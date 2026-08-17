@@ -9,6 +9,7 @@ import noRawClientEvents from './rules/no-raw-client-events';
 import noRawInteractionAcks from './rules/no-raw-interaction-acks';
 import subscriberMissingDecorators from './rules/subscriber-missing-decorators';
 import useCustomIdCodec from './rules/use-custom-id-codec';
+import usePaintInLogs from './rules/use-paint-in-logs';
 
 import type { TSESLint } from '@typescript-eslint/utils';
 
@@ -21,6 +22,7 @@ const rules = {
     'no-raw-client-events': noRawClientEvents,
     'no-raw-interaction-acks': noRawInteractionAcks,
     'subscriber-missing-decorators': subscriberMissingDecorators,
+    'use-paint-in-logs': usePaintInLogs,
     'use-custom-id-codec': useCustomIdCodec
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>;
 

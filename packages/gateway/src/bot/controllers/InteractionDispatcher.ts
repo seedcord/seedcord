@@ -23,7 +23,6 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath, hasKeys } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
-import chalk from 'chalk';
 import { Events } from 'discord.js';
 import { Envapter } from 'envapt';
 
@@ -164,7 +163,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         for (const route of commandLeaves) {
             if (!this.slashMap.has(route)) {
                 this.logger.warn(
-                    `Slash route ${paint.sky.bold(route)} has no registered ${chalk.bold('@SlashRoute')} handler.`
+                    `Slash route ${paint.sky.bold(route)} has no registered ${paint.bold('@SlashRoute')} handler.`
                 );
             }
         }
@@ -174,14 +173,14 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         for (const name of leaves.user) {
             if (!this.userContextMenuMap.has(name)) {
                 this.logger.warn(
-                    `User context menu ${paint.sky.bold(name)} has no registered ${chalk.bold('@ContextMenuRoute')} handler.`
+                    `User context menu ${paint.sky.bold(name)} has no registered ${paint.bold('@ContextMenuRoute')} handler.`
                 );
             }
         }
         for (const name of leaves.message) {
             if (!this.messageContextMenuMap.has(name)) {
                 this.logger.warn(
-                    `Message context menu ${paint.sky.bold(name)} has no registered ${chalk.bold('@ContextMenuRoute')} handler.`
+                    `Message context menu ${paint.sky.bold(name)} has no registered ${paint.bold('@ContextMenuRoute')} handler.`
                 );
             }
         }

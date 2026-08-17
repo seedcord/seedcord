@@ -54,6 +54,7 @@ function CommandOptions({ matches, selected, onHover, onRun }: CommandOptionsPro
     return (
         <div role="listbox" aria-label="Commands" className={cn('border-b-[3px] border-(--seed-dark)')}>
             {matches.map((command, index) => (
+                // eslint-disable-next-line react/forbid-elements -- a listbox option. a Button's styling and semantics would fight it
                 <button
                     key={command.name}
                     type="button"
@@ -154,6 +155,7 @@ function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): 
             {matches.length > 0 && (
                 <CommandOptions matches={matches} selected={selected} onHover={onSelect} onRun={run} />
             )}
+            {/* eslint-disable-next-line react/forbid-elements -- this draws Discord's message box, not the site's own input */}
             <input
                 ref={inputRef}
                 value={query ?? '/'}

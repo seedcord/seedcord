@@ -10,6 +10,7 @@ import {
     StringSelectMenuBuilder
 } from 'discord.js';
 
+import type { Logger } from './pkg/@seedcord/logger';
 import type {
     AnySelectMenuInteraction,
     AutocompleteInteraction,
@@ -109,3 +110,8 @@ export abstract class AutocompleteHandler<Route extends string> extends BaseHand
 export abstract class InteractionMiddleware<Event extends Repliable> extends BaseHandler<Event> {}
 
 export abstract class EventMiddleware<Event = unknown> extends BaseHandler<Event> {}
+
+// plugins and framework classes reach a logger they inherit, so the call site never imports Logger
+export declare abstract class PluginBase {
+    protected readonly logger: Logger;
+}

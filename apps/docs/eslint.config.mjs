@@ -25,7 +25,17 @@ export default createConfig({
                 'react/jsx-no-target-blank': 'error',
                 'react-hooks/exhaustive-deps': 'error',
                 'import/no-anonymous-default-export': 'error',
-                'import/no-default-export': 'error'
+                'import/no-default-export': 'error',
+                'react/forbid-elements': [
+                    'error',
+                    {
+                        forbid: [
+                            { element: 'button', message: 'use Button from @seedcord/ui' },
+                            { element: 'input', message: 'use Input from @seedcord/ui' },
+                            { element: 'select', message: 'use Dropdown from @seedcord/ui' }
+                        ]
+                    }
+                ]
             }
         },
 

@@ -1,6 +1,5 @@
 import { paint } from '@seedcord/errors';
 import { formatFilePath } from '@seedcord/utils';
-import chalk from 'chalk';
 
 import type { LogLevel, ILogger } from '@seedcord/types';
 
@@ -54,14 +53,14 @@ export class LoggerUtilities {
     public registration(name: string, from: string, type?: string, level: LogLevel = 'info'): void {
         const scope = type ? `${type} ` : '';
         this.logger[level](
-            `${chalk.italic('Registered')} ${paint.amber.bold(scope)}${paint.sky.bold(name)} from ${paint.mute(formatFilePath(from))}`
+            `${paint.italic('Registered')} ${paint.amber.bold(scope)}${paint.sky.bold(name)} from ${paint.mute(formatFilePath(from))}`
         );
     }
 
     /** Logs component initialization start or end. */
     public initialization(component: string, action: 'start' | 'end', level: LogLevel = 'info'): void {
         const verb = action === 'start' ? 'Initializing' : 'Initialized';
-        this.logger[level](`${chalk.italic(verb)} ${paint.sky.bold(component)}`);
+        this.logger[level](`${paint.italic(verb)} ${paint.sky.bold(component)}`);
     }
 
     /** Logs progress as "[current/total]" with an optional item label. */

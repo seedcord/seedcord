@@ -93,6 +93,7 @@ export function CopyCommand({ command, className }: CopyCommandProps): ReactNode
     };
 
     return (
+        // eslint-disable-next-line react/forbid-elements -- the two-label grid swap and the seed burst have no Button variant
         <button
             type="button"
             aria-label={`Copy ${command}`}

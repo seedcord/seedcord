@@ -10,7 +10,7 @@ All three run Next.js with React 19 and Tailwind v4. None of them publish.
 
 Every primitive lives in `tooling/ui/src/`. Read that folder before you build anything.
 
-Raw `<button>`, `<input>`, or `<select>` markup is banned when the primitive exists. A one-off style means the primitive is missing a variant. Add it there and inline nothing.
+`react/forbid-elements` catches raw `<button>`, `<input>` and `<select>`. A one-off style means the primitive is missing a variant. Add it there and inline nothing. An element that fills a different job, a listbox option or a mock of another product's interface, takes an inline disable naming the reason.
 
 `cn()` for class composition comes from `@seedcord/ui`. One definition serves all three apps.
 
