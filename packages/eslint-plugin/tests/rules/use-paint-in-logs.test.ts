@@ -26,6 +26,11 @@ ruleTester.run('use-paint-in-logs', rule, {
             import chalk from 'chalk';
             const banner = chalk.red('seedcord');
         `,
+        // the same goes for a tagged template outside a log call
+        dedent`
+            import chalk from 'chalk';
+            const banner = chalk.red\`seedcord\`;
+        `,
         // a same-named class that is not the seedcord Logger
         dedent`
             import chalk from 'chalk';
@@ -102,6 +107,46 @@ ruleTester.run('use-paint-in-logs', rule, {
                 import chalk from 'chalk';
                 declare const log: Logger;
                 log.info('bound', chalk.cyan('/health'));
+            `,
+            errors: [{ messageId: 'usePaint' }]
+        },
+        // chalk styles a tagged template too
+        {
+            code: dedent`
+                import { Logger } from '@seedcord/logger';
+                import chalk from 'chalk';
+                declare const log: Logger;
+                log.info(chalk.red\`ready\`);
+            `,
+            errors: [{ messageId: 'usePaint' }]
+        },
+        // chalk called straight as a tag
+        {
+            code: dedent`
+                import { Logger } from '@seedcord/logger';
+                import chalk from 'chalk';
+                declare const log: Logger;
+                log.info(chalk\`ready\`);
+            `,
+            errors: [{ messageId: 'usePaint' }]
+        },
+        // chalk.hex builds the tag, and the pair reports once
+        {
+            code: dedent`
+                import { Logger } from '@seedcord/logger';
+                import chalk from 'chalk';
+                declare const log: Logger;
+                log.info(chalk.hex('#f04e36')\`brand\`);
+            `,
+            errors: [{ messageId: 'usePaint' }]
+        },
+        // a tagged template nested in the message
+        {
+            code: dedent`
+                import { Logger } from '@seedcord/logger';
+                import chalk from 'chalk';
+                declare const log: Logger;
+                log.warn(\`route \${chalk.cyan\`/health\`} is slow\`);
             `,
             errors: [{ messageId: 'usePaint' }]
         },

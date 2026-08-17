@@ -21,7 +21,9 @@ function rootIdentifier(node: TSESTree.Node): TSESTree.Identifier | undefined {
 
 // `chalk.hex('#fff')('x')` nests two calls that both root at chalk, and only the outer one is worth reporting
 function isInnerChalkCall(node: TSESTree.CallExpression): boolean {
-    return node.parent.type === AST_NODE_TYPES.CallExpression && node.parent.callee === node;
+    const { parent } = node;
+    if (parent.type === AST_NODE_TYPES.CallExpression) return parent.callee === node;
+    return parent.type === AST_NODE_TYPES.TaggedTemplateExpression && parent.tag === node;
 }
 
 export default createRule({
@@ -65,6 +67,12 @@ export default createRule({
             return false;
         }
 
+        function reportWhenChalkInLog(node: TSESTree.Node, styled: TSESTree.Node): void {
+            const root = rootIdentifier(styled);
+            if (root === undefined || !chalkLocals.has(root.name)) return;
+            if (enclosingLoggerCall(node)) context.report({ node, messageId: 'usePaint' });
+        }
+
         return {
             ImportDeclaration(node) {
                 if (node.source.value !== 'chalk') return;
@@ -72,9 +80,11 @@ export default createRule({
             },
             CallExpression(node) {
                 if (isInnerChalkCall(node)) return;
-                const root = rootIdentifier(node.callee);
-                if (root === undefined || !chalkLocals.has(root.name)) return;
-                if (enclosingLoggerCall(node)) context.report({ node, messageId: 'usePaint' });
+                reportWhenChalkInLog(node, node.callee);
+            },
+            // chalk styles a tagged template too, as in chalk.red`ready`
+            TaggedTemplateExpression(node) {
+                reportWhenChalkInLog(node, node.tag);
             }
         };
     }
