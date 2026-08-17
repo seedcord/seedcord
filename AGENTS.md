@@ -62,7 +62,7 @@ Keep Node-only code out of anything the edge build reaches. Answer a question fo
 ## Other important rules
 
 - **Never throw a raw `Error`.** Framework code throws `SeedcordError`, `SeedcordTypeError`, or `SeedcordRangeError` from `@seedcord/errors`, each with a registered code. Translate a third-party throw before it reaches a consumer.
-- **Style interpolated values in log lines with `paint`** from `@seedcord/logger`. Routes, class names, ids, and paths get a tone. Multi-line output goes through `logger.utils`.
+- **Routes, class names, ids, and paths get a `paint` tone** from `@seedcord/errors`. `paint` also carries `bold`, `italic` and `underline` for the parts that use no color. Multi-line output goes through `logger.utils`.
 - **Derive types from their source.** A constructor shape is `TypedConstructor<typeof X>`. A member union comes from `keyof`, an indexed access, or `TypedExtract`. A hand-written copy drifts.
 - **Only implement what was asked.** Surface additions as a question first. Wait for the third use before extracting an abstraction.
 - **No dead code.** Before adding `export`, confirm something outside the file names the symbol. A symbol that exists only for a test belongs in the test folder.
