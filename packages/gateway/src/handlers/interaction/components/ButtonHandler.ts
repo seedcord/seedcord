@@ -1,3 +1,5 @@
+import { ComponentKindBrand } from '@seedcord/core/internal';
+
 import { ComponentHandler } from './ComponentHandler';
 
 import type { AnyCustomId } from '@seedcord/core/internal';
@@ -31,5 +33,5 @@ export abstract class ButtonHandler<
 > extends ComponentHandler<ButtonInteraction<Cache>, Defs> {
     // phantom, never set at runtime.
     /** @internal */
-    declare readonly __component?: 'button';
+    declare readonly [ComponentKindBrand]?: 'button';
 }

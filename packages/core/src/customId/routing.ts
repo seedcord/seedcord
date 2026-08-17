@@ -5,6 +5,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { decodeFor } from './CustomId';
 
+import type { ComponentDefsBrand } from '#src/decorators/brands';
 import type { AnyCustomId } from './CustomId';
 import type { DecodedParams } from './Field';
 import type { Promisable } from 'type-fest';
@@ -25,7 +26,7 @@ export const ComponentDefsKey = Symbol('seedcord:customId:componentDefs');
  */
 export interface HasComponentDefs<Defs extends readonly AnyCustomId[]> {
     /** @internal */
-    readonly __componentDefs?: Defs;
+    readonly [ComponentDefsBrand]?: Defs;
 }
 
 /** @internal */

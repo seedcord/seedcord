@@ -1,4 +1,4 @@
-import { decodeComponentRoute } from '@seedcord/core/internal';
+import { ComponentDefsBrand, decodeComponentRoute } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
@@ -33,7 +33,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
 {
     // phantom, never set at runtime.
     /** @internal */
-    declare readonly __componentDefs?: Defs;
+    declare readonly [ComponentDefsBrand]?: Defs;
 
     /** Rewrite the source message this component interaction came from. */
     protected update(response: GatewayReplyResponse | string): Promise<SentMessage> {

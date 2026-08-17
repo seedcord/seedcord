@@ -4,6 +4,7 @@ import { Envapter } from 'envapt';
 
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
 import { SubscribeMetadataKey } from '#src/metadataKeys';
+import { busLoggerOf } from '#subscribers/Bus';
 import { registrationFor, Subscriber } from '#subscribers/index';
 
 import type { Initializeable } from '#src/plugin/Plugin';
@@ -32,7 +33,7 @@ export class SubscriberLoader implements Initializeable, HmrAware {
             registerHandler: this.registerSubscriber.bind(this),
             unregisterHandler: this.unregisterSubscriber.bind(this),
             getArtifacts: this.getArtifacts.bind(this),
-            logger: this.bus.logger
+            logger: busLoggerOf(this.bus)
         });
     }
 
@@ -45,9 +46,9 @@ export class SubscriberLoader implements Initializeable, HmrAware {
 
         const { directory } = this;
         if (directory) {
-            this.bus.logger.debug(paint.mute(directory));
+            busLoggerOf(this.bus).debug(paint.mute(directory));
             await this.load(directory);
-            this.bus.logger.utils.list(
+            busLoggerOf(this.bus).utils.list(
                 [`${paint.iris.bold(this.bus.registeredCount)} subscribers`],
                 paint.mint.bold('Loaded'),
                 'debug'
@@ -70,7 +71,7 @@ export class SubscriberLoader implements Initializeable, HmrAware {
 
                 this.registerSubscriber(value);
                 this.hmrHandler?.trackHandler(fullPath, value);
-                this.bus.logger.utils.registration(value.name, relativePath, undefined, 'trace');
+                busLoggerOf(this.bus).utils.registration(value.name, relativePath, undefined, 'trace');
             }
         });
     }

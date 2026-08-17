@@ -14,6 +14,13 @@ import type {
     UserContextMenuRegistry
 } from '#registries/ContextMenuRegistry';
 import type { SlashOptionRegistry } from '#registries/SlashOptionRegistry';
+import type {
+    AutocompleteRouteBrand,
+    ComponentDefsBrand,
+    ComponentKindBrand,
+    ContextMenuKindBrand,
+    SlashRouteBrand
+} from './brands';
 import type { ApplicationCommandType } from 'discord-api-types/v10';
 import type { Constructor } from 'type-fest';
 
@@ -24,35 +31,35 @@ type AnyHandlerCtor = new (...args: any[]) => unknown;
 
 type SlashRouteOf<TCtor extends AnyHandlerCtor> =
     InstanceType<TCtor> extends {
-        __slashRoute?: infer Route extends keyof SlashOptionRegistry;
+        [SlashRouteBrand]?: infer Route extends keyof SlashOptionRegistry;
     }
         ? Route
         : never;
 
 type AutocompleteRouteOf<TCtor extends AnyHandlerCtor> =
     InstanceType<TCtor> extends {
-        __autocompleteRoute?: infer Route extends keyof SlashOptionRegistry;
+        [AutocompleteRouteBrand]?: infer Route extends keyof SlashOptionRegistry;
     }
         ? Route
         : never;
 
 type ContextMenuKindOf<TCtor extends AnyHandlerCtor> =
     InstanceType<TCtor> extends {
-        __ctxKind?: infer Kind extends ContextMenuKind;
+        [ContextMenuKindBrand]?: infer Kind extends ContextMenuKind;
     }
         ? Kind
         : never;
 
 type ComponentOf<TCtor extends AnyHandlerCtor> =
     InstanceType<TCtor> extends {
-        __component?: infer Brand extends ComponentBrand;
+        [ComponentKindBrand]?: infer Brand extends ComponentBrand;
     }
         ? Brand
         : never;
 
 type DefsOf<TCtor extends AnyHandlerCtor> =
     InstanceType<TCtor> extends {
-        __componentDefs?: infer Defs extends readonly AnyCustomId[];
+        [ComponentDefsBrand]?: infer Defs extends readonly AnyCustomId[];
     }
         ? Defs
         : never;

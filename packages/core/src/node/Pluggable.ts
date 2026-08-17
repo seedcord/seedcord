@@ -3,7 +3,7 @@ import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal
 import { FRAMEWORK_CHANNELS, Logger } from '@seedcord/logger';
 
 import { StartupPhase } from '#src/lifecycle/phases';
-import { resolvedLifecycleSpecOf } from '#src/plugin/Plugin';
+import { pluginLoggerOf, resolvedLifecycleSpecOf } from '#src/plugin/Plugin';
 
 import { withTimeout } from './Lifecycle/withTimeout';
 
@@ -150,7 +150,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         }
 
         const instance = new Plugin(this, ...args);
-        instance.logger.setChannel(key);
+        pluginLoggerOf(instance).setChannel(key);
         this.plugins.push(instance);
         this.attachments.push({ key, instance });
 
@@ -185,9 +185,9 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
             const { key, instance } = attachment;
             const spec = resolvedLifecycleSpecOf(instance);
 
-            instance.logger.utils.initialization(key, 'start');
+            pluginLoggerOf(instance).utils.initialization(key, 'start');
             await withTimeout(`Plugin (${key})`, () => instance.init(), spec.init.timeout);
-            instance.logger.utils.initialization(key, 'end');
+            pluginLoggerOf(instance).utils.initialization(key, 'end');
 
             this.completedInits.add(attachment);
             if (instance.dispose) this.registerDisposeTask(spec.dispose.phase);

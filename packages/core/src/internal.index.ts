@@ -1,3 +1,11 @@
+export { busLoggerOf } from '#subscribers/Bus';
+export {
+    AutocompleteRouteBrand,
+    ComponentDefsBrand,
+    ComponentKindBrand,
+    ContextMenuKindBrand,
+    SlashRouteBrand
+} from '#decorators/brands';
 export { setBotColor } from '#components/botColorHolder';
 
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';

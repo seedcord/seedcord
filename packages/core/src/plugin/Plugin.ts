@@ -17,6 +17,8 @@ export interface Initializeable {
 
 /** @internal */
 const resolvedSpecSlot = Symbol('seedcord.plugin.spec');
+/** @internal */
+const loggerSlot = Symbol('seedcord.plugin.logger');
 
 /**
  * Base class for Seedcord plugins. A subclass declares its options as the `Opts` type argument,
@@ -35,9 +37,11 @@ export abstract class Plugin<Opts extends PluginOptions = {}, TCore extends Core
 
     /** @internal */
     readonly [resolvedSpecSlot]: ResolvedPluginLifecycleSpec;
+    /** @internal */
+    readonly [loggerSlot]: Logger;
 
     /** Logs under the plugin's class name, on the channel its attach key sets. */
-    public readonly logger: Logger;
+    protected readonly logger: Logger;
 
     // CoreBase here keeps the augmented Core out of ConstructorParameters, which attach reads
     constructor(
@@ -45,6 +49,7 @@ export abstract class Plugin<Opts extends PluginOptions = {}, TCore extends Core
         spec?: PluginLifecycleSpec
     ) {
         this.logger = new Logger(this.constructor.name);
+        this[loggerSlot] = this.logger;
         this[resolvedSpecSlot] = resolveLifecycleSpec(spec, this.constructor.name);
     }
 
@@ -93,13 +98,21 @@ export function resolvedLifecycleSpecOf(plugin: PluginLike): ResolvedPluginLifec
     return plugin[resolvedSpecSlot];
 }
 
+/** @internal */
+export function pluginLoggerOf(plugin: PluginLike): Logger {
+    return plugin[loggerSlot];
+}
+
 export type { PluginLifecycleSpec } from './lifecycle';
 export type { PluginOptions } from './options';
 
 // a bound of Plugin<{}> rejects every plugin that declares an option, since Plugin<A> and Plugin<B>
 // are mutually unassignable. every member here must stay Opts-independent.
 /** @internal */
-export type PluginLike = Pick<Plugin, 'init' | 'ready' | 'dispose' | 'logger' | 'onHmr' | typeof resolvedSpecSlot>;
+export type PluginLike = Pick<
+    Plugin,
+    'init' | 'ready' | 'dispose' | 'onHmr' | typeof resolvedSpecSlot | typeof loggerSlot
+>;
 
 // a `CoreBase` first parameter rejects a narrowing ctor on its own, and it also collapses
 // `InstanceType<Ctor>` to `PluginLike` at every attach call. CoreParamAssert checks it instead.

@@ -1,3 +1,5 @@
+import { ContextMenuKindBrand } from '@seedcord/core/internal';
+
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { ContextMenuKind } from '@seedcord/core';
@@ -53,7 +55,7 @@ export abstract class ContextMenuHandler<
 > extends InteractionHandler<InteractionFor<Kind, Cache>> {
     // phantom, nothing reads it. it keeps Kind on the instance type
     /** @internal */
-    declare readonly __ctxKind?: Kind;
+    declare readonly [ContextMenuKindBrand]?: Kind;
 
     protected get target(): TargetFor<Kind, Cache> {
         // justified: the Kind generic decides which interaction member is live, both narrow to TargetFor.

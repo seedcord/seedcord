@@ -1,5 +1,5 @@
 import { Bus } from '@seedcord/core';
-import { HmrManager, setBotColor } from '@seedcord/core/internal';
+import { busLoggerOf, HmrManager, setBotColor } from '@seedcord/core/internal';
 import {
     HealthCheck,
     CoordinatedShutdown,
@@ -14,7 +14,7 @@ import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
-import { Bot } from './bot/Bot';
+import { botLoggerOf, Bot } from './bot/Bot';
 import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
@@ -90,15 +90,15 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
         if (Envapter.isDevelopment || Envapter.isTest) this.registerHmrAwareModules();
 
         this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
-            this.bus.logger.utils.initialization('Subscribers', 'start');
+            busLoggerOf(this.bus).utils.initialization('Subscribers', 'start');
             await this.subscribers.init();
-            this.bus.logger.utils.initialization('Subscribers', 'end');
+            busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
         });
 
         this.startup.addTask(StartupPhase.Login, 'bot-initialization', async () => {
-            this.bot.logger.utils.initialization('Bot', 'start');
+            botLoggerOf(this.bot).utils.initialization('Bot', 'start');
             await this.bot.init();
-            this.bot.logger.utils.initialization('Bot', 'end');
+            botLoggerOf(this.bot).utils.initialization('Bot', 'end');
         });
 
         const { healthCheck } = this;

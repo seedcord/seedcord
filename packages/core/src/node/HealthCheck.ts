@@ -18,18 +18,26 @@ const DEFAULT_HEALTH_CHECK_PORT = 6967;
 export class HealthCheck {
     public readonly logger = new Logger('HealthCheck', { channel: 'health' });
 
-    public readonly port: number;
-    public readonly host: string | undefined;
+    private readonly _port: number;
+    private readonly _host: string | undefined;
 
     private readonly responder: HealthResponder;
     private server?: Server;
 
     constructor(shutdown: CoordinatedShutdown, options?: HealthCheckConfig) {
-        this.port = options?.port ?? DEFAULT_HEALTH_CHECK_PORT;
-        this.host = options?.host;
+        this._port = options?.port ?? DEFAULT_HEALTH_CHECK_PORT;
+        this._host = options?.host;
         this.responder = new HealthResponder(options?.path);
 
         shutdown.addTask(ShutdownPhase.Drain, 'stop-healthcheck-server', () => this.stop());
+    }
+
+    public get port(): number {
+        return this._port;
+    }
+
+    public get host(): string | undefined {
+        return this._host;
     }
 
     public get path(): string {
@@ -60,19 +68,19 @@ export class HealthCheck {
                 server.on('error', (err) => this.logger.error('Health check server error', err));
 
                 // binds all interfaces, so log an address a browser can open
-                const address = this.host ?? 'localhost';
+                const address = this._host ?? 'localhost';
                 this.logger.info(
-                    `${paint.mint.bold('✔︎')} Health check server listening on ${paint.sky.bold(`http://${address}:${this.port}${this.path}`)}`
+                    `${paint.mint.bold('✔︎')} Health check server listening on ${paint.sky.bold(`http://${address}:${this._port}${this.path}`)}`
                 );
                 resolve();
             });
 
-            if (this.host) {
-                this.logger.debug(`Binding health check server to ${this.host}`);
-                server.listen(this.port, this.host);
+            if (this._host) {
+                this.logger.debug(`Binding health check server to ${this._host}`);
+                server.listen(this._port, this._host);
             } else {
                 this.logger.debug('Binding health check server to all interfaces');
-                server.listen(this.port);
+                server.listen(this._port);
             }
         });
     }

@@ -1,3 +1,4 @@
+import { SlashRouteBrand } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
@@ -40,7 +41,7 @@ export abstract class SlashHandler<
 > extends InteractionHandler<ChatInputCommandInteraction<Cache>> {
     // phantom, never set at runtime.
     /** @internal */
-    declare readonly __slashRoute?: Route;
+    declare readonly [SlashRouteBrand]?: Route;
 
     /**
      * The typed options for this command's route. Required options drop the null, choices narrow to their

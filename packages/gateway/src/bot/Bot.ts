@@ -25,14 +25,18 @@ const LOGOUT_TIMEOUT_MS = 2000;
 /**
  * The Discord client and its controllers. Access it through `core.bot`.
  */
+const loggerSlot = Symbol('seedcord:bot:logger');
+
 export class Bot implements Initializeable, HmrAware {
     @Envapt<string>('DISCORD_BOT_TOKEN', {
         converter: (raw) => validateDiscordToken(raw)
     })
     declare public readonly botToken: string;
 
+    private readonly logger = new Logger('Bot', { channel: 'bot' });
+
     /** @internal */
-    public readonly logger = new Logger('Bot', { channel: 'bot' });
+    readonly [loggerSlot]: Logger = this.logger;
     private isInitialized = false;
 
     private readonly _client: Client;
@@ -161,4 +165,9 @@ export class Bot implements Initializeable, HmrAware {
     public get client(): Client {
         return this._client;
     }
+}
+
+/** @internal */
+export function botLoggerOf(bot: Bot): Logger {
+    return bot[loggerSlot];
 }

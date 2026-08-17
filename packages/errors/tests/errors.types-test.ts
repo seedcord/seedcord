@@ -1,19 +1,20 @@
-import { assertType, describe, expect, expectTypeOf, it } from 'vitest';
+import { assertType, expectTypeOf } from 'vitest';
 
 import { SeedcordErrorCode, isSeedcordError } from '#src/index';
 import { SeedcordError, SeedcordTypeError } from '#src/internal.index';
 
 import type { SeedcordErrorTypeString } from '#src/index';
+import type { ErrorCodeFilter } from '#src/SeedcordError';
 
-// never run, the invalid cases would throw, but tc checks the body anyway
+// the invalid cases would throw
 function errorTypeContracts(): void {
-    const singletonError = new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
-    expectTypeOf(singletonError).toHaveProperty('type').toEqualTypeOf<'SeedcordError'>();
+    expectTypeOf(new SeedcordError(SeedcordErrorCode.CoreSingletonViolation)).toEqualTypeOf<
+        SeedcordError<SeedcordErrorCode.CoreSingletonViolation>
+    >();
 
-    const singletonWithOptions = new SeedcordError(SeedcordErrorCode.CoreSingletonViolation, {
-        cause: new Error('root')
-    });
-    expectTypeOf(singletonWithOptions).toHaveProperty('type').toEqualTypeOf<'SeedcordError'>();
+    expectTypeOf(
+        new SeedcordError(SeedcordErrorCode.CoreSingletonViolation, { cause: new Error('root') })
+    ).toEqualTypeOf<SeedcordError<SeedcordErrorCode.CoreSingletonViolation>>();
 
     // @ts-expect-error LifecycleUnknownPhase requires a [phase] tuple
     void new SeedcordError(SeedcordErrorCode.LifecycleUnknownPhase);
@@ -36,22 +37,17 @@ function errorTypeContracts(): void {
 
     const maybeError: unknown = new SeedcordTypeError(SeedcordErrorCode.DecoratorInvalidMiddlewarePriority);
     if (isSeedcordError(maybeError, 'SeedcordTypeError', SeedcordErrorCode.DecoratorInvalidMiddlewarePriority)) {
-        expectTypeOf(maybeError).toHaveProperty('type').toEqualTypeOf<'SeedcordTypeError'>();
-        expectTypeOf(maybeError.code).toEqualTypeOf<SeedcordErrorCode.DecoratorInvalidMiddlewarePriority>();
+        expectTypeOf(maybeError).toEqualTypeOf<
+            SeedcordTypeError<SeedcordErrorCode.DecoratorInvalidMiddlewarePriority>
+        >();
     }
 
     function narrowByCode(error: unknown): void {
         if (!isSeedcordError(error, undefined, SeedcordErrorCode.CorePluginKeyExists)) return;
 
-        expectTypeOf(error).toHaveProperty('type').toEqualTypeOf<SeedcordErrorTypeString>();
-        expectTypeOf(error.code).toEqualTypeOf<SeedcordErrorCode.CorePluginKeyExists>();
+        expectTypeOf(error).toEqualTypeOf<ErrorCodeFilter<undefined, SeedcordErrorCode.CorePluginKeyExists>>();
     }
 
     narrowByCode(new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, ['logger']));
 }
-
-describe('Seedcord error types', () => {
-    it('enforces the constructor and narrowing contracts at compile time', () => {
-        expect(errorTypeContracts).toBeTypeOf('function');
-    });
-});
+void errorTypeContracts;

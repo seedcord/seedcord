@@ -1,5 +1,4 @@
 import { REST } from '@discordjs/rest';
-import { Logger } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, expectTypeOf, afterEach } from 'vitest';
 
@@ -188,28 +187,26 @@ describe('attaching a plugin that declares options', () => {
 
         expect(attached.wide.options.dir).toBe('./services');
     });
-
-    it('rejects a class that carries no plugin brand', () => {
-        const host = new TestHost();
-
-        // every PluginLike member except the symbol slot
-        class Impostor {
-            public logger = new Logger('Impostor');
-            public init(): Promise<void> {
-                return Promise.resolve();
-            }
-            public ready(): Promise<void> {
-                return Promise.resolve();
-            }
-            public dispose(): Promise<void> {
-                return Promise.resolve();
-            }
-            public onHmr(): Promise<void> {
-                return Promise.resolve();
-            }
-        }
-
-        // @ts-expect-error Impostor lacks the symbol slot
-        host.attach('impostor', Impostor);
-    });
 });
+
+// every PluginLike member except the symbol slots
+class Impostor {
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+    public ready(): Promise<void> {
+        return Promise.resolve();
+    }
+    public dispose(): Promise<void> {
+        return Promise.resolve();
+    }
+    public onHmr(): Promise<void> {
+        return Promise.resolve();
+    }
+}
+
+function RejectsAClassCarryingNoPluginBrand(): void {
+    // @ts-expect-error Impostor lacks the symbol slots
+    new TestHost().attach('impostor', Impostor);
+}
+void RejectsAClassCarryingNoPluginBrand;

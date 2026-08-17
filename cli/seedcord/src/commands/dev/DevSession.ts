@@ -1,10 +1,9 @@
 import { existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
-import chalk from 'chalk';
 
 import { profileMark } from '#ui/profile';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
@@ -91,7 +90,7 @@ export class DevSession {
             }
 
             this.store.setPhase('running');
-            this.store.setStatus(`${chalk.bold(instance.username ?? 'Bot')} is ready!`);
+            this.store.setStatus(`${paint.bold(instance.username ?? 'Bot')} is ready!`);
             profileMark('ready');
             onReady?.();
             // tsc competes with vite's cold transform when it starts any earlier

@@ -1,5 +1,5 @@
 import { BaseHandler } from '@seedcord/core';
-import { reportedWrite } from '@seedcord/core/internal';
+import { AutocompleteRouteBrand, reportedWrite } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { InteractionResponseType, Routes } from 'discord-api-types/v10';
@@ -48,7 +48,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
 
     // phantom, never set at runtime.
     /** @internal */
-    declare readonly __autocompleteRoute?: Route;
+    declare readonly [AutocompleteRouteBrand]?: Route;
 
     /**
      * Typed Discord REST API (`@discordjs/core/http-only`) over `core.rest`, one instance per core.

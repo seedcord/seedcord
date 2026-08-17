@@ -71,7 +71,6 @@
         "@seedcord/logger": "workspace:^",
         "@seedcord/types": "workspace:^",
         "@seedcord/utils": "workspace:^",
-        "chalk": "catalog:deps",
         "commander": "^15.0.0",
         "discord-api-types": "catalog:deps",
         "ink": "^7.1.1",

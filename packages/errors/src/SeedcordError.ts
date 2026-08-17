@@ -68,9 +68,12 @@ function formatErrorName(name: string, _identifier: SeedcordErrorIdentifier, cod
  */
 export type SeedcordErrorTypeString = `Seedcord${'Error' | 'TypeError' | 'RangeError' | 'AggregateError'}`;
 
+// Symbol.for so two installed copies read the same slot
+const kIdentifier: unique symbol = Symbol.for('seedcord.errors.identifier');
+
 interface BaseSeedcordError {
     readonly code: SeedcordErrorCode;
-    readonly identifier: SeedcordErrorIdentifier;
+    readonly [kIdentifier]: SeedcordErrorIdentifier;
     readonly type: SeedcordErrorTypeString;
 }
 
@@ -90,7 +93,7 @@ export class SeedcordError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     implements BaseSeedcordError
 {
     public readonly code: Code;
-    public readonly identifier: SeedcordErrorIdentifier;
+    readonly [kIdentifier]: SeedcordErrorIdentifier;
     public readonly type = 'SeedcordError';
 
     constructor(code: Code, ...rest: SeedcordErrorCtorRest<Code>) {
@@ -98,8 +101,8 @@ export class SeedcordError<Code extends SeedcordErrorCode = SeedcordErrorCode>
         const message = resolveMessage(code, args);
         super(message, options);
         this.code = code;
-        this.identifier = resolveIdentifier(code);
-        this.name = formatErrorName(new.target.name, this.identifier, this.code);
+        this[kIdentifier] = resolveIdentifier(code);
+        this.name = formatErrorName(new.target.name, this[kIdentifier], this.code);
         Object.setPrototypeOf(this, new.target.prototype);
         if (typeof Error.captureStackTrace === 'function') {
             Error.captureStackTrace(this, new.target);
@@ -114,7 +117,7 @@ export class SeedcordTypeError<Code extends SeedcordErrorCode = SeedcordErrorCod
     implements BaseSeedcordError
 {
     public readonly code: Code;
-    public readonly identifier: SeedcordErrorIdentifier;
+    readonly [kIdentifier]: SeedcordErrorIdentifier;
     public readonly type = 'SeedcordTypeError';
 
     constructor(code: Code, ...rest: SeedcordErrorCtorRest<Code>) {
@@ -122,8 +125,8 @@ export class SeedcordTypeError<Code extends SeedcordErrorCode = SeedcordErrorCod
         const message = resolveMessage(code, args);
         super(message, options);
         this.code = code;
-        this.identifier = resolveIdentifier(code);
-        this.name = formatErrorName(new.target.name, this.identifier, this.code);
+        this[kIdentifier] = resolveIdentifier(code);
+        this.name = formatErrorName(new.target.name, this[kIdentifier], this.code);
         Object.setPrototypeOf(this, new.target.prototype);
         if (typeof Error.captureStackTrace === 'function') {
             Error.captureStackTrace(this, new.target);
@@ -138,7 +141,7 @@ export class SeedcordRangeError<Code extends SeedcordErrorCode = SeedcordErrorCo
     implements BaseSeedcordError
 {
     public readonly code: Code;
-    public readonly identifier: SeedcordErrorIdentifier;
+    readonly [kIdentifier]: SeedcordErrorIdentifier;
     public readonly type = 'SeedcordRangeError';
 
     constructor(code: Code, ...rest: SeedcordErrorCtorRest<Code>) {
@@ -146,8 +149,8 @@ export class SeedcordRangeError<Code extends SeedcordErrorCode = SeedcordErrorCo
         const message = resolveMessage(code, args);
         super(message, options);
         this.code = code;
-        this.identifier = resolveIdentifier(code);
-        this.name = formatErrorName(new.target.name, this.identifier, this.code);
+        this[kIdentifier] = resolveIdentifier(code);
+        this.name = formatErrorName(new.target.name, this[kIdentifier], this.code);
         Object.setPrototypeOf(this, new.target.prototype);
         if (typeof Error.captureStackTrace === 'function') {
             Error.captureStackTrace(this, new.target);
@@ -162,7 +165,7 @@ export class SeedcordAggregateError<Code extends SeedcordErrorCode = SeedcordErr
     implements BaseSeedcordError
 {
     public readonly code: Code;
-    public readonly identifier: SeedcordErrorIdentifier;
+    readonly [kIdentifier]: SeedcordErrorIdentifier;
     public readonly type = 'SeedcordAggregateError';
 
     constructor(code: Code, errors: readonly unknown[], ...rest: SeedcordErrorCtorRest<Code>) {
@@ -170,8 +173,8 @@ export class SeedcordAggregateError<Code extends SeedcordErrorCode = SeedcordErr
         const message = resolveMessage(code, args);
         super(errors, message, options);
         this.code = code;
-        this.identifier = resolveIdentifier(code);
-        this.name = formatErrorName(new.target.name, this.identifier, this.code);
+        this[kIdentifier] = resolveIdentifier(code);
+        this.name = formatErrorName(new.target.name, this[kIdentifier], this.code);
         Object.setPrototypeOf(this, new.target.prototype);
         if (typeof Error.captureStackTrace === 'function') {
             Error.captureStackTrace(this, new.target);
@@ -248,5 +251,5 @@ export function isSeedcordError<
     if (type && error.type !== type) return false;
     if (code === undefined) return true;
     // another copy of this package may number the same identifier differently
-    return error.identifier === resolveIdentifier(code);
+    return error[kIdentifier] === resolveIdentifier(code);
 }

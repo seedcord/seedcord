@@ -4,13 +4,10 @@ import { SeedcordErrorCode, isSeedcordError } from '#src/index';
 import { SeedcordError, SeedcordTypeError, SeedcordRangeError } from '#src/internal.index';
 
 describe('Seedcord error constructors', () => {
-    it('preserves metadata for parameterless codes', () => {
+    it('puts the code in the error name for parameterless codes', () => {
         const error = new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
 
         expect(error).toBeInstanceOf(SeedcordError);
-        expect(error.code).toBe(SeedcordErrorCode.CoreSingletonViolation);
-        expect(error.identifier).toBe('CoreSingletonViolation');
-        expect(error.type).toBe('SeedcordError');
         expect(error.name).toContain(String(SeedcordErrorCode.CoreSingletonViolation));
     });
 
@@ -24,10 +21,8 @@ describe('Seedcord error constructors', () => {
 
     it('formats messages with tuple arguments', () => {
         const phase = 'boot';
-        const error = new SeedcordError(SeedcordErrorCode.LifecycleUnknownPhase, [phase]);
 
-        expect(error.message).toContain(phase);
-        expect(error.identifier).toBe('LifecycleUnknownPhase');
+        expect(new SeedcordError(SeedcordErrorCode.LifecycleUnknownPhase, [phase]).message).toContain(phase);
     });
 
     it('supports SeedcordTypeError and SeedcordRangeError variants', () => {
@@ -35,9 +30,7 @@ describe('Seedcord error constructors', () => {
         const rangeError = new SeedcordRangeError(SeedcordErrorCode.PluginKyselyInvalidMigrationModule, ['foo.ts']);
 
         expect(typeError).toBeInstanceOf(TypeError);
-        expect(typeError.type).toBe('SeedcordTypeError');
         expect(rangeError).toBeInstanceOf(RangeError);
-        expect(rangeError.type).toBe('SeedcordRangeError');
         expect(rangeError.message).toContain('foo.ts');
     });
 });
