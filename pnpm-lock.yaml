@@ -760,9 +760,6 @@ importers:
       '@seedcord/utils':
         specifier: workspace:^
         version: link:../utils
-      chalk:
-        specifier: catalog:deps
-        version: 6.0.0
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.52
@@ -868,9 +865,6 @@ importers:
       '@seedcord/utils':
         specifier: workspace:^
         version: link:../utils
-      chalk:
-        specifier: catalog:deps
-        version: 6.0.0
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
@@ -929,9 +923,6 @@ importers:
       '@seedcord/utils':
         specifier: workspace:^
         version: link:../utils
-      chalk:
-        specifier: catalog:deps
-        version: 6.0.0
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.52

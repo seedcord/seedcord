@@ -1,6 +1,5 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import chalk from 'chalk';
 
 import { plural } from '#core/format';
 import { confirm, log, note, outro, spinner } from '#core/prompts';
@@ -73,7 +72,7 @@ export class InteractivePresenter implements CleanPresenter {
 
     public preview(scan: ScanResult): void {
         const body = groupByGuild(scan.flagged)
-            .map((group) => `${chalk.bold(group.guildName)}\n${group.commands.map((c) => `  ${c.name}`).join('\n')}`)
+            .map((group) => `${paint.bold(group.guildName)}\n${group.commands.map((c) => `  ${c.name}`).join('\n')}`)
             .join('\n\n');
         note(body, `Will delete ${plural(scan.flagged.length, 'guild command')} (nothing deleted yet)`);
         if (scan.skipped.length > 0) log.warn(skippedSummary(scan.skipped));
@@ -126,7 +125,7 @@ export class FlagPresenter implements CleanPresenter {
     }
 
     public preview(scan: ScanResult): void {
-        this.logger.info(chalk.bold(`${plural(scan.flagged.length, 'guild command')} selected for deletion`));
+        this.logger.info(paint.bold(`${plural(scan.flagged.length, 'guild command')} selected for deletion`));
         for (const group of groupByGuild(scan.flagged)) {
             this.logger.info(paint.sky(group.guildName));
             for (const command of group.commands) this.logger.info(`  ${command.name}`);
@@ -170,6 +169,6 @@ export class FlagPresenter implements CleanPresenter {
     }
 
     public dryRunHint(): void {
-        this.logger.info(chalk.italic('Dry run. Re-run with --apply to delete the above.'));
+        this.logger.info(paint.italic('Dry run. Re-run with --apply to delete the above.'));
     }
 }

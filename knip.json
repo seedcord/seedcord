@@ -39,8 +39,16 @@
                 "src/**/*.{ts,tsx,css}"
             ]
         },
-        "packages/core": {},
-        "packages/errors": {},
+        "packages/core": {
+            "entry": [
+                "**/*.types-test.ts"
+            ]
+        },
+        "packages/errors": {
+            "entry": [
+                "**/*.types-test.ts"
+            ]
+        },
         "tooling/eslint-plugin": {
             "ignore": [
                 "tests/fixtures/**"
@@ -59,30 +67,57 @@
         },
         "tooling/eslint-utils": {},
         "packages/event-emitter": {},
-        "packages/gateway": {},
+        "packages/gateway": {
+            "entry": [
+                "**/*.types-test.ts"
+            ]
+        },
         "packages/http": {
             "ignore": [
                 "tests/node/commands/fixtures/**",
                 "tests/node/discovery/fixtures/**",
                 "tests/node/discovery/duplicates/**"
+            ],
+            "entry": [
+                "**/*.types-test.ts"
             ]
         },
-        "packages/logger": {},
+        "packages/logger": {
+            "entry": [
+                "**/*.types-test.ts"
+            ]
+        },
         "packages/rate-limiter": {},
-        "packages/types": {},
+        "packages/types": {
+            "entry": [
+                "**/*.types-test.ts"
+            ]
+        },
         "packages/utils": {
             "ignore": [
                 "tests/node/fixtures/**"
             ]
         },
-        "plugins/kysely-postgres": {},
-        "plugins/mongoose": {},
+        "plugins/kysely-postgres": {
+            "entry": [
+                "**/*.types-test.ts"
+            ]
+        },
+        "plugins/mongoose": {
+            "entry": [
+                "**/*.types-test.ts"
+            ]
+        },
         "cli/seedcord": {
             "ignoreDependencies": [
                 "tsc-alias"
             ]
         },
-        "cli/create-seedcord": {},
+        "cli/create-seedcord": {
+            "entry": [
+                "**/*.types-test.ts"
+            ]
+        },
         "tooling/docs-engine": {},
         "tooling/docs-generator": {
             "ignore": [
