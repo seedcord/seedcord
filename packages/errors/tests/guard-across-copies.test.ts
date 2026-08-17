@@ -37,10 +37,9 @@ describe('isSeedcordError across two copies of the package', () => {
         const renumbered = Object.defineProperty(new Error('from an older copy'), Symbol.for('seedcord.errors.coded'), {
             value: true
         });
-        Object.assign(renumbered, {
-            type: 'SeedcordError',
-            identifier: 'CorePluginAfterInit',
-            code: 9999
+        Object.assign(renumbered, { type: 'SeedcordError', code: 9999 });
+        Object.defineProperty(renumbered, Symbol.for('seedcord.errors.identifier'), {
+            value: 'CorePluginAfterInit'
         });
 
         expect(catcher.isSeedcordError(renumbered, undefined, SeedcordErrorCode.CorePluginAfterInit)).toBe(true);

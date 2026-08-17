@@ -95,8 +95,8 @@ export class HasDangerousPermissions extends Notice {
 
     public constructor(
         message: string | undefined,
-        public subject: string,
-        public dangerousPerms: readonly string[]
+        private readonly subject: string,
+        private readonly dangerousPerms: readonly string[]
     ) {
         super(message ?? 'A dangerous permission is enabled.');
         this.customLead = message;

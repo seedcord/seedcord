@@ -18,8 +18,8 @@ const DEFAULT_HEALTH_CHECK_PORT = 6967;
 export class HealthCheck {
     public readonly logger = new Logger('HealthCheck', { channel: 'health' });
 
-    public readonly port: number;
-    public readonly host: string | undefined;
+    private readonly port: number;
+    private readonly host: string | undefined;
 
     private readonly responder: HealthResponder;
     private server?: Server;

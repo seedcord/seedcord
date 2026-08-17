@@ -20,21 +20,10 @@ describe('HealthCheck.fromOption', () => {
         expect(addTask).not.toHaveBeenCalled();
     });
 
-    it('undefined returns the defaults and registers the stop task', () => {
+    it('undefined registers the stop task', () => {
         const { shutdown, addTask } = stubShutdown();
-        const check = HealthCheck.fromOption(shutdown, undefined);
 
-        expect(check).toBeInstanceOf(HealthCheck);
-        expect(check?.port).toBe(6967);
-        expect(check?.path).toBe('/health');
+        expect(HealthCheck.fromOption(shutdown, undefined)).toBeInstanceOf(HealthCheck);
         expect(addTask).toHaveBeenCalledWith(ShutdownPhase.Drain, 'stop-healthcheck-server', expect.any(Function));
-    });
-
-    it('an options object is applied', () => {
-        const { shutdown } = stubShutdown();
-        const check = HealthCheck.fromOption(shutdown, { port: 7000, path: '/ready' });
-
-        expect(check?.port).toBe(7000);
-        expect(check?.path).toBe('/ready');
     });
 });

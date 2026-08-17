@@ -32,11 +32,6 @@ export class HmrManager {
         this.listeners.add(listener);
     }
 
-    /** @internal */
-    public unregister(listener: HmrAware): void {
-        this.listeners.delete(listener);
-    }
-
     private async handleUpdate(event: HmrUpdateEvent): Promise<void> {
         const promises = [...this.listeners].map(async (listener) => {
             try {

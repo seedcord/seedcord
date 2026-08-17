@@ -25,27 +25,9 @@ describe('HmrManager', () => {
             }
         });
 
-        // @ts-expect-error dispatch is private, the public path needs a vite hot context
+        // @ts-expect-error handleUpdate is private, the public path needs a vite hot context
         await manager.handleUpdate({ file: 'x.ts', type: 'update' });
 
         expect(ran).toEqual(['ok']);
-    });
-
-    it('an unregistered listener no longer receives updates', async () => {
-        const manager = new HmrManager();
-        const ran: string[] = [];
-        const listener = {
-            onHmr: (): Promise<void> => {
-                ran.push('gone');
-                return Promise.resolve();
-            }
-        };
-        manager.register(listener);
-        manager.unregister(listener);
-
-        // @ts-expect-error dispatch is private, the public path needs a vite hot context
-        await manager.handleUpdate({ file: 'x.ts', type: 'update' });
-
-        expect(ran).toEqual([]);
     });
 });

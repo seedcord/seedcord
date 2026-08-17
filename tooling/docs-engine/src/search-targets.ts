@@ -35,7 +35,7 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     { query: 'addTask' },
 
     // Accessors
-    { query: 'isRunning' },
+    { query: 'isReady' },
     { query: 'Notice report' },
     { query: 'client' },
 

@@ -112,8 +112,4 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
     public get isReady(): boolean {
         return this.hasStarted;
     }
-
-    public get isRunning(): boolean {
-        return this.isStartingUp;
-    }
 }

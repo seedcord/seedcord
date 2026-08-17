@@ -180,7 +180,7 @@ export class DevRunner {
         });
     }
 
-    public async loadConfig(): Promise<ResolvedSeedcordDevConfig> {
+    private async loadConfig(): Promise<ResolvedSeedcordDevConfig> {
         const configPath = this.deps.locator.locate();
         return this.deps.configLoader.load(configPath);
     }
