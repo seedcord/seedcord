@@ -8,7 +8,9 @@ import type { NavigationCategory } from '#lib/docs/types';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { ReactElement } from 'react';
 
-const chipBaseClassName = tw`bg-surface-moderate shadow-soft border-border inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2`;
+const chipClassName = tw`bg-surface-moderate shadow-soft border-border inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2`;
+
+const reexportChipClassName = tw`bg-surface-moderate shadow-soft border-border inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2`;
 
 function renderCategory(category: NavigationCategory): ReactElement {
     const { icon: ToneIcon, styles: toneStyles } = getToneConfig(category.tone);
@@ -26,7 +28,7 @@ function renderCategory(category: NavigationCategory): ReactElement {
             </header>
             <div className={cn('flex flex-wrap gap-2')}>
                 {category.items.map((item) => (
-                    <Link key={item.id} href={item.href} className={cn(chipBaseClassName, toneStyles.item)}>
+                    <Link key={item.id} href={item.href} className={cn(chipClassName, toneStyles.item)}>
                         <span aria-hidden className={cn('size-1.5 shrink-0 rounded-full', toneStyles.dot)} />
                         {item.label}
                     </Link>
@@ -55,9 +57,9 @@ function renderReexportLink(link: ReexportLink): ReactElement {
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
-            className={cn(chipBaseClassName, toneStyles?.item)}
+            className={cn(reexportChipClassName, toneStyles?.item)}
         >
-            {toneStyles ? <span aria-hidden className={cn('size-1.5 shrink-0 rounded-full', toneStyles.dot)} /> : null}
+            {toneStyles ? <span aria-hidden className={cn('size-1 shrink-0 rounded-full', toneStyles.dot)} /> : null}
             {link.name}
         </Link>
     );
