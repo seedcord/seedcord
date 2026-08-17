@@ -1,4 +1,4 @@
-export const GLOBAL_IGNORES = ['dist/**', 'node_modules/**', 'logs/**'] as const;
+export const GLOBAL_IGNORES = ['dist/**', 'node_modules/**', 'logs/**', 'tests/temp/**'] as const;
 
 export const COMMON_LINTER_OPTIONS = {
     // as const narrows this to the SeverityString literal type
