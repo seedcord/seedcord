@@ -1,5 +1,48 @@
 # @seedcord/gateway
 
+## 0.2.0-next.0
+
+### Minor Changes
+
+- 5c7c3e2: **BREAKING:** `setEmoji(Emojis.X)` on gateway used to throw through the builder's strict validation. `Emojis.X` now carries `id`, `name`, and `animated`, and the `GuildEmoji` or `ApplicationEmoji` discord.js resolved moved to `Emojis.X.source`, still typed by the codegen tag. `ResolvedEmoji` moved from `@seedcord/http` to `@seedcord/core`.
+
+### Patch Changes
+
+- 97b62ef: Update log colors in some places.
+- 7553449: Better encapsulate framework internals.
+
+    **BREAKING:** `SeedcordError.identifier` is accessed via a symbol now. Older framework versions won't be able to access it anymore. Please update to the latest version.
+
+- f39cde0: These packages now ship ESM only. `eslint-plugin-discordjs` keeps its CommonJS build.
+- a259cdc: Use `#` instead of `@` for tsconfig path aliases.
+- a8d7b5f: Rewrote package descriptions for all packages. Also added keywords.
+- 660a94d: Every package now declares Apache-2.0 along with its homepage, issue tracker, author, and funding link.
+- c50ad6c: Every package now has a README describing that package, with badges and an install line. Seven of them previously shipped a copy of the root README that named no package at all.
+- ad1e4d5: Every fault now reaches your subscribers. A rare bug used to stay silent while a common one kept throwing on the same route. Webhook cards still group repeats to one a minute, and each carries how many it covers.
+- Updated dependencies [1364c82]
+- Updated dependencies [97b62ef]
+- Updated dependencies [ad1e4d5]
+- Updated dependencies [aa6bb3a]
+- Updated dependencies [7553449]
+- Updated dependencies [f39cde0]
+- Updated dependencies [5c7c3e2]
+- Updated dependencies [a259cdc]
+- Updated dependencies [1364c82]
+- Updated dependencies [a8d7b5f]
+- Updated dependencies [660a94d]
+- Updated dependencies [c50ad6c]
+- Updated dependencies [c343f4a]
+- Updated dependencies [e11cbb3]
+- Updated dependencies [ad1e4d5]
+- Updated dependencies [1364c82]
+    - @seedcord/errors@0.4.0-next.0
+    - @seedcord/logger@0.2.0-next.0
+    - @seedcord/core@0.2.0-next.0
+    - @seedcord/event-emitter@0.1.3-next.0
+    - @seedcord/rate-limiter@0.1.3-next.0
+    - @seedcord/types@0.9.0-next.0
+    - @seedcord/utils@0.8.5-next.0
+
 ## 0.1.4
 
 ### Patch Changes

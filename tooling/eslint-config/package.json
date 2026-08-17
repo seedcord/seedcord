@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/eslint-config",
     "type": "module",
-    "version": "1.5.3",
+    "version": "1.5.4-next.0",
     "engines": {
         "node": ">=24.11"
     },

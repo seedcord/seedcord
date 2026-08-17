@@ -1,5 +1,27 @@
 # @seedcord/errors
 
+## 0.4.0-next.0
+
+### Minor Changes
+
+- aa6bb3a: **BREAKING:** sixteen error codes collapse into `CliConfigInvalidField`, `ConfigMissingEnv`, and `ConfigInvalidEnv`.
+- 7553449: Better encapsulate framework internals.
+
+    **BREAKING:** `SeedcordError.identifier` is accessed via a symbol now. Older framework versions won't be able to access it anymore. Please update to the latest version.
+
+- c343f4a: `paint` now carries `bold`, `italic` and `underline` beside its color tones. `paint.mute` for dim.
+- e11cbb3: **BREAKING:** `paint` now comes from `@seedcord/errors`, and `ILogSink`, `LogLevel`, `LogRecord`, `LogSinkHandle`, `LoggerConfig`, `LoggerChannelId`, and `FrameworkChannel` now come from `@seedcord/types`. `@seedcord/logger` no longer re-exports them. Both transports still expose every one of these.
+
+### Patch Changes
+
+- 1364c82: `isSeedcordError` now narrows correctly when two copies of `@seedcord/errors` are installed.
+- 97b62ef: Update log colors in some places.
+- f39cde0: These packages now ship ESM only. `eslint-plugin-discordjs` keeps its CommonJS build.
+- a259cdc: Use `#` instead of `@` for tsconfig path aliases.
+- a8d7b5f: Rewrote package descriptions for all packages. Also added keywords.
+- 660a94d: Every package now declares Apache-2.0 along with its homepage, issue tracker, author, and funding link.
+- c50ad6c: Every package now has a README describing that package, with badges and an install line. Seven of them previously shipped a copy of the root README that named no package at all.
+
 ## 0.3.4
 
 ### Patch Changes
