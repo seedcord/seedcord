@@ -3,6 +3,13 @@ import { describe, expect, it } from 'vitest';
 
 import { CustomId } from '#customId/CustomId';
 import { ComponentDefsKey } from '#customId/routing';
+import {
+    AutocompleteRouteBrand,
+    ComponentDefsBrand,
+    ComponentKindBrand,
+    ContextMenuKindBrand,
+    SlashRouteBrand
+} from '#decorators/brands';
 import { SelectMenuKind } from '#decorators/interactionRoutes';
 import {
     AutocompleteRoute,
@@ -37,23 +44,23 @@ declare module '#registries/ContextMenuRegistry' {
 
 // stub branded bases, the shape both transports' handler bases carry
 abstract class SlashBase<Route extends keyof SlashOptionRegistry> {
-    declare readonly __slashRoute?: Route;
+    declare readonly [SlashRouteBrand]?: Route;
     abstract execute(): Promise<void>;
 }
 abstract class AutocompleteBase<Route extends keyof SlashOptionRegistry> {
-    declare readonly __autocompleteRoute?: Route;
+    declare readonly [AutocompleteRouteBrand]?: Route;
     abstract execute(): Promise<void>;
 }
 abstract class ContextMenuBase<Kind extends ApplicationCommandType.User | ApplicationCommandType.Message> {
-    declare readonly __ctxKind?: Kind;
+    declare readonly [ContextMenuKindBrand]?: Kind;
     abstract execute(): Promise<void>;
 }
 abstract class ComponentBase<
     Brand extends 'button' | 'modal' | SelectMenuKind,
     Defs extends readonly AnyCustomId[]
 > implements HasComponentDefs<Defs> {
-    declare readonly __component?: Brand;
-    declare readonly __componentDefs?: Defs;
+    declare readonly [ComponentKindBrand]?: Brand;
+    declare readonly [ComponentDefsBrand]?: Defs;
     abstract execute(): Promise<void>;
 }
 

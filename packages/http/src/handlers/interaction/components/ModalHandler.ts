@@ -1,3 +1,4 @@
+import { ComponentKindBrand } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
@@ -23,7 +24,7 @@ export abstract class ModalHandler<Defs extends readonly AnyCustomId[]> extends 
 > {
     // phantom, never set at runtime.
     /** @internal */
-    declare readonly __component?: 'modal';
+    declare readonly [ComponentKindBrand]?: 'modal';
 
     /** Rewrite the message this modal was opened from. Throws when a command opened the modal. */
     protected override update(response: ReplyResponse | string): Promise<SentMessage> {

@@ -1,3 +1,4 @@
+import { ContextMenuKindBrand } from '@seedcord/core/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
@@ -36,7 +37,7 @@ export abstract class ContextMenuHandler<Kind extends ContextMenuKind> extends I
 > {
     // phantom, never set at runtime.
     /** @internal */
-    declare readonly __ctxKind?: Kind;
+    declare readonly [ContextMenuKindBrand]?: Kind;
 
     protected get target(): TargetFor<Kind> {
         const data = this.event.data;

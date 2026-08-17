@@ -1,3 +1,5 @@
+import { ComponentKindBrand } from '@seedcord/core/internal';
+
 import { ComponentHandler } from './ComponentHandler';
 
 import type { SelectMenuKind } from '@seedcord/core';
@@ -56,5 +58,5 @@ export abstract class SelectMenuHandler<
 > extends ComponentHandler<SelectMenuInteractionFor<Kind, Cache>, Defs> {
     // phantom, never set at runtime.
     /** @internal */
-    declare readonly __component?: Kind;
+    declare readonly [ComponentKindBrand]?: Kind;
 }

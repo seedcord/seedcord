@@ -1,4 +1,4 @@
-import { reportedWrite } from '@seedcord/core/internal';
+import { AutocompleteRouteBrand, reportedWrite } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
@@ -48,7 +48,7 @@ export abstract class AutocompleteHandler<
 > extends BaseHandler<AutocompleteInteraction<Cache>> {
     // phantom, never set at runtime.
     /** @internal */
-    declare readonly __autocompleteRoute?: Route;
+    declare readonly [AutocompleteRouteBrand]?: Route;
 
     // keep this ctor. it gives typeof AutocompleteHandler a public construct signature that HandlerConstructor
     // needs, and dropping it (inheriting BaseHandler's protected ctor) collapses HandlerConstructor to never.
