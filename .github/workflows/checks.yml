@@ -27,50 +27,104 @@ permissions:
     contents: read
 
 jobs:
-    verify:
+    lint:
         if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
-        name: Verify workspace
+        name: Lint
         runs-on: ubuntu-latest
-        timeout-minutes: 25
+        timeout-minutes: 15
         steps:
-            - name: Check out repository
-              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
                   persist-credentials: false
-
-            - name: Turbo cache
-              uses: ./.github/actions/turbo-cache
+            - uses: ./.github/actions/turbo-cache
               with:
                   turbo_token: ${{ secrets.TURBO_TOKEN }}
                   turbo_team: ${{ vars.TURBO_TEAM }}
                   enable_fallback_cache: 'true'
+            - uses: ./.github/actions/setup
+            - run: pnpm check:catalog
+            - run: pnpm lint
 
-            - name: Setup workspace
-              uses: ./.github/actions/setup
+    format:
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+        name: Format
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+            - uses: ./.github/actions/turbo-cache
+              with:
+                  turbo_token: ${{ secrets.TURBO_TOKEN }}
+                  turbo_team: ${{ vars.TURBO_TEAM }}
+                  enable_fallback_cache: 'true'
+            - uses: ./.github/actions/setup
+            - run: pnpm fmt:check
 
-            - name: Check workspace catalog
-              run: pnpm check:catalog
+    typecheck:
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+        name: Type check
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+            - uses: ./.github/actions/turbo-cache
+              with:
+                  turbo_token: ${{ secrets.TURBO_TOKEN }}
+                  turbo_team: ${{ vars.TURBO_TEAM }}
+                  enable_fallback_cache: 'true'
+            - uses: ./.github/actions/setup
+            - run: pnpm tc
 
-            - name: Lint
-              run: pnpm lint
+    test:
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+        name: Test
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+            - uses: ./.github/actions/turbo-cache
+              with:
+                  turbo_token: ${{ secrets.TURBO_TOKEN }}
+                  turbo_team: ${{ vars.TURBO_TEAM }}
+                  enable_fallback_cache: 'true'
+            - uses: ./.github/actions/setup
+            # raising this concurrency starves the eslint and prettier fixture suites into timeouts
+            - run: pnpm turbo test --concurrency=2
 
-            - name: Check formatting
-              run: pnpm fmt:check
-
-            - name: Type check
-              run: pnpm tc
-
-            - name: Test
-              run: pnpm turbo test --concurrency=2
-
-            - name: Build
-              run: pnpm build
+    build:
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+        name: Build
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+            - uses: ./.github/actions/turbo-cache
+              with:
+                  turbo_token: ${{ secrets.TURBO_TOKEN }}
+                  turbo_team: ${{ vars.TURBO_TEAM }}
+                  enable_fallback_cache: 'true'
+            - uses: ./.github/actions/setup
+            - run: pnpm build
               env:
                   SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
+            - run: pnpm turbo docs:extract
 
-            - name: Generate docs manifest
-              run: pnpm turbo docs:extract
-
-            - name: Audit for high severity vulnerabilities
-              if: github.event_name == 'push'
-              run: pnpm audit --prod --audit-level=high
+    audit:
+        if: github.event_name == 'push'
+        name: Audit
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  persist-credentials: false
+            - uses: ./.github/actions/setup
+            - run: pnpm audit --prod --audit-level=high
