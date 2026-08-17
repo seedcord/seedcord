@@ -57,6 +57,8 @@ export interface DocManifestPackage {
     entryPoints: string[];
     entries: DocManifestEntry[];
     output: string | null;
+    /** Root model widened with every subpath symbol. Sibling packages resolve against this one. */
+    sharedModel?: string;
     warnings: string[];
     errors: string[];
     warningCount: number;

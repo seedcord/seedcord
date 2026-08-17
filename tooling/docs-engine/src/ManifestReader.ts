@@ -77,6 +77,7 @@ function normalizePackage(value: unknown): DocManifestPackage | null {
         entryPoints,
         entries: normalizeEntries(pkg.entries),
         output: typeof pkg.output === 'string' ? pkg.output : null,
+        ...(typeof pkg.sharedModel === 'string' && { sharedModel: pkg.sharedModel }),
         warnings,
         errors,
         warningCount,

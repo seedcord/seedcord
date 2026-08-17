@@ -85,6 +85,8 @@ export interface PackageDocResult {
     entryPoints: string[];
     /** Primary `src` entry (relative to the package dir) the source pass walks. this matches AE's entry. */
     sourceEntry?: string;
+    /** Root model widened with every subpath symbol, written only when the package has subpaths. */
+    sharedModelPath?: string;
     outputPath: string | null;
     warnings: string[];
     errors: string[];
