@@ -6,7 +6,6 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
-import chalk from 'chalk';
 import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
@@ -136,12 +135,12 @@ export class CommandRegistry implements Initializeable, HmrAware {
     /** @internal */
     public async refresh(shouldRefresh = true): Promise<void> {
         if (!shouldRefresh) {
-            this.logger.debug(chalk.italic('Command refresh cancelled.'));
+            this.logger.debug(paint.italic('Command refresh cancelled.'));
             this.pendingEvents.clear();
             return;
         }
 
-        this.logger.debug(chalk.italic('Refreshing commands...'));
+        this.logger.debug(paint.italic('Refreshing commands...'));
         for (const event of this.pendingEvents.values()) {
             await this.hmrHandler?.handle(event);
         }

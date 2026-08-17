@@ -6,7 +6,6 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import chalk from 'chalk';
 
 import { withTimeout } from './withTimeout';
 
@@ -36,7 +35,7 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
 
         tasks.push({ name: taskName, task, timeout: timeoutMs });
         this.logger.debug(
-            `${chalk.italic('Added')} ${this.getTaskType()} task ${paint.sky.bold(taskName)} to phase ${paint.iris.bold(this.phaseEnum[phase])}`
+            `${paint.italic('Added')} ${this.getTaskType()} task ${paint.sky.bold(taskName)} to phase ${paint.iris.bold(this.phaseEnum[phase])}`
         );
     }
 
@@ -53,7 +52,7 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         const removed = initialLength !== filteredTasks.length;
         if (removed) {
             this.logger.debug(
-                `${chalk.italic('Removed')} ${this.getTaskType()} task ${paint.sky.bold(taskName)} from phase ${paint.iris.bold(this.phaseEnum[phase])}`
+                `${paint.italic('Removed')} ${this.getTaskType()} task ${paint.sky.bold(taskName)} from phase ${paint.iris.bold(this.phaseEnum[phase])}`
             );
         }
 
@@ -78,7 +77,7 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
             return rejected;
         }, []);
         if (reasons.length > 0) {
-            // chalk here would leak ANSI codes into the serialized error message (the unknown-exception webhook)
+            // paint here would leak ANSI codes into the serialized error message (the unknown-exception webhook)
             throw new SeedcordAggregateError(SeedcordErrorCode.LifecyclePhaseFailures, reasons, [
                 this.phaseEnum[phase],
                 reasons.length
@@ -92,19 +91,19 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
 
     protected async runTaskWithTimeout(phase: TPhase, task: LifecycleTask): Promise<void> {
         this.logger.trace(
-            `${chalk.italic('Starting')} task ${paint.sky.bold(task.name)} in phase ${paint.iris.bold(this.phaseEnum[phase])}`
+            `${paint.italic('Starting')} task ${paint.sky.bold(task.name)} in phase ${paint.iris.bold(this.phaseEnum[phase])}`
         );
 
         try {
             await withTimeout(task.name, task.task, task.timeout);
 
             this.logger.trace(
-                `${chalk.italic('Completed')} task ${paint.sky.bold(task.name)} in phase ${paint.iris.bold(this.phaseEnum[phase])}`
+                `${paint.italic('Completed')} task ${paint.sky.bold(task.name)} in phase ${paint.iris.bold(this.phaseEnum[phase])}`
             );
         } catch (error) {
             if (this.isAborted()) return;
             this.logger.error(
-                `${chalk.italic('Failed')} task ${paint.sky.bold(task.name)} in phase ${paint.iris.bold(this.phaseEnum[phase])}:`,
+                `${paint.italic('Failed')} task ${paint.sky.bold(task.name)} in phase ${paint.iris.bold(this.phaseEnum[phase])}:`,
                 error
             );
             throw error;

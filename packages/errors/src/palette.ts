@@ -18,5 +18,9 @@ export const paint = {
     flesh: chalk.hex(BRAND.flesh),
     rind: chalk.hex(BRAND.rind),
     pith: chalk.hex(BRAND.pith),
-    mute: chalk.dim // context around the subject
+    mute: chalk.dim, // context around the subject
+    // weight and shape
+    bold: chalk.bold,
+    italic: chalk.italic,
+    underline: chalk.underline
 } as const;

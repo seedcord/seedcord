@@ -5,7 +5,6 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
-import chalk from 'chalk';
 import { Envapter } from 'envapt';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
@@ -104,7 +103,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private warnMissing(names: Iterable<string>, map: RouteMap, label: string, decorator: string): void {
         for (const name of names) {
             if (map.has(name)) continue;
-            this.logger.warn(`${label} ${paint.sky.bold(name)} has no registered ${chalk.bold(decorator)} handler.`);
+            this.logger.warn(`${label} ${paint.sky.bold(name)} has no registered ${paint.bold(decorator)} handler.`);
         }
     }
 
