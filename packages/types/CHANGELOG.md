@@ -1,5 +1,19 @@
 # @seedcord/types
 
+## 0.9.0-next.0
+
+### Minor Changes
+
+- e11cbb3: **BREAKING:** `paint` now comes from `@seedcord/errors`, and `ILogSink`, `LogLevel`, `LogRecord`, `LogSinkHandle`, `LoggerConfig`, `LoggerChannelId`, and `FrameworkChannel` now come from `@seedcord/types`. `@seedcord/logger` no longer re-exports them. Both transports still expose every one of these.
+
+### Patch Changes
+
+- f39cde0: These packages now ship ESM only. `eslint-plugin-discordjs` keeps its CommonJS build.
+- a259cdc: Use `#` instead of `@` for tsconfig path aliases.
+- a8d7b5f: Rewrote package descriptions for all packages. Also added keywords.
+- 660a94d: Every package now declares Apache-2.0 along with its homepage, issue tracker, author, and funding link.
+- c50ad6c: Every package now has a README describing that package, with badges and an install line. Seven of them previously shipped a copy of the root README that named no package at all.
+
 ## 0.8.2
 
 ### Patch Changes
