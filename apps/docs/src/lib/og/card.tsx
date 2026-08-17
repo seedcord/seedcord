@@ -1,12 +1,8 @@
 /* eslint-disable no-magic-numbers -- OG card layout, the pixel and typography values are intrinsic to the 1200x630 Satori canvas */
-import { MaterwelonGlyph } from '@seedcord/ui/MaterwelonGlyph';
-import { GLYPH_SIZE, OG_SIZE } from '@seedcord/ui/og';
+import { OgFooter, OgFrame, OgMark } from '@seedcord/ui/OgCard';
 import { BRAND } from '@seedcord/ui/palette';
 
 import type { CSSProperties, ReactElement } from 'react';
-
-const PANEL_W = OG_SIZE.width - 96;
-const PANEL_H = OG_SIZE.height - 96;
 
 export interface DocOgCardProps {
     pill: string;
@@ -14,36 +10,6 @@ export interface DocOgCardProps {
     meta: readonly string[];
     name: string;
     description: string;
-}
-
-// a seed-dark copy offset behind the glyph fakes the hard drop-shadow (Satori has no filter)
-function Mark({ width }: { width: number }): ReactElement {
-    const ink = BRAND.seedDark;
-    const height = (width * GLYPH_SIZE.height) / GLYPH_SIZE.width;
-    const off = Math.max(2, Math.round(width * 0.06));
-    return (
-        <div style={{ position: 'relative', display: 'flex', flexShrink: 0, width, height }}>
-            <div
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    display: 'flex',
-                    transform: `translate(${off}px, ${off}px)`
-                }}
-            >
-                <MaterwelonGlyph
-                    width={width}
-                    fills={{ flesh: ink, seeds: ink, rind: ink, pith: ink }}
-                    style={{ opacity: 0.85 }}
-                />
-            </div>
-            <MaterwelonGlyph
-                width={width}
-                fills={{ flesh: BRAND.flesh, seeds: BRAND.seedDark, rind: BRAND.rind, pith: BRAND.pith }}
-            />
-        </div>
-    );
 }
 
 const badgeBase: CSSProperties = {
@@ -69,18 +35,9 @@ function Badge({ label }: { label: string }): ReactElement {
 
 function Footer(): ReactElement {
     return (
-        <div
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                height: 84,
-                padding: '0 46px',
-                borderTop: `3px solid ${BRAND.seedDark}`
-            }}
-        >
+        <OgFooter height={84} paddingX={46}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                <Mark width={40} />
+                <OgMark width={40} offset={2} />
                 <div
                     style={{
                         display: 'flex',
@@ -97,7 +54,7 @@ function Footer(): ReactElement {
             <div style={{ display: 'flex', fontFamily: 'JetBrains Mono', fontSize: 20, color: BRAND.seedDark }}>
                 docs.seedcord.org
             </div>
-        </div>
+        </OgFooter>
     );
 }
 
@@ -156,44 +113,9 @@ function CardBody({ pill, accent, meta, name, description }: DocOgCardProps): Re
 // no code block here, so a long signature can't overflow the layout
 export function DocOgCard(props: DocOgCardProps): ReactElement {
     return (
-        <div
-            style={{
-                position: 'relative',
-                display: 'flex',
-                width: OG_SIZE.width,
-                height: OG_SIZE.height,
-                backgroundColor: BRAND.pith
-            }}
-        >
-            <div
-                style={{
-                    position: 'absolute',
-                    left: 48,
-                    top: 48,
-                    width: PANEL_W,
-                    height: PANEL_H,
-                    backgroundColor: BRAND.seedDark,
-                    borderRadius: 4,
-                    transform: 'translate(10px, 10px)'
-                }}
-            />
-            <div
-                style={{
-                    position: 'absolute',
-                    left: 48,
-                    top: 48,
-                    width: PANEL_W,
-                    height: PANEL_H,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    backgroundColor: BRAND.pith,
-                    border: `3px solid ${BRAND.seedDark}`,
-                    borderRadius: 4
-                }}
-            >
-                <CardBody {...props} />
-                <Footer />
-            </div>
-        </div>
+        <OgFrame>
+            <CardBody {...props} />
+            <Footer />
+        </OgFrame>
     );
 }

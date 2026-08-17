@@ -50,6 +50,12 @@
                 "default": "./dist/Materwelon.mjs"
             }
         },
+        "./OgCard": {
+            "import": {
+                "types": "./dist/OgCard.d.mts",
+                "default": "./dist/OgCard.mjs"
+            }
+        },
         "./styles/globals.css": "./src/styles/globals.css",
         "./styles/tokens.css": "./src/styles/tokens.css"
     },

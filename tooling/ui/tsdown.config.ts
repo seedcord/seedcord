@@ -7,7 +7,8 @@ export default createTsdownConfig({
         'src/palette.ts',
         'src/MaterwelonGlyph.tsx',
         'src/MaterwelonFavicon.tsx',
-        'src/Materwelon.tsx'
+        'src/Materwelon.tsx',
+        'src/OgCard.tsx'
     ],
     format: ['esm'],
     platform: 'neutral',
