@@ -33,10 +33,7 @@
         "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
         "fmt": "prettier --write '*.{mjs,ts,json,md}' --cache",
         "fmt:check": "prettier --check '*.{mjs,ts,json,md}' --cache",
-        "tc": "tsgo --noEmit",
-        "test": "vitest run --passWithNoTests",
-        "test:watch": "vitest dev --passWithNoTests",
-        "coverage": "vitest run --coverage --passWithNoTests"
+        "tc": "tsgo --noEmit"
     },
     "dependencies": {
         "tsdown": "catalog:deps"
