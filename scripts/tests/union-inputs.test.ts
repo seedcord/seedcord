@@ -17,7 +17,12 @@ function remoteWith(...packages: PackageVersionsInput[]): IndexJson {
 function emit(
     folder: string,
     version: string,
-    opts: { fullName?: string; entities?: EmittedEntry['entities']; description?: string } = {}
+    opts: {
+        fullName?: string;
+        entities?: EmittedEntry['entities'];
+        description?: string;
+        workspace?: string;
+    } = {}
 ): EmittedEntry {
     return {
         folder,
@@ -25,7 +30,8 @@ function emit(
         version,
         channel: version.includes('-') ? 'prerelease' : 'stable',
         entities: opts.entities,
-        description: opts.description
+        description: opts.description,
+        workspace: opts.workspace
     };
 }
 
@@ -170,5 +176,46 @@ describe('buildUnionInputs', () => {
         const inputs = buildUnionInputs(null, [emit('seedcord', '0.11.0-next.0')]);
 
         expect(inputs[0]).not.toHaveProperty('description');
+    });
+
+    it('keeps the remote workspace for a package that was not republished', () => {
+        const remote = remoteWith(
+            { folder: 'seedcord', fullName: 'seedcord', versions: ['0.10.6'] },
+            { folder: 'utils', fullName: '@seedcord/utils', versions: ['1.0.0'], workspace: 'packages' }
+        );
+
+        const inputs = buildUnionInputs(remote, [emit('seedcord', '0.10.7')]);
+
+        expect(inputs.find((input) => input.folder === 'utils')?.workspace).toBe('packages');
+    });
+
+    it('carries the emitted workspace through to the rebuilt index', () => {
+        const inputs = buildUnionInputs(null, [
+            emit('mongoose', '0.1.0', { fullName: '@seedcord/plugin-mongoose', workspace: 'plugins' })
+        ]);
+
+        const rebuilt = buildIndex(inputs, { updatedAt: UPDATED_AT });
+        expect(rebuilt.packages.mongoose?.workspace).toBe('plugins');
+    });
+
+    it('overwrites the workspace for a republished package with the freshly emitted one', () => {
+        const remote = remoteWith({
+            folder: 'utils',
+            fullName: '@seedcord/utils',
+            versions: ['1.0.0'],
+            workspace: 'tooling'
+        });
+
+        const inputs = buildUnionInputs(remote, [
+            emit('utils', '1.0.1', { fullName: '@seedcord/utils', workspace: 'packages' })
+        ]);
+
+        expect(inputs.find((input) => input.folder === 'utils')?.workspace).toBe('packages');
+    });
+
+    it('omits the workspace key when neither remote nor emitted supply one', () => {
+        const inputs = buildUnionInputs(null, [emit('seedcord', '0.11.0-next.0')]);
+
+        expect(inputs[0]).not.toHaveProperty('workspace');
     });
 });

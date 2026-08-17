@@ -11,7 +11,15 @@ import {
     serializeProject
 } from '@seedcord/docs-engine';
 
-import type { DocProjectFile, IndexJson, PackageReexports, PackageVersionsInput } from '@seedcord/docs-engine';
+import { workspaceOf } from './workspace-of';
+
+import type {
+    DocProjectFile,
+    IndexJson,
+    PackageReexports,
+    PackageSourceIndex,
+    PackageVersionsInput
+} from '@seedcord/docs-engine';
 
 // `--fixtures` adds synthetic versions per package so the version dropdown is testable locally.
 
@@ -72,15 +80,13 @@ async function writeArtifacts(index: IndexJson, projects: readonly ProjectArtifa
     }
 }
 
-// manifest.json records source files relative to the repo root. first segment is the workspace glob
 async function readWorkspaces(): Promise<Map<string, string>> {
     const raw = await readFile(path.join(GENERATED_ROOT, 'manifest.json'), 'utf8');
-    const manifest = JSON.parse(raw) as { packages?: { name: string; sources?: Record<string, { file: string }[]> }[] };
+    const manifest = JSON.parse(raw) as { packages?: { name: string; sources?: PackageSourceIndex }[] };
     const workspaces = new Map<string, string>();
 
     for (const pkg of manifest.packages ?? []) {
-        const file = Object.values(pkg.sources ?? {})[0]?.[0]?.file;
-        const workspace = file?.split('/')[0];
+        const workspace = workspaceOf(pkg.sources);
         if (workspace) workspaces.set(pkg.name, workspace);
     }
 

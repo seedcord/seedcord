@@ -23,6 +23,7 @@ import {
     r2ConfigFromEnv
 } from './artifacts-repo';
 import { buildUnionInputs } from './union-inputs';
+import { workspaceOf } from './workspace-of';
 
 import type { RemoteRef } from './artifacts-repo';
 import type { EmittedEntry } from './union-inputs';
@@ -148,7 +149,8 @@ async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promis
         version: pkg.version,
         channel,
         entities: found.directory.toneMap(),
-        description: found.manifest.description
+        description: found.manifest.description,
+        workspace: workspaceOf(found.manifest.sources)
     };
 }
 
