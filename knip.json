@@ -31,6 +31,20 @@
                 "src/**/*.{ts,tsx,css}"
             ]
         },
+        "apps/guide": {
+            "entry": [
+                "src/app/**/{page,layout,route,not-found}.{ts,tsx}"
+            ],
+            "project": [
+                "src/**/*.{ts,tsx,css}"
+            ],
+            "ignoreDependencies": [
+                "@seedcord/core",
+                "@seedcord/gateway",
+                "discord.js",
+                "twoslash"
+            ]
+        },
         "apps/home": {
             "entry": [
                 "src/app/**/{page,layout,route,not-found}.{ts,tsx}"

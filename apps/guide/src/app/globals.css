@@ -1,4 +1,7 @@
 @import '@seedcord/ui/styles/globals.css';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+@import 'fumadocs-twoslash/twoslash.css';
 
 @layer base {
     body {

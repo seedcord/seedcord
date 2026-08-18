@@ -1,5 +1,6 @@
 import { BRAND } from '@seedcord/ui/palette';
 import { cn } from '@seedcord/ui';
+import { RootProvider } from 'fumadocs-ui/provider/next';
 import { Hanken_Grotesk, JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
@@ -32,13 +33,19 @@ interface RootLayoutProps {
 
 function RootLayout({ children }: RootLayoutProps): ReactNode {
     return (
-        <html lang="en">
+        <html lang="en" suppressHydrationWarning>
             <body
                 // this avoids a false mismatch warning because browser extensions mutate body attributes before hydration
                 suppressHydrationWarning
-                className={cn(sans.variable, display.variable, monoCode.variable, 'antialiased')}
+                className={cn(
+                    sans.variable,
+                    display.variable,
+                    monoCode.variable,
+                    'antialiased',
+                    'flex min-h-screen flex-col'
+                )}
             >
-                {children}
+                <RootProvider>{children}</RootProvider>
             </body>
         </html>
     );

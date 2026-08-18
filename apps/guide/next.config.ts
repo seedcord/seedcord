@@ -1,8 +1,12 @@
 import path from 'node:path';
 
+import { createMDX } from 'fumadocs-mdx/next';
+
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+    // twoslash runs the real typescript compiler
+    serverExternalPackages: ['typescript', 'twoslash'],
     // static export served by Cloudflare Workers static assets (see wrangler.jsonc + worker.ts)
     output: 'export',
     trailingSlash: true,
@@ -12,4 +16,4 @@ const nextConfig: NextConfig = {
     turbopack: {}
 };
 
-export default nextConfig;
+export default createMDX()(nextConfig);
