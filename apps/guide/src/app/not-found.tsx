@@ -1,7 +1,7 @@
-import { Placeholder } from '#components/Placeholder';
+import { NotFoundPanel } from '#components/NotFoundPanel';
 
 import type { ReactNode } from 'react';
 
 export default function NotFound(): ReactNode {
-    return <Placeholder />;
+    return <NotFoundPanel />;
 }

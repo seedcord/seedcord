@@ -15,13 +15,14 @@
         "postinstall": "fumadocs-mdx",
         "lint": "eslint 'src/**/*.{ts,tsx}' source.config.ts --cache",
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' source.config.ts --fix --cache",
-        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' --cache",
-        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md,css}' --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' source.config.ts --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' source.config.ts --cache",
         "tc": "fumadocs-mdx && tsgo --noEmit"
     },
     "dependencies": {
         "@seedcord/core": "workspace:^",
         "@seedcord/gateway": "workspace:^",
+        "@seedcord/http": "workspace:^",
         "@seedcord/ui": "workspace:^",
         "discord.js": "catalog:peer",
         "fumadocs-core": "16.14.4",

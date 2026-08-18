@@ -8,7 +8,7 @@ import { createFileSystemTypesCache } from 'fumadocs-twoslash/cache-fs';
 import type { TwoslashTypesCache } from 'fumadocs-twoslash';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const SALTED_PACKAGES = ['@seedcord/gateway', '@seedcord/core'];
+const SALTED_PACKAGES = ['@seedcord/gateway', '@seedcord/http', '@seedcord/core'];
 const SALT_LENGTH = 12;
 
 // the stock cache keys on the snippet text alone

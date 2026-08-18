@@ -41,6 +41,7 @@
             "ignoreDependencies": [
                 "@seedcord/core",
                 "@seedcord/gateway",
+                "@seedcord/http",
                 "discord.js",
                 "twoslash"
             ]

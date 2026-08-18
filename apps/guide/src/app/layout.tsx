@@ -45,7 +45,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                     'flex min-h-screen flex-col'
                 )}
             >
-                <RootProvider>{children}</RootProvider>
+                <RootProvider theme={{ attribute: 'data-theme', storageKey: 'theme' }}>{children}</RootProvider>
             </body>
         </html>
     );

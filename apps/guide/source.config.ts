@@ -1,3 +1,4 @@
+import { seedcordBrandDark, seedcordBrandLight } from '@seedcord/ui';
 import { rehypeCodeDefaultOptions } from 'fumadocs-core/mdx-plugins';
 import { defineConfig } from 'fumadocs-mdx/config';
 import { transformerTwoslash } from 'fumadocs-twoslash';
@@ -11,7 +12,7 @@ const twoslashEnabled = process.env.TWOSLASH !== '0';
 export default defineConfig({
     mdxOptions: {
         rehypeCodeOptions: {
-            themes: { light: 'github-light', dark: 'github-dark' },
+            themes: { light: seedcordBrandLight, dark: seedcordBrandDark },
             transformers: [
                 ...(rehypeCodeDefaultOptions.transformers ?? []),
                 ...(twoslashEnabled ? [transformerTwoslash({ typesCache: createSaltedTypesCache() })] : [])

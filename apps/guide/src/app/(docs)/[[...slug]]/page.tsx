@@ -1,7 +1,7 @@
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/layouts/docs/page';
 import { notFound } from 'next/navigation';
 
-import { getMDXComponents } from '#components/mdx';
+import { mdxComponents } from '#lib/mdxComponents';
 import { source } from '#lib/source';
 
 import type { Metadata } from 'next';
@@ -23,7 +23,7 @@ export default async function Page(props: PageParams): Promise<ReactNode> {
             <DocsTitle>{page.data.title}</DocsTitle>
             <DocsDescription>{page.data.description}</DocsDescription>
             <DocsBody>
-                <MDX components={getMDXComponents()} />
+                <MDX components={mdxComponents} />
             </DocsBody>
         </DocsPage>
     );

@@ -4,6 +4,6 @@ import { defineDocs } from 'fumadocs-mdx/macro';
 const docs = defineDocs({ dir: 'content/docs' });
 
 export const source = loader({
-    baseUrl: '/docs',
+    baseUrl: '/',
     source: docs.toFumadocsSource()
 });

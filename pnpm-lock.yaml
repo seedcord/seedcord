@@ -416,6 +416,9 @@ importers:
       '@seedcord/gateway':
         specifier: workspace:^
         version: link:../../packages/gateway
+      '@seedcord/http':
+        specifier: workspace:^
+        version: link:../../packages/http
       '@seedcord/ui':
         specifier: workspace:^
         version: link:../../tooling/ui
