@@ -2,7 +2,7 @@
 
 import { SegmentedControl } from '@seedcord/ui';
 
-import type { SegmentedControlOption } from '@seedcord/ui';
+import type { SegmentedControlOption, SegmentedControlSize } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
 export type Transport = 'gateway' | 'http';
@@ -15,15 +15,16 @@ const TRANSPORT_OPTIONS: readonly SegmentedControlOption<Transport>[] = [
 export interface TransportControlProps {
     value: Transport;
     onChange: (next: Transport) => void;
+    size?: SegmentedControlSize;
 }
 
-export function TransportControl({ value, onChange }: TransportControlProps): ReactElement {
+export function TransportControl({ value, onChange, size = 'md' }: TransportControlProps): ReactElement {
     return (
         <SegmentedControl
             options={TRANSPORT_OPTIONS}
             value={value}
             onChange={onChange}
-            size="md"
+            size={size}
             aria-label="Transport shown in code samples"
         />
     );

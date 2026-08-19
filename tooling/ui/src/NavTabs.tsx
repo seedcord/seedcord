@@ -8,7 +8,7 @@ import { layoutSpring } from './lib/motion';
 import { PlainLink } from './lib/navLink';
 
 import type { NavLinkComponent } from './lib/navLink';
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 export interface NavTabItem {
     label: string;
@@ -29,11 +29,12 @@ function isActive(href: string, current: string): boolean {
 export interface NavTabsProps {
     items: readonly NavTabItem[];
     activeHref: string;
+    trailing?: ReactNode;
     linkAs?: NavLinkComponent | undefined;
     className?: string | undefined;
 }
 
-export function NavTabs({ items, activeHref, linkAs, className }: NavTabsProps): ReactElement {
+export function NavTabs({ items, activeHref, trailing, linkAs, className }: NavTabsProps): ReactElement {
     const Link = linkAs ?? PlainLink;
     const reducedMotion = useReducedMotion() ?? false;
     const groupId = useId();
@@ -70,6 +71,7 @@ export function NavTabs({ items, activeHref, linkAs, className }: NavTabsProps):
                         </Link>
                     );
                 })}
+                {trailing ? <div className={cn('ml-auto flex shrink-0 items-center pl-4')}>{trailing}</div> : null}
             </nav>
         </LayoutGroup>
     );
