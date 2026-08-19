@@ -2,6 +2,7 @@
 @import 'tw-animate-css';
 @import './tokens.css';
 @import './utilities.css';
+@import './shiki.css';
 
 /* scan the package's own source for class names — apps that consume
    @seedcord/ui via this entry inherit the scan */
