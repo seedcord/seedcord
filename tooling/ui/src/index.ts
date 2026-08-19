@@ -34,6 +34,7 @@ export * from './lib/motion';
 export * from './lib/navLink';
 export * from './lib/tw';
 export * from './lib/useIsMac';
+export * from './lib/useRovingList';
 export * from './lib/useSearchHotkey';
 export * from './lib/useTimedToggle';
 export type { CodeRepresentation } from './types/CodeRepresentation';
