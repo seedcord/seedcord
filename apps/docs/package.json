@@ -29,7 +29,7 @@
         "@seedcord/types": "workspace:^",
         "@seedcord/ui": "workspace:^",
         "@shikijs/langs": "catalog:deps",
-        "@shikijs/themes": "^4.4.1",
+        "@shikijs/themes": "^4.4.3",
         "@tailwindcss/postcss": "catalog:deps",
         "envapt": "catalog:peer",
         "isomorphic-dompurify": "^3.21.0",

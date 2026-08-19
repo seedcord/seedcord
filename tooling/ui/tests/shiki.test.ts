@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    isHighlightable,
     highlightInlineToHtml,
     highlightMemberToHtml,
     highlightSignatureToHtml,
@@ -70,6 +71,16 @@ describe('the wrapped fragment helpers', () => {
         const html = await highlightTypeParamToHtml('T extends string = never');
 
         expect(lightText(html ?? '')).toBe('T extends string = never');
+    });
+});
+
+describe('isHighlightable', () => {
+    it.each(['ts', 'typescript', 'tsx', 'js', 'javascript', 'jsx', 'json', 'bash'])('accepts %s', (lang) => {
+        expect(isHighlightable(lang)).toBe(true);
+    });
+
+    it.each(['python', 'rust', 'go', 'css', ''])('rejects %s, which the highlighter never loaded', (lang) => {
+        expect(isHighlightable(lang)).toBe(false);
     });
 });
 

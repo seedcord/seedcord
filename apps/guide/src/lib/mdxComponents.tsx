@@ -1,5 +1,5 @@
 import { CodeBlock, cn } from '@seedcord/ui';
-import { highlightToHtml } from '@seedcord/ui/shiki';
+import { highlightToHtml, isHighlightable } from '@seedcord/ui/shiki';
 
 import type { MDXComponents } from 'mdx/types';
 import type { BundledLanguage } from 'shiki';
@@ -11,20 +11,22 @@ interface FenceProps {
     children?: ReactNode;
 }
 
-interface CodeElementProps {
-    className?: string;
-    children?: ReactNode;
-}
-
 // mdx renders a fence as <pre><code className="language-x">
 function readFence(children: ReactNode): { code: string; lang: BundledLanguage } | null {
     if (typeof children !== 'object' || children === null || !('props' in children)) return null;
 
-    const { className, children: code } = children.props as CodeElementProps;
+    const props = children.props as Record<string, unknown>;
+    const code = props.children;
     if (typeof code !== 'string') return null;
 
-    const named = className?.split(/\s+/).find((name) => name.startsWith(LANGUAGE_PREFIX));
-    return { code: code.replace(/\n$/, ''), lang: (named?.slice(LANGUAGE_PREFIX.length) ?? 'ts') as BundledLanguage };
+    const className = typeof props.className === 'string' ? props.className : '';
+    const named = className
+        .split(/\s+/)
+        .find((name) => name.startsWith(LANGUAGE_PREFIX))
+        ?.slice(LANGUAGE_PREFIX.length);
+
+    // an unloaded grammar falls back, since the highlighter carries six
+    return { code: code.replace(/\n$/, ''), lang: named && isHighlightable(named) ? named : 'ts' };
 }
 
 async function Fence({ children }: FenceProps): Promise<ReactElement> {
