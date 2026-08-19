@@ -28,7 +28,7 @@
         "@seedcord/rate-limiter": "workspace:^",
         "@seedcord/types": "workspace:^",
         "@seedcord/ui": "workspace:^",
-        "@shikijs/langs": "^4.4.1",
+        "@shikijs/langs": "catalog:deps",
         "@shikijs/themes": "^4.4.1",
         "@tailwindcss/postcss": "catalog:deps",
         "envapt": "catalog:peer",

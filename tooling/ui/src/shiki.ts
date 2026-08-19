@@ -1,4 +1,4 @@
-import { seedcordBrandDark, seedcordBrandLight } from '@seedcord/ui';
+import { seedcordBrandDark, seedcordBrandLight } from './brandTheme';
 import langBash from '@shikijs/langs/bash';
 import langJs from '@shikijs/langs/javascript';
 import langJson from '@shikijs/langs/json';
