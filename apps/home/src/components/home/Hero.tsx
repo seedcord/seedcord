@@ -12,7 +12,7 @@ export function Hero(): ReactNode {
         <section className={cn('relative overflow-hidden border-b-[3px] border-(--seed-dark) bg-(--pith)')}>
             <div
                 className={cn(
-                    'mx-auto grid max-w-7xl items-center gap-8 px-5 py-12 lg:grid-cols-[1.05fr_0.95fr] lg:py-16'
+                    'mx-auto grid max-w-(--shell-max) items-center gap-8 px-5 py-12 lg:grid-cols-[1.05fr_0.95fr] lg:py-16'
                 )}
             >
                 <div className={cn('relative z-10')}>

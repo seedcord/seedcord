@@ -2,6 +2,7 @@
 
 import {
     Button,
+    CodeBlock,
     GithubIcon,
     Icon,
     Navbar,
@@ -10,7 +11,6 @@ import {
     SearchField,
     SearchTrigger,
     SegmentedControl,
-    SettingsPopover,
     SiteSwitcher,
     ThemeToggle,
     cn,
@@ -40,13 +40,6 @@ const CONTEXT_OPTIONS: readonly SegmentedControlOption<SiteContext>[] = [
     { value: 'reference', label: 'reference' }
 ];
 
-type TransportPlacement = 'tabs' | 'settings';
-
-const PLACEMENT_OPTIONS: readonly SegmentedControlOption<TransportPlacement>[] = [
-    { value: 'tabs', label: 'in the tabs row' },
-    { value: 'settings', label: 'in settings' }
-];
-
 const GUIDE_DESTINATIONS: readonly SiteDestination[] = [
     { label: 'Home', href: HOME_URL },
     { label: 'Guide', href: SITE_URL, current: true },
@@ -69,7 +62,26 @@ function GithubLink(): ReactElement {
     );
 }
 
-function SamplePage({ context }: { context: SiteContext }): ReactElement {
+function sampleCode(transport: Transport): string {
+    return [
+        `import { SlashHandler, SlashRoute } from '@seedcord/${transport}';`,
+        '',
+        "@SlashRoute('maintenance')",
+        "export class Maintenance extends SlashHandler<'maintenance'> {",
+        '    public async execute(): Promise<void> {',
+        "        const notify = this.options.getUser('notify');",
+        '    }',
+        '}'
+    ].join('\n');
+}
+
+interface SamplePageProps {
+    context: SiteContext;
+    transport: Transport;
+    onTransportChange: (next: Transport) => void;
+}
+
+function SamplePage({ context, transport, onTransportChange }: SamplePageProps): ReactElement {
     const guide = context === 'guide';
 
     return (
@@ -87,6 +99,14 @@ function SamplePage({ context }: { context: SiteContext }): ReactElement {
                     Body copy sits here so the bar above has something to sit against. The point of this block is the
                     spacing between the bar and the first line of a page, and how the title reads under it.
                 </p>
+                {guide ? (
+                    <CodeBlock
+                        className={cn('mt-6')}
+                        label="src/handlers/Maintenance.ts"
+                        representation={{ text: sampleCode(transport), html: null }}
+                        actions={<TransportControl value={transport} onChange={onTransportChange} size="sm" />}
+                    />
+                ) : null}
             </div>
         </div>
     );
@@ -198,8 +218,6 @@ const CONTROL_LABEL = 'text-xs font-semibold tracking-widest text-(--text-faint)
 interface PreviewControlsProps {
     context: SiteContext;
     onContextChange: (next: SiteContext) => void;
-    placement: TransportPlacement;
-    onPlacementChange: (next: TransportPlacement) => void;
     activeHref: string;
     onActiveHrefChange: (next: string) => void;
 }
@@ -207,8 +225,6 @@ interface PreviewControlsProps {
 function PreviewControls({
     context,
     onContextChange,
-    placement,
-    onPlacementChange,
     activeHref,
     onActiveHrefChange
 }: PreviewControlsProps): ReactElement {
@@ -224,14 +240,6 @@ function PreviewControls({
             />
             {context === 'guide' ? (
                 <>
-                    <span className={cn(CONTROL_LABEL)}>transport</span>
-                    <SegmentedControl
-                        options={PLACEMENT_OPTIONS}
-                        value={placement}
-                        onChange={onPlacementChange}
-                        size="sm"
-                        aria-label="Where the transport control sits"
-                    />
                     <span className={cn(CONTROL_LABEL)}>active tab</span>
                     <div className={cn('flex flex-wrap gap-1')}>
                         {GUIDE_TABS.map((tab) => (
@@ -256,12 +264,10 @@ function NavbarPreview(): ReactElement {
     const [transport, setTransport] = useState<Transport>('gateway');
     const [activeHref, setActiveHref] = useState('/commands');
     const [searchOpen, setSearchOpen] = useState(false);
-    const [transportPlacement, setTransportPlacement] = useState<TransportPlacement>('tabs');
 
     const guide = context === 'guide';
     const searchLabel = guide ? 'Search the guide' : 'Search docs';
     const openSearch = useCallback(() => setSearchOpen(true), []);
-    const transportProps = { value: transport, onChange: setTransport };
 
     useSearchHotkey(useCallback(() => setSearchOpen((prev) => !prev), []));
 
@@ -270,8 +276,6 @@ function NavbarPreview(): ReactElement {
             <PreviewControls
                 context={context}
                 onContextChange={setContext}
-                placement={transportPlacement}
-                onPlacementChange={setTransportPlacement}
                 activeHref={activeHref}
                 onActiveHrefChange={setActiveHref}
             />
@@ -290,35 +294,12 @@ function NavbarPreview(): ReactElement {
                     actions={
                         <>
                             <ThemeToggle />
-                            <SettingsPopover label="Open guide settings">
-                                {transportPlacement === 'settings' ? (
-                                    <div className={cn('flex items-center justify-between gap-3')}>
-                                        <span className={cn('text-(--text)')}>Transport</span>
-                                        <TransportControl {...transportProps} />
-                                    </div>
-                                ) : (
-                                    <p className={cn('text-(--text-muted)')}>Nothing here yet.</p>
-                                )}
-                            </SettingsPopover>
                             <GithubLink />
                         </>
                     }
-                    tabs={
-                        guide ? (
-                            <NavTabs
-                                items={GUIDE_TABS}
-                                activeHref={activeHref}
-                                linkAs={Link}
-                                trailing={
-                                    transportPlacement === 'tabs' ? (
-                                        <TransportControl {...transportProps} size="sm" />
-                                    ) : null
-                                }
-                            />
-                        ) : null
-                    }
+                    tabs={guide ? <NavTabs items={GUIDE_TABS} activeHref={activeHref} linkAs={Link} /> : null}
                 />
-                <SamplePage context={context} />
+                <SamplePage context={context} transport={transport} onTransportChange={setTransport} />
             </section>
 
             <SearchPreview open={searchOpen} onOpenChange={setSearchOpen} label={searchLabel} />

@@ -33,8 +33,8 @@
     --surface: var(--color-surface);
     --border: color-mix(in oklab, var(--color-base-slate) 68%, var(--color-bg));
 
-    /* the centered width every shell row shares: the navbar, the tab strip, and the page columns under them */
-    --shell-max: 90rem;
+    /* the centered width every site shares: the navbar, the tab strip, and the page columns under them */
+    --shell-max: 80rem;
 
     /* mirrored in @seedcord/ui/lib/motion.ts */
     --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);

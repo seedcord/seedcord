@@ -37,7 +37,7 @@ export function Navbar(): ReactElement {
             ref={ref}
             className={cn('border-border fixed inset-x-0 top-0 z-50 border-b bg-(--bg-navbar) backdrop-blur')}
         >
-            <div className={cn('mx-auto flex max-w-7xl flex-col gap-3 p-4 md:px-6')}>
+            <div className={cn('mx-auto flex max-w-(--shell-max) flex-col gap-3 p-4 md:px-6')}>
                 <div className={cn('flex items-center justify-between gap-3')}>
                     <div className={cn('flex items-center gap-3')}>
                         <Button asChild variant="ghost" size="md" aria-label="Seedcord home">

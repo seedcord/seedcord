@@ -18,7 +18,7 @@ const LINKS = [
 export function Nav(): ReactNode {
     return (
         <header className={cn('sticky top-0 z-50 border-b-[3px] border-(--seed-dark) bg-(--pith)')}>
-            <div className={cn('mx-auto flex h-16 max-w-7xl items-center justify-between px-5')}>
+            <div className={cn('mx-auto flex h-16 max-w-(--shell-max) items-center justify-between px-5')}>
                 <div className={cn('flex items-center gap-3')}>
                     <Link href="/" className={cn('flex items-center gap-3')}>
                         <Materwelon className={cn('drop-shadow-mark size-9')} />
