@@ -1,5 +1,5 @@
 import { BRAND } from '@seedcord/ui/palette';
-import { ThemeProvider, cn } from '@seedcord/ui';
+import { MotionProvider, ThemeProvider, cn } from '@seedcord/ui';
 import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
@@ -37,7 +37,9 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 suppressHydrationWarning
                 className={cn(display.variable, monoCode.variable, 'antialiased', 'flex min-h-screen flex-col')}
             >
-                <ThemeProvider>{children}</ThemeProvider>
+                <ThemeProvider>
+                    <MotionProvider>{children}</MotionProvider>
+                </ThemeProvider>
             </body>
         </html>
     );
