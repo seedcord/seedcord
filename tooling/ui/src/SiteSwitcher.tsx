@@ -1,8 +1,9 @@
 'use client';
 
-import { ArrowUpRight, Check, ChevronRight } from 'lucide-react';
+import { ArrowUpRight, Check } from 'lucide-react';
 import { useState } from 'react';
 
+import { CaretTrigger } from './CaretTrigger';
 import { cn } from './lib/cn';
 import { PlainLink } from './lib/navLink';
 import { Popover, PopoverContent, PopoverTrigger } from './Popover';
@@ -42,24 +43,14 @@ export function SiteSwitcher({ site, destinations, linkAs }: SiteSwitcherProps):
             </span>
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
-                    <button
-                        type="button"
+                    <CaretTrigger
+                        label={site}
+                        open={open}
+                        variant="ghost"
+                        aria-haspopup="menu"
                         aria-label="Switch site"
-                        className={cn(
-                            'inline-flex items-center gap-1 rounded-md px-1 py-0.5',
-                            'font-display text-lg font-medium text-(--text-muted)',
-                            'transition-colors duration-150 ease-out hover:text-(--text)',
-                            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-outline-b)',
-                            'data-[state=open]:text-(--rind)'
-                        )}
-                    >
-                        {site}
-                        <ChevronRight
-                            size={16}
-                            aria-hidden
-                            className={cn('shrink-0 transition-transform duration-200 ease-out', open && 'rotate-90')}
-                        />
-                    </button>
+                        className={cn('font-display text-lg')}
+                    />
                 </PopoverTrigger>
                 <PopoverContent align="start" sideOffset={10} className={cn('w-56 p-1')}>
                     <ul className={cn('space-y-0.5')}>
