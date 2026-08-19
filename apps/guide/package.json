@@ -20,20 +20,13 @@
         "tc": "fumadocs-mdx && tsgo --noEmit"
     },
     "dependencies": {
-        "@seedcord/core": "workspace:^",
-        "@seedcord/gateway": "workspace:^",
-        "@seedcord/http": "workspace:^",
         "@seedcord/ui": "workspace:^",
-        "discord.js": "catalog:peer",
         "fumadocs-core": "16.14.4",
         "fumadocs-mdx": "15.2.3",
-        "fumadocs-twoslash": "3.3.0",
-        "fumadocs-ui": "16.14.4",
         "next": "catalog:deps",
         "react": "catalog:react",
         "react-dom": "catalog:react",
-        "shiki": "catalog:deps",
-        "twoslash": "0.3.9"
+        "shiki": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",

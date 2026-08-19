@@ -37,7 +37,7 @@
         "marked": "^18.0.7",
         "motion": "catalog:deps",
         "next": "catalog:deps",
-        "next-themes": "^0.4.6",
+        "next-themes": "catalog:deps",
         "postcss": "^8.5.25",
         "prettier": "catalog:deps",
         "react": "catalog:react",

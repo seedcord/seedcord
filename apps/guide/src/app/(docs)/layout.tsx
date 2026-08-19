@@ -1,14 +1,8 @@
-import { DocsLayout } from 'fumadocs-ui/layouts/docs';
-
-import { SITE_NAME } from '#lib/site';
-import { source } from '#lib/source';
+import { cn } from '@seedcord/ui';
 
 import type { ReactNode } from 'react';
 
+// a placeholder until the real shell arrives with the shared navbar
 export default function Layout({ children }: { children: ReactNode }): ReactNode {
-    return (
-        <DocsLayout tree={source.getPageTree()} nav={{ title: SITE_NAME }}>
-            {children}
-        </DocsLayout>
-    );
+    return <main className={cn('mx-auto w-full max-w-3xl px-6 py-16')}>{children}</main>;
 }

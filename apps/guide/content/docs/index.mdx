@@ -1,6 +1,24 @@
 ---
-title: Spike root
-description: Throwaway page so the docs route resolves.
+title: Still being written
+description: The seedcord guide is under construction. This page exercises the rendering path until real content arrives.
 ---
 
-Measurement pages sit beside this one.
+Every element below renders through the guide's own component map. Nothing here is content.
+
+## A heading
+
+A paragraph with `inline code` and [a link](https://docs.seedcord.org).
+
+- a list item
+- another one
+
+```ts
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ping')
+export class Ping extends SlashHandler<'ping'> {
+    public async execute(): Promise<void> {
+        await this.reply('Pong');
+    }
+}
+```

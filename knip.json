@@ -37,13 +37,6 @@
             ],
             "project": [
                 "src/**/*.{ts,tsx,css}"
-            ],
-            "ignoreDependencies": [
-                "@seedcord/core",
-                "@seedcord/gateway",
-                "@seedcord/http",
-                "discord.js",
-                "twoslash"
             ]
         },
         "apps/home": {

@@ -1,4 +1,4 @@
-import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/layouts/docs/page';
+import { cn } from '@seedcord/ui';
 import { notFound } from 'next/navigation';
 
 import { mdxComponents } from '#lib/mdxComponents';
@@ -19,13 +19,15 @@ export default async function Page(props: PageParams): Promise<ReactNode> {
     const MDX = page.data.body;
 
     return (
-        <DocsPage toc={page.data.toc} full={page.data.full}>
-            <DocsTitle>{page.data.title}</DocsTitle>
-            <DocsDescription>{page.data.description}</DocsDescription>
-            <DocsBody>
+        <article>
+            <h1 className={cn('font-display text-4xl/tight font-semibold text-(--text)')}>{page.data.title}</h1>
+            {page.data.description ? (
+                <p className={cn('mt-3 text-lg/relaxed text-(--text-muted)')}>{page.data.description}</p>
+            ) : null}
+            <div className={cn('mt-10 flex flex-col gap-5')}>
                 <MDX components={mdxComponents} />
-            </DocsBody>
-        </DocsPage>
+            </div>
+        </article>
     );
 }
 
