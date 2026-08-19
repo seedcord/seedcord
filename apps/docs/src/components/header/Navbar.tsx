@@ -1,7 +1,6 @@
 'use client';
 
-import { Button, GithubIcon, Icon, cn } from '@seedcord/ui';
-import { Menu } from 'lucide-react';
+import { Button, GithubIcon, Icon, MobileNavButton, cn } from '@seedcord/ui';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLayoutEffect, useRef } from 'react';
@@ -50,17 +49,11 @@ export function Navbar(): ReactElement {
                         <div className={cn('flex items-center gap-2')}>
                             <HeaderSearchControls />
                             {showMobileNavButton ? (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label="Open navigation menu"
-                                    aria-haspopup="dialog"
-                                    aria-expanded={isMobileNavOpen}
-                                    className={cn('text-(--text) lg:hidden')}
-                                    onClick={() => setMobileNavOpen(true)}
-                                >
-                                    <Icon icon={Menu} size={20} />
-                                </Button>
+                                <MobileNavButton
+                                    open={isMobileNavOpen}
+                                    onOpen={() => setMobileNavOpen(true)}
+                                    className={cn('lg:hidden')}
+                                />
                             ) : null}
                             <div className={cn('hidden items-center gap-2 lg:flex')}>
                                 <HeaderSettingsPopover />

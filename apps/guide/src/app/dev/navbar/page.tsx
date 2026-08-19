@@ -3,34 +3,34 @@
 import {
     Button,
     CodeBlock,
+    Dropdown,
     GithubIcon,
     Icon,
+    MobileNavButton,
+    MobilePanel,
     Navbar,
     NavTabs,
-    SearchDialog,
-    SearchField,
+    SearchIconButton,
     SearchTrigger,
     SegmentedControl,
     SiteSwitcher,
     ThemeToggle,
     cn,
-    useActiveRowScroll,
-    useRovingList,
+    useMobilePanelContainer,
     useSearchHotkey
 } from '@seedcord/ui';
 import Link from 'next/link';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { TransportControl } from '#components/TransportControl';
 import { DOCS_URL, HOME_URL, SITE_URL } from '#lib/site';
 import { GUIDE_TABS } from '#lib/tabs';
 
-import { MOCK_SEARCH_RESULTS } from './mockSearch';
-
-import type { MockSearchResult } from './mockSearch';
+import { MOCK_SIDEBAR_BY_TAB } from './mockSidebar';
+import { SearchPreview } from './SearchPreview';
 
 import type { Transport } from '#components/TransportControl';
-import type { SegmentedControlOption, SiteDestination } from '@seedcord/ui';
+import type { DropdownOption, SegmentedControlOption, SiteDestination } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
 type SiteContext = 'guide' | 'reference';
@@ -112,104 +112,77 @@ function SamplePage({ context, transport, onTransportChange }: SamplePageProps):
     );
 }
 
-const SEARCH_LISTBOX_ID = 'guide-search-results';
-
-interface SearchPreviewProps {
+interface MobileNavProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    label: string;
+    activeHref: string;
+    onActiveHrefChange: (next: string) => void;
 }
 
-function rowId(id: string): string {
-    return `guide-search-${id}`;
-}
-
-function SearchPreview({ open, onOpenChange, label }: SearchPreviewProps): ReactElement {
-    const inputRef = useRef<HTMLInputElement>(null);
-    const [query, setQuery] = useState('');
-
-    const matches = useMemo(
-        () =>
-            MOCK_SEARCH_RESULTS.filter((result) =>
-                `${result.title} ${result.tab}`.toLowerCase().includes(query.trim().toLowerCase())
-            ),
-        [query]
-    );
-    const expanded = query.trim().length > 0 && matches.length > 0;
-    const close = (): void => onOpenChange(false);
-
-    const { activeIndex, isFirst, isLast, setActiveIndex, onKeyDown } = useRovingList({
-        items: matches,
-        onSelect: close
-    });
-    const active = matches[activeIndex];
-
+function MobileNav({ open, onOpenChange, activeHref, onActiveHrefChange }: MobileNavProps): ReactElement {
     return (
-        <SearchDialog
+        <MobilePanel
             open={open}
             onOpenChange={onOpenChange}
-            onClose={close}
-            title="Search the guide"
-            description="Search guide pages by title and section."
-            field={
-                <SearchField
-                    inputRef={inputRef}
-                    value={query}
-                    onValueChange={setQuery}
-                    onKeyDown={onKeyDown}
-                    onClose={close}
-                    label={label}
-                    closeLabel="Close search"
-                    listboxId={SEARCH_LISTBOX_ID}
-                    listExpanded={expanded}
-                    activeId={active ? rowId(active.id) : undefined}
-                />
+            title="Navigation"
+            description="Slide-in navigation panel for the guide."
+            footer={
+                <div className={cn('flex items-center justify-end gap-2')}>
+                    <ThemeToggle />
+                    <GithubLink />
+                </div>
             }
         >
-            {expanded ? (
-                <SearchResults
-                    matches={matches}
-                    activeIndex={activeIndex}
-                    isFirst={isFirst}
-                    isLast={isLast}
-                    onActivate={setActiveIndex}
-                />
-            ) : null}
-        </SearchDialog>
+            <MobileNavBody activeHref={activeHref} onActiveHrefChange={onActiveHrefChange} />
+        </MobilePanel>
     );
 }
 
-interface SearchResultsProps {
-    matches: readonly MockSearchResult[];
-    activeIndex: number;
-    isFirst: boolean;
-    isLast: boolean;
-    onActivate: (index: number) => void;
+const TAB_OPTIONS: readonly DropdownOption[] = GUIDE_TABS.map((tab) => ({ value: tab.href, label: tab.label }));
+
+interface MobileNavBodyProps {
+    activeHref: string;
+    onActiveHrefChange: (next: string) => void;
 }
 
-function SearchResults({ matches, activeIndex, isFirst, isLast, onActivate }: SearchResultsProps): ReactElement {
-    const active = matches[activeIndex];
-    useActiveRowScroll(active ? rowId(active.id) : undefined, isFirst, isLast);
+function MobileNavBody({ activeHref, onActiveHrefChange }: MobileNavBodyProps): ReactElement {
+    const panelContainer = useMobilePanelContainer();
+    const sections = MOCK_SIDEBAR_BY_TAB[activeHref] ?? [];
 
     return (
-        <div id={SEARCH_LISTBOX_ID} role="listbox" aria-label="Search results" className={cn('py-3')}>
-            {matches.map((result, index) => (
-                <div
-                    key={result.id}
-                    id={rowId(result.id)}
-                    role="option"
-                    aria-selected={index === activeIndex}
-                    onMouseEnter={() => onActivate(index)}
-                    className={cn('mx-2 rounded-md px-3 py-2', index === activeIndex && 'bg-(--bg-accent-b-moderate)')}
-                >
-                    <div className={cn('flex items-baseline gap-2')}>
-                        <span className={cn('text-sm font-semibold text-(--text)')}>{result.title}</span>
-                        <span className={cn('text-xs text-(--text-faint)')}>{result.tab}</span>
+        <>
+            <Dropdown
+                aria-label="Section"
+                placeholderLabel="Section"
+                value={activeHref}
+                options={TAB_OPTIONS}
+                onChange={onActiveHrefChange}
+                container={panelContainer}
+                // without this a long list squashes the trigger to 24px against the panel's 80vh cap
+                className={cn('shrink-0')}
+            />
+            <div className={cn('nice-scroll mt-5 min-h-0 overflow-y-auto overscroll-contain')}>
+                {sections.map((section, index) => (
+                    <div
+                        key={section.label ?? 'top'}
+                        className={cn('pb-1', index > 0 && 'mt-4 border-t border-(--border) pt-4')}
+                    >
+                        {section.label ? <p className={cn(CONTROL_LABEL, 'mb-2 px-3')}>{section.label}</p> : null}
+                        {section.links.map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                className={cn(
+                                    'block rounded-md px-3 py-2 text-sm text-(--text-muted) hover:bg-(--surface-subtle) hover:text-(--text)'
+                                )}
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
                     </div>
-                    <p className={cn('mt-0.5 text-xs text-(--text-muted)')}>{result.excerpt}</p>
-                </div>
-            ))}
-        </div>
+                ))}
+            </div>
+        </>
     );
 }
 
@@ -264,6 +237,7 @@ function NavbarPreview(): ReactElement {
     const [transport, setTransport] = useState<Transport>('gateway');
     const [activeHref, setActiveHref] = useState('/commands');
     const [searchOpen, setSearchOpen] = useState(false);
+    const [navOpen, setNavOpen] = useState(false);
 
     const guide = context === 'guide';
     const searchLabel = guide ? 'Search the guide' : 'Search docs';
@@ -293,15 +267,42 @@ function NavbarPreview(): ReactElement {
                     center={<SearchTrigger label={searchLabel} onOpen={openSearch} />}
                     actions={
                         <>
-                            <ThemeToggle />
-                            <GithubLink />
+                            <SearchIconButton label={searchLabel} onOpen={openSearch} />
+                            <span className={cn('hidden items-center gap-2 lg:flex')}>
+                                <ThemeToggle />
+                                <GithubLink />
+                            </span>
+                            {guide ? (
+                                <MobileNavButton
+                                    open={navOpen}
+                                    onOpen={() => setNavOpen(true)}
+                                    className={cn('lg:hidden')}
+                                />
+                            ) : null}
                         </>
                     }
-                    tabs={guide ? <NavTabs items={GUIDE_TABS} activeHref={activeHref} linkAs={Link} /> : null}
+                    tabs={
+                        guide ? (
+                            <NavTabs
+                                items={GUIDE_TABS}
+                                activeHref={activeHref}
+                                linkAs={Link}
+                                className={cn('hidden lg:flex')}
+                            />
+                        ) : null
+                    }
                 />
                 <SamplePage context={context} transport={transport} onTransportChange={setTransport} />
             </section>
 
+            {guide ? (
+                <MobileNav
+                    open={navOpen}
+                    onOpenChange={setNavOpen}
+                    activeHref={activeHref}
+                    onActiveHrefChange={setActiveHref}
+                />
+            ) : null}
             <SearchPreview open={searchOpen} onOpenChange={setSearchOpen} label={searchLabel} />
         </div>
     );

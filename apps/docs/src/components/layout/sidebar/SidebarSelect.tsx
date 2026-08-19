@@ -1,9 +1,7 @@
 'use client';
 
-import { Dropdown, cn } from '@seedcord/ui';
-import { use, useMemo } from 'react';
-
-import { MobilePanelContainerContext } from './utils/container/MobilePanelContainer';
+import { Dropdown, cn, useMobilePanelContainer } from '@seedcord/ui';
+import { useMemo } from 'react';
 
 import type { DropdownGroup, DropdownOption } from '@seedcord/ui';
 import type { ReactElement } from 'react';
@@ -26,7 +24,7 @@ export function SidebarSelect({ id, label, value, options, groups, onChange }: S
     const labelId = `${id}-label`;
     // on mobile this is the drawer's content node so the dropdown portals there and anchors to its trigger.
     // on desktop it's null, so dropdowns fall back to document.body.
-    const panelContainer = use(MobilePanelContainerContext);
+    const panelContainer = useMobilePanelContainer();
     const dropdownOptions = useMemo<DropdownOption[]>(
         () => (options ?? []).map((option) => ({ value: option.id, label: option.label })),
         [options]
