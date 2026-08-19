@@ -1,78 +1,82 @@
 'use client';
 
-import { Button, GithubIcon, Icon, MobileNavButton, cn } from '@seedcord/ui';
+import {
+    Button,
+    GithubIcon,
+    Icon,
+    MobileNavButton,
+    Navbar as NavbarShell,
+    SearchIconButton,
+    SearchTrigger,
+    SiteSwitcher,
+    ThemeToggle,
+    cn
+} from '@seedcord/ui';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useLayoutEffect, useRef } from 'react';
 
 import { hasMobileNavPanel } from '#components/layout/sidebar/utils/hasMobileNavPanel';
+import { GUIDE_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site';
+import { log } from '#lib/logger';
 import { useUIStore } from '#store/ui';
 
 import { HeaderSettingsPopover } from './HeaderSettingsPopover';
-import { HeaderSearchControls } from './search-controls/HeaderSearchControls';
-import { SeedcordMark } from './SeedcordMark';
 
+import type { SiteDestination } from '@seedcord/ui';
 import type { ReactElement } from 'react';
+
+const SEARCH_LABEL = 'Search docs';
+
+const DESTINATIONS: readonly SiteDestination[] = [
+    { label: 'Home', href: HOME_URL },
+    { label: 'Guide', href: GUIDE_URL },
+    { label: 'Reference', href: SITE_URL, current: true }
+];
 
 export function Navbar(): ReactElement {
     const setMobileNavOpen = useUIStore((state) => state.setMobileNavOpen);
     const isMobileNavOpen = useUIStore((state) => state.isMobileNavOpen);
+    const isCommandPaletteOpen = useUIStore((state) => state.isCommandPaletteOpen);
+    const setCommandPaletteOpen = useUIStore((state) => state.setCommandPaletteOpen);
     const showMobileNavButton = hasMobileNavPanel(usePathname());
-    const ref = useRef<HTMLElement>(null);
 
-    // the fixed navbar reserves its height as --nav-h for the content offset and the sidebar top
-    useLayoutEffect(() => {
-        const measure = (): void => {
-            const height = ref.current?.getBoundingClientRect().height ?? 0;
-            if (height > 0) document.documentElement.style.setProperty('--nav-h', `${height}px`);
-        };
-        measure();
-        window.addEventListener('resize', measure);
-        return () => window.removeEventListener('resize', measure);
-    }, []);
+    const openSearch = (): void => {
+        log('Search button clicked');
+        setCommandPaletteOpen(!isCommandPaletteOpen);
+    };
 
     return (
-        <header
-            ref={ref}
-            className={cn('border-border fixed inset-x-0 top-0 z-50 border-b bg-(--bg-navbar) backdrop-blur')}
-        >
-            <div className={cn('mx-auto flex max-w-(--shell-max) flex-col gap-3 p-4 md:px-6')}>
-                <div className={cn('flex items-center justify-between gap-3')}>
-                    <div className={cn('flex items-center gap-3')}>
-                        <Button asChild variant="ghost" size="md" aria-label="Seedcord home">
-                            <Link href="/">
-                                <SeedcordMark />
+        <NavbarShell
+            mark={<SiteSwitcher site="docs" destinations={DESTINATIONS} linkAs={Link} />}
+            center={<SearchTrigger label={SEARCH_LABEL} onOpen={openSearch} />}
+            actions={
+                <>
+                    <SearchIconButton label={SEARCH_LABEL} onOpen={openSearch} />
+                    <ThemeToggle />
+                    {/* the burger panel's footer holds these two */}
+                    <span className={cn(showMobileNavButton ? 'hidden lg:flex' : 'flex', 'items-center gap-2')}>
+                        <HeaderSettingsPopover />
+                        <Button
+                            asChild
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Open GitHub repository"
+                            className={cn('text-(--text)')}
+                        >
+                            <Link href={REPO_URL} target="_blank" rel="noreferrer">
+                                <Icon icon={GithubIcon} size={20} />
                             </Link>
                         </Button>
-                    </div>
-                    <div className={cn('flex items-center gap-3')}>
-                        <div className={cn('flex items-center gap-2')}>
-                            <HeaderSearchControls />
-                            {showMobileNavButton ? (
-                                <MobileNavButton
-                                    open={isMobileNavOpen}
-                                    onOpen={() => setMobileNavOpen(true)}
-                                    className={cn('lg:hidden')}
-                                />
-                            ) : null}
-                            <div className={cn('hidden items-center gap-2 lg:flex')}>
-                                <HeaderSettingsPopover />
-                                <Button
-                                    asChild
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label="Open GitHub repository"
-                                    className={cn('text-(--text)')}
-                                >
-                                    <Link href="https://github.com/seedcord/seedcord" target="_blank" rel="noreferrer">
-                                        <Icon icon={GithubIcon} size={20} />
-                                    </Link>
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
+                    </span>
+                    {showMobileNavButton ? (
+                        <MobileNavButton
+                            open={isMobileNavOpen}
+                            onOpen={() => setMobileNavOpen(true)}
+                            className={cn('lg:hidden')}
+                        />
+                    ) : null}
+                </>
+            }
+        />
     );
 }
