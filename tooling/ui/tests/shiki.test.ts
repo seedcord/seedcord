@@ -12,7 +12,6 @@ function textOf(html: string): string {
     return html.replaceAll(/<[^>]+>/g, '');
 }
 
-// every block renders twice, once per theme
 function lightText(html: string): string {
     return textOf(/<pre class="shiki shiki-light[\s\S]*?<\/pre>/.exec(html)?.[0] ?? '');
 }

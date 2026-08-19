@@ -7,9 +7,8 @@
     },
     "private": true,
     "scripts": {
-        "dev": "TWOSLASH=0 next dev",
-        "dev:twoslash": "NODE_OPTIONS=--max-old-space-size=8192 next dev",
-        "build": "NODE_OPTIONS=--max-old-space-size=8192 next build",
+        "dev": "next dev",
+        "build": "next build",
         "start": "pnpm dlx serve out",
         "deploy": "wrangler deploy",
         "postinstall": "fumadocs-mdx",

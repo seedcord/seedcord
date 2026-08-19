@@ -1,4 +1,4 @@
-/* Entity kind accents. these name api-extractor symbol kinds, so they stay with the reference site. */
+/* Entity kind accents, one per api-extractor symbol kind */
 :root {
     --entity-class: #cf4329;
     --entity-interface: #cb7016;
