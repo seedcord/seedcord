@@ -1,6 +1,6 @@
 import { BRAND } from '@seedcord/ui/palette';
 import { cn } from '@seedcord/ui';
-import { Hanken_Grotesk, JetBrains_Mono, Space_Grotesk } from 'next/font/google';
+import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
 
@@ -10,7 +10,6 @@ import { DEFAULT_OG_IMAGE, REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } fro
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
-const sans = Hanken_Grotesk({ variable: '--font-sans', subsets: ['latin'], display: 'swap' });
 const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
 const monoCode = JetBrains_Mono({ variable: '--font-mono', subsets: ['latin'], display: 'swap' });
 
@@ -66,7 +65,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
             <body
                 // this avoids a false mismatch warning because browser extensions mutate body attributes before hydration
                 suppressHydrationWarning
-                className={cn(sans.variable, display.variable, monoCode.variable, 'antialiased')}
+                className={cn(display.variable, monoCode.variable, 'antialiased')}
             >
                 <script
                     type="application/ld+json"

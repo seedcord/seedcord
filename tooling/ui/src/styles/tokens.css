@@ -31,7 +31,7 @@
     --bg: var(--color-bg);
     --text: var(--color-text);
     --surface: var(--color-surface);
-    --border: rgba(0, 0, 0, 0.12);
+    --border: color-mix(in oklab, var(--color-base-slate) 68%, var(--color-bg));
 
     /* mirrored in @seedcord/ui/lib/motion.ts */
     --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
@@ -41,11 +41,19 @@
     color-scheme: light;
 }
 
+/* UI text uses whatever each OS ships, which beats a downloaded face at control sizes. Space Grotesk
+   and JetBrains Mono still load, so the brand sits on the headings and the code. */
+@theme {
+    --font-sans:
+        -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text', 'Segoe UI', system-ui, Cantarell, 'Noto Sans',
+        'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
+}
+
 [data-theme='dark'] {
     --color-bg: #1f1f1f;
     --color-text: #f8f6e8;
     --color-surface: rgba(255, 255, 255, 0.04);
-    --border: rgba(255, 255, 255, 0.16);
+    --border: color-mix(in oklab, var(--pith) 28%, var(--color-bg));
 
     color-scheme: dark;
 }
@@ -65,10 +73,10 @@
     /* Accent transparency tiers (for hover/active subtle tints) */
     --flesh-transparent-subtle: color-mix(in oklab, var(--flesh) 8%, transparent);
 
-    /* Text Mixes */
-    --text-muted: color-mix(in oklab, var(--color-text) 70%, transparent);
+    /* Text Mixes. the dark theme drops both tiers, see the override below */
+    --text-muted: color-mix(in oklab, var(--color-text) 80%, transparent);
     --text-muted-light: color-mix(in oklab, var(--color-text) 85%, transparent);
-    --text-faint: color-mix(in oklab, var(--color-text) 28%, transparent);
+    --text-faint: color-mix(in oklab, var(--color-text) 42%, transparent);
 
     /* Focus ring (primitive focus-visible default) */
     --focus-outline-b: color-mix(in oklab, var(--rind) 78%, transparent);
@@ -102,6 +110,63 @@
     /* SegmentedControl active tints */
     --text-accent-b-faint: color-mix(in oklab, var(--color-text) 92%, var(--rind) 8%);
     --surface-accent-b-moderate: color-mix(in oklab, var(--surface) 85%, var(--rind) 15%);
+
+    --command-overlay: color-mix(in oklab, var(--bg) 55%, var(--seed-dark) 45%);
+
+    /* Text mixes toward the rind */
+    --text-accent-b-subtle: color-mix(in oklab, var(--color-text) 85%, var(--rind) 15%);
+    --text-accent-b-strong: color-mix(in oklab, var(--color-text) 65%, var(--rind) 35%);
+    --text-accent-b-intense: color-mix(in oklab, var(--rind) 80%, var(--color-text) 20%);
+
+    /* Background mixes */
+    --bg-surface-subtle: color-mix(in oklab, var(--bg) 95%, var(--surface) 5%);
+    --bg-surface-moderate: color-mix(in oklab, var(--bg) 90%, var(--surface) 10%);
+    --bg-accent-b-subtle: color-mix(in oklab, var(--bg) 94%, var(--rind) 6%);
+    --bg-accent-b-moderate: color-mix(in oklab, var(--bg) 85%, var(--rind) 15%);
+    --bg-accent-b-strong: color-mix(in oklab, var(--bg) 76%, var(--rind) 24%);
+
+    /* Surface mixes */
+    --surface-accent-b-subtle: color-mix(in oklab, var(--surface) 92%, var(--rind) 8%);
+    --surface-accent-a-subtle: color-mix(in oklab, var(--surface) 92%, var(--flesh) 8%);
+    --surface-accent-a-moderate: color-mix(in oklab, var(--surface) 86%, var(--flesh) 14%);
+
+    /* Border mixes */
+    --border-70-transparent: color-mix(in oklab, var(--border) 70%, transparent);
+    --border-accent-b-subtle: color-mix(in oklab, var(--rind) 55%, var(--border));
+    --border-accent-b-moderate: color-mix(in oklab, var(--rind) 70%, var(--border));
+    --border-accent-b-strong: color-mix(in oklab, var(--rind) 85%, var(--border));
+    --border-accent-a-subtle: color-mix(in oklab, var(--flesh) 55%, var(--border));
+    --border-accent-a-moderate: color-mix(in oklab, var(--flesh) 70%, var(--border));
+
+    /* Outline and ring mixes */
+    --outline-accent-b-subtle: color-mix(in oklab, var(--rind) 35%, transparent);
+    --outline-accent-b-moderate: color-mix(in oklab, var(--rind) 48%, transparent);
+    --outline-accent-a-subtle: color-mix(in oklab, var(--flesh) 42%, transparent);
+    --outline-accent-a-moderate: color-mix(in oklab, var(--flesh) 52%, transparent);
+
+    /* Chrome */
+    --bg-navbar: color-mix(in oklab, var(--bg) 97%, white 3%);
+    --bg-surface-light: color-mix(in oklab, var(--surface) 90%, white 10%);
+    --bg-light-moderate: color-mix(in oklab, var(--bg) 92%, white 8%);
+    --overlay-dim: color-mix(in oklab, var(--bg) 72%, color-mix(in srgb, var(--color-base-slate), transparent 20%) 28%);
+    --bg-dim-subtle: color-mix(in oklab, var(--bg) 96%, var(--color-base-slate) 4%);
+
+    /* Transparent background mixes */
+    --bg-accent-a-transparent-subtle: color-mix(in oklab, var(--flesh) 12%, transparent);
+    --bg-accent-a-transparent-moderate: color-mix(in oklab, var(--flesh) 18%, transparent);
+    --bg-surface-subtle-transparent: color-mix(in oklab, var(--surface) 96%, transparent);
+    --bg-surface-moderate-transparent: color-mix(in oklab, var(--surface) 86%, transparent);
+    --bg-transparent-subtle: color-mix(in oklab, var(--bg) 96%, transparent);
+}
+
+[data-theme='dark'] {
+    --text-muted: color-mix(in oklab, var(--color-text) 70%, transparent);
+    --text-faint: color-mix(in oklab, var(--color-text) 28%, transparent);
+
+    /* the light theme mixes toward the brand ink. on the dark ground plain black reads deeper */
+    --command-overlay: color-mix(in oklab, var(--bg) 55%, black 45%);
+    --overlay-dim: color-mix(in oklab, var(--bg) 72%, color-mix(in srgb, black, transparent 20%) 28%);
+    --bg-dim-subtle: color-mix(in oklab, var(--bg) 96%, black 4%);
 }
 
 @layer base {

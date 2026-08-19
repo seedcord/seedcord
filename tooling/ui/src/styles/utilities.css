@@ -90,4 +90,72 @@
     .drop-shadow-mark-lg {
         filter: drop-shadow(10px 10px 0 color-mix(in srgb, var(--seed-dark) 55%, transparent));
     }
+
+    .text-subtle {
+        @apply text-(--text-muted);
+    }
+
+    .border-border {
+        border-color: var(--border);
+    }
+
+    .bg-surface {
+        background-color: var(--surface);
+    }
+
+    .shadow-soft {
+        box-shadow: 0 10px 30px color-mix(in oklab, var(--seed-dark) 8%, transparent);
+    }
+
+    .font-display {
+        font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .shiki {
+        background-color: transparent !important;
+        font-family: var(--font-mono), monospace;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin: 0;
+        padding: 0.1rem 0.2rem;
+    }
+
+    .shiki code {
+        display: block;
+        width: 100%;
+    }
+
+    .shiki-inline {
+        display: inline;
+        border-radius: 0.35em;
+        background-color: color-mix(in oklab, var(--bg) 94%, var(--text) 6%);
+        padding: 0.1em 0.36em;
+    }
+    [data-theme='dark'] .shiki-inline {
+        background-color: color-mix(in oklab, var(--bg) 89%, var(--text) 11%);
+    }
+
+    .shiki a,
+    .shiki-inline a {
+        color: inherit;
+        text-decoration-line: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+        text-decoration-color: currentColor;
+    }
+
+    .shiki a:focus,
+    .shiki a:hover,
+    .shiki-inline a:focus,
+    .shiki-inline a:hover {
+        opacity: 0.95;
+    }
+
+    .shiki a *,
+    .shiki-inline a * {
+        text-decoration-line: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+        text-decoration-color: currentColor;
+    }
 }
