@@ -24,7 +24,7 @@ export function SearchTrigger({ label, onOpen }: SearchTriggerProps): ReactEleme
                 onClick={onOpen}
                 aria-label={label}
                 className={cn(
-                    'group hidden max-w-70 items-center gap-4 border border-(--border)',
+                    'group hidden w-90 max-w-full items-center justify-between gap-4 border border-(--border)',
                     'bg-(--surface-moderate) px-3 py-2 text-sm text-(--text) sm:flex',
                     'hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-subtle)'
                 )}
