@@ -9,6 +9,7 @@ import { Plugin } from '#src/plugin/Plugin';
 import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
+import type { RuntimeBrand, TransportBrand } from '#src/plugin/brands';
 import type { Runtime } from '#src/plugin/options';
 import type { Config, IRateLimiter } from '@seedcord/types';
 
@@ -89,9 +90,9 @@ class TestHost extends Pluggable<'gateway', 'server'> {
     }
 }
 
-expectTypeOf<FullyScoped['__transport']>().toEqualTypeOf<'gateway' | undefined>();
-expectTypeOf<FullyScoped['__runtime']>().toEqualTypeOf<'server' | undefined>();
-expectTypeOf<GatewayScoped['__runtime']>().toEqualTypeOf<'any' | undefined>();
+expectTypeOf<FullyScoped[typeof TransportBrand]>().toEqualTypeOf<'gateway' | undefined>();
+expectTypeOf<FullyScoped[typeof RuntimeBrand]>().toEqualTypeOf<'server' | undefined>();
+expectTypeOf<GatewayScoped[typeof RuntimeBrand]>().toEqualTypeOf<'any' | undefined>();
 
 describe('attaching a plugin that declares options', () => {
     afterEach(() => {

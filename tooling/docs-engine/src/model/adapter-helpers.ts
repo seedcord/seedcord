@@ -1,6 +1,7 @@
 import {
     ApiDeclaredItem,
     ApiDocumentedItem,
+    ApiItemKind,
     ApiParameterListMixin,
     ApiTypeParameterListMixin,
     type ApiItem,
@@ -277,6 +278,19 @@ export function buildAccessorSignature(
     const throwsTags = comment?.blockTags.filter((tag) => tag.tag === '@throws');
     if (throwsTags && throwsTags.length > 0) signature.throws = throwsTags;
     return signature;
+}
+
+// AE reports the keys of an inline object type in a class's type parameters or heritage clause as
+// class members. `class C<T extends { id: string }>` gets an `id` property.
+const NEVER_IN_A_CLASS_BODY = new Set<ApiItemKind>([
+    ApiItemKind.PropertySignature,
+    ApiItemKind.MethodSignature,
+    ApiItemKind.CallSignature,
+    ApiItemKind.ConstructSignature
+]);
+
+export function belongsInClassBody(item: ApiItem): boolean {
+    return !NEVER_IN_A_CLASS_BODY.has(item.kind);
 }
 
 // TS requires same-name overloads be written adjacently
