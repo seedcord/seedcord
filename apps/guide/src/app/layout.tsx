@@ -37,6 +37,15 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 className={cn(display.variable, 'antialiased', 'flex min-h-screen flex-col')}
             >
                 <ThemeProvider>
+                    {/* the reference site's own skip link, class for class */}
+                    <a
+                        href="#main-content"
+                        className={cn(
+                            'fixed top-4 left-6 z-60 -translate-y-20 transform rounded-full bg-(--rind) px-4 py-2 text-sm font-semibold text-black transition focus-visible:translate-y-0'
+                        )}
+                    >
+                        Skip to content
+                    </a>
                     <MotionProvider>{children}</MotionProvider>
                 </ThemeProvider>
             </body>

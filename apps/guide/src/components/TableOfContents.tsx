@@ -16,7 +16,11 @@ export interface TableOfContentsProps {
 // 214px is the column the guide layouts mock drew
 const columnClassName = tw`nice-scroll sticky w-53.5 shrink-0 self-start overflow-y-auto text-[13px]`;
 export const labelClassName = tw`mb-2 text-xs font-semibold tracking-widest text-(--text-faint) uppercase`;
-export const rowClassName = cn(tw`block py-1.5`, tw`transition-colors duration-100 ease-out`);
+export const rowClassName = cn(
+    tw`block py-1.5`,
+    tw`transition-colors duration-100 ease-out`,
+    tw`focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--focus-outline-b)`
+);
 
 const TOP_LEVEL_DEPTH = 2;
 

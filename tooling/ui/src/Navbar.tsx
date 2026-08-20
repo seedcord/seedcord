@@ -24,7 +24,8 @@ export function Navbar({ mark, center, actions, tabs, tabsClassName, className }
     // the sidebar top and the page offset both read --nav-h, and the tab row makes the height vary per site
     useLayoutEffect(() => {
         const measure = (): void => {
-            const height = ref.current?.getBoundingClientRect().height ?? 0;
+            // rounded because anything sticking at a fractional offset renders a hairline at its edges
+            const height = Math.round(ref.current?.getBoundingClientRect().height ?? 0);
             if (height > 0) document.documentElement.style.setProperty('--nav-h', `${height}px`);
         };
         measure();

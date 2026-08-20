@@ -8,7 +8,7 @@ import { activeRangeOf, idOf, indentOf, labelClassName, rowClassName } from './T
 
 import type { TableOfContentsProps } from './TableOfContents';
 import type { Variants } from 'motion/react';
-import type { ReactElement } from 'react';
+import type { CSSProperties, ReactElement, RefObject } from 'react';
 
 const barClassName = cn(
     tw`relative border-b border-(--border) bg-(--bg-navbar) backdrop-blur`,
@@ -24,7 +24,13 @@ const triggerHeight = tw`h-11`;
 // that token's own weight, and the negative spread keeps the whole thing below the panel's top.
 const panelShadow = tw`shadow-[0_10px_20px_-8px_color-mix(in_oklab,var(--color-text)_8%,transparent)]`;
 
-const panelClassName = cn(tw`absolute inset-x-0 top-full origin-top`, tw`border-b bg-(--bg-navbar)`, panelShadow);
+// backdrop-blur puts the bar on its own compositing layer, and the panel's edge meeting it lands a
+// hairline whenever the sticky offset is fractional. the 1px overlap covers the join.
+const panelClassName = cn(
+    tw`absolute inset-x-0 top-full -mt-px origin-top`,
+    tw`border-b bg-(--bg-navbar)`,
+    panelShadow
+);
 
 const PANEL_SECONDS = 0.16;
 const UNFOLD_SCALE = 0.96;
@@ -42,6 +48,38 @@ const PANEL_MOTION: Variants = {
     gone: { opacity: 0, scaleY: UNFOLD_SCALE, transition: { duration: PANEL_SECONDS, ease: easeInOutStrong } }
 };
 
+// the bar's own bottom border is the track this fills. 2px matches NavTabs' active underline
+const progressClassName = tw`pointer-events-none absolute inset-x-0 -bottom-px h-0.5 origin-left bg-(--flesh)`;
+const progressStyle = { transform: 'scaleX(var(--read, 0))' } as CSSProperties;
+
+// scrolling stays off the render path
+function useReadProgress(target: RefObject<HTMLElement | null>): void {
+    useEffect(() => {
+        const element = target.current;
+        if (!element) return;
+
+        let frame = 0;
+        const write = (): void => {
+            frame = 0;
+            const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+            const read = scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0;
+            element.style.setProperty('--read', String(read));
+        };
+        const schedule = (): void => {
+            if (frame === 0) frame = requestAnimationFrame(write);
+        };
+
+        write();
+        window.addEventListener('scroll', schedule, { passive: true });
+        window.addEventListener('resize', schedule, { passive: true });
+        return () => {
+            window.removeEventListener('scroll', schedule);
+            window.removeEventListener('resize', schedule);
+            if (frame !== 0) cancelAnimationFrame(frame);
+        };
+    }, [target]);
+}
+
 export function TocBar({ items, activeIds, className }: TableOfContentsProps): ReactElement {
     const [open, setOpen] = useState(false);
     const reducedMotion = useReducedMotion() ?? false;
@@ -49,6 +87,8 @@ export function TocBar({ items, activeIds, className }: TableOfContentsProps): R
     const active = new Set(activeIds);
     const range = activeRangeOf(items, active);
     const current = range ? items[range.end] : undefined;
+
+    useReadProgress(ref);
 
     useEffect(() => {
         if (!open) return;
@@ -80,6 +120,7 @@ export function TocBar({ items, activeIds, className }: TableOfContentsProps): R
                     <span className={cn('min-w-0 flex-1 truncate text-left text-(--text)')}>{current?.title}</span>
                     <DisclosureChevron />
                 </DisclosureTrigger>
+                {open ? null : <span aria-hidden className={cn(progressClassName)} style={progressStyle} />}
                 <AnimatePresence>
                     {open ? (
                         <m.div

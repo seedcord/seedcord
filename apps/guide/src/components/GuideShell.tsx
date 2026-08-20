@@ -125,7 +125,9 @@ export function GuideShell({
                                 )}
                             />
                         ) : null}
-                        <main className={cn('min-w-0 flex-1 py-10')}>{children}</main>
+                        <main id="main-content" className={cn('min-w-0 flex-1 py-10')}>
+                            {children}
+                        </main>
                         {hasContents ? <ContentsColumn items={toc} /> : null}
                     </div>
                 </div>

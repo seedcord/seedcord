@@ -27,7 +27,8 @@ const sectionLabelClassName = tw`mb-2 px-3 text-xs font-semibold tracking-widest
 const linkClassName = cn(
     tw`block rounded-md px-3 py-2 text-sm`,
     tw`transition-colors duration-100 ease-out`,
-    tw`hover:bg-(--surface-subtle) hover:text-(--text)`
+    tw`hover:bg-(--surface-subtle) hover:text-(--text)`,
+    tw`focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--focus-outline-b)`
 );
 
 export function DocsSidebar({ sections, activeHref, onNavigate, className }: DocsSidebarProps): ReactElement {
