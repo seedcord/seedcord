@@ -2,6 +2,7 @@
 
 :root {
     --radius-surface: 0.375rem;
+    --content-max: 100rem;
 }
 
 @theme {
@@ -11,11 +12,21 @@
 }
 
 @layer base {
+    /* tokens.css forces this back to auto under prefers-reduced-motion */
+    html {
+        scroll-behavior: smooth;
+    }
+
     body {
         background-color: var(--bg);
         color: var(--text);
         font-family: var(--font-sans);
         min-height: 100vh;
         -webkit-font-smoothing: antialiased;
+    }
+
+    /* the navbar is fixed, so a heading jumped to from the contents would land under it */
+    :is(h1, h2, h3, h4, h5, h6)[id] {
+        scroll-margin-top: calc(var(--nav-h, 0px) + 1.5rem);
     }
 }

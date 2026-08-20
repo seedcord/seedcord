@@ -82,7 +82,7 @@ export function GuideShell({ tabs, sidebars, children }: GuideShellProps): React
             />
 
             <div
-                className={cn('mx-auto flex w-full max-w-(--shell-max) gap-10 px-4 md:px-6')}
+                className={cn('mx-auto flex w-full max-w-(--content-max) gap-10 px-4 md:px-6')}
                 style={{ paddingTop: 'var(--nav-h)' }}
             >
                 {sections.length > 0 ? (
