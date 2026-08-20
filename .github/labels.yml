@@ -73,6 +73,9 @@
 - name: '🔍 triage'
   color: a269b5
   description: not yet reviewed
+- name: '🧩 needs design'
+  color: 59c55d
+  description: shape not decided yet
 - name: '🔧 build'
   color: f9b233
   description: build and config changes
