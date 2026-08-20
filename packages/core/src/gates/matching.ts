@@ -1,7 +1,7 @@
 import type { Gate, GateContextBase, RequiredOf } from './Gate';
 import type { Constructor } from 'type-fest';
 
-// type-fest's UnionToIntersection collapses a union-context gate to never. this keeps each arm whole
+// type-fest's UnionToIntersection collapses a union-context gate to never
 export type IntersectRequired<Gates extends readonly Gate<GateContextBase>[]> = Gates extends readonly [
     infer First extends Gate<GateContextBase>,
     ...infer Rest extends readonly Gate<GateContextBase>[]
@@ -9,12 +9,10 @@ export type IntersectRequired<Gates extends readonly Gate<GateContextBase>[]> = 
     ? RequiredOf<First> & IntersectRequired<Rest>
     : unknown;
 
-// a combinator of one gate is just that gate, so and/or take two or more
 export type TwoOrMore<Item> = readonly [Item, Item, ...Item[]];
 
 type GateName<TGate> = TGate extends Gate<GateContextBase, infer Name> ? Name : string;
 
-// the mismatch error names each arm
 export type JoinNames<Gates extends readonly Gate<GateContextBase>[], Sep extends string> = Gates extends readonly [
     infer Only extends Gate<GateContextBase>
 ]
@@ -32,10 +30,8 @@ type GateMismatch<
     Got extends string
 > = `gate '${Name}' requires a ${Want} handler, and this handler is ${Got}`;
 
-// the brackets match Provided whole. a bare union would distribute and pass on a partial fit. on a mismatch
-// the message goes in a Constructor tuple, which TS prints inline where a raw context type would truncate.
-// the labels are pre-computed strings because each transport supplies its own kind labeler and core never
-// names a kind itself
+// without the brackets a union Provided distributes and passes on a partial fit
+// TS prints a Constructor tuple inline and truncates a raw context type
 export type GateFitsWith<Provided, ProvidedLabel extends string, TGate, ReqLabel extends string> = [Provided] extends [
     RequiredOf<TGate>
 ]

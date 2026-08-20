@@ -14,8 +14,6 @@ import type { SelectMenuKind } from '@seedcord/core';
 import type { ApplicationCommandType } from 'discord-api-types/v10';
 import type { Constructor } from 'type-fest';
 
-// typecheck-only, vitest never calls typeChecks
-
 declare module '@seedcord/core' {
     interface SlashOptionRegistry {
         httpkindprobe: { note: { kind: 'string'; required: false } };
@@ -99,6 +97,7 @@ class ProbeAutocomplete extends AutocompleteHandler<'httpkindprobe'> {
     }
 }
 
+// compile-only. tc is the assertion.
 function typeChecks(): void {
     expectTypeOf<LabelOf<typeof ProbeSlash>>().toEqualTypeOf<Mismatch<'Slash'>>();
     expectTypeOf<LabelOf<typeof ProbeMessageMenu>>().toEqualTypeOf<Mismatch<'MessageMenu'>>();
@@ -113,6 +112,7 @@ function typeChecks(): void {
     expectTypeOf<LabelOf<typeof ProbeAutocomplete>>().toEqualTypeOf<Mismatch<'autocomplete'>>();
 }
 
+// no-unused-vars does not count a name used only in a type position
 void [
     ProbeId,
     guildScoped,

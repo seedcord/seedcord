@@ -15,8 +15,6 @@ import type { SelectMenuKind } from '@seedcord/core';
 import type { ApplicationCommandType } from 'discord.js';
 import type { Constructor } from 'type-fest';
 
-// typecheck-only, vitest never calls typeChecks
-
 declare module '@seedcord/core' {
     interface SlashOptionRegistry {
         gwkindprobe: { note: { kind: 'string'; required: false } };
@@ -25,7 +23,6 @@ declare module '@seedcord/core' {
 
 const ProbeId = new CustomId('gwkindprobe').str('x');
 
-// only a messageCreate event handler fits this
 const messageOnly = defineGate('Probe', (ctx: EventGateContext<'messageCreate'>) => {
     void ctx;
 });
@@ -107,6 +104,7 @@ class ProbeMemberEvent extends EventHandler<'guildMemberAdd'> {
     }
 }
 
+// compile-only. tc is the assertion.
 function typeChecks(): void {
     expectTypeOf<LabelOf<typeof ProbeSlash>>().toEqualTypeOf<Mismatch<'Slash'>>();
     expectTypeOf<LabelOf<typeof ProbeMessageMenu>>().toEqualTypeOf<Mismatch<'MessageMenu'>>();
@@ -122,4 +120,21 @@ function typeChecks(): void {
     expectTypeOf<LabelOf<typeof ProbeMemberEvent>>().toEqualTypeOf<Mismatch<'guildMemberAdd event'>>();
 }
 
-void typeChecks;
+// no-unused-vars does not count a name used only in a type position
+void [
+    ProbeId,
+    messageOnly,
+    typeChecks,
+    ProbeSlash,
+    ProbeMessageMenu,
+    ProbeUserMenu,
+    ProbeStringSelect,
+    ProbeUserSelect,
+    ProbeRoleSelect,
+    ProbeChannelSelect,
+    ProbeMentionableSelect,
+    ProbeButton,
+    ProbeModal,
+    ProbeAutocomplete,
+    ProbeMemberEvent
+];

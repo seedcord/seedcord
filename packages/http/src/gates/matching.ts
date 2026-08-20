@@ -26,7 +26,6 @@ interface Ungateable {
     readonly [UngateableBrand]: true;
 }
 
-// a non-RepliableHandler (AutocompleteHandler) maps to Ungateable, which has no reply target for a refusal
 type ProvidedContext<TCtor extends AnyHandlerCtor> =
     InstanceType<TCtor> extends RepliableHandler<infer Event> ? InteractionGateContext<Event> : Ungateable;
 
@@ -44,11 +43,11 @@ type SelectKindName<Data> = Data extends APIMessageStringSelectInteractionData
             ? 'MentionableSelect'
             : 'an interaction';
 
-// a mismatch error names the kind where TS would otherwise truncate the raw API type
-// GuildPermissionsContext labels as gateway-only, because the http context does not define its guild fields
+// TS truncates the raw API type in a mismatch error
 type KindName<Ctx> = Ctx extends Ungateable
     ? 'autocomplete'
-    : Ctx extends GuildPermissionsContext
+    : // the http context defines no guild permission fields
+      Ctx extends GuildPermissionsContext
       ? 'gateway (guild permissions)'
       : Ctx extends InteractionGateContext<infer Repliable>
         ? Repliable extends APIChatInputApplicationCommandInteraction
@@ -57,7 +56,7 @@ type KindName<Ctx> = Ctx extends Ungateable
               ? 'MessageMenu'
               : Repliable extends APIUserApplicationCommandInteraction
                 ? 'UserMenu'
-                : // a button makes SelectData never, and never matches StringSelect
+                : // keep this guard. SelectData is never for a button, and never is assignable to StringSelect.
                   Repliable extends APIMessageComponentSelectMenuInteraction
                   ? SelectKindName<SelectData<Repliable>>
                   : Repliable extends APIMessageComponentButtonInteraction
