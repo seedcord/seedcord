@@ -16,7 +16,14 @@ describe('PackageDirectory', () => {
     it('produces a snapshot of top-level entities', () => {
         const snapshot = directory.snapshot();
         expect(snapshot).toEqual({
-            classes: ['base-class', 'mock-class'],
+            classes: [
+                'base-class',
+                'inline-constraint-base',
+                'inline-constraint-callable',
+                'inline-constraint-child',
+                'inline-constraint-shadow',
+                'mock-class'
+            ],
             interfaces: [
                 'extended-interface',
                 'indexable-interface',

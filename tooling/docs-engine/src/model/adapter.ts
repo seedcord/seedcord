@@ -16,6 +16,7 @@ import {
     accessorHasSetter,
     accessorRole,
     buildAccessorSignature,
+    belongsInClassBody,
     buildDeclarationHeader,
     emptyInheritance,
     explicitModifiers,
@@ -216,7 +217,8 @@ export class ApiAdapter {
 
     private visitMembers(members: readonly ApiItem[], parentPath: string[], owningContainer?: ApiItem): DocNode[] {
         const nodes: DocNode[] = [];
-        for (const group of groupOverloads(members)) {
+        const declared = owningContainer?.kind === ApiItemKind.Class ? members.filter(belongsInClassBody) : members;
+        for (const group of groupOverloads(declared)) {
             const primary = group[0];
             if (!primary) continue;
             // AE names it `(constructor)`
