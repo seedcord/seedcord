@@ -134,9 +134,9 @@ function Section({
 }
 
 const WORKSPACE_TITLES: Record<string, string> = {
+    cli: 'CLI',
     packages: 'Packages',
     plugins: 'Plugins',
-    cli: 'CLI',
     tooling: 'Tooling'
 };
 
