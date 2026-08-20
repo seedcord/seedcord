@@ -6,9 +6,6 @@ settings:
 
 catalogs:
   deps:
-    '@shikijs/langs':
-      specifier: ^4.4.3
-      version: 4.4.3
     '@tailwindcss/postcss':
       specifier: ^4.3.3
       version: 4.3.3
@@ -21,9 +18,6 @@ catalogs:
     next:
       specifier: ^16.2.12
       version: 16.2.12
-    next-themes:
-      specifier: ^0.4.6
-      version: 0.4.6
     prettier:
       specifier: ^3.9.6
       version: 3.9.6
@@ -220,12 +214,6 @@ importers:
       '@seedcord/ui':
         specifier: workspace:^
         version: link:../../tooling/ui
-      '@shikijs/langs':
-        specifier: catalog:deps
-        version: 4.4.3
-      '@shikijs/themes':
-        specifier: ^4.4.3
-        version: 4.4.3
       '@tailwindcss/postcss':
         specifier: catalog:deps
         version: 4.3.3
@@ -247,9 +235,6 @@ importers:
       next:
         specifier: catalog:deps
         version: 16.2.12(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      next-themes:
-        specifier: catalog:deps
-        version: 0.4.6(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       postcss:
         specifier: ^8.5.25
         version: 8.5.25

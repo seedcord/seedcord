@@ -77,16 +77,6 @@ const DOCS_BEHAVIORS = [
         description: 'README | Reference Overview segmented toggle; README default, disabled when a version has none'
     },
     {
-        href: '/dev/overview-header',
-        label: 'Overview header layouts',
-        description: 'candidate layouts for the package title + version + Overview/Reference toggle (pick one)'
-    },
-    {
-        href: '/dev/overview-header-mobile',
-        label: 'Overview header (mobile)',
-        description: 'mobile header layouts in a 380px frame: centered, full-width tabs, left stack (pick one)'
-    },
-    {
         href: '/dev/skeletons',
         label: 'Skeletons',
         description: 'sidebar category + overview loading placeholders, in isolation (they flash too fast live)'
@@ -95,26 +85,6 @@ const DOCS_BEHAVIORS = [
         href: '/dev/cross-pkg-link',
         label: 'Cross-package links',
         description: 'new-tab + prose arrow indicator for cross-package and external references (no icon in code)'
-    },
-    {
-        href: '/dev/search-scope',
-        label: 'Search scope',
-        description: 'three candidate behaviors for cross-package discoverability in the command palette'
-    },
-    {
-        href: '/dev/code-theme',
-        label: 'Code theme comparison',
-        description: 'catppuccin (before) vs seedcord brand theme, side by side across TS signatures, light + dark'
-    },
-    {
-        href: '/dev/code-palette',
-        label: 'Proposed code palette',
-        description: 'named warm palette swatches (dark + light) + applied to sample snippets, for theme approval'
-    },
-    {
-        href: '/dev/bg-candidates',
-        label: 'Dark background candidates',
-        description: 'swaps the root --color-bg live across grey candidates, with real docs content on top (pick one)'
     }
 ] as const;
 
