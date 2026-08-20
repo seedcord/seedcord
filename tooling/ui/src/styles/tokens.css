@@ -33,7 +33,6 @@
     --surface: var(--color-surface);
     --border: color-mix(in oklab, var(--color-base-slate) 68%, var(--color-bg));
 
-    /* the centered width every site shares: the navbar, the tab strip, and the page columns under them */
     --shell-max: 80rem;
 
     /* mirrored in @seedcord/ui/lib/motion.ts */
@@ -113,7 +112,7 @@
     --text-accent-b-faint: color-mix(in oklab, var(--color-text) 92%, var(--rind) 8%);
     --surface-accent-b-moderate: color-mix(in oklab, var(--surface) 85%, var(--rind) 15%);
 
-    /* accent-a is the flesh, accent-b is the rind */
+    /* accent-a mixes the flesh and accent-b mixes the rind */
     --text-accent-b-subtle: color-mix(in oklab, var(--color-text) 85%, var(--rind) 15%);
     --text-accent-b-strong: color-mix(in oklab, var(--color-text) 65%, var(--rind) 35%);
     --text-accent-b-intense: color-mix(in oklab, var(--rind) 80%, var(--color-text) 20%);

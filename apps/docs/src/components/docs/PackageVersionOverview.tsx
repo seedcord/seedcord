@@ -8,9 +8,9 @@ import type { NavigationCategory } from '#lib/docs/types';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { ReactElement } from 'react';
 
-const chipClassName = tw`bg-surface-moderate shadow-soft border-border inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2`;
+const chipClassName = tw`shadow-soft border-border inline-flex items-center gap-2 rounded-md border bg-(--surface-moderate) px-3 py-2 text-sm font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2`;
 
-const reexportChipClassName = tw`bg-surface-moderate shadow-soft border-border inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2`;
+const reexportChipClassName = tw`shadow-soft border-border inline-flex items-center gap-1.5 rounded-md border bg-(--surface-moderate) px-2 py-1 text-xs font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2`;
 
 function renderCategory(category: NavigationCategory): ReactElement {
     const { icon: ToneIcon, styles: toneStyles } = getToneConfig(category.tone);

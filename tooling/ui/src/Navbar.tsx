@@ -38,7 +38,7 @@ export function Navbar({ mark, center, actions, tabs, className }: NavbarProps):
                 className
             )}
         >
-            {/* three columns so the centre stays centred on the viewport whatever the two sides weigh */}
+            {/* the centre column stays on the viewport centre at any side width */}
             <div className={cn(shellRowClassName, 'grid grid-cols-[1fr_auto_1fr] gap-4 py-4 md:gap-6')}>
                 <div className={cn('flex items-center')}>{mark}</div>
                 <div className={cn('flex items-center justify-center')}>{center}</div>

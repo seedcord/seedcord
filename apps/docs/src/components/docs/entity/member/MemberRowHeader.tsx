@@ -27,7 +27,7 @@ export function MemberRowHeader({ member, anchorId, tags, prefix }: MemberRowHea
                             <li
                                 key={tag}
                                 className={cn(
-                                    'border-border bg-surface-moderate rounded-full border px-3 py-0.5 font-semibold'
+                                    'border-border rounded-full border bg-(--surface-moderate) px-3 py-0.5 font-semibold'
                                 )}
                             >
                                 {tag}

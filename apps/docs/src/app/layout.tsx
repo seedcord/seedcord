@@ -1,5 +1,5 @@
 import { ThemeProvider, TooltipProvider, cn } from '@seedcord/ui';
-import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
+import { Space_Grotesk } from 'next/font/google';
 import Script from 'next/script';
 import { preconnect } from 'react-dom';
 
@@ -15,8 +15,8 @@ import { OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, REPO_URL, SITE_DESCRIPTION, SITE_
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
+// code keeps tailwind's ui-monospace default. a webfont mono at 12px renders a pixel high in the chips
 const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
-const monoCode = JetBrains_Mono({ variable: '--font-mono', subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
@@ -73,7 +73,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
         <html lang="en" suppressHydrationWarning>
             <body
                 suppressHydrationWarning
-                className={cn(display.variable, monoCode.variable, 'antialiased')}
+                className={cn(display.variable, 'antialiased')}
                 data-new-gr-c-s-check-loaded=""
                 data-gr-ext-installed=""
             >

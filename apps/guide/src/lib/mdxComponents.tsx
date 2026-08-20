@@ -25,7 +25,6 @@ function readFence(children: ReactNode): { code: string; lang: BundledLanguage }
         .find((name) => name.startsWith(LANGUAGE_PREFIX))
         ?.slice(LANGUAGE_PREFIX.length);
 
-    // an unloaded grammar falls back, since the highlighter carries six
     return { code: code.replace(/\n$/, ''), lang: named && isHighlightable(named) ? named : 'ts' };
 }
 

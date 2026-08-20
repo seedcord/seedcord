@@ -9,8 +9,7 @@ import { cn } from './lib/cn';
 
 import type { ReactElement, ReactNode } from 'react';
 
-// popovers inside the panel portal to this node. portaling to document.body leaves them mispositioned and
-// inert under the modal dialog.
+// a popover portaled to document.body renders mispositioned and inert under the modal dialog
 const MobilePanelContainerContext = createContext<HTMLElement | null>(null);
 
 export function useMobilePanelContainer(): HTMLElement | null {

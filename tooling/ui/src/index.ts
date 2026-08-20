@@ -31,6 +31,7 @@ export * from './Switch';
 export * from './ThemeProvider';
 export * from './ThemeToggle';
 export * from './Tooltip';
+export * from './lib/activeHref';
 export * from './lib/cn';
 export * from './lib/motion';
 export * from './lib/navLink';

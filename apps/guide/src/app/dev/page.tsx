@@ -5,9 +5,9 @@ import type { ReactElement } from 'react';
 
 const SHELL_PIECES = [
     {
-        href: '/dev/navbar',
-        label: 'Navbar',
-        description: 'the bar both sites share, in a guide context and a reference context'
+        href: '/dev/transport',
+        label: 'Transport control',
+        description: 'the gateway and http picker for code samples, in a code header and on its own'
     }
 ] as const;
 

@@ -18,7 +18,9 @@ function ScrollToTopPage(): ReactElement {
                 </p>
                 <p className={cn('text-subtle text-sm')}>↓ scroll down to see it fade in. fixed at bottom-right.</p>
             </header>
-            <div className={cn('bg-surface-subtle rounded-xl border border-(--border) p-6 text-sm/7 text-(--text)')}>
+            <div
+                className={cn('rounded-xl border border-(--border) bg-(--surface-subtle) p-6 text-sm/7 text-(--text)')}
+            >
                 {Array.from({ length: SCROLL_LINES }, (_, i) => {
                     const lineNumber = i + 1;
                     return <p key={`scroll-filler-${lineNumber}`}>scroll filler line {lineNumber}</p>;

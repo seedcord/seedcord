@@ -28,7 +28,6 @@ interface FilterControlsProps {
     onKindChange: (kind: string) => void;
 }
 
-// the lists portal into the dialog node so they scroll under the palette's scroll lock
 function FilterDropdowns({ scope, kind, packages, onScopeChange, onKindChange }: FilterControlsProps): ReactElement {
     const container = useSearchDialogContainer();
     const scopeOptions: DropdownOption[] = [

@@ -8,7 +8,6 @@ export function useSearchHotkey(toggle: () => void): void {
     useEffect(() => {
         const handler = (event: KeyboardEvent): void => {
             if (event.key.toLowerCase() !== HOTKEY) return;
-            // cmd or ctrl sets this chord apart from a typed "k"
             if (!(event.metaKey || event.ctrlKey)) return;
 
             event.preventDefault();
