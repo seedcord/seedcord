@@ -12,11 +12,13 @@
         "start": "pnpm dlx serve out",
         "deploy": "wrangler deploy",
         "postinstall": "fumadocs-mdx",
-        "lint": "eslint 'src/**/*.{ts,tsx}' source.config.ts --cache",
-        "lint:fix": "eslint 'src/**/*.{ts,tsx}' source.config.ts --fix --cache",
+        "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' source.config.ts --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' source.config.ts --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' source.config.ts --cache",
         "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' source.config.ts --cache",
-        "tc": "fumadocs-mdx && tsgo --noEmit"
+        "tc": "fumadocs-mdx && tsgo --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev"
     },
     "dependencies": {
         "@seedcord/ui": "workspace:^",
@@ -30,7 +32,12 @@
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/vitest-config": "workspace:^",
         "@tailwindcss/postcss": "catalog:deps",
+        "@testing-library/dom": "catalog:test",
+        "@testing-library/jest-dom": "catalog:test",
+        "@testing-library/react": "catalog:test",
+        "@testing-library/user-event": "catalog:test",
         "@types/mdx": "^2.0.14",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
@@ -39,10 +46,12 @@
         "eslint-plugin-better-tailwindcss": "catalog:eslint",
         "eslint-plugin-react-compiler": "catalog:eslint",
         "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
+        "jsdom": "catalog:test",
         "prettier": "catalog:deps",
         "prettier-plugin-tailwindcss": "catalog:deps",
         "tailwindcss": "catalog:deps",
         "typescript": "catalog:peer",
+        "vitest": "catalog:test",
         "wrangler": "catalog:deps"
     }
 }

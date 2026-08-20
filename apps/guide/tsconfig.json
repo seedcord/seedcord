@@ -24,7 +24,10 @@
         "next-env.d.ts",
         "src/**/*.ts",
         "src/**/*.tsx",
+        "tests/**/*.ts",
+        "tests/**/*.tsx",
         "next.config.ts",
+        "vitest.config.ts",
         "source.config.ts",
         ".next/types/**/*.ts",
         "worker.ts"
