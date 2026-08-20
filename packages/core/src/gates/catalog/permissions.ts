@@ -84,7 +84,7 @@ export interface RequireRoleOptions {
  * @param scope - The permission flag bits the caller must all hold.
  * @param options - Pick the scope with `in`, and override each refusal with `notInGuild` or `missing`.
  *
- * @see the `@Gated` decorator from `seedcord`
+ * @see the `@Gated` decorator from your transport package
  *
  * @example
  * ```ts
@@ -140,7 +140,7 @@ export function RequirePermissions(
  * @param scope - The permission flag bits the bot must all hold.
  * @param options - Pick the scope with `in`, and override each refusal with `notInGuild` or `missing`.
  *
- * @see the `@Gated` decorator from `seedcord`
+ * @see the `@Gated` decorator from your transport package
  *
  * @example
  * ```ts
@@ -184,7 +184,7 @@ export function RequireBotPermissions(
  * @param roleId - The role snowflake the caller must hold.
  * @param options - Override each refusal, the outside-guild one with `notInGuild` and the missing-role one with `missingRole`.
  *
- * @see the `@Gated` decorator from `seedcord`
+ * @see the `@Gated` decorator from your transport package
  *
  * @example
  * ```ts

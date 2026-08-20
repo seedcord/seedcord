@@ -30,7 +30,7 @@ type GateMismatch<
     Name extends string,
     Want extends string,
     Got extends string
-> = `gate '${Name}' wants a ${Want} handler but this handler is ${Got}`;
+> = `gate '${Name}' requires a ${Want} handler, and this handler is ${Got}`;
 
 // the brackets match Provided whole. a bare union would distribute and pass on a partial fit. on a mismatch
 // the message goes in a Constructor tuple, which TS prints inline where a raw context type would truncate.
