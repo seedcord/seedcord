@@ -32,12 +32,12 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
     return (
         <html lang="en" suppressHydrationWarning>
             <body
-                // this avoids a false mismatch warning because browser extensions mutate body attributes before hydration
+                // extensions mutate body attributes before react hydrates
                 suppressHydrationWarning
                 className={cn(display.variable, 'antialiased', 'flex min-h-screen flex-col')}
             >
                 <ThemeProvider>
-                    {/* the reference site's own skip link, class for class */}
+                    {/* apps/docs uses this exact class string and they need to be the same */}
                     <a
                         href="#main-content"
                         className={cn(

@@ -25,8 +25,8 @@
         -webkit-font-smoothing: antialiased;
     }
 
-    /* the navbar is fixed, so a heading jumped to from the contents would land under it */
+    /* the navbar is fixed, so an anchor jump would land under it */
     :is(h1, h2, h3, h4, h5, h6)[id] {
-        scroll-margin-top: calc(var(--nav-h, 0px) + 1.5rem);
+        scroll-margin-top: calc(var(--nav-h, 0px) + 3.5rem);
     }
 }

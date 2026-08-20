@@ -20,7 +20,7 @@ function DevLayout({ children }: DevLayoutProps): ReactNode {
     return (
         <div className={cn('flex min-h-screen flex-col')}>
             {children}
-            {/* a preview rendering the real shell needs the flow to itself */}
+            {/* fixed because the shell's navbar covers the top of the flow */}
             <Link
                 href="/dev"
                 className={cn(

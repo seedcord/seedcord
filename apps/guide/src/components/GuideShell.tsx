@@ -70,7 +70,6 @@ export interface GuideShellProps {
     tabs: readonly GuideTab[];
     sidebars: SidebarsByTab;
     toc?: readonly TOCItemType[] | undefined;
-    /** The dev preview passes one, since no tab matches its own route. */
     pathname?: string | undefined;
     children: ReactNode;
 }

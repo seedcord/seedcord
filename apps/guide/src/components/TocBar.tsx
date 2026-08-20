@@ -14,18 +14,16 @@ const barClassName = cn(
     tw`relative border-b border-(--border) bg-(--bg-navbar) backdrop-blur`,
     tw`transition-colors duration-150 ease-out`
 );
-// the open panel carries the bottom edge, and a transparent border holds the 1px so nothing shifts
+// a transparent border holds the bar's height while the panel draws the visible edge
 const barOpenClassName = tw`border-b-transparent`;
 const eyebrowClassName = cn(labelClassName, tw`mb-0 shrink-0`);
-// 44px, the tap-target floor
+// 44px, the minimum tap target
 const triggerHeight = tw`h-11`;
 
-// --shadow-card-md reaches 8px up over the trigger, 12px of blur against a 4px offset. 8% matches
-// that token's own weight, and the negative spread keeps the whole thing below the panel's top.
+// -8px of spread starts the shadow below the panel's top so it never darkens the trigger
 const panelShadow = tw`shadow-[0_10px_20px_-8px_color-mix(in_oklab,var(--color-text)_8%,transparent)]`;
 
-// backdrop-blur puts the bar on its own compositing layer, and the panel's edge meeting it lands a
-// hairline whenever the sticky offset is fractional. the 1px overlap covers the join.
+// the 1px overlap covers the hairline where the panel meets the blurred bar at a fractional offset
 const panelClassName = cn(
     tw`absolute inset-x-0 top-full -mt-px origin-top`,
     tw`border-b bg-(--bg-navbar)`,
@@ -41,18 +39,17 @@ const INSTANT: Variants = {
     gone: { opacity: 0, transition: { duration: 0 } }
 };
 
-// ease-out-strong covers three quarters of its distance in the first fifth of the duration
 const PANEL_MOTION: Variants = {
     hidden: { opacity: 0, scaleY: UNFOLD_SCALE },
     shown: { opacity: 1, scaleY: 1, transition: { duration: PANEL_SECONDS, ease: easeOutStrong } },
     gone: { opacity: 0, scaleY: UNFOLD_SCALE, transition: { duration: PANEL_SECONDS, ease: easeInOutStrong } }
 };
 
-// the bar's own bottom border is the track this fills. 2px matches NavTabs' active underline
+// this matches the 2px active underline in NavTabs
 const progressClassName = tw`pointer-events-none absolute inset-x-0 -bottom-px h-0.5 origin-left bg-(--flesh)`;
 const progressStyle = { transform: 'scaleX(var(--read, 0))' } as CSSProperties;
 
-// scrolling stays off the render path
+// writes a css variable so a scroll never re-renders
 function useReadProgress(target: RefObject<HTMLElement | null>): void {
     useEffect(() => {
         const element = target.current;

@@ -41,7 +41,7 @@ describe('TocBar', () => {
         expect(screen.getByRole('link', { name: 'How it works' })).toBeInTheDocument();
 
         await click(trigger);
-        // a running exit is the only reason this is still mounted
+        // AnimatePresence keeps the row mounted until the exit finishes
         const row = screen.getByRole('link', { name: 'How it works' });
 
         await waitForElementToBeRemoved(row);

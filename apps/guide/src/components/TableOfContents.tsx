@@ -13,7 +13,7 @@ export interface TableOfContentsProps {
     className?: string | undefined;
 }
 
-// 214px is the column the guide layouts mock drew
+// 214px is the column width in the guide layouts mock
 const columnClassName = tw`nice-scroll sticky w-53.5 shrink-0 self-start overflow-y-auto text-[13px]`;
 export const labelClassName = tw`mb-2 text-xs font-semibold tracking-widest text-(--text-faint) uppercase`;
 export const rowClassName = cn(
@@ -60,7 +60,6 @@ export function TableOfContents({ items, activeIds, className }: TableOfContents
         <LayoutGroup id={groupId}>
             <nav aria-label="On this page" className={cn(columnClassName, className)}>
                 <p className={cn(labelClassName)}>On this page</p>
-                {/* the grid sizes the marker to its row span */}
                 <div className={cn('grid border-l border-(--border)')}>
                     {range ? (
                         <m.span

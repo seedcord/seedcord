@@ -24,7 +24,7 @@ export function Navbar({ mark, center, actions, tabs, tabsClassName, className }
     // the sidebar top and the page offset both read --nav-h, and the tab row makes the height vary per site
     useLayoutEffect(() => {
         const measure = (): void => {
-            // rounded because anything sticking at a fractional offset renders a hairline at its edges
+            // rounded because a sticky element at a fractional offset renders a hairline at its edges
             const height = Math.round(ref.current?.getBoundingClientRect().height ?? 0);
             if (height > 0) document.documentElement.style.setProperty('--nav-h', `${height}px`);
         };
@@ -41,7 +41,6 @@ export function Navbar({ mark, center, actions, tabs, tabsClassName, className }
                 className
             )}
         >
-            {/* the centre column stays on the viewport centre at any side width */}
             <div className={cn(shellRowClassName, 'grid grid-cols-[1fr_auto_1fr] gap-4 py-4 md:gap-6')}>
                 <div className={cn('flex items-center')}>{mark}</div>
                 <div className={cn('flex items-center justify-center')}>{center}</div>
