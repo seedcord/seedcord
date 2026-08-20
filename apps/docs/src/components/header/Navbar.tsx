@@ -1,7 +1,6 @@
 'use client';
 
-import { Button, GithubIcon, Icon, cn } from '@seedcord/ui';
-import { Menu } from 'lucide-react';
+import { Button, GithubIcon, Icon, MobileNavButton, cn } from '@seedcord/ui';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLayoutEffect, useRef } from 'react';
@@ -37,7 +36,7 @@ export function Navbar(): ReactElement {
             ref={ref}
             className={cn('border-border fixed inset-x-0 top-0 z-50 border-b bg-(--bg-navbar) backdrop-blur')}
         >
-            <div className={cn('mx-auto flex max-w-7xl flex-col gap-3 p-4 md:px-6')}>
+            <div className={cn('mx-auto flex max-w-(--shell-max) flex-col gap-3 p-4 md:px-6')}>
                 <div className={cn('flex items-center justify-between gap-3')}>
                     <div className={cn('flex items-center gap-3')}>
                         <Button asChild variant="ghost" size="md" aria-label="Seedcord home">
@@ -50,17 +49,11 @@ export function Navbar(): ReactElement {
                         <div className={cn('flex items-center gap-2')}>
                             <HeaderSearchControls />
                             {showMobileNavButton ? (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label="Open navigation menu"
-                                    aria-haspopup="dialog"
-                                    aria-expanded={isMobileNavOpen}
-                                    className={cn('text-(--text) lg:hidden')}
-                                    onClick={() => setMobileNavOpen(true)}
-                                >
-                                    <Icon icon={Menu} size={20} />
-                                </Button>
+                                <MobileNavButton
+                                    open={isMobileNavOpen}
+                                    onOpen={() => setMobileNavOpen(true)}
+                                    className={cn('lg:hidden')}
+                                />
                             ) : null}
                             <div className={cn('hidden items-center gap-2 lg:flex')}>
                                 <HeaderSettingsPopover />

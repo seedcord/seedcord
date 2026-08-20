@@ -1,9 +1,7 @@
 'use client';
 
-import * as Dialog from '@radix-ui/react-dialog';
-import { Card, cn, easeOutStrong } from '@seedcord/ui';
-import { m } from 'motion/react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { SearchDialog, cn, useActiveRowScroll, useRovingList } from '@seedcord/ui';
+import { useMemo } from 'react';
 
 import { CommandHeader } from './CommandHeader';
 import { CommandListItem } from './CommandListItem';
@@ -12,18 +10,10 @@ import { useCommandPaletteSearch } from './useCommandPaletteSearch';
 
 import type { CommandAction } from './types';
 import type { CommandPaletteController } from './useCommandPaletteController';
-import type { KeyboardEvent, ReactElement } from 'react';
-
-const HEIGHT_ANIMATION_S = 0.2;
+import type { ReactElement } from 'react';
 
 function optionId(id: string): string {
     return `command-option-${id}`;
-}
-
-// radix portals the dropdown listbox out of the dialog, so picking a filter reads as an outside
-// interaction and would close the palette
-function isWithinPopover(target: EventTarget | null): boolean {
-    return target instanceof Element && target.closest('[data-radix-popper-content-wrapper]') !== null;
 }
 
 interface CommandListContentProps {
@@ -32,6 +22,8 @@ interface CommandListContentProps {
     errorMessage?: string;
     results: CommandAction[];
     activeIndex: number;
+    isFirst: boolean;
+    isLast: boolean;
     onSelect: (action: CommandAction) => void;
     onActivate: (index: number) => void;
 }
@@ -42,9 +34,14 @@ function CommandListContent({
     errorMessage,
     results,
     activeIndex,
+    isFirst,
+    isLast,
     onSelect,
     onActivate
 }: CommandListContentProps): ReactElement | null {
+    const active = results[activeIndex];
+    useActiveRowScroll(active ? optionId(active.id) : undefined, isFirst, isLast);
+
     const hasResults = results.length > 0;
     // the isSearching guard keeps "no results" from flashing between keystrokes
     const shouldShowItems = !showInitialHint && !errorMessage && hasResults;
@@ -97,7 +94,7 @@ function CommandListContent({
 function deriveListProps(
     searchState: ReturnType<typeof useCommandPaletteSearch>,
     normalizedSearch: string
-): Omit<CommandListContentProps, 'activeIndex' | 'onSelect' | 'onActivate'> {
+): Omit<CommandListContentProps, 'activeIndex' | 'isFirst' | 'isLast' | 'onSelect' | 'onActivate'> {
     const showInitialHint = normalizedSearch.length < MIN_SEARCH_QUERY_LENGTH;
     const isSearching = searchState.status === 'loading';
     const resolvedError =
@@ -110,16 +107,8 @@ function deriveListProps(
     };
 }
 
-// eslint-disable-next-line max-lines-per-function -- dialog wires search state, roving keyboard nav, and the animated list
 export function CommandPaletteDialog({ controller }: { controller: CommandPaletteController }): ReactElement {
     const { open, handleOpenChange, searchValue, handleValueChange, handleClose, handleSelect, inputRef } = controller;
-
-    const commandRef = useRef<HTMLDivElement | null>(null);
-    const scrollRef = useRef<HTMLDivElement | null>(null);
-    const observerRef = useRef<ResizeObserver | null>(null);
-    const [activeIndex, setActiveIndex] = useState(0);
-    const [contentHeight, setContentHeight] = useState(0);
-    const [container, setContainer] = useState<HTMLElement | null>(null);
 
     const normalizedSearch = useMemo(() => searchValue.trim(), [searchValue]);
     const searchState = useCommandPaletteSearch({
@@ -132,150 +121,50 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
     const listProps = deriveListProps(searchState, normalizedSearch);
     const { results } = listProps;
 
-    // react's adjust-state-during-render pattern, an effect here would cost a second pass
-    const [trackedResults, setTrackedResults] = useState(results);
-    if (trackedResults !== results) {
-        setTrackedResults(results);
-        setActiveIndex(0);
-    }
-
-    // the radix portal drops this node on close. a callback ref re-attaches the observer on every open,
-    // and ResizeObserver fires once on observe() to seed the first height.
-    const measureRef = useCallback((el: HTMLDivElement | null) => {
-        observerRef.current?.disconnect();
-        if (!el) {
-            observerRef.current = null;
-            return;
-        }
-        const observer = new ResizeObserver(() => {
-            setContentHeight(el.scrollHeight);
-        });
-        observer.observe(el);
-        observerRef.current = observer;
-    }, []);
+    const { activeIndex, isFirst, isLast, setActiveIndex, onKeyDown } = useRovingList({
+        items: results,
+        onSelect: handleSelect
+    });
 
     const activeAction = results[activeIndex];
     const activeId = activeAction ? optionId(activeAction.id) : undefined;
     const listExpanded = !listProps.showInitialHint && !listProps.errorMessage && results.length > 0;
 
-    useEffect(() => {
-        if (!activeId) return;
-        // scrollIntoView on the first row tucks it under the header padding
-        if (activeIndex === 0) {
-            scrollRef.current?.scrollTo({ top: 0 });
-            return;
-        }
-        document.getElementById(activeId)?.scrollIntoView({ block: 'nearest' });
-    }, [activeId, activeIndex]);
-
-    const handleListKeyDown = useCallback(
-        (event: KeyboardEvent<HTMLInputElement>) => {
-            if (results.length === 0) return;
-            switch (event.key) {
-                case 'ArrowDown':
-                    event.preventDefault();
-                    setActiveIndex((index) => (index + 1) % results.length);
-                    break;
-                case 'ArrowUp':
-                    event.preventDefault();
-                    setActiveIndex((index) => (index - 1 + results.length) % results.length);
-                    break;
-                case 'Home':
-                    event.preventDefault();
-                    setActiveIndex(0);
-                    break;
-                case 'End':
-                    event.preventDefault();
-                    setActiveIndex(results.length - 1);
-                    break;
-                case 'Enter': {
-                    event.preventDefault();
-                    if (activeAction) handleSelect(activeAction);
-                    break;
-                }
-                default:
-                    break;
-            }
-        },
-        [results, activeAction, handleSelect]
-    );
-
     return (
-        <Dialog.Root open={open} onOpenChange={handleOpenChange}>
-            <Dialog.Portal>
-                <Dialog.Overlay
-                    data-command-overlay
-                    className={cn('fixed inset-0 z-60 bg-(--command-overlay)/70 backdrop-blur-sm')}
+        <SearchDialog
+            open={open}
+            onOpenChange={handleOpenChange}
+            onClose={handleClose}
+            title="Command palette"
+            description="Search documentation content and navigation items."
+            field={
+                <CommandHeader
+                    inputRef={inputRef}
+                    onClose={handleClose}
+                    onValueChange={handleValueChange}
+                    onKeyDown={onKeyDown}
+                    searchValue={searchValue}
+                    isSearching={listProps.isSearching}
+                    activeId={activeId}
+                    listExpanded={listExpanded}
+                    scope={controller.scope}
+                    kind={controller.kind}
+                    prerelease={controller.prerelease}
+                    packages={controller.packages}
+                    onScopeChange={controller.handleScopeChange}
+                    onKindChange={controller.handleKindChange}
+                    onPrereleaseChange={controller.handlePrereleaseChange}
                 />
-                <Dialog.Content
-                    ref={setContainer}
-                    data-command-content
-                    className={cn(
-                        'fixed inset-0 z-70 flex items-start justify-center px-4 pt-20 pb-8 sm:px-6 sm:pt-24 md:pt-28 md:pb-12 lg:pt-32 lg:pb-16'
-                    )}
-                    onInteractOutside={(event) => {
-                        if (isWithinPopover(event.detail.originalEvent.target)) {
-                            event.preventDefault();
-                            return;
-                        }
-                        handleClose();
-                    }}
-                    onPointerDown={(event) => {
-                        const target = event.target as Node | null;
-                        if (!commandRef.current || !target) return;
-                        if (!commandRef.current.contains(target) && !isWithinPopover(target)) {
-                            handleClose();
-                        }
-                    }}
-                >
-                    <Card
-                        size="none"
-                        className={cn(
-                            'mx-auto max-h-[78vh] w-full max-w-xl overflow-hidden bg-(--bg-dim) text-(--text) transition sm:max-w-2xl md:max-w-3xl'
-                        )}
-                    >
-                        <div ref={commandRef} className={cn('flex h-full flex-col')}>
-                            <Dialog.Title className={cn('sr-only')}>Command palette</Dialog.Title>
-                            <Dialog.Description className={cn('sr-only')}>
-                                Search documentation content and navigation items.
-                            </Dialog.Description>
-                            <CommandHeader
-                                inputRef={inputRef}
-                                onClose={handleClose}
-                                onValueChange={handleValueChange}
-                                onKeyDown={handleListKeyDown}
-                                searchValue={searchValue}
-                                isSearching={listProps.isSearching}
-                                activeId={activeId}
-                                listExpanded={listExpanded}
-                                scope={controller.scope}
-                                kind={controller.kind}
-                                prerelease={controller.prerelease}
-                                packages={controller.packages}
-                                container={container}
-                                onScopeChange={controller.handleScopeChange}
-                                onKindChange={controller.handleKindChange}
-                                onPrereleaseChange={controller.handlePrereleaseChange}
-                            />
-                            <m.div
-                                ref={scrollRef}
-                                animate={{ height: contentHeight }}
-                                transition={{ duration: HEIGHT_ANIMATION_S, ease: [...easeOutStrong] }}
-                                className={cn('max-h-[calc(78vh-5.25rem)] overflow-y-auto overscroll-contain px-2')}
-                            >
-                                <div ref={measureRef}>
-                                    <CommandListContent
-                                        {...listProps}
-                                        activeIndex={activeIndex}
-                                        onSelect={handleSelect}
-                                        onActivate={setActiveIndex}
-                                    />
-                                </div>
-                            </m.div>
-                        </div>
-                    </Card>
-                </Dialog.Content>
-            </Dialog.Portal>
-        </Dialog.Root>
+            }
+        >
+            <CommandListContent
+                {...listProps}
+                activeIndex={activeIndex}
+                isFirst={isFirst}
+                isLast={isLast}
+                onSelect={handleSelect}
+                onActivate={setActiveIndex}
+            />
+        </SearchDialog>
     );
 }

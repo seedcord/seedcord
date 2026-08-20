@@ -13,7 +13,7 @@ const SHOT = `${CDN_URL}/assets/screenshots/dev-tui`;
 
 const SRCSET = WIDTHS.map((w) => `${SHOT}-${w}.webp ${w}w`).join(', ');
 
-// 1320 is Section's max-w-7xl plus its two 20px gutters
+// 1320 is Section's max-w-(--shell-max) plus its two 20px gutters
 const SIZES = '(min-width: 1320px) 1240px, calc(100vw - 40px)';
 
 export function DevTui(): ReactNode {
