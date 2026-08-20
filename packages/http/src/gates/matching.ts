@@ -26,17 +26,28 @@ interface Ungateable {
     readonly [UngateableBrand]: true;
 }
 
-// a non-RepliableHandler (AutocompleteHandler) maps to Ungateable, which has no reply target for a refusal
 type ProvidedContext<TCtor extends AnyHandlerCtor> =
     InstanceType<TCtor> extends RepliableHandler<infer Event> ? InteractionGateContext<Event> : Ungateable;
 
 type SelectData<Repliable> = Repliable extends APIMessageComponentSelectMenuInteraction ? Repliable['data'] : never;
 
-// a mismatch error names the kind where TS would otherwise truncate the raw API type
-// GuildPermissionsContext labels as gateway-only, because the http context does not define its guild fields
+type SelectKindName<Data> = Data extends APIMessageStringSelectInteractionData
+    ? 'StringSelect'
+    : Data extends APIMessageUserSelectInteractionData
+      ? 'UserSelect'
+      : Data extends APIMessageRoleSelectInteractionData
+        ? 'RoleSelect'
+        : Data extends APIMessageChannelSelectInteractionData
+          ? 'ChannelSelect'
+          : Data extends APIMessageMentionableSelectInteractionData
+            ? 'MentionableSelect'
+            : 'an interaction';
+
+// TS truncates the raw API type in a mismatch error
 type KindName<Ctx> = Ctx extends Ungateable
     ? 'autocomplete'
-    : Ctx extends GuildPermissionsContext
+    : // the http context defines no guild permission fields
+      Ctx extends GuildPermissionsContext
       ? 'gateway (guild permissions)'
       : Ctx extends InteractionGateContext<infer Repliable>
         ? Repliable extends APIChatInputApplicationCommandInteraction
@@ -45,21 +56,14 @@ type KindName<Ctx> = Ctx extends Ungateable
               ? 'MessageMenu'
               : Repliable extends APIUserApplicationCommandInteraction
                 ? 'UserMenu'
-                : SelectData<Repliable> extends APIMessageStringSelectInteractionData
-                  ? 'StringSelect'
-                  : SelectData<Repliable> extends APIMessageUserSelectInteractionData
-                    ? 'UserSelect'
-                    : SelectData<Repliable> extends APIMessageRoleSelectInteractionData
-                      ? 'RoleSelect'
-                      : SelectData<Repliable> extends APIMessageChannelSelectInteractionData
-                        ? 'ChannelSelect'
-                        : SelectData<Repliable> extends APIMessageMentionableSelectInteractionData
-                          ? 'MentionableSelect'
-                          : Repliable extends APIMessageComponentButtonInteraction
-                            ? 'Button'
-                            : Repliable extends APIModalSubmitInteraction
-                              ? 'Modal'
-                              : 'an interaction'
+                : // keep this guard. SelectData is never for a button, and never is assignable to StringSelect.
+                  Repliable extends APIMessageComponentSelectMenuInteraction
+                  ? SelectKindName<SelectData<Repliable>>
+                  : Repliable extends APIMessageComponentButtonInteraction
+                    ? 'Button'
+                    : Repliable extends APIModalSubmitInteraction
+                      ? 'Modal'
+                      : 'an interaction'
         : 'an agnostic';
 
 export type FitAll<TCtor extends AnyHandlerCtor, Gates extends readonly Gate<GateContextBase>[]> = {

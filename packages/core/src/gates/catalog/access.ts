@@ -13,7 +13,7 @@ import type { GateNoticeOptions } from './options';
  *
  * @param options - Reword the default refusal with `message`, or replace it with `notice`.
  *
- * @see the `@Gated` decorator from `seedcord`
+ * @see the `@Gated` decorator from your transport package
  *
  * @example
  * ```ts
@@ -47,7 +47,7 @@ export function OwnerOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'O
  *
  * @param options - Reword the default refusal with `message`, or replace it with `notice`.
  *
- * @see the `@Gated` decorator from `seedcord`
+ * @see the `@Gated` decorator from your transport package
  *
  * @example
  * ```ts
@@ -76,7 +76,7 @@ export function GuildOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'G
  *
  * @param options - Reword the default refusal with `message`, or replace it with `notice`.
  *
- * @see the `@Gated` decorator from `seedcord`
+ * @see the `@Gated` decorator from your transport package
  *
  * @example
  * ```ts
