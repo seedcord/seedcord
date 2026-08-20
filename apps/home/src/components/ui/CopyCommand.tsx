@@ -93,33 +93,39 @@ export function CopyCommand({ command, className }: CopyCommandProps): ReactNode
     };
 
     return (
-        // eslint-disable-next-line react/forbid-elements -- the two-label grid swap and the seed burst have no Button variant
-        <button
-            type="button"
-            aria-label={`Copy ${command}`}
-            onClick={() => {
-                void copy();
-            }}
-            className={cn(
-                'font-mono-code relative cursor-pointer rounded-sm bg-(--seed-dark) px-2 py-1 text-sm text-(--pith)',
-                pressable,
-                'hover:bg-(--flesh-deep)',
-                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--rind)',
-                className
-            )}
-        >
-            <LabelSwap
-                active={copied}
-                idleLabel={
-                    <>
-                        <span className={cn('text-(--pith)/50 select-none')}>$ </span>
-                        {command}
-                    </>
-                }
-                activeLabel="copied!"
-                activeClassName={cn('text-center')}
-            />
-            <span ref={burstRef} aria-hidden className={cn('pointer-events-none absolute inset-0')} />
-        </button>
+        <>
+            {/* aria-label pins the button's name, keeping the swap below out of the a11y tree */}
+            <span aria-live="polite" className={cn('sr-only')}>
+                {copied ? 'Copied' : ''}
+            </span>
+            {/* eslint-disable-next-line react/forbid-elements -- the two-label grid swap and the seed burst have no Button variant */}
+            <button
+                type="button"
+                aria-label={`Copy ${command}`}
+                onClick={() => {
+                    void copy();
+                }}
+                className={cn(
+                    'font-mono-code relative cursor-pointer rounded-sm bg-(--seed-dark) px-2 py-1 text-sm text-(--pith)',
+                    pressable,
+                    'hover:bg-(--flesh-deep)',
+                    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--rind)',
+                    className
+                )}
+            >
+                <LabelSwap
+                    active={copied}
+                    idleLabel={
+                        <>
+                            <span className={cn('text-(--pith)/50 select-none')}>$ </span>
+                            {command}
+                        </>
+                    }
+                    activeLabel="copied!"
+                    activeClassName={cn('text-center')}
+                />
+                <span ref={burstRef} aria-hidden className={cn('pointer-events-none absolute inset-0')} />
+            </button>
+        </>
     );
 }

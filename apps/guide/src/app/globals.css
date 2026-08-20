@@ -3,6 +3,14 @@
 :root {
     --radius-surface: 0.375rem;
     --content-max: 100rem;
+    --nav-h: 4.5rem; /* fallback until the navbar measures its own height */
+}
+
+/* the tab row only renders at lg */
+@media (width >= 64rem) {
+    :root {
+        --nav-h: 7.5rem;
+    }
 }
 
 @theme {

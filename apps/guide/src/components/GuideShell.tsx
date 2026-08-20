@@ -124,7 +124,7 @@ export function GuideShell({
             />
 
             <AnchorProvider toc={anchors}>
-                <div style={{ paddingTop: 'var(--nav-h)' }}>
+                <div className={cn('pt-(--nav-h)')}>
                     {hasContents ? <ContentsBar items={toc} pageTitle={pageTitle} /> : null}
                     <div className={cn('mx-auto flex w-full max-w-(--content-max) gap-10 px-4 md:px-6')}>
                         {sections.length > 0 ? (

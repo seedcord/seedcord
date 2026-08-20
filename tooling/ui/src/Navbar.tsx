@@ -27,8 +27,8 @@ export function Navbar({ mark, center, actions, tabs, tabsClassName, className }
         if (!header) return;
 
         const measure = (): void => {
-            // rounding down leaves a sticky element a sliver high and the page shows through
-            const height = Math.ceil(header.getBoundingClientRect().height);
+            // rounding up parks a sticky element below this header and the page shows through the gap
+            const height = Math.floor(header.getBoundingClientRect().height);
             if (height > 0) document.documentElement.style.setProperty('--nav-h', `${height}px`);
         };
 
