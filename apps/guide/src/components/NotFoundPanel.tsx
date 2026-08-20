@@ -7,11 +7,12 @@ import { DOCS_URL, HOME_URL } from '#lib/site';
 import type { ReactNode } from 'react';
 
 const LINKS = [
+    { label: 'Start here', href: '/' },
     { label: 'seedcord.org', href: HOME_URL },
     { label: 'docs.seedcord.org', href: DOCS_URL }
 ] as const;
 
-export function Placeholder(): ReactNode {
+export function NotFoundPanel(): ReactNode {
     return (
         <main
             id="main-content"
@@ -25,10 +26,10 @@ export function Placeholder(): ReactNode {
                     'font-display text-[clamp(2.6rem,8vw,5rem)] leading-[0.94] font-semibold tracking-tight text-(--seed-dark)'
                 )}
             >
-                Still being <span className={cn('text-(--flesh-deep)')}>written</span>.
+                Nothing <span className={cn('text-(--flesh-deep)')}>here</span>.
             </h1>
             <p className={cn('max-w-md text-lg/snug font-medium text-(--seed-dark)/85')}>
-                This guide is a work in progress. Please use the docs for now.
+                That page does not exist. Search from any guide page, or pick one of these.
             </p>
             <div className={cn('font-mono-code mt-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-2')}>
                 {LINKS.map((link) => (

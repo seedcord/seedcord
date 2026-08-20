@@ -1,5 +1,7 @@
 import path from 'node:path';
 
+import { createMDX } from 'fumadocs-mdx/next';
+
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
@@ -12,4 +14,4 @@ const nextConfig: NextConfig = {
     turbopack: {}
 };
 
-export default nextConfig;
+export default createMDX()(nextConfig);

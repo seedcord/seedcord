@@ -11,22 +11,27 @@
         "build": "next build",
         "start": "pnpm dlx serve out",
         "deploy": "wrangler deploy",
-        "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
-        "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
-        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' --cache",
-        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md,css}' --cache",
-        "tc": "tsgo --noEmit"
+        "postinstall": "fumadocs-mdx",
+        "lint": "eslint 'src/**/*.{ts,tsx}' source.config.ts --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' source.config.ts --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' source.config.ts --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' source.config.ts --cache",
+        "tc": "fumadocs-mdx && tsgo --noEmit"
     },
     "dependencies": {
         "@seedcord/ui": "workspace:^",
+        "fumadocs-core": "16.14.4",
+        "fumadocs-mdx": "15.2.3",
         "next": "catalog:deps",
         "react": "catalog:react",
-        "react-dom": "catalog:react"
+        "react-dom": "catalog:react",
+        "shiki": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@tailwindcss/postcss": "catalog:deps",
+        "@types/mdx": "^2.0.14",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
         "eslint": "^9.39.4",

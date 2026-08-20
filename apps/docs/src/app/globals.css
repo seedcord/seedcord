@@ -17,7 +17,7 @@
     body {
         background-color: var(--bg);
         color: var(--text);
-        font-family: var(--font-sans, 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+        font-family: var(--font-sans);
         min-height: 100vh;
     }
 
@@ -29,28 +29,6 @@
             border-color 0.2s ease,
             transform 0.2s ease;
     }
-}
-
-/* Safari fails to resolve CSS variables from inline declarations, so we toggle visibility instead. */
-.shiki-theme-group .shiki-dark,
-.shiki-inline-group .shiki-dark {
-    display: none;
-}
-.shiki-theme-group .shiki-light {
-    display: block;
-}
-.shiki-inline-group .shiki-light {
-    display: inline;
-}
-[data-theme='dark'] .shiki-theme-group .shiki-light,
-[data-theme='dark'] .shiki-inline-group .shiki-light {
-    display: none;
-}
-[data-theme='dark'] .shiki-theme-group .shiki-dark {
-    display: block;
-}
-[data-theme='dark'] .shiki-inline-group .shiki-dark {
-    display: inline;
 }
 
 /* need to make sure both are using 'inline' otherwise the logo shifts when switching modes */

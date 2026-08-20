@@ -1,10 +1,10 @@
 packages:
-- mocks/*
-- packages/*
-- plugins/*
-- cli/*
-- tooling/*
-- apps/*
+  - mocks/*
+  - packages/*
+  - plugins/*
+  - cli/*
+  - tooling/*
+  - apps/*
 
 embedReadme: true
 
@@ -31,9 +31,9 @@ overrides:
 
 supportedArchitectures:
   libc:
-  - current
-  - glibc
-  - musl
+    - current
+    - glibc
+    - musl
 
 allowBuilds:
   '@swc/core': true
@@ -49,6 +49,7 @@ catalogs:
     '@clack/prompts': ^1.7.0
     '@discordjs/builders': ^1.14.1
     '@discordjs/rest': ^2.6.3
+    '@shikijs/langs': ^4.4.3
     '@tailwindcss/postcss': ^4.3.3
     '@types/node': ^26.1.2
     chalk: ^6.0.0
@@ -57,10 +58,11 @@ catalogs:
     lucide-react: ^1.28.0
     motion: ^12.43.0
     next: ^16.2.12
+    next-themes: ^0.4.6
     prettier: ^3.9.6
     prettier-plugin-tailwindcss: ^0.8.1
     reflect-metadata: ^0.2.2
-    shiki: ^4.4.1
+    shiki: ^4.4.3
     tailwindcss: ^4.3.3
     tsdown: ^0.22.14
     tsx: ^4.23.5

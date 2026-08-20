@@ -18,7 +18,7 @@ import {
     highlightToHtml,
     highlightTypeParamToHtml,
     type CodeLink
-} from '#lib/shiki';
+} from '@seedcord/ui/shiki';
 
 import { opensInNewTab } from './crossPackage';
 

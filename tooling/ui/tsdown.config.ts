@@ -8,7 +8,8 @@ export default createTsdownConfig({
         'src/MaterwelonGlyph.tsx',
         'src/MaterwelonFavicon.tsx',
         'src/Materwelon.tsx',
-        'src/OgCard.tsx'
+        'src/OgCard.tsx',
+        'src/shiki.ts'
     ],
     format: ['esm'],
     platform: 'neutral',
@@ -19,6 +20,8 @@ export default createTsdownConfig({
     deps: {
         skipNodeModulesBundle: true,
         neverBundle: [
+            '@shikijs/langs',
+            'shiki',
             '@radix-ui/react-popover',
             '@radix-ui/react-slot',
             '@radix-ui/react-switch',

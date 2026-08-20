@@ -1,4 +1,3 @@
-import { seedcordBrandDark, seedcordBrandLight } from '@seedcord/ui';
 import langBash from '@shikijs/langs/bash';
 import langJs from '@shikijs/langs/javascript';
 import langJson from '@shikijs/langs/json';
@@ -8,12 +7,21 @@ import langTs from '@shikijs/langs/typescript';
 import { createHighlighterCore, type HighlighterCore } from 'shiki/core';
 import { createOnigurumaEngine } from 'shiki/engine/oniguruma';
 
+import { seedcordBrandDark, seedcordBrandLight } from './brandTheme';
+
 import type { BundledLanguage, ShikiTransformer } from 'shiki';
 
 const THEMES = {
     light: 'seedcord-light',
     dark: 'seedcord-dark'
 } as const satisfies Record<'light' | 'dark', string>;
+
+// shiki registers each grammar under its full name and its short alias
+const HIGHLIGHTABLE = new Set(['ts', 'typescript', 'tsx', 'js', 'javascript', 'jsx', 'json', 'bash']);
+
+export function isHighlightable(lang: string): lang is BundledLanguage {
+    return HIGHLIGHTABLE.has(lang);
+}
 
 export interface CodeLink {
     name: string;
@@ -117,18 +125,18 @@ const LINK_OPEN = '\uE000';
 const LINK_OPEN_BOUND = '\uE001';
 const LINK_CLOSE = '\uE002';
 const LINK_CLOSE_BOUND = '\uE003';
-const INDEX_BASE = 0xe100;
-const SENTINEL_MIN = 0xe000;
-const SENTINEL_MAX = 0xe1ff;
+const INDEX_BASE = 0xe1_00;
+const SENTINEL_MIN = 0xe0_00;
+const SENTINEL_MAX = 0xe1_ff;
 const HEX_RADIX = 16;
 const DECIMAL_RADIX = 10;
 
 function escapeRegex(value: string): string {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return RegExp.escape(value);
 }
 
 function escapeHtmlAttr(value: string): string {
-    return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
 interface SentinelLink {
@@ -139,7 +147,7 @@ interface SentinelLink {
 
 // shiki writes the PUA chars out as numeric entities. decode first.
 function normalizeSentinels(html: string): string {
-    return html.replace(/&#(x?)([0-9a-fA-F]+);/g, (match, isHex: string, value: string) => {
+    return html.replaceAll(/&#(x?)([0-9a-fA-F]+);/g, (match, isHex: string, value: string) => {
         const code = Number.parseInt(value, isHex ? HEX_RADIX : DECIMAL_RADIX);
         if (Number.isNaN(code)) return match;
         if (code >= SENTINEL_MIN && code <= SENTINEL_MAX) return String.fromCharCode(code);
@@ -183,7 +191,7 @@ function applyLinkMarkers(html: string, markers: readonly SentinelLink[], links:
     let result = normalizeSentinels(html);
     // shiki sometimes tokenizes a lone sentinel into a span of its own, which leaves the open/close
     // regex below nothing to match until the span is unwrapped
-    result = result.replace(/<span[^>]*>\s*([-])\s*<\/span>/g, '$1');
+    result = result.replaceAll(/<span[^>]*>\s*([-])\s*<\/span>/g, '$1');
 
     for (let i = 0; i < markers.length; i += 1) {
         const marker = markers[i];
@@ -191,7 +199,7 @@ function applyLinkMarkers(html: string, markers: readonly SentinelLink[], links:
         if (!marker || !link) continue;
         const opensNewTab = link.external ?? EXTERNAL_URL_RE.test(link.href);
         const attrs = opensNewTab ? ' target="_blank" rel="noreferrer noopener"' : '';
-        const pattern = new RegExp(`${escapeRegex(marker.open)}([\\s\\S]*?)${escapeRegex(marker.close)}`, 'g');
+        const pattern = new RegExp(String.raw`${escapeRegex(marker.open)}([\s\S]*?)${escapeRegex(marker.close)}`, 'g');
         result = result.replace(
             pattern,
             (_match, content: string) => `<a href="${marker.href}"${attrs}>${content}</a>`

@@ -1,0 +1,24 @@
+---
+title: Still being written
+description: The seedcord guide has no content yet. This page renders one of each MDX element.
+---
+
+Every element below renders through the guide's own component map.
+
+## A heading
+
+A paragraph with `inline code` and [a link](https://docs.seedcord.org).
+
+- A list item
+- Another one
+
+```ts
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ping')
+export class Ping extends SlashHandler<'ping'> {
+    public async execute(): Promise<void> {
+        await this.reply('Pong');
+    }
+}
+```

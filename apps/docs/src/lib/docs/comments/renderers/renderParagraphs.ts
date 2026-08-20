@@ -2,7 +2,7 @@ import { marked } from 'marked';
 
 import { resolveInlineHref } from '#lib/docs/comments/resolvers';
 import { sanitizeHtml } from '#lib/sanitizeHtml';
-import { highlightToHtml, highlightInlineToHtml } from '#lib/shiki';
+import { highlightToHtml, highlightInlineToHtml } from '@seedcord/ui/shiki';
 
 import { decorateProseLinks } from './decorateProseLinks';
 
