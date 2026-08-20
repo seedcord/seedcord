@@ -40,6 +40,7 @@ export const mdxComponents: MDXComponents = {
     pre: Fence,
     h2: (props) => <h2 {...props} className={cn('font-display mt-6 text-2xl/snug font-semibold text-(--text)')} />,
     h3: (props) => <h3 {...props} className={cn('font-display mt-4 text-xl/snug font-semibold text-(--text)')} />,
+    h4: (props) => <h4 {...props} className={cn('font-display mt-3 text-lg/snug font-semibold text-(--text)')} />,
     p: (props) => <p {...props} className={cn('text-base/relaxed text-(--text)')} />,
     a: (props) => <a {...props} className={cn('text-(--rind-deep) underline underline-offset-4')} />,
     ul: (props) => <ul {...props} className={cn('list-disc space-y-1 ps-6 text-base/relaxed text-(--text)')} />,
