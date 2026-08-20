@@ -13,6 +13,8 @@ const popoverContentBaseClassName = cn(
     tw`rounded-md`,
     tw`border border-(--border) bg-(--bg-popover) text-(--text)`,
     tw`p-4 shadow-(--shadow-card)`,
+    // radix focuses the panel on open, and chrome paints its own ring around the whole thing. the rows carry theirs
+    tw`focus-visible:outline-hidden`,
     // scale from the radix-injected trigger anchor
     tw`origin-(--radix-popover-content-transform-origin)`,
     tw`data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95`,
