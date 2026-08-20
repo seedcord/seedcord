@@ -17,6 +17,12 @@ function lightText(html: string): string {
     return textOf(/<pre class="shiki shiki-light[\s\S]*?<\/pre>/.exec(html)?.[0] ?? '');
 }
 
+const ANCHOR_RE = /<a href="([^"]*)"([^>]*)>/g;
+
+function attrsFor(html: string, href: string): string[] {
+    return [...html.matchAll(ANCHOR_RE)].filter((match) => match[1] === href).map((match) => match[2] ?? '');
+}
+
 describe('highlightToHtml', () => {
     it('renders one block per theme so a span carries a resolved colour', async () => {
         const html = await highlightToHtml('const x = 1;');
@@ -47,6 +53,31 @@ describe('highlightToHtml', () => {
 
         expect(html).toContain('target="_blank"');
         expect(html).toContain('rel="noreferrer noopener"');
+    });
+
+    it('gives each href its own target when the links arrive out of order', async () => {
+        const code = 'const value: Local = remote();';
+        const remoteStart = code.indexOf('remote');
+        const localStart = code.indexOf('Local');
+        const links = [
+            {
+                name: 'remote',
+                href: 'https://example.com/remote',
+                start: remoteStart,
+                end: remoteStart + 'remote'.length
+            },
+            { name: 'Local', href: '/docs/local', start: localStart, end: localStart + 'Local'.length }
+        ];
+
+        const html = (await highlightToHtml(code, 'ts', links)) ?? '';
+
+        const local = attrsFor(html, '/docs/local');
+        const remote = attrsFor(html, 'https://example.com/remote');
+
+        expect(local.length).toBeGreaterThan(0);
+        expect(remote.length).toBeGreaterThan(0);
+        expect(local.every((attrs) => !attrs.includes('target'))).toBe(true);
+        expect(remote.every((attrs) => attrs.includes('target="_blank"'))).toBe(true);
     });
 
     it('returns an empty string for empty input', async () => {

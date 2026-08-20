@@ -111,7 +111,7 @@
         "@testing-library/dom": "catalog:test",
         "@testing-library/jest-dom": "catalog:test",
         "@testing-library/react": "catalog:test",
-        "@testing-library/user-event": "^14.6.1",
+        "@testing-library/user-event": "catalog:test",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
         "eslint-plugin-better-tailwindcss": "catalog:eslint",

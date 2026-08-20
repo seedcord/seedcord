@@ -16,6 +16,10 @@ const SRCSET = WIDTHS.map((w) => `${SHOT}-${w}.webp ${w}w`).join(', ');
 // 1320 is Section's max-w-(--shell-max) plus its two 20px gutters
 const SIZES = '(min-width: 1320px) 1240px, calc(100vw - 40px)';
 
+// the screenshot at 32px. jpeg still renders where the webp above fails
+const BLUR =
+    'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAwICQsJCAwLCgsODQwOEh4UEhEREiUbHBYeLCcuLisnKyoxN0Y7MTRCNCorPVM+QkhKTk9OLztWXFVMW0ZNTkv/2wBDAQ0ODhIQEiQUFCRLMisyS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0v/wAARCAAUACADASIAAhEBAxEB/8QAGQABAQADAQAAAAAAAAAAAAAAAAMBAgQG/8QAIBAAAgIBBAMBAAAAAAAAAAAAAAECEQMEISIxEjKRUf/EABUBAQEAAAAAAAAAAAAAAAAAAAAB/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A8ZB8571x+lcjqPvH4Q06Tc734Mvl8VD1XQHI3bMBpoAU07qbX6qYyZJT2fSAA0oUARX/2Q==';
+
 export function DevTui(): ReactNode {
     return (
         <Section ground="ink">
@@ -34,7 +38,14 @@ export function DevTui(): ReactNode {
                     with the bot still up, so your change reaches Discord without a restart.
                 </p>
             </div>
-            <figure className={cn('rule-pith blk-pith mt-10 overflow-hidden rounded-sm')}>
+            <figure className={cn('rule-pith blk-pith relative mt-10 overflow-hidden rounded-sm')}>
+                {/* idk why safari sometimes doesn't paints this image */}
+                <div
+                    className={cn('absolute inset-0 scale-110 bg-cover bg-center blur-xl')}
+                    style={{ backgroundImage: `url("${BLUR}")` }}
+                    aria-hidden
+                />
+                <div className={cn('shot-settle absolute inset-0 bg-(--husk)')} aria-hidden />
                 {/* eslint-disable-next-line @next/next/no-img-element -- next/image emits a single src when unoptimized is on, so this srcset never gets used */}
                 <img
                     src={`${SHOT}-1240.webp`}
@@ -45,7 +56,7 @@ export function DevTui(): ReactNode {
                     loading="lazy"
                     decoding="async"
                     alt="The seedcord dev server running an http bot. A sidebar on the left shows the version, uptime, bound port and tunnel status. The log stream beside it shows a handler failing, reloading in 4ms, then serving the same command. A card at the bottom asks whether to refresh the changed commands."
-                    className={cn('block h-auto w-full')}
+                    className={cn('shot-img relative block h-auto w-full')}
                 />
             </figure>
         </Section>

@@ -2,7 +2,6 @@
 
 import {
     Button,
-    Dropdown,
     GithubIcon,
     Icon,
     MobileNavButton,
@@ -12,21 +11,19 @@ import {
     SiteSwitcher,
     ThemeToggle,
     cn,
-    matchActiveHref,
-    useMobilePanelContainer
+    matchActiveHref
 } from '@seedcord/ui';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 import { DOCS_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site';
 
 import { DocsSidebar } from './DocsSidebar';
-
-import type { SidebarSection } from './DocsSidebar';
+import { MobileNav } from './MobileNav';
 
 import type { GuideTab, SidebarsByTab } from '#lib/nav';
-import type { DropdownOption, SiteDestination } from '@seedcord/ui';
+import type { SiteDestination } from '@seedcord/ui';
 import type { ReactElement, ReactNode } from 'react';
 
 const DESTINATIONS: readonly SiteDestination[] = [
@@ -114,46 +111,11 @@ export function GuideShell({ tabs, sidebars, children }: GuideShellProps): React
                 <MobileNav
                     tabs={tabs}
                     activeHref={activeHref ?? ''}
-                    sections={sections}
+                    sidebars={sidebars}
                     pathname={pathname}
                     onNavigate={() => setNavOpen(false)}
                 />
             </MobilePanel>
-        </>
-    );
-}
-
-interface MobileNavProps {
-    tabs: readonly GuideTab[];
-    activeHref: string;
-    sections: readonly SidebarSection[];
-    pathname: string;
-    onNavigate: () => void;
-}
-
-function MobileNav({ tabs, activeHref, sections, pathname, onNavigate }: MobileNavProps): ReactElement {
-    const panelContainer = useMobilePanelContainer();
-    const router = useRouter();
-    const options: readonly DropdownOption[] = tabs.map((tab) => ({ value: tab.href, label: tab.label }));
-
-    return (
-        <>
-            <Dropdown
-                aria-label="Section"
-                placeholderLabel="Section"
-                value={activeHref}
-                options={options}
-                onChange={(href) => router.push(href)}
-                container={panelContainer}
-                // without this a long list squashes the trigger to 24px against the panel's 80vh cap
-                className={cn('shrink-0')}
-            />
-            <DocsSidebar
-                sections={sections}
-                activeHref={pathname}
-                className={cn('nice-scroll mt-5 min-h-0 overflow-y-auto overscroll-contain')}
-                onNavigate={onNavigate}
-            />
         </>
     );
 }

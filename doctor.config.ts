@@ -87,6 +87,11 @@ export default defineConfig({
                 // the result panel grows from zero to its measured height
                 files: ['**/SearchDialog.tsx'],
                 rules: ['react-doctor/effect-needs-cleanup', 'react-doctor/no-layout-property-animation']
+            },
+            {
+                // react 19 calls the cleanup a ref callback returns
+                files: ['**/useSidebarPersistence.tsx'],
+                rules: ['react-doctor/effect-needs-cleanup']
             }
         ]
     },
