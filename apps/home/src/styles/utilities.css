@@ -11,6 +11,16 @@
         animation: marquee-x 240s linear infinite;
     }
 
+    .shot-settle {
+        animation: shot-settle 4.5s ease-in-out forwards;
+    }
+
+    /* a broken img paints its alt text and a glyph over the blur behind it. screen readers still read the attribute */
+    .shot-img {
+        color: transparent;
+        font-size: 0;
+    }
+
     /* main poster theme */
     .blk {
         box-shadow: 10px 10px 0 0 var(--seed-dark);
@@ -50,9 +60,38 @@
     }
 }
 
+/* three decaying beats, then gone to stop infinite skeleton */
+@keyframes shot-settle {
+    0% {
+        opacity: 0.28;
+    }
+    16% {
+        opacity: 0.08;
+    }
+    33% {
+        opacity: 0.26;
+    }
+    50% {
+        opacity: 0.07;
+    }
+    66% {
+        opacity: 0.2;
+    }
+    83% {
+        opacity: 0.05;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .marquee-anim {
         animation: none;
+    }
+    .shot-settle {
+        animation: none;
+        opacity: 0;
     }
 }
 
