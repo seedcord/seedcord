@@ -13,17 +13,22 @@ import {
     cn,
     matchActiveHref
 } from '@seedcord/ui';
+import { AnchorProvider, useActiveAnchor, useActiveAnchors } from 'fumadocs-core/toc';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { DOCS_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site';
 
 import { DocsSidebar } from './DocsSidebar';
 import { MobileNav } from './MobileNav';
+import { TableOfContents } from './TableOfContents';
+import { TocBar } from './TocBar';
 
 import type { GuideTab, SidebarsByTab } from '#lib/nav';
 import type { SiteDestination } from '@seedcord/ui';
+import type { TocBarProps } from './TocBar';
+import type { TOCItemType } from 'fumadocs-core/toc';
 import type { ReactElement, ReactNode } from 'react';
 
 const DESTINATIONS: readonly SiteDestination[] = [
@@ -31,6 +36,8 @@ const DESTINATIONS: readonly SiteDestination[] = [
     { label: 'Guide', href: SITE_URL, current: true },
     { label: 'Reference', href: DOCS_URL }
 ];
+
+const NO_TOC: readonly TOCItemType[] = [];
 
 function GithubLink(): ReactElement {
     return (
@@ -42,21 +49,62 @@ function GithubLink(): ReactElement {
     );
 }
 
+function ContentsBar({ items, pageTitle }: Omit<TocBarProps, 'activeIds' | 'currentId' | 'className'>): ReactElement {
+    const activeIds = useActiveAnchors();
+    const currentId = useActiveAnchor();
+
+    return (
+        <TocBar
+            items={items}
+            activeIds={activeIds}
+            currentId={currentId}
+            pageTitle={pageTitle}
+            className={cn('sticky top-(--nav-h) z-40 lg:hidden')}
+        />
+    );
+}
+
+function ContentsColumn({ items }: { items: readonly TOCItemType[] }): ReactElement {
+    const activeIds = useActiveAnchors();
+
+    return (
+        <TableOfContents
+            items={items}
+            activeIds={activeIds}
+            className={cn('top-(--nav-h) hidden max-h-[calc(100dvh-var(--nav-h))] py-10 lg:block')}
+        />
+    );
+}
+
 export interface GuideShellProps {
     tabs: readonly GuideTab[];
     sidebars: SidebarsByTab;
+    toc?: readonly TOCItemType[] | undefined;
+    pageTitle?: string | undefined;
+    pathname?: string | undefined;
     children: ReactNode;
 }
 
-export function GuideShell({ tabs, sidebars, children }: GuideShellProps): ReactElement {
-    const pathname = usePathname();
+export function GuideShell({
+    tabs,
+    sidebars,
+    toc = NO_TOC,
+    pageTitle = '',
+    pathname: override,
+    children
+}: GuideShellProps): ReactElement {
+    const current = usePathname();
+    const pathname = override ?? current;
     const [navOpen, setNavOpen] = useState(false);
+    // AnchorProvider re-observes every heading whenever this array changes identity
+    const anchors = useMemo(() => [...toc], [toc]);
 
     const activeHref = matchActiveHref(
         pathname,
         tabs.map((tab) => tab.href)
     );
     const sections = activeHref === undefined ? [] : (sidebars[activeHref] ?? []);
+    const hasContents = toc.length > 0;
 
     return (
         <>
@@ -71,31 +119,30 @@ export function GuideShell({ tabs, sidebars, children }: GuideShellProps): React
                         <MobileNavButton open={navOpen} onOpen={() => setNavOpen(true)} className={cn('lg:hidden')} />
                     </>
                 }
-                tabs={
-                    <NavTabs
-                        items={tabs}
-                        activeHref={activeHref ?? ''}
-                        linkAs={Link}
-                        className={cn('hidden lg:flex')}
-                    />
-                }
+                tabsClassName={cn('hidden lg:flex')}
+                tabs={<NavTabs items={tabs} activeHref={activeHref ?? ''} linkAs={Link} />}
             />
 
-            <div
-                className={cn('mx-auto flex w-full max-w-(--shell-max) gap-10 px-4 md:px-6')}
-                style={{ paddingTop: 'var(--nav-h)' }}
-            >
-                {sections.length > 0 ? (
-                    <DocsSidebar
-                        sections={sections}
-                        activeHref={pathname}
-                        className={cn(
-                            'nice-scroll sticky hidden h-[calc(100dvh-var(--nav-h))] w-64 shrink-0 overflow-y-auto py-10 lg:block'
-                        )}
-                    />
-                ) : null}
-                <main className={cn('min-w-0 flex-1 py-10')}>{children}</main>
-            </div>
+            <AnchorProvider toc={anchors}>
+                <div className={cn('pt-(--nav-h)')}>
+                    {hasContents ? <ContentsBar items={toc} pageTitle={pageTitle} /> : null}
+                    <div className={cn('mx-auto flex w-full max-w-(--content-max) gap-10 px-4 md:px-6')}>
+                        {sections.length > 0 ? (
+                            <DocsSidebar
+                                sections={sections}
+                                activeHref={pathname}
+                                className={cn(
+                                    'nice-scroll sticky top-(--nav-h) hidden h-[calc(100dvh-var(--nav-h))] w-64 shrink-0 overflow-y-auto py-10 lg:block'
+                                )}
+                            />
+                        ) : null}
+                        <main id="main-content" className={cn('min-w-0 flex-1 py-10')}>
+                            {children}
+                        </main>
+                        {hasContents ? <ContentsColumn items={toc} /> : null}
+                    </div>
+                </div>
+            </AnchorProvider>
 
             <MobilePanel
                 open={navOpen}
