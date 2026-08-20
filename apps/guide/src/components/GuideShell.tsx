@@ -2,7 +2,6 @@
 
 import {
     Button,
-    DocsSidebar,
     Dropdown,
     GithubIcon,
     Icon,
@@ -22,8 +21,12 @@ import { useState } from 'react';
 
 import { DOCS_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site';
 
+import { DocsSidebar } from './DocsSidebar';
+
+import type { SidebarSection } from './DocsSidebar';
+
 import type { GuideTab, SidebarsByTab } from '#lib/nav';
-import type { DropdownOption, SidebarSection, SiteDestination } from '@seedcord/ui';
+import type { DropdownOption, SiteDestination } from '@seedcord/ui';
 import type { ReactElement, ReactNode } from 'react';
 
 const DESTINATIONS: readonly SiteDestination[] = [
@@ -89,7 +92,6 @@ export function GuideShell({ tabs, sidebars, children }: GuideShellProps): React
                     <DocsSidebar
                         sections={sections}
                         activeHref={pathname}
-                        linkAs={Link}
                         className={cn(
                             'nice-scroll sticky hidden h-[calc(100dvh-var(--nav-h))] w-64 shrink-0 overflow-y-auto py-10 lg:block'
                         )}
@@ -149,7 +151,6 @@ function MobileNav({ tabs, activeHref, sections, pathname, onNavigate }: MobileN
             <DocsSidebar
                 sections={sections}
                 activeHref={pathname}
-                linkAs={Link}
                 className={cn('nice-scroll mt-5 min-h-0 overflow-y-auto overscroll-contain')}
                 onNavigate={onNavigate}
             />

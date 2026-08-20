@@ -2,7 +2,7 @@ import { getPageTreeRoots } from 'fumadocs-core/page-tree';
 
 import { source } from './source';
 
-import type { SidebarLink, SidebarSection } from '@seedcord/ui';
+import type { SidebarLink, SidebarSection } from '#components/DocsSidebar';
 import type { Folder, Node, Root } from 'fumadocs-core/page-tree';
 
 export interface GuideTab {

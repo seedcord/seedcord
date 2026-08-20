@@ -1,11 +1,8 @@
 'use client';
 
-import { isActiveHref } from './lib/activeHref';
-import { cn } from './lib/cn';
-import { PlainLink } from './lib/navLink';
-import { tw } from './lib/tw';
+import { cn, isActiveHref, tw } from '@seedcord/ui';
+import Link from 'next/link';
 
-import type { NavLinkComponent } from './lib/navLink';
 import type { ReactElement } from 'react';
 
 export interface SidebarLink {
@@ -21,7 +18,6 @@ export interface SidebarSection {
 export interface DocsSidebarProps {
     sections: readonly SidebarSection[];
     activeHref?: string | undefined;
-    linkAs?: NavLinkComponent | undefined;
     onNavigate?: (() => void) | undefined;
     className?: string | undefined;
 }
@@ -34,9 +30,7 @@ const linkClassName = cn(
     tw`hover:bg-(--surface-subtle) hover:text-(--text)`
 );
 
-export function DocsSidebar({ sections, activeHref, linkAs, onNavigate, className }: DocsSidebarProps): ReactElement {
-    const Link = linkAs ?? PlainLink;
-
+export function DocsSidebar({ sections, activeHref, onNavigate, className }: DocsSidebarProps): ReactElement {
     return (
         <nav aria-label="Section pages" className={cn(className)}>
             {sections.map((section, index) => (

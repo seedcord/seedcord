@@ -8,7 +8,6 @@ export * from './CodePanel';
 export * from './CopyAnchorButton';
 export * from './CopyButton';
 export * from './Disclosure';
-export * from './DocsSidebar';
 export * from './Dropdown';
 export * from './GithubIcon';
 export * from './Icon';
