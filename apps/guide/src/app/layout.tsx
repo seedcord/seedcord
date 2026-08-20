@@ -1,6 +1,6 @@
 import { BRAND } from '@seedcord/ui/palette';
 import { MotionProvider, ThemeProvider, cn } from '@seedcord/ui';
-import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
+import { Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
 
@@ -9,8 +9,8 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
+// code keeps tailwind's ui-monospace default
 const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
-const monoCode = JetBrains_Mono({ variable: '--font-mono', subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
@@ -35,7 +35,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
             <body
                 // this avoids a false mismatch warning because browser extensions mutate body attributes before hydration
                 suppressHydrationWarning
-                className={cn(display.variable, monoCode.variable, 'antialiased', 'flex min-h-screen flex-col')}
+                className={cn(display.variable, 'antialiased', 'flex min-h-screen flex-col')}
             >
                 <ThemeProvider>
                     <MotionProvider>{children}</MotionProvider>

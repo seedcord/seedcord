@@ -31,7 +31,7 @@ export function NotFoundPanel(): ReactNode {
             <p className={cn('max-w-md text-lg/snug font-medium text-(--seed-dark)/85')}>
                 That page does not exist. Search from any guide page, or pick one of these.
             </p>
-            <div className={cn('font-mono-code mt-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-2')}>
+            <div className={cn('mt-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 font-mono')}>
                 {LINKS.map((link) => (
                     <Link
                         key={link.href}
