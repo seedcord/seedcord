@@ -15,7 +15,7 @@ const ITEMS: readonly TOCItemType[] = [
 function renderBar(): void {
     render(
         <MotionProvider>
-            <TocBar items={ITEMS} activeIds={['do-this']} />
+            <TocBar items={ITEMS} activeIds={['do-this']} currentId="do-this" pageTitle="The dev loop" />
         </MotionProvider>
     );
 }
@@ -27,7 +27,7 @@ async function click(element: HTMLElement): Promise<void> {
 }
 
 describe('TocBar', () => {
-    it('names the last heading in view', () => {
+    it('names the heading you are in', () => {
         renderBar();
 
         expect(screen.getByRole('button')).toHaveTextContent('Do this');
@@ -54,5 +54,30 @@ describe('TocBar', () => {
         await click(screen.getByRole('link', { name: 'Related' }));
 
         await waitForElementToBeRemoved(() => screen.queryByRole('link', { name: 'Related' }));
+    });
+
+    it('points aria-controls at the panel it opens', async () => {
+        renderBar();
+        const trigger = screen.getByRole('button');
+
+        await click(trigger);
+        const controls = trigger.getAttribute('aria-controls');
+
+        expect(controls).toBeTruthy();
+        expect(document.getElementById(controls ?? '')).toBeInTheDocument();
+    });
+
+    it('returns focus to the trigger when escape closes it', async () => {
+        renderBar();
+        const trigger = screen.getByRole('button');
+
+        await click(trigger);
+        screen.getByRole('link', { name: 'How it works' }).focus();
+
+        await act(async () => {
+            fireEvent.keyDown(window, { key: 'Escape' });
+        });
+
+        expect(trigger).toHaveFocus();
     });
 });

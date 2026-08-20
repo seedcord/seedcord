@@ -13,6 +13,7 @@ export * from './GithubIcon';
 export * from './Icon';
 export * from './IconSwap';
 export * from './Input';
+export * from './LabelSwap';
 export * from './MobileNavButton';
 export * from './MobilePanel';
 export * from './MotionProvider';

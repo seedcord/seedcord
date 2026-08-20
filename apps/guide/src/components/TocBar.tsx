@@ -1,12 +1,23 @@
 'use client';
 
-import { Disclosure, DisclosureChevron, DisclosureTrigger, cn, easeInOutStrong, easeOutStrong, tw } from '@seedcord/ui';
+import {
+    Disclosure,
+    DisclosureChevron,
+    DisclosureTrigger,
+    LabelSwap,
+    cn,
+    easeInOutStrong,
+    easeOutStrong,
+    tw,
+    useDisclosure
+} from '@seedcord/ui';
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 
-import { activeRangeOf, idOf, indentOf, labelClassName, rowClassName } from './TableOfContents';
+import { idOf, indentOf, rowClassName } from './TableOfContents';
 
 import type { TableOfContentsProps } from './TableOfContents';
+import type { TOCItemType } from 'fumadocs-core/toc';
 import type { Variants } from 'motion/react';
 import type { CSSProperties, ReactElement, RefObject } from 'react';
 
@@ -16,7 +27,6 @@ const barClassName = cn(
 );
 // a transparent border holds the bar's height while the panel draws the visible edge
 const barOpenClassName = tw`border-b-transparent`;
-const eyebrowClassName = cn(labelClassName, tw`mb-0 shrink-0`);
 // 44px, the minimum tap target
 const triggerHeight = tw`h-11`;
 
@@ -59,7 +69,8 @@ function useReadProgress(target: RefObject<HTMLElement | null>): void {
         const write = (): void => {
             frame = 0;
             const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-            const read = scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0;
+            // a page that fits the screen is already read through
+            const read = scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 1;
             element.style.setProperty('--read', String(read));
         };
         const schedule = (): void => {
@@ -77,13 +88,84 @@ function useReadProgress(target: RefObject<HTMLElement | null>): void {
     }, [target]);
 }
 
-export function TocBar({ items, activeIds, className }: TableOfContentsProps): ReactElement {
-    const [open, setOpen] = useState(false);
+function PanelRows({
+    items,
+    active,
+    onPick
+}: {
+    items: readonly TOCItemType[];
+    active: ReadonlySet<string>;
+    onPick: () => void;
+}): ReactElement {
+    return (
+        <div
+            className={cn('nice-scroll max-h-[50dvh] overflow-y-auto overscroll-contain px-4 py-3 text-[13px] md:px-6')}
+        >
+            {items.map((item) => {
+                const isActive = active.has(idOf(item.url));
+                return (
+                    <a
+                        key={item.url}
+                        href={item.url}
+                        onClick={onPick}
+                        aria-current={isActive ? 'location' : undefined}
+                        className={cn(
+                            rowClassName,
+                            tw`border-l`,
+                            indentOf(item.depth),
+                            isActive ? tw`border-(--flesh) text-(--flesh)` : tw`border-(--border) text-(--text-muted)`
+                        )}
+                    >
+                        {item.title}
+                    </a>
+                );
+            })}
+        </div>
+    );
+}
+
+function Panel({
+    items,
+    active,
+    onPick
+}: {
+    items: readonly TOCItemType[];
+    active: ReadonlySet<string>;
+    onPick: () => void;
+}): ReactElement {
+    const { open, panelId } = useDisclosure();
     const reducedMotion = useReducedMotion() ?? false;
+
+    return (
+        <AnimatePresence>
+            {open ? (
+                <m.div
+                    id={panelId}
+                    variants={reducedMotion ? INSTANT : PANEL_MOTION}
+                    initial="hidden"
+                    animate="shown"
+                    exit="gone"
+                    className={cn(panelClassName, 'overflow-hidden')}
+                >
+                    <PanelRows items={items} active={active} onPick={onPick} />
+                </m.div>
+            ) : null}
+        </AnimatePresence>
+    );
+}
+
+export interface TocBarProps extends TableOfContentsProps {
+    /** The heading that went active most recently. works in both scroll directions. */
+    currentId: string | undefined;
+    pageTitle: string;
+}
+
+export function TocBar({ items, activeIds, currentId, pageTitle, className }: TocBarProps): ReactElement {
+    const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
     const active = new Set(activeIds);
-    const range = activeRangeOf(items, active);
-    const current = range ? items[range.end] : undefined;
+    const current = items.find((item) => idOf(item.url) === currentId);
 
     useReadProgress(ref);
 
@@ -94,8 +176,11 @@ export function TocBar({ items, activeIds, className }: TableOfContentsProps): R
             if (event.target instanceof Node && ref.current?.contains(event.target)) return;
             setOpen(false);
         };
+        // the focused row unmounts, dropping focus to the body
         const onKeyDown = (event: KeyboardEvent): void => {
-            if (event.key === 'Escape') setOpen(false);
+            if (event.key !== 'Escape') return;
+            setOpen(false);
+            triggerRef.current?.focus();
         };
 
         window.addEventListener('pointerdown', onPointerDown);
@@ -109,54 +194,18 @@ export function TocBar({ items, activeIds, className }: TableOfContentsProps): R
     return (
         <div ref={ref} className={cn(className)}>
             <Disclosure open={open} onOpenChange={setOpen} className={cn(barClassName, open && barOpenClassName)}>
-                <DisclosureTrigger className={cn(triggerHeight, 'gap-2 px-4 text-sm md:px-6')}>
-                    <span className={cn(eyebrowClassName)}>On this page</span>
-                    <span aria-hidden className={cn('shrink-0 text-(--text-faint)')}>
-                        /
-                    </span>
-                    <span className={cn('min-w-0 flex-1 truncate text-left text-(--text)')}>{current?.title}</span>
+                <DisclosureTrigger ref={triggerRef} className={cn(triggerHeight, 'gap-2 px-4 text-sm md:px-6')}>
+                    <LabelSwap
+                        active={open}
+                        idleLabel={current?.title ?? pageTitle}
+                        activeLabel={pageTitle}
+                        itemClassName={cn('truncate text-left')}
+                        className={cn('min-w-0 flex-1 text-(--text)')}
+                    />
                     <DisclosureChevron />
                 </DisclosureTrigger>
                 {open ? null : <span aria-hidden className={cn(progressClassName)} style={progressStyle} />}
-                <AnimatePresence>
-                    {open ? (
-                        <m.div
-                            variants={reducedMotion ? INSTANT : PANEL_MOTION}
-                            initial="hidden"
-                            animate="shown"
-                            exit="gone"
-                            className={cn(panelClassName, 'overflow-hidden')}
-                        >
-                            <div
-                                className={cn(
-                                    'nice-scroll max-h-[50dvh] overflow-y-auto overscroll-contain px-4 py-3 text-[13px] md:px-6'
-                                )}
-                            >
-                                {items.map((item) => {
-                                    const isActive = active.has(idOf(item.url));
-                                    return (
-                                        <a
-                                            key={item.url}
-                                            href={item.url}
-                                            onClick={() => setOpen(false)}
-                                            aria-current={isActive ? 'location' : undefined}
-                                            className={cn(
-                                                rowClassName,
-                                                tw`border-l`,
-                                                indentOf(item.depth),
-                                                isActive
-                                                    ? tw`border-(--flesh) text-(--flesh)`
-                                                    : tw`border-(--border) text-(--text-muted)`
-                                            )}
-                                        >
-                                            {item.title}
-                                        </a>
-                                    );
-                                })}
-                            </div>
-                        </m.div>
-                    ) : null}
-                </AnimatePresence>
+                <Panel items={items} active={active} onPick={() => setOpen(false)} />
             </Disclosure>
         </div>
     );

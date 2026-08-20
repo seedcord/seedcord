@@ -15,7 +15,7 @@ export interface TableOfContentsProps {
 
 // 214px is the column width in the guide layouts mock
 const columnClassName = tw`nice-scroll sticky w-53.5 shrink-0 self-start overflow-y-auto text-[13px]`;
-export const labelClassName = tw`mb-2 text-xs font-semibold tracking-widest text-(--text-faint) uppercase`;
+const labelClassName = tw`mb-2 text-xs font-semibold tracking-widest text-(--text-faint) uppercase`;
 export const rowClassName = cn(
     tw`block py-1.5`,
     tw`transition-colors duration-100 ease-out`,
@@ -37,7 +37,7 @@ interface ActiveRange {
     end: number;
 }
 
-export function activeRangeOf(items: readonly TOCItemType[], active: ReadonlySet<string>): ActiveRange | null {
+function activeRangeOf(items: readonly TOCItemType[], active: ReadonlySet<string>): ActiveRange | null {
     let start = -1;
     let end = -1;
 

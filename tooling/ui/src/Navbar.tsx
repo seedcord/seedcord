@@ -23,14 +23,20 @@ export function Navbar({ mark, center, actions, tabs, tabsClassName, className }
 
     // the sidebar top and the page offset both read --nav-h, and the tab row makes the height vary per site
     useLayoutEffect(() => {
+        const header = ref.current;
+        if (!header) return;
+
         const measure = (): void => {
-            // rounded because a sticky element at a fractional offset renders a hairline at its edges
-            const height = Math.round(ref.current?.getBoundingClientRect().height ?? 0);
+            // ceil because rounding down leaves a sticky element a sliver high, showing the page under it
+            const height = Math.ceil(header.getBoundingClientRect().height);
             if (height > 0) document.documentElement.style.setProperty('--nav-h', `${height}px`);
         };
+
+        // a webfont swapping in reflows these rows without firing a resize
+        const observer = new ResizeObserver(measure);
+        observer.observe(header);
         measure();
-        window.addEventListener('resize', measure);
-        return () => window.removeEventListener('resize', measure);
+        return () => observer.disconnect();
     }, []);
 
     return (

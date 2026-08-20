@@ -13,7 +13,7 @@ import {
     cn,
     matchActiveHref
 } from '@seedcord/ui';
-import { AnchorProvider, useActiveAnchors } from 'fumadocs-core/toc';
+import { AnchorProvider, useActiveAnchor, useActiveAnchors } from 'fumadocs-core/toc';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
@@ -27,6 +27,7 @@ import { TocBar } from './TocBar';
 
 import type { GuideTab, SidebarsByTab } from '#lib/nav';
 import type { SiteDestination } from '@seedcord/ui';
+import type { TocBarProps } from './TocBar';
 import type { TOCItemType } from 'fumadocs-core/toc';
 import type { ReactElement, ReactNode } from 'react';
 
@@ -48,10 +49,19 @@ function GithubLink(): ReactElement {
     );
 }
 
-function ContentsBar({ items }: { items: readonly TOCItemType[] }): ReactElement {
+function ContentsBar({ items, pageTitle }: Omit<TocBarProps, 'activeIds' | 'currentId' | 'className'>): ReactElement {
     const activeIds = useActiveAnchors();
+    const currentId = useActiveAnchor();
 
-    return <TocBar items={items} activeIds={activeIds} className={cn('sticky top-(--nav-h) z-40 lg:hidden')} />;
+    return (
+        <TocBar
+            items={items}
+            activeIds={activeIds}
+            currentId={currentId}
+            pageTitle={pageTitle}
+            className={cn('sticky top-(--nav-h) z-40 lg:hidden')}
+        />
+    );
 }
 
 function ContentsColumn({ items }: { items: readonly TOCItemType[] }): ReactElement {
@@ -70,6 +80,7 @@ export interface GuideShellProps {
     tabs: readonly GuideTab[];
     sidebars: SidebarsByTab;
     toc?: readonly TOCItemType[] | undefined;
+    pageTitle?: string | undefined;
     pathname?: string | undefined;
     children: ReactNode;
 }
@@ -78,6 +89,7 @@ export function GuideShell({
     tabs,
     sidebars,
     toc = NO_TOC,
+    pageTitle = '',
     pathname: override,
     children
 }: GuideShellProps): ReactElement {
@@ -113,7 +125,7 @@ export function GuideShell({
 
             <AnchorProvider toc={anchors}>
                 <div style={{ paddingTop: 'var(--nav-h)' }}>
-                    {hasContents ? <ContentsBar items={toc} /> : null}
+                    {hasContents ? <ContentsBar items={toc} pageTitle={pageTitle} /> : null}
                     <div className={cn('mx-auto flex w-full max-w-(--content-max) gap-10 px-4 md:px-6')}>
                         {sections.length > 0 ? (
                             <DocsSidebar

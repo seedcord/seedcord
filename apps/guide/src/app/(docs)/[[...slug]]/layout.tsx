@@ -15,7 +15,7 @@ export default async function Layout({ params, children }: LayoutProps): Promise
     const page = source.getPage(slug);
 
     return (
-        <GuideShell tabs={GUIDE_TABS} sidebars={sidebarsByTab()} toc={page?.data.toc}>
+        <GuideShell tabs={GUIDE_TABS} sidebars={sidebarsByTab()} toc={page?.data.toc} pageTitle={page?.data.title}>
             {children}
         </GuideShell>
     );
