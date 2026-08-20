@@ -15,7 +15,7 @@ import { OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, REPO_URL, SITE_DESCRIPTION, SITE_
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
-// code keeps tailwind's ui-monospace default. a webfont mono at 12px sits a pixel high in the chips
+// code keeps tailwind's ui-monospace default. a webfont mono at 12px renders a pixel high in the chips
 const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {

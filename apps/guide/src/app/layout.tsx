@@ -9,7 +9,6 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
-// code keeps tailwind's ui-monospace default
 const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {

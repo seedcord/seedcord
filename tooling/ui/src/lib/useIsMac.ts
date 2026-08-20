@@ -12,7 +12,7 @@ function isMacPlatform(nav: { platform?: string; userAgent?: string }): boolean 
 
 const subscribe = (): (() => void) => () => {};
 const readIsMac = (): boolean => isMacPlatform(navigator);
-// false on the server so the first client paint matches what was rendered
+// the first client paint has to match what the server rendered
 const readServer = (): boolean => false;
 
 export function useIsMac(): boolean {

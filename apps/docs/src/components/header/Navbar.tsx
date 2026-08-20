@@ -53,7 +53,7 @@ export function Navbar(): ReactElement {
                 <>
                     <SearchIconButton label={SEARCH_LABEL} onOpen={openSearch} />
                     <ThemeToggle />
-                    {/* the burger panel's footer holds these two */}
+                    {/* the burger panel's footer repeats these two */}
                     <span className={cn(showMobileNavButton ? 'hidden lg:flex' : 'flex', 'items-center gap-2')}>
                         <HeaderSettingsPopover />
                         <Button

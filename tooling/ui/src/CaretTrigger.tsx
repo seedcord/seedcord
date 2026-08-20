@@ -37,7 +37,6 @@ export interface CaretTriggerProps extends ButtonHTMLAttributes<HTMLButtonElemen
     ref?: Ref<HTMLButtonElement> | undefined;
 }
 
-// a right caret reads as closed everywhere in this repo
 export function CaretTrigger({
     label,
     open,
