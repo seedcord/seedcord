@@ -36,9 +36,6 @@ const DESTINATIONS: readonly SiteDestination[] = [
     { label: 'Reference', href: DOCS_URL }
 ];
 
-// below this a page fits on a screen or two
-const BAR_MIN_HEADINGS = 4;
-
 const NO_TOC: readonly TOCItemType[] = [];
 
 function GithubLink(): ReactElement {
@@ -51,14 +48,13 @@ function GithubLink(): ReactElement {
     );
 }
 
-function ContentsBar({ items }: { items: readonly TOCItemType[] }): ReactElement | null {
+function ContentsBar({ items }: { items: readonly TOCItemType[] }): ReactElement {
     const activeIds = useActiveAnchors();
-    if (items.length < BAR_MIN_HEADINGS) return null;
 
     return <TocBar items={items} activeIds={activeIds} className={cn('sticky top-(--nav-h) z-40 lg:hidden')} />;
 }
 
-function ContentsRail({ items }: { items: readonly TOCItemType[] }): ReactElement {
+function ContentsColumn({ items }: { items: readonly TOCItemType[] }): ReactElement {
     const activeIds = useActiveAnchors();
 
     return (
@@ -130,7 +126,7 @@ export function GuideShell({
                             />
                         ) : null}
                         <main className={cn('min-w-0 flex-1 py-10')}>{children}</main>
-                        {hasContents ? <ContentsRail items={toc} /> : null}
+                        {hasContents ? <ContentsColumn items={toc} /> : null}
                     </div>
                 </div>
             </AnchorProvider>

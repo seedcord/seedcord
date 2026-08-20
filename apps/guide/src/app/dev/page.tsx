@@ -7,7 +7,7 @@ const SHELL_PIECES = [
     {
         href: '/dev/toc',
         label: 'Table of contents',
-        description: 'three rails beside a mock page, varying the depth they list and what marks your position'
+        description: 'the headings on a page, in a column beside the body and a bar above it on a phone'
     },
     {
         href: '/dev/transport',

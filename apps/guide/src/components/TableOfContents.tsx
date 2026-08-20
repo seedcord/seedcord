@@ -14,9 +14,9 @@ export interface TableOfContentsProps {
 }
 
 // 214px is the column the guide layouts mock drew
-const railClassName = tw`nice-scroll sticky w-53.5 shrink-0 self-start overflow-y-auto text-[13px]`;
-const labelClassName = tw`mb-2.5 text-xs font-semibold tracking-wide text-(--text-muted) uppercase`;
-export const rowClassName = cn(tw`block py-[5px]`, tw`transition-colors duration-100 ease-out`);
+const columnClassName = tw`nice-scroll sticky w-53.5 shrink-0 self-start overflow-y-auto text-[13px]`;
+export const labelClassName = tw`mb-2 text-xs font-semibold tracking-widest text-(--text-faint) uppercase`;
+export const rowClassName = cn(tw`block py-1.5`, tw`transition-colors duration-100 ease-out`);
 
 const TOP_LEVEL_DEPTH = 2;
 
@@ -54,7 +54,7 @@ export function TableOfContents({ items, activeIds, className }: TableOfContents
 
     return (
         <LayoutGroup id={groupId}>
-            <nav aria-label="On this page" className={cn(railClassName, className)}>
+            <nav aria-label="On this page" className={cn(columnClassName, className)}>
                 <p className={cn(labelClassName)}>On this page</p>
                 {/* the grid sizes the marker to its row span */}
                 <div className={cn('grid border-l border-(--border)')}>
