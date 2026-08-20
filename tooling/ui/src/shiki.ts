@@ -28,17 +28,16 @@ export interface CodeLink {
     href: string;
     start: number;
     end: number;
-    // undefined falls back to the href protocol in applyLinkMarkers
+    // undefined falls back to the href protocol in instrumentLinks
     external?: boolean;
 }
 
-// listing the langs and themes here keeps the standalone trace down to what's below. oniguruma matches
-// the tokenization the transformers were written against.
 let highlighterPromise: Promise<HighlighterCore> | null = null;
 function ensureHighlighter(): Promise<HighlighterCore> {
     highlighterPromise ??= createHighlighterCore({
         themes: [seedcordBrandLight, seedcordBrandDark],
         langs: [langTs, langTsx, langJs, langJsx, langJson, langBash],
+        // the transformers below were written against oniguruma's tokenization
         engine: createOnigurumaEngine(import('shiki/wasm'))
     });
     return highlighterPromise;
@@ -113,14 +112,11 @@ function dropPrefix(line: HastElement, prefix: string): void {
     }
 }
 
-// refs are woven in as PUA unicode sentinels (U+E000 range). shiki's decorations API requires
-// token-boundary alignment the TS grammar doesn't always give (a return-type `: Foo` tokenizes as one
-// segment). the grammar treats the sentinels as identifier-continuation chars, and a post-render pass
-// swaps them for `<a href>`. the layout per ref is `<OPEN><index><BOUND>name<CLOSE><index><BOUND>`,
-// which lets one regex pull out the index and the content together.
+// shiki's decorations API needs token boundaries the TS grammar doesn't give (a return type `: Foo`
+// tokenizes as one segment). the U+E000 sentinels below wrap a link range and survive tokenization
+// because the grammar reads them as identifier continuations.
 
-// macos font fallback maps the U+E000 range onto apple's private glyphs, so raw literals here would
-// render as dock and imessage icons in an editor
+// a raw literal from that range renders as one of apple's private glyphs in a macos editor
 const LINK_OPEN = '\uE000';
 const LINK_OPEN_BOUND = '\uE001';
 const LINK_CLOSE = '\uE002';
@@ -143,7 +139,10 @@ interface SentinelLink {
     open: string;
     close: string;
     href: string;
+    opensNewTab: boolean;
 }
+
+const EXTERNAL_URL_RE = /^https?:\/\//i;
 
 // shiki writes the PUA chars out as numeric entities. decode first.
 function normalizeSentinels(html: string): string {
@@ -158,7 +157,7 @@ function normalizeSentinels(html: string): string {
 function instrumentLinks(code: string, links: readonly CodeLink[]): { code: string; markers: SentinelLink[] } {
     if (links.length === 0) return { code, markers: [] };
 
-    // Sorted by start so the cursor advance below stays left-to-right.
+    // sorted by start because the cursor below only moves forward
     const ordered = [...links].sort((a, b) => a.start - b.start);
     const markers: SentinelLink[] = [];
     let result = '';
@@ -171,7 +170,12 @@ function instrumentLinks(code: string, links: readonly CodeLink[]): { code: stri
         const indexChar = String.fromCharCode(indexCode);
         const open = `${LINK_OPEN}${indexChar}${LINK_OPEN_BOUND}`;
         const close = `${LINK_CLOSE}${indexChar}${LINK_CLOSE_BOUND}`;
-        markers.push({ open, close, href: escapeHtmlAttr(link.href) });
+        markers.push({
+            open,
+            close,
+            href: escapeHtmlAttr(link.href),
+            opensNewTab: link.external ?? EXTERNAL_URL_RE.test(link.href)
+        });
 
         result += code.slice(cursor, link.start);
         result += open;
@@ -183,9 +187,7 @@ function instrumentLinks(code: string, links: readonly CodeLink[]): { code: stri
     return { code: result, markers };
 }
 
-const EXTERNAL_URL_RE = /^https?:\/\//i;
-
-function applyLinkMarkers(html: string, markers: readonly SentinelLink[], links: readonly CodeLink[]): string {
+function applyLinkMarkers(html: string, markers: readonly SentinelLink[]): string {
     if (markers.length === 0) return html;
 
     let result = normalizeSentinels(html);
@@ -193,12 +195,8 @@ function applyLinkMarkers(html: string, markers: readonly SentinelLink[], links:
     // regex below nothing to match until the span is unwrapped
     result = result.replaceAll(/<span[^>]*>\s*([-])\s*<\/span>/g, '$1');
 
-    for (let i = 0; i < markers.length; i += 1) {
-        const marker = markers[i];
-        const link = links[i];
-        if (!marker || !link) continue;
-        const opensNewTab = link.external ?? EXTERNAL_URL_RE.test(link.href);
-        const attrs = opensNewTab ? ' target="_blank" rel="noreferrer noopener"' : '';
+    for (const marker of markers) {
+        const attrs = marker.opensNewTab ? ' target="_blank" rel="noreferrer noopener"' : '';
         const pattern = new RegExp(String.raw`${escapeRegex(marker.open)}([\s\S]*?)${escapeRegex(marker.close)}`, 'g');
         result = result.replace(
             pattern,
@@ -248,10 +246,9 @@ const stripMemberWrap: ShikiTransformer = {
     }
 };
 
-// shiki's dual-theme mode (`themes: {…}` + `defaultColor: false`) breaks in safari, because webkit
-// does not resolve a span's `color: var(--shiki-dark)` against an inline custom property on that same
-// span. rendering once per theme gives each `<pre>` a resolved `color:#X`, and globals.css switches
-// the `shiki-light`/`shiki-dark` pair by visibility.
+// safari breaks shiki's dual-theme mode (`themes: {…}` + `defaultColor: false`) because webkit does
+// not resolve a span's `color: var(--shiki-dark)` against an inline custom property on that same span.
+// globals.css switches the rendered pair by visibility.
 
 function decorateBlock(html: string, variant: 'light' | 'dark'): string {
     return html.replace('<pre class="shiki', `<pre class="shiki shiki-${variant}`);
@@ -260,7 +257,6 @@ function decorateBlock(html: string, variant: 'light' | 'dark'): string {
 async function renderDual(
     instrumented: string,
     markers: readonly SentinelLink[],
-    links: readonly CodeLink[],
     lang: BundledLanguage,
     transformers: ShikiTransformer[] = []
 ): Promise<string> {
@@ -273,8 +269,8 @@ async function renderDual(
         highlighter.codeToHtml(instrumented, { lang, theme: THEMES.dark, transformers }),
         'dark'
     );
-    const light = applyLinkMarkers(lightRaw, markers, links);
-    const dark = applyLinkMarkers(darkRaw, markers, links);
+    const light = applyLinkMarkers(lightRaw, markers);
+    const dark = applyLinkMarkers(darkRaw, markers);
     return `<div class="shiki-theme-group">${light}${dark}</div>`;
 }
 
@@ -287,15 +283,14 @@ export async function highlightToHtml(
 
     try {
         const { code: instrumented, markers } = instrumentLinks(code, links);
-        return await renderDual(instrumented, markers, links, lang);
+        return await renderDual(instrumented, markers, lang);
     } catch {
         return null;
     }
 }
 
-// shiki reads `extends` inside `<T extends X>` as a keyword only with a statement-context anchor in
-// front of it, hence the function wrap. a `class _ {…}` wrap also breaks multi-line type-param
-// constraints.
+// shiki reads `extends` inside `<T extends X>` as a keyword only with a statement in front of it. a
+// `class _ {…}` wrap breaks multi-line type-param constraints.
 export async function highlightSignatureToHtml(code: string, links: readonly CodeLink[] = []): Promise<string | null> {
     if (!code) return '';
 
@@ -308,7 +303,7 @@ export async function highlightSignatureToHtml(code: string, links: readonly Cod
             end: l.end + FN_PREFIX.length
         }));
         const { code: instrumented, markers } = instrumentLinks(wrapped, shifted);
-        return await renderDual(instrumented, markers, shifted, 'ts', [stripFunctionWrap]);
+        return await renderDual(instrumented, markers, 'ts', [stripFunctionWrap]);
     } catch {
         return null;
     }
@@ -327,15 +322,13 @@ export async function highlightMemberToHtml(code: string, links: readonly CodeLi
             end: l.end + PREFIX.length
         }));
         const { code: instrumented, markers } = instrumentLinks(wrapped, shifted);
-        return await renderDual(instrumented, markers, shifted, 'ts', [stripMemberWrap]);
+        return await renderDual(instrumented, markers, 'ts', [stripMemberWrap]);
     } catch {
         return null;
     }
 }
 
-// a type-param row like `TPluggableEvents extends X = Y` goes through `type _<row> = unknown` because
-// shiki tokenizes `<X extends Y = Z>` only inside real generic brackets, which a class-body wrap
-// can't give it
+// `<X extends Y = Z>` only tokenizes inside real generic brackets
 const stripTypeParamWrap: ShikiTransformer = {
     name: 'seedcord-strip-type-param-wrap',
     code(codeEl) {
@@ -367,7 +360,7 @@ export async function highlightTypeParamToHtml(code: string, links: readonly Cod
             end: l.end + PREFIX.length
         }));
         const { code: instrumented, markers } = instrumentLinks(wrapped, shifted);
-        return await renderDual(instrumented, markers, shifted, 'ts', [stripTypeParamWrap]);
+        return await renderDual(instrumented, markers, 'ts', [stripTypeParamWrap]);
     } catch {
         return null;
     }
