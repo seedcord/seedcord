@@ -32,8 +32,14 @@ export function LabelSwap({
     return (
         // both labels share one grid cell to keep the box at the wider one's width
         <span className={cn('grid', className)}>
-            <span className={cn(cellClassName, itemClassName, active ? leavingUp : 'opacity-100')}>{idleLabel}</span>
-            <span className={cn(cellClassName, itemClassName, activeClassName, active ? 'opacity-100' : waitingBelow)}>
+            {/* opacity leaves the hidden label in the accessibility tree */}
+            <span aria-hidden={active} className={cn(cellClassName, itemClassName, active ? leavingUp : 'opacity-100')}>
+                {idleLabel}
+            </span>
+            <span
+                aria-hidden={!active}
+                className={cn(cellClassName, itemClassName, activeClassName, active ? 'opacity-100' : waitingBelow)}
+            >
                 {activeLabel}
             </span>
         </span>

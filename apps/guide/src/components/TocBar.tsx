@@ -27,7 +27,7 @@ const barClassName = cn(
 );
 // a transparent border holds the bar's height while the panel draws the visible edge
 const barOpenClassName = tw`border-b-transparent`;
-// 44px, the minimum tap target
+// 44px is the minimum tap target
 const triggerHeight = tw`h-11`;
 
 // -8px of spread starts the shadow below the panel's top so it never darkens the trigger
@@ -80,9 +80,13 @@ function useReadProgress(target: RefObject<HTMLElement | null>): void {
         write();
         window.addEventListener('scroll', schedule, { passive: true });
         window.addEventListener('resize', schedule, { passive: true });
+        // this bar outlives a route change and arriving at scroll 0 fires no scroll event
+        const grew = new ResizeObserver(schedule);
+        grew.observe(document.documentElement);
         return () => {
             window.removeEventListener('scroll', schedule);
             window.removeEventListener('resize', schedule);
+            grew.disconnect();
             if (frame !== 0) cancelAnimationFrame(frame);
         };
     }, [target]);
@@ -176,11 +180,12 @@ export function TocBar({ items, activeIds, currentId, pageTitle, className }: To
             if (event.target instanceof Node && ref.current?.contains(event.target)) return;
             setOpen(false);
         };
-        // the focused row unmounts, dropping focus to the body
         const onKeyDown = (event: KeyboardEvent): void => {
             if (event.key !== 'Escape') return;
+            // focus falls to the body once the row unmounts
+            const heldFocus = ref.current?.contains(document.activeElement) ?? false;
             setOpen(false);
-            triggerRef.current?.focus();
+            if (heldFocus) triggerRef.current?.focus();
         };
 
         window.addEventListener('pointerdown', onPointerDown);
@@ -195,6 +200,8 @@ export function TocBar({ items, activeIds, currentId, pageTitle, className }: To
         <div ref={ref} className={cn(className)}>
             <Disclosure open={open} onOpenChange={setOpen} className={cn(barClassName, open && barOpenClassName)}>
                 <DisclosureTrigger ref={triggerRef} className={cn(triggerHeight, 'gap-2 px-4 text-sm md:px-6')}>
+                    {/* the visible label names a heading and never this control */}
+                    <span className={cn('sr-only')}>On this page: </span>
                     <LabelSwap
                         active={open}
                         idleLabel={current?.title ?? pageTitle}

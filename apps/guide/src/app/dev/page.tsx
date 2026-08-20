@@ -5,11 +5,6 @@ import type { ReactElement } from 'react';
 
 const SHELL_PIECES = [
     {
-        href: '/dev/toc',
-        label: 'Table of contents',
-        description: 'the headings on a page, in a column beside the body and a bar above it on a phone'
-    },
-    {
         href: '/dev/transport',
         label: 'Transport control',
         description: 'the gateway and http picker for code samples, in a code header and on its own'

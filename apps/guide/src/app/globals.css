@@ -25,7 +25,7 @@
         -webkit-font-smoothing: antialiased;
     }
 
-    /* the navbar is fixed, so an anchor jump would land under it */
+    /* an anchor jump lands under the fixed navbar without this */
     :is(h1, h2, h3, h4, h5, h6)[id] {
         scroll-margin-top: calc(var(--nav-h, 0px) + 3.5rem);
     }

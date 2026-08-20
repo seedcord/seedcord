@@ -21,13 +21,13 @@ export interface NavbarProps {
 export function Navbar({ mark, center, actions, tabs, tabsClassName, className }: NavbarProps): ReactElement {
     const ref = useRef<HTMLElement>(null);
 
-    // the sidebar top and the page offset both read --nav-h, and the tab row makes the height vary per site
+    // the sidebar top and the page offset both read --nav-h. a tab row makes the height vary per site
     useLayoutEffect(() => {
         const header = ref.current;
         if (!header) return;
 
         const measure = (): void => {
-            // ceil because rounding down leaves a sticky element a sliver high, showing the page under it
+            // rounding down leaves a sticky element a sliver high and the page shows through
             const height = Math.ceil(header.getBoundingClientRect().height);
             if (height > 0) document.documentElement.style.setProperty('--nav-h', `${height}px`);
         };
