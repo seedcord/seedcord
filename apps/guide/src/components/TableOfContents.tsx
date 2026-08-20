@@ -13,17 +13,18 @@ export interface TableOfContentsProps {
     className?: string | undefined;
 }
 
+// 214px is the column the guide layouts mock drew
 const railClassName = tw`nice-scroll sticky w-53.5 shrink-0 self-start overflow-y-auto text-[13px]`;
 const labelClassName = tw`mb-2.5 text-xs font-semibold tracking-wide text-(--text-muted) uppercase`;
-const rowClassName = cn(tw`block py-[5px]`, tw`transition-colors duration-100 ease-out`);
+export const rowClassName = cn(tw`block py-[5px]`, tw`transition-colors duration-100 ease-out`);
 
 const TOP_LEVEL_DEPTH = 2;
 
-function idOf(url: string): string {
+export function idOf(url: string): string {
     return url.startsWith('#') ? url.slice(1) : url;
 }
 
-function indentOf(depth: number): string {
+export function indentOf(depth: number): string {
     return depth > TOP_LEVEL_DEPTH ? tw`ps-6` : tw`ps-3`;
 }
 
@@ -32,7 +33,7 @@ interface ActiveRange {
     end: number;
 }
 
-function rangeOf(items: readonly TOCItemType[], active: ReadonlySet<string>): ActiveRange | null {
+export function activeRangeOf(items: readonly TOCItemType[], active: ReadonlySet<string>): ActiveRange | null {
     let start = -1;
     let end = -1;
 
@@ -45,41 +46,11 @@ function rangeOf(items: readonly TOCItemType[], active: ReadonlySet<string>): Ac
     return start === -1 ? null : { start, end };
 }
 
-export function TocBordered({ items, activeIds, className }: TableOfContentsProps): ReactElement {
-    const active = new Set(activeIds);
-
-    return (
-        <nav aria-label="On this page" className={cn(railClassName, className)}>
-            <p className={cn(labelClassName)}>On this page</p>
-            {items.map((item) => {
-                const isActive = active.has(idOf(item.url));
-                return (
-                    <a
-                        key={item.url}
-                        href={item.url}
-                        aria-current={isActive ? 'location' : undefined}
-                        className={cn(
-                            rowClassName,
-                            tw`border-l`,
-                            indentOf(item.depth),
-                            isActive
-                                ? tw`border-(--flesh) text-(--flesh)`
-                                : tw`border-(--border) text-(--text-muted) hover:text-(--text)`
-                        )}
-                    >
-                        {item.title}
-                    </a>
-                );
-            })}
-        </nav>
-    );
-}
-
-export function TocSliding({ items, activeIds, className }: TableOfContentsProps): ReactElement {
+export function TableOfContents({ items, activeIds, className }: TableOfContentsProps): ReactElement {
     const reducedMotion = useReducedMotion() ?? false;
     const groupId = useId();
     const active = new Set(activeIds);
-    const range = rangeOf(items, active);
+    const range = activeRangeOf(items, active);
 
     return (
         <LayoutGroup id={groupId}>
@@ -117,35 +88,5 @@ export function TocSliding({ items, activeIds, className }: TableOfContentsProps
                 </div>
             </nav>
         </LayoutGroup>
-    );
-}
-
-export function TocTinted({ items, activeIds, className }: TableOfContentsProps): ReactElement {
-    const active = new Set(activeIds);
-    const topLevel = items.filter((item) => item.depth <= TOP_LEVEL_DEPTH);
-
-    return (
-        <nav aria-label="On this page" className={cn(railClassName, className)}>
-            <p className={cn(labelClassName, 'px-3')}>On this page</p>
-            {topLevel.map((item) => {
-                const isActive = active.has(idOf(item.url));
-                return (
-                    <a
-                        key={item.url}
-                        href={item.url}
-                        aria-current={isActive ? 'location' : undefined}
-                        className={cn(
-                            rowClassName,
-                            tw`rounded-md px-3`,
-                            isActive
-                                ? tw`bg-(--bg-accent-b-moderate) font-medium text-(--text)`
-                                : tw`text-(--text-muted) hover:bg-(--surface-subtle) hover:text-(--text)`
-                        )}
-                    >
-                        {item.title}
-                    </a>
-                );
-            })}
-        </nav>
     );
 }

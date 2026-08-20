@@ -13,10 +13,12 @@ export interface NavbarProps {
     center?: ReactNode;
     actions?: ReactNode;
     tabs?: ReactNode;
+    /** Hide the tab row here. Hiding the tabs themselves leaves this row's border behind. */
+    tabsClassName?: string | undefined;
     className?: string | undefined;
 }
 
-export function Navbar({ mark, center, actions, tabs, className }: NavbarProps): ReactElement {
+export function Navbar({ mark, center, actions, tabs, tabsClassName, className }: NavbarProps): ReactElement {
     const ref = useRef<HTMLElement>(null);
 
     // the sidebar top and the page offset both read --nav-h, and the tab row makes the height vary per site
@@ -44,7 +46,9 @@ export function Navbar({ mark, center, actions, tabs, className }: NavbarProps):
                 <div className={cn('flex items-center justify-center')}>{center}</div>
                 <div className={cn('flex items-center justify-end gap-2')}>{actions}</div>
             </div>
-            {tabs ? <div className={cn(shellRowClassName, 'border-t border-(--border)')}>{tabs}</div> : null}
+            {tabs ? (
+                <div className={cn(shellRowClassName, 'border-t border-(--border)', tabsClassName)}>{tabs}</div>
+            ) : null}
         </header>
     );
 }

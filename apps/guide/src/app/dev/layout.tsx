@@ -19,17 +19,18 @@ function DevLayout({ children }: DevLayoutProps): ReactNode {
 
     return (
         <div className={cn('flex min-h-screen flex-col')}>
-            <div className={cn('border-b border-(--border) px-6 py-3')}>
-                <Link
-                    href="/dev"
-                    className={cn(
-                        'text-xs font-semibold tracking-widest text-(--text-faint) uppercase hover:text-(--text)'
-                    )}
-                >
-                    ← guide · /dev
-                </Link>
-            </div>
             {children}
+            {/* a preview rendering the real shell needs the flow to itself */}
+            <Link
+                href="/dev"
+                className={cn(
+                    'fixed bottom-4 left-4 z-70 rounded-md border border-(--border) bg-(--bg-popover) px-3 py-2',
+                    'text-xs font-semibold tracking-widest text-(--text-faint) uppercase shadow-(--shadow-card-md)',
+                    'hover:text-(--text)'
+                )}
+            >
+                ← /dev
+            </Link>
         </div>
     );
 }

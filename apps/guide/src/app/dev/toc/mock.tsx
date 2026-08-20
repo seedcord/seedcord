@@ -3,7 +3,7 @@ import { CodeBlock, cn } from '@seedcord/ui';
 import type { TOCItemType } from 'fumadocs-core/toc';
 import type { ReactElement } from 'react';
 
-export interface MockHeading {
+interface MockHeading {
     id: string;
     text: string;
     depth: TOCItemType['depth'];
@@ -11,32 +11,7 @@ export interface MockHeading {
     codeLines?: number;
 }
 
-export interface MockShape {
-    key: string;
-    label: string;
-    title: string;
-    description: string;
-    headings: readonly MockHeading[];
-}
-
-const TEMPLATE_HEADINGS: readonly MockHeading[] = [
-    { id: 'do-this', text: 'Do this', depth: 2, paragraphs: 2, codeLines: 5 },
-    { id: 'how-it-works', text: 'How it works', depth: 2, paragraphs: 4 },
-    { id: 'when-it-breaks', text: 'When it breaks', depth: 2, paragraphs: 1 },
-    {
-        id: 'cannot-read-properties-of-undefined',
-        text: 'Cannot read properties of undefined',
-        depth: 3,
-        paragraphs: 2,
-        codeLines: 3
-    },
-    { id: 'missing-required-option-name', text: "Missing required option 'name'", depth: 3, paragraphs: 1 },
-    { id: 'route-already-registered', text: 'Route already registered', depth: 3, paragraphs: 3 },
-    { id: 'on-http', text: 'On http', depth: 2, paragraphs: 1 },
-    { id: 'related', text: 'Related', depth: 2, paragraphs: 1 }
-];
-
-const LONG_HEADINGS: readonly MockHeading[] = [
+const HEADINGS: readonly MockHeading[] = [
     { id: 'install-the-cli', text: 'Install the CLI', depth: 2, paragraphs: 1, codeLines: 3 },
     { id: 'the-dev-loop', text: 'The dev loop', depth: 2, paragraphs: 2 },
     { id: 'watching-for-changes', text: 'Watching for changes', depth: 3, paragraphs: 1 },
@@ -56,50 +31,19 @@ const LONG_HEADINGS: readonly MockHeading[] = [
         depth: 3,
         paragraphs: 1
     },
-    { id: 'on-http-long', text: 'On http', depth: 2, paragraphs: 2 },
-    { id: 'related-long', text: 'Related', depth: 2, paragraphs: 1 }
+    { id: 'on-http', text: 'On http', depth: 2, paragraphs: 2 },
+    { id: 'related', text: 'Related', depth: 2, paragraphs: 1 }
 ];
 
-const SHORT_HEADINGS: readonly MockHeading[] = [
-    { id: 'do-this-short', text: 'Do this', depth: 2, paragraphs: 4, codeLines: 6 },
-    { id: 'related-short', text: 'Related', depth: 2, paragraphs: 1 }
-];
+const TITLE = 'The dev loop end to end';
+const DESCRIPTION =
+    'Sixteen headings and sections running from one paragraph to seven. Four carry a code block, so the rhythm matches a real page more closely than even filler would.';
 
-const TEMPLATE_SHAPE = {
-    key: 'template',
-    label: 'Page template',
-    title: 'Options that type themselves',
-    description:
-        'You declare a command options once. Codegen reads that declaration and types this.options, so a required option comes back non-null and a name you never declared fails to compile.',
-    headings: TEMPLATE_HEADINGS
-};
-
-const LONG_SHAPE = {
-    key: 'long',
-    label: 'Long page',
-    title: 'The dev loop end to end',
-    description:
-        'Sixteen headings and sections running from one paragraph to seven. Four carry a code block. This is where the rail decides what to do once its own list runs past the screen.',
-    headings: LONG_HEADINGS
-};
-
-const SHORT_SHAPE = {
-    key: 'short',
-    label: 'Two headings',
-    title: 'Reading an option',
-    description: 'Two headings, which is the case where a rail may be worth skipping entirely.',
-    headings: SHORT_HEADINGS
-};
-
-export const SHAPES = [TEMPLATE_SHAPE, LONG_SHAPE, SHORT_SHAPE] as const satisfies readonly MockShape[];
-
-export type ShapeKey = (typeof SHAPES)[number]['key'];
-
-export const DEFAULT_SHAPE = TEMPLATE_SHAPE;
-
-export function tocOf(shape: MockShape): TOCItemType[] {
-    return shape.headings.map((heading) => ({ title: heading.text, url: `#${heading.id}`, depth: heading.depth }));
-}
+export const MOCK_TOC: readonly TOCItemType[] = HEADINGS.map((heading) => ({
+    title: heading.text,
+    url: `#${heading.id}`,
+    depth: heading.depth
+}));
 
 const FILLER = [
     'Every getter narrows from your own declaration. A required option returns a value, and an optional one returns a union with null.',
@@ -154,12 +98,12 @@ function Section({ heading, index }: { heading: MockHeading; index: number }): R
     );
 }
 
-export function MockArticle({ shape }: { shape: MockShape }): ReactElement {
+export function MockArticle(): ReactElement {
     return (
         <article>
-            <h1 className={cn('font-display text-4xl/tight font-semibold text-(--text)')}>{shape.title}</h1>
-            <p className={cn('mt-3 text-lg/relaxed text-(--text-muted)')}>{shape.description}</p>
-            {shape.headings.map((heading, index) => (
+            <h1 className={cn('font-display text-4xl/tight font-semibold text-(--text)')}>{TITLE}</h1>
+            <p className={cn('mt-3 text-lg/relaxed text-(--text-muted)')}>{DESCRIPTION}</p>
+            {HEADINGS.map((heading, index) => (
                 <Section key={heading.id} heading={heading} index={index} />
             ))}
         </article>
