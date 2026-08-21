@@ -69,8 +69,14 @@ function GuideTable({ children, ...props }: ComponentProps<'table'>): ReactEleme
     );
 }
 
+interface Fenced {
+    code: string;
+    lang: BundledLanguage;
+    title: string | undefined;
+}
+
 // mdx renders a fence as <pre><code className="language-x">
-function readFence(children: ReactNode): { code: string; lang: BundledLanguage } | null {
+function readFence(children: ReactNode): Fenced | null {
     if (typeof children !== 'object' || children === null || !('props' in children)) return null;
 
     const props = children.props as Record<string, unknown>;
@@ -82,8 +88,13 @@ function readFence(children: ReactNode): { code: string; lang: BundledLanguage }
         .split(/\s+/)
         .find((name) => name.startsWith(LANGUAGE_PREFIX))
         ?.slice(LANGUAGE_PREFIX.length);
+    const title = props['data-title'];
 
-    return { code: code.replace(/\n$/, ''), lang: named && isHighlightable(named) ? named : 'ts' };
+    return {
+        code: code.replace(/\n$/, ''),
+        lang: named && isHighlightable(named) ? named : 'ts',
+        title: typeof title === 'string' ? title : undefined
+    };
 }
 
 async function Fence({ children }: FenceProps): Promise<ReactElement> {
@@ -91,7 +102,7 @@ async function Fence({ children }: FenceProps): Promise<ReactElement> {
     if (!fence) return <pre>{children}</pre>;
 
     const html = await highlightToHtml(fence.code, fence.lang);
-    return <CodeBlock representation={{ text: fence.code, html }} />;
+    return <CodeBlock representation={{ text: fence.code, html }} label={fence.title} />;
 }
 
 export const mdxComponents = {

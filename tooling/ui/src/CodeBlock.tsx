@@ -8,7 +8,7 @@ import type { ReactElement, ReactNode } from 'react';
 
 export interface CodeBlockProps {
     representation: CodeRepresentation;
-    label?: string;
+    label?: string | undefined;
     /**
      * Optional override for the copy-button's clipboard value. Defaults to
      * `representation.text`. Pass `null` to suppress the copy button.

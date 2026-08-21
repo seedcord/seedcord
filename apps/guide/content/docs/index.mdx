@@ -9,7 +9,7 @@ Every element below renders through the guide's own component map. The prose is 
 
 The decorator writes the route through `reflect-metadata`, and codegen reads the commands directory to build the registry. A handler reads its options through `this.options` and replies through `this.reply`. Both are typed off the route you named in `@SlashRoute`, so a rename in one place breaks the build in the other.
 
-```ts
+```ts title="src/commands/Ping.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 
 @SlashRoute('ping')
@@ -18,6 +18,12 @@ export class Ping extends SlashHandler<'ping'> {
         await this.reply('Pong');
     }
 }
+```
+
+A fence with no `title` keeps its header, since the copy button lives there.
+
+```sh
+pnpm add @seedcord/gateway
 ```
 
 ### Options come off the registry

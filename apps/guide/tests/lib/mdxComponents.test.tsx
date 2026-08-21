@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { mdxComponents } from '#lib/mdxComponents';
 
-const { Image } = mdxComponents;
+const { Image, pre: Fence } = mdxComponents;
 
 function classesOf(alt: string): string[] {
     return screen.getByRole('img', { name: alt }).className.split(/\s+/);
@@ -16,6 +16,25 @@ function borderWidthOf(alt: string): string | undefined {
 function marginOf(alt: string): string | undefined {
     return classesOf(alt).find((name) => /^m[a-z]-auto$/.test(name));
 }
+
+describe('a fence', () => {
+    // mdx gives pre one code child
+    async function renderFence(props: Record<string, unknown>): Promise<void> {
+        render(await Fence({ children: <code {...props}>const a = 1;</code> }));
+    }
+
+    it('captions the block with the fence title', async () => {
+        await renderFence({ className: 'language-ts', 'data-title': 'src/commands/Ping.ts' });
+
+        expect(screen.getByText('src/commands/Ping.ts')).toBeInTheDocument();
+    });
+
+    it('draws no caption when the fence gives no title', async () => {
+        await renderFence({ className: 'language-ts' });
+
+        expect(screen.queryByText('src/commands/Ping.ts')).toBeNull();
+    });
+});
 
 describe('the image component', () => {
     it('draws a border by default', () => {

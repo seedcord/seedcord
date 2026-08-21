@@ -39,6 +39,18 @@ describe('heading depth', () => {
     });
 });
 
+describe('a fence caption', () => {
+    function fence(meta: string): string {
+        return [`\`\`\`ts ${meta}`, 'const a = 1;', '```'].join('\n');
+    }
+
+    it('carries the title through to the code element', async () => {
+        const code = await compileGuideMdx(fence('title="src/commands/Ping.ts"'));
+
+        expect(code).toContain('src/commands/Ping.ts');
+    });
+});
+
 describe('a pipe table', () => {
     it('parses into a table the component map can style', async () => {
         const code = await compileGuideMdx(['| a | b |', '| --- | --- |', '| 1 | 2 |'].join('\n'));
