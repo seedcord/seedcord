@@ -27,7 +27,7 @@ export function CodeBlock({ representation, label, copyValue, actions, className
     const showHeader = Boolean(label) || showCopy || Boolean(actions);
 
     return (
-        <Card as="figure" variant="default" size="none" className={cn('overflow-hidden bg-(--bg-code)', className)}>
+        <Card as="figure" variant="flat" size="none" className={cn('overflow-hidden bg-(--bg-code)', className)}>
             {showHeader ? (
                 <figcaption
                     className={cn(

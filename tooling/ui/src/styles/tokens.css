@@ -34,6 +34,7 @@
     --text: var(--color-text);
     --surface: var(--color-surface);
     --border: color-mix(in oklab, var(--color-base-slate) 68%, var(--color-bg));
+    --link: var(--rind-deep);
 
     --shell-max: 80rem;
     --radius-surface: 0.375rem;
@@ -63,6 +64,7 @@
     --color-text: #f8f6e8;
     --color-surface: rgba(255, 255, 255, 0.04);
     --border: color-mix(in oklab, var(--pith) 28%, var(--color-bg));
+    --link: var(--rind);
 
     color-scheme: dark;
 }

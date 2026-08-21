@@ -74,6 +74,19 @@ A callout takes whole blocks, so a fence sits inside one.
 
 </Callout>
 
+## Reference links
+
+A named symbol links out to the reference site, and the slug comes off the name. A gate refuses by throwing
+
+<Ref pkg="core">Notice</Ref> or <Ref pkg="core">Silence</Ref>, and anything unexpected becomes a
+<Ref pkg="core">Fault</Ref>.
+
+A multi-word name kebab-cases itself, so <Ref pkg="gateway">SlashHandler</Ref> reaches `slash-handler`. A dotted member nests, so <Ref pkg="core">Paginator.start</Ref> reaches `paginator/start`. A generic drops off the end, so
+
+<Ref pkg="core">{'Plugin<Options>'}</Ref> and <Ref pkg="core">Plugin</Ref> land on the same page.
+
+Each package is its own argument, so <Ref pkg="http">createSeedcord</Ref> and <Ref pkg="gateway">Seedcord</Ref> point at two sites of the same idea. Every one of these opens in a new tab.
+
 ## Lists
 
 Three things ship with every command:

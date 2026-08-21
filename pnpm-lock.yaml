@@ -401,6 +401,9 @@ importers:
 
   apps/guide:
     dependencies:
+      '@seedcord/docs-engine':
+        specifier: workspace:^
+        version: link:../../tooling/docs-engine
       '@seedcord/ui':
         specifier: workspace:^
         version: link:../../tooling/ui

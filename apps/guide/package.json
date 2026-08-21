@@ -21,6 +21,7 @@
         "test:watch": "vitest dev"
     },
     "dependencies": {
+        "@seedcord/docs-engine": "workspace:^",
         "@seedcord/ui": "workspace:^",
         "fumadocs-core": "16.14.4",
         "fumadocs-mdx": "15.2.3",

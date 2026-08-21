@@ -2,6 +2,7 @@ import { Card, CodeBlock, CopyAnchorButton, cn, tw } from '@seedcord/ui';
 import { highlightInlineToHtml, highlightToHtml, isHighlightable } from '@seedcord/ui/shiki';
 
 import { Callout } from '#components/Callout';
+import { Ref } from '#components/Ref';
 
 import type { MDXComponents } from 'mdx/types';
 import type { BundledLanguage } from 'shiki';
@@ -159,7 +160,14 @@ export const mdxComponents = {
     h3: headingFor('h3'),
     h4: headingFor('h4'),
     p: (props) => <p {...props} className={cn('text-base/relaxed text-(--text)')} />,
-    a: (props) => <a {...props} className={cn('text-(--rind-deep) underline underline-offset-4')} />,
+    a: (props) => (
+        <a
+            {...props}
+            className={cn(
+                'text-(--link) underline underline-offset-4 transition-opacity duration-150 hover:opacity-80'
+            )}
+        />
+    ),
     strong: (props) => <strong {...props} className={cn('font-semibold')} />,
     ul: (props) => <ul {...props} className={cn('list-disc space-y-1 ps-6 text-base/relaxed text-(--text)')} />,
     ol: (props) => <ol {...props} className={cn('list-decimal space-y-1 ps-6 text-base/relaxed text-(--text)')} />,
@@ -180,5 +188,6 @@ export const mdxComponents = {
     img: GuideImage,
     // a lowercase tag written as jsx in an mdx file skips this map
     Image: GuideImage,
-    Callout
+    Callout,
+    Ref
 } satisfies MDXComponents;
