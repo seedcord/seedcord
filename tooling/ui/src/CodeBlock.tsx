@@ -27,11 +27,11 @@ export function CodeBlock({ representation, label, copyValue, actions, className
     const showHeader = Boolean(label) || showCopy || Boolean(actions);
 
     return (
-        <Card as="figure" variant="default" size="none" className={cn('overflow-hidden', className)}>
+        <Card as="figure" variant="default" size="none" className={cn('overflow-hidden bg-(--bg-code)', className)}>
             {showHeader ? (
                 <figcaption
                     className={cn(
-                        'flex items-center justify-between gap-3 border-b border-(--border)/70 bg-(--surface-moderate) px-3 py-1 text-xs font-medium text-(--text-muted)'
+                        'flex items-center justify-between gap-3 border-b border-(--border)/70 bg-(--bg-code-header) px-3 py-1 text-xs font-medium text-(--text-muted)'
                     )}
                 >
                     <span className={cn('truncate')}>{label}</span>

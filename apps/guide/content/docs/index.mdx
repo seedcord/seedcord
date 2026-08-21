@@ -34,6 +34,39 @@ A wrong option name is a compile error, before the bot ever connects. **Acking t
 
 The handler validates the layout hash after the route loads. h4 is as deep as the guide goes, and a page writing an h1, h5, or h6 fails the build.
 
+## Callouts
+
+<Callout type="note">Codegen runs before the first command typechecks.</Callout>
+
+<Callout type="tip">Name the route once and both the builder and the handler follow it.</Callout>
+
+<Callout type="warning">Discord gives you three seconds to answer an interaction.</Callout>
+
+<Callout type="danger">Acking twice throws `ReplyIllegalAckState` and the reply never arrives.</Callout>
+
+A transport difference runs one way or both ways, and the label says which.
+
+<Callout type="transport" only="gateway">
+    `getConfirmation` holds a collector in process, which an http bot has nowhere to keep.
+</Callout>
+
+<Callout type="transport" only="http">
+    Discord signs every request, and the receiver verifies the Ed25519 header before anything else runs.
+</Callout>
+
+<Callout type="transport">`getUser` returns a live discord.js `User` on gateway and a raw `APIUser` on http.</Callout>
+
+A callout takes whole blocks, so a fence sits inside one.
+
+<Callout type="tip">
+    Both mocks ship this command already.
+
+    ```ts title="src/commands/Ping.ts"
+    await this.reply('Pong');
+    ```
+
+</Callout>
+
 ## Lists
 
 Three things ship with every command:

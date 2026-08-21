@@ -1,4 +1,5 @@
 @import '@seedcord/ui/styles/globals.css';
+@import '../styles/callout.css';
 
 :root {
     --content-max: 100rem;

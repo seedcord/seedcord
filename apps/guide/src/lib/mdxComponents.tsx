@@ -1,5 +1,7 @@
 import { Card, CodeBlock, cn, tw } from '@seedcord/ui';
-import { highlightToHtml, isHighlightable } from '@seedcord/ui/shiki';
+import { highlightInlineToHtml, highlightToHtml, isHighlightable } from '@seedcord/ui/shiki';
+
+import { Callout } from '#components/Callout';
 
 import type { MDXComponents } from 'mdx/types';
 import type { BundledLanguage } from 'shiki';
@@ -97,6 +99,13 @@ function readFence(children: ReactNode): Fenced | null {
     };
 }
 
+async function InlineCode({ children }: FenceProps): Promise<ReactElement> {
+    const html = typeof children === 'string' ? await highlightInlineToHtml(children) : null;
+    if (!html) return <code className={cn('shiki-inline')}>{children}</code>;
+
+    return <span dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
 async function Fence({ children }: FenceProps): Promise<ReactElement> {
     const fence = readFence(children);
     if (!fence) return <pre>{children}</pre>;
@@ -115,7 +124,7 @@ export const mdxComponents = {
     strong: (props) => <strong {...props} className={cn('font-semibold')} />,
     ul: (props) => <ul {...props} className={cn('list-disc space-y-1 ps-6 text-base/relaxed text-(--text)')} />,
     ol: (props) => <ol {...props} className={cn('list-decimal space-y-1 ps-6 text-base/relaxed text-(--text)')} />,
-    code: (props) => <code {...props} className={cn('rounded-sm bg-(--surface-moderate) px-1.5 py-0.5 text-sm')} />,
+    code: InlineCode,
     blockquote: (props) => (
         <blockquote
             {...props}
@@ -131,5 +140,6 @@ export const mdxComponents = {
     td: (props) => <td {...props} className={cn('px-3 py-2 align-top text-(--text)')} />,
     img: GuideImage,
     // a lowercase tag written as jsx in an mdx file skips this map
-    Image: GuideImage
+    Image: GuideImage,
+    Callout
 } satisfies MDXComponents;

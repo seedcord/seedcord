@@ -24,6 +24,7 @@
         "@seedcord/ui": "workspace:^",
         "fumadocs-core": "16.14.4",
         "fumadocs-mdx": "15.2.3",
+        "lucide-react": "catalog:deps",
         "motion": "catalog:deps",
         "next": "catalog:deps",
         "react": "catalog:react",

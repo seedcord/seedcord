@@ -21,6 +21,8 @@
     --husk: #9aa089;
     /* resource accent */
     --accent-r: #8b90a7;
+    /* for warnings */
+    --amber: #e0952a;
     /* switch thumb, kept constant in both themes so it stays light on the gray off-track and green on-track */
     --switch-thumb: #f8f6e8;
 
@@ -125,6 +127,9 @@
 
     --bg-surface-subtle: color-mix(in oklab, var(--bg) 95%, var(--surface) 5%);
     --bg-surface-moderate: color-mix(in oklab, var(--bg) 90%, var(--surface) 10%);
+    --bg-code: color-mix(in oklab, var(--bg) 96%, var(--text) 4%);
+    --bg-code-header: color-mix(in oklab, var(--bg) 94%, var(--text) 6%);
+    --bg-chip: color-mix(in oklab, var(--bg) 88%, var(--text) 12%);
     --bg-accent-b-subtle: color-mix(in oklab, var(--bg) 94%, var(--rind) 6%);
     --bg-accent-b-moderate: color-mix(in oklab, var(--bg) 85%, var(--rind) 15%);
     --bg-accent-b-strong: color-mix(in oklab, var(--bg) 76%, var(--rind) 24%);

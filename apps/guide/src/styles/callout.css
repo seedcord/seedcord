@@ -1,0 +1,23 @@
+@layer components {
+    [data-callout] {
+        --cal-border: color-mix(in oklab, var(--cal-hue) 65%, var(--border));
+        --cal-bg: color-mix(in oklab, var(--cal-hue) 20%, var(--surface));
+        --cal-text: color-mix(in oklab, var(--text) 66%, var(--cal-hue) 34%);
+    }
+
+    [data-callout='note'] {
+        --cal-hue: var(--accent-r);
+    }
+    [data-callout='tip'] {
+        --cal-hue: var(--rind);
+    }
+    [data-callout='warning'] {
+        --cal-hue: var(--amber);
+    }
+    [data-callout='danger'] {
+        --cal-hue: var(--flesh);
+    }
+    [data-callout='transport'] {
+        --cal-hue: var(--husk);
+    }
+}

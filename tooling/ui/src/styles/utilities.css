@@ -127,12 +127,10 @@
 
     .shiki-inline {
         display: inline;
+        border: 1px solid var(--border);
         border-radius: 0.35em;
-        background-color: color-mix(in oklab, var(--bg) 94%, var(--text) 6%);
+        background-color: var(--bg-chip);
         padding: 0.1em 0.36em;
-    }
-    [data-theme='dark'] .shiki-inline {
-        background-color: color-mix(in oklab, var(--bg) 89%, var(--text) 11%);
     }
 
     .shiki a,
