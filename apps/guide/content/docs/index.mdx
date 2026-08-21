@@ -26,6 +26,13 @@ A fence with no `title` keeps its header, since the copy button lives there.
 pnpm add @seedcord/gateway
 ```
 
+Tagging a fence `output` drops the copy button, for the lines a terminal printed back.
+
+```sh output
+✓ 12 routes written to .seedcord/manifest.ts
+✓ 3 commands deployed to the test guild
+```
+
 ### Options come off the registry
 
 A wrong option name is a compile error, before the bot ever connects. **Acking twice throws.** Discord accepts one initial response per interaction, and seedcord surfaces the second attempt as `ReplyIllegalAckState` before it reaches the API. Read the [reference site](https://docs.seedcord.org) for the full code list, or _skim_ the reply page first.

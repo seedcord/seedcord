@@ -49,6 +49,18 @@ describe('a fence caption', () => {
 
         expect(code).toContain('src/commands/Ping.ts');
     });
+
+    it('marks a fence the author tagged as output', async () => {
+        const code = await compileGuideMdx(fence('output'));
+
+        expect(code).toContain('data-output');
+    });
+
+    it('leaves an untagged fence unmarked', async () => {
+        const code = await compileGuideMdx(fence('title="a.ts"'));
+
+        expect(code).not.toContain('data-output');
+    });
 });
 
 describe('a pipe table', () => {

@@ -34,6 +34,18 @@ describe('a fence', () => {
 
         expect(screen.queryByText('src/commands/Ping.ts')).toBeNull();
     });
+
+    it('drops the copy button on a fence tagged as output', async () => {
+        await renderFence({ className: 'language-bash', 'data-output': '' });
+
+        expect(screen.queryByRole('button', { name: /Copy/ })).toBeNull();
+    });
+
+    it('keeps the copy button on every other fence', async () => {
+        await renderFence({ className: 'language-bash' });
+
+        expect(screen.getByRole('button', { name: /Copy/ })).toBeInTheDocument();
+    });
 });
 
 describe('the image component', () => {

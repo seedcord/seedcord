@@ -1,4 +1,4 @@
-import { Card, CodeBlock, cn, tw } from '@seedcord/ui';
+import { Card, CodeBlock, CopyAnchorButton, cn, tw } from '@seedcord/ui';
 import { highlightInlineToHtml, highlightToHtml, isHighlightable } from '@seedcord/ui/shiki';
 
 import { Callout } from '#components/Callout';
@@ -75,6 +75,7 @@ interface Fenced {
     code: string;
     lang: BundledLanguage;
     title: string | undefined;
+    output: boolean;
 }
 
 // mdx renders a fence as <pre><code className="language-x">
@@ -95,7 +96,39 @@ function readFence(children: ReactNode): Fenced | null {
     return {
         code: code.replace(/\n$/, ''),
         lang: named && isHighlightable(named) ? named : 'ts',
-        title: typeof title === 'string' ? title : undefined
+        title: typeof title === 'string' ? title : undefined,
+        output: 'data-output' in props
+    };
+}
+
+const HEADING_SIZES = {
+    h2: tw`mt-6 text-2xl/snug`,
+    h3: tw`mt-4 text-xl/snug`,
+    h4: tw`mt-3 text-lg/snug`
+} as const;
+
+const ANCHOR = tw`ms-1 align-middle transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-has-focus-visible:opacity-100 md:data-[copied=true]:opacity-100`;
+
+function headingFor(tag: keyof typeof HEADING_SIZES): (props: ComponentProps<'h2'>) => ReactElement {
+    return function Heading({ id, children, ...props }: ComponentProps<'h2'>): ReactElement {
+        const Tag = tag;
+
+        return (
+            <Tag
+                {...props}
+                id={id}
+                className={cn('font-display group font-semibold text-(--text)', HEADING_SIZES[tag])}
+            >
+                {children}
+                {id === undefined ? null : (
+                    <CopyAnchorButton
+                        anchorId={id}
+                        label={typeof children === 'string' ? children : id}
+                        className={cn(ANCHOR)}
+                    />
+                )}
+            </Tag>
+        );
     };
 }
 
@@ -111,14 +144,20 @@ async function Fence({ children }: FenceProps): Promise<ReactElement> {
     if (!fence) return <pre>{children}</pre>;
 
     const html = await highlightToHtml(fence.code, fence.lang);
-    return <CodeBlock representation={{ text: fence.code, html }} label={fence.title} />;
+    return (
+        <CodeBlock
+            representation={{ text: fence.code, html }}
+            label={fence.title}
+            copyValue={fence.output ? null : undefined}
+        />
+    );
 }
 
 export const mdxComponents = {
     pre: Fence,
-    h2: (props) => <h2 {...props} className={cn('font-display mt-6 text-2xl/snug font-semibold text-(--text)')} />,
-    h3: (props) => <h3 {...props} className={cn('font-display mt-4 text-xl/snug font-semibold text-(--text)')} />,
-    h4: (props) => <h4 {...props} className={cn('font-display mt-3 text-lg/snug font-semibold text-(--text)')} />,
+    h2: headingFor('h2'),
+    h3: headingFor('h3'),
+    h4: headingFor('h4'),
     p: (props) => <p {...props} className={cn('text-base/relaxed text-(--text)')} />,
     a: (props) => <a {...props} className={cn('text-(--rind-deep) underline underline-offset-4')} />,
     strong: (props) => <strong {...props} className={cn('font-semibold')} />,

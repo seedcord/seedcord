@@ -13,7 +13,7 @@ export interface CodeBlockProps {
      * Optional override for the copy-button's clipboard value. Defaults to
      * `representation.text`. Pass `null` to suppress the copy button.
      */
-    copyValue?: string | null;
+    copyValue?: string | null | undefined;
     /** Rendered in the header beside the copy button. */
     actions?: ReactNode;
     className?: string;

@@ -1,4 +1,5 @@
 const TITLE = /(?:^|\s)title="([^"]*)"/;
+const OUTPUT = /(?:^|\s)output(?:\s|$)/;
 
 interface Element {
     type: string;
@@ -15,13 +16,17 @@ function codeElements(node: Element): Element[] {
 }
 
 // remark-rehype writes the fence meta to data.meta
-export function rehypeFenceTitle() {
+export function rehypeFenceMeta() {
     return (tree: Element): void => {
         for (const code of codeElements(tree)) {
-            const found = TITLE.exec(code.data?.meta ?? '');
-            if (!found?.[1]) continue;
+            const meta = code.data?.meta ?? '';
+            const title = TITLE.exec(meta)?.[1];
+            const added: Record<string, unknown> = {};
 
-            code.properties = { ...code.properties, 'data-title': found[1] };
+            if (title) added['data-title'] = title;
+            if (OUTPUT.test(meta)) added['data-output'] = '';
+
+            code.properties = { ...code.properties, ...added };
         }
     };
 }
