@@ -38,4 +38,16 @@ describe('Callout', () => {
 
         expect(() => render(<Callout {...wrong}>A body.</Callout>)).toThrow('nonsense');
     });
+
+    it('refuses an unknown only', () => {
+        const wrong = { type: 'transport', only: 'websocket' } as unknown as CalloutProps;
+
+        expect(() => render(<Callout {...wrong}>A body.</Callout>)).toThrow('websocket');
+    });
+
+    it('refuses only on a kind that names no transport', () => {
+        const wrong = { type: 'danger', only: 'gateway' } as unknown as CalloutProps;
+
+        expect(() => render(<Callout {...wrong}>A body.</Callout>)).toThrow('transport');
+    });
 });

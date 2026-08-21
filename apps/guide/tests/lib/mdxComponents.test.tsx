@@ -2,8 +2,17 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { mdxComponents } from '#lib/mdxComponents';
+import { MAPPED_TAGS } from '#lib/remarkNoMappedJsx';
 
 const { Image, pre: Fence } = mdxComponents;
+
+describe('the rejected jsx tag list', () => {
+    it('names every lowercase tag the map claims', () => {
+        const mapped = Object.keys(mdxComponents).filter((tag) => tag === tag.toLowerCase());
+
+        expect([...MAPPED_TAGS].sort()).toEqual(mapped.sort());
+    });
+});
 
 function classesOf(alt: string): string[] {
     return screen.getByRole('img', { name: alt }).className.split(/\s+/);

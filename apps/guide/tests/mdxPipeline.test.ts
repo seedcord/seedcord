@@ -32,6 +32,18 @@ describe('heading depth', () => {
         await expect(compileGuideMdx(source)).rejects.toThrow(name);
     });
 
+    // a lowercase jsx tag skips the component map
+    it.each(['<h5>five</h5>', '<p>a paragraph</p>', '<table><tbody /></table>'])(
+        'refuses %s written as jsx',
+        async (source) => {
+            await expect(compileGuideMdx(source)).rejects.toThrow();
+        }
+    );
+
+    it('leaves a tag the map never claims alone', async () => {
+        await expect(compileGuideMdx('a line<br />and another')).resolves.toContain('br');
+    });
+
     it('points at the line the heading is on', async () => {
         const thrown = await compileGuideMdx(['## two', '', '##### five'].join('\n')).catch((error: unknown) => error);
 

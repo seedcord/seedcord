@@ -28,7 +28,14 @@ export function Callout({ type, only, children }: CalloutProps): ReactElement {
     const kind = KINDS[type];
     if (kind === undefined) throw new Error(`${type} is not a callout. Write one of ${Object.keys(KINDS).join(', ')}.`);
 
+    if (only !== undefined && type !== 'transport') {
+        throw new Error(`only is for a transport callout. This one is a ${type}.`);
+    }
+
     const label = only === undefined ? kind.label : TRANSPORT_LABELS[only];
+    if (label === undefined) {
+        throw new Error(`${only} is not a transport. Write one of ${Object.keys(TRANSPORT_LABELS).join(', ')}.`);
+    }
 
     return (
         <Card as="div" size="none" data-callout={type} className={cn('border-(--cal-border) bg-(--cal-bg) px-4 py-3')}>
