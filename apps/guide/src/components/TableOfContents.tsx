@@ -23,13 +23,15 @@ export const rowClassName = cn(
 );
 
 const TOP_LEVEL_DEPTH = 2;
+// remarkHeadingRange throws on anything outside h2 through h4
+const INDENT_BY_DEPTH = [tw`ps-3`, tw`ps-5`, tw`ps-7`] as const;
 
 export function idOf(url: string): string {
     return url.startsWith('#') ? url.slice(1) : url;
 }
 
 export function indentOf(depth: number): string {
-    return depth > TOP_LEVEL_DEPTH ? tw`ps-6` : tw`ps-3`;
+    return INDENT_BY_DEPTH[depth - TOP_LEVEL_DEPTH] ?? INDENT_BY_DEPTH[0];
 }
 
 interface ActiveRange {

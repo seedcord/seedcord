@@ -1,0 +1,48 @@
+import { describe, expect, it } from 'vitest';
+
+import { compileGuideMdx } from './mdxPipeline';
+
+describe('a markdown image', () => {
+    it('keeps its src a string the component map can render', async () => {
+        const code = await compileGuideMdx('![the mark](/logo.svg)');
+
+        expect(code).toContain('src="/logo.svg"');
+    });
+
+    it('carries the size read off the file', async () => {
+        const code = await compileGuideMdx('![the mark](/logo.svg)');
+
+        expect(code).toContain('width="596.16"');
+        expect(code).toContain('height="500.4"');
+    });
+});
+
+describe('heading depth', () => {
+    it('takes h2 through h4', async () => {
+        await expect(compileGuideMdx(['## two', '', '### three', '', '#### four'].join('\n'))).resolves.toContain(
+            '_components.h4'
+        );
+    });
+
+    it.each([
+        ['# one', 'h1'],
+        ['##### five', 'h5'],
+        ['###### six', 'h6']
+    ])('refuses %s', async (source, name) => {
+        await expect(compileGuideMdx(source)).rejects.toThrow(name);
+    });
+
+    it('points at the line the heading is on', async () => {
+        const thrown = await compileGuideMdx(['## two', '', '##### five'].join('\n')).catch((error: unknown) => error);
+
+        expect(thrown).toMatchObject({ line: 3, file: 'content/docs/sample.mdx' });
+    });
+});
+
+describe('a pipe table', () => {
+    it('parses into a table the component map can style', async () => {
+        const code = await compileGuideMdx(['| a | b |', '| --- | --- |', '| 1 | 2 |'].join('\n'));
+
+        expect(code).toContain('_components.table');
+    });
+});
