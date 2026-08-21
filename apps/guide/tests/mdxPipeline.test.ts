@@ -61,6 +61,13 @@ describe('a fence caption', () => {
 
         expect(code).not.toContain('data-output');
     });
+
+    it('reads the word output outside the title only', async () => {
+        const code = await compileGuideMdx(fence('title="build output log.ts"'));
+
+        expect(code).toContain('build output log.ts');
+        expect(code).not.toContain('data-output');
+    });
 });
 
 describe('a pipe table', () => {

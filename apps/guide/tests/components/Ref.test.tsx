@@ -21,10 +21,10 @@ describe('Ref', () => {
         expect(hrefOf('SlashHandler')).toBe(`${DOCS_URL}/packages/gateway/latest/slash-handler`);
     });
 
-    it('turns a dotted member into a nested path', () => {
-        render(<Ref pkg="core">Paginator.start</Ref>);
+    it.each(['Paginator.start', 'Paginator#start'])('turns %s into a nested path', (name) => {
+        render(<Ref pkg="core">{name}</Ref>);
 
-        expect(hrefOf('Paginator.start')).toBe(`${DOCS_URL}/packages/core/latest/paginator/start`);
+        expect(hrefOf(name)).toBe(`${DOCS_URL}/packages/core/latest/paginator/start`);
     });
 
     it('drops a generic from the name', () => {

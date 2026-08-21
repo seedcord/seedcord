@@ -37,7 +37,7 @@ export function Callout({ type, only, children }: CalloutProps): ReactElement {
                 <span className={cn('text-[0.625rem] font-semibold tracking-widest uppercase')}>{label}</span>
             </p>
             {/* a one-line callout arrives as bare text with no p around it */}
-            <div className={cn('mt-1.5 space-y-3 text-sm/relaxed text-(--text)')}>{children}</div>
+            <div className={cn('mt-1.5 space-y-3 text-sm/relaxed text-(--text) [&>p]:text-sm/relaxed')}>{children}</div>
         </Card>
     );
 }

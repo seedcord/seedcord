@@ -64,9 +64,9 @@ describe('the image component', () => {
             </>
         );
 
-        const widths = ['thin', 'regular', 'thick'].map((alt) => borderWidthOf(alt));
-
-        expect(new Set(widths).size).toBe(widths.length);
+        expect(borderWidthOf('thin')).toBe('border');
+        expect(borderWidthOf('regular')).toBe('border-2');
+        expect(borderWidthOf('thick')).toBe('border-4');
     });
 
     it('drops the border and keeps frame off the dom', () => {
@@ -85,9 +85,9 @@ describe('the image component', () => {
             </>
         );
 
-        const margins = ['left', 'center', 'right'].map((alt) => marginOf(alt));
-
-        expect(new Set(margins).size).toBe(margins.length);
+        expect(marginOf('left')).toBe('me-auto');
+        expect(marginOf('center')).toBe('mx-auto');
+        expect(marginOf('right')).toBe('ms-auto');
     });
 
     it('keeps align off the dom', () => {

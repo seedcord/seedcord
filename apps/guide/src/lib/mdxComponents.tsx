@@ -2,7 +2,7 @@ import { Card, CodeBlock, CopyAnchorButton, cn, tw } from '@seedcord/ui';
 import { highlightInlineToHtml, highlightToHtml, isHighlightable } from '@seedcord/ui/shiki';
 
 import { Callout } from '#components/Callout';
-import { Ref } from '#components/Ref';
+import { LINK, Ref } from '#components/Ref';
 
 import type { MDXComponents } from 'mdx/types';
 import type { BundledLanguage } from 'shiki';
@@ -108,19 +108,18 @@ const HEADING_SIZES = {
     h4: tw`mt-3 text-lg/snug`
 } as const;
 
-const ANCHOR = tw`ms-1 align-middle transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-has-focus-visible:opacity-100 md:data-[copied=true]:opacity-100`;
+const ANCHOR = tw`ms-1 shrink-0 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-has-focus-visible:opacity-100 md:data-[copied=true]:opacity-100`;
 
 function headingFor(tag: keyof typeof HEADING_SIZES): (props: ComponentProps<'h2'>) => ReactElement {
+    // the button stays a sibling, since a labelled control inside a heading joins the heading's own name
     return function Heading({ id, children, ...props }: ComponentProps<'h2'>): ReactElement {
         const Tag = tag;
 
         return (
-            <Tag
-                {...props}
-                id={id}
-                className={cn('font-display group font-semibold text-(--text)', HEADING_SIZES[tag])}
-            >
-                {children}
+            <div className={cn('group flex items-center', HEADING_SIZES[tag])}>
+                <Tag {...props} id={id} className={cn('font-display font-semibold text-(--text)')}>
+                    {children}
+                </Tag>
                 {id === undefined ? null : (
                     <CopyAnchorButton
                         anchorId={id}
@@ -128,7 +127,7 @@ function headingFor(tag: keyof typeof HEADING_SIZES): (props: ComponentProps<'h2
                         className={cn(ANCHOR)}
                     />
                 )}
-            </Tag>
+            </div>
         );
     };
 }
@@ -160,14 +159,7 @@ export const mdxComponents = {
     h3: headingFor('h3'),
     h4: headingFor('h4'),
     p: (props) => <p {...props} className={cn('text-base/relaxed text-(--text)')} />,
-    a: (props) => (
-        <a
-            {...props}
-            className={cn(
-                'text-(--link) underline underline-offset-4 transition-opacity duration-150 hover:opacity-80'
-            )}
-        />
-    ),
+    a: (props) => <a {...props} className={cn(LINK)} />,
     strong: (props) => <strong {...props} className={cn('font-semibold')} />,
     ul: (props) => <ul {...props} className={cn('list-disc space-y-1 ps-6 text-base/relaxed text-(--text)')} />,
     ol: (props) => <ol {...props} className={cn('list-decimal space-y-1 ps-6 text-base/relaxed text-(--text)')} />,

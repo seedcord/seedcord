@@ -24,7 +24,8 @@ export function rehypeFenceMeta() {
             const added: Record<string, unknown> = {};
 
             if (title) added['data-title'] = title;
-            if (OUTPUT.test(meta)) added['data-output'] = '';
+            // a title like "build output.ts" would otherwise read as the output flag
+            if (OUTPUT.test(meta.replace(TITLE, ' '))) added['data-output'] = '';
 
             code.properties = { ...code.properties, ...added };
         }

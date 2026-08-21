@@ -1,5 +1,7 @@
 @layer components {
     [data-callout] {
+        /* a kind with no rule below would leave every color-mix invalid */
+        --cal-hue: var(--border);
         --cal-border: color-mix(in oklab, var(--cal-hue) 65%, var(--border));
         --cal-bg: color-mix(in oklab, var(--cal-hue) 20%, var(--surface));
         --cal-text: color-mix(in oklab, var(--text) 66%, var(--cal-hue) 34%);
