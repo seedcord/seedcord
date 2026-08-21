@@ -6,7 +6,7 @@
     --nav-h: 4.5rem; /* fallback until the navbar measures its own height */
 }
 
-/* the tab row only renders at lg */
+/* the navbar shows its tab row from lg up */
 @media (width >= 64rem) {
     :root {
         --nav-h: 7.5rem;
@@ -27,7 +27,6 @@
         -webkit-font-smoothing: antialiased;
     }
 
-    /* without this the fixed navbar covers the heading after an anchor jump */
     :is(h1, h2, h3, h4, h5, h6)[id] {
         scroll-margin-top: calc(var(--nav-h, 0px) + 1.5rem);
     }

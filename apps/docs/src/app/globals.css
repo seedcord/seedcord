@@ -24,7 +24,7 @@
     }
 }
 
-/* need to make sure both are using 'inline' otherwise the logo shifts when switching modes */
+/* both stay inline or the logo shifts when the theme flips */
 .readme-img-light {
     display: inline;
 }
@@ -38,10 +38,9 @@
     display: inline;
 }
 
-/* Cross-package/external indicator, emitted by decorateProseLinks (prose) and the SeeAlso /
- * inheritedFrom anchors. code-block links open in a new tab without this glyph. nowrap keeps the
- * glyph on the link's last line. */
+/* decorateProseLinks, SeeAlso, and the inheritedFrom anchors set this class on a cross-package or external link */
 a.cross-ref {
+    /* keeps the glyph on the link's last line */
     white-space: nowrap;
 }
 

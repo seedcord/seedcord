@@ -7,7 +7,7 @@
 
     /* the brand pith. both themes hold this value while --color-bg flips dark */
     --pith: #f8f6e8;
-    /* canonical brand ink (watermelon seeds + the offset mark shadow), fixed in both themes */
+    /* brand ink for the seeds and the offset mark shadow, fixed in both themes */
     --seed-dark: #2d3328;
 
     /* mater red */
@@ -23,13 +23,13 @@
     --accent-r: #8b90a7;
     /* for warnings */
     --amber: #e0952a;
-    /* switch thumb, kept constant in both themes so it stays light on the gray off-track and green on-track */
+    /* the thumb must read on a gray off-track and a green on-track, in either theme */
     --switch-thumb: #f8f6e8;
 
     --overlay: rgba(0, 0, 0, 0.6);
     --deprecated-dark: #cf3234;
 
-    /* Tailwind v4 alias layer (consumed via bg-(--bg), text-(--text), etc.) */
+    /* what bg-(--bg) and text-(--text) resolve to */
     --bg: var(--color-bg);
     --text: var(--color-text);
     --surface: var(--color-surface);
@@ -69,7 +69,6 @@
     color-scheme: dark;
 }
 
-/* Computed variants — auto-follow theme via inherited bases */
 :root {
     /* Surface Mixes */
     --bg-dim: color-mix(in oklab, var(--color-bg) 94%, black 6%);
@@ -89,10 +88,10 @@
     --text-muted-light: color-mix(in oklab, var(--color-text) 85%, transparent);
     --text-faint: color-mix(in oklab, var(--color-text) 42%, transparent);
 
-    /* Focus ring (primitive focus-visible default) */
+    /* the focus-visible ring on every primitive */
     --focus-outline-b: color-mix(in oklab, var(--rind) 78%, transparent);
 
-    /* Popover/Tooltip surface — slightly tinted toward dark for contrast at any theme */
+    /* Popover/Tooltip surface */
     --bg-popover: color-mix(in oklab, var(--bg) 98%, var(--color-base-dark) 2%);
 
     /* Shadows */

@@ -43,8 +43,8 @@
         min-width: 100%;
     }
 
-    /* shiki dual-render wraps two <pre> in a theme-group div. Without this rule the wrapper
-     * is `width: auto` and absorbs the children's max-content, breaking the scroll chain. */
+    /* renderDual in shiki.ts wraps the two themed <pre> in this div. at auto width it
+     * absorbs their max-content and the block stops scrolling. */
     .code-scroll-area .shiki-theme-group {
         display: block;
         width: max-content;
@@ -83,7 +83,7 @@
         background-clip: content-box;
     }
 
-    /* hard offset ink shadow for the brand mark. mainly for the pith ground, fades to nothing on the dark one */
+    /* hard offset ink shadow for the brand mark, near invisible on the dark ground */
     .drop-shadow-mark {
         filter: drop-shadow(2px 2px 0 color-mix(in srgb, var(--seed-dark) 85%, transparent));
     }

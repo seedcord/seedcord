@@ -23,7 +23,7 @@ function headingsIn(node: Node): Heading[] {
     return (node.children ?? []).flatMap(headingsIn);
 }
 
-// vfile turns this into a message carrying the file and the line
+// vfile reads the file and the line off the node passed as place
 interface Reporter {
     fail(reason: string, place: Node): never;
 }

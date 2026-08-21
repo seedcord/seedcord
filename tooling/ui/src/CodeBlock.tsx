@@ -9,10 +9,7 @@ import type { ReactElement, ReactNode } from 'react';
 export interface CodeBlockProps {
     representation: CodeRepresentation;
     label?: string | undefined;
-    /**
-     * Optional override for the copy-button's clipboard value. Defaults to
-     * `representation.text`. Pass `null` to suppress the copy button.
-     */
+    /** Defaults to `representation.text`. Pass `null` to leave the copy button out. */
     copyValue?: string | null | undefined;
     /** Rendered in the header beside the copy button. */
     actions?: ReactNode;

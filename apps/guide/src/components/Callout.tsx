@@ -19,14 +19,13 @@ type Transport = keyof typeof TRANSPORT_LABELS;
 
 export interface CalloutProps {
     type: CalloutType;
-    /** Which transport the difference runs on. Leaving it off says both differ. */
+    /** Which transport the difference applies to. Leave it off to say both differ. */
     only?: Transport;
     children: ReactNode;
 }
 
 export function Callout({ type, only, children }: CalloutProps): ReactElement {
     const kind = KINDS[type];
-    // a typo would otherwise render an uncoloured card with no label
     if (kind === undefined) throw new Error(`${type} is not a callout. Write one of ${Object.keys(KINDS).join(', ')}.`);
 
     const label = only === undefined ? kind.label : TRANSPORT_LABELS[only];
@@ -37,7 +36,7 @@ export function Callout({ type, only, children }: CalloutProps): ReactElement {
                 <Icon icon={kind.icon} size={15} />
                 <span className={cn('text-[0.625rem] font-semibold tracking-widest uppercase')}>{label}</span>
             </p>
-            {/* mdx gives phrasing children when the content shares a line with the tag */}
+            {/* a one-line callout arrives as bare text with no p around it */}
             <div className={cn('mt-1.5 space-y-3 text-sm/relaxed text-(--text)')}>{children}</div>
         </Card>
     );
