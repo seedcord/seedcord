@@ -87,12 +87,31 @@ The border comes in three weights. `thin`, `regular`, and `thick`, with `regular
 
 <Image src="/logo.svg" alt="Aligned right" width={160} height={160} align="right" />
 
-## A table, unstyled for now
+## Tables
 
-The table family is the next thing built. This one is here to prove the markdown parses.
+Three ways your code can stop:
 
-| what      | where it runs       | throws              |
-| --------- | ------------------- | ------------------- |
-| `Notice`  | a gate or a handler | replies with a card |
-| `Silence` | a gate              | stops with no reply |
-| `Fault`   | anywhere            | reports to the bus  |
+| what      | where it runs       | what the user sees   |
+| --------- | ------------------- | -------------------- |
+| `Notice`  | a gate or a handler | a card with a reason |
+| `Silence` | a gate              | nothing at all       |
+| `Fault`   | anywhere            | a generic apology    |
+
+A table wider than the column scrolls on its own. The page never scrolls sideways with it.
+
+Discord rejects a payload over any of these. It never truncates for you.
+
+| component | `custom_id` | `label` | `placeholder` | `options` | `value` | other |
+| --- | --- | --- | --- | --- | --- | --- |
+| _Button_ | 1 to 100 | 80 |  |  |  | `url` 512 |
+| _String select_ | 1 to 100 |  | 150 | 25 |  | `min_values` and `max_values` 0 to 25 |
+| Text input | 1 to 100 |  | 100 |  | 4000 | `max_length` 1 to 4000 |
+| ~~Modal~~ | 1 to 100 |  |  |  |  | `title` 45, 1 to 5 components |
+
+{/* prettier-ignore-start */}
+
+| component | `custom_id` | `label` | `placeholder` | `options` | `value` | other |
+| -- | -- | ------- | --------- | --------- | ------- | ----- |
+| **Button** | 1 to 100 | 80 | | | | `url` 512 |
+
+{/* prettier-ignore-end */}

@@ -1,4 +1,4 @@
-import { CodeBlock, cn, tw } from '@seedcord/ui';
+import { Card, CodeBlock, cn, tw } from '@seedcord/ui';
 import { highlightToHtml, isHighlightable } from '@seedcord/ui/shiki';
 
 import type { MDXComponents } from 'mdx/types';
@@ -57,6 +57,18 @@ function GuideImage({ alt, frame = 'regular', align = 'left', className, ...prop
     );
 }
 
+function GuideTable({ children, ...props }: ComponentProps<'table'>): ReactElement {
+    return (
+        <Card as="div" size="none" className={cn('overflow-hidden')}>
+            <div className={cn('nice-scroll overflow-x-auto')}>
+                <table {...props} className={cn('w-full border-collapse text-left text-sm')}>
+                    {children}
+                </table>
+            </div>
+        </Card>
+    );
+}
+
 // mdx renders a fence as <pre><code className="language-x">
 function readFence(children: ReactNode): { code: string; lang: BundledLanguage } | null {
     if (typeof children !== 'object' || children === null || !('props' in children)) return null;
@@ -101,6 +113,11 @@ export const mdxComponents = {
         />
     ),
     hr: (props) => <hr {...props} className={cn('my-3 border-(--border)')} />,
+    table: GuideTable,
+    thead: (props) => <thead {...props} className={cn('border-b border-(--border) bg-(--surface-moderate)')} />,
+    tbody: (props) => <tbody {...props} className={cn('divide-y divide-(--border)/70')} />,
+    th: (props) => <th {...props} className={cn('px-3 py-2 align-top font-semibold text-(--text)')} />,
+    td: (props) => <td {...props} className={cn('px-3 py-2 align-top text-(--text)')} />,
     img: GuideImage,
     // a lowercase tag written as jsx in an mdx file skips this map
     Image: GuideImage
