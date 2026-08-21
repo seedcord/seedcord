@@ -76,16 +76,13 @@ A callout takes whole blocks, so a fence sits inside one.
 
 ## Reference links
 
-A named symbol links out to the reference site, and the slug comes off the name. A gate refuses by throwing
+A symbol link is a markdown link with a `ref:` target, and the slug comes off the symbol. A gate refuses by throwing [Notice](ref:core/Notice) or [Silence](ref:core/Silence), and anything unexpected becomes a [Fault](ref:core/Fault).
 
-<Ref pkg="core">Notice</Ref> or <Ref pkg="core">Silence</Ref>, and anything unexpected becomes a
-<Ref pkg="core">Fault</Ref>.
+A multi-word name kebab-cases itself, so [SlashHandler](ref:gateway/SlashHandler) reaches `slash-handler`. A dotted member nests, so [Paginator.start](ref:core/Paginator.start) reaches `paginator/start`. A generic drops off the end, so [`Plugin<Options>`](ref:core/Plugin<Options>) and [Plugin](ref:core/Plugin) land on the same page.
 
-A multi-word name kebab-cases itself, so <Ref pkg="gateway">SlashHandler</Ref> reaches `slash-handler`. A dotted member nests, so <Ref pkg="core">Paginator.start</Ref> reaches `paginator/start`. A generic drops off the end, so
+The link text is yours, so [the card a refusal renders](ref:core/Notice) points at the same page as its own name. Each package is its own segment, so [createSeedcord](ref:http/createSeedcord) and [Seedcord](ref:gateway/Seedcord) reach two sites of the same idea. Every one of these opens in a new tab.
 
-<Ref pkg="core">{'Plugin<Options>'}</Ref> and <Ref pkg="core">Plugin</Ref> land on the same page.
-
-Each package is its own argument, so <Ref pkg="http">createSeedcord</Ref> and <Ref pkg="gateway">Seedcord</Ref> point at two sites of the same idea. Every one of these opens in a new tab.
+A heading takes no symbol link, since its text also renders in the table of contents. The build says so by name.
 
 ## Lists
 
