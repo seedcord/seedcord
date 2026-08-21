@@ -112,10 +112,10 @@ export function GuideShell({
                 mark={<SiteSwitcher site="guide" destinations={DESTINATIONS} linkAs={Link} />}
                 actions={
                     <>
-                        <ThemeToggle />
                         <span className={cn('hidden lg:flex')}>
                             <GithubLink />
                         </span>
+                        <ThemeToggle />
                         <MobileNavButton open={navOpen} onOpen={() => setNavOpen(true)} className={cn('lg:hidden')} />
                     </>
                 }

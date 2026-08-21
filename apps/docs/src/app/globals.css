@@ -2,15 +2,8 @@
 @import '../styles/tokens.css';
 @import '../styles/utilities.css';
 
-/* one knob for all docs rounding. chips need to be 2px tighter */
 :root {
-    --radius-surface: 0.375rem;
     --nav-h: 4.5rem; /* fallback until the navbar measures its own height */
-}
-@theme {
-    --radius-sm: calc(var(--radius-surface) - 0.125rem);
-    --radius-md: var(--radius-surface);
-    --radius-lg: var(--radius-surface);
 }
 
 @layer base {
@@ -31,7 +24,7 @@
     }
 }
 
-/* need to make sure both are using 'inline' otherwise the logo shifts when switching modes */
+/* both stay inline or the logo shifts when the theme flips */
 .readme-img-light {
     display: inline;
 }
@@ -45,10 +38,9 @@
     display: inline;
 }
 
-/* Cross-package/external indicator, emitted by decorateProseLinks (prose) and the SeeAlso /
- * inheritedFrom anchors. code-block links open in a new tab without this glyph. nowrap keeps the
- * glyph on the link's last line. */
+/* decorateProseLinks, SeeAlso, and the inheritedFrom anchors set this class on a cross-package or external link */
 a.cross-ref {
+    /* keeps the glyph on the link's last line */
     white-space: nowrap;
 }
 

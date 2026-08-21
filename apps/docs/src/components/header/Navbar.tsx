@@ -52,7 +52,6 @@ export function Navbar(): ReactElement {
             actions={
                 <>
                     <SearchIconButton label={SEARCH_LABEL} onOpen={openSearch} />
-                    <ThemeToggle />
                     {/* the burger panel's footer repeats these two */}
                     <span className={cn(showMobileNavButton ? 'hidden lg:flex' : 'flex', 'items-center gap-2')}>
                         <HeaderSettingsPopover />
@@ -68,6 +67,8 @@ export function Navbar(): ReactElement {
                             </Link>
                         </Button>
                     </span>
+                    {/* moving this into the span above loses it on mobile */}
+                    <ThemeToggle />
                     {showMobileNavButton ? (
                         <MobileNavButton
                             open={isMobileNavOpen}

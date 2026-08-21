@@ -7,7 +7,7 @@
 
     /* the brand pith. both themes hold this value while --color-bg flips dark */
     --pith: #f8f6e8;
-    /* canonical brand ink (watermelon seeds + the offset mark shadow), fixed in both themes */
+    /* brand ink for the seeds and the offset mark shadow, fixed in both themes */
     --seed-dark: #2d3328;
 
     /* mater red */
@@ -21,19 +21,23 @@
     --husk: #9aa089;
     /* resource accent */
     --accent-r: #8b90a7;
-    /* switch thumb, kept constant in both themes so it stays light on the gray off-track and green on-track */
+    /* for warnings */
+    --amber: #e0952a;
+    /* the thumb must read on a gray off-track and a green on-track, in either theme */
     --switch-thumb: #f8f6e8;
 
     --overlay: rgba(0, 0, 0, 0.6);
     --deprecated-dark: #cf3234;
 
-    /* Tailwind v4 alias layer (consumed via bg-(--bg), text-(--text), etc.) */
+    /* what bg-(--bg) and text-(--text) resolve to */
     --bg: var(--color-bg);
     --text: var(--color-text);
     --surface: var(--color-surface);
     --border: color-mix(in oklab, var(--color-base-slate) 68%, var(--color-bg));
+    --link: var(--rind-deep);
 
     --shell-max: 80rem;
+    --radius-surface: 0.375rem;
 
     /* mirrored in @seedcord/ui/lib/motion.ts */
     --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
@@ -45,6 +49,11 @@
 
 /* the app layouts load a webfont for --font-display and --font-mono only */
 @theme {
+    /* a Badge-sized chip takes 2px less than a card */
+    --radius-sm: calc(var(--radius-surface) - 0.125rem);
+    --radius-md: var(--radius-surface);
+    --radius-lg: var(--radius-surface);
+
     --font-sans:
         -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text', 'Segoe UI', system-ui, Cantarell, 'Noto Sans',
         'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
@@ -55,11 +64,11 @@
     --color-text: #f8f6e8;
     --color-surface: rgba(255, 255, 255, 0.04);
     --border: color-mix(in oklab, var(--pith) 28%, var(--color-bg));
+    --link: var(--rind);
 
     color-scheme: dark;
 }
 
-/* Computed variants — auto-follow theme via inherited bases */
 :root {
     /* Surface Mixes */
     --bg-dim: color-mix(in oklab, var(--color-bg) 94%, black 6%);
@@ -79,10 +88,10 @@
     --text-muted-light: color-mix(in oklab, var(--color-text) 85%, transparent);
     --text-faint: color-mix(in oklab, var(--color-text) 42%, transparent);
 
-    /* Focus ring (primitive focus-visible default) */
+    /* the focus-visible ring on every primitive */
     --focus-outline-b: color-mix(in oklab, var(--rind) 78%, transparent);
 
-    /* Popover/Tooltip surface — slightly tinted toward dark for contrast at any theme */
+    /* Popover/Tooltip surface */
     --bg-popover: color-mix(in oklab, var(--bg) 98%, var(--color-base-dark) 2%);
 
     /* Shadows */
@@ -119,6 +128,9 @@
 
     --bg-surface-subtle: color-mix(in oklab, var(--bg) 95%, var(--surface) 5%);
     --bg-surface-moderate: color-mix(in oklab, var(--bg) 90%, var(--surface) 10%);
+    --bg-code: color-mix(in oklab, var(--bg) 96%, var(--text) 4%);
+    --bg-code-header: color-mix(in oklab, var(--bg) 94%, var(--text) 6%);
+    --bg-chip: color-mix(in oklab, var(--bg) 88%, var(--text) 12%);
     --bg-accent-b-subtle: color-mix(in oklab, var(--bg) 94%, var(--rind) 6%);
     --bg-accent-b-moderate: color-mix(in oklab, var(--bg) 85%, var(--rind) 15%);
     --bg-accent-b-strong: color-mix(in oklab, var(--bg) 76%, var(--rind) 24%);
