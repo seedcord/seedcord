@@ -31,6 +31,12 @@ describe('a ref: link', () => {
         expect(code).toContain('Plugin<Options>');
     });
 
+    it('carries a member written with a hash', async () => {
+        const code = await compileGuideMdx('call [start](ref:core/Paginator#start) first');
+
+        expect(code).toContain('<Ref pkg="core" symbol="Paginator#start">');
+    });
+
     it('reaches a link inside a callout', async () => {
         const code = await compileGuideMdx('<Callout type="note">a [Notice](ref:core/Notice) link</Callout>');
 

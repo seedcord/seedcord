@@ -29,14 +29,25 @@ describe('Ref', () => {
         expect(hrefOf('SlashHandler')).toBe(`${DOCS_URL}/packages/gateway/latest/slash-handler`);
     });
 
-    it.each(['Paginator.start', 'Paginator#start'])('turns %s into a nested path', (symbol) => {
+    it.each(['Paginator.start', 'Paginator#start'])('anchors %s on the page of its owner', (symbol) => {
         render(
             <Ref pkg="core" symbol={symbol}>
                 {symbol}
             </Ref>
         );
 
-        expect(hrefOf(symbol)).toBe(`${DOCS_URL}/packages/core/latest/paginator/start`);
+        expect(hrefOf(symbol)).toBe(`${DOCS_URL}/packages/core/latest/paginator#start`);
+    });
+
+    // the reference site anchors the deepest name, whatever it hangs off
+    it('anchors a nested member on the entity that owns it', () => {
+        render(
+            <Ref pkg="gateway" symbol="SlashHandler.options.getBoolean">
+                getBoolean
+            </Ref>
+        );
+
+        expect(hrefOf('getBoolean')).toBe(`${DOCS_URL}/packages/gateway/latest/slash-handler#get-boolean`);
     });
 
     it('drops a generic from the symbol', () => {
