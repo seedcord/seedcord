@@ -15,7 +15,7 @@ export interface RefProps {
 
 export function Ref({ pkg, symbol, children }: RefProps): ReactElement {
     // the reference site splits a qualified name on the same pair, in resolve-helpers.ts
-    const slug = symbol.split(/[.#]/).filter(Boolean).map(slugifySegment).join('/');
+    const slug = (symbol.match(/[^.#]+/g) ?? []).map(slugifySegment).join('/');
 
     return (
         <a
