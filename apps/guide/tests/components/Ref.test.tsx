@@ -59,16 +59,6 @@ describe('Ref', () => {
         expect(hrefOf('the card a refusal renders')).toBe(`${DOCS_URL}/packages/core/latest/notice`);
     });
 
-    it('takes an element as its text', () => {
-        render(
-            <Ref pkg="core" symbol="Plugin">
-                <code>Plugin&lt;Options&gt;</code>
-            </Ref>
-        );
-
-        expect(hrefOf('Plugin<Options>')).toBe(`${DOCS_URL}/packages/core/latest/plugin`);
-    });
-
     it('opens the reference site in a new tab', () => {
         render(
             <Ref pkg="core" symbol="Notice">

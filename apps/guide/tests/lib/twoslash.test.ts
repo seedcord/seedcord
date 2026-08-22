@@ -6,7 +6,7 @@ function sample(...lines: string[]): string {
     return lines.join('\n');
 }
 
-async function render(code: string, lang: 'ts' | 'tsx' = 'ts'): Promise<string> {
+async function render(code: string, lang: 'ts' | 'tsx' | 'typescript' = 'ts'): Promise<string> {
     const { html } = await twoslashBlock(code, lang, true);
 
     return html ?? '';
@@ -123,14 +123,6 @@ describe('the twoslash transformer', () => {
         expect(second).not.toContain("Type 'string' is not assignable to type 'number'.");
     });
 
-    it('stays off while TWOSLASH is 0', async () => {
-        vi.stubEnv('TWOSLASH', '0');
-
-        const html = await render('// @errors: 2322\nconst count: number = "twelve";');
-
-        expect(html).not.toContain('twoslash-error-line');
-    });
-
     it('stays out of the way when the fence carries no flag', async () => {
         const { html } = await twoslashBlock('const count = 12;', 'ts', false);
 
@@ -146,8 +138,47 @@ describe('the twoslash transformer', () => {
     it('renders the stripped sample while TWOSLASH is 0', async () => {
         vi.stubEnv('TWOSLASH', '0');
 
-        const html = await render(sample('// @errors: 2322', 'const count: number = "twelve";'));
+        const { html, text } = await twoslashBlock(
+            sample('// @errors: 2322', 'const count: number = "twelve";'),
+            'ts',
+            true
+        );
 
-        expect(html).not.toContain('@errors');
+        expect(html).not.toContain('twoslash');
+        expect(text).toBe('const count: number = "twelve";');
+    });
+
+    it('renders a completion list at the cursor column', async () => {
+        const html = await render(
+            sample('// @noErrors', 'const routes = { ping: 1, pong: 2 };', 'routes.p', '//      ^|')
+        );
+
+        expect(html).toContain('twoslash-completion-list');
+        expect(html).toContain('--ts-col:8');
+        expect(html).toContain('twoslash-completions-matched');
+    });
+
+    it('type-checks a fence tagged typescript', async () => {
+        await expect(render('const count: number = "twelve";', 'typescript')).rejects.toThrow(
+            'not marked as being expected: 2322'
+        );
+    });
+
+    it('quotes the sample when the compiler crashes on a marker past the end of its line', async () => {
+        const source = sample('// @noErrors', 'const routes = { ping: 1 };', 'routes.p', '//          ^|');
+
+        await expect(render(source)).rejects.toThrow('routes.p');
+    });
+
+    it('marks a highlighted run', async () => {
+        const html = await render(sample('const token = 1;', '//    ^^^^^'));
+
+        expect(html).toContain('twoslash-highlighted');
+    });
+
+    it('leaves the copy text without a trailing blank line', async () => {
+        const { text } = await twoslashBlock(sample('const first = 1;', '//    ^?'), 'ts', true);
+
+        expect(text).toBe('const first = 1;');
     });
 });

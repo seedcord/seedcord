@@ -3,8 +3,10 @@
         position: relative;
         display: block;
         width: fit-content;
-        /* the code sits in a max-content chain with nothing else to wrap the message */
+        /* nothing above this box wraps the message */
         max-width: 62ch;
+        /* the caret cannot reach past this box */
+        min-width: calc(var(--ts-col, 0) * 1ch + 1.5rem);
         white-space: pre-wrap;
         margin: 0.6rem 0 0.5rem;
         padding: 0.3rem 0.6rem;
@@ -56,10 +58,6 @@
         font-weight: 600;
     }
 
-    .twoslash .twoslash-completions-icon {
-        display: none;
-    }
-
     .twoslash .twoslash-error {
         text-decoration: underline wavy color-mix(in oklab, var(--flesh) 80%, transparent);
         text-underline-offset: 0.25em;
@@ -73,9 +71,8 @@
         margin: -1px -3px;
     }
 
-    /* twoslash emits leading spaces that push the popup under the token ^? points at */
     .twoslash .twoslash-query-line {
-        /* a full line box would otherwise drop the popup to its bottom */
+        /* a full line box would drop the popup to its bottom */
         line-height: 0;
         margin: 0.6rem 0 0.5rem;
     }
@@ -92,14 +89,13 @@
         text-align: left;
     }
 
-    .twoslash .twoslash-query-line .twoslash-popup-container::before {
-        content: '';
+    .twoslash .twoslash-query-line .twoslash-popup-arrow {
         position: absolute;
         top: -0.3rem;
         left: 0.6rem;
         width: 0.5rem;
         height: 0.5rem;
-        background: inherit;
+        background: var(--bg-chip);
         border-top: 1px solid var(--border);
         border-left: 1px solid var(--border);
         transform: rotate(45deg);

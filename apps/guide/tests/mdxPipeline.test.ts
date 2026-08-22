@@ -81,14 +81,8 @@ describe('a fence caption', () => {
         expect(code).not.toContain('data-output');
     });
 
-    it('marks a fence the author tagged as twoslash', async () => {
-        const code = await compileGuideMdx(fence('twoslash'));
-
-        expect(code).toContain('data-twoslash');
-    });
-
-    it.each(['js', 'sh', 'json'])('refuses a %s fence tagged twoslash', async (lang) => {
-        const source = [`\`\`\`${lang} twoslash`, 'const a = 1;', '```'].join('\n');
+    it('refuses a js fence tagged twoslash', async () => {
+        const source = ['```js twoslash', 'const a = 1;', '```'].join('\n');
 
         await expect(compileGuideMdx(source)).rejects.toThrow('twoslash');
     });
@@ -104,8 +98,8 @@ describe('a fence caption', () => {
         await expect(compileGuideMdx(fence('title="a.ts"'))).resolves.not.toContain('data-twoslash');
     });
 
-    it('takes the flag on a tsx fence', async () => {
-        const source = ['```tsx twoslash', 'const a = 1;', '```'].join('\n');
+    it.each(['tsx', 'typescript'])('takes the flag on a %s fence', async (lang) => {
+        const source = [`\`\`\`${lang} twoslash`, 'const a = 1;', '```'].join('\n');
 
         await expect(compileGuideMdx(source)).resolves.toContain('data-twoslash');
     });

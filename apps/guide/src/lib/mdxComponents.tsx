@@ -3,13 +3,12 @@ import { highlightInlineToHtml, isHighlightable } from '@seedcord/ui/shiki';
 
 import { Callout } from '#components/Callout';
 import { LINK, Ref } from '#components/Ref';
+import { FENCE_ATTR, LANGUAGE_PREFIX } from '#lib/rehypeFenceMeta';
 import { twoslashBlock } from '#lib/twoslash';
 
 import type { MDXComponents } from 'mdx/types';
 import type { BundledLanguage } from 'shiki';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
-
-const LANGUAGE_PREFIX = 'language-';
 
 interface FenceProps {
     children?: ReactNode;
@@ -94,14 +93,14 @@ function readFence(children: ReactNode): Fenced | null {
         .split(/\s+/)
         .find((name) => name.startsWith(LANGUAGE_PREFIX))
         ?.slice(LANGUAGE_PREFIX.length);
-    const title = props['data-title'];
+    const title = props[FENCE_ATTR.title];
 
     return {
         code: code.replace(/\n$/, ''),
         lang: named && isHighlightable(named) ? named : 'ts',
         title: typeof title === 'string' ? title : undefined,
-        output: 'data-output' in props,
-        twoslash: 'data-twoslash' in props
+        output: FENCE_ATTR.output in props,
+        twoslash: FENCE_ATTR.twoslash in props
     };
 }
 

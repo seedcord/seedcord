@@ -28,7 +28,7 @@ const typesCache: TwoslashTypesCache = {
 };
 
 // every popup the rich renderer positions absolutely gets clipped by the code block's scroll area
-const rich = rendererRich({ errorRendering: 'line', queryRendering: 'line' });
+const rich = rendererRich({ queryRendering: 'line', completionIcons: false });
 
 const renderer: TwoslashRenderer = {
     ...rich,
@@ -69,10 +69,16 @@ export async function twoslashBlock(code: string, lang: BundledLanguage, tagged:
     if (!tagged) return { text: code, html: await highlightToHtml(code, lang) };
 
     // twoslash strips its own notation only in the html it renders
-    const text = removeTwoslashNotations(code);
+    // a trailing marker leaves the newline above it behind
+    const text = removeTwoslashNotations(code).replace(/\n+$/, '');
     // type-checking every block stalls next dev past a handful on one page
     if (process.env.TWOSLASH === '0') return { text, html: await highlightToHtml(text, lang) };
 
-    // a sample that stopped compiling would otherwise render as plain text and pass the build
-    return { text, html: await highlightToHtml(code, lang, { transformers: [twoslash], throwOnFailure: true }) };
+    try {
+        // a sample that stopped compiling would otherwise render as plain text and pass the build
+        return { text, html: await highlightToHtml(code, lang, { transformers: [twoslash], throwOnFailure: true }) };
+    } catch (error) {
+        // a bad marker reaches typescript as a bare "Debug Failure" with no file and no line
+        throw new Error(`twoslash failed on this sample:\n\n${code}\n\n${String(error)}`, { cause: error });
+    }
 }

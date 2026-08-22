@@ -2,8 +2,16 @@ const TITLE = /(?:^|\s)title="([^"]*)"/;
 const OUTPUT = /(?:^|\s)output(?:\s|$)/;
 const TWOSLASH = /(?:^|\s)twoslash(?:\s|$)/;
 
-const LANGUAGE_PREFIX = 'language-';
-const TWOSLASH_LANGS = new Set(['ts', 'tsx']);
+export const LANGUAGE_PREFIX = 'language-';
+
+// mdxComponents reads these back off the code element
+export const FENCE_ATTR = {
+    title: 'data-title',
+    output: 'data-output',
+    twoslash: 'data-twoslash'
+} as const;
+
+const TWOSLASH_LANGS = new Set(['ts', 'tsx', 'typescript']);
 
 interface Element {
     type: string;
@@ -44,14 +52,15 @@ export function rehypeFenceMeta() {
             const flags = meta.replace(TITLE, ' ');
             const added: Record<string, unknown> = {};
 
-            if (title) added['data-title'] = title;
-            if (OUTPUT.test(flags)) added['data-output'] = '';
+            if (title) added[FENCE_ATTR.title] = title;
+            if (OUTPUT.test(flags)) added[FENCE_ATTR.output] = '';
             if (TWOSLASH.test(flags)) {
                 const lang = languageOf(code);
                 if (!TWOSLASH_LANGS.has(lang)) {
-                    file.fail(`twoslash checks ts and tsx. This fence is tagged ${lang || 'nothing'}.`, code);
+                    const names = [...TWOSLASH_LANGS].join(', ');
+                    file.fail(`twoslash checks ${names}. This fence is tagged ${lang || 'nothing'}.`, code);
                 }
-                added['data-twoslash'] = '';
+                added[FENCE_ATTR.twoslash] = '';
             }
 
             code.properties = { ...code.properties, ...added };

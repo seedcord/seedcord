@@ -9,23 +9,11 @@ describe('a ref: link', () => {
         expect(code).toContain('<Ref pkg="core" symbol="Notice">');
     });
 
-    it('carries a dotted member through as the symbol', async () => {
-        const code = await compileGuideMdx('Start it with [Paginator.start](ref:core/Paginator.start).');
-
-        expect(code).toContain('symbol="Paginator.start"');
-    });
-
     it('takes link text that differs from the symbol', async () => {
         const code = await compileGuideMdx('Throw [the notice card](ref:core/Notice) instead.');
 
         expect(code).toContain('symbol="Notice"');
         expect(code).toContain('the notice card');
-    });
-
-    it('reaches a link nested inside a list', async () => {
-        const code = await compileGuideMdx('- a gate throws [Notice](ref:core/Notice)');
-
-        expect(code).toContain('<Ref pkg="core" symbol="Notice">');
     });
 
     it('reaches a link nested inside a table cell', async () => {

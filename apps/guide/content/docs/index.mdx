@@ -76,11 +76,18 @@ routes.p;
 //      ^|
 ```
 
-An error at the very start of a line pins the caret to the left corner.
+An error on the first token of a line.
 
 ```ts twoslash
 // @errors: 2304
 timoutMs = 3000;
+```
+
+A short message under a token far along the line. The card widens to reach it.
+
+```ts twoslash
+// @errors: 2304
+const config = { intents: [1, 2], partials: [], token: nope };
 ```
 
 ### Options come off the registry
