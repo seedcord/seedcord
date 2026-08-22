@@ -257,6 +257,20 @@ describe('the twoslash transformer', () => {
             expect(html).toContain('data-ref-pkg="gateway"');
         });
 
+        // a bare <T> reads as a type assertion under ts and as jsx under tsx
+        it('resolves inside a tsx sample', async () => {
+            const html = await render(
+                sample(
+                    "import { SlashHandler } from '@seedcord/gateway';",
+                    'declare const h: SlashHandler<never>;',
+                    'const id = <T,>(v: T): T => v;'
+                ),
+                'tsx'
+            );
+
+            expect(html).toContain('data-ref-pkg="gateway"');
+        });
+
         it('leaves the sample and the stdlib unlinked', async () => {
             const html = await render(sample('const count = 12;', 'const doubled = count * 2;'));
 

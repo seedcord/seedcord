@@ -113,7 +113,7 @@ function dedent(code: string): string {
 
 const compile = createTwoslasher();
 
-const VIRTUAL = 'index.ts';
+const virtualFile = (extension: string): string => `index.${extension}`;
 
 function leafAt(node: ts.Node, source: ts.SourceFile, offset: number): ts.Node {
     for (const child of node.getChildren(source)) {
@@ -139,16 +139,17 @@ function refAt(checker: ts.TypeChecker, source: ts.SourceFile, offset: number): 
     return referenceFor(declared, checker.getFullyQualifiedName(target));
 }
 
-function attachRefs(input: string, result: ReturnType<typeof compile>): void {
+function attachRefs(input: string, extension: string, result: ReturnType<typeof compile>): void {
     const hovers = result.nodes.filter((node): node is NodeHover => node.type === 'hover');
     const env = [...(compile.getCacheMap()?.values() ?? [])][0];
     if (hovers.length === 0 || !env) return;
 
+    const virtual = virtualFile(extension);
     // twoslash deletes the virtual file when the run ends
-    env.createFile(VIRTUAL, input);
+    env.createFile(virtual, input);
     try {
         const program = env.languageService.getProgram();
-        const source = program?.getSourceFiles().find((file) => file.fileName === VIRTUAL);
+        const source = program?.getSourceFiles().find((file) => file.fileName === virtual);
         if (!program || !source) return;
 
         const checker = program.getTypeChecker();
@@ -157,14 +158,14 @@ function attachRefs(input: string, result: ReturnType<typeof compile>): void {
             if (ref) (hover as HoverWithRef).ref = ref;
         }
     } finally {
-        env.deleteFile(VIRTUAL);
+        env.deleteFile(virtual);
     }
 }
 
 // a cut inside a class body leaves every visible line indented under a method that no longer renders
 const dedenting: TwoslashShikiFunction = (input, extension, options) => {
     const result = compile(input, extension, options);
-    attachRefs(input, result);
+    attachRefs(input, extension ?? 'ts', result);
     const width = commonIndent(result.code);
     if (!Number.isFinite(width) || width === 0) return result;
 
