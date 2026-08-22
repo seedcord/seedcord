@@ -6,11 +6,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Ref } from '#components/Ref';
 
-import type { PointerEvent, ReactElement, ReactNode } from 'react';
+import type { CSSProperties, PointerEvent, ReactElement, ReactNode } from 'react';
 
 const TOKEN = '.twoslash-hover';
 const TYPE = '.twoslash-popup-code';
 const POPOVER = '[data-radix-popper-content-wrapper]';
+
+// twoslash.css underlines the marked token
+const OPEN_ATTR = 'data-type-hover-open';
 
 // long enough to cross the 6px gap without tracing a straight line
 const CLOSE_GRACE_MS = 140;
@@ -43,6 +46,18 @@ const CONTENT = cn(
     tw`font-mono text-xs/relaxed whitespace-pre`
 );
 
+// radix cannot anchor to a token react never rendered
+function anchorRect(shown: Shown): CSSProperties {
+    return {
+        position: 'fixed',
+        left: shown.left,
+        top: shown.top,
+        width: shown.width,
+        height: shown.height,
+        pointerEvents: 'none'
+    };
+}
+
 function TypeBody({ shown }: { shown: Shown }): ReactElement {
     return (
         <>
@@ -66,11 +81,38 @@ function TypeBody({ shown }: { shown: Shown }): ReactElement {
     );
 }
 
+// scrolling and resizing both move the token out from under a rect measured in viewport space
+function useDropOnViewportChange(open: boolean, setOpen: (open: false) => void): void {
+    useEffect(() => {
+        if (!open) return undefined;
+
+        const drop = (event: Event): void => {
+            const moved = event.target as Element | null;
+            if (moved?.closest?.(POPOVER)) return;
+            setOpen(false);
+        };
+        window.addEventListener('scroll', drop, true);
+        window.addEventListener('resize', drop);
+
+        return () => {
+            window.removeEventListener('scroll', drop, true);
+            window.removeEventListener('resize', drop);
+        };
+    }, [open, setOpen]);
+}
+
 export function TypeHover({ children }: { children: ReactNode }): ReactElement {
     // the last token stays rendered while radix plays its close animation
     const [shown, setShown] = useState<Shown | null>(null);
     const [open, setOpen] = useState(false);
     const closing = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const marked = useRef<Element | null>(null);
+
+    const mark = useCallback((token: Element | null) => {
+        marked.current?.removeAttribute(OPEN_ATTR);
+        marked.current = token;
+        token?.setAttribute(OPEN_ATTR, '');
+    }, []);
 
     const hold = useCallback(() => {
         if (closing.current) clearTimeout(closing.current);
@@ -87,10 +129,10 @@ export function TypeHover({ children }: { children: ReactNode }): ReactElement {
         [hold]
     );
 
-    // a react portal still bubbles its events through the react tree
     const show = useCallback(
         (event: { target: EventTarget | null }) => {
             const from = event.target as Element | null;
+            // a react portal still bubbles its events through the react tree
             if (from?.closest(POPOVER)) {
                 hold();
                 return;
@@ -102,45 +144,26 @@ export function TypeHover({ children }: { children: ReactNode }): ReactElement {
             const next = readToken(token);
             if (next) {
                 hold();
+                mark(token);
                 setShown(next);
                 setOpen(true);
             }
         },
-        [hold]
+        [hold, mark]
     );
 
-    // scrolling moves the token out from under a rect measured in viewport space
     useEffect(() => {
-        if (!open) return undefined;
+        if (!open) mark(null);
+    }, [open, mark]);
 
-        const drop = (event: Event): void => {
-            const scrolled = event.target as Element | null;
-            if (scrolled?.closest?.(POPOVER)) return;
-            setOpen(false);
-        };
-        window.addEventListener('scroll', drop, true);
-
-        return () => window.removeEventListener('scroll', drop, true);
-    }, [open]);
+    useEffect(() => () => hold(), [hold]);
+    useDropOnViewportChange(open, setOpen);
 
     return (
         <div onPointerOver={show} onPointerOut={release} onClick={show}>
             {children}
             <Popover open={open} onOpenChange={setOpen}>
-                <PopoverAnchor
-                    style={
-                        shown
-                            ? {
-                                  position: 'fixed',
-                                  left: shown.left,
-                                  top: shown.top,
-                                  width: shown.width,
-                                  height: shown.height,
-                                  pointerEvents: 'none'
-                              }
-                            : undefined
-                    }
-                />
+                <PopoverAnchor style={shown ? anchorRect(shown) : undefined} />
                 {shown ? (
                     <PopoverContent
                         side="top"

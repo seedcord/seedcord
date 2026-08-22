@@ -8,19 +8,20 @@ import type { NextConfig } from 'next';
 const PAGE_EXTENSIONS = ['tsx', 'ts', 'jsx', 'js'];
 
 // a build-time notFound() still writes the route's file into a static export
-const devOnly = (phase: string): string[] => (phase === PHASE_DEVELOPMENT_SERVER ? ['dev.tsx'] : []);
+const devOnly = (phase: string): string[] => (phase === PHASE_DEVELOPMENT_SERVER ? ['dev.tsx', 'dev.ts'] : []);
 
 function guideConfig(phase: string): NextConfig {
     return {
         pageExtensions: [...PAGE_EXTENSIONS, ...devOnly(phase)],
-        // static export served by Cloudflare Workers static assets (see wrangler.jsonc + worker.ts)
+        // wrangler.jsonc and worker.ts serve these files as cloudflare static assets
         output: 'export',
         trailingSlash: true,
         images: { unoptimized: true },
-        // pin tracing to the monorepo root so workspace:* deps resolve into the build (matches apps/home).
+        // workspace:* deps resolve into the build only from the monorepo root
         outputFileTracingRoot: path.join(import.meta.dirname, '../..'),
         // a bundler cannot see the require('fs') @typescript/vfs assembles with String.fromCharCode
-        serverExternalPackages: ['typescript', '@typescript/vfs', 'twoslash', '@shikijs/twoslash'],
+        // prettier loads its typescript parser by path at call time
+        serverExternalPackages: ['typescript', '@typescript/vfs', 'twoslash', '@shikijs/twoslash', 'prettier'],
         turbopack: {}
     };
 }

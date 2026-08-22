@@ -1,6 +1,6 @@
 import { format } from 'prettier';
 
-// 76 mono columns is what the popup fits at its 36rem cap
+// the popup fits 76 mono columns at its 36rem cap
 const PRINT_WIDTH = 76;
 
 interface Shape {

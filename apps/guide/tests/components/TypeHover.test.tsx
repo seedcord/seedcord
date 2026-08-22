@@ -34,6 +34,8 @@ describe('the type hover', () => {
         const token = renderToken();
 
         pointer(token, 'pointerover', 'touch');
+        pointer(token, 'pointerdown', 'touch');
+        pointer(token, 'pointerup', 'touch');
         token.click();
         // the browser destroys a touch pointer the moment the finger lifts
         pointer(token, 'pointerout', 'touch');
@@ -51,6 +53,31 @@ describe('the type hover', () => {
         await waitFor(() => expect(isOpen()).toBe(true));
 
         pointer(token, 'pointerout', 'mouse');
+
+        await waitFor(() => expect(isOpen()).toBe(false));
+    });
+
+    it('marks the open token so touch gets an underline too', async () => {
+        const token = renderToken();
+
+        pointer(token, 'pointerover', 'mouse');
+        await waitFor(() => expect(isOpen()).toBe(true));
+
+        expect(token).toHaveAttribute('data-type-hover-open');
+
+        pointer(token, 'pointerout', 'mouse');
+        await waitFor(() => expect(isOpen()).toBe(false));
+
+        expect(token).not.toHaveAttribute('data-type-hover-open');
+    });
+
+    it('closes when the window resizes out from under the anchor', async () => {
+        const token = renderToken();
+
+        pointer(token, 'pointerover', 'mouse');
+        await waitFor(() => expect(isOpen()).toBe(true));
+
+        window.dispatchEvent(new Event('resize'));
 
         await waitFor(() => expect(isOpen()).toBe(false));
     });

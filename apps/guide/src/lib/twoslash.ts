@@ -44,8 +44,8 @@ const typesCache: TwoslashTypesCache = {
 // the twoslasher and every renderer hook run sync. prettier only formats async
 const formatted = new Map<string, string>();
 
-// every popup the rich renderer positions absolutely gets clipped by the code block's scroll area
 const rich = rendererRich({
+    // an absolutely positioned popup gets clipped by the code block's scroll area
     queryRendering: 'line',
     completionIcons: false,
     jsdoc: false,
@@ -176,7 +176,9 @@ const dedenting: TwoslashShikiFunction = (input, extension, options) => {
 async function learnFormatting(nodes: TwoslashShikiReturn['nodes']): Promise<void> {
     const pending = new Map<string, Promise<string>>();
     for (const node of nodes) {
-        if (node.type !== 'hover' || formatted.has(node.text) || pending.has(node.text)) continue;
+        // the renderer runs a query popup through processHoverInfo too
+        const formattable = node.type === 'hover' || node.type === 'query';
+        if (!formattable || formatted.has(node.text) || pending.has(node.text)) continue;
         pending.set(node.text, formatHoverType(defaultHoverInfoProcessor(node.text)));
     }
 
@@ -203,7 +205,6 @@ const twoslash = transformerTwoslash({
 export async function twoslashBlock(code: string, lang: BundledLanguage, tagged: boolean): Promise<CodeRepresentation> {
     if (!tagged) return { text: code, html: await highlightToHtml(code, lang) };
 
-    // twoslash strips its own notation only in the html it renders
     // a trailing marker leaves the newline above it behind
     const text = dedent(removeTwoslashNotations(code).replace(/\n+$/, ''));
     // type-checking every block stalls next dev past a handful on one page
@@ -211,7 +212,7 @@ export async function twoslashBlock(code: string, lang: BundledLanguage, tagged:
 
     const extension = LANG_ALIAS[lang] ?? lang;
     try {
-        // compiling here lets prettier finish before the sync renderer reads a hover
+        // prettier has to finish before the sync renderer reads a hover
         const compiled = dedenting(code, extension, TWOSLASH_OPTIONS);
         await learnFormatting(compiled.nodes);
         typesCache.write(code, compiled, extension);

@@ -34,7 +34,7 @@ describe('the reference a hovered symbol points at', () => {
         expect(referenceFor(gateway, 'SlashHandler')).toEqual({ pkg: 'gateway', symbol: 'SlashHandler' });
     });
 
-    it('keeps a member dotted, which Ref nests into a path', () => {
+    it('keeps a member dotted for Ref to split', () => {
         expect(referenceFor(gateway, 'SlashHandler.options')).toEqual({
             pkg: 'gateway',
             symbol: 'SlashHandler.options'
