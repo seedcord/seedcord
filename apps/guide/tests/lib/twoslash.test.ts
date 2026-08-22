@@ -44,10 +44,10 @@ describe('the twoslash transformer', () => {
     });
 
     it('stamps the error column so the caret can point at the squiggle', async () => {
-        const html = await render(sample('// @errors: 2322', '        const count: number = "twelve";'));
+        const html = await render(sample('// @errors: 2322', 'const count: number = "twelve";'));
 
-        // count starts at 14 and runs 5 wide
-        expect(html).toContain('--ts-col:16.5');
+        // count starts at 6 and runs 5 wide
+        expect(html).toContain('--ts-col:8.5');
     });
 
     it('renders a type query as a line', async () => {
@@ -108,10 +108,12 @@ describe('the twoslash transformer', () => {
         await expect(render(source, 'tsx')).rejects.toThrow('not marked as being expected');
     });
 
-    it('emits no hover popup', async () => {
-        const html = await render('const count = 12;');
+    it('carries the type on a hovered token, without its tsdoc', async () => {
+        const html = await render("const routes = ['ping'] as const;");
 
-        expect(html).not.toContain('twoslash-popup-container');
+        expect(html).toContain('twoslash-hover');
+        expect(html).toContain('twoslash-popup-code');
+        expect(html).not.toContain('twoslash-popup-docs');
     });
 
     it('keeps two blocks apart when they render back to back', async () => {
@@ -168,6 +170,122 @@ describe('the twoslash transformer', () => {
         const source = sample('// @noErrors', 'const routes = { ping: 1 };', 'routes.p', '//          ^|');
 
         await expect(render(source)).rejects.toThrow('routes.p');
+    });
+
+    describe('a sample cut out of a class body', () => {
+        const nested = sample(
+            "import { SlashHandler, SlashRoute } from '@seedcord/gateway';",
+            '',
+            "@SlashRoute('ping')",
+            "class Ping extends SlashHandler<'ping'> {",
+            '    public async execute(): Promise<void> {',
+            '// ---cut---',
+            "        await this.reply('Pong');",
+            '// ---cut-after---',
+            '    }',
+            '}'
+        );
+
+        it('copies without the indentation it was nested under', async () => {
+            const { text } = await twoslashBlock(nested, 'ts', true);
+
+            expect(text).toBe("await this.reply('Pong');");
+        });
+
+        it('renders without the indentation it was nested under', async () => {
+            const html = await render(nested);
+
+            expect(html.replaceAll(/<[^>]+>/g, '')).not.toContain('    await this.reply');
+        });
+
+        it('moves the error caret along with the code', async () => {
+            const html = await render(
+                sample(
+                    '// @errors: 2345',
+                    "import { SlashHandler, SlashRoute } from '@seedcord/gateway';",
+                    "@SlashRoute('ping')",
+                    "class Ping extends SlashHandler<'ping'> {",
+                    '    public async execute(): Promise<void> {',
+                    '// ---cut---',
+                    "        this.options.getBoolean('detaild');",
+                    '// ---cut-after---',
+                    '    }',
+                    '}'
+                )
+            );
+
+            // once the 8 spaces are gone the 9-wide argument starts at 24
+            expect(html).toContain('--ts-col:28.5');
+        });
+    });
+
+    describe('a hovered symbol a seedcord package declares', () => {
+        it('carries the package and the symbol', async () => {
+            const html = await render(
+                sample("import { SlashHandler } from '@seedcord/gateway';", 'declare const h: SlashHandler<never>;')
+            );
+
+            expect(html).toContain('data-ref-pkg="gateway"');
+            expect(html).toContain('data-ref-symbol="SlashHandler"');
+        });
+
+        it('nests a member the way the reference site does', async () => {
+            const html = await render(
+                sample(
+                    "import { SlashHandler, SlashRoute } from '@seedcord/gateway';",
+                    "@SlashRoute('ping')",
+                    "class Ping extends SlashHandler<'ping'> {",
+                    '    public async execute(): Promise<void> {',
+                    "        this.options.getBoolean('detailed');",
+                    '    }',
+                    '}'
+                )
+            );
+
+            expect(html).toContain('data-ref-symbol="SlashHandler.options"');
+        });
+
+        it('resolves through a cut that removed the import', async () => {
+            const html = await render(
+                sample(
+                    "import { SlashHandler } from '@seedcord/gateway';",
+                    '// ---cut---',
+                    'declare const handler: SlashHandler<never>;'
+                )
+            );
+
+            expect(html).toContain('data-ref-pkg="gateway"');
+        });
+
+        // a bare <T> reads as a type assertion under ts and as jsx under tsx
+        it('resolves inside a tsx sample', async () => {
+            const html = await render(
+                sample(
+                    "import { SlashHandler } from '@seedcord/gateway';",
+                    'declare const h: SlashHandler<never>;',
+                    'const id = <T,>(v: T): T => v;'
+                ),
+                'tsx'
+            );
+
+            expect(html).toContain('data-ref-pkg="gateway"');
+        });
+
+        it('leaves the sample and the stdlib unlinked', async () => {
+            const html = await render(sample('const count = 12;', 'const doubled = count * 2;'));
+
+            expect(html).toContain('twoslash-hover');
+            expect(html).not.toContain('data-ref-pkg');
+        });
+    });
+
+    it('breaks a long type across lines in the popup', async () => {
+        const html = await render(
+            sample("import { SlashHandler } from '@seedcord/gateway';", 'declare const h: SlashHandler<never>;')
+        );
+        const popup = /<code class="twoslash-popup-code">([\s\S]*?)<\/code>/.exec(html)?.[1] ?? '';
+
+        expect(popup.replaceAll(/<[^>]+>/g, '')).toContain('Route extends keyof SlashOptionRegistry,\n');
     });
 
     it('marks a highlighted run', async () => {

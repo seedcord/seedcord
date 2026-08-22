@@ -14,12 +14,13 @@ export interface RefProps {
 }
 
 export function Ref({ pkg, symbol, children }: RefProps): ReactElement {
-    // the reference site splits a qualified name on the same pair, in resolve-helpers.ts
-    const slug = (symbol.match(/[^.#]+/g) ?? []).map(slugifySegment).join('/');
+    // the reference site anchors a member on its owner's page, in AnchorStrategy.buildMemberHref
+    const [owner = '', ...members] = (symbol.match(/[^.#]+/g) ?? []).map(slugifySegment);
+    const anchor = members.at(-1);
 
     return (
         <a
-            href={`${DOCS_URL}/packages/${pkg}/latest/${slug}`}
+            href={`${DOCS_URL}/packages/${pkg}/latest/${owner}${anchor ? `#${anchor}` : ''}`}
             target="_blank"
             rel="noreferrer noopener"
             className={cn(LINK)}

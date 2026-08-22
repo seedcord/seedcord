@@ -425,6 +425,9 @@ importers:
       next:
         specifier: catalog:deps
         version: 16.2.12(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      prettier:
+        specifier: catalog:deps
+        version: 3.9.6
       react:
         specifier: catalog:react
         version: 19.2.8
@@ -435,8 +438,11 @@ importers:
         specifier: catalog:deps
         version: 4.4.3
       twoslash:
-        specifier: ^0.3.9
+        specifier: 0.3.9
         version: 0.3.9(supports-color@10.2.2)(typescript@6.0.3)
+      twoslash-protocol:
+        specifier: 0.3.9
+        version: 0.3.9
     devDependencies:
       '@mdx-js/mdx':
         specifier: ^3.1.1
@@ -498,9 +504,6 @@ importers:
       jsdom:
         specifier: catalog:test
         version: 30.0.1
-      prettier:
-        specifier: catalog:deps
-        version: 3.9.6
       prettier-plugin-tailwindcss:
         specifier: catalog:deps
         version: 0.8.1(prettier@3.9.6)
