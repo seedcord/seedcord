@@ -44,10 +44,10 @@ describe('the twoslash transformer', () => {
     });
 
     it('stamps the error column so the caret can point at the squiggle', async () => {
-        const html = await render(sample('// @errors: 2322', '        const count: number = "twelve";'));
+        const html = await render(sample('// @errors: 2322', 'const count: number = "twelve";'));
 
-        // count starts at 14 and runs 5 wide
-        expect(html).toContain('--ts-col:16.5');
+        // count starts at 6 and runs 5 wide
+        expect(html).toContain('--ts-col:8.5');
     });
 
     it('renders a type query as a line', async () => {
@@ -168,6 +168,53 @@ describe('the twoslash transformer', () => {
         const source = sample('// @noErrors', 'const routes = { ping: 1 };', 'routes.p', '//          ^|');
 
         await expect(render(source)).rejects.toThrow('routes.p');
+    });
+
+    describe('a sample cut out of a class body', () => {
+        const nested = sample(
+            "import { SlashHandler, SlashRoute } from '@seedcord/gateway';",
+            '',
+            "@SlashRoute('ping')",
+            "class Ping extends SlashHandler<'ping'> {",
+            '    public async execute(): Promise<void> {',
+            '// ---cut---',
+            "        await this.reply('Pong');",
+            '// ---cut-after---',
+            '    }',
+            '}'
+        );
+
+        it('copies without the indentation it was nested under', async () => {
+            const { text } = await twoslashBlock(nested, 'ts', true);
+
+            expect(text).toBe("await this.reply('Pong');");
+        });
+
+        it('renders without the indentation it was nested under', async () => {
+            const html = await render(nested);
+
+            expect(html.replaceAll(/<[^>]+>/g, '')).not.toContain('    await this.reply');
+        });
+
+        it('moves the error caret along with the code', async () => {
+            const html = await render(
+                sample(
+                    '// @errors: 2345',
+                    "import { SlashHandler, SlashRoute } from '@seedcord/gateway';",
+                    "@SlashRoute('ping')",
+                    "class Ping extends SlashHandler<'ping'> {",
+                    '    public async execute(): Promise<void> {',
+                    '// ---cut---',
+                    "        this.options.getBoolean('detaild');",
+                    '// ---cut-after---',
+                    '    }',
+                    '}'
+                )
+            );
+
+            // once the 8 spaces are gone the 9-wide argument starts at 24
+            expect(html).toContain('--ts-col:28.5');
+        });
     });
 
     it('marks a highlighted run', async () => {

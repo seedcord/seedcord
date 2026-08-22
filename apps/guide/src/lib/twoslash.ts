@@ -1,10 +1,17 @@
 import { rendererRich, transformerTwoslash } from '@shikijs/twoslash';
 import { highlightToHtml } from '@seedcord/ui/shiki';
+import { createTwoslasher } from 'twoslash';
 import { removeTwoslashNotations } from 'twoslash/fallback';
+import { removeCodeRanges, resolveNodePositions } from 'twoslash-protocol';
 
 import { SAMPLE_AUGMENTATION } from '#lib/sampleTypes';
 
-import type { TwoslashRenderer, TwoslashShikiReturn, TwoslashTypesCache } from '@shikijs/twoslash';
+import type {
+    TwoslashRenderer,
+    TwoslashShikiFunction,
+    TwoslashShikiReturn,
+    TwoslashTypesCache
+} from '@shikijs/twoslash';
 import type { CodeRepresentation } from '@seedcord/ui';
 import type { BundledLanguage } from 'shiki';
 
@@ -54,10 +61,50 @@ const renderer: TwoslashRenderer = {
     }
 };
 
+const INDENTS = /^[ \t]*(?=\S)/gm;
+
+function commonIndent(code: string): number {
+    const found = code.match(INDENTS) ?? [];
+
+    return found.reduce((width, indent) => Math.min(width, indent.length), Infinity);
+}
+
+function indentRanges(code: string, width: number): [number, number][] {
+    const ranges: [number, number][] = [];
+    let index = 0;
+    for (const line of code.split('\n')) {
+        if (line.trim()) ranges.push([index, index + width]);
+        index += line.length + 1;
+    }
+
+    return ranges;
+}
+
+function dedent(code: string): string {
+    const width = commonIndent(code);
+    if (!Number.isFinite(width) || width === 0) return code;
+
+    return code.replace(new RegExp(`^[ \\t]{${String(width)}}`, 'gm'), '');
+}
+
+const compile = createTwoslasher();
+
+// a cut inside a class body leaves every visible line indented under a method that no longer renders
+const dedenting: TwoslashShikiFunction = (input, extension, options) => {
+    const result = compile(input, extension, options);
+    const width = commonIndent(result.code);
+    if (!Number.isFinite(width) || width === 0) return result;
+
+    const { code, nodes } = removeCodeRanges(result.code, indentRanges(result.code, width), result.nodes);
+
+    return { ...result, code, nodes: resolveNodePositions(nodes, code) };
+};
+
 const twoslash = transformerTwoslash({
     langs: ['ts', 'tsx'],
     typesCache,
     renderer,
+    twoslasher: dedenting,
     twoslashOptions: {
         handbookOptions: { noStaticSemanticInfo: true },
         compilerOptions: { experimentalDecorators: true, types: ['node'] },
@@ -70,7 +117,7 @@ export async function twoslashBlock(code: string, lang: BundledLanguage, tagged:
 
     // twoslash strips its own notation only in the html it renders
     // a trailing marker leaves the newline above it behind
-    const text = removeTwoslashNotations(code).replace(/\n+$/, '');
+    const text = dedent(removeTwoslashNotations(code).replace(/\n+$/, ''));
     // type-checking every block stalls next dev past a handful on one page
     if (process.env.TWOSLASH === '0') return { text, html: await highlightToHtml(text, lang) };
 
