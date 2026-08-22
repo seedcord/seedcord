@@ -87,7 +87,6 @@ describe('a fence caption', () => {
         expect(code).toContain('data-twoslash');
     });
 
-    // the flag on any other language reads as checked while nothing checks it
     it.each(['js', 'sh', 'json'])('refuses a %s fence tagged twoslash', async (lang) => {
         const source = [`\`\`\`${lang} twoslash`, 'const a = 1;', '```'].join('\n');
 

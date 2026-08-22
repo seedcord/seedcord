@@ -3,7 +3,7 @@
         position: relative;
         display: block;
         width: fit-content;
-        /* a ch cap wraps the message, since the code sits in a max-content chain with nothing to wrap against */
+        /* the code sits in a max-content chain with nothing else to wrap the message */
         max-width: 62ch;
         white-space: pre-wrap;
         margin: 0.6rem 0 0.5rem;
@@ -14,7 +14,7 @@
         color: color-mix(in oklab, var(--text) 62%, var(--flesh) 38%);
     }
 
-    /* twoslash.ts writes --ts-col as the squiggle's middle column. the clamp keeps the caret off both corners */
+    /* twoslash.ts writes --ts-col as the squiggle's middle column */
     .twoslash .twoslash-error-line::before {
         content: '';
         position: absolute;
@@ -28,7 +28,7 @@
         transform: rotate(45deg);
     }
 
-    /* the list nests in the code line, so it flows below rather than floating over the next one */
+    /* an absolutely placed list would cover the next code line */
     .twoslash .twoslash-completion-list {
         display: block;
         width: fit-content;
@@ -73,9 +73,9 @@
         margin: -1px -3px;
     }
 
-    /* the leading spaces twoslash emits sit the box under the token the ^? points at */
+    /* twoslash emits leading spaces that push the popup under the token ^? points at */
     .twoslash .twoslash-query-line {
-        /* the spaces otherwise draw a full line box and the card baselines to the bottom of it */
+        /* a full line box would otherwise drop the popup to its bottom */
         line-height: 0;
         margin: 0.6rem 0 0.5rem;
     }

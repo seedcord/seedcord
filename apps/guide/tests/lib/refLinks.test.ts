@@ -49,7 +49,6 @@ describe('a ref: link', () => {
         expect(code).toContain('<Ref pkg="core" symbol="Notice">');
     });
 
-    // prettier produces the flow form by splitting an inline one onto its own line
     it.each(['a <Ref pkg="core">Notice</Ref> link', '<Ref pkg="core">Notice</Ref>'])(
         'refuses %s written as jsx',
         async (source) => {

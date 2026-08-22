@@ -75,7 +75,6 @@ function walk(tree: Node, file: Reporter, inHeading: boolean): void {
             file.fail('a heading takes no symbol link. Its text also renders in the table of contents.', child);
         }
 
-        // the isRefJsx check above never reaches the Ref this returns
         return refElement(child, file);
     });
 }

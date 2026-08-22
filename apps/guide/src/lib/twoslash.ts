@@ -11,7 +11,7 @@ import type { BundledLanguage } from 'shiki';
 // renderDual runs the same source through shiki once per theme, back to back
 let previous: { key: string; data: TwoslashShikiReturn } | null = null;
 
-// a tsx block must miss a ts block of the same source
+// twoslash reports different errors for one sample under tsx
 function cacheKey(code: string, lang: string | undefined): string {
     return `${lang ?? ''} ${code}`;
 }
@@ -35,7 +35,7 @@ const renderer: TwoslashRenderer = {
     lineError(error) {
         const nodes = rich.lineError?.call(this, error) ?? [];
         const [first] = nodes;
-        // css reads this to sit the caret under the middle of the squiggle, exact because the font is monospace
+        // css reads this to put the caret under the middle of the squiggle
         const middle = error.character + error.length / 2;
         if (first?.type === 'element') {
             first.properties = { ...first.properties, style: `--ts-col:${String(middle)}` };
@@ -68,9 +68,9 @@ const twoslash = transformerTwoslash({
 export async function twoslashBlock(code: string, lang: BundledLanguage, tagged: boolean): Promise<CodeRepresentation> {
     if (!tagged) return { text: code, html: await highlightToHtml(code, lang) };
 
-    // twoslash strips its own notation while it renders. the copy button never sees that pass
+    // twoslash strips its own notation only in the html it renders
     const text = removeTwoslashNotations(code);
-    // type-checking every block makes next dev unusable past a handful on one page
+    // type-checking every block stalls next dev past a handful on one page
     if (process.env.TWOSLASH === '0') return { text, html: await highlightToHtml(text, lang) };
 
     // a sample that stopped compiling would otherwise render as plain text and pass the build
