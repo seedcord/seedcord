@@ -86,9 +86,12 @@
         display: none;
     }
 
-    .twoslash .twoslash-hover:hover {
-        text-decoration: underline dotted color-mix(in oklab, var(--text) 45%, transparent);
-        text-underline-offset: 0.3em;
+    /* a phone keeps :hover on the tapped token until you tap somewhere else */
+    @media (hover: hover) {
+        .twoslash .twoslash-hover:hover {
+            text-decoration: underline dotted color-mix(in oklab, var(--text) 45%, transparent);
+            text-underline-offset: 0.3em;
+        }
     }
 
     .twoslash .twoslash-error {

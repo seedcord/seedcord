@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Ref } from '#components/Ref';
 
-import type { ReactElement, ReactNode } from 'react';
+import type { PointerEvent, ReactElement, ReactNode } from 'react';
 
 const TOKEN = '.twoslash-hover';
 const TYPE = '.twoslash-popup-code';
@@ -14,6 +14,9 @@ const POPOVER = '[data-radix-popper-content-wrapper]';
 
 // long enough to cross the 6px gap without tracing a straight line
 const CLOSE_GRACE_MS = 140;
+
+// matches the 1rem the max-width already reserves on each side
+const EDGE_GAP_PX = 16;
 
 interface Shown {
     html: string;
@@ -74,10 +77,15 @@ export function TypeHover({ children }: { children: ReactNode }): ReactElement {
         closing.current = null;
     }, []);
 
-    const release = useCallback(() => {
-        hold();
-        closing.current = setTimeout(() => setOpen(false), CLOSE_GRACE_MS);
-    }, [hold]);
+    const release = useCallback(
+        (event?: PointerEvent<HTMLElement>) => {
+            // the browser destroys a touch pointer the moment the finger lifts
+            if (event && event.pointerType !== 'mouse') return;
+            hold();
+            closing.current = setTimeout(() => setOpen(false), CLOSE_GRACE_MS);
+        },
+        [hold]
+    );
 
     // a react portal still bubbles its events through the react tree
     const show = useCallback(
@@ -138,6 +146,7 @@ export function TypeHover({ children }: { children: ReactNode }): ReactElement {
                         side="top"
                         align="start"
                         sideOffset={6}
+                        collisionPadding={EDGE_GAP_PX}
                         className={CONTENT}
                         onOpenAutoFocus={(event) => event.preventDefault()}
                         onPointerOver={hold}
