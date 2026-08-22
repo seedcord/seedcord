@@ -36,7 +36,7 @@ function readToken(token: Element): Shown | null {
 }
 
 const CONTENT = cn(
-    tw`type-hover-scroll max-h-[min(20rem,50vh)] max-w-[min(36rem,calc(100vw-2rem))] overflow-auto p-0 shadow-none`,
+    tw`type-hover-scroll max-h-[min(20rem,50vh)] max-w-[min(36rem,calc(100vw-2rem))] overflow-auto overscroll-none p-0 shadow-none`,
     tw`font-mono text-xs/relaxed whitespace-pre`
 );
 

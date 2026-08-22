@@ -33,7 +33,7 @@
         },
         "apps/guide": {
             "entry": [
-                "src/app/**/{page,layout,route,not-found}.{ts,tsx}"
+                "src/app/**/{page,layout,route,not-found}{,.dev}.{ts,tsx}"
             ],
             "project": [
                 "src/**/*.{ts,tsx,css}"

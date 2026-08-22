@@ -265,6 +265,15 @@ describe('the twoslash transformer', () => {
         });
     });
 
+    it('breaks a long type across lines in the popup', async () => {
+        const html = await render(
+            sample("import { SlashHandler } from '@seedcord/gateway';", 'declare const h: SlashHandler<never>;')
+        );
+        const popup = /<code class="twoslash-popup-code">([\s\S]*?)<\/code>/.exec(html)?.[1] ?? '';
+
+        expect(popup.replaceAll(/<[^>]+>/g, '')).toContain('Route extends keyof SlashOptionRegistry,\n');
+    });
+
     it('marks a highlighted run', async () => {
         const html = await render(sample('const token = 1;', '//    ^^^^^'));
 

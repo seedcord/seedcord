@@ -1,10 +1,11 @@
-import { rendererRich, transformerTwoslash } from '@shikijs/twoslash';
+import { defaultHoverInfoProcessor, rendererRich, transformerTwoslash } from '@shikijs/twoslash';
 import { highlightToHtml } from '@seedcord/ui/shiki';
 import ts from 'typescript';
 import { createTwoslasher } from 'twoslash';
 import { removeTwoslashNotations } from 'twoslash/fallback';
 import { removeCodeRanges, resolveNodePositions } from 'twoslash-protocol';
 
+import { formatHoverType } from '#lib/formatHoverType';
 import { SAMPLE_AUGMENTATION } from '#lib/sampleTypes';
 import { referenceFor } from '#lib/symbolRef';
 
@@ -40,8 +41,16 @@ const typesCache: TwoslashTypesCache = {
     }
 };
 
+// the twoslasher and every renderer hook run sync. prettier only formats async
+const formatted = new Map<string, string>();
+
 // every popup the rich renderer positions absolutely gets clipped by the code block's scroll area
-const rich = rendererRich({ queryRendering: 'line', completionIcons: false, jsdoc: false });
+const rich = rendererRich({
+    queryRendering: 'line',
+    completionIcons: false,
+    jsdoc: false,
+    processHoverInfo: (text) => formatted.get(text) ?? defaultHoverInfoProcessor(text)
+});
 
 const renderer: TwoslashRenderer = {
     ...rich,
@@ -116,8 +125,8 @@ function leafAt(node: ts.Node, source: ts.SourceFile, offset: number): ts.Node {
 
 // a cut removes the imports that resolve these symbols
 function beforeCuts(offset: number, removals: readonly Range[]): number {
-    return [...removals]
-        .sort((a, b) => a[0] - b[0])
+    return removals
+        .toSorted((a, b) => a[0] - b[0])
         .reduce((moved, [start, end]) => (start <= moved ? moved + (end - start) : moved), offset);
 }
 
@@ -164,11 +173,24 @@ const dedenting: TwoslashShikiFunction = (input, extension, options) => {
     return { ...result, code, nodes: resolveNodePositions(nodes, code) };
 };
 
+async function learnFormatting(nodes: TwoslashShikiReturn['nodes']): Promise<void> {
+    const pending = new Map<string, Promise<string>>();
+    for (const node of nodes) {
+        if (node.type !== 'hover' || formatted.has(node.text) || pending.has(node.text)) continue;
+        pending.set(node.text, formatHoverType(defaultHoverInfoProcessor(node.text)));
+    }
+
+    await Promise.all([...pending].map(([text, printed]) => printed.then((value) => void formatted.set(text, value))));
+}
+
 const TWOSLASH_OPTIONS = {
     handbookOptions: { noStaticSemanticInfo: false },
     compilerOptions: { experimentalDecorators: true, types: ['node'] },
     extraFiles: { 'seedcord-gen.d.ts': SAMPLE_AUGMENTATION }
 };
+
+// the transformer aliases a typescript fence to ts before it reads the cache
+const LANG_ALIAS: Record<string, string> = { typescript: 'ts' };
 
 const twoslash = transformerTwoslash({
     langs: ['ts', 'tsx'],
@@ -187,7 +209,13 @@ export async function twoslashBlock(code: string, lang: BundledLanguage, tagged:
     // type-checking every block stalls next dev past a handful on one page
     if (process.env.TWOSLASH === '0') return { text, html: await highlightToHtml(text, lang) };
 
+    const extension = LANG_ALIAS[lang] ?? lang;
     try {
+        // compiling here lets prettier finish before the sync renderer reads a hover
+        const compiled = dedenting(code, extension, TWOSLASH_OPTIONS);
+        await learnFormatting(compiled.nodes);
+        typesCache.write(code, compiled, extension);
+
         // a sample that stopped compiling would otherwise render as plain text and pass the build
         return { text, html: await highlightToHtml(code, lang, { transformers: [twoslash], throwOnFailure: true }) };
     } catch (error) {
