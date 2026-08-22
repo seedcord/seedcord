@@ -219,6 +219,52 @@ describe('the twoslash transformer', () => {
         });
     });
 
+    describe('a hovered symbol a seedcord package declares', () => {
+        it('carries the package and the symbol', async () => {
+            const html = await render(
+                sample("import { SlashHandler } from '@seedcord/gateway';", 'declare const h: SlashHandler<never>;')
+            );
+
+            expect(html).toContain('data-ref-pkg="gateway"');
+            expect(html).toContain('data-ref-symbol="SlashHandler"');
+        });
+
+        it('nests a member the way the reference site does', async () => {
+            const html = await render(
+                sample(
+                    "import { SlashHandler, SlashRoute } from '@seedcord/gateway';",
+                    "@SlashRoute('ping')",
+                    "class Ping extends SlashHandler<'ping'> {",
+                    '    public async execute(): Promise<void> {',
+                    "        this.options.getBoolean('detailed');",
+                    '    }',
+                    '}'
+                )
+            );
+
+            expect(html).toContain('data-ref-symbol="SlashHandler.options"');
+        });
+
+        it('resolves through a cut that removed the import', async () => {
+            const html = await render(
+                sample(
+                    "import { SlashHandler } from '@seedcord/gateway';",
+                    '// ---cut---',
+                    'declare const handler: SlashHandler<never>;'
+                )
+            );
+
+            expect(html).toContain('data-ref-pkg="gateway"');
+        });
+
+        it('leaves the sample and the stdlib unlinked', async () => {
+            const html = await render(sample('const count = 12;', 'const doubled = count * 2;'));
+
+            expect(html).toContain('twoslash-hover');
+            expect(html).not.toContain('data-ref-pkg');
+        });
+    });
+
     it('marks a highlighted run', async () => {
         const html = await render(sample('const token = 1;', '//    ^^^^^'));
 

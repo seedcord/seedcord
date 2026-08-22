@@ -1,10 +1,12 @@
 import { rendererRich, transformerTwoslash } from '@shikijs/twoslash';
 import { highlightToHtml } from '@seedcord/ui/shiki';
+import ts from 'typescript';
 import { createTwoslasher } from 'twoslash';
 import { removeTwoslashNotations } from 'twoslash/fallback';
 import { removeCodeRanges, resolveNodePositions } from 'twoslash-protocol';
 
 import { SAMPLE_AUGMENTATION } from '#lib/sampleTypes';
+import { referenceFor } from '#lib/symbolRef';
 
 import type {
     TwoslashRenderer,
@@ -12,8 +14,12 @@ import type {
     TwoslashShikiReturn,
     TwoslashTypesCache
 } from '@shikijs/twoslash';
+import type { SymbolReference } from '#lib/symbolRef';
 import type { CodeRepresentation } from '@seedcord/ui';
 import type { BundledLanguage } from 'shiki';
+import type { NodeHover, Range } from 'twoslash-protocol';
+
+type HoverWithRef = NodeHover & { ref?: SymbolReference };
 
 // renderDual runs the same source through shiki once per theme, back to back
 let previous: { key: string; data: TwoslashShikiReturn } | null = null;
@@ -49,6 +55,15 @@ const renderer: TwoslashRenderer = {
         }
 
         return nodes;
+    },
+    nodeStaticInfo(info, node) {
+        const element = rich.nodeStaticInfo?.call(this, info, node) ?? node;
+        const { ref } = info as HoverWithRef;
+        if (!ref || element.type !== 'element') return element;
+
+        element.properties = { ...element.properties, 'data-ref-pkg': ref.pkg, 'data-ref-symbol': ref.symbol };
+
+        return element;
     },
     nodeCompletion(completion, node) {
         const partial = rich.nodeCompletion?.call(this, completion, node) ?? {};
@@ -89,9 +104,58 @@ function dedent(code: string): string {
 
 const compile = createTwoslasher();
 
+const VIRTUAL = 'index.ts';
+
+function leafAt(node: ts.Node, source: ts.SourceFile, offset: number): ts.Node {
+    for (const child of node.getChildren(source)) {
+        if (child.getStart(source) <= offset && offset < child.getEnd()) return leafAt(child, source, offset);
+    }
+
+    return node;
+}
+
+// a cut removes the imports that resolve these symbols
+function beforeCuts(offset: number, removals: readonly Range[]): number {
+    return [...removals]
+        .sort((a, b) => a[0] - b[0])
+        .reduce((moved, [start, end]) => (start <= moved ? moved + (end - start) : moved), offset);
+}
+
+function refAt(checker: ts.TypeChecker, source: ts.SourceFile, offset: number): SymbolReference | null {
+    const symbol = checker.getSymbolAtLocation(leafAt(source, source, offset));
+    const target = symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+    const declared = target?.declarations?.[0]?.getSourceFile().fileName;
+    if (!target || !declared) return null;
+
+    return referenceFor(declared, checker.getFullyQualifiedName(target));
+}
+
+function attachRefs(input: string, result: ReturnType<typeof compile>): void {
+    const hovers = result.nodes.filter((node): node is NodeHover => node.type === 'hover');
+    const env = [...(compile.getCacheMap()?.values() ?? [])][0];
+    if (hovers.length === 0 || !env) return;
+
+    // twoslash deletes the virtual file when the run ends
+    env.createFile(VIRTUAL, input);
+    try {
+        const program = env.languageService.getProgram();
+        const source = program?.getSourceFiles().find((file) => file.fileName === VIRTUAL);
+        if (!program || !source) return;
+
+        const checker = program.getTypeChecker();
+        for (const hover of hovers) {
+            const ref = refAt(checker, source, beforeCuts(hover.start, result.meta.removals));
+            if (ref) (hover as HoverWithRef).ref = ref;
+        }
+    } finally {
+        env.deleteFile(VIRTUAL);
+    }
+}
+
 // a cut inside a class body leaves every visible line indented under a method that no longer renders
 const dedenting: TwoslashShikiFunction = (input, extension, options) => {
     const result = compile(input, extension, options);
+    attachRefs(input, result);
     const width = commonIndent(result.code);
     if (!Number.isFinite(width) || width === 0) return result;
 
@@ -100,16 +164,18 @@ const dedenting: TwoslashShikiFunction = (input, extension, options) => {
     return { ...result, code, nodes: resolveNodePositions(nodes, code) };
 };
 
+const TWOSLASH_OPTIONS = {
+    handbookOptions: { noStaticSemanticInfo: false },
+    compilerOptions: { experimentalDecorators: true, types: ['node'] },
+    extraFiles: { 'seedcord-gen.d.ts': SAMPLE_AUGMENTATION }
+};
+
 const twoslash = transformerTwoslash({
     langs: ['ts', 'tsx'],
     typesCache,
     renderer,
     twoslasher: dedenting,
-    twoslashOptions: {
-        handbookOptions: { noStaticSemanticInfo: false },
-        compilerOptions: { experimentalDecorators: true, types: ['node'] },
-        extraFiles: { 'seedcord-gen.d.ts': SAMPLE_AUGMENTATION }
-    }
+    twoslashOptions: TWOSLASH_OPTIONS
 });
 
 export async function twoslashBlock(code: string, lang: BundledLanguage, tagged: boolean): Promise<CodeRepresentation> {
