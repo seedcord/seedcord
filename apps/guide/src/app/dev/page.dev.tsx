@@ -8,6 +8,11 @@ const SHELL_PIECES = [
         href: '/dev/transport',
         label: 'Transport control',
         description: 'the gateway and http picker for code samples, in a code header and on its own'
+    },
+    {
+        href: '/dev/mdx-kit',
+        label: 'The mdx kit',
+        description: 'every element the guide component map renders, with the source that produced it'
     }
 ] as const;
 
