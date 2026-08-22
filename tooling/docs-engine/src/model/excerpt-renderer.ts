@@ -28,6 +28,18 @@ const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 const textPart = (text: string): SigPart => ({ kind: 'text', text });
 const punctPart = (text: string): SigPart => ({ kind: 'punct', text });
 
+const QUOTES = new Set(["'", '"']);
+
+// a string literal type spells `'any'` with the same letters as the intrinsic
+function literalAt(text: string, start: number): string | null {
+    const quote = text.charAt(start);
+    if (!QUOTES.has(quote)) return null;
+
+    const close = text.indexOf(quote, start + 1);
+
+    return text.slice(start, close === -1 ? text.length : close + 1);
+}
+
 function tokenizeContent(text: string, parts: SigPart[]): void {
     let buffer = '';
     let mode: 'word' | 'punct' | null = null;
@@ -44,7 +56,16 @@ function tokenizeContent(text: string, parts: SigPart[]): void {
         mode = null;
     };
 
-    for (const char of text) {
+    for (let index = 0; index < text.length; index++) {
+        const literal = literalAt(text, index);
+        if (literal) {
+            flush();
+            parts.push(punctPart(literal));
+            index += literal.length - 1;
+            continue;
+        }
+
+        const char = text.charAt(index);
         if (/\s/.test(char)) {
             flush();
             if (parts.at(-1)?.kind !== 'space') parts.push({ kind: 'space' });

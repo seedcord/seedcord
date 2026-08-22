@@ -43,4 +43,28 @@ describe('tokensToSigParts', () => {
         const bare = parts.find((part) => part.kind === 'text' && part.text === 'Promise');
         expect(bare).toBeDefined();
     });
+
+    it.each(["'any' | 'all'", '"never" | "always"'])('leaves an intrinsic inside the literal %s alone', (text) => {
+        const parts = tokensToSigParts([contentToken(text)]);
+
+        expect(parts.filter((part) => part.kind === 'ref')).toEqual([]);
+    });
+
+    it('keeps the literal text intact', () => {
+        const parts = tokensToSigParts([contentToken("'any'")]);
+
+        expect(parts.map((part) => (part.kind === 'space' ? ' ' : part.text)).join('')).toBe("'any'");
+    });
+
+    it('leaves the literal alone across the newlines of a type alias body', () => {
+        const parts = tokensToSigParts([contentToken('TypedOmit<P, "t"> & {\n    transport?: "gateway" | "any";\n}')]);
+
+        expect(parts.filter((part) => part.kind === 'ref')).toEqual([]);
+    });
+
+    it('still links an intrinsic that follows a literal', () => {
+        const parts = tokensToSigParts([contentToken("'any' | number")]);
+
+        expect(parts.find((part) => part.kind === 'ref')).toMatchObject({ text: 'number' });
+    });
 });
