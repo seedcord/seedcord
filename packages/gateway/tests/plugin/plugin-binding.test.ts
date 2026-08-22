@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 
 import { Plugin } from '#src/plugin';
 
@@ -32,13 +32,30 @@ class WrongTransport extends Plugin<{ transport: 'http' }> {
 }
 void WrongTransport;
 
-// the gateway base accepts a plugin declaring any transport
+// @ts-expect-error an http bot provides no gateway Core for this.core
 class Portable extends Plugin<{ transport: 'any' }> {
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 void Portable;
+
+// @ts-expect-error a websocket needs a long-lived process
+class OnEdge extends Plugin<{ runtime: 'edge' }> {
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+}
+void OnEdge;
+
+class Declared extends Plugin<{ transport: 'gateway'; runtime: 'server' }> {
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+}
+
+// a plugin that declares nothing should always be scoped to just this base
+expectTypeOf<Plugin>().toEqualTypeOf<Declared>();
 
 describe('the gateway plugin base', () => {
     it('binds this.core to the gateway Core', () => {
