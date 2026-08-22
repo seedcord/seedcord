@@ -7,8 +7,9 @@
     },
     "private": true,
     "scripts": {
-        "dev": "next dev",
-        "build": "next build",
+        "dev": "TWOSLASH=0 next dev",
+        "dev:twoslash": "NODE_OPTIONS=--max-old-space-size=8192 next dev",
+        "build": "NODE_OPTIONS=--max-old-space-size=8192 next build",
         "start": "pnpm dlx serve out",
         "deploy": "wrangler deploy",
         "postinstall": "fumadocs-mdx",
@@ -23,6 +24,7 @@
     "dependencies": {
         "@seedcord/docs-engine": "workspace:^",
         "@seedcord/ui": "workspace:^",
+        "@shikijs/twoslash": "^4.4.3",
         "fumadocs-core": "16.14.4",
         "fumadocs-mdx": "15.2.3",
         "lucide-react": "catalog:deps",
@@ -30,11 +32,14 @@
         "next": "catalog:deps",
         "react": "catalog:react",
         "react-dom": "catalog:react",
-        "shiki": "catalog:deps"
+        "shiki": "catalog:deps",
+        "twoslash": "^0.3.9"
     },
     "devDependencies": {
         "@mdx-js/mdx": "^3.1.1",
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/gateway": "workspace:^",
+        "@seedcord/http": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
         "@tailwindcss/postcss": "catalog:deps",

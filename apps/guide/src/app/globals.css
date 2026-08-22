@@ -1,5 +1,6 @@
 @import '@seedcord/ui/styles/globals.css';
 @import '../styles/callout.css';
+@import '../styles/twoslash.css';
 
 :root {
     --content-max: 100rem;
