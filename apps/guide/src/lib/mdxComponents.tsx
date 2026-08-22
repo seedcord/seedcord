@@ -1,14 +1,14 @@
 import { Card, CodeBlock, CopyAnchorButton, cn, tw } from '@seedcord/ui';
-import { highlightInlineToHtml, highlightToHtml, isHighlightable } from '@seedcord/ui/shiki';
+import { highlightInlineToHtml, isHighlightable } from '@seedcord/ui/shiki';
 
 import { Callout } from '#components/Callout';
 import { LINK, Ref } from '#components/Ref';
+import { FENCE_ATTR, LANGUAGE_PREFIX } from '#lib/rehypeFenceMeta';
+import { twoslashBlock } from '#lib/twoslash';
 
 import type { MDXComponents } from 'mdx/types';
 import type { BundledLanguage } from 'shiki';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
-
-const LANGUAGE_PREFIX = 'language-';
 
 interface FenceProps {
     children?: ReactNode;
@@ -77,6 +77,7 @@ interface Fenced {
     lang: BundledLanguage;
     title: string | undefined;
     output: boolean;
+    twoslash: boolean;
 }
 
 // mdx renders a fence as <pre><code className="language-x">
@@ -92,13 +93,14 @@ function readFence(children: ReactNode): Fenced | null {
         .split(/\s+/)
         .find((name) => name.startsWith(LANGUAGE_PREFIX))
         ?.slice(LANGUAGE_PREFIX.length);
-    const title = props['data-title'];
+    const title = props[FENCE_ATTR.title];
 
     return {
         code: code.replace(/\n$/, ''),
         lang: named && isHighlightable(named) ? named : 'ts',
         title: typeof title === 'string' ? title : undefined,
-        output: 'data-output' in props
+        output: FENCE_ATTR.output in props,
+        twoslash: FENCE_ATTR.twoslash in props
     };
 }
 
@@ -143,13 +145,10 @@ async function Fence({ children }: FenceProps): Promise<ReactElement> {
     const fence = readFence(children);
     if (!fence) return <pre>{children}</pre>;
 
-    const html = await highlightToHtml(fence.code, fence.lang);
+    const representation = await twoslashBlock(fence.code, fence.lang, fence.twoslash);
+
     return (
-        <CodeBlock
-            representation={{ text: fence.code, html }}
-            label={fence.title}
-            copyValue={fence.output ? null : undefined}
-        />
+        <CodeBlock representation={representation} label={fence.title} copyValue={fence.output ? null : undefined} />
     );
 }
 

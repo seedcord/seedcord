@@ -80,6 +80,36 @@ describe('a fence caption', () => {
         expect(code).toContain('build output log.ts');
         expect(code).not.toContain('data-output');
     });
+
+    it('refuses a js fence tagged twoslash', async () => {
+        const source = ['```js twoslash', 'const a = 1;', '```'].join('\n');
+
+        await expect(compileGuideMdx(source)).rejects.toThrow('twoslash');
+    });
+
+    it.each(['twoslash', 'twoslash output', 'output twoslash', 'title="a.ts" twoslash', 'twoslash title="a.ts"'])(
+        'reads the flag out of the meta %s',
+        async (meta) => {
+            await expect(compileGuideMdx(fence(meta))).resolves.toContain('data-twoslash');
+        }
+    );
+
+    it('leaves an untagged fence unchecked', async () => {
+        await expect(compileGuideMdx(fence('title="a.ts"'))).resolves.not.toContain('data-twoslash');
+    });
+
+    it.each(['tsx', 'typescript'])('takes the flag on a %s fence', async (lang) => {
+        const source = [`\`\`\`${lang} twoslash`, 'const a = 1;', '```'].join('\n');
+
+        await expect(compileGuideMdx(source)).resolves.toContain('data-twoslash');
+    });
+
+    it('reads the word twoslash outside the title only', async () => {
+        const code = await compileGuideMdx(fence('title="twoslash notes.ts"'));
+
+        expect(code).toContain('twoslash notes.ts');
+        expect(code).not.toContain('data-twoslash');
+    });
 });
 
 describe('a pipe table', () => {

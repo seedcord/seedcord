@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
     images: { unoptimized: true },
     // pin tracing to the monorepo root so workspace:* deps resolve into the build (matches apps/home).
     outputFileTracingRoot: path.join(import.meta.dirname, '../..'),
+    // a bundler cannot see the require('fs') @typescript/vfs assembles with String.fromCharCode
+    serverExternalPackages: ['typescript', '@typescript/vfs', 'twoslash', '@shikijs/twoslash'],
     turbopack: {}
 };
 

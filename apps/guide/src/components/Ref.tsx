@@ -3,19 +3,19 @@ import { cn, tw } from '@seedcord/ui';
 
 import { DOCS_URL } from '#lib/site';
 
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 export const LINK = tw`text-(--link) underline underline-offset-4 transition-opacity duration-150 hover:opacity-80`;
 
 export interface RefProps {
     pkg: string;
-    children: string;
+    symbol: string;
+    children: ReactNode;
 }
 
-// the reference site builds a cross-package link the same way, in resolve-helpers.ts
-export function Ref({ pkg, children }: RefProps): ReactElement {
-    // resolve-helpers.ts splits a qualified name on the same pair
-    const slug = children.split(/[.#]/).filter(Boolean).map(slugifySegment).join('/');
+export function Ref({ pkg, symbol, children }: RefProps): ReactElement {
+    // the reference site splits a qualified name on the same pair, in resolve-helpers.ts
+    const slug = (symbol.match(/[^.#]+/g) ?? []).map(slugifySegment).join('/');
 
     return (
         <a

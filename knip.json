@@ -37,6 +37,10 @@
             ],
             "project": [
                 "src/**/*.{ts,tsx,css}"
+            ],
+            "ignoreDependencies": [
+                "@seedcord/gateway",
+                "@seedcord/http"
             ]
         },
         "apps/home": {
