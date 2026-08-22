@@ -9,6 +9,8 @@ import {
     highlightTypeParamToHtml
 } from '#src/shiki';
 
+import type { ShikiTransformer } from 'shiki';
+
 function textOf(html: string): string {
     return html.replaceAll(/<[^>]+>/g, '');
 }
@@ -36,9 +38,9 @@ describe('highlightToHtml', () => {
     it('turns a link range into an anchor around that text', async () => {
         const code = 'const x: Foo = bar;';
         const start = code.indexOf('Foo');
-        const html = await highlightToHtml(code, 'ts', [
-            { name: 'Foo', href: '/packages/core/latest/foo', start, end: start + 'Foo'.length }
-        ]);
+        const html = await highlightToHtml(code, 'ts', {
+            links: [{ name: 'Foo', href: '/packages/core/latest/foo', start, end: start + 'Foo'.length }]
+        });
 
         expect(html).toContain('href="/packages/core/latest/foo"');
         expect(textOf(html ?? '')).toContain('Foo');
@@ -47,9 +49,9 @@ describe('highlightToHtml', () => {
     it('opens an http link in a new tab', async () => {
         const code = 'type A = B;';
         const start = code.indexOf('B');
-        const html = await highlightToHtml(code, 'ts', [
-            { name: 'B', href: 'https://example.com/b', start, end: start + 1 }
-        ]);
+        const html = await highlightToHtml(code, 'ts', {
+            links: [{ name: 'B', href: 'https://example.com/b', start, end: start + 1 }]
+        });
 
         expect(html).toContain('target="_blank"');
         expect(html).toContain('rel="noreferrer noopener"');
@@ -69,7 +71,7 @@ describe('highlightToHtml', () => {
             { name: 'Local', href: '/docs/local', start: localStart, end: localStart + 'Local'.length }
         ];
 
-        const html = (await highlightToHtml(code, 'ts', links)) ?? '';
+        const html = (await highlightToHtml(code, 'ts', { links })) ?? '';
 
         const local = attrsFor(html, '/docs/local');
         const remote = attrsFor(html, 'https://example.com/remote');
@@ -82,6 +84,19 @@ describe('highlightToHtml', () => {
 
     it('returns an empty string for empty input', async () => {
         await expect(highlightToHtml('')).resolves.toBe('');
+    });
+
+    it('runs a caller transformer over both themes', async () => {
+        const marker: ShikiTransformer = {
+            name: 'marker',
+            pre(node) {
+                this.addClassToHast(node, 'from-a-transformer');
+            }
+        };
+
+        const html = (await highlightToHtml('const x = 1;', 'ts', { transformers: [marker] })) ?? '';
+
+        expect(html.match(/from-a-transformer/g)).toHaveLength(2);
     });
 });
 

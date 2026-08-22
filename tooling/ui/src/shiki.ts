@@ -274,17 +274,24 @@ async function renderDual(
     return `<div class="shiki-theme-group">${light}${dark}</div>`;
 }
 
+interface HighlightOptions {
+    links?: readonly CodeLink[] | undefined;
+    transformers?: ShikiTransformer[] | undefined;
+    throwOnFailure?: boolean | undefined;
+}
+
 export async function highlightToHtml(
     code: string,
     lang: BundledLanguage = 'ts',
-    links: readonly CodeLink[] = []
+    { links = [], transformers = [], throwOnFailure = false }: HighlightOptions = {}
 ): Promise<string | null> {
     if (!code) return '';
 
     try {
         const { code: instrumented, markers } = instrumentLinks(code, links);
-        return await renderDual(instrumented, markers, lang);
-    } catch {
+        return await renderDual(instrumented, markers, lang, transformers);
+    } catch (error) {
+        if (throwOnFailure) throw error;
         return null;
     }
 }
