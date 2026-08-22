@@ -82,6 +82,18 @@ describe('highlightToHtml', () => {
         expect(remote.every((attrs) => attrs.includes('target="_blank"'))).toBe(true);
     });
 
+    it('keeps a subtraction operator coloured in a block that carries a link', async () => {
+        const code = 'const gap = end - start;';
+        const start = code.indexOf('end');
+        const html =
+            (await highlightToHtml(code, 'ts', {
+                links: [{ name: 'end', href: '/docs/end', start, end: start + 'end'.length }]
+            })) ?? '';
+
+        expect(html).toContain('href="/docs/end"');
+        expect(html).toMatch(/<span[^>]*>\s*-\s*<\/span>/);
+    });
+
     it('returns an empty string for empty input', async () => {
         await expect(highlightToHtml('')).resolves.toBe('');
     });

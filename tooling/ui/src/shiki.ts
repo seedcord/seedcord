@@ -191,9 +191,6 @@ function applyLinkMarkers(html: string, markers: readonly SentinelLink[]): strin
     if (markers.length === 0) return html;
 
     let result = normalizeSentinels(html);
-    // shiki sometimes tokenizes a lone sentinel into a span of its own, which leaves the open/close
-    // regex below nothing to match until the span is unwrapped
-    result = result.replaceAll(/<span[^>]*>\s*([-])\s*<\/span>/g, '$1');
 
     for (const marker of markers) {
         const attrs = marker.opensNewTab ? ' target="_blank" rel="noreferrer noopener"' : '';
