@@ -39,7 +39,7 @@ export default createConfig({
 
         {
             files: [
-                'src/app/**/{page,layout,loading,error,global-error,not-found,template,default,route,sitemap,robots,manifest}.{ts,tsx}',
+                'src/app/**/{page,layout,loading,error,global-error,not-found,template,default,route,sitemap,robots,manifest}.{ts,tsx,dev.ts,dev.tsx}',
                 'src/app/**/{icon,apple-icon,opengraph-image,twitter-image}.{ts,tsx}',
                 'src/{middleware,instrumentation}.{ts,tsx}'
             ],
