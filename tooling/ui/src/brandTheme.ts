@@ -7,7 +7,8 @@ const HUES = {
     comment: { dark: '#7d8675', light: '#8a9079' },
     linen: { dark: '#ecebd9', light: '#4a5142' },
     rind: { dark: BRAND.rind, light: '#3f7d2e' },
-    flesh: { dark: BRAND.flesh, light: '#c4452c' },
+    // the brand red also paints an error card and the danger callout
+    teal: { dark: '#5fb3ab', light: '#2f7b76' },
     amber: { dark: '#e3b552', light: '#a8781a' },
     coral: { dark: '#ea8568', light: '#bf5a3c' },
     wheat: { dark: '#ead98a', light: '#7a651c' },
@@ -131,7 +132,7 @@ function palette(mode: ThemeMode): BrandPalette {
         bg: HUES.ground[mode],
         fg: HUES.text[mode],
         comment: HUES.comment[mode],
-        string: HUES.flesh[mode],
+        string: HUES.teal[mode],
         number: HUES.amber[mode],
         keyword: HUES.rind[mode],
         type: HUES.wheat[mode],
