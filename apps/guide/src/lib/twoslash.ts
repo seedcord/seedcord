@@ -35,7 +35,7 @@ const typesCache: TwoslashTypesCache = {
 };
 
 // every popup the rich renderer positions absolutely gets clipped by the code block's scroll area
-const rich = rendererRich({ queryRendering: 'line', completionIcons: false });
+const rich = rendererRich({ queryRendering: 'line', completionIcons: false, jsdoc: false });
 
 const renderer: TwoslashRenderer = {
     ...rich,
@@ -106,7 +106,7 @@ const twoslash = transformerTwoslash({
     renderer,
     twoslasher: dedenting,
     twoslashOptions: {
-        handbookOptions: { noStaticSemanticInfo: true },
+        handbookOptions: { noStaticSemanticInfo: false },
         compilerOptions: { experimentalDecorators: true, types: ['node'] },
         extraFiles: { 'seedcord-gen.d.ts': SAMPLE_AUGMENTATION }
     }

@@ -3,6 +3,7 @@ import { highlightInlineToHtml, isHighlightable } from '@seedcord/ui/shiki';
 
 import { Callout } from '#components/Callout';
 import { LINK, Ref } from '#components/Ref';
+import { TypeHover } from '#components/TypeHover';
 import { FENCE_ATTR, LANGUAGE_PREFIX } from '#lib/rehypeFenceMeta';
 import { twoslashBlock } from '#lib/twoslash';
 
@@ -147,9 +148,11 @@ async function Fence({ children }: FenceProps): Promise<ReactElement> {
 
     const representation = await twoslashBlock(fence.code, fence.lang, fence.twoslash);
 
-    return (
+    const block = (
         <CodeBlock representation={representation} label={fence.title} copyValue={fence.output ? null : undefined} />
     );
+
+    return fence.twoslash ? <TypeHover>{block}</TypeHover> : block;
 }
 
 export const mdxComponents = {

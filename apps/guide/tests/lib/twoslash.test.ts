@@ -108,10 +108,12 @@ describe('the twoslash transformer', () => {
         await expect(render(source, 'tsx')).rejects.toThrow('not marked as being expected');
     });
 
-    it('emits no hover popup', async () => {
-        const html = await render('const count = 12;');
+    it('carries the type on a hovered token, without its tsdoc', async () => {
+        const html = await render("const routes = ['ping'] as const;");
 
-        expect(html).not.toContain('twoslash-popup-container');
+        expect(html).toContain('twoslash-hover');
+        expect(html).toContain('twoslash-popup-code');
+        expect(html).not.toContain('twoslash-popup-docs');
     });
 
     it('keeps two blocks apart when they render back to back', async () => {

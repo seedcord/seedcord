@@ -1,4 +1,27 @@
 @layer components {
+    /* the popover portals out of .twoslash, past every selector scoped to it */
+    .type-hover-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in oklab, var(--text) 18%, transparent) transparent;
+    }
+
+    .type-hover-scroll::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .type-hover-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .type-hover-scroll::-webkit-scrollbar-thumb {
+        background: color-mix(in oklab, var(--text) 22%, transparent);
+        border-radius: 9999px;
+    }
+
+    .type-hover-scroll:hover::-webkit-scrollbar-thumb {
+        background: color-mix(in oklab, var(--text) 38%, transparent);
+    }
+
     .twoslash .twoslash-error-line {
         position: relative;
         display: block;
@@ -56,6 +79,16 @@
     .twoslash .twoslash-completions-matched {
         color: var(--text);
         font-weight: 600;
+    }
+
+    /* TypeHover reads the type out of here and draws its own popover */
+    .twoslash .twoslash-hover > .twoslash-popup-container {
+        display: none;
+    }
+
+    .twoslash .twoslash-hover:hover {
+        text-decoration: underline dotted color-mix(in oklab, var(--text) 45%, transparent);
+        text-underline-offset: 0.3em;
     }
 
     .twoslash .twoslash-error {
