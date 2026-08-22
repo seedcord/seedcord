@@ -28,6 +28,38 @@
         transform: rotate(45deg);
     }
 
+    /* the list nests in the code line, so it flows below rather than floating over the next one */
+    .twoslash .twoslash-completion-list {
+        display: block;
+        width: fit-content;
+        min-width: 14ch;
+        margin: 0.3rem 0 0.4rem calc(var(--ts-col, 0) * 1ch);
+        padding: 0.2rem 0;
+        background: var(--bg-chip);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-surface);
+        list-style: none;
+    }
+
+    .twoslash .twoslash-completion-list li {
+        padding: 0.1rem 0.6rem;
+        color: var(--text-muted);
+    }
+
+    /* the first row is the one an editor preselects */
+    .twoslash .twoslash-completion-list li:first-child {
+        background: color-mix(in oklab, var(--rind) 16%, transparent);
+    }
+
+    .twoslash .twoslash-completions-matched {
+        color: var(--text);
+        font-weight: 600;
+    }
+
+    .twoslash .twoslash-completions-icon {
+        display: none;
+    }
+
     .twoslash .twoslash-error {
         text-decoration: underline wavy color-mix(in oklab, var(--flesh) 80%, transparent);
         text-underline-offset: 0.25em;

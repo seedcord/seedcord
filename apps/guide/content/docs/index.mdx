@@ -33,6 +33,56 @@ Tagging a fence `output` drops the copy button, for the lines a terminal printed
 ✓ 3 commands deployed to the test guild
 ```
 
+## The compiler in a fence
+
+Tagging a fence `twoslash` runs the TypeScript compiler over it while the page builds. A declared error renders under the line it came from, and the caret points at the squiggled token.
+
+```ts twoslash title="src/commands/Ping.ts"
+// @errors: 2345
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ping')
+export class Ping extends SlashHandler<'ping'> {
+    public async execute(): Promise<void> {
+        const detailed = this.options.getBoolean('detaild');
+    }
+}
+```
+
+An error the sample never declared fails the build, so a page cannot ship a sample that stopped compiling.
+
+A `^?` marker prints the inferred type under the line.
+
+```ts twoslash
+const routes = ['ping', 'ban'] as const;
+const first = routes[0];
+//    ^?
+```
+
+A run of `^` marks the characters above it.
+
+```ts twoslash
+const token = process.env.DISCORD_BOT_TOKEN;
+//    ^^^^^
+const ready = true;
+```
+
+A `^|` marker draws what your editor would offer at that point. The code is incomplete by definition, so the sample declares `@noErrors`.
+
+```ts twoslash
+// @noErrors
+const routes = { ping: 1, pong: 2, purge: 3, prune: 4 };
+routes.p;
+//      ^|
+```
+
+An error at the very start of a line pins the caret to the left corner.
+
+```ts twoslash
+// @errors: 2304
+timoutMs = 3000;
+```
+
 ### Options come off the registry
 
 A wrong option name is a compile error, before the bot ever connects. **Acking twice throws.** Discord accepts one initial response per interaction, and seedcord surfaces the second attempt as `ReplyIllegalAckState` before it reaches the API. Read the [reference site](https://docs.seedcord.org) for the full code list, or _skim_ the reply page first.

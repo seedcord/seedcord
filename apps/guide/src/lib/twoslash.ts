@@ -42,6 +42,15 @@ const renderer: TwoslashRenderer = {
         }
 
         return nodes;
+    },
+    nodeCompletion(completion, node) {
+        const partial = rich.nodeCompletion?.call(this, completion, node) ?? {};
+        if (partial.type !== 'element') return partial;
+
+        // the list drops to the line's left edge once it becomes a block
+        const style = `--ts-col:${String(completion.character)}`;
+
+        return { ...partial, properties: { ...partial.properties, style } };
     }
 };
 

@@ -8,11 +8,6 @@ const SHELL_PIECES = [
         href: '/dev/transport',
         label: 'Transport control',
         description: 'the gateway and http picker for code samples, in a code header and on its own'
-    },
-    {
-        href: '/dev/twoslash',
-        label: 'Twoslash',
-        description: 'compiler errors and type queries rendered as lines inside a code block'
     }
 ] as const;
 

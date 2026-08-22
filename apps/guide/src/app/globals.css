@@ -3,7 +3,7 @@
 @import '../styles/twoslash.css';
 
 :root {
-    --content-max: 100rem;
+    --content-max: 90rem;
     --nav-h: 4.5rem; /* fallback until the navbar measures its own height */
 }
 
