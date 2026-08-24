@@ -1,5 +1,19 @@
 # seedcord
 
+## 0.18.2
+
+### Patch Changes
+
+- 1d2f1e3: Updated TSDoc reference generation.
+- Updated dependencies [8f662bb]
+- Updated dependencies [1d2f1e3]
+    - @seedcord/core@0.2.1
+    - @seedcord/event-emitter@0.1.4
+    - @seedcord/errors@0.4.1
+    - @seedcord/logger@0.2.1
+    - @seedcord/utils@0.8.6
+    - @seedcord/types@0.9.1
+
 ## 0.18.2-next.0
 
 ### Patch Changes

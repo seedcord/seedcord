@@ -1,5 +1,13 @@
 # @seedcord/eslint-plugin
 
+## 0.2.1
+
+### Patch Changes
+
+- 1d2f1e3: Updated TSDoc reference generation.
+- Updated dependencies [1d2f1e3]
+    - eslint-plugin-discordjs@0.1.4
+
 ## 0.2.1-next.0
 
 ### Patch Changes

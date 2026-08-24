@@ -1,5 +1,11 @@
 # @seedcord/errors
 
+## 0.4.1
+
+### Patch Changes
+
+- 1d2f1e3: Updated TSDoc reference generation.
+
 ## 0.4.1-next.0
 
 ### Patch Changes

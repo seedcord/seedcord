@@ -1,5 +1,16 @@
 # @seedcord/plugin-kysely-postgres
 
+## 0.2.1
+
+### Patch Changes
+
+- 1d2f1e3: Updated TSDoc reference generation.
+- Updated dependencies [1d2f1e3]
+    - @seedcord/errors@0.4.1
+    - @seedcord/logger@0.2.1
+    - @seedcord/utils@0.8.6
+    - @seedcord/types@0.9.1
+
 ## 1.0.1-next.0
 
 ### Patch Changes

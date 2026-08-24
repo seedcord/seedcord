@@ -1,5 +1,22 @@
 # @seedcord/http
 
+## 0.3.1
+
+### Patch Changes
+
+- 9c8e66a: _Kinda BREAKING:_ A transport plugin base no longer accepts `transport: 'any'` and the gateway base no longer accepts `runtime: 'edge'`. Extend `@seedcord/core/plugin` for a plugin that runs on either transport. This IS a bug fix. This should not have been allowed before.
+- 8f662bb: Fixed a gate mismatch on a Button or Modal handler labelling the handler `StringSelect`. Every interaction kind now reports its own label.
+- 1d2f1e3: Updated TSDoc reference generation.
+- Updated dependencies [8f662bb]
+- Updated dependencies [1d2f1e3]
+    - @seedcord/core@0.2.1
+    - @seedcord/event-emitter@0.1.4
+    - @seedcord/rate-limiter@0.1.4
+    - @seedcord/errors@0.4.1
+    - @seedcord/logger@0.2.1
+    - @seedcord/utils@0.8.6
+    - @seedcord/types@0.9.1
+
 ## 0.3.1-next.0
 
 ### Patch Changes

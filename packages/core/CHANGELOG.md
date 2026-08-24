@@ -1,5 +1,18 @@
 # @seedcord/core
 
+## 0.2.1
+
+### Patch Changes
+
+- 8f662bb: The gate mismatch compile error now reads `gate 'Name' requires a X handler, and this handler is Y`. The `@see` lines on the gate factories now point at your transport package for `@Gated`.
+- 1d2f1e3: Updated TSDoc reference generation.
+- Updated dependencies [1d2f1e3]
+    - @seedcord/event-emitter@0.1.4
+    - @seedcord/errors@0.4.1
+    - @seedcord/logger@0.2.1
+    - @seedcord/utils@0.8.6
+    - @seedcord/types@0.9.1
+
 ## 0.2.1-next.0
 
 ### Patch Changes

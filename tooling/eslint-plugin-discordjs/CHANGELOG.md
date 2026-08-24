@@ -1,5 +1,11 @@
 # eslint-plugin-discordjs
 
+## 0.1.4
+
+### Patch Changes
+
+- 1d2f1e3: Updated TSDoc reference generation.
+
 ## 0.1.4-next.0
 
 ### Patch Changes

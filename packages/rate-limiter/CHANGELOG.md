@@ -1,5 +1,13 @@
 # @seedcord/rate-limiter
 
+## 0.1.4
+
+### Patch Changes
+
+- 1d2f1e3: Updated TSDoc reference generation.
+- Updated dependencies [1d2f1e3]
+    - @seedcord/types@0.9.1
+
 ## 0.1.4-next.0
 
 ### Patch Changes
