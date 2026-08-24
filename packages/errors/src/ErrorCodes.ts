@@ -16,6 +16,8 @@ export enum SeedcordErrorCode {
     ConfigMissingEnv = 1005,
     /** An environment variable is present and fails validation. */
     ConfigInvalidEnv = 1006,
+    /** A command usable in a guild is registered without the `Guilds` intent that caches guilds. */
+    MissingGuildsIntent = 1007,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,
