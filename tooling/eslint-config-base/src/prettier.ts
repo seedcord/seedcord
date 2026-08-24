@@ -48,6 +48,11 @@ export interface CreatePrettierConfigOptions {
      * (an optional peerDependency).
      */
     tailwind?: TailwindPrettierOptions;
+
+    /**
+     * Per-glob option overrides, passed through to prettier's own `overrides` field.
+     */
+    overrides?: PrettierConfig['overrides'];
 }
 
 /**
@@ -56,7 +61,10 @@ export interface CreatePrettierConfigOptions {
  * @param options - Pass `tailwind` to enable `prettier-plugin-tailwindcss`; omit for the plain base.
  */
 export function createPrettierConfig(options: CreatePrettierConfigOptions = {}): PrettierConfig {
-    const base: PrettierConfig = { ...PRETTIER_CONFIG };
+    const base: PrettierConfig = {
+        ...PRETTIER_CONFIG,
+        ...(options.overrides ? { overrides: options.overrides } : {})
+    };
 
     if (!options.tailwind) return base;
 
