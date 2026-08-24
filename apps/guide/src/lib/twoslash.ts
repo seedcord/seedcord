@@ -22,7 +22,7 @@ import type { NodeHover, Range } from 'twoslash-protocol';
 
 type HoverWithRef = NodeHover & { ref?: SymbolReference };
 
-// renderDual runs the same source through shiki once per theme, back to back
+// twoslashBlock compiles a fence itself to reach prettier, then hands the result to the transformer through here
 let previous: { key: string; data: TwoslashShikiReturn } | null = null;
 
 // twoslash reports different errors for one sample under tsx
