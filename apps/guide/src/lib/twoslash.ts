@@ -3,7 +3,7 @@ import { highlightToHtml } from '@seedcord/ui/shiki';
 import ts from 'typescript';
 import { createTwoslasher } from 'twoslash';
 import { removeTwoslashNotations } from 'twoslash/fallback';
-import { removeCodeRanges, resolveNodePositions } from 'twoslash-protocol';
+import { removeCodeRanges, resolveNodePositions, splitLines } from 'twoslash-protocol';
 
 import { formatHoverType } from '#lib/formatHoverType';
 import { SAMPLE_AUGMENTATION } from '#lib/sampleTypes';
@@ -94,14 +94,9 @@ function commonIndent(code: string): number {
 }
 
 function indentRanges(code: string, width: number): [number, number][] {
-    const ranges: [number, number][] = [];
-    let index = 0;
-    for (const line of code.split('\n')) {
-        if (line.trim()) ranges.push([index, index + width]);
-        index += line.length + 1;
-    }
-
-    return ranges;
+    return splitLines(code)
+        .filter(([line]) => line.trim())
+        .map(([, start]) => [start, start + width]);
 }
 
 function dedent(code: string): string {
@@ -192,11 +187,12 @@ const TWOSLASH_OPTIONS = {
     extraFiles: { 'seedcord-gen.d.ts': SAMPLE_AUGMENTATION }
 };
 
-// the transformer aliases a typescript fence to ts before it reads the cache
+// the transformer aliases the fence lang before it reads the cache. the pre-warm below writes it
 const LANG_ALIAS: Record<string, string> = { typescript: 'ts' };
 
 const twoslash = transformerTwoslash({
     langs: ['ts', 'tsx'],
+    langAlias: LANG_ALIAS,
     typesCache,
     renderer,
     twoslasher: dedenting,

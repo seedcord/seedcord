@@ -35,7 +35,8 @@ describe('the twoslash transformer', () => {
             )
         );
 
-        expect(html).toContain('class="shiki shiki-light seedcord-light twoslash');
+        // shiki owns the theme classes between these two
+        expect(html).toMatch(/<pre class="[^"]*\bshiki\b[^"]*\btwoslash\b/);
         expect(html).not.toContain('twoslash-error-line');
     });
 

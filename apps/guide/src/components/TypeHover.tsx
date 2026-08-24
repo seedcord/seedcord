@@ -142,15 +142,6 @@ function focusLeftTheBlock(event: FocusEvent<HTMLDivElement>): boolean {
     return !event.currentTarget.contains(to) && !to?.closest(POPOVER);
 }
 
-// highlightToHtml renders each block once per theme and hides one
-function isShowing(node: Element): boolean {
-    for (let step: Element | null = node; step; step = step.parentElement) {
-        if (getComputedStyle(step).display === 'none') return false;
-    }
-
-    return true;
-}
-
 type Show = (event: { target: EventTarget | null }, fromKey?: boolean) => void;
 
 // one tab stop per code block, since a page carries dozens of tokens
@@ -172,9 +163,7 @@ function useTokenWalk(
             const step = ARROW_STEP[event.key];
             if (!step || !block.current) return;
 
-            const tokens = [...block.current.querySelectorAll(TOKEN)].filter(
-                (node) => node.querySelector(TYPE) && isShowing(node)
-            );
+            const tokens = [...block.current.querySelectorAll(TOKEN)].filter((node) => node.querySelector(TYPE));
             const next = tokens[tokens.indexOf(marked.current as Element) + step];
             if (!next) return;
 

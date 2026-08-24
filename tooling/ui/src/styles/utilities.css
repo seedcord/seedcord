@@ -43,14 +43,6 @@
         min-width: 100%;
     }
 
-    /* renderDual in shiki.ts wraps the two themed <pre> in this div. at auto width it
-     * absorbs their max-content and the block stops scrolling. */
-    .code-scroll-area .shiki-theme-group {
-        display: block;
-        width: max-content;
-        min-width: 100%;
-    }
-
     .code-scroll-area .shiki {
         display: block;
         width: max-content;
