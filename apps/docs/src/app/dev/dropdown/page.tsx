@@ -194,7 +194,7 @@ function GhostVariantRow(): ReactElement {
     const [kind, setKind] = useState('all');
     return (
         <div
-            className={tw`bg-surface-subtle flex max-w-md items-center gap-1 rounded-lg border border-(--border) px-3 py-2`}
+            className={tw`flex max-w-md items-center gap-1 rounded-lg border border-(--border) bg-(--surface-subtle) px-3 py-2`}
         >
             <Dropdown
                 variant="ghost"

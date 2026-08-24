@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { Extractor, ExtractorConfig, ExtractorLogLevel, type IConfigFile } from '@microsoft/api-extractor';
 
+import { writeSharedModel } from './shared-model';
 import { pathExists } from './utils';
 import { readPackageManifest, resolveDocEntryPoints, unscopedName } from './workspace';
 
@@ -59,6 +60,9 @@ function apiJsonNameFor(packageName: string, subpath: string): string {
     const slug = subpath.replace(/^\.\//, '').replaceAll('-', '--').replaceAll('/', '-');
     return `${unscoped}.${slug}.api.json`;
 }
+
+// every entry output ends in `.api.json`
+const sharedModelNameFor = (packageName: string): string => `${unscopedName(packageName)}.shared-model.json`;
 
 function runExtractor(options: { packageDir: string; entryPoint: string; tsconfigPath: string; apiJsonPath: string }): {
     succeeded: boolean;
@@ -129,12 +133,17 @@ export async function extractPackageApiModel(
     const root = entries.find((entry) => entry.subpath === '.') ?? first;
     if (!root) return null;
 
+    const subpaths = entries.filter((entry) => entry !== root);
+    const sharedModelPath = path.join(paths.outputDir, sharedModelNameFor(manifest.name));
+    if (subpaths.length > 0) await writeSharedModel(root, subpaths, sharedModelPath);
+
     return {
         name: manifest.name,
         version: manifest.version,
         entries,
         entryPoints: entries.map((entry) => entry.entryPoint),
         ...(root.sourceEntry && { sourceEntry: root.sourceEntry }),
+        ...(subpaths.length > 0 && { sharedModelPath }),
         outputPath: root.outputPath,
         warnings: entries.flatMap((entry) => entry.warnings),
         errors: entries.flatMap((entry) => entry.errors),

@@ -1,6 +1,6 @@
 import { BRAND } from '@seedcord/ui/palette';
-import { cn } from '@seedcord/ui';
-import { Hanken_Grotesk, JetBrains_Mono, Space_Grotesk } from 'next/font/google';
+import { MotionProvider, ThemeProvider, cn } from '@seedcord/ui';
+import { Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
 
@@ -9,9 +9,7 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
-const sans = Hanken_Grotesk({ variable: '--font-sans', subsets: ['latin'], display: 'swap' });
 const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
-const monoCode = JetBrains_Mono({ variable: '--font-mono', subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
@@ -32,13 +30,24 @@ interface RootLayoutProps {
 
 function RootLayout({ children }: RootLayoutProps): ReactNode {
     return (
-        <html lang="en">
+        <html lang="en" suppressHydrationWarning>
             <body
-                // this avoids a false mismatch warning because browser extensions mutate body attributes before hydration
+                // extensions mutate body attributes before react hydrates
                 suppressHydrationWarning
-                className={cn(sans.variable, display.variable, monoCode.variable, 'antialiased')}
+                className={cn(display.variable, 'antialiased', 'flex min-h-screen flex-col')}
             >
-                {children}
+                <ThemeProvider>
+                    {/* apps/docs uses this exact class string and they need to be the same */}
+                    <a
+                        href="#main-content"
+                        className={cn(
+                            'fixed top-4 left-6 z-60 -translate-y-20 transform rounded-full bg-(--rind) px-4 py-2 text-sm font-semibold text-black transition focus-visible:translate-y-0'
+                        )}
+                    >
+                        Skip to content
+                    </a>
+                    <MotionProvider>{children}</MotionProvider>
+                </ThemeProvider>
             </body>
         </html>
     );

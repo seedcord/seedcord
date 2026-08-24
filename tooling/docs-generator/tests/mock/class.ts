@@ -162,3 +162,47 @@ export class MockClass<TypeT, TypeU extends number> extends BaseClass {
         return [first, ...rest].join('-');
     }
 }
+
+// new fixtures go at the bottom. source-index.test.ts pins the line numbers above.
+
+/**
+ * A base class whose type parameter is constrained by an inline object type.
+ *
+ * @typeParam TypeM - The stored shape.
+ */
+export class InlineConstraintBase<TypeM extends { token: string }> {
+    /**
+     * The most recently stored value.
+     */
+    public stored: TypeM | null = null;
+}
+
+/**
+ * A subclass that pins the base's type parameter with another inline object type.
+ */
+export class InlineConstraintChild extends InlineConstraintBase<{ token: string; revision: number }> {
+    /**
+     * A property the subclass declares itself.
+     */
+    public ownProp = 'child';
+}
+
+/**
+ * A class whose own property shares its name with the constraint's key.
+ */
+export class InlineConstraintShadow<TypeM extends { token: string }> {
+    /**
+     * The token this instance stores.
+     */
+    public token: TypeM | null = null;
+}
+
+/**
+ * A class whose constraint carries a call, a method, and a construct signature.
+ */
+export class InlineConstraintCallable<TypeM extends { (): void; run(): void; new (): object }> {
+    /**
+     * The value this instance holds.
+     */
+    public held: TypeM | null = null;
+}

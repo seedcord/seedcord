@@ -17,10 +17,13 @@ export const metadata: Metadata = pageMetadata({
     image: '/og'
 });
 
+// the publish pipeline rewrites index.json between builds
+export const revalidate = 300; // 5 mins
+
 const TRANSPORT_PACKAGES = new Set(['@seedcord/gateway', '@seedcord/http']);
 
 // matches the entity chips on a package's reference tab
-const cardClassName = tw`bg-surface-moderate shadow-soft border-border flex flex-col gap-3 rounded-md border p-4 transition`;
+const cardClassName = tw`shadow-soft border-border flex flex-col gap-3 rounded-md border bg-(--surface-moderate) p-4 transition`;
 
 interface PackageCard {
     entry: PackageCatalogEntry;
@@ -131,9 +134,9 @@ function Section({
 }
 
 const WORKSPACE_TITLES: Record<string, string> = {
+    cli: 'CLI',
     packages: 'Packages',
     plugins: 'Plugins',
-    cli: 'CLI',
     tooling: 'Tooling'
 };
 

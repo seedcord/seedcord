@@ -1,0 +1,156 @@
+/* shiki wraps a multi-line type in its own pre at the 0.9rem code size */
+@layer utilities {
+    .type-hover-scroll pre.shiki {
+        font-size: inherit;
+        line-height: inherit;
+        padding: 0;
+    }
+}
+
+@layer components {
+    /* the popover portals out of .twoslash, past every selector scoped to it */
+    .type-hover-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in oklab, var(--text) 18%, transparent) transparent;
+    }
+
+    .type-hover-scroll::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    .type-hover-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .type-hover-scroll::-webkit-scrollbar-thumb {
+        background: color-mix(in oklab, var(--text) 22%, transparent);
+        border-radius: 9999px;
+    }
+
+    .type-hover-scroll:hover::-webkit-scrollbar-thumb {
+        background: color-mix(in oklab, var(--text) 38%, transparent);
+    }
+
+    .twoslash .twoslash-error-line {
+        position: relative;
+        display: block;
+        width: fit-content;
+        /* nothing above this box wraps the message */
+        max-width: 62ch;
+        /* the caret cannot reach past this box */
+        min-width: calc(var(--ts-col, 0) * 1ch + 1.5rem);
+        white-space: pre-wrap;
+        margin: 0.6rem 0 0.5rem;
+        padding: 0.3rem 0.6rem;
+        background-color: color-mix(in oklab, var(--flesh) 14%, var(--bg-code));
+        border: 1px solid color-mix(in oklab, var(--flesh) 45%, transparent);
+        border-radius: var(--radius-surface);
+        color: color-mix(in oklab, var(--text) 62%, var(--flesh) 38%);
+    }
+
+    /* twoslash.ts writes --ts-col as the squiggle's middle column */
+    .twoslash .twoslash-error-line::before {
+        content: '';
+        position: absolute;
+        top: -0.3rem;
+        left: clamp(0.6rem, calc(var(--ts-col, 0) * 1ch - 0.25rem), calc(100% - 1.1rem));
+        width: 0.5rem;
+        height: 0.5rem;
+        background-color: inherit;
+        border-top: 1px solid color-mix(in oklab, var(--flesh) 45%, transparent);
+        border-left: 1px solid color-mix(in oklab, var(--flesh) 45%, transparent);
+        transform: rotate(45deg);
+    }
+
+    /* an absolutely placed list would cover the next code line */
+    .twoslash .twoslash-completion-list {
+        display: block;
+        width: fit-content;
+        min-width: 14ch;
+        margin: 0.3rem 0 0.4rem calc(var(--ts-col, 0) * 1ch);
+        padding: 0.2rem 0;
+        background: var(--bg-chip);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-surface);
+        list-style: none;
+    }
+
+    .twoslash .twoslash-completion-list li {
+        padding: 0.1rem 0.6rem;
+        color: var(--text-muted);
+    }
+
+    /* an editor preselects the first row */
+    .twoslash .twoslash-completion-list li:first-child {
+        background: color-mix(in oklab, var(--rind) 16%, transparent);
+    }
+
+    .twoslash .twoslash-completions-matched {
+        color: var(--text);
+        font-weight: 600;
+    }
+
+    /* TypeHover reads the type out of here and draws its own popover */
+    .twoslash .twoslash-hover > .twoslash-popup-container {
+        display: none;
+    }
+
+    /* TypeHover stamps this on the token it opened */
+    .twoslash .twoslash-hover[data-type-hover-open] {
+        text-decoration: underline dotted color-mix(in oklab, var(--text) 45%, transparent);
+        text-underline-offset: 0.3em;
+    }
+
+    .twoslash .twoslash-error {
+        text-decoration: underline wavy color-mix(in oklab, var(--flesh) 80%, transparent);
+        text-underline-offset: 0.25em;
+    }
+
+    .twoslash .twoslash-highlighted {
+        background-color: color-mix(in oklab, var(--amber) 18%, transparent);
+        border: 1px solid color-mix(in oklab, var(--amber) 40%, transparent);
+        border-radius: var(--radius-surface);
+        padding: 1px 2px;
+        margin: -1px -3px;
+    }
+
+    .twoslash .twoslash-query-line {
+        /* a full line box would drop the popup to its bottom */
+        line-height: 0;
+        margin: 0.6rem 0 0.5rem;
+    }
+
+    .twoslash .twoslash-query-line .twoslash-popup-container {
+        position: relative;
+        display: inline-flex;
+        flex-direction: column;
+        vertical-align: top;
+        line-height: normal;
+        background: var(--bg-chip);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-surface);
+        text-align: left;
+    }
+
+    .twoslash .twoslash-query-line .twoslash-popup-arrow {
+        position: absolute;
+        top: -0.3rem;
+        left: 0.6rem;
+        width: 0.5rem;
+        height: 0.5rem;
+        background: var(--bg-chip);
+        border-top: 1px solid var(--border);
+        border-left: 1px solid var(--border);
+        transform: rotate(45deg);
+    }
+
+    .twoslash .twoslash-popup-code,
+    .twoslash .twoslash-popup-docs {
+        padding: 0.375rem 0.5rem;
+    }
+
+    .twoslash .twoslash-popup-docs {
+        color: var(--text-muted);
+        border-top: 1px solid var(--border);
+    }
+}

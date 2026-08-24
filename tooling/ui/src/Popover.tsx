@@ -8,11 +8,13 @@ import { tw } from './lib/tw';
 import type { ComponentPropsWithoutRef, ReactElement } from 'react';
 
 const popoverContentBaseClassName = cn(
-    // z-70 so popovers render above the MobilePanelDialog
+    // z-70 so popovers render above MobilePanel
     tw`z-70`,
     tw`rounded-md`,
     tw`border border-(--border) bg-(--bg-popover) text-(--text)`,
     tw`p-4 shadow-(--shadow-card)`,
+    // radix focuses the panel on open and the browser outlines all of it. the rows inside carry their own ring
+    tw`focus-visible:outline-hidden`,
     // scale from the radix-injected trigger anchor
     tw`origin-(--radix-popover-content-transform-origin)`,
     tw`data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95`,

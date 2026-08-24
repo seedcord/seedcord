@@ -1,5 +1,5 @@
-import { TooltipProvider, cn } from '@seedcord/ui';
-import { Geist, Geist_Mono, Space_Grotesk } from 'next/font/google';
+import { ThemeProvider, TooltipProvider, cn } from '@seedcord/ui';
+import { Space_Grotesk } from 'next/font/google';
 import Script from 'next/script';
 import { preconnect } from 'react-dom';
 
@@ -8,7 +8,6 @@ import './globals.css';
 import { Navbar } from '#components/header/Navbar';
 import { HotkeyProvider } from '#components/providers/HotkeyProvider';
 import { MotionProvider } from '#components/providers/MotionProvider';
-import { ThemeProvider } from '#components/providers/ThemeProvider';
 import { CommandPalette } from '#components/search/command-palette';
 import { FOREGROUND_HEX } from '#lib/entityColors';
 import { OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
@@ -16,20 +15,8 @@ import { OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, REPO_URL, SITE_DESCRIPTION, SITE_
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
-const geistSans = Geist({
-    variable: '--font-geist-sans',
-    subsets: ['latin']
-});
-
-const geistMono = Geist_Mono({
-    variable: '--font-geist-mono',
-    subsets: ['latin']
-});
-
-const spaceGrotesk = Space_Grotesk({
-    variable: '--font-display',
-    subsets: ['latin']
-});
+// code keeps tailwind's ui-monospace default. a webfont mono at 12px renders a pixel high in the chips
+const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
@@ -86,7 +73,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
         <html lang="en" suppressHydrationWarning>
             <body
                 suppressHydrationWarning
-                className={cn(`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} antialiased`)}
+                className={cn(display.variable, 'antialiased')}
                 data-new-gr-c-s-check-loaded=""
                 data-gr-ext-installed=""
             >

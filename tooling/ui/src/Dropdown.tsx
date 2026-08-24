@@ -1,34 +1,18 @@
 'use client';
 
-import { Check, ChevronDown } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Fragment, useId, useState } from 'react';
 
+import { CaretTrigger } from './CaretTrigger';
 import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 import { Popover, PopoverContent, PopoverTrigger } from './Popover';
 
+import type { CaretTriggerSize, CaretTriggerVariant } from './CaretTrigger';
 import type { ReactElement, ReactNode } from 'react';
 
-const dropdownTriggerBaseClassName = cn(
-    tw`inline-flex items-center font-medium`,
-    tw`transition-[transform,background-color,color,border-color,box-shadow] duration-150 ease-out`,
-    tw`focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-outline-b)`,
-    tw`disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50`
-);
-
-const dropdownTriggerVariantClasses = {
-    default: tw`w-full justify-between gap-2 rounded-md border border-(--border) bg-(--bg-popover) text-(--text) hover:border-(--border-accent-b-subtle) aria-invalid:border-(--flesh) aria-invalid:focus-visible:outline-(--flesh) data-[state=open]:border-(--rind) data-[state=open]:bg-(--bg-accent-b-moderate)`,
-    ghost: tw`gap-1 rounded-md px-1 py-0.5 text-(--text-muted) hover:text-(--text) data-[state=open]:text-(--rind)`
-} as const;
-
-export type DropdownVariant = keyof typeof dropdownTriggerVariantClasses;
-
-const dropdownTriggerSizeClasses = {
-    sm: tw`h-8 px-3 text-sm`,
-    md: tw`h-10 px-4 text-sm`
-} as const;
-
-export type DropdownSize = keyof typeof dropdownTriggerSizeClasses;
+export type DropdownVariant = CaretTriggerVariant;
+export type DropdownSize = CaretTriggerSize;
 
 const dropdownContentClassName = tw`w-(--radix-popover-trigger-width) min-w-44 overflow-hidden p-1`;
 
@@ -172,9 +156,13 @@ export function Dropdown({
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <button
+                <CaretTrigger
                     id={id}
-                    type="button"
+                    label={displayLabel}
+                    open={open}
+                    variant={variant}
+                    fieldSize={fieldSize}
+                    leadingIcon={leadingIcon}
                     aria-haspopup="listbox"
                     aria-controls={listboxId}
                     aria-labelledby={ariaLabelledBy}
@@ -182,28 +170,8 @@ export function Dropdown({
                     aria-invalid={error || undefined}
                     disabled={disabled}
                     style={minWidth !== undefined ? { minWidth } : undefined}
-                    className={cn(
-                        dropdownTriggerBaseClassName,
-                        dropdownTriggerVariantClasses[variant],
-                        variant === 'default' ? dropdownTriggerSizeClasses[fieldSize] : '',
-                        className
-                    )}
-                >
-                    {leadingIcon ? (
-                        <span aria-hidden className={cn('inline-flex shrink-0 items-center text-(--text-muted)')}>
-                            {leadingIcon}
-                        </span>
-                    ) : null}
-                    <span className={cn('flex-1 truncate text-left')}>{displayLabel}</span>
-                    <ChevronDown
-                        size={16}
-                        aria-hidden
-                        className={cn(
-                            'text-subtle shrink-0 transition-transform duration-200 ease-out',
-                            open && 'rotate-180'
-                        )}
-                    />
-                </button>
+                    className={className}
+                />
             </PopoverTrigger>
             <PopoverContent
                 align="start"

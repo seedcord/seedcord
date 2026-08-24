@@ -4,14 +4,21 @@ import { LayoutGroup, m } from 'motion/react';
 import { useId } from 'react';
 
 import { cn } from './lib/cn';
+import { layoutSpring } from './lib/motion';
 import { tw } from './lib/tw';
 
 import type { ReactElement, ReactNode } from 'react';
 
 const segmentedControlContainerClassName = cn(
-    tw`inline-flex items-center border border-(--border) bg-(--surface-subtle)`,
+    tw`inline-flex items-stretch border border-(--border) bg-(--surface-subtle)`,
     tw`rounded-md`
 );
+
+// heights track Button's sm and md
+const segmentedControlContainerSizeClasses = {
+    sm: tw`h-8`,
+    md: tw`h-10`
+} as const;
 
 const segmentedControlOptionBaseClassName = cn(
     tw`relative inline-flex items-center justify-center gap-1.5 font-medium`,
@@ -23,8 +30,8 @@ const segmentedControlOptionBaseClassName = cn(
 );
 
 const segmentedControlOptionSizeClasses = {
-    sm: tw`px-3.5 py-1.5 text-xs`,
-    md: tw`px-4 py-2 text-sm`
+    sm: tw`px-3 text-sm`,
+    md: tw`px-4 text-sm`
 } as const;
 
 export type SegmentedControlSize = keyof typeof segmentedControlOptionSizeClasses;
@@ -48,8 +55,6 @@ export interface SegmentedControlProps<TValue extends string> {
     'aria-label'?: string;
 }
 
-const PILL_SPRING = { type: 'spring' as const, stiffness: 380, damping: 32 };
-
 export function SegmentedControl<TValue extends string>({
     options,
     value,
@@ -67,7 +72,12 @@ export function SegmentedControl<TValue extends string>({
             <div
                 role="radiogroup"
                 aria-label={ariaLabel}
-                className={cn(segmentedControlContainerClassName, fullWidth && tw`flex w-full`, className)}
+                className={cn(
+                    segmentedControlContainerClassName,
+                    segmentedControlContainerSizeClasses[size],
+                    fullWidth && tw`flex w-full`,
+                    className
+                )}
             >
                 {options.map((opt) => {
                     const isActive = opt.value === value;
@@ -89,7 +99,7 @@ export function SegmentedControl<TValue extends string>({
                                 <m.span
                                     layoutId={layoutId}
                                     aria-hidden
-                                    transition={PILL_SPRING}
+                                    transition={layoutSpring}
                                     className={cn(segmentedControlActivePillClassName)}
                                 />
                             ) : null}

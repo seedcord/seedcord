@@ -22,7 +22,7 @@ export function Section({
 }): ReactNode {
     return (
         <section className={cn('border-b-[3px] border-(--seed-dark)', GROUND[ground])}>
-            <div className={cn('mx-auto max-w-7xl px-5 py-14 lg:py-20', className)}>{children}</div>
+            <div className={cn('mx-auto max-w-(--shell-max) px-5 py-14 lg:py-20', className)}>{children}</div>
         </section>
     );
 }

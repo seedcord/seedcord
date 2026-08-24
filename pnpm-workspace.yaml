@@ -1,10 +1,10 @@
 packages:
-- mocks/*
-- packages/*
-- plugins/*
-- cli/*
-- tooling/*
-- apps/*
+  - mocks/*
+  - packages/*
+  - plugins/*
+  - cli/*
+  - tooling/*
+  - apps/*
 
 embedReadme: true
 
@@ -31,9 +31,9 @@ overrides:
 
 supportedArchitectures:
   libc:
-  - current
-  - glibc
-  - musl
+    - current
+    - glibc
+    - musl
 
 allowBuilds:
   '@swc/core': true
@@ -54,13 +54,13 @@ catalogs:
     chalk: ^6.0.0
     discord-api-types: ^0.38.52
     lodash.merge: ^4.6.2
-    lucide-react: ^1.28.0
+    lucide-react: ^1.31.0
     motion: ^12.43.0
     next: ^16.2.12
     prettier: ^3.9.6
     prettier-plugin-tailwindcss: ^0.8.1
     reflect-metadata: ^0.2.2
-    shiki: ^4.4.1
+    shiki: ^4.4.3
     tailwindcss: ^4.3.3
     tsdown: ^0.22.14
     tsx: ^4.23.5
@@ -96,6 +96,7 @@ catalogs:
     '@testing-library/dom': ^10.4.1
     '@testing-library/jest-dom': ^7.0.0
     '@testing-library/react': ^16.3.2
+    '@testing-library/user-event': ^14.6.1
     '@vitest/coverage-v8': ^4.1.10
     jsdom: ^30.0.1
     vitest: ^4.1.10

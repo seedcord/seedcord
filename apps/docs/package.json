@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/docs",
-    "version": "0.1.10",
+    "version": "0.1.11-next.0",
     "type": "module",
     "engines": {
         "node": ">=24.11"
@@ -22,14 +22,11 @@
         "coverage": "vitest run --coverage"
     },
     "dependencies": {
-        "@radix-ui/react-dialog": "^1.1.23",
         "@seedcord/docs-engine": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/rate-limiter": "workspace:^",
         "@seedcord/types": "workspace:^",
         "@seedcord/ui": "workspace:^",
-        "@shikijs/langs": "^4.4.1",
-        "@shikijs/themes": "^4.4.1",
         "@tailwindcss/postcss": "catalog:deps",
         "envapt": "catalog:peer",
         "isomorphic-dompurify": "^3.21.0",
@@ -37,7 +34,6 @@
         "marked": "^18.0.7",
         "motion": "catalog:deps",
         "next": "catalog:deps",
-        "next-themes": "^0.4.6",
         "postcss": "^8.5.25",
         "prettier": "catalog:deps",
         "react": "catalog:react",

@@ -1,5 +1,4 @@
 /* eslint-disable no-console -- CLI script so console is ok */
-import { spawn } from 'node:child_process';
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -10,7 +9,7 @@ import {
     isPrerelease,
     serializeProject
 } from '@seedcord/docs-engine';
-import { documentedPackageNames } from '@seedcord/docs-generator';
+import { ApiDocsGenerator, documentedPackageNames } from '@seedcord/docs-generator';
 
 import {
     cacheControlFor,
@@ -54,6 +53,8 @@ interface Options {
     prune: boolean;
     pruneForce: boolean;
     dryRun: boolean;
+    /** Re-uploads version dirs that R2 already holds, to repair artifacts a generator bug wrote. */
+    overwrite: boolean;
 }
 
 function flagValue(argv: readonly string[], flag: string): string | undefined {
@@ -98,36 +99,14 @@ async function parseArgs(argv: readonly string[]): Promise<Options> {
         bucket: flagValue(argv, '--bucket'),
         prune: argv.includes('--prune'),
         pruneForce: argv.includes('--prune-force'),
+        overwrite: argv.includes('--overwrite'),
         dryRun: argv.includes('--dry-run')
     };
 }
 
-function run(command: string, args: readonly string[]): Promise<void> {
-    return new Promise((resolve, reject) => {
-        const child = spawn(command, [...args], { stdio: 'inherit', cwd: INIT_CWD });
-        child.on('error', reject);
-        child.on('close', (code) => {
-            if (code === 0) resolve();
-            else reject(new Error(`${command} ${args.join(' ')} exited with code ${String(code)}`));
-        });
-    });
-}
-
 // <name>@<version> is the immutable release tag. Source links pinned to it never drift.
-async function extractPackage(pkg: PublishedPackage, projectFolderUrl: string): Promise<void> {
-    await run('pnpm', [
-        'tsx',
-        'scripts/docs/extract-docs.ts',
-        '-o',
-        './generated',
-        '--package',
-        pkg.name,
-        '--ref',
-        `${pkg.name}@${pkg.version}`,
-        '--project-folder-url',
-        projectFolderUrl
-    ]);
-}
+const releaseTags = (published: readonly PublishedPackage[]): Record<string, string> =>
+    Object.fromEntries(published.map((pkg) => [pkg.name, `${pkg.name}@${pkg.version}`]));
 
 async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promise<EmittedEntry | null> {
     const found = engine.getPackage(pkg.name);
@@ -157,23 +136,21 @@ async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promis
 async function collectEmitted(opts: Options): Promise<EmittedEntry[]> {
     const documented = await documentedPackageNames();
     const published = opts.published.filter((pkg) => documented.has(pkg.name));
-    const emitted: EmittedEntry[] = [];
 
     if (opts.extract) {
-        // each extract overwrites generated/manifest.json
-        for (const pkg of published) {
-            await extractPackage(pkg, opts.projectFolderUrl);
-            const engine = await DocsEngine.create({ generatedRoot: GENERATED_ROOT });
-            const entry = await emitVersionDir(engine, pkg);
-            if (entry) emitted.push(entry);
-        }
-    } else {
-        // generated/ already holds every published package (local / rehearsal path).
-        const engine = await DocsEngine.create({ generatedRoot: GENERATED_ROOT });
-        for (const pkg of published) {
-            const entry = await emitVersionDir(engine, pkg);
-            if (entry) emitted.push(entry);
-        }
+        // api-extractor drops an inherited member when its base class's package is absent from the model
+        await new ApiDocsGenerator({
+            outputDir: GENERATED_ROOT,
+            githubBase: opts.projectFolderUrl,
+            refs: releaseTags(published)
+        }).run();
+    }
+
+    const engine = await DocsEngine.create({ generatedRoot: GENERATED_ROOT });
+    const emitted: EmittedEntry[] = [];
+    for (const pkg of published) {
+        const entry = await emitVersionDir(engine, pkg);
+        if (entry) emitted.push(entry);
     }
     return emitted;
 }
@@ -226,7 +203,7 @@ async function finalize(opts: Options, emitted: readonly EmittedEntry[]): Promis
         for (const file of ['project.json', 'api.json'] as const) {
             const rel = `packages/${e.folder}/${relDir}/${e.version}/${file}`;
             const key = `${opts.prefix}${rel}`;
-            if (await objectExists({ client: ref.client, bucket: ref.bucket, key })) continue;
+            if (!opts.overwrite && (await objectExists({ client: ref.client, bucket: ref.bucket, key }))) continue;
             if (opts.dryRun) {
                 console.log(`PUT ${key}`);
                 continue;

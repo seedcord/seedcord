@@ -6,7 +6,14 @@ import { createContext, use, useCallback, useEffect, useId, useMemo, useState } 
 import { cn } from './lib/cn';
 import { tw } from './lib/tw';
 
-import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, HTMLAttributes, ReactElement, ReactNode } from 'react';
+import type {
+    ButtonHTMLAttributes,
+    ComponentPropsWithoutRef,
+    HTMLAttributes,
+    ReactElement,
+    ReactNode,
+    Ref
+} from 'react';
 
 const disclosureTriggerBaseClassName = cn(
     tw`flex w-full cursor-pointer items-center gap-2 text-left`,
@@ -22,7 +29,7 @@ const disclosurePanelBaseClassName = tw`grid min-w-0 transition-[grid-template-r
 // defeat downstream `overflow-x: auto` clipping.
 const disclosurePanelInnerClassName = tw`min-h-0 min-w-0 overflow-y-clip`;
 
-interface DisclosureContextValue {
+export interface DisclosureContextValue {
     open: boolean;
     setOpen: (next: boolean) => void;
     panelId: string;
@@ -34,6 +41,14 @@ function useDisclosureContext(componentName: string): DisclosureContextValue {
     const ctx = use(DisclosureContext);
     if (!ctx) throw new Error(`${componentName} must be rendered inside <Disclosure>`);
     return ctx;
+}
+
+/**
+ * Reads the surrounding `Disclosure`'s state. Put `panelId` on your own panel element when you
+ * render one in place of `DisclosurePanel`, since `DisclosureTrigger` points `aria-controls` at it.
+ */
+export function useDisclosure(): DisclosureContextValue {
+    return useDisclosureContext('useDisclosure');
 }
 
 export interface DisclosureProps {
@@ -101,12 +116,20 @@ export interface DisclosureTriggerProps extends Omit<
     'type' | 'aria-expanded' | 'aria-controls'
 > {
     children: ReactNode;
+    ref?: Ref<HTMLButtonElement> | undefined;
 }
 
-export function DisclosureTrigger({ className, children, onClick, ...props }: DisclosureTriggerProps): ReactElement {
+export function DisclosureTrigger({
+    className,
+    children,
+    onClick,
+    ref,
+    ...props
+}: DisclosureTriggerProps): ReactElement {
     const { open, setOpen, panelId } = useDisclosureContext('DisclosureTrigger');
     return (
         <button
+            ref={ref}
             type="button"
             aria-expanded={open}
             aria-controls={panelId}

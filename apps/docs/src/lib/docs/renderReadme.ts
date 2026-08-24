@@ -1,7 +1,7 @@
 import { Marked } from 'marked';
 
 import { sanitizeHtml } from '#lib/sanitizeHtml';
-import { highlightToHtml } from '#lib/shiki';
+import { highlightToHtml } from '@seedcord/ui/shiki';
 
 import type { Tokens } from 'marked';
 import type { BundledLanguage } from 'shiki';

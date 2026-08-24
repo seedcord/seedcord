@@ -19,7 +19,7 @@ function CopyButtonPage(): ReactElement {
                 <h2 className={cn('text-subtle text-xs font-semibold tracking-widest uppercase')}>Default</h2>
                 <div
                     className={cn(
-                        'bg-surface-subtle relative flex h-40 items-center justify-center rounded-xl border border-(--border) p-4'
+                        'relative flex h-40 items-center justify-center rounded-xl border border-(--border) bg-(--surface-subtle) p-4'
                     )}
                 >
                     <CopyButton value="hello from /dev/copy-button" ariaLabel="Copy sample text" />
@@ -30,7 +30,7 @@ function CopyButtonPage(): ReactElement {
                 <h2 className={cn('text-subtle text-xs font-semibold tracking-widest uppercase')}>
                     In a card overlay (real consumer pattern)
                 </h2>
-                <div className={cn('bg-surface-moderate relative h-32 rounded-xl border border-(--border) p-4')}>
+                <div className={cn('relative h-32 rounded-xl border border-(--border) bg-(--surface-moderate) p-4')}>
                     <CopyButton
                         value="npm install seedcord"
                         ariaLabel="Copy install command"

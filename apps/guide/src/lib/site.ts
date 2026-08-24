@@ -5,3 +5,4 @@ export const SITE_NAME = 'seedcord guide';
 export const SITE_DESCRIPTION = 'The guide to building Discord bots with seedcord.';
 export const HOME_URL = 'https://seedcord.org';
 export const DOCS_URL = 'https://docs.seedcord.org';
+export const REPO_URL = 'https://github.com/seedcord/seedcord';

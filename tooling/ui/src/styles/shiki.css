@@ -1,0 +1,17 @@
+/* a browser without light-dark() drops the whole color declaration, taking the highlighting with it.
+ * shiki writes these custom properties alongside for exactly that case. */
+@supports not (color: light-dark(red, blue)) {
+    .shiki,
+    .shiki span,
+    .shiki-inline,
+    .shiki-inline span {
+        color: var(--shiki-light);
+    }
+
+    [data-theme='dark'] .shiki,
+    [data-theme='dark'] .shiki span,
+    [data-theme='dark'] .shiki-inline,
+    [data-theme='dark'] .shiki-inline span {
+        color: var(--shiki-dark);
+    }
+}

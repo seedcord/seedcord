@@ -150,7 +150,7 @@ export interface EffectGate<Ctx extends GateContextBase = GateContextBase, Name 
  * @param fn - The check, which refuses by throwing a Notice or a Silence and passes by returning.
  *
  * @see {@link defineEffectGate}
- * @see the `@Gated` decorator from `seedcord`
+ * @see the `@Gated` decorator from your transport package
  *
  * @example
  * ```ts
@@ -191,7 +191,7 @@ export function defineGate<const Name extends string, Ctx extends GateContextBas
  * @param commit - Applies the side effect, running only after the whole gate set passes.
  *
  * @see {@link defineGate}
- * @see the `@Gated` decorator from `seedcord`
+ * @see the `@Gated` decorator from your transport package
  * @see {@link Cooldown}
  *
  * @example

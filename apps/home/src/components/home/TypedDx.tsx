@@ -17,8 +17,8 @@ const BULLETS = [
 export function TypedDx(): ReactNode {
     return (
         <Section ground="pith">
-            <div className={cn('grid items-start gap-10 lg:grid-cols-[0.9fr_1.1fr]')}>
-                <div className={cn('min-w-0')}>
+            <div className={cn('grid items-start gap-x-10 gap-y-8 lg:grid-cols-[0.9fr_1.1fr]')}>
+                <div className={cn('min-w-0 lg:col-start-1 lg:row-start-1')}>
                     <h2
                         className={cn(
                             'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
@@ -46,17 +46,18 @@ export function TypedDx(): ReactNode {
                             </li>
                         ))}
                     </ul>
-                    <CodeCard
-                        code={codegenOutput}
-                        filename="seedcord-gen.d.ts"
-                        note="automatically generated"
-                        className={cn('rule blk-rind mt-8')}
-                    />
                 </div>
-                <div className={cn('min-w-0 space-y-5')}>
+                <div className={cn('min-w-0 space-y-5 lg:col-start-2 lg:row-span-2 lg:row-start-1')}>
                     <CodeCard code={typedDxCommand} filename="commands/search.ts" className={cn('rule blk-rind')} />
                     <CodeCard code={typedDxHandler} filename="handlers/search.ts" className={cn('rule blk-rind')} />
                 </div>
+                {/* moving this into the left column puts it before the builder on mobile */}
+                <CodeCard
+                    code={codegenOutput}
+                    filename="seedcord-gen.d.ts"
+                    note="automatically generated"
+                    className={cn('rule blk-rind lg:col-start-1 lg:row-start-2')}
+                />
             </div>
         </Section>
     );

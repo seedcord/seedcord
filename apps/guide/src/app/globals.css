@@ -1,16 +1,34 @@
 @import '@seedcord/ui/styles/globals.css';
+@import '../styles/callout.css';
+@import '../styles/twoslash.css';
+
+:root {
+    --content-max: 90rem;
+    --nav-h: 4.5rem; /* fallback until the navbar measures its own height */
+}
+
+/* the navbar shows its tab row from lg up */
+@media (width >= 64rem) {
+    :root {
+        --nav-h: 7.5rem;
+    }
+}
 
 @layer base {
+    /* tokens.css forces this back to auto under prefers-reduced-motion */
+    html {
+        scroll-behavior: smooth;
+    }
+
     body {
-        background-color: var(--pith);
-        color: var(--seed-dark);
-        font-family:
-            var(--font-sans),
-            system-ui,
-            -apple-system,
-            BlinkMacSystemFont,
-            sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
+        font-family: var(--font-sans);
         min-height: 100vh;
         -webkit-font-smoothing: antialiased;
+    }
+
+    :is(h1, h2, h3, h4, h5, h6)[id] {
+        scroll-margin-top: calc(var(--nav-h, 0px) + 1.5rem);
     }
 }

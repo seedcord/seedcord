@@ -4,6 +4,7 @@ import { Logger } from '@seedcord/logger';
 
 import { getDevChannel } from '#hmr/devChannel';
 
+import { RuntimeBrand, TransportBrand } from './brands';
 import { resolveLifecycleSpec } from './lifecycle';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -30,10 +31,11 @@ const loggerSlot = Symbol('seedcord.plugin.logger');
 export abstract class Plugin<Opts extends PluginOptions = {}, TCore extends CoreBase = CoreBase>
     implements Initializeable, HmrAware
 {
-    /** @internal phantom, never set at runtime */
-    declare readonly __transport?: TransportOf<Opts>;
-    /** @internal phantom, never set at runtime */
-    declare readonly __runtime?: RuntimeOf<Opts>;
+    // phantom, never set at runtime.
+    /** @internal */
+    declare readonly [TransportBrand]?: TransportOf<Opts>;
+    /** @internal */
+    declare readonly [RuntimeBrand]?: RuntimeOf<Opts>;
 
     /** @internal */
     readonly [resolvedSpecSlot]: ResolvedPluginLifecycleSpec;

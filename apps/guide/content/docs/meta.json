@@ -1,0 +1,4 @@
+{
+    "title": "Start",
+    "pages": ["index", "commands", "replying", "components", "events", "gates", "plugins", "tooling"]
+}

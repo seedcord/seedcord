@@ -13,7 +13,7 @@ const tooltipContentBaseClassName = cn(
     tw`rounded-md`,
     tw`border border-(--border) bg-(--bg-popover) text-(--text)`,
     tw`text-xs/snug`,
-    tw`shadow-soft-token`,
+    tw`shadow-soft`,
     // scale from the radix-injected trigger anchor
     tw`origin-(--radix-tooltip-content-transform-origin)`,
     tw`data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95`,

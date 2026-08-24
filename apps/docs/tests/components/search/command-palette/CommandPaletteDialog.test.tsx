@@ -103,9 +103,16 @@ describe('CommandPaletteDialog', () => {
         expect(combobox()).toHaveAttribute('aria-activedescendant', optionId('b'));
     });
 
-    it('ArrowUp from the first option wraps to the last', () => {
+    it('ArrowUp holds on the first option', () => {
         renderDialog(makeController());
         fireEvent.keyDown(combobox(), { key: 'ArrowUp' });
+        expect(combobox()).toHaveAttribute('aria-activedescendant', optionId('a'));
+    });
+
+    it('ArrowDown holds on the last option', () => {
+        renderDialog(makeController());
+        fireEvent.keyDown(combobox(), { key: 'End' });
+        fireEvent.keyDown(combobox(), { key: 'ArrowDown' });
         expect(combobox()).toHaveAttribute('aria-activedescendant', optionId('c'));
     });
 

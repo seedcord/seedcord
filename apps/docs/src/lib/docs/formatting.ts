@@ -18,7 +18,7 @@ import {
     highlightToHtml,
     highlightTypeParamToHtml,
     type CodeLink
-} from '#lib/shiki';
+} from '@seedcord/ui/shiki';
 
 import { opensInNewTab } from './crossPackage';
 
@@ -73,7 +73,7 @@ export async function formatDeclarationHeader(
     // with no leading keyword the text isn't top-level TS, and shiki only reads `protected`, `readonly`
     // and type-param `extends` as keywords inside the class-body wrap
     const highlighter = header.keyword
-        ? (c: string): Promise<string | null> => highlightToHtml(c, 'ts', links)
+        ? (c: string): Promise<string | null> => highlightToHtml(c, 'ts', { links })
         : (c: string): Promise<string | null> => highlightMemberToHtml(c, links);
     return { text, html: await safeHighlight(highlighter, text) };
 }

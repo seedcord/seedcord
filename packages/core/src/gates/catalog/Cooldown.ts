@@ -74,7 +74,7 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
  * @param duration - A number is seconds, and a string is a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError**.
  * @param options - Sets the scope with `per`, the uses per window with `limit`, and the refusal text with `message` or `notice`.
  *
- * @see the `@Gated` decorator from `seedcord`
+ * @see the `@Gated` decorator from your transport package
  * @see {@link IRateLimiter}
  *
  * @example

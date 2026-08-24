@@ -1,3 +1,4 @@
+import type { RuntimeBrand, TransportBrand } from './brands';
 import type { FrameworkChannel, TypedExclude } from '@seedcord/types';
 
 /** The options a plugin declares as its `Plugin<Opts>` type argument. */
@@ -48,8 +49,8 @@ export type ChannelKeyAssert<Key extends string> = Key extends FrameworkChannel
     ? `'${Key}' is a channel the framework logs on. Pick another plugin key.`
     : Key;
 
-type BrandTransport<Plug> = Plug extends { readonly __transport?: infer T extends string } ? T : 'any';
-type BrandRuntime<Plug> = Plug extends { readonly __runtime?: infer R extends string } ? R : 'any';
+type BrandTransport<Plug> = Plug extends { readonly [TransportBrand]?: infer T extends string } ? T : 'any';
+type BrandRuntime<Plug> = Plug extends { readonly [RuntimeBrand]?: infer R extends string } ? R : 'any';
 
 // `unknown` vanishes from the intersection at the attach parameter, and a mismatch object leaves
 // the argument unassignable there.

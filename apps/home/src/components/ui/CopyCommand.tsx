@@ -1,6 +1,6 @@
 'use client';
 
-import { cn, useTimedToggle } from '@seedcord/ui';
+import { LabelSwap, cn, useTimedToggle } from '@seedcord/ui';
 import { useRef } from 'react';
 
 import { pressable } from './press';
@@ -93,42 +93,39 @@ export function CopyCommand({ command, className }: CopyCommandProps): ReactNode
     };
 
     return (
-        // eslint-disable-next-line react/forbid-elements -- the two-label grid swap and the seed burst have no Button variant
-        <button
-            type="button"
-            aria-label={`Copy ${command}`}
-            onClick={() => {
-                void copy();
-            }}
-            className={cn(
-                'font-mono-code relative cursor-pointer rounded-sm bg-(--seed-dark) px-2 py-1 text-sm text-(--pith)',
-                pressable,
-                'hover:bg-(--flesh-deep)',
-                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--rind)',
-                className
-            )}
-        >
-            {/* both labels share one grid cell so the chip keeps the wider width during the swap */}
-            <span className={cn('grid')}>
-                <span
-                    className={cn(
-                        'col-start-1 row-start-1 transition-[opacity,translate,filter] duration-200 ease-(--ease-out-strong)',
-                        copied ? 'opacity-0 blur-[2px] motion-safe:-translate-y-1' : 'opacity-100'
-                    )}
-                >
-                    <span className={cn('text-(--pith)/50 select-none')}>$ </span>
-                    {command}
-                </span>
-                <span
-                    className={cn(
-                        'col-start-1 row-start-1 text-center transition-[opacity,translate,filter] duration-200 ease-(--ease-out-strong)',
-                        copied ? 'opacity-100' : 'opacity-0 blur-[2px] motion-safe:translate-y-1'
-                    )}
-                >
-                    copied!
-                </span>
+        <>
+            {/* aria-label pins the button's name, keeping the swap below out of the a11y tree */}
+            <span aria-live="polite" className={cn('sr-only')}>
+                {copied ? 'Copied' : ''}
             </span>
-            <span ref={burstRef} aria-hidden className={cn('pointer-events-none absolute inset-0')} />
-        </button>
+            {/* eslint-disable-next-line react/forbid-elements -- the two-label grid swap and the seed burst have no Button variant */}
+            <button
+                type="button"
+                aria-label={`Copy ${command}`}
+                onClick={() => {
+                    void copy();
+                }}
+                className={cn(
+                    'font-mono-code relative cursor-pointer rounded-sm bg-(--seed-dark) px-2 py-1 text-sm text-(--pith)',
+                    pressable,
+                    'hover:bg-(--flesh-deep)',
+                    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--rind)',
+                    className
+                )}
+            >
+                <LabelSwap
+                    active={copied}
+                    idleLabel={
+                        <>
+                            <span className={cn('text-(--pith)/50 select-none')}>$ </span>
+                            {command}
+                        </>
+                    }
+                    activeLabel="copied!"
+                    activeClassName={cn('text-center')}
+                />
+                <span ref={burstRef} aria-hidden className={cn('pointer-events-none absolute inset-0')} />
+            </button>
+        </>
     );
 }

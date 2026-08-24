@@ -2,22 +2,15 @@
 @import '../styles/tokens.css';
 @import '../styles/utilities.css';
 
-/* one knob for all docs rounding. chips need to be 2px tighter */
 :root {
-    --radius-surface: 0.375rem;
     --nav-h: 4.5rem; /* fallback until the navbar measures its own height */
-}
-@theme {
-    --radius-sm: calc(var(--radius-surface) - 0.125rem);
-    --radius-md: var(--radius-surface);
-    --radius-lg: var(--radius-surface);
 }
 
 @layer base {
     body {
         background-color: var(--bg);
         color: var(--text);
-        font-family: var(--font-sans, 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+        font-family: var(--font-sans);
         min-height: 100vh;
     }
 
@@ -31,29 +24,7 @@
     }
 }
 
-/* Safari fails to resolve CSS variables from inline declarations, so we toggle visibility instead. */
-.shiki-theme-group .shiki-dark,
-.shiki-inline-group .shiki-dark {
-    display: none;
-}
-.shiki-theme-group .shiki-light {
-    display: block;
-}
-.shiki-inline-group .shiki-light {
-    display: inline;
-}
-[data-theme='dark'] .shiki-theme-group .shiki-light,
-[data-theme='dark'] .shiki-inline-group .shiki-light {
-    display: none;
-}
-[data-theme='dark'] .shiki-theme-group .shiki-dark {
-    display: block;
-}
-[data-theme='dark'] .shiki-inline-group .shiki-dark {
-    display: inline;
-}
-
-/* need to make sure both are using 'inline' otherwise the logo shifts when switching modes */
+/* both stay inline or the logo shifts when the theme flips */
 .readme-img-light {
     display: inline;
 }
@@ -67,10 +38,9 @@
     display: inline;
 }
 
-/* Cross-package/external indicator, emitted by decorateProseLinks (prose) and the SeeAlso /
- * inheritedFrom anchors. code-block links open in a new tab without this glyph. nowrap keeps the
- * glyph on the link's last line. */
+/* decorateProseLinks, SeeAlso, and the inheritedFrom anchors set this class on a cross-package or external link */
 a.cross-ref {
+    /* keeps the glyph on the link's last line */
     white-space: nowrap;
 }
 
@@ -87,58 +57,3 @@ a.cross-ref::after {
         no-repeat center / contain;
 }
 
-@keyframes commandOverlayShow {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes commandOverlayHide {
-    from {
-        opacity: 1;
-    }
-    to {
-        opacity: 0;
-    }
-}
-
-@keyframes commandSurfaceShow {
-    from {
-        opacity: 0;
-        transform: translateY(12px) scale(0.98);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-@keyframes commandSurfaceHide {
-    from {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-    to {
-        opacity: 0;
-        transform: translateY(6px) scale(0.98);
-    }
-}
-
-[data-command-overlay][data-state='open'] {
-    animation: commandOverlayShow 160ms ease-out forwards;
-}
-
-[data-command-overlay][data-state='closed'] {
-    animation: commandOverlayHide 140ms ease-in forwards;
-}
-
-[data-command-content][data-state='open'] {
-    animation: commandSurfaceShow 200ms cubic-bezier(0.21, 0.61, 0.35, 1) forwards;
-}
-
-[data-command-content][data-state='closed'] {
-    animation: commandSurfaceHide 150ms cubic-bezier(0.4, 0, 1, 1) forwards;
-}
