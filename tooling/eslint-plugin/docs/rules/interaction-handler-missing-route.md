@@ -2,7 +2,7 @@
 
 Require a route decorator on every concrete interaction handler.
 
-A class that extends `SlashHandler`, `ButtonHandler`, `ModalHandler`, `SelectMenuHandler`, `ContextMenuHandler`, or `AutocompleteHandler` registers only when it carries the matching route decorator (`@SlashRoute`, `@ButtonRoute`, and so on). Without one the handler loads without error and never registers, and its interactions fall through to the unhandled default.
+A class that extends `SlashHandler`, `ButtonHandler`, `ModalHandler`, `SelectMenuHandler`, `UserContextMenuHandler`, `MessageContextMenuHandler`, or `AutocompleteHandler` registers only when it carries the matching route decorator (`@SlashRoute`, `@ButtonRoute`, and so on). Without one the handler loads without error and never registers, and its interactions fall through to the unhandled default.
 
 The base class must be imported from `seedcord` or a `@seedcord/*` package. A same-named class from another module is not flagged, and an `abstract` intermediate base is skipped.
 

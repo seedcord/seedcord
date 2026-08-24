@@ -84,8 +84,12 @@ export abstract class SlashHandler<Route extends string> extends InteractionHand
     declare protected readonly route: Route;
 }
 
-export abstract class ContextMenuHandler<Kind> extends InteractionHandler<ContextMenuCommandInteraction> {
-    declare protected readonly kind: Kind;
+export abstract class UserContextMenuHandler<Names> extends InteractionHandler<ContextMenuCommandInteraction> {
+    declare protected readonly names: Names;
+}
+
+export abstract class MessageContextMenuHandler<Names> extends InteractionHandler<ContextMenuCommandInteraction> {
+    declare protected readonly names: Names;
 }
 
 export abstract class ComponentHandler<Event extends Repliable, Defs> extends InteractionHandler<Event> {

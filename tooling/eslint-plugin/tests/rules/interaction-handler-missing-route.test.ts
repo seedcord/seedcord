@@ -22,9 +22,14 @@ ruleTester.run('interaction-handler-missing-route', rule, {
             export class Nav extends ButtonHandler<[typeof Board]> {}
         `,
         dedent`
-            import { ContextMenuHandler, ContextMenuRoute } from 'seedcord';
-            @ContextMenuRoute(ApplicationCommandType.User, 'View Profile')
-            export class ViewProfile extends ContextMenuHandler<ApplicationCommandType.User> {}
+            import { UserContextMenuHandler, UserContextMenuRoute } from 'seedcord';
+            @UserContextMenuRoute('View Profile')
+            export class ViewProfile extends UserContextMenuHandler<'View Profile'> {}
+        `,
+        dedent`
+            import { MessageContextMenuHandler, MessageContextMenuRoute } from 'seedcord';
+            @MessageContextMenuRoute('Report Message')
+            export class ReportMessage extends MessageContextMenuHandler<'Report Message'> {}
         `,
         // a route decorator stacked under an unrelated one still counts
         dedent`
@@ -151,10 +156,29 @@ ruleTester.run('interaction-handler-missing-route', rule, {
         {
             // context menu handler without a route
             code: dedent`
-                import { ContextMenuHandler } from 'seedcord';
-                export class ViewProfile extends ContextMenuHandler<ApplicationCommandType.User> {}
+                import { UserContextMenuHandler } from 'seedcord';
+                export class ViewProfile extends UserContextMenuHandler<'View Profile'> {}
             `,
-            errors: [{ messageId: 'missingRoute', data: { base: 'ContextMenuHandler', decorator: 'ContextMenuRoute' } }]
+            errors: [
+                {
+                    messageId: 'missingRoute',
+                    data: { base: 'UserContextMenuHandler', decorator: 'UserContextMenuRoute' }
+                }
+            ]
+        },
+        {
+            // the user route decorator does not register a message handler
+            code: dedent`
+                import { MessageContextMenuHandler, UserContextMenuRoute } from 'seedcord';
+                @UserContextMenuRoute('Report Message')
+                export class ReportMessage extends MessageContextMenuHandler<'Report Message'> {}
+            `,
+            errors: [
+                {
+                    messageId: 'missingRoute',
+                    data: { base: 'MessageContextMenuHandler', decorator: 'MessageContextMenuRoute' }
+                }
+            ]
         },
         {
             // a concrete subclass of a same-file abstract handler base

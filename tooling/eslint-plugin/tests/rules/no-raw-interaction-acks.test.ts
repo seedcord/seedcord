@@ -191,8 +191,8 @@ ruleTester.run('no-raw-interaction-acks', rule, {
         },
         {
             code: dedent`
-                import { ContextMenuHandler } from 'seedcord';
-                export class Info extends ContextMenuHandler<'user'> {
+                import { UserContextMenuHandler } from 'seedcord';
+                export class Info extends UserContextMenuHandler<'Info'> {
                     async execute() {
                         await this.event.reply('info');
                     }
