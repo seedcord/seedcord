@@ -1,5 +1,21 @@
 # @seedcord/gateway
 
+## 0.2.1-next.0
+
+### Patch Changes
+
+- 9c8e66a: _Kinda BREAKING:_ A transport plugin base no longer accepts `transport: 'any'` and the gateway base no longer accepts `runtime: 'edge'`. Extend `@seedcord/core/plugin` for a plugin that runs on either transport. This IS a bug fix. This should not have been allowed before.
+- 1d2f1e3: Updated TSDoc reference generation.
+- Updated dependencies [8f662bb]
+- Updated dependencies [1d2f1e3]
+    - @seedcord/core@0.2.1-next.0
+    - @seedcord/event-emitter@0.1.4-next.0
+    - @seedcord/rate-limiter@0.1.4-next.0
+    - @seedcord/errors@0.4.1-next.0
+    - @seedcord/logger@0.2.1-next.0
+    - @seedcord/utils@0.8.6-next.0
+    - @seedcord/types@0.9.1-next.0
+
 ## 0.2.0
 
 ### Minor Changes
