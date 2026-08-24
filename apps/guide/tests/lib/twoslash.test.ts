@@ -7,7 +7,7 @@ function sample(...lines: string[]): string {
 }
 
 async function render(code: string, lang: 'ts' | 'tsx' | 'typescript' = 'ts'): Promise<string> {
-    const { html } = await twoslashBlock(code, lang, true);
+    const { html } = await twoslashBlock(code, lang, 'hovers');
 
     return html ?? '';
 }
@@ -127,13 +127,51 @@ describe('the twoslash transformer', () => {
     });
 
     it('stays out of the way when the fence carries no flag', async () => {
-        const { html } = await twoslashBlock('const count = 12;', 'ts', false);
+        const { html } = await twoslashBlock('const count = 12;', 'ts', 'off');
 
         expect(html).not.toContain('twoslash');
     });
 
+    describe('a fence checked without hovers', () => {
+        async function checked(code: string): Promise<string> {
+            const { html } = await twoslashBlock(code, 'ts', 'check');
+
+            return html ?? '';
+        }
+
+        it('names an undeclared error', async () => {
+            await expect(checked('const count: number = "twelve";')).rejects.toThrow(
+                'not marked as being expected: 2322'
+            );
+        });
+
+        it('leaves every token unhoverable', async () => {
+            const html = await checked("const routes = ['ping', 'ban'] as const;");
+
+            expect(html).not.toContain('twoslash-hover');
+        });
+
+        it('still renders a declared error', async () => {
+            const html = await checked(sample('// @errors: 2322', 'const count: number = "twelve";'));
+
+            expect(html).toContain('twoslash-error-line');
+        });
+
+        it('still renders a type query', async () => {
+            const html = await checked(
+                sample("const routes = ['ping', 'ban'] as const;", 'const first = routes[0];', '//    ^?')
+            );
+
+            expect(html).toContain('twoslash-query-line');
+        });
+    });
+
     it('hands the copy button a sample with no twoslash notation', async () => {
-        const { text } = await twoslashBlock(sample('// @errors: 2322', 'const count: number = "twelve";'), 'ts', true);
+        const { text } = await twoslashBlock(
+            sample('// @errors: 2322', 'const count: number = "twelve";'),
+            'ts',
+            'hovers'
+        );
 
         expect(text).toBe('const count: number = "twelve";');
     });
@@ -144,7 +182,7 @@ describe('the twoslash transformer', () => {
         const { html, text } = await twoslashBlock(
             sample('// @errors: 2322', 'const count: number = "twelve";'),
             'ts',
-            true
+            'hovers'
         );
 
         expect(html).not.toContain('twoslash');
@@ -188,7 +226,7 @@ describe('the twoslash transformer', () => {
         );
 
         it('copies without the indentation it was nested under', async () => {
-            const { text } = await twoslashBlock(nested, 'ts', true);
+            const { text } = await twoslashBlock(nested, 'ts', 'hovers');
 
             expect(text).toBe("await this.reply('Pong');");
         });
@@ -296,7 +334,7 @@ describe('the twoslash transformer', () => {
     });
 
     it('leaves the copy text without a trailing blank line', async () => {
-        const { text } = await twoslashBlock(sample('const first = 1;', '//    ^?'), 'ts', true);
+        const { text } = await twoslashBlock(sample('const first = 1;', '//    ^?'), 'ts', 'hovers');
 
         expect(text).toBe('const first = 1;');
     });

@@ -81,6 +81,18 @@ describe('a fence caption', () => {
         expect(code).not.toContain('data-output');
     });
 
+    it('reads hovers as its own flag', async () => {
+        const plain = await compileGuideMdx(fence('twoslash'));
+        const withHovers = await compileGuideMdx(fence('twoslash hovers'));
+
+        expect(plain).not.toContain('data-hovers');
+        expect(withHovers).toContain('data-hovers');
+    });
+
+    it('refuses hovers without twoslash', async () => {
+        await expect(compileGuideMdx(fence('hovers'))).rejects.toThrow('hovers needs twoslash');
+    });
+
     it('refuses a js fence tagged twoslash', async () => {
         const source = ['```js twoslash', 'const a = 1;', '```'].join('\n');
 

@@ -1,7 +1,7 @@
 import { parseCodeBlockAttributes } from 'fumadocs-core/mdx-plugins/codeblock-utils';
 
 // a name outside this list stays in the meta untouched
-const FENCE_NAMES = ['title', 'output', 'twoslash'];
+const FENCE_NAMES = ['title', 'output', 'twoslash', 'hovers'];
 
 export const LANGUAGE_PREFIX = 'language-';
 
@@ -9,7 +9,8 @@ export const LANGUAGE_PREFIX = 'language-';
 export const FENCE_ATTR = {
     title: 'data-title',
     output: 'data-output',
-    twoslash: 'data-twoslash'
+    twoslash: 'data-twoslash',
+    hovers: 'data-hovers'
 } as const;
 
 const TWOSLASH_LANGS = new Set(['ts', 'tsx', 'typescript']);
@@ -59,6 +60,9 @@ export function rehypeFenceMeta() {
                     file.fail(`twoslash checks ${names}. This fence is tagged ${lang || 'nothing'}.`, code);
                 }
                 added[FENCE_ATTR.twoslash] = '';
+                if ('hovers' in attributes) added[FENCE_ATTR.hovers] = '';
+            } else if ('hovers' in attributes) {
+                file.fail('hovers needs twoslash on the same fence.', code);
             }
 
             code.properties = { ...code.properties, ...added };

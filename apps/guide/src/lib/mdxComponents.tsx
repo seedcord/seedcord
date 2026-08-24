@@ -7,6 +7,7 @@ import { TypeHover } from '#components/TypeHover';
 import { FENCE_ATTR, LANGUAGE_PREFIX } from '#lib/rehypeFenceMeta';
 import { twoslashBlock } from '#lib/twoslash';
 
+import type { FenceMode } from '#lib/twoslash';
 import type { MDXComponents } from 'mdx/types';
 import type { BundledLanguage } from 'shiki';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
@@ -78,7 +79,13 @@ interface Fenced {
     lang: BundledLanguage;
     title: string | undefined;
     output: boolean;
-    twoslash: boolean;
+    mode: FenceMode;
+}
+
+function modeOf(props: Record<string, unknown>): FenceMode {
+    if (!(FENCE_ATTR.twoslash in props)) return 'off';
+
+    return FENCE_ATTR.hovers in props ? 'hovers' : 'check';
 }
 
 // mdx renders a fence as <pre><code className="language-x">
@@ -101,7 +108,7 @@ function readFence(children: ReactNode): Fenced | null {
         lang: named && isHighlightable(named) ? named : 'ts',
         title: typeof title === 'string' ? title : undefined,
         output: FENCE_ATTR.output in props,
-        twoslash: FENCE_ATTR.twoslash in props
+        mode: modeOf(props)
     };
 }
 
@@ -146,13 +153,13 @@ async function Fence({ children }: FenceProps): Promise<ReactElement> {
     const fence = readFence(children);
     if (!fence) return <pre>{children}</pre>;
 
-    const representation = await twoslashBlock(fence.code, fence.lang, fence.twoslash);
+    const representation = await twoslashBlock(fence.code, fence.lang, fence.mode);
 
     const block = (
         <CodeBlock representation={representation} label={fence.title} copyValue={fence.output ? null : undefined} />
     );
 
-    return fence.twoslash ? <TypeHover>{block}</TypeHover> : block;
+    return fence.mode === 'hovers' ? <TypeHover>{block}</TypeHover> : block;
 }
 
 export const mdxComponents = {
