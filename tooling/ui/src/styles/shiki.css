@@ -5,6 +5,13 @@
     .shiki span,
     .shiki-inline,
     .shiki-inline span {
+        color: var(--shiki-light);
+    }
+
+    [data-theme='dark'] .shiki,
+    [data-theme='dark'] .shiki span,
+    [data-theme='dark'] .shiki-inline,
+    [data-theme='dark'] .shiki-inline span {
         color: var(--shiki-dark);
     }
 }
