@@ -190,17 +190,26 @@ const TWOSLASH_OPTIONS = {
 // the transformer aliases the fence lang before it reads the cache. the pre-warm below writes it
 const LANG_ALIAS: Record<string, string> = { typescript: 'ts' };
 
-const twoslash = transformerTwoslash({
+const SHARED = {
     langs: ['ts', 'tsx'],
     langAlias: LANG_ALIAS,
     typesCache,
-    renderer,
     twoslasher: dedenting,
     twoslashOptions: TWOSLASH_OPTIONS
-});
+};
 
-export async function twoslashBlock(code: string, lang: BundledLanguage, tagged: boolean): Promise<CodeRepresentation> {
-    if (!tagged) return { text: code, html: await highlightToHtml(code, lang) };
+// a hovered token carries its whole printed type into the markup
+const withoutHovers: TwoslashRenderer = { ...renderer, nodeStaticInfo: (_info, node) => node };
+
+const TRANSFORMER = {
+    check: transformerTwoslash({ ...SHARED, renderer: withoutHovers }),
+    hovers: transformerTwoslash({ ...SHARED, renderer })
+};
+
+export type FenceMode = 'off' | keyof typeof TRANSFORMER;
+
+export async function twoslashBlock(code: string, lang: BundledLanguage, mode: FenceMode): Promise<CodeRepresentation> {
+    if (mode === 'off') return { text: code, html: await highlightToHtml(code, lang) };
 
     // a trailing marker leaves the newline above it behind
     const text = dedent(removeTwoslashNotations(code).replace(/\n+$/, ''));
@@ -214,8 +223,10 @@ export async function twoslashBlock(code: string, lang: BundledLanguage, tagged:
         await learnFormatting(compiled.nodes);
         typesCache.write(code, compiled, extension);
 
+        const options = { transformers: [TRANSFORMER[mode]], throwOnFailure: true };
+
         // a sample that stopped compiling would otherwise render as plain text and pass the build
-        return { text, html: await highlightToHtml(code, lang, { transformers: [twoslash], throwOnFailure: true }) };
+        return { text, html: await highlightToHtml(code, lang, options) };
     } catch (error) {
         // a bad marker reaches typescript as a bare "Debug Failure" with no file and no line
         throw new Error(`twoslash failed on this sample:\n\n${code}\n\n${String(error)}`, { cause: error });

@@ -37,6 +37,8 @@ Tagging a fence `output` drops the copy button, for lines a terminal printed bac
 
 Tagging a fence `twoslash` runs the TypeScript compiler over it while the page builds. An error the sample never declared fails the build. A sample that stopped compiling cannot reach a page.
 
+Errors, `^?` queries, and completions all render on a `twoslash` fence. A checked fence weighs about what a plain one does. Adding `hovers` next to the tag makes every token hoverable, which prints that token's whole type into the page and costs around five times the bytes. Use it on the samples where the types are the lesson.
+
 A declared error renders under the line it came from, with the caret under the squiggled token.
 
 ```ts twoslash title="src/commands/Ping.ts"
@@ -88,6 +90,22 @@ A `^|` marker draws what an editor would offer at that point. The code is incomp
 const routes = { ping: 1, pong: 2, purge: 3, prune: 4 };
 routes.p;
 //      ^|
+```
+
+## Hovers
+
+On a `twoslash hovers` fence every token carries the type the compiler gave it. Hover one, or tab into the block and walk it with the arrow keys.
+
+```ts twoslash hovers
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ping')
+export class Ping extends SlashHandler<'ping'> {
+    public async execute(): Promise<void> {
+        const detailed = this.options.getBoolean('detailed');
+        await this.reply(detailed === true ? 'Pong, at length' : 'Pong');
+    }
+}
 ```
 
 ## Cuts
