@@ -11,8 +11,20 @@ import {
 
 import type { ShikiTransformer } from 'shiki';
 
+const ENTITIES: Record<string, string> = {
+    '&#x3C;': '<',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&#x26;': '&',
+    '&amp;': '&',
+    '&quot;': '"',
+    '&#39;': "'"
+};
+
 function textOf(html: string): string {
-    return html.replaceAll(/<[^>]+>/g, '');
+    return html
+        .replaceAll(/<[^>]+>/g, '')
+        .replaceAll(/&(?:#x3C|#x26|#39|lt|gt|amp|quot);/g, (match) => ENTITIES[match] ?? match);
 }
 
 function lightText(html: string): string {
@@ -112,6 +124,12 @@ describe('highlightToHtml', () => {
     });
 });
 
+function anchorTextFor(html: string, href: string): string | null {
+    const match = new RegExp(String.raw`<a href="${href}"[^>]*>([\s\S]*?)</a>`).exec(html);
+
+    return match ? textOf(match[1] ?? '') : null;
+}
+
 describe('the wrapped fragment helpers', () => {
     it('drops the function wrap a signature needed to tokenize', async () => {
         const html = await highlightSignatureToHtml('doThing(count: number): void');
@@ -129,6 +147,53 @@ describe('the wrapped fragment helpers', () => {
         const html = await highlightTypeParamToHtml('T extends string = never');
 
         expect(lightText(html ?? '')).toBe('T extends string = never');
+    });
+
+    it('keeps a multi-line generic signature intact', async () => {
+        const code = ['doThing<', '    T extends Record<string, unknown>', '>(value: T): void'].join('\n');
+
+        const html = await highlightSignatureToHtml(code);
+
+        expect(lightText(html ?? '')).toBe(code);
+    });
+
+    it('anchors a signature link on exactly the linked name', async () => {
+        const code = 'doThing(count: Counter): void';
+        const start = code.indexOf('Counter');
+
+        const html =
+            (await highlightSignatureToHtml(code, [
+                { name: 'Counter', href: '/d/counter', start, end: start + 'Counter'.length }
+            ])) ?? '';
+
+        expect(anchorTextFor(html, '/d/counter')).toBe('Counter');
+        expect(lightText(html)).toBe(code);
+    });
+
+    it('anchors a member link on exactly the linked name', async () => {
+        const code = 'protected readonly source: ArraySource';
+        const start = code.indexOf('ArraySource');
+
+        const html =
+            (await highlightMemberToHtml(code, [
+                { name: 'ArraySource', href: '/d/array-source', start, end: start + 'ArraySource'.length }
+            ])) ?? '';
+
+        expect(anchorTextFor(html, '/d/array-source')).toBe('ArraySource');
+        expect(lightText(html)).toBe(code);
+    });
+
+    it('anchors a type parameter link on exactly the linked name', async () => {
+        const code = 'Route extends SlashOptionRegistry';
+        const start = code.indexOf('SlashOptionRegistry');
+
+        const html =
+            (await highlightTypeParamToHtml(code, [
+                { name: 'SlashOptionRegistry', href: '/d/registry', start, end: start + 'SlashOptionRegistry'.length }
+            ])) ?? '';
+
+        expect(anchorTextFor(html, '/d/registry')).toBe('SlashOptionRegistry');
+        expect(lightText(html)).toBe(code);
     });
 });
 

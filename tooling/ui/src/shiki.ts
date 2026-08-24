@@ -37,79 +37,9 @@ function ensureHighlighter(): Promise<HighlighterCore> {
     highlighterPromise ??= createHighlighterCore({
         themes: [seedcordBrandLight, seedcordBrandDark],
         langs: [langTs, langTsx, langJs, langJsx, langJson, langBash],
-        // the transformers below were written against oniguruma's tokenization
         engine: createOnigurumaEngine(import('shiki/wasm'))
     });
     return highlighterPromise;
-}
-
-interface HastTextNode {
-    type: 'text';
-    value: string;
-}
-interface HastElement {
-    type: 'element';
-    tagName: string;
-    properties?: Record<string, unknown>;
-    children: HastChild[];
-}
-type HastChild = HastTextNode | HastElement;
-
-function getClasses(node: HastElement): string[] {
-    const cls = node.properties?.class;
-    if (typeof cls === 'string') return cls.split(/\s+/).filter(Boolean);
-    if (Array.isArray(cls)) return cls.filter((c): c is string => typeof c === 'string');
-    return [];
-}
-
-function isLineElement(child: HastChild): child is HastElement {
-    return child.type === 'element' && child.tagName === 'span' && getClasses(child).includes('line');
-}
-
-function extractText(node: HastChild): string {
-    if (node.type === 'text') return node.value;
-    return node.children.map(extractText).join('');
-}
-
-function setText(node: HastChild, text: string): void {
-    if (node.type === 'text') {
-        node.value = text;
-        return;
-    }
-    node.children = [{ type: 'text', value: text }];
-}
-
-function dropSuffix(line: HastElement, suffix: string): void {
-    let remaining = suffix.length;
-    while (remaining > 0 && line.children.length > 0) {
-        const lastIdx = line.children.length - 1;
-        const last = line.children[lastIdx];
-        if (!last) break;
-        const text = extractText(last);
-        if (text.length <= remaining) {
-            remaining -= text.length;
-            line.children.splice(lastIdx, 1);
-            continue;
-        }
-        setText(last, text.slice(0, text.length - remaining));
-        remaining = 0;
-    }
-}
-
-function dropPrefix(line: HastElement, prefix: string): void {
-    let remaining = prefix.length;
-    while (remaining > 0 && line.children.length > 0) {
-        const first = line.children[0];
-        if (!first) break;
-        const text = extractText(first);
-        if (text.length <= remaining) {
-            remaining -= text.length;
-            line.children.shift();
-            continue;
-        }
-        setText(first, text.slice(remaining));
-        remaining = 0;
-    }
 }
 
 // shiki's decorations API needs token boundaries the TS grammar doesn't give (a return type `: Foo`
@@ -204,45 +134,6 @@ function applyLinkMarkers(html: string, markers: readonly SentinelLink[]): strin
     return result;
 }
 
-const stripFunctionWrap: ShikiTransformer = {
-    name: 'seedcord-strip-function-wrap',
-    code(codeEl) {
-        const root = codeEl as HastElement;
-        const lines = root.children.filter(isLineElement);
-        if (lines.length === 0) return;
-
-        const first = lines[0];
-        if (first) dropPrefix(first, 'function ');
-
-        for (let i = lines.length - 1; i >= 0; i -= 1) {
-            const line = lines[i];
-            if (!line || line.children.length === 0) continue;
-            dropSuffix(line, ' {}');
-            break;
-        }
-    }
-};
-
-const stripMemberWrap: ShikiTransformer = {
-    name: 'seedcord-strip-member-wrap',
-    code(codeEl) {
-        const root = codeEl as HastElement;
-        const lines = root.children.filter(isLineElement);
-        if (lines.length === 0) return;
-
-        const first = lines[0];
-        if (first) dropPrefix(first, 'class _ { ');
-
-        for (let i = lines.length - 1; i >= 0; i -= 1) {
-            const line = lines[i];
-            if (!line || line.children.length === 0) continue;
-            dropSuffix(line, ' }');
-            dropSuffix(line, ';');
-            break;
-        }
-    }
-};
-
 // safari breaks shiki's dual-theme mode (`themes: {…}` + `defaultColor: false`) because webkit does
 // not resolve a span's `color: var(--shiki-dark)` against an inline custom property on that same span.
 // globals.css switches the rendered pair by visibility.
@@ -255,17 +146,13 @@ async function renderDual(
     instrumented: string,
     markers: readonly SentinelLink[],
     lang: BundledLanguage,
-    transformers: ShikiTransformer[] = []
+    transformers: ShikiTransformer[] = [],
+    grammarContextCode?: string
 ): Promise<string> {
     const highlighter = await ensureHighlighter();
-    const lightRaw = decorateBlock(
-        highlighter.codeToHtml(instrumented, { lang, theme: THEMES.light, transformers }),
-        'light'
-    );
-    const darkRaw = decorateBlock(
-        highlighter.codeToHtml(instrumented, { lang, theme: THEMES.dark, transformers }),
-        'dark'
-    );
+    const shared = { lang, transformers, ...(!(grammarContextCode === undefined) && { grammarContextCode }) };
+    const lightRaw = decorateBlock(highlighter.codeToHtml(instrumented, { ...shared, theme: THEMES.light }), 'light');
+    const darkRaw = decorateBlock(highlighter.codeToHtml(instrumented, { ...shared, theme: THEMES.dark }), 'dark');
     const light = applyLinkMarkers(lightRaw, markers);
     const dark = applyLinkMarkers(darkRaw, markers);
     return `<div class="shiki-theme-group">${light}${dark}</div>`;
@@ -293,21 +180,13 @@ export async function highlightToHtml(
     }
 }
 
-// shiki reads `extends` inside `<T extends X>` as a keyword only with a statement in front of it. a
-// `class _ {…}` wrap breaks multi-line type-param constraints.
+// shiki reads `extends` inside `<T extends X>` as a keyword only with a statement in front of it
 export async function highlightSignatureToHtml(code: string, links: readonly CodeLink[] = []): Promise<string | null> {
     if (!code) return '';
 
     try {
-        const FN_PREFIX = 'function ';
-        const wrapped = `${FN_PREFIX}${code} {}`;
-        const shifted: CodeLink[] = links.map((l) => ({
-            ...l,
-            start: l.start + FN_PREFIX.length,
-            end: l.end + FN_PREFIX.length
-        }));
-        const { code: instrumented, markers } = instrumentLinks(wrapped, shifted);
-        return await renderDual(instrumented, markers, 'ts', [stripFunctionWrap]);
+        const { code: instrumented, markers } = instrumentLinks(code, links);
+        return await renderDual(instrumented, markers, 'ts', [], 'function ');
     } catch {
         return null;
     }
@@ -318,53 +197,20 @@ export async function highlightMemberToHtml(code: string, links: readonly CodeLi
     if (!code) return '';
 
     try {
-        const PREFIX = 'class _ { ';
-        const wrapped = `${PREFIX}${code}; }`;
-        const shifted: CodeLink[] = links.map((l) => ({
-            ...l,
-            start: l.start + PREFIX.length,
-            end: l.end + PREFIX.length
-        }));
-        const { code: instrumented, markers } = instrumentLinks(wrapped, shifted);
-        return await renderDual(instrumented, markers, 'ts', [stripMemberWrap]);
+        const { code: instrumented, markers } = instrumentLinks(code, links);
+        return await renderDual(instrumented, markers, 'ts', [], 'class _ { ');
     } catch {
         return null;
     }
 }
 
 // `<X extends Y = Z>` only tokenizes inside real generic brackets
-const stripTypeParamWrap: ShikiTransformer = {
-    name: 'seedcord-strip-type-param-wrap',
-    code(codeEl) {
-        const root = codeEl as HastElement;
-        const lines = root.children.filter(isLineElement);
-        if (lines.length === 0) return;
-
-        const first = lines[0];
-        if (first) dropPrefix(first, 'type _<');
-
-        for (let i = lines.length - 1; i >= 0; i -= 1) {
-            const line = lines[i];
-            if (!line || line.children.length === 0) continue;
-            dropSuffix(line, '> = unknown;');
-            break;
-        }
-    }
-};
-
 export async function highlightTypeParamToHtml(code: string, links: readonly CodeLink[] = []): Promise<string | null> {
     if (!code) return '';
 
     try {
-        const PREFIX = 'type _<';
-        const wrapped = `${PREFIX}${code}> = unknown;`;
-        const shifted: CodeLink[] = links.map((l) => ({
-            ...l,
-            start: l.start + PREFIX.length,
-            end: l.end + PREFIX.length
-        }));
-        const { code: instrumented, markers } = instrumentLinks(wrapped, shifted);
-        return await renderDual(instrumented, markers, 'ts', [stripTypeParamWrap]);
+        const { code: instrumented, markers } = instrumentLinks(code, links);
+        return await renderDual(instrumented, markers, 'ts', [], 'type _<');
     } catch {
         return null;
     }
