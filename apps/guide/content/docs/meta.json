@@ -1,4 +1,14 @@
 {
     "title": "Start",
-    "pages": ["index", "commands", "replying", "components", "events", "gates", "plugins", "tooling"]
+    "pages": [
+        "index",
+        "commands",
+        "replying",
+        "throwing",
+        "components",
+        "events",
+        "gates",
+        "plugins",
+        "tooling"
+    ]
 }
