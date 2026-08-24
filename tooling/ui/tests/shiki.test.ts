@@ -31,10 +31,13 @@ function lightText(html: string): string {
     return textOf(/<pre class="shiki shiki-light[\s\S]*?<\/pre>/.exec(html)?.[0] ?? '');
 }
 
-const ANCHOR_RE = /<a href="([^"]*)"([^>]*)>/g;
+// hast decides the attribute order
+const ANCHOR_RE = /<a\s([^>]*)>/g;
 
 function attrsFor(html: string, href: string): string[] {
-    return [...html.matchAll(ANCHOR_RE)].filter((match) => match[1] === href).map((match) => match[2] ?? '');
+    return [...html.matchAll(ANCHOR_RE)]
+        .map((match) => match[1] ?? '')
+        .filter((attrs) => attrs.includes(`href="${href}"`));
 }
 
 describe('highlightToHtml', () => {
@@ -125,7 +128,7 @@ describe('highlightToHtml', () => {
 });
 
 function anchorTextFor(html: string, href: string): string | null {
-    const match = new RegExp(String.raw`<a href="${href}"[^>]*>([\s\S]*?)</a>`).exec(html);
+    const match = new RegExp(String.raw`<a\s[^>]*href="${href}"[^>]*>([\s\S]*?)</a>`).exec(html);
 
     return match ? textOf(match[1] ?? '') : null;
 }
