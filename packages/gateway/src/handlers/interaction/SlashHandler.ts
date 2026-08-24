@@ -6,11 +6,11 @@ import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
-import type { SlashOptionRegistry } from '@seedcord/core';
+import type { CacheFor, SlashRegistry } from '@seedcord/core';
 import type { CacheType, ChatInputCommandInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
-type SlashMatchArms<Route extends keyof SlashOptionRegistry, Cache extends CacheType, Ret> = {
+type SlashMatchArms<Route extends keyof SlashRegistry, Cache extends CacheType, Ret> = {
     [Key in Route]: (options: SlashOptions<Key, Cache>) => Promisable<Ret>;
 };
 
@@ -21,8 +21,8 @@ type SlashMatchArms<Route extends keyof SlashOptionRegistry, Cache extends Cache
  * `this.options` for a single command or `this.match` for several. Command authoring stays plain
  * discord.js, `seedcord codegen` reads its `toJSON()` to type these options.
  *
- * @typeParam Route - One or more route keys from {@link SlashOptionRegistry}, e.g. `'ban'` or `'ban' | 'kick'`.
- * @typeParam Cache - The interaction cache state, `'cached'` by default.
+ * @typeParam Route - One or more route keys from {@link SlashRegistry}, e.g. `'ban'` or `'ban' | 'kick'`.
+ * @typeParam Cache - The interaction cache state. The command's contexts set it.
  *
  * @example
  * ```ts
@@ -36,8 +36,8 @@ type SlashMatchArms<Route extends keyof SlashOptionRegistry, Cache extends Cache
  * ```
  */
 export abstract class SlashHandler<
-    Route extends keyof SlashOptionRegistry,
-    Cache extends CacheType = 'cached'
+    Route extends keyof SlashRegistry,
+    Cache extends CacheType = CacheFor<Route>
 > extends InteractionHandler<ChatInputCommandInteraction<Cache>> {
     // phantom, never set at runtime.
     /** @internal */

@@ -1,8 +1,8 @@
-import { ContextMenuKindBrand } from '@seedcord/core/internal';
+import { ContextMenuKindBrand, ContextMenuNamesBrand } from '@seedcord/core/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
-import type { ContextMenuKind } from '@seedcord/core';
+import type { MenuCacheFor, NamesFor } from '@seedcord/core';
 import type {
     APIInteractionGuildMember,
     ApplicationCommandType,
@@ -16,60 +16,74 @@ import type {
     UserContextMenuCommandInteraction
 } from 'discord.js';
 
-type InteractionFor<Kind extends ContextMenuKind, Cache extends CacheType> = Kind extends ApplicationCommandType.User
-    ? UserContextMenuCommandInteraction<Cache>
-    : MessageContextMenuCommandInteraction<Cache>;
-
-type TargetFor<Kind extends ContextMenuKind, Cache extends CacheType> = Kind extends ApplicationCommandType.User
-    ? User
-    : Message<BooleanCache<Cache>>;
-
-type TargetMemberFor<Kind extends ContextMenuKind, Cache extends CacheType> = Kind extends ApplicationCommandType.User
-    ? CacheTypeReducer<Cache, GuildMember, APIInteractionGuildMember> | null
-    : never;
-
 /**
- * Base class for a context-menu command handler (right-click a user or a message).
+ * Base class for a user context-menu command handler (right-click a user).
  *
- * Pass the kind from `discord.js`'s {@link ApplicationCommandType} as the generic, the same value as
- * `@ContextMenuRoute`. Read the right-clicked entity from `this.target`, a `User` for a user menu and a
- * `Message` for a message menu. Context menus carry no options, so a handler registered for several names
- * reads `this.target` uniformly with no per-name branch.
+ * Pass the command name(s) as the generic, the same as `@UserContextMenuRoute`. Read the right-clicked
+ * user from `this.target` and that same user's guild member from `this.targetMember`.
  *
- * @typeParam Kind - `ApplicationCommandType.User` or `ApplicationCommandType.Message`.
- * @typeParam Cache - The interaction cache state, `'cached'` by default.
+ * @typeParam Names - One or more command names from the generated user registry.
+ * @typeParam Cache - The interaction cache state. The command's contexts set it.
  *
  * @example
  * ```ts
- * \@ContextMenuRoute(ApplicationCommandType.Message, 'Report Message')
- * class ReportMessage extends ContextMenuHandler<ApplicationCommandType.Message> {
+ * \@UserContextMenuRoute('View Profile')
+ * class ViewProfile extends UserContextMenuHandler<'View Profile'> {
+ *     async execute() {
+ *         const user = this.target;
+ *     }
+ * }
+ * ```
+ */
+export abstract class UserContextMenuHandler<
+    Names extends NamesFor<ApplicationCommandType.User>,
+    Cache extends CacheType = MenuCacheFor<ApplicationCommandType.User, Names>
+> extends InteractionHandler<UserContextMenuCommandInteraction<Cache>> {
+    // phantom, nothing reads them. they keep the kind and the names on the instance type
+    /** @internal */
+    declare readonly [ContextMenuKindBrand]?: ApplicationCommandType.User;
+    /** @internal */
+    declare readonly [ContextMenuNamesBrand]?: Names;
+
+    protected get target(): User {
+        return this.event.targetUser;
+    }
+
+    /** The right-clicked user's guild member, null outside a guild. */
+    protected get targetMember(): CacheTypeReducer<Cache, GuildMember, APIInteractionGuildMember> | null {
+        return this.event.targetMember;
+    }
+}
+
+/**
+ * Base class for a message context-menu command handler (right-click a message).
+ *
+ * Pass the command name(s) as the generic, the same as `@MessageContextMenuRoute`. Read the right-clicked
+ * message from `this.target`.
+ *
+ * @typeParam Names - One or more command names from the generated message registry.
+ * @typeParam Cache - The interaction cache state. The command's contexts set it.
+ *
+ * @example
+ * ```ts
+ * \@MessageContextMenuRoute('Report Message')
+ * class ReportMessage extends MessageContextMenuHandler<'Report Message'> {
  *     async execute() {
  *         const message = this.target;
  *     }
  * }
  * ```
  */
-export abstract class ContextMenuHandler<
-    Kind extends ContextMenuKind,
-    Cache extends CacheType = 'cached'
-> extends InteractionHandler<InteractionFor<Kind, Cache>> {
-    // phantom, nothing reads it. it keeps Kind on the instance type
+export abstract class MessageContextMenuHandler<
+    Names extends NamesFor<ApplicationCommandType.Message>,
+    Cache extends CacheType = MenuCacheFor<ApplicationCommandType.Message, Names>
+> extends InteractionHandler<MessageContextMenuCommandInteraction<Cache>> {
     /** @internal */
-    declare readonly [ContextMenuKindBrand]?: Kind;
+    declare readonly [ContextMenuKindBrand]?: ApplicationCommandType.Message;
+    /** @internal */
+    declare readonly [ContextMenuNamesBrand]?: Names;
 
-    protected get target(): TargetFor<Kind, Cache> {
-        // justified: the Kind generic decides which interaction member is live, both narrow to TargetFor.
-        const event = this.event;
-        const target = 'targetUser' in event ? event.targetUser : event.targetMessage;
-        return target as TargetFor<Kind, Cache>;
-    }
-
-    /**
-     * The invoking guild member, resolved only on user menus. Reading it on a message menu is a compile
-     * error since the type is `never` there.
-     */
-    protected get targetMember(): TargetMemberFor<Kind, Cache> {
-        // justified: only the User-kind event carries targetMember, the Message-kind read is unreachable per the type.
-        return (this.event as UserContextMenuCommandInteraction<Cache>).targetMember as TargetMemberFor<Kind, Cache>;
+    protected get target(): Message<BooleanCache<Cache>> {
+        return this.event.targetMessage;
     }
 }

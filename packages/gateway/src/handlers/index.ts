@@ -2,12 +2,13 @@ export {
     AutocompleteHandler,
     ButtonHandler,
     ComponentHandler,
-    ContextMenuHandler,
+    MessageContextMenuHandler,
     InteractionHandler,
     InteractionMiddleware,
     ModalHandler,
     SelectMenuHandler,
-    SlashHandler
+    SlashHandler,
+    UserContextMenuHandler
 } from './interaction';
 export { EventHandler, EventMiddleware } from './event';
 export { BaseHandler } from './BaseHandler';

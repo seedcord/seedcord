@@ -11,24 +11,36 @@ import type {
 
 // functions are typechecked and never run
 declare module '@seedcord/core' {
-    interface SlashOptionRegistry {
+    interface SlashRegistry {
         httpPurge: {
-            who: { kind: 'user'; required: true };
-            what: { kind: 'role'; required: true };
-            anyone: { kind: 'mentionable'; required: true };
-            file: { kind: 'attachment'; required: true };
-            label: { kind: 'string'; required: false };
+            options: {
+                who: { kind: 'user'; required: true };
+                what: { kind: 'role'; required: true };
+                anyone: { kind: 'mentionable'; required: true };
+                file: { kind: 'attachment'; required: true };
+                label: { kind: 'string'; required: false };
+            };
+            cache: 'cached';
         };
         httpAudit: {
-            mode: { kind: 'string'; required: true; choices: ['fast', 'deep'] };
+            options: {
+                mode: { kind: 'string'; required: true; choices: ['fast', 'deep'] };
+            };
+            cache: 'cached';
         };
         httpMove: {
-            dest: { kind: 'channel'; required: true; channelTypes: [0] };
-            hall: { kind: 'channel'; required: false; channelTypes: [0, 5] };
-            thread: { kind: 'channel'; required: true; channelTypes: [11] };
+            options: {
+                dest: { kind: 'channel'; required: true; channelTypes: [0] };
+                hall: { kind: 'channel'; required: false; channelTypes: [0, 5] };
+                thread: { kind: 'channel'; required: true; channelTypes: [11] };
+            };
+            cache: 'cached';
         };
         httpFlag: {
-            reason: { kind: 'string'; required: true };
+            options: {
+                reason: { kind: 'string'; required: true };
+            };
+            cache: 'cached';
         };
     }
 }

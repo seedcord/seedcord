@@ -1,12 +1,12 @@
 declare module '@seedcord/core' {
-    interface SlashOptionRegistry {
+    interface SlashRegistry {
         ping: Record<never, never>;
-        'config/set': { value: { kind: 'string'; required: true } };
-        ban: { user: { kind: 'user'; required: true } };
+        'config/set': { options: { value: { kind: 'string'; required: true } }; cache: 'cached' };
+        ban: { options: { user: { kind: 'user'; required: true } }; cache: 'cached' };
     }
 
     interface UserContextMenuRegistry {
-        'User Info': true;
+        'User Info': { cache: 'cached' };
     }
 }
 

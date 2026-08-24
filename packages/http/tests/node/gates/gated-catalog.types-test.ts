@@ -16,15 +16,13 @@ import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
 import { SelectMenuHandler } from '#handlers/interaction/components/SelectMenuHandler';
-import { ContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
+import { UserContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { Gated } from '#src/gates/Gated';
 
-import type { ApplicationCommandType } from 'discord-api-types/v10';
-
 declare module '@seedcord/core' {
-    interface SlashOptionRegistry {
-        httpgateprobe: { note: { kind: 'string'; required: false } };
+    interface SlashRegistry {
+        httpgateprobe: { options: { note: { kind: 'string'; required: false } }; cache: 'cached' };
     }
 }
 
@@ -76,7 +74,7 @@ class AttachesRequireBotPermissions extends ModalHandler<[typeof ModalProbeId]> 
 void AttachesRequireBotPermissions;
 
 @Gated(GuildOnly())
-class AttachesCoreGateContextMenu extends ContextMenuHandler<ApplicationCommandType.User> {
+class AttachesCoreGateContextMenu extends UserContextMenuHandler<never> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }

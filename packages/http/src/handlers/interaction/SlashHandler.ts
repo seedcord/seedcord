@@ -7,11 +7,11 @@ import { HttpSlashOptions } from '#inputs/HttpSlashOptions';
 import { slashRouteOf } from '#src/dispatch/slashRouteOf';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
-import type { SlashOptionRegistry } from '@seedcord/core';
+import type { SlashRegistry } from '@seedcord/core';
 import type { APIChatInputApplicationCommandInteraction } from 'discord-api-types/v10';
 import type { Promisable } from 'type-fest';
 
-type SlashMatchArms<Route extends keyof SlashOptionRegistry, Ret> = {
+type SlashMatchArms<Route extends keyof SlashRegistry, Ret> = {
     [Key in Route]: (options: SlashOptions<Key>) => Promisable<Ret>;
 };
 
@@ -22,10 +22,10 @@ type SlashMatchArms<Route extends keyof SlashOptionRegistry, Ret> = {
  * command or `this.match` for several. Command authoring stays plain discord.js, `seedcord codegen`
  * reads its `toJSON()` to type these options.
  *
- * @typeParam Route - One or more route keys from {@link SlashOptionRegistry}, e.g. `'ban'` or `'ban' | 'kick'`.
+ * @typeParam Route - One or more route keys from {@link SlashRegistry}, e.g. `'ban'` or `'ban' | 'kick'`.
  */
 export abstract class SlashHandler<
-    Route extends keyof SlashOptionRegistry
+    Route extends keyof SlashRegistry
 > extends InteractionHandler<APIChatInputApplicationCommandInteraction> {
     // phantom, never set at runtime.
     /** @internal */

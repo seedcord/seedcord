@@ -1,4 +1,3 @@
-import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
 import { CustomId } from '#customId/CustomId';
@@ -8,13 +7,15 @@ import {
     ComponentDefsBrand,
     ComponentKindBrand,
     ContextMenuKindBrand,
+    ContextMenuNamesBrand,
     SlashRouteBrand
 } from '#decorators/brands';
 import { SelectMenuKind } from '#decorators/interactionRoutes';
 import {
     AutocompleteRoute,
     ButtonRoute,
-    ContextMenuRoute,
+    MessageContextMenuRoute,
+    UserContextMenuRoute,
     ModalRoute,
     SelectMenuRoute,
     SlashRoute
@@ -23,13 +24,14 @@ import { InteractionRouteKeys, InteractionRoutes } from '#src/metadataKeys';
 
 import type { AnyCustomId } from '#customId/CustomId';
 import type { HasComponentDefs } from '#customId/routing';
-import type { SlashOptionRegistry } from '#registries/SlashOptionRegistry';
+import type { SlashRegistry } from '#registries/SlashRegistry';
+import type { ApplicationCommandType } from 'discord-api-types/v10';
 
-declare module '#registries/SlashOptionRegistry' {
-    interface SlashOptionRegistry {
-        rtBan: { target: { kind: 'user'; required: true } };
-        rtKick: { note: { kind: 'string'; required: false } };
-        rtFind: { query: { kind: 'string'; required: true; autocomplete: true } };
+declare module '#registries/SlashRegistry' {
+    interface SlashRegistry {
+        rtBan: { options: { target: { kind: 'user'; required: true } }; cache: 'cached' };
+        rtKick: { options: { note: { kind: 'string'; required: false } }; cache: 'cached' };
+        rtFind: { options: { query: { kind: 'string'; required: true; autocomplete: true } }; cache: 'cached' };
     }
 }
 
@@ -43,16 +45,20 @@ declare module '#registries/ContextMenuRegistry' {
 }
 
 // stub branded bases, the shape both transports' handler bases carry
-abstract class SlashBase<Route extends keyof SlashOptionRegistry> {
+abstract class SlashBase<Route extends keyof SlashRegistry> {
     declare readonly [SlashRouteBrand]?: Route;
     abstract execute(): Promise<void>;
 }
-abstract class AutocompleteBase<Route extends keyof SlashOptionRegistry> {
+abstract class AutocompleteBase<Route extends keyof SlashRegistry> {
     declare readonly [AutocompleteRouteBrand]?: Route;
     abstract execute(): Promise<void>;
 }
-abstract class ContextMenuBase<Kind extends ApplicationCommandType.User | ApplicationCommandType.Message> {
+abstract class ContextMenuBase<
+    Kind extends ApplicationCommandType.User | ApplicationCommandType.Message,
+    Names extends string
+> {
     declare readonly [ContextMenuKindBrand]?: Kind;
+    declare readonly [ContextMenuNamesBrand]?: Names;
     abstract execute(): Promise<void>;
 }
 abstract class ComponentBase<
@@ -90,8 +96,8 @@ class RejectsMismatchesAtCompile3 extends AutocompleteBase<'rtFind'> {
 }
 
 // @ts-expect-error the kind does not match the handler generic
-@ContextMenuRoute(ApplicationCommandType.Message, 'Report Message')
-class RejectsMismatchesAtCompile4 extends ContextMenuBase<ApplicationCommandType.User> {
+@MessageContextMenuRoute('Report Message')
+class RejectsMismatchesAtCompile4 extends ContextMenuBase<ApplicationCommandType.User, 'Report Message'> {
     async execute(): Promise<void> {}
 }
 
@@ -139,8 +145,8 @@ describe('route metadata writes', () => {
     });
 
     it('ContextMenuRoute stores the names under the kind key', () => {
-        @ContextMenuRoute(ApplicationCommandType.User, 'View Profile')
-        class Profile extends ContextMenuBase<ApplicationCommandType.User> {
+        @UserContextMenuRoute('View Profile')
+        class Profile extends ContextMenuBase<ApplicationCommandType.User, 'View Profile'> {
             async execute(): Promise<void> {}
         }
         expect(routes(InteractionRoutes.UserContextMenu, Profile)).toEqual(['View Profile']);

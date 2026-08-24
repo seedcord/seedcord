@@ -1,7 +1,7 @@
 // mirrors what mocks/gateway and mocks/http declare in their src/seedcord-gen.d.ts
 const REGISTRIES = `
-    interface SlashOptionRegistry {
-        ping: { detailed: { kind: 'boolean'; required: false } };
+    interface SlashRegistry {
+        ping: { options: { detailed: { kind: 'boolean'; required: false } }; cache: 'cached' };
     }
 `;
 

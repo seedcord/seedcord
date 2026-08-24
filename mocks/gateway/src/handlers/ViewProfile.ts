@@ -1,6 +1,5 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { ContextMenuHandler, ContextMenuRoute, Cooldown, Gated, Notice } from '@seedcord/gateway';
-import { ApplicationCommandType } from 'discord.js';
+import { UserContextMenuHandler, UserContextMenuRoute, Cooldown, Gated, Notice } from '@seedcord/gateway';
 
 import type { ReplyResponse } from '@seedcord/gateway';
 
@@ -18,8 +17,8 @@ class ProfileCooldown extends Notice {
 }
 
 @Gated(Cooldown('1m', { limit: 2, notice: (resetAt) => new ProfileCooldown(resetAt) }))
-@ContextMenuRoute(ApplicationCommandType.User, 'View Profile')
-export class ViewProfile extends ContextMenuHandler<ApplicationCommandType.User> {
+@UserContextMenuRoute('View Profile')
+export class ViewProfile extends UserContextMenuHandler<'View Profile'> {
     public async execute(): Promise<void> {
         const user = this.target;
 

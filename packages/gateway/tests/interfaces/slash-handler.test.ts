@@ -12,12 +12,21 @@ import type { ChatInputCommandInteraction, CommandInteractionOption, User } from
 // mistake below fails the build if it stops being a compile error. Distinct routes from typed-options.test.ts
 // avoid a duplicate registry augmentation.
 declare module '@seedcord/core' {
-    interface SlashOptionRegistry {
-        kick: { member: { kind: 'user'; required: true } };
-        warn: { user: { kind: 'user'; required: true }; reason: { kind: 'string'; required: false } };
-        mute: { target: { kind: 'user'; required: true }; minutes: { kind: 'integer'; required: true } };
-        note: { target: { kind: 'user'; required: true }; text: { kind: 'string'; required: true } };
-        'demo/setup': { channel: { kind: 'channel'; required: true } };
+    interface SlashRegistry {
+        kick: { options: { member: { kind: 'user'; required: true } }; cache: 'cached' };
+        warn: {
+            options: { user: { kind: 'user'; required: true }; reason: { kind: 'string'; required: false } };
+            cache: 'cached';
+        };
+        mute: {
+            options: { target: { kind: 'user'; required: true }; minutes: { kind: 'integer'; required: true } };
+            cache: 'cached';
+        };
+        note: {
+            options: { target: { kind: 'user'; required: true }; text: { kind: 'string'; required: true } };
+            cache: 'cached';
+        };
+        'demo/setup': { options: { channel: { kind: 'channel'; required: true } }; cache: 'cached' };
     }
 }
 
@@ -168,7 +177,7 @@ class SubcommandHandler extends SlashHandler<'demo/setup'> {
 }
 
 // the decorator only accepts registered routes, the keyof constraint that also drives route autocomplete
-// @ts-expect-error 'ghost' is not a key of SlashOptionRegistry.
+// @ts-expect-error 'ghost' is not a key of SlashRegistry.
 @SlashRoute('ghost')
 class UnknownDecoratorRoute extends SlashHandler<'kick'> {
     async execute(): Promise<void> {
@@ -177,7 +186,7 @@ class UnknownDecoratorRoute extends SlashHandler<'kick'> {
 }
 
 // the SlashHandler generic itself is constrained to registered routes
-// @ts-expect-error 'ghost' is not a key of SlashOptionRegistry.
+// @ts-expect-error 'ghost' is not a key of SlashRegistry.
 class UnknownGenericRoute extends SlashHandler<'ghost'> {
     async execute(): Promise<void> {
         await Promise.resolve();

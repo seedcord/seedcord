@@ -183,7 +183,7 @@ describe('CodegenRunner', () => {
         await makeRunner(root, silentLogger()).run(false);
 
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
-        expect(written).toContain('interface SlashOptionRegistry {\n\n    }');
+        expect(written).toContain('interface SlashRegistry {\n\n    }');
         expect(written).not.toContain('kind:');
     });
 
@@ -205,7 +205,7 @@ describe('CodegenRunner', () => {
         await scanRunner(root, cmdDir, () => ({ BanCommand, NotACommand, NOT_A_FUNCTION }), silentLogger()).run(false);
 
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
-        expect(written).toContain('ban: {}');
+        expect(written).toContain('ban: { options: {}; cache: undefined }');
     });
 
     it('scans a command once when a barrel re-exports it, instead of throwing a duplicate route', async () => {
@@ -221,7 +221,7 @@ describe('CodegenRunner', () => {
         await scanRunner(root, cmdDir, () => ({ BanCommand }), silentLogger()).run(false);
 
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
-        expect(written).toContain('ban: {}');
+        expect(written).toContain('ban: { options: {}; cache: undefined }');
     });
 
     it('throws CliCodegenCommandsDirUnreadable when the top-level commands dir is unreadable', async () => {
@@ -264,7 +264,7 @@ describe('CodegenRunner', () => {
         }
 
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
-        expect(written).toContain('ban: {}');
+        expect(written).toContain('ban: { options: {}; cache: undefined }');
         expect(warnings.some((warning) => warning.includes('locked'))).toBe(true);
     });
 
@@ -332,8 +332,12 @@ describe('CodegenRunner', () => {
         await scanRunner(root, cmdDir, () => ({ BanCommand, ViewProfile, ReportMessage }), silentLogger()).run(false);
 
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
-        expect(written).toContain('ban: {}');
-        expect(written).toContain("    interface UserContextMenuRegistry {\n        'View Profile': true;\n    }");
-        expect(written).toContain("    interface MessageContextMenuRegistry {\n        'Report Message': true;\n    }");
+        expect(written).toContain('ban: { options: {}; cache: undefined }');
+        expect(written).toContain(
+            "    interface UserContextMenuRegistry {\n        'View Profile': { cache: undefined };\n    }"
+        );
+        expect(written).toContain(
+            "    interface MessageContextMenuRegistry {\n        'Report Message': { cache: undefined };\n    }"
+        );
     });
 });

@@ -12,7 +12,7 @@ import type {
     MessageContextMenuRegistry,
     UserContextMenuRegistry
 } from '#registries/ContextMenuRegistry';
-import type { SlashOptionRegistry } from '#registries/SlashOptionRegistry';
+import type { SlashRegistry } from '#registries/SlashRegistry';
 import type { CommandBuilder, DeployResult } from '#src/commands/types';
 import type { APIApplicationCommand, Snowflake } from 'discord-api-types/v10';
 
@@ -34,11 +34,11 @@ export interface CommandInfo {
 
 /** Each registered slash route mapped to its deployed command. */
 export type InjectedCommandMap = {
-    [K in keyof SlashOptionRegistry]: CommandInfo;
+    [K in keyof SlashRegistry]: CommandInfo;
 };
 
 /**
- * The bot's deployed slash commands, keyed by {@link SlashOptionRegistry}. Filled by
+ * The bot's deployed slash commands, keyed by {@link SlashRegistry}. Filled by
  * {@link CommandInjector} after each deploy, and a read before that throws.
  *
  * @example

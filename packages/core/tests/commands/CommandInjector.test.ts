@@ -8,7 +8,7 @@ import { CommandInjector, Commands, ContextMenus } from '#src/commands/CommandIn
 import type { CommandInfo, ContextMenuInfo } from '#src/commands/CommandInjector';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
-// justified: SlashOptionRegistry is empty in tests, so runtime values read through a plain record
+// justified: SlashRegistry is empty in tests, so runtime values read through a plain record
 const commands = Commands as Record<string, CommandInfo>;
 const mentionOf = (route: string): string => commands[route]!.mention;
 

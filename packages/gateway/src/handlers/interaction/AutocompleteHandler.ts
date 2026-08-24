@@ -6,12 +6,12 @@ import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
 import { BaseHandler } from '#src/handlers/BaseHandler';
 
 import type { Core } from '#interfaces/Core';
-import type { AutocompleteOptions, DispatchContext, SlashOptionRegistry } from '@seedcord/core';
+import type { AutocompleteOptions, CacheFor, DispatchContext, SlashRegistry } from '@seedcord/core';
 import type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
 import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction, CacheType } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
-type FocusedArms<Route extends keyof SlashOptionRegistry, Ret> = {
+type FocusedArms<Route extends keyof SlashRegistry, Ret> = {
     [Name in AutocompletableNames<Route>]: (
         value: string,
         respond: (
@@ -27,8 +27,8 @@ type FocusedArms<Route extends keyof SlashOptionRegistry, Ret> = {
  * `@AutocompleteRoute`. Branch on the focused field with `this.match`, read already-entered sibling options
  * with `this.options`, and find which command fired with `this.route`.
  *
- * @typeParam Route - One or more route keys from {@link SlashOptionRegistry}, e.g. `'search'` or `'search' | 'find'`.
- * @typeParam Cache - The interaction cache state, `'cached'` by default.
+ * @typeParam Route - One or more route keys from {@link SlashRegistry}, e.g. `'search'` or `'search' | 'find'`.
+ * @typeParam Cache - The interaction cache state. The command's contexts set it.
  *
  * @example
  * ```ts
@@ -43,8 +43,8 @@ type FocusedArms<Route extends keyof SlashOptionRegistry, Ret> = {
  * ```
  */
 export abstract class AutocompleteHandler<
-    Route extends keyof SlashOptionRegistry,
-    Cache extends CacheType = 'cached'
+    Route extends keyof SlashRegistry,
+    Cache extends CacheType = CacheFor<Route>
 > extends BaseHandler<AutocompleteInteraction<Cache>> {
     // phantom, never set at runtime.
     /** @internal */

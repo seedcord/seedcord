@@ -324,7 +324,7 @@ describe('the twoslash transformer', () => {
         );
         const popup = /<code class="twoslash-popup-code">([\s\S]*?)<\/code>/.exec(html)?.[1] ?? '';
 
-        expect(popup.replaceAll(/<[^>]+>/g, '')).toContain('Route extends keyof SlashOptionRegistry,\n');
+        expect(popup.replaceAll(/<[^>]+>/g, '')).toContain('Route extends keyof SlashRegistry,\n');
     });
 
     it('marks a highlighted run', async () => {

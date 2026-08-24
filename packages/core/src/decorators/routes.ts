@@ -1,3 +1,5 @@
+import { ApplicationCommandType } from 'discord-api-types/v10';
+
 import {
     contextMenuRouteOf,
     selectMenuRouteOf,
@@ -8,20 +10,16 @@ import { InteractionRoutes } from '#src/metadataKeys';
 
 import type { AnyCustomId } from '#customId/CustomId';
 import type { SelectMenuKind } from '#decorators/interactionRoutes';
-import type {
-    ContextMenuKind,
-    MessageContextMenuRegistry,
-    UserContextMenuRegistry
-} from '#registries/ContextMenuRegistry';
-import type { SlashOptionRegistry } from '#registries/SlashOptionRegistry';
+import type { ContextMenuKind, NamesFor } from '#registries/ContextMenuRegistry';
+import type { SlashRegistry } from '#registries/SlashRegistry';
 import type {
     AutocompleteRouteBrand,
     ComponentDefsBrand,
     ComponentKindBrand,
     ContextMenuKindBrand,
+    ContextMenuNamesBrand,
     SlashRouteBrand
 } from './brands';
-import type { ApplicationCommandType } from 'discord-api-types/v10';
 import type { Constructor } from 'type-fest';
 
 type ComponentBrand = 'button' | 'modal' | SelectMenuKind;
@@ -31,14 +29,14 @@ type AnyHandlerCtor = new (...args: any[]) => unknown;
 
 type SlashRouteOf<TCtor extends AnyHandlerCtor> =
     InstanceType<TCtor> extends {
-        [SlashRouteBrand]?: infer Route extends keyof SlashOptionRegistry;
+        [SlashRouteBrand]?: infer Route extends keyof SlashRegistry;
     }
         ? Route
         : never;
 
 type AutocompleteRouteOf<TCtor extends AnyHandlerCtor> =
     InstanceType<TCtor> extends {
-        [AutocompleteRouteBrand]?: infer Route extends keyof SlashOptionRegistry;
+        [AutocompleteRouteBrand]?: infer Route extends keyof SlashRegistry;
     }
         ? Route
         : never;
@@ -48,6 +46,13 @@ type ContextMenuKindOf<TCtor extends AnyHandlerCtor> =
         [ContextMenuKindBrand]?: infer Kind extends ContextMenuKind;
     }
         ? Kind
+        : never;
+
+type ContextMenuNamesOf<TCtor extends AnyHandlerCtor> =
+    InstanceType<TCtor> extends {
+        [ContextMenuNamesBrand]?: infer Names;
+    }
+        ? Names
         : never;
 
 type ComponentOf<TCtor extends AnyHandlerCtor> =
@@ -64,7 +69,7 @@ type DefsOf<TCtor extends AnyHandlerCtor> =
         ? Defs
         : never;
 
-type AssertSlashRoute<Route extends keyof SlashOptionRegistry, TCtor extends AnyHandlerCtor> = [Route] extends [
+type AssertSlashRoute<Route extends keyof SlashRegistry, TCtor extends AnyHandlerCtor> = [Route] extends [
     SlashRouteOf<TCtor>
 ]
     ? [SlashRouteOf<TCtor>] extends [Route]
@@ -72,7 +77,7 @@ type AssertSlashRoute<Route extends keyof SlashOptionRegistry, TCtor extends Any
         : Constructor<['SlashHandler declares a route the SlashRoute decorator does not list', SlashRouteOf<TCtor>]>
     : Constructor<['SlashRoute does not match the SlashHandler generic', Route]>;
 
-type AssertAutocompleteRoute<Route extends keyof SlashOptionRegistry, TCtor extends AnyHandlerCtor> = [Route] extends [
+type AssertAutocompleteRoute<Route extends keyof SlashRegistry, TCtor extends AnyHandlerCtor> = [Route] extends [
     AutocompleteRouteOf<TCtor>
 ]
     ? [AutocompleteRouteOf<TCtor>] extends [Route]
@@ -85,11 +90,22 @@ type AssertAutocompleteRoute<Route extends keyof SlashOptionRegistry, TCtor exte
           >
     : Constructor<['AutocompleteRoute does not match the AutocompleteHandler generic', Route]>;
 
-type AssertContextMenuRoute<Kind extends ContextMenuKind, TCtor extends AnyHandlerCtor> = [Kind] extends [
-    ContextMenuKindOf<TCtor>
-]
+type AssertContextMenuRoute<
+    Kind extends ContextMenuKind,
+    Names extends NamesFor<Kind>,
+    TCtor extends AnyHandlerCtor
+> = [Kind] extends [ContextMenuKindOf<TCtor>]
     ? [ContextMenuKindOf<TCtor>] extends [Kind]
-        ? TCtor
+        ? [Names] extends [ContextMenuNamesOf<TCtor>]
+            ? [ContextMenuNamesOf<TCtor>] extends [Names]
+                ? TCtor
+                : Constructor<
+                      [
+                          'ContextMenuHandler declares a name the ContextMenuRoute decorator does not list',
+                          ContextMenuNamesOf<TCtor>
+                      ]
+                  >
+            : Constructor<['ContextMenuRoute lists a name the ContextMenuHandler generic does not declare', Names]>
         : Constructor<
               [
                   'ContextMenuHandler declares a kind the ContextMenuRoute decorator does not match',
@@ -111,10 +127,6 @@ type AssertComponentRoute<
         : Constructor<['the decorator does not match the handler kind', ComponentOf<TCtor>]>
     : Constructor<['the decorator does not match the handler kind', ComponentOf<TCtor>]>;
 
-type NamesFor<Kind extends ContextMenuKind> = Kind extends ApplicationCommandType.User
-    ? keyof UserContextMenuRegistry
-    : keyof MessageContextMenuRegistry;
-
 /**
  * Routes one or more slash commands to a `SlashHandler`.
  *
@@ -134,7 +146,7 @@ type NamesFor<Kind extends ContextMenuKind> = Kind extends ApplicationCommandTyp
  * }
  * ```
  */
-export function SlashRoute<const Route extends keyof SlashOptionRegistry>(...routes: Route[]) {
+export function SlashRoute<const Route extends keyof SlashRegistry>(...routes: Route[]) {
     return function <TCtor extends AnyHandlerCtor>(constructor: AssertSlashRoute<Route, TCtor>): void {
         storeInteractionRoute(InteractionRoutes.Slash, routes, constructor);
     };
@@ -160,36 +172,63 @@ export function SlashRoute<const Route extends keyof SlashOptionRegistry>(...rou
  * }
  * ```
  */
-export function AutocompleteRoute<const Route extends keyof SlashOptionRegistry>(...routes: Route[]) {
+export function AutocompleteRoute<const Route extends keyof SlashRegistry>(...routes: Route[]) {
     return function <TCtor extends AnyHandlerCtor>(constructor: AssertAutocompleteRoute<Route, TCtor>): void {
         storeInteractionRoute(InteractionRoutes.Autocomplete, routes, constructor);
     };
 }
 
 /**
- * Routes one or more context-menu commands to a `ContextMenuHandler`.
+ * Routes one or more user context-menu commands to a `UserContextMenuHandler`.
  *
- * Pass the kind (`ApplicationCommandType.User` or `ApplicationCommandType.Message`) and the command name(s),
- * each checked against that kind's registry. A typo there is a compile error. The handler's generic must
- * declare the same kind, cross-checked both directions. Context menus carry no options, so a multi-name
- * handler reads `this.target` uniformly with no branch.
+ * Every name is checked against the user registry. The handler's generic must declare the same names,
+ * checked in both directions.
  *
- * @param kind - The context-menu kind, `ApplicationCommandType.User` or `ApplicationCommandType.Message`.
- * @param names - The command name(s) this handler serves, keyed off the matching registry.
+ * @param names - The command name(s) this handler serves.
  * @decorator
  * @example
  * ```ts
- * \@ContextMenuRoute(ApplicationCommandType.User, 'View Profile')
- * class ViewProfile extends ContextMenuHandler<ApplicationCommandType.User> {
+ * \@UserContextMenuRoute('View Profile')
+ * class ViewProfile extends UserContextMenuHandler<'View Profile'> {
  *     async execute() {
  *         const user = this.target;
  *     }
  * }
  * ```
  */
-export function ContextMenuRoute<const Kind extends ContextMenuKind>(kind: Kind, ...names: NamesFor<Kind>[]) {
-    return function <TCtor extends AnyHandlerCtor>(constructor: AssertContextMenuRoute<Kind, TCtor>): void {
-        storeInteractionRoute(contextMenuRouteOf(kind), names, constructor);
+export function UserContextMenuRoute<const Names extends NamesFor<ApplicationCommandType.User>>(...names: Names[]) {
+    return function <TCtor extends AnyHandlerCtor>(
+        constructor: AssertContextMenuRoute<ApplicationCommandType.User, Names, TCtor>
+    ): void {
+        storeInteractionRoute(contextMenuRouteOf(ApplicationCommandType.User), names, constructor);
+    };
+}
+
+/**
+ * Routes one or more message context-menu commands to a `MessageContextMenuHandler`.
+ *
+ * Every name is checked against the message registry. The handler's generic must declare the same names,
+ * checked in both directions.
+ *
+ * @param names - The command name(s) this handler serves.
+ * @decorator
+ * @example
+ * ```ts
+ * \@MessageContextMenuRoute('Report Message')
+ * class ReportMessage extends MessageContextMenuHandler<'Report Message'> {
+ *     async execute() {
+ *         const message = this.target;
+ *     }
+ * }
+ * ```
+ */
+export function MessageContextMenuRoute<const Names extends NamesFor<ApplicationCommandType.Message>>(
+    ...names: Names[]
+) {
+    return function <TCtor extends AnyHandlerCtor>(
+        constructor: AssertContextMenuRoute<ApplicationCommandType.Message, Names, TCtor>
+    ): void {
+        storeInteractionRoute(contextMenuRouteOf(ApplicationCommandType.Message), names, constructor);
     };
 }
 
