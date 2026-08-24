@@ -8,8 +8,8 @@ const PERMANENT_REDIRECT = 308;
 // RFC 8288 discovery hints for agents
 const LINK_HEADER = '<https://docs.seedcord.org/>; rel="service-doc", <https://seedcord.org/>; rel="index"';
 
-// cloudflare serves the extension-less file next writes here with no content-type at all
-const ICON_PATH = '/icon';
+// cloudflare serves the extension-less files next writes here with no content-type at all
+const PNG_PATHS = new Set(['/icon', '/apple-icon']);
 
 const handler = {
     async fetch(request: Request, env: Env): Promise<Response> {
@@ -22,7 +22,7 @@ const handler = {
                 : asset;
 
         const response = new Response(normalized.body, normalized);
-        if (new URL(request.url).pathname === ICON_PATH) response.headers.set('Content-Type', 'image/png');
+        if (PNG_PATHS.has(new URL(request.url).pathname)) response.headers.set('Content-Type', 'image/png');
         if ((normalized.headers.get('content-type') ?? '').includes('text/html')) {
             response.headers.set('Link', LINK_HEADER);
         }
