@@ -133,17 +133,19 @@ export async function highlightTypeParamToHtml(code: string, links: readonly Cod
     }
 }
 
-const CODE_INNER_RE = /<code[^>]*>([\s\S]*?)<\/code>/;
-
 export async function highlightInlineToHtml(code: string, lang: BundledLanguage = 'ts'): Promise<string | null> {
     if (!code) return '';
 
     try {
-        const html = await render(code, [], lang);
-        const inner = html.match(CODE_INNER_RE);
-        if (!inner) return null;
+        const highlighter = await ensureHighlighter();
+        const tokens = highlighter.codeToHtml(code, {
+            lang,
+            themes: THEMES,
+            defaultColor: 'light-dark()',
+            structure: 'inline'
+        });
 
-        return `<code class="shiki-inline">${inner[1]}</code>`;
+        return `<code class="shiki-inline">${tokens}</code>`;
     } catch {
         return null;
     }

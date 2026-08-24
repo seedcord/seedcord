@@ -224,5 +224,6 @@ describe('highlightInlineToHtml', () => {
         expect(html).toContain('shiki-inline');
         expect(html).toMatch(/color:light-dark\(/);
         expect(html).not.toContain('<pre');
+        expect(html).not.toContain('class="line"');
     });
 });
