@@ -23,23 +23,21 @@ import type { NodeHover, Range } from 'twoslash-protocol';
 type HoverWithRef = NodeHover & { ref?: SymbolReference };
 
 // twoslashBlock compiles a fence itself to reach prettier, then hands the result to the transformer through here
-let previous: { key: string; data: TwoslashShikiReturn } | null = null;
+function oneEntryCache(): TwoslashTypesCache {
+    let previous: { key: string; data: TwoslashShikiReturn } | null = null;
+    // twoslash reports different errors for one sample under tsx
+    const keyFor = (code: string, lang: string | undefined): string => `${lang ?? ''} ${code}`;
 
-// twoslash reports different errors for one sample under tsx
-function cacheKey(code: string, lang: string | undefined): string {
-    return `${lang ?? ''} ${code}`;
+    return {
+        read: (code, lang) => (previous?.key === keyFor(code, lang) ? previous.data : null),
+        write: (code, data, lang) => {
+            previous = { key: keyFor(code, lang), data };
+        }
+    };
 }
 
-const typesCache: TwoslashTypesCache = {
-    read: (code, lang) => {
-        const key = cacheKey(code, lang);
-
-        return previous?.key === key ? previous.data : null;
-    },
-    write: (code, data, lang) => {
-        previous = { key: cacheKey(code, lang), data };
-    }
-};
+// one cache each, because a check compile reused for a hovers fence would render it bare
+const CACHE = { check: oneEntryCache(), hovers: oneEntryCache() };
 
 // the twoslasher and every renderer hook run sync. prettier only formats async
 const formatted = new Map<string, string>();
@@ -181,10 +179,15 @@ async function learnFormatting(nodes: TwoslashShikiReturn['nodes']): Promise<voi
     await Promise.all([...pending].map(([text, printed]) => printed.then((value) => void formatted.set(text, value))));
 }
 
-const TWOSLASH_OPTIONS = {
-    handbookOptions: { noStaticSemanticInfo: false },
+const BASE_OPTIONS = {
     compilerOptions: { experimentalDecorators: true, types: ['node'] },
     extraFiles: { 'seedcord-gen.d.ts': SAMPLE_AUGMENTATION }
+};
+
+// the hover sweep asks typescript for quick info on every identifier. it triples what a fence costs to compile
+const TWOSLASH_OPTIONS = {
+    check: { ...BASE_OPTIONS, handbookOptions: { noStaticSemanticInfo: true } },
+    hovers: { ...BASE_OPTIONS, handbookOptions: { noStaticSemanticInfo: false } }
 };
 
 // the transformer aliases the fence lang before it reads the cache. the pre-warm below writes it
@@ -193,17 +196,25 @@ const LANG_ALIAS: Record<string, string> = { typescript: 'ts' };
 const SHARED = {
     langs: ['ts', 'tsx'],
     langAlias: LANG_ALIAS,
-    typesCache,
-    twoslasher: dedenting,
-    twoslashOptions: TWOSLASH_OPTIONS
+    twoslasher: dedenting
 };
 
 // a hovered token carries its whole printed type into the markup
 const withoutHovers: TwoslashRenderer = { ...renderer, nodeStaticInfo: (_info, node) => node };
 
 const TRANSFORMER = {
-    check: transformerTwoslash({ ...SHARED, renderer: withoutHovers }),
-    hovers: transformerTwoslash({ ...SHARED, renderer })
+    check: transformerTwoslash({
+        ...SHARED,
+        renderer: withoutHovers,
+        typesCache: CACHE.check,
+        twoslashOptions: TWOSLASH_OPTIONS.check
+    }),
+    hovers: transformerTwoslash({
+        ...SHARED,
+        renderer,
+        typesCache: CACHE.hovers,
+        twoslashOptions: TWOSLASH_OPTIONS.hovers
+    })
 };
 
 export type FenceMode = 'off' | keyof typeof TRANSFORMER;
@@ -219,9 +230,9 @@ export async function twoslashBlock(code: string, lang: BundledLanguage, mode: F
     const extension = LANG_ALIAS[lang] ?? lang;
     try {
         // prettier has to finish before the sync renderer reads a hover
-        const compiled = dedenting(code, extension, TWOSLASH_OPTIONS);
+        const compiled = dedenting(code, extension, TWOSLASH_OPTIONS[mode]);
         await learnFormatting(compiled.nodes);
-        typesCache.write(code, compiled, extension);
+        CACHE[mode].write(code, compiled, extension);
 
         const options = { transformers: [TRANSFORMER[mode]], throwOnFailure: true };
 
