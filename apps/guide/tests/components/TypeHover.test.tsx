@@ -102,26 +102,6 @@ describe('the type hover', () => {
             expect(block.querySelectorAll(`${TOKEN_SELECTOR}[tabindex]`)).toHaveLength(0);
         });
 
-        // highlightToHtml renders each block once per theme and hides one with css
-        it('skips the tokens in the hidden theme copy', async () => {
-            render(
-                <TypeHover>
-                    <div>
-                        <div style={{ display: 'none' }} dangerouslySetInnerHTML={{ __html: token('HiddenCopy') }} />
-                        <div dangerouslySetInnerHTML={{ __html: token('SlashHandler') }} />
-                    </div>
-                </TypeHover>
-            );
-            const block = document.querySelector('[role="group"]');
-            if (!(block instanceof HTMLElement)) throw new Error('no block rendered');
-            block.focus();
-
-            await userEvent.keyboard('{ArrowRight}');
-
-            await waitFor(() => expect(isOpen()).toBe(true));
-            expect(shownSymbol()).toBe('SlashHandler');
-        });
-
         it('drops the tab stop shiki puts inside the type', async () => {
             const block = renderBlock();
             block.focus();

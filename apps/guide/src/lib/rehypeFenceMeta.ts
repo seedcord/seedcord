@@ -1,6 +1,7 @@
-const TITLE = /(?:^|\s)title="([^"]*)"/;
-const OUTPUT = /(?:^|\s)output(?:\s|$)/;
-const TWOSLASH = /(?:^|\s)twoslash(?:\s|$)/;
+import { parseCodeBlockAttributes } from 'fumadocs-core/mdx-plugins/codeblock-utils';
+
+// a name outside this list stays in the meta untouched
+const FENCE_NAMES = ['title', 'output', 'twoslash'];
 
 export const LANGUAGE_PREFIX = 'language-';
 
@@ -46,15 +47,12 @@ function languageOf(code: Element): string {
 export function rehypeFenceMeta() {
     return (tree: Element, file: Reporter): void => {
         for (const code of codeElements(tree)) {
-            const meta = code.data?.meta ?? '';
-            const title = TITLE.exec(meta)?.[1];
-            // a title like "build output.ts" would otherwise read as a flag
-            const flags = meta.replace(TITLE, ' ');
+            const { attributes } = parseCodeBlockAttributes(code.data?.meta ?? '', FENCE_NAMES);
             const added: Record<string, unknown> = {};
 
-            if (title) added[FENCE_ATTR.title] = title;
-            if (OUTPUT.test(flags)) added[FENCE_ATTR.output] = '';
-            if (TWOSLASH.test(flags)) {
+            if (typeof attributes.title === 'string') added[FENCE_ATTR.title] = attributes.title;
+            if ('output' in attributes) added[FENCE_ATTR.output] = '';
+            if ('twoslash' in attributes) {
                 const lang = languageOf(code);
                 if (!TWOSLASH_LANGS.has(lang)) {
                     const names = [...TWOSLASH_LANGS].join(', ');
