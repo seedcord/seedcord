@@ -42,7 +42,7 @@ describe('renderReadme', () => {
         const html = await renderReadme('```ts\nconst answer = 42;\n```');
 
         // same shiki output as the TSDoc prose renderer (renderParagraphs)
-        expect(html).toContain('shiki-theme-group');
+        expect(html).toContain('class="shiki');
         expect(html).toMatch(/style="[^"]*color:/i);
     });
 
@@ -50,7 +50,7 @@ describe('renderReadme', () => {
         // a bare ``` fence gives Marked an empty lang string, which must still use the ts default
         const html = await renderReadme('```\nconst answer = 42;\n```');
 
-        expect(html).toContain('shiki-theme-group');
+        expect(html).toContain('class="shiki');
         expect(html).toMatch(/color:[^"]*">const/i);
     });
 
@@ -59,6 +59,6 @@ describe('renderReadme', () => {
         const html = await renderReadme('```python\nprint("hi")\n```');
 
         expect(html).toContain('print("hi")');
-        expect(html).not.toContain('shiki-theme-group');
+        expect(html).not.toContain('class="shiki');
     });
 });
