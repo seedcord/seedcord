@@ -75,6 +75,67 @@ my-bot/
     scaffolder writes no `src/events` folder.
 </Callout>
 
+## The ping command
+
+Two files make `/ping` work.
+
+```ts twoslash title="src/commands/Ping.ts"
+import {
+    BuilderComponent,
+    RegisterCommand
+} from '@seedcord/gateway';
+
+@RegisterCommand('global')
+export class Ping extends BuilderComponent<'command'> {
+    constructor() {
+        super('command');
+
+        this.instance
+            .setName('ping')
+            .setDescription('Check that the bot is answering')
+            .addBooleanOption((option) =>
+                option
+                    .setName('detailed')
+                    .setDescription('Include process uptime')
+            );
+    }
+}
+```
+
+That is what Discord gets. A name, a description, and one optional boolean.
+
+```ts twoslash title="src/handlers/Ping.ts"
+import {
+    SlashHandler,
+    SlashRoute,
+    timestampFromSnowflake
+} from '@seedcord/gateway';
+
+@SlashRoute('ping')
+export class Ping extends SlashHandler<'ping'> {
+    public async execute(): Promise<void> {
+        const roundtrip =
+            Date.now() - timestampFromSnowflake(this.event.id);
+        const lines = ['### Pong', `Roundtrip **${roundtrip}ms**`];
+
+        if (this.options.getBoolean('detailed')) {
+            lines.push(
+                `Uptime **${Math.round(process.uptime())}s**`
+            );
+        }
+
+        await this.reply(lines.join('\n'));
+    }
+}
+```
+
+That runs when someone uses it. `'ping'` appears twice, on the decorator and on the generic, and both come from the name the command set. `this.options` carries `detailed` because `seedcord codegen` read the command file.
+
+<Callout type="transport">
+    An http scaffold writes the same two files and imports from
+    `@seedcord/http`.
+</Callout>
+
 ## Change something
 
 Open `src/handlers/Ping.ts` and change what it replies with. Save.

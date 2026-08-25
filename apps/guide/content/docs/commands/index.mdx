@@ -1,6 +1,129 @@
 ---
 title: Commands
-description: Declaring a command, the codegen that types its options, subcommands, autocomplete, context menus, and getting all of it onto Discord.
+description: Declaring a slash command, registering it globally or per guild, and the codegen that types its options.
 ---
 
-This section is being written.
+A command file declares what Discord shows people. A handler file runs when someone uses it.
+
+## The command file
+
+```ts twoslash title="src/commands/Ban.ts"
+import {
+    BuilderComponent,
+    RegisterCommand
+} from '@seedcord/gateway';
+
+@RegisterCommand('global')
+export class Ban extends BuilderComponent<'command'> {
+    constructor() {
+        super('command');
+
+        this.instance
+            .setName('ban')
+            .setDescription('Ban a member')
+            .addUserOption((option) =>
+                option
+                    .setName('target')
+                    .setDescription('Who to ban')
+                    .setRequired(true)
+            )
+            .addStringOption((option) =>
+                option.setName('reason').setDescription('Why')
+            );
+    }
+}
+```
+
+`'command'` picks which discord.js builder you get. TypeScript reads it from the generic and the constructor takes it at runtime.
+
+`this.instance` is that builder. Every builder method you already know works on it.
+
+[`BuilderComponent`](ref:core/BuilderComponent) calls `setContexts(InteractionContextType.Guild)`, so your command only shows up in servers. Call `setContexts` yourself to add `BotDM` for DMs with your bot, or `PrivateChannel` for group DMs.
+
+The file goes under the `commands` path your `bot.ts` declares. seedcord imports every file under that path at startup and sends the commands to Discord.
+
+## Global or one server
+
+`'global'` puts the command in every server your bot is in. A global command takes a while to show up, and Discord publishes no number for how long.
+
+`'guild'` takes the server ids and puts the command only there, where it appears right away.
+
+```ts
+@RegisterCommand('guild', ['613425648685547541'])
+```
+
+The ids are required. [`@RegisterCommand('guild')`](ref:core/RegisterCommand) on its own throws `DecoratorCommandGuildWithoutGuilds` at startup.
+
+## Codegen
+
+`seedcord codegen` reads every command file, calls `toJSON()` on what it finds, and writes `src/seedcord-gen.d.ts`.
+
+```ts title="src/seedcord-gen.d.ts" output
+declare module '@seedcord/gateway' {
+    interface SlashRegistry {
+        ban: {
+            options: {
+                target: { kind: 'user'; required: true };
+                reason: { kind: 'string'; required: false };
+            };
+            cache: 'cached';
+        };
+    }
+}
+```
+
+That file is generated. Commit it, and never edit it by hand.
+
+[`SlashRegistry`](ref:core/SlashRegistry) ships empty, so `keyof SlashRegistry` is `never` until codegen fills it in. A handler cannot name its route before that.
+
+<Callout type="warning">
+    A stale generated file breaks nothing at runtime, since nothing
+    there reads these types. Run your project's `tc` script to catch
+    it. Set `hmr.typecheck` to true in `seedcord.config.ts` so
+    `seedcord dev` runs one alongside the bot.
+</Callout>
+
+Run `seedcord codegen` after you add a command or change its options. `seedcord dev` runs it when you answer `y` to the re-register prompt.
+
+## The handler file
+
+```ts twoslash hovers title="src/handlers/Ban.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut---
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        const target = this.options.getUser('target');
+        const reason = this.options.getString('reason');
+
+        await this.reply(
+            `Banned ${target.username}. ${reason ?? 'No reason given.'}`
+        );
+    }
+}
+```
+
+`'ban'` appears twice, on the decorator and on the generic. Both are the name the command set.
+
+`target` was required on the command, so it arrives without a null check. `reason` was optional, so it can be null.
+
+Handler files go under the `interactions` path your `bot.ts` declares.
+
+## A command with no handler
+
+seedcord warns at startup for any route with nothing to answer it.
+
+```txt output
+Slash route ban has no registered @SlashRoute handler.
+```
+
+The command still reaches Discord. Anyone who runs it gets `Feature not implemented yet.`
+
+## When a command's constructor throws
+
+Codegen constructs every command it finds. When one throws, it stops and tells you which file to fix.
+
+```txt output
+Roster threw while codegen constructed it. Fix its constructor in
+src/commands/Roster.ts. Cannot read properties of undefined (reading 'guildId')
+```
