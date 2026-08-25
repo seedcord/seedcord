@@ -44,7 +44,7 @@ function pick<T extends Record<string, string>>(options: T, key: keyof T, prop: 
     return found;
 }
 
-function GuideImage({ alt, frame = 'regular', align = 'left', className, ...props }: ImageProps): ReactElement {
+function GuideImage({ alt, frame = false, align = 'left', className, ...props }: ImageProps): ReactElement {
     return (
         // eslint-disable-next-line @next/next/no-img-element -- next/image requires width and height, both optional on ImageProps
         <img
@@ -163,13 +163,28 @@ async function Fence({ children }: FenceProps): Promise<ReactElement> {
     return fence.mode === 'hovers' ? <TypeHover>{block}</TypeHover> : block;
 }
 
+const OFF_SITE = /^[a-z]+:/i;
+
+function GuideLink({ href, ...props }: ComponentProps<'a'>): ReactElement {
+    const offSite = href !== undefined && OFF_SITE.test(href);
+
+    return (
+        <a
+            {...props}
+            href={href}
+            {...(offSite && { target: '_blank', rel: 'noreferrer noopener' })}
+            className={cn(LINK)}
+        />
+    );
+}
+
 export const mdxComponents = {
     pre: Fence,
     h2: headingFor('h2'),
     h3: headingFor('h3'),
     h4: headingFor('h4'),
     p: (props) => <p {...props} className={cn('text-base/relaxed text-(--text)')} />,
-    a: (props) => <a {...props} className={cn(LINK)} />,
+    a: GuideLink,
     strong: (props) => <strong {...props} className={cn('font-semibold')} />,
     ul: (props) => <ul {...props} className={cn('list-disc space-y-1 ps-6 text-base/relaxed text-(--text)')} />,
     ol: (props) => <ol {...props} className={cn('list-decimal space-y-1 ps-6 text-base/relaxed text-(--text)')} />,

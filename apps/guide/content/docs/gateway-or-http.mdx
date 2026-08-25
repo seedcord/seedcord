@@ -1,0 +1,24 @@
+---
+title: Gateway or http
+description: What each transport receives from Discord, and what that means for your bot.
+---
+
+You're picking how Discord reaches your bot. Pages after this one assume you already did.
+
+## Gateway
+
+Your bot opens a websocket to Discord and holds it open. Discord can send anything happening in the servers your bot is in, from messages and joins to reactions and voice.
+
+discord.js caches guilds, channels, roles, and members off that connection, and its collections and helpers read from the cache. `interaction.guild` is filled in because the cache holds it.
+
+Holding the connection means a process running somewhere all the time.
+
+## Http
+
+Discord posts each interaction to a URL you own, one request at a time. Nothing else is sent.
+
+No connection means no cache. Anything you need about a guild or a member you fetch from Discord's REST API.
+
+## Switching later
+
+Most of your code moves on the import line. An http bot never receives server events, so event handlers do not work there.

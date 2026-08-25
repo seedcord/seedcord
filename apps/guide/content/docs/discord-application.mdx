@@ -1,0 +1,62 @@
+---
+title: Create your Discord application
+description: Making the app, getting the token, turning on intents, and adding the bot to a server.
+---
+
+Your bot needs an application on Discord's side before any code runs. Everything here happens in the [Discord Developer Portal](https://discord.com/developers/applications). Start with New Application, top right.
+
+## Get the token
+
+Open **Bot** in the sidebar. Discord shows a token once. Reset Token gives you a new one and kills the old.
+
+![The Token block on the Bot page, with a Reset Token button](/portal-token.webp)
+
+Keep it somewhere safe. You paste it in when you set up the project.
+
+<Callout type="warning">
+    The Client Secret on the OAuth2 page is a different credential.
+    Do not paste it where the token goes.
+</Callout>
+
+## Turn on the intents you need
+
+Same page, further down, under **Privileged Gateway Intents**. Turn on the ones your bot needs. Discord only reviews these for bots past 10,000 users.
+
+{/* prettier-ignore-start */}
+
+| Switch | What it covers |
+| --- | --- |
+| Presence Intent | who is online and what they are playing |
+| Server Members Intent | member joins, leaves, nickname and role changes |
+| Message Content Intent | the text of messages that do not mention your bot |
+
+{/* prettier-ignore-end */}
+
+![The three privileged gateway intent switches on the Bot page](/portal-intents.webp)
+
+Skip this on http, which holds no gateway connection.
+
+## Copy the public key, on http
+
+**General Information** carries your Public Key. Discord signs every request it posts to you, and your bot checks the signature against this key.
+
+The same page has an Interactions Endpoint URL field. Leave it empty. The dev server sets it for you later.
+
+## Add the bot to a server
+
+Open **Installation**.
+
+Under **Installation Contexts**, tick Guild Install. That is the one that puts your bot in a server. User Install puts it on a person's account.
+
+![Installation Contexts with Guild Install ticked](/portal-install-contexts.webp)
+
+Under **Default Install Settings**, pick the permissions your bot needs. `applications.commands` and `bot` are already in the scopes, and `applications.commands` cannot be removed.
+
+Copy the URL under **Install Link** and open it. Pick your server and confirm.
+
+![The install link and the default scopes and permissions](/portal-install-link.webp)
+
+<Callout type="warning">
+    Adding a bot to a server needs the Manage Server permission in
+    that server.
+</Callout>
