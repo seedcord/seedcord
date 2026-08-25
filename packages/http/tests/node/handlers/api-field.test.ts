@@ -11,8 +11,8 @@ import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
 
 declare module '@seedcord/core' {
-    interface SlashOptionRegistry {
-        apiprobe: Record<never, never>;
+    interface SlashRegistry {
+        apiprobe: { options: Record<never, never>; cache: 'cached' };
     }
 }
 

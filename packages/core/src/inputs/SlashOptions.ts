@@ -1,13 +1,13 @@
 import type { OptionLens } from '#inputs/OptionLens';
-import type { OptionKind, SlashOptionRegistry } from '#registries/SlashOptionRegistry';
+import type { OptionKind, SlashRegistry } from '#registries/SlashRegistry';
 import type { ChannelType } from 'discord-api-types/v10';
 import type { IsNever } from 'type-fest';
 
-type Row<Route extends keyof SlashOptionRegistry> = SlashOptionRegistry[Route];
+type Row<Route extends keyof SlashRegistry> = SlashRegistry[Route]['options'];
 
 // deliberately non-distributive because a union Route intersects to the names shared by every route, since a
 // distributed union would type a required option as non-null while a route without it fired
-type NamesOfKind<Route extends keyof SlashOptionRegistry, Kind extends OptionKind> = {
+type NamesOfKind<Route extends keyof SlashRegistry, Kind extends OptionKind> = {
     [Name in keyof Row<Route>]: Row<Route>[Name] extends { kind: Kind } ? Name : never;
 }[keyof Row<Route>];
 
@@ -48,7 +48,7 @@ type Returned<Lens extends OptionLens, Entry> = Entry extends { required: true }
     : ResolvedValue<Lens, Entry> | null;
 
 type Getter<
-    Route extends keyof SlashOptionRegistry,
+    Route extends keyof SlashRegistry,
     Lens extends OptionLens,
     Kind extends OptionKind,
     Method extends string
@@ -57,12 +57,12 @@ type Getter<
         ? unknown
         : Record<Method, <Name extends NamesOfKind<Route, Kind>>(name: Name) => Returned<Lens, Row<Route>[Name]>>;
 
-type MemberGetter<Route extends keyof SlashOptionRegistry, Lens extends OptionLens> =
+type MemberGetter<Route extends keyof SlashRegistry, Lens extends OptionLens> =
     IsNever<NamesOfKind<Route, 'user'>> extends true
         ? unknown
         : { getMember: <Name extends NamesOfKind<Route, 'user'>>(name: Name) => Lens['member'] | null };
 
-export type SlashOptions<Route extends keyof SlashOptionRegistry, Lens extends OptionLens> = Getter<
+export type SlashOptions<Route extends keyof SlashRegistry, Lens extends OptionLens> = Getter<
     Route,
     Lens,
     'string',

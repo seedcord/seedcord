@@ -11,15 +11,21 @@ import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction } from
 // fixtures for the autocomplete suite, distinct routes from the other interface test files so the registry
 // augmentation does not collide.
 declare module '@seedcord/core' {
-    interface SlashOptionRegistry {
+    interface SlashRegistry {
         search: {
-            query: { kind: 'string'; required: true; autocomplete: true };
-            limit: { kind: 'integer'; required: false; autocomplete: true };
-            category: { kind: 'string'; required: false; choices: ['books', 'films'] };
+            options: {
+                query: { kind: 'string'; required: true; autocomplete: true };
+                limit: { kind: 'integer'; required: false; autocomplete: true };
+                category: { kind: 'string'; required: false; choices: ['books', 'films'] };
+            };
+            cache: 'cached';
         };
         find: {
-            title: { kind: 'string'; required: true; autocomplete: true };
-            year: { kind: 'integer'; required: false; autocomplete: true };
+            options: {
+                title: { kind: 'string'; required: true; autocomplete: true };
+                year: { kind: 'integer'; required: false; autocomplete: true };
+            };
+            cache: 'cached';
         };
     }
 }
@@ -214,7 +220,7 @@ class ExtraCommand extends AutocompleteHandler<'search'> {
 void ExtraCommand;
 
 // the decorator only accepts registered routes
-// @ts-expect-error 'ghost' is not a key of SlashOptionRegistry.
+// @ts-expect-error 'ghost' is not a key of SlashRegistry.
 @AutocompleteRoute('ghost')
 class UnknownCommand extends AutocompleteHandler<'search'> {
     async execute(): Promise<void> {

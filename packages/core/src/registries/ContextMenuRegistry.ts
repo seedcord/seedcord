@@ -4,10 +4,10 @@ import type { ApplicationCommandType } from 'discord-api-types/v10';
 export type ContextMenuKind = ApplicationCommandType.User | ApplicationCommandType.Message;
 
 /**
- * Maps each user context-menu command name to a presence marker. Populated by `seedcord codegen`, which
- * reads every command's `toJSON()` and emits a `declare module '@seedcord/gateway'` augmentation, so
- * `keyof UserContextMenuRegistry` is the compile-time union of every registered user context-menu name.
- * Do not augment it by hand, run `seedcord codegen`.
+ * Maps each user context-menu command name to its cache state. `seedcord codegen` populates this. It reads
+ * every command's `toJSON()` and emits a `declare module '@seedcord/gateway'` augmentation.
+ * `keyof UserContextMenuRegistry` is then the compile-time union of every registered user context-menu
+ * name. Never augment it by hand.
  *
  * Kept separate from {@link MessageContextMenuRegistry} because Discord allows a user command and a message
  * command to share a name, so a single name-keyed registry would collapse a legal pair.
@@ -17,7 +17,7 @@ export type ContextMenuKind = ApplicationCommandType.User | ApplicationCommandTy
  * // seedcord-gen.d.ts (emitted, committed)
  * declare module '@seedcord/gateway' {
  *   interface UserContextMenuRegistry {
- *     'View Profile': true;
+ *     'View Profile': { cache: 'cached' };
  *   }
  * }
  * ```
@@ -25,10 +25,31 @@ export type ContextMenuKind = ApplicationCommandType.User | ApplicationCommandTy
 export interface UserContextMenuRegistry {}
 
 /**
- * Maps each message context-menu command name to a presence marker. Populated by `seedcord codegen`, so
+ * Maps each message context-menu command name to its cache state. `seedcord codegen` populates this.
  * `keyof MessageContextMenuRegistry` is the compile-time union of every registered message context-menu
- * name. Do not augment it by hand, run `seedcord codegen`.
+ * name. Never augment it by hand.
  *
  * Kept separate from {@link UserContextMenuRegistry}, see that interface for why.
  */
 export interface MessageContextMenuRegistry {}
+
+type MenuRegistryFor<Kind extends ContextMenuKind> = Kind extends ApplicationCommandType.User
+    ? UserContextMenuRegistry
+    : MessageContextMenuRegistry;
+
+/** Every command name registered for one context-menu kind. */
+export type NamesFor<Kind extends ContextMenuKind> = Extract<keyof MenuRegistryFor<Kind>, string>;
+
+/**
+ * The cache state for a context-menu handler's commands, defaulting its `Cache` generic. A handler serving
+ * several names takes `undefined` when any one of them is reachable outside a guild.
+ */
+export type MenuCacheFor<Kind extends ContextMenuKind, Names extends NamesFor<Kind>> =
+    undefined extends MenuCacheOf<Kind, Names> ? undefined : 'cached';
+
+// a name the registry cannot answer for carries no guild guarantee
+type MenuCacheOf<Kind extends ContextMenuKind, Names extends NamesFor<Kind>> = [Names] extends [never]
+    ? undefined
+    : MenuRegistryFor<Kind>[Names] extends { cache: infer Cache }
+      ? Cache
+      : undefined;

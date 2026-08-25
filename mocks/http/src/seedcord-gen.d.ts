@@ -3,8 +3,8 @@
 
 // prettier-ignore
 declare module '@seedcord/http' {
-    interface SlashOptionRegistry {
-        ping: { detailed: { kind: 'boolean'; required: false } };
+    interface SlashRegistry {
+        ping: { options: { detailed: { kind: 'boolean'; required: false } }; cache: 'cached' };
     }
     interface UserContextMenuRegistry {
 

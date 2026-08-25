@@ -1,4 +1,4 @@
-import type { SlashOptionRegistry } from '@seedcord/core';
+import type { SlashRegistry } from '@seedcord/core';
 import type { SlashOptions as OptionView } from '@seedcord/core/internal';
 import type {
     APIAttachment,
@@ -35,6 +35,6 @@ interface HttpLens {
  * A channel option declared with `addChannelTypes` narrows `getChannel` to the matching resolved-channel
  * subtype.
  *
- * @typeParam Route - A route key from the generated {@link SlashOptionRegistry}.
+ * @typeParam Route - A route key from the generated {@link SlashRegistry}.
  */
-export type SlashOptions<Route extends keyof SlashOptionRegistry> = OptionView<Route, HttpLens>;
+export type SlashOptions<Route extends keyof SlashRegistry> = OptionView<Route, HttpLens>;

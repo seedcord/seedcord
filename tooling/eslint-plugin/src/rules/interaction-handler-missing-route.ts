@@ -13,7 +13,8 @@ const BASE_TO_DECORATOR = {
     ButtonHandler: 'ButtonRoute',
     ModalHandler: 'ModalRoute',
     SelectMenuHandler: 'SelectMenuRoute',
-    ContextMenuHandler: 'ContextMenuRoute',
+    UserContextMenuHandler: 'UserContextMenuRoute',
+    MessageContextMenuHandler: 'MessageContextMenuRoute',
     AutocompleteHandler: 'AutocompleteRoute'
 } as const;
 

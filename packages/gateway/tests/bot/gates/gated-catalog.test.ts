@@ -24,8 +24,8 @@ import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import type { Events } from 'discord.js';
 
 declare module '@seedcord/core' {
-    interface SlashOptionRegistry {
-        catalogprobe: { note: { kind: 'string'; required: false } };
+    interface SlashRegistry {
+        catalogprobe: { options: { note: { kind: 'string'; required: false } }; cache: 'cached' };
     }
 }
 

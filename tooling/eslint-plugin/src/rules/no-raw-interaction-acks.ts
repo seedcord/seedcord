@@ -16,7 +16,8 @@ const HANDLER_BASE_NAMES = new Set([
     'ButtonHandler',
     'ModalHandler',
     'SelectMenuHandler',
-    'ContextMenuHandler'
+    'UserContextMenuHandler',
+    'MessageContextMenuHandler'
 ]);
 
 const REPLIABLE_INTERACTIONS = new Set([

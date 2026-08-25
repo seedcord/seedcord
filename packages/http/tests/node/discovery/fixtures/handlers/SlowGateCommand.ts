@@ -13,8 +13,8 @@ const SlowGate = defineGate('SlowGate', async () => {
 });
 
 declare module '@seedcord/core' {
-    interface SlashOptionRegistry {
-        slowping: Record<never, never>;
+    interface SlashRegistry {
+        slowping: { options: Record<never, never>; cache: 'cached' };
     }
 }
 

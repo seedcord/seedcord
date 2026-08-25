@@ -1,9 +1,9 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { routeLeavesOf, type SlashRouteLeaf } from '@seedcord/utils/internal';
-import { ApplicationCommandOptionType, ApplicationCommandType } from 'discord-api-types/v10';
+import { ApplicationCommandOptionType, ApplicationCommandType, InteractionContextType } from 'discord-api-types/v10';
 
-import type { OptionKind, SlashOption } from '@seedcord/core';
+import type { OptionKind, RouteCache, SlashOption, SlashRouteEntry } from '@seedcord/core/internal';
 import type { EmojiConfig, ILogger } from '@seedcord/types';
 import type {
     APIApplicationCommandBasicOption,
@@ -15,14 +15,17 @@ import type {
 export type RouteOptions = Record<string, SlashOption>;
 
 // keyed by route string (`cmd`, `cmd/sub`, or `cmd/group/sub`)
-export type SlashTables = Record<string, RouteOptions>;
+export type SlashTables = Record<string, SlashRouteEntry>;
+
+// keyed by the command name discord shows in the menu
+export type ContextMenuTables = Record<string, { cache: RouteCache }>;
 
 export type EmojiKinds = Record<string, 'string' | 'tuple'>;
 
 export interface Augmentation {
     slash: SlashTables;
-    userContextMenus: string[];
-    messageContextMenus: string[];
+    userContextMenus: ContextMenuTables;
+    messageContextMenus: ContextMenuTables;
     emojis: EmojiKinds;
 }
 
@@ -50,6 +53,12 @@ const KIND_BY_TYPE = {
     [ApplicationCommandOptionType.Attachment]: 'attachment'
 } as const satisfies Record<APIApplicationCommandBasicOption['type'], OptionKind>;
 
+// discord reads a command with no contexts as reachable from all three
+function cacheStateOf(contexts: RESTPostAPIApplicationCommandsJSONBody['contexts']): 'cached' | undefined {
+    if (!contexts || contexts.length === 0) return undefined;
+    return contexts.every((context) => context === InteractionContextType.Guild) ? 'cached' : undefined;
+}
+
 function mapEmojis(emojiConfig: EmojiConfig): EmojiKinds {
     const emojis: EmojiKinds = {};
     for (const [key, value] of Object.entries(emojiConfig)) {
@@ -67,16 +76,18 @@ export class AugmentationBuilder {
         const sourceByRoute = new Map<string, string>();
         const sourceByUserName = new Map<string, string>();
         const sourceByMessageName = new Map<string, string>();
+        const userMenus = new Map<string, { cache: 'cached' | undefined }>();
+        const messageMenus = new Map<string, { cache: 'cached' | undefined }>();
 
         for (const command of commands) {
             const { json } = command;
             switch (json.type) {
                 case ApplicationCommandType.User: {
-                    this.collectContextMenu('user', json, command.sourceFile, sourceByUserName);
+                    this.collectContextMenu('user', json, command.sourceFile, sourceByUserName, userMenus);
                     break;
                 }
                 case ApplicationCommandType.Message: {
-                    this.collectContextMenu('message', json, command.sourceFile, sourceByMessageName);
+                    this.collectContextMenu('message', json, command.sourceFile, sourceByMessageName, messageMenus);
                     break;
                 }
                 case undefined:
@@ -88,11 +99,11 @@ export class AugmentationBuilder {
             }
         }
 
-        const userContextMenus = [...sourceByUserName.keys()];
-        const messageContextMenus = [...sourceByMessageName.keys()];
+        const userContextMenus = Object.fromEntries(userMenus);
+        const messageContextMenus = Object.fromEntries(messageMenus);
         const emojis = mapEmojis(emojiConfig);
         this.logger.debug(
-            `Generated ${Object.keys(slash).length} slash route(s), ${userContextMenus.length} user and ${messageContextMenus.length} message context-menu command(s), ${Object.keys(emojis).length} emoji(s)`
+            `Generated ${Object.keys(slash).length} slash route(s), ${Object.keys(userContextMenus).length} user and ${Object.keys(messageContextMenus).length} message context-menu command(s), ${Object.keys(emojis).length} emoji(s)`
         );
         return { slash, userContextMenus, messageContextMenus, emojis };
     }
@@ -104,6 +115,7 @@ export class AugmentationBuilder {
         sourceByRoute: Map<string, string>
     ): void {
         this.warnEmptyGroups(json);
+        const cacheState = cacheStateOf(json.contexts);
         for (const leaf of routeLeavesOf(json)) {
             // declaration merging folds a duplicate route in silently
             const firstFile = sourceByRoute.get(leaf.route);
@@ -115,7 +127,7 @@ export class AugmentationBuilder {
                 ]);
             }
             sourceByRoute.set(leaf.route, sourceFile);
-            slash[leaf.route] = this.mapOptions(leaf.options);
+            slash[leaf.route] = { options: this.mapOptions(leaf.options), cache: cacheState };
         }
     }
 
@@ -123,7 +135,8 @@ export class AugmentationBuilder {
         kind: 'user' | 'message',
         json: RESTPostAPIContextMenuApplicationCommandsJSONBody,
         sourceFile: string,
-        sourceByName: Map<string, string>
+        sourceByName: Map<string, string>,
+        menus: Map<string, { cache: 'cached' | undefined }>
     ): void {
         const firstFile = sourceByName.get(json.name);
         if (firstFile !== undefined) {
@@ -135,6 +148,7 @@ export class AugmentationBuilder {
             ]);
         }
         sourceByName.set(json.name, sourceFile);
+        menus.set(json.name, { cache: cacheStateOf(json.contexts) });
     }
 
     // toJSON() allows an empty subcommand group though discord rejects it at deploy. routeLeavesOf gives it

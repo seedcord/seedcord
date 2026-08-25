@@ -79,11 +79,11 @@ describe('gateway handler log channels', () => {
 
     it('puts the interaction bases on the interactions channel', async () => {
         // justified: the fixture implements only the interaction surface these bases read
-        const interaction = mockInteraction() as unknown as ChatInputCommandInteraction<'cached'>;
+        const interaction = mockInteraction();
 
-        await new Guard(interaction, core).execute();
-        await new Suggest(interaction as unknown as AutocompleteInteraction<'cached'>, core).execute();
-        await new Ban(interaction, core).execute();
+        await new Guard(interaction as unknown as ChatInputCommandInteraction<'cached'>, core).execute();
+        await new Suggest(interaction as unknown as AutocompleteInteraction<undefined>, core).execute();
+        await new Ban(interaction as unknown as ChatInputCommandInteraction<undefined>, core).execute();
 
         expect(sink.records.map((record) => record.channel)).toEqual(['interactions', 'interactions', 'interactions']);
     });

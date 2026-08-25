@@ -1,8 +1,7 @@
-import { ContextMenuRoute, ContextMenuHandler } from '@seedcord/gateway';
-import { ApplicationCommandType } from 'discord.js';
+import { MessageContextMenuRoute, MessageContextMenuHandler } from '@seedcord/gateway';
 
-@ContextMenuRoute(ApplicationCommandType.Message, 'Report Message')
-export class ReportMessage extends ContextMenuHandler<ApplicationCommandType.Message> {
+@MessageContextMenuRoute('Report Message')
+export class ReportMessage extends MessageContextMenuHandler<'Report Message'> {
     public async execute(): Promise<void> {
         const message = this.target;
 

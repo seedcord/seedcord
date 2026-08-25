@@ -1,16 +1,16 @@
-import type { OptionKind, SlashOptionRegistry } from '#registries/SlashOptionRegistry';
+import type { OptionKind, SlashRegistry } from '#registries/SlashRegistry';
 import type { IsNever } from 'type-fest';
 
-type Row<Route extends keyof SlashOptionRegistry> = SlashOptionRegistry[Route];
+type Row<Route extends keyof SlashRegistry> = SlashRegistry[Route]['options'];
 
 // distributes over Route so each command's row resolves independently
-export type EntryFor<Route extends keyof SlashOptionRegistry, Name extends PropertyKey> = Route extends unknown
+export type EntryFor<Route extends keyof SlashRegistry, Name extends PropertyKey> = Route extends unknown
     ? Name extends keyof Row<Route>
         ? Row<Route>[Name]
         : never
     : never;
 
-export type AutocompletableNames<Route extends keyof SlashOptionRegistry> = Route extends unknown
+export type AutocompletableNames<Route extends keyof SlashRegistry> = Route extends unknown
     ? {
           [Name in keyof Row<Route>]: Row<Route>[Name] extends { autocomplete: true } ? Name : never;
       }[keyof Row<Route>]
@@ -23,12 +23,12 @@ export type ChoiceValueOf<Entry> = Entry extends { kind: 'string' }
       : never;
 
 /** the focused option. `value` is the raw partial discord delivers mid-type, always a string regardless of kind. */
-export interface FocusedField<Route extends keyof SlashOptionRegistry> {
+export interface FocusedField<Route extends keyof SlashRegistry> {
     name: AutocompletableNames<Route>;
     value: string;
 }
 
-type NamesOfKind<Route extends keyof SlashOptionRegistry, Kind extends OptionKind> = Route extends unknown
+type NamesOfKind<Route extends keyof SlashRegistry, Kind extends OptionKind> = Route extends unknown
     ? {
           [Name in keyof Row<Route>]: Row<Route>[Name] extends { kind: Kind } ? Name : never;
       }[keyof Row<Route>]
@@ -44,7 +44,7 @@ type ResolvedValue<Entry> = Entry extends { choices: readonly (infer Choice)[] }
           ? boolean
           : never;
 
-type Getter<Route extends keyof SlashOptionRegistry, Kind extends OptionKind, Method extends string> =
+type Getter<Route extends keyof SlashRegistry, Kind extends OptionKind, Method extends string> =
     IsNever<NamesOfKind<Route, Kind>> extends true
         ? unknown
         : Record<
@@ -58,9 +58,9 @@ type Getter<Route extends keyof SlashOptionRegistry, Kind extends OptionKind, Me
  * partial while the user types the focused field, and a getter appears only when a registered command has
  * an option of that kind.
  *
- * @typeParam Route - One or more route keys from {@link SlashOptionRegistry}.
+ * @typeParam Route - One or more route keys from {@link SlashRegistry}.
  */
-export type AutocompleteOptions<Route extends keyof SlashOptionRegistry> = Getter<Route, 'string', 'getString'> &
+export type AutocompleteOptions<Route extends keyof SlashRegistry> = Getter<Route, 'string', 'getString'> &
     Getter<Route, 'integer', 'getInteger'> &
     Getter<Route, 'number', 'getNumber'> &
     Getter<Route, 'boolean', 'getBoolean'>;

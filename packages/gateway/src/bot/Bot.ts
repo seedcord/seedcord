@@ -8,12 +8,14 @@ import { Envapt } from 'envapt/legacy';
 
 import { EventDispatcher } from '#bControllers/EventDispatcher';
 import { InteractionDispatcher } from '#bControllers/InteractionDispatcher';
+import { assertGuildsIntent } from '#miscellaneous/assertGuildsIntent';
 
 import { EmojiInjector } from './injectors/EmojiInjector';
 
 import type { Core } from '#interfaces/Core';
 import type { Initializeable } from '@seedcord/core';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
+import type { BitFieldResolvable, GatewayIntentsString } from 'discord.js';
 
 const DISPATCH_DRAIN_TIMEOUT_MS = 5000;
 // leaves room for each dispatcher's own timer to settle before the outer timeout fires
@@ -39,6 +41,7 @@ export class Bot implements Initializeable, HmrAware {
     readonly [loggerSlot]: Logger = this.logger;
     private isInitialized = false;
 
+    private readonly intents: BitFieldResolvable<GatewayIntentsString, number>;
     private readonly _client: Client;
     private readonly interactions?: InteractionDispatcher;
     private readonly events?: EventDispatcher;
@@ -54,6 +57,7 @@ export class Bot implements Initializeable, HmrAware {
 
     /** @internal */
     constructor(core: Core) {
+        this.intents = core.config.bot.clientOptions.intents;
         this._client = new Client(core.config.bot.clientOptions);
 
         if (core.config.bot.interactions.path) {
@@ -135,6 +139,7 @@ export class Bot implements Initializeable, HmrAware {
 
         if (this.commandRegistry) {
             await this.commandRegistry.init();
+            assertGuildsIntent(this.intents, this.commandRegistry.allCommands());
             await this.commandRegistry.setCommands();
             this.interactions?.warnUnhandledRoutes(this.commandRegistry.routeLeaves());
             this.interactions?.warnUnhandledContextMenuRoutes(this.commandRegistry.contextMenuLeaves());

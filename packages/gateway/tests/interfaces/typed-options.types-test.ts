@@ -5,11 +5,14 @@ import type { GuildMember, User } from 'discord.js';
 
 // augment the registry exactly as `seedcord codegen` would emit it for one command
 declare module '@seedcord/core' {
-    interface SlashOptionRegistry {
+    interface SlashRegistry {
         ban: {
-            target: { kind: 'user'; required: true };
-            reason: { kind: 'string'; required: false };
-            scope: { kind: 'string'; required: true; choices: ['guild', 'global'] };
+            options: {
+                target: { kind: 'user'; required: true };
+                reason: { kind: 'string'; required: false };
+                scope: { kind: 'string'; required: true; choices: ['guild', 'global'] };
+            };
+            cache: 'cached';
         };
     }
 }

@@ -1,6 +1,6 @@
 /**
  * The per-dispatch bag. Any code can merge fields into it by declaration merging, the
- * same pattern as {@link SlashOptionRegistry}. It stays empty until one does, so `keyof DispatchState` is
+ * same pattern as {@link SlashRegistry}. It stays empty until one does, so `keyof DispatchState` is
  * `never` and the bag is inert.
  */
 export interface DispatchState {}

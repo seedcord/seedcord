@@ -1,5 +1,5 @@
-import type { SlashOptionRegistry } from '@seedcord/core';
-import type { SlashOptions as OptionView } from '@seedcord/core/internal';
+import type { SlashRegistry } from '@seedcord/core';
+import type { CacheFor, SlashOptions as OptionView } from '@seedcord/core/internal';
 import type { CacheType, CommandInteractionOption } from 'discord.js';
 
 interface GatewayLens<Cache extends CacheType> {
@@ -20,10 +20,10 @@ interface GatewayLens<Cache extends CacheType> {
  * A channel option declared with `addChannelTypes` narrows `getChannel` to the matching channel subtype.
  * Pass the raw `this.event.options` resolver for anything this view does not cover.
  *
- * @typeParam Route - A route key from the generated {@link SlashOptionRegistry}.
- * @typeParam Cache - The interaction cache state, `'cached'` by default.
+ * @typeParam Route - A route key from the generated {@link SlashRegistry}.
+ * @typeParam Cache - The interaction cache state. The command's contexts set it.
  */
-export type SlashOptions<Route extends keyof SlashOptionRegistry, Cache extends CacheType = 'cached'> = OptionView<
+export type SlashOptions<Route extends keyof SlashRegistry, Cache extends CacheType = CacheFor<Route>> = OptionView<
     Route,
     GatewayLens<Cache>
 >;

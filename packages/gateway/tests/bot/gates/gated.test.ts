@@ -5,19 +5,19 @@ import {
     or,
     SelectMenuKind,
     ButtonRoute,
-    ContextMenuRoute,
+    UserContextMenuRoute,
+    MessageContextMenuRoute,
     ModalRoute,
     SelectMenuRoute
 } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
-import { ApplicationCommandType } from 'discord.js';
 import { describe, expect, it } from 'vitest';
 
 import { Gated } from '#bDecorators/Gated';
 import { EventHandler } from '#handlers/event';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { ButtonHandler, ModalHandler, SelectMenuHandler } from '#handlers/interaction/components';
-import { ContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
+import { UserContextMenuHandler, MessageContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import type { EventGateContext, InteractionGateContext } from '#bot/gates';
@@ -32,14 +32,14 @@ import type {
 } from 'discord.js';
 
 declare module '@seedcord/core' {
-    interface SlashOptionRegistry {
-        gateprobe: { note: { kind: 'string'; required: false } };
+    interface SlashRegistry {
+        gateprobe: { options: { note: { kind: 'string'; required: false } }; cache: 'cached' };
     }
     interface UserContextMenuRegistry {
-        'Probe User': true;
+        'Probe User': { cache: 'cached' };
     }
     interface MessageContextMenuRegistry {
-        'Probe Message': true;
+        'Probe Message': { cache: 'cached' };
     }
 }
 
@@ -303,8 +303,8 @@ class AcceptsUserSelectGateUserSelect extends SelectMenuHandler<SelectMenuKind.U
 void AcceptsUserSelectGateUserSelect;
 
 @Gated(UserMenuGate)
-@ContextMenuRoute(ApplicationCommandType.User, 'Probe User')
-class AcceptsUserMenuGateUserContext extends ContextMenuHandler<ApplicationCommandType.User> {
+@UserContextMenuRoute('Probe User')
+class AcceptsUserMenuGateUserContext extends UserContextMenuHandler<'Probe User'> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }
@@ -312,8 +312,8 @@ class AcceptsUserMenuGateUserContext extends ContextMenuHandler<ApplicationComma
 void AcceptsUserMenuGateUserContext;
 
 @Gated(MessageMenuGate)
-@ContextMenuRoute(ApplicationCommandType.Message, 'Probe Message')
-class AcceptsMessageMenuGateMessage extends ContextMenuHandler<ApplicationCommandType.Message> {
+@MessageContextMenuRoute('Probe Message')
+class AcceptsMessageMenuGateMessage extends MessageContextMenuHandler<'Probe Message'> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }
@@ -332,8 +332,8 @@ void RejectsModalGateButtonHandler;
 
 // @ts-expect-error the two context-menu kinds do not interchange
 @Gated(UserMenuGate)
-@ContextMenuRoute(ApplicationCommandType.Message, 'Probe Message')
-class RejectsUserMenuGateMessage extends ContextMenuHandler<ApplicationCommandType.Message> {
+@MessageContextMenuRoute('Probe Message')
+class RejectsUserMenuGateMessage extends MessageContextMenuHandler<'Probe Message'> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }

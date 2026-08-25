@@ -6,18 +6,17 @@ import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
 import { SelectMenuHandler } from '#handlers/interaction/components/SelectMenuHandler';
-import { ContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
+import { UserContextMenuHandler, MessageContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import type { AnyHandlerCtor, FitAll } from '#bot/gates/matching';
 import type { EventGateContext } from '#src/bot/gates/Gate';
 import type { SelectMenuKind } from '@seedcord/core';
-import type { ApplicationCommandType } from 'discord.js';
 import type { Constructor } from 'type-fest';
 
 declare module '@seedcord/core' {
-    interface SlashOptionRegistry {
-        gwkindprobe: { note: { kind: 'string'; required: false } };
+    interface SlashRegistry {
+        gwkindprobe: { options: { note: { kind: 'string'; required: false } }; cache: 'cached' };
     }
 }
 
@@ -38,13 +37,13 @@ class ProbeSlash extends SlashHandler<'gwkindprobe'> {
     }
 }
 
-class ProbeMessageMenu extends ContextMenuHandler<ApplicationCommandType.Message> {
+class ProbeMessageMenu extends MessageContextMenuHandler<never> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }
 }
 
-class ProbeUserMenu extends ContextMenuHandler<ApplicationCommandType.User> {
+class ProbeUserMenu extends UserContextMenuHandler<never> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }

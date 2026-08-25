@@ -16,44 +16,73 @@ import type {
 
 // functions are typechecked but never run. routes are distinct from the other type-test files because all declare-module augmentations merge during one tc run
 declare module '@seedcord/core' {
-    interface SlashOptionRegistry {
+    interface SlashRegistry {
         purge: {
-            who: { kind: 'user'; required: true };
-            where: { kind: 'channel'; required: true };
-            what: { kind: 'role'; required: true };
-            anyone: { kind: 'mentionable'; required: true };
-            file: { kind: 'attachment'; required: true };
-            count: { kind: 'integer'; required: true };
-            ratio: { kind: 'number'; required: true };
-            silent: { kind: 'boolean'; required: true };
-            label: { kind: 'string'; required: true };
+            options: {
+                who: { kind: 'user'; required: true };
+                where: { kind: 'channel'; required: true };
+                what: { kind: 'role'; required: true };
+                anyone: { kind: 'mentionable'; required: true };
+                file: { kind: 'attachment'; required: true };
+                count: { kind: 'integer'; required: true };
+                ratio: { kind: 'number'; required: true };
+                silent: { kind: 'boolean'; required: true };
+                label: { kind: 'string'; required: true };
+            };
+            cache: 'cached';
         };
         purgeOpt: {
-            who: { kind: 'user'; required: false };
-            where: { kind: 'channel'; required: false };
-            what: { kind: 'role'; required: false };
-            anyone: { kind: 'mentionable'; required: false };
-            file: { kind: 'attachment'; required: false };
-            label: { kind: 'string'; required: false };
+            options: {
+                who: { kind: 'user'; required: false };
+                where: { kind: 'channel'; required: false };
+                what: { kind: 'role'; required: false };
+                anyone: { kind: 'mentionable'; required: false };
+                file: { kind: 'attachment'; required: false };
+                label: { kind: 'string'; required: false };
+            };
+            cache: 'cached';
         };
         report: {
-            who: { kind: 'user'; required: true };
-            where: { kind: 'channel'; required: true };
-            what: { kind: 'role'; required: true };
-            anyone: { kind: 'mentionable'; required: true };
+            options: {
+                who: { kind: 'user'; required: true };
+                where: { kind: 'channel'; required: true };
+                what: { kind: 'role'; required: true };
+                anyone: { kind: 'mentionable'; required: true };
+            };
+            cache: 'cached';
         };
         audit: {
-            mode: { kind: 'string'; required: true; choices: ['fast', 'deep'] };
-            level: { kind: 'integer'; required: true; choices: [1, 2, 3] };
+            options: {
+                mode: { kind: 'string'; required: true; choices: ['fast', 'deep'] };
+                level: { kind: 'integer'; required: true; choices: [1, 2, 3] };
+            };
+            cache: 'cached';
         };
         flag: {
-            reason: { kind: 'string'; required: true };
+            options: {
+                reason: { kind: 'string'; required: true };
+            };
+            cache: 'cached';
+        };
+        // a DM can reach this one, so every resolved getter widens to include the raw payload
+        askDm: {
+            options: {
+                who: { kind: 'user'; required: true };
+                where: { kind: 'channel'; required: true };
+                what: { kind: 'role'; required: true };
+                anyone: { kind: 'mentionable'; required: true };
+                label: { kind: 'string'; required: true };
+            };
+            cache: undefined;
         };
         // codegen emits channelTypes as wire numbers (GuildText 0, GuildAnnouncement 5)
         move: {
-            dest: { kind: 'channel'; required: true; channelTypes: [0] };
-            hall: { kind: 'channel'; required: false; channelTypes: [0, 5] };
-            any: { kind: 'channel'; required: true };
+            options: {
+                dest: { kind: 'channel'; required: true; channelTypes: [0] };
+                hall: { kind: 'channel'; required: false; channelTypes: [0, 5] };
+                any: { kind: 'channel'; required: true };
+            };
+            cache: 'cached';
         };
     }
 }
@@ -78,6 +107,23 @@ function purgeOptional(options: SlashOptions<'purgeOpt'>): void {
     expectTypeOf(options.getMentionable('anyone')).toEqualTypeOf<GuildMember | Role | User | null>();
     expectTypeOf(options.getAttachment('file')).toEqualTypeOf<Attachment | null>();
 }
+
+function dmScalarsAreUnchanged(options: SlashOptions<'askDm'>): void {
+    expectTypeOf(options.getString('label')).toEqualTypeOf<string>();
+    expectTypeOf(options.getUser('who')).toEqualTypeOf<User>();
+}
+
+function dmResolvedWidensToTheRawPayload(options: SlashOptions<'askDm'>): void {
+    expectTypeOf(options.getMember('who')).toEqualTypeOf<GuildMember | APIInteractionDataResolvedGuildMember | null>();
+    expectTypeOf(options.getChannel('where')).toEqualTypeOf<GuildBasedChannel | APIInteractionDataResolvedChannel>();
+    expectTypeOf(options.getRole('what')).toEqualTypeOf<Role | APIRole>();
+    expectTypeOf(options.getMentionable('anyone')).toEqualTypeOf<
+        GuildMember | APIInteractionDataResolvedGuildMember | Role | APIRole | User
+    >();
+}
+
+void dmScalarsAreUnchanged;
+void dmResolvedWidensToTheRawPayload;
 
 function auditStringChoices(options: SlashOptions<'audit'>): void {
     expectTypeOf(options.getString('mode')).toEqualTypeOf<'fast' | 'deep'>();

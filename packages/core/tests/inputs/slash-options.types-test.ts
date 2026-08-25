@@ -38,33 +38,48 @@ interface StubLens extends OptionLens {
     attachment: StubAttachment;
 }
 
-declare module '#registries/SlashOptionRegistry' {
-    interface SlashOptionRegistry {
+declare module '#registries/SlashRegistry' {
+    interface SlashRegistry {
         coreReq: {
-            who: { kind: 'user'; required: true };
-            what: { kind: 'role'; required: true };
-            anyone: { kind: 'mentionable'; required: true };
-            file: { kind: 'attachment'; required: true };
-            count: { kind: 'integer'; required: true };
-            ratio: { kind: 'number'; required: true };
-            silent: { kind: 'boolean'; required: true };
-            label: { kind: 'string'; required: true };
+            options: {
+                who: { kind: 'user'; required: true };
+                what: { kind: 'role'; required: true };
+                anyone: { kind: 'mentionable'; required: true };
+                file: { kind: 'attachment'; required: true };
+                count: { kind: 'integer'; required: true };
+                ratio: { kind: 'number'; required: true };
+                silent: { kind: 'boolean'; required: true };
+                label: { kind: 'string'; required: true };
+            };
+            cache: 'cached';
         };
         coreOpt: {
-            who: { kind: 'user'; required: false };
-            label: { kind: 'string'; required: false };
+            options: {
+                who: { kind: 'user'; required: false };
+                label: { kind: 'string'; required: false };
+            };
+            cache: 'cached';
         };
         coreChoices: {
-            mode: { kind: 'string'; required: true; choices: ['fast', 'deep'] };
-            level: { kind: 'integer'; required: true; choices: [1, 2, 3] };
+            options: {
+                mode: { kind: 'string'; required: true; choices: ['fast', 'deep'] };
+                level: { kind: 'integer'; required: true; choices: [1, 2, 3] };
+            };
+            cache: 'cached';
         };
         coreChannels: {
-            dest: { kind: 'channel'; required: true; channelTypes: [0] };
-            some: { kind: 'channel'; required: false; channelTypes: [0, 5] };
-            any: { kind: 'channel'; required: true };
+            options: {
+                dest: { kind: 'channel'; required: true; channelTypes: [0] };
+                some: { kind: 'channel'; required: false; channelTypes: [0, 5] };
+                any: { kind: 'channel'; required: true };
+            };
+            cache: 'cached';
         };
         coreScalarOnly: {
-            reason: { kind: 'string'; required: true };
+            options: {
+                reason: { kind: 'string'; required: true };
+            };
+            cache: 'cached';
         };
     }
 }

@@ -10,7 +10,7 @@ import { slashRouteOf } from '#src/dispatch/slashRouteOf';
 
 import type { Core } from '#interfaces/Core';
 import type { API } from '@discordjs/core/http-only';
-import type { AutocompleteOptions, DispatchContext, SlashOptionRegistry } from '@seedcord/core';
+import type { AutocompleteOptions, DispatchContext, SlashRegistry } from '@seedcord/core';
 import type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
 import type {
     APIApplicationCommandOptionChoice,
@@ -18,7 +18,7 @@ import type {
 } from 'discord-api-types/v10';
 import type { Promisable } from 'type-fest';
 
-type FocusedArms<Route extends keyof SlashOptionRegistry, Ret> = {
+type FocusedArms<Route extends keyof SlashRegistry, Ret> = {
     [Name in AutocompletableNames<Route>]: (
         value: string,
         respond: (
@@ -34,9 +34,9 @@ type FocusedArms<Route extends keyof SlashOptionRegistry, Ret> = {
  * `this.match`, read already-entered sibling options with `this.options`, and find which command fired
  * with `this.route`.
  *
- * @typeParam Route - One or more route keys from {@link SlashOptionRegistry}, e.g. `'search'`.
+ * @typeParam Route - One or more route keys from {@link SlashRegistry}, e.g. `'search'`.
  */
-export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistry> extends BaseHandler<
+export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> extends BaseHandler<
     APIApplicationCommandAutocompleteInteraction,
     Core
 > {

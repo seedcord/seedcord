@@ -5,14 +5,18 @@ import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 
 import { silentLogger } from '../silentLogger';
 
-import type { SlashTables } from '#commands/codegen/AugmentationBuilder';
+import type { RouteOptions } from '#commands/codegen/AugmentationBuilder';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord.js';
 
-function tablesFor(...commands: { toJSON: () => RESTPostAPIApplicationCommandsJSONBody }[]): SlashTables {
-    return new AugmentationBuilder(silentLogger).generate(
+function tablesFor(
+    ...commands: { toJSON: () => RESTPostAPIApplicationCommandsJSONBody }[]
+): Record<string, RouteOptions> {
+    const { slash } = new AugmentationBuilder(silentLogger).generate(
         commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() })),
         {}
-    ).slash;
+    );
+
+    return Object.fromEntries(Object.entries(slash).map(([route, row]) => [route, row.options]));
 }
 
 describe('AugmentationBuilder channelTypes', () => {

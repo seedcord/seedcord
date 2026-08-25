@@ -4,7 +4,7 @@ import { ApplicationCommandOptionType, ApplicationCommandType } from 'discord-ap
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
-import { ContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
+import { UserContextMenuHandler, MessageContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import type { Core } from '#interfaces/Core';
@@ -20,17 +20,26 @@ import type {
 } from 'discord-api-types/v10';
 
 declare module '@seedcord/core' {
-    interface SlashOptionRegistry {
+    interface SlashRegistry {
         hbBan: {
-            reason: { kind: 'string'; required: true };
+            options: {
+                reason: { kind: 'string'; required: true };
+            };
+            cache: 'cached';
         };
         hbKick: {
-            note: { kind: 'string'; required: false };
+            options: {
+                note: { kind: 'string'; required: false };
+            };
+            cache: 'cached';
         };
         hbSearch: {
-            query: { kind: 'string'; required: true; autocomplete: true };
-            tag: { kind: 'string'; required: false; autocomplete: true };
-            limit: { kind: 'integer'; required: false };
+            options: {
+                query: { kind: 'string'; required: true; autocomplete: true };
+                tag: { kind: 'string'; required: false; autocomplete: true };
+                limit: { kind: 'integer'; required: false };
+            };
+            cache: 'cached';
         };
     }
 }
@@ -274,7 +283,7 @@ describe('ContextMenuHandler target', () => {
     it('resolves the right-clicked user and its member on a user menu', async () => {
         let target: APIUser | null = null;
         let nick: string | null | undefined;
-        class Profile extends ContextMenuHandler<ApplicationCommandType.User> {
+        class Profile extends UserContextMenuHandler<never> {
             execute(): Promise<void> {
                 target = this.target;
                 nick = this.targetMember?.nick;
@@ -290,11 +299,10 @@ describe('ContextMenuHandler target', () => {
 
     it('resolves the right-clicked message on a message menu', async () => {
         let target: APIMessage | null = null;
-        class Report extends ContextMenuHandler<ApplicationCommandType.Message> {
+        class Report extends MessageContextMenuHandler<never> {
             execute(): Promise<void> {
                 target = this.target;
                 expectTypeOf(this.target).toEqualTypeOf<APIMessage>();
-                expectTypeOf(this.targetMember).toBeNever();
                 return Promise.resolve();
             }
         }

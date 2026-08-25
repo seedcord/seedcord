@@ -6,15 +6,19 @@ import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 
 import { silentLogger } from '../silentLogger';
 
-import type { SlashTables } from '#commands/codegen/AugmentationBuilder';
+import type { RouteOptions } from '#commands/codegen/AugmentationBuilder';
 import type { ILogger } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord.js';
 
-function tablesFor(...commands: { toJSON: () => RESTPostAPIApplicationCommandsJSONBody }[]): SlashTables {
-    return new AugmentationBuilder(silentLogger).generate(
+function tablesFor(
+    ...commands: { toJSON: () => RESTPostAPIApplicationCommandsJSONBody }[]
+): Record<string, RouteOptions> {
+    const { slash } = new AugmentationBuilder(silentLogger).generate(
         commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() })),
         {}
-    ).slash;
+    );
+
+    return Object.fromEntries(Object.entries(slash).map(([route, row]) => [route, row.options]));
 }
 
 describe('AugmentationBuilder', () => {
@@ -154,7 +158,7 @@ describe('AugmentationBuilder', () => {
 
         const { slash } = new AugmentationBuilder(logger).generate([{ sourceFile: 'admin.ts', json }], {});
 
-        expect(slash).toEqual({ 'admin/ping': {} });
+        expect(slash).toEqual({ 'admin/ping': { options: {}, cache: undefined } });
         expect(warnings.some((warning) => warning.includes('admin/empty'))).toBe(true);
     });
 
@@ -380,7 +384,7 @@ describe('AugmentationBuilder', () => {
 
         const { slash } = new AugmentationBuilder(logger).generate([{ sourceFile: 'admin.ts', json }], {});
 
-        expect(slash).toEqual({ 'admin/ping': {} });
+        expect(slash).toEqual({ 'admin/ping': { options: {}, cache: undefined } });
         expect(slash).not.toHaveProperty('admin/empty');
         expect(warnings.some((warning) => warning.includes('admin/empty'))).toBe(true);
     });
@@ -445,8 +449,8 @@ describe('AugmentationBuilder', () => {
         );
 
         expect(registry.slash).toEqual({});
-        expect(registry.userContextMenus).toEqual(['View Profile']);
-        expect(registry.messageContextMenus).toEqual(['Report Message']);
+        expect(registry.userContextMenus).toEqual({ 'View Profile': { cache: undefined } });
+        expect(registry.messageContextMenus).toEqual({ 'Report Message': { cache: undefined } });
     });
 
     it('allows a user command and a message command to share a name', () => {
@@ -461,8 +465,8 @@ describe('AugmentationBuilder', () => {
             {}
         );
 
-        expect(registry.userContextMenus).toEqual(['Report']);
-        expect(registry.messageContextMenus).toEqual(['Report']);
+        expect(registry.userContextMenus).toEqual({ Report: { cache: undefined } });
+        expect(registry.messageContextMenus).toEqual({ Report: { cache: undefined } });
     });
 
     it('throws naming both files when two user context menus share a name', () => {

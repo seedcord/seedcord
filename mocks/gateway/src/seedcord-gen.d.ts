@@ -8,22 +8,22 @@ declare module '@seedcord/gateway' {
     interface Core {
         db: (typeof Bot)['db'];
     }
-    interface SlashOptionRegistry {
-        defernotice: {};
-        feed: {};
-        leaderboard: {};
-        maintenance: { notify: { kind: 'user'; required: true }; target: { kind: 'channel'; required: true; channelTypes: [0, 5] }; reason: { kind: 'string'; required: false } };
-        ping: { detailed: { kind: 'boolean'; required: false } };
-        probe: { query: { kind: 'string'; required: true; autocomplete: true }; count: { kind: 'integer'; required: false; autocomplete: true }; ratio: { kind: 'number'; required: false; autocomplete: true }; category: { kind: 'string'; required: false; choices: ['books', 'films'] }; exact: { kind: 'boolean'; required: false } };
-        roster: {};
-        'test/confirmable/v2': {};
-        throw: {};
+    interface SlashRegistry {
+        defernotice: { options: {}; cache: 'cached' };
+        feed: { options: {}; cache: 'cached' };
+        leaderboard: { options: {}; cache: 'cached' };
+        maintenance: { options: { notify: { kind: 'user'; required: true }; target: { kind: 'channel'; required: true; channelTypes: [0, 5] }; reason: { kind: 'string'; required: false } }; cache: 'cached' };
+        ping: { options: { detailed: { kind: 'boolean'; required: false } }; cache: 'cached' };
+        probe: { options: { query: { kind: 'string'; required: true; autocomplete: true }; count: { kind: 'integer'; required: false; autocomplete: true }; ratio: { kind: 'number'; required: false; autocomplete: true }; category: { kind: 'string'; required: false; choices: ['books', 'films'] }; exact: { kind: 'boolean'; required: false } }; cache: 'cached' };
+        roster: { options: {}; cache: 'cached' };
+        'test/confirmable/v2': { options: {}; cache: 'cached' };
+        throw: { options: {}; cache: 'cached' };
     }
     interface UserContextMenuRegistry {
-        'View Profile': true;
+        'View Profile': { cache: 'cached' };
     }
     interface MessageContextMenuRegistry {
-        'Report Message': true;
+        'Report Message': { cache: 'cached' };
     }
     interface EmojiMap {
         Cancel: 'application';

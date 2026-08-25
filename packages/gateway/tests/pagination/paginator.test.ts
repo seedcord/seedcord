@@ -20,7 +20,7 @@ import type { RepliableHandler } from '#handlers/RepliableHandler';
 import type { Core } from '#interfaces/Core';
 import type { PageContext } from '#pagination/PageContext';
 import type { Repliables } from '#src/handlers/interactionTypes';
-import type { APIContainerComponent, ButtonInteraction } from 'discord.js';
+import type { APIContainerComponent, ButtonInteraction, Guild } from 'discord.js';
 
 // justified: the paginator reads the interaction and the bus every write reports on
 const core = { bus: stubBus() } as unknown as Core;
@@ -235,3 +235,18 @@ describe('Paginator typing', () => {
         expect(nums.cursor.prefix).toBe('nums');
     });
 });
+
+const Roster = new Paginator({
+    prefix: 'rostercacheprobe',
+    source: new ArraySource(() => ['a', 'b'], { perPage: 1 }),
+    renderItem: (name) => name
+});
+
+class RosterNav extends Roster.Handler {
+    readsGuild(): string | undefined {
+        expectTypeOf(this.event.guild).toEqualTypeOf<Guild | null>();
+        return this.event.guild?.name;
+    }
+}
+
+void RosterNav;
