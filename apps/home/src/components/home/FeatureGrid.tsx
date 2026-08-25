@@ -59,7 +59,7 @@ const GROUPS: Group[] = [
             {
                 icon: Waypoints,
                 label: 'decorator routing',
-                gloss: '@SlashRoute, @ButtonRoute and four more bind handlers at startup'
+                gloss: '@SlashRoute, @ButtonRoute and five more bind handlers at startup'
             },
             { icon: ListTree, label: 'subcommand routing', gloss: 'subcommands and groups, routed by name' },
             {
