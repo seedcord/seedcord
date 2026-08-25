@@ -16,8 +16,20 @@ const THEMES = {
     dark: 'seedcord-dark'
 } as const satisfies Record<'light' | 'dark', string>;
 
-// shiki registers each grammar under its full name and its short alias
-const HIGHLIGHTABLE = new Set(['ts', 'typescript', 'tsx', 'js', 'javascript', 'jsx', 'json', 'bash']);
+// shiki registers each grammar under its full name and its short alias. txt needs no grammar, shiki special-cases it
+const HIGHLIGHTABLE = new Set([
+    'ts',
+    'typescript',
+    'tsx',
+    'js',
+    'javascript',
+    'jsx',
+    'json',
+    'bash',
+    'txt',
+    'text',
+    'plaintext'
+]);
 
 export function isHighlightable(lang: string): lang is BundledLanguage {
     return HIGHLIGHTABLE.has(lang);

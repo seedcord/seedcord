@@ -8,7 +8,8 @@ import type { ReactElement, ReactNode } from 'react';
 
 export interface CodeBlockProps {
     representation: CodeRepresentation;
-    label?: string | undefined;
+    /** Sits at the header's left edge. */
+    label?: ReactNode;
     /** Defaults to `representation.text`. Pass `null` to leave the copy button out. */
     copyValue?: string | null | undefined;
     /** Rendered in the header beside the copy button. */
@@ -31,7 +32,7 @@ export function CodeBlock({ representation, label, copyValue, actions, className
                         'flex items-center justify-between gap-3 border-b border-(--border)/70 bg-(--bg-code-header) px-3 py-1 text-xs font-medium text-(--text-muted)'
                     )}
                 >
-                    <span className={cn('truncate')}>{label}</span>
+                    <span className={cn(typeof label === 'string' && 'truncate')}>{label}</span>
                     <span className={cn('flex shrink-0 items-center gap-2')}>
                         {actions}
                         {showCopy ? (
