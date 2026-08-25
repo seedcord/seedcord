@@ -5,12 +5,15 @@
 :root {
     --content-max: 90rem;
     --nav-h: 4.5rem; /* fallback until the navbar measures its own height */
+    /* the collapsed toc bar sits under the navbar below lg and would cover a scrolled-to heading */
+    --heading-gap: 3.5rem;
 }
 
 /* the navbar shows its tab row from lg up */
 @media (width >= 64rem) {
     :root {
         --nav-h: 7.5rem;
+        --heading-gap: 1.5rem;
     }
 }
 
@@ -29,6 +32,6 @@
     }
 
     :is(h1, h2, h3, h4, h5, h6)[id] {
-        scroll-margin-top: calc(var(--nav-h, 0px) + 1.5rem);
+        scroll-margin-top: calc(var(--nav-h, 0px) + var(--heading-gap));
     }
 }
