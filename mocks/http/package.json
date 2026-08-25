@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/mock-http",
     "type": "module",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "engines": {
         "node": ">=24.11"
     },

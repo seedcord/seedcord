@@ -1,5 +1,16 @@
 # @seedcord/core
 
+## 0.3.0
+
+### Minor Changes
+
+- a46a7dd: **BREAKING:** A handler's cache state now follows the `contexts` its command declares, so a command a DM can reach types `interaction.guild` as `Guild | null`. `SlashOptionRegistry` becomes `SlashRegistry`, `ContextMenuHandler` splits into `UserContextMenuHandler` and `MessageContextMenuHandler` with a route decorator each, a paginator's nav handler reads `this.event.guild` as nullable, and a gateway bot registering a guild-capable command without the `Guilds` intent throws at startup. Run `seedcord codegen` after upgrading. This won't affect most commands.
+
+### Patch Changes
+
+- Updated dependencies [a46a7dd]
+    - @seedcord/errors@0.4.2
+
 ## 0.2.1
 
 ### Patch Changes
@@ -12,19 +23,6 @@
     - @seedcord/logger@0.2.1
     - @seedcord/utils@0.8.6
     - @seedcord/types@0.9.1
-
-## 0.2.1-next.0
-
-### Patch Changes
-
-- 8f662bb: The gate mismatch compile error now reads `gate 'Name' requires a X handler, and this handler is Y`. The `@see` lines on the gate factories now point at your transport package for `@Gated`.
-- 1d2f1e3: Updated TSDoc reference generation.
-- Updated dependencies [1d2f1e3]
-    - @seedcord/event-emitter@0.1.4-next.0
-    - @seedcord/errors@0.4.1-next.0
-    - @seedcord/logger@0.2.1-next.0
-    - @seedcord/utils@0.8.6-next.0
-    - @seedcord/types@0.9.1-next.0
 
 ## 0.2.0
 

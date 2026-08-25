@@ -1,5 +1,12 @@
 # @seedcord/mock-gateway
 
+## 0.2.30
+
+### Patch Changes
+
+- Updated dependencies [a46a7dd]
+    - @seedcord/gateway@0.3.0
+
 ## 0.2.29
 
 ### Patch Changes
