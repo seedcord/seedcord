@@ -47,9 +47,9 @@ export type NamesFor<Kind extends ContextMenuKind> = Extract<keyof MenuRegistryF
 export type MenuCacheFor<Kind extends ContextMenuKind, Names extends NamesFor<Kind>> =
     undefined extends MenuCacheOf<Kind, Names> ? undefined : 'cached';
 
-// a name the registry cannot answer for falls back to 'cached'
+// a name the registry cannot answer for carries no guild guarantee
 type MenuCacheOf<Kind extends ContextMenuKind, Names extends NamesFor<Kind>> = [Names] extends [never]
-    ? 'cached'
+    ? undefined
     : MenuRegistryFor<Kind>[Names] extends { cache: infer Cache }
       ? Cache
-      : 'cached';
+      : undefined;

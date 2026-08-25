@@ -46,10 +46,7 @@ it('derives one cache state for a handler serving several routes', () => {
     expectTypeOf<CacheFor<'roll' | 'support' | 'streak'>>().toEqualTypeOf<undefined>();
 });
 
-it('falls back to cached for a row generated before the cache existed', () => {
-    expectTypeOf<CacheFor<'legacy'>>().toEqualTypeOf<'cached'>();
-});
-
-it('falls back to cached for a handler that names no route', () => {
-    expectTypeOf<CacheFor<never>>().toEqualTypeOf<'cached'>();
+it('claims no guild for a row the registry cannot answer for', () => {
+    expectTypeOf<CacheFor<'legacy'>>().toEqualTypeOf<undefined>();
+    expectTypeOf<CacheFor<never>>().toEqualTypeOf<undefined>();
 });

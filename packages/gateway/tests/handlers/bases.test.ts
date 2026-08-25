@@ -15,11 +15,12 @@ import type { Core } from '#interfaces/Core';
 import type { ModalLike } from '@seedcord/core/internal';
 import type { ButtonInteraction, ChatInputCommandInteraction, ModalSubmitInteraction } from 'discord.js';
 
-type Slash = ChatInputCommandInteraction<'cached'>;
+// a handler naming no route carries no guild guarantee
+type Slash = ChatInputCommandInteraction<undefined>;
 type Button = ButtonInteraction<'cached'>;
 type Modal = ModalSubmitInteraction<'cached'>;
 
-// justified: the fixture implements only the interaction surface the sender reads, cached-cache matches the base generic
+// justified: the fixture implements only the interaction surface the sender reads
 function asSlash(mock: ReturnType<typeof mockInteraction>): Slash {
     return mock as unknown as Slash;
 }

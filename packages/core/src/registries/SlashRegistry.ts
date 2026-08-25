@@ -54,9 +54,9 @@ export interface SlashRegistry {}
  */
 export type CacheFor<Route extends keyof SlashRegistry> = undefined extends CacheOf<Route> ? undefined : 'cached';
 
-// a route the registry cannot answer for falls back to 'cached'
+// a route the registry cannot answer for carries no guild guarantee
 type CacheOf<Route extends keyof SlashRegistry> = [Route] extends [never]
-    ? 'cached'
+    ? undefined
     : SlashRegistry[Route] extends { cache: infer Cache }
       ? Cache
-      : 'cached';
+      : undefined;
