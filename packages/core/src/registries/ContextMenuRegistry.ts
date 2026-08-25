@@ -1,13 +1,7 @@
-import type { RouteCache } from '#registries/SlashRegistry';
 import type { ApplicationCommandType } from 'discord-api-types/v10';
 
 /** The two context-menu command kinds Discord defines. */
 export type ContextMenuKind = ApplicationCommandType.User | ApplicationCommandType.Message;
-
-/** Everything `seedcord codegen` reads off one context-menu command. */
-export interface ContextMenuCommand {
-    cache: RouteCache;
-}
 
 /**
  * Maps each user context-menu command name to its cache state. `seedcord codegen` populates this. It reads
@@ -39,8 +33,7 @@ export interface UserContextMenuRegistry {}
  */
 export interface MessageContextMenuRegistry {}
 
-/** The registry holding one kind's command names. */
-export type MenuRegistryFor<Kind extends ContextMenuKind> = Kind extends ApplicationCommandType.User
+type MenuRegistryFor<Kind extends ContextMenuKind> = Kind extends ApplicationCommandType.User
     ? UserContextMenuRegistry
     : MessageContextMenuRegistry;
 

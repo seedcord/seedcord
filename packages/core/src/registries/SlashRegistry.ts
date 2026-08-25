@@ -25,7 +25,7 @@ export interface SlashOption {
 }
 
 /** Everything `seedcord codegen` reads off one slash route. */
-export interface SlashRoute {
+export interface SlashRouteEntry {
     options: Record<string, SlashOption>;
     cache: RouteCache;
 }

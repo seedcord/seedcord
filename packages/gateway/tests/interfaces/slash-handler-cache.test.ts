@@ -2,7 +2,7 @@ import { expectTypeOf, it } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import type { CacheFor } from '@seedcord/core';
+import type { CacheFor } from '@seedcord/core/internal';
 import type { Guild } from 'discord.js';
 
 // Compile-time spec for the cache state a handler derives from its command's contexts. Routes here are

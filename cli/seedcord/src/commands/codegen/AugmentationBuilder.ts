@@ -3,7 +3,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { routeLeavesOf, type SlashRouteLeaf } from '@seedcord/utils/internal';
 import { ApplicationCommandOptionType, ApplicationCommandType, InteractionContextType } from 'discord-api-types/v10';
 
-import type { OptionKind, SlashOption } from '@seedcord/core';
+import type { OptionKind, RouteCache, SlashOption, SlashRouteEntry } from '@seedcord/core/internal';
 import type { EmojiConfig, ILogger } from '@seedcord/types';
 import type {
     APIApplicationCommandBasicOption,
@@ -14,16 +14,11 @@ import type {
 
 export type RouteOptions = Record<string, SlashOption>;
 
-export interface SlashRouteRow {
-    options: RouteOptions;
-    cache: 'cached' | undefined;
-}
-
 // keyed by route string (`cmd`, `cmd/sub`, or `cmd/group/sub`)
-export type SlashTables = Record<string, SlashRouteRow>;
+export type SlashTables = Record<string, SlashRouteEntry>;
 
 // keyed by the command name discord shows in the menu
-export type ContextMenuTables = Record<string, { cache: 'cached' | undefined }>;
+export type ContextMenuTables = Record<string, { cache: RouteCache }>;
 
 export type EmojiKinds = Record<string, 'string' | 'tuple'>;
 

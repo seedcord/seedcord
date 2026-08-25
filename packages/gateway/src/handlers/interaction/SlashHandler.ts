@@ -6,7 +6,8 @@ import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
-import type { CacheFor, SlashRegistry } from '@seedcord/core';
+import type { SlashRegistry } from '@seedcord/core';
+import type { CacheFor } from '@seedcord/core/internal';
 import type { CacheType, ChatInputCommandInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';
 

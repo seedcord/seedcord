@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 
-export type * from '#registries/ContextMenuRegistry';
-export type * from '#registries/SlashRegistry';
+export type { MessageContextMenuRegistry, UserContextMenuRegistry } from '#registries/ContextMenuRegistry';
+export type { SlashRegistry } from '#registries/SlashRegistry';
 
 export { Commands, ContextMenus } from '#src/commands/CommandInjector';
 export type {

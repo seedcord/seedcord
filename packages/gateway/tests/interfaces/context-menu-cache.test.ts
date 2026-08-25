@@ -2,7 +2,7 @@ import { expectTypeOf, it } from 'vitest';
 
 import { UserContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
 
-import type { MenuCacheFor } from '@seedcord/core';
+import type { MenuCacheFor } from '@seedcord/core/internal';
 import type { ApplicationCommandType, GuildMember } from 'discord.js';
 
 // Compile-time spec for the cache a context-menu handler derives from its command's contexts.

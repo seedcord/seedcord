@@ -2,7 +2,7 @@ import { ContextMenuKindBrand, ContextMenuNamesBrand } from '@seedcord/core/inte
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
-import type { MenuCacheFor, NamesFor } from '@seedcord/core';
+import type { MenuCacheFor, NamesFor } from '@seedcord/core/internal';
 import type {
     APIInteractionGuildMember,
     ApplicationCommandType,

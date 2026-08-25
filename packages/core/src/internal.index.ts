@@ -81,6 +81,9 @@ export {
 } from '#customId/routing';
 export type { DecodedParams } from '#customId/Field';
 
+export type { MenuCacheFor, NamesFor } from '#registries/ContextMenuRegistry';
+export type { CacheFor, OptionKind, RouteCache, SlashOption, SlashRouteEntry } from '#registries/SlashRegistry';
+
 export type { OptionLens } from '#inputs/OptionLens';
 export type { SlashOptions } from '#inputs/SlashOptions';
 export type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '#inputs/AutocompleteOptions';

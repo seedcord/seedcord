@@ -1,5 +1,5 @@
-import type { CacheFor, SlashRegistry } from '@seedcord/core';
-import type { SlashOptions as OptionView } from '@seedcord/core/internal';
+import type { SlashRegistry } from '@seedcord/core';
+import type { CacheFor, SlashOptions as OptionView } from '@seedcord/core/internal';
 import type { CacheType, CommandInteractionOption } from 'discord.js';
 
 interface GatewayLens<Cache extends CacheType> {

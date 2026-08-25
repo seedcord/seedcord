@@ -5,12 +5,12 @@ import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 
 import { silentLogger } from '../silentLogger';
 
-import type { SlashRouteRow } from '#commands/codegen/AugmentationBuilder';
+import type { SlashRouteEntry } from '@seedcord/core/internal';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord.js';
 
 function cacheFor(
     ...commands: { toJSON: () => RESTPostAPIApplicationCommandsJSONBody }[]
-): Record<string, SlashRouteRow['cache']> {
+): Record<string, SlashRouteEntry['cache']> {
     const { slash } = new AugmentationBuilder(silentLogger).generate(
         commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() })),
         {}

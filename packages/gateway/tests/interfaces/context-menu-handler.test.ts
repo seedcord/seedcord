@@ -25,6 +25,7 @@ declare module '@seedcord/core' {
     }
 }
 
+// justified: the target getters read the event only
 const core = {} as unknown as Core;
 
 function userMenu(target: User, member: GuildMember | null): UserContextMenuCommandInteraction<'cached'> {

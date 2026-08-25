@@ -6,8 +6,8 @@ import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
 import { BaseHandler } from '#src/handlers/BaseHandler';
 
 import type { Core } from '#interfaces/Core';
-import type { AutocompleteOptions, CacheFor, DispatchContext, SlashRegistry } from '@seedcord/core';
-import type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
+import type { AutocompleteOptions, DispatchContext, SlashRegistry } from '@seedcord/core';
+import type { AutocompletableNames, CacheFor, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
 import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction, CacheType } from 'discord.js';
 import type { Promisable } from 'type-fest';
 

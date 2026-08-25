@@ -12,7 +12,7 @@ import type { Core } from '#interfaces/Core';
 
 declare module '@seedcord/core' {
     interface SlashRegistry {
-        apiprobe: Record<never, never>;
+        apiprobe: { options: Record<never, never>; cache: 'cached' };
     }
 }
 
