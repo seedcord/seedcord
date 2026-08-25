@@ -78,6 +78,7 @@
         "jiti": "^2.7.0",
         "minimatch": "^10.2.6",
         "react": "catalog:react",
+        "reflect-metadata": "catalog:deps",
         "tsc-alias": "^1.9.1",
         "tsx": "catalog:deps",
         "vite": "catalog:deps",

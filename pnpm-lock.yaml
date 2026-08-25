@@ -673,6 +673,9 @@ importers:
       react:
         specifier: catalog:react
         version: 19.2.8
+      reflect-metadata:
+        specifier: catalog:deps
+        version: 0.2.2
       tsc-alias:
         specifier: ^1.9.1
         version: 1.9.1

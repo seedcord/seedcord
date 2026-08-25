@@ -214,6 +214,8 @@ const messages = {
         `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
     [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>
         `Could not read the commands directory ${dir} during codegen. ${reason}`,
+    [SeedcordErrorCode.CliCodegenCommandConstructorThrew]: (name: string, file: string, reason: string) =>
+        `${name} threw while codegen constructed it. Fix its constructor in ${file}. ${reason}`,
     [SeedcordErrorCode.CliCodegenDuplicateContextMenu]: (
         kind: string,
         name: string,

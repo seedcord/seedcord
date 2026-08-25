@@ -1,7 +1,10 @@
+import 'reflect-metadata';
+
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 
+import { CommandMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
@@ -118,7 +121,7 @@ export class CodegenRunner {
                     // a barrel re-exports the same class object
                     if (seen.has(exported)) continue;
                     seen.add(exported);
-                    const json = this.commandJsonOf(exported);
+                    const json = this.commandJsonOf(exported, fullPath);
                     if (json) yield { sourceFile: fullPath, json };
                 }
             }
@@ -147,14 +150,21 @@ export class CodegenRunner {
         };
     }
 
-    private commandJsonOf(exported: unknown): RESTPostAPIApplicationCommandsJSONBody | undefined {
+    private commandJsonOf(exported: unknown, sourceFile: string): RESTPostAPIApplicationCommandsJSONBody | undefined {
         if (typeof exported !== 'function') return undefined;
 
         let instance: unknown;
         try {
             instance = new (exported as new () => unknown)();
-        } catch {
-            return undefined;
+        } catch (error: unknown) {
+            // the commands directory holds helpers and constants too
+            if (!Reflect.hasMetadata(CommandMetadataKey, exported)) return undefined;
+            const reason = Error.isError(error) ? error.message : 'Unknown error';
+            throw new SeedcordError(SeedcordErrorCode.CliCodegenCommandConstructorThrew, [
+                exported.name,
+                sourceFile,
+                reason
+            ]);
         }
 
         if (!this.isBuilderLike(instance)) return undefined;

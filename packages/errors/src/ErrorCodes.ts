@@ -247,6 +247,8 @@ export enum SeedcordErrorCode {
     CliTunnelUnreachable = 3125,
     /** A config field is present with the wrong shape. */
     CliConfigInvalidField = 3126,
+    /** A class carrying `@RegisterCommand` threw while codegen constructed it. */
+    CliCodegenCommandConstructorThrew = 3127,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,
