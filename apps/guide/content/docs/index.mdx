@@ -1,102 +1,138 @@
 ---
-title: What seedcord is
+title: Introduction
 description: seedcord wires a Discord bot together on top of discord.js and types every part of it.
 ---
 
-Here is a slash command, and the code that runs when someone uses it.
-
-```ts twoslash title="src/commands/Ping.ts"
-import {
-    BuilderComponent,
-    RegisterCommand
-} from '@seedcord/gateway';
-
-@RegisterCommand('global')
-export class Ping extends BuilderComponent<'command'> {
-    constructor() {
-        super('command');
-
-        this.instance
-            .setName('ping')
-            .setDescription('Check that the bot is answering')
-            .addBooleanOption((option) =>
-                option
-                    .setName('detailed')
-                    .setDescription('Include process uptime')
-            );
-    }
-}
-```
+Commands, events, components, gates, replies, and the lifecycle all come with the framework. You write your bot's features. A wrong route or a wrong option name is a compile error, before the bot ever connects.
 
 <Callout type="note">
-    [BuilderComponent](ref:core/BuilderComponent) wraps discord.js's
-    builders. `this.instance` is the builder itself, typed to the
-    kind you pass to `super()`. A command declared this way is
-    guild-only until you call `setContexts`.
+    seedcord is pre-1.0, so a minor version can break. Read the
+    changelog before you bump. The http transport's edge build for
+    Cloudflare Workers is still being written and cannot be used
+    yet.
 </Callout>
 
-```ts twoslash hovers title="src/handlers/Ping.ts"
-import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+## What seedcord covers
 
-@SlashRoute('ping')
-export class Ping extends SlashHandler<'ping'> {
-    public async execute(): Promise<void> {
-        const detailed = this.options.getBoolean('detailed');
+- **Commands.** Slash commands, subcommands and groups, user and message context menus, autocomplete. seedcord sends every command it finds to Discord when the bot starts.
+- **Components.** Buttons, select menus, modals, and pagination. Discord hands a click back as the `custom_id` string you built, and parsing it is on you. In seedcord you declare the fields once, and the handler gets them back typed. The fields are packed, so you get more characters per character.
+- **Replying.** Discord allows one first response per interaction, then edits and follow-ups. seedcord tracks which one you already sent and throws a readable error when you call the wrong one.
+- **Gates.** A check that runs before your handler and refuses by throwing. `@Gated` puts one on a handler. You write your own with `defineGate`. Combine them with `and` when a command needs two things at once, or `or` when either will do. seedcord ships a catalog of gates you can import and use directly, like cooldowns and permission checks.
+- **Throwing.** One `throw` stops the command, shows the user your message, logs it, and publishes it for telemetry. It picks the right reply method for whatever state the interaction is already in. `Notice` is the one you subclass with your own message. `Fault` shows a generic failure and posts the real error to a Discord channel. `Silence` does all of it except the reply.
+- **Events.** Every event discord.js emits, on the gateway. You can publish and subscribe to your own alongside them.
+- **The dev loop.** Edit a handler and the running bot picks it up without a restart. Change a command and it asks whether to re-register. On http it opens a tunnel and points your app at it.
 
-        await this.reply(
-            detailed === true ? 'Pong, at length' : 'Pong'
-        );
-    }
-}
+## Philosophy
+
+If you have built a Discord bot without a framework, you have written the routing yourself. A switch on the command name, a tree of if/else on the custom id, one controller per interaction kind, all of it extended by hand each time you add a command. Then you restart the bot to see a change, wait for the login, and wait for Discord to take the new command.
+
+I wrote all that, got bored of it, and copied it into my next bot anyway.
+
+The frameworks I looked at put the routing, the checks, and the work in the same handler. A handler should do one thing.
+
+So in seedcord a command, its handler, and its components are three separate files. The types run between them, which is what keeps three files from turning into three things you sync by hand.
+
+Three rules decide what features seedcord has, in this order.
+
+1. Developer experience wins.
+2. seedcord does as much as it can reliably do for you, and stops before it takes a decision off you.
+3. Anything that can be typed is typed.
+
+## What a seedcord project looks like
+
+```txt title="my-bot" output
+my-bot/
+├─ src/
+│  ├─ commands/
+│  │  └─ Ping.ts
+│  ├─ handlers/
+│  │  └─ Ping.ts
+│  ├─ events/
+│  │  └─ Ready.ts
+│  ├─ bot.ts
+│  ├─ index.ts
+│  └─ seedcord-gen.d.ts
+├─ seedcord.config.ts
+├─ .env
+└─ package.json
 ```
 
-Hover `getBoolean` and the type comes back `boolean | null`. You declared that option once, on the command above, and the accessor reads its name and its shape from there.
+`src/commands/` holds what a command looks like on Discord. `src/handlers/` holds the code that runs when someone uses one. `src/events/` holds everything else happening in a server. `bot.ts` is your config, and `seedcord-gen.d.ts` is written by the CLI.
 
-## A typo stops the build
+One command sets this up, along with the tsconfig, lint, and formatter files.
 
-```ts twoslash title="src/handlers/Ping.ts"
+<Install create="seedcord" />
+
+## Your commands type your handlers
+
+You declare an option once, on the command. The handler asks for it by name and gets back the type you declared.
+
+```ts twoslash title="src/handlers/Ban.ts"
 // @errors: 2345
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 
-@SlashRoute('ping')
-export class Ping extends SlashHandler<'ping'> {
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
     public async execute(): Promise<void> {
-        const detailed = this.options.getBoolean('detaild');
+        const target = this.options.getUser('target');
+        //    ^?
+
+        await this.reply(`Banned ${target.username}`);
+
+        this.options.getString('resaon');
     }
 }
 ```
 
-`tsc` reports that before the bot ever connects. So does the route string. A handler for a command you never declared fails to compile.
+`target` is required on the command, so it arrives as a `User` with no null check. `reason` is optional, so that one arrives as `string | null`. The typo on the last line stops the build.
 
-## What comes with it
+`seedcord codegen` reads your command files and writes `seedcord-gen.d.ts`. The dev server runs it every time you save.
 
-**Commands and components.** A command is a class, and a [SlashHandler](ref:gateway/SlashHandler) runs when someone uses it. Subcommands, groups, autocomplete, and both context menus route the same way. Buttons, select menus, and modals reach a [ComponentHandler](ref:gateway/ComponentHandler) through their customId, and [CustomId](ref:core/CustomId) packs your fields into the hundred characters Discord allows and decodes them again on the click.
+## Errors that tell you what to do
 
-**Replying.** `reply()` sends the first response, and `defer()`, `edit()`, `followUp()`, `send()`, and `delete()` cover the rest, all on [RepliableHandler](ref:gateway/RepliableHandler). seedcord records which of those you already called and throws when the next one is illegal with a useful error message.
+Every seedcord error tells you what happened and what you need to do about it. For example, you deferred and then called `reply()`:
 
-**Refusing.** Gates run before `execute()` and refuse by throwing. [Notice](ref:core/Notice) shows the user a card you wrote. [Fault](ref:core/Fault) shows a generic apology and reports the real error to you. [Silence](ref:core/Silence) drops it. Permission gates, role gates, and [cooldowns](ref:core/Cooldown) come with the framework, and you write your own with [defineGate](ref:core/defineGate).
+```txt output
+reply() was called when this interaction was already deferred.
+Use edit() to fill the deferred reply or followUp() for a new
+message. (route slash:ban)
+```
 
-**Events.** An [EventHandler](ref:gateway/EventHandler) takes one gateway event and reads `this.event`, or takes several and branches with `this.match`, where each arm receives that event's own payload. The [Bus](ref:core/Bus) underneath carries seedcord's own timings, so you can subscribe to them.
+A component id packed past what Discord accepts:
 
-**Plugins.** `attach()` takes a key you pick and a [Plugin](ref:gateway/Plugin). Codegen types that key onto your core, and `this.core.<key>` resolves everywhere.
+```txt output
+Encoded customId is 118 characters, Discord allows at most 100.
+```
 
-**Tooling.** `seedcord dev` runs a full-screen terminal, and hot reload swaps changed modules while the gateway connection stays open. `seedcord codegen` writes the types behind `this.options`. Two ESLint plugins catch the payloads Discord rejects before you send them.
+A value read at the top of a file before startup filled it:
+
+```txt output
+Emojis.wave has no value yet. Emojis fills during startup, and a read
+at the top of a file runs before that.
+```
+
+discord.js validates a component through shapeshift, which throws a nested aggregate naming no component and no field. seedcord translates it:
+
+```txt output
+ProfileCard at components[0] failed to serialize: need a
+ButtonBuilder or ThumbnailBuilder, got nothing.
+(route slash:profile)
+```
+
+There are over a hundred more.
 
 ## Two transports
 
 You pick one when you scaffold.
 
-`@seedcord/gateway` holds a websocket connection through discord.js, which is how message, member, voice, and reaction events reach you. `@seedcord/http` answers Discord's interactions endpoint, where only interactions arrive.
+`@seedcord/gateway` holds a websocket connection through discord.js. Interactions arrive there, and so does every other event Discord sends about a server.
 
-Everything above is the same code on both. A command written for one transport differs from the other by its import line.
+`@seedcord/http` answers Discord's interactions endpoint. Discord posts only interactions to it. Discord also signs every request it sends, and seedcord checks the signature, turns away a stale or repeated one, and answers the check Discord runs before it accepts your URL.
 
-## Where it stands
+Most of the code you write works the same on either transport, and the import line is all you change.
 
-seedcord is pre-1.0, so a minor version can break you. Read the changelog before you bump. Most of the large changes I had planned are done already.
+## Prerequisites
 
-<Callout type="warning">
-    The http transport's edge build for Cloudflare Workers is a work
-    in progress and cannot be used yet. Http on Node works.
-</Callout>
-
-Every symbol here has its full signature on [the reference site](https://docs.seedcord.org). This guide covers what a signature cannot tell you.
+- **Node 24.11 or newer.** Every seedcord package declares it under `engines`.
+- **TypeScript.** seedcord uses it heavily. You read and write generics from the first handler onward.
+- **discord.js.** seedcord is built on top of it and covers most of the boilerplate. A lot of the code that touches Discord is still discord.js.

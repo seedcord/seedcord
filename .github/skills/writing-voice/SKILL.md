@@ -177,6 +177,7 @@ Aim for a spread in length, in how sentences open, and in what each one is doing
 5. One claim per sentence. Cut the intensifier.
 6. Give the condition, never the smoothness. Replace "no manual wiring" with "on a 429 the client waits `Retry-After` seconds before the next attempt".
 7. Prefer the concrete noun over the promised benefit. "Throws `TimeoutError` when no response arrives within `timeout` ms" beats any adjective.
+8. Count a list only when the set is closed. "The four lifecycle phases" is right when there are four. A sample of three out of thirty reads as all thirty unless the sentence says otherwise.
 
 Rule of thumb: if an adjective cannot be replaced by a measurable fact or a code reference, delete it.
 

@@ -2,6 +2,13 @@
 const REGISTRIES = `
     interface SlashRegistry {
         ping: { options: { detailed: { kind: 'boolean'; required: false } }; cache: 'cached' };
+        ban: {
+            options: {
+                target: { kind: 'user'; required: true };
+                reason: { kind: 'string'; required: false };
+            };
+            cache: 'cached';
+        };
     }
 `;
 
