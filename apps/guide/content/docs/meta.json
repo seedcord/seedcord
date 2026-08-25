@@ -4,6 +4,7 @@
         "index",
         "gateway-or-http",
         "discord-application",
+        "first-bot",
         "commands",
         "replying",
         "throwing",

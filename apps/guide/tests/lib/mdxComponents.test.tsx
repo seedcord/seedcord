@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { mdxComponents } from '#lib/mdxComponents';
 import { MAPPED_TAGS } from '#lib/remarkNoMappedJsx';
 
-const { Image, pre: Fence, a: Link } = mdxComponents;
+const { Image, pre: Fence, a: Link, Shell } = mdxComponents;
 
 describe('the rejected jsx tag list', () => {
     it('names every lowercase tag the map claims', () => {
@@ -54,6 +54,25 @@ describe('a fence', () => {
         await renderFence({ className: 'language-bash' });
 
         expect(screen.getByRole('button', { name: /Copy/ })).toBeInTheDocument();
+    });
+});
+
+describe('a shell block', () => {
+    it('puts a before line above the command', async () => {
+        render(await Shell({ run: 'dev', before: 'cd my-bot' }));
+
+        expect(screen.getByRole('figure')).toHaveTextContent('cd my-bot');
+        expect(screen.getByRole('figure')).toHaveTextContent('pnpm run dev');
+    });
+
+    it('copies both lines', async () => {
+        render(await Shell({ run: 'dev', before: 'cd my-bot' }));
+
+        expect(screen.getByRole('button', { name: /Copy/ })).toBeInTheDocument();
+    });
+
+    it('refuses two verbs at once', async () => {
+        await expect(Shell({ run: 'dev', add: 'zod' })).rejects.toThrow('exactly one');
     });
 });
 

@@ -24,11 +24,28 @@ let hydrated = false;
 
 const listeners = new Set<() => void>();
 
+// localStorage is absent in some runtimes and throws in others
+function stored(): Manager | null {
+    try {
+        const value = window.localStorage.getItem(STORAGE_KEY);
+        return isManager(value) ? value : null;
+    } catch {
+        return null;
+    }
+}
+
+function remember(next: Manager): void {
+    try {
+        window.localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+        // the choice still applies for this page load
+    }
+}
+
 export function subscribe(listener: () => void): () => void {
     if (!hydrated) {
         hydrated = true;
-        const stored = window.localStorage.getItem(STORAGE_KEY);
-        if (isManager(stored)) current = stored;
+        current = stored() ?? current;
     }
 
     listeners.add(listener);
@@ -39,7 +56,7 @@ export function getManager(): Manager {
     return current;
 }
 
-// every Install on the page renders the same manager on the server
+// every shell block on the page renders the same manager on the server
 export function getServerManager(): Manager {
     return DEFAULT;
 }
@@ -48,6 +65,6 @@ export function setManager(next: Manager): void {
     if (next === current) return;
 
     current = next;
-    window.localStorage.setItem(STORAGE_KEY, next);
+    remember(next);
     for (const listener of listeners) listener();
 }

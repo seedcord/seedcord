@@ -1,0 +1,103 @@
+---
+title: Your first bot
+description: Scaffolding a project, running the dev server, and getting a slash command to answer.
+---
+
+You need the token from the last page.
+
+<Shell create="seedcord" />
+
+## What it asks
+
+- **Where the project goes.** The folder name becomes the package name, so it takes lowercase letters, digits, and `. _ -`.
+- **TypeScript or JavaScript.**
+- **How Discord reaches your bot.** Gateway or http, the choice from two pages ago.
+- **What your bot should react to.** Gateway only. Pick the things you want and the scaffolder works out which intents that needs.
+- **Your bot token.**
+- **Your app public key.** Http only.
+- **Your bot colour.** Every reply seedcord builds carries it.
+
+Then it installs your dependencies, formats the project, runs `seedcord codegen`, and makes a git commit.
+
+## Run it
+
+<Shell run="dev" before="cd my-bot" />
+
+Your bot logs in, sends its commands to Discord, and the terminal turns into a dev console.
+
+## Say hello
+
+The scaffold ships a `ping` command. Type `/ping` in a server your bot is in.
+
+It probably will not be there yet. Global commands take time to appear, and Discord publishes no number for how long.
+
+<Callout type="tip">
+    Restart your Discord client with Ctrl+R or Cmd+R. That pulls a
+    fresh command list and usually ends the wait.
+</Callout>
+
+## What the scaffolder made
+
+```txt title="my-bot" output
+my-bot/
+├─ .vscode/
+│  └─ extensions.json
+├─ src/
+│  ├─ commands/
+│  │  └─ Ping.ts
+│  ├─ events/
+│  │  └─ Ready.ts
+│  ├─ handlers/
+│  │  └─ Ping.ts
+│  ├─ bot.ts
+│  ├─ index.ts
+│  └─ seedcord-gen.d.ts
+├─ .env
+├─ .gitignore
+├─ .prettierignore
+├─ eslint.config.mjs
+├─ package.json
+├─ prettier.config.mjs
+├─ README.md
+├─ seedcord.config.ts
+├─ tsconfig.build.json
+└─ tsconfig.json
+```
+
+- **`src/bot.ts`** builds your bot and exports it. **`src/index.ts`** imports that and starts it. They are separate so the CLI can import `bot.ts` and read your commands without logging in.
+- **`seedcord.config.ts`** configures the CLI. Your bot's own settings, the intents and the folder paths and the colour, go in `bot.ts`.
+- **`src/seedcord-gen.d.ts`** carries the types generated from your config and your commands. `seedcord codegen` writes it and you commit it.
+- **`tsconfig.json`** type-checks the project. **`tsconfig.build.json`** compiles `src` into `dist`.
+- **`.env`** holds your token. `bot.ts` sets `Envapter.baseDir` to the project root, which is where [envapt](https://envapt.materwelon.dev) then looks for the file.
+
+<Callout type="transport" only="http">
+    Discord posts only interactions to an http bot, so the
+    scaffolder writes no `src/events` folder.
+</Callout>
+
+## Change something
+
+Open `src/handlers/Ping.ts` and change what it replies with. Save.
+
+The dev server reloads the handler while the bot stays connected. Run `/ping` again and the new reply comes back.
+
+Now open `src/commands/Ping.ts` and change the command itself, the description for example. Save, and the dev server asks whether to re-register.
+
+```txt output
+1 command updated
+refresh? y/n
+```
+
+Press `y`. That sends the new command to Discord and runs `seedcord codegen`, which rewrites `src/seedcord-gen.d.ts` so your handler's types match what the command now declares.
+
+Press `n` and Discord keeps the old command.
+
+## When a file fails to import
+
+seedcord imports every file under `src/commands`, `src/handlers`, and `src/events` at startup. A syntax error in any one of them stops the whole scan.
+
+```txt output
+src/handlers/Ping.ts threw while importing.
+```
+
+Fix the file and press `r` to restart.

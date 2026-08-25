@@ -2,7 +2,7 @@ import { Card, CodeBlock, CopyAnchorButton, cn, tw } from '@seedcord/ui';
 import { highlightInlineToHtml, isHighlightable } from '@seedcord/ui/shiki';
 
 import { Callout } from '#components/Callout';
-import { Install } from '#components/Install';
+import { Shell } from '#components/Shell';
 import { LINK, Ref } from '#components/Ref';
 import { TypeHover } from '#components/TypeHover';
 import { FENCE_ATTR, LANGUAGE_PREFIX } from '#lib/rehypeFenceMeta';
@@ -206,6 +206,6 @@ export const mdxComponents = {
     // a lowercase tag written as jsx in an mdx file skips this map
     Image: GuideImage,
     Callout,
-    Install,
+    Shell,
     Ref
 } satisfies MDXComponents;

@@ -61,7 +61,7 @@ my-bot/
 
 One command sets this up, along with the tsconfig, lint, and formatter files.
 
-<Install create="seedcord" />
+<Shell create="seedcord" />
 
 ## Your commands type your handlers
 
@@ -86,7 +86,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 `target` is required on the command, so it arrives as a `User` with no null check. `reason` is optional, so that one arrives as `string | null`. The typo on the last line stops the build.
 
-`seedcord codegen` reads your command files and writes `seedcord-gen.d.ts`. The dev server runs it every time you save.
+`seedcord codegen` reads your command files and writes `seedcord-gen.d.ts`. Run it again after you change a command, or say yes when `seedcord dev` offers to re-register.
 
 ## Errors that tell you what to do
 

@@ -20,6 +20,10 @@ Keep it somewhere safe. You paste it in when you set up the project.
 
 ## Turn on the intents you need
 
+<Callout type="transport" only="gateway">
+    An http bot holds no gateway connection and declares no intents.
+</Callout>
+
 Same page, further down, under **Privileged Gateway Intents**. Turn on the ones your bot needs. Discord only reviews these for bots past 10,000 users.
 
 {/* prettier-ignore-start */}
@@ -34,9 +38,11 @@ Same page, further down, under **Privileged Gateway Intents**. Turn on the ones 
 
 ![The three privileged gateway intent switches on the Bot page](/portal-intents.webp)
 
-Skip this on http, which holds no gateway connection.
+## Copy the public key
 
-## Copy the public key, on http
+<Callout type="transport" only="http">
+    A gateway bot needs no public key.
+</Callout>
 
 **General Information** carries your Public Key. Discord signs every request it posts to you, and your bot checks the signature against this key.
 
