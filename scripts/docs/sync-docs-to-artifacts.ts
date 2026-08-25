@@ -21,6 +21,7 @@ import {
     putToR2,
     r2ConfigFromEnv
 } from './artifacts-repo';
+import { deprecatedByPackage, withoutDeprecated } from './deprecated-versions';
 import { buildUnionInputs } from './union-inputs';
 import { workspaceOf } from './workspace-of';
 
@@ -194,7 +195,8 @@ async function finalize(opts: Options, emitted: readonly EmittedEntry[]): Promis
     const ref: RemoteRef = { client: createR2Client(config), bucket: config.bucket, prefix: opts.prefix };
 
     const remote = await fetchRemoteIndex(ref);
-    const inputs = buildUnionInputs(remote, emitted);
+    const union = buildUnionInputs(remote, emitted);
+    const inputs = withoutDeprecated(union, await deprecatedByPackage(union, (message) => console.warn(message)));
     const index = buildIndex(inputs, { updatedAt: new Date().toISOString() });
 
     // already-uploaded versions are immutable. skip them on a re-run.
