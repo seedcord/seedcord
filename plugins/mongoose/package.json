@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/plugin-mongoose",
     "type": "module",
-    "version": "0.2.1",
+    "version": "1.0.0-next.0",
     "description": "Connect a seedcord bot to MongoDB with Mongoose",
     "keywords": [
         "discord-bot",
@@ -52,7 +52,7 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
-        "@seedcord/core": "workspace:>=0.2.0 <1.0.0",
+        "@seedcord/core": "workspace:>=0.3.0-next.0",
         "envapt": "catalog:peer",
         "mongoose": "catalog:peer",
         "typescript": "catalog:peer"

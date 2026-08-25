@@ -1,5 +1,15 @@
 # @seedcord/plugin-mongoose
 
+## 1.0.0-next.0
+
+### Patch Changes
+
+- Updated dependencies [a46a7dd]
+    - @seedcord/core@0.3.0-next.0
+    - @seedcord/errors@0.4.2-next.0
+    - @seedcord/logger@0.2.2-next.0
+    - @seedcord/utils@0.8.7-next.0
+
 ## 0.2.1
 
 ### Patch Changes

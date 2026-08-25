@@ -1,5 +1,19 @@
 # @seedcord/http
 
+## 0.4.0-next.0
+
+### Minor Changes
+
+- a46a7dd: **BREAKING:** A handler's cache state now follows the `contexts` its command declares, so a command a DM can reach types `interaction.guild` as `Guild | null`. `SlashOptionRegistry` becomes `SlashRegistry`, `ContextMenuHandler` splits into `UserContextMenuHandler` and `MessageContextMenuHandler` with a route decorator each, a paginator's nav handler reads `this.event.guild` as nullable, and a gateway bot registering a guild-capable command without the `Guilds` intent throws at startup. Run `seedcord codegen` after upgrading. This won't affect most commands.
+
+### Patch Changes
+
+- Updated dependencies [a46a7dd]
+    - @seedcord/core@0.3.0-next.0
+    - @seedcord/errors@0.4.2-next.0
+    - @seedcord/logger@0.2.2-next.0
+    - @seedcord/utils@0.8.7-next.0
+
 ## 0.3.1
 
 ### Patch Changes
@@ -16,23 +30,6 @@
     - @seedcord/logger@0.2.1
     - @seedcord/utils@0.8.6
     - @seedcord/types@0.9.1
-
-## 0.3.1-next.0
-
-### Patch Changes
-
-- 9c8e66a: _Kinda BREAKING:_ A transport plugin base no longer accepts `transport: 'any'` and the gateway base no longer accepts `runtime: 'edge'`. Extend `@seedcord/core/plugin` for a plugin that runs on either transport. This IS a bug fix. This should not have been allowed before.
-- 8f662bb: Fixed a gate mismatch on a Button or Modal handler labelling the handler `StringSelect`. Every interaction kind now reports its own label.
-- 1d2f1e3: Updated TSDoc reference generation.
-- Updated dependencies [8f662bb]
-- Updated dependencies [1d2f1e3]
-    - @seedcord/core@0.2.1-next.0
-    - @seedcord/event-emitter@0.1.4-next.0
-    - @seedcord/rate-limiter@0.1.4-next.0
-    - @seedcord/errors@0.4.1-next.0
-    - @seedcord/logger@0.2.1-next.0
-    - @seedcord/utils@0.8.6-next.0
-    - @seedcord/types@0.9.1-next.0
 
 ## 0.3.0
 

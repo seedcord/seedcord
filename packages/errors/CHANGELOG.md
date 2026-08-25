@@ -1,12 +1,12 @@
 # @seedcord/errors
 
-## 0.4.1
+## 0.4.2-next.0
 
 ### Patch Changes
 
-- 1d2f1e3: Updated TSDoc reference generation.
+- a46a7dd: **BREAKING:** A handler's cache state now follows the `contexts` its command declares, so a command a DM can reach types `interaction.guild` as `Guild | null`. `SlashOptionRegistry` becomes `SlashRegistry`, `ContextMenuHandler` splits into `UserContextMenuHandler` and `MessageContextMenuHandler` with a route decorator each, a paginator's nav handler reads `this.event.guild` as nullable, and a gateway bot registering a guild-capable command without the `Guilds` intent throws at startup. Run `seedcord codegen` after upgrading. This won't affect most commands.
 
-## 0.4.1-next.0
+## 0.4.1
 
 ### Patch Changes
 

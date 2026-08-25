@@ -6,12 +6,6 @@
 
 - 1d2f1e3: Updated TSDoc reference generation.
 
-## 0.9.1-next.0
-
-### Patch Changes
-
-- 1d2f1e3: Updated TSDoc reference generation.
-
 ## 0.9.0
 
 ### Minor Changes

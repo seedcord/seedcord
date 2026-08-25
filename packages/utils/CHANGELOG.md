@@ -1,5 +1,12 @@
 # @seedcord/utils
 
+## 0.8.7-next.0
+
+### Patch Changes
+
+- Updated dependencies [a46a7dd]
+    - @seedcord/errors@0.4.2-next.0
+
 ## 0.8.6
 
 ### Patch Changes
@@ -8,15 +15,6 @@
 - Updated dependencies [1d2f1e3]
     - @seedcord/errors@0.4.1
     - @seedcord/types@0.9.1
-
-## 0.8.6-next.0
-
-### Patch Changes
-
-- 1d2f1e3: Updated TSDoc reference generation.
-- Updated dependencies [1d2f1e3]
-    - @seedcord/errors@0.4.1-next.0
-    - @seedcord/types@0.9.1-next.0
 
 ## 0.8.5
 
