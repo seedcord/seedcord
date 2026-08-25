@@ -9,14 +9,15 @@ import type { PageContext } from './PageContext';
 import type { PaginatorConfig } from '@seedcord/core';
 import type { PageCursor } from '@seedcord/core/internal';
 import type { ReplyResponse } from '@seedcord/types';
-import type { ButtonInteraction, Message } from 'discord.js';
+import type { ButtonInteraction, CacheType, Message } from 'discord.js';
 
 // `& { execute }` concretizes the abstract execute so the empty `extends Bans.Handler {}` stays concrete
 // (no TS2515) and a concrete Nav assigns with no cast.
+// a nav click arrives wherever the paginated message lives
 type PaginatorHandlerCtor<Prefix extends string> = new (
-    event: ButtonInteraction<'cached'>,
+    event: ButtonInteraction<CacheType>,
     core: Core
-) => ButtonHandler<[PageCursor<Prefix>]> & { execute(): Promise<void> };
+) => ButtonHandler<[PageCursor<Prefix>], CacheType> & { execute(): Promise<void> };
 
 function contextOf(interaction: Repliables, core: Core): PageContext {
     return { interaction, user: interaction.user, guild: interaction.guild, core };
@@ -33,7 +34,7 @@ function contextOf(interaction: Repliables, core: Core): PageContext {
  * ```ts
  * export const Bans = new Paginator({
  *     prefix: 'bans',
- *     source: new ArraySource((ctx) => ctx.guild.bans.fetch().then((b) => [...b.values()]), { perPage: 10 }),
+ *     source: new ArraySource((ctx) => ctx.guild?.bans.fetch().then((b) => [...b.values()]) ?? [], { perPage: 10 }),
  *     renderItem: (ban) => ban.user.tag
  * });
  *
@@ -50,7 +51,7 @@ export class Paginator<Item, const Prefix extends string> extends PaginatorBase<
 
         // an arrow captures the paginator lexically so Nav.execute can reach it without aliasing `this`.
         const loadPage = (ctx: PageContext, n: number): Promise<ReplyResponse> => this.page(ctx, n);
-        this.Handler = class Nav extends ButtonHandler<[PageCursor<Prefix>]> {
+        this.Handler = class Nav extends ButtonHandler<[PageCursor<Prefix>], CacheType> {
             async execute(): Promise<void> {
                 await this.deferUpdate();
                 const response = await loadPage(contextOf(this.event, this.core), this.params.page);
