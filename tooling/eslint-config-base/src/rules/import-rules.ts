@@ -17,14 +17,9 @@ export const createImportSettings = (rootDir: string) => ({
     'import-x/external-module-folders': ['node_modules', 'dist']
 });
 
-/**
- * How much of `eslint-plugin-import-x` to run.
- *
- * `'fast'` turns off `no-cycle` and `no-deprecated`. Those two parse every file an import resolves
- * to. A full seedcord lint run spent about 15% of its rule time in them.
- */
 export type ImportPluginLevel = 'all' | 'fast' | 'off';
 
+// these two parse every file an import resolves to, about 15% of a full seedcord lint run's rule time
 const CROSS_FILE_RULES = ['import-x/no-cycle', 'import-x/no-deprecated'] as const;
 
 const IMPORT_RULES: Linter.RulesRecord = {
@@ -63,10 +58,18 @@ const IMPORT_RULES: Linter.RulesRecord = {
     'import-x/no-rename-default': 'error'
 };
 
+const LEVELS: readonly ImportPluginLevel[] = ['all', 'fast', 'off'];
+
+export function assertImportPluginLevel(value: unknown): asserts value is ImportPluginLevel {
+    if (LEVELS.includes(value as ImportPluginLevel)) return;
+
+    throw new Error(`registerImportPlugin takes 'all', 'fast', or 'off'. Received ${JSON.stringify(value)}.`);
+}
+
 export function createImportRules(level: ImportPluginLevel): Linter.RulesRecord {
-    if (level === 'all') return { ...IMPORT_RULES };
-    // eslint errors on an inline disable naming an unregistered rule
-    const off: Linter.RulesRecord = {};
-    for (const rule of CROSS_FILE_RULES) off[rule] = 'off';
-    return { ...IMPORT_RULES, ...off };
+    const rules = { ...IMPORT_RULES };
+    if (level === 'fast') {
+        for (const rule of CROSS_FILE_RULES) delete rules[rule];
+    }
+    return rules;
 }

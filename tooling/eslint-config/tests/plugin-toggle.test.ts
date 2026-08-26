@@ -28,13 +28,20 @@ describe('createConfig plugin toggles', () => {
         expect(rules['import-x/order']).toBeDefined();
     });
 
-    it('silences the cross-file import rules on fast, keeping the rest', async () => {
+    it('drops the cross-file import rules on fast, keeping the rest', async () => {
         const rules = await resolveRules({ registerImportPlugin: 'fast' }, 'src/example.ts');
 
-        // the key stays in the config at off. an inline disable naming a missing rule errors.
-        expect(rules['import-x/no-cycle']).toEqual([0]);
-        expect(rules['import-x/no-deprecated']).toEqual([0]);
+        expect(rules['import-x/no-cycle']).toBeUndefined();
+        expect(rules['import-x/no-deprecated']).toBeUndefined();
         expect(rules['import-x/order']).toBeDefined();
+    });
+
+    it.each([false, true, 'yes'])('rejects %o for registerImportPlugin', (value) => {
+        // nothing type-checks a consumer's eslint.config.mjs
+        expect(() =>
+            // justified: the fixture feeds the runtime the stale shape the types already reject
+            createConfig({ registerImportPlugin: value as NonNullable<SeedcordConfigOptions['registerImportPlugin']> })
+        ).toThrow(/takes 'all', 'fast', or 'off'/);
     });
 
     it('registers the discordjs rules when enabled', async () => {

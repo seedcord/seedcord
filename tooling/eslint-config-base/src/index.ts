@@ -28,6 +28,7 @@ import {
     TSDOC_RULES,
     TYPESCRIPT_RULES,
     UNICORN_RULES,
+    assertImportPluginLevel,
     createImportRules,
     createImportSettings
 } from './rules';
@@ -55,12 +56,7 @@ function pluginBlock(params: {
     return item;
 }
 
-/**
- * Builds an ESLint flat config, composing the shared JS/TS rule sets with the plugin blocks
- * (security, import, tsdoc, unicorn, tailwind, mdx) that `options` toggles on or off.
- *
- * Formatting is left to prettier's own CLI. Run `prettier --check` beside `eslint`.
- */
+/** Builds an ESLint flat config from the shared JS/TS rule sets and the plugin blocks `options` turns on. */
 function createConfig(options: CreateConfigOptions = {}): FlatConfig {
     const {
         tsconfigRootDir = process.cwd(),
@@ -76,6 +72,9 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         tailwindTaggedTemplates = ['tw'],
         mdxFiles
     } = options;
+
+    // nothing type-checks a consumer's eslint.config.mjs
+    assertImportPluginLevel(registerImportPlugin);
 
     const createTsParserOptions = (rootDir: string) => ({
         project: ['./tsconfig.json'],

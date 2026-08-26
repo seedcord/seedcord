@@ -96,7 +96,13 @@
             ]
         },
         "//#fmt:scripts": {
-            "inputs": ["scripts/**/*.{ts,tsx}", "prettier.config.*"]
+            "dependsOn": ["@seedcord/eslint-config#build"],
+            "inputs": [
+                "scripts/**/*.{ts,tsx}",
+                "prettier.config.*",
+                ".prettierignore",
+                "tooling/eslint-config/dist/**"
+            ]
         },
         "//#lint:md": {
             "inputs": ["**/*.md", ".markdownlint-cli2.jsonc", ".markdownlint.json"]
