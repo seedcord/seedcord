@@ -242,6 +242,7 @@ export function TypeHover({ children }: { children: ReactNode }): ReactElement {
     return (
         <div
             ref={block}
+            data-hovers
             role="group"
             tabIndex={0}
             aria-label="Code sample. Arrow keys walk its types."

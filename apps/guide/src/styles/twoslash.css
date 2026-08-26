@@ -95,11 +95,12 @@
         display: none;
     }
 
-    .twoslash .twoslash-hover {
+    /* a ^? query wraps its token in twoslash-hover as well. these two key off the hovers-mode wrapper */
+    [data-hovers] .twoslash .twoslash-hover {
         cursor: help;
     }
 
-    .twoslash:hover .twoslash-hover {
+    [data-hovers] .twoslash:hover .twoslash-hover {
         text-decoration: underline dotted color-mix(in oklab, var(--text) 22%, transparent);
         text-underline-offset: 0.3em;
     }
