@@ -32,7 +32,8 @@ export const MiddlewareMetadataKey = Symbol('seedcord:middleware:metadata');
 
 export const EventMetadataKey = Symbol('seedcord:event:metadata');
 
-export const CommandMetadataKey = Symbol('seedcord:command:metadata');
+// Symbol.for so the cli's own copy of this module reads the same slot
+export const CommandMetadataKey = Symbol.for('seedcord:command:metadata');
 
 export const GatedMetadataKey = Symbol('seedcord:gated:metadata');
 

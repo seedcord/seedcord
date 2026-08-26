@@ -78,6 +78,18 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
     }
 }
 
+// instanceof fails across the cli's separate module registry
+const BUILDER_COMPONENT = Symbol.for('seedcord.core.builderComponent');
+
+Object.defineProperty(BuilderComponent.prototype, BUILDER_COMPONENT, { value: true });
+
+/** @internal */
+export function isBuilderComponentClass(value: unknown): value is new () => BuilderComponent<BuilderType> {
+    if (typeof value !== 'function') return false;
+    const proto: unknown = (value as { prototype?: unknown }).prototype;
+    return typeof proto === 'object' && proto !== null && BUILDER_COMPONENT in proto;
+}
+
 /**
  * Base class for Discord action row components
  *

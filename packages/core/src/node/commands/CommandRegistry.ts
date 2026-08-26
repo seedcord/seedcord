@@ -9,11 +9,11 @@ import { traverseDirectory } from '@seedcord/utils/node';
 import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
-import { BuilderComponent } from '#components/Component';
 import { getDevChannel } from '#hmr/devChannel';
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
 import { CommandInjector } from '#src/commands/CommandInjector';
 import { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
+import { isCommandClass } from '#src/commands/isCommandClass';
 import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 import { CommandMetadataKey } from '#src/metadataKeys';
 import { PublishDefault } from '#subscribers/publishDefault';
@@ -21,13 +21,12 @@ import { PublishDefault } from '#subscribers/publishDefault';
 import type { CommandMeta } from '#decorators/Command';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
+import type { CommandCtor } from '#src/commands/isCommandClass';
 import type { CommandBuilder, DeployResult } from '#src/commands/types';
 import type { Initializeable } from '#src/plugin/Plugin';
 import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
-
-type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;
 
 interface CommandArtifact {
     name: string;
@@ -73,7 +72,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         if (!Envapter.isDevelopment && !Envapter.isTest) return;
         this.hmrHandler = new HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>({
             handlersDir: dir,
-            isHandler: this.isCommandClass.bind(this),
+            isHandler: isCommandClass,
             registerHandler: this.registerCommand.bind(this),
             unregisterHandler: this.unregisterCommand.bind(this),
             getArtifacts: this.getArtifacts.bind(this),
@@ -163,16 +162,11 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private async loadCommands(dir: string): Promise<void> {
         await traverseDirectory(dir, (fullPath, rel, mod) => {
             for (const exported of Object.values(mod))
-                if (this.isCommandClass(exported)) {
+                if (isCommandClass(exported)) {
                     this.registerCommand(exported, rel);
                     this.hmrHandler?.trackHandler(fullPath, exported);
                 }
         });
-    }
-
-    private isCommandClass(obj: unknown): obj is CommandCtor {
-        if (typeof obj !== 'function') return false;
-        return obj.prototype instanceof BuilderComponent && Reflect.hasMetadata(CommandMetadataKey, obj);
     }
 
     private registerCommand(ctor: CommandCtor, rel: string): void {
