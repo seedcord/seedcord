@@ -5,18 +5,27 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
+function declaredNodeRange() {
+    try {
+        const pkg = JSON.parse(readFileSync(resolve(here, '../package.json'), 'utf8'));
+        return pkg.engines?.node ?? '';
+    } catch {
+        return '';
+    }
+}
+
 // importing core's own check here would load the code this guards
 function unsupportedNodeRange() {
-    const pkg = JSON.parse(readFileSync(resolve(here, '../package.json'), 'utf8'));
-    const range = pkg.engines?.node ?? '';
+    const range = declaredNodeRange();
 
-    const required = /^>=\s*(\d+)\.(\d+)/.exec(range);
+    const required = new RegExp(String.raw`^>=(\d+)(?:\.(\d+))?`).exec(range.replaceAll(/\s/g, ''));
     const current = /^v?(\d+)\.(\d+)/.exec(process.version);
     if (!required || !current) return null;
 
+    const requiredMinor = required[2] ?? '0';
     const meets =
         Number(current[1]) > Number(required[1]) ||
-        (Number(current[1]) === Number(required[1]) && Number(current[2]) >= Number(required[2]));
+        (Number(current[1]) === Number(required[1]) && Number(current[2]) >= Number(requiredMinor));
     return meets ? null : range;
 }
 

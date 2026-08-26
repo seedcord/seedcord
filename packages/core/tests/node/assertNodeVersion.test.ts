@@ -1,3 +1,5 @@
+import { createRequire } from 'node:module';
+
 import { REST } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
@@ -42,9 +44,33 @@ describe('assertNodeVersion', () => {
         expect(() => assertNodeVersion('>=24.11', 'v26.7.0')).not.toThrow();
     });
 
+    it('reads a range that names only a major', () => {
+        expect(() => assertNodeVersion('>=24', 'v22.18.0')).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.UnsupportedNodeVersion })
+        );
+        expect(() => assertNodeVersion('>=24', 'v24.0.0')).not.toThrow();
+    });
+
+    it('reads a range that names a patch, and a range written with a space', () => {
+        expect(() => assertNodeVersion('>=24.11.0', 'v22.18.0')).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.UnsupportedNodeVersion })
+        );
+        expect(() => assertNodeVersion('>= 24.11', 'v22.18.0')).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.UnsupportedNodeVersion })
+        );
+    });
+
     it('checks nothing when the range is a form it cannot read', () => {
         expect(() => assertNodeVersion('', 'v22.18.0')).not.toThrow();
         expect(() => assertNodeVersion('^24.11.0', 'v22.18.0')).not.toThrow();
+    });
+
+    it('reads the range this package actually declares', () => {
+        const declared = createRequire(import.meta.url)('../../package.json') as { engines: { node: string } };
+
+        expect(() => assertNodeVersion(declared.engines.node, 'v1.0.0')).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.UnsupportedNodeVersion })
+        );
     });
 });
 
