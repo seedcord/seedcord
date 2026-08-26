@@ -31,8 +31,11 @@ interface TailwindBlockParams {
     taggedTemplates: string[];
 }
 
-// both rules run at warn so they autofix without blocking CI. a doubled space can appear when
-// shorthand collapses, but the next prettier pass cleans it
+// warn keeps the autofix without blocking CI. collapsing shorthand can leave a doubled space for
+// the next prettier run to clean up
+//
+// keep both rules. better-tailwindcss collapses `w-4 h-4` into `size-4`.
+// tailwind-canonical-classes rewrites raw units like `p-4px` into `p-1`.
 export function tailwindBlock(params: TailwindBlockParams): Linter.Config {
     const block: Linter.Config = { files: [...params.files] };
 
