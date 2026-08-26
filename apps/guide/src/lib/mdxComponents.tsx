@@ -66,7 +66,7 @@ function GuideImage({ alt, frame = false, align = 'left', className, ...props }:
 
 function GuideTable({ children, ...props }: ComponentProps<'table'>): ReactElement {
     return (
-        <Card as="div" size="none" className={cn('overflow-hidden')}>
+        <Card as="div" size="none" data-table className={cn('overflow-hidden')}>
             <div className={cn('nice-scroll overflow-x-auto')}>
                 <table {...props} className={cn('w-full border-collapse text-left text-sm')}>
                     {children}

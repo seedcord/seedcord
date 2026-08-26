@@ -23,3 +23,11 @@
         --cal-hue: var(--husk);
     }
 }
+
+@layer utilities {
+    /* --surface-subtle is a translucent wash. over the callout's tint it picks up the hue.
+       painting --bg underneath gives the same result a table on the page gets */
+    [data-callout] [data-table] {
+        background: linear-gradient(var(--surface-subtle), var(--surface-subtle)), var(--bg);
+    }
+}
