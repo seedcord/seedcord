@@ -1,5 +1,14 @@
 # @seedcord/logger
 
+## 0.2.2-next.0
+
+### Patch Changes
+
+- Updated dependencies [6b1cfbf]
+- Updated dependencies [b29904c]
+    - @seedcord/errors@0.4.3-next.0
+    - @seedcord/utils@0.8.7-next.0
+
 ## 0.2.1
 
 ### Patch Changes

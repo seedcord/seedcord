@@ -1,5 +1,13 @@
 # @seedcord/utils
 
+## 0.8.7-next.0
+
+### Patch Changes
+
+- b29904c: Bots now start on Windows. seedcord imported handler, command, and subscriber files by raw filesystem path, and Node read the `D:` drive letter as a URL protocol.
+- Updated dependencies [6b1cfbf]
+    - @seedcord/errors@0.4.3-next.0
+
 ## 0.8.6
 
 ### Patch Changes

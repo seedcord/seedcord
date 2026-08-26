@@ -1,5 +1,21 @@
 # @seedcord/core
 
+## 0.3.1-next.0
+
+### Patch Changes
+
+- a98d27b: A new `commandsDeployed` framework event fires after seedcord deploys your commands, carrying what Discord returned for the global and guild scopes. You can now read the bot's application id from `core.applicationId` on both transports.
+- 6b1cfbf: _Kinda BREAKING:_ Starting a bot or running the CLI on a Node version below the `engines` range now throws, naming the required range and the version you are running. The floor stays at `>=24.11`.
+- aa4d4c0: `Plugin`, `PluginLifecycleSpec`, and `PluginOptions` are better documented now with examples and explanations.
+
+    _Kinda BREAKING:_ `Initializeable` moved to `@seedcord/core/internal`. It describes framework wiring, and `Plugin` already declares `abstract init()` for you. This was supposed to be internal anyway. No one should have been implementing it.
+
+- Updated dependencies [6b1cfbf]
+- Updated dependencies [b29904c]
+    - @seedcord/errors@0.4.3-next.0
+    - @seedcord/utils@0.8.7-next.0
+    - @seedcord/logger@0.2.2-next.0
+
 ## 0.3.0
 
 ### Minor Changes

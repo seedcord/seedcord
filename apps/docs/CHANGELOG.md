@@ -1,5 +1,13 @@
 # @seedcord/docs
 
+## 0.1.12-next.0
+
+### Patch Changes
+
+- Updated dependencies [191add9]
+- Updated dependencies [191add9]
+    - @seedcord/eslint-config@2.0.0-next.0
+
 ## 0.1.11
 
 ### Patch Changes

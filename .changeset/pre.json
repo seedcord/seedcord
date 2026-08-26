@@ -32,5 +32,13 @@
     "@seedcord/ui": "0.2.0",
     "@seedcord/vitest-config": "0.0.1"
   },
-  "changesets": []
+  "changesets": [
+    "brave-moons-shave",
+    "commands-deployed-key",
+    "node-version-gate",
+    "olive-donkeys-invite",
+    "plugin-docs",
+    "spotty-jars-repeat",
+    "windows-file-imports"
+  ]
 }
