@@ -52,6 +52,7 @@
         "@types/mdx": "^2.0.14",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
+        "discord.js": "catalog:peer",
         "eslint": "^9.39.4",
         "eslint-config-next": "catalog:eslint",
         "eslint-plugin-better-tailwindcss": "catalog:eslint",

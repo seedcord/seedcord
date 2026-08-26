@@ -1,0 +1,204 @@
+---
+title: Options
+description: Reading a command's input, and how required, choices, and channel types decide what each getter hands back.
+---
+
+Every option you declare becomes a getter on `this.options`, typed from what you declared. Let's take this command as an example.
+
+```ts twoslash title="src/commands/Maintenance.ts"
+import {
+    BuilderComponent,
+    RegisterCommand
+} from '@seedcord/gateway';
+import { ChannelType } from 'discord.js';
+
+@RegisterCommand('global')
+export class Maintenance extends BuilderComponent<'command'> {
+    constructor() {
+        super('command');
+
+        this.instance
+            .setName('maintenance')
+            .setDescription('Post a maintenance notice')
+            .addUserOption((option) =>
+                option
+                    .setName('notify')
+                    .setDescription('Member to notify')
+                    .setRequired(true)
+            )
+            .addChannelOption((option) =>
+                option
+                    .setName('target')
+                    .setDescription('Channel to post in')
+                    .setRequired(true)
+                    .addChannelTypes(
+                        ChannelType.GuildText,
+                        ChannelType.GuildAnnouncement
+                    )
+            )
+            .addStringOption((option) =>
+                option.setName('reason').setDescription('Why')
+            );
+    }
+}
+```
+
+The handler reads them by name. Hover the block below to see the types of each option.
+
+```ts twoslash hovers title="src/handlers/Maintenance.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut---
+@SlashRoute('maintenance')
+export class Maintenance extends SlashHandler<'maintenance'> {
+    public async execute(): Promise<void> {
+        const notify = this.options.getUser('notify');
+        const target = this.options.getChannel('target');
+        const reason = this.options.getString('reason');
+
+        await target.send(`Maintenance incoming. ${reason ?? ''}`);
+        await this.reply(`Notified ${notify.username}.`);
+    }
+}
+```
+
+Run `seedcord codegen` after you add or change an option as the handler uses the old shape until you do.
+
+## Required options drop the null
+
+`notify` and `target` were declared with `setRequired(true)`, so they arrive as values. `reason` was left optional, so it arrives as `string | null`. Discord rejects the command before your handler runs when a required option is missing.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('maintenance')
+class Maintenance extends SlashHandler<'maintenance'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const notify = this.options.getUser('notify');
+        //    ^?
+        const reason = this.options.getString('reason');
+        //    ^?
+        // ---cut-after---
+    }
+}
+```
+
+## The kinds
+
+Each builder method has one getter, and the name you pass is restricted to that command's options of that kind. A typo is a compile error.
+
+{/* prettier-ignore-start */}
+
+| you declare | you call | you get |
+| --- | --- | --- |
+| `addStringOption` | `getString` | `string` |
+| `addIntegerOption` | `getInteger` | `number`, whole |
+| `addNumberOption` | `getNumber` | `number`, decimal allowed |
+| `addBooleanOption` | `getBoolean` | `boolean` |
+| `addUserOption` | `getUser` | the user |
+| `addUserOption` | `getMember` | the member, or `null` |
+| `addChannelOption` | `getChannel` | the channel |
+| `addRoleOption` | `getRole` | the role |
+| `addMentionableOption` | `getMentionable` | a user, member, or role |
+| `addAttachmentOption` | `getAttachment` | the attachment |
+
+{/* prettier-ignore-end */}
+
+<Callout type="transport">
+    The last six return live discord.js objects on gateway and raw
+    `discord-api-types` payloads on http. `id` and `username` are on
+    both. Anything only discord.js defines is a compile error on
+    http.
+</Callout>
+
+`getMember` returns `null` even for a required user option, since the person picked may have left the server.
+
+These getters cover the options. The rest of the discord.js resolver is on `this.event.options`.
+
+## Choices
+
+Adding choices narrows the return to those values.
+
+```ts twoslash title="src/commands/Probe.ts"
+import {
+    BuilderComponent,
+    RegisterCommand
+} from '@seedcord/gateway';
+// ---cut---
+@RegisterCommand('global')
+export class Probe extends BuilderComponent<'command'> {
+    constructor() {
+        super('command');
+
+        this.instance
+            .setName('probe')
+            .setDescription('Search the catalogue')
+            .addStringOption((option) =>
+                option
+                    .setName('category')
+                    .setDescription('Scope the query')
+                    .addChoices(
+                        { name: 'Books', value: 'books' },
+                        { name: 'Films', value: 'films' }
+                    )
+            );
+    }
+}
+```
+
+The getter gives back the union of the values, so a `switch` over it is exhaustive.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('probe')
+class Probe extends SlashHandler<'probe'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const category = this.options.getString('category');
+        //    ^?
+        // ---cut-after---
+    }
+}
+```
+
+## Channel types
+
+`addChannelTypes` narrows `getChannel` to the types you listed. `target` above allows text and announcement channels, so `send` is there to call.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('maintenance')
+class Maintenance extends SlashHandler<'maintenance'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const target = this.options.getChannel('target');
+        //    ^?
+        // ---cut-after---
+    }
+}
+```
+
+Without `addChannelTypes` you get every channel kind Discord might send, and a forum channel has no `send`.
+
+Threads are the one pair you cannot split. Asking for `PublicThread` alone gives you `PublicThread | AnnouncementThread`, since discord.js types a thread's `type` as both at once.
+
+## When a getter is missing
+
+A getter only exists when the command declares an option of that kind. `maintenance` declares no integer option, so `this.options.getInteger` does not exist there.
+
+```ts twoslash
+// @errors: 2339
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('maintenance')
+class Maintenance extends SlashHandler<'maintenance'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const count = this.options.getInteger('count');
+    }
+}
+```
+
+Seeing that on a getter you believe you declared means codegen has not read the change yet.

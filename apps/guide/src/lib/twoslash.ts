@@ -180,7 +180,7 @@ async function learnFormatting(nodes: TwoslashShikiReturn['nodes']): Promise<voi
 }
 
 const BASE_OPTIONS = {
-    compilerOptions: { experimentalDecorators: true, types: ['node'] },
+    compilerOptions: { experimentalDecorators: true, strict: true, types: ['node'] },
     extraFiles: { 'seedcord-gen.d.ts': SAMPLE_AUGMENTATION }
 };
 

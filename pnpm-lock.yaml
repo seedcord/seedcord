@@ -483,6 +483,9 @@ importers:
       '@types/react-dom':
         specifier: catalog:react
         version: 19.2.4(@types/react@19.2.18)
+      discord.js:
+        specifier: catalog:peer
+        version: 14.27.0
       eslint:
         specifier: ^9.39.4
         version: 9.39.4(jiti@2.7.0)(supports-color@10.2.2)
