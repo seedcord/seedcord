@@ -138,7 +138,7 @@ async function settle(sender: ReplySender, message: Message, outcome: Outcome | 
  * \@SlashRoute('ban')
  * class BanHandler extends SlashHandler<'ban'> {
  *     async execute() {
- *         const target = this.options.getUser('target', true);
+ *         const target = this.options.getUser('target');
  *         if (!(await getConfirmation(this, `Ban ${target.tag}? This cannot be undone.`))) return;
  *         await this.event.guild?.members.ban(target.id);
  *     }
@@ -193,7 +193,7 @@ export function getConfirmation(
  *     }
  * }
  *
- * const target = this.options.getUser('target', true);
+ * const target = this.options.getUser('target');
  * const confirmed = await getConfirmation(
  *     this,
  *     (ids) => ({ components: [new BanPrompt(`Ban ${target.tag}?`).component, new ConfirmRow(ids).component] }),

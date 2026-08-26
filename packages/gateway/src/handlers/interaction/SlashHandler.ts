@@ -45,9 +45,15 @@ export abstract class SlashHandler<
     declare readonly [SlashRouteBrand]?: Route;
 
     /**
-     * The typed options for this command's route. Required options drop the null, choices narrow to their
-     * literal union, and only the getters for kinds this command actually uses appear. Use `this.event.options`
-     * directly for anything outside this view, such as narrowing a channel option by type.
+     * The typed options for this command's route. Only the getters for kinds this command declares appear.
+     * Each getter's name argument is restricted to that command's options of its kind.
+     *
+     * - A required option drops the null.
+     * - Choices narrow to their literal union.
+     * - A channel option declared with `addChannelTypes` narrows to those types.
+     *
+     * Use `this.event.options` directly for anything outside this view, such as `getSubcommand()`.
+     * However, for the common case, the methods in this would suffice.
      */
     protected get options(): SlashOptions<Route, Cache> {
         // the djs resolver already carries every getter. SlashOptions is its stricter registry-typed view.
@@ -71,8 +77,8 @@ export abstract class SlashHandler<
      * class ModHandler extends SlashHandler<'ban' | 'kick'> {
      *     async execute() {
      *         await this.match({
-     *             ban: (options) => this.event.guild?.members.ban(options.getUser('target', true).id),
-     *             kick: (options) => this.event.guild?.members.kick(options.getUser('member', true).id)
+     *             ban: (options) => this.event.guild?.members.ban(options.getUser('target').id),
+     *             kick: (options) => this.event.guild?.members.kick(options.getUser('member').id)
      *         });
      *     }
      * }

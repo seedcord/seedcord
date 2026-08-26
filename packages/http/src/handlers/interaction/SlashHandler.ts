@@ -34,9 +34,14 @@ export abstract class SlashHandler<
     private resolver?: HttpSlashOptions;
 
     /**
-     * The typed options for this command's route. Required options drop the null, choices narrow to their
-     * literal union, and only the getters for kinds this command actually uses appear. Rich kinds resolve
-     * from the interaction's `resolved` data.
+     * The typed options for this command's route. Only the getters for kinds this command declares appear.
+     * Each getter's name argument is restricted to that command's options of its kind.
+     *
+     * - A required option drops the null.
+     * - Choices narrow to their literal union.
+     * - A channel option declared with `addChannelTypes` narrows to those types.
+     *
+     * Rich kinds resolve from the interaction's `resolved` data.
      */
     protected get options(): SlashOptions<Route> {
         this.resolver ??= new HttpSlashOptions(this.event.data);
