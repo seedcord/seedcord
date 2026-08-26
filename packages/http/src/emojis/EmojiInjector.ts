@@ -5,8 +5,6 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { Routes } from 'discord-api-types/v10';
 
-import { fetchApplicationId } from '#src/applicationId';
-
 import type { Core } from '#interfaces/Core';
 import type { EmojiMap } from '@seedcord/types';
 import type { APIEmoji } from 'discord-api-types/v10';
@@ -30,7 +28,7 @@ export type InjectedEmojiMap = {
 
 /**
  * The bot's resolved emojis, keyed by {@link EmojiMap}. Filled by {@link EmojiInjector} during startup.
- * A read before that throws.
+ * Throws if you read a key the injector did not fill.
  */
 export const Emojis = guardedAccessor('Emojis', emojiStorage) as InjectedEmojiMap;
 
@@ -38,11 +36,7 @@ export const Emojis = guardedAccessor('Emojis', emojiStorage) as InjectedEmojiMa
 export class EmojiInjector {
     private readonly logger = new Logger('Emojis', { channel: 'bot' });
 
-    constructor(
-        private readonly core: Core,
-        // the host passes its memoized one so a boot that also deploys commands resolves the id once
-        private readonly applicationId: () => Promise<string> = () => fetchApplicationId(core.rest)
-    ) {}
+    constructor(private readonly core: Core) {}
 
     public async init(): Promise<void> {
         clearStore(emojiStorage);
@@ -75,7 +69,7 @@ export class EmojiInjector {
 
     private async applicationEmojis(failures: string[]): Promise<Map<string, APIEmoji>> {
         try {
-            const appId = await this.applicationId();
+            const appId = this.core.applicationId;
             // justified: the discord api contract for this route
             const listed = (await this.core.rest.get(Routes.applicationEmojis(appId))) as {
                 items: APIEmoji[];

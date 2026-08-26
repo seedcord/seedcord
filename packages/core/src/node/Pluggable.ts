@@ -35,6 +35,7 @@ const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
     public abstract readonly config: Config;
     public abstract readonly rest: REST;
+    public abstract readonly applicationId: string;
     public abstract readonly rateLimiter: IRateLimiter;
     public abstract readonly bus: Bus;
 
