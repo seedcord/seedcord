@@ -30,10 +30,10 @@
     "scripts": {
         "build": "tsdown",
         "clean": "rm -rf dist",
-        "lint": "eslint '*.{mjs,ts}' --cache",
-        "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
-        "fmt": "prettier --write '*.{mjs,ts,json,md}' --cache",
-        "fmt:check": "prettier --check '*.{mjs,ts,json,md}' --cache",
+        "lint": "eslint '*.{mjs,ts}' 'src/**/*.ts' --cache",
+        "lint:fix": "eslint '*.{mjs,ts}' 'src/**/*.ts' --fix --cache",
+        "fmt": "prettier --write '*.{mjs,ts,json,md}' 'src/**/*.ts' --cache",
+        "fmt:check": "prettier --check '*.{mjs,ts,json,md}' 'src/**/*.ts' --cache",
         "tc": "tsgo --noEmit"
     },
     "peerDependencies": {

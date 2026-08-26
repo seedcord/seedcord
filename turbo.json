@@ -162,6 +162,10 @@
             "dependsOn": ["^build", "@seedcord/docs-generator#test"],
             "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"]
         },
+        "seedcord#test": {
+            "dependsOn": ["^build", "seedcord#build"],
+            "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "bin/**", "src/**", "tests/**"]
+        },
         "test:watch": {
             "cache": false,
             "persistent": true
