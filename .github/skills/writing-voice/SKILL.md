@@ -89,6 +89,23 @@ The other way a verb goes missing is a split sentence, where one clause becomes 
 
 <!--prettier-ignore-end-->
 
+### Keep the subject next to its verb
+
+A noun made from a verb can take the subject slot, and then a clause slips in between that subject and its own verb. The reader reaches the end, finds they attached the object to the wrong verb, and has to go back and parse the sentence a second time. This is a garden path sentence. Put the action back in a verb and the sentence reads in one pass.
+
+<!--prettier-ignore-start-->
+
+| Reparsed | Direct |
+|---|---|
+| a read before the host resolves it throws | throws if you read before the host resolves it |
+| a write after the buffer flushes it fails | the write fails once the buffer has flushed it |
+| a lookup while the cache evicts it misses | the lookup misses if the cache evicted the key first |
+| a connect before the server binds it hangs | connecting before the server binds hangs |
+
+<!--prettier-ignore-end-->
+
+The tell is a bare `a read`, `a write`, or `a fetch` opening a sentence with more than three words before its verb. Read the draft once at speed. If you stop and start over, that is this.
+
 ---
 
 ## 3. Anthropomorphism, with a test you can apply
