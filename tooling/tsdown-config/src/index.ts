@@ -7,34 +7,36 @@ import type { UserConfig } from 'tsdown';
 
 export type TsdownOptions = UserConfig;
 
-let cachedVersion: string | undefined;
+interface PackageFacts {
+    version: string;
+    nodeRange: string;
+}
 
-function readPackageVersion(): string {
-    if (cachedVersion) return cachedVersion;
+let cachedFacts: PackageFacts | undefined;
+
+function readPackageFacts(): PackageFacts {
+    if (cachedFacts) return cachedFacts;
+
+    let version = '0.0.0';
+    let nodeRange = '';
 
     try {
         const pkgPath = resolve(process.cwd(), 'package.json');
         const pkgRaw = readFileSync(pkgPath, 'utf8');
-        const pkg = JSON.parse(pkgRaw) as { version?: unknown };
-        if (typeof pkg.version === 'string' && pkg.version.length > 0) {
-            cachedVersion = pkg.version;
-            return cachedVersion;
-        }
+        const pkg = JSON.parse(pkgRaw) as { version?: unknown; engines?: { node?: unknown } };
+        if (typeof pkg.version === 'string' && pkg.version.length > 0) version = pkg.version;
+        if (typeof pkg.engines?.node === 'string') nodeRange = pkg.engines.node;
     } catch (error) {
         // eslint-disable-next-line no-console -- build-config helper has no Logger
-        console.warn(`[tsdown-config] could not read package.json version, using default: ${String(error)}`);
+        console.warn(`[tsdown-config] could not read package.json, using defaults: ${String(error)}`);
     }
 
-    cachedVersion = '0.0.0';
-    return cachedVersion;
+    cachedFacts = { version, nodeRange };
+    return cachedFacts;
 }
 
-/**
- * Creates a standardized tsdown configuration for seedcord packages.
- * @param options - tsdown configuration options to override defaults
- * @returns A configured tsdown configuration
- */
-// eslint-disable-next-line complexity -- Justified as this sets up default configs for tsdown
+/** Creates a standardized tsdown configuration for seedcord packages. */
+// eslint-disable-next-line complexity -- one destructure of every tsdown default
 export function createTsdownConfig({
     format = ['esm'],
     entry = ['src/index.ts'],
@@ -54,7 +56,7 @@ export function createTsdownConfig({
     env = {},
     ...rest
 }: TsdownOptions = {}): TsdownOptions {
-    const packageVersion = readPackageVersion();
+    const { version: packageVersion, nodeRange } = readPackageFacts();
 
     return defineConfig({
         format,
@@ -77,6 +79,7 @@ export function createTsdownConfig({
         },
         env: {
             PACKAGE_VERSION: packageVersion,
+            PACKAGE_NODE_RANGE: nodeRange,
             ...env
         },
         ...rest

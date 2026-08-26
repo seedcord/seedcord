@@ -2,6 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS, Logger } from '@seedcord/logger';
 
+import { assertNodeVersion } from '#node/assertNodeVersion';
 import { StartupPhase } from '#src/lifecycle/phases';
 import { pluginLoggerOf, resolvedLifecycleSpecOf } from '#src/plugin/Plugin';
 
@@ -58,8 +59,11 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     private static liveShutdown?: CoordinatedShutdown | undefined;
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
+        // a `sideEffects: false` build would drop the same call in the node entry
+        assertNodeVersion(process.env.PACKAGE_NODE_RANGE ?? '', process.version);
+
         if (Pluggable.isInstantiated) {
-            // the caller constructed this shutdown, its signal handlers leak unless dropped here
+            // signal handlers from the caller's shutdown stay on the process unless dropped here
             shutdown.removeSignalHandlers();
             throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
         }

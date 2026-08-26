@@ -16,6 +16,8 @@ const messages = {
         `Could not resolve ${count} configured emoji${count === 1 ? '' : 's'} at startup.\n${failures}`,
     [SeedcordErrorCode.MissingGuildsIntent]: (commands: string) =>
         `Add GatewayIntentBits.Guilds to clientOptions.intents. Without it discord.js doesn't cache any guild, so interaction.guild is null inside these commands: ${commands}.`,
+    [SeedcordErrorCode.UnsupportedNodeVersion]: (required: string, running: string) =>
+        `seedcord requires Node ${required} and this process runs ${running}. Upgrade Node before starting the bot.`,
 
     [SeedcordErrorCode.LifecycleAddAfterCompletion]: () =>
         'Cannot add tasks after startup sequence has already completed.',

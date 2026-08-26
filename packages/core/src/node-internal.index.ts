@@ -1,3 +1,8 @@
+import { assertNodeVersion } from '#node/assertNodeVersion';
+
+// the edge bundle never reaches this entry
+assertNodeVersion(process.env.PACKAGE_NODE_RANGE ?? '', process.version);
+
 export * from '#node/Lifecycle';
 export * from '#node/HealthCheck';
 export { HealthResponder } from '#node/HealthResponder';
