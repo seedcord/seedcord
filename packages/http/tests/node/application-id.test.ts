@@ -1,3 +1,4 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -50,6 +51,8 @@ describe('core.applicationId on the http host', () => {
         const host = new Seedcord(noCommandsConfig());
         live = host;
 
-        expect(() => host.applicationId).toThrow();
+        expect(() => host.applicationId).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CoreApplicationUnavailable })
+        );
     });
 });

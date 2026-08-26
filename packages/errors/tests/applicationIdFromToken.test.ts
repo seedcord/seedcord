@@ -23,7 +23,14 @@ describe('applicationIdFromToken', () => {
     it('throws on a segment length base64 cannot hold', () => {
         // validateDiscordToken accepts any first segment of 24 or more
         expect(() => applicationIdFromToken(tokenFor('a'.repeat(25)))).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.CoreApplicationUnavailable })
+            expect.objectContaining({ code: SeedcordErrorCode.ConfigTokenUnreadable })
+        );
+    });
+
+    it('throws when the segment decodes to something other than digits', () => {
+        // 24 chars is a legal base64 length
+        expect(() => applicationIdFromToken(tokenFor('a'.repeat(24)))).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.ConfigTokenUnreadable })
         );
     });
 });
