@@ -49,7 +49,7 @@ _**seedcord is pre-1.0, so minor versions can break.** I've already completed ne
 | [`@seedcord/utils`](packages/utils) | type helpers and small functions |
 | [`@seedcord/types`](packages/types) | config shapes and shared types |
 | [`@seedcord/rate-limiter`](packages/rate-limiter) | rate limiting and key building |
-| [`@seedcord/event-emitter`](packages/event-emitter) | typed event emitter with `waitFor` |
+| [`@seedcord/event-emitter`](packages/event-emitter) | node-free typed event emitter with `waitFor` |
 | [`@seedcord/plugin-mongoose`](plugins/mongoose) | MongoDB through Mongoose |
 | [`@seedcord/plugin-kysely-postgres`](plugins/kysely-postgres) | Postgres through Kysely |
 | [`@seedcord/eslint-plugin`](tooling/eslint-plugin) | ESLint rules for seedcord bots |
