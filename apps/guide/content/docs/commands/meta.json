@@ -1,5 +1,5 @@
 {
     "title": "Commands",
     "root": true,
-    "pages": ["index", "options", "subcommands"]
+    "pages": ["index", "options", "subcommands", "one-handler"]
 }

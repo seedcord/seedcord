@@ -12,10 +12,10 @@ You need the token from the last page.
 - **Where the project goes.** The folder name becomes the package name, so it takes lowercase letters, digits, and `. _ -`.
 - **TypeScript or JavaScript.**
 - **How Discord reaches your bot.** Gateway or http, the choice from two pages ago.
-- **What your bot should react to.** Gateway only. Pick the things you want and the scaffolder works out which intents that needs.
+- **What your bot should react to.** Gateway only. A list of eleven, from messages in servers to reactions, member joins, and polls. Each one names the intents and partials it needs, and the three privileged ones are marked. The scaffolder writes the set into your `bot.ts`.
 - **Your bot token.**
 - **Your app public key.** Http only.
-- **Your bot colour.** Every reply seedcord builds carries it.
+- **Your bot colour.** Every embed and container you build takes it, unless you set a colour on that one yourself.
 
 Then it installs your dependencies, formats the project, runs `seedcord codegen`, and makes a git commit.
 
@@ -25,7 +25,7 @@ Then it installs your dependencies, formats the project, runs `seedcord codegen`
 
 Your bot logs in, sends its commands to Discord, and the terminal turns into a dev console.
 
-## Say hello
+## Run the ping command
 
 The scaffold ships a `ping` command. Type `/ping` in a server your bot is in.
 
@@ -65,7 +65,7 @@ my-bot/
 ```
 
 - **`src/bot.ts`** builds your bot and exports it. **`src/index.ts`** imports that and starts it. They are separate so the CLI can import `bot.ts` and read your commands without logging in.
-- **`seedcord.config.ts`** configures the CLI. Your bot's own settings, the intents and the folder paths and the colour, go in `bot.ts`.
+- **`seedcord.config.ts`** configures the CLI. Your bot's own settings go in `bot.ts`, which is the file below.
 - **`src/seedcord-gen.d.ts`** carries the types generated from your config and your commands. `seedcord codegen` writes it and you commit it.
 - **`tsconfig.json`** type-checks the project. **`tsconfig.build.json`** compiles `src` into `dist`.
 - **`.env`** holds your token. `bot.ts` sets `Envapter.baseDir` to the project root, which is where [envapt](https://envapt.materwelon.dev) then looks for the file.
@@ -74,6 +74,50 @@ my-bot/
     Discord posts only interactions to an http bot, so the
     scaffolder writes no `src/events` folder.
 </Callout>
+
+## Your bot's settings
+
+Every answer you gave shows up in one object.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+import { Envapter } from 'envapt';
+
+Envapter.baseDir = resolve(import.meta.dirname, '..');
+
+export const seedcord = new Seedcord({
+    bot: {
+        // this is passed directly to the discord.js Client constructor.
+        // http doesn't have this option
+        clientOptions: {
+            intents: [GatewayIntentBits.Guilds]
+        },
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers')
+        },
+        commands: {
+            path: resolve(import.meta.dirname, './commands')
+        },
+        events: {
+            path: resolve(import.meta.dirname, './events')
+        }
+    },
+    subscribers: {
+        path: null
+    },
+    botColor: '#4ade80',
+    notifications: {
+        developerUsername: 'you'
+    }
+});
+
+export default seedcord;
+```
+
+The three `path` keys are the folders seedcord scans at startup. Each tab that teaches a folder's contents covers its key.
 
 ## The ping command
 
@@ -102,7 +146,7 @@ export class Ping extends BuilderComponent<'command'> {
 }
 ```
 
-That is what Discord gets. A name, a description, and one optional boolean.
+Discord gets a name, a description, and one optional boolean.
 
 ```ts twoslash title="src/handlers/Ping.ts"
 import {

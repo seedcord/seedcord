@@ -9,6 +9,12 @@ const REGISTRIES = `
             };
             cache: 'cached';
         };
+        kick: {
+            options: {
+                target: { kind: 'user'; required: true };
+            };
+            cache: 'cached';
+        };
         maintenance: {
             options: {
                 notify: { kind: 'user'; required: true };

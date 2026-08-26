@@ -77,10 +77,24 @@ That file is generated. Commit it, and never edit it by hand.
 [`SlashRegistry`](ref:core/SlashRegistry) ships empty, so `keyof SlashRegistry` is `never` until codegen fills it in. A handler cannot name its route before that.
 
 <Callout type="warning">
-    A stale generated file breaks nothing at runtime, since nothing
-    there reads these types. Run your project's `tc` script to catch
-    it. Set `hmr.typecheck` to true in `seedcord.config.ts` so
-    `seedcord dev` runs one alongside the bot.
+
+A stale generated file breaks nothing at runtime, since nothing there reads these types. Run your project's `tc` script to catch it.
+
+You can turn on `hmr.typecheck` to run `tsc --watch` next to the bot during `seedcord dev`, at the cost of a second node process.
+
+```ts title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    entry: './index.ts',
+    hmr: {
+        typecheck: true
+    }
+});
+```
+
 </Callout>
 
 Run `seedcord codegen` after you add a command or change its options. `seedcord dev` runs it when you answer `y` to the re-register prompt.
@@ -121,7 +135,7 @@ The command still reaches Discord. Anyone who runs it gets `Feature not implemen
 
 ## When a command's constructor throws
 
-Codegen constructs every command it finds. When one throws, it stops and tells you which file to fix.
+Codegen constructs every command it finds. A throw stops the run, and the error names the class and its file.
 
 ```txt output
 Roster threw while codegen constructed it. Fix its constructor in

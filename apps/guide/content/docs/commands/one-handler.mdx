@@ -1,0 +1,97 @@
+---
+title: One handler, several commands
+description: Serving more than one route from a single class, and reading each route's own options.
+---
+
+One class can answer several commands. The decorator and the generic both take the list.
+
+```ts twoslash title="src/handlers/Moderation.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban', 'kick')
+export class Moderation extends SlashHandler<'ban' | 'kick'> {
+    public async execute(): Promise<void> {
+        await this.match({
+            ban: async (options) => {
+                const reason = options.getString('reason');
+                await this.reply(`Banned. ${reason ?? ''}`);
+            },
+            kick: async () => {
+                await this.reply('Kicked.');
+            }
+        });
+    }
+}
+```
+
+Each arm receives that route's own options, so `reason` is there in the `ban` arm even though `kick` never declares it.
+
+## Options every route shares
+
+`this.options` on the class covers the options every route in the list declares. `ban` and `kick` both take `target`, so it is there.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban', 'kick')
+class Moderation extends SlashHandler<'ban' | 'kick'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const target = this.options.getUser('target');
+        //    ^?
+        // ---cut-after---
+    }
+}
+```
+
+An option only one route declares stays out.
+
+```ts twoslash
+// @errors: 2339
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban', 'kick')
+class Moderation extends SlashHandler<'ban' | 'kick'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const reason = this.options.getString('reason');
+    }
+}
+```
+
+`reason` belongs to `ban` alone, so reading it takes an arm.
+
+## Both lists must carry the same routes
+
+Adding a route to one list and forgetting the other is a compile error on the decorator line. TS's error is long, but you can look for the sentence `SlashHandler declares a route the SlashRoute decorator does not list`. Most seedcord type errors will be like that, so you can skim for the first line of the message.
+
+```ts twoslash
+// @errors: 1238
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut---
+@SlashRoute('ban')
+class Moderation extends SlashHandler<'ban' | 'kick'> {
+    public async execute(): Promise<void> {}
+}
+```
+
+## Every route needs an arm
+
+Leaving one out is a compile error.
+
+```ts twoslash
+// @errors: 2345
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban', 'kick')
+class Moderation extends SlashHandler<'ban' | 'kick'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        await this.match({
+            ban: async () => {
+                await this.reply('Banned.');
+            }
+        });
+    }
+}
+```
