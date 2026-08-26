@@ -108,6 +108,9 @@
         "packages/utils": {
             "ignore": [
                 "tests/node/fixtures/**"
+            ],
+            "ignoreDependencies": [
+                "tsx"
             ]
         },
         "plugins/kysely-postgres": {
