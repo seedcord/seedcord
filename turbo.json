@@ -95,6 +95,15 @@
                 "tooling/docs-generator/dist/**/*.d.mts"
             ]
         },
+        "//#fmt:scripts": {
+            "dependsOn": ["@seedcord/eslint-config#build"],
+            "inputs": [
+                "scripts/**/*.{ts,tsx}",
+                "prettier.config.*",
+                ".prettierignore",
+                "tooling/eslint-config/dist/**"
+            ]
+        },
         "//#lint:md": {
             "inputs": ["**/*.md", ".markdownlint-cli2.jsonc", ".markdownlint.json"]
         },
@@ -152,6 +161,10 @@
         "@seedcord/docs-engine#test": {
             "dependsOn": ["^build", "@seedcord/docs-generator#test"],
             "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"]
+        },
+        "seedcord#test": {
+            "dependsOn": ["^build", "seedcord#build"],
+            "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "bin/**", "src/**", "tests/**"]
         },
         "test:watch": {
             "cache": false,

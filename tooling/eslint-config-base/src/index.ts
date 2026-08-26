@@ -2,7 +2,6 @@ import { defineConfig } from 'eslint/config';
 import path from 'node:path';
 import prettierConfig from 'eslint-config-prettier';
 import { importX } from 'eslint-plugin-import-x';
-import eslintPrettier from 'eslint-plugin-prettier';
 import eslintSecurity from 'eslint-plugin-security';
 import eslintTsdoc from 'eslint-plugin-tsdoc';
 import eslintUnicorn from 'eslint-plugin-unicorn';
@@ -24,13 +23,13 @@ import {
 } from './constants';
 import {
     GENERAL_RULES,
-    IMPORT_RULES,
     OVERRIDE_RULES,
-    PRETTIER_RULES,
     SECURITY_RULES,
     TSDOC_RULES,
     TYPESCRIPT_RULES,
     UNICORN_RULES,
+    assertImportPluginLevel,
+    createImportRules,
     createImportSettings
 } from './rules';
 
@@ -57,17 +56,13 @@ function pluginBlock(params: {
     return item;
 }
 
-/**
- * Builds an ESLint flat config, composing the shared JS/TS rule sets with the plugin blocks
- * (security, import, prettier, tsdoc, unicorn, tailwind, mdx) that `options` toggles on or off.
- */
+/** Builds an ESLint flat config from the shared JS/TS rule sets and the plugin blocks `options` turns on. */
 function createConfig(options: CreateConfigOptions = {}): FlatConfig {
     const {
         tsconfigRootDir = process.cwd(),
         generalIgnores = [],
         userConfigs = [],
-        registerImportPlugin = true,
-        registerPrettierPlugin = true,
+        registerImportPlugin = 'all',
         registerSecurityPlugin = true,
         registerTsdocPlugin = true,
         registerTypescriptConfigs = true,
@@ -77,6 +72,9 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         tailwindTaggedTemplates = ['tw'],
         mdxFiles
     } = options;
+
+    // nothing type-checks a consumer's eslint.config.mjs
+    assertImportPluginLevel(registerImportPlugin);
 
     const createTsParserOptions = (rootDir: string) => ({
         project: ['./tsconfig.json'],
@@ -131,20 +129,12 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         }),
 
         pluginBlock({
-            enabled: registerImportPlugin,
+            enabled: registerImportPlugin !== 'off',
             files: [...ALL_FILES],
             pluginName: 'import-x',
             plugin: importX,
             settings: createImportSettings(tsconfigRootDir),
-            rules: IMPORT_RULES
-        }),
-
-        pluginBlock({
-            enabled: registerPrettierPlugin,
-            files: [...ALL_FILES],
-            pluginName: 'prettier',
-            plugin: eslintPrettier,
-            rules: PRETTIER_RULES
+            rules: createImportRules(registerImportPlugin)
         }),
 
         pluginBlock({

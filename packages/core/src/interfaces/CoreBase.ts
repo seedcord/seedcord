@@ -15,6 +15,8 @@ export interface CoreBase {
      * until the Login phase. On http the token is set by `start()`.
      */
     readonly rest: REST;
+    /** The bot's Discord application id. Throws if you read it before the host resolves it. */
+    readonly applicationId: string;
     /** Sliding-window rate limiting, the `Cooldown` gate's backend and a public direct-use API. */
     readonly rateLimiter: IRateLimiter;
     /** Publish and subscribe to framework and application events. */

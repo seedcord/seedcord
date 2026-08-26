@@ -108,6 +108,9 @@
         "packages/utils": {
             "ignore": [
                 "tests/node/fixtures/**"
+            ],
+            "ignoreDependencies": [
+                "tsx"
             ]
         },
         "plugins/kysely-postgres": {
@@ -141,7 +144,6 @@
                 "@types/eslint-plugin-security",
                 "@typescript-eslint/parser",
                 "eslint-config-prettier",
-                "eslint-plugin-prettier",
                 "eslint-plugin-security",
                 "eslint-plugin-tsdoc",
                 "eslint-plugin-unicorn",

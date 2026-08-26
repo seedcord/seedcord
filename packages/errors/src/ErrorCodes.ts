@@ -18,6 +18,10 @@ export enum SeedcordErrorCode {
     ConfigInvalidEnv = 1006,
     /** A command usable in a guild is registered without the `Guilds` intent that caches guilds. */
     MissingGuildsIntent = 1007,
+    /** The running Node version is below the range seedcord declares in `engines`. */
+    UnsupportedNodeVersion = 1008,
+    /** `DISCORD_BOT_TOKEN` passed its shape check and carries no readable application id. */
+    ConfigTokenUnreadable = 1009,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,
@@ -50,7 +54,7 @@ export enum SeedcordErrorCode {
     CoreDirectoryUnreadable = 1207,
     /** A plugin was attached under a key the framework logs on. */
     CorePluginReservedChannel = 1208,
-    /** A command deploy ran before the client resolved its application. */
+    /** The application id was read before startup resolved it. */
     CoreApplicationUnavailable = 1209,
     /** A generated accessor was read before startup resolved its values. */
     CoreAccessorUnresolved = 1210,

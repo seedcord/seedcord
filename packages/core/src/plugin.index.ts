@@ -1,5 +1,4 @@
 export { Plugin } from '#src/plugin/Plugin';
-export type { Initializeable } from '#src/plugin/Plugin';
 
 export type { PluginLifecycleSpec, PluginOptions } from '#src/plugin/Plugin';
 

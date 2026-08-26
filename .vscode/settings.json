@@ -22,7 +22,6 @@
     "eslint.format.enable": false,
     "eslint.lintTask.enable": true,
     "eslint.codeActionsOnSave.mode": "all",
-    "eslint.codeActionsOnSave.rules": ["!prettier/prettier", "*"],
     "eslint.workingDirectories": [
         {
             "mode": "auto"

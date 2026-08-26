@@ -25,7 +25,8 @@ import type { MiddlewareMetadata } from '#bDecorators/Middlewares';
 import type { EventHandlerConstructor, EventMiddlewareConstructor } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
 import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
-import type { Initializeable, SubscriptionData } from '@seedcord/core';
+import type { SubscriptionData } from '@seedcord/core';
+import type { Initializeable } from '@seedcord/core/internal';
 import type { EventFrequency, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { ClientEvents } from 'discord.js';
 

@@ -52,6 +52,7 @@ class TestPlugin extends Plugin {
 class TestHost extends Pluggable<'gateway', 'server'> {
     public readonly config: Config;
     public readonly rest = new REST();
+    public readonly applicationId = 'app-1';
     public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
     public readonly bus: Bus;
 

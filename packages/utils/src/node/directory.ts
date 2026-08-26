@@ -1,5 +1,6 @@
 import { readdir } from 'node:fs/promises';
 import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -51,7 +52,8 @@ export async function traverseDirectory(
         } else if (isTsOrJsFile(entry)) {
             let imported: Record<string, unknown>;
             try {
-                imported = (await import(fullPath)) as Record<string, unknown>;
+                // node reads a raw windows path's drive letter as a url protocol
+                imported = (await import(pathToFileURL(fullPath).href)) as Record<string, unknown>;
             } catch (err) {
                 throw new SeedcordError(SeedcordErrorCode.CoreDirectoryImportFailed, [relativePath], { cause: err });
             }

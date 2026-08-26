@@ -19,13 +19,29 @@ describe('createConfig plugin toggles', () => {
     it('drops plugin rules when the plugin is disabled', async () => {
         // regression: a disabled plugin left its import-x/* rules in the config, so eslint threw
         // "rule not found" for the eslint-9 apps that register no import-x plugin.
-        const rules = await resolveRules({ registerImportPlugin: false }, 'src/example.ts');
+        const rules = await resolveRules({ registerImportPlugin: 'off' }, 'src/example.ts');
         expect(Object.keys(rules).filter((name) => name.startsWith('import-x/'))).toEqual([]);
     });
 
     it('keeps plugin rules when the plugin is enabled', async () => {
-        const rules = await resolveRules({ registerImportPlugin: true }, 'src/example.ts');
+        const rules = await resolveRules({ registerImportPlugin: 'all' }, 'src/example.ts');
         expect(rules['import-x/order']).toBeDefined();
+    });
+
+    it('drops the cross-file import rules on fast, keeping the rest', async () => {
+        const rules = await resolveRules({ registerImportPlugin: 'fast' }, 'src/example.ts');
+
+        expect(rules['import-x/no-cycle']).toBeUndefined();
+        expect(rules['import-x/no-deprecated']).toBeUndefined();
+        expect(rules['import-x/order']).toBeDefined();
+    });
+
+    it.each([false, true, 'yes'])('rejects %o for registerImportPlugin', (value) => {
+        // nothing type-checks a consumer's eslint.config.mjs
+        expect(() =>
+            // justified: the fixture feeds the runtime the stale shape the types already reject
+            createConfig({ registerImportPlugin: value as NonNullable<SeedcordConfigOptions['registerImportPlugin']> })
+        ).toThrow(/takes 'all', 'fast', or 'off'/);
     });
 
     it('registers the discordjs rules when enabled', async () => {

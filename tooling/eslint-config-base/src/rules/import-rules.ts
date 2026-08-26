@@ -17,7 +17,12 @@ export const createImportSettings = (rootDir: string) => ({
     'import-x/external-module-folders': ['node_modules', 'dist']
 });
 
-export const IMPORT_RULES: Linter.RulesRecord = {
+export type ImportPluginLevel = 'all' | 'fast' | 'off';
+
+// these two parse every file an import resolves to, about 15% of a full seedcord lint run's rule time
+const CROSS_FILE_RULES = ['import-x/no-cycle', 'import-x/no-deprecated'] as const;
+
+const IMPORT_RULES: Linter.RulesRecord = {
     'import-x/order': [
         'warn',
         {
@@ -52,3 +57,19 @@ export const IMPORT_RULES: Linter.RulesRecord = {
     'import-x/no-useless-path-segments': ['error', { noUselessIndex: true }],
     'import-x/no-rename-default': 'error'
 };
+
+const LEVELS: readonly ImportPluginLevel[] = ['all', 'fast', 'off'];
+
+export function assertImportPluginLevel(value: unknown): asserts value is ImportPluginLevel {
+    if (LEVELS.includes(value as ImportPluginLevel)) return;
+
+    throw new Error(`registerImportPlugin takes 'all', 'fast', or 'off'. Received ${JSON.stringify(value)}.`);
+}
+
+export function createImportRules(level: ImportPluginLevel): Linter.RulesRecord {
+    const rules = { ...IMPORT_RULES };
+    if (level === 'fast') {
+        for (const rule of CROSS_FILE_RULES) delete rules[rule];
+    }
+    return rules;
+}

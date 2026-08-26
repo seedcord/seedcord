@@ -1,7 +1,18 @@
 import type { RuntimeBrand, TransportBrand } from './brands';
 import type { FrameworkChannel, TypedExclude } from '@seedcord/types';
 
-/** The options a plugin declares as its `Plugin<Opts>` type argument. */
+/**
+ * Declares where a plugin may attach. Pass it as the `Plugin<Opts>` type argument. `attach()` fails
+ * to compile when the host does not match.
+ *
+ * @example
+ * ```ts
+ * // attaching this to an http bot fails to compile
+ * class Voice extends Plugin<{ transport: 'gateway' }> {
+ *     public async init(): Promise<void> {}
+ * }
+ * ```
+ */
 export interface PluginOptions {
     /**
      * Which transport the plugin runs on. `'any'` attaches to either one.

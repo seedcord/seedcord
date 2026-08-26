@@ -77,6 +77,7 @@ class WidenedCtor extends Plugin<{ transport: 'gateway' }> {
 class TestHost extends Pluggable<'gateway', 'server'> {
     public readonly config = {} as Config;
     public readonly rest = new REST();
+    public readonly applicationId = 'app-1';
     public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
     public readonly bus: Bus;
 
@@ -135,6 +136,7 @@ describe('attaching a plugin that declares options', () => {
         class EdgeHost extends Pluggable<'http', 'edge'> {
             public readonly config = {} as Config;
             public readonly rest = new REST();
+            public readonly applicationId = 'app-1';
             public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
             public readonly bus: Bus;
             constructor() {
@@ -157,6 +159,7 @@ describe('attaching a plugin that declares options', () => {
         class WideHost extends Pluggable<'http', Runtime> {
             public readonly config = {} as Config;
             public readonly rest = new REST();
+            public readonly applicationId = 'app-1';
             public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
             public readonly bus: Bus;
             constructor() {

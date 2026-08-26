@@ -39,8 +39,12 @@ function coreWith(
         throw new Error(`unreachable route ${route}`);
     });
 
-    // justified: the injector reads only the emoji config and the REST getter
-    const core = { config: { bot: { emojis: configEmojis } }, rest: { get } } as unknown as Core;
+    // justified: the injector reads only these three members off core
+    const core = {
+        config: { bot: { emojis: configEmojis } },
+        applicationId: APP,
+        rest: { get }
+    } as unknown as Core;
     return { core, get };
 }
 
@@ -92,15 +96,6 @@ describe('EmojiInjector', () => {
         await new EmojiInjector(core).init();
 
         expect(get.mock.calls.map((call) => call[0])).toEqual([Routes.guildEmojis('g1')]);
-    });
-
-    it('collects an application fetch failure instead of throwing it raw', async () => {
-        const { core } = coreWith({ Confirm: 'confirm' }, {}, (route) => route === Routes.currentApplication());
-
-        const caught = await new EmojiInjector(core).init().catch((error: unknown) => error);
-
-        expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.ConfigEmojiUnresolved)).toBe(true);
-        expect(String(caught)).toContain('application id could not be resolved');
     });
 
     it('collects a guild fetch failure with its cause', async () => {

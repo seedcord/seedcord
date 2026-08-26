@@ -39,7 +39,7 @@ export type InjectedEmojiMap = {
 
 /**
  * The bot's resolved emojis, keyed by {@link EmojiMap}. Filled by {@link EmojiInjector} during startup.
- * A read before that throws.
+ * Throws if you read a key the injector did not fill.
  */
 export const Emojis = guardedAccessor('Emojis', emojiStorage) as InjectedEmojiMap;
 

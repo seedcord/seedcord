@@ -31,7 +31,6 @@ export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
 export { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
 export type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
 export { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
-export { CommandInjector } from '#src/commands/CommandInjector';
 export type { CommandBuilder, DeployResult } from '#src/commands/types';
 
 export { pickNotice } from '#gates/catalog/options';
@@ -104,3 +103,4 @@ export { PublishDefault } from '#subscribers/publishDefault';
 export { outcomeFor, queuedMsFor, reportDispatch } from '#src/dispatch/dispatchReport';
 // the transports' augmentation target for their own default keys
 export type { DefaultSubscriptions } from '#subscribers/types/Subscriptions';
+export type { Initializeable } from '#src/plugin/Plugin';

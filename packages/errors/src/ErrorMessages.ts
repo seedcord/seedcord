@@ -14,8 +14,12 @@ const messages = {
         `The webhook behind ${envKey} does not exist on Discord.`,
     [SeedcordErrorCode.ConfigEmojiUnresolved]: (count: number, failures: string) =>
         `Could not resolve ${count} configured emoji${count === 1 ? '' : 's'} at startup.\n${failures}`,
+    [SeedcordErrorCode.ConfigTokenUnreadable]: () =>
+        "DISCORD_BOT_TOKEN carries no readable application id. Discord builds the first part of a bot token from that id, so a token failing here is truncated or mistyped. Copy it again from your application's Bot page.",
     [SeedcordErrorCode.MissingGuildsIntent]: (commands: string) =>
         `Add GatewayIntentBits.Guilds to clientOptions.intents. Without it discord.js doesn't cache any guild, so interaction.guild is null inside these commands: ${commands}.`,
+    [SeedcordErrorCode.UnsupportedNodeVersion]: (required: string, running: string) =>
+        `seedcord requires Node ${required} and this process runs ${running}. Upgrade Node before starting the bot.`,
 
     [SeedcordErrorCode.LifecycleAddAfterCompletion]: () =>
         'Cannot add tasks after startup sequence has already completed.',
@@ -41,7 +45,8 @@ const messages = {
     [SeedcordErrorCode.CoreDirectoryUnreadable]: (dir: string) => `${dir} could not be read.`,
     [SeedcordErrorCode.CorePluginReservedChannel]: (key: string) =>
         `Plugin key "${key}" is a channel the framework logs on. Pick another key.`,
-    [SeedcordErrorCode.CoreApplicationUnavailable]: () => "The bot's application id could not be resolved.",
+    [SeedcordErrorCode.CoreApplicationUnavailable]: () =>
+        "The bot's application id resolves during startup. You read it before that. Read it inside a handler, inside a plugin's ready(), or after start() resolves.",
     [SeedcordErrorCode.CoreAccessorUnresolved]: (accessor: string, key: string) =>
         `${accessor}.${key} has no value yet. ${accessor} fills during startup, and a read at the top of a file runs before that.`,
 

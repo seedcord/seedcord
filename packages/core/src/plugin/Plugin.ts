@@ -22,11 +22,32 @@ const resolvedSpecSlot = Symbol('seedcord.plugin.spec');
 const loggerSlot = Symbol('seedcord.plugin.logger');
 
 /**
- * Base class for Seedcord plugins. A subclass declares its options as the `Opts` type argument,
- * implements `init()`, and reads the framework surface through `this.core`.
+ * Base class for a seedcord plugin. Extend it and implement `init()`. `this.core` is the running
+ * bot.
  *
- * @typeParam Opts - The plugin's declared {@link PluginOptions}.
- * @typeParam TCore - The host type `this.core` resolves to. Each transport binds it to its own `Core`.
+ * Your constructor takes the host first and passes it to `super()`. Add your own parameters after
+ * it. `attach()` types them at the call site.
+ *
+ * @typeParam Opts - Where this plugin may attach, checked only at compile time.
+ * @typeParam TCore - The `Core` each transport binds `this.core` to.
+ *
+ * @example
+ * ```ts
+ * class Analytics extends Plugin<{ transport: 'gateway' }> {
+ *     constructor(
+ *         host: CoreBase,
+ *         private readonly apiKey: string
+ *     ) {
+ *         super(host, { init: { phase: StartupPhase.Login } });
+ *     }
+ *
+ *     public async init(): Promise<void> {
+ *         await this.connect(this.apiKey);
+ *     }
+ * }
+ *
+ * seedcord.attach('analytics', Analytics, apiKey);
+ * ```
  */
 export abstract class Plugin<Opts extends PluginOptions = {}, TCore extends CoreBase = CoreBase>
     implements Initializeable, HmrAware
@@ -61,15 +82,21 @@ export abstract class Plugin<Opts extends PluginOptions = {}, TCore extends Core
         return this.host as TCore;
     }
 
+    /**
+     * Runs in `StartupPhase.Configuration` by default.
+     * Move it to a different phase with the {@link PluginLifecycleSpec}.
+     */
     abstract init(): Promise<void>;
 
     /**
-     * Runs in the startup Ready phase, after `init()`. The gateway client is logged in by this phase,
-     * and the http host binds its server in the same phase.
+     * Runs in the Ready phase, after every attached plugin's `init()` has resolved. The other Ready
+     * tasks run alongside it, including the http server binding its port.
+     *
+     * Override it when your work needs a logged-in client or a resolved application id.
      */
     ready?(): Promise<void>;
 
-    /** Runs during teardown, only when `init()` resolved. */
+    /** Runs during teardown, in `ShutdownPhase.Disconnect` by default. It never runs when `init()` has thrown. */
     dispose?(): Promise<void>;
 
     /**

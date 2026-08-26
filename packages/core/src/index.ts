@@ -31,8 +31,6 @@ export { RepliableHandler } from '#src/handlers/RepliableHandler';
 
 export type { CoreBase } from '#interfaces/CoreBase';
 
-export type { Initializeable } from '#src/plugin/Plugin';
-
 export { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 
 export { defineEffectGate, defineGate } from '#gates/Gate';
