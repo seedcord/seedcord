@@ -28,13 +28,6 @@ export interface CreateConfigOptions {
     registerImportPlugin?: boolean;
 
     /**
-     * Toggle registration of the `eslint-plugin-prettier` plugin
-     *
-     * @defaultValue `true`
-     */
-    registerPrettierPlugin?: boolean;
-
-    /**
      * Toggle registration of the `eslint-plugin-security` plugin
      *
      * @defaultValue `true`

@@ -141,7 +141,6 @@
                 "@types/eslint-plugin-security",
                 "@typescript-eslint/parser",
                 "eslint-config-prettier",
-                "eslint-plugin-prettier",
                 "eslint-plugin-security",
                 "eslint-plugin-tsdoc",
                 "eslint-plugin-unicorn",

@@ -95,6 +95,9 @@
                 "tooling/docs-generator/dist/**/*.d.mts"
             ]
         },
+        "//#fmt:scripts": {
+            "inputs": ["scripts/**/*.{ts,tsx}", "prettier.config.*"]
+        },
         "//#lint:md": {
             "inputs": ["**/*.md", ".markdownlint-cli2.jsonc", ".markdownlint.json"]
         },

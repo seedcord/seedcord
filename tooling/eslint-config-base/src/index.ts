@@ -2,7 +2,6 @@ import { defineConfig } from 'eslint/config';
 import path from 'node:path';
 import prettierConfig from 'eslint-config-prettier';
 import { importX } from 'eslint-plugin-import-x';
-import eslintPrettier from 'eslint-plugin-prettier';
 import eslintSecurity from 'eslint-plugin-security';
 import eslintTsdoc from 'eslint-plugin-tsdoc';
 import eslintUnicorn from 'eslint-plugin-unicorn';
@@ -26,7 +25,6 @@ import {
     GENERAL_RULES,
     IMPORT_RULES,
     OVERRIDE_RULES,
-    PRETTIER_RULES,
     SECURITY_RULES,
     TSDOC_RULES,
     TYPESCRIPT_RULES,
@@ -59,7 +57,9 @@ function pluginBlock(params: {
 
 /**
  * Builds an ESLint flat config, composing the shared JS/TS rule sets with the plugin blocks
- * (security, import, prettier, tsdoc, unicorn, tailwind, mdx) that `options` toggles on or off.
+ * (security, import, tsdoc, unicorn, tailwind, mdx) that `options` toggles on or off.
+ *
+ * Formatting is left to prettier's own CLI. Run `prettier --check` beside `eslint`.
  */
 function createConfig(options: CreateConfigOptions = {}): FlatConfig {
     const {
@@ -67,7 +67,6 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         generalIgnores = [],
         userConfigs = [],
         registerImportPlugin = true,
-        registerPrettierPlugin = true,
         registerSecurityPlugin = true,
         registerTsdocPlugin = true,
         registerTypescriptConfigs = true,
@@ -137,14 +136,6 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             plugin: importX,
             settings: createImportSettings(tsconfigRootDir),
             rules: IMPORT_RULES
-        }),
-
-        pluginBlock({
-            enabled: registerPrettierPlugin,
-            files: [...ALL_FILES],
-            pluginName: 'prettier',
-            plugin: eslintPrettier,
-            rules: PRETTIER_RULES
         }),
 
         pluginBlock({
