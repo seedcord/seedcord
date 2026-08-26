@@ -19,12 +19,21 @@ describe('createConfig plugin toggles', () => {
     it('drops plugin rules when the plugin is disabled', async () => {
         // regression: a disabled plugin left its import-x/* rules in the config, so eslint threw
         // "rule not found" for the eslint-9 apps that register no import-x plugin.
-        const rules = await resolveRules({ registerImportPlugin: false }, 'src/example.ts');
+        const rules = await resolveRules({ registerImportPlugin: 'off' }, 'src/example.ts');
         expect(Object.keys(rules).filter((name) => name.startsWith('import-x/'))).toEqual([]);
     });
 
     it('keeps plugin rules when the plugin is enabled', async () => {
-        const rules = await resolveRules({ registerImportPlugin: true }, 'src/example.ts');
+        const rules = await resolveRules({ registerImportPlugin: 'all' }, 'src/example.ts');
+        expect(rules['import-x/order']).toBeDefined();
+    });
+
+    it('silences the cross-file import rules on fast, keeping the rest', async () => {
+        const rules = await resolveRules({ registerImportPlugin: 'fast' }, 'src/example.ts');
+
+        // the key stays in the config at off. an inline disable naming a missing rule errors.
+        expect(rules['import-x/no-cycle']).toEqual([0]);
+        expect(rules['import-x/no-deprecated']).toEqual([0]);
         expect(rules['import-x/order']).toBeDefined();
     });
 

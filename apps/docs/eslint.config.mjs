@@ -6,7 +6,7 @@ import reactCompiler from 'eslint-plugin-react-compiler';
 
 export default createConfig({
     tsconfigRootDir: import.meta.dirname,
-    registerImportPlugin: false,
+    registerImportPlugin: 'off',
     registerTypescriptConfigs: false,
     // unicorn needs eslint 10.4 or newer, but this app is still on eslint 9
     registerUnicornPlugin: false,

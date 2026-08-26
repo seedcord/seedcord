@@ -23,12 +23,12 @@ import {
 } from './constants';
 import {
     GENERAL_RULES,
-    IMPORT_RULES,
     OVERRIDE_RULES,
     SECURITY_RULES,
     TSDOC_RULES,
     TYPESCRIPT_RULES,
     UNICORN_RULES,
+    createImportRules,
     createImportSettings
 } from './rules';
 
@@ -66,7 +66,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         tsconfigRootDir = process.cwd(),
         generalIgnores = [],
         userConfigs = [],
-        registerImportPlugin = true,
+        registerImportPlugin = 'all',
         registerSecurityPlugin = true,
         registerTsdocPlugin = true,
         registerTypescriptConfigs = true,
@@ -130,12 +130,12 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         }),
 
         pluginBlock({
-            enabled: registerImportPlugin,
+            enabled: registerImportPlugin !== 'off',
             files: [...ALL_FILES],
             pluginName: 'import-x',
             plugin: importX,
             settings: createImportSettings(tsconfigRootDir),
-            rules: IMPORT_RULES
+            rules: createImportRules(registerImportPlugin)
         }),
 
         pluginBlock({

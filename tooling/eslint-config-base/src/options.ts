@@ -1,3 +1,4 @@
+import type { ImportPluginLevel } from './rules/import-rules';
 import type { Linter } from 'eslint';
 
 /** @internal */
@@ -21,11 +22,12 @@ export interface CreateConfigOptions {
     userConfigs?: FlatConfigItem[];
 
     /**
-     * Toggle registration of the `eslint-plugin-import-x` plugin
+     * How much of the `eslint-plugin-import-x` rule set to run. Drop to `'fast'` when lint time
+     * matters more than catching import cycles and deprecated imports.
      *
-     * @defaultValue `true`
+     * @defaultValue `'all'`
      */
-    registerImportPlugin?: boolean;
+    registerImportPlugin?: ImportPluginLevel;
 
     /**
      * Toggle registration of the `eslint-plugin-security` plugin
