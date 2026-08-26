@@ -1,4 +1,4 @@
-// mirrors what mocks/gateway and mocks/http declare in their src/seedcord-gen.d.ts
+// these are all the types the registry uses to type its examples. expand as needed
 const REGISTRIES = `
     interface SlashRegistry {
         ping: { options: { detailed: { kind: 'boolean'; required: false } }; cache: 'cached' };
@@ -17,6 +17,21 @@ const REGISTRIES = `
             };
             cache: 'cached';
         };
+        'role/add': {
+            options: {
+                member: { kind: 'user'; required: true };
+                role: { kind: 'role'; required: true };
+            };
+            cache: 'cached';
+        };
+        'role/remove': {
+            options: {
+                member: { kind: 'user'; required: true };
+                role: { kind: 'role'; required: true };
+            };
+            cache: 'cached';
+        };
+        'settings/notifications/enable': { options: {}; cache: 'cached' };
         probe: {
             options: {
                 query: { kind: 'string'; required: true; autocomplete: true };
