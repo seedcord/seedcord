@@ -1,3 +1,5 @@
+import { dirname, resolve } from 'node:path';
+
 import { defaultHoverInfoProcessor, rendererRich, transformerTwoslash } from '@shikijs/twoslash';
 import { highlightToHtml } from '@seedcord/ui/shiki';
 import ts from 'typescript';
@@ -179,8 +181,22 @@ async function learnFormatting(nodes: TwoslashShikiReturn['nodes']): Promise<voi
     await Promise.all([...pending].map(([text, printed]) => printed.then((value) => void formatted.set(text, value))));
 }
 
+// typescript resolves the extends chain itself. the bundler rewrites a require.resolve of a json file
+function sampleCompilerOptions(): ts.CompilerOptions {
+    const configPath = resolve(process.cwd(), 'tsconfig.samples.json');
+    const { config, error } = ts.readConfigFile(configPath, (path) => ts.sys.readFile(path));
+    if (error) throw new Error(`${configPath}: ${ts.flattenDiagnosticMessageText(error.messageText, '\n')}`);
+
+    const parsed = ts.parseJsonConfigFileContent(config, ts.sys, dirname(configPath));
+    if (parsed.errors.length > 0) {
+        throw new Error(parsed.errors.map((e) => ts.flattenDiagnosticMessageText(e.messageText, '\n')).join('\n'));
+    }
+
+    return parsed.options;
+}
+
 const BASE_OPTIONS = {
-    compilerOptions: { experimentalDecorators: true, strict: true, types: ['node'] },
+    compilerOptions: sampleCompilerOptions(),
     extraFiles: { 'seedcord-gen.d.ts': SAMPLE_AUGMENTATION }
 };
 
