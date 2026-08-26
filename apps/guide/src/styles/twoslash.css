@@ -95,6 +95,15 @@
         display: none;
     }
 
+    .twoslash .twoslash-hover {
+        cursor: help;
+    }
+
+    .twoslash:hover .twoslash-hover {
+        text-decoration: underline dotted color-mix(in oklab, var(--text) 22%, transparent);
+        text-underline-offset: 0.3em;
+    }
+
     /* TypeHover stamps this on the token it opened */
     .twoslash .twoslash-hover[data-type-hover-open] {
         text-decoration: underline dotted color-mix(in oklab, var(--text) 45%, transparent);

@@ -2,6 +2,7 @@ import { Card, CodeBlock, CopyAnchorButton, cn, tw } from '@seedcord/ui';
 import { highlightInlineToHtml, isHighlightable } from '@seedcord/ui/shiki';
 
 import { Callout } from '#components/Callout';
+import { HoverHint } from '#components/HoverHint';
 import { Shell } from '#components/Shell';
 import { LINK, Ref } from '#components/Ref';
 import { TypeHover } from '#components/TypeHover';
@@ -156,11 +157,17 @@ async function Fence({ children }: FenceProps): Promise<ReactElement> {
 
     const representation = await twoslashBlock(fence.code, fence.lang, fence.mode);
 
+    const hoverable = fence.mode === 'hovers';
     const block = (
-        <CodeBlock representation={representation} label={fence.title} copyValue={fence.output ? null : undefined} />
+        <CodeBlock
+            representation={representation}
+            label={fence.title}
+            copyValue={fence.output ? null : undefined}
+            actions={hoverable ? <HoverHint /> : undefined}
+        />
     );
 
-    return fence.mode === 'hovers' ? <TypeHover>{block}</TypeHover> : block;
+    return hoverable ? <TypeHover>{block}</TypeHover> : block;
 }
 
 const OFF_SITE = /^[a-z]+:/i;
