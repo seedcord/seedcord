@@ -1,5 +1,12 @@
 {
     "title": "Commands",
     "root": true,
-    "pages": ["index", "options", "subcommands", "one-handler"]
+    "pages": [
+        "index",
+        "options",
+        "subcommands",
+        "one-handler",
+        "autocomplete",
+        "context-menus"
+    ]
 }

@@ -38,6 +38,14 @@ const REGISTRIES = `
             cache: 'cached';
         };
         'settings/notifications/enable': { options: {}; cache: 'cached' };
+        search: {
+            options: {
+                query: { kind: 'string'; required: true; autocomplete: true };
+                limit: { kind: 'integer'; required: false; autocomplete: true };
+                category: { kind: 'string'; required: false; choices: ['books', 'films'] };
+            };
+            cache: 'cached';
+        };
         probe: {
             options: {
                 query: { kind: 'string'; required: true; autocomplete: true };
@@ -48,6 +56,12 @@ const REGISTRIES = `
             };
             cache: 'cached';
         };
+    }
+    interface UserContextMenuRegistry {
+        'View Profile': { cache: 'cached' };
+    }
+    interface MessageContextMenuRegistry {
+        'Report Message': { cache: 'cached' };
     }
 `;
 

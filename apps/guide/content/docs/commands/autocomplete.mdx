@@ -1,0 +1,146 @@
+---
+title: Autocomplete
+description: Suggesting values while someone types an option, and reading what they already filled in.
+---
+
+An option offers suggestions once you call `setAutocomplete(true)` on it.
+
+```ts twoslash title="src/commands/Search.ts"
+import {
+    BuilderComponent,
+    RegisterCommand
+} from '@seedcord/gateway';
+
+@RegisterCommand('global')
+export class Search extends BuilderComponent<'command'> {
+    constructor() {
+        super('command');
+
+        this.instance
+            .setName('search')
+            .setDescription('Search the catalogue')
+            .addStringOption((option) =>
+                option
+                    .setName('query')
+                    .setDescription('What to search')
+                    .setRequired(true)
+                    .setAutocomplete(true)
+            )
+            .addIntegerOption((option) =>
+                option
+                    .setName('limit')
+                    .setDescription('How many results')
+                    .setAutocomplete(true)
+            )
+            .addStringOption((option) =>
+                option
+                    .setName('category')
+                    .setDescription('Scope the query')
+                    .addChoices(
+                        { name: 'Books', value: 'books' },
+                        { name: 'Films', value: 'films' }
+                    )
+            );
+    }
+}
+```
+
+Suggestions arrive as their own interaction, so they get their own class and their own decorator. The route is the command's.
+
+```ts twoslash hovers title="src/handlers/SearchAutocomplete.ts"
+import {
+    AutocompleteHandler,
+    AutocompleteRoute
+} from '@seedcord/gateway';
+
+const TITLES = ['Dune', 'Neuromancer', 'Ubik'];
+// ---cut---
+@AutocompleteRoute('search')
+export class SearchAutocomplete extends AutocompleteHandler<'search'> {
+    public async execute(): Promise<void> {
+        await this.match({
+            query: (value, respond) => respond(this.titles(value)),
+            limit: (value, respond) => respond(this.counts(value))
+        });
+    }
+
+    private titles(
+        value: string
+    ): { name: string; value: string }[] {
+        return TITLES.filter((title) =>
+            title.toLowerCase().startsWith(value.toLowerCase())
+        ).map((title) => ({ name: title, value: title }));
+    }
+
+    private counts(
+        value: string
+    ): { name: string; value: number }[] {
+        const parsed = Number.parseInt(value, 10);
+
+        return Number.isNaN(parsed)
+            ? []
+            : [{ name: `${parsed}`, value: parsed }];
+    }
+}
+```
+
+Discord sends one of these every time the person edits the field, so `value` is whatever they have typed so far.
+
+## One arm per field
+
+An autocomplete interaction names which field is focused, so every handler branches on it. `this.match` takes one arm per autocompletable field, and leaving one out is a compile error.
+
+Each arm receives the partial value and a `respond` typed to that field's choice values.
+
+## The value is always a string
+
+`limit` is an integer option, and its partial still arrives as a string.
+
+```ts twoslash
+import {
+    AutocompleteHandler,
+    AutocompleteRoute
+} from '@seedcord/gateway';
+
+@AutocompleteRoute('search')
+class SearchAutocomplete extends AutocompleteHandler<'search'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        await this.match({
+            query: (value, respond) => respond([]),
+            limit: (value, respond) => respond([])
+            //      ^?
+        });
+        // ---cut-after---
+    }
+}
+```
+
+Discord sends the raw text, so someone typing `120` sends `'1'`, then `'12'`, then `'120'`. Parse it yourself and guard the result, since an empty field sends an empty string.
+
+What you send back carries the real type, so `limit` takes `{ value: number }`.
+
+## Reading the other options
+
+`this.options` covers what the person has already filled in, which is how a suggestion narrows to their earlier answers.
+
+```ts twoslash
+import {
+    AutocompleteHandler,
+    AutocompleteRoute
+} from '@seedcord/gateway';
+
+@AutocompleteRoute('search')
+class SearchAutocomplete extends AutocompleteHandler<'search'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const category = this.options.getString('category');
+        //    ^?
+        // ---cut-after---
+    }
+}
+```
+
+Every read here is nullable, since the person may not have reached that option yet.
+
+Discord resolves four option kinds mid-type, so `getString`, `getInteger`, `getNumber`, and `getBoolean` are the only getters you get here.
