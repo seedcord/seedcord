@@ -18,6 +18,8 @@ export enum SeedcordErrorCode {
     ConfigInvalidEnv = 1006,
     /** A command usable in a guild is registered without the `Guilds` intent that caches guilds. */
     MissingGuildsIntent = 1007,
+    /** The running Node version is below the range seedcord declares in `engines`. */
+    UnsupportedNodeVersion = 1008,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,
