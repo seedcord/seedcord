@@ -9,8 +9,11 @@ export function stubBus(): Bus {
     return new Bus({} as unknown as CoreBase);
 }
 
+/** The id every host decodes out of {@link VALID_TOKEN}. */
+export const APP_ID = '1195232619718254663';
+
 // eslint-disable-next-line no-magic-numbers -- mimic valid token shape
-export const VALID_TOKEN = `${'a'.repeat(24)}.${'b'.repeat(6)}.${'c'.repeat(27)}`;
+export const VALID_TOKEN = `${btoa(APP_ID).replaceAll('=', '')}.${'b'.repeat(6)}.${'c'.repeat(27)}`;
 
 export const nullPathConfig: Config = {
     bot: { interactions: { path: null }, commands: { path: null } },

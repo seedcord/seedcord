@@ -31,7 +31,6 @@ export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
 export { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
 export type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
 export { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
-export { CommandInjector } from '#src/commands/CommandInjector';
 export type { CommandBuilder, DeployResult } from '#src/commands/types';
 
 export { pickNotice } from '#gates/catalog/options';

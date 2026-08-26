@@ -50,6 +50,11 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
     /** The discord.js client's REST client. Its token is set during the Login phase. */
     public readonly rest: REST;
 
+    /** The bot's Discord application id. Throws if you read it before login. */
+    public get applicationId(): string {
+        return this.bot.applicationId;
+    }
+
     /** @see {@link IRateLimiter} */
     public readonly rateLimiter: IRateLimiter;
 

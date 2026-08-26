@@ -9,13 +9,12 @@ import { InteractionDispatcher } from '#src/node/InteractionDispatcher';
 import { Seedcord } from '#src/node/Seedcord';
 
 import { createSigner } from '../../helpers/ed25519';
-import { VALID_TOKEN } from '../../helpers/fixtures';
+import { APP_ID, VALID_TOKEN } from '../../helpers/fixtures';
 
 import type { HttpConfig } from '#src/interfaces/Config';
 
 const COMMANDS_DIR = path.resolve(__dirname, './fixtures');
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
-const APP = 'app-1';
 
 // justified: the generated Commands map is empty in tests, so entries read through a plain record
 const commands = Commands as Record<string, { id: string; mention: string } | undefined>;
@@ -54,8 +53,8 @@ afterEach(async () => {
 // as undefined. assigning own properties shadows both.
 function stubRest(host: Seedcord): { get: ReturnType<typeof vi.fn>; put: ReturnType<typeof vi.fn> } {
     const get = vi.fn((route: string) => {
-        if (route === Routes.currentApplication()) return { id: APP };
-        if (route === Routes.applicationEmojis(APP)) return { items: [{ name: 'confirm', id: '111' }] };
+        if (route === Routes.currentApplication()) return { id: APP_ID };
+        if (route === Routes.applicationEmojis(APP_ID)) return { items: [{ name: 'confirm', id: '111' }] };
         return {};
     });
     const put = vi.fn().mockResolvedValue([{ id: 'cmd-1', name: 'ping', type: ApplicationCommandType.ChatInput }]);
@@ -72,7 +71,7 @@ describe('command deploy during http startup', () => {
         await host.start();
 
         expect(put).toHaveBeenCalledOnce();
-        expect(put.mock.calls[0]?.[0]).toBe(Routes.applicationCommands(APP));
+        expect(put.mock.calls[0]?.[0]).toBe(Routes.applicationCommands(APP_ID));
         expect((put.mock.calls[0]?.[1] as { body: { name: string }[] }).body[0]?.name).toBe('ping');
     });
 
@@ -87,14 +86,14 @@ describe('command deploy during http startup', () => {
         expect(commands.ping?.mention).toBe('</ping:cmd-1>');
     });
 
-    it('resolves the application id over REST, since http has no gateway session', async () => {
+    it('reads the application id out of the bot token', async () => {
         const host = new Seedcord(config(COMMANDS_DIR));
         live = host;
-        const { get } = stubRest(host);
+        stubRest(host);
 
         await host.start();
 
-        expect(get).toHaveBeenCalledWith(Routes.currentApplication());
+        expect(host.applicationId).toBe(APP_ID);
     });
 
     it('checks the deployed routes against the registered handlers', async () => {
@@ -110,7 +109,7 @@ describe('command deploy during http startup', () => {
         expect(menus).toHaveBeenCalledOnce();
     });
 
-    it('resolves the application id once when emojis and commands both need it', async () => {
+    it('never asks discord for the application id', async () => {
         const host = new Seedcord({
             ...config(COMMANDS_DIR),
             bot: { ...config(COMMANDS_DIR).bot, emojis: { Confirm: 'confirm' } }
@@ -120,7 +119,7 @@ describe('command deploy during http startup', () => {
 
         await host.start();
 
-        expect(get.mock.calls.filter((call) => call[0] === Routes.currentApplication())).toHaveLength(1);
+        expect(get).not.toHaveBeenCalledWith(Routes.currentApplication());
     });
 
     it('touches no command route when no commands path is configured', async () => {

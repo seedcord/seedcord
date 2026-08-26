@@ -8,13 +8,12 @@ import { Emojis } from '#src/emojis/EmojiInjector';
 import { Seedcord } from '#src/node/Seedcord';
 
 import { createSigner } from '../../helpers/ed25519';
-import { VALID_TOKEN } from '../../helpers/fixtures';
+import { APP_ID, VALID_TOKEN } from '../../helpers/fixtures';
 
 import type { HttpConfig } from '#src/interfaces/Config';
 import type { ResolvedEmoji } from '@seedcord/core';
 
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
-const APP = 'app-1';
 
 // justified: EmojiMap is empty in tests, so runtime values read through a plain record
 const emojis = Emojis as Record<string, ResolvedEmoji>;
@@ -55,8 +54,8 @@ describe('emoji injection during startup', () => {
         const host = new Seedcord(config());
         live = host;
         const get = vi.fn((route: string) => {
-            if (route === Routes.currentApplication()) return { id: APP };
-            if (route === Routes.applicationEmojis(APP)) return { items: [{ name: 'confirm', id: '111' }] };
+            if (route === Routes.currentApplication()) return { id: APP_ID };
+            if (route === Routes.applicationEmojis(APP_ID)) return { items: [{ name: 'confirm', id: '111' }] };
             return {};
         });
         vi.spyOn(host.rest, 'get').mockImplementation(get as never);

@@ -39,6 +39,7 @@ class TestHost extends Pluggable<'gateway', 'server'> {
     // justified: the host reads nothing off config in these tests
     public readonly config = {} as Config;
     public readonly rest = new REST();
+    public readonly applicationId = 'app-1';
     public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
     public readonly bus: Bus;
 

@@ -10,6 +10,7 @@ import {
     slowGateMonitor
 } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
+import { applicationIdFromToken } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
@@ -45,7 +46,14 @@ type CoreDraft = TypedOmit<Core, 'bus'> & { bus: Bus };
 export function createCore(config: HttpConfig, token: string): Core {
     const rateLimiter: IRateLimiter = config.store ?? new MemoryRateLimiter();
     // justified: bus completes the shape on the next line, and the Bus reads core at dispatch
-    const draft = { config, rateLimiter, rest: new REST().setToken(token) } as CoreDraft;
+    const draft = {
+        config,
+        rateLimiter,
+        rest: new REST().setToken(token),
+        get applicationId(): string {
+            return applicationIdFromToken(token);
+        }
+    } as CoreDraft;
     draft.bus = new Bus(draft);
     return draft;
 }

@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 
 import { REST } from '@discordjs/rest';
 import { Bus } from '@seedcord/core';
-import { busLoggerOf, CommandInjector, getDevChannel, HmrManager, setBotColor } from '@seedcord/core/internal';
+import { busLoggerOf, getDevChannel, HmrManager, setBotColor } from '@seedcord/core/internal';
 import {
     CommandRegistry,
     CoordinatedShutdown,
@@ -14,7 +14,7 @@ import {
     SubscriberLoader
 } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
+import { applicationIdFromToken, SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
@@ -22,7 +22,6 @@ import { SeedcordBrand } from '@seedcord/types/internal';
 import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
-import { fetchApplicationId } from '#src/applicationId';
 import { buildRouteMaps } from '#src/dispatch/resolve';
 import { EmojiInjector } from '#src/emojis/EmojiInjector';
 import { buildEngine } from '#src/engine';
@@ -77,12 +76,11 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
 
     private readonly interactions?: InteractionDispatcher;
     private readonly commandRegistry?: CommandRegistry;
-    private appId?: string;
-    private appIdPromise?: Promise<string>;
-    private readonly emojiInjector = new EmojiInjector(this, () => this.applicationId());
+    private readonly emojiInjector = new EmojiInjector(this);
     private readonly hmrManager: HmrManager;
     private readonly logger = new Logger('Server', { channel: 'bot' });
 
+    private token?: string;
     private server?: Server;
     private boundPort?: number;
     private fetchedUsername?: string | undefined;
@@ -100,20 +98,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
             this.interactions = new InteractionDispatcher(this.config.bot.interactions.path);
         }
 
-        const commandsDir = this.config.bot.commands.path;
-        if (commandsDir) {
-            const injector = new CommandInjector();
-            // onDeployed only fires at deploy time, long after registry is assigned
-            const registry: CommandRegistry = new CommandRegistry({
-                dir: commandsDir,
-                rest: this.rest,
-                applicationId: () => this.requireApplicationId(),
-                onDeployed: (result) => {
-                    injector.inject(result, registry.allCommands());
-                }
-            });
-            this.commandRegistry = registry;
-        }
+        if (this.config.bot.commands.path) this.commandRegistry = new CommandRegistry(this);
 
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
         this.bus = new Bus(this);
@@ -183,7 +168,6 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
             // one task because tasks in a phase run concurrently and the deploy reads the id
             this.startup.addTask(StartupPhase.Login, 'command-deploy', async () => {
                 await commandRegistry.init();
-                this.appId = await this.applicationId();
                 await commandRegistry.setCommands();
                 interactions?.warnUnhandledRoutes(commandRegistry.routeLeaves());
                 interactions?.warnUnhandledContextMenuRoutes(commandRegistry.contextMenuLeaves());
@@ -210,18 +194,14 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     }
 
     private authenticate(): void {
-        this.rest.setToken(validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN')));
+        this.token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
+        this.rest.setToken(this.token);
     }
 
-    private applicationId(): Promise<string> {
-        this.appIdPromise ??= fetchApplicationId(this.rest);
-        return this.appIdPromise;
-    }
-
-    // the registry redeploys on a hot reload, after the startup task resolved this
-    private requireApplicationId(): string {
-        if (!this.appId) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
-        return this.appId;
+    /** The bot's Discord application id. Throws if you read it before the Configuration phase. */
+    public get applicationId(): string {
+        if (!this.token) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
+        return applicationIdFromToken(this.token);
     }
 
     private async listen(): Promise<void> {
