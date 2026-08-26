@@ -12,7 +12,7 @@ import { assertGuildsIntent } from '#miscellaneous/assertGuildsIntent';
 import { EmojiInjector } from './injectors/EmojiInjector';
 
 import type { Core } from '#interfaces/Core';
-import type { Initializeable } from '@seedcord/core';
+import type { Initializeable } from '@seedcord/core/internal';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { BitFieldResolvable, GatewayIntentsString } from 'discord.js';
 

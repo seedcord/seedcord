@@ -31,8 +31,9 @@ describe('the seedcord bin', () => {
     });
 
     it('runs the cli when node meets the range', async () => {
-        const { code } = await runBinOn('v99.0.0');
+        const { code, stderr } = await runBinOn('v99.0.0');
 
+        expect(stderr).toBe('');
         expect(code).toBe(0);
     });
 });

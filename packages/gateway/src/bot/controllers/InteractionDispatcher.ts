@@ -41,8 +41,8 @@ import type { ReplySender } from '#bot/ReplySender';
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
 import type { Repliables, ValidInteractionTypes } from '#src/handlers/interactionTypes';
-import type { DispatchOutcome, Initializeable } from '@seedcord/core';
-import type { ContextMenuLeaves } from '@seedcord/core/internal';
+import type { DispatchOutcome } from '@seedcord/core';
+import type { Initializeable, ContextMenuLeaves } from '@seedcord/core/internal';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type {
     AutocompleteInteraction,

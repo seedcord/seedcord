@@ -28,8 +28,8 @@ const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 /**
  * Base class for a plugin host, a transport `Seedcord` class.
  *
- * Plugins are attached during configuration and initialized during startup, sequentially in attach
- * order within each phase.
+ * You attach plugins while configuring the bot. Within one startup phase, their `init()` calls run
+ * one after another in attach order.
  */
 // no defaults, a default runtime of the full union contains 'edge' and RuntimeAssert rejects every plugin on that
 export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
@@ -112,26 +112,21 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     }
 
     /**
-     * Attaches a plugin to this instance.
+     * Attaches a plugin under `key`. Read the instance back as `core[key]`. `seedcord codegen`
+     * writes the `Core` augmentation that types it there.
      *
-     * The plugin initializes during startup, after every plugin attached before it, and becomes
-     * available as a property on `core`. `seedcord codegen` writes the `Core` augmentation that
-     * types it.
+     * Startup runs each plugin's `init()` in attach order within its phase.
      *
-     * A plugin declaring a `transport` or `runtime` this host does not run is a compile error on
-     * this call. An edge host takes no plugins at all. A plugin constructor narrowing its first
-     * parameter past `CoreBase` is a compile error here too. Read the transport `Core` off `this.core`.
+     * Attaching a plugin whose `transport` or `runtime` differs from this host fails to compile.
+     * Your constructor takes `CoreBase` as its first parameter (you don't need to pass it though).
+     * A narrower one fails to compile here.
      *
-     * @typeParam Key - The property name for accessing the plugin
-     * @typeParam Ctor - The plugin constructor type
-     * @param key - Property name to access the plugin instance
-     * @param Plugin - Plugin constructor class
-     * @param args - Additional arguments to pass to the plugin constructor
-     * @returns This instance with the plugin attached as a typed property
-     * @throws A **SeedcordError** When called after initialization or if key already exists or is reserved
+     * @param key - Also the channel the plugin logs on. Reserved channel names throw.
+     * @param args - Whatever your constructor takes after the host.
+     * @throws A **SeedcordError** if you attach after the bot has started. A taken or reserved key throws too.
      * @example
-     * ```typescript
-     * seedcord.attach('db', Mongoose, { uri: 'mongodb://...', name: 'seedcord', dir: ... })
+     * ```ts
+     * seedcord.attach('db', Mongoose, { uri: 'mongodb://...', name: 'seedcord', dir: ... });
      * ```
      */
     public attach<Key extends string, Ctor extends PluginCtor>(

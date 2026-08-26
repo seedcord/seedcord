@@ -14,8 +14,7 @@ import { EMPTY_MANIFEST } from '#src/manifest/RouteManifest';
 
 import type { HandlerConstructor } from '#handlers/constructors';
 import type { ResolvedRoute, RouteMap, RouteMaps } from '#src/dispatch/resolve';
-import type { Initializeable } from '@seedcord/core';
-import type { ContextMenuLeaves } from '@seedcord/core/internal';
+import type { Initializeable, ContextMenuLeaves } from '@seedcord/core/internal';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
 interface RouteTarget {
