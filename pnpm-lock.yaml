@@ -1135,6 +1135,9 @@ importers:
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
+      tsx:
+        specifier: catalog:deps
+        version: 4.23.5
       type-fest:
         specifier: catalog:deps
         version: 5.8.0
