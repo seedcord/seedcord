@@ -1,4 +1,3 @@
-import { CommandInjector } from '@seedcord/core/internal';
 import { CommandRegistry, ShutdownPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
@@ -24,11 +23,11 @@ const DRAIN_TASK_TIMEOUT_MS = DISPATCH_DRAIN_TIMEOUT_MS + DRAIN_HEADROOM_MS;
 const UNBIND_TIMEOUT_MS = 2000;
 const LOGOUT_TIMEOUT_MS = 2000;
 
+const loggerSlot = Symbol('seedcord:bot:logger');
+
 /**
  * The Discord client and its controllers. Access it through `core.bot`.
  */
-const loggerSlot = Symbol('seedcord:bot:logger');
-
 export class Bot implements Initializeable, HmrAware {
     @Envapt<string>('DISCORD_BOT_TOKEN', {
         converter: (raw) => validateDiscordToken(raw)
@@ -67,28 +66,15 @@ export class Bot implements Initializeable, HmrAware {
             this.events = new EventDispatcher(core);
         }
 
-        const commandsDir = core.config.bot.commands.path;
-        if (commandsDir) {
-            const injector = new CommandInjector();
-            // registry is assigned before onDeployed ever fires, since that only happens at deploy time
-            const registry: CommandRegistry = new CommandRegistry({
-                dir: commandsDir,
-                // this._client.rest is what core.rest resolves to, but core.bot isn't assigned until this constructor returns
-                rest: this._client.rest,
-                applicationId: () => this.applicationId(),
-                onDeployed: (result) => {
-                    injector.inject(result, registry.allCommands());
-                }
-            });
-            this.commandRegistry = registry;
-        }
+        if (core.config.bot.commands.path) this.commandRegistry = new CommandRegistry(core);
 
         this.emojiInjector = new EmojiInjector(core);
 
         this.registerShutdownTasks(core);
     }
 
-    private applicationId(): string {
+    /** @internal */
+    public get applicationId(): string {
         const { application } = this._client;
         if (!application) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
         return application.id;

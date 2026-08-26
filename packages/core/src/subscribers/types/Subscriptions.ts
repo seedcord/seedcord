@@ -2,6 +2,7 @@ import type { WriteMethod } from '#reply/responseReport';
 import type { InteractionRoutes } from '#src/metadataKeys';
 import type { Notice } from '#stops/Notice';
 import type { TypedExclude } from '@seedcord/types';
+import type { APIApplicationCommand } from 'discord-api-types/v10';
 import type { UUID } from 'node:crypto';
 
 /**
@@ -121,6 +122,12 @@ export interface DefaultSubscriptions {
         messageId: string | null;
         /** Present when `outcome` is `failed`. */
         error?: Error;
+    };
+    /** Triggered after each command deploy, including the redeploy after a hot reload. */
+    commandsDeployed: {
+        global: APIApplicationCommand[];
+        /** Keyed by guild id. */
+        guilds: Record<string, APIApplicationCommand[]>;
     };
 }
 
