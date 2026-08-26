@@ -35,6 +35,7 @@ async function walkInNode(dir: string): Promise<string[]> {
     ].join('\n');
 
     const { stdout } = await run(process.execPath, ['--import', 'tsx/esm', '-e', script, SOURCE, dir]);
+    // justified: the script above only prints basenames
     return JSON.parse(stdout) as string[];
 }
 
@@ -44,8 +45,8 @@ afterAll(async () => {
 
 describe('traverseDirectory', () => {
     it('imports a file whose directory name holds a url-special character', async () => {
-        // '?' reproduces the windows drive-letter failure on any platform
-        const dir = path.join(scratch, 'query?segment');
+        // this name must break a raw import specifier and stay legal on windows
+        const dir = path.join(scratch, 'hash#segment');
         await mkdir(dir, { recursive: true });
         await writeFile(path.join(dir, 'package.json'), '{ "type": "module" }\n');
         await writeFile(path.join(dir, 'Mod.js'), 'export const ok = true;\n');
