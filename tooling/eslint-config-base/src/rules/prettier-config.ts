@@ -1,4 +1,3 @@
-import { Linter } from 'eslint';
 import { Options } from 'prettier';
 
 export const PRETTIER_CONFIG: Options = {
@@ -14,9 +13,4 @@ export const PRETTIER_CONFIG: Options = {
     quoteProps: 'as-needed',
     bracketSameLine: false,
     proseWrap: 'never'
-};
-
-// the plugin reads the consumer's prettier config
-export const PRETTIER_RULES: Linter.RulesRecord = {
-    'prettier/prettier': 'error'
 };

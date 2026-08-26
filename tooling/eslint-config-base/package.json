@@ -30,20 +30,20 @@
     "scripts": {
         "build": "tsdown",
         "clean": "rm -rf dist",
-        "lint": "eslint '*.{mjs,ts}' --cache",
-        "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
-        "fmt": "prettier --write '*.{mjs,ts,json,md}' --cache",
-        "fmt:check": "prettier --check '*.{mjs,ts,json,md}' --cache",
+        "lint": "eslint '*.{mjs,ts}' 'src/**/*.ts' --cache",
+        "lint:fix": "eslint '*.{mjs,ts}' 'src/**/*.ts' --fix --cache",
+        "fmt": "prettier --write '*.{mjs,ts,json,md}' 'src/**/*.ts' --cache",
+        "fmt:check": "prettier --check '*.{mjs,ts,json,md}' 'src/**/*.ts' --cache",
         "tc": "tsgo --noEmit"
     },
     "peerDependencies": {
         "eslint": "^9.22.0 || ^10.4.0",
+        "eslint-plugin-better-tailwindcss": "catalog:eslint",
+        "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
+        "eslint-plugin-mdx": "catalog:eslint",
         "prettier-plugin-tailwindcss": "catalog:deps",
         "tailwindcss": "catalog:deps",
-        "typescript": "catalog:peer",
-        "eslint-plugin-mdx": "catalog:eslint",
-        "eslint-plugin-better-tailwindcss": "catalog:eslint",
-        "eslint-plugin-tailwind-canonical-classes": "catalog:eslint"
+        "typescript": "catalog:peer"
     },
     "peerDependenciesMeta": {
         "prettier-plugin-tailwindcss": {
@@ -68,7 +68,6 @@
         "eslint-config-prettier": "catalog:eslint",
         "eslint-import-resolver-typescript": "catalog:eslint",
         "eslint-plugin-import-x": "catalog:eslint",
-        "eslint-plugin-prettier": "catalog:eslint",
         "eslint-plugin-security": "catalog:eslint",
         "eslint-plugin-tsdoc": "catalog:eslint",
         "eslint-plugin-unicorn": "catalog:eslint",

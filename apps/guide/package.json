@@ -15,8 +15,8 @@
         "postinstall": "fumadocs-mdx",
         "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' source.config.ts --cache",
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' source.config.ts --fix --cache",
-        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' source.config.ts --cache",
-        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' source.config.ts --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' 'tests/**/*.{ts,tsx}' 'content/**/*.mdx' source.config.ts --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md,css}' 'tests/**/*.{ts,tsx}' 'content/**/*.mdx' source.config.ts --cache",
         "tc": "fumadocs-mdx && tsgo --noEmit",
         "test": "vitest run",
         "test:watch": "vitest dev"

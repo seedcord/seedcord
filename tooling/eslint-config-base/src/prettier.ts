@@ -1,4 +1,4 @@
-import { PRETTIER_CONFIG } from './rules/prettier-rules';
+import { PRETTIER_CONFIG } from './rules/prettier-config';
 
 import type { Options } from 'prettier';
 
