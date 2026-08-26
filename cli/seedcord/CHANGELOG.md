@@ -1,5 +1,18 @@
 # seedcord
 
+## 0.19.1
+
+### Patch Changes
+
+- 6b1cfbf: _Kinda BREAKING:_ Starting a bot or running the CLI on a Node version below the `engines` range now throws, naming the required range and the version you are running. The floor stays at `>=24.11`.
+- Updated dependencies [a98d27b]
+- Updated dependencies [6b1cfbf]
+- Updated dependencies [aa4d4c0]
+- Updated dependencies [b29904c]
+    - @seedcord/core@0.3.1
+    - @seedcord/errors@0.4.3
+    - @seedcord/utils@0.8.7
+
 ## 0.19.0
 
 ### Minor Changes

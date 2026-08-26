@@ -1,5 +1,18 @@
 # @seedcord/gateway
 
+## 0.3.1
+
+### Patch Changes
+
+- a98d27b: A new `commandsDeployed` framework event fires after seedcord deploys your commands, carrying what Discord returned for the global and guild scopes. You can now read the bot's application id from `core.applicationId` on both transports.
+- Updated dependencies [a98d27b]
+- Updated dependencies [6b1cfbf]
+- Updated dependencies [aa4d4c0]
+- Updated dependencies [b29904c]
+    - @seedcord/core@0.3.1
+    - @seedcord/errors@0.4.3
+    - @seedcord/utils@0.8.7
+
 ## 0.3.0
 
 ### Minor Changes

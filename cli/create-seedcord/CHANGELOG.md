@@ -1,5 +1,11 @@
 # create-seedcord
 
+## 0.1.3
+
+### Patch Changes
+
+- 191add9: A scaffolded project gets an `fmt:check` script.
+
 ## 0.1.2
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @seedcord/eslint-config
 
+## 2.0.0
+
+### Major Changes
+
+- 191add9: **BREAKING:** Prettier no longer runs as an ESLint rule. Run `prettier --check` beside `eslint`.
+- 191add9: **BREAKING:** `registerImportPlugin` takes `'all' | 'fast' | 'off'` in place of a boolean. `'fast'` skips `no-cycle` and `no-deprecated`. `IMPORT_RULES` is no longer exported.
+
 ## 1.5.6
 
 ### Patch Changes
