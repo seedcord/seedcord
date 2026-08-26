@@ -104,7 +104,7 @@ A noun made from a verb can take the subject slot, and then a clause slips in be
 
 <!--prettier-ignore-end-->
 
-The tell is a bare `a read`, `a write`, or `a fetch` opening a sentence with more than three words before its verb. Read the draft once at speed. If you stop and start over, that is this.
+The tell is a sentence that starts with `a` plus a verb-derived noun, then puts more than three words before the verb. Examples non-exhaustively include `a read`, `a write`, `a fetch`, `a lookup`, and `a connect`. Read the draft once at speed. If you stop and start over, rewrite the sentence.
 
 ---
 

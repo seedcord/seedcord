@@ -61,7 +61,8 @@ Keep Node-only code out of anything the edge build reaches. Answer a question fo
 
 ## Other important rules
 
-- **Never throw a raw `Error`.** Framework code throws `SeedcordError`, `SeedcordTypeError`, or `SeedcordRangeError` from `@seedcord/errors`, each with a registered code. Translate a third-party throw before it reaches a consumer.
+- **Never throw a raw `Error`.** Framework code throws `SeedcordError`, `SeedcordTypeError`, `SeedcordRangeError`, or `SeedcordAggregateError` from `@seedcord/errors`, each with a registered code. Translate a third-party throw before it reaches a consumer if it makes sense to do so.
+    - **Write the message for whoever hit it.** Say what went wrong, and give them enough to act. Sometimes that means naming the likely cause, sometimes the env var to check, sometimes the one line that fixes it. Read it back as the developer who just got it at 2am, and cut anything they cannot use. Two throw sites that mean different things get different codes or better message arguments, because one message covering both tells the reader nothing.
 - **Routes, class names, ids, and paths get a `paint` tone** from `@seedcord/errors`. `paint` also carries `bold`, `italic` and `underline` for the parts that use no color. Multi-line output goes through `logger.utils`.
 - **Derive types from their source.** A constructor shape is `TypedConstructor<typeof X>`. A member union comes from `keyof`, an indexed access, or `TypedExtract`. A hand-written copy drifts.
 - **Only implement what was asked.** Surface additions as a question first. Wait for the third use before extracting an abstraction.
