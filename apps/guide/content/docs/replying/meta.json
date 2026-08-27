@@ -1,5 +1,9 @@
 {
     "title": "Replying",
     "root": true,
-    "pages": ["index", "deferring"]
+    "pages": [
+        "index",
+        "deferring",
+        "more-messages"
+    ]
 }
