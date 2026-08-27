@@ -92,6 +92,52 @@ An autocomplete interaction names which field is focused, so every handler branc
 
 Each arm receives the partial value and a `respond` typed to that field's choice values.
 
+## One handler for several commands
+
+The decorator and the generic take a list. The arms then cover every autocompletable field across all of them.
+
+`search` completes `query` and `limit`. A second command, `probe`, completes `query`, `count`, and `ratio`. One handler for both needs four arms.
+
+```ts twoslash
+import {
+    AutocompleteHandler,
+    AutocompleteRoute
+} from '@seedcord/gateway';
+// ---cut---
+@AutocompleteRoute('search', 'probe')
+export class Catalog extends AutocompleteHandler<
+    'search' | 'probe'
+> {
+    public async execute(): Promise<void> {
+        await this.match({
+            query: (value, respond) => respond([]),
+            limit: (value, respond) => respond([]),
+            count: (value, respond) => respond([]),
+            ratio: (value, respond) => respond([])
+        });
+    }
+}
+```
+
+Both commands complete `query`, so its arm reads `this.route` to tell them apart.
+
+```ts twoslash
+import {
+    AutocompleteHandler,
+    AutocompleteRoute
+} from '@seedcord/gateway';
+
+@AutocompleteRoute('search', 'probe')
+class Catalog extends AutocompleteHandler<'search' | 'probe'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const command = this.route;
+        //    ^?
+        // ---cut-after---
+    }
+}
+```
+
 ## The value is always a string
 
 `limit` is an integer option, and its partial still arrives as a string.

@@ -26,6 +26,26 @@ export class Moderation extends SlashHandler<'ban' | 'kick'> {
 
 Each arm receives that route's own options, so `reason` is there in the `ban` arm even though `kick` never declares it.
 
+## Subcommands work the same way
+
+A route with a slash in it goes in the list like any other. One handler can answer every leaf of a command.
+
+```ts twoslash title="src/handlers/Role.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut---
+@SlashRoute('role/add', 'role/remove')
+export class Role extends SlashHandler<'role/add' | 'role/remove'> {
+    public async execute(): Promise<void> {
+        await this.match({
+            'role/add': (options) =>
+                this.reply(`Gave ${options.getRole('role').name}.`),
+            'role/remove': (options) =>
+                this.reply(`Took ${options.getRole('role').name}.`)
+        });
+    }
+}
+```
+
 ## Options every route shares
 
 `this.options` on the class covers the options every route in the list declares. `ban` and `kick` both take `target`, so it is there.

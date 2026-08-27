@@ -114,6 +114,39 @@ class ViewProfile extends UserContextMenuHandler<'View Profile'> {
 }
 ```
 
+## Several commands in one handler
+
+The decorator and the generic both take a list. Each arm receives the clicked user and their server member, narrowed to that one command.
+
+```ts twoslash title="src/handlers/Moderation.ts"
+import {
+    UserContextMenuHandler,
+    UserContextMenuRoute
+} from '@seedcord/gateway';
+// ---cut---
+@UserContextMenuRoute('View Profile', 'Warn')
+export class Moderation extends UserContextMenuHandler<
+    'View Profile' | 'Warn'
+> {
+    public async execute(): Promise<void> {
+        await this.match({
+            'View Profile': (user) =>
+                this.reply(`Profile for ${user.tag}.`),
+            Warn: (user, member) =>
+                this.reply(
+                    `Warned ${member?.displayName ?? user.tag}.`
+                )
+        });
+    }
+}
+```
+
+Leaving a name out of the arms is a compile error, the same as a slash handler.
+
+`this.commandName` gives you the name that fired, typed to the union, for the times you want it without branching.
+
+Message commands work the same way, with each arm receiving the clicked message.
+
 ## Each kind keeps its own names
 
 Discord lets a user command and a message command share a name, so the two registries stay separate. A name in one is invisible to the other.

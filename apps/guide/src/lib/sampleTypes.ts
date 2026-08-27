@@ -59,6 +59,7 @@ const REGISTRIES = `
     }
     interface UserContextMenuRegistry {
         'View Profile': { cache: 'cached' };
+        Warn: { cache: 'cached' };
     }
     interface MessageContextMenuRegistry {
         'Report Message': { cache: 'cached' };
