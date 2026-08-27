@@ -8,7 +8,6 @@ import {
     Pluggable,
     SubscriberLoader
 } from '@seedcord/core/node/internal';
-import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
@@ -86,10 +85,11 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
         return this.bot.client.user?.username;
     }
 
-    protected static override reset(): void {
-        super.reset();
+    protected static override reset(host?: object): boolean {
+        if (!super.reset(host)) return false;
         // reset() would drop the dev TUI's log sink
         LoggerChannelRegistry.instance.configure({});
+        return true;
     }
 
     private registerStartupTasks(): void {
@@ -126,11 +126,9 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
         try {
             await super.init();
         } catch (caught) {
-            // resetting here would strip the handlers of whichever host replaced this one
-            if (isSeedcordError(caught, undefined, SeedcordErrorCode.LifecycleRestartAfterFailure)) throw caught;
             // shutdown releases any resource opened before the failure, then rethrow
             await this.shutdown.run(1, false);
-            Seedcord.reset();
+            Seedcord.reset(this);
             throw caught;
         }
         return this;

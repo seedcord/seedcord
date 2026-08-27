@@ -13,7 +13,7 @@ import {
     StartupPhase,
     SubscriberLoader
 } from '@seedcord/core/node/internal';
-import { isSeedcordError, SeedcordErrorCode, paint } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { applicationIdFromToken, SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
@@ -124,19 +124,18 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         try {
             await super.init();
         } catch (caught) {
-            // resetting here would strip the handlers of whichever host replaced this one
-            if (isSeedcordError(caught, undefined, SeedcordErrorCode.LifecycleRestartAfterFailure)) throw caught;
             await this.shutdown.run(1, false);
-            Seedcord.reset();
+            Seedcord.reset(this);
             throw caught;
         }
         return this;
     }
 
-    protected static override reset(): void {
-        super.reset();
+    protected static override reset(host?: object): boolean {
+        if (!super.reset(host)) return false;
         // super.reset() drops the dev TUI's log sink
         LoggerChannelRegistry.instance.configure({});
+        return true;
     }
 
     private registerStartupTasks(): void {

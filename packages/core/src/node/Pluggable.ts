@@ -59,6 +59,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     private initPromise?: Promise<this> | undefined;
 
     private static isInstantiated = false;
+    private static liveHost?: object | undefined;
     private static liveShutdown?: CoordinatedShutdown | undefined;
     private static liveProcessErrors?: (() => void) | undefined;
 
@@ -73,6 +74,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         }
 
         Pluggable.isInstantiated = true;
+        Pluggable.liveHost = this;
         Pluggable.liveShutdown = shutdown;
         this.shutdown = shutdown;
         this.startup = startup;
@@ -120,13 +122,17 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         return this.attachments.map((attachment) => attachment.key);
     }
 
-    /** @internal so the next host can construct */
-    protected static reset(): void {
+    /** @internal */
+    protected static reset(host?: object): boolean {
+        if (host !== undefined && Pluggable.liveHost !== host) return false;
+
         Pluggable.liveShutdown?.removeSignalHandlers();
         Pluggable.liveShutdown = undefined;
         Pluggable.liveProcessErrors?.();
         Pluggable.liveProcessErrors = undefined;
+        Pluggable.liveHost = undefined;
         Pluggable.isInstantiated = false;
+        return true;
     }
 
     /**

@@ -1,4 +1,5 @@
 import { ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
+import { LoggerChannelRegistry } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
@@ -67,6 +68,22 @@ describe('Seedcord host', () => {
         await expect(dead.start()).rejects.toThrow(/new instance/);
 
         expect(process.listenerCount('SIGTERM')).toBe(base + 1);
+    });
+
+    it('a racing start failure tears the host down once', async () => {
+        const seedcord = new Seedcord(testConfig());
+        seedcord.startup.addTask(StartupPhase.Configuration, 'boom', () => Promise.reject(new Error('boom')));
+        seedcord.shutdown.addTask(
+            ShutdownPhase.Drain,
+            'slow',
+            () => new Promise<void>((resolve) => setTimeout(resolve, 50))
+        );
+        const configure = vi.spyOn(LoggerChannelRegistry.instance, 'configure');
+
+        const settled = await Promise.allSettled([seedcord.start(), seedcord.start()]);
+
+        expect(settled.map((result) => result.status)).toEqual(['rejected', 'rejected']);
+        expect(configure).toHaveBeenCalledTimes(1);
     });
 
     it('a start failure after login destroys the client', async () => {
