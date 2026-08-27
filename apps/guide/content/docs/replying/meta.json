@@ -4,6 +4,7 @@
     "pages": [
         "index",
         "deferring",
-        "more-messages"
+        "more-messages",
+        "ack-states"
     ]
 }

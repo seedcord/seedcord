@@ -1,0 +1,112 @@
+---
+title: When a reply throws
+description: Reading the error your reply call threw.
+---
+
+seedcord checks the verb against the interaction's current state before it calls Discord. An illegal call throws without reaching the API. The message names the method you called, the reason, and the verb that works in that state.
+
+```txt output
+reply() was called when this interaction was already replied to.
+Use followUp() for a new message or edit() to rewrite the reply.
+(route slash:ban)
+```
+
+The throw carries an `AckTrace` as its `cause`. That error's stack points at the line that acknowledged the interaction first, so a double ack gives you both lines.
+
+## The four states
+
+{/* prettier-ignore-start */}
+
+| state | how you get there |
+| --- | --- |
+| `unacked` | nothing sent yet |
+| `deferred-reply` | `defer()` |
+| `deferred-update` | `deferUpdate()` |
+| `replied` | `reply()`, `update()`, or `showModal()` |
+
+{/* prettier-ignore-end */}
+
+[`update()`](ref:gateway/ComponentHandler.update), [`deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate), and [`showModal()`](ref:gateway/InteractionHandler.showModal) are defined on component and modal handlers, covered in the Components tab.
+
+## Which verb each state allows
+
+{/* prettier-ignore-start */}
+
+| state | legal | throws |
+| --- | --- | --- |
+| `unacked` | `reply`, `defer`, `deferUpdate`, `update`, `showModal`, `send` | `followUp`, `edit`, `delete` |
+| `deferred-reply` | `edit`, `followUp`, `delete`, `send` | `reply`, `defer`, `deferUpdate`, `update`, `showModal` |
+| `deferred-update` | `update`, `edit`, `followUp`, `delete`, `send` | `reply`, `defer`, `deferUpdate`, `showModal` |
+| `replied` | `edit`, `followUp`, `delete`, `send` | `reply`, `defer`, `deferUpdate`, `update`, `showModal` |
+
+{/* prettier-ignore-end */}
+
+[`send()`](ref:gateway/RepliableHandler.send) runs from every state, since it picks whichever verb the state allows. The mapping is in [Follow-ups and edits](/replying/more-messages).
+
+## A component that fails to serialize
+
+seedcord calls `toJSON()` on every component in your reply, and discord.js validates the builder there. seedcord catches that throw and rewrites it as one line, naming the class, its index in `components`, and what went wrong.
+
+```ts twoslash title="src/handlers/Ban.ts"
+import { TextDisplayBuilder } from '@discordjs/builders';
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        await this.reply({
+            components: [new TextDisplayBuilder()]
+        });
+    }
+}
+```
+
+```txt output
+TextDisplayBuilder at components[0] failed to serialize: need a
+string, got nothing. (route slash:ban)
+```
+
+The detail after the colon reads `need <the rule>, got <your value>`. A bound uses `at most`, `at least`, `fewer than`, or `more than`, and a rule carrying two bounds joins them with `and`. A failure on a named field puts the field first, as in `url: Invalid protocol for file URL`.
+
+The `got` half describes the value you passed.
+
+{/* prettier-ignore-start */}
+
+| what you passed | how it reads |
+| --- | --- |
+| `undefined` | `nothing` |
+| `null` | `null` |
+| an empty string | `an empty string` |
+| a string up to 40 characters | the string, quoted |
+| a longer string | the character count |
+| an empty array | `an empty list` |
+| a longer array | the item count |
+| a number, bigint, or boolean | the value itself |
+| any other object | its class name |
+
+{/* prettier-ignore-end */}
+
+A discord.js throw that never reaches its validator keeps its own message, like `Non-premium buttons must have a label and/or an emoji.`
+
+The original throw stays on the error as its `cause`, so you can still read the nested shapeshift error underneath.
+
+## The interaction callback returned no message
+
+`reply()` and `update()` read the created message out of Discord's callback response.
+
+```txt output
+The interaction callback for reply() returned no message.
+(route slash:ban)
+```
+
+Your handler cannot cause this throw. The callback carries that message on every documented path, so this one fires when Discord's response leaves it out.
+
+## update() on a modal a command opened
+
+`update()` rewrites the message that a component came from. A modal that your command opened does not carry one.
+
+```txt output
+update() was called on a modal opened from a command, which has no
+source message.
+Use reply() or defer() instead. (route slash:ban)
+```
