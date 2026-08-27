@@ -1,0 +1,66 @@
+---
+title: When a custom id goes stale
+description: What happens to components already sitting in Discord after you change their shape.
+---
+
+A message with a button or a select menu on it stays in the channel for as long as the channel does. Your shape changes on the next deploy. Every id seedcord mints carries three characters of shape hash, and `decode` compares that hash against the current shape.
+
+```ts twoslash title="src/components/TicketActions.ts"
+import { CustomId } from '@seedcord/gateway';
+// ---cut---
+export const TicketAction = new CustomId('ticket')
+    .snowflake('ownerId')
+    .oneOf('action', ['close', 'reopen']);
+```
+
+`TicketAction.routeKey` reads `ticketMXf`, the prefix `ticket` followed by the hash `MXf`. Every id [`encode`](ref:core/CustomId.encode) mints starts with it.
+
+## What changes the hash
+
+The hash covers each field's name, its position in the chain, its kind, a `oneOf`'s choices, and an `int`'s bounds. Change any one of those and every id already in Discord belongs to the old shape.
+
+{/* prettier-ignore-start */}
+
+| the edit | new routeKey |
+| --- | --- |
+| the shape above | `ticketMXf` |
+| rename `ownerId` to `userId` | `ticketk8r` |
+| add `'escalate'` to the choices | `ticketXWL` |
+| swap the two fields around | `ticketEjh` |
+| append `.bool('notify')` | `ticketF3A` |
+
+{/* prettier-ignore-end */}
+
+Bounds count the same way. `int('n', 0, 100)` and `int('n', 0, 200)` produce different hashes, so widening a page range invalidates the buttons already out there.
+
+## What your user sees
+
+Routing reads the prefix alone, so an interaction from an old message still reaches your handler. Reading [`this.params`](ref:gateway/ComponentHandler.params) decodes the wire, compares its route key against the current one, and refuses when they differ.
+
+That refusal is a [`Notice`](ref:core/Notice), so the boundary catches it and replies with a card.
+
+```txt output
+### Outdated
+This button or menu is from an older version. Please run the command again.
+```
+
+The card is ephemeral and it does not report, so nothing reaches your logs or the `handledException` bus. Editing a shape is normal work, and every component already minted from that shape goes stale.
+
+A modal and a select menu route by prefix the same way, so both go stale on the same rule.
+
+## A wire from a different id
+
+[`decode`](ref:core/CustomId.decode) separates two failures. A matching prefix with a different hash is the stale case above. A wire minted by some other `CustomId` refuses with a message naming both route keys.
+
+```txt output
+Invalid customId. routeKey "pollM4x" is not "ticketF3A"
+```
+
+That one does report, so seedcord logs it and publishes it to the `handledException` bus, where the report carries the name `InvalidCustomId`. The user sees the generic card.
+
+```txt output
+### Cannot Proceed
+Something went wrong. Please try again.
+```
+
+A corrupt string throws here, and so does one you wrote by hand. [Custom IDs](/components/custom-ids) covers minting one through `encode`.

@@ -160,15 +160,15 @@ A handler decodes for you, covered in [Buttons](/components/buttons). Anywhere e
 ```ts twoslash
 import { CustomId } from '@seedcord/gateway';
 
-const TicketId = new CustomId('ticket')
+const TicketAction = new CustomId('ticket')
     .snowflake('ownerId')
     .oneOf('action', ['close', 'reopen'])
     .bool('notify');
 // ---cut---
 declare const wire: string;
 
-if (TicketId.owns(wire)) {
-    const { ownerId, action } = TicketId.decode(wire);
+if (TicketAction.owns(wire)) {
+    const { ownerId, action } = TicketAction.decode(wire);
     //               ^?
 }
 ```
