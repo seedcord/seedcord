@@ -56,6 +56,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     private readonly completedInits = new Set<Attachment>();
     private readonly disposePhases = new Set<ShutdownPhase>();
     private pluginTasksRegistered = false;
+    private initPromise?: Promise<this> | undefined;
 
     private static isInstantiated = false;
     private static liveShutdown?: CoordinatedShutdown | undefined;
@@ -78,16 +79,23 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     }
 
     /** @internal */
-    protected async init(): Promise<this> {
+    protected init(): Promise<this> {
+        // clearing the slot on a rejection lets a later retry throw its own error
+        this.initPromise ??= this.runInit().catch((caught: unknown) => {
+            this.initPromise = undefined;
+            throw caught;
+        });
+        return this.initPromise;
+    }
+
+    private async runInit(): Promise<this> {
         if (this.isInitialized) return this;
         // a rerun after a failed startup would re-init the rolled-back plugins
         if (this.startFailed) throw new SeedcordError(SeedcordErrorCode.LifecycleRestartAfterFailure);
 
         this.registerPluginTasks();
 
-        // two racing start() calls both reach here, since isInitialized is only set once startup settles
-        const wantsProcessErrors = this.config.errors?.catchProcessErrors ?? true;
-        if (wantsProcessErrors && !Pluggable.liveProcessErrors) {
+        if (this.config.errors?.catchProcessErrors ?? true) {
             Pluggable.liveProcessErrors = registerProcessErrors(this, this.shutdown);
         }
 

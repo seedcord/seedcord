@@ -121,6 +121,15 @@ describe('process error handlers', () => {
         expect(process.listenerCount('unhandledRejection')).toBe(rejections);
     });
 
+    it('a racing start sees the same startup failure', async () => {
+        const host = new TestHost(new CoordinatedShutdown(), new CoordinatedStartup(), {} as Config);
+        host.startup.addTask(StartupPhase.Configuration, 'boom', () => Promise.reject(new Error('boot failed')));
+
+        const settled = await Promise.allSettled([host.run(), host.run()]);
+
+        expect(settled.map((result) => result.status)).toEqual(['rejected', 'rejected']);
+    });
+
     it('removes both listeners after a failed startup', async () => {
         const exceptions = process.listenerCount('uncaughtException');
         const rejections = process.listenerCount('unhandledRejection');
