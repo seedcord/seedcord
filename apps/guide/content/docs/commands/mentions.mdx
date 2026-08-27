@@ -1,0 +1,111 @@
+---
+title: Command mentions
+description: Linking to one of your own commands from a reply, and reading its deployed id.
+---
+
+Discord turns `</role remove:1287>` into a clickable mention that runs the command. The number is the id Discord assigned when your bot deployed it, so writing that string by hand means fetching the id first.
+
+Your bot already received that id at startup. [`Commands`](ref:core/Commands) is where you read it.
+
+```ts twoslash title="src/handlers/RoleAdd.ts"
+import {
+    Commands,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+
+@SlashRoute('role/add')
+export class RoleAdd extends SlashHandler<'role/add'> {
+    public async execute(): Promise<void> {
+        const member = this.options.getUser('member');
+        const role = this.options.getRole('role');
+
+        await this.reply(
+            `Gave ${role.name} to ${member.username}. ` +
+                `Undo with ${Commands['role/remove'].mention}.`
+        );
+    }
+}
+```
+
+## The keys are your routes
+
+`Commands` is keyed by the routes `seedcord codegen` wrote, the same strings your handlers name. `ping` is a valid identifier so it takes a dot. `role/add` has a slash in it and needs brackets.
+
+```ts twoslash hovers
+import { Commands } from '@seedcord/gateway';
+// ---cut---
+const ping = Commands.ping.mention; // '</ping:1234>'
+const addRole = Commands['role/add'].mention; // '</role add:1287>'
+```
+
+A subcommand's mention carries the whole path with a space in it, which is the form Discord reads.
+
+## What an entry holds
+
+{/* prettier-ignore-start */}
+
+| field | what it holds |
+| --- | --- |
+| `mention` | The clickable string, or plain `/role add` when the id did not resolve |
+| `id` | The deployed command id. Absent for a command in two or more servers |
+| `route` | The full route, `role/add` |
+| `description` | The description on that route. A nested route takes it from the subcommand |
+
+{/* prettier-ignore-end */}
+
+Every route you registered is in there, so a help command can read them all.
+
+```ts twoslash hovers
+import { Commands } from '@seedcord/gateway';
+// ---cut---
+const listing = Object.values(Commands).map(
+    (command) => `${command.mention} ${command.description}`
+);
+```
+
+## A command in two servers has no mention
+
+Discord gives a guild command its own id in every server it deploys to, so no single id stands for it. `id` comes back undefined and `mention` falls back to plain text.
+
+```ts twoslash
+import { Commands } from '@seedcord/gateway';
+// ---cut---
+const id = Commands.ping.id;
+//    ^?
+```
+
+Your bot logs it once per command at startup.
+
+```txt output
+ping is deployed to multiple guilds, falling back to plain text (not clickable).
+```
+
+A global command has one id everywhere, so it always gets a clickable mention.
+
+## Commands fills during startup
+
+Your bot sends its commands to Discord after it connects, and `Commands` fills from what comes back. A read before that throws.
+
+```txt output
+Commands.ping has no value yet. Commands fills during startup, and a read at the top of a file runs before that.
+```
+
+A `ready` event handler is early too, since the deploy runs after the client connects.
+
+<Callout type="tip">
+
+seedcord publishes a `commandsDeployed` bus event right after `Commands` fills. Subscribe to it to run something the moment your commands are live. It fires again every time a hot reload redeploys them.
+
+</Callout>
+
+## Context menu commands
+
+Discord has no mention syntax for a right-click command, so [`ContextMenus`](ref:core/ContextMenus) carries the id and the name. The two kinds keep separate registries, the same way Discord scopes name uniqueness per kind.
+
+```ts twoslash
+import { ContextMenus } from '@seedcord/gateway';
+// ---cut---
+const profile = ContextMenus.user['View Profile'].id;
+const report = ContextMenus.message['Report Message'].id;
+```
