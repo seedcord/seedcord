@@ -113,6 +113,11 @@ export const TYPESCRIPT_RULES: Linter.RulesRecord = {
             selector: 'property',
             format: null
         },
+        // match arms are keyed by route strings and context menu names that hold slashes and spaces
+        {
+            selector: ['objectLiteralMethod', 'typeMethod'],
+            format: null
+        },
         {
             selector: 'parameter',
             format: ['camelCase', 'PascalCase'],
