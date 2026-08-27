@@ -1,0 +1,192 @@
+---
+title: Configuring
+description: The errors block on your bot config.
+---
+
+[`Seedcord`](ref:gateway/Seedcord) takes an `errors` block on its config, with six keys. Every one is optional.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits, RESTJSONErrorCodes } from 'discord.js';
+// ---cut-start---
+
+import type { ReplyResponse } from '@seedcord/gateway';
+
+declare class BrandedFault {
+    constructor(uuid: string);
+    readonly report: boolean;
+    render(): ReplyResponse;
+}
+
+const bot = {
+    clientOptions: { intents: [GatewayIntentBits.Guilds] },
+    interactions: {
+        path: resolve(import.meta.dirname, './handlers')
+    },
+    commands: { path: resolve(import.meta.dirname, './commands') },
+    events: { path: null }
+};
+// ---cut-end---
+
+export const seedcord = new Seedcord({
+    bot,
+    subscribers: { path: null },
+    errors: {
+        errorStack: true,
+        logSilences: false,
+        defaultError: BrandedFault,
+        catchProcessErrors: false,
+        ignoreApiCodes: [RESTJSONErrorCodes.UnknownMessage],
+        ignoreEventApiCodes: [RESTJSONErrorCodes.UnknownMember]
+    }
+});
+```
+
+{/* prettier-ignore-start */}
+
+| key | default | what it changes |
+| --- | --- | --- |
+| `errorStack` | `false` | `true` prints the whole stack in your terminal for an unknown fault |
+| `logSilences` | `true` | `false` drops the debug line written for a [`Silence`](ref:core/Silence) reason |
+| `defaultError` | the built-in card | the class seedcord renders for an unknown fault |
+| `catchProcessErrors` | `true` | `false` leaves the `unhandledRejection` and `uncaughtException` listeners to you |
+| `ignoreApiCodes` | `[]` | Discord api codes the interaction path swallows |
+| `ignoreEventApiCodes` | `[]` | Discord api codes the event path swallows |
+
+{/* prettier-ignore-end */}
+
+[Faults](/throwing/faults) covers what `catchProcessErrors` turns off.
+
+## Replacing the card
+
+`defaultError` takes a class that seedcord constructs with the fault's uuid and then renders. Subclass [`Notice`](ref:core/Notice) and build your own card.
+
+```ts twoslash title="src/stops/BrandedFault.ts"
+import { BuilderComponent, Notice } from '@seedcord/gateway';
+
+import type { ReplyResponse } from '@seedcord/gateway';
+// ---cut---
+class BrandedCard extends BuilderComponent<'container'> {
+    constructor(uuid: string) {
+        super('container');
+
+        this.instance.addTextDisplayComponents((text) =>
+            text.setContent(`### Something broke\nCode \`${uuid}\``)
+        );
+    }
+}
+
+export class BrandedFault extends Notice {
+    public constructor(private readonly uuid: string) {
+        super(`unknown fault ${uuid}`);
+    }
+
+    public render(): ReplyResponse {
+        return {
+            components: [new BrandedCard(this.uuid).component]
+        };
+    }
+}
+```
+
+<Callout type="tip">
+
+Put a button on that card. The user can then file the fault themselves. The customId carries the uuid, so the click arrives with the code on it.
+
+```ts twoslash hovers title="src/handlers/ReportFault.ts"
+import { ButtonBuilder } from '@discordjs/builders';
+import {
+    ButtonHandler,
+    ButtonRoute,
+    CustomId,
+    RowComponent
+} from '@seedcord/gateway';
+import { ButtonStyle } from 'discord.js';
+// ---cut-start---
+
+declare const tickets: { open(uuid: string): Promise<void> };
+// ---cut-end---
+
+export const ReportFault = new CustomId('report').uuid('uuid');
+
+export class ReportRow extends RowComponent<'button'> {
+    constructor(uuid: string) {
+        super('button');
+
+        this.instance.addComponents(
+            new ButtonBuilder()
+                .setCustomId(ReportFault.encode({ uuid }))
+                .setLabel('Report this')
+                .setStyle(ButtonStyle.Secondary)
+        );
+    }
+}
+
+@ButtonRoute(ReportFault)
+export class OpenTicket extends ButtonHandler<
+    [typeof ReportFault]
+> {
+    public async execute(): Promise<void> {
+        await tickets.open(this.params.uuid);
+
+        await this.reply('Thanks. Someone will take a look.');
+    }
+}
+```
+
+Add the row to `BrandedCard` with `.addActionRowComponents(new ReportRow(uuid).component)`. The Components tab covers customIds and routing.
+
+</Callout>
+
+## The two ignore lists
+
+Both ignore lists start empty, so every api code your own work throws reports as a fault. A real bug surfaces that way, like a double ack from a misplaced `defer()`. Add a code once you have confirmed it is a dead end your bot reaches on purpose. A swallowed code still writes a debug line.
+
+The reply surface always swallows the harmless reply-token codes on its own send, whatever these lists hold.
+
+<Callout type="transport" only="gateway">
+
+`ignoreEventApiCodes` covers the event path, which only a gateway bot has. Discord delivers dead resources on events, like a reaction on a deleted message or a member who just left. Your handler's own fetch can throw on one. Until you add the code, each throw reports once a minute per handler. `UnknownMessage` is 10008, `UnknownMember` is 10007, and `UnknownUser` is 10013.
+
+</Callout>
+
+## Catching a framework error
+
+`@seedcord/errors` exports four things.
+
+- [`SeedcordErrorCode`](ref:errors/SeedcordErrorCode), every code the framework throws
+- [`isSeedcordError`](ref:errors/isSeedcordError), the guard below
+- [`paint`](ref:errors/paint), the terminal colours seedcord logs with
+- `version`, the installed package version
+
+Every error the framework throws carries one of those codes. `isSeedcordError` narrows a caught value down to it.
+
+```ts twoslash
+import {
+    isSeedcordError,
+    SeedcordErrorCode
+} from '@seedcord/gateway';
+
+declare const caught: unknown;
+declare const logger: { warn(message: string): void };
+// ---cut---
+if (isSeedcordError(caught)) {
+    logger.warn(`seedcord threw ${caught.code}`);
+}
+
+if (isSeedcordError(caught, 'SeedcordRangeError')) {
+    const ranged = caught;
+    //    ^?
+}
+
+const taken = SeedcordErrorCode.CorePluginKeyExists;
+
+if (isSeedcordError(caught, undefined, taken)) {
+    const exact = caught.code;
+    //    ^?
+}
+```
+
+The second argument narrows by class, one of `'SeedcordError'`, `'SeedcordTypeError'`, `'SeedcordRangeError'`, or `'SeedcordAggregateError'`. The third matches one exact code, and it takes `undefined` in the second slot when the class makes no difference.
