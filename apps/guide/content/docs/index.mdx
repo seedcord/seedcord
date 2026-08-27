@@ -17,8 +17,8 @@ Commands, events, components, gates, replies, and the lifecycle all come with th
 - **Commands.** Slash commands, subcommands and groups, user and message context menus, autocomplete. seedcord sends every command it finds to Discord when the bot starts.
 - **Components.** Buttons, select menus, modals, and pagination. Discord hands a click back as the `custom_id` string you built, and parsing it is on you. In seedcord you declare the fields once, and the handler gets them back typed. The fields are packed, so you get more characters per character.
 - **Replying.** Discord allows one first response per interaction, then edits and follow-ups. seedcord tracks which one you already sent and throws a readable error when you call the wrong one.
-- **Gates.** A check that runs before your handler and refuses by throwing. `@Gated` puts one on a handler. You write your own with `defineGate`. Combine them with `and` when a command needs two things at once, or `or` when either will do. seedcord ships a catalog of gates you can import and use directly, like cooldowns and permission checks.
-- **Throwing.** One `throw` stops the command, shows the user your message, logs it, and publishes it for telemetry. It picks the right reply method for whatever state the interaction is already in. `Notice` is the one you subclass with your own message. `Fault` shows a generic failure and posts the real error to a Discord channel. `Silence` does all of it except the reply.
+- **Gates.** A check that runs before your handler and refuses by throwing. [`@Gated`](ref:gateway/Gated) puts one on a handler. You write your own with [`defineGate`](ref:core/defineGate). Combine them with [`and`](ref:core/and) when a command needs two things at once, or [`or`](ref:core/or) when either will do. seedcord ships a catalog of gates you can import and use directly, like cooldowns and permission checks.
+- **Throwing.** One `throw` stops the command, shows the user your message, logs it, and publishes it for telemetry. It picks the right reply method for whatever state the interaction is already in. [`Notice`](ref:core/Notice) is the one you subclass with your own message. [`Fault`](ref:core/Fault) shows a generic failure and posts the real error to a Discord channel. [`Silence`](ref:core/Silence) does all of it except the reply.
 - **Events.** Every event discord.js emits, on the gateway. You can publish and subscribe to your own alongside them.
 - **The dev loop.** Edit a handler and the running bot picks it up without a restart. Change a command and it asks whether to re-register. On http it opens a tunnel and points your app at it.
 
@@ -86,11 +86,17 @@ export class Ban extends SlashHandler<'ban'> {
 
 `target` is required on the command, so it arrives as a `User` with no null check. `reason` is optional, so that one arrives as `string | null`. The typo on the last line stops the build.
 
+<Callout type="transport">
+
+The sample is gateway, where `getUser` returns a discord.js `User`. On http the same call returns an `APIUser`, which is Discord's raw payload. Both carry `username` and `id`, and only the discord.js one has methods.
+
+</Callout>
+
 `seedcord codegen` reads your command files and writes `seedcord-gen.d.ts`. Run it again after you change a command, or say yes when `seedcord dev` offers to re-register.
 
 ## Errors that tell you what to do
 
-Every seedcord error tells you what happened and what you need to do about it. For example, you deferred and then called `reply()`:
+Every seedcord error tells you what happened and what you need to do about it. For example, you deferred and then called [`reply()`](ref:gateway/RepliableHandler.reply):
 
 ```txt output
 reply() was called when this interaction was already deferred.

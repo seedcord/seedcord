@@ -179,7 +179,7 @@ export class Ping extends SlashHandler<'ping'> {
 }
 ```
 
-That runs when someone uses it. `'ping'` appears twice, on the decorator and on the generic, and both come from the name the command set. `this.options` carries `detailed` because `seedcord codegen` read the command file.
+That runs when someone uses it. `'ping'` appears twice, on the decorator and on the generic, and both come from the name the command set. [`this.options`](ref:gateway/SlashHandler.options) carries `detailed` because `seedcord codegen` read the command file.
 
 <Callout type="transport" only="http">
     An http scaffold writes the same two files and imports from
