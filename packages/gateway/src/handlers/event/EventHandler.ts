@@ -79,9 +79,8 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
     protected async match<Ret>(arms: EventMatchArms<Names, Ret>): Promise<Ret> {
         const name = this.firedEvent;
         if (name === undefined) throw new SeedcordError(SeedcordErrorCode.EventMatchArmMissing, ['<no event>']);
-        // justified: each arm takes its own payload tuple, so no single param type unifies the arms in a cast. read
-        // the arm as unknown keyed by the runtime event name, then narrow to a function before calling it.
-        const arm = (arms as Record<string, unknown>)[name];
+        // hasOwn, since a plain lookup for an event named `toString` returns Object.prototype's
+        const arm = Object.hasOwn(arms, name) ? (arms as Record<string, unknown>)[name] : undefined;
         if (typeof arm !== 'function') throw new SeedcordError(SeedcordErrorCode.EventMatchArmMissing, [name]);
         // this.event narrows to never on a multi-event handler. getEvent() returns the real tuple, spread so each arm gets its named params.
         return await (arm as (...args: unknown[]) => Promisable<Ret>)(...this.getEvent());

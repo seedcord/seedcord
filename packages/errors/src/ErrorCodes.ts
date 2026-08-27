@@ -122,6 +122,8 @@ export enum SeedcordErrorCode {
     EventMiddlewareNameUnavailable = 1613,
     /** An autocomplete payload carried no focused option. */
     AutocompleteNoFocusedOption = 1614,
+    /** A context menu handler's match() has no arm for the command name that fired. */
+    ContextMenuMatchArmMissing = 1615,
 
     /** A Cooldown gate was given a duration string that is not a well-formed positive duration. */
     GateInvalidCooldownDuration = 1701,

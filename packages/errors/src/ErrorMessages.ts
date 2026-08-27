@@ -116,6 +116,8 @@ const messages = {
         `match() has no arm for the focused field ${JSON.stringify(field)}.`,
     [SeedcordErrorCode.EventMatchArmMissing]: (event: string) =>
         `match() has no arm for the event ${JSON.stringify(event)}.`,
+    [SeedcordErrorCode.ContextMenuMatchArmMissing]: (name: string) =>
+        `match() has no arm for the context menu command ${JSON.stringify(name)}.`,
     [SeedcordErrorCode.EventMiddlewareNameUnavailable]: () =>
         `this.eventName is only available on middleware the controller constructed with a fired event name.`,
     [SeedcordErrorCode.AutocompleteNoFocusedOption]: () => `Autocomplete payload has no focused option.`,
