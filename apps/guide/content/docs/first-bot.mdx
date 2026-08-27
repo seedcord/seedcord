@@ -1,6 +1,6 @@
 ---
 title: Your first bot
-description: Scaffolding a project, running the dev server, and getting a slash command to answer.
+description: Going from an empty folder to a command that replies.
 ---
 
 You need the token from the last page.
@@ -118,6 +118,12 @@ export default seedcord;
 ```
 
 The three `path` keys are the folders seedcord scans at startup. Each tab that teaches a folder's contents covers its key.
+
+<Callout type="transport" only="http">
+
+An http config takes a top-level `port`, which defaults to 3000. `clientOptions` and `events` belong to gateway alone.
+
+</Callout>
 
 ## The ping command
 
