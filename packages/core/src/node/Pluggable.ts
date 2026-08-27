@@ -85,7 +85,9 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
 
         this.registerPluginTasks();
 
-        if (this.config.errors?.catchProcessErrors ?? true) {
+        // two racing start() calls both reach here, since isInitialized is only set once startup settles
+        const wantsProcessErrors = this.config.errors?.catchProcessErrors ?? true;
+        if (wantsProcessErrors && !Pluggable.liveProcessErrors) {
             Pluggable.liveProcessErrors = registerProcessErrors(this, this.shutdown);
         }
 

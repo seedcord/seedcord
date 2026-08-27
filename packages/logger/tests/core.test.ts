@@ -287,6 +287,14 @@ class ThrowingSink implements ILogSink {
     }
 }
 
+class RejectingSink implements ILogSink {
+    public readonly kind: ILogSink['kind'] = 'console';
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises, @typescript-eslint/require-await -- a void-returning interface taking an async method is the bug under test
+    public async onLog(): Promise<void> {
+        throw new Error('sink exploded later');
+    }
+}
+
 describe('a sink that throws', () => {
     it('keeps the throw away from whatever logged', () => {
         registry.configure({ level: 'trace', sinks: [new ThrowingSink()] });
@@ -311,5 +319,18 @@ describe('a sink that throws', () => {
         new Logger('Bot').info('ping');
 
         expect(capture.records).toHaveLength(1);
+    });
+
+    it('reports an async sink that rejects, and reports it once', async () => {
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        registry.configure({ level: 'trace', sinks: [new RejectingSink()] });
+
+        new Logger('Bot').info('first');
+        new Logger('Bot').info('second');
+
+        await vi.waitFor(() => {
+            expect(consoleError).toHaveBeenCalledTimes(1);
+        });
+        expect(consoleError.mock.calls[0]?.[0]).toContain('a log sink threw');
     });
 });

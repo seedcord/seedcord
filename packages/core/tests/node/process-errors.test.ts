@@ -48,11 +48,16 @@ async function startHost(config: Config = {} as Config): Promise<{
     return { host, shutdown, reported };
 }
 
-function fireLatest(event: 'uncaughtException' | 'unhandledRejection', error: Error): void {
-    const latest = process.listeners(event).at(-1);
-    if (!latest) throw new Error(`no ${event} listener registered`);
-    // justified: both node signatures take the thrown value first
-    (latest as unknown as (thrown: unknown) => void)(error);
+function fireUncaught(error: Error): void {
+    const latest = process.listeners('uncaughtException').at(-1);
+    if (!latest) throw new Error('no uncaughtException listener registered');
+    latest(error, 'uncaughtException');
+}
+
+function fireRejection(reason: Error): void {
+    const latest = process.listeners('unhandledRejection').at(-1);
+    if (!latest) throw new Error('no unhandledRejection listener registered');
+    latest(reason, Promise.resolve());
 }
 
 describe('process error handlers', () => {
@@ -66,7 +71,7 @@ describe('process error handlers', () => {
         const run = vi.spyOn(shutdown, 'run');
         const thrown = new Error('forgot an await');
 
-        fireLatest('unhandledRejection', thrown);
+        fireRejection(thrown);
 
         await vi.waitFor(() => {
             expect(reported).toHaveLength(1);
@@ -81,7 +86,7 @@ describe('process error handlers', () => {
         const run = vi.spyOn(shutdown, 'run').mockResolvedValue();
         const thrown = new Error('escaped every handler');
 
-        fireLatest('uncaughtException', thrown);
+        fireUncaught(thrown);
 
         await vi.waitFor(() => {
             expect(reported).toHaveLength(1);
@@ -99,6 +104,21 @@ describe('process error handlers', () => {
 
         expect(process.listenerCount('unhandledRejection')).toBe(rejections);
         expect(process.listenerCount('uncaughtException')).toBe(exceptions);
+    });
+
+    it('registers one listener pair when two starts race', async () => {
+        const exceptions = process.listenerCount('uncaughtException');
+        const rejections = process.listenerCount('unhandledRejection');
+
+        const host = new TestHost(new CoordinatedShutdown(), new CoordinatedStartup(), {} as Config);
+        await Promise.all([host.run(), host.run()]);
+
+        expect(process.listenerCount('uncaughtException')).toBe(exceptions + 1);
+
+        TestHost.resetHost();
+
+        expect(process.listenerCount('uncaughtException')).toBe(exceptions);
+        expect(process.listenerCount('unhandledRejection')).toBe(rejections);
     });
 
     it('removes both listeners after a failed startup', async () => {

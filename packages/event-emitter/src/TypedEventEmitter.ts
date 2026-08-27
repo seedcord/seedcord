@@ -43,7 +43,8 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
                 if (fired) return;
                 fired = true;
                 this.removeRegistration(event, registration);
-                original(...args);
+                // dispatchSafe reads this to catch an async listener's rejection
+                return original(...args);
             },
             original
         };
@@ -103,13 +104,9 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
         const current = [...slot];
         for (const registration of current) {
             try {
-                const returned: unknown = registration.call(...args);
-                // an async listener rejects after this try has already returned
-                if (returned instanceof Promise) {
-                    void returned.catch((error: unknown) => {
-                        this.onListenerError(error, event);
-                    });
-                }
+                void Promise.resolve(registration.call(...args)).catch((error: unknown) => {
+                    this.onListenerError(error, event);
+                });
             } catch (error) {
                 this.onListenerError(error, event);
             }
