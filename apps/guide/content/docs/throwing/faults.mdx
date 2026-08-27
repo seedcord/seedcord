@@ -88,7 +88,7 @@ Two config keys change this. `errors.defaultError` takes a class that seedcord c
 
 `Silence` stops the handler, and seedcord does not call Discord at all. That fits an event handler, since nothing is waiting on a response.
 
-```ts twoslash title="src/events/ScanMessage.ts"
+```ts twoslash title="src/events/Welcome.ts"
 import {
     EventHandler,
     RegisterEvent,
@@ -96,18 +96,31 @@ import {
 } from '@seedcord/gateway';
 import { Events } from 'discord.js';
 
-declare const filter: { scan(text: string): Promise<void> };
+declare const settings: {
+    welcome(guildId: string): Promise<string | null>;
+};
 // ---cut---
-@RegisterEvent([Events.MessageCreate])
-export class ScanMessage extends EventHandler<Events.MessageCreate> {
+@RegisterEvent([Events.GuildMemberAdd])
+export class Welcome extends EventHandler<Events.GuildMemberAdd> {
     public async execute(): Promise<void> {
-        const [message] = this.event;
-        if (message.author.bot) throw new Silence('bot message');
+        const [member] = this.event;
+        const template = await this.template(member.guild.id);
 
-        await filter.scan(message.content);
+        await member.guild.systemChannel?.send(
+            template.replace('{user}', `${member}`)
+        );
+    }
+
+    private async template(guildId: string): Promise<string> {
+        const saved = await settings.welcome(guildId);
+        if (!saved) throw new Silence('no welcome message set');
+
+        return saved;
     }
 }
 ```
+
+The throw sits two calls down with no return value to hand back, the same shape a `Notice` covers for an interaction.
 
 <Callout type="transport" only="gateway">
 
