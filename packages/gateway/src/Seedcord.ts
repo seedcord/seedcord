@@ -85,10 +85,11 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
         return this.bot.client.user?.username;
     }
 
-    protected static override reset(): void {
-        super.reset();
+    protected static override reset(host?: object): boolean {
+        if (!super.reset(host)) return false;
         // reset() would drop the dev TUI's log sink
         LoggerChannelRegistry.instance.configure({});
+        return true;
     }
 
     private registerStartupTasks(): void {
@@ -127,7 +128,7 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
         } catch (caught) {
             // shutdown releases any resource opened before the failure, then rethrow
             await this.shutdown.run(1, false);
-            Seedcord.reset();
+            Seedcord.reset(this);
             throw caught;
         }
         return this;

@@ -125,16 +125,17 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
             await super.init();
         } catch (caught) {
             await this.shutdown.run(1, false);
-            Seedcord.reset();
+            Seedcord.reset(this);
             throw caught;
         }
         return this;
     }
 
-    protected static override reset(): void {
-        super.reset();
+    protected static override reset(host?: object): boolean {
+        if (!super.reset(host)) return false;
         // super.reset() drops the dev TUI's log sink
         LoggerChannelRegistry.instance.configure({});
+        return true;
     }
 
     private registerStartupTasks(): void {

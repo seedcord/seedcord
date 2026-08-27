@@ -69,13 +69,19 @@ export class LoggerChannelRegistry {
 
     private emit(sink: ILogSink, record: LogRecord): void {
         try {
-            sink.onLog(record);
+            void Promise.resolve(sink.onLog(record)).catch((error: unknown) => {
+                this.sinkFailed(sink, error);
+            });
         } catch (error: unknown) {
-            if (this.broken.has(sink)) return;
-            this.broken.add(sink);
-            // eslint-disable-next-line no-console -- console because the log pipeline is the thing that broke
-            console.error('[seedcord] a log sink threw, dropping its output for this process', error);
+            this.sinkFailed(sink, error);
         }
+    }
+
+    private sinkFailed(sink: ILogSink, error: unknown): void {
+        if (this.broken.has(sink)) return;
+        this.broken.add(sink);
+        // eslint-disable-next-line no-console -- console because the log pipeline is the thing that broke
+        console.error('[seedcord] a log sink threw, dropping its output for this process', error);
     }
 
     /** Installs a capture sink (the dev TUI, a remote drain). Survives a `configure` replace. */

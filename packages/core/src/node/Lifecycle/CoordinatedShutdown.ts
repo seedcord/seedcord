@@ -95,6 +95,8 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
 
         // a dev-mode run leaves the process alive, so a second call would re-execute every task
         if (this.hasShutdown || this.isShuttingDown) {
+            // a crash mid-shutdown must still leave a failing code for whatever supervises the process
+            if (exitCode > this.exitCode) this.exitCode = exitCode;
             this.logger.warn('Shutdown sequence already ran or is in progress');
             return;
         }

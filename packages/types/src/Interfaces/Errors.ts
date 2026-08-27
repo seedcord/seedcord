@@ -37,6 +37,18 @@ export interface ErrorsConfig {
      */
     defaultError?: new (uuid: UUID) => RenderableNotice;
     /**
+     * Whether the framework reports a throw that escapes every handler, such as a promise your code
+     * never awaited or a `setTimeout` callback that threw. Both report as an unknown fault. The bot
+     * keeps running after an unhandled rejection. An uncaught exception runs the coordinated shutdown
+     * and exits 1.
+     *
+     * Turn it off when the surrounding application registers its own `unhandledRejection` and
+     * `uncaughtException` handlers.
+     *
+     * @defaultValue `true`
+     */
+    catchProcessErrors?: boolean;
+    /**
      * discord.js API error codes the interaction error path swallows quietly, reporting no fault, for a
      * code thrown by the handler's own work. When empty, every such code reports and a real
      * bug (a double ack from a misplaced defer) surfaces. Add a code here to swallow it once you have

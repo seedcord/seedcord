@@ -1,4 +1,5 @@
 import { ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
+import { LoggerChannelRegistry } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
@@ -52,6 +53,37 @@ describe('Seedcord host', () => {
         await expect(seedcord.start()).rejects.toThrow();
         await expect(seedcord.start()).rejects.toThrow(/new instance/);
         expect(() => new Seedcord(testConfig())).not.toThrow();
+    });
+
+    it('a stale host retrying start leaves the live host alone', async () => {
+        const dead = new Seedcord(testConfig());
+        dead.startup.addTask(StartupPhase.Configuration, 'boom', () => Promise.reject(new Error('boom')));
+        await expect(dead.start()).rejects.toThrow();
+
+        const base = process.listenerCount('SIGTERM');
+        // eslint-disable-next-line no-new -- construction registers the handlers under test
+        new Seedcord(testConfig());
+        expect(process.listenerCount('SIGTERM')).toBe(base + 1);
+
+        await expect(dead.start()).rejects.toThrow(/new instance/);
+
+        expect(process.listenerCount('SIGTERM')).toBe(base + 1);
+    });
+
+    it('a racing start failure tears the host down once', async () => {
+        const seedcord = new Seedcord(testConfig());
+        seedcord.startup.addTask(StartupPhase.Configuration, 'boom', () => Promise.reject(new Error('boom')));
+        seedcord.shutdown.addTask(
+            ShutdownPhase.Drain,
+            'slow',
+            () => new Promise<void>((resolve) => setTimeout(resolve, 50))
+        );
+        const configure = vi.spyOn(LoggerChannelRegistry.instance, 'configure');
+
+        const settled = await Promise.allSettled([seedcord.start(), seedcord.start()]);
+
+        expect(settled.map((result) => result.status)).toEqual(['rejected', 'rejected']);
+        expect(configure).toHaveBeenCalledTimes(1);
     });
 
     it('a start failure after login destroys the client', async () => {

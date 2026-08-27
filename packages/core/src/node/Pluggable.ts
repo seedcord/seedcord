@@ -7,6 +7,7 @@ import { StartupPhase } from '#src/lifecycle/phases';
 import { pluginLoggerOf, resolvedLifecycleSpecOf } from '#src/plugin/Plugin';
 
 import { withTimeout } from './Lifecycle/withTimeout';
+import { registerProcessErrors } from './processErrors';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
@@ -55,9 +56,12 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     private readonly completedInits = new Set<Attachment>();
     private readonly disposePhases = new Set<ShutdownPhase>();
     private pluginTasksRegistered = false;
+    private initPromise?: Promise<this> | undefined;
 
     private static isInstantiated = false;
+    private static liveHost?: object | undefined;
     private static liveShutdown?: CoordinatedShutdown | undefined;
+    private static liveProcessErrors?: (() => void) | undefined;
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
         // a `sideEffects: false` build would drop the same call in the node entry
@@ -70,18 +74,32 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         }
 
         Pluggable.isInstantiated = true;
+        Pluggable.liveHost = this;
         Pluggable.liveShutdown = shutdown;
         this.shutdown = shutdown;
         this.startup = startup;
     }
 
     /** @internal */
-    protected async init(): Promise<this> {
+    protected init(): Promise<this> {
+        // clearing the slot on a rejection lets a later retry throw its own error
+        this.initPromise ??= this.runInit().catch((caught: unknown) => {
+            this.initPromise = undefined;
+            throw caught;
+        });
+        return this.initPromise;
+    }
+
+    private async runInit(): Promise<this> {
         if (this.isInitialized) return this;
         // a rerun after a failed startup would re-init the rolled-back plugins
         if (this.startFailed) throw new SeedcordError(SeedcordErrorCode.LifecycleRestartAfterFailure);
 
         this.registerPluginTasks();
+
+        if (this.config.errors?.catchProcessErrors ?? true) {
+            Pluggable.liveProcessErrors = registerProcessErrors(this, this.shutdown);
+        }
 
         const startupSettled: PromiseWithResolvers<void> = Promise.withResolvers();
         this.shutdown.gateOnStartup(startupSettled.promise);
@@ -104,11 +122,17 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         return this.attachments.map((attachment) => attachment.key);
     }
 
-    /** @internal so the next host can construct */
-    protected static reset(): void {
+    /** @internal */
+    protected static reset(host?: object): boolean {
+        if (host !== undefined && Pluggable.liveHost !== host) return false;
+
         Pluggable.liveShutdown?.removeSignalHandlers();
         Pluggable.liveShutdown = undefined;
+        Pluggable.liveProcessErrors?.();
+        Pluggable.liveProcessErrors = undefined;
+        Pluggable.liveHost = undefined;
         Pluggable.isInstantiated = false;
+        return true;
     }
 
     /**
@@ -231,7 +255,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         if (this.disposePhases.has(phase)) return;
         this.disposePhases.add(phase);
 
-        // registered once per phase, later inits of that phase run in the same task
+        // the budget covers every dispose in this phase because they all run in this one task
         const budget = this.attachments.reduce((sum, a) => {
             const spec = resolvedLifecycleSpecOf(a.instance);
             return a.instance.dispose && spec.dispose.phase === phase ? sum + spec.dispose.timeout : sum;
