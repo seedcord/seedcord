@@ -460,7 +460,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             const dispatch = new DispatchContext(routeIdOf(HandlerCtor) ?? routeId);
             routeId = dispatch.routeId ?? routeId;
             const handler = this.buildHandler(HandlerCtor, interaction as Repliables, dispatch, key, !matched);
-            if (handler instanceof RepliableHandler) sender = handler.getSender();
+            if (handler instanceof RepliableHandler) sender = handler.sender;
             // @Gated rejects autocomplete at compile time, since it has no reply target. this is the backstop
             const refusal = interaction.isAutocomplete()
                 ? null

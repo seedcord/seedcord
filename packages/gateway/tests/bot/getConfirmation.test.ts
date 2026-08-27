@@ -83,7 +83,7 @@ describe('getConfirmation', () => {
         const sender = new ReplySender(interaction, routeId, bus);
         return {
             getEvent: () => interaction,
-            getSender: () => sender
+            sender
         } as unknown as RepliableHandler<NonModalInteraction>;
     }
 

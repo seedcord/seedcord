@@ -55,7 +55,7 @@ function stubHandler(post: ReturnType<typeof vi.fn>, interaction = guildPayload(
     return {
         core,
         getEvent: () => interaction,
-        getSender: () => sender
+        sender
     } as unknown as RepliableHandler<Repliables>;
 }
 

@@ -268,7 +268,7 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
         core,
         payload,
         routeId,
-        sender: handler instanceof RepliableHandler ? handler.getSender() : null
+        sender: handler instanceof RepliableHandler ? handler.sender : null
     };
 
     const refusal = await gateRefusal(ctor, match, payload, core);

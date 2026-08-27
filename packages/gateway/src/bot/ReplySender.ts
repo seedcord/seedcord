@@ -1,4 +1,5 @@
-import { BaseReplySender, deferFlags, sendFlags } from '@seedcord/core/internal';
+import { BaseReplySender } from '@seedcord/core';
+import { deferFlags, sendFlags } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { MessageFlags } from 'discord.js';

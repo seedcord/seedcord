@@ -20,6 +20,9 @@ export * from '#handlers/index';
 export { BaseHandler } from '#handlers/BaseHandler';
 export { RepliableHandler } from '#handlers/RepliableHandler';
 
+export { ReplySender } from '#bot/ReplySender';
+export type { SentMessage } from '#bot/ReplySender';
+
 export * from '#pagination/index';
 // same reason, core exports its own ArraySource and CursorSource
 export { ArraySource, CursorSource } from '#pagination/sources';

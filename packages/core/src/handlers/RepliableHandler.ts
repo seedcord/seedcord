@@ -22,7 +22,8 @@ export abstract class RepliableHandler<
     TNative,
     TSender extends BaseReplySender<TMessage, TNative>
 > extends BaseHandler<Event, TCore> {
-    protected readonly sender: TSender;
+    /** The reply surface for this interaction. Pass the handler to reply from outside its class. */
+    public readonly sender: TSender;
     protected readonly routeId: string;
 
     protected constructor(event: Event, core: TCore, dispatch?: DispatchContext) {
@@ -33,11 +34,6 @@ export abstract class RepliableHandler<
     }
 
     protected abstract buildSender(event: Event, core: TCore, routeId: string): TSender;
-
-    /** @internal The dispatcher's fault boundary replies through the live ack state. */
-    public getSender(): TSender {
-        return this.sender;
-    }
 
     /** Send the initial response, exactly once. */
     protected reply(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {

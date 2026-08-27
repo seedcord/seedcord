@@ -216,7 +216,7 @@ export async function getConfirmation(
 
     const response = typeof prompt === 'string' ? defaultPrompt(prompt, options) : await prompt(CONFIRM_IDS);
     const interaction = handler.getEvent();
-    const sender = handler.getSender();
+    const { sender } = handler;
     const message = await sender.send(response, { ephemeral });
 
     const winner = await collectChoice(message, interaction.user.id, timeoutMs);

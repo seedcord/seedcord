@@ -133,7 +133,7 @@ function stubHandler(event: ReturnType<typeof startEvent>): RepliableHandler<Rep
     const core = stubCore();
     const sender = new ReplySender(interaction, 'slash:page', core.bus);
     // justified: start reads only these three members off the handler
-    return { core, getEvent: () => interaction, getSender: () => sender } as unknown as RepliableHandler<Repliables>;
+    return { core, getEvent: () => interaction, sender } as unknown as RepliableHandler<Repliables>;
 }
 
 describe('Paginator.start', () => {

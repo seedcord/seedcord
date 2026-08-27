@@ -26,6 +26,9 @@ export * from './handlers';
 // two `export *` both re-export RepliableHandler, so export it explicitly to resolve to the http subclass
 export { RepliableHandler } from '#handlers/RepliableHandler';
 
+export { ReplySender } from '#reply/ReplySender';
+export type { InteractionRef, SentMessage } from '#reply/ReplySender';
+
 // same shadowing reason, these bind the transport Core into the two subscriber bases
 export { Subscriber, WebhookLog } from '#subscribers/index';
 

@@ -1,4 +1,5 @@
-import { BaseReplySender, deferFlags, sendFlags } from '@seedcord/core/internal';
+import { BaseReplySender } from '@seedcord/core';
+import { deferFlags, sendFlags } from '@seedcord/core/internal';
 import { InteractionResponseType, MessageFlags, Routes } from 'discord-api-types/v10';
 
 import type { REST, RawFile } from '@discordjs/rest';

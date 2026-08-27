@@ -12,7 +12,7 @@ import { stubBus } from '../utils/stubBus';
 
 import type { SentMessage } from '#bot/ReplySender';
 import type { Core } from '#interfaces/Core';
-import type { ModalLike } from '@seedcord/core/internal';
+import type { ModalLike } from '@seedcord/core';
 import type { ButtonInteraction, ChatInputCommandInteraction, ModalSubmitInteraction } from 'discord.js';
 
 // a handler naming no route carries no guild guarantee

@@ -29,6 +29,9 @@ export type { DispatchState } from '#src/dispatch/DispatchContext';
 export { BaseHandler } from '#src/handlers/BaseHandler';
 export { RepliableHandler } from '#src/handlers/RepliableHandler';
 
+export { BaseReplySender } from '#reply/BaseReplySender';
+export type { ModalLike } from '#reply/BaseReplySender';
+
 export type { CoreBase } from '#interfaces/CoreBase';
 
 export { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
