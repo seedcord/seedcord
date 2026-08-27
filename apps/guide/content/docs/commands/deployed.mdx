@@ -58,7 +58,11 @@ For CI, `--all-guilds` covers every server your bot is in and `--yes` skips the 
 
 {/* prettier-ignore-end */}
 
-`--purge` needs named servers. Passing it with `--all-guilds` throws, since that pair would delete every guild command your bot has. Passing neither `--guild` nor `--all-guilds` throws too.
+<Callout type="warning">
+
+`--purge` needs named servers. It throws next to `--all-guilds`, since that pair would delete every guild command your bot has. It throws again when you pass no `--guild` and no `--all-guilds`.
+
+</Callout>
 
 <Callout type="note">
 

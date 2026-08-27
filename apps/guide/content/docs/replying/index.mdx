@@ -79,7 +79,9 @@ class Ban extends SlashHandler<'ban'> {
         const reason = this.options.getString('reason') ?? '';
 
         await this.reply({
-            components: [new TextDisplayBuilder().setContent(reason)],
+            components: [
+                new TextDisplayBuilder().setContent(reason)
+            ],
             allowedMentions: { parse: [] }
         });
         // ---cut-after---
@@ -110,7 +112,10 @@ import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 class Ban extends SlashHandler<'ban'> {
     public async execute(): Promise<void> {
         // ---cut---
-        await this.reply('Banned.', { ephemeral: false, silent: true });
+        await this.reply('Banned.', {
+            ephemeral: false,
+            silent: true
+        });
         // ---cut-after---
     }
 }

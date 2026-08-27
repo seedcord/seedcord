@@ -21,6 +21,16 @@ Your commands also stay inside servers by default, since [`BuilderComponent`](re
 
 ## You are near a limit
 
-Discord caps an application at 100 global slash commands, 15 user context menus, and 15 message context menus. Every server gets that same allowance again for its guild commands.
+Discord caps how many commands an application registers, and every server gets that same allowance again for its guild commands.
+
+{/* prettier-ignore-start */}
+
+| kind | global | per server |
+| --- | --- | --- |
+| slash commands | 100 | 100 |
+| user context menus | 15 | 15 |
+| message context menus | 15 | 15 |
+
+{/* prettier-ignore-end */}
 
 Creating a command counts against a second cap, 200 per day per guild. A command that already exists does not count toward it, so restarting your bot all day is free. You would have to add a hundred brand new commands in an afternoon to reach it.
