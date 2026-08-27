@@ -1,4 +1,4 @@
-export const MANAGERS = ['pnpm', 'bun', 'npm', 'yarn'] as const;
+export const MANAGERS = ['pnpm', 'npm', 'bun', 'yarn'] as const;
 
 export type Manager = (typeof MANAGERS)[number];
 
@@ -6,7 +6,8 @@ export type Manager = (typeof MANAGERS)[number];
 export const VERBS = {
     create: { npm: 'npm create', pnpm: 'pnpm create', yarn: 'yarn create', bun: 'bun create' },
     add: { npm: 'npm install', pnpm: 'pnpm add', yarn: 'yarn add', bun: 'bun add' },
-    run: { npm: 'npm run', pnpm: 'pnpm run', yarn: 'yarn', bun: 'bun run' }
+    run: { npm: 'npm run', pnpm: 'pnpm run', yarn: 'yarn', bun: 'bun run' },
+    exec: { npm: 'npx', pnpm: 'pnpm exec', yarn: 'yarn exec', bun: 'bunx' }
 } as const satisfies Record<string, Record<Manager, string>>;
 
 export type Verb = keyof typeof VERBS;

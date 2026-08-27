@@ -1,0 +1,26 @@
+---
+title: Why your command has not appeared
+description: What to check when a command you registered is missing from Discord.
+---
+
+Your bot started, the logs list the command, and Discord does not show it.
+
+## Check the scope first
+
+A guild command appears the moment your bot deploys it. A global command takes longer, and Discord publishes no figure for how long.
+
+A client still holding the old copy gets that run refused. Discord checks the version, turns the run down, and sends the client the new copy.
+
+Register to a guild while you are still changing a command. Move it to global when you're ready to deploy it.
+
+## Nobody can see it
+
+Discord hides a command from the picker when the person lacks permission to use it. A command you cannot run looks exactly like a command nobody deployed.
+
+Your commands also stay inside servers by default, since [`BuilderComponent`](ref:core/BuilderComponent) sets `InteractionContextType.Guild`. A command missing from a DM needs `BotDM`.
+
+## You are near a limit
+
+Discord caps an application at 100 global slash commands, 15 user context menus, and 15 message context menus. Every server gets that same allowance again for its guild commands.
+
+Creating a command counts against a second cap, 200 per day per guild. A command that already exists does not count toward it, so restarting your bot all day is free. You would have to add a hundred brand new commands in an afternoon to reach it.

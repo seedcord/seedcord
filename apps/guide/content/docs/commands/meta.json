@@ -8,6 +8,8 @@
         "one-handler",
         "autocomplete",
         "context-menus",
-        "mentions"
+        "mentions",
+        "deployed",
+        "missing"
     ]
 }
