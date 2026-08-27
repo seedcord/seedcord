@@ -1,0 +1,179 @@
+---
+title: Reporting faults
+description: Sending faults to a Discord channel.
+---
+
+seedcord ships two reporters and registers both while your bot starts. Each one reads a webhook url from an environment variable. Set both and your faults show up in a Discord channel.
+
+```txt title=".env"
+HANDLED_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
+UNKNOWN_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
+```
+
+{/* prettier-ignore-start */}
+
+| variable | bus key | what reaches it |
+| --- | --- | --- |
+| `HANDLED_EXCEPTION_WEBHOOK_URL` | `handledException` | a [`Notice`](ref:core/Notice) you threw with `report` true, and every [`Fault`](ref:core/Fault) |
+| `UNKNOWN_EXCEPTION_WEBHOOK_URL` | `unknownException` | every other throw, plus the two process listeners |
+
+{/* prettier-ignore-end */}
+
+The `handledException` card opens with the class name and its message, then the kind, the command or the customId, and the user, guild, channel, and interaction ids. The uuid and the cause's stack come under that, and seedcord attaches the raw interaction as `source.json`. A fault raised in an event handler names the event and the handler where the kind and command would sit.
+
+The `unknownException` card names the guild and the user, then the uuid with the error's stack. A `DiscordAPIError` from an interaction callback adds three timestamps, when Discord sent the interaction, when the error reached the log, and the gap between them.
+
+## What seedcord checks at boot
+
+An unset variable disables its reporter and logs one line.
+
+```txt output
+HandledException disabled, HANDLED_EXCEPTION_WEBHOOK_URL is not set
+```
+
+<Callout type="warning">
+
+seedcord matches every url it finds against Discord's webhook form and throws on a miss. It then asks Discord about every webhook it accepted, and a 404 or a 401 throws too. That second throw names every dead variable at once, so a first boot reports all of them together.
+
+</Callout>
+
+## Your own reporter
+
+A reporter delivers one bus key to one webhook. Subclass [`WebhookLog`](ref:gateway/WebhookLog), name the key with [`@Subscribe`](ref:core/Subscribe), and name the environment variable with [`@WebhookUrl`](ref:core/WebhookUrl).
+
+```ts twoslash title="src/subscribers/FaultMirror.ts"
+import {
+    BuilderComponent,
+    Subscribe,
+    WebhookLog,
+    WebhookUrl
+} from '@seedcord/gateway';
+
+import type { WebhookReport } from '@seedcord/gateway';
+// ---cut-start---
+
+class MirrorCard extends BuilderComponent<'container'> {
+    constructor(uuid: string, route: string) {
+        super('container');
+
+        this.instance.addTextDisplayComponents((text) =>
+            text.setContent(`### ${route}\n\`${uuid}\``)
+        );
+    }
+}
+// ---cut-end---
+
+@Subscribe('handledException')
+@WebhookUrl('FAULT_MIRROR_WEBHOOK_URL')
+export class FaultMirror extends WebhookLog<'handledException'> {
+    public report(): WebhookReport {
+        const { uuid, routeId } = this.data;
+
+        return {
+            username: 'Faults',
+            components: [new MirrorCard(uuid, routeId).component]
+        };
+    }
+}
+```
+
+`this.data` is that key's payload. Return a promise from `report()` when you have to load something before the card can be built.
+
+{/* prettier-ignore-start */}
+
+| field | what it does |
+| --- | --- |
+| `components` | the card itself, and the only field you have to return |
+| `username` | the author name Discord shows, defaulting to your class name |
+| `avatarUrl` | the author avatar, defaulting to the webhook's own |
+| `files` | bytes to upload, which a file or thumbnail component references by name |
+
+{/* prettier-ignore-end */}
+
+Both shipped reporters use `files` to attach the raw payload as json.
+
+seedcord scans the folder named by `subscribers.path` for your reporters. The scaffold ships `null` there, so point it at your folder.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+const bot = {
+    clientOptions: { intents: [GatewayIntentBits.Guilds] },
+    interactions: {
+        path: resolve(import.meta.dirname, './handlers')
+    },
+    commands: { path: resolve(import.meta.dirname, './commands') },
+    events: { path: null }
+};
+// ---cut---
+export const seedcord = new Seedcord({
+    bot,
+    subscribers: {
+        path: resolve(import.meta.dirname, './subscribers')
+    }
+});
+```
+
+seedcord registers the two shipped reporters whether or not you set that path. The Events tab covers the bus and the rest of what a subscriber can do.
+
+## One card a minute
+
+seedcord calls `throttleKey()` before every send. The base returns `null`, so each publish sends its own card. Override it to return a string. Events that share that string collapse into one card a minute.
+
+seedcord then calls `report()` with the number it dropped while the minute was running. Here is `FaultMirror` again with both methods.
+
+```ts twoslash title="src/subscribers/FaultMirror.ts"
+import {
+    BuilderComponent,
+    Subscribe,
+    WebhookLog,
+    WebhookUrl
+} from '@seedcord/gateway';
+
+import type { WebhookReport } from '@seedcord/gateway';
+// ---cut-start---
+
+class MirrorCard extends BuilderComponent<'container'> {
+    constructor(uuid: string, route: string, suppressed: number) {
+        super('container');
+
+        const tail =
+            suppressed > 0 ? `\n-# +${suppressed} more` : '';
+
+        this.instance.addTextDisplayComponents((text) =>
+            text.setContent(`### ${route}\n\`${uuid}\`${tail}`)
+        );
+    }
+}
+// ---cut-end---
+
+@Subscribe('handledException')
+@WebhookUrl('FAULT_MIRROR_WEBHOOK_URL')
+export class FaultMirror extends WebhookLog<'handledException'> {
+    protected override throttleKey(): string {
+        return `mirror:${this.data.routeId}`;
+    }
+
+    public report(suppressed: number): WebhookReport {
+        const { uuid, routeId } = this.data;
+
+        return {
+            username: 'Faults',
+            components: [
+                new MirrorCard(uuid, routeId, suppressed).component
+            ]
+        };
+    }
+}
+```
+
+Both shipped reporters key on the route and the error's class name, and they end their card with the count.
+
+```txt output
+-# 12 more of these since the last report
+```
+
+seedcord keeps the count when a send fails, so the next card still carries those events.

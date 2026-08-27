@@ -1,5 +1,5 @@
 {
     "title": "Throwing",
     "root": true,
-    "pages": ["index", "faults"]
+    "pages": ["index", "faults", "reporting"]
 }
