@@ -78,9 +78,12 @@ class Menu extends UserContextMenuHandler<'hb Profile' | 'hb Greet'> {
     }
 
     public runPartial(): Promise<string> {
-        const arms = { 'hb Profile': () => 'profile' };
-        // justified: reaching the runtime throw means dropping an arm past the compiler
-        return this.match(arms as unknown as { 'hb Profile': () => string; 'hb Greet': () => string });
+        const arms = {
+            'hb Profile': (): string => 'profile',
+            'hb Greet': (): string => 'greet'
+        };
+        Reflect.deleteProperty(arms, 'hb Greet');
+        return this.match(arms);
     }
 
     public readName(): 'hb Profile' | 'hb Greet' {

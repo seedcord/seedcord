@@ -113,10 +113,15 @@ export const TYPESCRIPT_RULES: Linter.RulesRecord = {
             selector: 'property',
             format: null
         },
-        // match arms are keyed by route strings and context menu names that hold slashes and spaces
+        // match arms key on route strings and context menu names. prettier unquotes a one-word name like `Report`
         {
             selector: ['objectLiteralMethod', 'typeMethod'],
+            modifiers: ['requiresQuotes'],
             format: null
+        },
+        {
+            selector: ['objectLiteralMethod', 'typeMethod'],
+            format: ['camelCase', 'PascalCase']
         },
         {
             selector: 'parameter',

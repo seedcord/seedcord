@@ -27,7 +27,6 @@ declare module '@seedcord/core' {
 // justified: nothing on this path reads core
 const core = {} as unknown as Core;
 
-// MenuCacheFor collapses to undefined when the names differ in cache state
 function userMenu(name: string): UserContextMenuCommandInteraction<undefined> {
     return {
         commandName: name,
@@ -56,9 +55,12 @@ class Menu extends UserContextMenuHandler<'View Profile' | 'Say Hello'> {
     }
 
     public runPartial(): Promise<string> {
-        const arms = { 'View Profile': () => 'profile' };
-        // justified: reaching the runtime throw means dropping an arm past the compiler
-        return this.match(arms as unknown as { 'View Profile': () => string; 'Say Hello': () => string });
+        const arms = {
+            'View Profile': (): string => 'profile',
+            'Say Hello': (): string => 'hello'
+        };
+        Reflect.deleteProperty(arms, 'Say Hello');
+        return this.match(arms);
     }
 
     public readName(): 'View Profile' | 'Say Hello' {
