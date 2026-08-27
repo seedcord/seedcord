@@ -31,7 +31,6 @@ To send an embed or a poll, use discord.js's own methods on `this.event`. That s
 ## A reply is a list of components
 
 ```ts twoslash hovers title="src/handlers/Ban.ts"
-import { TextDisplayBuilder } from '@discordjs/builders';
 import {
     BuilderComponent,
     SlashHandler,
@@ -42,8 +41,8 @@ class BanCard extends BuilderComponent<'container'> {
     constructor(name: string) {
         super('container');
 
-        this.instance.addTextDisplayComponents(
-            new TextDisplayBuilder().setContent(`Banned ${name}.`)
+        this.instance.addTextDisplayComponents((text) =>
+            text.setContent(`Banned ${name}.`)
         );
     }
 }

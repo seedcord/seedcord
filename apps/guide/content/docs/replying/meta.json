@@ -5,6 +5,7 @@
         "index",
         "deferring",
         "more-messages",
-        "ack-states"
+        "ack-states",
+        "files"
     ]
 }
