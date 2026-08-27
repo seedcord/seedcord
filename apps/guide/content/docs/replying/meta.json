@@ -1,5 +1,5 @@
 {
     "title": "Replying",
     "root": true,
-    "pages": ["index"]
+    "pages": ["index", "deferring"]
 }
