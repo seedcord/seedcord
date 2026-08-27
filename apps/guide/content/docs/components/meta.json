@@ -1,5 +1,19 @@
 {
     "title": "Components",
     "root": true,
-    "pages": ["index"]
+    "pages": [
+        "index",
+        "---Custom IDs---",
+        "custom-ids",
+        "routing",
+        "stale",
+        "---Menus and modals---",
+        "select-menus",
+        "modals",
+        "confirm",
+        "---Pagination---",
+        "pagination",
+        "pagination-sources",
+        "pagination-render"
+    ]
 }

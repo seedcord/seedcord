@@ -64,6 +64,11 @@ const REGISTRIES = `
     interface MessageContextMenuRegistry {
         'Report Message': { cache: 'cached' };
     }
+    interface EmojiMap {
+        Confirm: 'application';
+        Cancel: 'application';
+        Streak: 'guild';
+    }
 `;
 
 export const SAMPLE_AUGMENTATION = `
