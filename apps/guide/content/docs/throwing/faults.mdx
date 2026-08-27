@@ -1,0 +1,145 @@
+---
+title: Faults
+description: The generic card, and the throws that produce it.
+---
+
+Throw a [`Fault`](ref:core/Fault) when you catch an error and have no specific message for the user.
+
+```ts twoslash title="src/handlers/Ban.ts"
+import { Fault, SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+declare const cases: { open(id: string): Promise<void> };
+// ---cut-end---
+
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        const target = this.options.getUser('target');
+
+        try {
+            await cases.open(target.id);
+        } catch (cause) {
+            throw new Fault({ cause });
+        }
+
+        await this.reply(`Banned ${target.username}.`);
+    }
+}
+```
+
+`cause` is the error you caught. It reaches your logs and your fault report. The user never sees it.
+
+{/* prettier-ignore-start */}
+
+| you write | reported |
+| --- | --- |
+| `new Fault()` | yes |
+| `new Fault({ cause })` | yes, with that error's stack |
+| `new Fault({ report: false })` | no |
+
+{/* prettier-ignore-end */}
+
+All three render the same card.
+
+## The card every fault renders
+
+```txt output
+### Error
+Something went wrong. Please reach out to the developer with a way
+to reproduce the error and the following:
+### UUID: `9f2b1c04-6d3e-4a71-8f5c-0b7e2d9a1c33`
+```
+
+seedcord logs that uuid and puts it on the fault report, so a user who pastes it into your support channel gives you the exact log line to search for.
+
+`the developer` is the default contact. Set `notifications.developerUsername` to put your own name there.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+const bot = {
+    clientOptions: { intents: [GatewayIntentBits.Guilds] },
+    interactions: {
+        path: resolve(import.meta.dirname, './handlers')
+    },
+    commands: { path: resolve(import.meta.dirname, './commands') },
+    events: { path: null }
+};
+// ---cut---
+export const seedcord = new Seedcord({
+    bot,
+    subscribers: { path: null },
+    notifications: {
+        developerUsername: 'materwelon'
+    }
+});
+```
+
+## Anything else you throw
+
+Any throw that is neither a [`Notice`](ref:core/Notice) nor a [`Silence`](ref:core/Silence) renders that same card. A `TypeError` off a bad property read goes here. So does a `DiscordAPIError` from a call you made yourself, and anything a library you installed threw. seedcord logs each one with its uuid and publishes it to the `unknownException` bus key. Your error's message never reaches the reply.
+
+Two config keys change this. `errors.defaultError` takes a class seedcord constructs with the uuid, and `errors.ignoreApiCodes` takes a list of Discord api codes to swallow. [Configuring](/throwing/configuring) has both in a real config.
+
+## Stopping without a reply
+
+`Silence` stops the handler, and seedcord does not call Discord at all. That fits an event handler, since nothing is waiting on a response.
+
+```ts twoslash title="src/events/ScanMessage.ts"
+import {
+    EventHandler,
+    RegisterEvent,
+    Silence
+} from '@seedcord/gateway';
+import { Events } from 'discord.js';
+
+declare const filter: { scan(text: string): Promise<void> };
+// ---cut---
+@RegisterEvent([Events.MessageCreate])
+export class ScanMessage extends EventHandler<Events.MessageCreate> {
+    public async execute(): Promise<void> {
+        const [message] = this.event;
+        if (message.author.bot) throw new Silence('bot message');
+
+        await filter.scan(message.content);
+    }
+}
+```
+
+<Callout type="transport" only="gateway">
+
+Only a gateway bot receives client events, so only `@seedcord/gateway` exports [`EventHandler`](ref:gateway/EventHandler). A `Notice` with `report` false stops an event handler the same way a `Silence` does.
+
+</Callout>
+
+The reason string reaches a debug log and stops there. `new Silence()` without one skips that log line.
+
+<Callout type="danger">
+
+Throwing a `Silence` from an interaction handler leaves the user with Discord's own failure message. Before any ack Discord says the application did not respond, and after a `defer()` the thinking placeholder stays. Throw a `Notice` there.
+
+</Callout>
+
+## Throws outside a handler
+
+seedcord registers an `unhandledRejection` and an `uncaughtException` listener while your bot starts. They catch the throws that reach Node itself, like a promise you forgot to await or a `setTimeout` callback that threw. Each one reports as an unknown fault.
+
+{/* prettier-ignore-start */}
+
+| listener | route id on the report | what happens next |
+| --- | --- | --- |
+| `unhandledRejection` | `process:unhandledRejection` | the bot keeps running |
+| `uncaughtException` | `process:uncaughtException` | seedcord runs the shutdown tasks and exits 1 |
+
+{/* prettier-ignore-end */}
+
+Both fire outside any interaction, so no user sees a reply. [Configuring](/throwing/configuring) covers `errors.catchProcessErrors`, which turns seedcord's pair off when your application registers its own.
+
+<Callout type="transport" only="http">
+
+An edge bot registers neither listener, since [`createSeedcord`](ref:http/createSeedcord) returns a request handler and never starts a host process.
+
+</Callout>
