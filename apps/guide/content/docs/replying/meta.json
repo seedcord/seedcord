@@ -6,6 +6,7 @@
         "deferring",
         "more-messages",
         "ack-states",
-        "files"
+        "files",
+        "raw-acks"
     ]
 }
