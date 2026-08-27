@@ -103,7 +103,13 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
         const current = [...slot];
         for (const registration of current) {
             try {
-                registration.call(...args);
+                const returned: unknown = registration.call(...args);
+                // an async listener rejects after this try has already returned
+                if (returned instanceof Promise) {
+                    void returned.catch((error: unknown) => {
+                        this.onListenerError(error, event);
+                    });
+                }
             } catch (error) {
                 this.onListenerError(error, event);
             }

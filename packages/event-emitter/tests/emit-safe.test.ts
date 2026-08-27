@@ -34,6 +34,25 @@ describe('TypedEventEmitter.emitSafe', () => {
         expect(ee.errors).toEqual([boom]);
     });
 
+    it('routes a rejected async listener to onListenerError', async () => {
+        const ee = new SafeEmitter();
+        const boom = new Error('boom');
+        const after = vi.fn();
+
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises -- the void position is exactly what this pins
+        ee.on('e', async () => {
+            await Promise.resolve();
+            throw boom;
+        });
+        ee.on('e', after);
+
+        expect(ee.fire(1)).toBe(true);
+        expect(after).toHaveBeenCalledWith(1);
+        await vi.waitFor(() => {
+            expect(ee.errors).toEqual([boom]);
+        });
+    });
+
     it('default onListenerError isolates the caller and re-throws the error on a microtask', () => {
         const scheduled: (() => void)[] = [];
         const spy = vi.spyOn(globalThis, 'queueMicrotask').mockImplementation((cb) => {

@@ -50,6 +50,23 @@ describe('Bus listener isolation', () => {
         expect(reached).toBe(true);
     });
 
+    it('logs a rejected async listener through its own logger', async () => {
+        const bus = stubBus();
+        const error = vi.spyOn(busLoggerOf(bus), 'error');
+        const thrown = new Error('listener blew up');
+
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises -- the void position is what this pins
+        bus.on('unknownException', async () => {
+            await Promise.resolve();
+            throw thrown;
+        });
+        bus[PublishDefault]('unknownException', faultPayload());
+
+        await vi.waitFor(() => {
+            expect(error).toHaveBeenCalledWith('listener for unknownException threw', thrown);
+        });
+    });
+
     it('logs the listener error through its own logger', () => {
         const bus = stubBus();
         const error = vi.spyOn(busLoggerOf(bus), 'error');
