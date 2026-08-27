@@ -1,6 +1,176 @@
 ---
 title: Throwing
-description: Stopping a handler by throwing, and deciding what the user sees.
+description: Stopping a handler by throwing a Notice.
 ---
 
-This section is being written.
+Throw to stop a handler. seedcord catches it and replies for you, and the class you throw sets that reply. Gates run inside the same boundary, so throwing from a gate sends the same reply.
+
+You write a refusal as a [`Notice`](ref:core/Notice) subclass.
+
+```ts twoslash title="src/handlers/Ban.ts"
+import {
+    BuilderComponent,
+    Notice,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+
+import type { ReplyResponse } from '@seedcord/gateway';
+// ---cut-start---
+declare const cases: { countOpen(id: string): Promise<number> };
+// ---cut-end---
+
+class OpenCaseCard extends BuilderComponent<'container'> {
+    constructor() {
+        super('container');
+
+        this.instance.addTextDisplayComponents((text) =>
+            text.setContent(
+                '### Cannot ban\nThat user already has an open case.'
+            )
+        );
+    }
+}
+
+class OpenCaseExists extends Notice {
+    constructor(id: string) {
+        super(`user ${id} has an open case`);
+    }
+
+    public render(): ReplyResponse {
+        return { components: [new OpenCaseCard().component] };
+    }
+}
+
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        const target = this.options.getUser('target');
+        await this.assertNoOpenCase(target.id);
+
+        await this.reply(`Banned ${target.username}.`);
+    }
+
+    private async assertNoOpenCase(id: string): Promise<void> {
+        const open = await cases.countOpen(id);
+        if (open > 0) throw new OpenCaseExists(id);
+    }
+}
+```
+
+Your logs and your fault reports read the string you pass to `super()`. The user never sees it, so the id goes there. `render()` builds the reply and returns a [`ReplyResponse`](ref:types/ReplyResponse), the same `{ components }` shape that [`this.reply()`](ref:gateway/RepliableHandler.reply) takes.
+
+`assertNoOpenCase` refuses on its own, and `execute()` never checks its return value.
+
+`super()` takes a second argument too. `super(message, { cause })` keeps the error you caught, and seedcord's fault reporter prints that error's stack on its card.
+
+## What each throw produces
+
+{/* prettier-ignore-start */}
+
+| you throw | the user sees | reported |
+| --- | --- | --- |
+| a `Notice` subclass | whatever your `render()` returns | when you set `report` |
+| a [`Fault`](ref:core/Fault) | a generic card carrying a tracking uuid | yes, by default |
+| a [`Silence`](ref:core/Silence) | nothing | no |
+| any other error | that same generic card | yes |
+
+{/* prettier-ignore-end */}
+
+Reported means seedcord logs the throw and puts it on the bus, where a webhook reporter can send it to a Discord channel. [Faults](/throwing/faults) covers the bottom three rows, and [Reporting faults](/throwing/reporting) covers the webhooks.
+
+## The fields on a Notice
+
+```ts twoslash
+import { Notice } from '@seedcord/gateway';
+
+import type { ReplyResponse } from '@seedcord/gateway';
+
+declare const components: ReplyResponse['components'];
+
+class OpenCaseExists extends Notice {
+    // ---cut---
+    constructor(id: string) {
+        super(`user ${id} has an open case`);
+
+        this.report = true;
+        this.ephemeral = false;
+        this.summary = 'the target already has an open case';
+    }
+    // ---cut-after---
+
+    public render(): ReplyResponse {
+        return { components };
+    }
+}
+```
+
+{/* prettier-ignore-start */}
+
+| field | default | what it changes |
+| --- | --- | --- |
+| `report` | `false` | `true` logs the throw with a uuid and publishes it to the `handledException` bus key |
+| `ephemeral` | `true` | `false` shows the reply to everyone in the channel |
+| `summary` | unset | [`or`](ref:core/or) lists them when every arm that refused sets one |
+
+{/* prettier-ignore-end */}
+
+Only `or` reads `summary`, and the Gates tab covers it.
+
+<Callout type="warning">
+
+Throwing a custom `Notice` for a real bug shows its card and produces nothing else, because `report` starts `false`. Throw a [`Fault`](ref:core/Fault) when you need the error in your logs or set `report = true` on the `Notice`.
+
+</Callout>
+
+## What render receives
+
+`render()` takes a [`RenderContext`](ref:types/RenderContext). Leave the parameter off when you do not read either field, as the first sample does.
+
+{/* prettier-ignore-start */}
+
+| field | holds |
+| --- | --- |
+| `ctx.uuid` | the id seedcord logs and reports for this throw |
+| `ctx.developerUsername` | `notifications.developerUsername` from your bot config, set on [Faults](/throwing/faults). `undefined` when you have not set it |
+
+{/* prettier-ignore-end */}
+
+```ts twoslash
+import { BuilderComponent, Notice } from '@seedcord/gateway';
+
+import type {
+    RenderContext,
+    ReplyResponse
+} from '@seedcord/gateway';
+
+class TraceCard extends BuilderComponent<'container'> {
+    constructor(uuid: string, contact: string) {
+        super('container');
+
+        const body = `Tell ${contact} about \`${uuid}\`.`;
+
+        this.instance.addTextDisplayComponents((text) =>
+            text.setContent(`### Lookup failed\n${body}`)
+        );
+    }
+}
+
+class LookupFailed extends Notice {
+    public constructor() {
+        super('the profile lookup failed');
+    }
+
+    // ---cut---
+    public render(ctx: RenderContext): ReplyResponse {
+        const contact = ctx.developerUsername ?? 'the developer';
+
+        return {
+            components: [new TraceCard(ctx.uuid, contact).component]
+        };
+    }
+    // ---cut-after---
+}
+```
+
+seedcord calls `render()` fresh each time it shows the refusal. Build the components inside it.
