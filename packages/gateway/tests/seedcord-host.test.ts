@@ -54,6 +54,21 @@ describe('Seedcord host', () => {
         expect(() => new Seedcord(testConfig())).not.toThrow();
     });
 
+    it('a stale host retrying start leaves the live host alone', async () => {
+        const dead = new Seedcord(testConfig());
+        dead.startup.addTask(StartupPhase.Configuration, 'boom', () => Promise.reject(new Error('boom')));
+        await expect(dead.start()).rejects.toThrow();
+
+        const base = process.listenerCount('SIGTERM');
+        // eslint-disable-next-line no-new -- construction registers the handlers under test
+        new Seedcord(testConfig());
+        expect(process.listenerCount('SIGTERM')).toBe(base + 1);
+
+        await expect(dead.start()).rejects.toThrow(/new instance/);
+
+        expect(process.listenerCount('SIGTERM')).toBe(base + 1);
+    });
+
     it('a start failure after login destroys the client', async () => {
         const seedcord = new Seedcord(testConfig());
         // justified: the mock client cannot complete a real login handshake

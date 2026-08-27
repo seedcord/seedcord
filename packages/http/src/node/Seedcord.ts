@@ -13,7 +13,7 @@ import {
     StartupPhase,
     SubscriberLoader
 } from '@seedcord/core/node/internal';
-import { SeedcordErrorCode, paint } from '@seedcord/errors';
+import { isSeedcordError, SeedcordErrorCode, paint } from '@seedcord/errors';
 import { applicationIdFromToken, SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
@@ -124,6 +124,8 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         try {
             await super.init();
         } catch (caught) {
+            // resetting here would strip the handlers of whichever host replaced this one
+            if (isSeedcordError(caught, undefined, SeedcordErrorCode.LifecycleRestartAfterFailure)) throw caught;
             await this.shutdown.run(1, false);
             Seedcord.reset();
             throw caught;
