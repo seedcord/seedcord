@@ -37,6 +37,7 @@ const REGISTRIES = `
             };
             cache: 'cached';
         };
+        help: { options: {}; cache: 'cached' };
         'settings/notifications/enable': { options: {}; cache: 'cached' };
         search: {
             options: {
