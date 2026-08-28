@@ -5,7 +5,7 @@ description: Keeping the page math and building the cursor and buttons by hand.
 
 [Custom rendering](/components/pagination-render) took the message back from seedcord. This page takes the rest.
 
-[`paginate()`](ref:core/paginate) is the slicing math on its own. It takes a list, a page number, and a page size, then returns a [`PageView`](ref:core/PageView) with the page clamped into range and `totalPages` filled in. The cursor, the buttons, and the routing are all yours to write.
+[`paginate()`](ref:core/paginate) is the slicing math on its own. It takes a list, a page number, and a page size, then returns a [`PageView`](ref:core/PageView) with `totalPages` filled in. The cursor, the buttons, and the routing are all yours to write.
 
 Two things rule out a [`Paginator`](ref:gateway/Paginator).
 

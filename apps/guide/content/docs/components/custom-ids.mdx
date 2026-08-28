@@ -126,11 +126,36 @@ const { choice } = Vote.decode('...');
 //      ^?
 ```
 
+## Fields that can be absent
+
+Every kind takes `{ nullable: true }`, which decodes the field as `T | null`.
+
+```ts twoslash
+import { CustomId } from '@seedcord/gateway';
+// ---cut---
+const Board = new CustomId('board')
+    .int('page', 0, 999)
+    .snowflake('roleId', { nullable: true });
+
+const { roleId } = Board.decode('...');
+//      ^?
+```
+
+A `/leaderboard [role]` command mints that id once, so every nav button carries the filter. Leaving the option out encodes `roleId` as null.
+
+`encode` takes the null too, so `Board.encode({ page: 0, roleId: null })` compiles.
+
+<Callout type="warning">
+
+Marking a field nullable changes the shape, which changes the hash in the route key. Every button already on a message refuses with `StaleCustomId` on the next click. [When a custom id goes stale](/components/stale) covers what the user sees.
+
+</Callout>
+
 ## What a field costs
 
 Discord caps a `custom_id` at 100 characters, and that covers the prefix, the shape hash, and every value.
 
-A packing field has a known count of possible values. seedcord multiplies those counts into one integer and writes it in base64.
+A packing field has a known count of possible values. seedcord multiplies those counts into one integer and writes it in base64. A nullable field adds one to its own count, for the absent case.
 
 ```txt output
 ownerId  184580573574955008   2^64 possible values

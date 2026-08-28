@@ -77,7 +77,7 @@ Every source returns a [`PageView`](ref:core/PageView), the two shipped ones and
 | field | what it holds |
 | --- | --- |
 | `items` | the items on this page |
-| `page` | the zero-based page number, already clamped into range |
+| `page` | the zero-based page number, never past the last page |
 | `perPage` | the page size the source used |
 | `totalPages` | the count, or `undefined` when the source cannot get one cheaply |
 | `hasPrev` | whether a page comes before this one |
@@ -89,7 +89,7 @@ Every source returns a [`PageView`](ref:core/PageView), the two shipped ones and
 
 ## Writing your own
 
-[`PageSource`](ref:core/PageSource) declares one method. Write your own for something neither shipped source does, like reporting a real total on a query you still fetch one slice at a time.
+[`PageSource`](ref:gateway/PageSource) declares one method. Write your own for something neither shipped source does, like reporting a real total on a query you still fetch one slice at a time.
 
 ```ts twoslash
 import type {
@@ -113,7 +113,7 @@ declare function readAuditRows(
     limit: number
 ): Promise<Entry[]>;
 // ---cut---
-export class AuditSource implements PageSource<Entry, PageContext> {
+export class AuditSource implements PageSource<Entry> {
     constructor(private readonly perPage: number) {}
 
     public async page(

@@ -39,13 +39,17 @@ export class RolesList extends SlashHandler<'roles'> {
 
 The paginator builds its own nav handler and puts it on [`Roles.Handler`](ref:gateway/Paginator.Handler). Extend that with an empty body, hand `Roles.cursor` to [`@ButtonRoute`](ref:core/ButtonRoute), and export it from wherever seedcord scans your handlers. Clicks do not route until that class exists.
 
-[`start()`](ref:gateway/Paginator.start) sends page 0 through your handler's reply surface, which picks reply, edit, or follow-up from the interaction's current state.
+[`start()`](ref:gateway/Paginator.start) sends the first page through your handler's reply surface, which picks reply, edit, or follow-up from the interaction's current state.
+
+`Roles.start(this, 3)` opens on page 3. A number bigger than the page count opens the last page.
 
 <Callout type="transport">
 
 `start()` resolves to a discord.js `Message` on gateway and an `APIMessage` on http.
 
 </Callout>
+
+[`page()`](ref:gateway/Paginator.page) builds the same message and hands it back without sending. To post it outside the reply, add `flags: MessageFlags.IsComponentsV2`.
 
 ## Where the items come from
 
