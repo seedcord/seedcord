@@ -149,6 +149,8 @@ const messages = {
     [SeedcordErrorCode.PluginOptionsRejected]: (pluginName: string, reason: string) =>
         `${pluginName} rejected its options, ${reason.replace(/\.$/, '')}.`,
     [SeedcordErrorCode.PluginDisposeFailures]: (count: number) => `${count} plugins failed to dispose.`,
+    [SeedcordErrorCode.PluginInvalidLifecycleTimeout]: (pluginName: string, field: string, declared: number) =>
+        `${pluginName} declared lifecycle ${field}.timeout as ${declared}. Pass a positive number of milliseconds, or omit it for the default.`,
 
     [SeedcordErrorCode.PluginMongooseServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongooseService on ${className}.`,

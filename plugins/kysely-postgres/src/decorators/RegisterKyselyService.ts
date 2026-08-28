@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import type { KyselyTable } from '../types/KyselyDatabase';
 import type { KyselyServiceRegistrationOptions } from '../types/KyselyServiceRegistrationOptions';
@@ -36,7 +36,7 @@ export function RegisterKyselyService<
     return <Ctor extends Constructor<KyselyServices[TKey] & { table: TTable }>>(ctor: Ctor): void => {
         const tableName = options?.table ?? String(key);
         if (tableName.length === 0) {
-            throw new SeedcordError(SeedcordErrorCode.PluginKyselyServiceTableMissing, [ctor.name]);
+            throw new SeedcordTypeError(SeedcordErrorCode.PluginKyselyServiceTableMissing, [ctor.name]);
         }
 
         Reflect.defineMetadata(KyselyServiceMetadataKey, key, ctor);

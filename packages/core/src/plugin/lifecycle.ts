@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordRangeError } from '@seedcord/errors/internal';
 
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 
@@ -45,10 +45,7 @@ function timeoutOf(
 ): number {
     if (declared === undefined) return fallback;
     if (!Number.isFinite(declared) || declared <= 0) {
-        throw new SeedcordError(SeedcordErrorCode.PluginOptionsRejected, [
-            pluginName,
-            `lifecycle ${field}.timeout must be a positive number of milliseconds`
-        ]);
+        throw new SeedcordRangeError(SeedcordErrorCode.PluginInvalidLifecycleTimeout, [pluginName, field, declared]);
     }
     return declared;
 }

@@ -121,7 +121,7 @@ describe('button decode', () => {
 
         const wire = RejectId.encode({ userId: '42' });
         await expect(new Review(buttonEvent(wire), core).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.CustomIdMatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.CustomIdMatchArmMissing)
         );
     });
 
@@ -182,7 +182,7 @@ describe('button decode', () => {
         }
 
         await expect(new Weird(buttonEvent(Ctor.encode({ userId: '1' })), core).execute()).rejects.toSatisfy(
-            (e: unknown) => isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.CustomIdMatchArmMissing)
+            (e: unknown) => isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.CustomIdMatchArmMissing)
         );
     });
 

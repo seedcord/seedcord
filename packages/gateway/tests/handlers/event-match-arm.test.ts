@@ -40,6 +40,6 @@ describe('EventHandler.match', () => {
             caught = error;
         }
 
-        expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.EventMatchArmMissing)).toBe(true);
+        expect(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.EventMatchArmMissing)).toBe(true);
     });
 });

@@ -1,6 +1,6 @@
 import { MiddlewareMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import type { EventMiddleware } from '#handlers/event';
 import type { InteractionMiddleware } from '#handlers/interaction';
@@ -75,7 +75,7 @@ export function Middleware<MType extends MiddlewareType, const Events extends re
         }
 
         if (type === MiddlewareType.Interaction && Array.isArray(options.events) && options.events.length > 0) {
-            throw new SeedcordError(SeedcordErrorCode.DecoratorInteractionEventFilter);
+            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorInteractionEventFilter);
         }
 
         const metadata: MiddlewareMetadata = {

@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordAggregateError, SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS, Logger } from '@seedcord/logger';
 
 import { assertNodeVersion } from '#node/assertNodeVersion';
@@ -167,7 +167,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         }
         // several reserved channels are also members on a host, which the next check would report first
         if (RESERVED_KEYS.has(key)) {
-            throw new SeedcordError(SeedcordErrorCode.CorePluginReservedChannel, [key]);
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginReservedChannel, [key]);
         }
         if (key in this) {
             throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);

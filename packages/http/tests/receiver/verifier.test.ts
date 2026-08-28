@@ -76,7 +76,7 @@ describe('Ed25519Verifier', () => {
             const verifier = new Ed25519Verifier(publicKeyHex);
             expect.unreachable(`construction should throw, got ${typeof verifier}`);
         } catch (error) {
-            expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigInvalidEnv)).toBe(true);
+            expect(isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.ConfigInvalidEnv)).toBe(true);
         }
     });
 });

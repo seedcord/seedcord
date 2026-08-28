@@ -193,7 +193,7 @@ describe('createSeedcord', () => {
             createSeedcord(nullPathConfig, emptyManifest());
             expect.unreachable('createSeedcord should throw');
         } catch (error) {
-            expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigInvalidEnv)).toBe(true);
+            expect(isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.ConfigInvalidEnv)).toBe(true);
         }
     });
 

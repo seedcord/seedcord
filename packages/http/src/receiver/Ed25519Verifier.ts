@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 const PUBLIC_KEY_BYTES = 32;
 const SIGNATURE_BYTES = 64;
@@ -24,7 +24,10 @@ export class Ed25519Verifier {
     constructor(publicKeyHex: string) {
         const publicKey = hexToBytes(publicKeyHex, PUBLIC_KEY_BYTES);
         if (!publicKey)
-            throw new SeedcordError(SeedcordErrorCode.ConfigInvalidEnv, ['DISCORD_PUBLIC_KEY', '64 hex characters']);
+            throw new SeedcordTypeError(SeedcordErrorCode.ConfigInvalidEnv, [
+                'DISCORD_PUBLIC_KEY',
+                '64 hex characters'
+            ]);
 
         this.key = crypto.subtle.importKey('raw', publicKey, 'Ed25519', false, ['verify']);
     }

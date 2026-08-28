@@ -1,6 +1,6 @@
 import { Subscriber } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 
 import type { RouteManifest } from '#src/manifest/RouteManifest';
 import type { Bus } from '@seedcord/core';
@@ -33,7 +33,7 @@ export function registerSubscribers(bus: Bus, manifest: RouteManifest): void {
                 // a hand-authored manifest reaches here too, so the check cannot rest on codegen
                 const exported = module[row.exportName];
                 if (typeof exported !== 'function' || !(exported.prototype instanceof Subscriber)) {
-                    throw new SeedcordError(SeedcordErrorCode.SubscriberRouteNotASubscriber, [
+                    throw new SeedcordTypeError(SeedcordErrorCode.SubscriberRouteNotASubscriber, [
                         keys,
                         row.exportName,
                         row.from

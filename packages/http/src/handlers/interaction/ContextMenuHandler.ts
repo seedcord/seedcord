@@ -1,6 +1,6 @@
 import { ContextMenuKindBrand, ContextMenuNamesBrand } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
@@ -28,7 +28,7 @@ type MessageMenuArms<Names extends NamesFor<ApplicationCommandType.Message>, Ret
 function armFor<Ret>(arms: object, name: string): (...args: never[]) => Promisable<Ret> {
     // hasOwn, since a plain lookup for a command named `constructor` returns Object.prototype's
     const arm = Object.hasOwn(arms, name) ? (arms as Record<string, unknown>)[name] : undefined;
-    if (typeof arm !== 'function') throw new SeedcordError(SeedcordErrorCode.ContextMenuMatchArmMissing, [name]);
+    if (typeof arm !== 'function') throw new SeedcordTypeError(SeedcordErrorCode.ContextMenuMatchArmMissing, [name]);
     return arm as (...args: never[]) => Promisable<Ret>;
 }
 

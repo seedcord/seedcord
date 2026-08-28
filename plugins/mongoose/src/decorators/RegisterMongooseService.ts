@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import type { MongooseServiceRegistrationOptions } from '../types/MongooseServiceRegistrationOptions';
 import type { MongooseServiceKeys, MongooseServices } from '../types/MongooseServices';
@@ -37,7 +37,7 @@ export function RegisterMongooseService<TService extends MongooseServiceKeys>(
     return <Ctor extends Constructor<MongooseServices[TService]> & { schema: mongoose.Schema }>(ctor: Ctor): void => {
         const modelName = options?.modelName ?? String(key);
         if (modelName.length === 0) {
-            throw new SeedcordError(SeedcordErrorCode.PluginMongooseModelNameMissing, [ctor.name]);
+            throw new SeedcordTypeError(SeedcordErrorCode.PluginMongooseModelNameMissing, [ctor.name]);
         }
 
         Reflect.defineMetadata(ServiceMetadataKey, key, ctor);

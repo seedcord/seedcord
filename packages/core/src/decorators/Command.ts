@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { CommandMetadataKey } from '#src/metadataKeys';
 
@@ -60,11 +60,11 @@ export function RegisterCommand(scope: CommandScope, guilds: string[] = []) {
         }
 
         if (scope === 'global' && guilds.length > 0) {
-            throw new SeedcordError(SeedcordErrorCode.DecoratorCommandGlobalWithGuilds);
+            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorCommandGlobalWithGuilds);
         }
 
         if (scope === 'guild' && (!Array.isArray(guilds) || guilds.length === 0)) {
-            throw new SeedcordError(SeedcordErrorCode.DecoratorCommandGuildWithoutGuilds);
+            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorCommandGuildWithoutGuilds);
         }
 
         const meta: GlobalMeta | GuildMeta = scope === 'global' ? { scope } : { scope, guilds };

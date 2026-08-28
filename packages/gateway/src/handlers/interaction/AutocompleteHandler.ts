@@ -1,6 +1,6 @@
 import { AutocompleteRouteBrand, reportedWrite } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
 import { BaseHandler } from '#src/handlers/BaseHandler';
@@ -106,7 +106,7 @@ export abstract class AutocompleteHandler<
             respond: (choices: readonly ApplicationCommandOptionChoiceData[]) => Promise<void>
         ) => Promisable<Ret>;
         const arm = Object.hasOwn(arms, name) ? (arms as Record<string, Arm>)[name] : undefined;
-        if (!arm) throw new SeedcordError(SeedcordErrorCode.AutocompleteMatchArmMissing, [name]);
+        if (!arm) throw new SeedcordTypeError(SeedcordErrorCode.AutocompleteMatchArmMissing, [name]);
         return await arm(value, respond);
     }
 

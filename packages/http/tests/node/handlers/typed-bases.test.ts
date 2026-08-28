@@ -123,7 +123,7 @@ describe('SlashHandler options and match', () => {
         const event = slashEvent({ name: 'hbGhost', options: [] });
 
         await expect(new Ban(event, coreMock().core).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.SlashMatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.SlashMatchArmMissing)
         );
     });
 
@@ -136,7 +136,7 @@ describe('SlashHandler options and match', () => {
         const event = slashEvent({ name: 'constructor', options: [] });
 
         await expect(new Ban(event, coreMock().core).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.SlashMatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.SlashMatchArmMissing)
         );
     });
 });
@@ -200,7 +200,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
         });
 
         await expect(new Search(event, coreMock().core).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.AutocompleteMatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.AutocompleteMatchArmMissing)
         );
     });
 
@@ -219,7 +219,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
         });
 
         await expect(new Search(event, coreMock().core).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.AutocompleteMatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.AutocompleteMatchArmMissing)
         );
     });
 

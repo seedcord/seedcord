@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { inspect } from 'node:util';
 
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError, SeedcordRangeError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { keepDefined } from '@seedcord/utils';
 import { FileMigrationProvider, Migrator, NO_MIGRATIONS } from 'kysely/migration';
 
@@ -63,7 +63,7 @@ export class KyselyMigrationManager {
                 return;
             }
             default: {
-                throw new SeedcordError(SeedcordErrorCode.PluginKyselyUnknownDirection, [direction]);
+                throw new SeedcordTypeError(SeedcordErrorCode.PluginKyselyUnknownDirection, [direction]);
             }
         }
     }
@@ -206,7 +206,7 @@ export class KyselyMigrationManager {
                 const mod: unknown = await import(moduleUrl);
 
                 if (!this.isMigrationModule(mod)) {
-                    throw new SeedcordError(SeedcordErrorCode.PluginKyselyInvalidMigrationModule, [filePath]);
+                    throw new SeedcordTypeError(SeedcordErrorCode.PluginKyselyInvalidMigrationModule, [filePath]);
                 }
 
                 const { up, down } = mod;

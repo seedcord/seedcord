@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordRangeError } from '@seedcord/errors/internal';
+import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { computeLayoutHash, decodeBody, encodeBody, HASH_LENGTH } from './codec';
 import { InvalidCustomId, StaleCustomId } from './Errors';
@@ -68,7 +68,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
         // an empty prefix leaves the routeKey all-hash, which prefixOf then strips to nothing. a colon
         // or a control char breaks the wire framing.
         if (!prefix || /[:\x1B\x1F]/.test(prefix)) {
-            throw new SeedcordError(SeedcordErrorCode.CustomIdInvalidPrefix, [prefix]);
+            throw new SeedcordTypeError(SeedcordErrorCode.CustomIdInvalidPrefix, [prefix]);
         }
         this.prefix = prefix;
         this.shape = shape;
@@ -81,9 +81,10 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
         field: CustomIdField<Decoded>
     ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Decoded>>> {
         // integer-like keys get reordered by js, which would scramble the field order.
-        if (/^(?:0|[1-9]\d*)$/.test(name)) throw new SeedcordError(SeedcordErrorCode.CustomIdReservedFieldName, [name]);
+        if (/^(?:0|[1-9]\d*)$/.test(name))
+            throw new SeedcordTypeError(SeedcordErrorCode.CustomIdReservedFieldName, [name]);
         // a repeat name collapses the decoded type to never and overwrites the earlier field at runtime.
-        if (name in this.shape) throw new SeedcordError(SeedcordErrorCode.CustomIdDuplicateFieldName, [name]);
+        if (name in this.shape) throw new SeedcordTypeError(SeedcordErrorCode.CustomIdDuplicateFieldName, [name]);
         // justified: the spread plus a computed key cannot be proven to the exact intersection
         const shape = { ...this.shape, [name]: field } as Shape & Record<Name, CustomIdField<Decoded>>;
         return new CustomId(this.prefix, shape);
@@ -153,7 +154,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<number, Nullable>>>> {
         const min = typeof minOrOpts === 'number' ? minOrOpts : undefined;
         if (min !== undefined && max !== undefined && min > max) {
-            throw new SeedcordError(SeedcordErrorCode.CustomIdInvalidBounds, [name, min, max]);
+            throw new SeedcordRangeError(SeedcordErrorCode.CustomIdInvalidBounds, [name, min, max]);
         }
         const options = typeof minOrOpts === 'number' ? opts : minOrOpts;
         const bounds = min === undefined || max === undefined ? {} : { min, max };
@@ -188,7 +189,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
         choices: Choices,
         opts?: FieldOptions<Nullable>
     ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<Choices[number], Nullable>>>> {
-        if (choices.length === 0) throw new SeedcordError(SeedcordErrorCode.CustomIdEmptyChoices, [name]);
+        if (choices.length === 0) throw new SeedcordRangeError(SeedcordErrorCode.CustomIdEmptyChoices, [name]);
         return this.add<Name, Nullish<Choices[number], Nullable>>(name, { ...opts, kind: 'oneOf', choices });
     }
 

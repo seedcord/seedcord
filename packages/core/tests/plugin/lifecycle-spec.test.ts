@@ -1,4 +1,4 @@
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordRangeError } from '@seedcord/errors/internal';
 import { describe, expect, it } from 'vitest';
 
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
@@ -47,7 +47,7 @@ describe('plugin lifecycle spec', () => {
     });
 
     it('throws on a non-positive declared timeout', () => {
-        expect(() => new SpecPlugin(host, { init: { timeout: 0 } })).toThrow(SeedcordError);
+        expect(() => new SpecPlugin(host, { init: { timeout: 0 } })).toThrow(SeedcordRangeError);
         expect(() => new SpecPlugin(host, { init: { timeout: 0 } })).toThrow(/init\.timeout/);
         expect(() => new SpecPlugin(host, { ready: { timeout: -1 } })).toThrow(/ready\.timeout/);
         expect(() => new SpecPlugin(host, { ready: { timeout: 0 } })).toThrow(/ready\.timeout/);

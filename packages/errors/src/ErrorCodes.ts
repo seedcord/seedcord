@@ -154,6 +154,8 @@ export enum SeedcordErrorCode {
     PluginOptionsRejected = 2001,
     /** Two or more plugins threw while disposing. */
     PluginDisposeFailures = 2002,
+    /** A plugin declared a lifecycle timeout that is not a positive, finite number of milliseconds. */
+    PluginInvalidLifecycleTimeout = 2003,
 
     /** Mongoose service class is missing the `@RegisterMongooseService` decorator. */
     PluginMongooseServiceDecoratorMissing = 2101,

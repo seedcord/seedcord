@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { BaseHandler } from '#src/handlers/BaseHandler';
 
@@ -78,10 +78,10 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
      */
     protected async match<Ret>(arms: EventMatchArms<Names, Ret>): Promise<Ret> {
         const name = this.firedEvent;
-        if (name === undefined) throw new SeedcordError(SeedcordErrorCode.EventMatchArmMissing, ['<no event>']);
+        if (name === undefined) throw new SeedcordTypeError(SeedcordErrorCode.EventMatchArmMissing, ['<no event>']);
         // hasOwn, since a plain lookup for an event named `toString` returns Object.prototype's
         const arm = Object.hasOwn(arms, name) ? (arms as Record<string, unknown>)[name] : undefined;
-        if (typeof arm !== 'function') throw new SeedcordError(SeedcordErrorCode.EventMatchArmMissing, [name]);
+        if (typeof arm !== 'function') throw new SeedcordTypeError(SeedcordErrorCode.EventMatchArmMissing, [name]);
         // this.event narrows to never on a multi-event handler. getEvent() returns the real tuple, spread so each arm gets its named params.
         return await (arm as (...args: unknown[]) => Promisable<Ret>)(...this.getEvent());
     }

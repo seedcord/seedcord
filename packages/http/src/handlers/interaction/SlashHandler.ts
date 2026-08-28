@@ -1,6 +1,6 @@
 import { SlashRouteBrand } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { HttpSlashOptions } from '#inputs/HttpSlashOptions';
@@ -66,7 +66,7 @@ export abstract class SlashHandler<
         const arm = Object.hasOwn(arms, route)
             ? (arms as Record<string, (options: SlashOptions<Route>) => Promisable<Ret>>)[route]
             : undefined;
-        if (!arm) throw new SeedcordError(SeedcordErrorCode.SlashMatchArmMissing, [route]);
+        if (!arm) throw new SeedcordTypeError(SeedcordErrorCode.SlashMatchArmMissing, [route]);
         return await arm(this.options);
     }
 }

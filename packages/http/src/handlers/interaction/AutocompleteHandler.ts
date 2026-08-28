@@ -1,7 +1,7 @@
 import { BaseHandler } from '@seedcord/core';
 import { AutocompleteRouteBrand, reportedWrite } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { InteractionResponseType, Routes } from 'discord-api-types/v10';
 
 import { HttpSlashOptions } from '#inputs/HttpSlashOptions';
@@ -96,7 +96,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashRegistry> ext
             respond: (choices: readonly APIApplicationCommandOptionChoice[]) => Promise<void>
         ) => Promisable<Ret>;
         const arm = Object.hasOwn(arms, name) ? (arms as Record<string, Arm>)[name] : undefined;
-        if (!arm) throw new SeedcordError(SeedcordErrorCode.AutocompleteMatchArmMissing, [name]);
+        if (!arm) throw new SeedcordTypeError(SeedcordErrorCode.AutocompleteMatchArmMissing, [name]);
         return await arm(value, respond);
     }
 

@@ -137,7 +137,7 @@ describe('context menu match', () => {
             caught = error;
         }
 
-        expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.ContextMenuMatchArmMissing)).toBe(true);
+        expect(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.ContextMenuMatchArmMissing)).toBe(true);
     });
 
     it('throws for a command named after an Object.prototype member', async () => {
@@ -148,7 +148,7 @@ describe('context menu match', () => {
             caught = error;
         }
 
-        expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.ContextMenuMatchArmMissing)).toBe(true);
+        expect(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.ContextMenuMatchArmMissing)).toBe(true);
     });
 
     it('reads the fired command name without an arm', () => {

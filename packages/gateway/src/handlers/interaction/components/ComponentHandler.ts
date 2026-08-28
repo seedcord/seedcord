@@ -1,6 +1,6 @@
 import { ComponentDefsBrand, decodeComponentRoute } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
@@ -96,7 +96,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
         const arm = Object.hasOwn(arms, prefix)
             ? (arms as Record<string, (params: Record<string, unknown>) => Promisable<Ret>>)[prefix]
             : undefined;
-        if (!arm) throw new SeedcordError(SeedcordErrorCode.CustomIdMatchArmMissing, [prefix]);
+        if (!arm) throw new SeedcordTypeError(SeedcordErrorCode.CustomIdMatchArmMissing, [prefix]);
         return await arm(params);
     }
 }

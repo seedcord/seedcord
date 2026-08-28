@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { KyselyServiceMetadataKey, KyselyTableMetadataKey } from './decorators/RegisterKyselyService';
 
@@ -52,7 +52,7 @@ export abstract class KyselyService<TTable extends LiteralUnion<KyselyTable, str
 
         // the decorator always writes a table with the key, so this only fires if it was bypassed
         if (!table) {
-            throw new SeedcordError(SeedcordErrorCode.PluginKyselyServiceTableMissing, [ctor.name]);
+            throw new SeedcordTypeError(SeedcordErrorCode.PluginKyselyServiceTableMissing, [ctor.name]);
         }
 
         this.table = table;

@@ -4,7 +4,7 @@
  */
 
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordAggregateError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 
 import { withTimeout } from './withTimeout';
@@ -30,7 +30,7 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
 
         const tasks = this.tasksMap.get(phase);
         if (!tasks) {
-            throw new SeedcordError(SeedcordErrorCode.LifecycleUnknownPhase, [phase]);
+            throw new SeedcordTypeError(SeedcordErrorCode.LifecycleUnknownPhase, [phase]);
         }
 
         tasks.push({ name: taskName, task, timeout: timeoutMs });

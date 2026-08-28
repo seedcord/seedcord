@@ -1,5 +1,5 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { Converters, Envapter } from 'envapt';
 
 import { sendFlags } from '#reply/flags';
@@ -112,7 +112,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
         if (!Envapter.has(envKey)) return null;
         const raw = Envapter.getRequired(envKey, Converters.String).trim();
         if (raw === '') return null;
-        if (!isDiscordWebhookUrl(raw)) throw new SeedcordError(SeedcordErrorCode.ConfigWebhookUrlInvalid, [envKey]);
+        if (!isDiscordWebhookUrl(raw)) throw new SeedcordTypeError(SeedcordErrorCode.ConfigWebhookUrlInvalid, [envKey]);
         return raw;
     }
 }
