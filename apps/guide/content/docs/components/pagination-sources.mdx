@@ -1,0 +1,153 @@
+---
+title: Sources
+description: Paging over a query you cannot load all at once.
+---
+
+A source answers one question: which items belong on page N. [Pagination](/components/pagination) used the simpler of the two sources seedcord ships. This page covers the other one, plus writing your own.
+
+[`ArraySource`](ref:gateway/ArraySource) loads the whole list and slices it. [`CursorSource`](ref:gateway/CursorSource) fetches one page at a time and reports whether another follows, which is what a SQL `LIMIT`/`OFFSET` query or a paged HTTP API gives you.
+
+```ts twoslash title="src/handlers/History.ts"
+import {
+    ButtonRoute,
+    CursorSource,
+    Paginator,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+// ---cut-start---
+
+interface Entry {
+    at: string;
+    action: string;
+}
+
+declare function readAuditPage(
+    guildId: string | undefined,
+    offset: number,
+    limit: number
+): Promise<{ items: Entry[]; hasNext: boolean }>;
+// ---cut-end---
+
+export const History = new Paginator({
+    prefix: 'history',
+    source: new CursorSource(
+        (ctx, page, perPage) =>
+            readAuditPage(ctx.guild?.id, page * perPage, perPage),
+        { perPage: 10 }
+    ),
+    renderItem: (entry) => `\`${entry.at}\` ${entry.action}`
+});
+
+@ButtonRoute(History.cursor)
+export class HistoryNav extends History.Handler {}
+
+@SlashRoute('history')
+export class HistoryList extends SlashHandler<'history'> {
+    public async execute(): Promise<void> {
+        await History.start(this);
+    }
+}
+```
+
+The fetcher receives the page number and the page size, so the offset is yours to compute. Return the slice and a `hasNext` flag, as a promise or a plain object.
+
+<Callout type="transport">
+
+The fetcher's first argument is a [`PageContext`](ref:gateway/PageContext). Gateway's carries `guild: Guild | null` while http's carries `guildId: string | null`, so `ctx.guild` fails to compile there.
+
+</Callout>
+
+## Without a total
+
+Counting every row costs a second query, so seedcord never runs one. Three things follow.
+
+- `totalPages` comes back `undefined`.
+- The nav row drops First and Last, leaving Prev, the indicator, and Next.
+- The indicator reads `Page 3` with no total after it.
+
+Use [`ArraySource`](ref:gateway/ArraySource) when the list is small enough to load whole and you want the count.
+
+## The page a source returns
+
+Every source returns a [`PageView`](ref:core/PageView), the two shipped ones and yours alike.
+
+{/* prettier-ignore-start */}
+
+| field | what it holds |
+| --- | --- |
+| `items` | the items on this page |
+| `page` | the zero-based page number, already clamped into range |
+| `perPage` | the page size the source used |
+| `totalPages` | the count, or `undefined` when the source cannot get one cheaply |
+| `hasPrev` | whether a page comes before this one |
+| `hasNext` | whether a page comes after it |
+
+{/* prettier-ignore-end */}
+
+`perPage` defaults to 10 on both sources. A zero, a fraction, or a negative throws `PaginationInvalidPerPage` while you construct the source.
+
+## Writing your own
+
+[`PageSource`](ref:core/PageSource) declares one method. Write your own for something neither shipped source does, like reporting a real total on a query you still fetch one slice at a time.
+
+```ts twoslash
+import type {
+    PageContext,
+    PageSource,
+    PageView
+} from '@seedcord/gateway';
+
+interface Entry {
+    at: string;
+    action: string;
+}
+
+declare function countAuditRows(
+    guildId: string | undefined
+): Promise<number>;
+
+declare function readAuditRows(
+    guildId: string | undefined,
+    offset: number,
+    limit: number
+): Promise<Entry[]>;
+// ---cut---
+export class AuditSource implements PageSource<Entry, PageContext> {
+    constructor(private readonly perPage: number) {}
+
+    public async page(
+        ctx: PageContext,
+        n: number
+    ): Promise<PageView<Entry>> {
+        const total = await countAuditRows(ctx.guild?.id);
+        const totalPages = Math.max(
+            1,
+            Math.ceil(total / this.perPage)
+        );
+        const page = Math.min(
+            Math.max(0, Math.trunc(n)),
+            totalPages - 1
+        );
+
+        return {
+            items: await readAuditRows(
+                ctx.guild?.id,
+                page * this.perPage,
+                this.perPage
+            ),
+            page,
+            perPage: this.perPage,
+            totalPages,
+            hasPrev: page > 0,
+            hasNext: page < totalPages - 1
+        };
+    }
+}
+```
+
+One `COUNT` beside the page query fills in `totalPages`, which puts First and Last back without loading the table.
+
+Clamp `n` yourself. Discord hands back whatever page number the button carried, which nothing checks before your query runs.
+
+seedcord has rendered every page so far. [Custom rendering](/components/pagination-render) hands you the whole message.

@@ -14,6 +14,7 @@
         "---Pagination---",
         "pagination",
         "pagination-sources",
-        "pagination-render"
+        "pagination-render",
+        "pagination-headless"
     ]
 }

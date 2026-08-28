@@ -1,0 +1,133 @@
+---
+title: Paging it yourself
+description: Keeping the page math and building the cursor and buttons by hand.
+---
+
+[Custom rendering](/components/pagination-render) took the message back from seedcord. This page takes the rest.
+
+[`paginate()`](ref:core/paginate) is the slicing math on its own. It takes a list, a page number, and a page size, then returns a [`PageView`](ref:core/PageView) with the page clamped into range and `totalPages` filled in. The cursor, the buttons, and the routing are all yours to write.
+
+Two things rule out a [`Paginator`](ref:gateway/Paginator).
+
+- **An embed.** Discord forbids an embed on a ComponentsV2 message, which is what seedcord's reply methods send.
+- **Extra values on the button.** A paginator's cursor carries a page and a slot. A filter, a sort key, or a target user id takes a [`CustomId`](ref:core/CustomId) you declare yourself.
+
+```ts twoslash title="src/handlers/Leaderboard.ts"
+import {
+    ButtonHandler,
+    ButtonRoute,
+    CustomId,
+    paginate,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+// ---cut-start---
+
+interface Score {
+    name: string;
+    points: number;
+}
+
+declare const SCORES: Score[];
+
+declare class BoardCard {
+    constructor(view: import('@seedcord/gateway').PageView<Score>);
+    readonly component: import('@discordjs/builders').EmbedBuilder;
+}
+
+declare class BoardRow {
+    constructor(
+        prevId: string,
+        nextId: string,
+        hasPrev: boolean,
+        hasNext: boolean
+    );
+    readonly component: import('@discordjs/builders').ActionRowBuilder<
+        import('@discordjs/builders').ButtonBuilder
+    >;
+}
+// ---cut-end---
+
+const PER_PAGE = 5;
+const PAGE_BOUND = 999;
+
+const Board = new CustomId('lb').int('page', 0, PAGE_BOUND);
+
+function renderBoard(page: number) {
+    const view = paginate(SCORES, page, PER_PAGE);
+    const row = new BoardRow(
+        Board.encode({ page: Math.max(0, view.page - 1) }),
+        Board.encode({ page: Math.min(view.page + 1, PAGE_BOUND) }),
+        view.hasPrev,
+        view.hasNext
+    );
+
+    return {
+        embeds: [new BoardCard(view).component],
+        components: [row.component]
+    };
+}
+
+@SlashRoute('leaderboard')
+export class Leaderboard extends SlashHandler<'leaderboard'> {
+    public async execute(): Promise<void> {
+        // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- an embed cannot ride a ComponentsV2 reply
+        await this.event.reply(renderBoard(0));
+    }
+}
+
+@ButtonRoute(Board)
+export class LeaderboardNav extends ButtonHandler<[typeof Board]> {
+    public async execute(): Promise<void> {
+        // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- an embed cannot ride a ComponentsV2 reply
+        await this.event.update(renderBoard(this.params.page));
+    }
+}
+```
+
+Both handlers call `renderBoard`.
+
+<Callout type="transport">
+
+`this.event` is the discord.js interaction on gateway, which declares `reply` and `update` itself. Http delivers `this.event` as a raw payload with no ack methods, so the same job goes through [`this.api`](ref:http/RepliableHandler.api), whose `api.interactions` callbacks answer Discord themselves.
+
+[Raw acks](/replying/raw-acks) covers both routes and the lint rule the two handlers above disable.
+
+</Callout>
+
+## The cursor you declare
+
+`Board` here carries a page and nothing else. Prev targets `page - 1` while next targets `page + 1`, two numbers that never collide.
+
+A third button breaks that. From page 1, First and prev both target page 0. Discord rejects a message carrying two identical custom ids, so give the cursor a second field, `.int('slot', 0, 4)`, and pass each button its own slot.
+
+<Callout type="warning">
+
+`encode` throws once a value passes the bound its field declared. Clamp the target page on both ends before you encode it, the way `Math.min` and `Math.max` do in the fence above.
+
+</Callout>
+
+## What paginate returns
+
+```ts twoslash
+import { paginate } from '@seedcord/gateway';
+
+declare const scores: { name: string }[];
+// ---cut---
+const view = paginate(scores, 12, 5);
+//    ^?
+```
+
+`page` comes back clamped into `[0, totalPages - 1]`, so a button carrying a stale page number resolves to the nearest real one. A fractional page truncates.
+
+`totalPages` is always a number here, since the whole list was in the argument. An empty list still reports 1.
+
+A `perPage` of zero, a fraction, or a negative throws `PaginationInvalidPerPage`.
+
+## Where the buttons still work
+
+`renderBoard` builds a plain object, so any call taking Discord's message shape accepts it. Both handlers above pass it straight to an ack.
+
+Those buttons route from any message, since the custom id carries everything the handler reads. [`@ButtonRoute`](ref:core/ButtonRoute) matches on its prefix alone.
+
+[Buttons](/components/buttons) covers `@ButtonRoute` and `this.params` in full.
