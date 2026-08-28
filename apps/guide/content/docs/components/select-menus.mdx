@@ -55,7 +55,7 @@ export class Topics extends SelectMenuHandler<
 > {
     public async execute(): Promise<void> {
         const { userId } = this.params;
-        const picked = this.event.values;
+        const picked = this.values;
         //    ^?
 
         await this.update(
@@ -65,11 +65,11 @@ export class Topics extends SelectMenuHandler<
 }
 ```
 
-The kind narrows `this.event`, so `values` comes back as the strings you put on the options. `this.params`, `this.match`, `this.update`, and `this.deferUpdate` all work the way [Buttons](/components/buttons) covers them.
+`this.values` holds what someone picked. On a string menu those are the values you set on the options. `this.params`, `this.match`, `this.update`, and `this.deferUpdate` all work the way [Buttons](/components/buttons) covers them.
 
 ## The four resolving kinds
 
-`SelectMenuKind.User`, `Role`, `Channel`, and `Mentionable` hand you `values` as ids plus the resolved objects.
+`SelectMenuKind.User`, `Role`, `Channel`, and `Mentionable` fill `this.values` with ids, and the handler carries the resolved objects alongside them.
 
 ```ts twoslash title="src/handlers/Assign.ts"
 import {
@@ -88,7 +88,7 @@ export class Assign extends SelectMenuHandler<
 > {
     public async execute(): Promise<void> {
         const { roleId } = this.params;
-        const chosen = this.event.users;
+        const chosen = this.users;
         //    ^?
 
         await this.update(
@@ -100,21 +100,23 @@ export class Assign extends SelectMenuHandler<
 
 {/* prettier-ignore-start */}
 
-| kind | on `this.event` |
+| kind | what the handler carries |
 | --- | --- |
-| `String` | `values` |
-| `User` | `values`, `users`, `members` |
-| `Role` | `values`, `roles` |
-| `Channel` | `values`, `channels` |
-| `Mentionable` | `values`, `users`, `members`, `roles` |
+| `String` | `this.values` |
+| `User` | `this.values`, `this.users`, `this.members` |
+| `Role` | `this.values`, `this.roles` |
+| `Channel` | `this.values`, `this.channels` |
+| `Mentionable` | `this.values`, `this.users`, `this.members`, `this.roles` |
 
 {/* prettier-ignore-end */}
 
-A `Mentionable` menu accepts users and roles together. `users` and `roles` each hold whatever matched, so either one can be empty.
+The kind decides which of the four resolved sets the handler carries, and the rest are `never`. Read one your kind leaves out and the compiler stops you.
+
+A `Mentionable` menu accepts users and roles together. `this.users` and `this.roles` each hold whatever matched, so either one can be empty.
 
 <Callout type="transport">
 
-Gateway narrows `this.event` to the discord.js interaction for that kind, so each resolved set is a `Collection` of live objects, `User` on `users`, `GuildMember` on `members`, `Role` on `roles`, and `Channel` on `channels`. Http narrows `this.event.data`, so you read the picks from `this.event.data.values` and the resolved payloads from `this.event.data.resolved`, keyed by id. `values` carries the same ids on both.
+The member names match on both transports, and only the container differs. Gateway returns a discord.js `Collection` of live `User`, `GuildMember`, `Role`, and `Channel` objects. Http returns a `Map` of `discord-api-types` payloads. `Collection` extends `Map`, so `get`, `has`, `size`, and iteration read the same either way.
 
 </Callout>
 
@@ -139,7 +141,7 @@ export class Filters extends SelectMenuHandler<
     [typeof RegionId, typeof LanguageId]
 > {
     public async execute(): Promise<void> {
-        const picked = this.event.values.join(', ');
+        const picked = this.values.join(', ');
 
         await this.match({
             region: ({ userId }) =>

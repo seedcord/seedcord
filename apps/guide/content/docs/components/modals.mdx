@@ -87,9 +87,8 @@ export class AppealSubmit extends ModalHandler<
 > {
     public async execute(): Promise<void> {
         const { userId } = this.params;
-        const { fields } = this.event;
 
-        const reason = fields.getTextInputValue('reason');
+        const reason = this.fields.getTextInputValue('reason');
         //    ^?
 
         await this.reply(
@@ -99,7 +98,7 @@ export class AppealSubmit extends ModalHandler<
 }
 ```
 
-Read the modal id's values from [`this.params`](ref:gateway/ComponentHandler.params), and the submitted inputs from `this.event.fields`. Each getter takes the input's own custom id.
+Read the modal id's values from [`this.params`](ref:gateway/ComponentHandler.params), and the submitted inputs from `this.fields`. Each getter takes the input's own custom id.
 
 ## What a label can hold
 
@@ -125,12 +124,6 @@ A label wraps a text input or any of nine other inputs, and each kind has its ow
 `getCheckbox` returns a boolean and `getCheckboxGroup` returns the checked values. `getSelectedChannels` takes a list of allowed channel types and throws when someone picks a channel outside it.
 
 Most getters that can come back empty take a `required` flag, and passing `true` narrows away the `null`. `getSelectedMembers` takes the custom id alone, so its result stays nullable.
-
-<Callout type="transport">
-
-Gateway gives you `this.event.fields` with every getter above. Http hands you the raw tree on `this.event.data.components`, keyed by `custom_id`. A text input, a radio group, and a checkbox each carry a `value`. The select, file, and checkbox-group kinds use a `values` array.
-
-</Callout>
 
 ## Rewriting the message it came from
 
