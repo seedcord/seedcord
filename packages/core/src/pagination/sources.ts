@@ -73,8 +73,8 @@ export class CursorSourceBase<Item, Ctx> implements PageSourceBase<Item, Ctx> {
     }
 
     async page(ctx: Ctx, n: number): Promise<PageView<Item>> {
-        // NaN comes back out of Math.trunc and Math.max unchanged, then reaches the fetcher as an offset.
-        const page = Number.isNaN(n) ? 0 : Math.max(0, Math.trunc(n));
+        // a cursor source has no total to clamp against. Infinity and NaN both fall back to 0.
+        const page = Number.isFinite(n) ? Math.max(0, Math.trunc(n)) : 0;
         const { items, hasNext } = await this.fetch(ctx, page, this.perPage);
         return { items: [...items], page, perPage: this.perPage, hasPrev: page > 0, hasNext };
     }
