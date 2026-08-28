@@ -18,7 +18,12 @@ import type {
 type FieldKind = ModalSubmitComponent['type'];
 type KindWithValues = Extract<ModalSubmitComponent, { values: string[] }>['type'];
 
-const FIELD_KINDS: Record<FieldKind, { label: string; getter: string }> = {
+interface KindLabel {
+    label: string;
+    getter: string;
+}
+
+const FIELD_KINDS: Record<FieldKind, KindLabel> = {
     [ComponentType.TextInput]: { label: 'a text input', getter: 'getTextInputValue' },
     [ComponentType.StringSelect]: { label: 'a string select', getter: 'getStringSelectValues' },
     [ComponentType.UserSelect]: { label: 'a user select', getter: 'getSelectedUsers' },
@@ -30,6 +35,11 @@ const FIELD_KINDS: Record<FieldKind, { label: string; getter: string }> = {
     [ComponentType.CheckboxGroup]: { label: 'a checkbox group', getter: 'getCheckboxGroup' },
     [ComponentType.Checkbox]: { label: 'a checkbox', getter: 'getCheckbox' }
 };
+
+function nameOfChannelType(type: ChannelType): string {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ChannelType doesn't have a member for a type discord adds later
+    return ChannelType[type] ?? String(type);
+}
 
 function isKind<Kind extends FieldKind>(
     entry: ModalSubmitComponent,
@@ -60,7 +70,8 @@ export class ModalFields {
 
     constructor(data: APIModalSubmission) {
         this.resolved = data.resolved;
-        for (const component of data.components) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- the wire can omit components even though the typing requires it
+        for (const component of data.components ?? []) {
             // discord nests each field under an action row or a label
             if ('components' in component) {
                 for (const child of component.components) this.entries.set(child.custom_id, child);
@@ -76,8 +87,12 @@ export class ModalFields {
         const entry = this.entries.get(customId);
         if (!entry) throw new SeedcordTypeError(SeedcordErrorCode.ModalFieldNotFound, [customId]);
         if (!isKind(entry, kinds)) {
-            const { label, getter } = FIELD_KINDS[entry.type];
-            throw new SeedcordTypeError(SeedcordErrorCode.ModalFieldWrongKind, [customId, label, getter]);
+            // a modal can carry a component type newer than this enum
+            const known = (FIELD_KINDS as Partial<Record<ComponentType, KindLabel>>)[entry.type];
+            const args = known
+                ? ([customId, known.label, known.getter] as const)
+                : ([customId, `component type ${entry.type}`] as const);
+            throw new SeedcordTypeError(SeedcordErrorCode.ModalFieldWrongKind, [...args]);
         }
         return entry;
     }
@@ -130,10 +145,10 @@ export class ModalFields {
         if (!picked || channelTypes.length === 0) return picked;
         for (const found of picked.values()) {
             if (channelTypes.includes(found.type)) continue;
-            const allowed = channelTypes.map((type) => ChannelType[type]).join(', ');
+            const allowed = channelTypes.map(nameOfChannelType).join(', ');
             throw new SeedcordTypeError(SeedcordErrorCode.ModalFieldChannelType, [
                 customId,
-                ChannelType[found.type],
+                nameOfChannelType(found.type),
                 allowed
             ]);
         }
@@ -159,7 +174,8 @@ export class ModalFields {
     }
 
     getRadioGroup(customId: string, required = false): string | null {
-        const { value } = this.field(customId, [ComponentType.RadioGroup]);
+        // discord.js guards this key against an absent value
+        const value = this.field(customId, [ComponentType.RadioGroup]).value ?? null;
         if (value !== null) return value;
         if (required) throw new SeedcordTypeError(SeedcordErrorCode.ModalFieldEmpty, [customId]);
         return null;

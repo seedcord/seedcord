@@ -15,8 +15,11 @@ import type {
 
 type SelectKey = 'values' | 'users' | 'members' | 'roles' | 'channels';
 
-type EventMember<Kind extends SelectMenuKind, Cache extends CacheType, Key extends SelectKey> =
-    Key extends keyof SelectMenuInteractionFor<Kind, Cache> ? SelectMenuInteractionFor<Kind, Cache>[Key] : never;
+type EventMember<
+    Kind extends SelectMenuKind,
+    Cache extends CacheType,
+    Key extends SelectKey
+> = Key extends keyof SelectMenuInteractionFor<Kind, Cache> ? SelectMenuInteractionFor<Kind, Cache>[Key] : never;
 
 type SelectMenuInteractionFor<
     SelectMenu extends SelectMenuKind,

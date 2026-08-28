@@ -23,7 +23,8 @@ import type {
 type UserKinds = SelectMenuKind.User | SelectMenuKind.Mentionable;
 type RoleKinds = SelectMenuKind.Role | SelectMenuKind.Mentionable;
 
-type ResolvedFor<Kind extends SelectMenuKind, Allowed extends SelectMenuKind, Value> = Kind extends Allowed
+// use tuple form so mixed kinds don't resolve to empty maps
+type ResolvedFor<Kind extends SelectMenuKind, Allowed extends SelectMenuKind, Value> = [Kind] extends [Allowed]
     ? Map<string, Value>
     : never;
 

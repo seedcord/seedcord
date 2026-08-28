@@ -123,8 +123,10 @@ const messages = {
     [SeedcordErrorCode.AutocompleteNoFocusedOption]: () => `Autocomplete payload has no focused option.`,
     [SeedcordErrorCode.ModalFieldNotFound]: (customId: string) =>
         `The submitted modal carries no field with the custom id ${JSON.stringify(customId)}. Check it against the id you gave the component when you built the modal.`,
-    [SeedcordErrorCode.ModalFieldWrongKind]: (customId: string, kind: string, getter: string) =>
-        `Modal field ${JSON.stringify(customId)} holds ${kind}. Read it with ${getter}().`,
+    [SeedcordErrorCode.ModalFieldWrongKind]: (customId: string, kind: string, getter?: string) =>
+        getter
+            ? `Modal field ${JSON.stringify(customId)} holds ${kind}. Read it with ${getter}().`
+            : `Modal field ${JSON.stringify(customId)} holds ${kind}. No getter reads that kind.`,
     [SeedcordErrorCode.ModalFieldEmpty]: (customId: string) =>
         `Modal field ${JSON.stringify(customId)} carries no selection. Build the component as required, or read it without the required argument.`,
     [SeedcordErrorCode.ModalFieldChannelType]: (customId: string, picked: string, allowed: string) =>

@@ -242,9 +242,7 @@ describe('mentionable select', () => {
     it('throws when a required role read finds nothing', () => {
         const empty = new ModalFields({
             custom_id: 'form',
-            components: [
-                labelled(1, { type: ComponentType.RoleSelect, id: 2, custom_id: 'ping', values: [] })
-            ]
+            components: [labelled(1, { type: ComponentType.RoleSelect, id: 2, custom_id: 'ping', values: [] })]
         });
         expect(codeFrom(() => empty.getSelectedRoles('ping', true))).toBe(SeedcordErrorCode.ModalFieldEmpty);
     });
@@ -257,9 +255,7 @@ describe('mentionable select', () => {
             ]
         });
         expect(empty.getSelectedMentionables('targets')).toBeNull();
-        expect(codeFrom(() => empty.getSelectedMentionables('targets', true))).toBe(
-            SeedcordErrorCode.ModalFieldEmpty
-        );
+        expect(codeFrom(() => empty.getSelectedMentionables('targets', true))).toBe(SeedcordErrorCode.ModalFieldEmpty);
     });
 });
 
@@ -350,5 +346,67 @@ describe('radio groups and checkboxes', () => {
         );
         expect(empty.getRadioGroup('plan')).toBeNull();
         expect(codeFrom(() => empty.getRadioGroup('plan', true))).toBe(SeedcordErrorCode.ModalFieldEmpty);
+    });
+
+    it('treats an absent radio value the same as a null one', () => {
+        // justified: discord.js guards this key against an absent value
+        const bare = { type: ComponentType.RadioGroup, id: 2, custom_id: 'plan' } as unknown as ModalSubmitComponent;
+        const empty = new ModalFields(submission([labelled(1, bare)]));
+
+        expect(empty.getRadioGroup('plan')).toBeNull();
+        expect(codeFrom(() => empty.getRadioGroup('plan', true))).toBe(SeedcordErrorCode.ModalFieldEmpty);
+    });
+});
+
+describe('payloads the pinned types forbid', () => {
+    it('reports a component kind newer than the pinned discord-api-types', () => {
+        // justified: no arm of the union covers an unknown type
+        const future = { type: 99, id: 2, custom_id: 'weird', value: 'z' } as unknown as ModalSubmitComponent;
+        const fields = new ModalFields(submission([labelled(1, future)]));
+
+        expect(codeFrom(() => fields.getTextInputValue('weird'))).toBe(SeedcordErrorCode.ModalFieldWrongKind);
+    });
+
+    it('names a channel type the pinned enum does not carry', () => {
+        const odd = channel('c1', 999 as ChannelType);
+        const fields = new ModalFields({
+            custom_id: 'form',
+            resolved: { channels: { c1: odd } },
+            components: [labelled(1, { type: ComponentType.ChannelSelect, id: 2, custom_id: 'where', values: ['c1'] })]
+        });
+
+        let message = '';
+        try {
+            fields.getSelectedChannels('where', false, [ChannelType.GuildText]);
+        } catch (error) {
+            message = (error as Error).message;
+        }
+        expect(message).not.toContain('undefined');
+        expect(message).toContain('999');
+    });
+
+    it('reads an empty modal when the payload carries no components', () => {
+        // justified: the test omits a key the typing marks required
+        const bare = { custom_id: 'form' } as unknown as APIModalSubmission;
+        const fields = new ModalFields(bare);
+
+        expect(codeFrom(() => fields.getTextInputValue('name'))).toBe(SeedcordErrorCode.ModalFieldNotFound);
+    });
+
+    it('ignores ids that name an Object prototype member', () => {
+        const fields = new ModalFields({
+            custom_id: 'form',
+            resolved: { users: {} },
+            components: [
+                labelled(1, {
+                    type: ComponentType.UserSelect,
+                    id: 2,
+                    custom_id: 'owners',
+                    values: ['constructor', 'toString']
+                })
+            ]
+        });
+
+        expect(fields.getSelectedUsers('owners')).toBeNull();
     });
 });

@@ -1,11 +1,6 @@
-export function pick<Value>(
-    ids: readonly string[],
-    bucket: Record<string, Value> | undefined
-): Map<string, Value> {
+export function pick<Value>(ids: readonly string[], bucket: Record<string, Value> | undefined): Map<string, Value> {
     const found = new Map<string, Value>();
-    for (const id of ids) {
-        const value = bucket?.[id];
-        if (value !== undefined) found.set(id, value);
-    }
+    if (!bucket) return found;
+    for (const id of ids) if (Object.hasOwn(bucket, id)) found.set(id, bucket[id] as Value);
     return found;
 }

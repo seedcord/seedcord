@@ -38,10 +38,7 @@ type ChannelSelectEvent = SelectEvent<APIMessageChannelSelectInteractionData>;
 type MentionableSelectEvent = SelectEvent<APIMessageMentionableSelectInteractionData>;
 
 // justified: the bases touch data alone on this event
-function selectEvent<Event extends APIMessageComponentSelectMenuInteraction>(
-    customId: string,
-    data: object
-): Event {
+function selectEvent<Event extends APIMessageComponentSelectMenuInteraction>(customId: string, data: object): Event {
     return {
         application_id: 'app-1',
         id: 'int-1',

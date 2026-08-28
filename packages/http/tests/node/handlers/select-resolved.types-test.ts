@@ -54,4 +54,13 @@ class MentionableProbe extends SelectMenuHandler<SelectMenuKind.Mentionable, [ty
     }
 }
 
-export type Probes = [StringProbe, UserProbe, ChannelProbe, MentionableProbe];
+// a union kind carries only what every arm of it resolves, the same as gateway
+class UnionProbe extends SelectMenuHandler<SelectMenuKind.String | SelectMenuKind.User, [typeof ProbeId]> {
+    execute(): Promise<void> {
+        expectTypeOf(this.users).toBeNever();
+        expectTypeOf(this.members).toBeNever();
+        return Promise.resolve();
+    }
+}
+
+export type Probes = [StringProbe, UserProbe, ChannelProbe, MentionableProbe, UnionProbe];
