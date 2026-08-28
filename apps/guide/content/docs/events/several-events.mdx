@@ -1,0 +1,142 @@
+---
+title: Several events in one class
+description: Registering one handler for more than one event and reading each payload.
+---
+
+A join and a profile change belong in the same log. [`@RegisterEvent`](ref:gateway/RegisterEvent) takes as many events as you pass it. [`this.match`](ref:gateway/EventHandler.match) runs the arm for whichever one fired.
+
+```ts twoslash hovers title="src/events/MemberLog.ts"
+import { EventHandler, RegisterEvent } from '@seedcord/gateway';
+import { Events, type GuildMember } from 'discord.js';
+
+@RegisterEvent([Events.GuildMemberAdd], [Events.GuildMemberUpdate])
+export class MemberLog extends EventHandler<
+    Events.GuildMemberAdd | Events.GuildMemberUpdate
+> {
+    public async execute(): Promise<void> {
+        await this.match({
+            [Events.GuildMemberAdd]: (member) =>
+                this.post(member, 'joined'),
+            [Events.GuildMemberUpdate]: (_before, after) =>
+                this.post(after, 'updated their profile')
+        });
+    }
+
+    private async post(
+        member: GuildMember,
+        what: string
+    ): Promise<void> {
+        await member.guild.systemChannel?.send(
+            `${member} ${what}.`
+        );
+    }
+}
+```
+
+You pass one tuple per event. The generic lists those same events as a union.
+
+<Callout type="warning">
+
+[`this.event`](ref:gateway/EventHandler.event) is `never` on a handler registered for several events, since the payload depends on which one fired. `this.match` is how you read it there.
+
+</Callout>
+
+## What an arm receives
+
+An arm takes that event's own payload, spread into parameters. That is one member for `guildMemberAdd` and two for `guildMemberUpdate`, under the names discord.js uses.
+
+```ts twoslash
+import { EventHandler, RegisterEvent } from '@seedcord/gateway';
+import { Events } from 'discord.js';
+
+@RegisterEvent([Events.GuildMemberAdd], [Events.GuildMemberUpdate])
+class MemberLog extends EventHandler<
+    Events.GuildMemberAdd | Events.GuildMemberUpdate
+> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        await this.match({
+            [Events.GuildMemberAdd]: (member) =>
+                this.logger.info(`${member.displayName} joined`),
+            [Events.GuildMemberUpdate]: (before, after) =>
+                //                       ^?
+                this.logger.info(
+                    `${before.displayName} is now ${after.displayName}`
+                )
+        });
+        // ---cut-after---
+    }
+}
+```
+
+Hovering `before` shows `GuildMember | PartialGuildMember`, since the earlier copy comes out of your bot's cache.
+
+## Every arm is required
+
+The compiler checks the arms against the union, so adding a third event without its arm fails to compile.
+
+```ts twoslash
+// @errors: 2345
+import { EventHandler, RegisterEvent } from '@seedcord/gateway';
+import { Events, type GuildMember } from 'discord.js';
+
+declare function post(
+    member: GuildMember,
+    what: string
+): Promise<void>;
+// ---cut---
+@RegisterEvent([Events.GuildMemberAdd], [Events.GuildMemberUpdate])
+export class MemberLog extends EventHandler<
+    Events.GuildMemberAdd | Events.GuildMemberUpdate
+> {
+    public async execute(): Promise<void> {
+        await this.match({
+            [Events.GuildMemberAdd]: (member) =>
+                post(member, 'joined')
+        });
+    }
+}
+```
+
+Read the first line of that error, since it names the arm you left out. A key the generic never listed gets rejected too.
+
+## Arms return values
+
+`match` returns whatever its arm returned. The branch stays in one expression and the shared work follows it.
+
+```ts twoslash hovers
+import { EventHandler, RegisterEvent } from '@seedcord/gateway';
+import { Events } from 'discord.js';
+
+declare function post(what: string): Promise<void>;
+
+@RegisterEvent([Events.GuildMemberAdd], [Events.GuildMemberUpdate])
+class MemberLog extends EventHandler<
+    Events.GuildMemberAdd | Events.GuildMemberUpdate
+> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const what = await this.match({
+            [Events.GuildMemberAdd]: () => 'joined',
+            [Events.GuildMemberUpdate]: () =>
+                'updated their profile'
+        });
+
+        await post(what);
+        // ---cut-after---
+    }
+}
+```
+
+## Mixed frequency
+
+Each tuple carries its own options, so one event can run once while the others keep firing.
+
+```ts
+@RegisterEvent(
+    [Events.GuildMemberAdd, { frequency: 'once' }],
+    [Events.GuildMemberUpdate]
+)
+```
+
+Here the join arm runs for the first member and never again. The update arm runs every time.
