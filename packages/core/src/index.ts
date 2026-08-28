@@ -57,6 +57,7 @@ export { Fault } from '#stops/Fault';
 export { Silence } from '#stops/Silence';
 
 export { CustomId } from '#customId/CustomId';
+export type { FieldOptions } from '#customId/CustomId';
 
 export { ResolvedEmoji } from '#src/miscellaneous/emoji';
 

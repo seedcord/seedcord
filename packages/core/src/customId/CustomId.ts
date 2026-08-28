@@ -11,6 +11,18 @@ import type { NonEmptyTuple } from 'type-fest';
 // discord caps a customId at 100 chars.
 const MAX_WIRE_LENGTH = 100;
 
+/** Per-field options every {@link CustomId} chain method takes. */
+export interface FieldOptions<Nullable extends boolean = boolean> {
+    /**
+     * Whether the field also carries null. A nullable field costs one extra slot on the wire.
+     *
+     * @defaultValue `false`
+     */
+    nullable?: Nullable;
+}
+
+type Nullish<Decoded, Nullable extends boolean> = Nullable extends true ? Decoded | null : Decoded;
+
 function routeKeyOf(wire: string): string {
     const colon = wire.indexOf(':');
     return colon === -1 ? '' : wire.slice(0, colon);
@@ -85,8 +97,11 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
      * new CustomId('ban').snowflake('userId');
      * ```
      */
-    snowflake<Name extends string>(name: Name): CustomId<Prefix, Shape & Record<Name, CustomIdField<Snowflake>>> {
-        return this.add<Name, Snowflake>(name, { kind: 'snowflake' });
+    snowflake<Name extends string, const Nullable extends boolean = false>(
+        name: Name,
+        opts?: FieldOptions<Nullable>
+    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<Snowflake, Nullable>>>> {
+        return this.add<Name, Nullish<Snowflake, Nullable>>(name, { kind: 'snowflake', ...opts });
     }
 
     /**
@@ -97,8 +112,11 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
      * new CustomId('ticket').uuid('ticketId');
      * ```
      */
-    uuid<Name extends string>(name: Name): CustomId<Prefix, Shape & Record<Name, CustomIdField<string>>> {
-        return this.add<Name, string>(name, { kind: 'uuid' });
+    uuid<Name extends string, const Nullable extends boolean = false>(
+        name: Name,
+        opts?: FieldOptions<Nullable>
+    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<string, Nullable>>>> {
+        return this.add<Name, Nullish<string, Nullable>>(name, { kind: 'uuid', ...opts });
     }
 
     /**
@@ -109,7 +127,10 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
      * new CustomId('shop').int('amount');
      * ```
      */
-    int<Name extends string>(name: Name): CustomId<Prefix, Shape & Record<Name, CustomIdField<number>>>;
+    int<Name extends string, const Nullable extends boolean = false>(
+        name: Name,
+        opts?: FieldOptions<Nullable>
+    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<number, Nullable>>>>;
     /**
      * Add an integer field bounded by min and max, so it packs into fewer characters on the wire.
      *
@@ -118,22 +139,25 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
      * new CustomId('paginate').int('page', 1, 50);
      * ```
      */
-    int<Name extends string>(
+    int<Name extends string, const Nullable extends boolean = false>(
         name: Name,
         min: number,
-        max: number
-    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<number>>>;
-    int<Name extends string>(
+        max: number,
+        opts?: FieldOptions<Nullable>
+    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<number, Nullable>>>>;
+    int<Name extends string, const Nullable extends boolean = false>(
         name: Name,
-        min?: number,
-        max?: number
-    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<number>>> {
+        minOrOpts?: number | FieldOptions<Nullable>,
+        max?: number,
+        opts?: FieldOptions<Nullable>
+    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<number, Nullable>>>> {
+        const min = typeof minOrOpts === 'number' ? minOrOpts : undefined;
         if (min !== undefined && max !== undefined && min > max) {
             throw new SeedcordError(SeedcordErrorCode.CustomIdInvalidBounds, [name, min, max]);
         }
-        const field: CustomIdField<number> =
-            min === undefined || max === undefined ? { kind: 'int' } : { kind: 'int', min, max };
-        return this.add<Name, number>(name, field);
+        const options = typeof minOrOpts === 'number' ? opts : minOrOpts;
+        const bounds = min === undefined || max === undefined ? {} : { min, max };
+        return this.add<Name, Nullish<number, Nullable>>(name, { kind: 'int', ...bounds, ...options });
     }
 
     /**
@@ -144,8 +168,11 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
      * new CustomId('settings').bool('silent');
      * ```
      */
-    bool<Name extends string>(name: Name): CustomId<Prefix, Shape & Record<Name, CustomIdField<boolean>>> {
-        return this.add<Name, boolean>(name, { kind: 'bool' });
+    bool<Name extends string, const Nullable extends boolean = false>(
+        name: Name,
+        opts?: FieldOptions<Nullable>
+    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<boolean, Nullable>>>> {
+        return this.add<Name, Nullish<boolean, Nullable>>(name, { kind: 'bool', ...opts });
     }
 
     /**
@@ -156,12 +183,13 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
      * new CustomId('poll').oneOf('choice', ['yes', 'no', 'abstain']);
      * ```
      */
-    oneOf<Name extends string, const Choices extends NonEmptyTuple<string>>(
+    oneOf<Name extends string, const Choices extends NonEmptyTuple<string>, const Nullable extends boolean = false>(
         name: Name,
-        choices: Choices
-    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Choices[number]>>> {
+        choices: Choices,
+        opts?: FieldOptions<Nullable>
+    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<Choices[number], Nullable>>>> {
         if (choices.length === 0) throw new SeedcordError(SeedcordErrorCode.CustomIdEmptyChoices, [name]);
-        return this.add<Name, Choices[number]>(name, { kind: 'oneOf', choices });
+        return this.add<Name, Nullish<Choices[number], Nullable>>(name, { kind: 'oneOf', choices, ...opts });
     }
 
     /**
@@ -173,8 +201,11 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
      * new CustomId('note').str('message');
      * ```
      */
-    str<Name extends string>(name: Name): CustomId<Prefix, Shape & Record<Name, CustomIdField<string>>> {
-        return this.add<Name, string>(name, { kind: 'string' });
+    str<Name extends string, const Nullable extends boolean = false>(
+        name: Name,
+        opts?: FieldOptions<Nullable>
+    ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Nullish<string, Nullable>>>> {
+        return this.add<Name, Nullish<string, Nullable>>(name, { kind: 'string', ...opts });
     }
 
     /**

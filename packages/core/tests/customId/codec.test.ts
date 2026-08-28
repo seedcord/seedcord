@@ -16,6 +16,73 @@ function thrownCode(run: () => unknown): SeedcordErrorCode | undefined {
     return undefined;
 }
 
+describe('nullable fields', () => {
+    it('round-trips null and a value for every kind', () => {
+        const Every = new CustomId('every')
+            .snowflake('userId', { nullable: true })
+            .uuid('ticketId', { nullable: true })
+            .int('priority', 0, 5, { nullable: true })
+            .int('reopenCount', { nullable: true })
+            .bool('escalated', { nullable: true })
+            .oneOf('queue', ['billing', 'tech'], { nullable: true })
+            .str('subject', { nullable: true });
+
+        const absent = {
+            userId: null,
+            ticketId: null,
+            priority: null,
+            reopenCount: null,
+            escalated: null,
+            queue: null,
+            subject: null
+        };
+        expect(Every.decode(Every.encode(absent))).toEqual(absent);
+
+        const present = {
+            userId: '853472916483920128',
+            ticketId: '6a1f4c2e-8b3d-4e7a-9c0f-1d2e3f4a5b6c',
+            priority: 4,
+            reopenCount: 12,
+            escalated: false,
+            queue: 'tech' as const,
+            subject: 'cannot log in'
+        };
+        expect(Every.decode(Every.encode(present))).toEqual(present);
+    });
+
+    it('keeps an empty string apart from null on a nullable str', () => {
+        const Note = new CustomId('note').str('body', { nullable: true });
+
+        expect(Note.decode(Note.encode({ body: '' })).body).toBe('');
+        expect(Note.decode(Note.encode({ body: null })).body).toBeNull();
+    });
+
+    it('keeps false apart from null on a nullable bool', () => {
+        const Flag = new CustomId('flag').bool('silent', { nullable: true });
+
+        expect(Flag.decode(Flag.encode({ silent: false })).silent).toBe(false);
+        expect(Flag.decode(Flag.encode({ silent: null })).silent).toBeNull();
+    });
+
+    it('marks a wire stale once a field turns nullable', () => {
+        const before = new CustomId('report').snowflake('claimedBy');
+        const after = new CustomId('report').snowflake('claimedBy', { nullable: true });
+        const wire = before.encode({ claimedBy: '853472916483920128' });
+
+        expect(() => after.decode(wire)).toThrow(StaleCustomId);
+    });
+
+    it('leaves a field alone when nullable is false', () => {
+        const Plain = new CustomId('plain').snowflake('userId', { nullable: false });
+        const Omitted = new CustomId('plain').snowflake('userId');
+
+        expect(Plain.routeKey).toBe(Omitted.routeKey);
+        expect(thrownCode(() => Plain.encode({ userId: null as unknown as string }))).toBe(
+            SeedcordErrorCode.CustomIdValueOutOfRange
+        );
+    });
+});
+
 describe('CustomId round-trips', () => {
     it('round-trips every field kind in one customId', () => {
         // a support-ticket action button that carries one field of every kind at once.

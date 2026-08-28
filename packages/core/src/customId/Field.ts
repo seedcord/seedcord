@@ -14,6 +14,8 @@ export interface CustomIdField<Decoded> {
     readonly max?: number;
     /** The allowed values, for a oneOf field. */
     readonly choices?: readonly string[];
+    /** Whether this field also carries null. */
+    readonly nullable?: boolean;
     /** Phantom only, carries the decoded type and is never set at runtime. */
     readonly decoded?: Decoded;
 }
