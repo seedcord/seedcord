@@ -4,7 +4,15 @@ import { expectTypeOf } from 'vitest';
 import { ModalFields } from '#inputs/ModalFields';
 
 import type { SelectedMentionables } from '#inputs/ModalFields';
-import type { APIAttachment, APIInteractionDataResolvedChannel, APIRole, APIUser } from 'discord-api-types/v10';
+import type {
+    APIAttachment,
+    APIInteractionDataResolvedChannel,
+    APIModalSubmitCheckboxComponent,
+    APIModalSubmitTextInputComponent,
+    APIRole,
+    APIUser,
+    ModalSubmitComponent
+} from 'discord-api-types/v10';
 
 const fields = new ModalFields({
     custom_id: 'form',
@@ -37,3 +45,7 @@ expectTypeOf(fields.getRadioGroup('p', true)).toEqualTypeOf<string>();
 expectTypeOf(fields.getRadioGroup('p')).toEqualTypeOf<string | null>();
 
 expectTypeOf(fields.getSelectedMembers('owners')).toBeNullable();
+
+expectTypeOf(fields.getField('owners')).toEqualTypeOf<ModalSubmitComponent>();
+expectTypeOf(fields.getField('owners', ComponentType.TextInput)).toEqualTypeOf<APIModalSubmitTextInputComponent>();
+expectTypeOf(fields.getField('owners', ComponentType.Checkbox)).toEqualTypeOf<APIModalSubmitCheckboxComponent>();

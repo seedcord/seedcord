@@ -472,3 +472,47 @@ describe('payloads the pinned types forbid', () => {
         expect(fields.getSelectedUsers('owners')).toBeNull();
     });
 });
+
+describe('getField', () => {
+    const fields = new ModalFields(
+        submission([
+            labelled(1, { type: ComponentType.Checkbox, id: 2, custom_id: 'agree', value: true }),
+            labelled(3, { type: ComponentType.TextInput, id: 4, custom_id: 'name', value: 'dhruv' })
+        ])
+    );
+
+    it('returns the raw component', () => {
+        expect(fields.getField('agree')).toEqual({
+            type: ComponentType.Checkbox,
+            id: 2,
+            custom_id: 'agree',
+            value: true
+        });
+    });
+
+    it('throws when the modal carries no field with that custom id', () => {
+        expect(codeFrom(() => fields.getField('nope'))).toBe(SeedcordErrorCode.ModalFieldNotFound);
+    });
+
+    it('narrows to the kind you name', () => {
+        expect(fields.getField('name', ComponentType.TextInput).value).toBe('dhruv');
+    });
+
+    it('throws when the field holds another kind', () => {
+        expect(codeFrom(() => fields.getField('agree', ComponentType.TextInput))).toBe(
+            SeedcordErrorCode.ModalFieldWrongKind
+        );
+    });
+
+    it('returns a component kind the getters do not cover', () => {
+        const future = {
+            type: 99,
+            id: 2,
+            custom_id: 'future',
+            value: 'from a newer discord release'
+        } as unknown as ModalSubmitComponent;
+        const withFuture = new ModalFields(submission([labelled(1, future)]));
+
+        expect(withFuture.getField('future')).toBe(future);
+    });
+});

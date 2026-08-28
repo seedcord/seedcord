@@ -85,12 +85,17 @@ export class ModalFields {
         }
     }
 
+    private entry(customId: string): ModalSubmitComponent {
+        const found = this.entries.get(customId);
+        if (!found) throw new SeedcordTypeError(SeedcordErrorCode.ModalFieldNotFound, [customId]);
+        return found;
+    }
+
     private field<Kind extends FieldKind>(
         customId: string,
         kinds: readonly Kind[]
     ): Extract<ModalSubmitComponent, { type: Kind }> {
-        const entry = this.entries.get(customId);
-        if (!entry) throw new SeedcordTypeError(SeedcordErrorCode.ModalFieldNotFound, [customId]);
+        const entry = this.entry(customId);
         if (!isKind(entry, kinds)) {
             // a modal can carry a component type newer than this enum
             const known = (FIELD_KINDS as Partial<Record<ComponentType, KindLabel>>)[entry.type];
@@ -113,6 +118,18 @@ export class ModalFields {
         if (found.size > 0) return found;
         if (required) throw new SeedcordTypeError(SeedcordErrorCode.ModalFieldEmpty, [customId]);
         return null;
+    }
+
+    /**
+     * Returns the field with this custom id, as Discord sent it. Use it for a component type the typed
+     * getters do not cover.
+     *
+     * Pass a component type to get that exact type back. It throws when the field holds a different one.
+     */
+    getField<Kind extends FieldKind>(customId: string, kind: Kind): Extract<ModalSubmitComponent, { type: Kind }>;
+    getField(customId: string): ModalSubmitComponent;
+    getField(customId: string, kind?: FieldKind): ModalSubmitComponent {
+        return kind === undefined ? this.entry(customId) : this.field(customId, [kind]);
     }
 
     getTextInputValue(customId: string): string {
