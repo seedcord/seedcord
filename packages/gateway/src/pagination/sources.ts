@@ -1,6 +1,15 @@
 import { ArraySource as BaseArraySource, CursorSource as BaseCursorSource } from '@seedcord/core';
 
 import type { PageContext } from './PageContext';
+import type { PageSource as BasePageSource } from '@seedcord/core';
+
+/**
+ * The one method a paginator calls on a source, once per click. Implement it for a source neither shipped
+ * one covers.
+ *
+ * @typeParam Item - The item type the source pages over.
+ */
+export type PageSource<Item> = BasePageSource<Item, PageContext>;
 
 /**
  * A source for a bounded list you can load whole. It loads the full list on every click, then slices the

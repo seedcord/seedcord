@@ -19,7 +19,9 @@ import { stubBus } from '../utils/stubBus';
 import type { RepliableHandler } from '#handlers/RepliableHandler';
 import type { Core } from '#interfaces/Core';
 import type { PageContext } from '#pagination/PageContext';
+import type { PageSource } from '#pagination/sources';
 import type { Repliables } from '#src/handlers/interactionTypes';
+import type { PageView } from '@seedcord/core';
 import type { APIContainerComponent, ButtonInteraction, Guild } from 'discord.js';
 
 // justified: the paginator reads the interaction and the bus every write reports on
@@ -187,6 +189,33 @@ describe('Paginator.page', () => {
 
         expect(containerText(reply.components)).toBe('c\nd');
         expect(event.reply).not.toHaveBeenCalled();
+    });
+});
+
+describe('Paginator custom source', () => {
+    it('takes a hand-written PageSource with the page context already bound', async () => {
+        class OneItem implements PageSource<string> {
+            public page(_ctx: PageContext, n: number): Promise<PageView<string>> {
+                return Promise.resolve({
+                    items: [letters[n] ?? 'z'],
+                    page: n,
+                    perPage: 1,
+                    hasPrev: n > 0,
+                    hasNext: true
+                });
+            }
+        }
+
+        const custom = new Paginator({
+            prefix: 'custom',
+            source: new OneItem(),
+            renderItem: (letter) => letter
+        });
+        const event = startEvent();
+        await custom.start(stubHandler(event), 3);
+
+        const options = event.reply.mock.calls[0]?.[0] as { components: unknown[] };
+        expect(sentContainerText(options.components)).toBe('d');
     });
 });
 

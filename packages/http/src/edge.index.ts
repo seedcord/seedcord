@@ -36,8 +36,9 @@ export type { InteractionRef, SentMessage } from '#reply/ReplySender';
 export { Subscriber, WebhookLog } from '#subscribers/index';
 
 export * from '#src/pagination/index';
-// same reason, core exports its own ArraySource and CursorSource
+// same reason, core exports its own ArraySource, CursorSource, and PageSource
 export { ArraySource, CursorSource } from '#src/pagination/sources';
+export type { PageSource } from '#src/pagination/sources';
 
 export { Gated } from '#src/gates/Gated';
 export type { InteractionGateContext } from '#src/gates/Gate';
