@@ -3,7 +3,7 @@ import { renderPage } from '#pagination/render';
 
 import type { PageCursor } from '#pagination/cursor';
 import type { ItemRender, PageRender } from '#pagination/render';
-import type { PageSource } from '#pagination/sources';
+import type { PageSourceBase } from '#pagination/sources';
 import type { ReplyResponse } from '@seedcord/types';
 
 /**
@@ -16,7 +16,7 @@ import type { ReplyResponse } from '@seedcord/types';
 export interface PaginatorConfig<Item, Prefix extends string, Ctx> {
     /** The route prefix used to build the page cursor on the nav buttons. */
     prefix: Prefix;
-    source: PageSource<Item, Ctx>;
+    source: PageSourceBase<Item, Ctx>;
     /** Render one item, `index` is its absolute position across pages. Ignored when `render` is set. */
     renderItem?: ItemRender<Item>;
     /** Take over the whole page tree. Receives the page data and the controls factory. */

@@ -4,6 +4,6 @@
 '@seedcord/core': minor
 ---
 
-`start(handler, n)` opens a paginator on any page. `page(handler, n)` renders one without sending it. A source you write yourself takes the new `PageSource<Item>` each transport exports.
+`start(handler, n)` opens a paginator on any page, and `page(handler, n)` renders one without sending it. A source you write yourself takes `PageSource<Item>`, which each transport exports with its page context already bound.
 
-**BREAKING:** `Paginator.page` takes the handler in place of a page context, matching `start`. `PaginatorBase.page` is now `protected buildPage`.
+**BREAKING:** `Paginator.page` now takes the handler. `PaginatorBase.page` is `protected buildPage`, and core's three source symbols gained a `Base` suffix so the plain names belong to the transports.

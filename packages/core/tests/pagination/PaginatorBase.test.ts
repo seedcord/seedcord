@@ -2,7 +2,7 @@ import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
 import { PaginatorBase } from '#pagination/PaginatorBase';
-import { ArraySource } from '#pagination/sources';
+import { ArraySourceBase } from '#pagination/sources';
 
 import type { PaginatorConfig } from '#pagination/PaginatorBase';
 import type { ReplyResponse } from '@seedcord/types';
@@ -41,7 +41,7 @@ const letters = ['a', 'b', 'c', 'd', 'e'];
 function pager(): TestPaginator<string> {
     return new TestPaginator({
         prefix: 'test',
-        source: new ArraySource<string, TestCtx>(() => letters, { perPage: 2 }),
+        source: new ArraySourceBase<string, TestCtx>(() => letters, { perPage: 2 }),
         renderItem: (letter) => letter
     });
 }
@@ -60,7 +60,7 @@ describe('PaginatorBase', () => {
         const seen: TestCtx[] = [];
         const paged = new TestPaginator<string>({
             prefix: 'test',
-            source: new ArraySource<string, TestCtx>((received) => {
+            source: new ArraySourceBase<string, TestCtx>((received) => {
                 seen.push(received);
                 return letters;
             }),

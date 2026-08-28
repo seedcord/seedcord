@@ -24,9 +24,6 @@ export { ReplySender } from '#bot/ReplySender';
 export type { SentMessage } from '#bot/ReplySender';
 
 export * from '#pagination/index';
-// same reason, core exports its own ArraySource, CursorSource, and PageSource
-export { ArraySource, CursorSource } from '#pagination/sources';
-export type { PageSource } from '#pagination/sources';
 
 export type * from '#inputs/index';
 
