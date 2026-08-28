@@ -41,7 +41,7 @@ export abstract class ModalHandler<
     declare readonly [ComponentKindBrand]?: 'modal';
 
     /** The fields this modal submitted, read by custom id. */
-    protected get fields(): ModalSubmitFields {
+    protected get fields(): ModalSubmitFields<Cache> {
         return this.event.fields;
     }
 
