@@ -1,0 +1,153 @@
+---
+title: Confirmation prompts
+description: Asking the user a yes or no question and reading the answer.
+---
+
+[`getConfirmation`](ref:gateway/getConfirmation) sends a prompt with Confirm and Cancel buttons and resolves to `true` only when the person who ran the command clicks confirm. A cancel click and a timeout both resolve to `false`.
+
+```ts twoslash title="src/handlers/Ban.ts"
+import {
+    getConfirmation,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        const target = this.options.getUser('target');
+
+        const confirmed = await getConfirmation(
+            this,
+            `Ban ${target.username}?`
+        );
+        if (!confirmed) return;
+
+        await this.event.guild?.members.ban(target.id);
+    }
+}
+```
+
+Pass `this` as the first argument. The prompt uses your handler's own reply surface. That surface picks reply, edit, or follow-up from the interaction's current state.
+
+seedcord ignores a click from anyone else, whether the prompt is ephemeral or public.
+
+## The options
+
+{/* prettier-ignore-start */}
+
+| option | default | what it does |
+| --- | --- | --- |
+| `ephemeral` | `true` | shows the prompt to the invoking user alone |
+| `timeoutMs` | `30_000` | how long to wait before resolving `false` |
+| `confirmLabel` | `'Confirm'` | the confirm button's text |
+| `cancelLabel` | `'Cancel'` | the cancel button's text |
+| `confirmStyle` | `ButtonStyle.Danger` | the confirm button's color |
+| `onConfirm` | | replaces the prompt after a confirm click |
+| `onCancel` | | replaces the prompt after a cancel click |
+| `onTimeout` | | replaces the prompt when the wait runs out |
+
+{/* prettier-ignore-end */}
+
+Only the string form takes the three label and style options.
+
+## Replacing the prompt
+
+seedcord deletes the prompt once the user answers. Set one of the three outcome options and it replaces the prompt with your reply.
+
+```ts twoslash
+import { TextDisplayBuilder } from '@discordjs/builders';
+import {
+    getConfirmation,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+
+@SlashRoute('ban')
+class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        const target = this.options.getUser('target');
+        // ---cut---
+        const text = (content: string) => ({
+            components: [
+                new TextDisplayBuilder().setContent(content)
+            ]
+        });
+
+        const confirmed = await getConfirmation(
+            this,
+            `Ban ${target.username}?`,
+            {
+                onConfirm: () => text('Banned.'),
+                onTimeout: text('Timed out.')
+            }
+        );
+        // ---cut-after---
+        if (!confirmed) return;
+    }
+}
+```
+
+Each one takes a reply or a function returning one. The fence above passes both shapes. seedcord calls the function after the click, so it reads whatever is true by then.
+
+Send the result with a fresh [`this.followUp()`](ref:gateway/RepliableHandler.followUp), since a deleted prompt leaves nothing to edit.
+
+## Building the prompt yourself
+
+The second form takes a function and hands it the two button ids. Put them on your own buttons and return the whole reply.
+
+```ts twoslash
+import { ButtonBuilder } from '@discordjs/builders';
+import {
+    getConfirmation,
+    RowComponent,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+import { ButtonStyle } from 'discord.js';
+
+class GrantRow extends RowComponent<'button'> {
+    constructor(ids: { confirm: string; cancel: string }) {
+        super('button');
+
+        this.instance.addComponents(
+            new ButtonBuilder()
+                .setCustomId(ids.confirm)
+                .setLabel('Grant it')
+                .setStyle(ButtonStyle.Success),
+            new ButtonBuilder()
+                .setCustomId(ids.cancel)
+                .setLabel('Not now')
+                .setStyle(ButtonStyle.Secondary)
+        );
+    }
+}
+
+@SlashRoute('role/add')
+class AddRole extends SlashHandler<'role/add'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const confirmed = await getConfirmation(this, (ids) => ({
+            components: [new GrantRow(ids).component]
+        }));
+        // ---cut-after---
+        if (!confirmed) return;
+    }
+}
+```
+
+Those two ids come from a reserved customId with no route behind it, so the collector reads the click.
+
+<Callout type="transport" only="gateway">
+
+`getConfirmation` holds a collector in the running process. An http bot answers each interaction as its own request and keeps nothing between them.
+
+</Callout>
+
+<Callout type="warning">
+
+Once a restart kills an open prompt, a later click gets Discord's own failure message.
+
+</Callout>
+
+Calling it from a [`ModalHandler`](ref:gateway/ModalHandler) fails to compile.
