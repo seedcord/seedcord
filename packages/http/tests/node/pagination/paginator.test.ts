@@ -13,7 +13,9 @@ import type { Core } from '#interfaces/Core';
 import type { InteractionRef } from '#reply/ReplySender';
 import type { Repliables } from '#src/handlers/interactionTypes';
 import type { PageContext } from '#src/pagination/PageContext';
+import type { PageSource } from '#src/pagination/sources';
 import type { REST } from '@discordjs/rest';
+import type { PageView } from '@seedcord/core';
 import type {
     APIComponentInContainer,
     APIContainerComponent,
@@ -87,6 +89,14 @@ describe('http Paginator.start', () => {
         expect(textLines(data?.components?.[0])).toEqual(['a\nb']);
     });
 
+    it('opens on the page it is given', async () => {
+        const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
+
+        await pagerFor().start(stubHandler(post), 2);
+
+        expect(textLines(callbackBody(post).data?.components?.[0])).toEqual(['e']);
+    });
+
     it('honors an ephemeral paginator', async () => {
         const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
 
@@ -100,6 +110,44 @@ describe('http Paginator.start', () => {
         const post = vi.fn().mockRejectedValue(failure);
 
         await expect(pagerFor().start(stubHandler(post))).rejects.toBe(failure);
+    });
+});
+
+describe('http Paginator custom source', () => {
+    it('takes a hand-written PageSource with the page context already bound', async () => {
+        class OneItem implements PageSource<string> {
+            public page(_ctx: PageContext, n: number): Promise<PageView<string>> {
+                return Promise.resolve({
+                    items: [letters[n] ?? 'z'],
+                    page: n,
+                    perPage: 1,
+                    hasPrev: n > 0,
+                    hasNext: true
+                });
+            }
+        }
+
+        const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
+        const custom = new Paginator({
+            prefix: 'custom',
+            source: new OneItem(),
+            renderItem: (letter) => letter
+        });
+
+        await custom.start(stubHandler(post), 3);
+
+        expect(textLines(callbackBody(post).data?.components?.[0])).toEqual(['d']);
+    });
+});
+
+describe('http Paginator.page', () => {
+    it('renders the requested page and sends nothing', async () => {
+        const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
+
+        const reply = await pagerFor().page(stubHandler(post), 1);
+
+        expect(textLines(reply.components[0]?.toJSON() as APIContainerComponent)).toEqual(['c\nd']);
+        expect(post).not.toHaveBeenCalled();
     });
 });
 

@@ -99,7 +99,12 @@ function isBounded(field: CustomIdField<unknown>): boolean {
     return field.kind === 'snowflake' || field.kind === 'uuid' || field.kind === 'bool' || field.kind === 'oneOf';
 }
 
+// slot 0 is the null on a nullable field. every other value shifts up one.
 function radixOf(field: CustomIdField<unknown>): bigint {
+    return kindRadix(field) + (field.nullable === true ? 1n : 0n);
+}
+
+function kindRadix(field: CustomIdField<unknown>): bigint {
     switch (field.kind) {
         case 'snowflake': {
             return 1n << 64n;
@@ -130,6 +135,10 @@ function radixOf(field: CustomIdField<unknown>): bigint {
 }
 
 function boundedToBigint(field: CustomIdField<unknown>, name: string, value: unknown): bigint {
+    if (field.nullable === true) {
+        if (value === null) return 0n;
+        return boundedToBigint({ ...field, nullable: false }, name, value) + 1n;
+    }
     const slot = boundedSlot(field, name, value);
     // out of range would carry into the neighbouring field on decode.
     if (slot < 0n || slot >= radixOf(field)) outOfRange(name, value);
@@ -175,6 +184,13 @@ function outOfRange(name: string, value: unknown): never {
 
 // inverse of boundedSlot.
 function bigintToBoundedValue(field: CustomIdField<unknown>, slot: bigint): unknown {
+    if (field.nullable === true) {
+        return slot === 0n ? null : bigintToBoundedValue({ ...field, nullable: false }, slot - 1n);
+    }
+    return kindValue(field, slot);
+}
+
+function kindValue(field: CustomIdField<unknown>, slot: bigint): unknown {
     switch (field.kind) {
         case 'snowflake': {
             return slot.toString();
@@ -202,7 +218,16 @@ function bigintToUuid(value: bigint): string {
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
+// an unbounded field trails as its own token, where an empty string is already a legal str value. a
+// nullable one carries one leading char to tell the two apart.
+const ABSENT = '0';
+const PRESENT = '1';
+
 function encodeUnboundedToken(field: CustomIdField<unknown>, name: string, value: unknown): string {
+    if (field.nullable === true) {
+        if (value === null) return ABSENT;
+        return PRESENT + encodeUnboundedToken({ ...field, nullable: false }, name, value);
+    }
     if (field.kind === 'int') {
         if (!Number.isSafeInteger(value)) outOfRange(name, value);
         return bigintToBase64(zigzagEncode(value as number));
@@ -210,6 +235,12 @@ function encodeUnboundedToken(field: CustomIdField<unknown>, name: string, value
     return escapeToken(value as string);
 }
 function decodeUnboundedToken(field: CustomIdField<unknown>, piece: string): unknown {
+    if (field.nullable === true) {
+        const marker = piece.charAt(0);
+        if (marker === ABSENT && piece.length === 1) return null;
+        if (marker !== PRESENT) throw new InvalidCustomId(`bad presence marker ${JSON.stringify(marker)}`);
+        return decodeUnboundedToken({ ...field, nullable: false }, piece.slice(1));
+    }
     if (field.kind !== 'int') return unescapeToken(piece);
     // an empty piece means a truncated wire
     if (piece === '') throw new InvalidCustomId('empty integer token');
@@ -227,6 +258,7 @@ export function computeLayoutHash(shape: CustomIdShape): string {
             name,
             field.kind,
             isBounded(field),
+            field.nullable === true,
             field.kind === 'oneOf' ? (field.choices ?? []) : null,
             field.kind === 'int' ? [field.min ?? null, field.max ?? null] : null
         ])

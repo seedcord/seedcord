@@ -12,6 +12,16 @@ function InfersItemTypeFromInput(): void {
 void InfersItemTypeFromInput;
 
 describe('paginate', () => {
+    it.each([
+        [Number.NaN, 0],
+        [Number.NEGATIVE_INFINITY, 0],
+        [Number.POSITIVE_INFINITY, 2]
+    ])('clamps %p into range', (page, expected) => {
+        const view = paginate(items, page, 10);
+        expect(view.page).toBe(expected);
+        expect(view.items.length).toBeGreaterThan(0);
+    });
+
     it('slices the requested page and reports the bounds', () => {
         const view = paginate(items, 0, 10);
         expect(view.items).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);

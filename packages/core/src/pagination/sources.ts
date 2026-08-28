@@ -14,7 +14,7 @@ const DEFAULT_PER_PAGE = 10;
  * @typeParam Item - The item type the source pages over.
  * @typeParam Ctx - The transport's page context, handed to the loader.
  */
-export interface PageSource<Item, Ctx> {
+export interface PageSourceBase<Item, Ctx> {
     page(ctx: Ctx, n: number): Promise<PageView<Item>>;
 }
 
@@ -34,7 +34,7 @@ function perPageOf(opts?: { perPage?: number }): number {
  * @typeParam Item - The item type, inferred from the loader's return.
  * @typeParam Ctx - The transport's page context. Each transport exports a subclass that fixes it.
  */
-export class ArraySource<Item, Ctx> implements PageSource<Item, Ctx> {
+export class ArraySourceBase<Item, Ctx> implements PageSourceBase<Item, Ctx> {
     private readonly perPage: number;
 
     constructor(
@@ -58,7 +58,7 @@ export class ArraySource<Item, Ctx> implements PageSource<Item, Ctx> {
  * @typeParam Item - The item type, inferred from the fetcher's slice.
  * @typeParam Ctx - The transport's page context. Each transport exports a subclass that fixes it.
  */
-export class CursorSource<Item, Ctx> implements PageSource<Item, Ctx> {
+export class CursorSourceBase<Item, Ctx> implements PageSourceBase<Item, Ctx> {
     private readonly perPage: number;
 
     constructor(
@@ -73,7 +73,8 @@ export class CursorSource<Item, Ctx> implements PageSource<Item, Ctx> {
     }
 
     async page(ctx: Ctx, n: number): Promise<PageView<Item>> {
-        const page = Math.max(0, Math.trunc(n));
+        // a cursor source has no total to clamp against. Infinity and NaN both fall back to 0.
+        const page = Number.isFinite(n) ? Math.max(0, Math.trunc(n)) : 0;
         const { items, hasNext } = await this.fetch(ctx, page, this.perPage);
         return { items: [...items], page, perPage: this.perPage, hasPrev: page > 0, hasNext };
     }

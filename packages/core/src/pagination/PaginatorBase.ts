@@ -3,7 +3,7 @@ import { renderPage } from '#pagination/render';
 
 import type { PageCursor } from '#pagination/cursor';
 import type { ItemRender, PageRender } from '#pagination/render';
-import type { PageSource } from '#pagination/sources';
+import type { PageSourceBase } from '#pagination/sources';
 import type { ReplyResponse } from '@seedcord/types';
 
 /**
@@ -16,7 +16,7 @@ import type { ReplyResponse } from '@seedcord/types';
 export interface PaginatorConfig<Item, Prefix extends string, Ctx> {
     /** The route prefix used to build the page cursor on the nav buttons. */
     prefix: Prefix;
-    source: PageSource<Item, Ctx>;
+    source: PageSourceBase<Item, Ctx>;
     /** Render one item, `index` is its absolute position across pages. Ignored when `render` is set. */
     renderItem?: ItemRender<Item>;
     /** Take over the whole page tree. Receives the page data and the controls factory. */
@@ -48,8 +48,8 @@ export abstract class PaginatorBase<Item, Prefix extends string, Ctx> {
         this.config = config;
     }
 
-    /** Render a page as a {@link ReplyResponse}. To post it elsewhere, add `flags: MessageFlags.IsComponentsV2`. */
-    async page(ctx: Ctx, n: number): Promise<ReplyResponse> {
+    /** Build one page as a {@link ReplyResponse}. Each transport wraps this in a `page()` taking its handler. */
+    protected async buildPage(ctx: Ctx, n: number): Promise<ReplyResponse> {
         const view = await this.config.source.page(ctx, n);
         return renderPage(view, this.cursor, this.config);
     }
