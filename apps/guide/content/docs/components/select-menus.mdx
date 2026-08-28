@@ -1,0 +1,160 @@
+---
+title: Select menus
+description: Handling the five kinds of select menus and reading the values.
+---
+
+Discord ships five select menus. One carries options you write, and four resolve users, roles, channels, or a mix of the three. [`SelectMenuKind`](ref:core/SelectMenuKind) names them, and every kind routes to a handler the way a button does.
+
+```ts twoslash title="src/components/TopicPicker.ts"
+import { StringSelectMenuBuilder } from '@discordjs/builders';
+import { CustomId, RowComponent } from '@seedcord/gateway';
+
+export const TopicsId = new CustomId('topics').snowflake('userId');
+
+export class TopicPicker extends RowComponent<'menu_string'> {
+    constructor(userId: string) {
+        super('menu_string');
+
+        this.instance.addComponents(
+            new StringSelectMenuBuilder()
+                .setCustomId(TopicsId.encode({ userId }))
+                .setPlaceholder('Pick your topics')
+                .setMinValues(1)
+                .setMaxValues(3)
+                .addOptions(
+                    { label: 'Releases', value: 'releases' },
+                    { label: 'Outages', value: 'outages' },
+                    { label: 'Events', value: 'events' }
+                )
+        );
+    }
+}
+```
+
+Discord allows one select menu per row and nothing beside it. `setMinValues` and `setMaxValues` bound how many someone picks. Both default to 1, and Discord caps each at 25.
+
+## Routing the pick
+
+[`@SelectMenuRoute`](ref:core/SelectMenuRoute) takes the kind first and the customId definitions after it. The handler's generic repeats both in the same order.
+
+```ts twoslash title="src/handlers/Topics.ts"
+import {
+    CustomId,
+    SelectMenuHandler,
+    SelectMenuKind,
+    SelectMenuRoute
+} from '@seedcord/gateway';
+
+// in your project this lives in the component file that mints it
+const TopicsId = new CustomId('topics').snowflake('userId');
+
+@SelectMenuRoute(SelectMenuKind.String, TopicsId)
+export class Topics extends SelectMenuHandler<
+    SelectMenuKind.String,
+    [typeof TopicsId]
+> {
+    public async execute(): Promise<void> {
+        const { userId } = this.params;
+        const picked = this.event.values;
+        //    ^?
+
+        await this.update(
+            `<@${userId}> now follows ${picked.join(', ')}.`
+        );
+    }
+}
+```
+
+The kind narrows `this.event`, so `values` comes back as the strings you put on the options. `this.params`, `this.match`, `this.update`, and `this.deferUpdate` all work the way [Buttons](/components/buttons) covers them.
+
+## The four resolving kinds
+
+`SelectMenuKind.User`, `Role`, `Channel`, and `Mentionable` hand you `values` as ids plus the resolved objects.
+
+```ts twoslash title="src/handlers/Assign.ts"
+import {
+    CustomId,
+    SelectMenuHandler,
+    SelectMenuKind,
+    SelectMenuRoute
+} from '@seedcord/gateway';
+
+const AssignId = new CustomId('assign').snowflake('roleId');
+// ---cut---
+@SelectMenuRoute(SelectMenuKind.User, AssignId)
+export class Assign extends SelectMenuHandler<
+    SelectMenuKind.User,
+    [typeof AssignId]
+> {
+    public async execute(): Promise<void> {
+        const { roleId } = this.params;
+        const chosen = this.event.users;
+        //    ^?
+
+        await this.update(
+            `Assigning <@&${roleId}> to ${chosen.size} member(s).`
+        );
+    }
+}
+```
+
+{/* prettier-ignore-start */}
+
+| kind | on `this.event` |
+| --- | --- |
+| `String` | `values` |
+| `User` | `values`, `users`, `members` |
+| `Role` | `values`, `roles` |
+| `Channel` | `values`, `channels` |
+| `Mentionable` | `values`, `users`, `members`, `roles` |
+
+{/* prettier-ignore-end */}
+
+A `Mentionable` menu accepts users and roles together. `users` and `roles` each hold whatever matched, so either one can be empty.
+
+<Callout type="transport">
+
+Gateway narrows `this.event` to the discord.js interaction for that kind, so each resolved set is a `Collection` of live objects, `User` on `users`, `GuildMember` on `members`, `Role` on `roles`, and `Channel` on `channels`. Http narrows `this.event.data`, so you read the picks from `this.event.data.values` and the resolved payloads from `this.event.data.resolved`, keyed by id. `values` carries the same ids on both.
+
+</Callout>
+
+## One handler, several menus
+
+`@SelectMenuRoute` takes as many ids as you pass after the kind. One handler then serves every menu you list, and `this.match` branches by prefix.
+
+```ts twoslash title="src/handlers/Filters.ts"
+import {
+    CustomId,
+    SelectMenuHandler,
+    SelectMenuKind,
+    SelectMenuRoute
+} from '@seedcord/gateway';
+
+const RegionId = new CustomId('region').snowflake('userId');
+const LanguageId = new CustomId('language').snowflake('userId');
+// ---cut---
+@SelectMenuRoute(SelectMenuKind.String, RegionId, LanguageId)
+export class Filters extends SelectMenuHandler<
+    SelectMenuKind.String,
+    [typeof RegionId, typeof LanguageId]
+> {
+    public async execute(): Promise<void> {
+        const picked = this.event.values.join(', ');
+
+        await this.match({
+            region: ({ userId }) =>
+                this.update(`<@${userId}> is in ${picked}.`),
+            language: ({ userId }) =>
+                this.update(`<@${userId}> reads ${picked}.`)
+        });
+    }
+}
+```
+
+<Callout type="warning">
+
+A string menu and a user menu need a handler each, and the compiler says so at the decorator line with `the decorator does not match the handler kind`.
+
+</Callout>
+
+Putting several menus on one message takes a row each. Give each menu its own id, and route them to the same handler when they share a kind.
