@@ -58,6 +58,19 @@ describe('ArraySourceBase', () => {
 });
 
 describe('CursorSourceBase', () => {
+    it('hands the fetcher a real page number when the caller passes a non-finite one', async () => {
+        const seen: number[] = [];
+        const source = new CursorSourceBase<string, TestCtx>((_ctx, page) => {
+            seen.push(page);
+            return { items: ['a'], hasNext: false };
+        });
+
+        const view = await source.page(ctx, Number.NaN);
+
+        expect(seen[0]).toBe(0);
+        expect(view.page).toBe(0);
+    });
+
     it('wraps one fetched page with an unknown total', async () => {
         const source = new CursorSourceBase(() => ({ items: ['a', 'b'], hasNext: true }), { perPage: 2 });
         const view = await source.page(ctx, 0);

@@ -77,9 +77,14 @@ describe('nullable fields', () => {
         const Omitted = new CustomId('plain').snowflake('userId');
 
         expect(Plain.routeKey).toBe(Omitted.routeKey);
-        expect(thrownCode(() => Plain.encode({ userId: null as unknown as string }))).toBe(
-            SeedcordErrorCode.CustomIdValueOutOfRange
-        );
+        expect(
+            thrownCode(() =>
+                Plain.encode({
+                    // @ts-expect-error a non-nullable field rejects null at compile time and at runtime
+                    userId: null
+                })
+            )
+        ).toBe(SeedcordErrorCode.CustomIdValueOutOfRange);
     });
 });
 

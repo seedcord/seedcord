@@ -73,7 +73,8 @@ export class CursorSourceBase<Item, Ctx> implements PageSourceBase<Item, Ctx> {
     }
 
     async page(ctx: Ctx, n: number): Promise<PageView<Item>> {
-        const page = Math.max(0, Math.trunc(n));
+        // NaN comes back out of Math.trunc and Math.max unchanged, then reaches the fetcher as an offset.
+        const page = Number.isNaN(n) ? 0 : Math.max(0, Math.trunc(n));
         const { items, hasNext } = await this.fetch(ctx, page, this.perPage);
         return { items: [...items], page, perPage: this.perPage, hasPrev: page > 0, hasNext };
     }

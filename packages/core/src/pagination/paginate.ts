@@ -18,7 +18,9 @@ export function paginate<Item>(items: readonly Item[], page: number, perPage: nu
     }
 
     const totalPages = Math.max(1, Math.ceil(items.length / perPage));
-    const clamped = Math.min(Math.max(Math.trunc(page), 0), totalPages - 1);
+    // NaN comes back out of Math.trunc, Math.max, and Math.min unchanged.
+    const requested = Number.isNaN(page) ? 0 : Math.trunc(page);
+    const clamped = Math.min(Math.max(requested, 0), totalPages - 1);
     const start = clamped * perPage;
 
     return {
