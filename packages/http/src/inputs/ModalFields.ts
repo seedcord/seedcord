@@ -123,6 +123,8 @@ export class ModalFields {
         return listOf(this.field(customId, [ComponentType.StringSelect]).values);
     }
 
+    getSelectedUsers(customId: string, required: true): Map<string, APIUser>;
+    getSelectedUsers(customId: string, required?: boolean): Map<string, APIUser> | null;
     getSelectedUsers(customId: string, required = false): Map<string, APIUser> | null {
         const kinds = [ComponentType.UserSelect, ComponentType.MentionableSelect] as const;
         return this.selected(customId, kinds, this.resolved?.users, required);
@@ -134,12 +136,24 @@ export class ModalFields {
         return this.selected(customId, kinds, this.resolved?.members, false);
     }
 
+    getSelectedRoles(customId: string, required: true): Map<string, APIRole>;
+    getSelectedRoles(customId: string, required?: boolean): Map<string, APIRole> | null;
     getSelectedRoles(customId: string, required = false): Map<string, APIRole> | null {
         const kinds = [ComponentType.RoleSelect, ComponentType.MentionableSelect] as const;
         return this.selected(customId, kinds, this.resolved?.roles, required);
     }
 
     /** Pass `channelTypes` to throw when a pick falls outside those types. */
+    getSelectedChannels(
+        customId: string,
+        required: true,
+        channelTypes?: readonly ChannelType[]
+    ): Map<string, APIInteractionDataResolvedChannel>;
+    getSelectedChannels(
+        customId: string,
+        required?: boolean,
+        channelTypes?: readonly ChannelType[]
+    ): Map<string, APIInteractionDataResolvedChannel> | null;
     getSelectedChannels(
         customId: string,
         required = false,
@@ -160,6 +174,8 @@ export class ModalFields {
         return picked;
     }
 
+    getSelectedMentionables(customId: string, required: true): SelectedMentionables;
+    getSelectedMentionables(customId: string, required?: boolean): SelectedMentionables | null;
     getSelectedMentionables(customId: string, required = false): SelectedMentionables | null {
         const { values } = this.field(customId, [ComponentType.MentionableSelect]);
         const resolved = this.resolved;
@@ -173,11 +189,15 @@ export class ModalFields {
         return null;
     }
 
+    getUploadedFiles(customId: string, required: true): Map<string, APIAttachment>;
+    getUploadedFiles(customId: string, required?: boolean): Map<string, APIAttachment> | null;
     getUploadedFiles(customId: string, required = false): Map<string, APIAttachment> | null {
         const kinds = [ComponentType.FileUpload] as const;
         return this.selected(customId, kinds, this.resolved?.attachments, required);
     }
 
+    getRadioGroup(customId: string, required: true): string;
+    getRadioGroup(customId: string, required?: boolean): string | null;
     getRadioGroup(customId: string, required = false): string | null {
         // discord.js guards this key against an absent value
         const value = this.field(customId, [ComponentType.RadioGroup]).value ?? null;
