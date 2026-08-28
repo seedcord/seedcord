@@ -286,6 +286,14 @@ describe('channel select', () => {
         );
     });
 
+    it('throws when a required channel read finds nothing picked', () => {
+        const empty = new ModalFields(
+            submission([labelled(1, { type: ComponentType.ChannelSelect, id: 2, custom_id: 'where', values: [] })])
+        );
+        expect(empty.getSelectedChannels('where')).toBeNull();
+        expect(codeFrom(() => empty.getSelectedChannels('where', true))).toBe(SeedcordErrorCode.ModalFieldEmpty);
+    });
+
     it('names the type that failed', () => {
         let message = '';
         try {
@@ -365,6 +373,15 @@ describe('payloads the pinned types forbid', () => {
         const fields = new ModalFields(submission([labelled(1, future)]));
 
         expect(codeFrom(() => fields.getTextInputValue('weird'))).toBe(SeedcordErrorCode.ModalFieldWrongKind);
+
+        let message = '';
+        try {
+            fields.getTextInputValue('weird');
+        } catch (error) {
+            message = (error as Error).message;
+        }
+        expect(message).toContain('component type 99');
+        expect(message).toContain('No getter reads that kind');
     });
 
     it('names a channel type the pinned enum does not carry', () => {
@@ -391,6 +408,51 @@ describe('payloads the pinned types forbid', () => {
         const fields = new ModalFields(bare);
 
         expect(codeFrom(() => fields.getTextInputValue('name'))).toBe(SeedcordErrorCode.ModalFieldNotFound);
+    });
+
+    it('reads a select field that carries no values key', () => {
+        // justified: discord.js guards this key on every select kind
+        const bare = { type: ComponentType.UserSelect, id: 2, custom_id: 'owners' } as unknown as ModalSubmitComponent;
+        const fields = new ModalFields({
+            custom_id: 'form',
+            resolved: { users: { u1: user('u1', 'ada') } },
+            components: [labelled(1, bare)]
+        });
+
+        expect(fields.getSelectedUsers('owners')).toBeNull();
+        expect(codeFrom(() => fields.getSelectedUsers('owners', true))).toBe(SeedcordErrorCode.ModalFieldEmpty);
+    });
+
+    it('reads a mentionable field that carries no values key', () => {
+        const bare = {
+            type: ComponentType.MentionableSelect,
+            id: 2,
+            custom_id: 'targets'
+        } as unknown as ModalSubmitComponent;
+        const fields = new ModalFields({
+            custom_id: 'form',
+            resolved: { users: { u1: user('u1', 'ada') }, roles: { r1: role('r1', 'mods') } },
+            components: [labelled(1, bare)]
+        });
+
+        expect(fields.getSelectedMentionables('targets')).toBeNull();
+    });
+
+    it('returns an empty list for a string select carrying no values key', () => {
+        const bare = {
+            type: ComponentType.StringSelect,
+            id: 2,
+            custom_id: 'colors'
+        } as unknown as ModalSubmitComponent;
+        const group = {
+            type: ComponentType.CheckboxGroup,
+            id: 4,
+            custom_id: 'extras'
+        } as unknown as ModalSubmitComponent;
+        const fields = new ModalFields(submission([labelled(1, bare), labelled(3, group)]));
+
+        expect(fields.getStringSelectValues('colors')).toEqual([]);
+        expect(fields.getCheckboxGroup('extras')).toEqual([]);
     });
 
     it('ignores ids that name an Object prototype member', () => {

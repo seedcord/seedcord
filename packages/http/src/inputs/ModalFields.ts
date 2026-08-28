@@ -41,6 +41,11 @@ function nameOfChannelType(type: ChannelType): string {
     return ChannelType[type] ?? String(type);
 }
 
+function listOf(values: string[]): string[] {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- discord.js guards this key on every select kind
+    return values ?? [];
+}
+
 function isKind<Kind extends FieldKind>(
     entry: ModalSubmitComponent,
     kinds: readonly Kind[]
@@ -115,7 +120,7 @@ export class ModalFields {
     }
 
     getStringSelectValues(customId: string): string[] {
-        return this.field(customId, [ComponentType.StringSelect]).values;
+        return listOf(this.field(customId, [ComponentType.StringSelect]).values);
     }
 
     getSelectedUsers(customId: string, required = false): Map<string, APIUser> | null {
@@ -182,7 +187,7 @@ export class ModalFields {
     }
 
     getCheckboxGroup(customId: string): string[] {
-        return this.field(customId, [ComponentType.CheckboxGroup]).values;
+        return listOf(this.field(customId, [ComponentType.CheckboxGroup]).values);
     }
 
     getCheckbox(customId: string): boolean {

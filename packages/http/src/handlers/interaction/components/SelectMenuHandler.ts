@@ -85,7 +85,8 @@ export abstract class SelectMenuHandler<
 
     /** The ids this select picked. */
     protected get values(): string[] {
-        return this.selection.values;
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- discord.js defaults this key to an empty array
+        return this.selection.values ?? [];
     }
 
     /** The users this select picked. */

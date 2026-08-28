@@ -3,7 +3,11 @@ import { expectTypeOf } from 'vitest';
 
 import { SelectMenuHandler } from '#handlers/interaction/components';
 
-import type { ChannelSelectMenuInteraction, UserSelectMenuInteraction } from 'discord.js';
+import type {
+    ChannelSelectMenuInteraction,
+    MentionableSelectMenuInteraction,
+    UserSelectMenuInteraction
+} from 'discord.js';
 
 const ProbeId = new CustomId('selectprobe').str('x');
 
@@ -38,4 +42,23 @@ class ChannelProbe extends SelectMenuHandler<SelectMenuKind.Channel, [typeof Pro
     }
 }
 
-export type Probes = [StringProbe, UserProbe, ChannelProbe];
+@SelectMenuRoute(SelectMenuKind.Mentionable, ProbeId)
+class MentionableProbe extends SelectMenuHandler<SelectMenuKind.Mentionable, [typeof ProbeId]> {
+    execute(): Promise<void> {
+        expectTypeOf(this.users).toEqualTypeOf<MentionableSelectMenuInteraction<'cached'>['users']>();
+        expectTypeOf(this.roles).toEqualTypeOf<MentionableSelectMenuInteraction<'cached'>['roles']>();
+        expectTypeOf(this.channels).toBeNever();
+        return Promise.resolve();
+    }
+}
+
+// a union kind carries only what every arm of it resolves, the same as http
+class UnionProbe extends SelectMenuHandler<SelectMenuKind.String | SelectMenuKind.User, [typeof ProbeId]> {
+    execute(): Promise<void> {
+        expectTypeOf(this.users).toBeNever();
+        expectTypeOf(this.members).toBeNever();
+        return Promise.resolve();
+    }
+}
+
+export type Probes = [StringProbe, UserProbe, ChannelProbe, MentionableProbe, UnionProbe];

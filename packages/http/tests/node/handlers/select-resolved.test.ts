@@ -70,6 +70,31 @@ describe('picked ids', () => {
     });
 });
 
+describe('a payload carrying no values key', () => {
+    it('reads as an empty pick, the same as gateway', async () => {
+        let values: unknown;
+        let users: unknown;
+
+        @SelectMenuRoute(SelectMenuKind.User, AssignId)
+        class Assign extends SelectMenuHandler<SelectMenuKind.User, [typeof AssignId]> {
+            async execute(): Promise<void> {
+                values = this.values;
+                users = this.users;
+                await Promise.resolve();
+            }
+        }
+
+        const event = selectEvent<UserSelectEvent>(AssignId.encode({ roleId: 'r1' }), {
+            component_type: 5,
+            resolved: { users: { u1: ada } }
+        });
+        await new Assign(event, core).execute();
+
+        expect(values).toEqual([]);
+        expect(users).toEqual(new Map());
+    });
+});
+
 describe('user select', () => {
     it('resolves the picked users and members', async () => {
         let users: unknown;
