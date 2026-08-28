@@ -6,8 +6,8 @@ declare module '@seedcord/core/internal' {
         unhandledEventError: {
             error: Error;
         };
-        /** Triggered for every client event the bot receives, before its handlers run. */
-        anyEvent: {
+        /** Triggered before an event's handlers run. An event that no handler registered never triggers it. */
+        eventDispatching: {
             [Name in keyof ClientEvents]: { name: Name; args: ClientEvents[Name] };
         }[keyof ClientEvents];
         /** Triggered for every interaction the bot receives, before routing. */

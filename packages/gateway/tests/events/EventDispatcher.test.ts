@@ -70,7 +70,7 @@ describe('EventDispatcher Integration', () => {
         expect(controller.eventMap.get('ready')).toHaveLength(1);
     });
 
-    it('a throwing anyEvent observer does not abort the dispatch', async () => {
+    it('a throwing eventDispatching observer does not abort the dispatch', async () => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/Ping.ts`,
@@ -96,7 +96,7 @@ describe('EventDispatcher Integration', () => {
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
         await testBot.events.init();
 
-        seedcord.bus.on('anyEvent', () => {
+        seedcord.bus.on('eventDispatching', () => {
             throw new Error('observer boom');
         });
 
@@ -107,7 +107,7 @@ describe('EventDispatcher Integration', () => {
         expect(() => fire?.({ reply: vi.fn() })).not.toThrow();
     });
 
-    it('publishes anyEvent with the fired name and its args', async () => {
+    it('publishes eventDispatching with the fired name and its args', async () => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/Ping.ts`,
@@ -132,8 +132,8 @@ describe('EventDispatcher Integration', () => {
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
         await testBot.events.init();
 
-        const seen: SubscriptionData<'anyEvent'>[] = [];
-        seedcord.bus.on('anyEvent', (payload) => seen.push(payload));
+        const seen: SubscriptionData<'eventDispatching'>[] = [];
+        seedcord.bus.on('eventDispatching', (payload) => seen.push(payload));
 
         const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
             ((...args: unknown[]) => void) | undefined;

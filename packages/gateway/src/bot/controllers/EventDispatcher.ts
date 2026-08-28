@@ -311,8 +311,11 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
         this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
             if (this.draining) return;
-            // justified: the per-event tuple erases across the generic key, args matches eventName here
-            this.core.bus[PublishDefault]('anyEvent', { name: eventName, args } as SubscriptionData<'anyEvent'>);
+            // justified: the generic key erases the per-event tuple and args matches eventName here
+            this.core.bus[PublishDefault]('eventDispatching', {
+                name: eventName,
+                args
+            } as SubscriptionData<'eventDispatching'>);
             const run = this.processEvent(eventName, args).catch((caught: unknown) => {
                 const error = asError(caught);
                 this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${error.name}`, error.stack);
