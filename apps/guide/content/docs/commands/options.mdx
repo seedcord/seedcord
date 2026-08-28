@@ -107,8 +107,7 @@ Each builder method has one getter, and the name you pass is restricted to that 
 <Callout type="transport">
     The last six return live discord.js objects on gateway and raw
     `discord-api-types` payloads on http. `id` and `username` are on
-    both. Anything only discord.js defines is a compile error on
-    http.
+    both.
 </Callout>
 
 `getMember` returns `null` even for a required user option, since the person picked may have left the server.

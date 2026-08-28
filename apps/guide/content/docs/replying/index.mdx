@@ -142,7 +142,6 @@ class Ban extends SlashHandler<'ban'> {
 
 <Callout type="transport">
     On gateway you get a discord.js `Message`. On http you get an
-    `APIMessage`, which is Discord's raw payload, so calling a
-    discord.js method on it is a compile error. `followUp()`,
+    `APIMessage`, which is Discord's raw payload. `followUp()`,
     `edit()`, and `update()` all return the same type.
 </Callout>
