@@ -11,6 +11,9 @@ export type { HttpConfig, HttpEdgeConfig, HttpServerConfig } from '#interfaces/C
 
 export type { SlashOptions } from '#inputs/SlashOptions';
 
+export { ModalFields } from '#inputs/ModalFields';
+export type { SelectedMentionables } from '#inputs/ModalFields';
+
 export { Emojis } from '#src/emojis/EmojiInjector';
 export type { InjectedEmojiMap } from '#src/emojis/EmojiInjector';
 

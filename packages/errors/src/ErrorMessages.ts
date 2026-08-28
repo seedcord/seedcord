@@ -121,6 +121,14 @@ const messages = {
     [SeedcordErrorCode.EventMiddlewareNameUnavailable]: () =>
         `this.eventName is only available on middleware the controller constructed with a fired event name.`,
     [SeedcordErrorCode.AutocompleteNoFocusedOption]: () => `Autocomplete payload has no focused option.`,
+    [SeedcordErrorCode.ModalFieldNotFound]: (customId: string) =>
+        `The submitted modal carries no field with the custom id ${JSON.stringify(customId)}. Check it against the id you gave the component when you built the modal.`,
+    [SeedcordErrorCode.ModalFieldWrongKind]: (customId: string, kind: string, getter: string) =>
+        `Modal field ${JSON.stringify(customId)} holds ${kind}. Read it with ${getter}().`,
+    [SeedcordErrorCode.ModalFieldEmpty]: (customId: string) =>
+        `Modal field ${JSON.stringify(customId)} carries no selection. Build the component as required, or read it without the required argument.`,
+    [SeedcordErrorCode.ModalFieldChannelType]: (customId: string, picked: string, allowed: string) =>
+        `Modal field ${JSON.stringify(customId)} picked a ${picked} channel. This read allows ${allowed}.`,
 
     [SeedcordErrorCode.GateInvalidCooldownDuration]: (input: string) =>
         `Cooldown duration ${JSON.stringify(input)} is not valid. Pass a number of seconds or a duration string like '30m', '24h', or '500ms'.`,

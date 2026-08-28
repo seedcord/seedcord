@@ -2,6 +2,8 @@ import { ComponentKindBrand } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import { ModalFields } from '#inputs/ModalFields';
+
 import { ComponentHandler } from './ComponentHandler';
 
 import type { SentMessage } from '#reply/ReplySender';
@@ -13,10 +15,22 @@ import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
  * Base class for a modal submit handler on the HTTP transport.
  *
  * Register the customId definitions this handler decodes with `@ModalRoute` and list the same ones in the
- * generic. Read the submitted inputs off `this.event.data.components`. Reply through the handler members.
- * Discord forbids opening a modal in response to a modal, so `showModal` fails compilation on this kind.
+ * generic. Read the submitted inputs from `this.fields`. Reply through the handler members. `showModal`
+ * fails compilation on this kind, because Discord forbids opening a modal in response to a modal.
  *
  * @typeParam Defs - The customId definitions this handler decodes, e.g. `[typeof ConfigId]`.
+ *
+ * @example
+ * ```ts
+ * \@ModalRoute(ConfigId)
+ * class ConfigModal extends ModalHandler<[typeof ConfigId]> {
+ *     async execute() {
+ *         const { guildId } = this.params;
+ *         const name = this.fields.getTextInputValue('name');
+ *         await this.reply(`saved ${name} for ${guildId}`);
+ *     }
+ * }
+ * ```
  */
 export abstract class ModalHandler<Defs extends readonly AnyCustomId[]> extends ComponentHandler<
     APIModalSubmitInteraction,
@@ -25,6 +39,14 @@ export abstract class ModalHandler<Defs extends readonly AnyCustomId[]> extends 
     // phantom, never set at runtime.
     /** @internal */
     declare readonly [ComponentKindBrand]?: 'modal';
+
+    private reader?: ModalFields;
+
+    /** The fields this modal submitted, read by custom id. */
+    protected get fields(): ModalFields {
+        this.reader ??= new ModalFields(this.event.data);
+        return this.reader;
+    }
 
     /** Rewrite the message this modal was opened from. Throws when a command opened the modal. */
     protected override update(response: ReplyResponse | string): Promise<SentMessage> {

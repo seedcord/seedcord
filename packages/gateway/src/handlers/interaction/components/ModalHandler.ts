@@ -7,15 +7,15 @@ import { ComponentHandler } from './ComponentHandler';
 import type { SentMessage } from '#bot/ReplySender';
 import type { GatewayReplyResponse } from '#interfaces/ReplyResponse';
 import type { AnyCustomId } from '@seedcord/core/internal';
-import type { CacheType, ModalSubmitInteraction } from 'discord.js';
+import type { CacheType, ModalSubmitFields, ModalSubmitInteraction } from 'discord.js';
 
 /**
  * Base class for a modal submit handler.
  *
  * Register the customId definitions this handler decodes with `@ModalRoute`, list the same ones in the
  * generic, then read `this.params` for a single route or `this.match` for several. Read the submitted
- * inputs from `this.event.fields`, and reply through the handler members. Discord forbids opening a modal in
- * response to a modal, so `showModal` fails compilation on this kind.
+ * inputs from `this.fields`. Reply through the handler members. `showModal` fails compilation on this kind,
+ * because Discord forbids opening a modal in response to a modal.
  *
  * @typeParam Defs - The customId definitions this handler decodes, e.g. `[typeof ConfigId]`.
  * @typeParam Cache - The interaction cache state, `'cached'` by default.
@@ -26,7 +26,7 @@ import type { CacheType, ModalSubmitInteraction } from 'discord.js';
  * class ConfigModal extends ModalHandler<[typeof ConfigId]> {
  *     async execute() {
  *         const { guildId } = this.params;
- *         const name = this.event.fields.getTextInputValue('name');
+ *         const name = this.fields.getTextInputValue('name');
  *         await this.reply(`saved ${name} for ${guildId}`);
  *     }
  * }
@@ -39,6 +39,11 @@ export abstract class ModalHandler<
     // phantom, never set at runtime.
     /** @internal */
     declare readonly [ComponentKindBrand]?: 'modal';
+
+    /** The fields this modal submitted, read by custom id. */
+    protected get fields(): ModalSubmitFields {
+        return this.event.fields;
+    }
 
     /** Rewrite the message this modal was opened from. Throws when a command opened the modal. */
     protected override update(response: GatewayReplyResponse | string): Promise<SentMessage> {
