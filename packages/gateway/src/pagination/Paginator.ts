@@ -2,6 +2,7 @@ import { PaginatorBase } from '@seedcord/core';
 
 import { ButtonHandler } from '#handlers/interaction/components';
 
+import type { SentMessage } from '#bot/ReplySender';
 import type { RepliableHandler } from '#handlers/RepliableHandler';
 import type { Core } from '#interfaces/Core';
 import type { Repliables } from '#src/handlers/interactionTypes';
@@ -9,7 +10,7 @@ import type { PageContext } from './PageContext';
 import type { PaginatorConfig } from '@seedcord/core';
 import type { PageCursor } from '@seedcord/core/internal';
 import type { ReplyResponse } from '@seedcord/types';
-import type { ButtonInteraction, CacheType, Message } from 'discord.js';
+import type { ButtonInteraction, CacheType } from 'discord.js';
 
 // `& { execute }` concretizes the abstract execute so the empty `extends Bans.Handler {}` stays concrete
 // (no TS2515) and a concrete Nav assigns with no cast.
@@ -50,11 +51,12 @@ export class Paginator<Item, const Prefix extends string> extends PaginatorBase<
         super(config);
 
         // an arrow captures the paginator lexically so Nav.execute can reach it without aliasing `this`.
-        const loadPage = (ctx: PageContext, n: number): Promise<ReplyResponse> => this.page(ctx, n);
+        const pageFor = (handler: RepliableHandler<Repliables>, n: number): Promise<ReplyResponse> =>
+            this.page(handler, n);
         this.Handler = class Nav extends ButtonHandler<[PageCursor<Prefix>], CacheType> {
             async execute(): Promise<void> {
                 await this.deferUpdate();
-                const response = await loadPage(contextOf(this.event, this.core), this.params.page);
+                const response = await pageFor(this, this.params.page);
                 // deferUpdate seeds the sender deferred-update, so update PATCHes @original
                 await this.update(response);
             }
@@ -62,14 +64,23 @@ export class Paginator<Item, const Prefix extends string> extends PaginatorBase<
     }
 
     /**
-     * Render page 0 and send it through the handler's sender, which picks reply, edit, or followUp from its
-     * ack state.
+     * Render a page as a {@link ReplyResponse} without sending anything.
+     *
+     * @param handler - The handler rendering the page, normally `this`.
+     * @param n - The zero-based page.
+     */
+    async page(handler: RepliableHandler<Repliables>, n: number): Promise<ReplyResponse> {
+        return this.buildPage(contextOf(handler.getEvent(), handler.core), n);
+    }
+
+    /**
+     * Send a page through the handler's sender. The sender picks reply, edit, or followUp from its ack state.
      *
      * @param handler - The handler starting the paginator, normally `this`.
+     * @param n - The zero-based page to open on.
      */
-    async start(handler: RepliableHandler<Repliables>): Promise<Message> {
-        const interaction = handler.getEvent();
-        const response = await this.page(contextOf(interaction, handler.core), 0);
+    async start(handler: RepliableHandler<Repliables>, n = 0): Promise<SentMessage> {
+        const response = await this.page(handler, n);
         return handler.sender.send(response, { ephemeral: this.config.ephemeral ?? false });
     }
 }

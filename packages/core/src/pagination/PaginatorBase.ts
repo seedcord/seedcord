@@ -48,8 +48,8 @@ export abstract class PaginatorBase<Item, Prefix extends string, Ctx> {
         this.config = config;
     }
 
-    /** Render a page as a {@link ReplyResponse}. To post it elsewhere, add `flags: MessageFlags.IsComponentsV2`. */
-    async page(ctx: Ctx, n: number): Promise<ReplyResponse> {
+    /** Build one page as a {@link ReplyResponse}. Each transport wraps this in a `page()` taking its handler. */
+    protected async buildPage(ctx: Ctx, n: number): Promise<ReplyResponse> {
         const view = await this.config.source.page(ctx, n);
         return renderPage(view, this.cursor, this.config);
     }

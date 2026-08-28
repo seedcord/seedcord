@@ -17,6 +17,11 @@ class TestPaginator<Item> extends PaginatorBase<Item, 'test', TestCtx> {
     constructor(config: PaginatorConfig<Item, 'test', TestCtx>) {
         super(config);
     }
+
+    // stands in for the page(handler, n) each transport builds on buildPage
+    public page(ctx: TestCtx, n: number): Promise<ReplyResponse> {
+        return this.buildPage(ctx, n);
+    }
 }
 
 function containerOf(reply: ReplyResponse): APIContainerComponent {

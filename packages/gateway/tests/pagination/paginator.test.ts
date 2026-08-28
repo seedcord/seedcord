@@ -158,6 +158,14 @@ describe('Paginator.start', () => {
         await expect(pager.start(stubHandler(event))).rejects.toBe(failure);
     });
 
+    it('opens on the page it is given', async () => {
+        const event = startEvent();
+        await pager.start(stubHandler(event), 2);
+
+        const options = event.reply.mock.calls[0]?.[0] as { components: unknown[] };
+        expect(sentContainerText(options.components)).toBe('e');
+    });
+
     it('honors an ephemeral paginator', async () => {
         const ephemeral = new Paginator({
             prefix: 'invites',
@@ -173,11 +181,12 @@ describe('Paginator.start', () => {
 });
 
 describe('Paginator.page', () => {
-    it('renders the requested page as a ReplyResponse', async () => {
-        // justified: page() reads no field off the context, only forwards it to the source loader
-        const ctx = { interaction: {}, user: {}, guild: null } as unknown as PageContext;
-        const reply = await pager.page(ctx, 1);
+    it('renders the requested page and sends nothing', async () => {
+        const event = startEvent();
+        const reply = await pager.page(stubHandler(event), 1);
+
         expect(containerText(reply.components)).toBe('c\nd');
+        expect(event.reply).not.toHaveBeenCalled();
     });
 });
 

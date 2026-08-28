@@ -87,6 +87,14 @@ describe('http Paginator.start', () => {
         expect(textLines(data?.components?.[0])).toEqual(['a\nb']);
     });
 
+    it('opens on the page it is given', async () => {
+        const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
+
+        await pagerFor().start(stubHandler(post), 2);
+
+        expect(textLines(callbackBody(post).data?.components?.[0])).toEqual(['e']);
+    });
+
     it('honors an ephemeral paginator', async () => {
         const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
 
@@ -100,6 +108,17 @@ describe('http Paginator.start', () => {
         const post = vi.fn().mockRejectedValue(failure);
 
         await expect(pagerFor().start(stubHandler(post))).rejects.toBe(failure);
+    });
+});
+
+describe('http Paginator.page', () => {
+    it('renders the requested page and sends nothing', async () => {
+        const post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
+
+        const reply = await pagerFor().page(stubHandler(post), 1);
+
+        expect(textLines(reply.components[0]?.toJSON() as APIContainerComponent)).toEqual(['c\nd']);
+        expect(post).not.toHaveBeenCalled();
     });
 });
 
