@@ -60,7 +60,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private readonly inFlight = new Set<Promise<void>>();
     private draining = false;
 
-    // batched during bulk load. A reload reports on the hmr channel instead
+    // a reload reports on the hmr channel
     private loading = false;
     private readonly loadedHandlers: { name: string; from: string }[] = [];
     private readonly loadedMiddlewares: { name: string; from: string }[] = [];
@@ -195,7 +195,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
                 }
             }
         }
-        // spent follows the ctor identity, so leaving executedOnceHandlers alone keeps a rollback-restored ctor spent
+        // leaving executedOnceHandlers alone keeps a rollback-restored ctor spent
     }
 
     private unregisterMiddleware(middlewareCtor: EventMiddlewareConstructor): void {
@@ -238,7 +238,6 @@ export class EventDispatcher implements Initializeable, HmrAware {
                 const middleware = new ctor(args, this.core, eventName); // event name so a catchall/multi middleware can read this.eventName
                 await middleware.execute();
             } catch (caught) {
-                // a middleware throw stops the event for downstream handlers
                 handleEventFault(caught, String(eventName), ctor.name, args, this.core);
                 return false;
             }
@@ -345,7 +344,6 @@ export class EventDispatcher implements Initializeable, HmrAware {
             (entry) => entry.frequency !== 'once' || !this.executedOnceHandlers.has(entry.ctor)
         );
 
-        // avoid running middlewares when every handler is a spent 'once'
         if (handlersToExecute.length === 0) return;
 
         const shouldContinue = await this.runMiddlewares(eventName, args);

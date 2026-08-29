@@ -92,7 +92,6 @@ describe('EventDispatcher Integration', () => {
         // justified: TestBot exposes the private events controller for assertion
         const testBot = seedcord.bot as unknown as TestBot;
 
-        // capture the messageCreate handler attachListener registers on the client
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
         await testBot.events.init();
 
@@ -268,8 +267,7 @@ describe('EventDispatcher Integration', () => {
         const testBot = seedcord.bot as unknown as TestBot;
         await testBot.events.init();
 
-        // both fires run their once-filter snapshot before either marks spent, because
-        // `await runMiddlewares` yields between the snapshot and the mark
+        // both fires pass the once filter because runMiddlewares awaits between the snapshot and the mark
         const message = { reply: vi.fn() };
         await Promise.all([
             testBot.events.processEvent('messageCreate', [message]),
@@ -325,7 +323,6 @@ describe('EventDispatcher Integration', () => {
         const testBot = seedcord.bot as unknown as TestBot;
         await testBot.events.init();
 
-        // a middleware block stops the whole event, so it must not spend the once budget
         const message = { reply: vi.fn() };
         await testBot.events.processEvent('messageCreate', [message]);
         expect(message.reply).not.toHaveBeenCalled();
@@ -362,11 +359,10 @@ describe('EventDispatcher Integration', () => {
         await testBot.events.processEvent('messageCreate', [message]);
         expect(message.reply).toHaveBeenCalledTimes(1);
 
-        // a broken edit, the reload fails and rolls the handler back
+        // the failed reload rolls the handler back
         await testEnv.createFile(`${eventsDir}/OnceRollback.ts`, 'export const broken = {{{ not valid');
         await testBot.events.onHmr({ file: filePath, type: 'update' });
 
-        // the rolled-back handler is the same spent ctor, so a second fire must not re-run it
         await testBot.events.processEvent('messageCreate', [message]);
         expect(message.reply).toHaveBeenCalledTimes(1);
     });
@@ -404,7 +400,7 @@ describe('EventDispatcher Integration', () => {
             import { EventHandler, RegisterEvent } from '${seedcordPath}';
             import { Events } from 'discord.js';
 
-            @RegisterEvent(['messageUpdate']) // Changed event
+            @RegisterEvent(['messageUpdate'])
             export class MessageHandler extends EventHandler<Events.MessageUpdate> {
                 public async execute() {
                     console.log('Message Updated!');
@@ -485,7 +481,6 @@ describe('EventDispatcher Integration', () => {
         const message = { reply: vi.fn() };
         await testBot.events.processEvent('messageCreate', [message]);
 
-        // the gate threw a Silence, so execute never ran
         expect(message.reply).not.toHaveBeenCalled();
     });
 
@@ -568,7 +563,6 @@ describe('EventDispatcher Integration', () => {
 
             controller.stopAccepting();
             fire?.({ reply: vi.fn() });
-            // draining, so no new dispatch started
             expect(processSpy).toHaveBeenCalledTimes(1);
 
             await expect(controller.drain(50)).resolves.toBeUndefined();
