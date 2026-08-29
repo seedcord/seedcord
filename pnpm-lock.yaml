@@ -543,6 +543,9 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: catalog:deps
         version: 0.8.1(prettier@3.9.6)
+      seedcord:
+        specifier: workspace:^
+        version: link:../../cli/seedcord
       tailwindcss:
         specifier: catalog:deps
         version: 4.3.3

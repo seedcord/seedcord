@@ -69,6 +69,7 @@
         "mongoose": "catalog:peer",
         "pg": "catalog:peer",
         "prettier-plugin-tailwindcss": "catalog:deps",
+        "seedcord": "workspace:^",
         "tailwindcss": "catalog:deps",
         "typescript": "catalog:peer",
         "vitest": "catalog:test",

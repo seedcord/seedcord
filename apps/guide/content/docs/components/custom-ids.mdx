@@ -205,3 +205,37 @@ if (TicketAction.owns(wire)) {
 A custom id you write by hand compiles. `setCustomId('ticket:123')` skips the shape hash `encode` adds, so seedcord reads that prefix as `tic` and no handler matches the click. Mint every id through `encode`.
 
 </Callout>
+
+## Clicks the router should skip
+
+A discord.js collector you opened yourself already consumes the clicks it waits on. Naming that id under `ignoreCustomIds` keeps seedcord's router off them.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { CustomId, Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+export const Poll = new CustomId('poll').uuid('pollId');
+// ---cut---
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers'),
+            ignoreCustomIds: [Poll]
+        },
+        commands: { path: null },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+```
+
+A click whose prefix `Poll` owns never reaches a handler. The list takes `CustomId` values. A raw string fails to compile, since seedcord matches each entry by calling `owns`.
+
+<Callout type="transport" only="gateway">
+    An http bot does not read `ignoreCustomIds`. Discord posts every
+    interaction to one endpoint, and the router dispatches all of
+    them.
+</Callout>

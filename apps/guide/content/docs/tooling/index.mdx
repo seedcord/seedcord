@@ -1,6 +1,94 @@
 ---
 title: Tooling
-description: Running and debugging your bot while you build it.
+description: Configuring and running your bot with the seedcord CLI.
 ---
 
-This section is being written.
+A seedcord project carries two configs. The CLI reads `seedcord.config.ts` for your project's paths. The `new Seedcord({ ... })` call in `src/bot.ts` configures the bot itself.
+
+Start with the CLI's file.
+
+```ts twoslash title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    entry: './index.ts',
+    // false stops the dev terminal's idle animation
+    idleAnimation: true,
+    build: {
+        tsconfig: './tsconfig.build.json'
+    },
+    hmr: {
+        // true runs tsc --watch beside the bot, in a second node process
+        typecheck: false
+    }
+});
+```
+
+`instance` and `entry` are the two you have to write. The rest carry defaults.
+
+{/* prettier-ignore-start */}
+
+| key | default | what it does |
+| --- | --- | --- |
+| `instance` | required | the module whose default export is your configured [`Seedcord`](ref:gateway/Seedcord) |
+| `entry` | required | the file that starts the bot, and the one the build copies |
+| `root` | the config's own folder | what every other path here resolves against |
+| `tunnel` | `true` | `true` opens a cloudflared quick tunnel to your http bot. An https string is a URL you already serve. Gateway ignores it |
+| `idleAnimation` | `true` | whether the dev terminal animates while nothing happens |
+| `build` | `{}` | `outDir`, `tsconfig`, and `bootstrap` for `seedcord build` |
+| `hmr` | omitted | `restart` globs, `rollback`, and `typecheck` for `seedcord dev` |
+
+{/* prettier-ignore-end */}
+
+`entry` has to resolve inside `root`. A path outside it throws `CliConfigEntryOutsideRoot`.
+
+## The four commands
+
+Your `package.json` already wires three of them as scripts. Those same three read the config above. `seedcord commands` reads only your bot token.
+
+{/* prettier-ignore-start */}
+
+| command | what it does |
+| --- | --- |
+| [`seedcord dev`](/tooling/dev) | runs your bot, reloads a changed file in place, and prints its logs in a terminal you can filter |
+| [`seedcord codegen`](/tooling/codegen) | reads your command files and writes `seedcord-gen.d.ts` |
+| [`seedcord build`](/tooling/build) | compiles `src` and writes a bootstrap file beside it |
+| [`seedcord commands`](/commands/deployed) | inspects and cleans up the commands Discord is holding |
+
+{/* prettier-ignore-end */}
+
+Run the fourth through your package manager's runner.
+
+<Shell exec="seedcord commands" />
+
+## Your bot's config
+
+`src/bot.ts` holds the second config. The table below points at the page that teaches each key, and that page shows the key inside a real `new Seedcord({ ... })` sample.
+
+`bot`, `subscribers`, `bot.interactions`, and `bot.commands` are required. A gateway bot also sets `bot.events` and `bot.clientOptions`. Every other key is optional.
+
+{/* prettier-ignore-start */}
+
+| key | what it sets | where it is taught |
+| --- | --- | --- |
+| `bot.interactions` | the folder seedcord scans for handlers, plus middleware and ignored ids | [Components](/components) |
+| `bot.commands` | the folder seedcord scans for commands | [Commands](/commands) |
+| `bot.emojis` | the emoji names [`Emojis`](ref:gateway/Emojis) resolves at startup | [Components](/components) |
+| `bot.events` | the folder seedcord scans for event handlers. Gateway only | [Events](/events) |
+| `bot.clientOptions` | passed straight to the discord.js `Client`. Gateway only | [Your first bot](/first-bot) |
+| `subscribers` | the folder seedcord scans for bus subscribers | [The bus](/events/bus) |
+| `errors` | how a fault renders, what gets logged, which api codes get swallowed | [Configuring](/throwing/configuring) |
+| `notifications` | the contact name in the generic unknown-error message | [Faults](/throwing/faults) |
+| `botColor` | the accent on every [`BuilderComponent`](ref:core/BuilderComponent) you build | [Components](/components) |
+| `ownerIds` | the ids [`OwnerOnly`](ref:core/OwnerOnly) treats as owners | [Gates](/gates) |
+| `store` | where framework state survives a restart | [The rate limiter](/gates/rate-limiter) |
+| `logger` | the level, the sinks, and the per-channel overrides | [Configuring the logger](/tooling/logger-config) |
+| `runtime` | `'server'` for a node process, `'edge'` for a bundled isolate | [Building](/tooling/build) |
+
+{/* prettier-ignore-end */}
+
+An http server takes `port`, which defaults to 3000. An edge bot declares `runtime: 'edge'` and does not accept `port` at all. On gateway, `healthCheck` runs a small http server on port 6967 that answers `/health`, and `false` turns it off.
+
+The reference site carries the full shape of every one of these, down to each nested field.
