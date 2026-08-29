@@ -1,0 +1,106 @@
+---
+title: The dev loop
+description: Reloading your code while your bot stays connected.
+---
+
+`seedcord dev` runs your bot and watches the files you are editing. When you save a handler, seedcord swaps the new version in while the bot stays connected to Discord.
+
+<Shell run="dev" />
+
+You pass it nothing. Every setting it reads comes from `seedcord.config.ts`, which [Tooling](/tooling) covers.
+
+## What the terminal shows
+
+Once it starts, your terminal turns into a console for the bot. The wide pane on the right fills with your logs. Anything that would normally print to the console goes there instead. A narrow sidebar on the left shows which phase the bot is in, how long it has been up, the log filters, plus the keys you can press. The pane keeps the most recent lines, so older ones drop off as new ones arrive.
+
+## The keys
+
+{/* prettier-ignore-start */}
+
+| key | what it does |
+| --- | --- |
+| `q` | quits |
+| `Ctrl-C` | one press arms it, a second quits. Any other key in between disarms it |
+| `r` | stops the bot, then starts it again |
+| `d` | stops the bot but leaves the terminal up. The status then reads `Disconnected. Press r to restart.` |
+| `c` | empties the log pane |
+| `↑` `↓` | scroll one line |
+| `PageUp` `PageDown` | scroll one screen |
+| `Home` or `t` | go to the first log line |
+| `End` or `b` | go to the last log line |
+| `y` `n` | answer the re-register prompt after you change a command |
+
+{/* prettier-ignore-end */}
+
+You can scroll with these keys or your mouse wheel at any time, even while the bot is starting or shutting down. The three that act on the bot itself, `r`, `d`, and `c`, wait until it settles.
+
+## Filtering the log
+
+Every log line comes tagged with a channel and a level, both covered in [Logging](/tooling/logging). The sidebar draws them as two rows of small chips. Four more keys walk you through those chips.
+
+{/* prettier-ignore-start */}
+
+| key | what it does |
+| --- | --- |
+| `←` `→` | move the cursor along the chips |
+| `Tab` | switch between the channel row and the level row |
+| `o` | turn the chip under the cursor on or off |
+| `Space` | show only the chip under the cursor |
+
+{/* prettier-ignore-end */}
+
+When no chip is on you see every line. That is the state the terminal starts in. Switch one on to begin filtering. The five levels are `error`, `warn`, `info`, `debug`, and `trace`.
+
+## When the terminal is small
+
+The layout adjusts to the room it has. Give it a full window and you get the sidebar, the filter chips, and the log pane together. Shrink the window and the chips go first, taking the four keys that drive them along. The sidebar then tells you to resize if you want them back. Shrink it further and the sidebar disappears, leaving a single status line above the logs. Your logs and the scroll keys survive every size, so make the window whatever size suits you.
+
+## Where the logs go
+
+The terminal takes the console over while it runs, so that pane is the only place those lines appear on screen. seedcord writes the same lines to a file under `logs/` as it goes. When you quit, it prints that path.
+
+```txt output
+seedcord dev stopped. logs: logs/
+```
+
+<Callout type="note">
+    Every run writes its own file in there and nothing removes the
+    old ones, so clear the folder out now and then.
+</Callout>
+
+## The health server
+
+Something else starts alongside your bot. A gateway bot opens a small http server that answers `/health` on port 6967, as soon as it reaches the Ready phase. This happens under `seedcord dev` just as it does in production. Most hosting platforms call an endpoint like this to check that your process is still alive.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+// ---cut-start---
+
+const paths = {
+    interactions: {
+        path: resolve(import.meta.dirname, './handlers')
+    },
+    commands: { path: resolve(import.meta.dirname, './commands') },
+    events: { path: null }
+} as const;
+// ---cut-end---
+
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        ...paths
+    },
+    subscribers: { path: null },
+    healthCheck: { port: 8080, path: '/healthz' }
+});
+```
+
+All three keys are optional. Leave `port` out to get 6967. Leave `path` out to get `/health`. `host` narrows the server to one network interface. Leave it out to bind every one. To turn the server off completely, set `healthCheck: false`.
+
+<Callout type="transport" only="gateway">
+    An http bot already answers on a port of its own, so its config
+    does not accept `healthCheck`.
+</Callout>
