@@ -86,10 +86,12 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         super.addTask(phase, taskName, task, timeoutMs);
     }
 
+    /** @internal */
     public override removeTask(phase: ShutdownPhase, taskName: string): boolean {
         return super.removeTask(phase, taskName);
     }
 
+    /** @internal */
     public async run(exitCode = 0, exitProcess = true): Promise<void> {
         this.removeSignalHandlers();
 

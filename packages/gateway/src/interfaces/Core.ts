@@ -1,7 +1,7 @@
 import type { Bot } from '#bot/Bot';
 import type { GatewayConfig } from '#interfaces/Config';
 import type { CoreBase } from '@seedcord/core';
-import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/node/internal';
+import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/node';
 
 /**
  * Main interface for Seedcord core functionality

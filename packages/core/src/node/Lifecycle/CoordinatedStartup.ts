@@ -59,6 +59,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
     }
 
     // each phase completes fully before the next begins
+    /** @internal */
     public async run(): Promise<void> {
         if (this.hasStarted) {
             this.logger.warn('Startup sequence has already completed');
@@ -102,6 +103,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         return !this.isStartingUp;
     }
 
+    /** @internal */
     public abort(): void {
         if (!this.isStartingUp) return;
 
@@ -109,6 +111,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         this.logger.warn('Aborting coordinated startup sequence');
     }
 
+    /** @internal */
     public get isReady(): boolean {
         return this.hasStarted;
     }

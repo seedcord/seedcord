@@ -4,15 +4,8 @@ import { createServer } from 'node:http';
 import { REST } from '@discordjs/rest';
 import { Bus } from '@seedcord/core';
 import { busLoggerOf, getDevChannel, HmrManager, setBotColor } from '@seedcord/core/internal';
-import {
-    CommandRegistry,
-    CoordinatedShutdown,
-    CoordinatedStartup,
-    Pluggable,
-    ShutdownPhase,
-    StartupPhase,
-    SubscriberLoader
-} from '@seedcord/core/node/internal';
+import { CoordinatedShutdown, CoordinatedStartup, Pluggable } from '@seedcord/core/node';
+import { CommandRegistry, ShutdownPhase, StartupPhase, SubscriberLoader } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { applicationIdFromToken, SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';

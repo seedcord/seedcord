@@ -1,13 +1,7 @@
 import { Bus } from '@seedcord/core';
 import { busLoggerOf, HmrManager, setBotColor } from '@seedcord/core/internal';
-import {
-    HealthCheck,
-    CoordinatedShutdown,
-    CoordinatedStartup,
-    StartupPhase,
-    Pluggable,
-    SubscriberLoader
-} from '@seedcord/core/node/internal';
+import { CoordinatedShutdown, CoordinatedStartup, Pluggable } from '@seedcord/core/node';
+import { HealthCheck, StartupPhase, SubscriberLoader } from '@seedcord/core/node/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
