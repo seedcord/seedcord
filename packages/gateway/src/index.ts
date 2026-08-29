@@ -39,6 +39,7 @@ export * from '@seedcord/core';
 export * from '@seedcord/errors';
 export * from '@seedcord/event-emitter';
 export * from '@seedcord/logger';
+export { WinstonConsoleSink, WinstonFileSink } from '@seedcord/logger/node';
 export * from '@seedcord/rate-limiter';
 export type * from '@seedcord/types';
 export * from '@seedcord/utils';
