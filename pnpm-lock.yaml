@@ -24,9 +24,6 @@ catalogs:
     chalk:
       specifier: ^6.0.0
       version: 6.0.0
-    discord-api-types:
-      specifier: ^0.38.52
-      version: 0.38.52
     lodash.merge:
       specifier: ^4.6.2
       version: 4.6.2
@@ -450,6 +447,9 @@ importers:
       '@mdx-js/mdx':
         specifier: ^3.1.1
         version: 3.1.1(supports-color@10.2.2)
+      '@seedcord/core':
+        specifier: workspace:^
+        version: link:../../packages/core
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config
@@ -459,6 +459,12 @@ importers:
       '@seedcord/http':
         specifier: workspace:^
         version: link:../../packages/http
+      '@seedcord/plugin-kysely-postgres':
+        specifier: workspace:^
+        version: link:../../plugins/kysely-postgres
+      '@seedcord/plugin-mongoose':
+        specifier: workspace:^
+        version: link:../../plugins/mongoose
       '@seedcord/tsconfig':
         specifier: workspace:^
         version: link:../../tooling/tsconfig
@@ -483,6 +489,9 @@ importers:
       '@types/mdx':
         specifier: ^2.0.14
         version: 2.0.14
+      '@types/pg':
+        specifier: ^8.20.3
+        version: 8.20.3
       '@types/react':
         specifier: catalog:react
         version: 19.2.18
@@ -513,6 +522,15 @@ importers:
       jsdom:
         specifier: catalog:test
         version: 30.0.1
+      kysely:
+        specifier: ^0.29.4
+        version: 0.29.4
+      mongoose:
+        specifier: catalog:peer
+        version: 9.9.1
+      pg:
+        specifier: ^8.22.0
+        version: 8.22.0
       prettier-plugin-tailwindcss:
         specifier: catalog:deps
         version: 0.8.1(prettier@3.9.6)
@@ -7717,9 +7735,6 @@ packages:
     peerDependencies:
       pg: '>=8.0'
 
-  pg-protocol@1.14.0:
-    resolution: {integrity: sha512-n5taZ1kO3s9ngDTVxsEznOqCyToTgz0FLuPq0B33COy5pPpuWJpY3/2oRBVETuOgzdqRXfWpM9HIhp2LBBT1BA==}
-
   pg-protocol@1.15.0:
     resolution: {integrity: sha512-cq9sECI5s0+uPUXjbz8ioyPJni6RzsRib0US67i5IoTZKw8fNeYlVE7u8F4dG7vEJJtc5wdD1K189lCCUwqWTQ==}
 
@@ -11868,7 +11883,7 @@ snapshots:
   '@types/pg@8.20.3':
     dependencies:
       '@types/node': 26.1.2
-      pg-protocol: 1.14.0
+      pg-protocol: 1.15.0
       pg-types: 2.2.0
 
   '@types/react-dom@19.2.4(@types/react@19.2.18)':
@@ -15981,8 +15996,6 @@ snapshots:
   pg-pool@3.14.0(pg@8.22.0):
     dependencies:
       pg: 8.22.0
-
-  pg-protocol@1.14.0: {}
 
   pg-protocol@1.15.0: {}
 
