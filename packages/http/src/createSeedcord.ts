@@ -1,4 +1,5 @@
 import { validateDiscordToken } from '@seedcord/errors/internal';
+import { Logger } from '@seedcord/logger';
 import { Envapter } from 'envapt';
 
 import { createCore } from './dispatch/dispatchInteraction';
@@ -24,11 +25,16 @@ export type { EngineContext } from './engine';
  *
  * Reads `DISCORD_PUBLIC_KEY` and `DISCORD_BOT_TOKEN` from the environment through envapt and throws a
  * `SeedcordError` when either is missing or malformed.
+ *
+ * Applies `config.logger`. An omitted `logger` resets the level and the sinks to their defaults, the
+ * way `installNodeDefaults` does on the node hosts.
  */
 export function createSeedcord(
     config: HttpConfig,
     manifest: RouteManifest
 ): (request: Request, ctx?: EngineContext) => Promise<Response> {
+    Logger.configure(config.logger ?? {});
+
     const token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
     const core = createCore(config, token);
     core.bus.registerDefaults();
