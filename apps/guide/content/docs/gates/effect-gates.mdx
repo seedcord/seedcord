@@ -1,0 +1,177 @@
+---
+title: Effect gates
+description: A gate that changes state, with the change held until every gate passes.
+---
+
+Say a command costs one credit. Your gate reads the balance and deducts one. A later gate then refuses. The command never ran, and the caller lost a credit anyway.
+
+[`defineEffectGate`](ref:core/defineEffectGate) splits the gate in two. `check` reads and refuses. `commit` applies the change, and seedcord runs it only after every gate on the handler has passed.
+
+```ts twoslash title="src/gates/SpendCredit.ts"
+import { defineEffectGate, Notice } from '@seedcord/gateway';
+
+import type { ReplyResponse } from '@seedcord/gateway';
+
+declare const credits: {
+    balance(userId: string): Promise<number>;
+    deduct(userId: string): Promise<void>;
+};
+declare const components: ReplyResponse['components'];
+
+class OutOfCredits extends Notice {
+    public constructor() {
+        super('caller has no credits left');
+        this.summary = 'have a credit left';
+    }
+
+    public render(): ReplyResponse {
+        return { components };
+    }
+}
+
+// ---cut---
+export const SpendCredit = defineEffectGate(
+    'SpendCredit',
+    async (ctx) => {
+        if (ctx.userId === null) return;
+        if ((await credits.balance(ctx.userId)) < 1) {
+            throw new OutOfCredits();
+        }
+    },
+    async (ctx) => {
+        if (ctx.userId !== null) await credits.deduct(ctx.userId);
+    }
+);
+```
+
+Attach it like any other gate.
+
+```ts twoslash
+import {
+    Gated,
+    GuildOnly,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+
+import type {
+    EffectGate,
+    GateContextBase
+} from '@seedcord/gateway';
+
+declare const SpendCredit: EffectGate<
+    GateContextBase,
+    'SpendCredit'
+>;
+
+// ---cut---
+@Gated(SpendCredit, GuildOnly())
+@SlashRoute('search')
+export class Search extends SlashHandler<'search'> {
+    public async execute(): Promise<void> {
+        await this.reply('Searching.');
+    }
+}
+```
+
+## The order
+
+seedcord runs every check before it runs any commit.
+
+1. Each gate's `check`, left to right, stopping at the first refusal.
+2. Every queued `commit`, in the order its gate ran.
+3. `execute()`.
+
+Say someone runs that command in a DM. `SpendCredit` checks their balance first and queues its commit. [`GuildOnly`](ref:core/GuildOnly) then refuses. Step two never runs, so nothing deducts the credit.
+
+A refusal anywhere in step one drops every queued commit. The same holds when a check throws a [`Fault`](ref:core/Fault), a [`Silence`](ref:core/Silence), or a plain error.
+
+<Callout type="warning">
+
+Step two finishes before step three starts. A handler that throws runs after every commit, so the credit stays spent. Refund it in the handler when that matters.
+
+</Callout>
+
+## Inside an or
+
+An [`or`](ref:core/or) arm can hold more than one gate, which is where a queued commit gets thrown away. Here is a handler with an effect gate buried two levels down.
+
+```ts twoslash hovers
+import {
+    and,
+    Cooldown,
+    Gated,
+    GuildOnly,
+    or,
+    OwnerOnly,
+    RequireRole,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+
+import type {
+    EffectGate,
+    GateContextBase
+} from '@seedcord/gateway';
+
+declare const SpendCredit: EffectGate<
+    GateContextBase,
+    'SpendCredit'
+>;
+
+// ---cut---
+@Gated(
+    GuildOnly(),
+    or(
+        and(SpendCredit, RequireRole('221439658686939136')),
+        OwnerOnly()
+    ),
+    Cooldown('1m')
+)
+@SlashRoute('history')
+export class History extends SlashHandler<'history'> {
+    public async execute(): Promise<void> {
+        await this.reply('Here it is.');
+    }
+}
+```
+
+A bot owner who lacks that role runs it. Read the checks down, then the commits.
+
+```txt output
+1. every check, left to right
+├─ GuildOnly            pass
+├─ or
+│  ├─ and
+│  │  ├─ SpendCredit    pass, commit queued
+│  │  └─ RequireRole    refuse
+│  │
+│  │  the and refuses, so this arm refuses
+│  │  seedcord drops the queued commit
+│  │
+│  └─ OwnerOnly         pass, so the or passes
+└─ Cooldown             pass, commit queued
+
+2. every queued commit
+└─ Cooldown             charges the slot
+
+3. execute()
+```
+
+The owner keeps their credit and still spends a cooldown slot. Only the arm that passes keeps its commit, and `OwnerOnly` queued none.
+
+<Callout type="note">
+
+Every commit runs after every check. A check never reads what another gate's commit wrote.
+
+</Callout>
+
+## What the two halves share
+
+Annotate `ctx` on either half and both take that context. The gate then fits the same handlers as a [`defineGate`](ref:core/defineGate) gate with that annotation.
+
+Either half can return a promise. A synchronous one works too, so a commit writing to a `Map` does not need `async`.
+
+## Cooldown
+
+[`Cooldown`](ref:core/Cooldown) is an effect gate. It peeks at the window in `check` and charges the slot in `commit`, which is why a later refusal never records a use. [Cooldowns](/gates/cooldown) covers it.

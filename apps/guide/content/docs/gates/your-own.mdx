@@ -5,7 +5,7 @@ description: Writing a gate with defineGate, and what its check can read.
 
 The catalog covers owners, roles, permissions, and cooldowns. [`defineGate`](ref:core/defineGate) builds a gate for anything else you want to check.
 
-It takes a name and a check. The check reads the context, refuses by throwing, and passes by returning. Here's an example that keeps a command to one channel. The [`Notice`](ref:core/Notice) it throws and the card that `render()` builds both come from [Throwing](/throwing).
+It takes a name and a check. The check reads the context, refuses by throwing, and passes by returning. Here's an example that keeps a command to one channel. [Throwing](/throwing) covers the [`Notice`](ref:core/Notice) it throws and the card `render()` builds.
 
 ```ts twoslash hovers title="src/gates/InChannel.ts"
 import {
@@ -98,7 +98,7 @@ Leaving the `ctx` parameter unannotated makes it a [`GateContextBase`](ref:core/
 
 {/* prettier-ignore-end */}
 
-A gate written against these fields fits any handler you attach it to. `InChannel` above reads one of them and works on a slash command, a button, and a message event alike.
+A gate that reads only these fields fits any handler you attach it to. `InChannel` above reads one of them, so it works on a slash command, a button, and a message event.
 
 ## Narrowing what the gate accepts
 
@@ -123,7 +123,13 @@ export const NoAttachments = defineGate(
 );
 ```
 
-`ctx.payload` is typed to that one event's argument tuple, so `message` comes back as a discord.js `Message`. Attaching this gate to any other handler fails to compile.
+`ctx.payload` is typed to that one event's argument tuple, so `message` is a discord.js `Message`. Attaching this gate to any other handler fails to compile.
+
+<Callout type="tip">
+
+`NoAttachments` takes no argument, so it needs no function around it. Export the gate itself and attach it without calling, the way [`IgnoreBots`](ref:gateway/IgnoreBots) does. `InChannel` above stays a function because it closes over a channel id.
+
+</Callout>
 
 The two gateway arms carry different fields. Narrow on `ctx.kind` before reading either set.
 
@@ -136,15 +142,15 @@ The two gateway arms carry different fields. Narrow on `ctx.kind` before reading
 | `InteractionGateContext<ButtonInteraction>` | button handlers | the same, with `interaction` typed to a button |
 | [`EventGateContext`](ref:gateway/EventGateContext) | any event handler | `eventName`, `payload`, `user`, `guild`, `member` |
 | `EventGateContext<Events.MessageCreate>` | that one event | the same, with `payload` typed to its tuple |
-| [`GateContext`](ref:gateway/GateContext) | either arm | narrow on `ctx.kind` before reading further |
+| [`GateContext`](ref:gateway/GateContext) | either arm | the union of the two rows above |
 
 {/* prettier-ignore-end */}
 
 <Callout type="transport">
 
-Both transports export a type called `InteractionGateContext`, and the two carry different things. Gateway's holds live discord.js objects, a `User`, a `Guild`, and a `GuildMember`. Http's holds an `APIUser` and an `APIInteractionGuildMember`, with no `guild` field at all, so a gate reading `ctx.guild` compiles on gateway and fails on http.
+Both transports export a type called `InteractionGateContext`, and the two carry different fields. Gateway's holds live discord.js objects, a `User`, a `Guild`, and a `GuildMember`. Http's holds an `APIUser` and an `APIInteractionGuildMember`, and it does not carry `guild` at all. A gate reading `ctx.guild` compiles on gateway and fails on http.
 
-A discord.js `Guild` comes out of the gateway cache, which an http bot has no equivalent of. Discord sends http a partial guild instead, carrying `id`, `features`, and `locale`, and `ctx.interaction.guild` reaches it.
+The gateway cache builds that discord.js `Guild`. An http bot does not run one. Discord sends it a partial guild carrying `id`, `features`, and `locale`, which `ctx.interaction.guild` reaches.
 
 </Callout>
 
@@ -165,11 +171,7 @@ A check can return a promise, and seedcord awaits it before the handler runs. Re
 ```ts twoslash
 import { defineGate, Notice } from '@seedcord/gateway';
 
-import type {
-    Gate,
-    GateContextBase,
-    ReplyResponse
-} from '@seedcord/gateway';
+import type { ReplyResponse } from '@seedcord/gateway';
 
 declare const bans: { has(id: string): Promise<boolean> };
 declare const components: ReplyResponse['components'];
@@ -185,18 +187,16 @@ class Banned extends Notice {
 }
 
 // ---cut---
-export function NotBanned(): Gate<GateContextBase, 'NotBanned'> {
-    return defineGate('NotBanned', async (ctx) => {
-        if (ctx.userId === null) return;
-        if (await bans.has(ctx.userId)) throw new Banned();
-    });
-}
+export const NotBanned = defineGate('NotBanned', async (ctx) => {
+    if (ctx.userId === null) return;
+    if (await bans.has(ctx.userId)) throw new Banned();
+});
 ```
 
-Gates run one after another, so a slow check delays every gate behind it. Discord gives you three seconds to answer an interaction, and the checks count against it. seedcord prints a console warning when one handler's checks total more than 750ms. That warning is off in production.
+Gates run one after another, so a slow check delays every gate behind it. Discord gives you three seconds to answer an interaction, and the checks use part of it. seedcord prints a console warning when one handler's checks total more than 750ms. That warning is off in production.
 
 ## What to throw
 
-A [`Notice`](ref:core/Notice) replies with the card its `render()` builds. A [`Silence`](ref:core/Silence) drops the request without replying, which suits an event handler. [Throwing](/throwing) covers both, plus what happens when a check throws something else.
+Throw a [`Notice`](ref:core/Notice) and seedcord replies with the card its `render()` builds. Throw a [`Silence`](ref:core/Silence) and seedcord drops the request with no reply, which suits an event handler. [Throwing](/throwing) covers both, plus what happens when a check throws something else.
 
 Set `summary` on a `Notice` you throw from a gate when you plan to pass that gate to an [`or`](ref:core/or). [Combining gates](/gates/combining) covers what `or` does with it.
