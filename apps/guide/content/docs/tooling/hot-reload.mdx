@@ -3,13 +3,13 @@ title: Hot reload
 description: Controlling which saves restart your bot.
 ---
 
-Most of the time seedcord picks up a saved file by itself. It drops that one file, imports the fresh copy, then wires the new handlers in. Your bot keeps its connection to Discord through all of it, so you can immediately go back to Discord to test your changes.
+Most of the time seedcord reloads a saved file on its own. It drops that one file, imports the fresh copy, then wires the new handlers in. Your bot keeps its connection to Discord through all of it, so you can immediately go back to Discord to test your changes.
 
 A few files cannot work that way.
 
 ## Saves that need a restart
 
-Five things force a full restart when you save them:
+Saving any of these forces a full restart:
 
 - `seedcord.config.ts`, since the CLI read it at startup
 - any `package.json`
@@ -25,7 +25,9 @@ Restart required. Press r to restart.
 
 Nothing restarts by itself. Press `r` once you are ready to lose the connection for a moment.
 
-You might want the same for some of your own files. A file that opens a connection or computes something once at import is the usual candidate, since a reload imports it again and runs that work a second time. `hmr.restart` takes glob patterns, matched against paths under `root`.
+A plugin can add to that list too. The Kysely plugin registers your migrations folder, which [Writing your own](/plugins/your-own) covers under `registerCriticalFiles`.
+
+You might want the same for some of your own files. The usual candidate opens a connection or computes something once at import, since a reload imports it again and runs that work a second time. `hmr.restart` takes glob patterns, matched against paths under `root`.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -45,10 +47,23 @@ export default defineConfig({
 Typos happen. A file that throws on import would normally leave you without a working handler, so seedcord keeps the last good version live instead.
 
 ```txt output
-Rolled back src/handlers/Ping.ts to the last-good version
+Rolled back ./src/handlers/Ping.ts to the last-good version
 ```
 
 Your old handler stays live until your next good save replaces it. Setting `hmr.rollback` to `false` turns that off. A broken file then drops its handlers, so the route stops answering until you fix it.
+
+```ts twoslash title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+// ---cut---
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    entry: './index.ts',
+    hmr: {
+        rollback: false
+    }
+});
+```
 
 ## Type errors while you work
 
@@ -67,7 +82,7 @@ export default defineConfig({
 });
 ```
 
-That costs you a second node process, which is why it starts switched off. It also waits until your bot is ready before it starts, which keeps your first login quick.
+A second node process is the price, so it starts switched off. It also waits until your bot is ready. Your first login stays quick that way.
 
 Pass an object when your build uses a different tsconfig.
 
