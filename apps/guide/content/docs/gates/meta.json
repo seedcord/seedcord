@@ -1,5 +1,16 @@
 {
     "title": "Gates",
     "root": true,
-    "pages": ["index"]
+    "pages": [
+        "index",
+        "permissions",
+        "your-own",
+        "combining",
+        "---Rate limiting---",
+        "cooldown",
+        "effect-gates",
+        "rate-limiter",
+        "---Inside a handler---",
+        "in-handler-permissions"
+    ]
 }

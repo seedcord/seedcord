@@ -3,4 +3,174 @@ title: Gates
 description: Refusing a command before it runs.
 ---
 
-This section is being written.
+A gate runs before `execute()`. It passes and your handler runs, or it refuses and the call stops there. Attach one with [`@Gated`](ref:gateway/Gated), above the route decorator. Check this example below that gates a slash command to users that have the `BanMembers` permission in a server.
+
+```ts twoslash title="src/handlers/Ban.ts"
+import {
+    Gated,
+    GuildOnly,
+    RequirePermissions,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+import { PermissionFlagsBits } from 'discord.js';
+
+@Gated(
+    GuildOnly(),
+    RequirePermissions([PermissionFlagsBits.BanMembers])
+)
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        const target = this.options.getUser('target');
+
+        await this.reply(`Banned ${target.username}.`);
+    }
+}
+```
+
+`execute()` runs once every gate has passed. Anyone in a DM gets a refusal, and so does anyone in a server who cannot ban.
+
+## A gate refuses by throwing
+
+seedcord catches a gate's throw at the same boundary it catches your handler's. The user sees the same card either way. [Throwing](/throwing) covers what each class produces.
+
+Every catalog gate throws a [`Notice`](ref:core/Notice). [`IgnoreBots`](ref:gateway/IgnoreBots) is the exception. It throws a [`Silence`](ref:core/Silence), so the message gets dropped and your bot does not reply.
+
+## Several gates on one handler
+
+`@Gated` takes one gate or several, and all of them have to pass. They run left to right, and the first one to refuse stops the rest.
+
+The order you pick matters once a gate does real work. Put the cheap checks first so a caller who fails one never pays for a database read behind it, for example.
+
+## The catalog gates
+
+{/* prettier-ignore-start */}
+
+| gate | passes when |
+| --- | --- |
+| [`OwnerOnly()`](ref:core/OwnerOnly) | the caller's id is in `ownerIds` |
+| [`GuildOnly()`](ref:core/GuildOnly) | the call came from a server |
+| [`DmOnly()`](ref:core/DmOnly) | the call came from a direct message |
+| [`RequireRole(id)`](ref:core/RequireRole) | the caller holds that role |
+| [`RequirePermissions(bits)`](ref:core/RequirePermissions) | the caller holds every bit you name |
+| [`RequireBotPermissions(bits)`](ref:core/RequireBotPermissions) | your bot holds every bit you name |
+| [`Cooldown(duration)`](ref:core/Cooldown) | uses remain in the current window |
+| [`Nsfw()`](ref:gateway/Nsfw) | the channel is age-restricted. Gateway only |
+| [`IgnoreBots`](ref:gateway/IgnoreBots) | the actor is a person. Gateway only, and event handlers only |
+
+{/* prettier-ignore-end */}
+
+Most of these are functions, so you call one and pass the result. `IgnoreBots` does not take options, so you attach it directly.
+
+```ts twoslash title="src/events/Mentioned.ts"
+import {
+    EventHandler,
+    Gated,
+    IgnoreBots,
+    RegisterEvent
+} from '@seedcord/gateway';
+import { Events } from 'discord.js';
+
+@Gated(IgnoreBots)
+@RegisterEvent([Events.MessageCreate])
+export class Mentioned extends EventHandler<Events.MessageCreate> {
+    public async execute(): Promise<void> {
+        const [message] = this.event;
+
+        await message.reply('hey');
+    }
+}
+```
+
+Every gate carries the context it reads, and `@Gated` checks that against the handler you put it on. Attaching `IgnoreBots` to a slash handler fails to compile, and the message names both.
+
+```ts twoslash
+// @errors: 1238
+import {
+    EventHandler,
+    Gated,
+    Nsfw,
+    RegisterEvent
+} from '@seedcord/gateway';
+import { Events } from 'discord.js';
+
+// ---cut---
+@Gated(Nsfw())
+@RegisterEvent([Events.MessageCreate])
+export class Welcome extends EventHandler<Events.MessageCreate> {
+    public async execute(): Promise<void> {}
+}
+```
+
+[Permissions](/gates/permissions) picks up the three permission gates, and `Cooldown` has its own page under [Cooldowns](/gates/cooldown).
+
+## Who counts as an owner
+
+`OwnerOnly` reads `ownerIds` off your bot config. Leaving it unset refuses everyone.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+export const seedcord = new Seedcord({
+    ownerIds: ['221439658686939136'],
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers')
+        },
+        commands: {
+            path: resolve(import.meta.dirname, './commands')
+        },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+```
+
+## Rewording a refusal
+
+`OwnerOnly`, `GuildOnly`, `DmOnly`, and `Nsfw` take the same [`GateNoticeOptions`](ref:core/GateNoticeOptions). `message` swaps the text and keeps the card. `notice` replaces the whole refusal with a [`Notice`](ref:core/Notice) you wrote.
+
+```ts twoslash
+import {
+    BuilderComponent,
+    GuildOnly,
+    Notice,
+    OwnerOnly
+} from '@seedcord/gateway';
+
+import type { ReplyResponse } from '@seedcord/gateway';
+
+class LockedCard extends BuilderComponent<'container'> {
+    public constructor() {
+        super('container');
+
+        this.instance.addTextDisplayComponents((text) =>
+            text.setContent('### Locked\nAsk a maintainer.')
+        );
+    }
+}
+
+class Locked extends Notice {
+    public constructor() {
+        super('caller is not a maintainer');
+    }
+
+    public render(): ReplyResponse {
+        return { components: [new LockedCard().component] };
+    }
+}
+
+// ---cut---
+GuildOnly({ message: 'Try this in a server.' });
+
+OwnerOnly({ notice: new Locked() });
+```
+
+The three `Require` gates nest that shape one level deeper, since each can refuse for two different reasons. `Cooldown` takes a function in both slots, so its refusal can print the retry time.
+
+When none of these fits, write your own. [Your own gates](/gates/your-own) starts there, and [Combining gates](/gates/combining) folds several into one.
