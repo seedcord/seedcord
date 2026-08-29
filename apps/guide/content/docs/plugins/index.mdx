@@ -173,12 +173,7 @@ seedcord.attach('commands', Mongoose, {
 
 The taken names are `default`, `bot`, `lifecycle`, `health`, `interactions`, `events`, `commands`, `subscribers`, `errors`, `gates`, `plugins`, `hmr`, `cli`, and `tsc`. [Logging](/tooling) covers what each one carries.
 
-Two more mistakes throw once the bot is running, one for reusing a key you already attached, and one for attaching anything at all after startup.
-
-```txt output
-Plugin with key "db" already exists.
-Cannot attach a plugin after initialization.
-```
+Two more mistakes throw once the bot is running. Reusing a key you already attached throws `CorePluginKeyExists`, and attaching anything at all after startup throws `CorePluginAfterInit`.
 
 ## A plugin declares where it runs
 

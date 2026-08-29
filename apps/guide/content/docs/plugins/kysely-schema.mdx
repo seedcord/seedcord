@@ -1,0 +1,136 @@
+---
+title: Your schema
+description: Declaring the database interface that types every Kysely query.
+---
+
+Kysely types every query against one interface you write by hand. You give the plugin that interface by declaring `schema` on [`KyselyDatabase`](ref:plugin-kysely-postgres/KyselyDatabase).
+
+```ts twoslash title="src/database.ts"
+import type { KyselyDatabase } from '@seedcord/plugin-kysely-postgres';
+
+// ---cut---
+import type { ColumnType, Generated } from 'kysely';
+
+export interface UsersTable {
+    id: Generated<number>;
+    discord_id: string;
+    username: string;
+    joined_at: ColumnType<Date, string | undefined, never>;
+}
+
+export interface AppDatabase {
+    users: UsersTable;
+}
+
+declare module '@seedcord/plugin-kysely-postgres' {
+    interface KyselyDatabase {
+        schema: AppDatabase;
+    }
+}
+```
+
+TypeScript applies that block from anywhere in your project, so nothing needs to import `src/database.ts`.
+
+`AppDatabase` takes one entry per table, keyed by the table's name in Postgres. Within a table, two Kysely helpers cover the columns that read back differently from how you write them.
+
+`Generated` covers a column Postgres fills in, so an insert can leave `id` out while a select still reads it as `number`. `ColumnType` sets the three directions by hand. That gives `joined_at` a `Date` on select and an optional `string` on insert, with `never` for updates, so updating it fails to compile.
+
+## Every table name compiles until you declare it
+
+With `KyselyDatabase` left empty, [`KyselySchema`](ref:plugin-kysely-postgres/KyselySchema) falls back to `Record<string, never>`, which widens [`KyselyTable`](ref:plugin-kysely-postgres/KyselyTable) to plain `string`.
+
+```ts twoslash
+import type { KyselyTable } from '@seedcord/plugin-kysely-postgres';
+
+declare const table: KyselyTable;
+//            ^?
+```
+
+So a typo compiles, then fails against Postgres at runtime. Column names go unchecked too, and every column you select comes back typed `never`.
+
+## What the declaration catches
+
+Declaring it stops that typo at compile time.
+
+```ts twoslash
+// @errors: 2345
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+import type { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import type { Generated } from 'kysely';
+
+interface UsersTable {
+    id: Generated<number>;
+    username: string;
+}
+
+declare module '@seedcord/plugin-kysely-postgres' {
+    interface KyselyDatabase {
+        schema: { users: UsersTable };
+    }
+}
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        db: KyselyPostgres;
+    }
+}
+
+@SlashRoute('leaderboard')
+class Leaderboard extends SlashHandler<'leaderboard'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        await this.core.db.connection
+            .selectFrom('user')
+            .selectAll()
+            .execute();
+        // ---cut-after---
+    }
+}
+```
+
+Spelling `users` right returns the row shape, with `id` already unwrapped from its `Generated`.
+
+```ts twoslash hovers
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+import type { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import type { Generated } from 'kysely';
+
+interface UsersTable {
+    id: Generated<number>;
+    username: string;
+}
+
+declare module '@seedcord/plugin-kysely-postgres' {
+    interface KyselyDatabase {
+        schema: { users: UsersTable };
+    }
+}
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        db: KyselyPostgres;
+    }
+}
+
+@SlashRoute('leaderboard')
+class Leaderboard extends SlashHandler<'leaderboard'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const row = await this.core.db.connection
+            .selectFrom('users')
+            .select(['id', 'username'])
+            .executeTakeFirst();
+
+        await this.reply(row ? row.username : 'No record.');
+        // ---cut-after---
+    }
+}
+```
+
+## Nothing checks this against your database
+
+Your migrations create the tables and you write this interface by hand, so adding a column in a migration changes Postgres alone. TypeScript keeps the old shape until you add it here too, which makes every migration an edit in two places.
+
+[Migrations](/plugins/kysely-migrations) covers writing them. From there, [Services](/plugins/kysely-services) narrows this schema to one table at a time.

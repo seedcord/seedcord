@@ -38,7 +38,7 @@ declare module '@seedcord/gateway' {
 export {};
 ```
 
-That `Bot` binding is the default export of the file your `instance` key names, which is how each row reads a key's type from the bot you actually built. Exporting that bot as a named const alone stops codegen before it writes anything, with "Seedcord instance must default export an object with a start() method."
+That `Bot` binding is the default export of the file your `instance` key names, which is how each row reads a key's type from the bot you actually built. Exporting that bot as a named const alone stops codegen before it writes anything, with the code `CliInstanceInvalid`.
 
 The [`Core`](ref:gateway/Core) block only appears once you have attached something. Its `declare module` line names the package you import `Seedcord` from, so the same file on an http bot opens `declare module '@seedcord/http'`.
 

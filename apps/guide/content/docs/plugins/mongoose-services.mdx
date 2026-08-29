@@ -134,18 +134,19 @@ declare module '@seedcord/gateway' {
     }
 }
 
-// ---cut---
 @SlashRoute('history')
-export class History extends SlashHandler<'history'> {
+class History extends SlashHandler<'history'> {
     public async execute(): Promise<void> {
+        // ---cut---
         const found =
             await this.core.db.services.users.findByName('ada');
 
         await this.reply(
             found ? `Found ${found.username}.` : 'No record.'
         );
+        // ---cut-after---
     }
 }
 ```
 
-`services` fills up only after the plugin has connected and loaded every class. Reading it before then throws "Mongoose services accessed before the plugin finished initializing."
+`services` fills up only after the plugin has connected and loaded every class. Reading it before then throws `PluginMongooseServicesNotReady`.

@@ -97,7 +97,7 @@ The `ready` field takes a timeout and no phase, since `ready()` always runs in t
 
 Each method gets its own timeout. `init()` and `ready()` default to 15000ms, `dispose()` to 10000ms.
 
-A method that runs past its timeout throws. The task name in the message carries the attach key and which method ran.
+A method that runs past its timeout throws `LifecycleTaskTimeout`. The task name in the message carries the attach key and which method ran.
 
 ```txt output
 Task "Plugin (db)" timed out after 15000ms.
@@ -105,7 +105,7 @@ Task "Plugin:db:ready" timed out after 15000ms.
 Task "Plugin:db:dispose" timed out after 10000ms.
 ```
 
-Declaring a timeout of zero, a negative number, or `Infinity` throws in the constructor, before any of your code runs.
+Declaring a timeout of zero, a negative number, or `Infinity` throws `PluginInvalidLifecycleTimeout` in the constructor, before any of your code runs.
 
 ## When init fails
 
@@ -113,10 +113,10 @@ A throw from `init()` stops startup. seedcord disposes every plugin whose `init(
 
 The plugin that threw never gets its `dispose()` call, so close whatever `init()` already opened before you throw.
 
-That host cannot start again either. Calling `start()` on it a second time throws "Startup failed and this host cannot start again. Construct a new instance."
+That host cannot start again either. Calling `start()` on it a second time throws `LifecycleRestartAfterFailure`.
 
 <Callout type="warning">
 
-During shutdown one failing `dispose()` never stops the others. seedcord runs them all, then throws the single failure it caught. Several failures throw as one `AggregateError` reading `2 plugins failed to dispose.`, with each individual error on its `errors` array.
+During shutdown one failing `dispose()` never stops the others. seedcord runs them all, then throws the single failure it caught. Several failures throw as one `AggregateError` carrying `PluginDisposeFailures`, with each individual error on its `errors` array.
 
 </Callout>

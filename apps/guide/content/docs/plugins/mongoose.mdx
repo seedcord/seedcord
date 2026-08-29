@@ -63,9 +63,9 @@ The plugin adds `tls: true` and `ssl: true` when the environment is set to `prod
 
 `init()` connects, then reads every service class from `dir`. A failure at either step disconnects and rethrows.
 
-When the connection fails you get "Could not connect to MongoDB (seedcord)." The parentheses hold your `name` option, and the `cause` holds mongoose's own error.
+A failed connection throws `PluginMongooseConnectionFailed`, which names your `name` option in the message and carries mongoose's own error on the `cause`.
 
-Shutdown runs the same steps backwards. `dispose()` clears the service registry and every loaded model, then closes the connection. A failure at that last step throws "Failed to disconnect from MongoDB cleanly during shutdown."
+Shutdown runs the same steps backwards. `dispose()` clears the service registry and every loaded model, then closes the connection. A failure at that last step throws `PluginMongooseDisconnectFailed`.
 
 ## The mongoose instance
 
@@ -82,13 +82,14 @@ declare module '@seedcord/gateway' {
     }
 }
 
-// ---cut---
 @SlashRoute('history')
-export class History extends SlashHandler<'history'> {
+class History extends SlashHandler<'history'> {
     public async execute(): Promise<void> {
+        // ---cut---
         const state = this.core.db.connection.connection.readyState;
 
         await this.reply(`Connection state ${String(state)}.`);
+        // ---cut-after---
     }
 }
 ```

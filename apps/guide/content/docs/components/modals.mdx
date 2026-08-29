@@ -64,7 +64,7 @@ export class Appeal extends SlashHandler<'ban'> {
 
 <Callout type="danger">
 
-`showModal()` has to be the initial response. Calling it after `reply()`, `defer()`, or `deferUpdate()` throws with `showModal() was called when this interaction was already acknowledged`. Discord also forbids a modal opening another modal, so the call fails to compile inside a [`ModalHandler`](ref:gateway/ModalHandler).
+`showModal()` has to be the initial response. Calling it after `reply()`, `defer()`, or `deferUpdate()` throws `ReplyIllegalAckState`, covered in [When a reply throws](/replying/ack-states). Discord also forbids a modal opening another modal, so the call fails to compile inside a [`ModalHandler`](ref:gateway/ModalHandler).
 
 </Callout>
 
