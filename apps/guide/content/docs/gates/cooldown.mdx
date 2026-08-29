@@ -152,37 +152,6 @@ Two requests racing the same key can both read a free slot before either records
 
 ## Keeping windows across restarts
 
-The default store keeps windows in memory, so a restart clears every cooldown. A serverless deploy gets one store per isolate, which spreads a window across however many isolates are warm.
+Cooldown windows live in [`core.rateLimiter`](ref:types/IRateLimiter), which counts in memory by default. A restart clears every cooldown, and a serverless deploy gets one set per isolate.
 
-Point `store` at something durable to fix both.
-
-```ts twoslash title="src/bot.ts"
-import { resolve } from 'node:path';
-
-import { Seedcord } from '@seedcord/gateway';
-import { GatewayIntentBits } from 'discord.js';
-
-import type { Store } from '@seedcord/gateway';
-
-declare const redisStore: Store<'charge'>;
-
-// ---cut---
-export const seedcord = new Seedcord({
-    store: redisStore,
-    bot: {
-        clientOptions: { intents: [GatewayIntentBits.Guilds] },
-        interactions: {
-            path: resolve(import.meta.dirname, './handlers')
-        },
-        commands: {
-            path: resolve(import.meta.dirname, './commands')
-        },
-        events: { path: null }
-    },
-    subscribers: { path: null }
-});
-```
-
-Each window's key includes the route, so a durable store rebuilds the same windows after a restart.
-
-Reading and writing those windows yourself is [The rate limiter](/gates/rate-limiter).
+[The rate limiter](/gates/rate-limiter) covers the `store` config key that replaces it, and charging a window yourself.
