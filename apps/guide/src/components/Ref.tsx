@@ -15,12 +15,13 @@ export interface RefProps {
 
 export function Ref({ pkg, symbol, children }: RefProps): ReactElement {
     // the reference site anchors a member on its owner's page, in AnchorStrategy.buildMemberHref
-    const [owner = '', ...members] = (symbol.match(/[^.#]+/g) ?? []).map(slugifySegment);
+    const [owner, ...members] = (symbol.match(/[^.#]+/g) ?? []).map(slugifySegment);
     const anchor = members.at(-1);
+    const page = `${DOCS_URL}/packages/${pkg}/latest`;
 
     return (
         <a
-            href={`${DOCS_URL}/packages/${pkg}/latest/${owner}${anchor ? `#${anchor}` : ''}`}
+            href={owner === undefined ? page : `${page}/${owner}${anchor ? `#${anchor}` : ''}`}
             target="_blank"
             rel="noreferrer noopener"
             className={cn(LINK)}

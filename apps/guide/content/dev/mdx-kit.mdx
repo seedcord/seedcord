@@ -220,6 +220,8 @@ A symbol link is a markdown link with a `ref:` target, and the slug comes off th
 
 A multi-word name kebab-cases itself: [SlashHandler](ref:gateway/SlashHandler) reaches `slash-handler`. A dotted member anchors on its owner's page: [Paginator.start](ref:core/Paginator.start) reaches `paginator#start`. A generic drops off the end, which puts [`Plugin<Options>`](ref:core/Plugin<Options>) and [Plugin](ref:core/Plugin) on one page.
 
+Dropping the symbol reaches the package itself, so [`@seedcord/utils`](ref:utils) opens its landing page.
+
 The link text is free. [The card a refusal renders](ref:core/Notice) points at the same page as its own name. Each package is its own segment, so [createSeedcord](ref:http/createSeedcord) and [Seedcord](ref:gateway/Seedcord) each reach their own. Every one of these opens in a new tab.
 
 A heading takes no symbol link, since its text also renders in the table of contents. The build says so by name.
