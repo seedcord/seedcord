@@ -4,7 +4,13 @@ import { displayWidth, wrapText } from './displayWidth';
 import { renderMarkdown } from './markdown';
 
 import type { LinePart } from './borders';
-import type { TableOptions } from './options';
+import type { BorderStyle, Overflow, TableOptions } from './options';
+
+// a GFM cell holds one line, leaving truncation as markdown's only way to honour maxWidth
+function truncationWidth(maxWidth: number | undefined, overflow: Overflow, border: BorderStyle): number | undefined {
+    if (maxWidth === undefined) return undefined;
+    return overflow === 'truncate' || border === 'markdown' ? maxWidth : undefined;
+}
 
 export function renderSingle(data: readonly (readonly string[])[], options?: TableOptions): string {
     if (data.length === 0) return '';
@@ -24,13 +30,14 @@ export function renderSingle(data: readonly (readonly string[])[], options?: Tab
     const columnCount = data.reduce((max, row) => Math.max(max, row.length), 0);
     if (columnCount === 0) return '';
 
+    const cutAt = truncationWidth(maxWidth, overflow, border);
+
     // a raw newline in a cell would split the framed output across physical lines
     const grid = data.map((row) =>
         Array.from({ length: columnCount }, (_, i) => {
             const cell = (row[i] ?? '').replaceAll(/\r?\n/g, ' ');
             const filled = cell === '' ? emptyCell : cell;
-            if (maxWidth === undefined || overflow !== 'truncate') return filled;
-            return truncate(filled, maxWidth);
+            return cutAt === undefined ? filled : truncate(filled, cutAt);
         })
     );
 
@@ -44,7 +51,7 @@ export function renderSingle(data: readonly (readonly string[])[], options?: Tab
     const pad = ' '.repeat(padding);
 
     if (border === 'markdown') {
-        const md = renderMarkdown(grid, columnCount, alignments, pad);
+        const md = renderMarkdown(grid, columnCount, alignments, pad, header);
         return fence ? wrapFence(md) : md;
     }
 

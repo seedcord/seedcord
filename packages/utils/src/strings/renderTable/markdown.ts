@@ -7,7 +7,8 @@ export function renderMarkdown(
     grid: readonly (readonly string[])[],
     columnCount: number,
     alignments: readonly Alignment[],
-    pad: string
+    pad: string,
+    header: boolean
 ): string {
     // a raw | or \ in a cell would split or corrupt the GFM row, so escape before measuring widths
     const escapeCell = (value: string): string => value.replaceAll('\\', '\\\\').replaceAll('|', String.raw`\|`);
@@ -29,7 +30,8 @@ export function renderMarkdown(
         return ' --- ';
     };
 
-    const [head = [], ...body] = escaped;
+    // GFM always puts a delimiter under the first row. a headerless table gets a blank one to sit under
+    const [head = [], ...body] = header ? escaped : [[], ...escaped];
     const delimiter = `|${columnWidths.map((_, col) => delimiterCell(col)).join('|')}|`;
     const lines = [row(head), delimiter, ...body.map(row)];
     return `${lines.join('\n')}\n`;

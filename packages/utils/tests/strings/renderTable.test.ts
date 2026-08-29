@@ -186,6 +186,31 @@ describe('renderTable markdown alignment and escaping', () => {
         expect(header).toContain(String.raw`a\|b`);
         expect(header).toContain(String.raw`c\\d`);
     });
+
+    it('caps a cell at maxWidth without asking for truncate, since a GFM cell cannot wrap', () => {
+        const table = renderTable([['description'], ['hello world this is long']], {
+            border: 'markdown',
+            maxWidth: 10
+        });
+        const lines = table.split('\n');
+        expect(lines[0]).toBe('| descripti… |');
+        expect(lines[2]).toBe('| hello wor… |');
+    });
+
+    it('keeps row 0 as data under header false, with an empty header above the delimiter', () => {
+        const table = renderTable(
+            [
+                ['a', 'b'],
+                ['c', 'd']
+            ],
+            { border: 'markdown', header: false }
+        );
+        const lines = table.split('\n').filter((line) => line.length > 0);
+        expect(lines[0]).toBe('|   |   |');
+        expect(lines[1]).toBe('| --- | --- |');
+        expect(lines[2]).toBe('| a | b |');
+        expect(lines[3]).toBe('| c | d |');
+    });
 });
 
 describe('renderTable header control', () => {

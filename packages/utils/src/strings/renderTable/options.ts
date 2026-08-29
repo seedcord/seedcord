@@ -1,10 +1,11 @@
 export type Alignment = 'left' | 'center' | 'right';
 export type BorderStyle = 'double' | 'rounded' | 'ascii' | 'markdown';
-type Overflow = 'wrap' | 'truncate';
+export type Overflow = 'wrap' | 'truncate';
 
 export interface TableOptions {
     /**
-     * Treats the first row as a header and draws a separator beneath it (heavier for the double and ascii frames).
+     * Treats the first row as a header and draws a separator beneath it. The double frame draws that separator heavier.
+     * The markdown border always carries its delimiter row. Turning this off puts a blank row above it.
      * @defaultValue true
      */
     header?: boolean;
@@ -37,7 +38,8 @@ export interface TableOptions {
     /** Max content display width applied to every column. Wider cells are wrapped or truncated. */
     maxWidth?: number;
     /**
-     * How an over-wide cell is handled once maxWidth is set. `wrap` word-wraps onto multiple lines, `truncate` cuts with a trailing ellipsis. The markdown border applies `truncate` but not `wrap`.
+     * How an over-wide cell is handled once maxWidth is set. `wrap` word-wraps onto multiple lines, `truncate` cuts with a trailing ellipsis.
+     * A GFM cell holds one line. The markdown border truncates whatever this says.
      * @defaultValue 'wrap'
      */
     overflow?: Overflow;
