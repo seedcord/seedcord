@@ -87,7 +87,7 @@ export class Trace extends Subscriber<'eventDispatching'> {
 
 ## The fault keys
 
-`unknownException` carries the `uuid`, the `error`, the `routeId`, optional `guild` and `user` fields, and a `metadata` field typed `unknown`. On a fault from an event handler that metadata holds the event name, the handler, and the args. `handledException` carries the `uuid`, the `routeId`, the `Notice` itself as `denial`, and a [`FaultSource`](ref:core/FaultSource) naming where the throw came from.
+`unknownException` carries the `uuid`, the `error`, the `routeId`, and optional `guild`, `user`, and `metadata` fields. `metadata` is typed `unknown`. On a fault from an event handler that metadata holds the event name, the handler, and the args. `handledException` carries the `uuid`, the `routeId`, the `Notice` itself as `denial`, and a [`FaultSource`](ref:core/FaultSource) naming where the throw came from.
 
 seedcord ships a subscriber for each and registers it for you. Both post a card to a Discord webhook once you set `UNKNOWN_EXCEPTION_WEBHOOK_URL` and `HANDLED_EXCEPTION_WEBHOOK_URL`. An unset variable leaves that reporter off, with one line at boot to say so. [Reporting faults](/throwing/reporting) covers the cards and writing your own.
 
