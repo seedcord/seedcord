@@ -1,0 +1,163 @@
+---
+title: Writing your own
+description: Extending the Plugin base, declaring where it runs, and reaching the host.
+---
+
+Extend [`Plugin`](ref:core/Plugin) and write `init()`. Everything else on the base is optional.
+
+```ts twoslash title="src/plugins/Uptime.ts"
+import { Plugin } from '@seedcord/gateway';
+
+export class Uptime extends Plugin {
+    private startedAt = 0;
+
+    public async init(): Promise<void> {
+        this.startedAt = Date.now();
+    }
+
+    public elapsed(): number {
+        return Date.now() - this.startedAt;
+    }
+}
+```
+
+Attach it with two arguments, since its constructor takes only the host.
+
+```ts twoslash
+import { Plugin, Seedcord } from '@seedcord/gateway';
+
+declare const seedcord: Seedcord;
+
+class Uptime extends Plugin {
+    public async init(): Promise<void> {}
+}
+
+// ---cut---
+seedcord.attach('uptime', Uptime);
+```
+
+## Which base to import
+
+Each transport exports its own `Plugin`. The one you pick decides the type of `this.core`.
+
+{/* prettier-ignore-start */}
+
+| import from | `this.core` carries | write this one for |
+| --- | --- | --- |
+| `@seedcord/gateway` | the gateway `Core`, including `bot` | a plugin inside a gateway bot |
+| `@seedcord/http` | the http `Core` | a plugin inside an http bot |
+| `@seedcord/core/plugin` | `CoreBase`, the members both transports share | a plugin you publish for both |
+
+{/* prettier-ignore-end */}
+
+[`CoreBase`](ref:core/CoreBase) carries `config`, `rest`, `applicationId`, `rateLimiter`, and `bus`. Anything beyond those needs a transport base.
+
+<Callout type="transport">
+    `config` narrows with the base you extend. A transport base
+    types it as that transport's own config, and `CoreBase` types it
+    as the shared `Config`.
+</Callout>
+
+## Declaring where it runs
+
+The gateway base declares `transport: 'gateway'` and `runtime: 'server'`. The http base declares `transport: 'http'`.
+
+The base from `@seedcord/core/plugin` leaves both at `'any'`. Pass the [`PluginOptions`](ref:core/PluginOptions) generic to narrow them.
+
+```ts twoslash
+import { Plugin } from '@seedcord/core/plugin';
+
+export class Voice extends Plugin<{
+    transport: 'gateway';
+    runtime: 'server';
+}> {
+    public async init(): Promise<void> {}
+}
+```
+
+Either field stands alone. `Plugin<{ runtime: 'server' }>` keeps a plugin off the edge runtime and takes either transport.
+
+Attaching `Voice` to an http bot fails to compile. [The index](/plugins) shows the error.
+
+## What the constructor takes
+
+The host comes first, and its type has to be `CoreBase`. The parameters after it are yours, and `attach` passes them through.
+
+```ts twoslash
+import { Plugin } from '@seedcord/gateway';
+
+import type { CoreBase } from '@seedcord/core';
+
+// ---cut---
+export class Uptime extends Plugin {
+    public constructor(
+        host: CoreBase,
+        private readonly label: string
+    ) {
+        super(host);
+    }
+
+    public async init(): Promise<void> {
+        this.logger.info(`tracking ${this.label}`);
+    }
+}
+```
+
+Narrowing that first parameter to the gateway `Core` fails to compile. The error reads:
+
+```txt output
+this plugin constructor must take CoreBase as its first parameter and read the transport Core off this.core
+```
+
+## Rejecting bad options
+
+Call [`rejectOptions`](ref:core/Plugin.rejectOptions) from the constructor. It throws with your class name before the reason.
+
+```ts twoslash
+import { Plugin } from '@seedcord/gateway';
+
+import type { CoreBase } from '@seedcord/core';
+
+// ---cut---
+export class Uptime extends Plugin {
+    public constructor(host: CoreBase, label: string) {
+        super(host);
+
+        if (label.length === 0)
+            this.rejectOptions('label is empty');
+    }
+
+    public async init(): Promise<void> {}
+}
+```
+
+That throws `Uptime rejected its options, label is empty.`
+
+## Logging
+
+`this.logger` exists from the constructor onward. It prints under your class name, on the [channel your attach key names](/plugins#the-key-also-names-a-log-channel).
+
+## Reacting to a dev reload
+
+Override [`onHmr`](ref:core/Plugin.onHmr) to react when `seedcord dev` swaps a changed file. Call [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles) with glob patterns that should force a full restart.
+
+```ts twoslash
+import { Plugin } from '@seedcord/gateway';
+
+import type { HmrUpdateEvent } from '@seedcord/core/plugin';
+
+// ---cut---
+export class Uptime extends Plugin {
+    public async init(): Promise<void> {
+        this.registerCriticalFiles(['src/schema/**']);
+    }
+
+    public override async onHmr(
+        event: HmrUpdateEvent
+    ): Promise<void> {
+        this.logger.debug(`${event.file} changed`);
+    }
+}
+```
+
+Both do nothing outside dev.
