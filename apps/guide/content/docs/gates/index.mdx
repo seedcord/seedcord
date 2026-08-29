@@ -41,7 +41,7 @@ Every catalog gate throws a [`Notice`](ref:core/Notice). [`IgnoreBots`](ref:gate
 
 `@Gated` takes one gate or several, and all of them have to pass. They run left to right, and the first one to refuse stops the rest.
 
-The order you pick matters once a gate does real work. Put the cheap checks first so a caller who fails one never pays for a database read behind it, for example.
+The order you pick matters once a gate does real work. Put the cheap checks first so a caller who fails one never reaches the database read behind it, for example.
 
 ## The catalog gates
 
