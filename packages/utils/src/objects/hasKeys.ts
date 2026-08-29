@@ -1,9 +1,8 @@
 import type { UnionToIntersection } from 'type-fest';
 
 /**
- * Extracts the type of a nested property, distributing over unions.
- *
- * @internal
+ * Extracts the type of a nested property, distributing over unions. {@link hasKeys} narrows through
+ * this.
  */
 export type DeepGet<Obj, Key extends string> = Obj extends unknown
     ? Key extends `${infer K}.${infer Rest}`
@@ -17,8 +16,7 @@ export type DeepGet<Obj, Key extends string> = Obj extends unknown
 
 /**
  * Converts a dot-notation path string into a nested object type with a specific leaf value.
- *
- * @internal
+ * {@link hasKeys} builds its narrowed type out of these.
  */
 export type PathToObj<Path extends string, Value> = Path extends `${infer Head}.${infer Tail}`
     ? { [K in Head]: PathToObj<Tail, Value> }

@@ -28,9 +28,8 @@ export type JsonifyWithCirculars<BaseType, Marker extends string = '[Circular]'>
                     : never;
 
 /**
- * Helper to JSONify object types with circular markers.
- *
- * @internal
+ * JSONifies an object type with circular markers. {@link JsonifyWithCirculars} resolves to this for
+ * any object position.
  */
 export type JsonifyObject<BaseType, Marker extends string> = {
     [

@@ -1,5 +1,5 @@
 /**
- * Copies only the keys whose values are defined.
+ * Copies only the keys holding a value, dropping both `undefined` and `null`.
  *
  * @typeParam TObject - the original object type you're pulling from
  * @typeParam TKey - the keys to copy when defined
@@ -12,14 +12,14 @@
  *   host?: string;
  *   port?: number;
  *   user?: string;
- *   password?: string;
+ *   password?: string | null;
  * }
  *
  * const config: Config = {
  *   host: 'localhost',
  *   port: undefined,
  *   user: 'admin',
- *   password: undefined
+ *   password: null
  * };
  *
  * const definedConfig = keepDefined(config, 'host', 'port', 'user', 'password');

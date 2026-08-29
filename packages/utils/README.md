@@ -65,7 +65,7 @@ Passing epoch ms straight into `<t:...>` renders a date tens of thousands of yea
 | `longestStringLength(arr)` | the character count of the longest element, numbers included |
 | `prettify(key, opts?)` | camelCase, PascalCase, snake_case, or kebab-case to spaced words |
 | `prettyDifference(before, after)` | the difference as a string, prefixed with `+` when positive |
-| `renderTable(data, options?)` | a framed monospace table for Discord. Widths use display width, so emoji and CJK cells stay aligned. Pass `budget` for one string per page |
+| `renderTable(data, options?)` | a framed monospace table for Discord. Widths count a CJK character or an emoji as two columns, which a terminal draws square and Discord draws wide for emoji. Pass `budget` for one string per page |
 | `stripAnsi(value)` | strips ANSI escape sequences, for a sink that would print them raw |
 
 <!-- prettier-ignore-end -->

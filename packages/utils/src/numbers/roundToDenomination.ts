@@ -1,12 +1,11 @@
-import type { TupleOf } from 'type-fest';
-
 export interface RoundToDenomOptions {
     /**
-     * Suffixes to use for each denomination level.
+     * Suffixes to use for each denomination level, one per thousand. Shortening stops at the last one,
+     * so a shorter list leaves a larger number in front of it.
      *
      * @defaultValue `['K', 'M', 'B', 'T', 'Q']`
      */
-    suffixes?: TupleOf<5, string>;
+    suffixes?: readonly string[];
     /**
      * Number of decimal places to include in the rounded result.
      *
@@ -18,8 +17,11 @@ export interface RoundToDenomOptions {
 /**
  * Rounds a number to a string representation with a denomination suffix.
  *
+ * A number below 1000 comes back as its own digits.
+ *
  * @example
  * ```ts
+ * roundToDenomination(999); // "999"
  * roundToDenomination(1234); // "1.2K"
  * roundToDenomination(10000, { suffixes: ['k', 'm', 'b', 't', 'q'] }); // "10k"
  * roundToDenomination(12345678); // "12.3M"
@@ -28,7 +30,7 @@ export interface RoundToDenomOptions {
 export function roundToDenomination(num: number, opts?: RoundToDenomOptions): string {
     const { suffixes = ['K', 'M', 'B', 'T', 'Q'], precision = 1 } = opts ?? {};
 
-    if (num < 10_000) {
+    if (num < 1000) {
         return num.toString();
     }
 

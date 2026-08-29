@@ -1,7 +1,7 @@
 /**
  * Function takes an array of strings or numbers and returns the number of characters in the longest string/number
  *
- * @returns The length of the longest element when converted to string
+ * @returns The length of the longest element when converted to string, or `0` for an empty array.
  *
  * @example
  * ```ts
@@ -9,5 +9,6 @@
  * ```
  */
 export function longestStringLength(arr: (string | number)[]): number {
-    return Math.max(...arr.map((el) => el.toString().length));
+    // Math.max() with no arguments is -Infinity
+    return arr.reduce<number>((longest, el) => Math.max(longest, el.toString().length), 0);
 }
