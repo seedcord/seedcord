@@ -34,4 +34,10 @@
     :is(h1, h2, h3, h4, h5, h6)[id] {
         scroll-margin-top: calc(var(--nav-h, 0px) + var(--heading-gap));
     }
+
+    /* next scrolls the changed route segment into view on navigation */
+    main > article {
+        /* matches main's py-10 */
+        scroll-margin-top: calc(var(--nav-h, 0px) + 2.5rem);
+    }
 }

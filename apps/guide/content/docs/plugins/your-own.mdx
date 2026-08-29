@@ -54,8 +54,8 @@ Each transport exports its own `Plugin`. The one you pick sets the type of `this
 
 <Callout type="transport">
     `config` narrows with the base you extend. A transport base
-    types it as that transport's own config, and `CoreBase` types it
-    as the shared `Config`.
+    types it as that transport's own config. `CoreBase` types it as
+    the shared `Config`.
 </Callout>
 
 ## Declaring where it runs
@@ -81,7 +81,7 @@ Attaching `Voice` to an http bot fails to compile. [The index](/plugins) shows t
 
 ## What the constructor takes
 
-The host comes first, and its type has to be `CoreBase`. The parameters after it are yours, and `attach` passes them through.
+The host comes first. Its type has to be `CoreBase`. Every parameter after it is yours, and `attach` passes them through.
 
 ```ts twoslash
 import { Plugin } from '@seedcord/gateway';
@@ -131,7 +131,7 @@ export class Uptime extends Plugin {
 }
 ```
 
-That throws `Uptime rejected its options, label is empty.`
+That throws "Uptime rejected its options, label is empty." Your class name comes first, then whatever reason you passed.
 
 ## Logging
 

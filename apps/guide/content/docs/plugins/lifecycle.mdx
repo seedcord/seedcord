@@ -113,7 +113,7 @@ A throw from `init()` stops startup. seedcord disposes every plugin whose `init(
 
 The plugin that threw never gets its `dispose()` call, so close whatever `init()` already opened before you throw.
 
-That host cannot start again. Calling `start()` on it a second time throws `Startup failed and this host cannot start again. Construct a new instance.`
+That host cannot start again either. Calling `start()` on it a second time throws "Startup failed and this host cannot start again. Construct a new instance."
 
 <Callout type="warning">
 

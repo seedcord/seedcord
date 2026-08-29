@@ -1,0 +1,151 @@
+---
+title: Mongoose services
+description: A typed class per collection, and how the plugin finds it.
+---
+
+A service is one class per collection. Extend [`MongooseService`](ref:plugin-mongoose/MongooseService), declare the schema as a static, and decorate it with a key. That key is what you read it back by.
+
+```ts twoslash title="src/services/Users.ts"
+import {
+    MongooseService,
+    RegisterMongooseService
+} from '@seedcord/plugin-mongoose';
+import mongoose from 'mongoose';
+
+import type { MongooseDocument } from '@seedcord/plugin-mongoose';
+
+interface IUser extends MongooseDocument {
+    username: string;
+    streak: number;
+}
+
+@RegisterMongooseService('users')
+export class Users extends MongooseService<IUser> {
+    public static schema = new mongoose.Schema<IUser>({
+        username: { type: String, required: true, unique: true },
+        streak: { type: Number, default: 0 }
+    });
+
+    public findByName(username: string): Promise<IUser | null> {
+        return this.model.findOne({ username }).lean().exec();
+    }
+}
+
+declare module '@seedcord/plugin-mongoose' {
+    interface MongooseServices {
+        users: Users;
+    }
+}
+```
+
+[`MongooseDocument`](ref:plugin-mongoose/MongooseDocument) declares `_id: string`, the one field every document has. Passing your own document type makes `this.model` a `Model<IUser>`, with every mongoose query method typed against your fields. Leaving the type argument off falls back to a bare `_id`.
+
+## You never construct a service
+
+The plugin reads every class in the `dir` you passed to `attach`, builds its model, then constructs it. That constructor call is the registration, so `new Users()` never appears in your code.
+
+<Callout type="warning">
+
+The plugin only picks up a class carrying `@RegisterMongooseService`. An undecorated one is skipped in silence, so `services.users` comes back undefined with nothing thrown and nothing logged.
+
+</Callout>
+
+## The model name sets the collection
+
+The key is also the mongoose model name, which mongoose then pluralizes to find the collection. So a key of `user` reads and writes the `users` collection.
+
+Pass `modelName` when the two should differ.
+
+```ts twoslash
+import {
+    MongooseService,
+    RegisterMongooseService
+} from '@seedcord/plugin-mongoose';
+import mongoose from 'mongoose';
+
+import type { MongooseDocument } from '@seedcord/plugin-mongoose';
+
+interface IUser extends MongooseDocument {
+    username: string;
+}
+
+declare module '@seedcord/plugin-mongoose' {
+    interface MongooseServices {
+        users: Users;
+    }
+}
+
+// ---cut---
+@RegisterMongooseService('users', { modelName: 'app_user' })
+export class Users extends MongooseService<IUser> {
+    public static schema = new mongoose.Schema<IUser>({
+        username: { type: String, required: true }
+    });
+}
+```
+
+That reads the `app_users` collection while you still reach it as `services.users`.
+
+## Typing the registry
+
+[`MongooseServices`](ref:plugin-mongoose/MongooseServices) starts empty, so you fill it in yourself with the `declare module` block at the bottom of the first example. Write that block by hand, since codegen never touches it. Codegen handles the `Core` augmentation covered in [Typing a plugin](/plugins/typing).
+
+After you declare it, the key you pass to the decorator must match one of those entries. If you forget to declare a key, TypeScript will fail to compile.
+
+## Reading a service
+
+```ts twoslash hovers
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+import {
+    MongooseService,
+    RegisterMongooseService
+} from '@seedcord/plugin-mongoose';
+import mongoose from 'mongoose';
+
+import type {
+    Mongoose,
+    MongooseDocument
+} from '@seedcord/plugin-mongoose';
+
+interface IUser extends MongooseDocument {
+    username: string;
+}
+
+@RegisterMongooseService('users')
+class Users extends MongooseService<IUser> {
+    public static schema = new mongoose.Schema<IUser>({
+        username: { type: String, required: true }
+    });
+
+    public findByName(username: string): Promise<IUser | null> {
+        return this.model.findOne({ username }).lean().exec();
+    }
+}
+
+declare module '@seedcord/plugin-mongoose' {
+    interface MongooseServices {
+        users: Users;
+    }
+}
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        db: Mongoose;
+    }
+}
+
+// ---cut---
+@SlashRoute('history')
+export class History extends SlashHandler<'history'> {
+    public async execute(): Promise<void> {
+        const found =
+            await this.core.db.services.users.findByName('ada');
+
+        await this.reply(
+            found ? `Found ${found.username}.` : 'No record.'
+        );
+    }
+}
+```
+
+`services` fills up only after the plugin has connected and loaded every class. Reading it before then throws "Mongoose services accessed before the plugin finished initializing."

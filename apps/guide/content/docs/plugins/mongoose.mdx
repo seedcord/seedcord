@@ -3,7 +3,7 @@ title: Mongoose
 description: Connecting a bot to MongoDB using the mongoose library.
 ---
 
-[`@seedcord/plugin-mongoose`](ref:plugin-mongoose) opens a MongoDB connection during startup and loads your service classes from a directory.
+[`@seedcord/plugin-mongoose`](ref:plugin-mongoose) opens a MongoDB connection during startup and loads your service classes from a directory. You'll also need to be familiar with [Mongoose](https://mongoosejs.com/docs/), since the plugin is a thin wrapper over it.
 
 <Shell add="@seedcord/plugin-mongoose mongoose" />
 
@@ -63,9 +63,9 @@ The plugin adds `tls: true` and `ssl: true` when the environment is set to `prod
 
 `init()` connects, then reads every service class from `dir`. A failure at either step disconnects and rethrows.
 
-A connection failure throws `Could not connect to MongoDB (seedcord).` with the driver's own error as its `cause`.
+When the connection fails you get "Could not connect to MongoDB (seedcord)." The parentheses hold your `name` option, and the `cause` holds mongoose's own error.
 
-`dispose()` clears the service registry and every loaded model, then closes the connection. A failure closing it throws `Failed to disconnect from MongoDB cleanly during shutdown.`
+Shutdown runs the same steps backwards. `dispose()` clears the service registry and every loaded model, then closes the connection. A failure at that last step throws "Failed to disconnect from MongoDB cleanly during shutdown."
 
 ## The mongoose instance
 
