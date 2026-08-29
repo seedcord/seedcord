@@ -51,6 +51,7 @@ catalogs:
     '@discordjs/rest': ^2.6.3
     '@tailwindcss/postcss': ^4.3.3
     '@types/node': ^26.1.2
+    '@types/pg': ^8.20.3
     chalk: ^6.0.0
     discord-api-types: ^0.38.52
     lodash.merge: ^4.6.2
@@ -88,7 +89,9 @@ catalogs:
   peer:
     discord.js: ^14.27.0
     envapt: ^8.1.1
+    kysely: ^0.29.4
     mongoose: ^9.9.1
+    pg: ^8.22.0
     typescript: ^6.0.3
   test:
     dedent: ^1.7.2
