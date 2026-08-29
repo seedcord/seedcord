@@ -19,6 +19,14 @@ const AgnosticGate = defineGate('any', () => {});
 
 expectTypeOf(and(AgnosticGate, AgnosticGate)).toEqualTypeOf<Gate<GateContextBase, 'any & any'>>();
 
+expectTypeOf(or(and(AgnosticGate, AgnosticGate), AgnosticGate)).toEqualTypeOf<
+    Gate<GateContextBase, '(any & any) | any'>
+>();
+
+expectTypeOf(or(and(AgnosticGate, or(AgnosticGate, AgnosticGate)), AgnosticGate)).toEqualTypeOf<
+    Gate<GateContextBase, '(any & (any | any)) | any'>
+>();
+
 expectTypeOf<RequiredOf<string>>().toEqualTypeOf<never>();
 
 describe('and', () => {
@@ -56,6 +64,27 @@ describe('and', () => {
 
         expect(and(A, B).name).toBe('a & b');
         expect(or(A, B).name).toBe('a | b');
+    });
+
+    it('wraps a nested combinator so the grouping survives the join', () => {
+        const A = defineGate('a', () => {});
+        const B = defineGate('b', () => {});
+        const C = defineGate('c', () => {});
+
+        expect(or(and(A, B), C).name).toBe('(a & b) | c');
+        expect(and(or(A, B), C).name).toBe('(a | b) & c');
+        expect(and(A, or(B, C)).name).toBe('a & (b | c)');
+    });
+
+    it('keeps bracketing every level down', () => {
+        const A = defineGate('a', () => {});
+        const B = defineGate('b', () => {});
+        const C = defineGate('c', () => {});
+        const D = defineGate('d', () => {});
+
+        expect(or(and(A, or(B, C)), D).name).toBe('(a & (b | c)) | d');
+        expect(and(or(and(A, B), C), D).name).toBe('((a & b) | c) & d');
+        expect(and(or(A, B), or(C, D)).name).toBe('(a | b) & (c | d)');
     });
 });
 

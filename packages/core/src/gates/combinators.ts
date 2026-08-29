@@ -8,6 +8,13 @@ import { defineGate } from './Gate';
 import type { Gate, GateContextBase, RequiredOf } from './Gate';
 import type { IntersectRequired, JoinNames, TwoOrMore } from './matching';
 
+// keep this in step with Grouped in matching.ts
+const ALREADY_JOINED = / [&|] /;
+
+function joinNames(gates: readonly Gate<GateContextBase>[], separator: string): string {
+    return gates.map((gate) => (ALREADY_JOINED.test(gate.name) ? `(${gate.name})` : gate.name)).join(separator);
+}
+
 /**
  * Runs each gate in order and refuses on the first refusal. Takes two or more arms. The required
  * context is the intersection of the arms, so an event-only and an interaction-only gate cannot be
@@ -35,7 +42,7 @@ export function and<Gates extends TwoOrMore<Gate<GateContextBase>>>(
     ...gates: Gates
 ): Gate<IntersectRequired<Gates> & GateContextBase, JoinNames<Gates, ' & '>>;
 export function and(...gates: readonly Gate<GateContextBase>[]): Gate<GateContextBase> {
-    return defineGate(gates.map((gate) => gate.name).join(' & '), async (ctx) => {
+    return defineGate(joinNames(gates, ' & '), async (ctx) => {
         for (const gate of gates) {
             await runCheck(gate, ctx);
         }
@@ -90,7 +97,7 @@ export function or(...args: readonly (Gate<GateContextBase> | OrOptions)[]): Gat
     const options = last !== undefined && isOrOptions(last) ? last : undefined;
     const gates = (options ? args.slice(0, -1) : args) as readonly Gate<GateContextBase>[];
 
-    return defineGate(gates.map((gate) => gate.name).join(' | '), async (ctx) => {
+    return defineGate(joinNames(gates, ' | '), async (ctx) => {
         const summaries: string[] = [];
         let everyArmHasSummary = true;
         for (const gate of gates) {

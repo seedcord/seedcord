@@ -69,7 +69,7 @@ expectTypeOf(and(or(ButtonGate, SlashGate), AgnosticGate)).toEqualTypeOf<
     Gate<
         (InteractionGateContext<ButtonInteraction> | InteractionGateContext<ChatInputCommandInteraction>) &
             GateContextBase,
-        'btn | slash & any'
+        '(btn | slash) & any'
     >
 >();
 
@@ -77,7 +77,7 @@ expectTypeOf(or(and(ButtonGate, AgnosticGate), SlashGate)).toEqualTypeOf<
     Gate<
         | (InteractionGateContext<ButtonInteraction> & GateContextBase)
         | InteractionGateContext<ChatInputCommandInteraction>,
-        'btn & any | slash'
+        '(btn & any) | slash'
     >
 >();
 
