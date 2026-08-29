@@ -172,6 +172,17 @@ describe('RequireBotPermissions', () => {
         expect(text).not.toContain('You are missing');
     });
 
+    it('summarises the bot as needing the permission it lacks', async () => {
+        let caught: unknown;
+        await RequireBotPermissions([BanMembers])
+            .check(permCtx({ appPermissions: 0n }))
+            .catch((error: unknown) => {
+                caught = error;
+            });
+        // the direction is the point. an earlier draft read "The bot holds Ban Members"
+        expect((caught as MissingPermissions).summary).toBe('The bot needs Ban Members');
+    });
+
     it('refuses with NotInGuild when the bot channel set is null', async () => {
         await expect(
             RequireBotPermissions([BanMembers]).check(permCtx({ appPermissions: null }))

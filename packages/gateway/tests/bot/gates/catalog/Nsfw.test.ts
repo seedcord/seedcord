@@ -1,3 +1,5 @@
+import { or, OwnerOnly } from '@seedcord/core';
+import { NeedsAny } from '@seedcord/core/internal';
 import { describe, it, expect } from 'vitest';
 
 import { Nsfw } from '#bot/gates/catalog';
@@ -26,5 +28,23 @@ describe('Nsfw', () => {
 
     it('refuses with no channel', async () => {
         await expect(Nsfw().check(nsfwCtx(null))).rejects.toBeInstanceOf(NotNsfw);
+    });
+
+    it('joins the or list beside a core gate', async () => {
+        // both gates together read only these three
+        const ctx = {
+            interaction: { channel: { isThread: () => false, nsfw: false } },
+            core: { config: { ownerIds: [] } },
+            userId: 'u1'
+        } as unknown as InteractionGateContext<NonModalInteraction>;
+
+        const thrown = await or(Nsfw(), OwnerOnly())
+            .check(ctx)
+            .then(
+                () => undefined,
+                (error: unknown) => error
+            );
+
+        expect(thrown).toBeInstanceOf(NeedsAny);
     });
 });

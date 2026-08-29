@@ -39,7 +39,7 @@ describe('OwnerOnly', () => {
         await expect(OwnerOnly({ notice: custom }).check(ownerCtx('u2', ['o1']))).rejects.toBe(custom);
     });
 
-    it('rewords the refusal with the message override', async () => {
+    it('rewords the refusal with the message override and keeps the or summary', async () => {
         let caught: unknown;
         await OwnerOnly({ message: 'Admins only.' })
             .check(ownerCtx('u2', ['o1']))
@@ -48,6 +48,8 @@ describe('OwnerOnly', () => {
             });
         expect(caught).toBeInstanceOf(NotOwner);
         expect((caught as NotOwner).message).toBe('Admins only.');
+        // a custom message is a whole sentence and would read wrong as a bullet in the or list
+        expect((caught as NotOwner).summary).toBe(new NotOwner().summary);
     });
 });
 

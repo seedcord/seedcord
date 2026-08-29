@@ -14,19 +14,26 @@ export abstract class GateNotice extends Notice {
 export class NotOwner extends GateNotice {
     public constructor(message = 'Only the bot owner can use this.') {
         super(message);
+        this.summary = 'be the bot owner';
     }
 }
 
 export class NotInGuild extends GateNotice {
     public constructor(message = 'This can only be used in a server.') {
         super(message);
+        this.summary = 'be in a server';
     }
 }
 
 export class NotInDm extends GateNotice {
     public constructor(message = 'This can only be used in a direct message.') {
         super(message);
+        this.summary = 'be in a direct message';
     }
+}
+
+function retryAt(resetAt: EpochMs): string {
+    return `<t:${toEpochSeconds(resetAt)}:R>`;
 }
 
 export class OnCooldown extends GateNotice {
@@ -34,7 +41,8 @@ export class OnCooldown extends GateNotice {
         public readonly resetAt: EpochMs,
         message?: string
     ) {
-        super(message ?? `You are doing that too fast. Try again <t:${toEpochSeconds(resetAt)}:R>.`);
+        super(message ?? `You are doing that too fast. Try again ${retryAt(resetAt)}.`);
+        this.summary = `try again ${retryAt(resetAt)}`;
     }
 }
 
@@ -49,13 +57,17 @@ export class NotAllowed extends Notice {
 }
 
 export class NeedsAny extends Notice {
-    public constructor(private readonly summaries: readonly string[]) {
+    private readonly summaries: readonly string[];
+
+    public constructor(summaries: readonly string[]) {
         super('not allowed');
+        // two arms can refuse with the same summary
+        this.summaries = [...new Set(summaries)];
     }
 
     public render(): ReplyResponse {
         const bullets = this.summaries.map((summary) => `• ${summary}`).join('\n');
-        return { components: [new NoticeCard(`You need any of:\n${bullets}`).component] };
+        return { components: [new NoticeCard(`You need to meet at least one of these:\n${bullets}`).component] };
     }
 }
 
@@ -64,6 +76,7 @@ export class MissingRole extends GateNotice {
         super(
             message ?? (roleId ? `You need the <@&${roleId}> role to use this.` : 'You do not have the required role.')
         );
+        this.summary = roleId ? `hold the <@&${roleId}> role` : 'hold the required role';
     }
 }
 
@@ -77,6 +90,8 @@ export class MissingPermissions extends Notice {
     ) {
         super(message ?? 'A required permission is missing.');
         this.customLead = message;
+        const names = missingPerms.join(', ');
+        this.summary = subject === null ? `hold ${names}` : `${subject} needs ${names}`;
     }
 
     public render(): ReplyResponse {
@@ -100,6 +115,7 @@ export class HasDangerousPermissions extends Notice {
     ) {
         super(message ?? 'A dangerous permission is enabled.');
         this.customLead = message;
+        this.summary = `${subject} must not hold ${dangerousPerms.join(', ')}`;
     }
 
     public render(): ReplyResponse {

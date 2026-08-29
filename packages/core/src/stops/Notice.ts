@@ -55,8 +55,9 @@ export abstract class Notice extends Error {
     public ephemeral = true;
 
     /**
-     * A short one-line reason. When every arm of an `or` gate refuses and each refusal sets this, `or`
-     * lists them as the reply.
+     * A short one-line reason. When every arm of an {@link or} gate refuses and each one sets this, `or`
+     * throws a refusal listing them under `You need to meet at least one of these:`. Write a verb phrase that
+     * finishes that line, for example, "be the bot owner".
      */
     public summary?: string;
 

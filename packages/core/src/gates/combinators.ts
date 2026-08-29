@@ -42,12 +42,10 @@ export function and(...gates: readonly Gate<GateContextBase>[]): Gate<GateContex
     });
 }
 
-// the caller-supplied refusal when every or arm refuses, replacing the default list or neutral refusal
 interface OrOptions {
     fail: Notice | ((ctx: GateContextBase) => Notice);
 }
 
-// a gate has a check method, but the options object does not
 function isOrOptions(arg: Gate<GateContextBase> | OrOptions): arg is OrOptions {
     return !('check' in arg);
 }
@@ -55,9 +53,8 @@ function isOrOptions(arg: Gate<GateContextBase> | OrOptions): arg is OrOptions {
 /**
  * Runs each gate in order and passes on the first arm that passes. Takes two or more arms. The
  * required context is the union of the arms. A handler that matches any one arm fits. When every
- * arm refuses it throws the trailing {@link OrOptions} `fail` if given, else an auto list of the
- * arms derived from the summary field, else a default refusal. The trailing options object does not
- * count as an arm.
+ * arm refuses it throws the trailing {@link OrOptions} `fail` if given, else a list built from each
+ * refusal's `summary`, else a default refusal. The trailing options object does not count as an arm.
  *
  * @typeParam Gates - The tuple of two or more gate arms, tried left to right.
  * @param gates - The gate arms to try in order, with an optional trailing {@link OrOptions} object.
@@ -104,7 +101,7 @@ export function or(...args: readonly (Gate<GateContextBase> | OrOptions)[]): Gat
             } catch (error) {
                 // only a refusal counts as an arm declining. a Fault (even report-false), a Silence, or a raw error stops everything
                 if (error instanceof Notice && !(error instanceof Fault) && !error.report) {
-                    // the arm may have queued an effect's commit before refusing, so drop it before the winner carries it
+                    // the arm may have queued an effect's commit before it refused
                     rollbackCommits(ctx, mark);
                     if (error.summary === undefined) everyArmHasSummary = false;
                     else summaries.push(error.summary);
@@ -114,7 +111,7 @@ export function or(...args: readonly (Gate<GateContextBase> | OrOptions)[]): Gat
             }
         }
         if (options) throw typeof options.fail === 'function' ? options.fail(ctx) : options.fail;
-        // the auto-list shows only when every refusal gave a summary, because a partial list would mislead by omission
+        // a partial list would mislead by omission
         if (everyArmHasSummary && summaries.length > 0) throw new NeedsAny(summaries);
         throw new NotAllowed();
     });

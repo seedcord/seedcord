@@ -7,6 +7,7 @@ import type { Role } from 'discord.js';
 export class NotNsfw extends GateNotice {
     public constructor(message = 'This can only be used in an age-restricted channel.') {
         super(message);
+        this.summary = 'be in an age-restricted channel';
     }
 }
 
