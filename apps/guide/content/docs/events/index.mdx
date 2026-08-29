@@ -21,7 +21,7 @@ export class Welcome extends EventHandler<Events.GuildMemberAdd> {
 }
 ```
 
-[`@RegisterEvent`](ref:gateway/RegisterEvent) takes the event in a tuple, and the generic on [`EventHandler`](ref:gateway/EventHandler) names the same one. They have to match. The compiler catches it when they don't.
+[`@RegisterEvent`](ref:gateway/RegisterEvent) takes the event in a tuple. The generic on [`EventHandler`](ref:gateway/EventHandler) has to name the same one, and the compiler catches a mismatch.
 
 `Events.InteractionCreate` fails to compile here. Every interaction kind has its own handler base, taught in [Commands](/commands) and [Components](/components).
 
