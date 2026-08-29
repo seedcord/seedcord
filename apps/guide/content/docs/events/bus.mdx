@@ -1,0 +1,214 @@
+---
+title: The bus
+description: Publishing your own named events inside a bot and reacting to them with a class.
+---
+
+The bus carries named events inside your bot. Any code with a `core` can publish one, and every subscriber on that key runs. Nothing here reaches Discord.
+
+Start by naming the key and its payload. Declaration merging puts them on the [`Subscriptions`](ref:core/Subscriptions) interface that your transport package exports.
+
+```ts twoslash title="src/subscriptions.ts"
+import '@seedcord/gateway';
+
+declare module '@seedcord/gateway' {
+    interface Subscriptions {
+        levelUp: { userId: string; level: number };
+    }
+}
+```
+
+TypeScript augments only a module that the file already imports. Leaving that import out gives `Invalid module name in augmentation`.
+
+Now the key exists everywhere in your project. A subscriber reacts to it.
+
+```ts twoslash hovers title="src/subscribers/Announce.ts"
+import { Subscribe, Subscriber } from '@seedcord/gateway';
+// ---cut-start---
+
+declare module '@seedcord/gateway' {
+    interface Subscriptions {
+        levelUp: { userId: string; level: number };
+    }
+}
+// ---cut-end---
+
+@Subscribe('levelUp')
+export class Announce extends Subscriber<'levelUp'> {
+    public async execute(): Promise<void> {
+        const { userId, level } = this.data;
+
+        this.logger.info(`${userId} reached ${level}`);
+    }
+}
+```
+
+[`@Subscribe`](ref:core/Subscribe) names the key, and the generic on [`Subscriber`](ref:gateway/Subscriber) has to repeat it. A mismatch is a compile error, since `this.data` would carry the wrong payload.
+
+## Publishing
+
+`core.bus.publish` takes the key and its payload. TypeScript checks both against what you declared.
+
+```ts twoslash title="src/handlers/Award.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+
+declare module '@seedcord/gateway' {
+    interface Subscriptions {
+        levelUp: { userId: string; level: number };
+    }
+}
+// ---cut-end---
+
+@SlashRoute('award')
+export class Award extends SlashHandler<'award'> {
+    public async execute(): Promise<void> {
+        const member = this.options.getUser('member');
+
+        this.core.bus.publish('levelUp', {
+            userId: member.id,
+            level: 12
+        });
+
+        await this.reply(`Levelled up <@${member.id}>.`);
+    }
+}
+```
+
+<Callout type="warning">
+
+`publish` returns before your subscribers finish. Code after the call cannot read anything a subscriber wrote. seedcord catches a throwing subscriber and logs it on the `subscribers` channel, so nothing surfaces at the call site.
+
+</Callout>
+
+`publish` returns whether any `on` listener existed for the key. It counts those listeners only, so a key with three subscribers and no listeners returns `false`.
+
+Several subscribers on one key all run at once. Any of them can finish first, so write each one so it stands alone.
+
+## Running once
+
+`@Subscribe` takes a `frequency` option, the same one [`@RegisterEvent`](ref:gateway/RegisterEvent) takes.
+
+```ts twoslash
+import { Subscribe, Subscriber } from '@seedcord/gateway';
+// ---cut-start---
+
+declare module '@seedcord/gateway' {
+    interface Subscriptions {
+        levelUp: { userId: string; level: number };
+    }
+}
+// ---cut-end---
+
+@Subscribe('levelUp', { frequency: 'once' })
+export class FirstLevel extends Subscriber<'levelUp'> {
+    public async execute(): Promise<void> {
+        this.logger.info('somebody levelled for the first time');
+    }
+}
+```
+
+seedcord marks a `'once'` subscriber as spent when it starts, so a throw partway through leaves it spent.
+
+## Where subscribers live
+
+seedcord scans the folder named by `subscribers.path` at startup. The scaffold ships `null` there, so point it at your folder when you write your first one.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+const bot = {
+    clientOptions: { intents: [GatewayIntentBits.Guilds] },
+    interactions: { path: null },
+    commands: { path: null },
+    events: { path: null }
+} as const;
+// ---cut---
+export const seedcord = new Seedcord({
+    bot,
+    subscribers: {
+        path: resolve(import.meta.dirname, './subscribers')
+    }
+});
+```
+
+A class without `@Subscribe` loads and never runs. The `@seedcord/subscriber-missing-decorators` rule reports it.
+
+## Listening without a class
+
+`core.bus` is a [`TypedEventEmitter`](ref:event-emitter/TypedEventEmitter), so a plain callback works too.
+
+```ts twoslash
+import type { Core } from '@seedcord/gateway';
+// ---cut-start---
+
+declare module '@seedcord/gateway' {
+    interface Subscriptions {
+        levelUp: { userId: string; level: number };
+    }
+}
+// ---cut-end---
+
+declare const core: Core;
+// ---cut---
+core.bus.on('levelUp', (data) => {
+    console.log(data.level);
+});
+
+const [data] = await core.bus.waitFor('levelUp', {
+    timeoutMs: 5000
+});
+```
+
+`on`, `once`, and `off` each take a key and a callback. `waitFor` resolves with the next payload and takes a `filter`, a `timeoutMs`, and an abort `signal`. A timeout rejects with a `WaitForError`.
+
+Use a subscriber first, since a class gets `this.core`, `this.logger`, and its own file. `waitFor` suits code that has to block until the next publish.
+
+<Callout type="danger">
+
+Your editor offers `core.bus.emit` beside `publish`, and it does something else. `emit` reaches your `on` listeners and skips every subscriber, so a class decorated with `@Subscribe` never runs. It also drops the catch that `publish` wraps each listener in, which sends a throw to the process. `publish` is the one to call.
+
+</Callout>
+
+## The framework's own keys
+
+seedcord publishes its own keys onto the same bus, and every one of them is yours to listen to.
+
+<Callout type="transport">
+
+Gateway carries nine of these keys and http carries seven. `anyInteraction` exists on both and carries a discord.js `Interaction` on gateway against an `APIInteraction` on http.
+
+</Callout>
+
+```ts twoslash hovers
+import type { Core } from '@seedcord/gateway';
+
+declare const core: Core;
+// ---cut---
+core.bus.on('interactionDispatched', (data) => {
+    console.log(data.routeId, data.durationMs);
+});
+```
+
+Publishing one is a compile error, since seedcord is the only thing that produces them.
+
+```ts twoslash
+// @errors: 2345
+import type { Core } from '@seedcord/gateway';
+// ---cut-start---
+
+declare module '@seedcord/gateway' {
+    interface Subscriptions {
+        levelUp: { userId: string; level: number };
+    }
+}
+// ---cut-end---
+
+declare const core: Core;
+// ---cut---
+core.bus.publish('interactionDispatched', {} as never);
+```
+
+[The framework's bus keys](/events/default-keys) lists them all. A subscriber that posts one to a Discord channel is a [`WebhookLog`](ref:gateway/WebhookLog). [Reporting faults](/throwing/reporting) covers those.

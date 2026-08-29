@@ -38,6 +38,12 @@ const REGISTRIES = `
             cache: 'cached';
         };
         'settings/notifications/enable': { options: {}; cache: 'cached' };
+        award: {
+            options: {
+                member: { kind: 'user'; required: true };
+            };
+            cache: 'cached';
+        };
         roles: { options: {}; cache: 'cached' };
         history: { options: {}; cache: 'cached' };
         feed: { options: {}; cache: 'cached' };
