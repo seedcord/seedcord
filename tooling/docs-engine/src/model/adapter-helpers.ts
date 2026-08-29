@@ -293,6 +293,12 @@ export function belongsInClassBody(item: ApiItem): boolean {
     return !NEVER_IN_A_CLASS_BODY.has(item.kind);
 }
 
+// api extractor writes enum members alphabetically. the manifest keeps each one's source line
+export function enumMembersInOrder(nodes: DocNode[], container: ApiItem | undefined): DocNode[] {
+    if (container?.kind !== ApiItemKind.Enum) return nodes;
+    return nodes.toSorted((a, b) => (a.sources[0]?.line ?? 0) - (b.sources[0]?.line ?? 0));
+}
+
 // TS requires same-name overloads be written adjacently
 export function groupOverloads(members: readonly ApiItem[]): ApiItem[][] {
     const groups: ApiItem[][] = [];

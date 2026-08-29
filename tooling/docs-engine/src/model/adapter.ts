@@ -20,6 +20,7 @@ import {
     buildDeclarationHeader,
     emptyInheritance,
     explicitModifiers,
+    enumMembersInOrder,
     groupOverloads,
     inheritedFromRef,
     paramFlags,
@@ -251,7 +252,7 @@ export class ApiAdapter {
             }
             nodes.push(node);
         }
-        return nodes;
+        return enumMembersInOrder(nodes, owningContainer);
     }
 
     private applyAccessor(node: DocNode, group: ApiItem[]): void {
