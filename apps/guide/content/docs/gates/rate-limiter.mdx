@@ -144,11 +144,86 @@ async function clearAwards(memberId: string): Promise<void> {
 }
 ```
 
-## Where the windows live
+## The default store
 
-The default is a [`MemoryRateLimiter`](ref:rate-limiter/MemoryRateLimiter), which counts inside one process. A restart clears every window. A serverless deploy gets one set per isolate.
+Seedcord builds a [`MemoryRateLimiter`](ref:rate-limiter/MemoryRateLimiter), which counts inside one process. A restart clears every window. A serverless deploy gets one set per isolate.
 
-`store` replaces it. Pass anything implementing `Store<'charge'>` and `core.rateLimiter` becomes that.
+The `store` config key replaces it. What you pass becomes `core.rateLimiter`, so every `charge` on this page and every `Cooldown` gate reads it.
+
+## Writing a store
+
+[`Store`](ref:types/Store) is typed by the verbs a backend supports, and `'charge'` is the rate-limiting one. A `Store<'charge'>` carries two fields plus the three [`IRateLimiter`](ref:types/IRateLimiter) methods.
+
+The generic takes a union, so one backend serving several features declares `Store<'charge' | 'claim'>` and lists both in `caps`. Rate limiting reads `'charge'` alone.
+
+{/* prettier-ignore-start */}
+
+| member | type | holds |
+| --- | --- | --- |
+| `kind` | [`StoreKind`](ref:types/StoreKind) | which backend this is, one of `'memory'`, `'sqlite'`, `'d1'`, `'turso'`, `'durable-object'`, `'redis'` |
+| `caps` | `ReadonlySet<'charge'>` | the verbs it implements, so `new Set(['charge'])` here |
+| `charge` | `(key, window) => Promise<RateLimitResult>` | records a use when a slot is free |
+| `peek` | `(key, window) => Promise<RateLimitResult>` | reads without recording |
+| `reset` | `(key) => Promise<void>` | clears the key's uses |
+
+{/* prettier-ignore-end */}
+
+`implements Store<'charge'>` reports any of the five as missing at compile time.
+
+```ts twoslash title="src/RedisStore.ts"
+import type {
+    RateLimitResult,
+    RateLimitWindow,
+    Store,
+    StoreKind
+} from '@seedcord/gateway';
+
+declare const redis: {
+    charge(
+        key: string,
+        ms: number,
+        limit: number
+    ): Promise<RateLimitResult>;
+    peek(
+        key: string,
+        ms: number,
+        limit: number
+    ): Promise<RateLimitResult>;
+    del(key: string): Promise<void>;
+};
+
+// ---cut---
+function slots(window: RateLimitWindow): number {
+    return Math.max(1, window.limit ?? 1);
+}
+
+export class RedisStore implements Store<'charge'> {
+    public readonly kind: StoreKind = 'redis';
+    public readonly caps = new Set(['charge'] as const);
+
+    public charge(
+        key: string,
+        window: RateLimitWindow
+    ): Promise<RateLimitResult> {
+        return redis.charge(key, window.windowMs, slots(window));
+    }
+
+    public peek(
+        key: string,
+        window: RateLimitWindow
+    ): Promise<RateLimitResult> {
+        return redis.peek(key, window.windowMs, slots(window));
+    }
+
+    public async reset(key: string): Promise<void> {
+        await redis.del(key);
+    }
+}
+```
+
+Two things the type cannot check for you. Resolve `limit` with `Math.max(1, window.limit ?? 1)`, since it is optional and a zero or negative value would otherwise block every call. Then make `charge` read and write in one atomic step, through a Lua script on Redis or a transaction elsewhere. Two requests can each read a free slot before either records a use, and then both pass.
+
+Pass it as `store`. Both transports read the key the same way.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -176,5 +251,3 @@ export const seedcord = new Seedcord({
     subscribers: { path: null }
 });
 ```
-
-Every `Cooldown` window moves with it, since the gate charges the same store.

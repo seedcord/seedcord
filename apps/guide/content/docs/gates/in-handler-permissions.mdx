@@ -1,0 +1,261 @@
+---
+title: Permissions in a handler
+description: Checking a target your handler resolved, after the gates have passed.
+---
+
+The gate catalog checks the caller and your bot. `/ban @someone` needs the target checked too, and its target arrives in the options `execute()` reads.
+
+Five functions do that work. [`assertPermissions`](ref:core/assertPermissions) and [`mergeRoles`](ref:core/mergeRoles) run on both transports. Three more take discord.js objects, so they are gateway only.
+
+## Asserting a bitfield
+
+[`assertPermissions`](ref:core/assertPermissions) takes one object. It returns when the subject holds every bit in `scope`, and throws a [`Notice`](ref:core/Notice) naming what is missing.
+
+You compute `permissions` yourself, so it works on either transport. Here `/maintenance` checks that the person it is about to notify can see the channel.
+
+```ts twoslash title="src/handlers/Maintenance.ts"
+import {
+    assertPermissions,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+import { PermissionFlagsBits } from 'discord.js';
+
+@SlashRoute('maintenance')
+export class Maintenance extends SlashHandler<'maintenance'> {
+    public async execute(): Promise<void> {
+        const notify = this.options.getMember('notify');
+        const channel = this.options.getChannel('target');
+
+        if (notify === null) {
+            await this.reply('That user is not in this server.');
+            return;
+        }
+
+        assertPermissions({
+            subject: `<@${notify.id}>`,
+            permissions: channel.permissionsFor(notify, true)
+                .bitfield,
+            scope: [PermissionFlagsBits.ViewChannel]
+        });
+
+        await this.reply('Notified.');
+    }
+}
+```
+
+The refusal card names `subject`, so pass `<@id>` for a member and `<@&id>` for a role. `scope` is a list of `PermissionFlagsBits` values.
+
+`getMember` returns null even for a required user option. Discord omits the member object in a direct message, and the cache can miss.
+
+<Callout type="transport">
+
+`getMember` returns a different shape on each transport. Gateway gives a discord.js `GuildMember`, whose bits are `member.permissions.bitfield`. Http gives an `APIInteractionDataResolvedGuildMember`, whose bits are `BigInt(member.permissions)`.
+
+Both shapes carry the target's permissions, so `assertPermissions` works on either without a REST call. Http resolves those bits against the invoked channel.
+
+</Callout>
+
+## Refusing a permission they hold
+
+`inverse: true` flips the check. It throws when the subject holds any bit in `scope`, and returns otherwise.
+
+Use it for a target you refuse to act on. `/ban` should decline an administrator before it calls Discord.
+
+```ts twoslash
+import { assertPermissions } from '@seedcord/gateway';
+import { PermissionFlagsBits } from 'discord.js';
+
+import type { GuildMember } from 'discord.js';
+
+declare const target: GuildMember;
+
+// ---cut---
+assertPermissions({
+    subject: `<@${target.id}>`,
+    permissions: target.permissions.bitfield,
+    scope: [PermissionFlagsBits.Administrator],
+    inverse: true
+});
+```
+
+<Callout type="warning">
+
+Discord grants every permission to Administrator, so the inverse check reports every bit in `scope` as present for anyone holding it. Name the bits you mean, and read the refusal as "holds at least one of these".
+
+</Callout>
+
+## Replacing the refusal card
+
+`missingNotice` and `dangerousNotice` take a [`Notice`](ref:core/Notice) subclass for each of the two refusals. Both constructors receive the same three arguments, a message, the `subject` string, and the permission names.
+
+[Throwing](/throwing) covers writing the subclass itself.
+
+```ts twoslash
+import { assertPermissions, Notice } from '@seedcord/gateway';
+import { PermissionFlagsBits } from 'discord.js';
+
+import type { GuildMember } from 'discord.js';
+
+declare const target: GuildMember;
+declare const CannotBan: new (
+    message: string | undefined,
+    subject: string,
+    missing: readonly string[]
+) => Notice;
+
+// ---cut---
+assertPermissions({
+    subject: `<@${target.id}>`,
+    permissions: target.permissions.bitfield,
+    scope: [PermissionFlagsBits.BanMembers],
+    missingNotice: CannotBan
+});
+```
+
+## Checking a role or member
+
+[`checkPermissions`](ref:gateway/checkPermissions) computes the bitfield for you and calls `assertPermissions`. What it computes depends on the second argument.
+
+{/* prettier-ignore-start */}
+
+| second argument | reads |
+| --- | --- |
+| a `Guild` | the base bits from the target's roles, before any channel overwrite |
+| a `TextChannel` | the set that channel's overwrites resolve to |
+
+{/* prettier-ignore-end */}
+
+It has three call shapes.
+
+```ts twoslash
+import { checkPermissions } from '@seedcord/gateway';
+import { PermissionFlagsBits } from 'discord.js';
+
+import type { Guild, GuildMember, TextChannel } from 'discord.js';
+
+declare const guild: Guild;
+declare const channel: TextChannel;
+declare const member: GuildMember;
+
+// ---cut---
+checkPermissions(member, guild, [PermissionFlagsBits.KickMembers]);
+
+checkPermissions(member, channel, [
+    PermissionFlagsBits.SendMessages
+]);
+
+checkPermissions(
+    member,
+    guild,
+    [PermissionFlagsBits.Administrator],
+    true
+);
+
+checkPermissions({
+    for: member,
+    in: channel,
+    scope: [PermissionFlagsBits.SendMessages],
+    inverse: true
+});
+```
+
+A positional call takes `inverse` fourth and the notice overrides fifth. The object form names the same two, `inverse` plus `missingNotice` or `dangerousNotice`.
+
+## Checking your own bot
+
+[`checkBotPermissions`](ref:gateway/checkBotPermissions) runs the same check against the bot's member, so it takes the guild or the channel and skips the target.
+
+```ts twoslash
+import { checkBotPermissions } from '@seedcord/gateway';
+import { PermissionFlagsBits } from 'discord.js';
+
+import type { TextChannel } from 'discord.js';
+
+declare const channel: TextChannel;
+
+// ---cut---
+checkBotPermissions(channel, [
+    PermissionFlagsBits.SendMessages,
+    PermissionFlagsBits.ViewChannel
+]);
+```
+
+When the bot member is uncached, the refusal lists every permission in `scope` as missing. The channel form logs a warning first.
+
+## Assigning a role
+
+Role position overrides permission bits. A bot holding Manage Roles still cannot assign a role sitting above its own, and Discord rejects the call.
+
+[`hasPermsToAssign`](ref:gateway/hasPermsToAssign) runs the three checks a working `roles.add` needs, in this order.
+
+1. The target role sits at or above the bot's highest role.
+2. The target role is managed, which covers a bot's own role and a Nitro booster role.
+3. The bot lacks Manage Roles.
+
+```ts twoslash
+import { hasPermsToAssign } from '@seedcord/gateway';
+
+import type { Role } from 'discord.js';
+
+declare const role: Role;
+
+// ---cut---
+hasPermsToAssign(role);
+```
+
+An options object takes the same role plus replacements for all three refusals.
+
+```ts twoslash
+import { hasPermsToAssign, Notice } from '@seedcord/gateway';
+
+import type { Role } from 'discord.js';
+
+declare const role: Role;
+declare const TooHigh: new (
+    message: string,
+    role: Role,
+    botRole: Role
+) => Notice;
+
+// ---cut---
+hasPermsToAssign({
+    targetRole: role,
+    noticeOverrides: { higherNotice: TooHigh }
+});
+```
+
+Reading the bot's own role needs the guild's role cache. A cold cache throws with the code `CoreBotRoleMissing`.
+
+## Changing someone's roles
+
+[`mergeRoles`](ref:core/mergeRoles) takes the ids a member holds, the ids to add, and the ids to remove, and returns the merged list. A removal wins over an addition of the same id.
+
+```ts twoslash
+import {
+    mergeRoles,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+
+// ---cut---
+@SlashRoute('role/add')
+export class AddRole extends SlashHandler<'role/add'> {
+    public async execute(): Promise<void> {
+        const member = this.options.getMember('member');
+        const role = this.options.getRole('role');
+
+        if (member === null) {
+            await this.reply('That user is not in this server.');
+            return;
+        }
+
+        const ids = member.roles.cache.map((held) => held.id);
+        await member.roles.set(mergeRoles(ids, [role.id], []));
+
+        await this.reply(`Added ${role.name}.`);
+    }
+}
+```
+
+`mergeRoles` computes the list and writes nothing. Gateway applies it with `member.roles.set()`. Http applies it through `this.api.guilds.editMember(guildId, userId, { roles: ids })`, the typed REST client every repliable handler carries.
