@@ -1,5 +1,5 @@
 {
     "title": "Tooling",
     "root": true,
-    "pages": ["index", "dev", "hot-reload"]
+    "pages": ["index", "dev", "hot-reload", "codegen"]
 }
