@@ -162,7 +162,7 @@ const [data] = await core.bus.waitFor('levelUp', {
 });
 ```
 
-`on`, `once`, and `off` each take a key and a callback. `waitFor` resolves with the next payload and takes a `filter`, a `timeoutMs`, and an abort `signal`. A timeout rejects with a `WaitForError`.
+`on`, `once`, and `off` each take a key and a callback. `waitFor` resolves with the next payload. Pass an optional second argument to add a `filter`, a `timeoutMs`, or an abort `signal`. A timeout rejects with a `WaitForError`.
 
 Use a subscriber first, since a class gets `this.core`, `this.logger`, and its own file. `waitFor` suits code that has to block until the next publish.
 

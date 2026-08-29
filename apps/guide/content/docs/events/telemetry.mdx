@@ -49,11 +49,11 @@ discord creates it      dispatch entry             settled
         └───── queuedMs ──────┘                       │
                               │                       │
                               └───── durationMs ──────┘
-                                on interactionDispatched
+                               on interactionDispatched
 
                               middleware, gates, execute()
-                                one responseAttempted per write,
-                                each with its own durationMs
+                              one responseAttempted per write,
+                              each with its own durationMs
 ```
 
 `durationMs` runs on a monotonic clock, so a system clock change never moves it. It covers your gates, your handler, and the replies your handler sends.
@@ -87,7 +87,7 @@ So `queuedMs` is how long the interaction waited before your bot got to it. It g
 | `outcome` | [`ResponseOutcome`](ref:core/ResponseOutcome) | `sent` or `failed` |
 | `durationMs` | `number` | the write itself, monotonic |
 | `messageId` | `string \| null` | the id of the message Discord returned |
-| `error?` | `Error` | present when `outcome` is `failed` |
+| `error` | `Error` | only on a failed write |
 
 {/* prettier-ignore-end */}
 
@@ -99,7 +99,7 @@ Both keys carry `interactionId`. Keying a store on it lines one dispatch up with
 
 ## Catching a failed write
 
-When a write throws, seedcord publishes `outcome` `failed` with the throw on `error`.
+When a write throws, seedcord publishes `outcome` `failed` with the throw on `error`. Check `outcome` first, because only the failed shape carries an `error` field.
 
 ```ts twoslash title="src/subscribers/WriteAudit.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
@@ -107,12 +107,12 @@ import { Subscribe, Subscriber } from '@seedcord/gateway';
 @Subscribe('responseAttempted')
 export class WriteAudit extends Subscriber<'responseAttempted'> {
     public async execute(): Promise<void> {
-        const { interactionId, method, outcome, error } = this.data;
-        if (outcome === 'sent') return;
+        const write = this.data;
+        if (write.outcome === 'sent') return;
 
         this.logger.error(
-            `${method} failed on ${interactionId}`,
-            error
+            `${write.method} failed on ${write.interactionId}`,
+            write.error
         );
     }
 }

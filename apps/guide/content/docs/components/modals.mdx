@@ -121,7 +121,7 @@ A label wraps a text input or any of nine other inputs, and each kind has its ow
 
 {/* prettier-ignore-end */}
 
-`getCheckbox` returns a boolean and `getCheckboxGroup` returns the checked values. `getSelectedChannels` takes a list of allowed channel types and throws when someone picks a channel outside it.
+`getCheckbox` returns a boolean and `getCheckboxGroup` returns the checked values. `getSelectedChannels` takes an optional list of allowed channel types and throws when someone picks outside it. Leave it out to accept any channel type.
 
 Most getters that can come back empty take a `required` flag, and passing `true` narrows away the `null`. `getSelectedMembers` takes the custom id alone, so its result stays nullable.
 
