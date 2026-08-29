@@ -26,7 +26,7 @@ declare const role: Role;
 hasPermsToAssign(role);
 ```
 
-A managed role belongs to an integration, which covers every bot's own role and the Nitro booster role. Discord assigns those itself, so nobody else can assign one.
+A managed role belongs to an integration. Every bot's own role, the Nitro booster role, and any role a linked service hands out, such as a Twitch subscriber tier, all carry the flag. Discord assigns those itself, so nobody else can assign one.
 
 <Callout type="transport" only="gateway">
 
@@ -36,7 +36,7 @@ A managed role belongs to an integration, which covers every bot's own role and 
 
 ## Wording the three refusals
 
-An options object takes the same role plus a replacement for each refusal. `higherNotice` receives the target role and the bot's role, `managedNotice` receives a message, and `missingNotice` receives the message, the subject, and the permission names.
+An options object takes the same role plus a replacement for each refusal. Every constructor takes a message first. `higherNotice` then takes the target role and the bot's role. `managedNotice` takes nothing more. `missingNotice` then takes the subject and the permission names.
 
 ```ts twoslash
 import { hasPermsToAssign, Notice } from '@seedcord/gateway';

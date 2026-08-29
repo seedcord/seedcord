@@ -13,6 +13,7 @@
         "events",
         "gates",
         "plugins",
+        "utilities",
         "tooling"
     ]
 }

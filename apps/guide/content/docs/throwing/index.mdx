@@ -1,9 +1,11 @@
 ---
 title: Throwing
-description: Stopping a handler by throwing a Notice.
+description: seedcord's refusal based control-flow system.
 ---
 
-Throw to stop a handler. seedcord catches it and replies for you, and the class you throw sets that reply. Gates run inside the same boundary, so throwing from a gate sends the same reply.
+A handler refuses by throwing. seedcord catches it at one boundary and sends the reply. The class you throw sets what that reply says. A gate throws into the same boundary, so a gate's refusal reaches the user the same way.
+
+Every failure path inside a handler ends in a throw, which keeps error handling out of `execute()`.
 
 You write a refusal as a [`Notice`](ref:core/Notice) subclass.
 
