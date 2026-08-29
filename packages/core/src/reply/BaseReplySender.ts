@@ -7,7 +7,6 @@ import { attemptWrite, publishResponse } from './responseReport';
 import { serializeReply } from './serializeReply';
 import { translateSerializationError } from './translateSerialization';
 
-import type { ResponseOutcome } from '#subscribers/types/Subscriptions';
 import type { AckState, ReplyMethod } from './ackLegality';
 import type { ReplyTelemetry } from './responseReport';
 import type { SerializedReply } from './serializeReply';
@@ -40,8 +39,9 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         this.state = initialState;
     }
 
-    private report(method: ReplyMethod, startedAt: number, outcome: ResponseOutcome, messageId: string | null): void {
-        publishResponse(this.telemetry, { routeId: this.routeId, method, startedAt, outcome, messageId });
+    // anything that threw already reported through attemptWrite
+    private report(method: ReplyMethod, startedAt: number, messageId: string | null): void {
+        publishResponse(this.telemetry, { routeId: this.routeId, method, startedAt, outcome: 'sent', messageId });
     }
 
     private async attempt<Result>(
@@ -59,7 +59,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         // the callback already acked discord, so record replied before the message guard can throw
         this.transition('reply', 'replied');
         const message = this.remember(this.requireMessage(created, 'reply'));
-        this.report('reply', startedAt, 'sent', message.id);
+        this.report('reply', startedAt, message.id);
         return message;
     }
 
@@ -68,7 +68,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         const startedAt = performance.now();
         await this.attempt('defer', startedAt, () => this.writeDefer(opts));
         this.transition('defer', 'deferred-reply');
-        this.report('defer', startedAt, 'sent', null);
+        this.report('defer', startedAt, null);
     }
 
     public async deferUpdate(): Promise<void> {
@@ -76,7 +76,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         const startedAt = performance.now();
         await this.attempt('deferUpdate', startedAt, () => this.writeDeferUpdate());
         this.transition('deferUpdate', 'deferred-update');
-        this.report('deferUpdate', startedAt, 'sent', null);
+        this.report('deferUpdate', startedAt, null);
     }
 
     /**
@@ -90,13 +90,13 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         // in deferred-update the source message is @original and the ack-legality check above already passed
         if (this.state === 'deferred-update') {
             const edited = await this.attempt('update', startedAt, () => this.editOriginal(response));
-            this.report('update', startedAt, 'sent', edited.id);
+            this.report('update', startedAt, edited.id);
             return edited;
         }
         const created = await this.attempt('update', startedAt, () => this.writeUpdate(response));
         this.transition('update', 'replied');
         const message = this.remember(this.requireMessage(created, 'update'));
-        this.report('update', startedAt, 'sent', message.id);
+        this.report('update', startedAt, message.id);
         return message;
     }
 
@@ -105,7 +105,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         const startedAt = performance.now();
         const created = await this.attempt('followUp', startedAt, () => this.writeFollowUp(response, opts));
         const message = this.remember(created);
-        this.report('followUp', startedAt, 'sent', message.id);
+        this.report('followUp', startedAt, message.id);
         return message;
     }
 
@@ -122,7 +122,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
             const edited = await this.attempt('edit', startedAt, () =>
                 this.editOriginal(targetOrResponse as ReplyResponse<TNative> | string)
             );
-            this.report('edit', startedAt, 'sent', edited.id);
+            this.report('edit', startedAt, edited.id);
             return edited;
         }
         // justified: the overloads narrow targetOrResponse to a target message once maybeResponse is defined
@@ -132,7 +132,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         }
         const written = await this.attempt('edit', startedAt, () => this.writeEditTarget(target.id, maybeResponse));
         const message = this.remember(written);
-        this.report('edit', startedAt, 'sent', message.id);
+        this.report('edit', startedAt, message.id);
         return message;
     }
 
@@ -143,7 +143,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         const startedAt = performance.now();
         if (target === undefined) {
             await this.attempt('delete', startedAt, () => this.writeDeleteOriginal());
-            this.report('delete', startedAt, 'sent', null);
+            this.report('delete', startedAt, null);
             return;
         }
         if (!this.sent.has(target.id)) {
@@ -152,7 +152,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         await this.attempt('delete', startedAt, () => this.writeDeleteTarget(target.id));
         // evict so a later targeted edit of this id throws foreign
         this.sent.delete(target.id);
-        this.report('delete', startedAt, 'sent', null);
+        this.report('delete', startedAt, null);
     }
 
     /** Routes to the verb the current ack state permits. Every state has a route, so the illegal-ack throw is unreachable. */
@@ -178,7 +178,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         const startedAt = performance.now();
         await this.attempt('showModal', startedAt, () => this.writeModal(data));
         this.transition('showModal', 'replied');
-        this.report('showModal', startedAt, 'sent', null);
+        this.report('showModal', startedAt, null);
     }
 
     protected serialize(response: ReplyResponse<TNative> | string): SerializedReply<TNative> {

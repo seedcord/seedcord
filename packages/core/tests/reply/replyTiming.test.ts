@@ -72,7 +72,6 @@ describe('reply timing', () => {
                 method: 'respond',
                 startedAt: performance.now(),
                 outcome: 'failed',
-                messageId: null,
                 error: new Error('discord said no')
             }
         );

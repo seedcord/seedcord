@@ -74,8 +74,13 @@ export type { ItemRender, PageRender } from '#pagination/render';
 
 export { Bus, Subscribe, Subscriber, WebhookLog, WebhookUrl } from '#subscribers/index';
 export type {
+    AttemptedWrite,
     DispatchOutcome,
     FaultSource,
+    ResponseAttempt,
+    ResponseFailed,
+    ResponseOutcome,
+    ResponseSent,
     SubscribeOptions,
     Subscriptions,
     SubscriptionData,

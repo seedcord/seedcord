@@ -10,8 +10,13 @@ export { WebhookLog, type WebhookReport } from './bases/WebhookLog';
 export type { WebhookFile } from './bases/WebhookSender';
 
 export type {
+    AttemptedWrite,
     DispatchOutcome,
     FaultSource,
+    ResponseAttempt,
+    ResponseFailed,
+    ResponseOutcome,
+    ResponseSent,
     Subscriptions,
     SubscriptionData,
     SubscriptionKey

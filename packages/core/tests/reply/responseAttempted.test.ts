@@ -5,7 +5,7 @@ import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { ModalLike } from '#reply/BaseReplySender';
-import type { SubscriptionData } from '#subscribers/types/Subscriptions';
+import type { ResponseFailed, SubscriptionData } from '#subscribers/types/Subscriptions';
 import type { ReplyResponse } from '@seedcord/types';
 
 interface TestMessage {
@@ -49,6 +49,11 @@ class TestSender extends BaseReplySender<TestMessage> {
     protected writeModal(): Promise<void> {
         return Promise.resolve();
     }
+}
+
+function failedWrite(payload: SubscriptionData<'responseAttempted'> | undefined): ResponseFailed {
+    if (payload?.outcome !== 'failed') throw new Error(`expected a failed write, got ${String(payload?.outcome)}`);
+    return payload;
 }
 
 // justified: the Bus only stores core, no member is read during publish
@@ -128,7 +133,7 @@ describe('responseAttempted', () => {
 
         expect(sent).toHaveLength(1);
         expect(sent[0]).toMatchObject({ method: 'reply', outcome: 'failed', messageId: null });
-        expect(sent[0]?.error?.message).toBe('discord said no');
+        expect(failedWrite(sent[0]).error.message).toBe('discord said no');
     });
 
     it('keeps the thrown value as the cause', async () => {
@@ -141,7 +146,7 @@ describe('responseAttempted', () => {
 
         await expect(sender.reply(response)).rejects.toBe(thrown);
 
-        expect(sent[0]?.error?.cause).toBe(thrown);
+        expect(failedWrite(sent[0]).error.cause).toBe(thrown);
     });
 
     it('reports a failed write, carrying the error and no message id', async () => {
@@ -155,7 +160,7 @@ describe('responseAttempted', () => {
 
         expect(sent).toHaveLength(1);
         expect(sent[0]).toMatchObject({ method: 'reply', outcome: 'failed', messageId: null });
-        expect(sent[0]?.error?.message).toBe('discord said no');
+        expect(failedWrite(sent[0]).error.message).toBe('discord said no');
     });
 
     it('reports deferUpdate and the update that rewrites through it', async () => {

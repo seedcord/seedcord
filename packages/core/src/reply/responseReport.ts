@@ -5,7 +5,6 @@ import { asError } from '#stops/asError';
 import { PublishDefault } from '#subscribers/publishDefault';
 
 import type { Bus } from '#subscribers/Bus';
-import type { ResponseOutcome } from '#subscribers/types/Subscriptions';
 import type { ReplyMethod } from './ackLegality';
 
 let replyLogger: Logger | undefined;
@@ -22,28 +21,40 @@ export interface ReplyTelemetry {
 // the reply verbs plus the autocomplete choices callback, which runs outside the ack state machine
 export type WriteMethod = ReplyMethod | 'respond';
 
-export interface ResponseReport {
+interface WriteStart {
     readonly routeId: string;
     readonly method: WriteMethod;
     // performance.now() captured before the write began
     readonly startedAt: number;
-    readonly outcome: ResponseOutcome;
-    readonly messageId: string | null;
-    readonly error?: Error;
 }
+
+interface SentReport extends WriteStart {
+    readonly outcome: 'sent';
+    readonly messageId: string | null;
+}
+
+interface FailedReport extends WriteStart {
+    readonly outcome: 'failed';
+    readonly error: Error;
+}
+
+export type ResponseReport = SentReport | FailedReport;
 
 /** @internal */
 export function publishResponse(telemetry: ReplyTelemetry, report: ResponseReport): void {
     const durationMs = performance.now() - report.startedAt;
-    telemetry.bus[PublishDefault]('responseAttempted', {
+    const write = {
         routeId: report.routeId,
         interactionId: telemetry.interactionId,
         method: report.method,
-        outcome: report.outcome,
-        durationMs,
-        messageId: report.messageId,
-        ...(report.error && { error: report.error })
-    });
+        durationMs
+    };
+    telemetry.bus[PublishDefault](
+        'responseAttempted',
+        report.outcome === 'failed'
+            ? { ...write, outcome: 'failed', messageId: null, error: report.error }
+            : { ...write, outcome: 'sent', messageId: report.messageId }
+    );
 
     // after publish so a throwing sink doesn't reach the publish above
     logger().trace(
@@ -75,7 +86,7 @@ export async function attemptWrite<Result>(
         return await write();
     } catch (caught) {
         const error = asError(caught);
-        publishResponse(telemetry, { routeId, method, startedAt, outcome: 'failed', messageId: null, error });
+        publishResponse(telemetry, { routeId, method, startedAt, outcome: 'failed', error });
         // rethrown raw
         throw caught;
     }
