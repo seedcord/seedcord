@@ -117,7 +117,7 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-`'ban'` appears twice, on the decorator and on the generic. Both are the name the command set.
+`'ban'` appears twice, on the decorator and on the generic. You write the command's own name in both, and a mismatch is a compile error.
 
 `target` was required on the command, so it arrives without a null check. `reason` was optional, so it can be null.
 

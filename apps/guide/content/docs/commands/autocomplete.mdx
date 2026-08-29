@@ -45,7 +45,7 @@ export class Search extends BuilderComponent<'command'> {
 }
 ```
 
-Suggestions arrive as their own interaction, so they get their own class and their own decorator. The route is the command's.
+Suggestions arrive as their own interaction, so they get their own class and their own decorator. You give it the command's own name, and a mismatch is a compile error.
 
 ```ts twoslash hovers title="src/handlers/SearchAutocomplete.ts"
 import {

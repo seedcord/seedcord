@@ -77,7 +77,7 @@ export class FaultMirror extends WebhookLog<'handledException'> {
 }
 ```
 
-`this.data` is that key's payload. Return a promise from `report()` when you have to load something before the card can be built.
+`this.data` is that key's payload. The generic on `WebhookLog` has to name the same key you gave `@Subscribe`. Return a promise from `report()` when you have to load something before the card can be built.
 
 {/* prettier-ignore-start */}
 

@@ -42,9 +42,9 @@ export class ViewProfile extends UserContextMenuHandler<'View Profile'> {
 }
 ```
 
-## The kind picks the base class
+## Each kind has its own base class
 
-`ApplicationCommandType.User` puts the command on a right-clicked person. `ApplicationCommandType.Message` puts it on a right-clicked message. Each kind has its own handler base and its own decorator.
+`ApplicationCommandType.User` puts the command on a right-clicked person. `ApplicationCommandType.Message` puts it on a right-clicked message. Pick the base and the decorator that match the kind you set.
 
 {/* prettier-ignore-start */}
 
