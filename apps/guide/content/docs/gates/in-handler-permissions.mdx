@@ -5,7 +5,7 @@ description: Checking a target your handler resolved, after the gates have passe
 
 The gate catalog checks the caller and your bot. `/ban @someone` needs the target checked too, and its target arrives in the options `execute()` reads.
 
-Five functions do that work. [`assertPermissions`](ref:core/assertPermissions) and [`mergeRoles`](ref:core/mergeRoles) run on both transports. Three more take discord.js objects, so they are gateway only.
+Three functions do that work. [`assertPermissions`](ref:core/assertPermissions) runs on both transports. [`checkPermissions`](ref:gateway/checkPermissions) and [`checkBotPermissions`](ref:gateway/checkBotPermissions) take discord.js objects, so they are gateway only.
 
 ## Asserting a bitfield
 
@@ -183,79 +183,4 @@ checkBotPermissions(channel, [
 
 When the bot member is uncached, the refusal lists every permission in `scope` as missing. The channel form logs a warning first.
 
-## Assigning a role
-
-Role position overrides permission bits. A bot holding Manage Roles still cannot assign a role sitting above its own, and Discord rejects the call.
-
-[`hasPermsToAssign`](ref:gateway/hasPermsToAssign) runs the three checks a working `roles.add` needs, in this order.
-
-1. The target role sits at or above the bot's highest role.
-2. The target role is managed, which covers a bot's own role and a Nitro booster role.
-3. The bot lacks Manage Roles.
-
-```ts twoslash
-import { hasPermsToAssign } from '@seedcord/gateway';
-
-import type { Role } from 'discord.js';
-
-declare const role: Role;
-
-// ---cut---
-hasPermsToAssign(role);
-```
-
-An options object takes the same role plus replacements for all three refusals.
-
-```ts twoslash
-import { hasPermsToAssign, Notice } from '@seedcord/gateway';
-
-import type { Role } from 'discord.js';
-
-declare const role: Role;
-declare const TooHigh: new (
-    message: string,
-    role: Role,
-    botRole: Role
-) => Notice;
-
-// ---cut---
-hasPermsToAssign({
-    targetRole: role,
-    noticeOverrides: { higherNotice: TooHigh }
-});
-```
-
-Reading the bot's own role needs the guild's role cache. A cold cache throws with the code `CoreBotRoleMissing`.
-
-## Changing someone's roles
-
-[`mergeRoles`](ref:core/mergeRoles) takes the ids a member holds, the ids to add, and the ids to remove, and returns the merged list. A removal wins over an addition of the same id.
-
-```ts twoslash
-import {
-    mergeRoles,
-    SlashHandler,
-    SlashRoute
-} from '@seedcord/gateway';
-
-// ---cut---
-@SlashRoute('role/add')
-export class AddRole extends SlashHandler<'role/add'> {
-    public async execute(): Promise<void> {
-        const member = this.options.getMember('member');
-        const role = this.options.getRole('role');
-
-        if (member === null) {
-            await this.reply('That user is not in this server.');
-            return;
-        }
-
-        const ids = member.roles.cache.map((held) => held.id);
-        await member.roles.set(mergeRoles(ids, [role.id], []));
-
-        await this.reply(`Added ${role.name}.`);
-    }
-}
-```
-
-`mergeRoles` computes the list and writes nothing. Gateway applies it with `member.roles.set()`. Http applies it through `this.api.guilds.editMember(guildId, userId, { roles: ids })`, the typed REST client every repliable handler carries.
+Role position blocks a write these checks let through. [Changing roles](/gates/changing-roles) covers that, plus the two functions for it.

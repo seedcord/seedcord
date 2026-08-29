@@ -11,6 +11,7 @@
         "cooldown",
         "rate-limiter",
         "---Inside a handler---",
-        "in-handler-permissions"
+        "in-handler-permissions",
+        "changing-roles"
     ]
 }

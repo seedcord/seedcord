@@ -490,7 +490,7 @@ importers:
         specifier: catalog:react
         version: 19.2.4(@types/react@19.2.18)
       discord-api-types:
-        specifier: catalog:deps
+        specifier: ^0.38.52
         version: 0.38.52
       discord.js:
         specifier: catalog:peer
