@@ -58,7 +58,7 @@ src/handlers/Ban.ts
 
 {/* prettier-ignore-end */}
 
-The rule resolves the receiver's type, so it reports `this.event.reply()` and a local alias alike. Two things slip past it. A destructured `const { reply } = this.event` hides the receiver, and middleware falls outside the rule's scope.
+The rule resolves the receiver's type, which is how it reports `this.event.reply()` and a local alias alike. Two things slip past it. A destructured `const { reply } = this.event` hides the receiver, and middleware falls outside the rule's scope.
 
 ## When you actually need one
 
@@ -67,7 +67,7 @@ The rule resolves the receiver's type, so it reports `this.event.reply()` and a 
 
 But both those are anti-patterns in seedcord. Text Display and Container are Discord's replacements for `content` and `embeds` under the flag. seedcord routes a click by its customId to a [`ButtonHandler`](ref:gateway/ButtonHandler), for example, which any process can answer. A collector runs in the process that opened it, so a restart drops every prompt still waiting.
 
-For the interaction that seedcord dispatched, pass the handler. Its [`sender`](ref:gateway/RepliableHandler.sender) is public, so a helper replies through the same ack state.
+For the interaction that seedcord dispatched, pass the handler. Its [`sender`](ref:gateway/RepliableHandler.sender) is public. A helper replies through the same ack state.
 
 ```ts twoslash hovers
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -88,7 +88,7 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-The reply members stay protected, so `handler.reply()` from outside is a compile error. The sender carries the same verbs.
+The reply members stay protected, which makes `handler.reply()` from outside a compile error. The sender carries the same verbs.
 
 The rule reports any repliable receiver inside a handler class, so acknowledge a collected interaction from a function outside it.
 

@@ -55,7 +55,7 @@ You hold Administrator on your own test server, as the owner or through a role. 
 
 </Callout>
 
-`RequireRole` reads role ids, so it refuses an administrator who lacks the role.
+`RequireRole` reads role ids, which is why it also refuses an administrator who lacks the role.
 
 ## Channel permissions and server permissions
 
@@ -113,7 +113,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 ## On a gateway event handler
 
-An interaction payload carries both channel sets. A gateway event carries neither, so `'channel'` behaves differently on each gate.
+An interaction payload carries both channel sets. A gateway event carries neither, which changes what `'channel'` does on each gate.
 
 {/* prettier-ignore-start */}
 
@@ -161,7 +161,7 @@ Combine several with [`or`](ref:core/or) when any one of them should let the cal
 
 ## Wording each refusal
 
-Each of these gates refuses for two different reasons, so its options carry one slot per reason. Each slot takes the `message` and `notice` pair from [Gates](/gates).
+Each of these gates refuses for two different reasons. Its options carry one slot per reason, and each slot takes the `message` and `notice` pair from [Gates](/gates).
 
 {/* prettier-ignore-start */}
 

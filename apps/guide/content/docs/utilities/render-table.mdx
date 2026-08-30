@@ -38,7 +38,7 @@ Discord renders a message in a proportional font, which throws the frame out of 
 
 ## Picking a frame
 
-`border` takes one of four values.
+Every table so far used the default frame. `border` picks another one.
 
 ```ts twoslash
 import { renderTable } from '@seedcord/gateway';
@@ -78,7 +78,7 @@ Discord does not render GitHub-flavored tables in a message. Use `markdown` for 
 
 ## Aligning columns
 
-`align` takes one value for every column, or an array for one each. A column past the end of the array falls back to left.
+Pass `align` one value to set every column, or an array to set them one at a time. A column past the end of the array falls back to left.
 
 ```ts twoslash
 import { renderTable } from '@seedcord/gateway';

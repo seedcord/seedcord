@@ -111,7 +111,7 @@ seedcord marks a `'once'` subscriber as spent when it starts, so a throw partway
 
 ## Where subscribers live
 
-seedcord scans the folder named by `subscribers.path` at startup. The scaffold ships `null` there, so point it at your folder when you write your first one.
+Your subscribers get their own folder, named by `subscribers.path`. The scaffold ships `null` there, so point it at your folder when you write your first one.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';

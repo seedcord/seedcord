@@ -93,7 +93,7 @@ Two middlewares at the same priority run in the order that seedcord loaded them.
 
 ## Where middleware lives
 
-seedcord scans `bot.events.middlewares` for them. The key is optional.
+Middlewares live under `bot.events.middlewares`. The key is optional in case you don't want middlewares.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';

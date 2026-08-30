@@ -64,7 +64,7 @@ The window slides. Once the oldest of the three leaves it, a fourth award passes
 
 ## The result
 
-Both `charge` and `peek` return a [`RateLimitResult`](ref:types/RateLimitResult).
+The sample above read `limited`, `resetAt`, and `remaining` off that call. Both `charge` and `peek` return a [`RateLimitResult`](ref:types/RateLimitResult).
 
 {/* prettier-ignore-start */}
 
@@ -81,7 +81,7 @@ Discord's `<t:...:R>` markup takes seconds. Pass `resetAt` through [`toEpochSeco
 
 ## Keys
 
-A key is any string. [`buildKey`](ref:rate-limiter/buildKey) joins a prefix and the values you scope by with `:`, and writes `global` for a part that is null or undefined.
+That first argument is where you decide what the window counts. A key is any string. [`buildKey`](ref:rate-limiter/buildKey) joins a prefix and the values you scope by with `:`, and writes `global` for a part that is null or undefined.
 
 ```ts twoslash
 import { buildKey } from '@seedcord/gateway';
@@ -146,15 +146,15 @@ async function clearAwards(memberId: string): Promise<void> {
 
 ## The default store
 
-Seedcord builds a [`MemoryRateLimiter`](ref:rate-limiter/MemoryRateLimiter), which counts inside one process. A restart clears every window. A serverless deploy gets one set per isolate.
+Everything above charged an in-memory store (the default). seedcord builds a [`MemoryRateLimiter`](ref:rate-limiter/MemoryRateLimiter) for you, which counts inside one process. A restart clears every window. On a serverless deploy each running copy keeps its own counts.
 
-The `store` config key replaces it. What you pass becomes `core.rateLimiter`, so every `charge` on this page and every `Cooldown` gate reads it.
+The `store` config key replaces it. What you pass becomes `core.rateLimiter`, which every `charge` on this page and every `Cooldown` gate reads.
 
 ## Writing a store
 
 [`Store`](ref:types/Store) is typed by the verbs a backend supports, and `'charge'` is the rate-limiting one. A `Store<'charge'>` carries two fields plus the three [`IRateLimiter`](ref:types/IRateLimiter) methods.
 
-The generic takes a union, so one backend serving several features declares `Store<'charge' | 'claim'>` and lists both in `caps`. Rate limiting reads `'charge'` alone.
+The generic takes a union. One backend serving several features declares `Store<'charge' | 'claim'>`, for example, and lists both in `caps`. Rate limiting reads `'charge'` alone.
 
 {/* prettier-ignore-start */}
 

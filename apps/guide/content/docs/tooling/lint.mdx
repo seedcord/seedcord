@@ -11,6 +11,8 @@ The scaffold writes `eslint.config.ts` for you, plus two scripts that run ESLint
 
 ## The config file
 
+Here is what the scaffold puts there.
+
 ```ts twoslash title="eslint.config.ts"
 import createConfig from '@seedcord/eslint-config';
 
@@ -49,7 +51,7 @@ These read your handlers, commands, events, and subscribers. Some catch a class 
 
 ## What the discord.js rules catch
 
-The discord.js rules read your builders. Most of them catch a payload Discord rejects, or one discord.js refuses to build.
+Builders get their own set. Most of these rules stop a payload Discord would reject, or one discord.js refuses to build.
 
 {/* prettier-ignore-start */}
 

@@ -152,6 +152,6 @@ Two requests racing the same key can both read a free slot before either records
 
 ## Keeping windows across restarts
 
-Cooldown windows live in [`core.rateLimiter`](ref:types/IRateLimiter), which counts in memory by default. A restart clears every cooldown, and a serverless deploy gets one set per isolate.
+Cooldown windows live in [`core.rateLimiter`](ref:types/IRateLimiter), which counts in memory by default. A restart clears every cooldown. On a serverless deploy each running copy keeps its own counts. Unless you set a `store`, that is.
 
 [The rate limiter](/gates/rate-limiter) covers the `store` config key that replaces it, and charging a window yourself.
