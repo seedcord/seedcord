@@ -3,7 +3,7 @@ title: Tooling
 description: Configuring and running your bot with the seedcord CLI.
 ---
 
-A seedcord project carries two configs. The CLI reads `seedcord.config.ts` for your project's paths. The `new Seedcord({ ... })` call in `src/bot.ts` configures the bot itself.
+Two files configure a seedcord project, and each one has its own job. `seedcord.config.ts` names where your code is, which is what the CLI needs. The `new Seedcord({ ... })` call in `src/bot.ts` configures the bot itself.
 
 Start with the CLI's file.
 
@@ -44,9 +44,9 @@ export default defineConfig({
 
 `entry` has to resolve inside `root`. A path outside it throws `CliConfigEntryOutsideRoot`.
 
-## The four commands
+## The commands
 
-Your `package.json` already wires three of them as scripts. Those same three read the config above. `seedcord commands` reads only your bot token.
+Your `package.json` already carries `dev`, `codegen`, and `build` as scripts, and all three read the config above.
 
 {/* prettier-ignore-start */}
 
@@ -59,13 +59,13 @@ Your `package.json` already wires three of them as scripts. Those same three rea
 
 {/* prettier-ignore-end */}
 
-Run the fourth through your package manager's runner.
+`seedcord commands` skips the config and reads your bot token, so run it through your package manager's runner.
 
 <Shell exec="seedcord commands" />
 
 ## Your bot's config
 
-`src/bot.ts` holds the second config. The table below points at the page that teaches each key, and that page shows the key inside a real `new Seedcord({ ... })` sample.
+`src/bot.ts` holds the second config, the one your bot reads while it runs. Each row below links to the page that teaches its key, where you will find it inside a real `new Seedcord({ ... })` sample.
 
 `bot`, `subscribers`, `bot.interactions`, and `bot.commands` are required. A gateway bot also sets `bot.events` and `bot.clientOptions`. Every other key is optional.
 
@@ -92,3 +92,5 @@ Run the fourth through your package manager's runner.
 An http server takes `port`, which defaults to 3000. An edge bot declares `runtime: 'edge'` and does not accept `port` at all. On gateway, `healthCheck` runs a small http server on port 6967 that answers `/health`, and `false` turns it off.
 
 The reference site carries the full shape of every one of these, down to each nested field.
+
+That is everything you configure. The rest of the tab is about what runs: [the dev terminal](/tooling/dev), [how it reloads a changed file](/tooling/hot-reload), [the tunnel](/tooling/tunnel) an http bot needs while you work locally, [logging](/tooling/logging), and [the lint rules](/tooling/lint) that catch a broken handler before your bot ever starts.

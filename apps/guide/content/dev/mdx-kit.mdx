@@ -33,6 +33,24 @@ Tagging a fence `output` drops the copy button, for lines a terminal printed bac
 ✓ 3 commands deployed to the test guild
 ```
 
+## Shell commands
+
+`Shell` writes one command for pnpm, npm, bun, and yarn, and the reader picks the tab. Their choice persists and every `Shell` block on the page follows it.
+
+<Shell add="@seedcord/gateway discord.js" />
+
+It takes exactly one verb, and the verb decides which command each manager gets. Passing two or none throws while the page builds.
+
+<Shell create="seedcord" />
+
+<Shell run="dev" />
+
+<Shell exec="seedcord codegen" />
+
+`before` puts your own lines above the command, inside the same block.
+
+<Shell run="dev" before="cd my-bot" />
+
 ## Twoslash
 
 Tagging a fence `twoslash` runs the TypeScript compiler over it while the page builds. An error the sample never declared fails the build. A sample that stopped compiling cannot reach a page.
