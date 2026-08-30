@@ -1,0 +1,158 @@
+---
+title: Linting
+description: Catching a broken handler before your bot ever runs.
+---
+
+The scaffold writes `eslint.config.ts` for you, plus two scripts that run ESLint over your `src` folder.
+
+<Shell run="lint" />
+
+`lint:fix` runs the same rules and writes back the fixes it can apply.
+
+## The config file
+
+```ts twoslash title="eslint.config.ts"
+import createConfig from '@seedcord/eslint-config';
+
+export default createConfig({
+    tsconfigRootDir: import.meta.dirname,
+    registerDiscordjsPlugin: true,
+    registerSeedcordPlugin: true,
+    generalIgnores: ['**/seedcord-gen.d.ts']
+});
+```
+
+[`createConfig`](ref:eslint-config/createConfig) returns a flat config array, so ESLint reads it directly. By default it turns on the typescript-eslint presets, import ordering, TSDoc syntax checking, unicorn, the security plugin, and prettier compatibility. `tsconfigRootDir` points the type-aware rules at your `tsconfig.json`. In almost every project `import.meta.dirname` is the right value.
+
+The two `register` flags above add the rules written for bots. Both tables below list what those two bring in.
+
+## What the seedcord rules catch
+
+These read your handlers, commands, events, and subscribers. Some catch a class that never registers. The rest catch a call that bypasses the framework.
+
+{/* prettier-ignore-start */}
+
+| rule | what it catches |
+| --- | --- |
+| `interaction-handler-missing-route` | a handler missing its route decorator. Its clicks reach the unhandled default |
+| `command-builder-missing-register-command` | a command missing `@RegisterCommand`, which keeps it from deploying to Discord |
+| `event-handler-missing-register-event` | an event handler missing `@RegisterEvent`, so it never fires. Gateway only |
+| `middleware-missing-register-decorator` | middleware missing `@Middleware`. It never runs on a request |
+| `subscriber-missing-decorators` | a subscriber missing `@Subscribe`, or a `WebhookLog` missing `@WebhookUrl` |
+| `no-raw-client-events` | a `client.on` listener, which skips the dispatcher and every middleware on it. Gateway only |
+| `no-raw-interaction-acks` | a raw discord.js `reply`, `defer`, `update`, or `showModal` on a handler's interaction |
+| `no-djs-builder-import` | a component builder imported from `discord.js`. Only the `@discordjs/builders` copy survives nesting |
+| `use-custom-id-codec` | a hand-written `setCustomId` string, which drifts from the route that reads it |
+| `use-paint-in-logs` | chalk inside a logger call. A terminal theme remaps chalk's color names |
+
+{/* prettier-ignore-end */}
+
+## What the discord.js rules catch
+
+The discord.js rules read your builders. Most of them catch a payload Discord rejects, or one discord.js refuses to build.
+
+{/* prettier-ignore-start */}
+
+| rule | what it catches |
+| --- | --- |
+| `valid-command-name` | a name outside Discord's rules: lowercase letters, digits, hyphens, underscores, 1 to 32 characters |
+| `required-option-before-optional` | a required slash option declared after an optional one |
+| `no-choices-and-autocomplete` | autocomplete and choices on the same option, which throws a `RangeError` |
+| `no-discord-limit-exceeded` | more items than a builder allows, whenever the count is written in the code |
+| `require-button-props` | a button missing the props that its style requires, like a url on a Link button |
+| `no-conflicting-button-props` | a button carrying props that its style forbids, like a customId next to a url |
+| `select-menu-min-exceeds-max` | a select menu whose minimum selections go above its maximum |
+| `require-components-v2-flag` | v2 components sent without `MessageFlags.IsComponentsV2` |
+| `no-mixed-message-format` | builder components mixed with content, embeds, poll, or stickers |
+| `prefer-ephemeral-flag` | the deprecated `ephemeral` option. `lint:fix` rewrites it to `flags` |
+| `prefer-v2-component` | an embed where a container and a text display fit |
+
+{/* prettier-ignore-end */}
+
+`prefer-ephemeral-flag` and `prefer-v2-component` report as warnings, since both describe a preference. Every other rule on this page reports as an error.
+
+## Turning one off
+
+The seedcord rules carry a `@seedcord/` prefix, and the discord.js rules carry `discordjs/`. Both tables above drop those prefixes, so write the full name to change a rule.
+
+`userConfigs` goes in last, so anything you put there overrides the blocks above it.
+
+```ts twoslash title="eslint.config.ts"
+// ---cut-start---
+import createConfig from '@seedcord/eslint-config';
+// ---cut-end---
+export default createConfig({
+    tsconfigRootDir: import.meta.dirname,
+    registerDiscordjsPlugin: true,
+    registerSeedcordPlugin: true,
+    userConfigs: [
+        {
+            files: ['src/legacy/**/*.ts'],
+            rules: { 'discordjs/prefer-v2-component': 'off' }
+        }
+    ]
+});
+```
+
+## The other options
+
+Every one of these is optional. The defaults suit a normal bot. For the full set, including the Tailwind and MDX keys a web project would set, see [`SeedcordConfigOptions`](ref:eslint-config/SeedcordConfigOptions).
+
+{/* prettier-ignore-start */}
+
+| option | default | what it does |
+| --- | --- | --- |
+| `tsconfigRootDir` | the working directory | where the type-aware rules look for `tsconfig.json` |
+| `generalIgnores` | `[]` | globs to skip, added to `dist`, `node_modules`, `logs`, and `tests/temp` |
+| `userConfigs` | `[]` | your own config blocks, applied last |
+| `registerImportPlugin` | `'all'` | `'fast'` skips the cycle and deprecation checks. `'off'` drops the plugin |
+| `registerUnicornPlugin` | `true` | unicorn requires ESLint 10.4, so set `false` on ESLint 9 |
+| `registerSecurityPlugin` | `true` | the `eslint-plugin-security` recommended set |
+| `registerTsdocPlugin` | `true` | TSDoc syntax checking in your comments |
+| `registerTypescriptConfigs` | `true` | the typescript-eslint recommended, type-checked, strict, and stylistic presets. `'no-type-checked'` keeps them and turns off the rules that read the type checker |
+
+{/* prettier-ignore-end */}
+
+<Callout type="tip">
+
+When your lint run gets slow, `registerTypescriptConfigs: 'no-type-checked'` saves the most. Dropping the rules that read the type checker cuts about a fifth of the run time on the seedcord packages. `registerImportPlugin: 'fast'` removes the two rules that parse every file an import resolves to. That one saves closer to a tenth.
+
+</Callout>
+
+## Formatting
+
+Prettier reads its own file, and the scaffold points it at the shared config.
+
+```ts twoslash title="prettier.config.ts"
+import { createPrettierConfig } from '@seedcord/eslint-config/prettier';
+
+export default createPrettierConfig();
+```
+
+[`createPrettierConfig`](ref:eslint-config/createPrettierConfig) also takes per-glob `overrides`.
+
+```ts twoslash title="prettier.config.ts"
+// ---cut-start---
+import { createPrettierConfig } from '@seedcord/eslint-config/prettier';
+// ---cut-end---
+export default createPrettierConfig({
+    overrides: [{ files: '*.md', options: { proseWrap: 'always' } }]
+});
+```
+
+`createConfig` already turns off every ESLint rule that overlaps prettier's formatting, so you can skip adding `eslint-config-prettier` yourself.
+
+## Starting from an existing project
+
+<Shell add="-D @seedcord/eslint-config eslint jiti typescript" />
+
+The two plugins come with it, so the `register` flags are all you write. ESLint loads a TypeScript config file through `jiti`. Then add the `eslint.config.ts` from the top of this page along with the two scripts.
+
+```json title="package.json"
+{
+    "scripts": {
+        "lint": "eslint 'src/**/*.ts' --cache",
+        "lint:fix": "eslint 'src/**/*.ts' --fix --cache"
+    }
+}
+```
