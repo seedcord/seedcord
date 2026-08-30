@@ -38,7 +38,7 @@ import {
     Webhook
 } from 'lucide-react';
 
-import { Section } from '#components/home/Section';
+import { SECTION_HEADING, Section } from '#components/home/Section';
 
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -182,11 +182,7 @@ function pad(count: number): string {
 export function FeatureGrid(): ReactNode {
     return (
         <Section ground="pith">
-            <h2
-                className={cn(
-                    'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
-                )}
-            >
+            <h2 className={cn(SECTION_HEADING)}>
                 It all comes <span className={cn('text-(--flesh-deep)')}>built in.</span>
             </h2>
 

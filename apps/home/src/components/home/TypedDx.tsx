@@ -2,7 +2,7 @@ import { cn, Icon } from '@seedcord/ui';
 import { Braces, RefreshCw, ShieldCheck } from 'lucide-react';
 
 import { CodeCard } from '#components/code/CodeCard';
-import { Section } from '#components/home/Section';
+import { SECTION_HEADING, Section } from '#components/home/Section';
 import { Code } from '#components/ui/Code';
 import { CODE_MARK_LIGHT } from '#lib/code/marks';
 import { codegenOutput, typedDxCommand, typedDxHandler } from '#lib/code/samples';
@@ -20,11 +20,7 @@ export function TypedDx(): ReactNode {
         <Section ground="pith">
             <div className={cn('grid items-start gap-x-10 gap-y-8 lg:grid-cols-[0.9fr_1.1fr]')}>
                 <div className={cn('min-w-0 lg:col-start-1 lg:row-start-1')}>
-                    <h2
-                        className={cn(
-                            'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
-                        )}
-                    >
+                    <h2 className={cn(SECTION_HEADING)}>
                         The builder is the <span className={cn('text-(--flesh-deep)')}>source</span> of the types.
                     </h2>
                     <p className={cn('mt-6 max-w-md text-lg/snug font-medium text-(--seed-dark)/85')}>

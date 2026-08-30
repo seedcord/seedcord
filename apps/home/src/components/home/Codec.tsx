@@ -2,7 +2,7 @@ import { cn, Icon } from '@seedcord/ui';
 import { ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-react';
 
 import { CodeCard } from '#components/code/CodeCard';
-import { Section } from '#components/home/Section';
+import { SECTION_HEADING, Section } from '#components/home/Section';
 import { Code } from '#components/ui/Code';
 import { CODE_MARK_DARK } from '#lib/code/marks';
 import { codecComponent, codecHandler } from '#lib/code/samples';
@@ -18,11 +18,7 @@ export function Codec(): ReactNode {
     return (
         <Section ground="flesh">
             <div className={cn('grid items-start gap-x-10 gap-y-6 lg:grid-cols-2')}>
-                <h2
-                    className={cn(
-                        'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
-                    )}
-                >
+                <h2 className={cn(SECTION_HEADING)}>
                     Discord hands back a flat string.
                     <br />
                     You get your typed fields.

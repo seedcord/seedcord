@@ -1,7 +1,7 @@
 import { cn, Icon } from '@seedcord/ui';
 import { PlugZap, Radio } from 'lucide-react';
 
-import { Section } from '#components/home/Section';
+import { SECTION_HEADING, Section } from '#components/home/Section';
 
 import type { ReactNode } from 'react';
 
@@ -23,11 +23,7 @@ const TRANSPORTS = [
 export function Transports(): ReactNode {
     return (
         <Section ground="rind">
-            <h2
-                className={cn(
-                    'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
-                )}
-            >
+            <h2 className={cn(SECTION_HEADING)}>
                 Two transports.
                 <br />
                 One set of handlers.

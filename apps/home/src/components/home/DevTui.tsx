@@ -1,6 +1,6 @@
 import { cn } from '@seedcord/ui';
 
-import { Section } from '#components/home/Section';
+import { SECTION_HEADING, Section } from '#components/home/Section';
 import { Code } from '#components/ui/Code';
 import { CDN_URL } from '#lib/site';
 
@@ -24,11 +24,7 @@ export function DevTui(): ReactNode {
     return (
         <Section ground="ink">
             <div className={cn('max-w-2xl')}>
-                <h2
-                    className={cn(
-                        'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
-                    )}
-                >
+                <h2 className={cn(SECTION_HEADING)}>
                     The dev server has a <span className={cn('text-(--flesh)')}>UI</span>.
                 </h2>
                 <p className={cn('mt-6 text-lg/snug font-medium text-(--pith)/80')}>
