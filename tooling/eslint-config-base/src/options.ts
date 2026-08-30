@@ -1,4 +1,5 @@
 import type { ImportPluginLevel } from './rules/import-rules';
+import type { TypescriptConfigsLevel } from './rules/typescript-rules';
 import type { Linter } from 'eslint';
 
 /** @internal */
@@ -44,11 +45,13 @@ export interface CreateConfigOptions {
     registerTsdocPlugin?: boolean;
 
     /**
-     * Toggle registration of TypeScript ESLint configs
+     * Toggle registration of TypeScript ESLint configs. `'no-type-checked'` keeps the presets and
+     * turns off the rules that read the type checker, the slowest ones in a run. The parser keeps
+     * its `project` either way, since the seedcord and discordjs rules read types of their own.
      *
      * @defaultValue `true`
      */
-    registerTypescriptConfigs?: boolean;
+    registerTypescriptConfigs?: TypescriptConfigsLevel;
 
     /**
      * Toggle registration of the `eslint-plugin-unicorn` plugin. unicorn requires eslint >=10.4, so
