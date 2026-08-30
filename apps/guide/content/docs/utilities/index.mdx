@@ -38,7 +38,7 @@ The scaffold's `/ping` measures a roundtrip this way, storing nothing. Discord s
 
 ## Discord timestamps take seconds
 
-`<t:1735689600:R>` renders as a live relative time in a message. Discord reads that number as **seconds**. JavaScript hands you milliseconds everywhere, so [`toEpochSeconds`](ref:utils/toEpochSeconds) does the divide and the rounding.
+`<t:1735689600:R>` renders as a live relative time in a message. Discord reads that number as **seconds**. JavaScript gives you milliseconds everywhere, so [`toEpochSeconds`](ref:utils/toEpochSeconds) does the divide and the rounding.
 
 ```ts twoslash
 import {
@@ -140,7 +140,7 @@ const [winner] = fyShuffle(entrants);
 
 ## Objects that will not stringify
 
-discord.js structures point back at the client, which points back at them, so `JSON.stringify` on one throws. [`filterCirculars`](ref:utils/filterCirculars) returns a copy with each cycle replaced by a marker.
+discord.js structures point back at the client, which points back at them. `JSON.stringify` on one throws. [`filterCirculars`](ref:utils/filterCirculars) returns a copy with each cycle replaced by a marker.
 
 ```ts twoslash
 import { filterCirculars } from '@seedcord/gateway';

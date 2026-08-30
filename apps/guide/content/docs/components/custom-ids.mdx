@@ -80,7 +80,7 @@ export class TicketActions extends RowComponent<'button'> {
 }
 ```
 
-The chain types the values, so a wrong value or a missing field stops the build.
+Because the chain types the values, a wrong value or a missing field stops the build.
 
 ```ts twoslash
 // @errors: 2322
@@ -143,7 +143,7 @@ const { roleId } = Board.decode('...');
 
 A `/leaderboard [role]` command mints that id once, so every nav button carries the filter. Leaving the option out encodes `roleId` as null.
 
-`encode` takes the null too, so `Board.encode({ page: 0, roleId: null })` compiles.
+You pass that null back through `encode`, and `Board.encode({ page: 0, roleId: null })` compiles.
 
 <Callout type="warning">
 
@@ -170,7 +170,7 @@ notify   true                    2 possible values
 
 A token field sits after that number behind a separator. `str` writes its text as given, which makes it the expensive kind. Avoid it where another kind fits.
 
-`encode` throws `CustomIdWireTooLong` once a wire runs past 100. That happens while you build the component, so the failure never waits for a click.
+Once a wire runs past 100, `encode` throws `CustomIdWireTooLong`. That happens while you build the component, so the failure never waits for a click.
 
 <Callout type="tip">
 

@@ -164,7 +164,7 @@ class SearchAutocomplete extends AutocompleteHandler<'search'> {
 
 Discord sends the raw text, so someone typing `120` sends `'1'`, then `'12'`, then `'120'`. Parse it yourself and guard the result, since an empty field sends an empty string.
 
-What you send back carries the real type, so `limit` takes `{ value: number }`.
+What you send back carries the real type. `limit` takes `{ value: number }`.
 
 ## Reading the other options
 
@@ -189,4 +189,4 @@ class SearchAutocomplete extends AutocompleteHandler<'search'> {
 
 Every read here is nullable, since the person may not have reached that option yet.
 
-Discord resolves four option kinds mid-type, so `getString`, `getInteger`, `getNumber`, and `getBoolean` are the only getters you get here.
+Discord resolves these option kinds mid-type, so `getString`, `getInteger`, `getNumber`, and `getBoolean` are the only getters you get here.

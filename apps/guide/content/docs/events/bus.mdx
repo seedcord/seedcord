@@ -80,9 +80,9 @@ export class Award extends SlashHandler<'award'> {
 
 </Callout>
 
-`publish` returns whether any `on` listener existed for the key. It counts those listeners only, so a key with three subscribers and no listeners returns `false`.
+The return value tells you whether any `on` listener existed for the key. It counts those listeners only, so a key with three subscribers and no listeners returns `false`.
 
-Several subscribers on one key all run at once. Any of them can finish first, so write each one so it stands alone.
+Several subscribers on one key all run at once. Any of them can finish first. Write each one so it stands alone.
 
 ## Running once
 

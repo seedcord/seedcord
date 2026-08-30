@@ -48,7 +48,7 @@ The file goes under the `commands` path your `bot.ts` declares. seedcord imports
 
 `'global'` puts the command in every server your bot is in. A global command takes a while to show up, and Discord publishes no number for how long.
 
-`'guild'` takes the server ids and puts the command only there, where it appears right away.
+For one server, pass `'guild'` with the ids. The command appears there right away.
 
 ```ts
 @RegisterCommand('guild', ['613425648685547541'])
