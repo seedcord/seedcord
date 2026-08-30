@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordBrand } from '@seedcord/types/internal';
+import { HostAugmentTarget, HostPluginKeys, SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType } from 'discord.js';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -48,8 +48,8 @@ function makeRunner(root: string, logger: ILogger): CodegenRunner {
             Promise.resolve({
                 default: {
                     [SeedcordBrand]: true,
-                    augmentTarget: '@seedcord/gateway',
-                    pluginKeys: [],
+                    [HostAugmentTarget]: '@seedcord/gateway',
+                    [HostPluginKeys]: [],
                     config: { bot: { commands: { path: null } } }
                 }
             })
@@ -76,8 +76,8 @@ function scanRunner(
                 ? Promise.resolve({
                       default: {
                           [SeedcordBrand]: true,
-                          augmentTarget: '@seedcord/gateway',
-                          pluginKeys: [],
+                          [HostAugmentTarget]: '@seedcord/gateway',
+                          [HostPluginKeys]: [],
                           config: { bot: { commands: { path: commandsPath } } }
                       }
                   })
@@ -108,8 +108,8 @@ function pluginRunner(root: string, instance: string, pluginKeys: readonly strin
             Promise.resolve({
                 default: {
                     [SeedcordBrand]: true,
-                    augmentTarget: '@seedcord/gateway',
-                    pluginKeys,
+                    [HostAugmentTarget]: '@seedcord/gateway',
+                    [HostPluginKeys]: pluginKeys,
                     config: { bot: { commands: { path: null } } }
                 }
             })

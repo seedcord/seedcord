@@ -58,6 +58,8 @@ export enum SeedcordErrorCode {
     CoreApplicationUnavailable = 1209,
     /** A generated accessor was read before startup resolved its values. */
     CoreAccessorUnresolved = 1210,
+    /** A startup or shutdown task was added to a core built by `createSeedcord`. */
+    CoreLifecycleUnavailable = 1211,
 
     /** Interaction middleware decorated with disallowed event filters. */
     DecoratorInteractionEventFilter = 1301,

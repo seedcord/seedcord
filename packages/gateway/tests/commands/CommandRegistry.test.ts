@@ -1,3 +1,4 @@
+import { HostVersion } from '@seedcord/types/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
@@ -52,7 +53,7 @@ describe('CommandRegistry Integration', () => {
         const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
 
         seedcord = new Seedcord(config);
-        expect(seedcord.version).toBe('0.0.0');
+        expect(seedcord[HostVersion]).toBe('0.0.0');
         await registryOf(seedcord).init();
 
         const globalCommands = registryOf(seedcord).globalCommands;

@@ -1,5 +1,6 @@
 import { REST } from '@discordjs/rest';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
+import { HostPluginKeys } from '@seedcord/types/internal';
 import { describe, it, expect, afterEach } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
@@ -39,7 +40,7 @@ describe('pluginKeys', () => {
     });
 
     it('is empty before anything attaches', () => {
-        expect(new TestHost().pluginKeys).toEqual([]);
+        expect(new TestHost()[HostPluginKeys]).toEqual([]);
     });
 
     it('reports the keys in attach order', () => {
@@ -47,6 +48,6 @@ describe('pluginKeys', () => {
 
         const attached = host.attach('db', TestPlugin).attach('cache', TestPlugin);
 
-        expect(attached.pluginKeys).toEqual(['db', 'cache']);
+        expect(attached[HostPluginKeys]).toEqual(['db', 'cache']);
     });
 });

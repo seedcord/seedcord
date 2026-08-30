@@ -7,7 +7,13 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { isCommandClass } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
+import {
+    HostAugmentTarget,
+    HostPluginKeys,
+    SeedcordBrand,
+    type Brandable,
+    type SeedcordInstance
+} from '@seedcord/types/internal';
 import { isTsOrJsFile } from '@seedcord/utils/node';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
@@ -141,8 +147,8 @@ export class CodegenRunner {
         return {
             commandsDir: commandsPath ? resolve(process.cwd(), commandsPath) : undefined,
             emojis: instance.config.bot.emojis ?? {},
-            augmentTarget: instance.augmentTarget,
-            pluginKeys: instance.pluginKeys
+            augmentTarget: instance[HostAugmentTarget],
+            pluginKeys: instance[HostPluginKeys]
         };
     }
 

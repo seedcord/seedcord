@@ -49,6 +49,8 @@ const messages = {
         "The bot's application id resolves during startup. You read it before that. Read it inside a handler, inside a plugin's ready(), or after start() resolves.",
     [SeedcordErrorCode.CoreAccessorUnresolved]: (accessor: string, key: string) =>
         `${accessor}.${key} has no value yet. ${accessor} fills during startup, and a read at the top of a file runs before that.`,
+    [SeedcordErrorCode.CoreLifecycleUnavailable]: (accessor: string) =>
+        `core.${accessor}.addTask() does not work here. This bot was built with createSeedcord() whose build never runs startup or shutdown. Your task would never run. Do the work inside your handler instead. To use startup and shutdown, run the bot on node with new Seedcord(config).start().`,
 
     [SeedcordErrorCode.DecoratorInteractionEventFilter]: () => 'Interaction middleware cannot specify event filters.',
     [SeedcordErrorCode.DecoratorCommandAlreadyRegistered]: (

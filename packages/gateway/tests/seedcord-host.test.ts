@@ -1,4 +1,4 @@
-import { ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
+import { ShutdownPhase, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
@@ -37,13 +37,13 @@ describe('Seedcord host', () => {
     it('registers the health server by default', () => {
         const seedcord = new Seedcord(testConfig());
 
-        expect(seedcord.shutdown.removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(true);
+        expect(shutdownOf(seedcord).removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(true);
     });
 
     it('healthCheck: false skips the health server', () => {
         const seedcord = new Seedcord(testConfig({ healthCheck: false }));
 
-        expect(seedcord.shutdown.removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(false);
+        expect(shutdownOf(seedcord).removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(false);
     });
 
     it('rejects a restart after a failed start', async () => {

@@ -151,9 +151,8 @@ describe('Bus Integration', () => {
         const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
         seedcord = new Seedcord(config);
-        // HMR registration runs in the Configuration phase, before Bot Init (which needs a real token
-        // the test env omits), so let the later phase fail, the wiring we assert has already run
-        await seedcord.startup.run().catch(() => undefined);
+        // hmr registration runs in Configuration. Login rejects later without a real token
+        await seedcord.start().catch(() => undefined);
 
         const { hmrManager, subscribers } = internalsOf(seedcord);
         const onHmr = vi.spyOn(subscribers, 'onHmr');

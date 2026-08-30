@@ -1,5 +1,5 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { SeedcordBrand } from '@seedcord/types/internal';
+import { HostAugmentTarget, HostShutdown, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { describe, expect, it, vi } from 'vitest';
 
 import { DevSession } from '#commands/dev/DevSession';
@@ -87,12 +87,12 @@ describe('DevSession', () => {
     it('accepts a branded instance', async () => {
         const instance = {
             [SeedcordBrand]: true,
-            version: '1.2.3',
-            augmentTarget: '@seedcord/gateway',
+            [HostVersion]: '1.2.3',
+            [HostAugmentTarget]: '@seedcord/gateway',
             username: 'TestBot',
             start: () => Promise.resolve(),
-            startup: { abort: () => undefined },
-            shutdown: { run: () => Promise.resolve() }
+            [HostStartup]: { abort: () => undefined },
+            [HostShutdown]: { run: () => Promise.resolve() }
         };
         const store = new DevStore();
         const session = new DevSession(config(), runtime({ default: instance }), store, () => undefined);

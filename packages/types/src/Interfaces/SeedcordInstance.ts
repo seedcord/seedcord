@@ -1,13 +1,16 @@
+import type { HostAugmentTarget, HostPluginKeys, HostShutdown, HostStartup, HostVersion } from '../brand';
 import type { Config } from './Config';
 
 // Core implements this. the CLI narrows a loaded module export to it after the SeedcordBrand runtime check
 export interface SeedcordInstance {
     readonly config: Config;
-    readonly version: string; // for `seedcord dev` to show the current version
     readonly username: string | undefined; // the bot's discord username, for the dev status. undefined before login
-    readonly augmentTarget: string; // the transport package codegen uses for declare module
-    readonly pluginKeys: readonly string[]; // the attach keys codegen augments Core with
-    readonly shutdown: { run(exitCode?: number, exitProcess?: boolean): Promise<void> };
-    readonly startup: { abort(): void };
+
+    // symbol keys keep these out of autocomplete on a host
+    readonly [HostVersion]: string;
+    readonly [HostAugmentTarget]: string;
+    readonly [HostPluginKeys]: readonly string[];
+    readonly [HostShutdown]: { run(exitCode?: number, exitProcess?: boolean): Promise<void> };
+    readonly [HostStartup]: { abort(): void };
     start(): Promise<unknown>;
 }

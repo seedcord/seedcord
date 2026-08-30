@@ -1,11 +1,11 @@
 import { Bus } from '@seedcord/core';
 import { busLoggerOf, HmrManager, setBotColor } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, Pluggable } from '@seedcord/core/node';
-import { HealthCheck, StartupPhase, SubscriberLoader } from '@seedcord/core/node/internal';
+import { HealthCheck, shutdownOf, StartupPhase, SubscriberLoader } from '@seedcord/core/node/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
-import { SeedcordBrand } from '@seedcord/types/internal';
+import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
 import { botLoggerOf, Bot } from './bot/Bot';
@@ -26,9 +26,9 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
     /** @internal */
     public readonly [SeedcordBrand] = true;
     /** @internal */
-    public readonly augmentTarget = '@seedcord/gateway';
+    public readonly [HostAugmentTarget] = '@seedcord/gateway';
     /** @internal */
-    public readonly version: string = packageVersion;
+    public readonly [HostVersion]: string = packageVersion;
 
     private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
@@ -69,7 +69,7 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
         this.bot = new Bot(this);
         this.rest = this.bot.client.rest;
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
-        this.healthCheck = HealthCheck.fromOption(this.shutdown, config.healthCheck);
+        this.healthCheck = HealthCheck.fromOption(shutdownOf(this), config.healthCheck);
 
         this.registerStartupTasks();
     }
@@ -121,7 +121,7 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
             await super.init();
         } catch (caught) {
             // shutdown releases any resource opened before the failure, then rethrow
-            await this.shutdown.run(1, false);
+            await shutdownOf(this).run(1, false);
             Seedcord.reset(this);
             throw caught;
         }

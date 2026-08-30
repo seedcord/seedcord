@@ -3,7 +3,15 @@ import { dirname } from 'node:path';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
+import {
+    HostAugmentTarget,
+    HostShutdown,
+    HostStartup,
+    HostVersion,
+    SeedcordBrand,
+    type Brandable,
+    type SeedcordInstance
+} from '@seedcord/types/internal';
 
 import { profileMark } from '#ui/profile';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
@@ -77,7 +85,7 @@ export class DevSession {
         }
 
         this.instance = instance;
-        this.store.setTransport({ name: instance.augmentTarget, version: instance.version });
+        this.store.setTransport({ name: instance[HostAugmentTarget], version: instance[HostVersion] });
 
         try {
             this.store.setPhase('starting');
@@ -115,7 +123,7 @@ export class DevSession {
     private async runStop(): Promise<void> {
         this.isStopped = true;
         this.tscRunner?.stop();
-        this.instance?.startup.abort();
+        this.instance?.[HostStartup].abort();
 
         if (this.startupPromise) {
             // so the shutdown below still runs
@@ -124,7 +132,7 @@ export class DevSession {
             } catch {}
         }
 
-        await this.instance?.shutdown.run(0, false);
+        await this.instance?.[HostShutdown].run(0, false);
         this.stopResolve?.();
     }
 

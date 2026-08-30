@@ -1,6 +1,7 @@
 /* eslint-disable max-lines -- one integration suite per dispatcher, splitting fragments the shared test env */
 
 import { CustomId } from '@seedcord/core';
+import { shutdownOf } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -963,7 +964,7 @@ describe('InteractionDispatcher Integration', () => {
             vi.useFakeTimers();
             const debugs = vi.spyOn(Logger.prototype, 'debug');
             const errors = vi.spyOn(Logger.prototype, 'error');
-            const run = seedcord.shutdown.run(0, false);
+            const run = shutdownOf(seedcord).run(0, false);
             await vi.advanceTimersByTimeAsync(10_000);
             await run;
             vi.useRealTimers();
