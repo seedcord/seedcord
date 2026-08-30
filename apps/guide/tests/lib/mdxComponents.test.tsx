@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { mdxComponents } from '#lib/mdxComponents';
 import { MAPPED_TAGS } from '#lib/remarkNoMappedJsx';
 
-const { Image, pre: Fence } = mdxComponents;
+const { Image, pre: Fence, a: Link, Shell } = mdxComponents;
 
 describe('the rejected jsx tag list', () => {
     it('names every lowercase tag the map claims', () => {
@@ -57,11 +57,47 @@ describe('a fence', () => {
     });
 });
 
-describe('the image component', () => {
-    it('draws a border by default', () => {
-        render(<Image src="/logo.svg" alt="framed" />);
+describe('a shell block', () => {
+    it('puts a before line above the command', async () => {
+        render(await Shell({ run: 'dev', before: 'cd my-bot' }));
 
-        expect(borderWidthOf('framed')).toBeDefined();
+        expect(screen.getByRole('figure')).toHaveTextContent('cd my-bot');
+        expect(screen.getByRole('figure')).toHaveTextContent('pnpm run dev');
+    });
+
+    it('copies both lines', async () => {
+        render(await Shell({ run: 'dev', before: 'cd my-bot' }));
+
+        expect(screen.getByRole('button', { name: /Copy/ })).toBeInTheDocument();
+    });
+
+    it('refuses two verbs at once', async () => {
+        await expect(Shell({ run: 'dev', add: 'zod' })).rejects.toThrow('exactly one');
+    });
+});
+
+describe('a link', () => {
+    it('opens a link off the guide in a new tab', () => {
+        render(<Link href="https://discord.com/developers/applications">the portal</Link>);
+
+        const anchor = screen.getByRole('link');
+
+        expect(anchor).toHaveAttribute('target', '_blank');
+        expect(anchor).toHaveAttribute('rel', 'noreferrer noopener');
+    });
+
+    it.each(['/gateway-or-http', '#intents', './commands'])('keeps %s in this tab', (href) => {
+        render(<Link href={href}>somewhere in the guide</Link>);
+
+        expect(screen.getByRole('link')).not.toHaveAttribute('target');
+    });
+});
+
+describe('the image component', () => {
+    it('draws no border by default', () => {
+        render(<Image src="/logo.svg" alt="bare" />);
+
+        expect(borderWidthOf('bare')).toBeUndefined();
     });
 
     it('gives each weight its own border', () => {
@@ -78,11 +114,11 @@ describe('the image component', () => {
         expect(borderWidthOf('thick')).toBe('border-4');
     });
 
-    it('drops the border and keeps frame off the dom', () => {
-        render(<Image src="/logo.svg" alt="bare" frame={false} />);
+    it('keeps frame off the dom', () => {
+        render(<Image src="/logo.svg" alt="asked for bare" frame={false} />);
 
-        expect(borderWidthOf('bare')).toBeUndefined();
-        expect(screen.getByRole('img', { name: 'bare' })).not.toHaveAttribute('frame');
+        expect(borderWidthOf('asked for bare')).toBeUndefined();
+        expect(screen.getByRole('img', { name: 'asked for bare' })).not.toHaveAttribute('frame');
     });
 
     it('gives each alignment its own margin', () => {

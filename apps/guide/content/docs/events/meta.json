@@ -1,5 +1,14 @@
 {
     "title": "Events",
     "root": true,
-    "pages": ["index"]
+    "pages": [
+        "index",
+        "several-events",
+        "middleware",
+        "messages",
+        "---The bus---",
+        "bus",
+        "default-keys",
+        "telemetry"
+    ]
 }

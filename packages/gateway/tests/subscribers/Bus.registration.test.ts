@@ -1,4 +1,4 @@
-import { busLoggerOf } from '@seedcord/core/internal';
+import { busLoggerOf, VerifyWebhooks } from '@seedcord/core/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
@@ -108,7 +108,7 @@ describe('Bus webhook reporter registration', () => {
             new DiscordAPIError({ message: 'Unknown Webhook', code: 10_015 }, 10_015, 404, 'GET', 'url', {})
         );
         // one boot reports every dead webhook, both default urls are mocked dead here
-        await expect(seedcord.bus.verifyWebhooks()).rejects.toThrow(
+        await expect(seedcord.bus[VerifyWebhooks]()).rejects.toThrow(
             /UNKNOWN_EXCEPTION_WEBHOOK_URL.+HANDLED_EXCEPTION_WEBHOOK_URL/
         );
     });
@@ -144,7 +144,9 @@ describe('Bus webhook reporter registration', () => {
         restMocks.getMock.mockRejectedValue(
             new DiscordAPIError({ message: 'Unknown Webhook', code: 10_015 }, 10_015, 404, 'GET', 'url', {})
         );
-        await expect(seedcord.bus.verifyWebhooks()).rejects.toThrow(/DUPLICATE_A_WEBHOOK_URL.+DUPLICATE_B_WEBHOOK_URL/);
+        await expect(seedcord.bus[VerifyWebhooks]()).rejects.toThrow(
+            /DUPLICATE_A_WEBHOOK_URL.+DUPLICATE_B_WEBHOOK_URL/
+        );
     });
 
     it('warns and continues when discord is unreachable at verify', async () => {
@@ -153,7 +155,7 @@ describe('Bus webhook reporter registration', () => {
 
         restMocks.getMock.mockRejectedValue(new TypeError('fetch failed'));
         const warnSpy = vi.spyOn(busLoggerOf(seedcord.bus), 'warn');
-        await expect(seedcord.bus.verifyWebhooks()).resolves.toBeUndefined();
+        await expect(seedcord.bus[VerifyWebhooks]()).resolves.toBeUndefined();
         expect(warnSpy).toHaveBeenCalled();
     });
 

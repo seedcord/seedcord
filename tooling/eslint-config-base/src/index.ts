@@ -29,6 +29,7 @@ import {
     TYPESCRIPT_RULES,
     UNICORN_RULES,
     assertImportPluginLevel,
+    assertTypescriptConfigsLevel,
     createImportRules,
     createImportSettings
 } from './rules';
@@ -73,8 +74,9 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         mdxFiles
     } = options;
 
-    // nothing type-checks a consumer's eslint.config.mjs
+    // types never run on a plain js config file
     assertImportPluginLevel(registerImportPlugin);
+    assertTypescriptConfigsLevel(registerTypescriptConfigs);
 
     const createTsParserOptions = (rootDir: string) => ({
         project: ['./tsconfig.json'],
@@ -83,7 +85,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
 
     const tsConfigs: FlatConfigItem[] = [];
 
-    if (registerTypescriptConfigs) {
+    if (registerTypescriptConfigs !== false) {
         tsConfigs.push(
             ...tseslint.configs.recommended.map((c) => ({ ...c, files: [...TS_FILES] })),
             ...tseslint.configs.recommendedTypeChecked.map((c) => ({ ...c, files: [...TS_FILES] })),
@@ -92,6 +94,15 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             // gated here because these rules need the plugin the presets above register
             { files: [...TS_FILES], rules: merge({}, TYPESCRIPT_RULES) }
         );
+
+        if (registerTypescriptConfigs === 'no-type-checked') {
+            // rules only. the full config clears parserOptions.project which the seedcord and
+            // discordjs still need to do their type aware linting
+            tsConfigs.push({
+                files: [...TS_FILES],
+                rules: merge({}, tseslint.configs.disableTypeChecked.rules)
+            });
+        }
     }
 
     // Resolve general ignores relative to the repository root so callers can

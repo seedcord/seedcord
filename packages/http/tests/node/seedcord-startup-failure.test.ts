@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { shutdownOf } from '@seedcord/core/node/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -59,7 +60,7 @@ describe('http Seedcord startup failure', () => {
     beforeEach(reset);
 
     afterEach(async () => {
-        await live?.shutdown.run(0, false);
+        if (live) await shutdownOf(live).run(0, false);
         live = undefined;
         reset();
     });

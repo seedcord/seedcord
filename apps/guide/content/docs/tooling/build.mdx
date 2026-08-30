@@ -1,0 +1,67 @@
+---
+title: Building
+description: Compiling your bot for production.
+---
+
+`seedcord build` turns your `src` folder into a `dist` folder that plain node can run. It does not take flags, so everything it needs comes from `seedcord.config.ts`.
+
+<Shell run="build" />
+
+Three things happen, in this order.
+
+1. Your project's own `tsc` compiles the project. seedcord always passes `--inlineSources`. It adds `--sourceMap` too, unless your tsconfig already sets `inlineSourceMap`. Both give you readable stack traces in production.
+2. `tsc-alias` rewrites every import specifier in the output. TypeScript emits each one exactly as you wrote it, so a path alias or an extensionless import would fail at runtime under node.
+3. seedcord writes a bootstrap file. It holds a single import of the compiled entry.
+
+Your source layout decides where the compiled `entry` goes under `outDir`. The bootstrap file always has the same path, so your start script points at that.
+
+## Running what it built
+
+<Shell run="start" />
+
+The scaffold wires that script to `node --enable-source-maps dist/index.mjs`. That flag turns the source maps from step 1 into line numbers you recognize.
+
+## The three build keys
+
+Your CLI config holds all three under `build`. Every one is optional.
+
+```ts twoslash title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    entry: './index.ts',
+    build: {
+        outDir: './dist',
+        tsconfig: './tsconfig.build.json',
+        bootstrap: 'index.mjs'
+    }
+});
+```
+
+`outDir` defaults to `./dist` beside your config.
+
+A relative `bootstrap` resolves against `outDir`. That turns `index.mjs` into `dist/index.mjs`.
+
+Leave `tsconfig` out and seedcord looks for `tsconfig.build.json` first, then `tsconfig.json`. When both are missing, it throws `CliBuildTsconfigNotFound` and names the two filenames.
+
+## When the build fails
+
+A type error stops the build. seedcord throws `CliBuildFailed` and shows you the compiler's own output, trimmed if it runs long.
+
+When `tsc` finishes, seedcord checks that the compiled entry file is there. Sometimes the compiler reports success and that file is still missing. You get the same `CliBuildFailed` error. It prints the path seedcord checked.
+
+Two things usually cause this. Your tsconfig may exclude the entry file. Or `rootDir` may send the output to a folder you did not expect.
+
+## Where your bot runs
+
+You set `runtime` on your bot's own config in `src/bot.ts`, beside `bot` and `subscribers`. It says which shape your bot is built for.
+
+<Callout type="transport">
+
+A gateway bot only accepts `'server'`, since its websocket needs a process that stays up. An http bot takes `'server'` for a long-running node process, or `'edge'` for a Cloudflare Worker.
+
+</Callout>
+
+`seedcord build` compiles the same way for both today, because the edge build is still being written.

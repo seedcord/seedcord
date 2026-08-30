@@ -12,7 +12,7 @@ import type {
 } from '#lib/docs/types';
 import type { DocNode, DocSignature } from '@seedcord/docs-engine';
 
-type DocNodeLike = Pick<DocNode, 'flags' | 'comment'>;
+export type DocNodeLike = Pick<DocNode, 'flags' | 'comment'>;
 
 export const cloneExamples = (examples: readonly CommentExample[] | null | undefined): CommentExample[] =>
     examples?.length ? [...examples] : [];
@@ -189,8 +189,13 @@ export function deriveSharedDocumentation(
     return stripDuplicateDescription(nodeComment.paragraphs, description);
 }
 
-export function buildDeprecationStatusFromNodeLike(node: DocNodeLike): DeprecationStatus {
+export function buildDeprecationStatusFromNodeLike(
+    node: DocNodeLike,
+    // the rendered form carries the links and inline code that block.text flattens away
+    rendered?: readonly CommentParagraph[] | undefined
+): DeprecationStatus {
     if (!node.flags.isDeprecated) return { isDeprecated: false };
+    if (rendered?.length) return { isDeprecated: true, deprecationMessage: [...rendered] };
 
     const deprecationBlock = node.comment?.blockTags.find((val) => val.tag === '@deprecated');
 
@@ -204,4 +209,23 @@ export function buildDeprecationStatusFromNodeLike(node: DocNodeLike): Deprecati
         isDeprecated: true,
         deprecationMessage: paragraphs
     };
+}
+
+// api-extractor hangs a method's doc comment off its signature, leaving the member node with the flag alone
+export function resolveMemberDeprecation(
+    node: DocNodeLike,
+    signatures: readonly { deprecationStatus?: DeprecationStatus | undefined }[],
+    rendered?: readonly CommentParagraph[] | undefined
+): DeprecationStatus {
+    const own = buildDeprecationStatusFromNodeLike(node, rendered);
+    if (!own.isDeprecated || own.deprecationMessage?.length) return own;
+
+    for (const signature of signatures) {
+        const status = signature.deprecationStatus;
+        if (status?.isDeprecated && status.deprecationMessage?.length) {
+            return { isDeprecated: true, deprecationMessage: status.deprecationMessage };
+        }
+    }
+
+    return own;
 }

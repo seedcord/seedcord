@@ -122,6 +122,10 @@ interface Violation {
     reason: 'duplicate-literal' | 'catalog-missing-entry' | 'catalog-underused';
 }
 
+export function distinctPackageCount(refs: readonly DepRef[]): number {
+    return new Set(refs.map((r) => r.packageJsonPath)).size;
+}
+
 function findViolations(byName: Map<string, DepRef[]>, catalogEntries: Set<string>): Violation[] {
     const violations: Violation[] = [];
     const seen = new Set<string>();
@@ -129,8 +133,7 @@ function findViolations(byName: Map<string, DepRef[]>, catalogEntries: Set<strin
     for (const [depName, refs] of byName.entries()) {
         if (IGNORED_DEPS.has(depName)) continue;
         // an optional peer is often also a devDependency
-        const distinctPackages = new Set(refs.map((r) => r.packageJsonPath));
-        if (distinctPackages.size < 2) continue;
+        if (distinctPackageCount(refs) < 2) continue;
 
         const literalRefs = refs.filter((r) => !isInternalRef(r.version));
         if (literalRefs.length > 0) {
@@ -151,8 +154,7 @@ function findViolations(byName: Map<string, DepRef[]>, catalogEntries: Set<strin
         if (seen.has(entryName)) continue;
         const allRefs = byName.get(entryName) ?? [];
         const catalogRefs = allRefs.filter((r) => r.version.startsWith('catalog:'));
-        const distinctPackages = new Set(catalogRefs.map((r) => r.packageJsonPath));
-        if (distinctPackages.size < 2) {
+        if (distinctPackageCount(catalogRefs) < 2) {
             violations.push({ depName: entryName, refs: catalogRefs, reason: 'catalog-underused' });
         }
     }
@@ -186,7 +188,8 @@ function reportViolations(violations: Violation[]): void {
                 `      → A package references catalog:* for "${v.depName}" but no catalog entry exists in pnpm-workspace.yaml.`
             );
         } else {
-            const usedBy = v.refs.length === 0 ? '0 packages' : `${v.refs.length} package(s)`;
+            const packageCount = distinctPackageCount(v.refs);
+            const usedBy = packageCount === 1 ? '1 package' : `${packageCount} packages`;
 
             console.error(
                 `      → Catalog entry "${v.depName}" is used by ${usedBy}. Catalog is for shared deps (≥2 packages).\n` +

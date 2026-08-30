@@ -34,9 +34,9 @@ export function Hero(): ReactNode {
                         <span className={cn('text-(--flesh-deep)')}>typed</span>.
                     </h1>
                     <p className={cn('mt-7 max-w-xl text-lg/snug font-medium text-(--seed-dark)/85 md:text-xl')}>
-                        Everything a Discord bot needs, commands, events, components, gates, lifecycle and plugins,
-                        wired and typed on top of discord.js. A wrong route or option is a compile error, before the bot
-                        ever connects.
+                        Everything a Discord bot needs is wired and typed on top of discord.js: commands, events,
+                        components, gates, lifecycle, plugins, and more. A wrong route or option is a compile error,
+                        before the bot ever connects.
                     </p>
                     {/* ml-1 matches the poster button's 4px rest translate, aligning the chip with the button face */}
                     <CopyCommand command="pnpm create seedcord" className={cn('mt-7 ml-1')} />

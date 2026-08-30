@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { ShutdownPhase } from '@seedcord/core/node/internal';
+import { ShutdownPhase, shutdownOf } from '@seedcord/core/node/internal';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -56,7 +56,7 @@ describe('http Seedcord class', () => {
     beforeEach(reset);
 
     afterEach(async () => {
-        await live?.shutdown.run(0, false);
+        if (live) await shutdownOf(live).run(0, false);
         live = undefined;
         reset();
     });
@@ -92,7 +92,7 @@ describe('http Seedcord class', () => {
     it('shutdown closes the server', async () => {
         const { host, url } = await readyHost();
 
-        await host.shutdown.run(0, false);
+        await shutdownOf(host).run(0, false);
 
         await expect(fetch(url, { method: 'POST' })).rejects.toThrow();
     });
@@ -100,7 +100,7 @@ describe('http Seedcord class', () => {
     it('skips the health server on healthCheck: false', async () => {
         const { host } = await readyHost();
 
-        expect(host.shutdown.removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(false);
+        expect(shutdownOf(host).removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(false);
     });
 
     it('username stays undefined before the ready fetch', async () => {

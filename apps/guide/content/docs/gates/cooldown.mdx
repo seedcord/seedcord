@@ -1,0 +1,157 @@
+---
+title: Cooldowns
+description: Limiting how often a handler runs, and scoping that limit.
+---
+
+[`Cooldown`](ref:core/Cooldown) allows a set number of uses per window and refuses once they run out. The refusal card shows when the caller can try again.
+
+```ts twoslash title="src/handlers/Feed.ts"
+import {
+    Cooldown,
+    Gated,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+
+@Gated(Cooldown('30m'))
+@SlashRoute('feed')
+export class Feed extends SlashHandler<'feed'> {
+    public async execute(): Promise<void> {
+        await this.reply('Fed.');
+    }
+}
+```
+
+## The duration
+
+A string is a duration literal. A number is seconds.
+
+```ts twoslash
+import { Cooldown } from '@seedcord/gateway';
+// ---cut---
+Cooldown('30m'); // thirty minutes
+Cooldown(30); // thirty seconds
+```
+
+A duration literal is digits followed by one lowercase unit.
+
+{/* prettier-ignore-start */}
+
+| unit | means |
+| --- | --- |
+| `ms` | milliseconds |
+| `s` | seconds |
+| `m` | minutes |
+| `h` | hours |
+| `d` | days |
+
+{/* prettier-ignore-end */}
+
+<Callout type="warning">
+
+The type accepts any number in front of the unit. The parser accepts whole digits alone. So this compiles, then throws as the module loads.
+
+    ```ts twoslash
+    import { Cooldown } from '@seedcord/gateway';
+    // ---cut---
+    Cooldown('1.5h');
+    ```
+
+    Your bot never starts, and the error names the code `GateInvalidCooldownDuration`. Write `Cooldown('90m')`.
+
+</Callout>
+
+Everything else the parser rejects throws the same way.
+
+- an uppercase unit, as in `30M`
+- a bare number in a string, as in `'30'`
+- a zero duration, as in `0s`
+
+## Several uses per window
+
+`limit` sets how many uses fit in one window. It defaults to `1`.
+
+```ts twoslash
+import { Cooldown } from '@seedcord/gateway';
+// ---cut---
+Cooldown('10m', { limit: 3 });
+```
+
+Three calls inside ten minutes pass. The fourth refuses until the earliest of the three leaves the window.
+
+## Who shares a window
+
+Leaving `per` out gives every caller their own window. Pass `'guild'` or `'channel'` to widen it.
+
+{/* prettier-ignore-start */}
+
+| `per` | one window per | falls back to |
+| --- | --- | --- |
+| `'user'`, the default | caller | one shared window when the source carries no user |
+| `'guild'` | server | one shared window when the source carries no server |
+| `'channel'` | channel | one shared window when the source carries no channel |
+
+{/* prettier-ignore-end */}
+
+```ts twoslash
+import { Cooldown } from '@seedcord/gateway';
+// ---cut---
+Cooldown('1h', { per: 'guild' });
+```
+
+Every caller outside a server then shares one global window. Pair `per: 'guild'` with [`GuildOnly`](ref:core/GuildOnly) when that matters.
+
+Two handlers with the same settings still get separate windows, since the key includes the route. Two `Cooldown` calls with different settings stay apart even on the same handler.
+
+## Wording the refusal
+
+`message` rewords the card and `notice` replaces it. Both take a function that receives the epoch milliseconds when the window frees up.
+
+```ts twoslash
+import { Cooldown, toEpochSeconds } from '@seedcord/gateway';
+// ---cut---
+Cooldown('10s', {
+    per: 'channel',
+    message: (resetAt) =>
+        `Slow down. Try again <t:${toEpochSeconds(resetAt)}:R>.`
+});
+```
+
+Discord's `<t:...:R>` markup takes seconds, and [`toEpochSeconds`](ref:utils/toEpochSeconds) converts it. The default card already prints a relative time.
+
+```ts twoslash
+import { Cooldown, Notice } from '@seedcord/gateway';
+
+import type { EpochMs, ReplyResponse } from '@seedcord/gateway';
+
+declare const components: ReplyResponse['components'];
+
+class SlowDown extends Notice {
+    public constructor(resetAt: EpochMs) {
+        super(`caller is limited until ${String(resetAt)}`);
+    }
+
+    public render(): ReplyResponse {
+        return { components };
+    }
+}
+
+// ---cut---
+Cooldown('1m', { notice: (resetAt) => new SlowDown(resetAt) });
+```
+
+## When the slot is charged
+
+`Cooldown` is an effect gate. It reads the window during the check and records the use only after every gate on the handler has passed. A gate refusing later means the commit never runs, so the caller keeps their use.
+
+<Callout type="note">
+
+Two requests racing the same key can both read a free slot before either records its use. A tight burst can exceed `limit` that way. [Effect gates](/gates/effect-gates) covers the check and commit split this comes from.
+
+</Callout>
+
+## Keeping windows across restarts
+
+Cooldown windows live in [`core.rateLimiter`](ref:types/IRateLimiter), which counts in memory by default. A restart clears every cooldown. On a serverless deploy each running copy keeps its own counts. Unless you set a `store`, that is.
+
+[The rate limiter](/gates/rate-limiter) covers the `store` config key that replaces it, and charging a window yourself.

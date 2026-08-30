@@ -21,6 +21,7 @@
         "tests/**/*.tsx",
         "playground/**/*.ts",
         "playground/**/*.tsx",
+        "eslint.config.ts",
         "tsdown.config.ts",
         "vitest.config.ts"
     ],

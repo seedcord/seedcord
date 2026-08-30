@@ -1,6 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordAggregateError, SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS, Logger } from '@seedcord/logger';
+import { HostPluginKeys, HostShutdown, HostStartup } from '@seedcord/types/internal';
 
 import { assertNodeVersion } from '#node/assertNodeVersion';
 import { StartupPhase } from '#src/lifecycle/phases';
@@ -40,11 +41,16 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     public abstract readonly rateLimiter: IRateLimiter;
     public abstract readonly bus: Bus;
 
-    /** @see {@link CoordinatedShutdown} */
-    public readonly shutdown: CoordinatedShutdown;
+    /** @internal */
+    readonly [HostShutdown]: CoordinatedShutdown;
+    /** @internal */
+    readonly [HostStartup]: CoordinatedStartup;
 
-    /** @see {@link CoordinatedStartup} */
-    public readonly startup: CoordinatedStartup;
+    /** Add a task that runs while the bot shuts down. */
+    public readonly shutdown: Pick<CoordinatedShutdown, 'addTask'>;
+
+    /** Add a task that runs while the bot starts. */
+    public readonly startup: Pick<CoordinatedStartup, 'addTask'>;
 
     protected isInitialized = false;
     protected startFailed = false;
@@ -76,8 +82,11 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         Pluggable.isInstantiated = true;
         Pluggable.liveHost = this;
         Pluggable.liveShutdown = shutdown;
-        this.shutdown = shutdown;
-        this.startup = startup;
+        this[HostShutdown] = shutdown;
+        this[HostStartup] = startup;
+        // a getter returning the slot would hand back run() and the signal handlers with it
+        this.shutdown = { addTask: shutdown.addTask.bind(shutdown) };
+        this.startup = { addTask: startup.addTask.bind(startup) };
     }
 
     /** @internal */
@@ -98,14 +107,14 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         this.registerPluginTasks();
 
         if (this.config.errors?.catchProcessErrors ?? true) {
-            Pluggable.liveProcessErrors = registerProcessErrors(this, this.shutdown);
+            Pluggable.liveProcessErrors = registerProcessErrors(this, this[HostShutdown]);
         }
 
         const startupSettled: PromiseWithResolvers<void> = Promise.withResolvers();
-        this.shutdown.gateOnStartup(startupSettled.promise);
+        this[HostShutdown].gateOnStartup(startupSettled.promise);
 
         try {
-            await this.startup.run();
+            await this[HostStartup].run();
         } catch (caught) {
             await this.rollback();
             throw caught;
@@ -117,8 +126,8 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         return this;
     }
 
-    /** @internal codegen reads these to emit the `Core` augmentation */
-    public get pluginKeys(): readonly string[] {
+    /** @internal codegen reads this to emit the `Core` augmentation */
+    public get [HostPluginKeys](): readonly string[] {
         return this.attachments.map((attachment) => attachment.key);
     }
 
@@ -299,4 +308,9 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         // prevents re-dispose when shutdown runs after rollback
         this.completedInits.clear();
     }
+}
+
+// the public `shutdown` field carries addTask alone
+export function shutdownOf(host: Pick<Pluggable<Transport, Runtime>, typeof HostShutdown>): CoordinatedShutdown {
+    return host[HostShutdown];
 }

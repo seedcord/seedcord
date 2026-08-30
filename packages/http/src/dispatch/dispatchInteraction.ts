@@ -9,8 +9,8 @@ import {
     runHandlerGates,
     slowGateMonitor
 } from '@seedcord/core/internal';
-import { paint } from '@seedcord/errors';
-import { applicationIdFromToken } from '@seedcord/errors/internal';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
+import { applicationIdFromToken, SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
@@ -26,6 +26,7 @@ import type { HttpConfig } from '#interfaces/Config';
 import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from './resolve';
 import type { DispatchOutcome } from '@seedcord/core';
+import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/node';
 import type { IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
 
 // lazy, env binds after this module loads
@@ -43,6 +44,13 @@ type HandlerCtor = new (event: ValidInteractionTypes, core: Core, dispatch?: Dis
 
 type CoreDraft = TypedOmit<Core, 'bus'> & { bus: Bus };
 
+function noLifecycle(accessor: string): never {
+    throw new SeedcordError(SeedcordErrorCode.CoreLifecycleUnavailable, [accessor]);
+}
+
+const edgeShutdown: Pick<CoordinatedShutdown, 'addTask'> = { addTask: () => noLifecycle('shutdown') };
+const edgeStartup: Pick<CoordinatedStartup, 'addTask'> = { addTask: () => noLifecycle('startup') };
+
 export function createCore(config: HttpConfig, token: string): Core {
     const rateLimiter: IRateLimiter = config.store ?? new MemoryRateLimiter();
     // justified: bus completes the shape on the next line, and the Bus reads core at dispatch
@@ -50,6 +58,8 @@ export function createCore(config: HttpConfig, token: string): Core {
         config,
         rateLimiter,
         rest: new REST().setToken(token),
+        shutdown: edgeShutdown,
+        startup: edgeStartup,
         get applicationId(): string {
             return applicationIdFromToken(token);
         }

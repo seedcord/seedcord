@@ -1,0 +1,69 @@
+---
+title: Deferring
+description: Answering an interaction that needs longer than three seconds.
+---
+
+Some handlers need longer than the three seconds Discord allows for a first response. [`this.defer()`](ref:gateway/RepliableHandler.defer) answers inside that with a loading state, which leaves the real reply for later.
+
+```ts twoslash title="src/handlers/Ban.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+
+async function countPriorBans(userId: string): Promise<number> {
+    return 0;
+}
+// ---cut-end---
+
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        await this.defer();
+
+        const target = this.options.getUser('target');
+        const priors = await countPriorBans(target.id);
+
+        await this.edit(
+            `Banned ${target.username}. ${priors} bans before this one.`
+        );
+    }
+}
+```
+
+The person who ran the command sees your bot thinking until [`edit()`](ref:gateway/RepliableHandler.edit) runs. Discord expires the interaction token fifteen minutes after the interaction, and every call you make on it has to arrive before that.
+
+## Set ephemeral when you defer
+
+`defer()` takes one option, `ephemeral`, and it is on by default.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban')
+class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        await this.defer({ ephemeral: false });
+        // ---cut-after---
+    }
+}
+```
+
+`edit()` does not take options, so whatever you pass `defer()` is what the reply carries.
+
+## reply() after a deferral throws
+
+The deferral was the initial response. `edit()` rewrites it.
+
+```txt output
+reply() was called when this interaction was already deferred.
+Use edit() to fill the deferred reply or followUp() for a new
+message. (route slash:ban)
+```
+
+[`followUp()`](ref:gateway/RepliableHandler.followUp) sends a second message beside the first, and [`delete()`](ref:gateway/RepliableHandler.delete) removes the loading state. The full table is in [When a reply throws](/replying/ack-states).
+
+## Defer before anything slow
+
+[`reply()`](ref:gateway/RepliableHandler.reply) past the three seconds throws Discord's own error, `DiscordAPIError[10062]`, since the interaction is gone by then. seedcord rethrows it untouched and skips the fault card, because there is nowhere left to send one. Your bot goes quiet and the person who ran the command sees the interaction fail.
+
+Defer first whenever you cannot predict how long the handler takes.

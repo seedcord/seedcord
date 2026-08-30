@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { Subscribe } from '#subscribers/decorators/Subscribe';
 import { Bus, registrationFor } from '#subscribers/index';
 import { PublishDefault } from '#subscribers/publishDefault';
+import { RegisterSubscriber } from '#subscribers/slots';
 import { Subscriber } from '#subscribers/Subscriber';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -33,7 +34,7 @@ class FastSubscriber extends Subscriber<'unknownException', CoreBase> {
 // justified: the Bus only stores core, no member is read during publish
 function busWith(...ctors: StoredSubscriberCtor[]): Bus {
     const bus = new Bus({} as unknown as CoreBase);
-    for (const ctor of ctors) bus.register(registrationFor(ctor));
+    for (const ctor of ctors) bus[RegisterSubscriber](registrationFor(ctor));
     return bus;
 }
 

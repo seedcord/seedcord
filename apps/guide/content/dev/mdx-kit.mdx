@@ -33,6 +33,24 @@ Tagging a fence `output` drops the copy button, for lines a terminal printed bac
 ✓ 3 commands deployed to the test guild
 ```
 
+## Shell commands
+
+`Shell` writes one command for pnpm, npm, bun, and yarn, and the reader picks the tab. Their choice persists and every `Shell` block on the page follows it.
+
+<Shell add="@seedcord/gateway discord.js" />
+
+It takes exactly one verb, and the verb decides which command each manager gets. Passing two or none throws while the page builds.
+
+<Shell create="seedcord" />
+
+<Shell run="dev" />
+
+<Shell exec="seedcord codegen" />
+
+`before` puts your own lines above the command, inside the same block.
+
+<Shell run="dev" before="cd my-bot" />
+
 ## Twoslash
 
 Tagging a fence `twoslash` runs the TypeScript compiler over it while the page builds. An error the sample never declared fails the build. A sample that stopped compiling cannot reach a page.
@@ -103,7 +121,9 @@ import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 export class Ping extends SlashHandler<'ping'> {
     public async execute(): Promise<void> {
         const detailed = this.options.getBoolean('detailed');
-        await this.reply(detailed === true ? 'Pong, at length' : 'Pong');
+        await this.reply(
+            detailed === true ? 'Pong, at length' : 'Pong'
+        );
     }
 }
 ```
@@ -135,7 +155,9 @@ class Ping extends SlashHandler<'ping'> {
     public async execute(): Promise<void> {
         // ---cut---
         const detailed = this.options.getBoolean('detailed');
-        await this.reply(detailed === true ? 'Pong, at length' : 'Pong');
+        await this.reply(
+            detailed === true ? 'Pong, at length' : 'Pong'
+        );
         // ---cut-after---
     }
 }
@@ -166,25 +188,38 @@ An h1, h5, or h6 fails the build.
 
 ## Callouts
 
-<Callout type="note">A note carries something the reader can act on later.</Callout>
+<Callout type="note">
+    A note carries something the reader can act on later.
+</Callout>
 
-<Callout type="tip">A tip is optional. The page still works if you skip it.</Callout>
+<Callout type="tip">
+    A tip is optional. The page still works if you skip it.
+</Callout>
 
-<Callout type="warning">A warning marks what commonly goes wrong.</Callout>
+<Callout type="warning">
+    A warning marks what commonly goes wrong.
+</Callout>
 
-<Callout type="danger">Danger is reserved for what breaks a running bot.</Callout>
+<Callout type="danger">
+    Danger is reserved for what breaks a running bot.
+</Callout>
 
 A transport callout runs one way or both ways, and the label says which.
 
 <Callout type="transport" only="gateway">
-    `getConfirmation` holds a collector in process, which an http bot has nowhere to keep.
+    `getConfirmation` holds a collector in process, which an http
+    bot has nowhere to keep.
 </Callout>
 
 <Callout type="transport" only="http">
-    Discord signs every request, and the receiver verifies the Ed25519 header before anything else runs.
+    Discord signs every request, and the receiver verifies the
+    Ed25519 header before anything else runs.
 </Callout>
 
-<Callout type="transport">`getUser` returns a live discord.js `User` on gateway and a raw `APIUser` on http.</Callout>
+<Callout type="transport">
+    `getUser` returns a live discord.js `User` on gateway and a raw
+    `APIUser` on http.
+</Callout>
 
 A callout takes whole blocks. A fence renders inside one.
 
@@ -202,6 +237,8 @@ A callout takes whole blocks. A fence renders inside one.
 A symbol link is a markdown link with a `ref:` target, and the slug comes off the symbol. [Notice](ref:core/Notice), [Silence](ref:core/Silence), and [Fault](ref:core/Fault).
 
 A multi-word name kebab-cases itself: [SlashHandler](ref:gateway/SlashHandler) reaches `slash-handler`. A dotted member anchors on its owner's page: [Paginator.start](ref:core/Paginator.start) reaches `paginator#start`. A generic drops off the end, which puts [`Plugin<Options>`](ref:core/Plugin<Options>) and [Plugin](ref:core/Plugin) on one page.
+
+Dropping the symbol reaches the package itself, so [`@seedcord/utils`](ref:utils) opens its landing page.
 
 The link text is free. [The card a refusal renders](ref:core/Notice) points at the same page as its own name. Each package is its own segment, so [createSeedcord](ref:http/createSeedcord) and [Seedcord](ref:gateway/Seedcord) each reach their own. Every one of these opens in a new tab.
 
@@ -254,21 +291,57 @@ Markdown image syntax gets the border by default.
 
 `<Image frame={false} />` turns the border off, for a mark or a diagram on a transparent ground. Markdown has no slot for that, so the capitalized name is the way to reach it.
 
-<Image src="/logo.svg" alt="The seedcord watermelon mark, unframed" width={280} height={280} frame={false} />
+<Image
+    src="/logo.svg"
+    alt="The seedcord watermelon mark, unframed"
+    width={280}
+    height={280}
+    frame={false}
+/>
 
 The border comes in three weights. `thin`, `regular`, and `thick`, with `regular` the default.
 
-<Image src="/logo.svg" alt="A thin border" width={200} height={200} frame="thin" />
+<Image
+    src="/logo.svg"
+    alt="A thin border"
+    width={200}
+    height={200}
+    frame="thin"
+/>
 
-<Image src="/logo.svg" alt="A thick border" width={200} height={200} frame="thick" />
+<Image
+    src="/logo.svg"
+    alt="A thick border"
+    width={200}
+    height={200}
+    frame="thick"
+/>
 
 `align` takes `left`, `center`, and `right`, with `left` the default.
 
-<Image src="/logo.svg" alt="Aligned left" width={160} height={160} align="left" />
+<Image
+    src="/logo.svg"
+    alt="Aligned left"
+    width={160}
+    height={160}
+    align="left"
+/>
 
-<Image src="/logo.svg" alt="Aligned center" width={160} height={160} align="center" />
+<Image
+    src="/logo.svg"
+    alt="Aligned center"
+    width={160}
+    height={160}
+    align="center"
+/>
 
-<Image src="/logo.svg" alt="Aligned right" width={160} height={160} align="right" />
+<Image
+    src="/logo.svg"
+    alt="Aligned right"
+    width={160}
+    height={160}
+    align="right"
+/>
 
 ## Tables
 

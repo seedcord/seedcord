@@ -31,6 +31,12 @@ describe('a ref: link', () => {
         expect(code).toContain('Plugin<Options>');
     });
 
+    it('takes a package on its own, with no symbol after it', async () => {
+        const code = await compileGuideMdx('install [`@seedcord/plugin-mongoose`](ref:plugin-mongoose) first');
+
+        expect(code).toContain('<Ref pkg="plugin-mongoose" symbol="">');
+    });
+
     it('carries a member written with a hash', async () => {
         const code = await compileGuideMdx('call [start](ref:core/Paginator#start) first');
 
@@ -57,7 +63,7 @@ describe('a ref: link', () => {
         expect(code).not.toContain('<Ref');
     });
 
-    it.each(['ref:core', 'ref:core/', 'ref:/Notice', 'ref:core/a/b', 'ref:'])('refuses %s', async (target) => {
+    it.each(['ref:core/', 'ref:/Notice', 'ref:core/a/b', 'ref:'])('refuses %s', async (target) => {
         await expect(compileGuideMdx(`a [symbol](${target}) link`)).rejects.toThrow('is missing the package');
     });
 
@@ -69,7 +75,7 @@ describe('a ref: link', () => {
     it('refuses a reference-style definition', async () => {
         const source = ['a [Notice][n] link', '', '[n]: ref:core/Notice'].join('\n');
 
-        await expect(compileGuideMdx(source)).rejects.toThrow('symbol link');
+        await expect(compileGuideMdx(source)).rejects.toThrow('stays a plain url');
     });
 
     it('refuses one with no link text', async () => {
@@ -77,7 +83,7 @@ describe('a ref: link', () => {
     });
 
     it('points at the line the bad link is on', async () => {
-        const source = ['## two', '', 'a [symbol](ref:core) link'].join('\n');
+        const source = ['## two', '', 'a [symbol](ref:core/) link'].join('\n');
         const thrown = await compileGuideMdx(source).catch((error: unknown) => error);
 
         expect(thrown).toMatchObject({ line: 3, file: 'content/docs/sample.mdx' });

@@ -1,0 +1,159 @@
+---
+title: Kysely and Postgres
+description: Connecting a bot to Postgres through the Kysely query builder.
+---
+
+[`@seedcord/plugin-kysely-postgres`](ref:plugin-kysely-postgres) opens a Postgres pool while your bot starts, runs your migrations against it, then loads your service classes from a directory. You'll also need to be familiar with [Kysely](https://kysely.dev/docs/intro), since every query you write goes through it.
+
+<Shell add="@seedcord/plugin-kysely-postgres kysely pg" />
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import { GatewayIntentBits } from 'discord.js';
+
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers')
+        },
+        commands: {
+            path: resolve(import.meta.dirname, './commands')
+        },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+}).attach('db', KyselyPostgres, {
+    dir: resolve(import.meta.dirname, './services'),
+    connectionString: 'postgres://localhost:5432/seedcord',
+    migrations: {
+        path: resolve(import.meta.dirname, './migrations')
+    }
+});
+
+export default seedcord;
+```
+
+`dir` and `migrations` are the only two you cannot leave out. Without a connection string, `pg` falls back to `PGHOST`, `PGUSER`, `PGPASSWORD`, and `PGDATABASE` from the environment.
+
+## The options
+
+{/* prettier-ignore-start */}
+
+| option | required | what it sets |
+| --- | --- | --- |
+| `dir` | yes | the directory the plugin scans for service classes |
+| `migrations` | yes | where the migrations live and when they run |
+| `pool` | no | a `pg` pool to reuse, or the config to build one from |
+| `connectionString` | no | the Postgres URL |
+| `onConnectSQL` | no | statements to run on every new connection |
+| `forceInsecureSSL` | no | sets `ssl.rejectUnauthorized` to false |
+| `kysely` | no | any Kysely config except the dialect, which is Postgres here |
+| `timeout` | no | how long closing the pool may take during shutdown, in milliseconds. Defaults to 10000 |
+
+{/* prettier-ignore-end */}
+
+`connectionString` and `forceInsecureSSL` both overwrite the matching key in whatever you passed as `pool`.
+
+`onConnectSQL` runs on every new connection the pool opens. Because it does not block, your first query can reach a connection whose statements are still running. A failed statement gets logged and never throws.
+
+[Migrations](/plugins/kysely-migrations) covers everything under `migrations`.
+
+## Where the connection comes from
+
+The plugin reads `pool` to pick between three paths.
+
+**A connection string on its own** is the shortest, and the sample above uses it. The plugin builds the pool for you.
+
+**A `PoolConfig` object** lets you set pg's own options, `max`, `idleTimeoutMillis`, and the rest. A `connectionString` beside it still applies.
+
+```ts twoslash
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import { GatewayIntentBits } from 'discord.js';
+
+const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers')
+        },
+        commands: {
+            path: resolve(import.meta.dirname, './commands')
+        },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+
+// ---cut---
+seedcord.attach('db', KyselyPostgres, {
+    dir: resolve(import.meta.dirname, './services'),
+    pool: {
+        connectionString: 'postgres://localhost:5432/seedcord',
+        max: 20
+    },
+    onConnectSQL: ['set statement_timeout to 5000'],
+    migrations: {
+        path: resolve(import.meta.dirname, './migrations')
+    }
+});
+```
+
+**A `Pool` you built yourself** stays as you built it. The plugin ignores your `connectionString`, and the database check below never runs. Construct it first, then pass it as `pool`.
+
+```ts twoslash
+import { Pool } from 'pg';
+
+const pool = new Pool({
+    connectionString: 'postgres://localhost:5432/seedcord'
+});
+```
+
+<Callout type="warning">
+
+Shutdown closes the pool every time, including one you built and passed in yourself. A pool you share with the rest of your application closes with the bot.
+
+</Callout>
+
+## The plugin creates the database if it is missing
+
+Before it opens your pool, the plugin connects to the `postgres` admin database using the same host and credentials. It takes the target name from `database` on your pool config, or from the path on your connection string, so `postgres://localhost:5432/seedcord` targets `seedcord`. A database that does not exist yet gets a `CREATE DATABASE` from there.
+
+Two bots starting at once is safe. The second one gets Postgres's duplicate-database error, which the plugin ignores.
+
+The check gets skipped in four cases:
+
+- a `Pool` you built yourself, since the plugin never gets a config to build an admin connection from
+- a connection string that will not parse as a URL, which only logs a warning
+- a target of `postgres` itself
+- a config that leaves the database name out
+
+Any other failure here throws `PluginKyselyBootstrapFailed`.
+
+## Startup and shutdown
+
+All of that runs during the first of three startup steps. `init()` connects, migrates, then loads every service class from `dir`. A failure at any one of the three closes the pool and rethrows, so a bot that cannot migrate never reaches its handlers.
+
+A connection failure throws `PluginKyselyConnectionFailed`, which names whichever database the plugin resolved and carries pg's own error on the `cause`.
+
+<Callout type="warning">
+
+The migrations directory has to exist before the first boot. The plugin treats a missing path as a single migration file, and the import then throws Node's `ERR_MODULE_NOT_FOUND`. An empty directory is fine.
+
+</Callout>
+
+Shutdown does less. `dispose()` clears the service registry, then closes the pool. A pool that fails to close throws `PluginKyselyDisconnectFailed`.
+
+## The Kysely instance
+
+Once `init()` has connected, `connection` holds the Kysely instance. In a handler you reach it as `this.core.db.connection`.
+
+`connection` is typed as always present, though the plugin only assigns it once the pool connects. Before that point it reads as `undefined`.
+
+Kysely resolves every table name in a query against a schema you declare yourself. [Your schema](/plugins/kysely-schema) covers that next.

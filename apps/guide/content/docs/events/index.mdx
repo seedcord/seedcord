@@ -1,8 +1,119 @@
 ---
-title: Events
-description: Gateway event handlers, event middleware, the internal bus, and logging to a Discord webhook.
+title: Your first event handler
+description: Running code when something happens in a server.
 ---
 
-This section is being written.
+A member joins, someone posts a message, someone edits it. Each one is a discord.js event. You answer one with a handler class.
 
-It will cover your first gateway event handler, several events in one class, event middleware, gating an event handler, prefix commands, your own internal events, waiting for the next one, and logging to a Discord webhook.
+```ts twoslash title="src/events/Welcome.ts"
+import { EventHandler, RegisterEvent } from '@seedcord/gateway';
+import { Events } from 'discord.js';
+
+@RegisterEvent([Events.GuildMemberAdd])
+export class Welcome extends EventHandler<Events.GuildMemberAdd> {
+    public async execute(): Promise<void> {
+        const [member] = this.event;
+
+        await member.guild.systemChannel?.send(
+            `${member} just joined.`
+        );
+    }
+}
+```
+
+[`@RegisterEvent`](ref:gateway/RegisterEvent) takes the event in a tuple. The generic on [`EventHandler`](ref:gateway/EventHandler) has to name the same one, and the compiler catches a mismatch.
+
+`Events.InteractionCreate` fails to compile here. Every interaction kind has its own handler base, taught in [Commands](/commands) and [Components](/components).
+
+<Callout type="transport" only="gateway">
+
+Discord delivers server events down the gateway websocket. An http bot only receives interactions, so `EventHandler` ships on `@seedcord/gateway`.
+
+</Callout>
+
+## Reading the payload
+
+discord.js emits a tuple for each event, and [`this.event`](ref:gateway/EventHandler.event) is that tuple. `guildMemberAdd` emits one member. `messageUpdate` emits two, the message before the edit and the message after it.
+
+```ts twoslash title="src/events/EditLog.ts"
+import { EventHandler, RegisterEvent } from '@seedcord/gateway';
+import { Events } from 'discord.js';
+// ---cut---
+@RegisterEvent([Events.MessageUpdate])
+export class EditLog extends EventHandler<Events.MessageUpdate> {
+    public async execute(): Promise<void> {
+        const [before, after] = this.event;
+        if (before.content === after.content) return;
+
+        this.logger.info(
+            `${after.author.username} edited a message`
+        );
+    }
+}
+```
+
+You answer with the objects in `this.event` itself. On a message event that is `message.reply(...)`.
+
+[`this.logger`](ref:core/BaseHandler.logger) writes to the `events` channel. [Tooling](/tooling) covers the channels and the levels.
+
+## Where handlers live
+
+seedcord scans the folder named by `bot.events.path` at startup and registers every handler class it finds. Subfolders work, since the scan goes all the way down.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: {
+            intents: [
+                GatewayIntentBits.Guilds,
+                GatewayIntentBits.GuildMembers
+            ]
+        },
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers')
+        },
+        commands: {
+            path: resolve(import.meta.dirname, './commands')
+        },
+        events: { path: resolve(import.meta.dirname, './events') }
+    },
+    subscribers: { path: null }
+});
+```
+
+If you scaffolded the project, `create-seedcord` already asked what your bot should react to and wrote this folder with the intents to match.
+
+## Running once
+
+The tuple takes a second entry for options. `frequency: 'once'` runs the handler on the first fire and never again.
+
+```ts twoslash title="src/events/Boot.ts"
+import { EventHandler, RegisterEvent } from '@seedcord/gateway';
+import { Events } from 'discord.js';
+// ---cut---
+@RegisterEvent([Events.ClientReady, { frequency: 'once' }])
+export class Boot extends EventHandler<Events.ClientReady> {
+    public async execute(): Promise<void> {
+        const [client] = this.event;
+
+        this.logger.info(`connected as ${client.user.username}`);
+    }
+}
+```
+
+Leaving the options out gives `frequency: 'on'`, so the handler runs every time.
+
+<Callout type="warning">
+
+A handler without `@RegisterEvent` never runs, and nothing warns you. seedcord only attaches a listener for the events you registered. The `@seedcord/event-handler-missing-register-event` rule catches it, and it's on in a scaffolded project.
+
+</Callout>
+
+Several handlers can register the same event. They run one after another. One of them throwing leaves the rest to run, and [Throwing](/throwing) covers what your bot sends when that happens.
+
+A class can also take more than one event. [Several events in one class](/events/several-events) picks that up.

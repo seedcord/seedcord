@@ -2,6 +2,8 @@ import { Card, CodeBlock, CopyAnchorButton, cn, tw } from '@seedcord/ui';
 import { highlightInlineToHtml, isHighlightable } from '@seedcord/ui/shiki';
 
 import { Callout } from '#components/Callout';
+import { HoverHint } from '#components/HoverHint';
+import { Shell } from '#components/Shell';
 import { LINK, Ref } from '#components/Ref';
 import { TypeHover } from '#components/TypeHover';
 import { FENCE_ATTR, LANGUAGE_PREFIX } from '#lib/rehypeFenceMeta';
@@ -43,7 +45,7 @@ function pick<T extends Record<string, string>>(options: T, key: keyof T, prop: 
     return found;
 }
 
-function GuideImage({ alt, frame = 'regular', align = 'left', className, ...props }: ImageProps): ReactElement {
+function GuideImage({ alt, frame = false, align = 'left', className, ...props }: ImageProps): ReactElement {
     return (
         // eslint-disable-next-line @next/next/no-img-element -- next/image requires width and height, both optional on ImageProps
         <img
@@ -64,7 +66,7 @@ function GuideImage({ alt, frame = 'regular', align = 'left', className, ...prop
 
 function GuideTable({ children, ...props }: ComponentProps<'table'>): ReactElement {
     return (
-        <Card as="div" size="none" className={cn('overflow-hidden')}>
+        <Card as="div" size="none" data-table className={cn('overflow-hidden')}>
             <div className={cn('nice-scroll overflow-x-auto')}>
                 <table {...props} className={cn('w-full border-collapse text-left text-sm')}>
                     {children}
@@ -155,11 +157,32 @@ async function Fence({ children }: FenceProps): Promise<ReactElement> {
 
     const representation = await twoslashBlock(fence.code, fence.lang, fence.mode);
 
+    const hoverable = fence.mode === 'hovers';
     const block = (
-        <CodeBlock representation={representation} label={fence.title} copyValue={fence.output ? null : undefined} />
+        <CodeBlock
+            representation={representation}
+            label={fence.title}
+            copyValue={fence.output ? null : undefined}
+            actions={hoverable ? <HoverHint /> : undefined}
+        />
     );
 
-    return fence.mode === 'hovers' ? <TypeHover>{block}</TypeHover> : block;
+    return hoverable ? <TypeHover>{block}</TypeHover> : block;
+}
+
+const OFF_SITE = /^[a-z]+:/i;
+
+function GuideLink({ href, ...props }: ComponentProps<'a'>): ReactElement {
+    const offSite = href !== undefined && OFF_SITE.test(href);
+
+    return (
+        <a
+            {...props}
+            href={href}
+            {...(offSite && { target: '_blank', rel: 'noreferrer noopener' })}
+            className={cn(LINK)}
+        />
+    );
 }
 
 export const mdxComponents = {
@@ -168,7 +191,7 @@ export const mdxComponents = {
     h3: headingFor('h3'),
     h4: headingFor('h4'),
     p: (props) => <p {...props} className={cn('text-base/relaxed text-(--text)')} />,
-    a: (props) => <a {...props} className={cn(LINK)} />,
+    a: GuideLink,
     strong: (props) => <strong {...props} className={cn('font-semibold')} />,
     ul: (props) => <ul {...props} className={cn('list-disc space-y-1 ps-6 text-base/relaxed text-(--text)')} />,
     ol: (props) => <ol {...props} className={cn('list-decimal space-y-1 ps-6 text-base/relaxed text-(--text)')} />,
@@ -190,5 +213,6 @@ export const mdxComponents = {
     // a lowercase tag written as jsx in an mdx file skips this map
     Image: GuideImage,
     Callout,
+    Shell,
     Ref
 } satisfies MDXComponents;

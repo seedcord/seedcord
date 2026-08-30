@@ -1,5 +1,5 @@
 const PROTOCOL = 'ref:';
-const FORM = 'Write a symbol link as [text](ref:<package>/<Symbol>).';
+const FORM = 'Write [text](ref:<package>/<Symbol>) for a symbol, or [text](ref:<package>) for a package.';
 
 const JSX_NODES = new Set(['mdxJsxFlowElement', 'mdxJsxTextElement']);
 
@@ -34,10 +34,11 @@ function refElement(link: Node, file: Reporter): Node {
     const url = link.url ?? '';
     const target = url.slice(PROTOCOL.length);
     const slash = target.indexOf('/');
-    const pkg = target.slice(0, slash);
-    const symbol = target.slice(slash + 1);
+    const named = slash !== -1;
+    const pkg = named ? target.slice(0, slash) : target;
+    const symbol = named ? target.slice(slash + 1) : '';
 
-    if (slash < 1 || symbol === '' || symbol.includes('/')) {
+    if (pkg === '' || (named && (symbol === '' || symbol.includes('/')))) {
         file.fail(`${url} is missing the package or the symbol. ${FORM}`, link);
     }
     if ((link.children ?? []).length === 0) file.fail(`${url} has no link text. ${FORM}`, link);

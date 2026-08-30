@@ -1,0 +1,125 @@
+---
+title: Pagination
+description: Splitting a long list across pages with nav buttons seedcord routes for you.
+---
+
+A [`Paginator`](ref:gateway/Paginator) sends one page of a list and routes the clicks on its nav buttons. Every button carries its target page inside the custom id, so a click still works after your bot restarts.
+
+```ts twoslash hovers title="src/handlers/Roles.ts"
+import {
+    ArraySource,
+    ButtonRoute,
+    Paginator,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+
+export const Roles = new Paginator({
+    prefix: 'roles',
+    source: new ArraySource(
+        (ctx) => [...(ctx.guild?.roles.cache.values() ?? [])],
+        { perPage: 15 }
+    ),
+    renderItem: (role, index) => `${index + 1}. ${role.name}`,
+    ephemeral: true
+});
+
+@ButtonRoute(Roles.cursor)
+export class RolesNav extends Roles.Handler {}
+
+@SlashRoute('roles')
+export class RolesList extends SlashHandler<'roles'> {
+    public async execute(): Promise<void> {
+        await Roles.start(this);
+    }
+}
+```
+
+`prefix` names the route every nav button carries, the same way a [`CustomId`](ref:core/CustomId) prefix names one. Pick a name nothing else in your bot uses.
+
+The paginator builds its own nav handler and puts it on [`Roles.Handler`](ref:gateway/Paginator.Handler). Extend that with an empty body, hand `Roles.cursor` to [`@ButtonRoute`](ref:core/ButtonRoute), and export it from wherever seedcord scans your handlers. Clicks do not route until that class exists.
+
+[`start()`](ref:gateway/Paginator.start) sends the first page through your handler's reply surface, which picks reply, edit, or follow-up from the interaction's current state.
+
+`Roles.start(this, 3)` opens on page 3. A number bigger than the page count opens the last page.
+
+<Callout type="transport">
+
+`start()` resolves to a discord.js `Message` on gateway and an `APIMessage` on http.
+
+</Callout>
+
+[`page()`](ref:gateway/Paginator.page) builds the same message and hands it back without sending. To post it outside the reply, add `flags: MessageFlags.IsComponentsV2`.
+
+## Where the items come from
+
+[`ArraySource`](ref:gateway/ArraySource) takes a loader and a page size. Every click runs the loader again, then slices out the page its button targets. It loads everything, so the page count is exact. The nav row then gets a working Last button, and the indicator reads `Page 2 of 4`.
+
+Your loader can return a promise. Cache inside it when the load is expensive.
+
+`perPage` defaults to 10.
+
+<Callout type="transport">
+
+The loader receives a [`PageContext`](ref:gateway/PageContext), which carries `guild: Guild | null` on gateway and `guildId: string | null` on http. Reading `ctx.guild` fails to compile there. Fetch the guild through `ctx.core.rest` where your loader reads guild data.
+
+</Callout>
+
+## What a paginator takes
+
+{/* prettier-ignore-start */}
+
+| key | what it does |
+| --- | --- |
+| `prefix` | the route prefix on every nav button |
+| `source` | where one page of items comes from |
+| `renderItem` | turns one item into a line, ignored once `render` is set |
+| `render` | replaces the whole page, covered in [Custom rendering](/components/pagination-render) |
+| `ephemeral` | whether the first page is ephemeral, `false` by default |
+
+{/* prettier-ignore-end */}
+
+Every nav click edits the message `start()` sent. One `ephemeral` covers the whole run.
+
+## Rendering each item
+
+Leaving `render` out puts the items and a row of nav buttons in one container.
+
+`renderItem` receives an item and its position, counted from the start of the list. At a `perPage` of 15, the first item on page two is number 16.
+
+It returns a string for a plain line, or a [`BuilderComponent<'section'>`](ref:core/BuilderComponent) for an item that carries a thumbnail or a button of its own.
+
+```ts twoslash
+import {
+    ArraySource,
+    BuilderComponent,
+    Paginator
+} from '@seedcord/gateway';
+
+interface Report {
+    id: string;
+    title: string;
+}
+
+declare function loadReports(): Promise<Report[]>;
+
+declare class ReportRow extends BuilderComponent<'section'> {
+    constructor(report: Report, position: number);
+}
+// ---cut---
+export const Reports = new Paginator({
+    prefix: 'reports',
+    source: new ArraySource(() => loadReports()),
+    renderItem: (report, index) => new ReportRow(report, index + 1)
+});
+```
+
+Return `ReportRow` whole, since seedcord reads `.component` off it.
+
+One page can mix both forms. A section breaks the run of lines and renders as its own block, keeping your items in order.
+
+Three pages carry on from here. Each one hands you a job seedcord was doing.
+
+- [Sources](/components/pagination-sources) pages a list too large to load whole, and writes a source of its own.
+- [Custom rendering](/components/pagination-render) replaces the message, nav buttons included.
+- [Paging it yourself](/components/pagination-headless) drops the paginator and keeps the page math.

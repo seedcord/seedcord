@@ -1,0 +1,122 @@
+---
+title: The lifecycle
+description: When a plugin connects, when it closes down, and what happens when it fails.
+---
+
+You write up to three methods on a plugin. `init()` is the required one. seedcord skips `ready()` and `dispose()` when you omit them.
+
+```ts twoslash title="src/plugins/Presence.ts"
+import { Plugin } from '@seedcord/gateway';
+
+export class Presence extends Plugin {
+    private timer?: NodeJS.Timeout;
+
+    public async init(): Promise<void> {
+        this.logger.info('presence plugin starting');
+    }
+
+    public override async ready(): Promise<void> {
+        this.timer = setInterval(() => {
+            this.core.bot.client.user?.setActivity('with types');
+        }, 60_000);
+    }
+
+    public override async dispose(): Promise<void> {
+        clearInterval(this.timer);
+    }
+}
+```
+
+`setActivity` needs a logged-in client, so that call belongs in `ready()`.
+
+<Callout type="transport" only="gateway">
+    `this.core.bot` is a gateway member. The phases and the three
+    methods work the same on http, where the Ready phase is the one
+    that binds the port.
+</Callout>
+
+## Where each one runs
+
+Startup runs three phases in order.
+
+{/* prettier-ignore-start */}
+
+| startup phase | what has happened | plugins |
+| --- | --- | --- |
+| `Configuration` | nothing connected | `init()` runs here by default |
+| `Login` | the gateway session opens, and http runs its REST-only startup work | |
+| `Ready` | handlers are live and interactions dispatch | `ready()` always runs here |
+
+{/* prettier-ignore-end */}
+
+Shutdown then runs four.
+
+{/* prettier-ignore-start */}
+
+| shutdown phase | what happens | plugins |
+| --- | --- | --- |
+| `Unbind` | new interactions and requests stop | |
+| `Drain` | in-flight work settles and internal services stop | |
+| `Disconnect` | external resources close | `dispose()` runs here by default |
+| `Logout` | the client disconnects last, so a draining handler can still reference it | |
+
+{/* prettier-ignore-end */}
+
+Inside one phase your plugins run one after another in attach order. Every `ready()` waits for every `init()` to resolve. A plugin that you moved into the Ready phase still finishes its `init()` before any `ready()` starts.
+
+## Moving a method to another phase
+
+Pass a [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec) as the second argument to `super()`. Leaving a field out keeps its default.
+
+```ts twoslash
+import {
+    Plugin,
+    StartupPhase,
+    ShutdownPhase
+} from '@seedcord/gateway';
+
+import type { CoreBase } from '@seedcord/core';
+
+// ---cut---
+export class Presence extends Plugin {
+    public constructor(host: CoreBase) {
+        super(host, {
+            init: { phase: StartupPhase.Login },
+            ready: { timeout: 20_000 },
+            dispose: { phase: ShutdownPhase.Drain, timeout: 30_000 }
+        });
+    }
+
+    public async init(): Promise<void> {}
+}
+```
+
+The `ready` field takes a timeout and no phase, since `ready()` always runs in the Ready phase.
+
+## Timeouts
+
+Each method gets its own timeout. `init()` and `ready()` default to 15000ms, `dispose()` to 10000ms.
+
+A method that runs past its timeout throws `LifecycleTaskTimeout`. The task name in the message carries the attach key and which method ran.
+
+```txt output
+Task "Plugin (db)" timed out after 15000ms.
+Task "Plugin:db:ready" timed out after 15000ms.
+Task "Plugin:db:dispose" timed out after 10000ms.
+```
+
+Declaring a timeout of zero, a negative number, or `Infinity` throws `PluginInvalidLifecycleTimeout` in the constructor, before any of your code runs.
+
+## When init fails
+
+A throw from `init()` stops startup. seedcord disposes every plugin whose `init()` already finished, in reverse attach order, and rethrows what you threw.
+
+The plugin that threw never gets its `dispose()` call, so close whatever `init()` already opened before you throw.
+
+That host cannot start again either. Calling `start()` on it a second time throws `LifecycleRestartAfterFailure`.
+
+<Callout type="warning">
+
+During shutdown one failing `dispose()` never stops the others. seedcord runs them all, then throws the single failure it caught. Several failures throw as one `AggregateError` carrying `PluginDisposeFailures`, with each individual error on its `errors` array.
+
+</Callout>

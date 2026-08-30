@@ -26,6 +26,10 @@ function freshCommand(): typeof TestCommand {
 }
 
 describe('RegisterCommand', () => {
+    it('keys the metadata on a registered symbol, so codegen reads it from its own copy of this module', () => {
+        expect(Symbol.keyFor(CommandMetadataKey)).toBe('seedcord:command:metadata');
+    });
+
     it('stores global scope metadata on the class', () => {
         const Cmd = freshCommand();
         RegisterCommand('global')(Cmd);

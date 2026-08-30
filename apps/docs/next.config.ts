@@ -32,5 +32,4 @@ const nextConfig: NextConfig = {
     turbopack: {}
 };
 
-// eslint-disable-next-line import/no-default-export -- Next.js config entrypoint
 export default nextConfig;

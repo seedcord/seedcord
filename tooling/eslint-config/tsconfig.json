@@ -10,6 +10,6 @@
             "#src/*": ["./src/*"]
         }
     },
-    "include": ["./src", "eslint.config.mjs", "./tsdown.config.ts", "./tests/**/*.ts", "vitest.config.ts"],
+    "include": ["./src", "eslint.config.ts", "./tsdown.config.ts", "./tests/**/*.ts", "vitest.config.ts"],
     "exclude": ["node_modules", "dist"]
 }

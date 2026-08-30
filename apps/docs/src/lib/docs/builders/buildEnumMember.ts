@@ -17,7 +17,7 @@ export async function buildEnumMember(node: DocNode, context: FormatContext): Pr
         label: node.name,
         summary: cloneCommentParagraphs(comment.paragraphs),
         signature: code,
-        deprecationStatus: buildDeprecationStatusFromNodeLike(node)
+        deprecationStatus: buildDeprecationStatusFromNodeLike(node, comment.deprecation)
     };
 
     const tags = collectMemberTags(node);

@@ -39,6 +39,16 @@ describe('Ref', () => {
         expect(hrefOf(symbol)).toBe(`${DOCS_URL}/packages/core/latest/paginator#start`);
     });
 
+    it('reaches the package page when the symbol is empty', () => {
+        render(
+            <Ref pkg="plugin-mongoose" symbol="">
+                @seedcord/plugin-mongoose
+            </Ref>
+        );
+
+        expect(hrefOf('@seedcord/plugin-mongoose')).toBe(`${DOCS_URL}/packages/plugin-mongoose/latest`);
+    });
+
     it('drops a generic from the symbol', () => {
         render(
             <Ref pkg="core" symbol="Plugin<Options>">

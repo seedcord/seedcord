@@ -1,5 +1,15 @@
 {
     "title": "Commands",
     "root": true,
-    "pages": ["index"]
+    "pages": [
+        "index",
+        "options",
+        "subcommands",
+        "one-handler",
+        "autocomplete",
+        "context-menus",
+        "mentions",
+        "deployed",
+        "missing"
+    ]
 }

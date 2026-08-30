@@ -2,6 +2,7 @@ import { pageCursor } from '@seedcord/core/internal';
 import { ComponentType } from 'discord.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { interactionsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
 
 import { seedcordPath } from '../utils/source-path';
@@ -12,12 +13,15 @@ import '../utils/mock-env';
 
 import type { APIContainerComponent } from 'discord.js';
 
-interface TestBot {
-    interactions: {
-        buttonMap: Map<string, unknown>;
-        init(): Promise<void>;
-        handleButton(interaction: unknown): Promise<void>;
-    };
+interface PrivateDispatcher {
+    buttonMap: Map<string, unknown>;
+    init(): Promise<void>;
+    handleButton(interaction: unknown): Promise<void>;
+}
+
+// justified: buttonMap and handleButton are private on the dispatcher
+function dispatcherOf(instance: Seedcord): PrivateDispatcher {
+    return interactionsOf(instance.bot) as unknown as PrivateDispatcher;
 }
 
 // the sender reads the interaction's unacked flags, so this.deferUpdate() sets deferred-update
@@ -94,7 +98,7 @@ describe('Paginator end-to-end through the real dispatcher', () => {
 
         const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = dispatcherOf(seedcord);
         await controller.init();
 
         // the file-scan discovered the paginator's minted nav handler and registered it by the cursor prefix.

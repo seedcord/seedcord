@@ -1,0 +1,98 @@
+---
+title: Files and attachments
+description: Uploading bytes with a reply and showing them in a component.
+---
+
+You upload bytes through `files` on a reply. Both transports take a [`ReplyFile`](ref:types/ReplyFile), the bytes plus the name Discord shows.
+
+```ts twoslash title="src/handlers/Ban.ts"
+import {
+    BuilderComponent,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+// ---cut-start---
+
+async function buildReport(userId: string): Promise<Uint8Array> {
+    return new Uint8Array();
+}
+// ---cut-end---
+
+class ReportCard extends BuilderComponent<'container'> {
+    constructor(filename: string) {
+        super('container');
+
+        this.instance.addFileComponents((file) =>
+            file.setURL(`attachment://${filename}`)
+        );
+    }
+}
+
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        const target = this.options.getUser('target');
+        const bytes = await buildReport(target.id);
+        const name = 'report.pdf';
+
+        await this.reply({
+            components: [new ReportCard(name).component],
+            files: [{ data: bytes, name }]
+        });
+    }
+}
+```
+
+## A component has to reference the upload
+
+Under ComponentsV2, Discord renders an attachment where a component references it. Set the component's URL to `attachment://` plus the name you gave the file. A file component, a thumbnail, and a media gallery item all take that URL.
+
+An upload that no component references still reaches Discord, but stays hidden from everyone reading the message.
+
+## The four fields
+
+{/* prettier-ignore-start */}
+
+| field | takes | what it does |
+| --- | --- | --- |
+| `data` | `Uint8Array` | the bytes. A node `Buffer` assigns here, since it extends `Uint8Array` |
+| `name` | `string` | the filename Discord shows, and what an `attachment://` reference resolves against |
+| `description` | `string` | alt text, read by screen readers and shown on hover |
+| `title` | `string` | a display title Discord shows in place of the filename |
+
+{/* prettier-ignore-end */}
+
+`data` and `name` are required. A file missing its name fails to compile.
+
+Prefix the name with `SPOILER_` to blur the attachment until the viewer clicks it.
+
+```ts
+files: [
+    {
+        data: bytes,
+        name: 'SPOILER_evidence.png',
+        description: 'The message before it was edited',
+        title: 'Evidence'
+    }
+];
+```
+
+<Callout type="transport">
+
+Http takes `ReplyFile` alone, so a discord.js file form is a compile error there.
+
+Gateway takes every form that discord.js takes, since it passes `files` straight to the library.
+
+```ts
+files: [
+    new AttachmentBuilder(createReadStream('./report.pdf'), {
+        name: 'report.pdf'
+    })
+];
+```
+
+That covers `AttachmentBuilder`, an `Attachment` off an existing message, a bare `Buffer`, a node `Stream`, a path or URL string, and an `{ attachment, name }` payload. One `files` array mixes them with `ReplyFile` entries freely, since each element types on its own.
+
+Use [`GatewayReplyResponse`](ref:gateway/GatewayReplyResponse) to type a helper that returns one of these.
+
+</Callout>

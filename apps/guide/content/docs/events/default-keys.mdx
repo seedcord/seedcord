@@ -1,0 +1,96 @@
+---
+title: The framework's bus keys
+description: What seedcord publishes onto the bus, and what each key carries.
+---
+
+seedcord publishes its own keys onto `core.bus`. Subscribe to them with [`@Subscribe`](ref:core/Subscribe) or `core.bus.on`, the same way you subscribe to your own. [The bus](/events/bus) shows why publishing one fails to compile.
+
+Gateway carries nine, and http carries seven.
+
+{/* prettier-ignore-start */}
+
+| key | where | fires when |
+| --- | --- | --- |
+| `unknownException` | both | a raw throw reaches the fault boundary |
+| `handledException` | both | a [`Notice`](ref:core/Notice) with `report` true is caught |
+| `unhandledInteractionError` | both | an interaction dispatch throws past the boundary |
+| `interactionDispatched` | both | one dispatch settles |
+| `responseAttempted` | both | any write through the reply surface |
+| `commandsDeployed` | both | a command deploy finishes |
+| `anyInteraction` | both | an interaction arrives, before routing |
+| `unhandledEventError` | gateway | an event dispatch throws past the boundary |
+| `eventDispatching` | gateway | before the handlers for an event run |
+
+{/* prettier-ignore-end */}
+
+<Callout type="transport">
+
+`anyInteraction` carries a discord.js `Interaction` on gateway and an `APIInteraction` on http. A subscriber that calls a discord.js method on it compiles on gateway and fails on http.
+
+On http it publishes once the request clears Ed25519 verification and the replay checks, so a forged or repeated request never reaches it.
+
+</Callout>
+
+## After a deploy
+
+`commandsDeployed` fires once your bot has told Discord about its commands, including the redeploy that follows a hot reload. The payload carries what Discord accepted.
+
+```ts twoslash title="src/subscribers/DeployLog.ts"
+import { Subscribe, Subscriber } from '@seedcord/gateway';
+
+@Subscribe('commandsDeployed')
+export class DeployLog extends Subscriber<'commandsDeployed'> {
+    public async execute(): Promise<void> {
+        const { global, guilds } = this.data;
+
+        this.logger.info(`${global.length} global commands live`);
+
+        for (const [guildId, commands] of Object.entries(guilds)) {
+            this.logger.info(`${commands.length} in ${guildId}`);
+        }
+    }
+}
+```
+
+`global` and the values in `guilds` are `APIApplicationCommand[]` straight from Discord, so each command carries the id that Discord assigned.
+
+## Watching everything come in
+
+`anyInteraction` fires before seedcord routes an interaction anywhere. `eventDispatching` fires for client events, ahead of the handlers.
+
+```ts twoslash title="src/subscribers/Trace.ts"
+import { Subscribe, Subscriber } from '@seedcord/gateway';
+// ---cut---
+@Subscribe('eventDispatching')
+export class Trace extends Subscriber<'eventDispatching'> {
+    public async execute(): Promise<void> {
+        const { name, args } = this.data;
+
+        this.logger.debug(
+            `${name} arrived with ${args.length} args`
+        );
+    }
+}
+```
+
+`name` and `args` narrow together, so a check on `name` gives you that event's own tuple.
+
+<Callout type="warning">
+
+`eventDispatching` fires only for an event that some handler registered, since seedcord attaches a client listener per registered event. It also fires ahead of your middleware, so an event that a middleware later stops has already published here.
+
+</Callout>
+
+## The two unhandled errors
+
+`unhandledInteractionError` and `unhandledEventError` both carry `{ error: Error }` and nothing else. seedcord publishes them when a dispatch throws past the fault boundary. By then it has already caught and answered every ordinary throw, so anything reaching here points at a bug in the framework.
+
+## The fault keys
+
+`unknownException` carries the `uuid`, the `error`, the `routeId`, and optional `guild`, `user`, and `metadata` fields. `metadata` is typed `unknown`. On a fault from an event handler that metadata holds the event name, the handler, and the args. `handledException` carries the `uuid`, the `routeId`, the `Notice` itself as `denial`, and a [`FaultSource`](ref:core/FaultSource) naming where the throw came from.
+
+seedcord ships a subscriber for each and registers it for you. Both post a card to a Discord webhook once you set `UNKNOWN_EXCEPTION_WEBHOOK_URL` and `HANDLED_EXCEPTION_WEBHOOK_URL`. An unset variable leaves that reporter off, with one line at boot to say so. [Reporting faults](/throwing/reporting) covers the cards and writing your own.
+
+## The telemetry keys
+
+`interactionDispatched` and `responseAttempted` carry timings and an outcome. [Reading the telemetry](/events/telemetry) covers what each field measures on each path.

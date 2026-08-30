@@ -1,5 +1,7 @@
+import { HostVersion } from '@seedcord/types/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+import { commandRegistryOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
 
 import { seedcordPath } from '../utils/source-path';
@@ -10,9 +12,10 @@ import type { CommandRegistry } from '@seedcord/core/node/internal';
 
 import '../utils/mock-env';
 
-// justified: commandRegistry is private on Bot, and these tests use it without a login
 function registryOf(instance: Seedcord): CommandRegistry {
-    return (instance.bot as unknown as { commandRegistry: CommandRegistry }).commandRegistry;
+    const registry = commandRegistryOf(instance.bot);
+    if (!registry) throw new Error('this test config declares no commands path');
+    return registry;
 }
 
 describe('CommandRegistry Integration', () => {
@@ -52,7 +55,7 @@ describe('CommandRegistry Integration', () => {
         const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
 
         seedcord = new Seedcord(config);
-        expect(seedcord.version).toBe('0.0.0');
+        expect(seedcord[HostVersion]).toBe('0.0.0');
         await registryOf(seedcord).init();
 
         const globalCommands = registryOf(seedcord).globalCommands;

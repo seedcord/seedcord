@@ -124,6 +124,7 @@
         background-color: var(--bg-chip);
         padding: 0.1em 0.36em;
         font-size: 0.9em;
+        white-space: nowrap;
     }
 
     .shiki a,

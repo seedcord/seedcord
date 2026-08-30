@@ -1,0 +1,195 @@
+---
+title: Permissions
+description: Requiring permission bits and a role before a handler runs.
+---
+
+[`RequirePermissions`](ref:core/RequirePermissions) checks the caller, [`RequireBotPermissions`](ref:core/RequireBotPermissions) checks your bot, and [`RequireRole`](ref:core/RequireRole) checks one role by id.
+
+Kicking someone takes permission on both sides. The caller has to be allowed to kick, and so does your bot.
+
+```ts twoslash title="src/handlers/Kick.ts"
+import {
+    Gated,
+    RequireBotPermissions,
+    RequirePermissions,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+import { PermissionFlagsBits } from 'discord.js';
+
+@Gated(
+    RequirePermissions([PermissionFlagsBits.KickMembers]),
+    RequireBotPermissions([PermissionFlagsBits.KickMembers])
+)
+@SlashRoute('kick')
+export class Kick extends SlashHandler<'kick'> {
+    public async execute(): Promise<void> {
+        const target = this.options.getUser('target');
+
+        await this.reply(`Kicked ${target.username}.`);
+    }
+}
+```
+
+The two permission gates take a [`PermissionScope`](ref:core/PermissionScope), an array of flag bits. A scope with several bits requires all of them.
+
+```ts twoslash
+import { RequirePermissions } from '@seedcord/gateway';
+import { PermissionFlagsBits } from 'discord.js';
+// ---cut---
+RequirePermissions([
+    PermissionFlagsBits.ManageMessages,
+    PermissionFlagsBits.ManageThreads
+]);
+```
+
+An http bot does not depend on discord.js, so the same bits come from `discord-api-types/v10` there. The values are identical.
+
+## Administrator passes everything
+
+Discord grants every permission to Administrator, so both permission gates apply that rule. A caller holding Administrator passes any scope you name.
+
+<Callout type="warning">
+
+You hold Administrator on your own test server, as the owner or through a role. Both permission gates pass there, so you cannot tell a broken one from a working one. Test with a second account that holds no admin role.
+
+</Callout>
+
+`RequireRole` reads role ids, which is why it also refuses an administrator who lacks the role.
+
+## Channel permissions and server permissions
+
+The `in` option picks which set the gate reads.
+
+{/* prettier-ignore-start */}
+
+| `in` | reads | holds true when |
+| --- | --- | --- |
+| `'channel'`, the default | the effective set for the invoked channel, after overwrites | Discord would allow the action right here |
+| `'guild'` | the base set from roles alone | the roles grant it somewhere in the server |
+
+{/* prettier-ignore-end */}
+
+A channel overwrite can take away a permission that a role granted. `'channel'` includes that overwrite in what it reads, so it answers "can they do this here". `'guild'` answers "do their roles grant this anywhere in the server", which is what you want when the command acts on the whole server.
+
+```ts twoslash
+import { RequirePermissions } from '@seedcord/gateway';
+import { PermissionFlagsBits } from 'discord.js';
+// ---cut---
+RequirePermissions([PermissionFlagsBits.BanMembers], {
+    in: 'guild'
+});
+```
+
+<Callout type="transport" only="gateway">
+
+`in: 'guild'` reads role-derived sets that only the gateway cache carries. The gate then requires a [`GuildPermissionsContext`](ref:core/GuildPermissionsContext), which the http transport never provides.
+
+</Callout>
+
+Putting a guild-scoped gate on an http handler fails at the decorator line.
+
+```ts twoslash
+// @errors: 1238
+import {
+    Gated,
+    RequirePermissions,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/http';
+import { PermissionFlagsBits } from 'discord-api-types/v10';
+
+// ---cut---
+@Gated(
+    RequirePermissions([PermissionFlagsBits.BanMembers], {
+        in: 'guild'
+    })
+)
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {}
+}
+```
+
+## On a gateway event handler
+
+An interaction payload carries both channel sets. A gateway event carries neither, which changes what `'channel'` does on each gate.
+
+{/* prettier-ignore-start */}
+
+| on an event, `in: 'channel'` | what happens |
+| --- | --- |
+| `RequirePermissions` | reads the caller's role-derived set, the same value `'guild'` reads. Channel overwrites go uncounted |
+| `RequireBotPermissions` | reads `app_permissions`, which an event never carries, so it refuses every time and reports the set as unresolved |
+
+{/* prettier-ignore-end */}
+
+Use `in: 'guild'` on an event handler. It names what you are actually getting on the caller side, and it is the only scope that works on the bot side.
+
+```ts twoslash
+import { RequireBotPermissions } from '@seedcord/gateway';
+import { PermissionFlagsBits } from 'discord.js';
+// ---cut---
+RequireBotPermissions([PermissionFlagsBits.ManageMessages], {
+    in: 'guild'
+});
+```
+
+## Requiring a role
+
+[`RequireRole`](ref:core/RequireRole) takes one role id and reads the caller's roles. Roles are server-wide, so it does not take a scope option.
+
+```ts twoslash
+import {
+    Gated,
+    RequireRole,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+
+// ---cut---
+@Gated(RequireRole('221439658686939136'))
+@SlashRoute('roles')
+export class Roles extends SlashHandler<'roles'> {
+    public async execute(): Promise<void> {
+        await this.reply('Here they are.');
+    }
+}
+```
+
+Combine several with [`or`](ref:core/or) when any one of them should let the caller through. [Combining gates](/gates/combining) covers that.
+
+## Wording each refusal
+
+Each of these gates refuses for two different reasons. Its options carry one slot per reason, and each slot takes the `message` and `notice` pair from [Gates](/gates).
+
+{/* prettier-ignore-start */}
+
+| gate | slot | refuses when |
+| --- | --- | --- |
+| `RequirePermissions` | `notInGuild` | the set is unavailable, outside a server or unresolved inside one |
+| `RequirePermissions` | `missing` | a bit in the scope is absent |
+| `RequireBotPermissions` | `notInGuild` | the same, for your bot's set |
+| `RequireBotPermissions` | `missing` | the same, for your bot's bits |
+| `RequireRole` | `notInGuild` | the call came from outside a server |
+| `RequireRole` | `missingRole` | the caller lacks the role |
+
+{/* prettier-ignore-end */}
+
+```ts twoslash
+import { RequirePermissions, RequireRole } from '@seedcord/gateway';
+import { PermissionFlagsBits } from 'discord.js';
+// ---cut---
+RequirePermissions([PermissionFlagsBits.BanMembers], {
+    notInGuild: { message: 'Run this in a server.' },
+    missing: { message: 'You cannot ban here.' }
+});
+
+RequireRole('221439658686939136', {
+    missingRole: { message: 'Subscribers only.' }
+});
+```
+
+Leaving a slot out keeps the default card. The permission gates list every missing bit on it by name, and `RequireRole` mentions the role.
+
+These gates covered permissions and roles. But maybe they don't cover everything you want to check before a handler runs. So, go ahead and [write your own](/gates/your-own).

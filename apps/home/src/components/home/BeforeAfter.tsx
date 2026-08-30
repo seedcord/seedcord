@@ -2,7 +2,7 @@ import { cn, Icon } from '@seedcord/ui';
 import { ArrowRight } from 'lucide-react';
 
 import { CodeCard } from '#components/code/CodeCard';
-import { Section } from '#components/home/Section';
+import { SECTION_HEADING, Section } from '#components/home/Section';
 import { afterSeedcord, beforeRawDjs } from '#lib/code/samples';
 
 import type { ReactNode } from 'react';
@@ -12,11 +12,7 @@ export function BeforeAfter(): ReactNode {
         <Section ground="pith">
             <div className={cn('mb-10 flex flex-wrap items-end justify-between gap-4')}>
                 <div>
-                    <h2
-                        className={cn(
-                            'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
-                        )}
-                    >
+                    <h2 className={cn(SECTION_HEADING)}>
                         Same command.
                         <br />
                         <span className={cn('text-(--flesh-deep)')}>Far less</span> to write.
@@ -35,7 +31,7 @@ export function BeforeAfter(): ReactNode {
                 <CodeCard code={afterSeedcord} filename="seedcord" className={cn('rule blk-rind')} />
             </div>
             <p className={cn('font-mono-code mt-5 text-xs text-(--seed-dark)/70')}>
-                The left wires the routing, registration and checks by hand. seedcord does that wiring from your
+                By hand you wire the routing, registration and checks yourself. seedcord does all that from your
                 decorators.
             </p>
         </Section>

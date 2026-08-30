@@ -52,7 +52,13 @@ export function MemberRow({ member, prefix, isLast, parentDeprecationStatus }: M
             )}
         >
             <DeprecatedEntity deprecationStatus={deprecationStatus}>
-                <MemberRowHeader member={member} anchorId={anchorId} tags={tags} prefix={prefix} />
+                <MemberRowHeader
+                    member={member}
+                    anchorId={anchorId}
+                    tags={tags}
+                    prefix={prefix}
+                    isDeprecated={deprecationStatus.isDeprecated}
+                />
                 <MemberRowBody member={member} parentDeprecationStatus={deprecationStatus} />
             </DeprecatedEntity>
         </article>

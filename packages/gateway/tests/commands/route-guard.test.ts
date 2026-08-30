@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+import { commandRegistryOf, interactionsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
 
 import { seedcordPath } from '../utils/source-path';
@@ -14,6 +15,14 @@ interface GuardBot {
         init(): Promise<void>;
         warnUnhandledRoutes(commandLeaves: Iterable<string>): void;
         logger: { warn: (message: string) => void };
+    };
+}
+
+// justified: the guard reads private state on both controllers
+function guardBotOf(instance: Seedcord): GuardBot {
+    return {
+        commandRegistry: commandRegistryOf(instance.bot) as unknown as GuardBot['commandRegistry'],
+        interactions: interactionsOf(instance.bot) as unknown as GuardBot['interactions']
     };
 }
 
@@ -73,8 +82,7 @@ describe('Boot-time slash route exhaustiveness guard', () => {
         });
 
         seedcord = new Seedcord(config);
-        // justified: the guard and the controllers it reads are private, and these tests use them without a login
-        const bot = seedcord.bot as unknown as GuardBot;
+        const bot = guardBotOf(seedcord);
         await bot.commandRegistry.init();
         await bot.interactions.init();
 
@@ -122,8 +130,7 @@ describe('Boot-time slash route exhaustiveness guard', () => {
         });
 
         seedcord = new Seedcord(config);
-        // justified: the guard and the controllers it reads are private, and these tests drive them without a login
-        const bot = seedcord.bot as unknown as GuardBot;
+        const bot = guardBotOf(seedcord);
         await bot.commandRegistry.init();
         await bot.interactions.init();
 

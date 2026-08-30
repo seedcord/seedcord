@@ -1,0 +1,241 @@
+---
+title: Custom IDs
+description: Packing typed values into the string Discord hands back on a click.
+---
+
+Discord hands a component's `custom_id` back when someone clicks a button, picks from a select menu, or submits a modal. Whatever your handler reads later has to be inside that string.
+
+[`CustomId`](ref:core/CustomId) declares what the string carries. The component that mints it and the handler that reads it share that one declaration. The `AppealId` that the button on the [building components](/components) page used is one of these.
+
+```ts twoslash hovers title="src/components/TicketActions.ts"
+import { CustomId } from '@seedcord/gateway';
+
+export const TicketAction = new CustomId('ticket')
+    .snowflake('ownerId')
+    .oneOf('action', ['close', 'reopen'])
+    .bool('notify');
+```
+
+`'ticket'` is the prefix, and seedcord routes a click by it. Each call after that adds one field, and the accumulated shape types both `encode` and `decode`.
+
+```txt output
+{ ownerId: '184580573574955008', action: 'close', notify: true }
+                        │
+                 encode │
+                        ▼
+              ticketF3A:o_DDcBfgAB
+              └──┬─┘└┬┘ └────┬───┘
+                 │   │       └ the three values
+                 │   └ shape hash
+                 └ prefix
+                        │
+                 decode │
+                        ▼
+{ ownerId: '184580573574955008', action: 'close', notify: true }
+```
+
+<Callout type="warning">
+
+Each method returns a new `CustomId` and leaves the original untouched, so the whole chain has to be one expression.
+
+```ts
+const Broken = new CustomId('ticket');
+// the result goes nowhere and Broken keeps zero fields
+Broken.snowflake('ownerId');
+```
+
+</Callout>
+
+## Minting the string
+
+`encode` takes one value per field and returns the wire string.
+
+```ts twoslash title="src/components/TicketActions.ts"
+import { ButtonBuilder } from '@discordjs/builders';
+import { CustomId, RowComponent } from '@seedcord/gateway';
+import { ButtonStyle } from 'discord.js';
+
+const TicketAction = new CustomId('ticket')
+    .snowflake('ownerId')
+    .oneOf('action', ['close', 'reopen'])
+    .bool('notify');
+// ---cut---
+export class TicketActions extends RowComponent<'button'> {
+    constructor(ownerId: string) {
+        super('button');
+
+        const close = TicketAction.encode({
+            ownerId,
+            action: 'close',
+            notify: true
+        });
+
+        this.instance.addComponents(
+            new ButtonBuilder()
+                .setCustomId(close)
+                .setLabel('Close')
+                .setStyle(ButtonStyle.Danger)
+        );
+    }
+}
+```
+
+Because the chain types the values, a wrong value or a missing field stops the build.
+
+```ts twoslash
+// @errors: 2322
+import { CustomId } from '@seedcord/gateway';
+
+const TicketAction = new CustomId('ticket')
+    .snowflake('ownerId')
+    .oneOf('action', ['close', 'reopen'])
+    .bool('notify');
+// ---cut---
+TicketAction.encode({ ownerId: '123', action: 'archive' });
+```
+
+## The field kinds
+
+`int` is the only kind that comes in two forms.
+
+{/* prettier-ignore-start */}
+
+| method | decodes to | on the wire |
+| --- | --- | --- |
+| `snowflake(name)` | `string` | packs |
+| `uuid(name)` | `string` | packs |
+| `int(name, min, max)` | `number` | packs |
+| `int(name)` | `number` | its own token |
+| `bool(name)` | `boolean` | packs |
+| `oneOf(name, choices)` | the literal union | packs |
+| `str(name)` | `string` | its own token |
+
+{/* prettier-ignore-end */}
+
+`oneOf` reads its choices as literals with no `as const`, so the decoded field comes back as that union.
+
+```ts twoslash
+import { CustomId } from '@seedcord/gateway';
+// ---cut---
+const Vote = new CustomId('vote')
+    .uuid('pollId')
+    .oneOf('choice', ['yes', 'no', 'abstain'])
+    .int('weight', 1, 10);
+
+const { choice } = Vote.decode('...');
+//      ^?
+```
+
+## Fields that can be absent
+
+Every kind takes `{ nullable: true }`, which decodes the field as `T | null`.
+
+```ts twoslash
+import { CustomId } from '@seedcord/gateway';
+// ---cut---
+const Board = new CustomId('board')
+    .int('page', 0, 999)
+    .snowflake('roleId', { nullable: true });
+
+const { roleId } = Board.decode('...');
+//      ^?
+```
+
+A `/leaderboard [role]` command mints that id once, so every nav button carries the filter. Leaving the option out encodes `roleId` as null.
+
+You pass that null back through `encode`, and `Board.encode({ page: 0, roleId: null })` compiles.
+
+<Callout type="warning">
+
+Marking a field nullable changes the shape, which changes the hash in the route key. Every button already on a message refuses with `StaleCustomId` on the next click. [When a custom id goes stale](/components/stale) covers what the user sees.
+
+</Callout>
+
+## What a field costs
+
+Discord caps a `custom_id` at 100 characters, and that covers the prefix, the shape hash, and every value.
+
+A packing field has a known count of possible values. seedcord multiplies those counts into one integer and writes it in base64. A nullable field adds one to its own count, for the absent case.
+
+```txt output
+ownerId  184580573574955008   2^64 possible values
+action   'close'                 2 possible values
+notify   true                    2 possible values
+
+     multiplied into one integer, written in base64
+                          │
+                          ▼
+                     o_DDcBfgAB    10 characters
+```
+
+A token field sits after that number behind a separator. `str` writes its text as given, which makes it the expensive kind. Avoid it where another kind fits.
+
+Once a wire runs past 100, `encode` throws `CustomIdWireTooLong`. That happens while you build the component, so the failure never waits for a click.
+
+<Callout type="tip">
+
+Bound an integer whenever you know its range. `int('page')` writes its own token. `int('page', 0, 500)` folds into the shared number with everything else and results in a shorter wire. `oneOf` is the same, and `bool` is the cheapest of all.
+
+</Callout>
+
+## Reading one back yourself
+
+A handler decodes for you, covered in [Buttons](/components/buttons). Anywhere else you read it by hand.
+
+```ts twoslash
+import { CustomId } from '@seedcord/gateway';
+
+const TicketAction = new CustomId('ticket')
+    .snowflake('ownerId')
+    .oneOf('action', ['close', 'reopen'])
+    .bool('notify');
+// ---cut---
+declare const wire: string;
+
+if (TicketAction.owns(wire)) {
+    const { ownerId, action } = TicketAction.decode(wire);
+    //               ^?
+}
+```
+
+`owns` compares the prefix and ignores everything after it. `decode` checks the whole thing and throws when the string came from a different shape, which [When a custom id goes stale](/components/stale) covers.
+
+<Callout type="danger">
+
+A custom id you write by hand compiles. `setCustomId('ticket:123')` skips the shape hash `encode` adds, so seedcord reads that prefix as `tic` and no handler matches the click. Mint every id through `encode`.
+
+</Callout>
+
+## Clicks the router should skip
+
+A discord.js collector you opened yourself already consumes the clicks it waits on. Naming that id under `ignoreCustomIds` keeps seedcord's router off them.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { CustomId, Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+export const Poll = new CustomId('poll').uuid('pollId');
+// ---cut---
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers'),
+            ignoreCustomIds: [Poll]
+        },
+        commands: { path: null },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+```
+
+A click whose prefix `Poll` owns never reaches a handler. The list takes `CustomId` values. A raw string fails to compile, since seedcord matches each entry by calling `owns`.
+
+<Callout type="transport" only="gateway">
+    An http bot does not read `ignoreCustomIds`. Discord posts every
+    interaction to one endpoint, and the router dispatches all of
+    them.
+</Callout>

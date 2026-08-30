@@ -1,0 +1,195 @@
+---
+title: Combining gates
+description: Folding several gates into one with and, and or.
+---
+
+Stacking gates on [`@Gated`](ref:gateway/Gated) already requires all of them. [`and`](ref:core/and) and [`or`](ref:core/or) fold several gates into one gate. That gate goes on a handler like any other. It also nests inside another combinator. Both take two arms or more.
+
+## or, when any one of them is enough
+
+`or` runs each arm in order and stops at the first one that passes. The rest never run.
+
+```ts twoslash title="src/handlers/Award.ts"
+import {
+    Gated,
+    OwnerOnly,
+    RequireRole,
+    SlashHandler,
+    SlashRoute,
+    or
+} from '@seedcord/gateway';
+
+@Gated(or(OwnerOnly(), RequireRole('221439658686939136')))
+@SlashRoute('award')
+export class Award extends SlashHandler<'award'> {
+    public async execute(): Promise<void> {
+        const member = this.options.getUser('member');
+
+        await this.reply(`Awarded ${member.username}.`);
+    }
+}
+```
+
+A bot owner clears the first arm and never reaches the role check. Anyone holding the role clears the second.
+
+## and, for a reusable pair
+
+`@Gated(A(), B())` and `and(A(), B())` refuse under the same conditions. Use `and` when you want that pair as one value, usually to put it inside an `or`.
+
+```ts twoslash
+import {
+    GuildOnly,
+    OwnerOnly,
+    RequireRole,
+    and,
+    or
+} from '@seedcord/gateway';
+// ---cut---
+const staff = and(GuildOnly(), RequireRole('221439658686939136'));
+
+const staffOrOwner = or(staff, OwnerOnly());
+```
+
+Arms run left to right. The first refusal stops the rest.
+
+The combined gate carries the names of its arms, joined with `&` for an `and` and `|` for an `or`.
+
+```ts twoslash
+import { GuildOnly, OwnerOnly, and } from '@seedcord/gateway';
+// ---cut---
+const guildOwner = and(GuildOnly(), OwnerOnly());
+//    ^?
+```
+
+A compile error prints that name when the gate goes on a handler it does not fit.
+
+## What each one accepts
+
+The arms decide which handlers the combined gate fits.
+
+{/* prettier-ignore-start */}
+
+| | required context | a handler fits when |
+| --- | --- | --- |
+| `and` | the intersection of every arm | it satisfies all of them |
+| `or` | the union of every arm | it satisfies at least one |
+
+{/* prettier-ignore-end */}
+
+An `and` of an event-only gate and an interaction-only gate fits nothing, since no handler provides both contexts. The compiler catches it at the `@Gated` line.
+
+## What counts as declining
+
+An `or` arm declines only when it throws a [`Notice`](ref:core/Notice) with `report` left at `false`. Anything else stops the whole `or`, and the user sees whatever that throw produces.
+
+{/* prettier-ignore-start */}
+
+| an arm throws | `or` does |
+| --- | --- |
+| a `Notice` with `report` false | tries the next arm |
+| a `Notice` with `report` true | stops, reports it, shows that Notice |
+| a [`Fault`](ref:core/Fault) | stops, shows the generic card, reports it unless its `report` is false |
+| a [`Silence`](ref:core/Silence) | stops, and your bot does not reply |
+| any other error | stops, reports it, shows the generic card |
+
+{/* prettier-ignore-end */}
+
+Setting `report = true` on your own `Notice` to get a refusal into your logs takes that arm out of the decline path.
+
+## The refusal when every arm refuses
+
+`or` picks what to throw in three steps.
+
+1. The `fail` option, when you passed one.
+2. A list of what each arm needed, when every refusal carried a `summary`.
+3. A generic refusal reading `You are not allowed to use this command.`
+
+Every gate seedcord ships sets a `summary`, so an `or` built from catalog gates alone reaches step two.
+
+```txt output
+You need to meet at least one of these:
+• be the bot owner
+• hold the <@&221439658686939136> role
+```
+
+A gate of your own joins that list once its `Notice` sets `summary`, which [Your own gates](/gates/your-own) covers. A single arm without a summary drops the whole list to the generic refusal, since a partial list would mislead by leaving an option out.
+
+## Wording it yourself
+
+`fail` takes a trailing options object after the arms. Pass a `Notice` for a fixed refusal.
+
+```ts twoslash
+import {
+    Notice,
+    OwnerOnly,
+    RequireRole,
+    or
+} from '@seedcord/gateway';
+
+import type { ReplyResponse } from '@seedcord/gateway';
+
+declare const components: ReplyResponse['components'];
+
+class StaffOnly extends Notice {
+    public constructor(reason: string) {
+        super(reason);
+    }
+
+    public render(): ReplyResponse {
+        return { components };
+    }
+}
+
+// ---cut---
+or(OwnerOnly(), RequireRole('221439658686939136'), {
+    fail: new StaffOnly('caller is neither')
+});
+```
+
+Pass a function when the refusal needs to read the context. It receives the same `ctx` the arms did.
+
+```ts twoslash
+import {
+    Notice,
+    OwnerOnly,
+    RequireRole,
+    or
+} from '@seedcord/gateway';
+
+import type { ReplyResponse } from '@seedcord/gateway';
+
+declare const components: ReplyResponse['components'];
+
+class StaffOnly extends Notice {
+    public constructor(reason: string) {
+        super(reason);
+    }
+
+    public render(): ReplyResponse {
+        return { components };
+    }
+}
+
+// ---cut---
+or(OwnerOnly(), RequireRole('221439658686939136'), {
+    fail: (ctx) => new StaffOnly(`${ctx.userId ?? 'nobody'} tried`)
+});
+```
+
+`or` throws `fail` first and never builds the summary list.
+
+## Two arms, at least
+
+One arm is that gate on its own, and the compiler says so.
+
+```ts twoslash
+// @errors: 2555
+import { OwnerOnly, or } from '@seedcord/gateway';
+
+// ---cut---
+or(OwnerOnly());
+```
+
+The options object never counts as an arm, so `or(A(), { fail })` fails the same way.
+
+An effect gate inside a refused `or` arm rolls its pending commit back, which [Effect gates](/gates/effect-gates) covers.

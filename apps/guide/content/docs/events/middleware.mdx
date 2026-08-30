@@ -1,0 +1,139 @@
+---
+title: Event middleware
+description: Running code before every handler for an event, and stopping the event.
+---
+
+Middleware runs before the handlers for an event. Throwing from it stops all of them.
+
+```ts twoslash title="src/events/middlewares/SkipMuted.ts"
+import {
+    EventMiddleware,
+    Middleware,
+    MiddlewareType,
+    Silence
+} from '@seedcord/gateway';
+import { Events } from 'discord.js';
+// ---cut-start---
+
+declare function isMuted(userId: string): Promise<boolean>;
+// ---cut-end---
+
+@Middleware(MiddlewareType.Event, 0, {
+    events: [Events.MessageCreate]
+})
+export class SkipMuted extends EventMiddleware<Events.MessageCreate> {
+    public async execute(): Promise<void> {
+        const [message] = this.event;
+
+        if (await isMuted(message.author.id)) {
+            throw new Silence('author is muted');
+        }
+    }
+}
+```
+
+[`@Middleware`](ref:gateway/Middleware) takes the kind first, then a priority, then its options. [`MiddlewareType.Event`](ref:gateway/MiddlewareType) is the kind for client events.
+
+## Stopping the event
+
+Any throw stops the event. The class you throw decides what the user sees. With a [`Silence`](ref:core/Silence) the user sees nothing. A reason passed to it goes to a debug log. Anything else goes down the same path that a handler's throw takes. [Throwing](/throwing) covers it.
+
+That stops one dispatch. The next message runs the chain again from the top.
+
+## Which events it runs for
+
+`{ events }` names the events, and the generic on [`EventMiddleware`](ref:gateway/EventMiddleware) has to list the same ones. Applying the decorator with a mismatch is a compile error. `SkipMuted` above takes one, so [`this.event`](ref:gateway/EventMiddleware.event) is that event's payload.
+
+With several, the payload could be any of them, so `this.event` turns `never`. [`this.eventName`](ref:gateway/EventMiddleware.eventName) returns the event that fired.
+
+```ts twoslash title="src/events/middlewares/CountMessages.ts"
+import {
+    EventMiddleware,
+    Middleware,
+    MiddlewareType
+} from '@seedcord/gateway';
+import { Events } from 'discord.js';
+// ---cut---
+@Middleware(MiddlewareType.Event, 1, {
+    events: [Events.MessageCreate, Events.MessageDelete]
+})
+export class CountMessages extends EventMiddleware<
+    Events.MessageCreate | Events.MessageDelete
+> {
+    public async execute(): Promise<void> {
+        this.logger.debug(`${this.eventName} fired`);
+    }
+}
+```
+
+Leaving `{ events }` off gives a catchall, which runs on every event that your handlers registered. Drop the generic with it.
+
+```ts twoslash title="src/events/middlewares/Trace.ts"
+import {
+    EventMiddleware,
+    Middleware,
+    MiddlewareType
+} from '@seedcord/gateway';
+// ---cut---
+@Middleware(MiddlewareType.Event, 2)
+export class Trace extends EventMiddleware {
+    public async execute(): Promise<void> {
+        this.logger.debug(`${this.eventName} reached the chain`);
+    }
+}
+```
+
+Write one class per event when you need each payload shape.
+
+## Order
+
+The second argument sets the priority and defaults to `0`. Lower runs first, so `SkipMuted` (`0`), `CountMessages` (`1`), and `Trace` (`2`) run in that order.
+
+Two middlewares at the same priority run in the order that seedcord loaded them. Give anything order-dependent its own number.
+
+## Where middleware lives
+
+Middlewares live under `bot.events.middlewares`. The key is optional in case you don't want middlewares.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+const rest = {
+    interactions: { path: null },
+    commands: { path: null }
+} as const;
+// ---cut---
+export const seedcord = new Seedcord({
+    bot: {
+        ...rest,
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        events: {
+            path: resolve(import.meta.dirname, './events'),
+            middlewares: resolve(
+                import.meta.dirname,
+                './events/middlewares'
+            )
+        }
+    },
+    subscribers: { path: null }
+});
+```
+
+A class without `@Middleware` loads and never runs, the same way a handler without `@RegisterEvent` does. The `@seedcord/middleware-missing-register-decorator` rule reports it.
+
+<Callout type="warning">
+
+Middleware runs only when a handler is about to run. seedcord looks for a handler left to fire before it starts the chain. So a catchall middleware skips any event that nothing handles, and any event whose handlers are all spent `once`.
+
+</Callout>
+
+<Callout type="transport" only="gateway">
+
+`@Middleware` and both middleware bases ship on `@seedcord/gateway`. An http bot routes each interaction straight to its handler.
+
+</Callout>
+
+Message events carry some rules that no middleware can work around. Check out how to [read message content](/events/messages) before you write a middleware that needs it.

@@ -2,6 +2,7 @@ import { setDevChannel } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+import { commandRegistryOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
 
 import { seedcordPath } from '../utils/source-path';
@@ -15,9 +16,10 @@ import type { CommandRegistry } from '@seedcord/core/node/internal';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { Mock } from 'vitest';
 
-// justified: commandRegistry is private on Bot, and these tests use it without a login
 function registryOf(instance: Seedcord): CommandRegistry {
-    return (instance.bot as unknown as { commandRegistry: CommandRegistry }).commandRegistry;
+    const registry = commandRegistryOf(instance.bot);
+    if (!registry) throw new Error('this test config declares no commands path');
+    return registry;
 }
 
 type FrameworkChannel = DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>;

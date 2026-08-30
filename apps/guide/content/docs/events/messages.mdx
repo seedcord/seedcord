@@ -1,0 +1,121 @@
+---
+title: Handling messages
+description: What arrives in a message event, and what Discord gates behind the Message Content intent.
+---
+
+A `messageCreate` handler runs for every message in a server your bot is in. Discord gates the text itself.
+
+```ts twoslash title="src/events/Echo.ts"
+import { EventHandler, RegisterEvent } from '@seedcord/gateway';
+import { Events } from 'discord.js';
+
+@RegisterEvent([Events.MessageCreate])
+export class Echo extends EventHandler<Events.MessageCreate> {
+    public async execute(): Promise<void> {
+        const [message] = this.event;
+        const text = message.content;
+        //    ^?
+
+        this.logger.info(`content: "${text}"`);
+    }
+}
+```
+
+Without the Message Content intent, that logs an empty string every time.
+
+```txt output
+content: ""
+```
+
+The handler runs fine and the string comes back empty. `content` is typed `string` with or without the intent, so the compiler accepts every read of it.
+
+## What the intent gates
+
+Discord empties five fields on a message object for an app without the intent: `content`, `embeds`, `attachments`, `components`, and `poll`. The intent gates the data across Discord's APIs, so the same fields come back empty wherever your bot reads a message.
+
+## The exceptions
+
+Discord sends the real content in these cases, whatever intents you set.
+
+{/* prettier-ignore-start */}
+
+| case | what it covers |
+| --- | --- |
+| your own messages | anything your app sent |
+| direct messages | a DM to your app |
+| a mention | a message that mentions your app |
+| a reply | a reply to one of your app's messages, with ping on reply left on |
+| a context menu | the message a message context menu command ran on |
+
+{/* prettier-ignore-end */}
+
+A bot that answers when someone mentions it reads that message in full. It runs without a privileged intent.
+
+```ts twoslash title="src/events/Mentioned.ts"
+import {
+    EventHandler,
+    Gated,
+    IgnoreBots,
+    RegisterEvent
+} from '@seedcord/gateway';
+import { Events } from 'discord.js';
+// ---cut---
+@Gated(IgnoreBots)
+@RegisterEvent([Events.MessageCreate])
+export class Mentioned extends EventHandler<Events.MessageCreate> {
+    public async execute(): Promise<void> {
+        const [message] = this.event;
+        if (!message.mentions.users.has(message.client.user.id))
+            return;
+
+        await message.reply(`hey ${message.author.displayName}`);
+    }
+}
+```
+
+[`@Gated`](ref:gateway/Gated) with [`IgnoreBots`](ref:gateway/IgnoreBots) stops the handler on a message from any bot, including your own. [Gates](/gates) covers the catalog.
+
+## Turning the intent on
+
+You need two switches. Turn on Message Content in the developer portal under your application's Bot tab, then add the intent to `clientOptions`.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+const rest = {
+    interactions: { path: null },
+    commands: { path: null }
+} as const;
+// ---cut---
+export const seedcord = new Seedcord({
+    bot: {
+        ...rest,
+        clientOptions: {
+            intents: [
+                GatewayIntentBits.Guilds,
+                GatewayIntentBits.GuildMessages,
+                GatewayIntentBits.MessageContent
+            ]
+        },
+        events: { path: resolve(import.meta.dirname, './events') }
+    },
+    subscribers: { path: null }
+});
+```
+
+`GuildMessages` delivers the event. `MessageContent` fills in the five fields.
+
+<Callout type="warning">
+
+Message Content is a privileged intent. Once more than 10,000 unique users can see your app, Discord requires you to apply for it, and you reapply every year to keep it. Discord may deny a request whose use case "can be accomplished through interactions or other means without privileged intents".
+
+</Callout>
+
+## Prefix commands and the intent review
+
+Discord's page on avoiding a privileged intent opens its checklist with "Is my bot using prefix commands (`!help`, `?play`) that could be migrated to slash commands?" It answers by pointing at slash commands, which run without a privileged intent.
+
+Reading every message to find a `!` prefix is the case that checklist names first. [Commands](/commands) covers the path Discord points at. A message context menu command is the other route, and it carries the full message object with its content.

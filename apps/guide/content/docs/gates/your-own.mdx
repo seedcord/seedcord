@@ -1,0 +1,202 @@
+---
+title: Your own gates
+description: Writing a gate with defineGate, and what its check can read.
+---
+
+The catalog covers owners, roles, permissions, and cooldowns. [`defineGate`](ref:core/defineGate) builds a gate for anything else you want to check.
+
+It takes a name and a check. The check reads the context, refuses by throwing, and passes by returning. Here's an example that keeps a command to one channel. [Throwing](/throwing) covers the [`Notice`](ref:core/Notice) it throws and the card `render()` builds.
+
+```ts twoslash hovers title="src/gates/InChannel.ts"
+import {
+    BuilderComponent,
+    defineGate,
+    Notice
+} from '@seedcord/gateway';
+
+import type {
+    Gate,
+    GateContextBase,
+    ReplyResponse
+} from '@seedcord/gateway';
+
+class WrongChannelCard extends BuilderComponent<'container'> {
+    public constructor(channelId: string) {
+        super('container');
+
+        this.instance.addTextDisplayComponents((text) =>
+            text.setContent(
+                `### Wrong channel\nTry <#${channelId}>.`
+            )
+        );
+    }
+}
+
+class WrongChannel extends Notice {
+    public constructor(private readonly channelId: string) {
+        super(`caller was outside ${channelId}`);
+    }
+
+    public render(): ReplyResponse {
+        return {
+            components: [
+                new WrongChannelCard(this.channelId).component
+            ]
+        };
+    }
+}
+
+export function InChannel(
+    channelId: string
+): Gate<GateContextBase, 'InChannel'> {
+    return defineGate('InChannel', (ctx) => {
+        if (ctx.channelId !== channelId)
+            throw new WrongChannel(channelId);
+    });
+}
+```
+
+`InChannel` is a function that returns a gate, which is how most of the catalog is built. The closure keeps the argument, so one factory covers any channel.
+
+```ts twoslash
+import { Gated, SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+import type { Gate, GateContextBase } from '@seedcord/gateway';
+
+declare function InChannel(
+    channelId: string
+): Gate<GateContextBase, 'InChannel'>;
+
+// ---cut---
+@Gated(InChannel('221439658686939136'))
+@SlashRoute('leaderboard')
+export class Leaderboard extends SlashHandler<'leaderboard'> {
+    public async execute(): Promise<void> {
+        await this.reply('Top ten.');
+    }
+}
+```
+
+The name you pass appears in the compile error when you attach a gate to a handler it does not fit. [`and`](ref:core/and) and [`or`](ref:core/or) join the names of their arms into one.
+
+## What a check reads
+
+Leaving the `ctx` parameter unannotated makes it a [`GateContextBase`](ref:core/GateContextBase), which every handler on both transports provides. These are its fields.
+
+{/* prettier-ignore-start */}
+
+| field | type | holds |
+| --- | --- | --- |
+| `core` | `CoreBase` | the running framework, for `core.config` and `core.rateLimiter` |
+| `userId` | `string \| null` | the acting user's id, null on an event that carries none |
+| `guildId` | `string \| null` | the server id, null in a direct message |
+| `channelId` | `string \| null` | the channel id, null when the source carries none |
+| `memberRoleIds` | `readonly string[]` | the caller's role ids without the everyone role, empty outside a server |
+| `memberPermissions` | `bigint \| null` | the caller's permission bits, channel-scoped on an interaction and role-derived on a gateway event, null outside a server |
+| `appPermissions` | `bigint \| null` | your bot's permission bits in the invoked channel, null on gateway events |
+| `routeId` | `string \| null` | the dispatched handler as `kind:route`, such as `slash:daily`, null off a route |
+
+{/* prettier-ignore-end */}
+
+A gate that reads only these fields fits any handler you attach it to. `InChannel` above reads one of them, so it works on a slash command, a button, and a message event.
+
+## Narrowing what the gate accepts
+
+Annotating `ctx` with a narrower context changes two things. The check reads the extra fields, and [`@Gated`](ref:gateway/Gated) rejects the gate on any handler that lacks them.
+
+```ts twoslash hovers title="src/gates/NoAttachments.ts"
+import { defineGate, Silence } from '@seedcord/gateway';
+import { Events } from 'discord.js';
+
+import type { EventGateContext } from '@seedcord/gateway';
+
+// ---cut---
+export const NoAttachments = defineGate(
+    'NoAttachments',
+    (ctx: EventGateContext<Events.MessageCreate>) => {
+        const [message] = ctx.payload;
+
+        if (message.attachments.size > 0) {
+            throw new Silence('message carried an attachment');
+        }
+    }
+);
+```
+
+`ctx.payload` is typed to that one event's argument tuple, so `message` is a discord.js `Message`. Attaching this gate to any other handler fails to compile.
+
+<Callout type="tip">
+
+`NoAttachments` does not take an argument. Export the gate itself and attach it without calling, the way [`IgnoreBots`](ref:gateway/IgnoreBots) does. `InChannel` above stays a function because it closes over a channel id.
+
+</Callout>
+
+The two gateway arms carry different fields. Narrow on `ctx.kind` before reading either set.
+
+{/* prettier-ignore-start */}
+
+| annotation | fits | adds |
+| --- | --- | --- |
+| `GateContextBase` | every handler, both transports | the eight fields above |
+| [`InteractionGateContext`](ref:gateway/InteractionGateContext) | any interaction handler | `interaction`, `user`, `guild`, `member` |
+| `InteractionGateContext<ButtonInteraction>` | button handlers | the same, with `interaction` typed to a button |
+| [`EventGateContext`](ref:gateway/EventGateContext) | any event handler | `eventName`, `payload`, `user`, `guild`, `member` |
+| `EventGateContext<Events.MessageCreate>` | that one event | the same, with `payload` typed to its tuple |
+| [`GateContext`](ref:gateway/GateContext) | either arm | the union of the two rows above |
+
+{/* prettier-ignore-end */}
+
+<Callout type="transport">
+
+Both transports export a type called `InteractionGateContext`, and the two carry different fields. Gateway's holds live discord.js objects, a `User`, a `Guild`, and a `GuildMember`. Http's holds an `APIUser` and an `APIInteractionGuildMember`, and it does not carry `guild` at all. A gate reading `ctx.guild` compiles on gateway and fails on http.
+
+The gateway cache builds that discord.js `Guild`. An http bot does not run one. Discord sends it a partial guild carrying `id`, `features`, and `locale`, which `ctx.interaction.guild` reaches.
+
+</Callout>
+
+## The two guild permission fields
+
+[`GuildPermissionsContext`](ref:core/GuildPermissionsContext) adds `memberGuildPermissions` and `appGuildPermissions`, the permission sets computed from roles alone.
+
+<Callout type="transport" only="gateway">
+
+Only the gateway cache carries role-derived permissions. Annotating `ctx` with `GuildPermissionsContext` gives you a gate that the http transport rejects at the decorator line. [`RequirePermissions`](ref:core/RequirePermissions) applies the same rule under `in: 'guild'`.
+
+</Callout>
+
+## An async check
+
+A check can return a promise, and seedcord awaits it before the handler runs. Read a database, call an API, or wait on anything else you need.
+
+```ts twoslash
+import { defineGate, Notice } from '@seedcord/gateway';
+
+import type { ReplyResponse } from '@seedcord/gateway';
+
+declare const bans: { has(id: string): Promise<boolean> };
+declare const components: ReplyResponse['components'];
+
+class Banned extends Notice {
+    public constructor() {
+        super('caller is on the ban list');
+    }
+
+    public render(): ReplyResponse {
+        return { components };
+    }
+}
+
+// ---cut---
+export const NotBanned = defineGate('NotBanned', async (ctx) => {
+    if (ctx.userId === null) return;
+    if (await bans.has(ctx.userId)) throw new Banned();
+});
+```
+
+Gates run one after another, so a slow check delays every gate behind it. Discord gives you three seconds to answer an interaction, and the checks use part of it. seedcord prints a console warning when one handler's checks total more than 750ms. That warning is off in production.
+
+## What to throw
+
+Throw a [`Notice`](ref:core/Notice) and seedcord replies with the card its `render()` builds. Throw a [`Silence`](ref:core/Silence) and seedcord drops the request with no reply, which suits an event handler. [Throwing](/throwing) covers both, plus what happens when a check throws something else.
+
+Set `summary` on a `Notice` you throw from a gate when you plan to pass that gate to an [`or`](ref:core/or). [Combining gates](/gates/combining) covers what `or` does with it.

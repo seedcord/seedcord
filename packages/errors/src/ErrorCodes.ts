@@ -58,6 +58,10 @@ export enum SeedcordErrorCode {
     CoreApplicationUnavailable = 1209,
     /** A generated accessor was read before startup resolved its values. */
     CoreAccessorUnresolved = 1210,
+    /** A startup or shutdown task was added to a core built by `createSeedcord`. */
+    CoreLifecycleUnavailable = 1211,
+    /** `emit` was called on the bus. It reaches listeners and skips every subscriber. */
+    CoreBusEmitUnavailable = 1212,
 
     /** Interaction middleware decorated with disallowed event filters. */
     DecoratorInteractionEventFilter = 1301,
@@ -247,6 +251,8 @@ export enum SeedcordErrorCode {
     CliTunnelUnreachable = 3125,
     /** A config field is present with the wrong shape. */
     CliConfigInvalidField = 3126,
+    /** A class carrying `@RegisterCommand` threw while codegen constructed it. */
+    CliCodegenCommandConstructorThrew = 3127,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

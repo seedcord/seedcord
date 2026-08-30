@@ -50,8 +50,8 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
             },
             {
                 type: 'add',
-                path: '{{ dir }}/{{ folder dir name }}/eslint.config.mjs',
-                templateFile: 'templates/eslint.config.mjs.hbs'
+                path: '{{ dir }}/{{ folder dir name }}/eslint.config.ts',
+                templateFile: 'templates/eslint.config.ts.hbs'
             },
             {
                 type: 'add',

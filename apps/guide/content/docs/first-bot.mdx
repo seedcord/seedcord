@@ -1,0 +1,216 @@
+---
+title: Your first bot
+description: Going from an empty folder to a command that replies.
+---
+
+You need the token from the last page.
+
+<Shell create="seedcord" />
+
+## What it asks
+
+- **Where the project goes.** The folder name becomes the package name, so it takes lowercase letters, digits, and `. _ -`.
+- **TypeScript or JavaScript.**
+- **How Discord reaches your bot.** Gateway or http, the choice from two pages ago.
+- **What your bot should react to.** Gateway only. A checklist covering messages in servers, reactions, member joins, polls, and more. Each one names the intents and partials it needs, and the privileged ones are marked. The scaffolder writes the set into your `bot.ts`.
+- **Your bot token.**
+- **Your app public key.** Http only.
+- **Your bot color.** Every embed and container you build takes it, unless you set a color on that one yourself.
+
+Then it installs your dependencies, formats the project, runs `seedcord codegen`, and makes a git commit.
+
+## Run it
+
+<Shell run="dev" before="cd my-bot" />
+
+Your bot logs in, sends its commands to Discord, and the terminal turns into a dev console.
+
+## Run the ping command
+
+The scaffold ships a `ping` command. Type `/ping` in a server your bot is in.
+
+It probably will not be there yet. Global commands take time to appear, and Discord publishes no number for how long.
+
+<Callout type="tip">
+    Restart your Discord client with Ctrl+R or Cmd+R. That pulls a
+    fresh command list and usually ends the wait.
+</Callout>
+
+## What the scaffolder made
+
+That command came from a file the scaffolder wrote. Here is everything else it put in the folder.
+
+```txt title="my-bot" output
+my-bot/
+├─ .vscode/
+│  └─ extensions.json
+├─ src/
+│  ├─ commands/
+│  │  └─ Ping.ts
+│  ├─ events/
+│  │  └─ Ready.ts
+│  ├─ handlers/
+│  │  └─ Ping.ts
+│  ├─ bot.ts
+│  ├─ index.ts
+│  └─ seedcord-gen.d.ts
+├─ .env
+├─ .gitignore
+├─ .prettierignore
+├─ eslint.config.ts
+├─ package.json
+├─ prettier.config.ts
+├─ README.md
+├─ seedcord.config.ts
+├─ tsconfig.build.json
+└─ tsconfig.json
+```
+
+- **`src/bot.ts`** builds your bot and exports it. **`src/index.ts`** imports that and starts it. They are separate so the CLI can import `bot.ts` and read your commands without logging in.
+- **`seedcord.config.ts`** configures the CLI. Your bot's own settings go in `bot.ts`, which is the file below.
+- **`src/seedcord-gen.d.ts`** carries the types generated from your config and your commands. `seedcord codegen` writes it and you commit it.
+- **`tsconfig.json`** type-checks the project. **`tsconfig.build.json`** compiles `src` into `dist`.
+- **`.env`** holds your token. `bot.ts` sets `Envapter.baseDir` to the project root, which is where [envapt](https://envapt.materwelon.dev) then looks for the file.
+
+<Callout type="transport" only="http">
+    Discord posts only interactions to an http bot, so the
+    scaffolder writes no `src/events` folder.
+</Callout>
+
+## Your bot's settings
+
+Every answer you gave shows up in one object.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+import { Envapter } from 'envapt';
+
+Envapter.baseDir = resolve(import.meta.dirname, '..');
+
+export const seedcord = new Seedcord({
+    bot: {
+        // this is passed directly to the discord.js Client constructor.
+        // http doesn't have this option
+        clientOptions: {
+            intents: [GatewayIntentBits.Guilds]
+        },
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers')
+        },
+        commands: {
+            path: resolve(import.meta.dirname, './commands')
+        },
+        events: {
+            path: resolve(import.meta.dirname, './events')
+        }
+    },
+    subscribers: {
+        path: null
+    },
+    botColor: '#4ade80',
+    notifications: {
+        developerUsername: 'you'
+    }
+});
+
+export default seedcord;
+```
+
+The `path` keys are the folders seedcord scans at startup. Each tab that teaches a folder's contents covers its key.
+
+<Callout type="transport" only="http">
+
+An http config takes a top-level `port`, which defaults to 3000. `clientOptions` and `events` belong to gateway alone.
+
+</Callout>
+
+## The ping command
+
+Two files make `/ping` work.
+
+```ts twoslash title="src/commands/Ping.ts"
+import {
+    BuilderComponent,
+    RegisterCommand
+} from '@seedcord/gateway';
+
+@RegisterCommand('global')
+export class Ping extends BuilderComponent<'command'> {
+    constructor() {
+        super('command');
+
+        this.instance
+            .setName('ping')
+            .setDescription('Check that the bot is answering')
+            .addBooleanOption((option) =>
+                option
+                    .setName('detailed')
+                    .setDescription('Include process uptime')
+            );
+    }
+}
+```
+
+Discord gets a name, a description, and one optional boolean.
+
+```ts twoslash title="src/handlers/Ping.ts"
+import {
+    SlashHandler,
+    SlashRoute,
+    timestampFromSnowflake
+} from '@seedcord/gateway';
+
+@SlashRoute('ping')
+export class Ping extends SlashHandler<'ping'> {
+    public async execute(): Promise<void> {
+        const roundtrip =
+            Date.now() - timestampFromSnowflake(this.event.id);
+        const lines = ['### Pong', `Roundtrip **${roundtrip}ms**`];
+
+        if (this.options.getBoolean('detailed')) {
+            lines.push(
+                `Uptime **${Math.round(process.uptime())}s**`
+            );
+        }
+
+        await this.reply(lines.join('\n'));
+    }
+}
+```
+
+That runs when someone uses it. `'ping'` appears twice, on the decorator and on the generic, and both have to be the name the command set. The compiler catches a mismatch. [`this.options`](ref:gateway/SlashHandler.options) carries `detailed` because `seedcord codegen` read the command file.
+
+<Callout type="transport" only="http">
+    An http scaffold writes the same two files and imports from
+    `@seedcord/http`.
+</Callout>
+
+## Change something
+
+Open `src/handlers/Ping.ts` and change what it replies with. Save.
+
+The dev server reloads the handler while the bot stays connected. Run `/ping` again and the new reply comes back.
+
+Now open `src/commands/Ping.ts` and change the command itself, the description for example. Save, and the dev server asks whether to re-register.
+
+```txt output
+1 command updated
+refresh? y/n
+```
+
+Press `y`. That sends the new command to Discord and runs `seedcord codegen`, which rewrites `src/seedcord-gen.d.ts` so your handler's types match what the command now declares.
+
+Press `n` and Discord keeps the old command.
+
+## When a file fails to import
+
+seedcord imports every file under `src/commands`, `src/handlers`, and `src/events` at startup. A syntax error in any one of them stops the whole scan.
+
+```txt output
+src/handlers/Ping.ts threw while importing.
+```
+
+Fix the file and press `r` to restart.

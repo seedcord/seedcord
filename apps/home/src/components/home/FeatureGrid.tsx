@@ -38,7 +38,7 @@ import {
     Webhook
 } from 'lucide-react';
 
-import { Section } from '#components/home/Section';
+import { SECTION_HEADING, Section } from '#components/home/Section';
 
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -59,7 +59,7 @@ const GROUPS: Group[] = [
             {
                 icon: Waypoints,
                 label: 'decorator routing',
-                gloss: '@SlashRoute, @ButtonRoute and four more bind handlers at startup'
+                gloss: '@SlashRoute, @ButtonRoute and five more bind handlers at startup'
             },
             { icon: ListTree, label: 'subcommand routing', gloss: 'subcommands and groups, routed by name' },
             {
@@ -70,7 +70,7 @@ const GROUPS: Group[] = [
             {
                 icon: Sparkles,
                 label: 'typed autocomplete',
-                gloss: 'a handler per option, missing one is a compile error'
+                gloss: 'a handler per option, and a missing one fails to compile'
             },
             { icon: AtSign, label: 'command mentions', gloss: 'renders </route:id> once Discord assigns the id' },
             { icon: Smile, label: 'emojis', gloss: 'resolved at startup, reached by name' }
@@ -182,11 +182,7 @@ function pad(count: number): string {
 export function FeatureGrid(): ReactNode {
     return (
         <Section ground="pith">
-            <h2
-                className={cn(
-                    'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
-                )}
-            >
+            <h2 className={cn(SECTION_HEADING)}>
                 It all comes <span className={cn('text-(--flesh-deep)')}>built in.</span>
             </h2>
 

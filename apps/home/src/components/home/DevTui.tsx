@@ -1,7 +1,8 @@
 import { cn } from '@seedcord/ui';
 
-import { Section } from '#components/home/Section';
+import { SECTION_HEADING, Section } from '#components/home/Section';
 import { Code } from '#components/ui/Code';
+import { CODE_MARK_INK } from '#lib/code/marks';
 import { CDN_URL } from '#lib/site';
 
 import type { ReactNode } from 'react';
@@ -23,21 +24,15 @@ const BLUR =
 export function DevTui(): ReactNode {
     return (
         <Section ground="ink">
-            <div className={cn('max-w-2xl')}>
-                <h2
-                    className={cn(
-                        'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
-                    )}
-                >
-                    The dev server has a <span className={cn('text-(--flesh)')}>UI</span>.
-                </h2>
-                <p className={cn('mt-6 text-lg/snug font-medium text-(--pith)/80')}>
-                    <Code className={cn('text-[0.95em] text-(--flesh)')}>seedcord dev</Code> starts your bot inside a
-                    terminal UI. Filter the log stream by channel and level, and watch the uptime beside it. On http you
-                    get the bound port and the tunnel status too. Save a handler and Vite swaps it in a few milliseconds
-                    with the bot still up, so your change reaches Discord without a restart.
-                </p>
-            </div>
+            <h2 className={cn(SECTION_HEADING)}>
+                The dev server has a <span className={cn('text-(--flesh)')}>UI</span>.
+            </h2>
+            <p className={cn('mt-6 text-lg/snug font-medium text-(--pith)/80')}>
+                <Code className={cn(CODE_MARK_INK)}>seedcord dev</Code> starts your bot inside a terminal UI. Filter the
+                log stream by channel and level, and watch the uptime beside it. On http you get the bound port and the
+                tunnel status too. Save a handler and Vite swaps it in a few milliseconds with the bot still up, so your
+                change reaches Discord without a restart.
+            </p>
             <figure className={cn('rule-pith blk-pith relative mt-10 overflow-hidden rounded-sm')}>
                 {/* idk why safari sometimes doesn't paints this image */}
                 <div

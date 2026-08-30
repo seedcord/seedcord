@@ -1,5 +1,17 @@
 import { Linter } from 'eslint';
 
+export type TypescriptConfigsLevel = boolean | 'no-type-checked';
+
+const LEVELS: readonly TypescriptConfigsLevel[] = [true, false, 'no-type-checked'];
+
+export function assertTypescriptConfigsLevel(value: unknown): asserts value is TypescriptConfigsLevel {
+    if (LEVELS.includes(value as TypescriptConfigsLevel)) return;
+
+    throw new Error(
+        `registerTypescriptConfigs takes true, false, or 'no-type-checked'. Received ${JSON.stringify(value)}.`
+    );
+}
+
 export const TYPESCRIPT_RULES: Linter.RulesRecord = {
     '@typescript-eslint/explicit-function-return-type': [
         'warn',

@@ -1,3 +1,5 @@
+import { dirname, resolve } from 'node:path';
+
 import { defaultHoverInfoProcessor, rendererRich, transformerTwoslash } from '@shikijs/twoslash';
 import { highlightToHtml } from '@seedcord/ui/shiki';
 import ts from 'typescript';
@@ -42,12 +44,24 @@ const CACHE = { check: oneEntryCache(), hovers: oneEntryCache() };
 // the twoslasher and every renderer hook run sync. prettier only formats async
 const formatted = new Map<string, string>();
 
+const LEADING_MODIFIER = /^\(([\w-]+)\)\s+/gm;
+const IMPORT_STATEMENT = /\nimport .*$/;
+
+// twoslash erases a hover printing as a bare `interface Name`. the token then loses its popup and its
+// reference link
+function hoverInfo(text: string): string {
+    const processed = defaultHoverInfoProcessor(text);
+    if (processed) return processed;
+
+    return text.replace(LEADING_MODIFIER, '').replace(IMPORT_STATEMENT, '').trim();
+}
+
 const rich = rendererRich({
     // an absolutely positioned popup gets clipped by the code block's scroll area
     queryRendering: 'line',
     completionIcons: false,
     jsdoc: false,
-    processHoverInfo: (text) => formatted.get(text) ?? defaultHoverInfoProcessor(text)
+    processHoverInfo: (text) => formatted.get(text) ?? hoverInfo(text)
 });
 
 const renderer: TwoslashRenderer = {
@@ -173,14 +187,28 @@ async function learnFormatting(nodes: TwoslashShikiReturn['nodes']): Promise<voi
         // the renderer runs a query popup through processHoverInfo too
         const formattable = node.type === 'hover' || node.type === 'query';
         if (!formattable || formatted.has(node.text) || pending.has(node.text)) continue;
-        pending.set(node.text, formatHoverType(defaultHoverInfoProcessor(node.text)));
+        pending.set(node.text, formatHoverType(hoverInfo(node.text)));
     }
 
     await Promise.all([...pending].map(([text, printed]) => printed.then((value) => void formatted.set(text, value))));
 }
 
+// typescript resolves the extends chain itself. the bundler rewrites a require.resolve of a json file
+function sampleCompilerOptions(): ts.CompilerOptions {
+    const configPath = resolve(process.cwd(), 'tsconfig.samples.json');
+    const { config, error } = ts.readConfigFile(configPath, (path) => ts.sys.readFile(path));
+    if (error) throw new Error(`${configPath}: ${ts.flattenDiagnosticMessageText(error.messageText, '\n')}`);
+
+    const parsed = ts.parseJsonConfigFileContent(config, ts.sys, dirname(configPath));
+    if (parsed.errors.length > 0) {
+        throw new Error(parsed.errors.map((e) => ts.flattenDiagnosticMessageText(e.messageText, '\n')).join('\n'));
+    }
+
+    return parsed.options;
+}
+
 const BASE_OPTIONS = {
-    compilerOptions: { experimentalDecorators: true, types: ['node'] },
+    compilerOptions: sampleCompilerOptions(),
     extraFiles: { 'seedcord-gen.d.ts': SAMPLE_AUGMENTATION }
 };
 

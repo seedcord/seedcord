@@ -1,8 +1,260 @@
 ---
 title: Components
-description: Buttons, select menus, modals, the typed customId that routes them, and pagination.
+description: Wrapping a discord.js builder in a class your handlers reuse.
 ---
 
-This section is being written.
+seedcord wraps each discord.js builder in a class. Subclass [`BuilderComponent`](ref:core/BuilderComponent), name the builder you want, and call its setters in the constructor.
 
-It will cover declaring a customId shape, putting one on a component, routing a button click, select menus, modals, updating the message a component came from, stale customIds, and paging both an array and a query too large to load at once.
+```ts twoslash title="src/components/BanCard.ts"
+import { BuilderComponent } from '@seedcord/gateway';
+
+export class BanCard extends BuilderComponent<'container'> {
+    constructor(name: string, reason: string) {
+        super('container');
+
+        this.instance.addTextDisplayComponents(
+            (text) => text.setContent(`## Banned ${name}`),
+            (text) => text.setContent(reason)
+        );
+    }
+}
+```
+
+Use `this.instance` inside the class. It is the builder itself, protected so only the subclass reaches it.
+
+Then, instantiate your component class and read the completed builder via `.component`, which returns it ready to send.
+
+It's recommended to treat `.component` as immutable. Keep your changes inside the class. Reading `.component` (a getter) applies your bot color and hands the builder over, so a setter you call on the result runs after seedcord has finished with it.
+
+```ts twoslash title="src/handlers/Ban.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+import type { ContainerBuilder } from '@discordjs/builders';
+
+declare class BanCard {
+    constructor(name: string, reason: string);
+    readonly component: ContainerBuilder;
+}
+// ---cut---
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        const target = this.options.getUser('target');
+        const reason = this.options.getString('reason');
+
+        const card = new BanCard(target.username, reason ?? 'none');
+        await this.reply({ components: [card.component] });
+    }
+}
+```
+
+<Callout type="tip">
+
+seedcord imports your commands, handlers, events, and subscribers from the paths you set in your bot config. Your own code imports a component directly, so your config never mentions that folder. However, you should create one yourself.
+
+For clean seedcord code, create a folder called `src/components`. And then think in building-blocks terms. A card is a building block, and a row of buttons is another. A modal is a building block, and a row of inputs is another, maybe you have a menu builder that dynamically creates its values, or you want to create items in one conditionally. You'd create all these various `BuilderComponent` subclasses in that one folder and import them into your handlers.
+
+For example, a `BanCard` and a `BanActions` row of buttons live in the same folder, and your `Ban` handler imports both.
+
+```txt title="my-bot" output
+src/
+├─ commands/
+├─ components/
+│  ├─ BanCard.ts
+│  └─ BanActions.ts
+├─ handlers/
+└─ bot.ts
+```
+
+You pass a component its inputs through the constructor. `BanCard` takes a name and a reason, so one class covers every ban card your bot sends. Another handler imports that same class and passes its own values.
+
+</Callout>
+
+## A row of buttons
+
+[`RowComponent`](ref:core/RowComponent) wraps `ActionRowBuilder` and types it to whatever the row holds. A row holds buttons or one select menu.
+
+```ts twoslash title="src/components/BanActions.ts"
+import { ButtonBuilder } from '@discordjs/builders';
+import { CustomId, RowComponent } from '@seedcord/gateway';
+import { ButtonStyle } from 'discord.js';
+// ---cut---
+export const AppealId = new CustomId('appeal').snowflake('userId');
+
+export class BanActions extends RowComponent<'button'> {
+    constructor(userId: string) {
+        super('button');
+
+        this.instance.addComponents(
+            new ButtonBuilder()
+                .setCustomId(AppealId.encode({ userId }))
+                .setLabel('Appeal')
+                .setStyle(ButtonStyle.Secondary)
+        );
+    }
+}
+```
+
+Discord hands the custom id back when someone clicks the button. Declare the [`CustomId`](ref:core/CustomId) in the same file as the component that mints it, and then import both into your handlers. [Custom IDs](/components/custom-ids) covers what you can pack into one.
+
+`addActionRowComponents` nests a row inside a container.
+
+<Callout type="warning">
+
+Import every builder from `@discordjs/builders`. discord.js re-exports its own CJS copy of each one, and the two are different classes once one nests inside the other. `instanceof` returns false and `toJSON` misbehaves.
+
+The `@seedcord/no-djs-builder-import` lint rule flags every runtime import of a builder from `discord.js`. A type-only import is erased before runtime so that one is safe.
+
+</Callout>
+
+## Which builder each key wraps
+
+The key you pass to `super()` picks the builder. Make sure the generic on the subclass matches it as it types `this.instance`.
+
+{/* prettier-ignore-start */}
+
+| what you are building | keys |
+| --- | --- |
+| a message, ComponentsV2 | `container`, `text_display`, `section`, `separator`, `media`, `file` |
+| an embed | `embed` |
+| a command definition | `command`, `context_menu`, `subcommand`, `group` |
+| a modal | `modal`, `label`, `text_input`, `file_upload`, `checkbox`, `checkbox_group`, `checkbox_group_option`, `radio_group`, `radio_group_option` |
+| a row child | `button`, `menu_string`, `menu_user`, `menu_role`, `menu_channel`, `menu_mentionable` |
+| one option inside a string menu | `menu_option_string` |
+
+{/* prettier-ignore-end */}
+
+`RowComponent` takes the six row-child keys. Every other key goes to `BuilderComponent`.
+
+## Your bot color
+
+`botColor` takes one value for the whole bot.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+// ---cut-start---
+
+const bot = {
+    clientOptions: { intents: [GatewayIntentBits.Guilds] },
+    interactions: {
+        path: resolve(import.meta.dirname, './handlers')
+    },
+    commands: { path: resolve(import.meta.dirname, './commands') },
+    events: { path: null }
+};
+// ---cut-end---
+
+export const seedcord = new Seedcord({
+    bot,
+    subscribers: { path: null },
+    botColor: '#fe565a'
+});
+```
+
+Reading `.component` applies it. An embed takes it as its color and a container takes it as its accent. You can override this by setting a builder's color or accent directly, but that is rarely necessary.
+
+```ts twoslash title="src/components/MaintenanceEmbed.ts"
+import { BuilderComponent } from '@seedcord/gateway';
+// ---cut---
+export class MaintenanceEmbed extends BuilderComponent<'embed'> {
+    constructor(until: string) {
+        super('embed');
+
+        this.instance
+            .setTitle('Maintenance')
+            .setDescription(`Back at ${until}.`);
+    }
+}
+```
+
+An embed reaches Discord through a channel send or a raw ack. seedcord's reply methods send ComponentsV2 messages, and Discord forbids an embed on one of those. [Raw acks](/replying/raw-acks) covers that route.
+
+`botColor` accepts a `#hex` string, a discord.js color name like `'Blurple'`, a raw integer, or an `[r, g, b]` tuple. Leave the key out for Discord's default.
+
+## Emojis by name
+
+Name each custom emoji in your config, then read it back by that name.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+const shared = {
+    clientOptions: { intents: [GatewayIntentBits.Guilds] },
+    interactions: {
+        path: resolve(import.meta.dirname, './handlers')
+    },
+    commands: { path: resolve(import.meta.dirname, './commands') }
+};
+// ---cut---
+export const seedcord = new Seedcord({
+    bot: {
+        ...shared,
+        events: { path: null },
+        emojis: {
+            Confirm: 'confirmation_check',
+            Cancel: 'confirmation_cross',
+            // a tuple pins one guild's emoji
+            Streak: ['streak_flame', '1872389747982323426']
+        }
+    },
+    subscribers: { path: null }
+});
+```
+
+A plain string names an application emoji, one you upload under your app in the developer portal. Run `seedcord codegen` after you change that block. It writes the key names into [`EmojiMap`](ref:types/EmojiMap), and that interface types the [`Emojis`](ref:gateway/Emojis) accessor.
+
+```ts twoslash hovers title="src/components/StreakCard.ts"
+import { BuilderComponent, Emojis } from '@seedcord/gateway';
+// ---cut---
+export class StreakCard extends BuilderComponent<'container'> {
+    constructor(days: number) {
+        super('container');
+
+        this.instance.addTextDisplayComponents((text) =>
+            text.setContent(`${Emojis.Streak} ${days} days`)
+        );
+    }
+}
+```
+
+A resolved emoji stringifies to `<:name:id>`, or `<a:name:id>` when it animates. It also passes straight to any builder's `setEmoji`.
+
+```ts twoslash hovers
+import { ButtonBuilder } from '@discordjs/builders';
+import { Emojis, RowComponent } from '@seedcord/gateway';
+import { ButtonStyle } from 'discord.js';
+
+class ConfirmRow extends RowComponent<'button'> {
+    constructor(confirmId: string) {
+        super('button');
+        // ---cut---
+        this.instance.addComponents(
+            new ButtonBuilder()
+                .setCustomId(confirmId)
+                .setEmoji(Emojis.Confirm)
+                .setLabel('Confirm')
+                .setStyle(ButtonStyle.Success)
+        );
+        // ---cut-after---
+    }
+}
+```
+
+seedcord resolves the whole map while the bot starts, and a name it cannot find stops startup with the list of failures. Reading a key the resolver never filled throws.
+
+<Callout type="transport" only="gateway">
+
+A `[name, guildId]` emoji needs the `Guilds` intent, since seedcord reads that guild's emoji list off the discord.js client cache. Without it startup reports the guild as unavailable. On http the same tuple resolves over one REST call to that guild's emoji route.
+
+</Callout>
+
+<Callout type="transport">
+
+On gateway, each one is a [`GatewayEmoji`](ref:gateway/GatewayEmoji). In the example above, `Emojis.Streak` carries a `.source` holding the live discord.js `GuildEmoji` or `ApplicationEmoji`, typed per key from the tag codegen wrote. On http it is a plain [`ResolvedEmoji`](ref:core/ResolvedEmoji) with the name, the id, and the animated flag. Both stringify and both pass to `setEmoji`.
+
+</Callout>

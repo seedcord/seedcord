@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import { setDevChannel } from '@seedcord/core/internal';
+import { shutdownOf } from '@seedcord/core/node/internal';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -32,7 +33,7 @@ describe('http dev channel', () => {
     beforeEach(reset);
 
     afterEach(async () => {
-        await live?.shutdown.run(0, false);
+        if (live) await shutdownOf(live).run(0, false);
         live = undefined;
         setDevChannel(undefined);
         reset();

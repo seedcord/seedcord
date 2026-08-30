@@ -37,7 +37,7 @@ describe('createConfig plugin toggles', () => {
     });
 
     it.each([false, true, 'yes'])('rejects %o for registerImportPlugin', (value) => {
-        // nothing type-checks a consumer's eslint.config.mjs
+        // types never run on a plain js config file
         expect(() =>
             // justified: the fixture feeds the runtime the stale shape the types already reject
             createConfig({ registerImportPlugin: value as NonNullable<SeedcordConfigOptions['registerImportPlugin']> })

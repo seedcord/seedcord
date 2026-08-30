@@ -1,0 +1,161 @@
+---
+title: Context menu commands
+description: Adding a command to the right-click menu on a user or a message.
+---
+
+Discord shows a context menu command when someone right-clicks. It takes a name and a kind, and the click itself is its only input.
+
+```ts twoslash title="src/commands/ViewProfile.ts"
+import {
+    BuilderComponent,
+    RegisterCommand
+} from '@seedcord/gateway';
+import { ApplicationCommandType } from 'discord.js';
+
+@RegisterCommand('global')
+export class ViewProfile extends BuilderComponent<'context_menu'> {
+    constructor() {
+        super('context_menu');
+
+        this.instance
+            .setName('View Profile')
+            .setType(ApplicationCommandType.User);
+    }
+}
+```
+
+The name is the route, spaces and capitals included.
+
+```ts twoslash hovers title="src/handlers/ViewProfile.ts"
+import {
+    UserContextMenuHandler,
+    UserContextMenuRoute
+} from '@seedcord/gateway';
+// ---cut---
+@UserContextMenuRoute('View Profile')
+export class ViewProfile extends UserContextMenuHandler<'View Profile'> {
+    public async execute(): Promise<void> {
+        const user = this.target;
+
+        await this.reply(`Profile for ${user.tag}.`);
+    }
+}
+```
+
+## Each kind has its own base class
+
+`ApplicationCommandType.User` puts the command on a right-clicked person. `ApplicationCommandType.Message` puts it on a right-clicked message. Pick the base and the decorator that match the kind you set.
+
+{/* prettier-ignore-start */}
+
+| the command sets | the handler extends | the decorator |
+| --- | --- | --- |
+| `ApplicationCommandType.User` | [`UserContextMenuHandler`](ref:gateway/UserContextMenuHandler) | [`@UserContextMenuRoute`](ref:core/UserContextMenuRoute) |
+| `ApplicationCommandType.Message` | [`MessageContextMenuHandler`](ref:gateway/MessageContextMenuHandler) | [`@MessageContextMenuRoute`](ref:core/MessageContextMenuRoute) |
+
+{/* prettier-ignore-end */}
+
+<Callout type="transport">
+
+The clicked thing arrives as a discord.js object on gateway and as a `discord-api-types` payload on http.
+
+{/* prettier-ignore-start */}
+
+| | gateway | http |
+| --- | --- | --- |
+| user `this.target` | `User` | `APIUser` |
+| message `this.target` | `Message` | `APIMessage` |
+| `this.targetMember` | `GuildMember \| null` | `APIInteractionDataResolvedGuildMember \| null` |
+
+{/* prettier-ignore-end */}
+
+`id` and `username` are on both.
+
+</Callout>
+
+A message command reads the message it was run on.
+
+```ts twoslash hovers title="src/handlers/ReportMessage.ts"
+import {
+    MessageContextMenuHandler,
+    MessageContextMenuRoute
+} from '@seedcord/gateway';
+// ---cut---
+@MessageContextMenuRoute('Report Message')
+export class ReportMessage extends MessageContextMenuHandler<'Report Message'> {
+    public async execute(): Promise<void> {
+        const message = this.target;
+
+        await this.reply(
+            `Reported ${message.id} from <@${message.author.id}>.`
+        );
+    }
+}
+```
+
+## Reaching the member
+
+A user command also carries the clicked person's server member, which is `null` when the command runs outside a server.
+
+```ts twoslash
+import {
+    UserContextMenuHandler,
+    UserContextMenuRoute
+} from '@seedcord/gateway';
+
+@UserContextMenuRoute('View Profile')
+class ViewProfile extends UserContextMenuHandler<'View Profile'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const member = this.targetMember;
+        //    ^?
+        // ---cut-after---
+    }
+}
+```
+
+## Several commands in one handler
+
+Both commands go on one class. Its decorator takes every name, its generic repeats them, and each arm receives the clicked user and their server member, narrowed to that one command.
+
+```ts twoslash title="src/handlers/Moderation.ts"
+import {
+    UserContextMenuHandler,
+    UserContextMenuRoute
+} from '@seedcord/gateway';
+// ---cut---
+@UserContextMenuRoute('View Profile', 'Warn')
+export class Moderation extends UserContextMenuHandler<
+    'View Profile' | 'Warn'
+> {
+    public async execute(): Promise<void> {
+        await this.match({
+            'View Profile': (user) =>
+                this.reply(`Profile for ${user.tag}.`),
+            Warn: (user, member) =>
+                this.reply(
+                    `Warned ${member?.displayName ?? user.tag}.`
+                )
+        });
+    }
+}
+```
+
+Leaving a name out of the arms is a compile error, the same as a slash handler.
+
+`this.commandName` gives you the name that fired, typed to the union, for the times you want it without branching.
+
+Message commands work the same way, with each arm receiving the clicked message.
+
+## Each kind keeps its own names
+
+Discord lets a user command and a message command share a name, so the two registries stay separate. A name in one is invisible to the other.
+
+```ts twoslash
+// @errors: 2344
+import { MessageContextMenuHandler } from '@seedcord/gateway';
+// ---cut---
+class Wrong extends MessageContextMenuHandler<'View Profile'> {
+    public async execute(): Promise<void> {}
+}
+```

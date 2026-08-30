@@ -49,6 +49,10 @@ const messages = {
         "The bot's application id resolves during startup. You read it before that. Read it inside a handler, inside a plugin's ready(), or after start() resolves.",
     [SeedcordErrorCode.CoreAccessorUnresolved]: (accessor: string, key: string) =>
         `${accessor}.${key} has no value yet. ${accessor} fills during startup, and a read at the top of a file runs before that.`,
+    [SeedcordErrorCode.CoreLifecycleUnavailable]: (accessor: string) =>
+        `core.${accessor}.addTask() does not work here. This bot was built with createSeedcord() whose build never runs startup or shutdown. Your task would never run. Do the work inside your handler instead. To use startup and shutdown, run the bot on node with new Seedcord(config).start().`,
+    [SeedcordErrorCode.CoreBusEmitUnavailable]: (event: string) =>
+        `core.bus.emit('${event}') would reach your on() listeners and skip every Subscriber class. Call core.bus.publish('${event}', data) to run both.`,
 
     [SeedcordErrorCode.DecoratorInteractionEventFilter]: () => 'Interaction middleware cannot specify event filters.',
     [SeedcordErrorCode.DecoratorCommandAlreadyRegistered]: (
@@ -214,6 +218,8 @@ const messages = {
         `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
     [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>
         `Could not read the commands directory ${dir} during codegen. ${reason}`,
+    [SeedcordErrorCode.CliCodegenCommandConstructorThrew]: (name: string, file: string, reason: string) =>
+        `${name} threw while codegen constructed it. Fix its constructor in ${file}. ${reason}`,
     [SeedcordErrorCode.CliCodegenDuplicateContextMenu]: (
         kind: string,
         name: string,

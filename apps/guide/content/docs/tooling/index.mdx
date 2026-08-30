@@ -1,8 +1,96 @@
 ---
 title: Tooling
-description: Logging, the dev loop and the CLI, going to production, and the escape hatches.
+description: Configuring and running your bot with the seedcord CLI.
 ---
 
-This section is being written.
+Two files configure a seedcord project, and each one has its own job. `seedcord.config.ts` names where your code is, which is what the CLI needs. The `new Seedcord({ ... })` call in `src/bot.ts` configures the bot itself.
 
-It will cover logging from a handler, levels and channels, the dev terminal, hot reload against restart, typed emojis, clickable command mentions, building and deploying, the lint rules, and the escape hatches for reaching past the framework.
+Start with the CLI's file.
+
+```ts twoslash title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    entry: './index.ts',
+    // false stops the dev terminal's idle animation
+    idleAnimation: true,
+    build: {
+        tsconfig: './tsconfig.build.json'
+    },
+    hmr: {
+        // true runs tsc --watch beside the bot, in a second node process
+        typecheck: false
+    }
+});
+```
+
+`instance` and `entry` are the two you have to write. The rest carry defaults.
+
+{/* prettier-ignore-start */}
+
+| key | default | what it does |
+| --- | --- | --- |
+| `instance` | required | the module whose default export is your configured [`Seedcord`](ref:gateway/Seedcord) |
+| `entry` | required | the file that starts the bot, and the one the build copies |
+| `root` | the config's own folder | what every other path here resolves against |
+| `tunnel` | `true` | `true` opens a cloudflared quick tunnel to your http bot. An https string is a URL you already serve. Gateway ignores it |
+| `idleAnimation` | `true` | whether the dev terminal animates while nothing happens |
+| `build` | `{}` | `outDir`, `tsconfig`, and `bootstrap` for `seedcord build` |
+| `hmr` | omitted | `restart` globs, `rollback`, and `typecheck` for `seedcord dev` |
+
+{/* prettier-ignore-end */}
+
+`entry` has to resolve inside `root`. A path outside it throws `CliConfigEntryOutsideRoot`.
+
+## The commands
+
+Your `package.json` already carries `dev`, `codegen`, and `build` as scripts, and all three read the config above.
+
+{/* prettier-ignore-start */}
+
+| command | what it does |
+| --- | --- |
+| [`seedcord dev`](/tooling/dev) | runs your bot, reloads a changed file in place, and prints its logs in a terminal you can filter |
+| [`seedcord codegen`](/tooling/codegen) | reads your command files and writes `seedcord-gen.d.ts` |
+| [`seedcord build`](/tooling/build) | compiles `src` and writes a bootstrap file beside it |
+| [`seedcord commands`](/commands/deployed) | inspects and cleans up the commands Discord is holding |
+
+{/* prettier-ignore-end */}
+
+`seedcord commands` skips the config and reads your bot token, so run it through your package manager's runner.
+
+<Shell exec="seedcord commands" />
+
+## Your bot's config
+
+`src/bot.ts` holds the second config, the one your bot reads while it runs. Each row below links to the page that teaches its key, where you will find it inside a real `new Seedcord({ ... })` sample.
+
+`bot`, `subscribers`, `bot.interactions`, and `bot.commands` are required. A gateway bot also sets `bot.events` and `bot.clientOptions`. Every other key is optional.
+
+{/* prettier-ignore-start */}
+
+| key | what it sets | where it is taught |
+| --- | --- | --- |
+| `bot.interactions` | the folder seedcord scans for handlers, plus middleware and ignored ids | [Components](/components) |
+| `bot.commands` | the folder seedcord scans for commands | [Commands](/commands) |
+| `bot.emojis` | the emoji names [`Emojis`](ref:gateway/Emojis) resolves at startup | [Components](/components) |
+| `bot.events` | the folder seedcord scans for event handlers. Gateway only | [Events](/events) |
+| `bot.clientOptions` | passed straight to the discord.js `Client`. Gateway only | [Your first bot](/first-bot) |
+| `subscribers` | the folder seedcord scans for bus subscribers | [The bus](/events/bus) |
+| `errors` | how a fault renders, what gets logged, which api codes get swallowed | [Configuring](/throwing/configuring) |
+| `notifications` | the contact name in the generic unknown-error message | [Faults](/throwing/faults) |
+| `botColor` | the accent on every [`BuilderComponent`](ref:core/BuilderComponent) you build | [Components](/components) |
+| `ownerIds` | the ids [`OwnerOnly`](ref:core/OwnerOnly) treats as owners | [Gates](/gates) |
+| `store` | where framework state survives a restart | [The rate limiter](/gates/rate-limiter) |
+| `logger` | the level, the sinks, and the per-channel overrides | [Configuring the logger](/tooling/logger-config) |
+| `runtime` | `'server'` for a node process, `'edge'` for a Cloudflare Worker | [Building](/tooling/build) |
+
+{/* prettier-ignore-end */}
+
+An http server takes `port`, which defaults to 3000. An edge bot declares `runtime: 'edge'` and does not accept `port` at all. On gateway, `healthCheck` runs a small http server on port 6967 that answers `/health`, and `false` turns it off.
+
+The reference site carries the full shape of every one of these, down to each nested field.
+
+That is everything you configure. The rest of the tab is about what runs: [the dev terminal](/tooling/dev), [how it reloads a changed file](/tooling/hot-reload), [the tunnel](/tooling/tunnel) an http bot needs while you work locally, [logging](/tooling/logging), and [the lint rules](/tooling/lint) that catch a broken handler before your bot ever starts.

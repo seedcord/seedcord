@@ -5,13 +5,19 @@ import { REST } from '@discordjs/rest';
 import { Bus } from '@seedcord/core';
 import { busLoggerOf, getDevChannel, HmrManager, setBotColor } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, Pluggable } from '@seedcord/core/node';
-import { CommandRegistry, ShutdownPhase, StartupPhase, SubscriberLoader } from '@seedcord/core/node/internal';
+import {
+    CommandRegistry,
+    ShutdownPhase,
+    shutdownOf,
+    StartupPhase,
+    SubscriberLoader
+} from '@seedcord/core/node/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { applicationIdFromToken, SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
-import { SeedcordBrand } from '@seedcord/types/internal';
+import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
@@ -52,9 +58,9 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     /** @internal */
     public readonly [SeedcordBrand] = true;
     /** @internal */
-    public readonly augmentTarget = '@seedcord/http';
+    public readonly [HostAugmentTarget] = '@seedcord/http';
     /** @internal */
-    public readonly version: string = packageVersion;
+    public readonly [HostVersion]: string = packageVersion;
 
     /** Workerd-compatible Discord REST client. `start()` sets the token. */
     public readonly rest = new REST();
@@ -117,7 +123,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         try {
             await super.init();
         } catch (caught) {
-            await this.shutdown.run(1, false);
+            await shutdownOf(this).run(1, false);
             Seedcord.reset(this);
             throw caught;
         }

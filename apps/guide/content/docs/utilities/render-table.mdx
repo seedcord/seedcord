@@ -1,0 +1,228 @@
+---
+title: Rendering a table
+description: Drawing aligned columns into a Discord message, and paging them under the character limit.
+---
+
+Discord does not render table markup, so a leaderboard or a settings dump comes out as a ragged list. [`renderTable`](ref:utils/renderTable) draws aligned columns into a string you can send.
+
+```ts twoslash
+import { renderTable } from '@seedcord/gateway';
+// ---cut---
+const table = renderTable([
+    ['Command', 'Uses'],
+    ['/ban', '412'],
+    ['/kick', '87'],
+    ['/award', '1203']
+]);
+```
+
+```txt output
+╭─────────┬──────╮
+│ Command │ Uses │
+├─────────┼──────┤
+│ /ban    │ 412  │
+├─────────┼──────┤
+│ /kick   │ 87   │
+├─────────┼──────┤
+│ /award  │ 1203 │
+╰─────────┴──────╯
+```
+
+The first argument is rows of strings. Row zero becomes the header. Content sets each column's width.
+
+<Callout type="tip">
+
+Discord renders a message in a proportional font, which throws the frame out of line. Pass `fence: true` to wrap the output in a code block.
+
+</Callout>
+
+## Picking a frame
+
+Every table so far used the default frame. `border` picks another one.
+
+```ts twoslash
+import { renderTable } from '@seedcord/gateway';
+
+declare const rows: string[][];
+
+// ---cut---
+renderTable(rows, { border: 'rounded' }); // the default
+renderTable(rows, { border: 'double' });
+renderTable(rows, { border: 'ascii' });
+renderTable(rows, { border: 'markdown' });
+```
+
+`double` draws a heavier frame. Only that style gives the header its own separator glyphs.
+
+```txt output
+╔═══════╦═════╗          +-------+-----+
+║ Name  ║ Age ║          | Name  | Age |
+╠═══════╬═════╣          +-------+-----+
+║ Alice ║ 30  ║          | Alice | 30  |
+╚═══════╩═════╝          +-------+-----+
+```
+
+`markdown` drops the outer frame and emits a GitHub-flavored table, the kind with a `| --- |` delimiter row.
+
+```txt output
+| Name  | Age |
+| --- | --- |
+| Alice | 30  |
+```
+
+<Callout type="warning">
+
+Discord does not render GitHub-flavored tables in a message. Use `markdown` for output headed somewhere else, a gist or a repo file. Take a box border with `fence: true` for a Discord message.
+
+</Callout>
+
+## Aligning columns
+
+Pass `align` one value to set every column, or an array to set them one at a time. A column past the end of the array falls back to left.
+
+```ts twoslash
+import { renderTable } from '@seedcord/gateway';
+
+declare const rows: string[][];
+
+// ---cut---
+renderTable(rows, { align: 'center' });
+renderTable(rows, { align: ['left', 'right', 'center'] });
+```
+
+`numericAlign` right-aligns any column whose body cells all read as numbers, which lines the digits up on a scoreboard. An explicit `align` for that column wins.
+
+```ts twoslash
+import { renderTable } from '@seedcord/gateway';
+// ---cut---
+renderTable(
+    [
+        ['Player', 'Score'],
+        ['ava', '100'],
+        ['ben', '9'],
+        ['cy', '42']
+    ],
+    { numericAlign: true }
+);
+```
+
+```txt output
+╭────────┬───────╮
+│ Player │ Score │
+├────────┼───────┤
+│ ava    │   100 │
+├────────┼───────┤
+│ ben    │     9 │
+├────────┼───────┤
+│ cy     │    42 │
+╰────────┴───────╯
+```
+
+An empty cell sits out of that test. A cell holding a space takes part, and `Number(' ')` is `0`, so a column of digits carrying one space still counts as numeric. Setting `emptyCell` to something like `'-'` turns the whole column non-numeric.
+
+## Capping a column
+
+`maxWidth` sets the widest a column can get, counted in display columns. `overflow` picks what happens to a cell over that cap.
+
+```ts twoslash
+import { renderTable } from '@seedcord/gateway';
+
+declare const rows: string[][];
+
+// ---cut---
+renderTable(rows, { maxWidth: 20 }); // wraps, the default
+renderTable(rows, { maxWidth: 20, overflow: 'truncate' });
+```
+
+`wrap` breaks the cell across several lines inside its row. `truncate` cuts it and adds a trailing ellipsis, which counts toward the cap.
+
+```txt output
+wrap                      truncate
+
+╭────────────╮            ╭────────────╮
+│ hello      │            │ hello wor… │
+│ world this │            ╰────────────╯
+│ is long    │
+╰────────────╯
+```
+
+A markdown row holds one line, so that border truncates whatever `overflow` says.
+
+<Callout type="warning">
+
+`maxWidth` throws a `RangeError` on zero, a negative, or a fraction. `padding` throws on a negative or a fraction. Both checks run before any drawing.
+
+</Callout>
+
+## Wide characters and emoji
+
+Latin letters, digits, and punctuation line up everywhere. Emoji break the frame in Discord. CJK sits close enough to read.
+
+`renderTable` counts a CJK character and an emoji as two columns, then pads on that count. A terminal whose font covers those characters draws the result correctly.
+
+```ts twoslash
+import { renderTable } from '@seedcord/gateway';
+// ---cut---
+renderTable([
+    ['Name', 'Label'],
+    ['Tokyo', '東京'],
+    ['Party', '🎉🎉']
+]);
+```
+
+```txt output
+╭───────┬───────╮
+│ Name  │ Label │
+├───────┼───────┤
+│ Tokyo │ 東京  │
+├───────┼───────┤
+│ Party │ 🎉🎉  │
+╰───────┴───────╯
+```
+
+That block is the terminal render. Discord draws an emoji as an image sized to the line height, which is wider than two characters. The emoji row's right border then lands further out. Padding cannot correct it, since the count is in columns and the client is placing pictures.
+
+Put emoji in a line above or below the table. Keep the columns to text.
+
+Leave trimming to `maxWidth`. Your own trim counts characters differently, so the widths come out wrong.
+
+## Filling and spacing
+
+{/* prettier-ignore-start */}
+
+| option | type | holds |
+| --- | --- | --- |
+| `header` | `boolean` | treats row 0 as a header, `true` by default |
+| `padding` | `number` | spaces on each side of every cell, `1` by default |
+| `emptyCell` | `string` | fills a missing or empty cell, `''` by default |
+| `fence` | `boolean` | wraps the output in a code block, `false` by default |
+
+{/* prettier-ignore-end */}
+
+Rows can differ in length. The widest row sets the column count, so the short ones take `emptyCell` in the gaps.
+
+A newline inside a cell becomes a space, which keeps the frame from splitting across lines. Multi-line cells come from `wrap`.
+
+## Paging past the character limit
+
+Discord caps a message at 2000 characters. Passing `budget` returns an array of pages, each one carrying its own header.
+
+```ts twoslash
+import { renderTable } from '@seedcord/gateway';
+
+declare const rows: string[][];
+
+// ---cut---
+const pages = renderTable(rows, { budget: 2000, fence: true });
+//    ^?
+```
+
+The `budget` key selects this overload by its presence alone, so an options object carrying `budget: undefined` still returns an array.
+
+`budget` is a target. A single row longer than the whole budget still gets a page of its own, since a page smaller than one row cannot exist. Count the fence characters against your budget when `fence` is on.
+
+<Callout type="note">
+
+This paging splits a string by length. [Pagination](/components/pagination) is the separate button-driven system for a message someone clicks through. Feed these pages into a paginator to get both.
+
+</Callout>

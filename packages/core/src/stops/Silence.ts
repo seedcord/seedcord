@@ -9,8 +9,9 @@
  * ```ts
  * import { Silence } from '@seedcord/gateway';
  *
- * // before any reply or defer, drop the interaction with no reply and no report
- * if (await isBlacklisted(interaction.user.id)) throw new Silence('blacklisted user');
+ * // a helper under a guildMemberAdd handler, stopping when this guild configured nothing to send
+ * const template = await settings.welcome(member.guild.id);
+ * if (!template) throw new Silence('no welcome message set');
  * ```
  */
 export class Silence extends Error {

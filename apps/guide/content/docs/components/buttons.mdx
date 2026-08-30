@@ -1,0 +1,116 @@
+---
+title: Buttons
+description: Running code when someone clicks a button on a message.
+---
+
+A click arrives as its own interaction carrying the custom id your component minted. [`ButtonHandler`](ref:gateway/ButtonHandler) decodes that id and puts the values on [`this.params`](ref:gateway/ComponentHandler.params).
+
+```ts twoslash title="src/handlers/Appeal.ts"
+import {
+    ButtonHandler,
+    ButtonRoute,
+    CustomId
+} from '@seedcord/gateway';
+
+// in your project this lives in the component file that mints it
+const AppealId = new CustomId('appeal').snowflake('userId');
+
+@ButtonRoute(AppealId)
+export class Appeal extends ButtonHandler<[typeof AppealId]> {
+    public async execute(): Promise<void> {
+        const { userId } = this.params;
+        //      ^?
+
+        await this.reply(`Appeal filed for <@${userId}>.`);
+    }
+}
+```
+
+[`@ButtonRoute`](ref:core/ButtonRoute) takes the [`CustomId`](ref:core/CustomId) your component used, and the generic lists the same one as a tuple. Passing the decorator one definition and the generic another is a compile error.
+
+A click is an interaction like any other, so every reply method works here. [Replying](/replying) covers them.
+
+## Rewriting the source message
+
+[`this.update()`](ref:gateway/ComponentHandler.update) replaces the message the button came from. It takes the same response shape every reply method takes, so a new `components` list drops the old buttons along with them.
+
+```ts twoslash
+import type { ContainerBuilder } from '@discordjs/builders';
+import {
+    ButtonHandler,
+    ButtonRoute,
+    CustomId
+} from '@seedcord/gateway';
+
+const AppealId = new CustomId('appeal').snowflake('userId');
+
+declare class ReviewCard {
+    constructor(userId: string, status: string);
+    readonly component: ContainerBuilder;
+}
+
+@ButtonRoute(AppealId)
+class Appeal extends ButtonHandler<[typeof AppealId]> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const { userId } = this.params;
+
+        await this.update({
+            components: [
+                new ReviewCard(userId, 'under review').component
+            ]
+        });
+        // ---cut-after---
+    }
+}
+```
+
+A plain string works too, which seedcord wraps in one text component.
+
+[`this.deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) acknowledges the click and leaves the message as it is.
+
+<Callout type="transport">
+    `update()` resolves to a discord.js `Message` on gateway and an
+    `APIMessage` on http.
+</Callout>
+
+## One handler, several buttons
+
+Approve and reject sit next to each other on the same message, and one handler can take both. Pass every id to the decorator, list them in the generic, then branch with [`this.match`](ref:gateway/ComponentHandler.match).
+
+```ts twoslash hovers title="src/handlers/Review.ts"
+import {
+    ButtonHandler,
+    ButtonRoute,
+    CustomId
+} from '@seedcord/gateway';
+
+const ApproveId = new CustomId('approve').snowflake('userId');
+const RejectId = new CustomId('reject')
+    .snowflake('userId')
+    .str('reason');
+// ---cut---
+@ButtonRoute(ApproveId, RejectId)
+export class Review extends ButtonHandler<
+    [typeof ApproveId, typeof RejectId]
+> {
+    public async execute(): Promise<void> {
+        await this.match({
+            approve: ({ userId }) =>
+                this.update(`Approved <@${userId}>.`),
+            reject: ({ userId, reason }) =>
+                this.update(`Rejected <@${userId}>. ${reason}`)
+        });
+    }
+}
+```
+
+You key each arm by its route's prefix, and each one receives that route's own values. `reject` reads a `reason` that `approve` never declared. The compiler requires one arm per registered prefix.
+
+<Callout type="warning">
+
+`this.params` is `never` on a handler registered for several routes, since the decoded shape depends on which button someone clicked. `this.match` is the only read there.
+
+</Callout>
+
+Decoding runs once, before any arm, so a wire from an older shape throws before your code executes. [When a custom id goes stale](/components/stale) covers that.

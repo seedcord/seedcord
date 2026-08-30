@@ -1,0 +1,81 @@
+---
+title: Follow-ups and edits
+description: Sending and rewriting messages after the first reply.
+---
+
+Once you have replied or deferred, [`this.followUp()`](ref:gateway/RepliableHandler.followUp) sends another message. Every one of [`reply()`](ref:gateway/RepliableHandler.reply), `followUp()`, and [`edit()`](ref:gateway/RepliableHandler.edit) resolves to the message it wrote. Pass one back to `edit()` to rewrite it.
+
+```ts twoslash title="src/handlers/Ban.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+
+async function revokeSessions(userId: string): Promise<number> {
+    return 0;
+}
+// ---cut-end---
+
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        const target = this.options.getUser('target');
+
+        await this.reply(`Banned ${target.username}.`);
+
+        const progress = await this.followUp('Revoking sessions.');
+        const revoked = await revokeSessions(target.id);
+
+        await this.edit(progress, `Revoked ${revoked} sessions.`);
+    }
+}
+```
+
+`edit()` with one argument rewrites the first reply. `edit(message, response)` rewrites the message you pass.
+
+<Callout type="transport">
+    That message is a discord.js `Message` on gateway and an
+    `APIMessage` on http. Passing it back to `edit()` or `delete()`
+    works on both.
+</Callout>
+
+## Targets have to come from this interaction
+
+seedcord stores the id of every message it sends. A targeted `edit()` or `delete()` accepts those ids alone.
+
+```txt output
+edit() was passed message 1287, which this interaction did not send.
+Pass a message this interaction sent, returned by reply(),
+followUp(), edit(), or update(). (route slash:ban)
+```
+
+[`delete()`](ref:gateway/RepliableHandler.delete) with no argument removes the first reply. `delete(message)` removes the one you pass, and that id stops working as a target afterwards.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban')
+class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const notice = await this.followUp('Working.');
+
+        await this.delete(notice);
+        await this.delete();
+        // ---cut-after---
+    }
+}
+```
+
+## send() picks the verb for you
+
+[`this.send()`](ref:gateway/RepliableHandler.send) works from every state, so it never throws the illegal-ack error the other verbs can.
+
+{/* prettier-ignore-start */}
+
+| state | send() calls |
+| --- | --- |
+| nothing sent yet | `reply()` |
+| deferred a reply | `edit()`, filling the placeholder |
+| deferred an update | `followUp()` |
+| already replied | `followUp()` |
+
+{/* prettier-ignore-end */}

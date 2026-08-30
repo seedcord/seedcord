@@ -95,6 +95,16 @@
         display: none;
     }
 
+    /* a ^? query wraps its token in twoslash-hover as well. these two key off the hovers-mode wrapper */
+    [data-hovers] .twoslash .twoslash-hover {
+        cursor: help;
+    }
+
+    [data-hovers] .twoslash:hover .twoslash-hover {
+        text-decoration: underline dotted color-mix(in oklab, var(--text) 22%, transparent);
+        text-underline-offset: 0.3em;
+    }
+
     /* TypeHover stamps this on the token it opened */
     .twoslash .twoslash-hover[data-type-hover-open] {
         text-decoration: underline dotted color-mix(in oklab, var(--text) 45%, transparent);

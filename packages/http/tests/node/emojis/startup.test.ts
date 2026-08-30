@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { shutdownOf } from '@seedcord/core/node/internal';
 import { Routes } from 'discord-api-types/v10';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -45,7 +46,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-    await live?.shutdown.run(0, false);
+    if (live) await shutdownOf(live).run(0, false);
     live = undefined;
 });
 

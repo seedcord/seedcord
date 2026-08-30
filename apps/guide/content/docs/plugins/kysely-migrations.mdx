@@ -1,0 +1,175 @@
+---
+title: Migrations
+description: Writing migrations and choosing when they run.
+---
+
+A migration is a file exporting `up` and `down`. The plugin runs them while your bot starts, so the tables exist before any service queries them.
+
+```ts twoslash title="src/migrations/001-create-users.ts"
+import type { Kysely } from 'kysely';
+
+export async function up(db: Kysely<any>): Promise<void> {
+    await db.schema
+        .createTable('users')
+        .addColumn('id', 'serial', (col) => col.primaryKey())
+        .addColumn('discord_id', 'text', (col) =>
+            col.notNull().unique()
+        )
+        .addColumn('streak', 'integer', (col) =>
+            col.notNull().defaultTo(0)
+        )
+        .execute();
+}
+
+export async function down(db: Kysely<any>): Promise<void> {
+    await db.schema.dropTable('users').execute();
+}
+```
+
+Both take `Kysely<any>`, because each migration runs against whatever schema the ones before it produced. [Your schema](/plugins/kysely-schema) describes the tables once every migration has run.
+
+## Where the files live
+
+The `path` under `migrations` points at that file, and it takes three shapes.
+
+{/* prettier-ignore-start */}
+
+| `path` | what the plugin reads |
+| --- | --- |
+| a directory | every migration file in it, ordered by name |
+| one file path | that file alone |
+| an array of paths | those files, ordered by `nameComparator` |
+
+{/* prettier-ignore-end */}
+
+A relative path resolves against the directory your bot runs from. Passing `resolve(import.meta.dirname, './migrations')` points it at the source file's own directory. Each migration takes its name from the file, so a sortable prefix like `001-` or a timestamp decides the order.
+
+<Callout type="warning">
+
+`nameComparator` only applies to a single file or an array. A directory goes through Kysely's own file provider, which sorts by name and ignores any comparator you pass.
+
+</Callout>
+
+## When they run
+
+Attaching the plugin runs every pending migration. `onStartup` changes that.
+
+{/* prettier-ignore-start */}
+
+| `onStartup` | what happens while the bot starts |
+| --- | --- |
+| left out, or `true` | runs every pending migration |
+| `false` | runs nothing, leaving them to you |
+| a [`MigrationOptions`](ref:plugin-kysely-postgres/MigrationOptions) object | runs that instruction |
+
+{/* prettier-ignore-end */}
+
+```ts twoslash
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import { GatewayIntentBits } from 'discord.js';
+
+const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers')
+        },
+        commands: {
+            path: resolve(import.meta.dirname, './commands')
+        },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+
+// ---cut---
+seedcord.attach('db', KyselyPostgres, {
+    dir: resolve(import.meta.dirname, './services'),
+    connectionString: 'postgres://localhost:5432/seedcord',
+    migrations: {
+        path: resolve(import.meta.dirname, './migrations'),
+        onStartup: false
+    }
+});
+```
+
+A migration that throws stops startup, since it runs inside `init()`. The pool closes and your bot never reaches its handlers.
+
+## Running them yourself
+
+These methods drive the migrator, each reaching you through `this.core.db`.
+
+{/* prettier-ignore-start */}
+
+| method | what it does |
+| --- | --- |
+| `migrate(options?)` | runs to the latest migration, or the target and direction you name |
+| `migrateUp(options?)` | applies one migration, or `steps` of them |
+| `migrateDown(options?)` | reverts one migration, or `steps` of them |
+| `listMigrations()` | every migration, applied or pending |
+| `listPendingMigrations()` | the ones with no `executedAt` |
+
+{/* prettier-ignore-end */}
+
+`listMigrations()` returns Kysely's `MigrationInfo`, whose `executedAt` holds a `Date` for an applied migration and `undefined` for a pending one.
+
+`migrate` takes three keys, and `target` overrides `direction` and `steps` whenever you pass it.
+
+{/* prettier-ignore-start */}
+
+| key | what it accepts |
+| --- | --- |
+| `target` | a migration name, or `NO_MIGRATIONS` to revert everything |
+| `direction` | `'latest'`, `'up'`, or `'down'`. Defaults to `'latest'` |
+| `steps` | how many to apply under `'up'` or `'down'`. Defaults to 1 |
+
+{/* prettier-ignore-end */}
+
+`NO_MIGRATIONS` comes from `kysely/migration`.
+
+```ts twoslash
+import { NO_MIGRATIONS } from 'kysely/migration';
+
+import type { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+
+declare const db: KyselyPostgres;
+
+// ---cut---
+await db.migrate({ target: NO_MIGRATIONS });
+```
+
+`steps` takes a safe integer of zero or more, so a fraction, a negative number, `NaN`, and `Infinity` all throw `PluginKyselyInvalidStepCount`. Zero applies nothing and logs that nothing ran. A `direction` outside those three throws `PluginKyselyUnknownDirection`.
+
+## When a migration fails
+
+A migration's own error reaches you unchanged, which means a failing `CREATE TABLE` gives you Postgres's message. Everything around the migration carries a code of its own.
+
+{/* prettier-ignore-start */}
+
+| what went wrong | code |
+| --- | --- |
+| a file missing `up` or `down` | `PluginKyselyInvalidMigrationModule`, naming the file |
+| an empty array of paths | `PluginKyselyNoMigrationFiles` |
+| a migration throwing a value that is not an `Error` | `PluginKyselyNonErrorFailure` |
+| a `path` that does not exist | Node's `ERR_MODULE_NOT_FOUND`, since the plugin imports it as a file |
+
+{/* prettier-ignore-end */}
+
+## The rest of the options
+
+{/* prettier-ignore-start */}
+
+| option | what it sets |
+| --- | --- |
+| `allowUnorderedMigrations` | runs a migration inserted behind one already applied. Defaults to `false` |
+| `migrationTableName` | the table tracking what has run |
+| `migrationLockTableName` | the table the migrator locks against |
+| `migrationTableSchema` | the schema holding both of those tables |
+| `nameComparator` | orders a file list. Defaults to `localeCompare` |
+
+{/* prettier-ignore-end */}
+
+[Services](/plugins/kysely-services) covers the classes that query the tables your migrations create.

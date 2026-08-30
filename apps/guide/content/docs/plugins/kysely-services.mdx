@@ -1,0 +1,169 @@
+---
+title: Kysely services
+description: A typed class per table, and how the plugin finds it.
+---
+
+A service is one class per table. Extend [`KyselyService`](ref:plugin-kysely-postgres/KyselyService), name the table in its type argument, then decorate the class with the key you use to read it back.
+
+```ts twoslash title="src/postgres/Users.ts"
+import {
+    KyselyService,
+    RegisterKyselyService
+} from '@seedcord/plugin-kysely-postgres';
+
+import type { Generated } from 'kysely';
+
+interface UsersTable {
+    id: Generated<number>;
+    discord_id: string;
+    username: string;
+    streak: number;
+}
+
+declare module '@seedcord/plugin-kysely-postgres' {
+    interface KyselyDatabase {
+        schema: { users: UsersTable };
+    }
+}
+
+// ---cut---
+@RegisterKyselyService('users')
+export class Users extends KyselyService<'users'> {
+    public findByDiscordId(discordId: string) {
+        return this.db
+            .selectFrom(this.table)
+            .selectAll()
+            .where('discord_id', '=', discordId)
+            .executeTakeFirst();
+    }
+}
+
+declare module '@seedcord/plugin-kysely-postgres' {
+    interface KyselyServices {
+        users: Users;
+    }
+}
+```
+
+`this.db` holds the same Kysely instance as `connection`, so every service queries through one pool. `this.table` holds the table name, typed to the argument you gave. That keeps `selectFrom(this.table)` on the one table this class covers.
+
+## You never construct a service
+
+During startup the plugin loads `dir` and constructs every service class it finds. Constructing a class registers it, which is why `new Users()` never appears in your code.
+
+<Callout type="warning">
+
+The plugin skips a class missing [`@RegisterKyselyService`](ref:plugin-kysely-postgres/RegisterKyselyService). Nothing throws, nothing reaches the log, and `services.users` reads back as `undefined`.
+
+</Callout>
+
+## The key names the table
+
+`@RegisterKyselyService('users')` reads and writes the `users` table, since the key doubles as the table name. Pass `table` when the two differ.
+
+```ts twoslash
+import {
+    KyselyService,
+    RegisterKyselyService
+} from '@seedcord/plugin-kysely-postgres';
+
+import type { Generated } from 'kysely';
+
+interface UsersTable {
+    id: Generated<number>;
+    username: string;
+}
+
+declare module '@seedcord/plugin-kysely-postgres' {
+    interface KyselyDatabase {
+        schema: { users: UsersTable };
+    }
+}
+
+declare module '@seedcord/plugin-kysely-postgres' {
+    interface KyselyServices {
+        people: People;
+    }
+}
+
+// ---cut---
+@RegisterKyselyService('people', { table: 'users' })
+export class People extends KyselyService<'users'> {}
+```
+
+That queries `users` while you reach the class as `services.people`.
+
+Whichever name `table` resolves to has to match the type argument on the class. Decorating a `KyselyService<'products'>` with `{ table: 'users' }` fails to compile. Leaving the override out fails the same way when the key names a different table.
+
+## Typing the registry
+
+The `declare module` block at the bottom of the first example fills [`KyselyServices`](ref:plugin-kysely-postgres/KyselyServices), which starts out empty. You write that block by hand, since codegen never touches it. [Typing a plugin](/plugins/typing) covers the `Core` augmentation codegen does write.
+
+Once a key is declared there, the decorator accepts it. Passing one you have not declared fails to compile.
+
+## Reading a service
+
+```ts twoslash hovers
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+import {
+    KyselyService,
+    RegisterKyselyService
+} from '@seedcord/plugin-kysely-postgres';
+
+import type { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import type { Generated } from 'kysely';
+
+interface UsersTable {
+    id: Generated<number>;
+    discord_id: string;
+    username: string;
+    streak: number;
+}
+
+declare module '@seedcord/plugin-kysely-postgres' {
+    interface KyselyDatabase {
+        schema: { users: UsersTable };
+    }
+}
+
+@RegisterKyselyService('users')
+class Users extends KyselyService<'users'> {
+    public findByDiscordId(discordId: string) {
+        return this.db
+            .selectFrom(this.table)
+            .selectAll()
+            .where('discord_id', '=', discordId)
+            .executeTakeFirst();
+    }
+}
+
+declare module '@seedcord/plugin-kysely-postgres' {
+    interface KyselyServices {
+        users: Users;
+    }
+}
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        db: KyselyPostgres;
+    }
+}
+
+@SlashRoute('leaderboard')
+class Leaderboard extends SlashHandler<'leaderboard'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        const found =
+            await this.core.db.services.users.findByDiscordId(
+                this.event.user.id
+            );
+
+        await this.reply(
+            found ? `Streak ${String(found.streak)}.` : 'No record.'
+        );
+        // ---cut-after---
+    }
+}
+```
+
+The plugin fills `services` after it connects and loads every class. Reading it before that throws `PluginKyselyServicesNotReady`.

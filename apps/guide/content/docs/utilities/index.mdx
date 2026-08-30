@@ -1,0 +1,182 @@
+---
+title: Utilities
+description: Small functions seedcord ships that might come in handy.
+---
+
+Your transport package re-exports `@seedcord/utils`. Everything here imports from `@seedcord/gateway` or `@seedcord/http` alongside the rest.
+
+The functions below each carry a Discord fact or a trap. [Rendering a table](/utilities/render-table) has its own page.
+
+## A snowflake carries its own timestamp
+
+Every Discord id encodes the moment it was created, in the top 42 bits. [`timestampFromSnowflake`](ref:utils/timestampFromSnowflake) reads it back off any id, a user's, a guild's, a message's, or an interaction's.
+
+```ts twoslash title="src/handlers/Ping.ts"
+import {
+    SlashHandler,
+    SlashRoute,
+    timestampFromSnowflake
+} from '@seedcord/gateway';
+
+@SlashRoute('ping')
+export class Ping extends SlashHandler<'ping'> {
+    public async execute(): Promise<void> {
+        const sent = timestampFromSnowflake(this.event.id);
+
+        await this.reply(`Roundtrip ${Date.now() - sent}ms.`);
+    }
+}
+```
+
+The scaffold's `/ping` measures a roundtrip this way, storing nothing. Discord stamped the id when it built the interaction, so the difference against `Date.now()` is the time in flight.
+
+<Callout type="warning">
+
+`BigInt` throws a `SyntaxError` on a string holding anything other than digits. Guard it when the id came from user input.
+
+</Callout>
+
+## Discord timestamps take seconds
+
+`<t:1735689600:R>` renders as a live relative time in a message. Discord reads that number as **seconds**. JavaScript gives you milliseconds everywhere, so [`toEpochSeconds`](ref:utils/toEpochSeconds) does the divide and the rounding.
+
+```ts twoslash
+import {
+    timestampFromSnowflake,
+    toEpochSeconds
+} from '@seedcord/gateway';
+
+declare const userId: string;
+
+// ---cut---
+const created = toEpochSeconds(timestampFromSnowflake(userId));
+const line = `Account created <t:${created}:R>`;
+```
+
+[`currentTime`](ref:utils/currentTime) returns now in the same unit, for a timestamp you build from scratch.
+
+## Duration strings
+
+[`parseDuration`](ref:utils/parseDuration) turns `'30m'` into milliseconds. It is the same parser [`Cooldown`](ref:core/Cooldown) uses, exported so your own options can take the same shape.
+
+```ts twoslash
+import { parseDuration } from '@seedcord/gateway';
+// ---cut---
+parseDuration('24h'); // 86400000
+parseDuration('500ms'); // 500
+parseDuration('1.5h'); // null
+parseDuration('30M'); // null
+```
+
+The grammar is one or more digits followed by one lowercase unit, `ms`, `s`, `m`, `h`, or `d`. Everything else returns null, including a fraction, an uppercase unit, a bare number, and a duration of zero.
+
+[`ValidDuration`](ref:utils/ValidDuration) types a string in that shape. It accepts a fraction that the parser then rejects, so check the return.
+
+## Shortening a big number
+
+An embed showing `12345678` makes someone count digits. [`roundToDenomination`](ref:utils/roundToDenomination) shortens it.
+
+```ts twoslash
+import { roundToDenomination } from '@seedcord/gateway';
+// ---cut---
+roundToDenomination(999); // '999'
+roundToDenomination(1234); // '1.2K'
+roundToDenomination(999_999); // '1M'
+roundToDenomination(12_345_678, { precision: 2 }); // '12.35M'
+roundToDenomination(12_345_678, { suffixes: ['k'] }); // '12345.7k'
+```
+
+Anything below 1000 comes back unchanged. `precision` defaults to `1`. `suffixes` replaces the default `['K', 'M', 'B', 'T', 'Q']` with a list of any length. Shortening stops at the last suffix you give it, which is what leaves five digits in front of the `k` above.
+
+999,999 rounds to 1000K. A label reading `1000K` looks wrong, so it carries to `1M`.
+
+Shortening costs you precision, since 1234 and 1240 both read as `1.2K`. Keep the digits where the exact number is the point, as in a currency balance.
+
+[`ordinal`](ref:utils/ordinal) adds the rank suffix a leaderboard prints. It covers 11th, 12th, and 13th, which a hand-rolled version usually gets wrong.
+
+```ts twoslash
+import { ordinal } from '@seedcord/gateway';
+// ---cut---
+ordinal(1); // '1st'
+ordinal(11); // '11th'
+ordinal(21); // '21st'
+ordinal(113); // '113th'
+```
+
+## Names a reader scans
+
+[`prettify`](ref:utils/prettify) turns an identifier into words. It reads camelCase, PascalCase, snake_case, and kebab-case, which is how seedcord prints `ManageMessages` as `Manage Messages` in a permission refusal.
+
+```ts twoslash
+import { prettify } from '@seedcord/gateway';
+// ---cut---
+prettify('ManageMessages'); // 'Manage Messages'
+prettify('snake_case_string'); // 'snake case string'
+prettify('someLongOption', { capitalize: true }); // 'Some long option'
+```
+
+`capitalize` raises the first letter of the whole phrase and lowers the rest, which gives you a sentence. Title case takes your own pass over the words.
+
+## Picking at random
+
+[`fyShuffle`](ref:utils/fyShuffle) returns a shuffled copy and leaves the input alone. It runs Fisher-Yates, so every ordering is equally likely.
+
+```ts twoslash
+import { fyShuffle } from '@seedcord/gateway';
+
+declare const entrants: string[];
+
+// ---cut---
+const [winner] = fyShuffle(entrants);
+```
+
+<Callout type="tip">
+
+`items.sort(() => Math.random() - 0.5)` is the common way to write this by hand. It is measurably biased. A comparator has to give the same answer every time it sees a pair. That one answers at random on each call, which leaves some orderings far more likely than others.
+
+</Callout>
+
+[`generateCode`](ref:utils/generateCode) returns a random number with exactly that many digits, never starting with a zero. It draws from `Math.random()`, which suits a pairing code. Use `node:crypto` for a code that guards something.
+
+## Objects that will not stringify
+
+discord.js structures point back at the client, which points back at them. `JSON.stringify` on one throws. [`filterCirculars`](ref:utils/filterCirculars) returns a copy with each cycle replaced by a marker.
+
+```ts twoslash
+import { filterCirculars } from '@seedcord/gateway';
+
+declare const payload: { name: string; self?: unknown };
+
+// ---cut---
+const safe = filterCirculars(payload);
+const withMarker = filterCirculars(payload, { marker: '[loop]' });
+```
+
+`mode` picks how the copy is built. The default `'decycle'` clones the value directly. `'json'` runs stringify and parse, which lets a `toJSON()` method rewrite its own object on the way through. Both read own enumerable properties, so a getter defined on a class prototype is absent from the result.
+
+Pass a `logger` to see why a copy failed. Without one the failure returns quietly as `{ '[unserializable]': ... }`.
+
+[`hasKeys`](ref:utils/hasKeys) checks a nested path and narrows the type when it passes.
+
+```ts twoslash
+import { hasKeys } from '@seedcord/gateway';
+
+interface Report {
+    author?: { profile?: { handle?: string } } | null;
+    score?: number | null;
+}
+
+declare const report: Report;
+
+// ---cut---
+if (hasKeys(report, ['author.profile.handle', 'score'])) {
+    report.author.profile.handle.toUpperCase();
+    report.score.toFixed(2);
+}
+```
+
+Each string is a dot path, checked against null and undefined at every step. The narrowing covers every path you passed.
+
+## The rest
+
+[The reference](ref:utils) lists every function in the package with its signature and its documentation.

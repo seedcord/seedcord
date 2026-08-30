@@ -1,0 +1,206 @@
+---
+title: Custom rendering
+description: Building the whole page yourself, nav buttons included.
+---
+
+On [Pagination](/components/pagination) and [Sources](/components/pagination-sources), seedcord rendered the message. `render` takes that job. It replaces the page seedcord would have built, the nav row along with it, and adds nothing around what you return.
+
+The function receives two arguments. `view` is the [`PageView`](ref:core/PageView) the source returned, holding this page's items. `controls` is a [`PaginatorControls`](ref:core/PaginatorControls), which builds nav buttons already pointed at the right page.
+
+## A page with no buttons on it
+
+Start with a `render` that ignores `controls` and returns a string.
+
+```ts twoslash hovers title="src/handlers/Feed.ts"
+import {
+    ButtonRoute,
+    CursorSource,
+    Paginator,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+// ---cut-start---
+
+interface Post {
+    id: number;
+    text: string;
+}
+
+declare function fetchPosts(
+    page: number,
+    perPage: number
+): Promise<{ items: Post[]; hasNext: boolean }>;
+// ---cut-end---
+
+export const Feed = new Paginator({
+    prefix: 'feed',
+    source: new CursorSource((_ctx, page, perPage) =>
+        fetchPosts(page, perPage)
+    ),
+    render: (view) =>
+        `Page ${view.page + 1}, ${view.items.length} posts`
+});
+
+@ButtonRoute(Feed.cursor)
+export class FeedNav extends Feed.Handler {}
+
+@SlashRoute('feed')
+export class FeedList extends SlashHandler<'feed'> {
+    public async execute(): Promise<void> {
+        await Feed.start(this);
+    }
+}
+```
+
+Run that and you get one line of text with no way to reach page two. `FeedNav` is wired correctly and never fires, since no button on the message carries its route. Everything below puts the buttons back.
+
+A string is one of three shapes `render` can return.
+
+{/* prettier-ignore-start */}
+
+| what you return | what seedcord sends |
+| --- | --- |
+| a string | one text component holding it |
+| an array of components | those components, in order |
+| a whole reply object | exactly that, so `files` and `allowedMentions` pass through |
+
+{/* prettier-ignore-end */}
+
+## Putting the buttons back
+
+[`controls.row()`](ref:core/PaginatorControls.row) returns a finished action row. Name the keys you want, in the order you want them on screen.
+
+```ts twoslash title="src/components/FeedCard.ts"
+import { BuilderComponent } from '@seedcord/gateway';
+
+import type {
+    PageView,
+    PaginatorControls
+} from '@seedcord/gateway';
+// ---cut-start---
+
+interface Post {
+    id: number;
+    text: string;
+}
+// ---cut-end---
+
+export class FeedCard extends BuilderComponent<'container'> {
+    constructor(view: PageView<Post>, controls: PaginatorControls) {
+        super('container');
+
+        const lines = view.items
+            .map((post) => `- ${post.text}`)
+            .join('\n');
+
+        this.instance
+            .addTextDisplayComponents((text) =>
+                text.setContent(lines)
+            )
+            .addActionRowComponents(
+                controls.row('prev', 'indicator', 'next')
+            );
+    }
+}
+```
+
+Now `render` takes both arguments and hands the card back.
+
+```ts twoslash
+import { CursorSource, Paginator } from '@seedcord/gateway';
+
+import type { ContainerBuilder } from '@discordjs/builders';
+import type {
+    PageView,
+    PaginatorControls
+} from '@seedcord/gateway';
+
+interface Post {
+    id: number;
+    text: string;
+}
+
+declare function fetchPosts(
+    page: number,
+    perPage: number
+): Promise<{ items: Post[]; hasNext: boolean }>;
+
+declare class FeedCard {
+    constructor(view: PageView<Post>, controls: PaginatorControls);
+    readonly component: ContainerBuilder;
+}
+// ---cut---
+export const Feed = new Paginator({
+    prefix: 'feed',
+    source: new CursorSource((_ctx, page, perPage) =>
+        fetchPosts(page, perPage)
+    ),
+    render: (view, controls) => [
+        new FeedCard(view, controls).component
+    ]
+});
+```
+
+`controls` builds every button with its target page already set, and disables it at the ends of the list. Prev on page one comes back greyed out with nothing left for you to wire.
+
+## The control keys
+
+`first`, `prev`, `indicator`, `next`, and `last`.
+
+The indicator is a disabled button showing the page text, `Page 2 of 4` when the source counted and `Page 2` when it could not. A cursor source never counts, which is why the fence above names three keys and skips First and Last. An [`ArraySource`](ref:gateway/ArraySource) knows its total, so a row there takes every key.
+
+`row()` throws on an empty list, on more than five keys, and on the same key twice. Two copies of one control mint the same custom id, which Discord rejects.
+
+## One button at a time
+
+`row()` builds every button with its default label and color. [`controls.button()`](ref:core/PaginatorControls.button) returns them one at a time so you can pass cosmetics.
+
+```ts twoslash
+import { BuilderComponent } from '@seedcord/gateway';
+import { ButtonStyle } from 'discord.js';
+
+import type { PaginatorControls } from '@seedcord/gateway';
+
+class FeedCard extends BuilderComponent<'container'> {
+    constructor(controls: PaginatorControls) {
+        super('container');
+        // ---cut---
+        this.instance.addActionRowComponents((row) =>
+            row.addComponents(
+                controls.button('prev', {
+                    style: ButtonStyle.Primary,
+                    emoji: { name: '⬅️' }
+                }),
+                controls.button('indicator'),
+                controls.button('next', {
+                    style: ButtonStyle.Primary,
+                    emoji: { name: '➡️' }
+                })
+            )
+        );
+        // ---cut-after---
+    }
+}
+```
+
+{/* prettier-ignore-start */}
+
+| option | what it sets |
+| --- | --- |
+| `label` | the button text |
+| `style` | `Primary`, `Secondary`, `Success`, or `Danger` |
+| `emoji` | an emoji payload, `{ name }` for unicode or `{ id }` for a custom one |
+
+{/* prettier-ignore-end */}
+
+An emoji with no `label` gives an icon-only button, which is what Prev and Next are above. The indicator keeps its page text either way.
+
+<Callout type="warning">
+
+Call cosmetic setters only. `setCustomId` overwrites the page the button targets. `setStyle` with `ButtonStyle.Link` or `ButtonStyle.Premium` strips the custom id entirely, since Discord allows no custom id on either style. Any of the three leaves a button that reaches no handler.
+
+</Callout>
+
+A header of your own printing `of 4` takes a branch, since a cursor source leaves `view.totalPages` undefined. [Sources](/components/pagination-sources) lists every field on a `PageView`.
+
+[Paging it yourself](/components/pagination-headless) is the last step, dropping the paginator and keeping the page math.

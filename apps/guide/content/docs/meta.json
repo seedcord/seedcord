@@ -1,4 +1,20 @@
 {
     "title": "Start",
-    "pages": ["index", "commands", "replying", "components", "events", "gates", "plugins", "tooling"]
+    "pages": [
+        "index",
+        "gateway-or-http",
+        "discord-application",
+        "first-bot",
+        "core",
+        "where-to-go-next",
+        "commands",
+        "replying",
+        "throwing",
+        "components",
+        "events",
+        "gates",
+        "plugins",
+        "utilities",
+        "tooling"
+    ]
 }

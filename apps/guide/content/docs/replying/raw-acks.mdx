@@ -1,0 +1,117 @@
+---
+title: Raw acks
+description: Reaching past the reply surface to discord.js's own ack methods.
+---
+
+`this.event` is the discord.js interaction, and its own ack methods reach Discord the same way seedcord's do. They skip the ack state machine.
+
+## A raw ack leaves the state stale
+
+The reply sender reads the interaction's state once, when seedcord constructs your handler. That happens before `execute()` runs, and only seedcord's own verbs move it afterwards. Send an ack yourself and the copy stays where the last seedcord verb left it.
+
+```ts twoslash title="src/handlers/Ban.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        await this.event.reply('Banned.');
+
+        await this.edit('Banned, and sessions revoked.');
+    }
+}
+```
+
+Discord accepts the first line. The second throws.
+
+```txt output
+edit() was called when nothing has been sent yet.
+Send with reply() or defer() first, then edit() rewrites it.
+(route slash:ban)
+```
+
+Every later verb reads that same stale state, so [`followUp()`](ref:gateway/RepliableHandler.followUp) and [`delete()`](ref:gateway/RepliableHandler.delete) throw too.
+
+## The lint rule
+
+`@seedcord/no-raw-interaction-acks` reports every ack method on a repliable interaction inside a handler class, plus `respond()` on an autocomplete one. The recommended preset turns it on as an error.
+
+```txt output
+src/handlers/Ban.ts
+  6:15  error  Reply through this.reply().  @seedcord/no-raw-interaction-acks
+```
+
+{/* prettier-ignore-start */}
+
+| discord.js | seedcord |
+| --- | --- |
+| `reply()` | `this.reply()` |
+| `deferReply()` | `this.defer()` |
+| `editReply()` | `this.edit()` |
+| `followUp()` | `this.followUp()` |
+| `update()` | `this.update()` |
+| `deferUpdate()` | `this.deferUpdate()` |
+| `showModal()` | `this.showModal()` |
+| `deleteReply()` | `this.delete()` |
+| `fetchReply()` | the message a reply member already returned |
+| `respond()` | `this.respond()`, on an autocomplete handler |
+
+{/* prettier-ignore-end */}
+
+The rule resolves the receiver's type, which is how it reports `this.event.reply()` and a local alias alike. Two things slip past it. A destructured `const { reply } = this.event` hides the receiver, and middleware falls outside the rule's scope.
+
+## When you actually need one
+
+- **An embed or a poll.** The ComponentsV2 flag on every seedcord reply forbids both, and `this.event.reply()` sends them.
+- **A click you collected yourself.** Gateway only. `message.awaitMessageComponent()` hands you a component interaction that never reached seedcord's dispatcher, so no handler and no sender exist for it. That click is its own interaction. Answering it leaves your handler's state where it was. An http bot answers each interaction in its own request, and a collector needs a process that stays alive between them.
+
+But both those are anti-patterns in seedcord. Text Display and Container are Discord's replacements for `content` and `embeds` under the flag. seedcord routes a click by its customId to a [`ButtonHandler`](ref:gateway/ButtonHandler), for example, which any process can answer. A collector runs in the process that opened it, so a restart drops every prompt still waiting.
+
+For the interaction that seedcord dispatched, pass the handler. Its [`sender`](ref:gateway/RepliableHandler.sender) is public. A helper replies through the same ack state.
+
+```ts twoslash hovers
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+import type { ReplySender } from '@seedcord/gateway';
+// ---cut---
+async function confirmSaved(sender: ReplySender): Promise<void> {
+    await sender.followUp('Saved to the audit log.');
+}
+
+@SlashRoute('ban')
+export class Ban extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        await this.reply('Banned.');
+
+        await confirmSaved(this.sender);
+    }
+}
+```
+
+The reply members stay protected, which makes `handler.reply()` from outside a compile error. The sender carries the same verbs.
+
+The rule reports any repliable receiver inside a handler class, so acknowledge a collected interaction from a function outside it.
+
+```ts twoslash
+import type { Message } from 'discord.js';
+// ---cut---
+export async function acknowledgeClick(
+    prompt: Message
+): Promise<void> {
+    const click = await prompt.awaitMessageComponent({
+        time: 30_000
+    });
+
+    await click.reply('Got it.');
+}
+```
+
+seedcord ships [`getConfirmation`](ref:gateway/getConfirmation) for the common confirm-then-act case, which collects the click and answers it for you.
+
+<Callout type="transport" only="http">
+
+Http adds [`this.api`](ref:http/RepliableHandler.api), a typed REST client over `core.rest` from `@discordjs/core/http-only`. Use it for Discord calls beyond the reply surface.
+
+The callbacks on `api.interactions` answer the interaction directly, which leaves the state stale the same way. The lint rule reads discord.js interaction types alone, so those calls pass it.
+
+</Callout>

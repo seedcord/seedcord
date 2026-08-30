@@ -1,5 +1,18 @@
 {
     "title": "Plugins",
     "root": true,
-    "pages": ["index"]
+    "pages": [
+        "index",
+        "typing",
+        "lifecycle",
+        "your-own",
+        "---Mongoose---",
+        "mongoose",
+        "mongoose-services",
+        "---Kysely and Postgres---",
+        "kysely",
+        "kysely-schema",
+        "kysely-services",
+        "kysely-migrations"
+    ]
 }

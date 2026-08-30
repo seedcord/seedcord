@@ -89,6 +89,7 @@ export type WithSeeAlso<IsRequired = false, HasTarget = false> = IsRequired exte
 export interface FormattedComment extends WithThrows, WithSeeAlso, WithDefaultValue {
     paragraphs: readonly CommentParagraph[];
     examples: readonly CommentExample[];
+    deprecation?: readonly CommentParagraph[] | undefined;
 }
 
 export interface NavigationEntityItem {

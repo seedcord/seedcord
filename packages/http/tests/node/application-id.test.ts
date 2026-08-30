@@ -1,3 +1,4 @@
+import { shutdownOf } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -34,7 +35,7 @@ async function startHost(): Promise<Seedcord> {
 }
 
 afterEach(async () => {
-    await live?.shutdown.run(0, false);
+    if (live) await shutdownOf(live).run(0, false);
     live = undefined;
     // @ts-expect-error singleton reset between tests
     Seedcord.reset();

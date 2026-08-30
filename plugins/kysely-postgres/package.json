@@ -54,8 +54,8 @@
     "peerDependencies": {
         "@seedcord/core": "workspace:>=0.2.0 <1.0.0",
         "envapt": "catalog:peer",
-        "kysely": "^0.29.2",
-        "pg": "^8.21.0",
+        "kysely": "catalog:peer",
+        "pg": "catalog:peer",
         "typescript": "catalog:peer"
     },
     "devDependencies": {
@@ -66,10 +66,10 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
-        "@types/pg": "^8.20.3",
+        "@types/pg": "catalog:deps",
         "envapt": "catalog:peer",
-        "kysely": "^0.29.4",
-        "pg": "^8.22.0",
+        "kysely": "catalog:peer",
+        "pg": "catalog:peer",
         "type-fest": "catalog:deps"
     },
     "publishConfig": {

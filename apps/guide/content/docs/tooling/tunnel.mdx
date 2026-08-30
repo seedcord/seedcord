@@ -1,0 +1,96 @@
+---
+title: The dev tunnel
+description: Letting Discord reach your http bot in development.
+---
+
+Discord delivers interactions by posting them to a URL. Your laptop does not have one. Discord cannot reach `localhost:3000` on your desk, so `seedcord dev` gives you a public address while you work.
+
+<Callout type="transport" only="http">
+    A gateway bot opens its own connection to Discord, so it ignores
+    the `tunnel` setting completely.
+</Callout>
+
+## What cloudflared does
+
+`cloudflared` is a small program from Cloudflare. You run it on your machine, it opens a connection to Cloudflare, and Cloudflare gives you a public https address. Anything posted to that address comes back through the same connection and arrives at your local port.
+
+Your router and your firewall stay untouched, since your machine only makes outgoing connections.
+
+You install `cloudflared` once. From then on `seedcord dev` starts it, reads the address cloudflared prints, and stops it again when you quit.
+
+## Installing it
+
+{/* prettier-ignore-start */}
+
+| platform | how to install |
+| --- | --- |
+| macOS | `brew install cloudflared` |
+| Windows | `winget install -e --id Cloudflare.cloudflared` |
+| Linux | Cloudflare's package repository, a `.deb`, an `.rpm`, or a direct binary |
+
+{/* prettier-ignore-end */}
+
+[Cloudflare's downloads page](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/downloads/) carries every option, including Docker. seedcord looks for `cloudflared` on your `PATH`. Any install that puts it there works.
+
+Skipping this step keeps your bot running. You get an install hint in the terminal, then `seedcord dev` continues without a public address.
+
+## The default, a quick tunnel
+
+With cloudflared installed, you already have everything a quick tunnel needs. It works without a Cloudflare account or a domain. Leaving `tunnel` unset gives you one on every run.
+
+Each start goes through five steps.
+
+1. Your bot's interactions server starts listening on its port.
+2. seedcord starts `cloudflared` pointed at that port, then waits for Cloudflare to send back a hostname.
+3. seedcord waits a few more seconds. Cloudflare publishes the DNS record slightly after sending the hostname. Looking it up too early would cache the failure for half an hour.
+4. seedcord posts an unsigned request to the new address and waits for a `401`. Your bot's verifier rejects an unsigned request with exactly that status, so a `401` back means the tunnel carries traffic to your port.
+5. seedcord writes the address into your Discord application as its interactions endpoint.
+
+<Image
+    src="/tunnel-connecting.webp"
+    alt="The dev terminal ticking off each tunnel step as it finishes"
+    width={1452}
+    height={616}
+/>
+
+Cloudflare gives you a fresh hostname every run, so step 5 repeats each time. Quitting clears the endpoint again, since that hostname stops working once the tunnel closes.
+
+## When you already have a URL
+
+Give `tunnel` an https address you already serve. A named cloudflared tunnel, a tailscale funnel, a reverse proxy, or a staging server all work.
+
+```ts twoslash title="seedcord.config.ts"
+import { defineConfig } from 'seedcord';
+
+export default defineConfig({
+    root: './src',
+    instance: './bot.ts',
+    entry: './index.ts',
+    tunnel: 'https://bot.example.com'
+});
+```
+
+Point that address at your bot's port yourself. seedcord does not start `cloudflared` here. The forwarding is your job.
+
+seedcord runs the same `401` check here too, then writes the endpoint only when your application holds a different value. Your address keeps working between runs, so quitting leaves it in place.
+
+## Turning it off
+
+Set `tunnel` to `false` and seedcord skips all of it. Use this when you set the endpoint yourself in the developer portal, or when you work on something the interactions path never touches.
+
+## When it fails
+
+Four things go wrong. Your bot keeps running through all of them.
+
+{/* prettier-ignore-start */}
+
+| what happened | what you get |
+| --- | --- |
+| cloudflared never reported a hostname | `CliTunnelUrlUnavailable` |
+| your own URL never answered the `401` check | `CliTunnelUnreachable` |
+| Discord refused the address | `CliTunnelNotVerified` |
+| cloudflared exited after going live | a log line, and the status turns to `lost` |
+
+{/* prettier-ignore-end */}
+
+The third one has a common cause. Discord verifies an endpoint by posting its own signed ping to it. That ping fails while DNS servers are still learning the new hostname. Press `r` to restart. That gives you a fresh hostname and another attempt.

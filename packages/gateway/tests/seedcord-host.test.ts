@@ -1,5 +1,6 @@
-import { ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
+import { ShutdownPhase, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
+import { Events } from 'discord.js';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
@@ -7,6 +8,8 @@ import { Seedcord } from '#src/Seedcord';
 import { testConfig } from './utils/test-config';
 
 import './utils/mock-env';
+
+import type { Client } from 'discord.js';
 
 function reset(): void {
     // @ts-expect-error reset the Seedcord singleton between tests
@@ -37,13 +40,13 @@ describe('Seedcord host', () => {
     it('registers the health server by default', () => {
         const seedcord = new Seedcord(testConfig());
 
-        expect(seedcord.shutdown.removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(true);
+        expect(shutdownOf(seedcord).removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(true);
     });
 
     it('healthCheck: false skips the health server', () => {
         const seedcord = new Seedcord(testConfig({ healthCheck: false }));
 
-        expect(seedcord.shutdown.removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(false);
+        expect(shutdownOf(seedcord).removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(false);
     });
 
     it('rejects a restart after a failed start', async () => {
@@ -88,9 +91,13 @@ describe('Seedcord host', () => {
 
     it('a start failure after login destroys the client', async () => {
         const seedcord = new Seedcord(testConfig());
-        // justified: the mock client cannot complete a real login handshake
-        vi.spyOn(seedcord.bot, 'init').mockResolvedValue(undefined);
-        const destroySpy = vi.spyOn(seedcord.bot.client, 'destroy').mockResolvedValue(undefined);
+        const { client } = seedcord.bot;
+        // the test token never reaches a real handshake. login() waits on ClientReady
+        vi.spyOn(client, 'login').mockImplementation(() => {
+            client.emit(Events.ClientReady, client as Client<true>);
+            return Promise.resolve('token');
+        });
+        const destroySpy = vi.spyOn(client, 'destroy').mockResolvedValue(undefined);
         seedcord.startup.addTask(StartupPhase.Ready, 'boom', () => Promise.reject(new Error('boom')));
 
         await expect(seedcord.start()).rejects.toThrow();

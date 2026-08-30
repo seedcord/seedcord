@@ -1,0 +1,134 @@
+---
+title: Modals
+description: Opening a form, and reading back what someone filled in.
+---
+
+A modal is a form that Discord opens on top of the client. You open it with `showModal()`, and the submit arrives as a separate interaction carrying the modal's custom id.
+
+```ts twoslash title="src/components/AppealModal.ts"
+import type { LabelBuilder } from '@discordjs/builders';
+import { BuilderComponent, CustomId } from '@seedcord/gateway';
+import { TextInputStyle } from 'discord.js';
+
+export const AppealFormId = new CustomId('appealform').snowflake(
+    'userId'
+);
+
+export class AppealModal extends BuilderComponent<'modal'> {
+    constructor(userId: string) {
+        super('modal');
+
+        this.instance
+            .setCustomId(AppealFormId.encode({ userId }))
+            .setTitle('Appeal a ban')
+            .addLabelComponents((label) => this.reason(label));
+    }
+
+    private reason(label: LabelBuilder): LabelBuilder {
+        return label
+            .setLabel('Why should we unban you?')
+            .setDescription('A moderator reads this.')
+            .setTextInputComponent((input) =>
+                input
+                    .setCustomId('reason')
+                    .setStyle(TextInputStyle.Paragraph)
+            );
+    }
+}
+```
+
+A modal carries two kinds of custom id. You mint the modal's own id with [`CustomId`](ref:core/CustomId), since seedcord routes the submit by it. Each input takes a plain string id you pick, and you read that field back by the same string.
+
+A modal holds up to five labels, and each label wraps one input. `addTextDisplayComponents` adds a line of plain text.
+
+## Opening it
+
+A modal opens from a handler through `showModal`, which takes the built component.
+
+```ts twoslash title="src/handlers/Appeal.ts"
+import type { ModalBuilder } from '@discordjs/builders';
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+declare class AppealModal {
+    constructor(userId: string);
+    readonly component: ModalBuilder;
+}
+// ---cut---
+@SlashRoute('ban')
+export class Appeal extends SlashHandler<'ban'> {
+    public async execute(): Promise<void> {
+        const target = this.options.getUser('target');
+
+        await this.showModal(new AppealModal(target.id).component);
+    }
+}
+```
+
+<Callout type="danger">
+
+`showModal()` has to be the initial response. Calling it after `reply()`, `defer()`, or `deferUpdate()` throws `ReplyIllegalAckState`, covered in [When a reply throws](/replying/ack-states). Discord also forbids a modal opening another modal, so the call fails to compile inside a [`ModalHandler`](ref:gateway/ModalHandler).
+
+</Callout>
+
+## Reading the submission
+
+[`@ModalRoute`](ref:core/ModalRoute) routes the submit by the modal's id, the same way [`@ButtonRoute`](ref:core/ButtonRoute) routes a click. It also takes several ids, and `this.match` branches between them. [Buttons](/components/buttons) covers that form.
+
+```ts twoslash title="src/handlers/AppealSubmit.ts"
+import {
+    CustomId,
+    ModalHandler,
+    ModalRoute
+} from '@seedcord/gateway';
+
+const AppealFormId = new CustomId('appealform').snowflake('userId');
+// ---cut---
+@ModalRoute(AppealFormId)
+export class AppealSubmit extends ModalHandler<
+    [typeof AppealFormId]
+> {
+    public async execute(): Promise<void> {
+        const { userId } = this.params;
+
+        const reason = this.fields.getTextInputValue('reason');
+        //    ^?
+
+        await this.reply(
+            `Appeal from <@${userId}> recorded. ${reason}`
+        );
+    }
+}
+```
+
+Read the modal id's values from [`this.params`](ref:gateway/ComponentHandler.params), and the submitted inputs from `this.fields`. Each getter takes the input's own custom id.
+
+## What a label can hold
+
+A label wraps a text input or one of the other input kinds, and each kind has its own getter.
+
+{/* prettier-ignore-start */}
+
+| what you put on the label | how you read it |
+| --- | --- |
+| `setTextInputComponent` | `getTextInputValue` |
+| `setStringSelectMenuComponent` | `getStringSelectValues` |
+| `setUserSelectMenuComponent` | `getSelectedUsers`, `getSelectedMembers` |
+| `setRoleSelectMenuComponent` | `getSelectedRoles` |
+| `setChannelSelectMenuComponent` | `getSelectedChannels` |
+| `setMentionableSelectMenuComponent` | `getSelectedMentionables` |
+| `setFileUploadComponent` | `getUploadedFiles` |
+| `setCheckboxComponent` | `getCheckbox` |
+| `setCheckboxGroupComponent` | `getCheckboxGroup` |
+| `setRadioGroupComponent` | `getRadioGroup` |
+
+{/* prettier-ignore-end */}
+
+`getCheckbox` returns a boolean and `getCheckboxGroup` returns the checked values. `getSelectedChannels` takes an optional list of allowed channel types and throws when someone picks outside it. Leave it out to accept any channel type.
+
+Most getters that can come back empty take a `required` flag, and passing `true` narrows away the `null`. `getSelectedMembers` takes the custom id alone, so its result stays nullable.
+
+## Rewriting the message it came from
+
+A modal opened from a button keeps that button's message as its source, so `this.update()` rewrites it.
+
+A slash command can open the same modal. Discord omits the source message in that case, so `update()` and `deferUpdate()` both throw `ReplyUpdateWithoutSource`. The message says `Use reply() or defer() instead`. `followUp()` throws there as well, since nothing has acknowledged the submit yet.

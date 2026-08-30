@@ -1,10 +1,19 @@
+import 'reflect-metadata';
+
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 
+import { isCommandClass } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
+import {
+    HostAugmentTarget,
+    HostPluginKeys,
+    SeedcordBrand,
+    type Brandable,
+    type SeedcordInstance
+} from '@seedcord/types/internal';
 import { isTsOrJsFile } from '@seedcord/utils/node';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
@@ -25,10 +34,6 @@ import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v
 const OUTPUT_FILENAME = 'seedcord-gen.d.ts';
 
 const ENTRY_EXTENSION = /\.[mc]?[jt]sx?$/;
-
-interface BuilderLike {
-    component: { toJSON: () => unknown };
-}
 
 interface ScanResult {
     commands: ScannedCommand[];
@@ -118,7 +123,7 @@ export class CodegenRunner {
                     // a barrel re-exports the same class object
                     if (seen.has(exported)) continue;
                     seen.add(exported);
-                    const json = this.commandJsonOf(exported);
+                    const json = this.commandJsonOf(exported, fullPath);
                     if (json) yield { sourceFile: fullPath, json };
                 }
             }
@@ -142,35 +147,28 @@ export class CodegenRunner {
         return {
             commandsDir: commandsPath ? resolve(process.cwd(), commandsPath) : undefined,
             emojis: instance.config.bot.emojis ?? {},
-            augmentTarget: instance.augmentTarget,
-            pluginKeys: instance.pluginKeys
+            augmentTarget: instance[HostAugmentTarget],
+            pluginKeys: instance[HostPluginKeys]
         };
     }
 
-    private commandJsonOf(exported: unknown): RESTPostAPIApplicationCommandsJSONBody | undefined {
-        if (typeof exported !== 'function') return undefined;
+    private commandJsonOf(exported: unknown, sourceFile: string): RESTPostAPIApplicationCommandsJSONBody | undefined {
+        // the commands directory holds helpers and constants too
+        if (!isCommandClass(exported)) return undefined;
 
-        let instance: unknown;
+        let json: unknown;
         try {
-            instance = new (exported as new () => unknown)();
-        } catch {
-            return undefined;
+            json = new exported().component.toJSON();
+        } catch (error: unknown) {
+            const reason = Error.isError(error) ? error.message : 'Unknown error';
+            throw new SeedcordError(SeedcordErrorCode.CliCodegenCommandConstructorThrew, [
+                exported.name,
+                sourceFile,
+                reason
+            ]);
         }
 
-        if (!this.isBuilderLike(instance)) return undefined;
-        const json = instance.component.toJSON();
-        if (!this.isApplicationCommand(json)) return undefined;
-        return json;
-    }
-
-    private isBuilderLike(value: unknown): value is BuilderLike {
-        if (typeof value !== 'object' || value === null) return false;
-        const component = (value as { component?: unknown }).component;
-        return (
-            typeof component === 'object' &&
-            component !== null &&
-            typeof (component as BuilderLike['component']).toJSON === 'function'
-        );
+        return this.isApplicationCommand(json) ? json : undefined;
     }
 
     private isApplicationCommand(json: unknown): json is RESTPostAPIApplicationCommandsJSONBody {

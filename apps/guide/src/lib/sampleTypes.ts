@@ -1,7 +1,83 @@
-// mirrors what mocks/gateway and mocks/http declare in their src/seedcord-gen.d.ts
+// these are all the types the registry uses to type its examples. expand as needed
 const REGISTRIES = `
     interface SlashRegistry {
         ping: { options: { detailed: { kind: 'boolean'; required: false } }; cache: 'cached' };
+        ban: {
+            options: {
+                target: { kind: 'user'; required: true };
+                reason: { kind: 'string'; required: false };
+            };
+            cache: 'cached';
+        };
+        kick: {
+            options: {
+                target: { kind: 'user'; required: true };
+            };
+            cache: 'cached';
+        };
+        maintenance: {
+            options: {
+                notify: { kind: 'user'; required: true };
+                target: { kind: 'channel'; required: true; channelTypes: [0, 5] };
+                reason: { kind: 'string'; required: false };
+            };
+            cache: 'cached';
+        };
+        'role/add': {
+            options: {
+                member: { kind: 'user'; required: true };
+                role: { kind: 'role'; required: true };
+            };
+            cache: 'cached';
+        };
+        'role/remove': {
+            options: {
+                member: { kind: 'user'; required: true };
+                role: { kind: 'role'; required: true };
+            };
+            cache: 'cached';
+        };
+        'settings/notifications/enable': { options: {}; cache: 'cached' };
+        award: {
+            options: {
+                member: { kind: 'user'; required: true };
+            };
+            cache: 'cached';
+        };
+        roles: { options: {}; cache: 'cached' };
+        history: { options: {}; cache: 'cached' };
+        feed: { options: {}; cache: 'cached' };
+        leaderboard: { options: {}; cache: 'cached' };
+        search: {
+            options: {
+                query: { kind: 'string'; required: true; autocomplete: true };
+                limit: { kind: 'integer'; required: false; autocomplete: true };
+                category: { kind: 'string'; required: false; choices: ['books', 'films'] };
+            };
+            cache: 'cached';
+        };
+        probe: {
+            options: {
+                query: { kind: 'string'; required: true; autocomplete: true };
+                count: { kind: 'integer'; required: false; autocomplete: true };
+                ratio: { kind: 'number'; required: false; autocomplete: true };
+                category: { kind: 'string'; required: false; choices: ['books', 'films'] };
+                exact: { kind: 'boolean'; required: false };
+            };
+            cache: 'cached';
+        };
+    }
+    interface UserContextMenuRegistry {
+        'View Profile': { cache: 'cached' };
+        Warn: { cache: 'cached' };
+    }
+    interface MessageContextMenuRegistry {
+        'Report Message': { cache: 'cached' };
+    }
+    interface EmojiMap {
+        Confirm: 'application';
+        Cancel: 'application';
+        Streak: 'guild';
     }
 `;
 

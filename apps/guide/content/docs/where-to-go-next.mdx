@@ -1,0 +1,30 @@
+---
+title: Where to go next
+description: What the rest of the guide covers, and what to read outside it.
+---
+
+## The tabs
+
+- **Commands.** Declaring one, the options it takes, subcommands, autocomplete, and context menus.
+- **Replying.** Which reply method Discord allows from which state, and the defaults already turned on.
+- **Throwing.** Stopping a command partway and telling the user why.
+- **Components.** Buttons, select menus, modals, and pagination. Discord hands a click back as a plain string, and seedcord gives you back the fields you put in it, typed.
+- **Events.** Messages, members, reactions, and the rest of what discord.js emits, on gateway. Publishing and subscribing to your own works on either transport.
+- **Gates.** A check that runs before your handler and refuses by throwing. Permissions, cooldowns, and rules you write.
+- **Plugins.** Extending seedcord with your own functionality, reachable from every handler and typed. Attaching one, its lifecycle, and writing your own.
+- **Utilities.** Small functions you call directly, from reading the timestamp out of a snowflake to drawing a table into a message.
+- **Tooling.** The dev loop, codegen, the build, logging, and the lint rules for a seedcord project.
+
+## The bots in the repo
+
+[`mocks/gateway`](https://github.com/seedcord/seedcord/tree/next/mocks/gateway) is a runnable bot that goes well past the scaffold. It has pagination done two ways, an autocomplete route, a gated command, both kinds of context menu, event handlers, and commands that throw on purpose so you can see what the user gets.
+
+[`mocks/http`](https://github.com/seedcord/seedcord/tree/next/mocks/http) is the same ping bot on the other transport.
+
+## The reference
+
+[docs.seedcord.org](https://docs.seedcord.org) carries every exported symbol with its signature and its documentation, plus every error code and what throws it.
+
+## If you get stuck
+
+Ask in the [Discord server](https://discord.gg/DzFxY58WXf).

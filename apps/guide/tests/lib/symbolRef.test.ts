@@ -54,4 +54,14 @@ describe('the reference a hovered symbol points at', () => {
     ])('points nowhere for %s', (file, fqn) => {
         expect(referenceFor(file, fqn)).toBeNull();
     });
+
+    // the checker calls an inline object type __type. the reference site has no page for one
+    it.each([
+        ['__type.durationMs', 'a field on an inline payload type'],
+        ['__type', 'the inline type itself'],
+        ['__object.routeId', 'a field on an object literal'],
+        ['__function', 'an anonymous function type']
+    ])('points nowhere for %s, %s', (fqn) => {
+        expect(referenceFor(gateway, fqn)).toBeNull();
+    });
 });

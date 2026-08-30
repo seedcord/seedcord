@@ -321,6 +321,31 @@ describe('a sink that throws', () => {
         expect(capture.records).toHaveLength(1);
     });
 
+    it('stops sending records to a sink that threw', () => {
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const broken = new ThrowingSink();
+        registry.configure({ level: 'trace', sinks: [broken] });
+
+        new Logger('Bot').info('first');
+        new Logger('Bot').info('second');
+        new Logger('Bot').info('third');
+
+        expect(broken.calls).toBe(1);
+        consoleError.mockRestore();
+    });
+
+    it('keeps the healthy sinks running after a neighbour is dropped', () => {
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const healthy = new FakeSink();
+        registry.configure({ level: 'trace', sinks: [new ThrowingSink(), healthy] });
+
+        new Logger('Bot').info('first');
+        new Logger('Bot').info('second');
+
+        expect(healthy.records.map((r) => r.message)).toEqual(['first', 'second']);
+        consoleError.mockRestore();
+    });
+
     it('reports an async sink that rejects, and reports it once', async () => {
         const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
         registry.configure({ level: 'trace', sinks: [new RejectingSink()] });

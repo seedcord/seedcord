@@ -6,6 +6,13 @@ import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
 import { SubscribeMetadataKey } from '#src/metadataKeys';
 import { busLoggerOf } from '#subscribers/Bus';
 import { registrationFor, Subscriber } from '#subscribers/index';
+import {
+    RegisterDefaults,
+    RegisteredCount,
+    RegisterSubscriber,
+    UnregisterSubscriber,
+    VerifyWebhooks
+} from '#subscribers/slots';
 
 import type { Initializeable } from '#src/plugin/Plugin';
 import type { SubscribeMetadataEntry } from '#subscribers/decorators/Subscribe';
@@ -42,20 +49,20 @@ export class SubscriberLoader implements Initializeable, HmrAware {
         if (this.isInitialized) return;
         this.isInitialized = true;
 
-        this.bus.registerDefaults();
+        this.bus[RegisterDefaults]();
 
         const { directory } = this;
         if (directory) {
             busLoggerOf(this.bus).debug(paint.mute(directory));
             await this.load(directory);
             busLoggerOf(this.bus).utils.list(
-                [`${paint.iris.bold(this.bus.registeredCount)} subscribers`],
+                [`${paint.iris.bold(this.bus[RegisteredCount])} subscribers`],
                 paint.mint.bold('Loaded'),
                 'debug'
             );
         }
 
-        if (!Envapter.isTest) await this.bus.verifyWebhooks();
+        if (!Envapter.isTest) await this.bus[VerifyWebhooks]();
     }
 
     /** @internal */
@@ -77,11 +84,11 @@ export class SubscriberLoader implements Initializeable, HmrAware {
     }
 
     private registerSubscriber(ctor: StoredSubscriberCtor): void {
-        this.bus.register(registrationFor(ctor));
+        this.bus[RegisterSubscriber](registrationFor(ctor));
     }
 
     private unregisterSubscriber(ctor: StoredSubscriberCtor, artifacts?: SubscriberArtifact): void {
-        this.bus.unregister(ctor, artifacts);
+        this.bus[UnregisterSubscriber](ctor, artifacts);
     }
 
     private getArtifacts(ctor: StoredSubscriberCtor): SubscriberArtifact {

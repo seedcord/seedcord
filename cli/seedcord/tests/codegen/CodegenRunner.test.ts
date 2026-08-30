@@ -2,9 +2,10 @@ import { chmod, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
+import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordBrand } from '@seedcord/types/internal';
-import { ApplicationCommandType, ContextMenuCommandBuilder, SlashCommandBuilder } from 'discord.js';
+import { HostAugmentTarget, HostPluginKeys, SeedcordBrand } from '@seedcord/types/internal';
+import { ApplicationCommandType } from 'discord.js';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
@@ -16,6 +17,14 @@ import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
 const OUTPUT = 'seedcord-gen.d.ts';
+
+class BanCommand extends BuilderComponent<'command'> {
+    public constructor() {
+        super('command');
+        this.instance.setName('ban').setDescription('Ban a member');
+    }
+}
+RegisterCommand('global')(BanCommand);
 
 function silentLogger(overrides: Partial<ILogger> = {}): ILogger {
     return {
@@ -39,8 +48,8 @@ function makeRunner(root: string, logger: ILogger): CodegenRunner {
             Promise.resolve({
                 default: {
                     [SeedcordBrand]: true,
-                    augmentTarget: '@seedcord/gateway',
-                    pluginKeys: [],
+                    [HostAugmentTarget]: '@seedcord/gateway',
+                    [HostPluginKeys]: [],
                     config: { bot: { commands: { path: null } } }
                 }
             })
@@ -67,8 +76,8 @@ function scanRunner(
                 ? Promise.resolve({
                       default: {
                           [SeedcordBrand]: true,
-                          augmentTarget: '@seedcord/gateway',
-                          pluginKeys: [],
+                          [HostAugmentTarget]: '@seedcord/gateway',
+                          [HostPluginKeys]: [],
                           config: { bot: { commands: { path: commandsPath } } }
                       }
                   })
@@ -99,8 +108,8 @@ function pluginRunner(root: string, instance: string, pluginKeys: readonly strin
             Promise.resolve({
                 default: {
                     [SeedcordBrand]: true,
-                    augmentTarget: '@seedcord/gateway',
-                    pluginKeys,
+                    [HostAugmentTarget]: '@seedcord/gateway',
+                    [HostPluginKeys]: pluginKeys,
                     config: { bot: { commands: { path: null } } }
                 }
             })
@@ -192,9 +201,6 @@ describe('CodegenRunner', () => {
         const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
 
-        class BanCommand {
-            component = new SlashCommandBuilder().setName('ban').setDescription('Ban a member');
-        }
         class NotACommand {
             greet(): string {
                 return 'hi';
@@ -205,7 +211,7 @@ describe('CodegenRunner', () => {
         await scanRunner(root, cmdDir, () => ({ BanCommand, NotACommand, NOT_A_FUNCTION }), silentLogger()).run(false);
 
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
-        expect(written).toContain('ban: { options: {}; cache: undefined }');
+        expect(written).toContain("ban: { options: {}; cache: 'cached' }");
     });
 
     it('scans a command once when a barrel re-exports it, instead of throwing a duplicate route', async () => {
@@ -214,14 +220,11 @@ describe('CodegenRunner', () => {
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
         await writeFile(join(cmdDir, 'index.ts'), 'export {};', 'utf8');
 
-        class BanCommand {
-            component = new SlashCommandBuilder().setName('ban').setDescription('Ban a member');
-        }
         // ban.ts and index.ts both yield the same class object, as a re-export would.
         await scanRunner(root, cmdDir, () => ({ BanCommand }), silentLogger()).run(false);
 
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
-        expect(written).toContain('ban: { options: {}; cache: undefined }');
+        expect(written).toContain("ban: { options: {}; cache: 'cached' }");
     });
 
     it('throws CliCodegenCommandsDirUnreadable when the top-level commands dir is unreadable', async () => {
@@ -248,9 +251,6 @@ describe('CodegenRunner', () => {
         await writeFile(join(locked, 'x.ts'), 'export {};', 'utf8');
         await chmod(locked, 0o000);
 
-        class BanCommand {
-            component = new SlashCommandBuilder().setName('ban').setDescription('Ban a member');
-        }
         const warnings: string[] = [];
         try {
             await scanRunner(
@@ -264,7 +264,7 @@ describe('CodegenRunner', () => {
         }
 
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
-        expect(written).toContain('ban: { options: {}; cache: undefined }');
+        expect(written).toContain("ban: { options: {}; cache: 'cached' }");
         expect(warnings.some((warning) => warning.includes('locked'))).toBe(true);
     });
 
@@ -301,9 +301,6 @@ describe('CodegenRunner', () => {
         const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
 
-        class BanCommand {
-            component = new SlashCommandBuilder().setName('ban').setDescription('Ban a member');
-        }
         const exports = (): Record<string, unknown> => ({ BanCommand });
 
         await scanRunner(root, cmdDir, exports, silentLogger()).run(false);
@@ -317,27 +314,95 @@ describe('CodegenRunner', () => {
         const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
         await writeFile(join(cmdDir, 'commands.ts'), 'export {};', 'utf8');
 
-        class BanCommand {
-            component = new SlashCommandBuilder().setName('ban').setDescription('Ban a member');
+        class ViewProfile extends BuilderComponent<'context_menu'> {
+            public constructor() {
+                super('context_menu');
+                this.instance.setName('View Profile').setType(ApplicationCommandType.User);
+            }
         }
-        class ViewProfile {
-            component = new ContextMenuCommandBuilder().setName('View Profile').setType(ApplicationCommandType.User);
+        RegisterCommand('global')(ViewProfile);
+
+        class ReportMessage extends BuilderComponent<'context_menu'> {
+            public constructor() {
+                super('context_menu');
+                this.instance.setName('Report Message').setType(ApplicationCommandType.Message);
+            }
         }
-        class ReportMessage {
-            component = new ContextMenuCommandBuilder()
-                .setName('Report Message')
-                .setType(ApplicationCommandType.Message);
-        }
+        RegisterCommand('global')(ReportMessage);
 
         await scanRunner(root, cmdDir, () => ({ BanCommand, ViewProfile, ReportMessage }), silentLogger()).run(false);
 
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
-        expect(written).toContain('ban: { options: {}; cache: undefined }');
+        expect(written).toContain("ban: { options: {}; cache: 'cached' }");
         expect(written).toContain(
-            "    interface UserContextMenuRegistry {\n        'View Profile': { cache: undefined };\n    }"
+            "    interface UserContextMenuRegistry {\n        'View Profile': { cache: 'cached' };\n    }"
         );
         expect(written).toContain(
-            "    interface MessageContextMenuRegistry {\n        'Report Message': { cache: undefined };\n    }"
+            "    interface MessageContextMenuRegistry {\n        'Report Message': { cache: 'cached' };\n    }"
         );
+    });
+
+    it('throws and names the command when a registered command constructor throws', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        await writeFile(join(cmdDir, 'broken.ts'), 'export {};', 'utf8');
+
+        class BrokenCommand extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                throw new Error('the database was not ready');
+            }
+        }
+        RegisterCommand('global')(BrokenCommand);
+
+        let caught: unknown;
+        try {
+            await scanRunner(root, cmdDir, () => ({ BrokenCommand }), silentLogger()).run(false);
+        } catch (error: unknown) {
+            caught = error;
+        }
+
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenCommandConstructorThrew });
+        expect((caught as Error).message).toContain('BrokenCommand');
+        expect((caught as Error).message).toContain('the database was not ready');
+    });
+
+    it('skips a BuilderComponent subclass carrying no @RegisterCommand', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        await writeFile(join(cmdDir, 'base.ts'), 'export {};', 'utf8');
+
+        class Undecorated extends BuilderComponent<'command'> {
+            public constructor() {
+                super('command');
+                this.instance.setName('undecorated').setDescription('carries no decorator');
+            }
+        }
+
+        await scanRunner(root, cmdDir, () => ({ Undecorated }), silentLogger()).run(false);
+
+        const written = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(written).not.toContain('undecorated');
+    });
+
+    it('skips an undecorated export whose constructor throws', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        await writeFile(join(cmdDir, 'helpers.ts'), 'export {};', 'utf8');
+
+        // the scan constructs with no arguments
+        class Formatter {
+            public readonly prefix: string;
+
+            constructor(prefix: string) {
+                if (prefix.length === 0) throw new Error('needs a prefix');
+                this.prefix = prefix;
+            }
+        }
+
+        await scanRunner(root, cmdDir, () => ({ BanCommand, Formatter }), silentLogger()).run(false);
+
+        const written = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(written).toContain("ban: { options: {}; cache: 'cached' }");
     });
 });

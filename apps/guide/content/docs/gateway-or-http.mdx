@@ -1,0 +1,26 @@
+---
+title: Gateway or http
+description: Picking the transport your bot runs on, and what each one receives.
+---
+
+You're picking how Discord reaches your bot. Pages after this one assume you already did.
+
+## Gateway
+
+Your bot opens a websocket to Discord and holds it open. Discord can send anything happening in the servers your bot is in, from messages and joins to reactions and voice.
+
+discord.js caches guilds, channels, roles, and members off that connection, and its collections and helpers read from the cache. `interaction.guild` is filled in because the cache holds it.
+
+Holding the connection means a process running somewhere all the time.
+
+## Http
+
+An http bot waits for Discord to call it. Discord posts each interaction to a URL you own, one request at a time. Nothing else is sent.
+
+No connection means no cache. Anything you need about a guild or a member you fetch from Discord's REST API.
+
+## Switching later
+
+seedcord's transports are written with parity in mind. Most of the code you write for one **will** work for the other. You'll only really find yourself rewriting the import line and a few lines in handlers that deal with specific types from the methods. Also, an http bot never receives server events, so event handlers do not work there.
+
+Either choice needs the same setup on Discord's side. Go ahead and [create your Discord application](/discord-application).

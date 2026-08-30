@@ -1,5 +1,6 @@
 import { Subscriber } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { RegisterSubscriber } from '@seedcord/core/internal';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 
 import type { RouteManifest } from '#src/manifest/RouteManifest';
@@ -9,7 +10,7 @@ import type { StoredSubscriberCtor, SubscriberRegistration } from '@seedcord/cor
 // an idle isolate that never publishes pays nothing for this
 export function registerSubscribers(bus: Bus, manifest: RouteManifest): void {
     for (const row of manifest.subscriberRoutes) {
-        bus.register({
+        bus[RegisterSubscriber]({
             keys: row.keys,
             frequency: row.frequency,
             resolve: async () => {

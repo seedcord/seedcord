@@ -177,6 +177,7 @@ Aim for a spread in length, in how sentences open, and in what each one is doing
 5. One claim per sentence. Cut the intensifier.
 6. Give the condition, never the smoothness. Replace "no manual wiring" with "on a 429 the client waits `Retry-After` seconds before the next attempt".
 7. Prefer the concrete noun over the promised benefit. "Throws `TimeoutError` when no response arrives within `timeout` ms" beats any adjective.
+8. Count a list only when the set is closed. "The four lifecycle phases" is right when there are four. A sample of three out of thirty reads as all thirty unless the sentence says otherwise.
 
 Rule of thumb: if an adjective cannot be replaced by a measurable fact or a code reference, delete it.
 
@@ -232,6 +233,10 @@ State the positive claim on its own. Defining a thing by first naming what it is
 
 When a contrast genuinely carries weight, write two plain sentences.
 
+**One test separates the tic from a real substitution. Was the reader already holding the alternative?**
+
+An `instead of` naming a swap the reader is actually making stays, since naming what they replace is the instruction. "Pass a `CustomId` instead of a string" is written for someone passing a string right now. The ban covers an alternative nobody raised, as in "the codec is a real format instead of string concatenation", where the reader loads concatenation and then throws it away.
+
 ---
 
 ## 7. Ban-list
@@ -253,7 +258,8 @@ Illustrative. When a word is missing from the table, apply section 1 and the tes
 | under the hood | internally, or delete |
 | out of the box | by default |
 | first-class | name the support |
-| simply / just | delete |
+| simply / just, minimizing the work | delete |
+| just, meaning only | only |
 | in order to | to |
 | please / please note | delete |
 | enable / unlock / empower | turn on, lets you, you can |
@@ -270,6 +276,8 @@ Illustrative. When a word is missing from the table, apply section 1 and the tes
 | to be honest / frankly | delete |
 
 <!--prettier-ignore-end-->
+
+A word can carry more than one sense, and the ban follows the sense. `just` minimizing the work is the defect, since "just add the decorator" rates how hard the step is for someone whose keyboard you are not at. `just` meaning only carries a real restriction, so write `only`, which nobody can misread. The temporal `just` is a third word again, as in "the member just joined".
 
 ---
 

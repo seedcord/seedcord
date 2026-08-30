@@ -33,7 +33,7 @@ export async function buildFunctionSignature(
         typeParameters,
         summary: cloneCommentParagraphs(comment.paragraphs),
         examples: comment.examples.slice(),
-        deprecationStatus: buildDeprecationStatusFromNodeLike(signature),
+        deprecationStatus: buildDeprecationStatusFromNodeLike(signature, comment.deprecation),
         throws: comment.throws?.slice() ?? []
     };
 
