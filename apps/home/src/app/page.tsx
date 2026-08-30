@@ -8,6 +8,7 @@ import { GetStarted } from '#components/home/GetStarted';
 import { Hero } from '#components/home/Hero';
 import { FeatureMarquee } from '#components/home/Marquee';
 import { Nav } from '#components/home/Nav';
+import { Plugins } from '#components/home/Plugins';
 import { ResolvedType } from '#components/home/ResolvedType';
 import { Transports } from '#components/home/Transports';
 import { TypedDx } from '#components/home/TypedDx';
@@ -28,6 +29,7 @@ function Home(): ReactNode {
                 <BeforeAfter />
                 <Codec />
                 <Gates />
+                <Plugins />
                 <DevTui />
                 <FeatureGrid />
                 <Transports />

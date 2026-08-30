@@ -4,6 +4,7 @@ import { Braces, RefreshCw, ShieldCheck } from 'lucide-react';
 import { CodeCard } from '#components/code/CodeCard';
 import { Section } from '#components/home/Section';
 import { Code } from '#components/ui/Code';
+import { CODE_MARK_LIGHT } from '#lib/code/marks';
 import { codegenOutput, typedDxCommand, typedDxHandler } from '#lib/code/samples';
 
 import type { ReactNode } from 'react';
@@ -28,8 +29,8 @@ export function TypedDx(): ReactNode {
                     </h2>
                     <p className={cn('mt-6 max-w-md text-lg/snug font-medium text-(--seed-dark)/85')}>
                         You define options on the standard discord.js builder for slash commands or context menu
-                        commands. <Code className={cn('text-[0.95em] text-(--flesh)')}>seedcord codegen</Code> reads it
-                        and writes the accessor types, so the builder stays the only schema you maintain.
+                        commands. <Code className={cn(CODE_MARK_LIGHT)}>seedcord codegen</Code> reads it and writes the
+                        accessor types, so the builder stays the only schema you maintain.
                     </p>
                     <ul className={cn('mt-8 space-y-4')}>
                         {BULLETS.map((b) => (

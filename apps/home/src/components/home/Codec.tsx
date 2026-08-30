@@ -4,12 +4,10 @@ import { ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-react';
 import { CodeCard } from '#components/code/CodeCard';
 import { Section } from '#components/home/Section';
 import { Code } from '#components/ui/Code';
+import { CODE_MARK_DARK } from '#lib/code/marks';
 import { codecComponent, codecHandler } from '#lib/code/samples';
 
 import type { ReactNode } from 'react';
-
-// --flesh on the flesh ground is too dark to read
-const MARK = 'rounded-sm bg-(--seed-dark)/30 px-1.5 text-[0.88em]';
 
 const CHIPS = [
     { icon: ArrowRightFromLine, label: 'encode(values) to string' },
@@ -32,11 +30,11 @@ export function Codec(): ReactNode {
                 <div className={cn('min-w-0')}>
                     <p className={cn('text-lg/snug font-medium text-(--pith)')}>
                         A click arrives carrying the custom id you set, as one string. Split it yourself and every field
-                        comes back as <Code className={cn(MARK)}>string</Code>.
+                        comes back as <Code className={cn(CODE_MARK_DARK)}>string</Code>.
                     </p>
                     <p className={cn('mt-4 text-lg/snug font-medium text-(--pith)')}>
-                        <Code className={cn(MARK)}>CustomId</Code> declares those fields once.{' '}
-                        <Code className={cn(MARK)}>this.params</Code> then returns each one at its real type.
+                        <Code className={cn(CODE_MARK_DARK)}>CustomId</Code> declares those fields once.{' '}
+                        <Code className={cn(CODE_MARK_DARK)}>this.params</Code> then returns each one at its real type.
                     </p>
                     <p className={cn('mt-4 text-lg/snug font-medium text-(--pith)')}>
                         Discord caps that string at 100 characters. The codec packs your fields into fewer of them than
