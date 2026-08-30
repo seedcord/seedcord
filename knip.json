@@ -33,14 +33,27 @@
         },
         "apps/guide": {
             "entry": [
-                "src/app/**/{page,layout,route,not-found}{,.dev}.{ts,tsx}"
+                "src/app/**/{page,layout,route,not-found,sitemap}{,.dev}.{ts,tsx}",
+                "tests/**/*.test.{ts,tsx}"
             ],
             "project": [
-                "src/**/*.{ts,tsx,css}"
+                "src/**/*.{ts,tsx,css}",
+                "tests/**/*.{ts,tsx}"
             ],
             "ignoreDependencies": [
                 "@seedcord/gateway",
-                "@seedcord/http"
+                "@seedcord/http",
+                "@discordjs/builders",
+                "@seedcord/core",
+                "@seedcord/plugin-kysely-postgres",
+                "@seedcord/plugin-mongoose",
+                "@types/pg",
+                "discord-api-types",
+                "discord.js",
+                "kysely",
+                "mongoose",
+                "pg",
+                "seedcord"
             ]
         },
         "apps/home": {
