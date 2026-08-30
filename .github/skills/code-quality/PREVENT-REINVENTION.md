@@ -69,7 +69,7 @@ Before creating any file, look at sibling packages. The conventions are consiste
 - Tests live in `<package>/tests/` mirroring `src/`. Do not put tests in `src/**/*.test.ts`.
 - Vitest is the runner (`vitest run` / `vitest dev`). Coverage runs via `vitest run --coverage`.
 - Lint and tc scripts cover both `src/**` and `tests/**`.
-- ESLint configs at the package root as `eslint.config.mjs` (flat config), composed from `@seedcord/eslint-config`.
+- ESLint configs at the package root as `eslint.config.ts` (flat config), composed from `@seedcord/eslint-config`.
 - TypeScript configs extend `@seedcord/tsconfig` and never cross package source-path boundaries (no `paths` or `include` reaching into another package's `src`).
 - Build packages use `@seedcord/tsdown-config` via tsdown, emitting `dist/index.d.mts` + `dist/index.mjs`. Published packages ship ESM only.
 - Shared deps must live in `pnpm-workspace.yaml`'s `catalogs:` (`deps:` for app/runtime, `peer:` for peer deps) and be consumed as `catalog:deps` / `catalog:peer` from every `package.json`. Never pin the same version twice.

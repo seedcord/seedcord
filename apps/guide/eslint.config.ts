@@ -4,6 +4,11 @@ import createConfig from '@seedcord/eslint-config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import reactCompiler from 'eslint-plugin-react-compiler';
 
+import type { Linter } from 'eslint';
+
+// justified: exactOptionalPropertyTypes rejects this plugin's RuleModule type
+const reactCompilerConfig = reactCompiler.configs.recommended as Linter.Config;
+
 export default createConfig({
     tsconfigRootDir: import.meta.dirname,
     registerImportPlugin: 'off',
@@ -14,10 +19,11 @@ export default createConfig({
     userConfigs: [
         ...nextVitals,
 
-        reactCompiler.configs.recommended,
+        reactCompilerConfig,
 
         // react-doctor already covers the jsx-a11y strict set
         {
+            files: ['src/**/*.{ts,tsx}'],
             rules: {
                 'jsx-a11y/alt-text': ['error', { elements: ['img'], img: ['Image'] }],
                 'react/jsx-no-target-blank': 'error',

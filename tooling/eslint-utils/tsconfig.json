@@ -5,6 +5,6 @@
         "rootDir": "./",
         "outDir": "./dist"
     },
-    "include": ["src/**/*.ts", "tsdown.config.ts"],
+    "include": ["src/**/*.ts", "eslint.config.ts", "tsdown.config.ts"],
     "exclude": ["node_modules", "dist"]
 }

@@ -32,5 +32,4 @@ const handler = {
     }
 };
 
-// eslint-disable-next-line import/no-default-export -- Cloudflare Worker entrypoint
 export default handler;

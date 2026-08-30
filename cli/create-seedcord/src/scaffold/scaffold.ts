@@ -33,6 +33,8 @@ const DEV_PACKAGES = [
     '@seedcord/tsconfig',
     // @seedcord/tsconfig sets types: ['node']
     '@types/node',
+    // eslint reads eslint.config.ts through jiti
+    'jiti',
     'prettier',
     'seedcord',
     // typescript-eslint 8 caps typescript below 6.1

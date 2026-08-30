@@ -1,9 +1,8 @@
 import tseslint from 'typescript-eslint';
 
-/**
- * @type {import('typescript-eslint').ConfigArray}
- */
-const config = tseslint.config(
+import type { ConfigArray } from 'typescript-eslint';
+
+const config: ConfigArray = tseslint.config(
     {
         ignores: ['dist/**', 'node_modules/**']
     },

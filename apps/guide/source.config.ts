@@ -5,7 +5,6 @@ import { remarkHeadingRange } from './src/lib/remarkHeadingRange';
 import { remarkNoMappedJsx } from './src/lib/remarkNoMappedJsx';
 import { remarkRefLinks } from './src/lib/remarkRefLinks';
 
-// eslint-disable-next-line import/no-default-export -- fumadocs-mdx reads this file's default export
 export default defineConfig({
     mdxOptions: {
         // mdxComponents.tsx highlights every fence through CodeBlock

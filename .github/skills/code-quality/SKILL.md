@@ -44,7 +44,7 @@ pnpm test
 pnpm prePush      # build + tc + lint + test, the full pre-push gate
 ```
 
-Husky's hooks run `lint-staged` (configured in `lint-staged.config.mjs`) on commit and the full `prePush` gate on push. Don't bypass them.
+Husky's hooks run `lint-staged` (configured in `lint-staged.config.ts`) on commit and the full `prePush` gate on push. Don't bypass them.
 
 ---
 
