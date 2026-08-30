@@ -161,8 +161,8 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     }
 
     /**
-     * @deprecated Call {@link Bus.publish} to reach subscribers and listeners together.
-     * @throws A **SeedcordTypeError** always. `emit` reaches only the `on()` listeners.
+     * @deprecated Always throws. Call {@link Bus.publish} to reach subscribers and listeners together.
+     * @throws A **SeedcordTypeError** with `CoreBusEmitUnavailable`. `emit` reaches only the `on()` listeners.
      */
     public override emit<KeyOfSubscribers extends SubscriptionKey>(
         event: KeyOfSubscribers,

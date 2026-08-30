@@ -5,12 +5,12 @@ import { opensInNewTab } from '#lib/docs/crossPackage';
 
 import { buildSignatureDetails } from './buildSignatureDetails';
 import {
-    buildDeprecationStatusFromNodeLike,
     cloneExamples,
     collectMemberTags,
     deriveSharedDocumentation,
     normalizeAccessor,
     resolveHeaderSignature,
+    resolveMemberDeprecation,
     selectDescription
 } from './utils';
 
@@ -51,7 +51,7 @@ export async function buildMemberSummary(node: DocNode, context: FormatContext):
         signatures
     };
 
-    summary.deprecationStatus = buildDeprecationStatusFromNodeLike(node);
+    summary.deprecationStatus = resolveMemberDeprecation(node, signatures, nodeComment.deprecation);
 
     const tags = collectMemberTags(node);
     if (tags.length) summary.tags = tags;

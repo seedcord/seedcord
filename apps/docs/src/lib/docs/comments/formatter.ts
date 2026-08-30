@@ -1,4 +1,5 @@
 import { renderDefaultValue } from './renderers/renderDefaultValue';
+import { renderDeprecation } from './renderers/renderDeprecation';
 import { renderExamples } from './renderers/renderExamples';
 import { renderParagraphs } from './renderers/renderParagraphs';
 import { renderSeeAlso } from './renderers/renderSeeAlso';
@@ -15,12 +16,13 @@ export async function formatCommentRich(
         return { paragraphs: [], examples: [] } satisfies FormattedComment;
     }
 
-    const [paragraphs, examples, seeAlso, throws, defaultValue] = await Promise.all([
+    const [paragraphs, examples, seeAlso, throws, defaultValue, deprecation] = await Promise.all([
         renderParagraphs(comment, context),
         renderExamples(comment),
         Promise.resolve(renderSeeAlso(comment, context)),
         renderThrows(comment, context),
-        renderDefaultValue(comment, context)
+        renderDefaultValue(comment, context),
+        renderDeprecation(comment, context)
     ]);
 
     return {
@@ -28,6 +30,7 @@ export async function formatCommentRich(
         examples,
         seeAlso: seeAlso ?? [],
         throws: throws ?? [],
-        defaultValue: defaultValue ?? []
+        defaultValue: defaultValue ?? [],
+        deprecation
     } satisfies FormattedComment;
 }

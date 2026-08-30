@@ -11,9 +11,16 @@ interface MemberRowHeaderProps {
     anchorId: string;
     tags: string[];
     prefix?: 'property' | 'method' | 'constructor' | 'typeParameter';
+    isDeprecated?: boolean;
 }
 
-export function MemberRowHeader({ member, anchorId, tags, prefix }: MemberRowHeaderProps): ReactElement {
+export function MemberRowHeader({
+    member,
+    anchorId,
+    tags,
+    prefix,
+    isDeprecated = false
+}: MemberRowHeaderProps): ReactElement {
     return (
         <div className={cn('flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between')}>
             <div className={cn('min-w-0 flex-1 space-y-3')}>
@@ -43,7 +50,9 @@ export function MemberRowHeader({ member, anchorId, tags, prefix }: MemberRowHea
                             className={cn(
                                 'text-subtle z-10 flex size-8 items-center justify-center transition-opacity hover:text-(--text)',
                                 'order-last',
-                                'md:absolute md:top-1/2 md:-left-8 md:-translate-y-1/2 md:opacity-0 md:group-hover/name:opacity-100 md:group-has-focus-visible/name:opacity-100 md:data-[copied=true]:opacity-100'
+                                'md:opacity-0 md:group-hover/name:opacity-100 md:group-has-focus-visible/name:opacity-100 md:data-[copied=true]:opacity-100',
+                                // the -left-8 gutter falls outside the deprecated card's border
+                                !isDeprecated && 'md:absolute md:top-1/2 md:-left-8 md:-translate-y-1/2'
                             )}
                         />
                         <h3 className={cn('truncate text-base font-semibold text-(--text) sm:text-lg')}>

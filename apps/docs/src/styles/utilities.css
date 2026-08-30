@@ -5,36 +5,8 @@
 
     .deprecated-card {
         position: relative;
-        border: 3px solid var(--deprecated-dark);
-        border-radius: 1rem;
-    }
-
-    .deprecated-card::before {
-        content: '';
-        position: absolute;
-        top: -1px;
-        left: -1px;
-        width: 28px;
-        height: 20px;
-        background: transparent;
-        z-index: 2;
-    }
-
-    .deprecated-label {
-        position: absolute;
-        top: -0.6rem;
-        left: 0.75rem;
-        z-index: 3;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        padding: 0.125rem 0.5rem;
-        font-size: 0.625rem;
-        font-weight: 700;
-        color: white;
-        border-radius: 9999px;
-        background-color: var(--deprecated-dark);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
+        margin-top: 0.75rem;
+        border: 1px solid var(--deprecated-dark);
+        border-radius: var(--radius-surface);
     }
 }

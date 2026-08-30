@@ -118,7 +118,7 @@ export async function buildSignatureDetails({
                 examples
             };
 
-            const sigDep = buildDeprecationStatusFromNodeLike(signature);
+            const sigDep = buildDeprecationStatusFromNodeLike(signature, comment?.deprecation);
             if (sigDep.isDeprecated) detail.deprecationStatus = sigDep;
 
             const signatureSourceUrl = signature.sourceUrl ?? node.sourceUrl;
