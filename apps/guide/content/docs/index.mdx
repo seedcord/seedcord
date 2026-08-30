@@ -24,19 +24,20 @@ Commands, events, components, gates, replies, and the lifecycle all come with th
 
 ## Philosophy
 
-If you have built a Discord bot without a framework, you have written the routing yourself. A switch on the command name, a tree of if/else on the custom id, one controller per interaction kind, all of it extended by hand each time you add a command. Then you restart the bot to see a change, wait for the login, and wait for Discord to take the new command.
+If you have built a Discord bot, you have written the routing yourself. A switch on the command name, a tree of if/else on the custom id, one controller per interaction kind, all of it extended by hand each time you add a command. I wrote that too, and I copied it into every bot I started.
 
-I wrote all that, got bored of it, and copied it into my next bot anyway.
+TypeScript could not help with any of it. You registered the option yourself, and `getString` still hands back `string | null`. A custom id arrives as a plain string you parse and cast into the thing you encoded. Every read opens with a check whose answer you already know.
 
-The frameworks I looked at put the routing, the checks, and the work in the same handler. A handler should do one thing.
+Every time I needed to test my bot and tweak it while doing so, I had to restart it. That meant waiting for it to log in, do any registration steps, and take its time on any other startup work before I could see my change in Discord.
 
-So in seedcord a command, its handler, and its components are three separate files. The types run between them, which is what keeps three files from turning into three things you sync by hand.
+Most frameworks put the routing, the checks, and the work in one handler. Each of those changes for a different reason, and a file holding all three gets edited every time any of them moves.
 
-Three rules decide what features seedcord has, in this order.
+I wanted to fix all that, and more, following two principles in making the framework:
 
-1. Developer experience wins.
-2. seedcord does as much as it can reliably do for you, and stops before it takes a decision off you.
-3. Anything that can be typed is typed.
+1. seedcord automates what it reliably can, and still let's you still stay in control.
+2. Types cover everything seedcord can know before your bot runs.
+
+All this, while keeping the framework simple and straightforward to use for a bot of any size.
 
 ## What a seedcord project looks like
 

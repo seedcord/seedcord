@@ -46,6 +46,13 @@ Each start goes through five steps.
 4. seedcord posts an unsigned request to the new address and waits for a `401`. Your bot's verifier rejects an unsigned request with exactly that status, so a `401` back means the tunnel carries traffic to your port.
 5. seedcord writes the address into your Discord application as its interactions endpoint.
 
+<Image
+    src="/tunnel-connecting.webp"
+    alt="The dev terminal ticking off each tunnel step as it finishes"
+    width={1452}
+    height={616}
+/>
+
 Cloudflare gives you a fresh hostname every run, so step 5 repeats each time. Quitting clears the endpoint again, since that hostname stops working once the tunnel closes.
 
 ## When you already have a URL
