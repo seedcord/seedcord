@@ -68,6 +68,8 @@ export class LoggerChannelRegistry {
     }
 
     private emit(sink: ILogSink, record: LogRecord): void {
+        if (this.broken.has(sink)) return;
+
         try {
             void Promise.resolve(sink.onLog(record)).catch((error: unknown) => {
                 this.sinkFailed(sink, error);
