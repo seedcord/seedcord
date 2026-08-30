@@ -5,6 +5,8 @@ export default createTsdownConfig({
         'src/index.ts',
         'src/og.ts',
         'src/palette.ts',
+        'src/skills.ts',
+        'src/skills/seedcord.ts',
         'src/MaterwelonGlyph.tsx',
         'src/MaterwelonFavicon.tsx',
         'src/Materwelon.tsx',
