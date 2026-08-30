@@ -6,7 +6,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { botLoggerOf } from '#bot/Bot';
+import { botLoggerOf, interactionsOf } from '#bot/Bot';
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
 import { Seedcord } from '#src/Seedcord';
 
@@ -82,13 +82,9 @@ function fakeAutocomplete(commandName: string) {
     };
 }
 
-interface TestBot {
-    interactions: PrivateInteractionDispatcher;
-}
-
-// justified: access the private interactions dispatcher off the bot to assert its routing state
+// justified: slashMap and the other route maps are private on the dispatcher
 function controllerOf(instance: Seedcord): PrivateInteractionDispatcher {
-    return (instance.bot as unknown as TestBot).interactions;
+    return interactionsOf(instance.bot) as unknown as PrivateInteractionDispatcher;
 }
 
 describe('InteractionDispatcher Integration', () => {
@@ -126,11 +122,9 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private interactions controller for assertion
-        const testBot = seedcord.bot as unknown as TestBot;
-        await testBot.interactions.init();
+        const controller = controllerOf(seedcord);
+        await controller.init();
 
-        const controller = testBot.interactions;
         expect(controller.slashMap.has('ping')).toBe(true);
     });
 
@@ -152,12 +146,11 @@ describe('InteractionDispatcher Integration', () => {
 
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private interactions controller for assertion
-        const testBot = seedcord.bot as unknown as TestBot;
+        const controller = controllerOf(seedcord);
 
         // capture the interactionCreate handler attachToClient registers on the client
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
-        await testBot.interactions.init();
+        await controller.init();
 
         seedcord.bus.on('anyInteraction', () => {
             throw new Error('observer boom');
@@ -648,11 +641,9 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private interactions controller for assertion
-        const testBot = seedcord.bot as unknown as TestBot;
-        await testBot.interactions.init();
+        let controller = controllerOf(seedcord);
+        await controller.init();
 
-        let controller = testBot.interactions;
         expect(controller.buttonMap.has('click-me')).toBe(true);
 
         await testEnv.createFile(
@@ -671,12 +662,12 @@ describe('InteractionDispatcher Integration', () => {
             `
         );
 
-        await testBot.interactions.onHmr({
+        await controller.onHmr({
             file: filePath,
             type: 'update'
         });
 
-        controller = testBot.interactions;
+        controller = controllerOf(seedcord);
         expect(controller.buttonMap.has('click-me')).toBe(false);
         expect(controller.buttonMap.has('dont-click-me')).toBe(true);
     });

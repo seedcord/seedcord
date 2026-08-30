@@ -60,6 +60,8 @@ export enum SeedcordErrorCode {
     CoreAccessorUnresolved = 1210,
     /** A startup or shutdown task was added to a core built by `createSeedcord`. */
     CoreLifecycleUnavailable = 1211,
+    /** `emit` was called on the bus. It reaches listeners and skips every subscriber. */
+    CoreBusEmitUnavailable = 1212,
 
     /** Interaction middleware decorated with disallowed event filters. */
     DecoratorInteractionEventFilter = 1301,

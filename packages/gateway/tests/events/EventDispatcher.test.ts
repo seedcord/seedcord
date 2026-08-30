@@ -1,7 +1,7 @@
 import { PublishDefault } from '@seedcord/core/internal';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { botLoggerOf } from '#bot/Bot';
+import { botLoggerOf, eventsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
 
 import { seedcordPath } from '../utils/source-path';
@@ -21,8 +21,9 @@ interface PrivateEventDispatcher {
     drain(timeoutMs: number): Promise<void>;
 }
 
-interface TestBot {
-    events: PrivateEventDispatcher;
+// justified: eventMap and processEvent are private on the dispatcher
+function dispatcherOf(instance: Seedcord): PrivateEventDispatcher {
+    return eventsOf(instance.bot) as unknown as PrivateEventDispatcher;
 }
 
 describe('EventDispatcher Integration', () => {
@@ -61,11 +62,10 @@ describe('EventDispatcher Integration', () => {
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private events controller for assertion
-        const testBot = seedcord.bot as unknown as TestBot;
-        await testBot.events.init();
+        const events = dispatcherOf(seedcord);
+        await events.init();
 
-        const controller = testBot.events;
+        const controller = events;
         expect(controller.eventMap.has('ready')).toBe(true);
         expect(controller.eventMap.get('ready')).toHaveLength(1);
     });
@@ -89,11 +89,10 @@ describe('EventDispatcher Integration', () => {
 
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private events controller for assertion
-        const testBot = seedcord.bot as unknown as TestBot;
+        const events = dispatcherOf(seedcord);
 
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
-        await testBot.events.init();
+        await events.init();
 
         seedcord.bus.on('eventDispatching', () => {
             throw new Error('observer boom');
@@ -125,11 +124,10 @@ describe('EventDispatcher Integration', () => {
 
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private events controller for assertion
-        const testBot = seedcord.bot as unknown as TestBot;
+        const events = dispatcherOf(seedcord);
 
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
-        await testBot.events.init();
+        await events.init();
 
         const seen: SubscriptionData<'eventDispatching'>[] = [];
         seedcord.bus.on('eventDispatching', (payload) => seen.push(payload));
@@ -167,16 +165,15 @@ describe('EventDispatcher Integration', () => {
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private events controller for assertion
-        const testBot = seedcord.bot as unknown as TestBot;
-        await testBot.events.init();
+        const events = dispatcherOf(seedcord);
+        await events.init();
 
         const created = { reply: vi.fn() };
-        await testBot.events.processEvent('messageCreate', [created]);
+        await events.processEvent('messageCreate', [created]);
         expect(created.reply).toHaveBeenCalledWith('created');
 
         const edited = { reply: vi.fn() };
-        await testBot.events.processEvent('messageUpdate', [{ reply: vi.fn() }, edited]);
+        await events.processEvent('messageUpdate', [{ reply: vi.fn() }, edited]);
         expect(edited.reply).toHaveBeenCalledWith('updated');
     });
 
@@ -202,11 +199,10 @@ describe('EventDispatcher Integration', () => {
 
         seedcord = new Seedcord(config);
         const publish = vi.spyOn(seedcord.bus, PublishDefault);
-        // justified: TestBot exposes the private events controller for assertion
-        const testBot = seedcord.bot as unknown as TestBot;
-        await testBot.events.init();
+        const events = dispatcherOf(seedcord);
+        await events.init();
 
-        await testBot.events.processEvent('guildMemberAdd', [{}]);
+        await events.processEvent('guildMemberAdd', [{}]);
 
         expect(publish).toHaveBeenCalledWith('unknownException', expect.anything());
     });
@@ -232,13 +228,12 @@ describe('EventDispatcher Integration', () => {
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private events controller for assertion
-        const testBot = seedcord.bot as unknown as TestBot;
-        await testBot.events.init();
+        const events = dispatcherOf(seedcord);
+        await events.init();
 
         const member = { setNickname: vi.fn() };
-        await testBot.events.processEvent('guildMemberAdd', [member]);
-        await testBot.events.processEvent('guildMemberAdd', [member]);
+        await events.processEvent('guildMemberAdd', [member]);
+        await events.processEvent('guildMemberAdd', [member]);
 
         expect(member.setNickname).toHaveBeenCalledTimes(1);
     });
@@ -263,15 +258,14 @@ describe('EventDispatcher Integration', () => {
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private events controller for assertion
-        const testBot = seedcord.bot as unknown as TestBot;
-        await testBot.events.init();
+        const events = dispatcherOf(seedcord);
+        await events.init();
 
         // both fires pass the once filter because runMiddlewares awaits between the snapshot and the mark
         const message = { reply: vi.fn() };
         await Promise.all([
-            testBot.events.processEvent('messageCreate', [message]),
-            testBot.events.processEvent('messageCreate', [message])
+            events.processEvent('messageCreate', [message]),
+            events.processEvent('messageCreate', [message])
         ]);
 
         expect(message.reply).toHaveBeenCalledTimes(1);
@@ -319,15 +313,14 @@ describe('EventDispatcher Integration', () => {
         });
 
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private events controller for assertion
-        const testBot = seedcord.bot as unknown as TestBot;
-        await testBot.events.init();
+        const events = dispatcherOf(seedcord);
+        await events.init();
 
         const message = { reply: vi.fn() };
-        await testBot.events.processEvent('messageCreate', [message]);
+        await events.processEvent('messageCreate', [message]);
         expect(message.reply).not.toHaveBeenCalled();
 
-        await testBot.events.processEvent('messageCreate', [message]);
+        await events.processEvent('messageCreate', [message]);
         expect(message.reply).toHaveBeenCalledTimes(1);
     });
 
@@ -351,19 +344,18 @@ describe('EventDispatcher Integration', () => {
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private events controller for assertion
-        const testBot = seedcord.bot as unknown as TestBot;
-        await testBot.events.init();
+        const events = dispatcherOf(seedcord);
+        await events.init();
 
         const message = { reply: vi.fn() };
-        await testBot.events.processEvent('messageCreate', [message]);
+        await events.processEvent('messageCreate', [message]);
         expect(message.reply).toHaveBeenCalledTimes(1);
 
         // the failed reload rolls the handler back
         await testEnv.createFile(`${eventsDir}/OnceRollback.ts`, 'export const broken = {{{ not valid');
-        await testBot.events.onHmr({ file: filePath, type: 'update' });
+        await events.onHmr({ file: filePath, type: 'update' });
 
-        await testBot.events.processEvent('messageCreate', [message]);
+        await events.processEvent('messageCreate', [message]);
         expect(message.reply).toHaveBeenCalledTimes(1);
     });
 
@@ -387,11 +379,10 @@ describe('EventDispatcher Integration', () => {
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private events controller for assertion
-        const testBot = seedcord.bot as unknown as TestBot;
-        await testBot.events.init();
+        const events = dispatcherOf(seedcord);
+        await events.init();
 
-        let controller = testBot.events;
+        let controller = events;
         expect(controller.eventMap.get('messageCreate')).toHaveLength(1);
 
         await testEnv.createFile(
@@ -409,12 +400,12 @@ describe('EventDispatcher Integration', () => {
             `
         );
 
-        await testBot.events.onHmr({
+        await events.onHmr({
             file: filePath,
             type: 'update'
         });
 
-        controller = testBot.events;
+        controller = events;
 
         expect(controller.eventMap.has('messageCreate')).toBe(false);
         expect(controller.eventMap.has('messageUpdate')).toBe(true);
@@ -442,11 +433,11 @@ describe('EventDispatcher Integration', () => {
         const config = testConfig({ events: testEnv.resolvePath('events') });
 
         seedcord = new Seedcord(config);
-        const testBot = seedcord.bot as unknown as TestBot;
-        await testBot.events.init();
+        const events = dispatcherOf(seedcord);
+        await events.init();
 
         const message = { reply: vi.fn() };
-        await testBot.events.processEvent('messageCreate', [message]);
+        await events.processEvent('messageCreate', [message]);
 
         expect(message.reply).toHaveBeenCalledWith('ran');
     });
@@ -475,11 +466,11 @@ describe('EventDispatcher Integration', () => {
         const config = testConfig({ events: testEnv.resolvePath('events') });
 
         seedcord = new Seedcord(config);
-        const testBot = seedcord.bot as unknown as TestBot;
-        await testBot.events.init();
+        const events = dispatcherOf(seedcord);
+        await events.init();
 
         const message = { reply: vi.fn() };
-        await testBot.events.processEvent('messageCreate', [message]);
+        await events.processEvent('messageCreate', [message]);
 
         expect(message.reply).not.toHaveBeenCalled();
     });
@@ -506,8 +497,7 @@ describe('EventDispatcher Integration', () => {
 
             const config = testConfig({ events: testEnv.resolvePath('events') });
             seedcord = new Seedcord(config);
-            // justified: reaches the private events dispatcher for these client-attached tests
-            const controller = (seedcord.bot as unknown as TestBot).events;
+            const controller = dispatcherOf(seedcord);
 
             const onSpy = vi.spyOn(seedcord.bot.client, 'on');
             await controller.init();

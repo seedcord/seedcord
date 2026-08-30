@@ -15,7 +15,19 @@ describe('the Bot surface a bot author reaches', () => {
     it('drops the calls the host drives', () => {
         const { bot } = new Seedcord(testConfig());
 
-        for (const name of ['init', 'stop', 'logout', 'drain', 'stopAccepting', 'registerShutdownTasks']) {
+        const hidden = [
+            'init',
+            'stop',
+            'logout',
+            'login',
+            'drain',
+            'stopAccepting',
+            'registerShutdownTasks',
+            'interactions',
+            'events',
+            'commandRegistry'
+        ];
+        for (const name of hidden) {
             expect(name in bot).toBe(false);
         }
         expect(bot.client).toBeDefined();

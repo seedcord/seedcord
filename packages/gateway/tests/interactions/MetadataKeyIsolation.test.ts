@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+import { interactionsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
 
 import { seedcordPath } from '../utils/source-path';
@@ -13,8 +14,9 @@ interface PrivateDispatcher {
     init(): Promise<void>;
 }
 
-interface TestBot {
-    interactions: PrivateDispatcher;
+// justified: slashMap is private on the dispatcher
+function dispatcherOf(instance: Seedcord): PrivateDispatcher {
+    return interactionsOf(instance.bot) as unknown as PrivateDispatcher;
 }
 
 describe('interaction route metadata key isolation', () => {
@@ -54,7 +56,7 @@ describe('interaction route metadata key isolation', () => {
 
         seedcord = new Seedcord(config);
         // justified: TestBot exposes the private interactions controller for assertion
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = dispatcherOf(seedcord);
         await controller.init();
 
         expect(controller.slashMap.has('mycmd')).toBe(true);

@@ -1,5 +1,5 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 
@@ -67,12 +67,13 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         super();
     }
 
-    // keep this inside start(). a bad webhook url thrown outside it never resets the singleton guard
+    /** @internal keep this inside start(). a bad webhook url thrown outside it never resets the singleton guard */
     public [RegisterDefaults](): void {
         this[RegisterSubscriber](registrationFor(UnknownException));
         this[RegisterSubscriber](registrationFor(HandledException));
     }
 
+    /** @internal */
     public [RegisterSubscriber](registration: SubscriberRegistration): void {
         // a url-less reporter never registers. a publish on its key reaches nothing
         if (registration.ctor && !this.probeWebhook(registration.ctor)) return;
@@ -87,6 +88,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         }
     }
 
+    /** @internal */
     public [UnregisterSubscriber](ctor: StoredSubscriberCtor, keys?: readonly SubscriptionKey[]): void {
         for (const key of keys ?? [...this.subscribersMap.keys()]) {
             const registrations = this.subscribersMap.get(key);
@@ -97,11 +99,12 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         // the once state hangs off the registration identity, which is why a restored subscriber runs again
     }
 
+    /** @internal */
     public get [RegisteredCount](): number {
         return [...this.subscribersMap.values()].reduce((total, entries) => total + entries.length, 0);
     }
 
-    // a lazy edge registration never probes. every server-host reporter registers eagerly
+    /** @internal a lazy edge registration never probes. every server-host reporter registers eagerly */
     public async [VerifyWebhooks](): Promise<void> {
         const missing: string[] = [];
         await Promise.all(
@@ -155,6 +158,17 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         data: AllSubscriptions[KeyOfSubscribers]
     ): boolean {
         return this.dispatchKey(event, data);
+    }
+
+    /**
+     * @deprecated Call {@link Bus.publish} to reach subscribers and listeners together.
+     * @throws A **SeedcordTypeError** always. `emit` reaches only the `on()` listeners.
+     */
+    public override emit<KeyOfSubscribers extends SubscriptionKey>(
+        event: KeyOfSubscribers,
+        ..._args: SubscriptionTuples[KeyOfSubscribers]
+    ): never {
+        throw new SeedcordTypeError(SeedcordErrorCode.CoreBusEmitUnavailable, [String(event)]);
     }
 
     /** @internal the framework's own publish path, keyed by a symbol no public entry exports */

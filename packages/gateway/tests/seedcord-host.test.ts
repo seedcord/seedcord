@@ -1,5 +1,6 @@
 import { ShutdownPhase, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
+import { Events } from 'discord.js';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
@@ -7,6 +8,8 @@ import { Seedcord } from '#src/Seedcord';
 import { testConfig } from './utils/test-config';
 
 import './utils/mock-env';
+
+import type { Client } from 'discord.js';
 
 function reset(): void {
     // @ts-expect-error reset the Seedcord singleton between tests
@@ -88,11 +91,13 @@ describe('Seedcord host', () => {
 
     it('a start failure after login destroys the client', async () => {
         const seedcord = new Seedcord(testConfig());
-        // justified: login is private. the mock client never completes a real handshake
-        vi.spyOn(seedcord.bot as unknown as { login(token: string): Promise<void> }, 'login').mockResolvedValue(
-            undefined
-        );
-        const destroySpy = vi.spyOn(seedcord.bot.client, 'destroy').mockResolvedValue(undefined);
+        const { client } = seedcord.bot;
+        // the test token never reaches a real handshake. login() waits on ClientReady
+        vi.spyOn(client, 'login').mockImplementation(() => {
+            client.emit(Events.ClientReady, client as Client<true>);
+            return Promise.resolve('token');
+        });
+        const destroySpy = vi.spyOn(client, 'destroy').mockResolvedValue(undefined);
         seedcord.startup.addTask(StartupPhase.Ready, 'boom', () => Promise.reject(new Error('boom')));
 
         await expect(seedcord.start()).rejects.toThrow();

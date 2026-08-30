@@ -24,6 +24,13 @@ const LOGOUT_TIMEOUT_MS = 2000;
 
 const loggerSlot = Symbol('seedcord:bot:logger');
 const initSlot = Symbol('seedcord:bot:init');
+const controllersSlot = Symbol('seedcord:bot:controllers');
+
+interface Controllers {
+    readonly interactions?: InteractionDispatcher | undefined;
+    readonly events?: EventDispatcher | undefined;
+    readonly commandRegistry?: CommandRegistry | undefined;
+}
 
 /**
  * The Discord client and its controllers. Access it through `core.bot`.
@@ -43,17 +50,15 @@ export class Bot implements HmrAware {
     readonly #intents: BitFieldResolvable<GatewayIntentsString, number>;
     readonly #client: Client;
     readonly #emojiInjector: EmojiInjector;
-
-    // the gateway integration tests drive these three off the host
-    private readonly interactions?: InteractionDispatcher;
-    private readonly events?: EventDispatcher;
-    private readonly commandRegistry?: CommandRegistry;
+    readonly #interactions?: InteractionDispatcher;
+    readonly #events?: EventDispatcher;
+    readonly #commandRegistry?: CommandRegistry;
 
     /** @internal */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        if (this.interactions) await this.interactions.onHmr(event);
-        if (this.events) await this.events.onHmr(event);
-        if (this.commandRegistry) await this.commandRegistry.onHmr(event);
+        if (this.#interactions) await this.#interactions.onHmr(event);
+        if (this.#events) await this.#events.onHmr(event);
+        if (this.#commandRegistry) await this.#commandRegistry.onHmr(event);
     }
 
     /** @internal */
@@ -62,17 +67,22 @@ export class Bot implements HmrAware {
         this.#client = new Client(core.config.bot.clientOptions);
 
         if (core.config.bot.interactions.path) {
-            this.interactions = new InteractionDispatcher(core);
+            this.#interactions = new InteractionDispatcher(core);
         }
         if (core.config.bot.events.path) {
-            this.events = new EventDispatcher(core);
+            this.#events = new EventDispatcher(core);
         }
 
-        if (core.config.bot.commands.path) this.commandRegistry = new CommandRegistry(core);
+        if (core.config.bot.commands.path) this.#commandRegistry = new CommandRegistry(core);
 
         this.#emojiInjector = new EmojiInjector(core);
 
         this.#registerShutdownTasks(core);
+    }
+
+    /** @internal */
+    public get [controllersSlot](): Controllers {
+        return { interactions: this.#interactions, events: this.#events, commandRegistry: this.#commandRegistry };
     }
 
     /** @internal */
@@ -97,18 +107,19 @@ export class Bot implements HmrAware {
     }
 
     #stopAccepting(): void {
-        this.interactions?.stopAccepting();
-        this.events?.stopAccepting();
+        this.#interactions?.stopAccepting();
+        this.#events?.stopAccepting();
     }
 
     async #drain(): Promise<void> {
         // runs through allSettled since a rejecting drain must not abort the other dispatcher's drain
         await Promise.allSettled([
-            this.interactions?.drain(DISPATCH_DRAIN_TIMEOUT_MS),
-            this.events?.drain(DISPATCH_DRAIN_TIMEOUT_MS)
+            this.#interactions?.drain(DISPATCH_DRAIN_TIMEOUT_MS),
+            this.#events?.drain(DISPATCH_DRAIN_TIMEOUT_MS)
         ]);
     }
 
+    /** @internal */
     public async [initSlot](): Promise<void> {
         if (this.#isInitialized) {
             return;
@@ -117,19 +128,19 @@ export class Bot implements HmrAware {
 
         const token = this.botToken;
 
-        if (this.interactions) await this.interactions.init();
-        if (this.events) await this.events.init();
+        if (this.#interactions) await this.#interactions.init();
+        if (this.#events) await this.#events.init();
 
-        await this.login(token);
+        await this.#login(token);
 
         await this.#emojiInjector.init();
 
-        if (this.commandRegistry) {
-            await this.commandRegistry.init();
-            assertGuildsIntent(this.#intents, this.commandRegistry.allCommands());
-            await this.commandRegistry.setCommands();
-            this.interactions?.warnUnhandledRoutes(this.commandRegistry.routeLeaves());
-            this.interactions?.warnUnhandledContextMenuRoutes(this.commandRegistry.contextMenuLeaves());
+        if (this.#commandRegistry) {
+            await this.#commandRegistry.init();
+            assertGuildsIntent(this.#intents, this.#commandRegistry.allCommands());
+            await this.#commandRegistry.setCommands();
+            this.#interactions?.warnUnhandledRoutes(this.#commandRegistry.routeLeaves());
+            this.#interactions?.warnUnhandledContextMenuRoutes(this.#commandRegistry.contextMenuLeaves());
         }
     }
 
@@ -139,8 +150,7 @@ export class Bot implements HmrAware {
         await this.#logout();
     }
 
-    // seedcord-host.test spies on this to skip the handshake
-    private async login(token: string): Promise<Bot> {
+    async #login(token: string): Promise<Bot> {
         const ready: PromiseWithResolvers<void> = Promise.withResolvers();
         this.#client.once(Events.ClientReady, () => ready.resolve());
         void this.#client.login(token);
@@ -165,4 +175,17 @@ export function botLoggerOf(bot: Bot): Logger {
 
 export function initBot(bot: Bot): Promise<void> {
     return bot[initSlot]();
+}
+
+// the gateway integration tests call these three off a live host
+export function interactionsOf(bot: Bot): InteractionDispatcher | undefined {
+    return bot[controllersSlot].interactions;
+}
+
+export function eventsOf(bot: Bot): EventDispatcher | undefined {
+    return bot[controllersSlot].events;
+}
+
+export function commandRegistryOf(bot: Bot): CommandRegistry | undefined {
+    return bot[controllersSlot].commandRegistry;
 }

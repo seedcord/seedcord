@@ -51,6 +51,8 @@ const messages = {
         `${accessor}.${key} has no value yet. ${accessor} fills during startup, and a read at the top of a file runs before that.`,
     [SeedcordErrorCode.CoreLifecycleUnavailable]: (accessor: string) =>
         `core.${accessor}.addTask() does not work here. This bot was built with createSeedcord() whose build never runs startup or shutdown. Your task would never run. Do the work inside your handler instead. To use startup and shutdown, run the bot on node with new Seedcord(config).start().`,
+    [SeedcordErrorCode.CoreBusEmitUnavailable]: (event: string) =>
+        `core.bus.emit('${event}') would reach your on() listeners and skip every Subscriber class. Call core.bus.publish('${event}', data) to run both.`,
 
     [SeedcordErrorCode.DecoratorInteractionEventFilter]: () => 'Interaction middleware cannot specify event filters.',
     [SeedcordErrorCode.DecoratorCommandAlreadyRegistered]: (
