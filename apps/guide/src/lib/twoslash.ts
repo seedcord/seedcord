@@ -7,6 +7,7 @@ import { createTwoslasher } from 'twoslash';
 import { removeTwoslashNotations } from 'twoslash/fallback';
 import { removeCodeRanges, resolveNodePositions, splitLines } from 'twoslash-protocol';
 
+import { commonIndent, dedent } from '#lib/dedent';
 import { formatHoverType } from '#lib/formatHoverType';
 import { SAMPLE_AUGMENTATION } from '#lib/sampleTypes';
 import { referenceFor } from '#lib/symbolRef';
@@ -97,25 +98,10 @@ const renderer: TwoslashRenderer = {
     }
 };
 
-const INDENTS = /^[ \t]*(?=\S)/gm;
-
-function commonIndent(code: string): number {
-    const found = code.match(INDENTS) ?? [];
-
-    return found.reduce((width, indent) => Math.min(width, indent.length), Infinity);
-}
-
 function indentRanges(code: string, width: number): [number, number][] {
     return splitLines(code)
         .filter(([line]) => line.trim())
         .map(([, start]) => [start, start + width]);
-}
-
-function dedent(code: string): string {
-    const width = commonIndent(code);
-    if (!Number.isFinite(width) || width === 0) return code;
-
-    return code.replace(new RegExp(`^[ \\t]{${String(width)}}`, 'gm'), '');
 }
 
 const compile = createTwoslasher();
