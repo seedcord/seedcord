@@ -3,9 +3,13 @@ import { ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-react';
 
 import { CodeCard } from '#components/code/CodeCard';
 import { Section } from '#components/home/Section';
+import { Code } from '#components/ui/Code';
 import { codecComponent, codecHandler } from '#lib/code/samples';
 
 import type { ReactNode } from 'react';
+
+// --flesh on the flesh ground is too dark to read
+const MARK = 'rounded-sm bg-(--seed-dark)/30 px-1.5 text-[0.88em]';
 
 const CHIPS = [
     { icon: ArrowRightFromLine, label: 'encode(values) to string' },
@@ -15,37 +19,46 @@ const CHIPS = [
 export function Codec(): ReactNode {
     return (
         <Section ground="flesh">
-            <div className={cn('max-w-2xl')}>
+            <div className={cn('grid items-start gap-x-10 gap-y-6 lg:grid-cols-2')}>
                 <h2
                     className={cn(
                         'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
                     )}
                 >
-                    100 characters.
+                    Discord hands back a flat string.
                     <br />
-                    Packed by a
-                    <br />
-                    typed schema.
+                    You get your typed fields.
                 </h2>
-                <p className={cn('mt-6 max-w-md text-lg/snug font-medium text-(--pith)')}>
-                    Discord limits a customId to 100 characters. The codec packs your fields so more state fits than a
-                    joined string would, then decodes them back to exact, typed values.
-                </p>
-                <div className={cn('mt-7 flex flex-wrap gap-2')}>
-                    {CHIPS.map((chip) => (
-                        <span
-                            key={chip.label}
-                            className={cn(
-                                'rule-pith font-mono-code flex items-center gap-2 rounded-sm bg-(--seed-dark)/30 px-3 py-1.5 text-xs font-semibold'
-                            )}
-                        >
-                            <Icon icon={chip.icon} size={14} className={cn('shrink-0')} />
-                            {chip.label}
-                        </span>
-                    ))}
+                <div className={cn('min-w-0')}>
+                    <p className={cn('text-lg/snug font-medium text-(--pith)')}>
+                        A click arrives carrying the custom id you set, as one string. Split it yourself and every field
+                        comes back as <Code className={cn(MARK)}>string</Code>.
+                    </p>
+                    <p className={cn('mt-4 text-lg/snug font-medium text-(--pith)')}>
+                        <Code className={cn(MARK)}>CustomId</Code> declares those fields once.{' '}
+                        <Code className={cn(MARK)}>this.params</Code> then returns each one at its real type.
+                    </p>
+                    <p className={cn('mt-4 text-lg/snug font-medium text-(--pith)')}>
+                        Discord caps that string at 100 characters. The codec packs your fields into fewer of them than
+                        joining the values would.
+                    </p>
+                    <div className={cn('mt-6 flex flex-wrap gap-2')}>
+                        {CHIPS.map((chip) => (
+                            <span
+                                key={chip.label}
+                                className={cn(
+                                    'rule-pith font-mono-code flex items-center gap-2 rounded-sm bg-(--seed-dark)/30 px-3 py-1.5 text-xs font-semibold'
+                                )}
+                            >
+                                <Icon icon={chip.icon} size={14} className={cn('shrink-0')} />
+                                {chip.label}
+                            </span>
+                        ))}
+                    </div>
                 </div>
             </div>
-            <div className={cn('mt-10 grid gap-5 lg:grid-cols-2')}>
+            {/* columns and gutter match the text grid above */}
+            <div className={cn('mt-10 grid gap-x-10 gap-y-5 lg:grid-cols-2')}>
                 <CodeCard
                     code={codecComponent}
                     filename="components/role-picker.ts"
