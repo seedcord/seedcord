@@ -1,0 +1,144 @@
+---
+title: The core object
+description: The one object every handler, gate, and subscriber in your bot shares.
+---
+
+Your `/ping` handler replied and stopped there. Most handlers need more than that. They read your own config, or a database, or the rate limiter that a cooldown charges. seedcord builds one object holding all of it while your bot starts, and every handler reaches that object as `this.core`.
+
+```ts twoslash title="src/handlers/Ping.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ping')
+export class Ping extends SlashHandler<'ping'> {
+    public async execute(): Promise<void> {
+        const owners = this.core.config.ownerIds;
+        //    ^?
+
+        await this.reply(
+            `${owners?.length ?? 0} owners configured.`
+        );
+    }
+}
+```
+
+The rest of your code reaches the same object. A gate reads it as `ctx.core`. A subscriber and a plugin both read `this.core`, the same as a handler.
+
+## What it carries
+
+{/* prettier-ignore-start */}
+
+| member | holds |
+| --- | --- |
+| `config` | the object you passed to `new Seedcord()` |
+| `rest` | Discord's REST client, which is discord.js's own on gateway |
+| `applicationId` | your bot's Discord application id |
+| `rateLimiter` | the windows behind [`Cooldown`](/gates/cooldown), and yours to charge directly |
+| `bus` | [publishing and subscribing](/events/bus) for framework and application events |
+| `startup` | `addTask`, for work that runs while your bot boots |
+| `shutdown` | `addTask`, for work that runs while it stops |
+| `bot` | the discord.js client and your bot token. Gateway only |
+
+{/* prettier-ignore-end */}
+
+[`CoreBase`](ref:core/CoreBase) is the part both transports share. Each one adds its own members to it.
+
+`config` reaches your handler exactly as you wrote it in `src/bot.ts`. `ownerIds` is optional, which is why the sample above guards it, and [`OwnerOnly`](ref:core/OwnerOnly) reads that same key.
+
+## Running work while your bot starts and stops
+
+Say your bot opens a cache of its own. Something has to fill it before the first command runs, then close it again when the bot stops. [`startup.addTask`](ref:core/CoordinatedStartup.addTask) and [`shutdown.addTask`](ref:core/CoordinatedShutdown.addTask) put that work in the right phase.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import {
+    Seedcord,
+    ShutdownPhase,
+    StartupPhase
+} from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+declare function openCache(): Promise<void>;
+declare function closeCache(): Promise<void>;
+
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers')
+        },
+        commands: {
+            path: resolve(import.meta.dirname, './commands')
+        },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+
+seedcord.startup.addTask(
+    StartupPhase.Configuration,
+    'open-cache',
+    openCache
+);
+
+seedcord.shutdown.addTask(
+    ShutdownPhase.Disconnect,
+    'close-cache',
+    closeCache
+);
+
+export default seedcord;
+```
+
+Each call takes the phase, a name for the logs, the work itself, and an optional timeout in milliseconds. A startup task gets 10000 and a shutdown task gets 5000 unless you pass your own.
+
+Pick the phase by what has to be true when your task runs. The sample fills its cache in `Configuration`, before anything connects, and closes it in `Disconnect`, the phase for closing external resources. [Plugin lifecycle](/plugins/lifecycle) tables every startup and shutdown phase with what has already happened by each one.
+
+<Callout type="transport" only="gateway">
+
+`core.applicationId` comes from the discord.js client, so it resolves during the Login phase. Reading it from a `Configuration` task throws. Every handler runs long after login, which makes it safe there.
+
+</Callout>
+
+<Callout type="transport" only="http">
+
+`createSeedcord` builds a core without these phases. Both `addTask` calls compile on an edge bot and throw `CoreLifecycleUnavailable` when they run.
+
+</Callout>
+
+## A plugin becomes a property
+
+[`attach()`](ref:gateway/Seedcord.attach) takes a key, a plugin class, and whatever that plugin's constructor needs after the host. The key turns into a property on the same object your handlers read.
+
+```ts twoslash
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
+import { GatewayIntentBits } from 'discord.js';
+
+const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers')
+        },
+        commands: { path: null },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+
+// ---cut---
+seedcord.attach('db', KyselyPostgres, {
+    dir: resolve(import.meta.dirname, './services'),
+    connectionString: 'postgres://localhost:5432/seedcord',
+    migrations: {
+        path: resolve(import.meta.dirname, './migrations')
+    }
+});
+```
+
+`attach()` sets the property at runtime. `seedcord codegen` then writes the type that makes `this.core.db` compile inside a handler. Check out the [plugins](/plugins) page for more about this.
+
+Every tab ahead uses `this.core` somewhere. Now. [Where do you want to go next](/where-to-go-next)?
