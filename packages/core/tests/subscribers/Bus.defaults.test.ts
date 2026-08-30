@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import { Bus } from '#subscribers/index';
+import { RegisterDefaults, RegisteredCount } from '#subscribers/slots';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 
@@ -14,9 +15,9 @@ describe('Bus default reporters', () => {
     // reporter url error there escapes before start() can reset it
     it('registers nothing until the host asks for the defaults', () => {
         const bus = stubBus();
-        expect(bus.registeredCount).toBe(0);
+        expect(bus[RegisteredCount]).toBe(0);
 
-        bus.registerDefaults();
-        expect(bus.registeredCount).toBe(2);
+        bus[RegisterDefaults]();
+        expect(bus[RegisteredCount]).toBe(2);
     });
 });

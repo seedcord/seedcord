@@ -9,6 +9,7 @@ import { WebhookLog } from './bases/WebhookLog';
 import { HandledException } from './default/HandledException';
 import { UnknownException } from './default/UnknownException';
 import { PublishDefault } from './publishDefault';
+import { RegisterDefaults, RegisteredCount, RegisterSubscriber, UnregisterSubscriber, VerifyWebhooks } from './slots';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { SubscribeMetadataEntry } from './decorators/Subscribe';
@@ -66,14 +67,13 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         super();
     }
 
-    /** @internal the host calls this during startup, keeping the url validation inside `start()` where a failure can still release the singleton guard. */
-    public registerDefaults(): void {
-        this.register(registrationFor(UnknownException));
-        this.register(registrationFor(HandledException));
+    // keep this inside start(). a bad webhook url thrown outside it never resets the singleton guard
+    public [RegisterDefaults](): void {
+        this[RegisterSubscriber](registrationFor(UnknownException));
+        this[RegisterSubscriber](registrationFor(HandledException));
     }
 
-    /** @internal */
-    public register(registration: SubscriberRegistration): void {
+    public [RegisterSubscriber](registration: SubscriberRegistration): void {
         // a url-less reporter never registers. a publish on its key reaches nothing
         if (registration.ctor && !this.probeWebhook(registration.ctor)) return;
 
@@ -87,8 +87,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         }
     }
 
-    /** @internal */
-    public unregister(ctor: StoredSubscriberCtor, keys?: readonly SubscriptionKey[]): void {
+    public [UnregisterSubscriber](ctor: StoredSubscriberCtor, keys?: readonly SubscriptionKey[]): void {
         for (const key of keys ?? [...this.subscribersMap.keys()]) {
             const registrations = this.subscribersMap.get(key);
             if (!registrations) continue;
@@ -98,13 +97,12 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         // the once state hangs off the registration identity, which is why a restored subscriber runs again
     }
 
-    /** @internal */
-    public get registeredCount(): number {
+    public get [RegisteredCount](): number {
         return [...this.subscribersMap.values()].reduce((total, entries) => total + entries.length, 0);
     }
 
-    /** @internal Only eagerly registered reporters are probed, which is every server-host one. */
-    public async verifyWebhooks(): Promise<void> {
+    // a lazy edge registration never probes. every server-host reporter registers eagerly
+    public async [VerifyWebhooks](): Promise<void> {
         const missing: string[] = [];
         await Promise.all(
             [...this.webhookProbes].map(async ([url, envKeys]) => {

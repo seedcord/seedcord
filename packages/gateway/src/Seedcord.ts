@@ -8,7 +8,7 @@ import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
-import { botLoggerOf, Bot } from './bot/Bot';
+import { botLoggerOf, Bot, initBot } from './bot/Bot';
 import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
@@ -97,7 +97,7 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
 
         this.startup.addTask(StartupPhase.Login, 'bot-initialization', async () => {
             botLoggerOf(this.bot).utils.initialization('Bot', 'start');
-            await this.bot.init();
+            await initBot(this.bot);
             botLoggerOf(this.bot).utils.initialization('Bot', 'end');
         });
 

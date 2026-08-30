@@ -12,7 +12,6 @@ import { assertGuildsIntent } from '#miscellaneous/assertGuildsIntent';
 import { EmojiInjector } from './injectors/EmojiInjector';
 
 import type { Core } from '#interfaces/Core';
-import type { Initializeable } from '@seedcord/core/internal';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { BitFieldResolvable, GatewayIntentsString } from 'discord.js';
 
@@ -24,27 +23,30 @@ const UNBIND_TIMEOUT_MS = 2000;
 const LOGOUT_TIMEOUT_MS = 2000;
 
 const loggerSlot = Symbol('seedcord:bot:logger');
+const initSlot = Symbol('seedcord:bot:init');
 
 /**
  * The Discord client and its controllers. Access it through `core.bot`.
  */
-export class Bot implements Initializeable, HmrAware {
+export class Bot implements HmrAware {
     @Envapt<string>('DISCORD_BOT_TOKEN', {
         converter: (raw) => validateDiscordToken(raw)
     })
     declare public readonly botToken: string;
 
-    private readonly logger = new Logger('Bot', { channel: 'bot' });
+    readonly #logger = new Logger('Bot', { channel: 'bot' });
 
     /** @internal */
-    readonly [loggerSlot]: Logger = this.logger;
-    private isInitialized = false;
+    readonly [loggerSlot]: Logger = this.#logger;
+    #isInitialized = false;
 
-    private readonly intents: BitFieldResolvable<GatewayIntentsString, number>;
-    private readonly _client: Client;
+    readonly #intents: BitFieldResolvable<GatewayIntentsString, number>;
+    readonly #client: Client;
+    readonly #emojiInjector: EmojiInjector;
+
+    // the gateway integration tests drive these three off the host
     private readonly interactions?: InteractionDispatcher;
     private readonly events?: EventDispatcher;
-    private readonly emojiInjector: EmojiInjector;
     private readonly commandRegistry?: CommandRegistry;
 
     /** @internal */
@@ -56,8 +58,8 @@ export class Bot implements Initializeable, HmrAware {
 
     /** @internal */
     constructor(core: Core) {
-        this.intents = core.config.bot.clientOptions.intents;
-        this._client = new Client(core.config.bot.clientOptions);
+        this.#intents = core.config.bot.clientOptions.intents;
+        this.#client = new Client(core.config.bot.clientOptions);
 
         if (core.config.bot.interactions.path) {
             this.interactions = new InteractionDispatcher(core);
@@ -68,38 +70,38 @@ export class Bot implements Initializeable, HmrAware {
 
         if (core.config.bot.commands.path) this.commandRegistry = new CommandRegistry(core);
 
-        this.emojiInjector = new EmojiInjector(core);
+        this.#emojiInjector = new EmojiInjector(core);
 
-        this.registerShutdownTasks(core);
+        this.#registerShutdownTasks(core);
     }
 
     /** @internal */
     public get applicationId(): string {
-        const { application } = this._client;
+        const { application } = this.#client;
         if (!application) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
         return application.id;
     }
 
-    private registerShutdownTasks(core: Core): void {
+    #registerShutdownTasks(core: Core): void {
         core.shutdown.addTask(
             ShutdownPhase.Unbind,
             'stop-dispatch',
             () => {
-                this.stopAccepting();
+                this.#stopAccepting();
                 return Promise.resolve();
             },
             UNBIND_TIMEOUT_MS
         );
-        core.shutdown.addTask(ShutdownPhase.Drain, 'drain-dispatch', () => this.drain(), DRAIN_TASK_TIMEOUT_MS);
-        core.shutdown.addTask(ShutdownPhase.Logout, 'stop-bot', async () => await this.stop(), LOGOUT_TIMEOUT_MS);
+        core.shutdown.addTask(ShutdownPhase.Drain, 'drain-dispatch', () => this.#drain(), DRAIN_TASK_TIMEOUT_MS);
+        core.shutdown.addTask(ShutdownPhase.Logout, 'stop-bot', async () => await this.#stop(), LOGOUT_TIMEOUT_MS);
     }
 
-    private stopAccepting(): void {
+    #stopAccepting(): void {
         this.interactions?.stopAccepting();
         this.events?.stopAccepting();
     }
 
-    private async drain(): Promise<void> {
+    async #drain(): Promise<void> {
         // runs through allSettled since a rejecting drain must not abort the other dispatcher's drain
         await Promise.allSettled([
             this.interactions?.drain(DISPATCH_DRAIN_TIMEOUT_MS),
@@ -107,12 +109,11 @@ export class Bot implements Initializeable, HmrAware {
         ]);
     }
 
-    /** @internal */
-    public async init(): Promise<void> {
-        if (this.isInitialized) {
+    public async [initSlot](): Promise<void> {
+        if (this.#isInitialized) {
             return;
         }
-        this.isInitialized = true;
+        this.#isInitialized = true;
 
         const token = this.botToken;
 
@@ -121,44 +122,47 @@ export class Bot implements Initializeable, HmrAware {
 
         await this.login(token);
 
-        await this.emojiInjector.init();
+        await this.#emojiInjector.init();
 
         if (this.commandRegistry) {
             await this.commandRegistry.init();
-            assertGuildsIntent(this.intents, this.commandRegistry.allCommands());
+            assertGuildsIntent(this.#intents, this.commandRegistry.allCommands());
             await this.commandRegistry.setCommands();
             this.interactions?.warnUnhandledRoutes(this.commandRegistry.routeLeaves());
             this.interactions?.warnUnhandledContextMenuRoutes(this.commandRegistry.contextMenuLeaves());
         }
     }
 
-    /** @internal */
-    public async stop(): Promise<void> {
-        this._client.removeAllListeners();
+    async #stop(): Promise<void> {
+        this.#client.removeAllListeners();
 
-        await this.logout();
+        await this.#logout();
     }
 
+    // seedcord-host.test spies on this to skip the handshake
     private async login(token: string): Promise<Bot> {
         const ready: PromiseWithResolvers<void> = Promise.withResolvers();
-        this._client.once(Events.ClientReady, () => ready.resolve());
-        void this._client.login(token);
+        this.#client.once(Events.ClientReady, () => ready.resolve());
+        void this.#client.login(token);
         await ready.promise;
-        this.logger.info(`Logged in as ${paint.sky.bold(this._client.user?.username)}!`);
+        this.#logger.info(`Logged in as ${paint.sky.bold(this.#client.user?.username)}!`);
         return this;
     }
 
-    private async logout(): Promise<void> {
-        await this._client.destroy();
-        this.logger.info(paint.coral.bold('Logged out of Discord!'));
+    async #logout(): Promise<void> {
+        await this.#client.destroy();
+        this.#logger.info(paint.coral.bold('Logged out of Discord!'));
     }
 
     public get client(): Client {
-        return this._client;
+        return this.#client;
     }
 }
 
-/** @internal */
 export function botLoggerOf(bot: Bot): Logger {
     return bot[loggerSlot];
+}
+
+export function initBot(bot: Bot): Promise<void> {
+    return bot[initSlot]();
 }

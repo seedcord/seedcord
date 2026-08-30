@@ -88,8 +88,10 @@ describe('Seedcord host', () => {
 
     it('a start failure after login destroys the client', async () => {
         const seedcord = new Seedcord(testConfig());
-        // justified: the mock client cannot complete a real login handshake
-        vi.spyOn(seedcord.bot, 'init').mockResolvedValue(undefined);
+        // justified: login is private. the mock client never completes a real handshake
+        vi.spyOn(seedcord.bot as unknown as { login(token: string): Promise<void> }, 'login').mockResolvedValue(
+            undefined
+        );
         const destroySpy = vi.spyOn(seedcord.bot.client, 'destroy').mockResolvedValue(undefined);
         seedcord.startup.addTask(StartupPhase.Ready, 'boom', () => Promise.reject(new Error('boom')));
 

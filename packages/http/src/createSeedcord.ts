@@ -1,3 +1,4 @@
+import { RegisterDefaults } from '@seedcord/core/internal';
 import { validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { Envapter } from 'envapt';
@@ -37,7 +38,7 @@ export function createSeedcord(
 
     const token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
     const core = createCore(config, token);
-    core.bus.registerDefaults();
+    core.bus[RegisterDefaults]();
     registerSubscribers(core.bus, manifest);
     return buildEngine(core, buildRouteMaps(manifest)).handle;
 }

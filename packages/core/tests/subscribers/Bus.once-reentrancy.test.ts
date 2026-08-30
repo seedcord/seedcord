@@ -5,6 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { Bus } from '#subscribers/Bus';
 import { Subscribe } from '#subscribers/decorators/Subscribe';
 import { PublishDefault } from '#subscribers/publishDefault';
+import { RegisterSubscriber } from '#subscribers/slots';
 import { Subscriber } from '#subscribers/Subscriber';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -34,7 +35,7 @@ describe("Bus 'once' re-entrancy", () => {
             }
         }
 
-        bus.register({
+        bus[RegisterSubscriber]({
             keys: ['unknownException'],
             frequency: 'once',
             resolve: () => ReentrantOnce,

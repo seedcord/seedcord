@@ -100,6 +100,13 @@ export { serializeReply, type SerializedReply } from '#reply/serializeReply';
 export { type StoredSubscriberCtor, type SubscriberRegistration } from '#subscribers/Bus';
 export { ReportThrottle } from '#subscribers/ReportThrottle';
 export { PublishDefault } from '#subscribers/publishDefault';
+export {
+    RegisterDefaults,
+    RegisteredCount,
+    RegisterSubscriber,
+    UnregisterSubscriber,
+    VerifyWebhooks
+} from '#subscribers/slots';
 export { outcomeFor, queuedMsFor, reportDispatch } from '#src/dispatch/dispatchReport';
 // the transports' augmentation target for their own default keys
 export type { DefaultSubscriptions } from '#subscribers/types/Subscriptions';
