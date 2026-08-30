@@ -17,7 +17,7 @@ export function Plugins(): ReactNode {
                 <h2 className={cn(SECTION_HEADING)}>
                     Write your own Plugin.
                     <br />
-                    Reach it from every handler.
+                    Reach it from <span className={cn('text-(--flesh-deep)')}>every handler</span>.
                 </h2>
                 <div className={cn('min-w-0')}>
                     <p className={cn('text-lg/snug font-medium text-(--seed-dark)/85')}>

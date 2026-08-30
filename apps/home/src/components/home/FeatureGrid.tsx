@@ -70,7 +70,7 @@ const GROUPS: Group[] = [
             {
                 icon: Sparkles,
                 label: 'typed autocomplete',
-                gloss: 'a handler per option, missing one is a compile error'
+                gloss: 'a handler per option, and a missing one fails to compile'
             },
             { icon: AtSign, label: 'command mentions', gloss: 'renders </route:id> once Discord assigns the id' },
             { icon: Smile, label: 'emojis', gloss: 'resolved at startup, reached by name' }
