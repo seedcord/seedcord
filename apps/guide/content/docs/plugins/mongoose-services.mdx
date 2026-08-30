@@ -88,7 +88,7 @@ That reads the `app_users` collection while you still reach it as `services.user
 
 ## Typing the registry
 
-[`MongooseServices`](ref:plugin-mongoose/MongooseServices) starts empty, so you fill it in yourself with the `declare module` block at the bottom of the first example. Write that block by hand, since codegen never touches it. Codegen handles the `Core` augmentation covered in [Typing a plugin](/plugins/typing).
+[`MongooseServices`](ref:plugin-mongoose/MongooseServices) starts empty, so you fill it in yourself with the `declare module` block at the bottom of the first example. Write that block by hand, since codegen never touches it. Codegen writes the `Core` augmentation covered in [Typing a plugin](/plugins/typing).
 
 After you declare it, the key you pass to the decorator must match one of those entries. If you forget to declare a key, TypeScript will fail to compile.
 

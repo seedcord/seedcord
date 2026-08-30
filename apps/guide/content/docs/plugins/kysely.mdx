@@ -58,7 +58,7 @@ export default seedcord;
 
 `connectionString` and `forceInsecureSSL` both overwrite the matching key in whatever you passed as `pool`.
 
-`onConnectSQL` runs on every new connection the pool opens. It does not block, so your first query can reach a connection whose statements are still running. A failed statement gets logged and never throws.
+`onConnectSQL` runs on every new connection the pool opens. Because it does not block, your first query can reach a connection whose statements are still running. A failed statement gets logged and never throws.
 
 [Migrations](/plugins/kysely-migrations) covers everything under `migrations`.
 
@@ -105,7 +105,7 @@ seedcord.attach('db', KyselyPostgres, {
 });
 ```
 
-**A `Pool` you built yourself** stays as you built it, so your `connectionString` is ignored and the database check below never runs. Build it, then pass it as `pool`.
+**A `Pool` you built yourself** stays as you built it. The plugin ignores your `connectionString`, and the database check below never runs. Construct it first, then pass it as `pool`.
 
 ```ts twoslash
 import { Pool } from 'pg';
@@ -117,7 +117,7 @@ const pool = new Pool({
 
 <Callout type="warning">
 
-Shutdown closes the pool whichever path you took, so sharing one with the rest of your application ends it when the bot stops.
+Shutdown closes the pool every time, including one you built and passed in yourself. A pool you share with the rest of your application closes with the bot.
 
 </Callout>
 
@@ -144,7 +144,7 @@ A connection failure throws `PluginKyselyConnectionFailed`, which names whicheve
 
 <Callout type="warning">
 
-The migrations directory has to exist before the first boot. A missing path gets treated as a single migration file, so the import throws Node's `ERR_MODULE_NOT_FOUND`. An empty directory is fine.
+The migrations directory has to exist before the first boot. The plugin treats a missing path as a single migration file, and the import then throws Node's `ERR_MODULE_NOT_FOUND`. An empty directory is fine.
 
 </Callout>
 
@@ -154,6 +154,6 @@ Shutdown does less. `dispose()` clears the service registry, then closes the poo
 
 Once `init()` has connected, `connection` holds the Kysely instance. In a handler you reach it as `this.core.db.connection`.
 
-TypeScript treats it as always present. The plugin assigns it once the pool connects, so reading it any earlier gives you `undefined`.
+`connection` is typed as always present, though the plugin only assigns it once the pool connects. Before that point it reads as `undefined`.
 
 Kysely resolves every table name in a query against a schema you declare yourself. [Your schema](/plugins/kysely-schema) covers that next.

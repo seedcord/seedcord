@@ -88,13 +88,13 @@ Discord sends one of these every time the person edits the field, so `value` is 
 
 ## One arm per field
 
-An autocomplete interaction names which field is focused, so every handler branches on it. `this.match` takes one arm per autocompletable field, and leaving one out is a compile error.
+An autocomplete interaction names which field is focused, so every handler branches on it. `this.match` takes one arm per autocompletable field, and a missing arm fails to compile.
 
 Each arm receives the partial value and a `respond` typed to that field's choice values.
 
 ## One handler for several commands
 
-The decorator and the generic take a list. The arms then cover every autocompletable field across all of them.
+Name every command in the decorator, and repeat those names in the generic. The arms then cover every autocompletable field across all of them.
 
 `search` completes `query` and `limit`. A second command, `probe`, completes `query`, `count`, and `ratio`. One handler for both needs four arms.
 

@@ -49,11 +49,11 @@ declare module '@seedcord/plugin-kysely-postgres' {
 
 ## You never construct a service
 
-The plugin reads every class under the `dir` you passed to `attach`, then constructs it. That constructor call is the registration, so `new Users()` never appears in your code.
+During startup the plugin loads `dir` and constructs every service class it finds. Constructing a class registers it, which is why `new Users()` never appears in your code.
 
 <Callout type="warning">
 
-The plugin only loads a class carrying [`@RegisterKyselyService`](ref:plugin-kysely-postgres/RegisterKyselyService). An undecorated one is skipped in silence, so `services.users` comes back undefined with nothing thrown and nothing logged.
+The plugin skips a class missing [`@RegisterKyselyService`](ref:plugin-kysely-postgres/RegisterKyselyService). Nothing throws, nothing reaches the log, and `services.users` reads back as `undefined`.
 
 </Callout>
 
@@ -97,7 +97,7 @@ Whichever name `table` resolves to has to match the type argument on the class. 
 
 ## Typing the registry
 
-[`KyselyServices`](ref:plugin-kysely-postgres/KyselyServices) starts empty, so you fill it in with the `declare module` block at the bottom of the first example. Write that block by hand, since codegen never touches it. Codegen handles the `Core` augmentation covered in [Typing a plugin](/plugins/typing).
+The `declare module` block at the bottom of the first example fills [`KyselyServices`](ref:plugin-kysely-postgres/KyselyServices), which starts out empty. You write that block by hand, since codegen never touches it. [Typing a plugin](/plugins/typing) covers the `Core` augmentation codegen does write.
 
 Once a key is declared there, the decorator accepts it. Passing one you have not declared fails to compile.
 
@@ -166,4 +166,4 @@ class Leaderboard extends SlashHandler<'leaderboard'> {
 }
 ```
 
-`services` fills up once the plugin has connected and loaded every class. Reading it before then throws `PluginKyselyServicesNotReady`.
+The plugin fills `services` after it connects and loads every class. Reading it before that throws `PluginKyselyServicesNotReady`.

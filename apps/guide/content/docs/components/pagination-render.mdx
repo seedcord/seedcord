@@ -143,11 +143,11 @@ export const Feed = new Paginator({
 
 `controls` builds every button with its target page already set, and disables it at the ends of the list. Prev on page one comes back greyed out with nothing left for you to wire.
 
-## The five keys
+## The control keys
 
 `first`, `prev`, `indicator`, `next`, and `last`.
 
-The indicator is a disabled button showing the page text, `Page 2 of 4` when the source counted and `Page 2` when it could not. A cursor source never counts, which is why the fence above names three keys and skips First and Last. An [`ArraySource`](ref:gateway/ArraySource) knows its total, so a row there takes all five.
+The indicator is a disabled button showing the page text, `Page 2 of 4` when the source counted and `Page 2` when it could not. A cursor source never counts, which is why the fence above names three keys and skips First and Last. An [`ArraySource`](ref:gateway/ArraySource) knows its total, so a row there takes every key.
 
 `row()` throws on an empty list, on more than five keys, and on the same key twice. Two copies of one control mint the same custom id, which Discord rejects.
 

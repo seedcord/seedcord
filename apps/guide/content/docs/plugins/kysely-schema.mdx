@@ -33,7 +33,7 @@ TypeScript applies that block from anywhere in your project, so nothing needs to
 
 `AppDatabase` takes one entry per table, keyed by the table's name in Postgres. Within a table, two Kysely helpers cover the columns that read back differently from how you write them.
 
-`Generated` covers a column Postgres fills in, so an insert can leave `id` out while a select still reads it as `number`. `ColumnType` sets the three directions by hand. That gives `joined_at` a `Date` on select and an optional `string` on insert, with `never` for updates, so updating it fails to compile.
+`Generated` covers a column Postgres fills in, so an insert can leave `id` out while a select still reads it as `number`. `ColumnType` sets the three directions by hand. That gives `joined_at` a `Date` on select and an optional `string` on insert, with `never` for updates, which makes updating it a compile error.
 
 ## Every table name compiles until you declare it
 

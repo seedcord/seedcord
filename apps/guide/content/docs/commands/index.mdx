@@ -7,6 +7,8 @@ A command file declares what Discord shows people. A handler file runs when some
 
 ## The command file
 
+Here is a `/ban` command taking a user and an optional reason.
+
 ```ts twoslash title="src/commands/Ban.ts"
 import {
     BuilderComponent,
@@ -100,6 +102,8 @@ export default defineConfig({
 Run `seedcord codegen` after you add a command or change its options. `seedcord dev` runs it when you answer `y` to the re-register prompt.
 
 ## The handler file
+
+Now the code that runs when someone uses `/ban`.
 
 ```ts twoslash hovers title="src/handlers/Ban.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';

@@ -39,7 +39,7 @@ The `export default` on the last line matters as much as the attach call, since 
 
 ## Reading it from a handler
 
-`this.core` carries every attached plugin under its key, so the handler below reaches the mongoose service through `this.core.db`.
+`this.core` carries every attached plugin under its key, which is how the handler below reaches the mongoose service through `this.core.db`.
 
 ```ts twoslash title="src/handlers/History.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -139,7 +139,7 @@ export const seedcord = new Seedcord({
 
 ## The key also names a log channel
 
-Every mongoose line above prints under `db`, since a plugin logs on the channel its attach key names. The framework already logs on reserved channels of its own, so none of those names can be a key.
+Every mongoose line above prints under `db`, since a plugin logs on the channel its attach key names. The framework already logs on reserved channels of its own, which rules those names out as keys.
 
 ```ts twoslash
 // @errors: 2345

@@ -76,7 +76,7 @@ A plain string works too, which seedcord wraps in one text component.
 
 ## One handler, several buttons
 
-`@ButtonRoute` takes as many ids as you pass it. List every one in the generic, then branch with [`this.match`](ref:gateway/ComponentHandler.match).
+Approve and reject sit next to each other on the same message, and one handler can take both. Pass every id to the decorator, list them in the generic, then branch with [`this.match`](ref:gateway/ComponentHandler.match).
 
 ```ts twoslash hovers title="src/handlers/Review.ts"
 import {

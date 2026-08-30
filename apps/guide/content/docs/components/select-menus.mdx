@@ -67,7 +67,7 @@ export class Topics extends SelectMenuHandler<
 
 `this.values` holds what someone picked. On a string menu those are the values you set on the options. `this.params`, `this.match`, `this.update`, and `this.deferUpdate` all work the way [Buttons](/components/buttons) covers them.
 
-## The four resolving kinds
+## The resolving kinds
 
 `SelectMenuKind.User`, `Role`, `Channel`, and `Mentionable` fill `this.values` with ids, and the handler carries the resolved objects alongside them.
 
@@ -122,7 +122,7 @@ The member names match on both transports, and only the container differs. Gatew
 
 ## One handler, several menus
 
-`@SelectMenuRoute` takes as many ids as you pass after the kind. One handler then serves every menu you list, and `this.match` branches by prefix.
+Two menus on the same message can share one class. Name the kind, then every id, and give `this.match` an arm per prefix.
 
 ```ts twoslash title="src/handlers/Filters.ts"
 import {

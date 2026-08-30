@@ -42,7 +42,7 @@ The `path` under `migrations` points at that file, and it takes three shapes.
 
 {/* prettier-ignore-end */}
 
-A relative path resolves against the directory your bot runs from. Passing `resolve(import.meta.dirname, './migrations')` resolves it against the source file's own directory. Each migration takes its name from the file name, so a sortable prefix like `001-` or a timestamp decides the order.
+A relative path resolves against the directory your bot runs from. Passing `resolve(import.meta.dirname, './migrations')` points it at the source file's own directory. Each migration takes its name from the file, so a sortable prefix like `001-` or a timestamp decides the order.
 
 <Callout type="warning">
 
@@ -145,7 +145,7 @@ await db.migrate({ target: NO_MIGRATIONS });
 
 ## When a migration fails
 
-Whatever a migration itself throws reaches you unchanged, so a failing `CREATE TABLE` gives you Postgres's own error. Everything around the migration carries a code of its own.
+A migration's own error reaches you unchanged, which means a failing `CREATE TABLE` gives you Postgres's message. Everything around the migration carries a code of its own.
 
 {/* prettier-ignore-start */}
 
