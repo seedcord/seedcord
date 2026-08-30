@@ -1,3 +1,4 @@
+import { OgPageCard } from '@seedcord/ui/OgCard';
 import { OG_SIZE } from '@seedcord/ui/og';
 import { BRAND } from '@seedcord/ui/palette';
 import { ImageResponse } from 'next/og';
@@ -6,28 +7,30 @@ import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from '#lib/docs
 import { plainSummary } from '#lib/docs/plainSummary';
 import { resolveEntity } from '#lib/docs/resolveEntity';
 import { ENTITY_TONE_HEX } from '#lib/entityColors';
-import { DocOgCard } from '#lib/og/card';
 import { OG_FONTS } from '#lib/og/fonts';
 import { SITE_DESCRIPTION } from '#lib/site';
 
-import type { DocOgCardProps } from '#lib/og/card';
+import type { OgPageCardProps } from '@seedcord/ui/OgCard';
 
 // every og:image points here, the path mirrors the page. `/og` is the root, `/og/packages/<pkg>/<ver>`
 // the overview, `/og/packages/<pkg>/<ver>/<category>/<slug>` an entity. anything else returns the 404 card.
 export const dynamic = 'force-static';
 
-function render(props: DocOgCardProps): ImageResponse {
-    return new ImageResponse(<DocOgCard {...props} />, { ...OG_SIZE, fonts: OG_FONTS });
+const DOMAIN = 'docs.seedcord.org';
+
+function render(props: Omit<OgPageCardProps, 'domain'>): ImageResponse {
+    return new ImageResponse(<OgPageCard {...props} domain={DOMAIN} />, { ...OG_SIZE, fonts: OG_FONTS });
 }
 
 function notFoundCard(): ImageResponse {
     return new ImageResponse(
-        <DocOgCard
+        <OgPageCard
             pill="404"
             accent={BRAND.seedDark}
             meta={[]}
             name="Not found"
             description="This documentation page does not exist."
+            domain={DOMAIN}
         />,
         { ...OG_SIZE, fonts: OG_FONTS, status: 404 }
     );
