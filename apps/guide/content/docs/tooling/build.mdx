@@ -42,7 +42,7 @@ export default defineConfig({
 
 `outDir` defaults to `./dist` beside your config.
 
-A relative `bootstrap` resolves against `outDir`. That turns `index.mjs` into `dist/index.mjs`. Many people expect the project root here.
+A relative `bootstrap` resolves against `outDir`. That turns `index.mjs` into `dist/index.mjs`.
 
 Leave `tsconfig` out and seedcord looks for `tsconfig.build.json` first, then `tsconfig.json`. When both are missing, it throws `CliBuildTsconfigNotFound` and names the two filenames.
 
@@ -56,6 +56,12 @@ Two things usually cause this. Your tsconfig may exclude the entry file. Or `roo
 
 ## Where your bot runs
 
-`runtime` says which shape your bot is built for. A gateway bot only accepts `'server'`, since its websocket needs a process that stays up. An http bot takes `'server'` for a long-running node process, or `'edge'` for a bundled isolate.
+You set `runtime` on your bot's own config in `src/bot.ts`, beside `bot` and `subscribers`. It says which shape your bot is built for.
+
+<Callout type="transport">
+
+A gateway bot only accepts `'server'`, since its websocket needs a process that stays up. An http bot takes `'server'` for a long-running node process, or `'edge'` for a Cloudflare Worker.
+
+</Callout>
 
 `seedcord build` compiles the same way for both today, because the edge build is still being written.

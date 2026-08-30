@@ -22,17 +22,17 @@ You install `cloudflared` once. From then on `seedcord dev` starts it, reads the
 
 {/* prettier-ignore-start */}
 
-| platform | command |
+| platform | how to install |
 | --- | --- |
 | macOS | `brew install cloudflared` |
 | Windows | `winget install -e --id Cloudflare.cloudflared` |
-| Linux | Cloudflare's package repository, or a `.deb`, `.rpm`, or direct binary |
+| Linux | Cloudflare's package repository, a `.deb`, an `.rpm`, or a direct binary |
 
 {/* prettier-ignore-end */}
 
 [Cloudflare's downloads page](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/downloads/) carries every option, including Docker. seedcord looks for `cloudflared` on your `PATH`. Any install that puts it there works.
 
-Skipping this step keeps your bot running. You get an install hint in the terminal, then `seedcord dev` continues without a public address. Install cloudflared to give Discord an address to post to.
+Skipping this step keeps your bot running. You get an install hint in the terminal, then `seedcord dev` continues without a public address.
 
 ## The default, a quick tunnel
 
@@ -43,7 +43,7 @@ Each start goes through five steps.
 1. Your bot's interactions server starts listening on its port.
 2. seedcord starts `cloudflared` pointed at that port, then waits for Cloudflare to send back a hostname.
 3. seedcord waits a few more seconds. Cloudflare publishes the DNS record slightly after sending the hostname. Looking it up too early would cache the failure for half an hour.
-4. seedcord posts an unsigned request to the new address and waits for a `401`. Only a seedcord bot answers that way. A `401` back proves the tunnel reaches you.
+4. seedcord posts an unsigned request to the new address and waits for a `401`. Your bot's verifier rejects an unsigned request with exactly that status, so a `401` back means the tunnel carries traffic to your port.
 5. seedcord writes the address into your Discord application as its interactions endpoint.
 
 Cloudflare gives you a fresh hostname every run, so step 5 repeats each time. Quitting clears the endpoint again, since that hostname stops working once the tunnel closes.
@@ -69,7 +69,7 @@ seedcord runs the same `401` check here too, then writes the endpoint only when 
 
 ## Turning it off
 
-Set `tunnel` to `false` and seedcord skips all of it. Use this when you point Discord at your endpoint by hand, or when you work on something the interactions path never touches.
+Set `tunnel` to `false` and seedcord skips all of it. Use this when you set the endpoint yourself in the developer portal, or when you work on something the interactions path never touches.
 
 ## When it fails
 

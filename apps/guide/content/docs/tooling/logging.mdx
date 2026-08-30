@@ -1,0 +1,159 @@
+---
+title: Logging
+description: Writing log lines from anywhere in your bot.
+---
+
+Every handler, subscriber, and plugin carries a `logger`. You call it with one of five methods.
+
+```ts twoslash title="src/handlers/Ping.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ping')
+export class Ping extends SlashHandler<'ping'> {
+    public async execute(): Promise<void> {
+        this.logger.info('checking latency');
+        await this.reply('Pong');
+    }
+}
+```
+
+## The five levels
+
+{/* prettier-ignore-start */}
+
+| method | what it marks |
+| --- | --- |
+| `error` | something broke and you want to know about it |
+| `warn` | something looks wrong, though your bot kept running |
+| `info` | the ordinary record of what your bot did |
+| `debug` | detail you want while you debug something |
+| `trace` | the noisiest detail, usually one step inside a loop |
+
+{/* prettier-ignore-end */}
+
+You pick one of these as your floor. seedcord then prints that level plus everything above it in the table. Development uses `trace`, so every line prints. Staging starts at `debug`, and everything else at `info`, which hides `debug` and `trace`. [Configuring the logger](/tooling/logger-config) covers changing that floor.
+
+## Every line carries your class name
+
+A logger takes its label from the class holding it, so a line from `Ping` shows `Ping` as its label.
+
+## More than a string
+
+Every method takes extra arguments after the message.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ping')
+export class Ping extends SlashHandler<'ping'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        this.logger.debug(
+            '%s ran %s',
+            this.event.user.username,
+            this.event.commandName
+        );
+
+        this.logger.info('replying', {
+            userId: this.event.user.id
+        });
+
+        try {
+            await this.reply('Pong');
+        } catch (error) {
+            this.logger.error('reply failed', error);
+        }
+        // ---cut-after---
+    }
+}
+```
+
+A plain object merges into the record as its own fields. An `Error` becomes its name, message, and stack. Anything else prints beside the message. Those merged fields stay searchable once a hosting platform indexes your logs.
+
+The message itself takes format specifiers. Each one consumes the next argument.
+
+{/* prettier-ignore-start */}
+
+| specifier | the argument | what prints |
+| --- | --- | --- |
+| `%s` | `'Ada'` | `Ada` |
+| `%d` and `%i` | `3.7` | `3` |
+| `%f` | `3.7` | `3.7` |
+| `%j`, `%o`, and `%O` | `{ id: 4 }` | the value, serialized |
+| `%%` | none | `%` |
+
+{/* prettier-ignore-end */}
+
+The three serializing ones split by sink. A node sink prints an object the way `console.log` does. [`ObjectConsoleSink`](ref:logger/ObjectConsoleSink), which an edge bot runs, prints JSON. Whatever the specifiers do not consume goes the same way as the arguments above.
+
+## Channels
+
+Every line also carries a channel, which is a label for the part of your bot that the line came from. seedcord sets one for you. An interaction handler logs on `interactions`, an event handler on `events`, and a subscriber on `subscribers`.
+
+All of these are reserved for the framework. They're called the [`FRAMEWORK_CHANNELS`](ref:logger/FRAMEWORK_CHANNELS).
+
+{/* prettier-ignore-start */}
+
+| channel | what arrives there |
+| --- | --- |
+| `default` | a logger built without a channel |
+| `bot` | the client login on gateway, the interactions server on http, plus emoji and command injection |
+| `lifecycle` | each startup and shutdown task, and the signal that stopped your bot |
+| `health` | the health check server binding and its errors |
+| `interactions` | which handler ran, unmatched routes, and how long dispatch and the reply took |
+| `events` | which listeners attached, and which handler ran for an event. Gateway only |
+| `commands` | the commands seedcord loaded, and the deploy summary |
+| `subscribers` | bus activity, unreachable webhooks, and errors thrown inside a subscriber |
+| `errors` | uncaught process errors and fault reports. An http bot reports faults on `interactions` |
+| `gates` | a warning when your gate checks use too much of Discord's 3s window |
+| `plugins` | how long each plugin took to start |
+| `hmr` | what reloaded while `seedcord dev` runs |
+| `cli` | status and errors from the CLI, codegen and the tunnel included |
+| `tsc` | output from `tsc --watch`, once you turn `hmr.typecheck` on |
+
+{/* prettier-ignore-end */}
+
+Your own bot adds to that set. A plugin gets a channel named after the attach key you chose, so attaching one as `db` sends its lines to the `db` channel. Picking a name from the table above throws `CorePluginReservedChannel` instead.
+
+Dividing your bot this way pays off in the [dev terminal](/tooling/dev), which draws every channel as a filter chip. Give each subject its own channel and you can watch one part of your bot at a time.
+
+## Sending one line somewhere else
+
+[`inChannel`](ref:logger/Logger.inChannel) returns a second logger. It keeps the same label and uses the channel you name.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ping')
+export class Ping extends SlashHandler<'ping'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        this.logger.inChannel('payments').info('charge accepted');
+        // ---cut-after---
+    }
+}
+```
+
+Your own channel names are free, so pick whatever divides your bot usefully. [`setChannel`](ref:logger/Logger.setChannel) changes the channel on the logger you already have.
+
+## Several lines at once
+
+Logging a list one call at a time gives the dev terminal several records. Other output can then appear between them. [`logger.utils`](ref:logger/Logger.utils) writes the whole group as a single record.
+
+```ts twoslash
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('ping')
+export class Ping extends SlashHandler<'ping'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        this.logger.utils.block('Cache warmed', [
+            'guilds 41',
+            'members 1204'
+        ]);
+        // ---cut-after---
+    }
+}
+```
+
+`block` takes a heading and its lines. `list` takes items with an optional heading above them. [`LoggerUtilities`](ref:logger/LoggerUtilities) carries the rest, among them counts, progress, and registration lines.

@@ -139,7 +139,7 @@ export const seedcord = new Seedcord({
 
 ## The key also names a log channel
 
-Every mongoose line above prints under `db`, since a plugin logs on the channel its attach key names. The framework already logs on fourteen channels of its own, so none of those names can be a key.
+Every mongoose line above prints under `db`, since a plugin logs on the channel its attach key names. The framework already logs on reserved channels of its own, so none of those names can be a key.
 
 ```ts twoslash
 // @errors: 2345
@@ -171,7 +171,11 @@ seedcord.attach('commands', Mongoose, {
 });
 ```
 
-The taken names are `default`, `bot`, `lifecycle`, `health`, `interactions`, `events`, `commands`, `subscribers`, `errors`, `gates`, `plugins`, `hmr`, `cli`, and `tsc`. [Logging](/tooling) covers what each one carries.
+<Callout type="warning">
+
+`commands` is one of those reserved channels, so that attach fails to compile. [Logging](/tooling/logging) lists them with what each one carries.
+
+</Callout>
 
 Two more mistakes throw once the bot is running. Reusing a key you already attached throws `CorePluginKeyExists`, and attaching anything at all after startup throws `CorePluginAfterInit`.
 
