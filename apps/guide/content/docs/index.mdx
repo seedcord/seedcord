@@ -105,13 +105,13 @@ Use edit() to fill the deferred reply or followUp() for a new
 message. (route slash:ban)
 ```
 
-A component id packed past what Discord accepts:
+Or you packed a component id past what Discord accepts:
 
 ```txt output
 Encoded customId is 118 characters, Discord allows at most 100.
 ```
 
-A value read at the top of a file before startup filled it:
+Here you read a value before startup had filled it:
 
 ```txt output
 Emojis.wave has no value yet. Emojis fills during startup, and a read
@@ -132,11 +132,11 @@ There are over a hundred more.
 
 You pick one when you scaffold.
 
-`@seedcord/gateway` holds a websocket connection through discord.js. Interactions arrive there, and so does every other event Discord sends about a server.
+`@seedcord/gateway` holds a websocket connection through discord.js, so every event Discord sends about a server reaches your bot.
 
-`@seedcord/http` answers Discord's interactions endpoint. Discord posts only interactions to it. Discord also signs every request it sends, and seedcord checks the signature, turns away a stale or repeated one, and answers the check Discord runs before it accepts your URL.
+`@seedcord/http` answers Discord's interactions endpoint, where Discord posts only interactions and signs every request. seedcord checks each signature, turns away a stale or repeated one, and answers the check Discord runs before it accepts your URL.
 
-Most of the code you write works the same on either transport, and the import line is all you change.
+Most of the code you write works the same on either transport, and the import line is likely all you'll need to change. Pick [gateway or http](/gateway-or-http) based on your needs.
 
 ## Prerequisites
 

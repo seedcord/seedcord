@@ -5,7 +5,7 @@ description: Packing typed values into the string Discord hands back on a click.
 
 Discord hands a component's `custom_id` back when someone clicks a button, picks from a select menu, or submits a modal. Whatever your handler reads later has to be inside that string.
 
-[`CustomId`](ref:core/CustomId) declares what the string carries. The component that mints it and the handler that reads it share that one declaration.
+[`CustomId`](ref:core/CustomId) declares what the string carries. The component that mints it and the handler that reads it share that one declaration. The `AppealId` that the button on the [building components](/components) page used is one of these.
 
 ```ts twoslash hovers title="src/components/TicketActions.ts"
 import { CustomId } from '@seedcord/gateway';

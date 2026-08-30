@@ -140,3 +140,5 @@ Each tuple carries its own options, so one event can run once while the others k
 ```
 
 Here the join arm runs for the first member and never again. The update arm runs every time.
+
+One handler answering several events often wants the same check on each of them. Use a [middleware](/events/middleware) to run, well, middlewares, in a particular order before each of your events.

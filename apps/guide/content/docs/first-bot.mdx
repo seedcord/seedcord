@@ -12,10 +12,10 @@ You need the token from the last page.
 - **Where the project goes.** The folder name becomes the package name, so it takes lowercase letters, digits, and `. _ -`.
 - **TypeScript or JavaScript.**
 - **How Discord reaches your bot.** Gateway or http, the choice from two pages ago.
-- **What your bot should react to.** Gateway only. A list of eleven, from messages in servers to reactions, member joins, and polls. Each one names the intents and partials it needs, and the three privileged ones are marked. The scaffolder writes the set into your `bot.ts`.
+- **What your bot should react to.** Gateway only. A checklist covering messages in servers, reactions, member joins, polls, and more. Each one names the intents and partials it needs, and the privileged ones are marked. The scaffolder writes the set into your `bot.ts`.
 - **Your bot token.**
 - **Your app public key.** Http only.
-- **Your bot colour.** Every embed and container you build takes it, unless you set a colour on that one yourself.
+- **Your bot color.** Every embed and container you build takes it, unless you set a color on that one yourself.
 
 Then it installs your dependencies, formats the project, runs `seedcord codegen`, and makes a git commit.
 
@@ -37,6 +37,8 @@ It probably will not be there yet. Global commands take time to appear, and Disc
 </Callout>
 
 ## What the scaffolder made
+
+That command came from a file the scaffolder wrote. Here is everything else it put in the folder.
 
 ```txt title="my-bot" output
 my-bot/
@@ -117,7 +119,7 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-The three `path` keys are the folders seedcord scans at startup. Each tab that teaches a folder's contents covers its key.
+The `path` keys are the folders seedcord scans at startup. Each tab that teaches a folder's contents covers its key.
 
 <Callout type="transport" only="http">
 

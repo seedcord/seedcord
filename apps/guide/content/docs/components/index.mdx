@@ -20,11 +20,11 @@ export class BanCard extends BuilderComponent<'container'> {
 }
 ```
 
-`this.instance` is the builder itself, protected so only the subclass reaches it.
+Use `this.instance` inside the class. It is the builder itself, protected so only the subclass reaches it.
 
-Outside the class you read `.component`, which returns that same builder ready to send.
+Then, instantiate your component class and read the completed builder via `.component`, which returns it ready to send.
 
-Preferrably, don't mutate the builder outside the class. That's also an antipattern in seedcord. Reading `.component` applies your bot color, any checks, any utilities, etc, and then hands the builder over, so a setter you call on the result runs after seedcord has finished with it.
+It's recommended to treat `.component` as immutable. Keep your changes inside the class. Reading `.component` (a getter) applies your bot color and hands the builder over, so a setter you call on the result runs after seedcord has finished with it.
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';

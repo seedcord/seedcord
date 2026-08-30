@@ -3,7 +3,7 @@ title: Reporting faults
 description: Sending faults to a Discord channel.
 ---
 
-seedcord ships two reporters and registers both while your bot starts. Each one reads a webhook url from an environment variable. Set both and your faults show up in a Discord channel.
+A fault with `report` set to `true` goes to a reporter. seedcord ships two and registers both while your bot starts. Each one reads a webhook url from an environment variable, then sends comprehensive information about the fault to that webhook. Make sure to set both of them up to know what happens when your bot throws when you're not expecting it to.
 
 ```txt title=".env"
 HANDLED_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...

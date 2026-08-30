@@ -133,4 +133,4 @@ class Leaderboard extends SlashHandler<'leaderboard'> {
 
 Your migrations create the tables and you write this interface by hand, so adding a column in a migration changes Postgres alone. TypeScript keeps the old shape until you add it here too, which makes every migration an edit in two places.
 
-[Migrations](/plugins/kysely-migrations) covers writing them. From there, [Services](/plugins/kysely-services) narrows this schema to one table at a time.
+Now that you have your schema ready to type every query, it's time to write a [service](/plugins/kysely-services) that narrows it to one table at a time, and a [migration](/plugins/kysely-migrations) when you need yet another table for who knows what.

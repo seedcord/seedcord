@@ -47,7 +47,7 @@ Augmentations are out of date. Run `seedcord codegen` and commit src/seedcord-ge
 
 ## Commands codegen passes over
 
-A command class reaches the registry once it carries `@RegisterCommand`. Without the decorator codegen skips that export entirely. Your route never appears in `SlashRegistry`, so the handler naming it fails to compile.
+A command class reaches the registry once it carries [`@RegisterCommand`](ref:core/RegisterCommand). Without the decorator codegen skips that export entirely. Your route never appears in `SlashRegistry`, so the handler naming it fails to compile.
 
 Your commands folder can hold helpers and constants too. Codegen imports every file it finds there. It keeps the exports that are decorated command classes and ignores the rest.
 

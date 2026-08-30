@@ -251,3 +251,5 @@ export const seedcord = new Seedcord({
     subscribers: { path: null }
 });
 ```
+
+Every gate so far runs before `execute()` does. However, some checks need a value your handler has already read. And some of those might deal with permissions. Fortunately, for you, seedcord ships some nice [permission helpers](/gates/in-handler-permissions) that you can use in your handlers.

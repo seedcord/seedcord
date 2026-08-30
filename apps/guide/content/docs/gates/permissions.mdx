@@ -3,7 +3,7 @@ title: Permissions
 description: Requiring permission bits and a role before a handler runs.
 ---
 
-Three gates read permissions. [`RequirePermissions`](ref:core/RequirePermissions) checks the caller, [`RequireBotPermissions`](ref:core/RequireBotPermissions) checks your bot, and [`RequireRole`](ref:core/RequireRole) checks one role by id.
+[`RequirePermissions`](ref:core/RequirePermissions) checks the caller, [`RequireBotPermissions`](ref:core/RequireBotPermissions) checks your bot, and [`RequireRole`](ref:core/RequireRole) checks one role by id.
 
 Kicking someone takes permission on both sides. The caller has to be allowed to kick, and so does your bot.
 
@@ -161,7 +161,7 @@ Combine several with [`or`](ref:core/or) when any one of them should let the cal
 
 ## Wording each refusal
 
-All three gates refuse for two different reasons, so their options carry one slot per reason. Each slot takes the `message` and `notice` pair from [Gates](/gates).
+Each of these gates refuses for two different reasons, so its options carry one slot per reason. Each slot takes the `message` and `notice` pair from [Gates](/gates).
 
 {/* prettier-ignore-start */}
 
@@ -191,3 +191,5 @@ RequireRole('221439658686939136', {
 ```
 
 Leaving a slot out keeps the default card. The permission gates list every missing bit on it by name, and `RequireRole` mentions the role.
+
+These gates covered permissions and roles. But maybe they don't cover everything you want to check before a handler runs. So, go ahead and [write your own](/gates/your-own).

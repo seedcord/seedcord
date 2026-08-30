@@ -46,11 +46,11 @@ Each transport exports its own `Plugin`. The one you pick sets the type of `this
 | --- | --- | --- |
 | `@seedcord/gateway` | the gateway `Core`, including `bot` | a plugin inside a gateway bot |
 | `@seedcord/http` | the http `Core` | a plugin inside an http bot |
-| `@seedcord/core/plugin` | `CoreBase`, the members both transports share | a plugin you publish for both |
+| `@seedcord/core/plugin` | [`CoreBase`](ref:core/CoreBase), the members both transports share | a plugin you publish for both |
 
 {/* prettier-ignore-end */}
 
-[`CoreBase`](ref:core/CoreBase) carries `config`, `rest`, `applicationId`, `rateLimiter`, and `bus`. Anything beyond those needs a transport base.
+`CoreBase` carries `config`, `rest`, `applicationId`, `rateLimiter`, and `bus`. Anything beyond those needs a transport base.
 
 <Callout type="transport">
     `config` narrows with the base you extend. A transport base
@@ -141,7 +141,7 @@ That throws `PluginOptionsRejected`. Your class name comes first in the message,
 
 Override [`onHmr`](ref:core/Plugin.onHmr) to react when `seedcord dev` swaps a changed file. Call [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles) with glob patterns that should force a full restart.
 
-```ts twoslash
+```ts twoslash hovers
 import { Plugin } from '@seedcord/gateway';
 
 import type { HmrUpdateEvent } from '@seedcord/core/plugin';
@@ -160,4 +160,6 @@ export class Uptime extends Plugin {
 }
 ```
 
-Both do nothing outside dev.
+Both do nothing outside dev. But dev's where you'll be most of the time so this is actually very useful for you as a plugin author.
+
+seedcord's own plugins are built this way. Find all the official plugins seedcord ships starting in the next section.

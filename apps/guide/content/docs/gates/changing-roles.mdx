@@ -9,7 +9,7 @@ Your bot holds Manage Roles and `roles.add` still fails. Role position overrides
 
 ## Checking before you write
 
-`hasPermsToAssign` runs three checks and throws a [`Notice`](ref:core/Notice) on the first one that refuses.
+`hasPermsToAssign` runs these checks and throws a [`Notice`](ref:core/Notice) on the first one that refuses.
 
 1. The target role sits at or above the bot's highest role.
 2. The target role is managed.
@@ -34,9 +34,9 @@ A managed role belongs to an integration. Every bot's own role, the Nitro booste
 
 </Callout>
 
-## Wording the three refusals
+## Replacing the notices
 
-An options object takes the same role plus a replacement for each refusal. Every constructor takes a message first. `higherNotice` then takes the target role and the bot's role. `managedNotice` takes nothing more. `missingNotice` then takes the subject and the permission names.
+An options object takes the same role plus a replacement for each refusal. Every constructor takes a message first. `higherNotice` then takes the target role and the bot's role. `managedNotice` takes only that message. `missingNotice` then takes the subject and the permission names.
 
 ```ts twoslash
 import { hasPermsToAssign, Notice } from '@seedcord/gateway';

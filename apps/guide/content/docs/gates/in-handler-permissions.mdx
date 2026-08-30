@@ -5,7 +5,7 @@ description: Checking a target your handler resolved, after the gates have passe
 
 The gate catalog checks the caller and your bot. `/ban @someone` needs the target checked too, and its target arrives in the options `execute()` reads.
 
-Three functions do that work. [`assertPermissions`](ref:core/assertPermissions) runs on both transports. [`checkPermissions`](ref:gateway/checkPermissions) and [`checkBotPermissions`](ref:gateway/checkBotPermissions) take discord.js objects, so they are gateway only.
+[`assertPermissions`](ref:core/assertPermissions) runs on both transports. [`checkPermissions`](ref:gateway/checkPermissions) and [`checkBotPermissions`](ref:gateway/checkBotPermissions) take discord.js objects, so they are gateway only.
 
 ## Asserting a bitfield
 

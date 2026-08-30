@@ -43,6 +43,8 @@ A modal holds up to five labels, and each label wraps one input. `addTextDisplay
 
 ## Opening it
 
+A modal opens from a handler through `showModal`, which takes the built component.
+
 ```ts twoslash title="src/handlers/Appeal.ts"
 import type { ModalBuilder } from '@discordjs/builders';
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';

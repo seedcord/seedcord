@@ -80,7 +80,7 @@ export const seedcord = new Seedcord({
 
 ## Anything else you throw
 
-Any throw that is neither a [`Notice`](ref:core/Notice) nor a [`Silence`](ref:core/Silence) renders that same card. A `TypeError` off a bad property read goes here. So does a `DiscordAPIError` from a call you made yourself, and anything a library you installed threw. seedcord logs each one with its uuid and publishes it to the `unknownException` bus key. Your error's message never reaches the reply.
+Any throw that is neither a [`Notice`](ref:core/Notice) nor a [`Silence`](ref:core/Silence) renders that same card. A `TypeError` off a bad property read goes here, along with a `DiscordAPIError` from a call you made yourself and anything a library you installed threw. seedcord logs each one with its uuid and publishes it to the `unknownException` bus key. Your error's message never reaches the reply.
 
 Two config keys change this. `errors.defaultError` takes a class that seedcord constructs with the uuid, and `errors.ignoreApiCodes` takes a list of Discord api codes to swallow. [Configuring](/throwing/configuring) has both in a real config.
 
@@ -156,3 +156,5 @@ Both fire outside any interaction, so no user sees a reply. [Configuring](/throw
 An edge bot registers neither listener, since [`createSeedcord`](ref:http/createSeedcord) returns a request handler and never starts a host process.
 
 </Callout>
+
+Alright. In the past two pages, we've seen _how_, _what_, _where_, and _when_ to throw. But of course, we don't want to throw into the void, do we? We want to know what happened. Or rather, how to [report](/throwing/reporting) it.

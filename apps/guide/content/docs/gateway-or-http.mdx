@@ -15,10 +15,12 @@ Holding the connection means a process running somewhere all the time.
 
 ## Http
 
-Discord posts each interaction to a URL you own, one request at a time. Nothing else is sent.
+An http bot waits for Discord to call it. Discord posts each interaction to a URL you own, one request at a time. Nothing else is sent.
 
 No connection means no cache. Anything you need about a guild or a member you fetch from Discord's REST API.
 
 ## Switching later
 
-Most of your code moves on the import line. An http bot never receives server events, so event handlers do not work there.
+seedcord's transports are written with parity in mind. Most of the code you write for one **will** work for the other. You'll only really find yourself rewriting the import line and a few lines in handlers that deal with specific types from the methods. Also, an http bot never receives server events, so event handlers do not work there.
+
+Either choice needs the same setup on Discord's side. Go ahead and [create your Discord application](/discord-application).

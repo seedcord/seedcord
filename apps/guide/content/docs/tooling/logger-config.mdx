@@ -68,7 +68,7 @@ A channel with its own `level` ignores the top-level one. Every channel you leav
 
 A sink is where a record goes after it passes the floor. Every sink you name receives all of them.
 
-Three sinks ship with seedcord.
+These sinks ship with seedcord.
 
 {/* prettier-ignore-start */}
 
@@ -116,7 +116,7 @@ export const seedcord = new Seedcord({
 
 `WinstonConsoleSink` takes one option. `format` defaults to `'pretty'`, the readable columns you see in development. `'json'` writes one object per line.
 
-`WinstonFileSink` takes four options, all optional. `filename` defaults to `logs/combined-{timestamp}.log`. seedcord replaces `{date}` with `2026-08-29` and `{timestamp}` with `2026-08-29-143005-812` when you construct the sink, so two runs in the same second still get their own file. `format` takes the same two values. `maxSize` and `maxFiles` set winston's rotation limits. Leaving both out gives you one file that keeps growing.
+`WinstonFileSink` takes four options, all optional. `filename` defaults to `logs/combined-{timestamp}.log`. seedcord replaces `{date}` with `2026-01-31` and `{timestamp}` with `2026-01-31-143005-812` when you construct the sink, so two runs in the same second still get their own file. `format` takes the same two values. `maxSize` and `maxFiles` set winston's rotation limits. Leaving both out gives you one file that keeps growing.
 
 A channel can carry its own `sinks` as well. That list replaces the top-level one for that channel.
 

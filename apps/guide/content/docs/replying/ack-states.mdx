@@ -11,7 +11,7 @@ Use followUp() for a new message or edit() to rewrite the reply.
 (route slash:ban)
 ```
 
-The throw carries an `AckTrace` as its `cause`. That error's stack points at the line that acknowledged the interaction first, so a double ack gives you both lines.
+Its `cause` holds a second error whose stack points at the line that acknowledged the interaction first. This means that you'll always know exactly where that pesky double ack happened and what you need to use instead.
 
 ## The four states
 
