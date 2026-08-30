@@ -27,12 +27,12 @@ function Home(): ReactNode {
                 <TypedDx />
                 <ResolvedType />
                 <BeforeAfter />
+                <Transports />
                 <Codec />
                 <Gates />
                 <Plugins />
                 <DevTui />
                 <FeatureGrid />
-                <Transports />
                 <GetStarted />
             </main>
             <Footer />

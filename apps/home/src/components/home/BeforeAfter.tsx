@@ -31,7 +31,7 @@ export function BeforeAfter(): ReactNode {
                 <CodeCard code={afterSeedcord} filename="seedcord" className={cn('rule blk-rind')} />
             </div>
             <p className={cn('font-mono-code mt-5 text-xs text-(--seed-dark)/70')}>
-                The left wires the routing, registration and checks by hand. seedcord does that wiring from your
+                By hand you wire the routing, registration and checks yourself. seedcord does all that from your
                 decorators.
             </p>
         </Section>

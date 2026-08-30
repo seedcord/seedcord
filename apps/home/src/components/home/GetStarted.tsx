@@ -4,7 +4,7 @@ import { CodeCard } from '#components/code/CodeCard';
 import { SECTION_HEADING_LG, Section } from '#components/home/Section';
 import { PosterButton } from '#components/ui/PosterButton';
 import { startTerminal } from '#lib/code/samples';
-import { GUIDE_URL, REPO_URL } from '#lib/site';
+import { DISCORD_URL, REPO_URL } from '#lib/site';
 
 import type { ReactNode } from 'react';
 
@@ -24,11 +24,11 @@ export function GetStarted(): ReactNode {
                     </p>
                     <div className={cn('mt-8 flex flex-wrap gap-3')}>
                         <PosterButton
-                            href={GUIDE_URL}
+                            href={DISCORD_URL}
                             variant="solidDark"
                             className={cn('font-display px-4 py-2.5 text-base sm:px-7 sm:py-3 sm:text-lg')}
                         >
-                            Read the guide
+                            Join the Discord
                         </PosterButton>
                         <PosterButton
                             href={REPO_URL}

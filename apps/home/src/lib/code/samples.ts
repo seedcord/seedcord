@@ -91,7 +91,7 @@ export class SearchHandler extends
 }
 
 // the route, registration and guards are done.
-// edit, save, hot reload, the gateway stays up.`;
+// edit, save, hot reload, the connection stays up.`;
 
 export const codecComponent = `import {
     BuilderComponent, CustomId
