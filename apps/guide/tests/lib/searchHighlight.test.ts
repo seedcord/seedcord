@@ -59,11 +59,12 @@ describe('the code in a search result', () => {
     });
 
     it('shows no markup when a match ends on the closing backtick', () => {
-        const rendered = highlightSegments('as `ctx<mark>.core`</mark> here')
-            .map((segment) => segment.text)
-            .join('');
-
-        expect(rendered).not.toContain('mark');
+        expect(highlightSegments('as `ctx<mark>.core`</mark> here')).toEqual([
+            { text: 'as ', match: false, code: false },
+            { text: 'ctx', match: false, code: true },
+            { text: '.core', match: true, code: true },
+            { text: ' here', match: false, code: false }
+        ]);
     });
 });
 

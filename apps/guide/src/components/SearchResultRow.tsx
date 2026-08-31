@@ -5,6 +5,7 @@ import { FileText, Hash, TextQuote } from 'lucide-react';
 
 import { highlightSegments, matchWindow } from '#lib/searchHighlight';
 
+import type { HighlightSegment } from '#lib/searchHighlight';
 import type { IconComponent } from '@seedcord/ui';
 import type { SortedResult } from 'fumadocs-core/search';
 import type { ReactElement } from 'react';
@@ -17,6 +18,17 @@ const ACTIVE = tw`data-[active=true]:border-(--rind)/38 data-[active=true]:bg-(-
 // 24 chars of lead keeps the match near the left where a reader looks first
 const LEAD = 24;
 const WIDTH = 150;
+
+// one result can mark the same word twice. the text alone would collide as a key
+function keyed(segments: readonly HighlightSegment[]): { key: string; segment: HighlightSegment }[] {
+    let at = 0;
+
+    return segments.map((segment) => {
+        const key = `${String(at)}-${segment.text}`;
+        at += segment.text.length;
+        return { key, segment };
+    });
+}
 
 export interface SearchResultRowProps {
     result: SortedResult;
@@ -58,11 +70,11 @@ export function SearchResultRow({
             <Icon icon={KIND_ICONS[result.type]} size={16} className={cn('text-subtle shrink-0')} aria-hidden />
             <div className={cn('flex min-w-0 flex-1 flex-col gap-0.5')}>
                 <span className={cn('truncate', isPage ? tw`font-medium` : tw`text-(--text-muted)`)}>
-                    {segments.map((segment, index) => {
+                    {keyed(segments).map(({ key, segment }) => {
                         const Tag = segment.match ? 'mark' : 'span';
                         return (
                             <Tag
-                                key={`${String(index)}-${segment.text}`}
+                                key={key}
                                 className={cn(
                                     segment.match ? tw`bg-(--rind)/25 text-(--text)` : null,
                                     segment.code ? tw`font-mono text-[0.9em]` : null

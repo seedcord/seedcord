@@ -15,8 +15,9 @@ describe('the robots file', () => {
         expect(await body()).toContain('Allow: /');
     });
 
-    it('keeps the dev routes out', async () => {
-        expect(await body()).toContain('Disallow: /dev');
+    // a Disallow path is a prefix match. `/dev` would take /dev-narrow-layout.webp with it
+    it('blocks nothing', async () => {
+        expect(await body()).not.toContain('Disallow');
     });
 
     it('points at the sitemap', async () => {

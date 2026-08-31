@@ -10,17 +10,14 @@ export interface Skill {
 // cloudflare's discovery rfc renamed the well-known path at v0.2.0
 export const AGENT_SKILLS_BASE = '/.well-known/agent-skills';
 
-// vercel's skills-handler still defaults to the v0.1.0 path
-export const SKILLS_BASE = '/.well-known/skills';
-
 const SCHEMA = 'https://schemas.agentskills.io/discovery/0.2.0/schema.json';
 const FILE = 'SKILL.md';
 const MARKDOWN = 'text/markdown; charset=utf-8';
 const HEX = 16;
 const BYTE_WIDTH = 2;
 
-export function skillUrl(skill: Skill, base: string = AGENT_SKILLS_BASE): string {
-    return `${base}/${skill.name}/${FILE}`;
+export function skillUrl(skill: Skill): string {
+    return `${AGENT_SKILLS_BASE}/${skill.name}/${FILE}`;
 }
 
 // the rfc requires a client to verify what it downloads against this

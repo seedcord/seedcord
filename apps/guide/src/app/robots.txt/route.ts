@@ -11,7 +11,6 @@ const BODY = `# Content Signals Policy (https://contentsignals.org)
 User-agent: *
 Content-Signal: search=yes, ai-train=yes, ai-input=yes
 Allow: /
-Disallow: /dev
 
 Sitemap: ${canonicalUrl('/sitemap.xml')}
 `;

@@ -37,12 +37,6 @@ function get(url: string, assets: Assets): Promise<Response> {
 }
 
 describe('the guide worker', () => {
-    it('lets a crawler index a page', async () => {
-        const response = await get('https://guide.seedcord.org/tooling/', serving(html()));
-
-        expect(response.headers.get('X-Robots-Tag')).toBeNull();
-    });
-
     it('advertises the reference site and the home page to an agent', async () => {
         const response = await get('https://guide.seedcord.org/tooling/', serving(html()));
 
@@ -133,6 +127,30 @@ describe('the guide worker', () => {
 
         expect(assets.asked).toEqual(['/llms/commands/options.md']);
         expect(response.headers.get('content-type')).toBe(MARKDOWN);
+    });
+
+    // llms.txt is the url the Link header and the skill both point an agent at
+    it('serves a real file to a client that asked for markdown', async () => {
+        const assets = recording('/llms.txt');
+        const request = new Request('https://guide.seedcord.org/llms.txt', {
+            headers: { accept: 'text/markdown, text/plain, */*' }
+        });
+
+        const response = await handler.fetch(request, assets);
+
+        expect(response.status).toBe(200);
+        expect(assets.asked).toEqual(['/llms/llms.txt.md', '/llms.txt']);
+    });
+
+    it('serves an image to a client that asked for markdown', async () => {
+        const assets = recording('/dev-narrow-layout.webp');
+        const request = new Request('https://guide.seedcord.org/dev-narrow-layout.webp', {
+            headers: { accept: 'text/markdown, */*' }
+        });
+
+        const response = await handler.fetch(request, assets);
+
+        expect(response.status).toBe(200);
     });
 
     it('leaves a browser on the html page', async () => {

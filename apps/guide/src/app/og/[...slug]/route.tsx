@@ -21,7 +21,9 @@ export function generateStaticParams(): { slug: string[] }[] {
 
 export async function GET(_req: Request, { params }: { params: Promise<{ slug: string[] }> }): Promise<Response> {
     const { slug } = await params;
-    const page = source.getPage(slugsFromAsset(slug, CARD));
+    // getPage defaults an undefined slug list to the root page
+    const slugs = slugsFromAsset(slug, CARD);
+    const page = slugs === undefined ? undefined : source.getPage(slugs);
     if (!page) notFound();
 
     return new ImageResponse(

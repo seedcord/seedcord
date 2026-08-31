@@ -81,11 +81,7 @@ describe('the seedcord skill', () => {
 describe('where a skill answers', () => {
     const other: Skill = { name: 'probe', description: 'x', body: 'y' };
 
-    it('defaults to the v0.2.0 base', () => {
+    it('resolves under the v0.2.0 base', () => {
         expect(skillUrl(other)).toBe('/.well-known/agent-skills/probe/SKILL.md');
-    });
-
-    it('takes the v0.1.0 base when asked', () => {
-        expect(skillUrl(other, '/.well-known/skills')).toBe('/.well-known/skills/probe/SKILL.md');
     });
 });

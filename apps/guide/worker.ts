@@ -45,6 +45,12 @@ function at(request: Request, pathname: string): Request {
 
 // a real file in public/ wins over a page's generated card or twin
 async function fromAssets(env: Env, request: Request, pathname: string): Promise<Response> {
+    // only a page has a twin. every other url falls through to the file itself
+    if (wantsMarkdown(request)) {
+        const twin = await env.ASSETS.fetch(at(request, assetPath(pathname, TWIN)));
+        if (twin.status !== NOT_FOUND) return twin;
+    }
+
     const direct = await env.ASSETS.fetch(request);
     if (direct.status !== NOT_FOUND) return direct;
 
@@ -55,8 +61,7 @@ async function fromAssets(env: Env, request: Request, pathname: string): Promise
 const handler = {
     async fetch(request: Request, env: Env): Promise<Response> {
         const { pathname } = new URL(request.url);
-        const negotiated = wantsMarkdown(request) ? at(request, assetPath(pathname, TWIN)) : request;
-        const asset = await fromAssets(env, negotiated, pathname);
+        const asset = await fromAssets(env, request, pathname);
 
         // collapse the slash/non-slash duplicate into one permanent redirect
         const normalized =
