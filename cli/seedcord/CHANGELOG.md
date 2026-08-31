@@ -1,5 +1,41 @@
 # seedcord
 
+## 0.19.2-next.0
+
+### Patch Changes
+
+- 554129a: `seedcord codegen` now skips a `BuilderComponent` subclass that carries no `@RegisterCommand`, matching the set your bot deploys at startup. An undecorated class previously got a route, and a handler could then typecheck against a command that never reached Discord.
+- 554129a: Hide the internals that were already marked internal. `core.shutdown` and `core.startup` carry `addTask` alone, `core.bus` carries `publish` and the listener methods, and `core.bot` drops the controllers and the lifecycle calls. The http transport's `Core` declares the two lifecycle members, and a core built by `createSeedcord` throws from either one.
+- 554129a: `seedcord codegen` now throws and names the file when a class carrying `@RegisterCommand` fails to construct.
+- Updated dependencies [1bf7d89]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [2cb3c87]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [554129a]
+- Updated dependencies [5b15463]
+- Updated dependencies [8dc4791]
+- Updated dependencies [554129a]
+- Updated dependencies [5f4e203]
+- Updated dependencies [554129a]
+- Updated dependencies [554129a]
+- Updated dependencies [0ad8bd1]
+- Updated dependencies [8dc4791]
+- Updated dependencies [6872865]
+- Updated dependencies [3ff40e7]
+- Updated dependencies [64c9a0e]
+- Updated dependencies [554129a]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [0c6cdc8]
+- Updated dependencies [e4e8605]
+- Updated dependencies [554129a]
+    - @seedcord/errors@0.5.0-next.0
+    - @seedcord/core@0.4.0-next.0
+    - @seedcord/event-emitter@0.1.5-next.0
+    - @seedcord/logger@0.2.2-next.0
+    - @seedcord/types@0.10.0-next.0
+    - @seedcord/utils@0.8.8-next.0
+
 ## 0.19.1
 
 ### Patch Changes

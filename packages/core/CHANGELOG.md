@@ -1,5 +1,49 @@
 # @seedcord/core
 
+## 0.4.0-next.0
+
+### Minor Changes
+
+- 1bf7d89: **BREAKING:** an error that reports a bad argument now throws `SeedcordTypeError` or `SeedcordRangeError`. Update any `isSeedcordError(error, 'SeedcordError', code)` call naming one of those codes, since branching on the code alone is unaffected.
+
+    An invalid plugin lifecycle timeout throws the new `PluginInvalidLifecycleTimeout` code.
+
+- 9b6a31c: `errors.catchProcessErrors` reports a throw that escaped every handler, and defaults on. The bot keeps running after a rejection. An uncaught exception runs the coordinated shutdown and exits 1.
+- 8dc4791: Every `CustomId` field now also takes `{ nullable: true }` and decodes to `T | null`, at one extra slot on the wire. Marking a live field nullable will change its layout hash as well.
+- 8dc4791: `start(handler, n)` opens a paginator on any page, and `page(handler, n)` renders one without sending it. A source you write yourself takes `PageSource<Item>`, which each transport exports with its page context already bound.
+
+    **BREAKING:** `Paginator.page` now takes the handler. `PaginatorBase.page` is `protected buildPage`, and core's three source symbols gained a `Base` suffix so the plain names belong to the transports.
+
+- 3ff40e7: Every repliable handler now carries its reply sender on a public `sender` property, replacing the internal `getSender()`. `ReplySender`, `BaseReplySender`, and `ModalLike` are also exported now.
+- 0c6cdc8: **BREAKING:** The `responseAttempted` payload is now a union of `ResponseSent` and `ResponseFailed`, both exported. Check `outcome` to reach `error`. Every framework payload field is readonly now, because the bus hands one object to every subscriber.
+
+### Patch Changes
+
+- 2cb3c87: Fixed `Seedcord.attach()` not showing up in the documentation.
+- 554129a: `seedcord codegen` now skips a `BuilderComponent` subclass that carries no `@RegisterCommand`, matching the set your bot deploys at startup. An undecorated class previously got a route, and a handler could then typecheck against a command that never reached Discord.
+- 5f4e203: Every gate seedcord ships now sets `summary`. An `or` whose arms all refuse lists what each one required, under the lead line `You need to meet any of these:`.
+- 554129a: Hide the internals that were already marked internal. `core.shutdown` and `core.startup` carry `addTask` alone, `core.bus` carries `publish` and the listener methods, and `core.bot` drops the controllers and the lifecycle calls. The http transport's `Core` declares the two lifecycle members, and a core built by `createSeedcord` throws from either one.
+- 6872865: `and` and `or` now bracket an arm that is itself a combinator. `or(and(A, B), C)` names itself `(A & B) | C` on a `@Gated` hover and in the compile error for a gate that does not fit its handler.
+- 554129a: Fix the `Silence` example. It threw from an interaction while the text above it said to throw only in event handlers.
+- 9b6a31c: A host whose startup failed used to tear down whichever host had replaced it, taking the replacement's signal handlers and logger config with it. Teardown now runs only for the host that is still live. A second `start()` racing the first rejects with the same error, where it used to resolve a half-started host.
+- Updated dependencies [1bf7d89]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [5b15463]
+- Updated dependencies [554129a]
+- Updated dependencies [554129a]
+- Updated dependencies [554129a]
+- Updated dependencies [0ad8bd1]
+- Updated dependencies [64c9a0e]
+- Updated dependencies [e4e8605]
+- Updated dependencies [554129a]
+    - @seedcord/errors@0.5.0-next.0
+    - @seedcord/event-emitter@0.1.5-next.0
+    - @seedcord/logger@0.2.2-next.0
+    - @seedcord/types@0.10.0-next.0
+    - @seedcord/utils@0.8.8-next.0
+
 ## 0.3.1
 
 ### Patch Changes

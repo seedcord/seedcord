@@ -1,5 +1,21 @@
 # @seedcord/errors
 
+## 0.5.0-next.0
+
+### Minor Changes
+
+- 1bf7d89: **BREAKING:** an error that reports a bad argument now throws `SeedcordTypeError` or `SeedcordRangeError`. Update any `isSeedcordError(error, 'SeedcordError', code)` call naming one of those codes, since branching on the code alone is unaffected.
+
+    An invalid plugin lifecycle timeout throws the new `PluginInvalidLifecycleTimeout` code.
+
+- 5b15463: A context menu handler registered for several command names runs one arm per name through `match` and reads the fired name from `commandName`. On gateway each arm receives the target narrowed to that one command's cache state.
+- 554129a: Add two error codes. `CoreLifecycleUnavailable` throws when a bot adds a startup or shutdown task to a core built by `createSeedcord`, and `CoreBusEmitUnavailable` throws when a bot calls `core.bus.emit`.
+- 0ad8bd1: Modal and select menu handlers read their inputs the same way on both transports. `this.fields` reads a modal's submitted values by custom id. A select handler carries `values` plus the resolved `users`, `members`, `roles`, and `channels` for its kind.
+
+### Patch Changes
+
+- 554129a: `seedcord codegen` now throws and names the file when a class carrying `@RegisterCommand` fails to construct.
+
 ## 0.4.3
 
 ### Patch Changes

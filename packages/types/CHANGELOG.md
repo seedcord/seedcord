@@ -1,5 +1,15 @@
 # @seedcord/types
 
+## 0.10.0-next.0
+
+### Minor Changes
+
+- 9b6a31c: `errors.catchProcessErrors` reports a throw that escaped every handler, and defaults on. The bot keeps running after a rejection. An uncaught exception runs the coordinated shutdown and exits 1.
+
+### Patch Changes
+
+- 554129a: Hide the internals that were already marked internal. `core.shutdown` and `core.startup` carry `addTask` alone, `core.bus` carries `publish` and the listener methods, and `core.bot` drops the controllers and the lifecycle calls. The http transport's `Core` declares the two lifecycle members, and a core built by `createSeedcord` throws from either one.
+
 ## 0.9.1
 
 ### Patch Changes
