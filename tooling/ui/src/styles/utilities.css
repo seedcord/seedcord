@@ -124,7 +124,8 @@
         background-color: var(--bg-chip);
         padding: 0.1em 0.36em;
         font-size: 0.9em;
-        white-space: nowrap;
+        /* nowrap here pushes a chip longer than the column off the side of a phone screen */
+        overflow-wrap: break-word;
     }
 
     .shiki a,

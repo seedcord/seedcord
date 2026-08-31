@@ -22,10 +22,7 @@ function SignatureCell({
 }): ReactElement {
     const withHtml = (
         <div className={cn('text-subtle flex items-center gap-2 text-sm')}>
-            <div
-                className={cn('shiki-inline-wrapper truncate')}
-                dangerouslySetInnerHTML={{ __html: signatureHtml ?? '' }}
-            />
+            <div className={cn('truncate')} dangerouslySetInnerHTML={{ __html: signatureHtml ?? '' }} />
             {showValueAfterSignature ? <code className={cn('truncate font-mono')}>= {value}</code> : null}
         </div>
     );

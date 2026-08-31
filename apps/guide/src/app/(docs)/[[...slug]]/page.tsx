@@ -2,7 +2,10 @@ import { cn } from '@seedcord/ui';
 import { notFound } from 'next/navigation';
 
 import { CopyPageButton } from '#components/CopyPageButton';
+import { PageNav } from '#components/PageNav';
 import { mdxComponents } from '#lib/mdxComponents';
+import { guideOrder } from '#lib/nav';
+import { neighboursOf } from '#lib/neighbours';
 import { assetPath, TWIN } from '#lib/pageAssets';
 import { pageMetadata } from '#lib/site';
 import { source } from '#lib/source';
@@ -20,6 +23,7 @@ export default async function Page(props: PageParams): Promise<ReactNode> {
     if (!page) notFound();
 
     const MDX = page.data.body;
+    const { previous, next } = neighboursOf(guideOrder(), page.url);
 
     return (
         <article>
@@ -39,6 +43,7 @@ export default async function Page(props: PageParams): Promise<ReactNode> {
             <div className={cn('mt-10 flex flex-col gap-5')}>
                 <MDX components={mdxComponents} />
             </div>
+            <PageNav previous={previous} next={next} />
         </article>
     );
 }

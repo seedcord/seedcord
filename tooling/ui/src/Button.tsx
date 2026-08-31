@@ -29,6 +29,7 @@ const buttonVariantClasses = {
 export type ButtonVariant = keyof typeof buttonVariantClasses;
 
 const buttonSizeClasses = {
+    none: tw`h-auto p-0`,
     sm: tw`h-8 px-3 text-sm`,
     md: tw`h-10 px-4 text-sm`,
     lg: tw`h-12 px-6 text-base`,
