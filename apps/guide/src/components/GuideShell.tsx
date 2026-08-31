@@ -21,6 +21,7 @@ import { useMemo, useState } from 'react';
 import { DOCS_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site';
 
 import { DocsSidebar } from './DocsSidebar';
+import { GuideSearch } from './GuideSearch';
 import { MobileNav } from './MobileNav';
 import { TableOfContents } from './TableOfContents';
 import { TocBar } from './TocBar';
@@ -110,6 +111,7 @@ export function GuideShell({
         <>
             <Navbar
                 mark={<SiteSwitcher site="guide" destinations={DESTINATIONS} linkAs={Link} />}
+                center={<GuideSearch />}
                 actions={
                     <>
                         <span className={cn('hidden lg:flex')}>

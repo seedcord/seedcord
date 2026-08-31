@@ -4,10 +4,10 @@ import { defaultHoverInfoProcessor, rendererRich, transformerTwoslash } from '@s
 import { highlightToHtml } from '@seedcord/ui/shiki';
 import ts from 'typescript';
 import { createTwoslasher } from 'twoslash';
-import { removeTwoslashNotations } from 'twoslash/fallback';
 import { removeCodeRanges, resolveNodePositions, splitLines } from 'twoslash-protocol';
 
-import { commonIndent, dedent } from '#lib/dedent';
+import { commonIndent } from '#lib/dedent';
+import { cleanFence } from '#lib/fence';
 import { formatHoverType } from '#lib/formatHoverType';
 import { SAMPLE_AUGMENTATION } from '#lib/sampleTypes';
 import { referenceFor } from '#lib/symbolRef';
@@ -236,8 +236,7 @@ export type FenceMode = 'off' | keyof typeof TRANSFORMER;
 export async function twoslashBlock(code: string, lang: BundledLanguage, mode: FenceMode): Promise<CodeRepresentation> {
     if (mode === 'off') return { text: code, html: await highlightToHtml(code, lang) };
 
-    // a trailing marker leaves the newline above it behind
-    const text = dedent(removeTwoslashNotations(code).replace(/\n+$/, ''));
+    const text = cleanFence(code);
     // type-checking every block stalls next dev past a handful on one page
     if (process.env.TWOSLASH === '0') return { text, html: await highlightToHtml(text, lang) };
 

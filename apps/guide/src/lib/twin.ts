@@ -1,8 +1,7 @@
 import { parseCodeBlockAttributes } from 'fumadocs-core/mdx-plugins/codeblock-utils';
-import { removeTwoslashNotations } from 'twoslash/fallback';
 
 import { CALLOUT_LABELS, TRANSPORT_LABELS } from '#lib/callout';
-import { dedent } from '#lib/dedent';
+import { cleanFence } from '#lib/fence';
 import { getServerManager, VERBS } from '#lib/packageManager';
 import { refHref } from '#lib/refHref';
 import { FENCE_MODES } from '#lib/rehypeFenceMeta';
@@ -71,8 +70,7 @@ export const TWIN_OPTIONS: LLMsOptions = {
         if (node.type === 'code') {
             const { rest } = parseCodeBlockAttributes(node.meta ?? '', FENCE_MODES);
             const fence = [node.lang, rest.trim()].filter(Boolean).join(' ');
-            const body = dedent(removeTwoslashNotations(node.value).replace(/\n+$/, ''));
-            return `\`\`\`${fence}\n${body}\n\`\`\``;
+            return `\`\`\`${fence}\n${cleanFence(node.value)}\n\`\`\``;
         }
 
         if (!isJsx(node)) return undefined;

@@ -2,7 +2,7 @@
 
 import * as Dialog from '@radix-ui/react-dialog';
 import { m } from 'motion/react';
-import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, use, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Card } from './Card';
 import { cn } from './lib/cn';
@@ -35,11 +35,12 @@ export function useSearchDialogScroll(): SearchDialogScroll {
     return use(SearchDialogContext).scroll;
 }
 
-// the ends scroll the whole way so the list keeps its own padding in view
+// the ends scroll the whole way so the list keeps its own padding in view.
+// useLayoutEffect puts the scroll in the same frame as the moved selection. useEffect paints them one apart
 export function useActiveRowScroll(activeId: string | undefined, isFirst: boolean, isLast: boolean): void {
     const scroll = useSearchDialogScroll();
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (activeId === undefined) return;
         if (isFirst) {
             scroll.toTop();
