@@ -153,6 +153,28 @@ describe('the guide worker', () => {
         expect(response.status).toBe(200);
     });
 
+    it('reads the q value that ranks markdown above html', async () => {
+        const assets = recording('/llms/commands/options.md');
+        const request = new Request('https://guide.seedcord.org/commands/options/', {
+            headers: { accept: 'text/markdown;q=1, text/html;q=0.1' }
+        });
+
+        await handler.fetch(request, assets);
+
+        expect(assets.asked).toEqual(['/llms/commands/options.md']);
+    });
+
+    it('treats a markdown q of zero as a refusal', async () => {
+        const assets = recording('/commands/options/');
+        const request = new Request('https://guide.seedcord.org/commands/options/', {
+            headers: { accept: 'text/markdown;q=0, */*' }
+        });
+
+        await handler.fetch(request, assets);
+
+        expect(assets.asked).toEqual(['/commands/options/']);
+    });
+
     it('leaves a browser on the html page', async () => {
         const assets = recording('/commands/options/');
         const request = new Request('https://guide.seedcord.org/commands/options/', {

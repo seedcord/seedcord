@@ -44,6 +44,38 @@ describe('the code in a search result', () => {
         ]);
     });
 
+    it('drops the asterisks a bold lead-in wraps', () => {
+        expect(highlightSegments('**Components.** Buttons and modals')).toEqual([
+            { text: 'Components. Buttons and modals', match: false, code: false }
+        ]);
+    });
+
+    it('drops the asterisks around an italic word', () => {
+        expect(highlightSegments('we saw *how* and *what*')).toEqual([
+            { text: 'we saw how and what', match: false, code: false }
+        ]);
+    });
+
+    // remark stores an asterisk that follows a backtick as &#x2A;
+    it('decodes an escaped asterisk back into its bold run', () => {
+        expect(highlightSegments('**`bot.ts`*&#x2A; builds it')).toEqual([
+            { text: 'bot.ts', match: false, code: true },
+            { text: ' builds it', match: false, code: false }
+        ]);
+    });
+
+    // a code fence row carries no backticks. a glob has to survive on its own
+    it('leaves a glob alone when a row holds two of them', () => {
+        const code = "eslint 'src/**/*.ts' and 'tests/**/*.ts'";
+
+        expect(highlightSegments(code)).toEqual([{ text: code, match: false, code: false }]);
+    });
+
+    // markdown closes a span on a backtick run of the same width
+    it('keeps the backtick a double backtick span wraps', () => {
+        expect(highlightSegments('``a ` b``')).toEqual([{ text: 'a ` b', match: false, code: true }]);
+    });
+
     it('leaves a lone backtick alone', () => {
         expect(highlightSegments('a ` b')).toEqual([{ text: 'a ` b', match: false, code: false }]);
     });

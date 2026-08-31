@@ -8,6 +8,19 @@ export interface HighlightSegment {
 const OPEN = '<mark>';
 const CLOSE = '</mark>';
 const TICK = '`';
+const STAR = '*';
+
+// remark stores an asterisk that follows a backtick as &#x2A;. that splits the bold run around it
+const NUMERIC_ENTITY = /&#(x)?([0-9a-f]+);/gi;
+const HEX = 16;
+const DECIMAL = 10;
+
+function decodeEntities(content: string): string {
+    return content.replace(NUMERIC_ENTITY, (whole, hex: string | undefined, digits: string) => {
+        const point = Number.parseInt(digits, hex === undefined ? DECIMAL : HEX);
+        return Number.isNaN(point) ? whole : String.fromCodePoint(point);
+    });
+}
 
 interface Marked {
     plain: string;
@@ -38,27 +51,96 @@ function stripMarks(content: string): Marked {
     return { plain, match };
 }
 
-function codeFlags(plain: string): boolean[] {
-    const code = Array.from({ length: plain.length }, () => false);
+function runWidth(plain: string, start: number, char: string): number {
+    let end = start;
+    while (plain[end] === char) end++;
+    return end - start;
+}
 
-    for (let open = plain.indexOf(TICK); open !== -1; open = plain.indexOf(TICK, open + 1)) {
-        const close = plain.indexOf(TICK, open + 1);
-        if (close === -1) break;
-        for (let at = open; at <= close; at++) code[at] = true;
-        open = close;
+// a span closes on the next run of the same width. a shorter run inside it is content
+function closingRun(plain: string, from: number, width: number, char: string): number {
+    for (let at = from; at < plain.length; at++) {
+        if (plain[at] !== char) continue;
+
+        const run = runWidth(plain, at, char);
+        if (run === width) return at;
+        at += run - 1;
     }
 
-    return code;
+    return -1;
+}
+
+interface Fenced {
+    code: boolean[];
+    delimiter: boolean[];
+}
+
+function codeFlags(plain: string): Fenced {
+    const code = Array.from({ length: plain.length }, () => false);
+    const delimiter = Array.from({ length: plain.length }, () => false);
+
+    for (let at = 0; at < plain.length; at++) {
+        if (plain[at] !== TICK) continue;
+
+        const width = runWidth(plain, at, TICK);
+        const close = closingRun(plain, at + width, width, TICK);
+        if (close === -1) {
+            at += width - 1;
+            continue;
+        }
+
+        for (let mark = at; mark < close + width; mark++) code[mark] = true;
+        for (let mark = 0; mark < width; mark++) {
+            delimiter[at + mark] = true;
+            delimiter[close + mark] = true;
+        }
+        at = close + width - 1;
+    }
+
+    return { code, delimiter };
+}
+
+// emphasis opens on a word or a code span. a glob writes **/ or *. and opens neither
+const EMPHASIS_START = /[A-Za-z0-9`]/;
+
+function opensEmphasis(plain: string, after: number): boolean {
+    const next = plain[after];
+    return next !== undefined && EMPHASIS_START.test(next);
+}
+
+function closesEmphasis(plain: string, close: number): boolean {
+    const before = plain[close - 1];
+    return before !== undefined && before.trim() !== '';
+}
+
+function markEmphasis(plain: string, code: readonly boolean[], delimiter: boolean[]): void {
+    for (let at = 0; at < plain.length; at++) {
+        if (plain[at] !== STAR || code[at] === true) continue;
+
+        const width = runWidth(plain, at, STAR);
+        const close = opensEmphasis(plain, at + width) ? closingRun(plain, at + width, width, STAR) : -1;
+        if (close === -1 || !closesEmphasis(plain, close)) {
+            at += width - 1;
+            continue;
+        }
+
+        for (let mark = 0; mark < width; mark++) {
+            delimiter[at + mark] = true;
+            delimiter[close + mark] = true;
+        }
+        at = close + width - 1;
+    }
 }
 
 export function highlightSegments(content: string): HighlightSegment[] {
-    const { plain, match } = stripMarks(content);
-    const code = codeFlags(plain);
+    const { plain, match } = stripMarks(decodeEntities(content));
+    const { code, delimiter } = codeFlags(plain);
+    markEmphasis(plain, code, delimiter);
     const segments: HighlightSegment[] = [];
 
     for (let at = 0; at < plain.length; at++) {
-        // a backtick delimits an inline span and never renders
-        if (code[at] === true && plain[at] === TICK) continue;
+        // a backtick that opens or closes a span never renders
+        if (delimiter[at] === true) continue;
 
         const last = segments.at(-1);
         const same = last !== undefined && last.match === match[at] && last.code === code[at];
