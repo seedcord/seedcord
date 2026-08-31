@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/plugin-mongoose",
     "type": "module",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "description": "Connect a seedcord bot to MongoDB with Mongoose",
     "keywords": [
         "discord-bot",

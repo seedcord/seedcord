@@ -1,5 +1,11 @@
 # @seedcord/event-emitter
 
+## 0.1.5
+
+### Patch Changes
+
+- 9b6a31c: An async listener that throws used to crash the process. Its error now reaches `onListenerError`, the same as a synchronous one. This covers listeners registered with both `on()` and `once()`.
+
 ## 0.1.4
 
 ### Patch Changes

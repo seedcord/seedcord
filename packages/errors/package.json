@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/errors",
     "type": "module",
-    "version": "0.4.3",
+    "version": "0.5.0",
     "engines": {
         "node": ">=24.11"
     },

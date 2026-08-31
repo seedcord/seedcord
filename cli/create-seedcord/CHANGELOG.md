@@ -1,5 +1,11 @@
 # create-seedcord
 
+## 0.2.0
+
+### Minor Changes
+
+- 554129a: New projects get `eslint.config.ts` (and `jiti` as a dev-dep for it) and `prettier.config.ts`. No more `.mjs` files.
+
 ## 0.1.3
 
 ### Patch Changes

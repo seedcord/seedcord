@@ -1,5 +1,31 @@
 # @seedcord/plugin-mongoose
 
+## 0.3.0
+
+### Minor Changes
+
+- 1bf7d89: **BREAKING:** an error that reports a bad argument now throws `SeedcordTypeError` or `SeedcordRangeError`. Update any `isSeedcordError(error, 'SeedcordError', code)` call naming one of those codes, since branching on the code alone is unaffected.
+
+    An invalid plugin lifecycle timeout throws the new `PluginInvalidLifecycleTimeout` code.
+
+### Patch Changes
+
+- Updated dependencies [1bf7d89]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [5b15463]
+- Updated dependencies [554129a]
+- Updated dependencies [554129a]
+- Updated dependencies [554129a]
+- Updated dependencies [0ad8bd1]
+- Updated dependencies [64c9a0e]
+- Updated dependencies [e4e8605]
+- Updated dependencies [554129a]
+    - @seedcord/errors@0.5.0
+    - @seedcord/logger@0.2.2
+    - @seedcord/types@0.10.0
+    - @seedcord/utils@0.8.8
+
 ## 0.2.1
 
 ### Patch Changes

@@ -1,5 +1,24 @@
 # @seedcord/utils
 
+## 0.8.8
+
+### Patch Changes
+
+- 64c9a0e: `renderTable` now applies `maxWidth` under `border: 'markdown'` without needing `overflow: 'truncate'`, since a GFM cell holds one line. `header: false` under that border keeps row 0 as data and puts a blank row above the delimiter.
+- e4e8605: Fixed `roundToDenomination` shortening from 10_000 up. It should have been 1_000. `1234` now correctly returns `'1.2K'` where it used to return `'1234'`. Also, this function now takes any number of `suffixes`.
+
+    Fixed `longestStringLength([])` returning `-Infinity` instead of `0`.
+
+- Updated dependencies [1bf7d89]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [5b15463]
+- Updated dependencies [554129a]
+- Updated dependencies [554129a]
+- Updated dependencies [0ad8bd1]
+- Updated dependencies [554129a]
+    - @seedcord/errors@0.5.0
+    - @seedcord/types@0.10.0
+
 ## 0.8.7
 
 ### Patch Changes

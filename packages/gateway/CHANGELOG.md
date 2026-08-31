@@ -1,5 +1,61 @@
 # @seedcord/gateway
 
+## 0.4.0
+
+### Minor Changes
+
+- 1bf7d89: **BREAKING:** an error that reports a bad argument now throws `SeedcordTypeError` or `SeedcordRangeError`. Update any `isSeedcordError(error, 'SeedcordError', code)` call naming one of those codes, since branching on the code alone is unaffected.
+
+    An invalid plugin lifecycle timeout throws the new `PluginInvalidLifecycleTimeout` code.
+
+- 5b15463: A context menu handler registered for several command names runs one arm per name through `match` and reads the fired name from `commandName`. On gateway each arm receives the target narrowed to that one command's cache state.
+- 3f74e62: **BREAKING:** The `anyEvent` bus key is now `eventDispatching`. It was a misnomer to call it `anyEvent` because it was only triggered for events with a registered handler.
+- 0ad8bd1: Modal and select menu handlers read their inputs the same way on both transports. `this.fields` reads a modal's submitted values by custom id. A select handler carries `values` plus the resolved `users`, `members`, `roles`, and `channels` for its kind.
+- 8dc4791: `start(handler, n)` opens a paginator on any page, and `page(handler, n)` renders one without sending it. A source you write yourself takes `PageSource<Item>`, which each transport exports with its page context already bound.
+
+    **BREAKING:** `Paginator.page` now takes the handler. `PaginatorBase.page` is `protected buildPage`, and core's three source symbols gained a `Base` suffix so the plain names belong to the transports.
+
+- 3ff40e7: Every repliable handler now carries its reply sender on a public `sender` property, replacing the internal `getSender()`. `ReplySender`, `BaseReplySender`, and `ModalLike` are also exported now.
+
+### Patch Changes
+
+- 2cb3c87: Fixed `Seedcord.attach()` not showing up in the documentation.
+- 554129a: Export the winston sinks from both node entries.
+- 5b15463: `EventHandler.match` threw `EventMatchArmMissing` for an unregistered event only when the name missed `Object.prototype`. An event named `toString` or `constructor` found the prototype's method and called it. This couldn't happen in the first place, but still was inconsistent behavior.
+- 5f4e203: Every gate seedcord ships now sets `summary`. An `or` whose arms all refuse lists what each one required, under the lead line `You need to meet any of these:`.
+- 554129a: Hide the internals that were already marked internal. `core.shutdown` and `core.startup` carry `addTask` alone, `core.bus` carries `publish` and the listener methods, and `core.bot` drops the controllers and the lifecycle calls. The http transport's `Core` declares the two lifecycle members, and a core built by `createSeedcord` throws from either one.
+- 58318fa: Fix TSDoc in `SlashHandler` and `getConfirmation`. They were showing the incorrect number of arguments for option getters.
+- 9b6a31c: A host whose startup failed used to tear down whichever host had replaced it, taking the replacement's signal handlers and logger config with it. Teardown now runs only for the host that is still live. A second `start()` racing the first rejects with the same error, where it used to resolve a half-started host.
+- Updated dependencies [1bf7d89]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [2cb3c87]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [554129a]
+- Updated dependencies [5b15463]
+- Updated dependencies [8dc4791]
+- Updated dependencies [554129a]
+- Updated dependencies [5f4e203]
+- Updated dependencies [554129a]
+- Updated dependencies [554129a]
+- Updated dependencies [0ad8bd1]
+- Updated dependencies [8dc4791]
+- Updated dependencies [6872865]
+- Updated dependencies [3ff40e7]
+- Updated dependencies [64c9a0e]
+- Updated dependencies [554129a]
+- Updated dependencies [9b6a31c]
+- Updated dependencies [0c6cdc8]
+- Updated dependencies [e4e8605]
+- Updated dependencies [554129a]
+    - @seedcord/errors@0.5.0
+    - @seedcord/core@0.4.0
+    - @seedcord/event-emitter@0.1.5
+    - @seedcord/logger@0.2.2
+    - @seedcord/types@0.10.0
+    - @seedcord/utils@0.8.8
+    - @seedcord/rate-limiter@0.1.5
+
 ## 0.3.1
 
 ### Patch Changes

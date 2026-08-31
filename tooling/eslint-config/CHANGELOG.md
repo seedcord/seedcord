@@ -1,5 +1,15 @@
 # @seedcord/eslint-config
 
+## 2.1.0
+
+### Minor Changes
+
+- 554129a: `registerTypescriptConfigs` now takes `'no-type-checked'`. It keeps the presets and turns off the rules that read the type checker.
+
+### Patch Changes
+
+- 5b15463: `@typescript-eslint/naming-convention` no longer warns on an object key that holds a function. A `match` arm keys on a route string or a context menu name, both of which carry slashes and spaces.
+
 ## 2.0.0
 
 ### Major Changes

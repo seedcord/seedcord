@@ -1,5 +1,13 @@
 # @seedcord/rate-limiter
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies [9b6a31c]
+- Updated dependencies [554129a]
+    - @seedcord/types@0.10.0
+
 ## 0.1.4
 
 ### Patch Changes
