@@ -8,10 +8,12 @@ import {
     MobilePanel,
     Navbar,
     NavTabs,
+    SearchIconButton,
     SiteSwitcher,
     ThemeToggle,
     cn,
-    matchActiveHref
+    matchActiveHref,
+    tw
 } from '@seedcord/ui';
 import { AnchorProvider, useActiveAnchor, useActiveAnchors } from 'fumadocs-core/toc';
 import Link from 'next/link';
@@ -20,8 +22,9 @@ import { useMemo, useState } from 'react';
 
 import { DOCS_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site';
 
+import { CopyPageButton } from './CopyPageButton';
 import { DocsSidebar } from './DocsSidebar';
-import { GuideSearch } from './GuideSearch';
+import { GuideSearch, SEARCH_LABEL } from './GuideSearch';
 import { MobileNav } from './MobileNav';
 import { TableOfContents } from './TableOfContents';
 import { TocBar } from './TocBar';
@@ -50,6 +53,27 @@ function GithubLink(): ReactElement {
     );
 }
 
+function NavActions({
+    navOpen,
+    onNavOpen,
+    onSearchOpen
+}: {
+    navOpen: boolean;
+    onNavOpen: () => void;
+    onSearchOpen: () => void;
+}): ReactElement {
+    return (
+        <>
+            <SearchIconButton label={SEARCH_LABEL} onOpen={onSearchOpen} />
+            <span className={cn('hidden lg:flex')}>
+                <GithubLink />
+            </span>
+            <ThemeToggle />
+            <MobileNavButton open={navOpen} onOpen={onNavOpen} className={cn('lg:hidden')} />
+        </>
+    );
+}
+
 function ContentsBar({ items, pageTitle }: Omit<TocBarProps, 'activeIds' | 'currentId' | 'className'>): ReactElement {
     const activeIds = useActiveAnchors();
     const currentId = useActiveAnchor();
@@ -65,15 +89,26 @@ function ContentsBar({ items, pageTitle }: Omit<TocBarProps, 'activeIds' | 'curr
     );
 }
 
-function ContentsColumn({ items }: { items: readonly TOCItemType[] }): ReactElement {
+// 214px is the column width in the guide layouts mock
+const contentsColumnClassName = tw`sticky top-(--nav-h) hidden max-h-[calc(100dvh-var(--nav-h))] w-53.5 shrink-0 flex-col gap-4 self-start py-10 lg:flex`;
+
+function ContentsColumn({
+    items,
+    markdownPath
+}: {
+    items: readonly TOCItemType[];
+    markdownPath: string | undefined;
+}): ReactElement {
     const activeIds = useActiveAnchors();
 
     return (
-        <TableOfContents
-            items={items}
-            activeIds={activeIds}
-            className={cn('top-(--nav-h) hidden max-h-[calc(100dvh-var(--nav-h))] py-10 lg:block')}
-        />
+        <div className={cn(contentsColumnClassName)}>
+            {markdownPath === undefined ? null : (
+                // 14px is the button's px-3 plus the blank lucide leaves inside the icon
+                <CopyPageButton source={markdownPath} className={cn('-ms-3.5 self-start')} />
+            )}
+            <TableOfContents items={items} activeIds={activeIds} className={cn('min-h-0')} />
+        </div>
     );
 }
 
@@ -82,6 +117,8 @@ export interface GuideShellProps {
     sidebars: SidebarsByTab;
     toc?: readonly TOCItemType[] | undefined;
     pageTitle?: string | undefined;
+    /** Where the contents column copies this page's markdown from. */
+    markdownPath?: string | undefined;
     pathname?: string | undefined;
     children: ReactNode;
 }
@@ -91,12 +128,14 @@ export function GuideShell({
     sidebars,
     toc = NO_TOC,
     pageTitle = '',
+    markdownPath,
     pathname: override,
     children
 }: GuideShellProps): ReactElement {
     const current = usePathname();
     const pathname = override ?? current;
     const [navOpen, setNavOpen] = useState(false);
+    const [searchOpen, setSearchOpen] = useState(false);
     // AnchorProvider re-observes every heading whenever this array changes identity
     const anchors = useMemo(() => [...toc], [toc]);
 
@@ -111,15 +150,13 @@ export function GuideShell({
         <>
             <Navbar
                 mark={<SiteSwitcher site="guide" destinations={DESTINATIONS} linkAs={Link} />}
-                center={<GuideSearch />}
+                center={<GuideSearch open={searchOpen} onOpenChange={setSearchOpen} />}
                 actions={
-                    <>
-                        <span className={cn('hidden lg:flex')}>
-                            <GithubLink />
-                        </span>
-                        <ThemeToggle />
-                        <MobileNavButton open={navOpen} onOpen={() => setNavOpen(true)} className={cn('lg:hidden')} />
-                    </>
+                    <NavActions
+                        navOpen={navOpen}
+                        onNavOpen={() => setNavOpen(true)}
+                        onSearchOpen={() => setSearchOpen(true)}
+                    />
                 }
                 tabsClassName={cn('hidden lg:flex')}
                 tabs={<NavTabs items={tabs} activeHref={activeHref ?? ''} linkAs={Link} />}
@@ -141,7 +178,7 @@ export function GuideShell({
                         <main id="main-content" className={cn('min-w-0 flex-1 py-10')}>
                             {children}
                         </main>
-                        {hasContents ? <ContentsColumn items={toc} /> : null}
+                        {hasContents ? <ContentsColumn items={toc} markdownPath={markdownPath} /> : null}
                     </div>
                 </div>
             </AnchorProvider>

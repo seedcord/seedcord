@@ -15,13 +15,14 @@ export const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
     title: { default: SITE_NAME, template: '%s · seedcord guide' },
     description: SITE_DESCRIPTION,
-    applicationName: SITE_NAME,
-    // flip this once the guide has real pages
-    robots: { index: false, follow: false }
+    applicationName: SITE_NAME
 };
 
 export const viewport: Viewport = {
-    themeColor: BRAND.pith
+    themeColor: [
+        { media: '(prefers-color-scheme: light)', color: BRAND.seedDark },
+        { media: '(prefers-color-scheme: dark)', color: BRAND.pith }
+    ]
 };
 
 interface RootLayoutProps {

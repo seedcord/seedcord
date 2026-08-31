@@ -68,3 +68,39 @@ describe('the page a whole phrase should land on', () => {
         expect(ranked.map((row) => row.id)).toEqual(results.map((row) => row.id));
     });
 });
+
+describe('the page a query names outright', () => {
+    it('puts a title that covers the query above a page that only mentions it', () => {
+        const rows: Row[] = [
+            page('lint', 'Linting'),
+            text('lint-1', 'use-custom-id-codec'),
+            text('lint-2', 'use-paint-in-logs'),
+            page('custom-ids', 'Custom IDs'),
+            text('custom-ids-1', 'A wire from a different id')
+        ];
+
+        expect(rankByCoverage(rows, 'custom id')[0]?.id).toBe('custom-ids');
+    });
+
+    it('keeps a page covering every word above a title that catches one', () => {
+        const rows: Row[] = [
+            page('commands', 'Commands'),
+            text('commands-1', 'slash commands live here'),
+            page('messages', 'Handling messages'),
+            text('messages-1', 'that could be migrated to slash commands')
+        ];
+
+        expect(rankByCoverage(rows, 'migrated slash commands')[0]?.id).toBe('messages');
+    });
+
+    it('puts the shorter title first when two titles both cover the query', () => {
+        const rows: Row[] = [
+            page('stale', 'When a custom id goes stale'),
+            text('stale-1', 'A corrupt string throws here'),
+            page('custom-ids', 'Custom IDs'),
+            text('custom-ids-1', 'A wire from a different id')
+        ];
+
+        expect(rankByCoverage(rows, 'custom id')[0]?.id).toBe('custom-ids');
+    });
+});

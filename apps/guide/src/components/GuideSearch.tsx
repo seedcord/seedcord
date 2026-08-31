@@ -3,7 +3,6 @@
 import {
     SearchDialog,
     SearchField,
-    SearchIconButton,
     SearchTrigger,
     cn,
     useActiveRowScroll,
@@ -25,12 +24,13 @@ import type { SortedResult } from 'fumadocs-core/search';
 import type { ReactElement } from 'react';
 
 const LISTBOX_ID = 'guide-search-results';
-const LABEL = 'Search the guide';
+
+export const SEARCH_LABEL = 'Search the guide';
 
 const NO_RESULTS: SortedResult[] = [];
 
 // a common term matches most of the guide. the ranking already puts the right page on top
-const MAX_PAGES = 8;
+const MAX_PAGES = 16;
 
 function optionId(id: string): string {
     return `guide-search-${id}`;
@@ -83,8 +83,12 @@ function Results({
     );
 }
 
-export function GuideSearch(): ReactElement {
-    const [open, setOpen] = useState(false);
+export interface GuideSearchProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}
+
+export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): ReactElement {
     const [typed, setTyped] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
@@ -102,10 +106,10 @@ export function GuideSearch(): ReactElement {
         [setSearch]
     );
 
-    useSearchHotkey(() => setOpen((wasOpen) => !wasOpen));
+    useSearchHotkey(() => setOpen(!open));
 
     const found = query.data === 'empty' || query.data === undefined ? NO_RESULTS : query.data;
-    // ranking runs before the cap so the cap keeps the pages that cover the most of the query.
+    // ranking first leaves the cap holding whichever pages cover the most of the query
     // useRovingList keys an effect on this array's identity
     const results = useMemo(() => firstPages(rankByCoverage(found, stripStopwords(typed)), MAX_PAGES), [found, typed]);
 
@@ -114,7 +118,7 @@ export function GuideSearch(): ReactElement {
             setOpen(false);
             router.push(result.url);
         },
-        [router]
+        [router, setOpen]
     );
 
     const { activeIndex, isFirst, isLast, setActiveIndex, onKeyDown } = useRovingList({
@@ -131,8 +135,7 @@ export function GuideSearch(): ReactElement {
 
     return (
         <>
-            <SearchTrigger label={LABEL} onOpen={() => setOpen(true)} />
-            <SearchIconButton label={LABEL} onOpen={() => setOpen(true)} />
+            <SearchTrigger label={SEARCH_LABEL} onOpen={() => setOpen(true)} />
             <SearchDialog
                 open={open}
                 onOpenChange={setOpen}
@@ -146,7 +149,7 @@ export function GuideSearch(): ReactElement {
                         onValueChange={onValueChange}
                         onKeyDown={onKeyDown}
                         onClose={() => setOpen(false)}
-                        label={LABEL}
+                        label={SEARCH_LABEL}
                         closeLabel="Close search"
                         placeholder="Search the guide"
                         listboxId={LISTBOX_ID}

@@ -10,7 +10,7 @@
         "binding": "ASSETS",
         "not_found_handling": "404-page",
         "html_handling": "auto-trailing-slash",
-        // route every request through worker.ts so it can add the noindex and Link headers
+        // worker.ts answers a markdown request from a different asset than the url names
         "run_worker_first": true
     }
 }

@@ -39,7 +39,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-    themeColor: BRAND.pith
+    themeColor: [
+        { media: '(prefers-color-scheme: light)', color: BRAND.seedDark },
+        { media: '(prefers-color-scheme: dark)', color: BRAND.pith }
+    ]
 };
 
 const jsonLd = {

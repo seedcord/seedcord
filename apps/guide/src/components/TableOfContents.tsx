@@ -13,8 +13,8 @@ export interface TableOfContentsProps {
     className?: string | undefined;
 }
 
-// 214px is the column width in the guide layouts mock
-const columnClassName = tw`nice-scroll sticky w-53.5 shrink-0 self-start overflow-y-auto text-[13px]`;
+// GuideShell's ContentsColumn owns the width and the sticky offset
+const columnClassName = tw`nice-scroll overflow-y-auto text-[13px]`;
 const labelClassName = tw`mb-2 text-xs font-semibold tracking-widest text-(--text-faint) uppercase`;
 export const rowClassName = cn(
     tw`block py-1.5`,
