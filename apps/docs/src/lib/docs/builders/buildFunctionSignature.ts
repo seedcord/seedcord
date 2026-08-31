@@ -6,7 +6,7 @@ import { buildFunctionParameters } from './buildFunctionParameters';
 import { buildFunctionTypeParams } from './buildFunctionTypeParams';
 import { ensureSignatureAnchor, buildDeprecationStatusFromNodeLike } from './utils';
 
-import type { CodeRepresentation, FormatContext, FunctionSignatureModel } from '#lib/docs/types';
+import type { FormatContext, FunctionSignatureModel } from '#lib/docs/types';
 import type { DocSignature } from '@seedcord/docs-engine';
 
 export async function buildFunctionSignature(
@@ -15,13 +15,12 @@ export async function buildFunctionSignature(
     isAsync = false
 ): Promise<FunctionSignatureModel> {
     const rendered = signature.render;
-    const code: CodeRepresentation = rendered
-        ? await formatSignature(rendered, context, isAsync ? 'async' : undefined)
-        : await highlightCode(signature.name);
-
-    const parameters = await buildFunctionParameters(signature, rendered, context);
-    const comment = await formatCommentRich(signature.comment, context);
-    const typeParameters = await buildFunctionTypeParams(signature, rendered, context);
+    const [code, parameters, comment, typeParameters] = await Promise.all([
+        rendered ? formatSignature(rendered, context, isAsync ? 'async' : undefined) : highlightCode(signature.name),
+        buildFunctionParameters(signature, rendered, context),
+        formatCommentRich(signature.comment, context),
+        buildFunctionTypeParams(signature, rendered, context)
+    ]);
 
     const anchor = ensureSignatureAnchor(signature);
     const model: FunctionSignatureModel = {

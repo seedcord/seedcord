@@ -110,7 +110,7 @@ export function profileReport(): string | null {
     if (!enabled) return null;
 
     const session = performance.now();
-    const sorted = [...renderTimes].sort((a, b) => a - b);
+    const sorted = renderTimes.toSorted((a, b) => a - b);
     const layoutTotal = renderTimes.reduce((sum, time) => sum + time, 0);
     const mb = (written / BYTES_PER_MB).toFixed(2);
     const share = (part: number): string => `${((part / session) * PERCENT).toFixed(1)}% of session`;

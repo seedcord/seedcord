@@ -16,7 +16,7 @@ interface AttachedPlugins {
 }
 
 export function renderAugmentation(registry: Augmentation, target: string, plugins?: AttachedPlugins): string {
-    const keys = [...(plugins?.keys ?? [])].sort(compare);
+    const keys = (plugins?.keys ?? []).toSorted(compare);
     const attached = plugins !== undefined && keys.length > 0;
     const botImport = attached ? `import type ${BOT_BINDING} from '${escapeLiteral(plugins.specifier)}';\n\n` : '';
     const coreRows = attached ? `    interface Core {\n${renderPluginRows(keys)}\n    }\n` : '';

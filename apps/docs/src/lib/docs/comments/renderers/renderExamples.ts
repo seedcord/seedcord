@@ -12,18 +12,21 @@ export async function renderExamples(comment: DocComment): Promise<CommentExampl
 
     if (!Array.isArray(sourceExamples) || sourceExamples.length === 0) return [];
 
-    const examples: CommentExample[] = [];
+    const pending: Promise<CommentExample>[] = [];
     for (const example of sourceExamples) {
         const { code, language } = extractExample(example);
         if (!code) continue;
 
-        const representation = await highlightCode(code, language);
-        const entry: CommentExample = { code: representation };
-        if (example.caption) entry.caption = example.caption;
-        examples.push(entry);
+        pending.push(
+            highlightCode(code, language).then((representation) => {
+                const entry: CommentExample = { code: representation };
+                if (example.caption) entry.caption = example.caption;
+                return entry;
+            })
+        );
     }
 
-    return examples;
+    return Promise.all(pending);
 }
 
 function extractExample(example: DocCommentExample): { code: string; language: string } {

@@ -2,7 +2,7 @@
 
 import * as Dialog from '@radix-ui/react-dialog';
 import { m } from 'motion/react';
-import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, use, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Card } from './Card';
 import { cn } from './lib/cn';
@@ -35,12 +35,13 @@ export function useSearchDialogScroll(): SearchDialogScroll {
     return use(SearchDialogContext).scroll;
 }
 
-// the ends scroll the whole way so the list keeps its own padding in view
+// useLayoutEffect puts the scroll in the same frame as the moved selection. useEffect paints them one apart
 export function useActiveRowScroll(activeId: string | undefined, isFirst: boolean, isLast: boolean): void {
     const scroll = useSearchDialogScroll();
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (activeId === undefined) return;
+        // scrolling the whole way at the ends keeps the list's own padding in view
         if (isFirst) {
             scroll.toTop();
             return;
@@ -62,8 +63,7 @@ function useMeasuredHeight(): [number, (el: HTMLDivElement | null) => void] {
     const observerRef = useRef<ResizeObserver | null>(null);
     const [height, setHeight] = useState(0);
 
-    // the radix portal drops this node on close. a callback ref re-attaches the observer on every open,
-    // and ResizeObserver fires once on observe() to seed the first height.
+    // the radix portal drops this node on close. a callback ref re-attaches the observer on the next open
     const measureRef = useCallback((el: HTMLDivElement | null) => {
         observerRef.current?.disconnect();
         if (!el) {
@@ -71,6 +71,7 @@ function useMeasuredHeight(): [number, (el: HTMLDivElement | null) => void] {
             return;
         }
         const observer = new ResizeObserver(() => setHeight(el.scrollHeight));
+        // ResizeObserver fires once on observe() to seed the first height
         observer.observe(el);
         observerRef.current = observer;
     }, []);

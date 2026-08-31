@@ -37,6 +37,10 @@ interface ContainerProps {
 const SIDEBAR_BASE_CLASS = 'flex w-full flex-col';
 const MOBILE_SIDEBAR_OVERRIDES = 'border-transparent bg-transparent shadow-none';
 
+const CONTAINER_STYLE: CSSProperties & { '--sidebar-width': string } = {
+    '--sidebar-width': `${SIDEBAR_WIDTH}px`
+};
+
 export function Container({
     catalog,
     activePackageId,
@@ -47,12 +51,8 @@ export function Container({
     const isMobileNavOpen = useUIStore((state) => state.isMobileNavOpen);
     const setMobileNavOpen = useUIStore((state) => state.setMobileNavOpen);
 
-    const containerStyle: CSSProperties & { '--sidebar-width': string } = {
-        '--sidebar-width': `${SIDEBAR_WIDTH}px`
-    };
-
     return (
-        <div style={containerStyle} className={cn('flex w-full flex-1 flex-col gap-5', className)}>
+        <div style={CONTAINER_STYLE} className={cn('flex w-full flex-1 flex-col gap-5', className)}>
             <MobilePanel
                 open={isMobileNavOpen}
                 onOpenChange={setMobileNavOpen}

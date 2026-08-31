@@ -25,6 +25,7 @@
         "next-env.d.ts",
         "src/**/*.ts",
         "src/**/*.tsx",
+        "src/app/.well-known/**/*.ts",
         "eslint.config.ts",
         "prettier.config.ts",
         "next.config.ts",

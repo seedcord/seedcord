@@ -7,12 +7,9 @@ export async function renderThrows(
     comment: DocComment,
     context: FormatContext
 ): Promise<CommentParagraph[] | undefined> {
-    const tags = comment.blockTags.filter((t) => t.tag === '@throws' || t.tag === '@exception');
-    if (!tags.length) return undefined;
+    const pending = comment.blockTags.reduce<Promise<CommentParagraph[]>[]>((tasks, tag) => {
+        if (tag.tag !== '@throws' && tag.tag !== '@exception') return tasks;
 
-    const paragraphs: CommentParagraph[] = [];
-
-    for (const tag of tags) {
         const fakeComment: DocComment = {
             summary: '',
             summaryParts: tag.content,
@@ -20,9 +17,10 @@ export async function renderThrows(
             modifierTags: [],
             examples: []
         };
-        const rendered = await renderParagraphs(fakeComment, context);
-        paragraphs.push(...rendered);
-    }
+        tasks.push(renderParagraphs(fakeComment, context));
+        return tasks;
+    }, []);
 
+    const paragraphs = (await Promise.all(pending)).flat();
     return paragraphs.length ? paragraphs : undefined;
 }

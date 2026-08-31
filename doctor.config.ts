@@ -2,7 +2,8 @@ import { defineConfig } from 'react-doctor/api';
 
 export default defineConfig({
     ignore: {
-        files: ['**/app/dev/**', '**/tests/**'],
+        // devSource only feeds the dev pages ignored on the line above
+        files: ['**/app/dev/**', '**/tests/**', '**/lib/devSource.ts'],
 
         overrides: [
             {
@@ -23,9 +24,40 @@ export default defineConfig({
                     '**/components/docs/entity/comments/CommentParagraphs.tsx',
                     '**/components/docs/entity/enums/EnumMemberCard.tsx',
                     '**/components/docs/entity/member/MemberRowBody.tsx',
-                    '**/components/docs/entity/utils/renderers/renderParagraphNode.tsx'
+                    '**/components/docs/entity/utils/renderers/renderParagraphNode.tsx',
+                    '**/components/TypeHover.tsx'
                 ],
                 rules: ['react-doctor/no-danger', 'react-doctor/dangerous-html-sink']
+            },
+            {
+                // one project.json fetch per package already reached next's 60s page limit
+                files: ['**/app/sitemap.ts'],
+                rules: ['react-doctor/async-await-in-loop']
+            },
+            {
+                // setVersion writes shared engine state. the packages resolve one at a time
+                files: ['**/search/route.ts'],
+                rules: ['react-doctor/async-await-in-loop']
+            },
+            {
+                // Button asChild merges the aria-label onto the anchor
+                files: ['**/components/docs/entity/EntityHeader.tsx'],
+                rules: ['react-doctor/control-has-associated-label']
+            },
+            {
+                // the fetch chain already ends in .catch
+                files: ['**/useCommandPaletteController.ts'],
+                rules: ['react-doctor/no-promise-then-side-effect-in-effect-without-catch']
+            },
+            {
+                // isFirst and isLast carry roving-list position into useActiveRowScroll
+                files: ['**/CommandPaletteDialog.tsx'],
+                rules: ['react-doctor/no-many-boolean-props']
+            },
+            {
+                // next/image demands width and height, both optional on this component's props
+                files: ['**/lib/mdxComponents.tsx'],
+                rules: ['react-doctor/nextjs-no-img-element']
             },
             {
                 // JSON-LD script tags, value is escaped and built server-side

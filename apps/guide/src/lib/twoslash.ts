@@ -4,9 +4,10 @@ import { defaultHoverInfoProcessor, rendererRich, transformerTwoslash } from '@s
 import { highlightToHtml } from '@seedcord/ui/shiki';
 import ts from 'typescript';
 import { createTwoslasher } from 'twoslash';
-import { removeTwoslashNotations } from 'twoslash/fallback';
 import { removeCodeRanges, resolveNodePositions, splitLines } from 'twoslash-protocol';
 
+import { commonIndent } from '#lib/dedent';
+import { cleanFence } from '#lib/fence';
 import { formatHoverType } from '#lib/formatHoverType';
 import { SAMPLE_AUGMENTATION } from '#lib/sampleTypes';
 import { referenceFor } from '#lib/symbolRef';
@@ -47,8 +48,7 @@ const formatted = new Map<string, string>();
 const LEADING_MODIFIER = /^\(([\w-]+)\)\s+/gm;
 const IMPORT_STATEMENT = /\nimport .*$/;
 
-// twoslash erases a hover printing as a bare `interface Name`. the token then loses its popup and its
-// reference link
+// twoslash erases a hover that prints as a bare `interface Name`
 function hoverInfo(text: string): string {
     const processed = defaultHoverInfoProcessor(text);
     if (processed) return processed;
@@ -97,25 +97,11 @@ const renderer: TwoslashRenderer = {
     }
 };
 
-const INDENTS = /^[ \t]*(?=\S)/gm;
-
-function commonIndent(code: string): number {
-    const found = code.match(INDENTS) ?? [];
-
-    return found.reduce((width, indent) => Math.min(width, indent.length), Infinity);
-}
-
 function indentRanges(code: string, width: number): [number, number][] {
-    return splitLines(code)
-        .filter(([line]) => line.trim())
-        .map(([, start]) => [start, start + width]);
-}
-
-function dedent(code: string): string {
-    const width = commonIndent(code);
-    if (!Number.isFinite(width) || width === 0) return code;
-
-    return code.replace(new RegExp(`^[ \\t]{${String(width)}}`, 'gm'), '');
+    return splitLines(code).reduce<[number, number][]>((ranges, [line, start]) => {
+        if (line.trim()) ranges.push([start, start + width]);
+        return ranges;
+    }, []);
 }
 
 const compile = createTwoslasher();
@@ -212,7 +198,7 @@ const BASE_OPTIONS = {
     extraFiles: { 'seedcord-gen.d.ts': SAMPLE_AUGMENTATION }
 };
 
-// the hover sweep asks typescript for quick info on every identifier. it triples what a fence costs to compile
+// hovers make twoslash query typescript on every identifier. that triples what a fence costs to compile
 const TWOSLASH_OPTIONS = {
     check: { ...BASE_OPTIONS, handbookOptions: { noStaticSemanticInfo: true } },
     hovers: { ...BASE_OPTIONS, handbookOptions: { noStaticSemanticInfo: false } }
@@ -250,8 +236,7 @@ export type FenceMode = 'off' | keyof typeof TRANSFORMER;
 export async function twoslashBlock(code: string, lang: BundledLanguage, mode: FenceMode): Promise<CodeRepresentation> {
     if (mode === 'off') return { text: code, html: await highlightToHtml(code, lang) };
 
-    // a trailing marker leaves the newline above it behind
-    const text = dedent(removeTwoslashNotations(code).replace(/\n+$/, ''));
+    const text = cleanFence(code);
     // type-checking every block stalls next dev past a handful on one page
     if (process.env.TWOSLASH === '0') return { text, html: await highlightToHtml(text, lang) };
 
@@ -262,9 +247,9 @@ export async function twoslashBlock(code: string, lang: BundledLanguage, mode: F
         await learnFormatting(compiled.nodes);
         CACHE[mode].write(code, compiled, extension);
 
+        // a sample that stopped compiling would otherwise render as plain text and pass the build
         const options = { transformers: [TRANSFORMER[mode]], throwOnFailure: true };
 
-        // a sample that stopped compiling would otherwise render as plain text and pass the build
         return { text, html: await highlightToHtml(code, lang, options) };
     } catch (error) {
         // a bad marker reaches typescript as a bare "Debug Failure" with no file and no line

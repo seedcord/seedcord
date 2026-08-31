@@ -22,9 +22,9 @@ export function CommentExamples({ examples, className, open = false }: CommentEx
             </DisclosureTrigger>
             <DisclosurePanel>
                 <div className={cn('space-y-3 pt-2')}>
-                    {examples.map((example, index) => {
+                    {examples.map((example) => {
                         const representation = example.code;
-                        const key = example.caption ?? representation.html ?? `example-${index}`;
+                        const key = example.caption ?? representation.html ?? representation.text;
                         return (
                             <CodeBlock
                                 key={key}

@@ -40,7 +40,7 @@ export function useCommandPaletteSearch({
     prerelease
 }: UseCommandPaletteSearchOptions): SearchState {
     const [state, setState] = useState<SearchState>(DEFAULT_STATE);
-    const cacheRef = useRef<Map<string, CommandAction[]>>(new Map());
+    const cacheRef = useRef<Map<string, CommandAction[]> | null>(null);
     const trimmed = query.trim();
     const active = open && trimmed.length >= MIN_SEARCH_QUERY_LENGTH;
     const { pkg, version } = parseActiveDocsTarget(usePathname());
@@ -48,12 +48,14 @@ export function useCommandPaletteSearch({
     useEffect(() => {
         if (!active) return undefined;
 
+        if (cacheRef.current === null) cacheRef.current = new Map();
+        const cache = cacheRef.current;
         let cancelled = false;
         const controller = new AbortController();
         const cacheKey = `${pkg}::${version}::${scope}::${kind}::${prerelease ? '1' : '0'}::${trimmed}`;
         // a cache hit waits out the debounce too, else old queries flash by as you type
         const timeout = window.setTimeout(() => {
-            const cached = cacheRef.current.get(cacheKey);
+            const cached = cache.get(cacheKey);
             if (cached) {
                 setState({ results: cached, status: 'success' });
                 return;
@@ -83,7 +85,7 @@ export function useCommandPaletteSearch({
                         return;
                     }
                     const results = Array.isArray(payload.results) ? payload.results : [];
-                    cacheRef.current.set(cacheKey, results);
+                    cache.set(cacheKey, results);
                     setState({ results, status: 'success' });
                 })
                 .catch((error: unknown) => {

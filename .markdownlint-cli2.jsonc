@@ -4,6 +4,7 @@
     "ignores": [
         "**/node_modules/**",
         "**/dist/**",
+        "**/out/**",
         "**/.next/**",
         "**/.turbo/**",
         "**/coverage/**",

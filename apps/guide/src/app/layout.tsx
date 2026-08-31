@@ -15,13 +15,14 @@ export const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
     title: { default: SITE_NAME, template: '%s · seedcord guide' },
     description: SITE_DESCRIPTION,
-    applicationName: SITE_NAME,
-    // flip this once the guide has real pages
-    robots: { index: false, follow: false }
+    applicationName: SITE_NAME
 };
 
 export const viewport: Viewport = {
-    themeColor: BRAND.pith
+    themeColor: [
+        { media: '(prefers-color-scheme: light)', color: BRAND.seedDark },
+        { media: '(prefers-color-scheme: dark)', color: BRAND.pith }
+    ]
 };
 
 interface RootLayoutProps {
@@ -37,7 +38,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 className={cn(display.variable, 'antialiased', 'flex min-h-screen flex-col')}
             >
                 <ThemeProvider>
-                    {/* apps/docs uses this exact class string and they need to be the same */}
+                    {/* apps/docs repeats this class string, change both */}
                     <a
                         href="#main-content"
                         className={cn(

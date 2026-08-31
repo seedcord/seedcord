@@ -1,7 +1,10 @@
 import { cn } from '@seedcord/ui';
 import { notFound } from 'next/navigation';
 
+import { CopyPageButton } from '#components/CopyPageButton';
 import { mdxComponents } from '#lib/mdxComponents';
+import { assetPath, TWIN } from '#lib/pageAssets';
+import { pageMetadata } from '#lib/site';
 import { source } from '#lib/source';
 
 import type { Metadata } from 'next';
@@ -20,10 +23,19 @@ export default async function Page(props: PageParams): Promise<ReactNode> {
 
     return (
         <article>
-            <h1 className={cn('font-display text-4xl/tight font-semibold text-(--text)')}>{page.data.title}</h1>
-            {page.data.description ? (
-                <p className={cn('mt-3 text-lg/relaxed text-(--text-muted)')}>{page.data.description}</p>
-            ) : null}
+            <div className={cn('flex flex-col items-start gap-1')}>
+                <div className={cn('min-w-0')}>
+                    <h1 className={cn('font-display text-4xl/tight font-semibold text-(--text)')}>{page.data.title}</h1>
+                    {page.data.description ? (
+                        <p className={cn('mt-3 text-lg/relaxed text-(--text-muted)')}>{page.data.description}</p>
+                    ) : null}
+                </div>
+                {/* the button's own px-3 would inset it from the content column */}
+                <CopyPageButton
+                    source={assetPath(page.url, TWIN)}
+                    className={cn('order-first -me-3 -mt-6 flex-row-reverse self-end lg:hidden')}
+                />
+            </div>
             <div className={cn('mt-10 flex flex-col gap-5')}>
                 <MDX components={mdxComponents} />
             </div>
@@ -40,5 +52,5 @@ export async function generateMetadata(props: PageParams): Promise<Metadata> {
     const page = source.getPage(slug);
     if (!page) notFound();
 
-    return { title: page.data.title, description: page.data.description };
+    return pageMetadata({ title: page.data.title, description: page.data.description, path: page.url });
 }

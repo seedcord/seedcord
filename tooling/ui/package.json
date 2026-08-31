@@ -32,6 +32,18 @@
                 "default": "./dist/og.mjs"
             }
         },
+        "./skills": {
+            "import": {
+                "types": "./dist/skills.d.mts",
+                "default": "./dist/skills.mjs"
+            }
+        },
+        "./skills/seedcord": {
+            "import": {
+                "types": "./dist/skills/seedcord.d.mts",
+                "default": "./dist/skills/seedcord.mjs"
+            }
+        },
         "./MaterwelonGlyph": {
             "import": {
                 "types": "./dist/MaterwelonGlyph.d.mts",

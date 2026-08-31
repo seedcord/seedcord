@@ -1,7 +1,10 @@
 import { parseCodeBlockAttributes } from 'fumadocs-core/mdx-plugins/codeblock-utils';
 
+// the markdown twin strips these back out
+export const FENCE_MODES = ['twoslash', 'hovers'];
+
 // a name outside this list stays in the meta untouched
-const FENCE_NAMES = ['title', 'output', 'twoslash', 'hovers'];
+const FENCE_NAMES = ['title', 'output', ...FENCE_MODES];
 
 export const LANGUAGE_PREFIX = 'language-';
 
