@@ -19,9 +19,11 @@ import type { DocNode } from '@seedcord/docs-engine';
 
 export async function buildMemberSummary(node: DocNode, context: FormatContext): Promise<EntityMemberSummary> {
     const memberId = memberFragment(node);
-    const headerSignature = await resolveHeaderSignature(node, context);
-    const nodeComment = await formatCommentRich(node.comment, context);
-    const signatureComments = await Promise.all(node.signatures.map((sig) => formatCommentRich(sig.comment, context)));
+    const [headerSignature, nodeComment, signatureComments] = await Promise.all([
+        resolveHeaderSignature(node, context),
+        formatCommentRich(node.comment, context),
+        Promise.all(node.signatures.map((sig) => formatCommentRich(sig.comment, context)))
+    ]);
 
     const { description, signatureIndex } = selectDescription(signatureComments, nodeComment);
     const sharedDocumentation = deriveSharedDocumentation(nodeComment, description, signatureIndex);

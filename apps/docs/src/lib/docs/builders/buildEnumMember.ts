@@ -10,8 +10,10 @@ import type { EnumMemberModel, FormatContext } from '#lib/docs/types';
 import type { DocNode } from '@seedcord/docs-engine';
 
 export async function buildEnumMember(node: DocNode, context: FormatContext): Promise<EnumMemberModel> {
-    const code = await highlightCode(node.headerText ?? node.name);
-    const comment = await formatCommentRich(node.comment, context);
+    const [code, comment] = await Promise.all([
+        highlightCode(node.headerText ?? node.name),
+        formatCommentRich(node.comment, context)
+    ]);
     const member: EnumMemberModel = {
         id: memberFragment(node),
         label: node.name,

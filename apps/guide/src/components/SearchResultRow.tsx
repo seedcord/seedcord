@@ -14,7 +14,7 @@ const KIND_ICONS: Record<SortedResult['type'], IconComponent> = { page: FileText
 
 const ACTIVE = tw`data-[active=true]:border-(--rind)/38 data-[active=true]:bg-(--rind)/16`;
 
-// a row is one line. 24 chars of lead keeps the match near the left where a reader looks first
+// 24 chars of lead keeps the match near the left where a reader looks first
 const LEAD = 24;
 const WIDTH = 150;
 

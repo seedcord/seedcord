@@ -13,7 +13,7 @@ export interface TableOfContentsProps {
     className?: string | undefined;
 }
 
-// GuideShell's ContentsColumn owns the width and the sticky offset
+// GuideShell's ContentsColumn sets the width and the sticky offset
 const columnClassName = tw`nice-scroll overflow-y-auto text-[13px]`;
 const labelClassName = tw`mb-2 text-xs font-semibold tracking-widest text-(--text-faint) uppercase`;
 export const rowClassName = cn(

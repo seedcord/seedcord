@@ -48,8 +48,7 @@ const formatted = new Map<string, string>();
 const LEADING_MODIFIER = /^\(([\w-]+)\)\s+/gm;
 const IMPORT_STATEMENT = /\nimport .*$/;
 
-// twoslash erases a hover printing as a bare `interface Name`. the token then loses its popup and its
-// reference link
+// twoslash erases a hover that prints as a bare `interface Name`
 function hoverInfo(text: string): string {
     const processed = defaultHoverInfoProcessor(text);
     if (processed) return processed;
@@ -99,9 +98,10 @@ const renderer: TwoslashRenderer = {
 };
 
 function indentRanges(code: string, width: number): [number, number][] {
-    return splitLines(code)
-        .filter(([line]) => line.trim())
-        .map(([, start]) => [start, start + width]);
+    return splitLines(code).reduce<[number, number][]>((ranges, [line, start]) => {
+        if (line.trim()) ranges.push([start, start + width]);
+        return ranges;
+    }, []);
 }
 
 const compile = createTwoslasher();
@@ -198,7 +198,7 @@ const BASE_OPTIONS = {
     extraFiles: { 'seedcord-gen.d.ts': SAMPLE_AUGMENTATION }
 };
 
-// the hover sweep asks typescript for quick info on every identifier. it triples what a fence costs to compile
+// hovers make twoslash query typescript on every identifier. that triples what a fence costs to compile
 const TWOSLASH_OPTIONS = {
     check: { ...BASE_OPTIONS, handbookOptions: { noStaticSemanticInfo: true } },
     hovers: { ...BASE_OPTIONS, handbookOptions: { noStaticSemanticInfo: false } }
@@ -247,9 +247,9 @@ export async function twoslashBlock(code: string, lang: BundledLanguage, mode: F
         await learnFormatting(compiled.nodes);
         CACHE[mode].write(code, compiled, extension);
 
+        // a sample that stopped compiling would otherwise render as plain text and pass the build
         const options = { transformers: [TRANSFORMER[mode]], throwOnFailure: true };
 
-        // a sample that stopped compiling would otherwise render as plain text and pass the build
         return { text, html: await highlightToHtml(code, lang, options) };
     } catch (error) {
         // a bad marker reaches typescript as a bare "Debug Failure" with no file and no line

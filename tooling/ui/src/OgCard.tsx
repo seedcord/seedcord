@@ -204,7 +204,7 @@ export function OgFooter({
     );
 }
 
-// every seedcord og card draws this frame, the body and footer come from the app
+// every seedcord og card draws this frame around a body and footer from the app
 export function OgFrame({ children }: { children: ReactNode }): ReactElement {
     return (
         <div

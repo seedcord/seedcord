@@ -70,7 +70,7 @@ const handler = {
 
         const contentType = normalized.headers.get('content-type') ?? '';
         if (contentType.includes('text/html')) response.headers.set('Link', linkHeader(pathname));
-        // a cache that ignores Accept would hand an agent the html
+        // a cache that ignores Accept would serve an agent the html
         if (contentType.includes('text/html') || contentType.includes(MARKDOWN)) {
             response.headers.set('Vary', 'Accept');
         }

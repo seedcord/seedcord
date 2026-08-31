@@ -54,7 +54,6 @@ describe('the v0.1.0 index', () => {
 });
 
 describe('the seedcord skill', () => {
-    // 1 to 64 chars, lowercase alphanumeric and hyphens, no leading, trailing, or doubled hyphen
     it('takes a name the agent skills spec accepts', () => {
         const { name } = SEEDCORD_SKILL;
 

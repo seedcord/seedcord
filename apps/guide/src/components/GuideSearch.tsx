@@ -29,7 +29,7 @@ export const SEARCH_LABEL = 'Search the guide';
 
 const NO_RESULTS: SortedResult[] = [];
 
-// a common term matches most of the guide. the ranking already puts the right page on top
+// a common term matches most of the guide
 const MAX_PAGES = 16;
 
 function optionId(id: string): string {
@@ -97,7 +97,6 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     const client = useMemo(() => staticClient({ search: { tolerance: 1 } }), []);
     const { setSearch, query } = useDocsSearch({ client });
 
-    // the box keeps what the reader typed. the index gets the words that narrow the search
     const onValueChange = useCallback(
         (value: string) => {
             setTyped(value);
@@ -109,7 +108,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     useSearchHotkey(() => setOpen(!open));
 
     const found = query.data === 'empty' || query.data === undefined ? NO_RESULTS : query.data;
-    // ranking first leaves the cap holding whichever pages cover the most of the query
+    // the cap drops whatever the ranking put last
     // useRovingList keys an effect on this array's identity
     const results = useMemo(() => firstPages(rankByCoverage(found, stripStopwords(typed)), MAX_PAGES), [found, typed]);
 

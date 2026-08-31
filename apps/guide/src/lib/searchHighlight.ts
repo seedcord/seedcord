@@ -86,10 +86,7 @@ function lengthOf(segments: readonly HighlightSegment[]): number {
     return segments.reduce((total, segment) => total + segment.text.length, 0);
 }
 
-/**
- * Trims a result to a window around its first match. A long paragraph truncated from the start
- * hides the very text the reader searched for.
- */
+/** Trims a result to a window around its first match. Cutting from the start would hide the match. */
 export function matchWindow(segments: readonly HighlightSegment[], lead: number, width: number): HighlightSegment[] {
     const first = segments.findIndex((segment) => segment.match);
     if (first === -1 || lengthOf(segments) <= width) return [...segments];

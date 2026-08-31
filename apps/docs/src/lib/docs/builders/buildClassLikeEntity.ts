@@ -1,7 +1,7 @@
 import { buildMemberSummary } from './buildMemberSummary';
 import { buildTypeParameterSummaries } from './buildTypeParameterSummaries';
 
-import type { BaseEntityModel, ClassLikeEntityModel, FormatContext } from '#lib/docs/types';
+import type { BaseEntityModel, ClassLikeEntityModel, EntityMemberSummary, FormatContext } from '#lib/docs/types';
 import type { DocNode } from '@seedcord/docs-engine';
 
 const PROPERTY_KINDS = new Set(['kind_property', 'kind_accessor']);
@@ -13,28 +13,27 @@ export async function buildClassLikeEntity<Kind extends 'class' | 'interface'>(
     node: DocNode,
     context: FormatContext
 ): Promise<ClassLikeEntityModel & { kind: Kind }> {
-    // @internal members are filtered from the page listing but stay reachable by direct link
-    const visibleChildren = node.children.filter((child) => !child.flags.isInternal);
+    const propertyNodes: DocNode[] = [];
+    const constructorNodes: DocNode[] = [];
+    const methodNodes: DocNode[] = [];
 
-    const properties = await Promise.all(
-        visibleChildren
-            .filter((child) => PROPERTY_KINDS.has(child.kindLabel))
-            .map((child) => buildMemberSummary(child, context))
-    );
+    for (const child of node.children) {
+        // an @internal member stays reachable by its direct link
+        if (child.flags.isInternal) continue;
+        if (PROPERTY_KINDS.has(child.kindLabel)) propertyNodes.push(child);
+        else if (child.kindLabel === CONSTRUCTOR_KIND) constructorNodes.push(child);
+        else if (METHOD_KINDS.has(child.kindLabel)) methodNodes.push(child);
+    }
 
-    const constructors = await Promise.all(
-        visibleChildren
-            .filter((child) => child.kindLabel === CONSTRUCTOR_KIND)
-            .map((child) => buildMemberSummary(child, context))
-    );
+    const summarize = (children: DocNode[]): Promise<EntityMemberSummary[]> =>
+        Promise.all(children.map((child) => buildMemberSummary(child, context)));
 
-    const methods = await Promise.all(
-        visibleChildren
-            .filter((child) => METHOD_KINDS.has(child.kindLabel))
-            .map((child) => buildMemberSummary(child, context))
-    );
-
-    const typeParameters = await buildTypeParameterSummaries(node.header, context, node.typeParameters);
+    const [properties, constructors, methods, typeParameters] = await Promise.all([
+        summarize(propertyNodes),
+        summarize(constructorNodes),
+        summarize(methodNodes),
+        buildTypeParameterSummaries(node.header, context, node.typeParameters)
+    ]);
 
     return {
         ...base,

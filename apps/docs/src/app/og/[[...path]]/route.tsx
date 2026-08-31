@@ -12,8 +12,6 @@ import { SITE_DESCRIPTION } from '#lib/site';
 
 import type { OgPageCardProps } from '@seedcord/ui/OgCard';
 
-// every og:image points here, the path mirrors the page. `/og` is the root, `/og/packages/<pkg>/<ver>`
-// the overview, `/og/packages/<pkg>/<ver>/<category>/<slug>` an entity. anything else returns the 404 card.
 export const dynamic = 'force-static';
 
 const DOMAIN = 'docs.seedcord.org';

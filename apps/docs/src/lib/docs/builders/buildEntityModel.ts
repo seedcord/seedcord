@@ -26,8 +26,10 @@ function importPath(manifestPackage: string, entries: DocNode['entries']): strin
 export async function buildEntityModel(engine: VersionedDocsEngine, node: DocNode): Promise<EntityModel> {
     const manifestPackage = node.packageName;
     const context = createFormatContext(engine, manifestPackage);
-    const formattedSummary = await formatCommentRich(node.comment, context);
-    const signature = await resolveHeaderSignature(node, context);
+    const [formattedSummary, signature] = await Promise.all([
+        formatCommentRich(node.comment, context),
+        resolveHeaderSignature(node, context)
+    ]);
     const kind = resolveEntityKind(node);
 
     const base = buildBaseEntityModel({

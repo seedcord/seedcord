@@ -10,7 +10,7 @@ function serving(response: Response): Assets {
 
 const NOT_FOUND = 404;
 
-// only the paths the export actually wrote answer, everything else misses
+// only the paths the export actually wrote answer
 function recording(...present: string[]): Assets & { asked: string[] } {
     const asked: string[] = [];
     return {

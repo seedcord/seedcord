@@ -185,7 +185,7 @@ export class AugmentationBuilder {
         // sorted so a reordered declaration still matches under `--check`
         const channelTypes =
             'channel_types' in option && option.channel_types && option.channel_types.length > 0
-                ? [...option.channel_types].sort((first, second) => first - second)
+                ? option.channel_types.toSorted((first, second) => first - second)
                 : undefined;
         return {
             kind: KIND_BY_TYPE[option.type],

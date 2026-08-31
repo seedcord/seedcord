@@ -38,7 +38,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 className={cn(display.variable, 'antialiased', 'flex min-h-screen flex-col')}
             >
                 <ThemeProvider>
-                    {/* apps/docs uses this exact class string and they need to be the same */}
+                    {/* apps/docs repeats this class string, change both */}
                     <a
                         href="#main-content"
                         className={cn(

@@ -31,7 +31,7 @@ function better<T>(left: Group<T>, right: Group<T>): number {
 
 /**
  * Reorders whole pages by how much of the query they cover, breaking a tie on the title.
- * BM25 scores a two word block above a paragraph that answers the question, since it divides by length.
+ * BM25 divides by length and scores a two word block above the paragraph that answers the question.
  */
 export function rankByCoverage<T extends Result>(results: readonly T[], query: string): T[] {
     const terms = query
@@ -58,7 +58,7 @@ export function rankByCoverage<T extends Result>(results: readonly T[], query: s
         group.covered = Math.max(group.covered, found);
     }
 
-    // sort() is stable. pages scoring the same keep the order the index gave them
+    // a stable sort() keeps pages scoring the same in the order the index gave them
     return groups
         .slice()
         .sort(better)

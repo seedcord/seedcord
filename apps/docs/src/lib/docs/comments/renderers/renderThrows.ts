@@ -10,19 +10,19 @@ export async function renderThrows(
     const tags = comment.blockTags.filter((t) => t.tag === '@throws' || t.tag === '@exception');
     if (!tags.length) return undefined;
 
-    const paragraphs: CommentParagraph[] = [];
+    const rendered = await Promise.all(
+        tags.map((tag) => {
+            const fakeComment: DocComment = {
+                summary: '',
+                summaryParts: tag.content,
+                blockTags: [],
+                modifierTags: [],
+                examples: []
+            };
+            return renderParagraphs(fakeComment, context);
+        })
+    );
 
-    for (const tag of tags) {
-        const fakeComment: DocComment = {
-            summary: '',
-            summaryParts: tag.content,
-            blockTags: [],
-            modifierTags: [],
-            examples: []
-        };
-        const rendered = await renderParagraphs(fakeComment, context);
-        paragraphs.push(...rendered);
-    }
-
+    const paragraphs: CommentParagraph[] = rendered.flat();
     return paragraphs.length ? paragraphs : undefined;
 }

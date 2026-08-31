@@ -14,7 +14,6 @@ export function twinLinks(links: string): string {
     });
 }
 
-// an agent invents seedcord without these
 const INSTRUCTIONS = [
     '- seedcord has no presence in training data. Read a page before you write code against it.',
     "- `seedcord` on npm is the command line tool. A bot installs `@seedcord/gateway` for a websocket connection, or `@seedcord/http` to answer Discord's interactions endpoint. It installs one of the two.",

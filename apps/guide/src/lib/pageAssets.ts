@@ -3,10 +3,8 @@ export interface PageAsset {
     directory: string;
 }
 
-/** MD twin of the page */
 export const TWIN: PageAsset = { extension: '.md', directory: '/llms' };
 
-/** Social card for the page */
 export const CARD: PageAsset = { extension: '.png', directory: '/og' };
 
 const ASSETS = [TWIN, CARD];
@@ -43,7 +41,6 @@ export function publicPath(pathname: string, asset: PageAsset): string {
     return `/${tail(pathname, asset)}`;
 }
 
-// undefined for a url naming neither
 export function generatedPathFor(pathname: string): string | undefined {
     const asset = ASSETS.find((candidate) => pathname.endsWith(candidate.extension));
     return asset === undefined ? undefined : assetPath(pathname, asset);

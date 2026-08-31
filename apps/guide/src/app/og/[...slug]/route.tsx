@@ -13,7 +13,6 @@ export const dynamic = 'force-static';
 
 const DOMAIN = 'guide.seedcord.org';
 
-// the bare domain shares the whole guide
 const SITE_PILL = 'guide';
 
 export function generateStaticParams(): { slug: string[] }[] {

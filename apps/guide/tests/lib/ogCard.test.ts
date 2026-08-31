@@ -11,7 +11,7 @@ describe('the pill on a guide card', () => {
         expect(tabPillFor('commands/index.mdx')).toBe('commands');
     });
 
-    // the Start tab's pages live directly under content/docs
+    // the Start tab's pages are directly under content/docs
     it('names Start for a page with no folder above it', () => {
         expect(tabPillFor('first-bot.mdx')).toBe('start');
     });

@@ -117,7 +117,6 @@ export interface GuideShellProps {
     sidebars: SidebarsByTab;
     toc?: readonly TOCItemType[] | undefined;
     pageTitle?: string | undefined;
-    /** Where the contents column copies this page's markdown from. */
     markdownPath?: string | undefined;
     pathname?: string | undefined;
     children: ReactNode;
