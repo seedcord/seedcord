@@ -1,6 +1,6 @@
 ---
 title: Several events in one class
-description: Registering one handler for more than one event and reading each payload.
+description: One handler covers as many events as you register, and the compiler requires an arm for each one.
 ---
 
 A join and a profile change belong in the same log. [`@RegisterEvent`](ref:gateway/RegisterEvent) takes as many events as you pass it. [`this.match`](ref:gateway/EventHandler.match) runs the arm for whichever one fired.

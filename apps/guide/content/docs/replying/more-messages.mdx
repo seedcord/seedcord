@@ -1,6 +1,6 @@
 ---
 title: Follow-ups and edits
-description: Sending and rewriting messages after the first reply.
+description: Every reply method resolves to the message it wrote. Pass one back to edit() when you want to rewrite it.
 ---
 
 Once you have replied or deferred, [`this.followUp()`](ref:gateway/RepliableHandler.followUp) sends another message. Every one of [`reply()`](ref:gateway/RepliableHandler.reply), `followUp()`, and [`edit()`](ref:gateway/RepliableHandler.edit) resolves to the message it wrote. Pass one back to `edit()` to rewrite it.

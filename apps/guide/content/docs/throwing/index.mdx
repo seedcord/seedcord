@@ -1,6 +1,6 @@
 ---
 title: Throwing
-description: seedcord's refusal based control-flow system.
+description: Throw a Notice and the user reads whatever your render() returns. Throw a Fault and they get a card carrying a tracking uuid.
 ---
 
 A handler refuses by throwing. seedcord catches it at one boundary and sends the reply. The class you throw sets what that reply says. A gate throws into the same boundary, so a gate's refusal reaches the user the same way.

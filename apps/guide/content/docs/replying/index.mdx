@@ -1,6 +1,6 @@
 ---
 title: Replying
-description: Sending your first response to an interaction.
+description: reply() sends the first response, defer() holds the interaction open, and followUp() adds a message after either one.
 ---
 
 Discord gives your bot three seconds to answer an interaction. seedcord puts the methods for answering on the handler. [`this.reply()`](ref:gateway/RepliableHandler.reply) sends the first response. [`this.defer()`](ref:gateway/RepliableHandler.defer) shows a thinking placeholder while you work, then [`this.edit()`](ref:gateway/RepliableHandler.edit) fills it in. [`this.followUp()`](ref:gateway/RepliableHandler.followUp) sends another message after either one.

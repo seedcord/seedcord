@@ -1,6 +1,6 @@
 ---
 title: Mongoose services
-description: A typed class per collection, and how the plugin finds it.
+description: The model name you give mongoose picks the collection it writes to. You reach the service itself by its decorator key.
 ---
 
 A service is one class per collection. Extend [`MongooseService`](ref:plugin-mongoose/MongooseService), declare the schema as a static, and decorate it with a key. That key is what you read it back by.

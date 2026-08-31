@@ -1,6 +1,6 @@
 ---
 title: Kysely services
-description: A typed class per table, and how the plugin finds it.
+description: You never construct a service yourself. seedcord builds it at startup, then you read it back by the key you registered.
 ---
 
 A service is one class per table. Extend [`KyselyService`](ref:plugin-kysely-postgres/KyselyService), name the table in its type argument, then decorate the class with the key you use to read it back.

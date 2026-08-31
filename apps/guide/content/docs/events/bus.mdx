@@ -1,6 +1,6 @@
 ---
 title: The bus
-description: Publishing your own named events inside a bot and reacting to them with a class.
+description: Declaration merging puts your own event keys on Subscriptions, then a subscriber reacts to whichever one it names.
 ---
 
 The bus carries named events inside your bot. Any code with a `core` can publish one, and every subscriber on that key runs. Nothing here reaches Discord.
@@ -178,7 +178,7 @@ seedcord publishes its own keys onto the same bus, and every one of them is your
 
 <Callout type="transport">
 
-Gateway carries nine of these keys and http carries seven. `anyInteraction` exists on both and carries a discord.js `Interaction` on gateway against an `APIInteraction` on http.
+Some of these exist on gateway alone. `anyInteraction` exists on both and carries a discord.js `Interaction` on gateway against an `APIInteraction` on http.
 
 </Callout>
 

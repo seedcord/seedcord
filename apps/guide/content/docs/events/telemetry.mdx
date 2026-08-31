@@ -1,6 +1,6 @@
 ---
 title: Reading the telemetry
-description: The timings and outcomes seedcord publishes for every interaction.
+description: interactionDispatched fires once per interaction. responseAttempted fires on every write, so one interaction can produce several.
 ---
 
 Some bus keys carry numbers. `interactionDispatched` fires once per interaction, after the handler chain settles. `responseAttempted` fires on every write through the reply surface, so one interaction can produce several. That count includes the error card seedcord sends when your handler throws.

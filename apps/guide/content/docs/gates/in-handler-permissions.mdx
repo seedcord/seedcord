@@ -1,6 +1,6 @@
 ---
 title: Permissions in a handler
-description: Checking a target your handler resolved, after the gates have passed.
+description: A gate checks the caller and your bot. Checking the target waits for execute(), where the options arrive.
 ---
 
 The gate catalog checks the caller and your bot. `/ban @someone` needs the target checked too, and its target arrives in the options `execute()` reads.

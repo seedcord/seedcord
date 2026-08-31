@@ -1,6 +1,6 @@
 ---
 title: The lifecycle
-description: When a plugin connects, when it closes down, and what happens when it fails.
+description: A plugin can write up to three methods, though init() is the only one seedcord requires.
 ---
 
 You write up to three methods on a plugin. `init()` is the required one. seedcord skips `ready()` and `dispose()` when you omit them.

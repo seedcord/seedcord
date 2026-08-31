@@ -1,6 +1,6 @@
 ---
 title: Plugins
-description: Attaching a plugin and reading it back from a handler.
+description: You attach a plugin under a key, read it back by that key, and get a log channel with the same name.
 ---
 
 A plugin extends your bot with additional functionality. It has its own lifecycle, arguments, logging channel, and more. You attach it under a key you pick, then read it back from `this.core` anywhere `core` is available, like a handler.

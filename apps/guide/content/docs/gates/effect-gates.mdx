@@ -1,6 +1,6 @@
 ---
 title: Effect gates
-description: A gate that changes state, with the change held until every gate passes.
+description: When a gate deducts a credit and a later gate refuses, the caller pays for a command that never ran.
 ---
 
 Say a command costs one credit. Your gate reads the balance and deducts one. A later gate then refuses. The command never ran, and the caller lost a credit anyway.

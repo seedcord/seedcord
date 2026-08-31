@@ -1,11 +1,11 @@
 ---
 title: The framework's bus keys
-description: What seedcord publishes onto the bus, and what each key carries.
+description: Every deploy, every dispatch, and every fault already publishes a key you can subscribe to.
 ---
 
 seedcord publishes its own keys onto `core.bus`. Subscribe to them with [`@Subscribe`](ref:core/Subscribe) or `core.bus.on`, the same way you subscribe to your own. [The bus](/events/bus) shows why publishing one fails to compile.
 
-Gateway carries nine, and http carries seven.
+The `where` column names the transport that publishes each one.
 
 {/* prettier-ignore-start */}
 

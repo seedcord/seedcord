@@ -1,6 +1,6 @@
 ---
 title: When a custom id goes stale
-description: What happens to components already sitting in Discord after you change their shape.
+description: A message keeps its buttons long after you change their shape, which is why every id carries a shape hash.
 ---
 
 A message with a button or a select menu on it stays in the channel for as long as the channel does. Your shape changes on the next deploy. Every id seedcord mints carries three characters of shape hash, and `decode` compares that hash against the current shape.

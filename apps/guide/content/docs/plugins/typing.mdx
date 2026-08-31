@@ -1,6 +1,6 @@
 ---
 title: Typing a plugin
-description: What codegen writes so this.core.db compiles.
+description: Every plugin key you attached becomes a row on Core, which codegen writes into src/seedcord-gen.d.ts.
 ---
 
 You attached the plugin, but `this.core.db` still fails to compile. The property is there when the bot runs, so only the types are missing. `seedcord codegen` writes them into `src/seedcord-gen.d.ts`.

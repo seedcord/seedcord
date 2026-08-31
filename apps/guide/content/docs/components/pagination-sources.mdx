@@ -1,6 +1,6 @@
 ---
 title: Sources
-description: Paging over a query you cannot load all at once.
+description: ArraySource slices a list you already hold. CursorSource fetches one page at a time, the shape a LIMIT query gives you.
 ---
 
 A source answers one question: which items belong on page N. [Pagination](/components/pagination) used the simpler of the two sources seedcord ships. This page covers the other one, plus writing your own.

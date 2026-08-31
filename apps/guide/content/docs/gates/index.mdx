@@ -1,6 +1,6 @@
 ---
 title: Gates
-description: Refusing a command before it runs.
+description: A check that runs before your handler and refuses by throwing. The first one to refuse stops the rest.
 ---
 
 A gate runs before `execute()`. It passes and your handler runs, or it refuses and the call stops there. Attach one with [`@Gated`](ref:gateway/Gated), above the route decorator. Check this example below that gates a slash command to users that have the `BanMembers` permission in a server.

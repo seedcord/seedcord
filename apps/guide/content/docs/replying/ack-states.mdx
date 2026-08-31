@@ -1,6 +1,6 @@
 ---
 title: When a reply throws
-description: Reading the error your reply call threw.
+description: seedcord checks your reply call before it reaches Discord, so the error you get names the method that works from there.
 ---
 
 seedcord checks the verb against the interaction's current state before it calls Discord. An illegal call throws without reaching the API. The message names the method you called, the reason, and the verb that works in that state.

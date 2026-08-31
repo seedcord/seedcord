@@ -1,6 +1,6 @@
 ---
 title: Changing roles
-description: Checking that your bot can assign a role, then building the list to write.
+description: hasPermsToAssign checks whether a role write can succeed, and mergeRoles builds the list to send.
 ---
 
 Your bot holds Manage Roles and `roles.add` still fails. Role position overrides permission bits. A bot changes only the roles sitting below its own highest role, and Discord rejects a write against anything above.

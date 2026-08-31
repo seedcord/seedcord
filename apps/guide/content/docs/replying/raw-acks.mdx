@@ -1,6 +1,6 @@
 ---
 title: Raw acks
-description: Reaching past the reply surface to discord.js's own ack methods.
+description: The discord.js ack methods on this.event reach Discord the same way, though they skip seedcord's state machine.
 ---
 
 `this.event` is the discord.js interaction, and its own ack methods reach Discord the same way seedcord's do. They skip the ack state machine.
