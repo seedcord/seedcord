@@ -31,7 +31,7 @@ pnpm create seedcord
 
 **[Read the guide →](https://guide.seedcord.org)**
 
-_**seedcord is pre-1.0, so minor versions can break.** I've already completed nearly all of the massive changes I planned though, so it's relatively stable. Read the changelog before you bump. Also, the `http` transport's edge build for CloudFlare Workers is a work in progress, and currently cannot be used._
+_**seedcord is pre-1.0, so minor versions can break.** I've already completed nearly all of the massive changes I planned though, so it's relatively stable. Read the changelog before you bump. Also, the `http` transport's edge build for Cloudflare Workers is a work in progress, and currently cannot be used._
 
 <div align="center">
   <img src="https://cdn.seedcord.org/assets/readme-dev-tui.webp" alt="seedcord dev server" width="640" />
