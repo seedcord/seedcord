@@ -75,8 +75,8 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
             },
             {
                 type: 'add',
-                path: '{{ dir }}/{{ folder dir name }}/tests/basic.test.ts',
-                templateFile: 'templates/tests/basic.test.ts.hbs'
+                path: '{{ dir }}/{{ folder dir name }}/tests/.gitkeep',
+                templateFile: 'templates/tests/.gitkeep.hbs'
             },
             {
                 type: 'add',
