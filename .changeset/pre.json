@@ -10,6 +10,7 @@
     "@seedcord/mock-gateway": "0.2.31",
     "@seedcord/mock-http": "0.0.9",
     "@seedcord/core": "0.4.0",
+    "@seedcord/custom-id": "0.0.1",
     "@seedcord/errors": "0.5.0",
     "@seedcord/event-emitter": "0.1.5",
     "@seedcord/gateway": "0.4.0",

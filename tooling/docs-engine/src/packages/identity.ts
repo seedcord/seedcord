@@ -50,6 +50,10 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
         displayName: 'seedcord',
         aliases: ['cli', 'seedcord']
     },
+    '@seedcord/custom-id': {
+        displayName: 'custom-id',
+        aliases: ['custom-id', 'customid']
+    },
     '@seedcord/errors': {
         displayName: 'errors',
         aliases: ['errors']

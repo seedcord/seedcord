@@ -69,6 +69,11 @@
                 "**/*.types-test.ts"
             ]
         },
+        "packages/custom-id": {
+            "entry": [
+                "**/*.types-test.ts"
+            ]
+        },
         "packages/errors": {
             "entry": [
                 "**/*.types-test.ts"

@@ -16,6 +16,9 @@
 '📦 plugin-kysely-postgres':
   - changed-files:
       - any-glob-to-any-file: 'plugins/kysely-postgres/**'
+'📦 custom-id':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/custom-id/**'
 '📦 errors':
   - changed-files:
       - any-glob-to-any-file: 'packages/errors/**'
