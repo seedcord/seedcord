@@ -60,6 +60,7 @@
         "@discordjs/builders": "catalog:deps",
         "@discordjs/rest": "catalog:deps",
         "@seedcord/core": "workspace:^",
+        "@seedcord/custom-id": "workspace:^",
         "@seedcord/errors": "workspace:^",
         "@seedcord/event-emitter": "workspace:^",
         "@seedcord/logger": "workspace:^",

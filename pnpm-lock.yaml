@@ -853,6 +853,9 @@ importers:
       '@discordjs/rest':
         specifier: catalog:deps
         version: 2.6.3
+      '@seedcord/custom-id':
+        specifier: workspace:^
+        version: link:../custom-id
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../errors
@@ -983,6 +986,9 @@ importers:
       '@seedcord/core':
         specifier: workspace:^
         version: link:../core
+      '@seedcord/custom-id':
+        specifier: workspace:^
+        version: link:../custom-id
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../errors
@@ -1041,6 +1047,9 @@ importers:
       '@seedcord/core':
         specifier: workspace:^
         version: link:../core
+      '@seedcord/custom-id':
+        specifier: workspace:^
+        version: link:../custom-id
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../errors

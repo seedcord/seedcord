@@ -5,13 +5,8 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { SentMessage } from '#reply/ReplySender';
-import type {
-    AnyCustomId,
-    DecodedComponentRoute,
-    HasComponentDefs,
-    MatchArms,
-    SingleParams
-} from '@seedcord/core/internal';
+import type { DecodedComponentRoute, HasComponentDefs, MatchArms, SingleParams } from '@seedcord/core/internal';
+import type { AnyCustomId } from '@seedcord/custom-id';
 import type { ReplyResponse } from '@seedcord/types';
 import type { APIMessageComponentInteraction, APIModalSubmitInteraction } from 'discord-api-types/v10';
 import type { Promisable } from 'type-fest';
