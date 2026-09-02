@@ -284,6 +284,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
      *
      * Throws two different errors. A wire minted before the shape changed throws the stale one. A
      * corrupt wire, or one minted by a different definition, throws the invalid one.
+     * Use {@link setCustomIdErrors} to customize the two thrown Error classes.
      *
      * @param wire - The customId string from the interaction.
      * @returns The decoded values, typed by the chain.
