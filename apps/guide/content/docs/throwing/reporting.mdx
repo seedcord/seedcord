@@ -21,7 +21,14 @@ UNKNOWN_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
 
 The `handledException` card opens with the class name and its message, then the kind, the command or the customId, and the user, guild, channel, and interaction ids. The uuid and the cause's stack come under that, and seedcord attaches the raw interaction as `source.json`. A fault raised in an event handler names the event and the handler where the kind and command would sit.
 
-The `unknownException` card names the guild and the user, then the uuid with the error's stack. A `DiscordAPIError` from an interaction callback adds three timestamps, when Discord sent the interaction, when the error reached the log, and the gap between them.
+The `unknownException` card names the guild and the user, then the uuid with the error's stack. seedcord attaches any metadata on the throw as `metadata.json`. A `DiscordAPIError` from an interaction callback adds three timestamps, when Discord sent the interaction, when the error reached the log, and the gap between them.
+
+<Image
+    src="/unknown-exception-card.webp"
+    alt="The unknown exception card in Discord, with the guild and user, the uuid, a stack trace, and a metadata.json attachment"
+    width={1336}
+    height={1260}
+/>
 
 ## What seedcord checks at boot
 
