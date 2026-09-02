@@ -1,6 +1,6 @@
+import { CustomId } from '@seedcord/custom-id';
 import { describe, expect, it } from 'vitest';
 
-import { CustomId } from '#customId/CustomId';
 import { ComponentDefsKey } from '#customId/routing';
 import {
     AutocompleteRouteBrand,
@@ -22,9 +22,9 @@ import {
 } from '#decorators/routes';
 import { InteractionRouteKeys, InteractionRoutes } from '#src/metadataKeys';
 
-import type { AnyCustomId } from '#customId/CustomId';
 import type { HasComponentDefs } from '#customId/routing';
 import type { SlashRegistry } from '#registries/SlashRegistry';
+import type { AnyCustomId } from '@seedcord/custom-id';
 import type { ApplicationCommandType } from 'discord-api-types/v10';
 
 declare module '#registries/SlashRegistry' {

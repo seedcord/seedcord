@@ -12,7 +12,7 @@ import {
 } from '#decorators/interactionRoutes';
 import { InteractionMetadataKey, InteractionRouteKeys, InteractionRoutes } from '#src/metadataKeys';
 
-import type { AnyCustomId } from '#customId/CustomId';
+import type { AnyCustomId } from '@seedcord/custom-id';
 
 describe('storeInteractionRoute', () => {
     it('stores routes under the route key and marks the constructor', () => {
