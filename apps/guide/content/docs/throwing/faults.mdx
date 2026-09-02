@@ -43,12 +43,14 @@ All three render the same card.
 
 ## The card every fault renders
 
-```txt output
-### Error
-Something went wrong. Please reach out to the developer with a way
-to reproduce the error and the following:
-### UUID: `9f2b1c04-6d3e-4a71-8f5c-0b7e2d9a1c33`
-```
+<Image
+    src="/fault-card.webp"
+    alt="The fault card in Discord, reading Error, Something went wrong, above a copyable UUID"
+    width={1334}
+    height={350}
+/>
+
+[Replace the card](/throwing/configuring#replacing-the-card) when you want a different look or an action on it.
 
 seedcord logs that uuid and puts it on the fault report, so a user who pastes it into your support channel gives you the exact log line to search for.
 
