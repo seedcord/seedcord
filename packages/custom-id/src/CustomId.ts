@@ -2,7 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { computeLayoutHash, decodeBody, encodeBody, HASH_LENGTH } from './codec';
-import { InvalidCustomId, StaleCustomId } from './Errors';
+import { invalidError, staleError } from './errors';
 
 import type { CustomIdField, CustomIdShape, DecodedParams } from './Field';
 import type { Snowflake } from 'discord-api-types/v10';
@@ -28,7 +28,27 @@ function routeKeyOf(wire: string): string {
     return colon === -1 ? '' : wire.slice(0, colon);
 }
 
-/** Strip the layout hash off the routeKey to recover the stable prefix the controller routes by. @internal */
+/**
+ * Recover the stable prefix from a wire by stripping its layout hash.
+ *
+ * Route on this. The prefix survives a shape change. A click on a component built before the change
+ * still reaches the same place, where {@link CustomId.decode} refuses it. Returns an empty string for a
+ * wire too short to carry a hash.
+ *
+ * @param wire - The customId string from the interaction.
+ * @returns The prefix the customId was declared with.
+ *
+ * @example
+ * ```ts
+ * const Approve = new CustomId('approve').snowflake('userId');
+ *
+ * // 'approve', whatever fields the definition carries today
+ * prefixOf(Approve.encode({ userId: '123' }));
+ *
+ * // route a raw interaction on it
+ * const handler = handlers.get(prefixOf(interaction.customId));
+ * ```
+ */
 export function prefixOf(wire: string): string {
     const key = routeKeyOf(wire);
     return key.length <= HASH_LENGTH ? '' : key.slice(0, key.length - HASH_LENGTH);
@@ -44,16 +64,42 @@ export function prefixOf(wire: string): string {
  *
  * @example
  * ```ts
- * const ApproveId = new CustomId('approve')
- *     .snowflake('userId')
- *     .oneOf('action', ['approve', 'deny']);
+ * import { ButtonHandler, ButtonRoute, CustomId } from '@seedcord/gateway';
  *
- * // Set the custom id on a button when creating it.
- * new ButtonBuilder().setCustomId(ApproveId.encode({ userId: '123', action: 'approve' }));
+ * // declare this in the component file that mints the button
+ * export const Approve = new CustomId('approve').snowflake('userId').oneOf('action', ['approve', 'deny']);
  *
- * // in the handler, userId comes back a string
- * const { userId, action } = this.params; // userId: string, action: 'approve' | 'deny'
- * await this.event.guild?.members.fetch(userId);
+ * \@ButtonRoute(Approve)
+ * export class ApproveButton extends ButtonHandler<[typeof Approve]> {
+ *     public async execute(): Promise<void> {
+ *         const { userId, action } = this.params;
+ *         // userId: string, action: 'approve' | 'deny'
+ *
+ *         await this.reply(`${action} for <@${userId}>`);
+ *     }
+ * }
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Using it outside seedcord:
+ * import { ButtonBuilder, Events } from 'discord.js';
+ * import { CustomId } from '@seedcord/custom-id';
+ *
+ * // one declaration, imported by both sides
+ * const Approve = new CustomId('approve').snowflake('userId').oneOf('action', ['approve', 'deny']);
+ *
+ * // minting, on the button you send
+ * new ButtonBuilder().setCustomId(Approve.encode({ userId: '123', action: 'deny' })).setLabel('Deny');
+ *
+ * // reading, wherever your bot receives the click
+ * client.on(Events.InteractionCreate, (interaction) => {
+ *     if (!interaction.isButton()) return;
+ *     if (!Approve.owns(interaction.customId)) return;
+ *
+ *     const { userId, action } = Approve.decode(interaction.customId);
+ *     // userId: string, action: 'approve' | 'deny'
+ * });
  * ```
  */
 export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
@@ -214,6 +260,16 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
      *
      * @param values - One value per field, typed by the chain.
      * @returns The wire string to put on the component's customId.
+     *
+     * @example
+     * ```ts
+     * const Ticket = new CustomId('ticket').snowflake('ownerId').int('page', 1, 50);
+     *
+     * new ButtonBuilder().setCustomId(Ticket.encode({ ownerId: user.id, page: 3 })).setLabel('Next');
+     *
+     * // 900 falls outside the declared 1 to 50. this throws at runtime
+     * Ticket.encode({ ownerId: user.id, page: 900 });
+     * ```
      */
     encode(values: DecodedParams<Shape>): string {
         const wire = `${this.routeKey}:${encodeBody(this.shape, values)}`;
@@ -226,47 +282,91 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     /**
      * Read a wire string back into values.
      *
-     * - This will refuse with a default Notice when the shape changed since the wire was minted.
-     * - Or refuse with a different default Notice on a corrupt or foreign wire.
+     * Throws two different errors. A wire minted before the shape changed throws the stale one. A
+     * corrupt wire, or one minted by a different definition, throws the invalid one.
      *
      * @param wire - The customId string from the interaction.
      * @returns The decoded values, typed by the chain.
+     *
+     * @example
+     * ```ts
+     * const Ticket = new CustomId('ticket').snowflake('ownerId').int('page', 1, 50);
+     *
+     * const { ownerId, page } = Ticket.decode(interaction.customId);
+     * // ownerId: string, page: number
+     *
+     * // a message from an older deploy still carries its old button. catch the throw and answer it
+     * try {
+     *     Ticket.decode(interaction.customId);
+     * } catch {
+     *     await interaction.reply('This button is out of date. Run the command again.');
+     * }
+     * ```
      */
     decode(wire: string): DecodedParams<Shape> {
         const key = routeKeyOf(wire);
         if (key !== this.routeKey) {
             // same prefix but a different hash means the shape changed since this wire was minted.
-            if (prefixOf(wire) === this.prefix) throw new StaleCustomId(this.prefix);
-            throw new InvalidCustomId(`routeKey ${JSON.stringify(key)} is not ${JSON.stringify(this.routeKey)}`);
+            if (prefixOf(wire) === this.prefix) throw staleError(this.prefix);
+            throw invalidError(`routeKey ${JSON.stringify(key)} is not ${JSON.stringify(this.routeKey)}`);
         }
         // justified: the codec returns runtime values and the shape guarantees their decoded types.
         return decodeBody(this.shape, wire.slice(key.length + 1)) as DecodedParams<Shape>;
     }
 
-    /** True if this wire was minted from this customId's prefix, ignoring the shape hash. */
+    /**
+     * True if this wire was minted from this customId's prefix, ignoring the shape hash.
+     *
+     * Use it to pick which definition a click belongs to before decoding. {@link decodeFor} runs this
+     * loop for you across several definitions.
+     *
+     * @param wire - The customId string from the interaction.
+     *
+     * @example
+     * ```ts
+     * // a button from an older deploy still matches here
+     * if (!Approve.owns(interaction.customId)) return;
+     * ```
+     */
     owns(wire: string): boolean {
         return prefixOf(wire) === this.prefix;
     }
 }
 
-/** @internal */
+/** Any customId, whatever its prefix and fields. Write this to take one as a parameter. */
 export type AnyCustomId = CustomId<string, CustomIdShape>;
 
-/**
- * The outcome of decoding a wire against several customIds, the matched prefix paired with its values.
- *
- * @internal
- */
+/** The outcome of decoding a wire against several customIds, the matched prefix paired with its values. */
 export type DecodedRoute<Defs extends readonly AnyCustomId[]> = {
     [Index in keyof Defs]: Defs[Index] extends AnyCustomId
         ? { readonly prefix: Defs[Index]['prefix']; readonly params: DecodedParams<Defs[Index]['shape']> }
         : never;
 }[number];
 
-/** @internal */
+/**
+ * Decode a wire against several customIds at once, for a handler serving more than one.
+ *
+ * Matching runs on the prefix. The result pairs the matched prefix with that definition's own params.
+ * Switching on `prefix` narrows both together.
+ *
+ * @param defs - The customId definitions to try, in order.
+ * @param wire - The customId string from the interaction.
+ * @returns The matched prefix and its decoded params.
+ * @throws When no definition owns the wire, or when the matched one refuses it.
+ *
+ * @example
+ * ```ts
+ * const Approve = new CustomId('approve').snowflake('userId');
+ * const Reject = new CustomId('reject').snowflake('userId').str('reason');
+ *
+ * const { prefix, params } = decodeFor([Approve, Reject], wire);
+ * // params.reason exists on this branch alone
+ * if (prefix === 'reject') await deny(params.userId, params.reason);
+ * ```
+ */
 export function decodeFor<Defs extends readonly AnyCustomId[]>(defs: Defs, wire: string): DecodedRoute<Defs> {
     const match = defs.find((def) => def.owns(wire));
-    if (!match) throw new InvalidCustomId(`no customId owns ${JSON.stringify(routeKeyOf(wire))}`);
+    if (!match) throw invalidError(`no customId owns ${JSON.stringify(routeKeyOf(wire))}`);
     // justified: the matched customId fixes both prefix and params together but find() loses that link.
     return { prefix: match.prefix, params: match.decode(wire) } as DecodedRoute<Defs>;
 }

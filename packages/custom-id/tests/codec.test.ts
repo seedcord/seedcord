@@ -1,8 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { decodeFor, prefixOf, CustomId } from '#customId/CustomId';
-import { InvalidCustomId, StaleCustomId } from '#customId/Errors';
+import { decodeFor, prefixOf, CustomId } from '#src/CustomId';
 
 import type { SeedcordError } from '@seedcord/errors/internal';
 
@@ -69,7 +68,7 @@ describe('nullable fields', () => {
         const after = new CustomId('report').snowflake('claimedBy', { nullable: true });
         const wire = before.encode({ claimedBy: '853472916483920128' });
 
-        expect(() => after.decode(wire)).toThrow(StaleCustomId);
+        expect(thrownCode(() => after.decode(wire))).toBe(SeedcordErrorCode.CustomIdWireStale);
     });
 
     it('leaves a field alone when nullable is false', () => {
@@ -156,31 +155,37 @@ describe('CustomId stale detection', () => {
     it('flags a reordered oneOf as stale', () => {
         const v1 = new CustomId('poll').oneOf('choice', ['yes', 'no']);
         const v2 = new CustomId('poll').oneOf('choice', ['no', 'yes']);
-        expect(() => v2.decode(v1.encode({ choice: 'no' }))).toThrow(StaleCustomId);
+        expect(thrownCode(() => v2.decode(v1.encode({ choice: 'no' })))).toBe(SeedcordErrorCode.CustomIdWireStale);
     });
 
     it('flags an int that gained bounds as stale', () => {
         const v1 = new CustomId('page').int('index');
         const v2 = new CustomId('page').int('index', 0, 100);
-        expect(() => v2.decode(v1.encode({ index: 3 }))).toThrow(StaleCustomId);
+        expect(thrownCode(() => v2.decode(v1.encode({ index: 3 })))).toBe(SeedcordErrorCode.CustomIdWireStale);
     });
 });
 
 describe('CustomId corruption is rejected', () => {
     it('rejects an appended junk piece', () => {
         const Tag = new CustomId('tag').str('label');
-        expect(() => Tag.decode(`${Tag.encode({ label: 'hi' })}\u{1F}JUNK`)).toThrow(InvalidCustomId);
+        expect(thrownCode(() => Tag.decode(`${Tag.encode({ label: 'hi' })}\u{1F}JUNK`))).toBe(
+            SeedcordErrorCode.CustomIdWireInvalid
+        );
     });
 
     it('rejects a body truncated to the routeKey', () => {
         const Ban = new CustomId('ban').snowflake('userId');
         const wire = Ban.encode({ userId: '853472916483920128' });
-        expect(() => Ban.decode(wire.slice(0, wire.indexOf(':') + 1))).toThrow(InvalidCustomId);
+        expect(thrownCode(() => Ban.decode(wire.slice(0, wire.indexOf(':') + 1)))).toBe(
+            SeedcordErrorCode.CustomIdWireInvalid
+        );
     });
 
     it('rejects a bad base64 character', () => {
         const Ban = new CustomId('ban').snowflake('userId');
-        expect(() => Ban.decode(`${Ban.encode({ userId: '853472916483920128' })}*`)).toThrow(InvalidCustomId);
+        expect(thrownCode(() => Ban.decode(`${Ban.encode({ userId: '853472916483920128' })}*`))).toBe(
+            SeedcordErrorCode.CustomIdWireInvalid
+        );
     });
 
     it('rejects an unbounded int that decodes past the safe range', () => {
@@ -188,13 +193,15 @@ describe('CustomId corruption is rejected', () => {
         const Ban = new CustomId('ban').snowflake('userId');
         const oversized = Ban.encode({ userId: (1n << 60n).toString() }).split(':')[1] ?? '';
         const Counter = new CustomId('counter').int('total');
-        expect(() => Counter.decode(`${Counter.routeKey}:${oversized}`)).toThrow(InvalidCustomId);
+        expect(thrownCode(() => Counter.decode(`${Counter.routeKey}:${oversized}`))).toBe(
+            SeedcordErrorCode.CustomIdWireInvalid
+        );
     });
 
     it('rejects a packed block with leftover bits after unpacking', () => {
         // a single bool packs to 0 or 1, so a block that base64-decodes to 2 leaves a bit unconsumed.
         const Flag = new CustomId('flag').bool('on');
-        expect(() => Flag.decode(`${Flag.routeKey}:C`)).toThrow(InvalidCustomId);
+        expect(thrownCode(() => Flag.decode(`${Flag.routeKey}:C`))).toBe(SeedcordErrorCode.CustomIdWireInvalid);
     });
 });
 
@@ -276,7 +283,7 @@ describe('decodeFor', () => {
     });
 
     it('throws when no customId owns the wire', () => {
-        expect(() => decodeFor(routes, 'zzz000:A')).toThrow(InvalidCustomId);
+        expect(thrownCode(() => decodeFor(routes, 'zzz000:A'))).toBe(SeedcordErrorCode.CustomIdWireInvalid);
     });
 });
 
