@@ -5,7 +5,7 @@ description: Whatever your handler reads after a click has to be inside the cust
 
 Discord hands a component's `custom_id` back when someone clicks a button, picks from a select menu, or submits a modal. Whatever your handler reads later has to be inside that string.
 
-[`CustomId`](ref:core/CustomId) declares what the string carries. The component that mints it and the handler that reads it share that one declaration. The `AppealId` that the button on the [building components](/components) page used is one of these.
+[`CustomId`](ref:custom-id/CustomId) declares what the string carries. The component that mints it and the handler that reads it share that one declaration. The `AppealId` that the button on the [building components](/components) page used is one of these.
 
 ```ts twoslash hovers title="src/components/TicketActions.ts"
 import { CustomId } from '@seedcord/gateway';
@@ -203,6 +203,12 @@ if (TicketAction.owns(wire)) {
 <Callout type="danger">
 
 A custom id you write by hand compiles. `setCustomId('ticket:123')` skips the shape hash `encode` adds, so seedcord reads that prefix as `tic` and no handler matches the click. Mint every id through `encode`.
+
+</Callout>
+
+<Callout type="danger">
+
+`CustomId` ships in `@seedcord/custom-id`, and your transport package re-exports it. Import it from `@seedcord/gateway` or `@seedcord/http`. Adding `@seedcord/custom-id` to your own dependencies can resolve a second copy, and a decode failure from that copy skips the cards on [When a custom id goes stale](/components/stale).
 
 </Callout>
 
