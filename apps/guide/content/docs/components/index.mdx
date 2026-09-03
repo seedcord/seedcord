@@ -94,7 +94,7 @@ export class BanActions extends RowComponent<'button'> {
 }
 ```
 
-Discord hands the custom id back when someone clicks the button. Declare the [`CustomId`](ref:core/CustomId) in the same file as the component that mints it, and then import both into your handlers. [Custom IDs](/components/custom-ids) covers what you can pack into one.
+Discord hands the custom id back when someone clicks the button. Declare the [`CustomId`](ref:custom-id/CustomId) in the same file as the component that mints it, and then import both into your handlers.
 
 `addActionRowComponents` nests a row inside a container.
 
@@ -169,7 +169,7 @@ export class MaintenanceEmbed extends BuilderComponent<'embed'> {
 }
 ```
 
-An embed reaches Discord through a channel send or a raw ack. seedcord's reply methods send ComponentsV2 messages, and Discord forbids an embed on one of those. [Raw acks](/replying/raw-acks) covers that route.
+An embed reaches Discord through a channel send or a [raw ack](/replying/raw-acks). seedcord's reply methods send ComponentsV2 messages, and Discord forbids an embed on one of those.
 
 `botColor` accepts a `#hex` string, a discord.js color name like `'Blurple'`, a raw integer, or an `[r, g, b]` tuple. Leave the key out for Discord's default.
 

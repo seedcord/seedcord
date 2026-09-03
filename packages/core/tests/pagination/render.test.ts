@@ -1,9 +1,9 @@
 import { ButtonBuilder, TextDisplayBuilder } from '@discordjs/builders';
+import { CustomId } from '@seedcord/custom-id';
 import { ButtonStyle, ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
 import { BuilderComponent } from '#components/Component';
-import { CustomId } from '#customId/CustomId';
 import { pageCursor } from '#pagination/cursor';
 import { renderPage } from '#pagination/render';
 

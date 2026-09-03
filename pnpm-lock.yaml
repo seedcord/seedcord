@@ -100,6 +100,9 @@ catalogs:
     eslint-plugin-import-x:
       specifier: ^4.17.1
       version: 4.17.1
+    eslint-plugin-mdx:
+      specifier: ^3.8.1
+      version: 3.8.1
     eslint-plugin-react-compiler:
       specifier: 19.1.0-rc.2
       version: 19.1.0-rc.2
@@ -184,7 +187,7 @@ overrides:
   '@sapphire/snowflake': 3.5.5
   brace-expansion: ^5.0.9
   minimatch: ^10.2.6
-  fast-uri@3: ^3.1.5
+  fast-uri@3: ^3.1.6
   nanoid@3: ^3.3.17
   js-yaml@3: ^3.15.1
   js-yaml@4: ^4.3.1
@@ -850,6 +853,9 @@ importers:
       '@discordjs/rest':
         specifier: catalog:deps
         version: 2.6.3
+      '@seedcord/custom-id':
+        specifier: workspace:^
+        version: link:../custom-id
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../errors
@@ -899,6 +905,34 @@ importers:
       vite:
         specifier: catalog:deps
         version: 8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0)
+
+  packages/custom-id:
+    dependencies:
+      '@seedcord/errors':
+        specifier: workspace:^
+        version: link:../errors
+      discord-api-types:
+        specifier: ^0.38.52
+        version: 0.38.52
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:^
+        version: link:../../tooling/eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:^
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:^
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:^
+        version: link:../../tooling/vitest-config
+      type-fest:
+        specifier: catalog:deps
+        version: 5.8.0
 
   packages/errors:
     dependencies:
@@ -952,6 +986,9 @@ importers:
       '@seedcord/core':
         specifier: workspace:^
         version: link:../core
+      '@seedcord/custom-id':
+        specifier: workspace:^
+        version: link:../custom-id
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../errors
@@ -1010,6 +1047,9 @@ importers:
       '@seedcord/core':
         specifier: workspace:^
         version: link:../core
+      '@seedcord/custom-id':
+        specifier: workspace:^
+        version: link:../custom-id
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../errors
@@ -6096,8 +6136,8 @@ packages:
   fast-string-width@3.0.2:
     resolution: {integrity: sha512-gX8LrtNEI5hq8DVUfRQMbr5lpaS4nMIWV+7XEbXk2b8kiQIizgnlr12B4dA3ZEx3308ze0O4Q1R+cHts8kyUJg==}
 
-  fast-uri@3.1.5:
-    resolution: {integrity: sha512-gHwA1O9LDIcKunMKhObS/HimwtehO1nPUECKAu5TpKgaO19fcWEl4bliWe1jWxVFvIXztJjjQ4L8XQ1EU9f7Jw==}
+  fast-uri@3.1.6:
+    resolution: {integrity: sha512-7Ical1vFEMr0onbVzEDIreM22I4khW+fzyQPwvAFWBp1iwdshSZRsL4jjRvPG9JP1uiqMHRto+YU6R2/CzDz5Q==}
 
   fast-wrap-ansi@0.2.2:
     resolution: {integrity: sha512-7F2Fl+TjRSenLqlU3UjSH0iyqopqoZIu7eZVpEirP2g1GtWa2G/ecEmBdgz31+Mxr+ELclgg6sokpSFIQiZ02Q==}
@@ -12556,14 +12596,14 @@ snapshots:
   ajv@8.18.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.5
+      fast-uri: 3.1.6
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
   ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.5
+      fast-uri: 3.1.6
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -14013,7 +14053,7 @@ snapshots:
     dependencies:
       fast-string-truncated-width: 3.0.3
 
-  fast-uri@3.1.5: {}
+  fast-uri@3.1.6: {}
 
   fast-wrap-ansi@0.2.2:
     dependencies:

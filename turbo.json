@@ -12,6 +12,7 @@
             "dependsOn": [
                 "@seedcord/docs-generator#build",
                 "@seedcord/core#build",
+                "@seedcord/custom-id#build",
                 "@seedcord/errors#build",
                 "@seedcord/eslint-config#build",
                 "@seedcord/eslint-plugin#build",

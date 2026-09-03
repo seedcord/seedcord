@@ -36,7 +36,7 @@ export class SkipMuted extends EventMiddleware<Events.MessageCreate> {
 
 ## Stopping the event
 
-Any throw stops the event. The class you throw decides what the user sees. With a [`Silence`](ref:core/Silence) the user sees nothing. A reason passed to it goes to a debug log. Anything else goes down the same path that a handler's throw takes. [Throwing](/throwing) covers it.
+Any throw stops the event. The class you throw decides what the user sees. With a [`Silence`](ref:core/Silence) the user sees nothing. A reason passed to it goes to a debug log. Anything else goes down the same path that a handler's [throw](/throwing) takes.
 
 That stops one dispatch. The next message runs the chain again from the top.
 
@@ -136,4 +136,4 @@ Middleware runs only when a handler is about to run. seedcord looks for a handle
 
 </Callout>
 
-Message events carry some rules that no middleware can work around. Check out how to [read message content](/events/messages) before you write a middleware that needs it.
+[Message events](/events/messages) carry some rules that no middleware can work around.

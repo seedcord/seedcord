@@ -1,6 +1,6 @@
 import { Subscriber } from '@seedcord/core';
-import { SeedcordErrorCode } from '@seedcord/errors';
 import { RegisterSubscriber } from '@seedcord/core/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 
 import type { RouteManifest } from '#src/manifest/RouteManifest';

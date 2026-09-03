@@ -12,10 +12,10 @@
         "start": "pnpm dlx serve out",
         "deploy": "wrangler deploy",
         "deploy:preview": "wrangler versions upload",
-        "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
-        "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
-        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' --cache",
-        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md,css}' --cache",
+        "lint": "eslint 'src/**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' --cache --no-error-on-unmatched-pattern",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md,css}' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit"
     },
     "dependencies": {

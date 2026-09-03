@@ -73,7 +73,7 @@ export class Mentioned extends EventHandler<Events.MessageCreate> {
 }
 ```
 
-[`@Gated`](ref:gateway/Gated) with [`IgnoreBots`](ref:gateway/IgnoreBots) stops the handler on a message from any bot, including your own. [Gates](/gates) covers the catalog.
+[`@Gated`](ref:gateway/Gated) with [`IgnoreBots`](ref:gateway/IgnoreBots) stops the handler on a message from any bot, including your own. The [gate catalog](/gates) has the rest.
 
 ## Turning the intent on
 
@@ -118,4 +118,4 @@ Message Content is a privileged intent. Once more than 10,000 unique users can s
 
 Discord's page on avoiding a privileged intent opens its checklist with "Is my bot using prefix commands (`!help`, `?play`) that could be migrated to slash commands?" It answers by pointing at slash commands, which run without a privileged intent.
 
-Reading every message to find a `!` prefix is the case that checklist names first. [Commands](/commands) covers the path Discord points at. A message context menu command is the other route, and it carries the full message object with its content.
+Reading every message to find a `!` prefix is the case that checklist names first. [Commands](/commands) teaches the path Discord points at. A message context menu command is the other route, and it carries the full message object with its content.

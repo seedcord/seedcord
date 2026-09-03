@@ -40,4 +40,11 @@
         /* matches main's py-10 */
         scroll-margin-top: calc(var(--nav-h, 0px) + 2.5rem);
     }
+
+    /* below lg the copy button's -mt-6 lifts it 1.5rem above the article's top edge */
+    @media (width < 64rem) {
+        main > article {
+            scroll-margin-top: calc(var(--nav-h, 0px) + var(--heading-gap) + 1.5rem);
+        }
+    }
 }

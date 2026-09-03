@@ -2,7 +2,7 @@ import { ComponentKindBrand } from '@seedcord/core/internal';
 
 import { ComponentHandler } from './ComponentHandler';
 
-import type { AnyCustomId } from '@seedcord/core/internal';
+import type { AnyCustomId } from '@seedcord/custom-id';
 import type { ButtonInteraction, CacheType } from 'discord.js';
 
 /**

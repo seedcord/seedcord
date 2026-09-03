@@ -1,8 +1,10 @@
+import { CustomId } from '@seedcord/custom-id';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { CustomId } from '#customId/CustomId';
 import { decodeComponentRoute } from '#customId/routing';
+// the barrel registers the notices. a bot always loads it
+import '#src/index';
 import { storeComponentRoute } from '#decorators/interactionRoutes';
 import { InteractionRoutes } from '#src/metadataKeys';
 import { Notice } from '#stops/Notice';

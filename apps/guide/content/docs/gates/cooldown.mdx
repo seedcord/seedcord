@@ -146,12 +146,10 @@ Cooldown('1m', { notice: (resetAt) => new SlowDown(resetAt) });
 
 <Callout type="note">
 
-Two requests racing the same key can both read a free slot before either records its use. A tight burst can exceed `limit` that way. [Effect gates](/gates/effect-gates) covers the check and commit split this comes from.
+Two requests racing the same key can both read a free slot before either records its use. A tight burst can exceed `limit` that way. This comes from the check and commit split every [effect gate](/gates/effect-gates) makes.
 
 </Callout>
 
 ## Keeping windows across restarts
 
-Cooldown windows live in [`core.rateLimiter`](ref:types/IRateLimiter), which counts in memory by default. A restart clears every cooldown. On a serverless deploy each running copy keeps its own counts. Unless you set a `store`, that is.
-
-[The rate limiter](/gates/rate-limiter) covers the `store` config key that replaces it, and charging a window yourself.
+[`core.rateLimiter`](ref:types/IRateLimiter) holds the cooldown windows and counts them in memory by default. A restart clears every cooldown. On a serverless deploy each running copy keeps its own counts. Unless you set a [`store`](/gates/rate-limiter), that is.

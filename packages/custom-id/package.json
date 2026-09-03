@@ -1,0 +1,71 @@
+{
+    "name": "@seedcord/custom-id",
+    "type": "module",
+    "version": "0.0.1",
+    "description": "Typed customId encoding and decoding",
+    "keywords": [
+        "discord",
+        "discord-bot",
+        "seedcord",
+        "custom-id",
+        "typescript"
+    ],
+    "engines": {
+        "node": ">=24.11"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/seedcord/seedcord.git",
+        "directory": "packages/custom-id"
+    },
+    "homepage": "https://seedcord.org",
+    "bugs": "https://github.com/seedcord/seedcord/issues",
+    "license": "Apache-2.0",
+    "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
+    "funding": "https://github.com/sponsors/materwelonDhruv",
+    "types": "./dist/index.d.mts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            }
+        }
+    },
+    "files": [
+        "dist",
+        "package.json",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsdown",
+        "clean": "rm -rf dist",
+        "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
+        "tc": "tsgo --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev",
+        "coverage": "vitest run --coverage"
+    },
+    "dependencies": {
+        "@seedcord/errors": "workspace:^",
+        "discord-api-types": "catalog:deps"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "devDependencies": {
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsdown-config": "workspace:^",
+        "@seedcord/vitest-config": "workspace:^",
+        "type-fest": "catalog:deps"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    }
+}

@@ -5,7 +5,7 @@ import { pick } from '#inputs/pick';
 import { ComponentHandler } from './ComponentHandler';
 
 import type { SelectMenuKind } from '@seedcord/core';
-import type { AnyCustomId } from '@seedcord/core/internal';
+import type { AnyCustomId } from '@seedcord/custom-id';
 import type {
     APIInteractionDataResolved,
     APIInteractionDataResolvedChannel,

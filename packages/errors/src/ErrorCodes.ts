@@ -136,6 +136,10 @@ export enum SeedcordErrorCode {
     ModalFieldEmpty = 1618,
     /** A channel select field picked a channel outside the types getSelectedChannels() allows. */
     ModalFieldChannelType = 1619,
+    /** A customId was minted under an older shape of the same definition. */
+    CustomIdWireStale = 1620,
+    /** A customId wire is corrupt, truncated, or was minted by a different definition. */
+    CustomIdWireInvalid = 1621,
 
     /** A Cooldown gate was given a duration string that is not a well-formed positive duration. */
     GateInvalidCooldownDuration = 1701,

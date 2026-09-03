@@ -24,6 +24,11 @@ function linkHeader(pathname: string): string {
 const MARKDOWN = 'text/markdown';
 const HTML = 'text/html';
 
+// cloudflare serves a worker-routed asset must-revalidate. one year is what its own docs use for a
+// content-hashed name
+const HASHED_ASSETS = '/_next/static/';
+const HASHED_ASSET_CACHE = 'public, max-age=31536000, immutable';
+
 // cloudflare serves the extension-less files next writes here with no content-type at all
 const TYPED_PATHS: Record<string, string> = {
     '/icon': 'image/png',
@@ -85,6 +90,8 @@ const handler = {
                 : asset;
 
         const response = new Response(normalized.body, normalized);
+        if (pathname.startsWith(HASHED_ASSETS)) response.headers.set('Cache-Control', HASHED_ASSET_CACHE);
+
         const typed = TYPED_PATHS[pathname];
         if (typed !== undefined) response.headers.set('Content-Type', typed);
 

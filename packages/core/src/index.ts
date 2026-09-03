@@ -1,5 +1,8 @@
 import 'reflect-metadata';
 
+// Errors.ts registers the two notices thrown by a failed decode
+import '#customId/Errors';
+
 export type { MessageContextMenuRegistry, UserContextMenuRegistry } from '#registries/ContextMenuRegistry';
 export type { SlashRegistry } from '#registries/SlashRegistry';
 
@@ -56,8 +59,8 @@ export { Notice } from '#stops/Notice';
 export { Fault } from '#stops/Fault';
 export { Silence } from '#stops/Silence';
 
-export { CustomId } from '#customId/CustomId';
-export type { FieldOptions } from '#customId/CustomId';
+export { CustomId, setCustomIdErrors } from '@seedcord/custom-id';
+export type { FieldOptions } from '@seedcord/custom-id';
 
 export { ResolvedEmoji } from '#src/miscellaneous/emoji';
 

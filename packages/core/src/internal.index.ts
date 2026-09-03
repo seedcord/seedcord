@@ -70,7 +70,6 @@ export {
 export { asError } from '#stops/asError';
 export { NoticeCard } from '#stops/NoticeCard';
 
-export { prefixOf, decodeFor, type AnyCustomId } from '#customId/CustomId';
 export {
     ComponentDefsKey,
     decodeComponentRoute,
@@ -79,7 +78,6 @@ export {
     type MatchArms,
     type SingleParams
 } from '#customId/routing';
-export type { DecodedParams } from '#customId/Field';
 
 export type { MenuCacheFor, NamesFor } from '#registries/ContextMenuRegistry';
 export type { CacheFor, OptionKind, RouteCache, SlashOption, SlashRouteEntry } from '#registries/SlashRegistry';

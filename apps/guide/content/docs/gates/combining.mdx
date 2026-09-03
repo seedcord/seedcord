@@ -112,7 +112,7 @@ You need to meet at least one of these:
 • hold the <@&221439658686939136> role
 ```
 
-A gate of your own joins that list once its `Notice` sets `summary`, which [Your own gates](/gates/your-own) covers. A single arm without a summary drops the whole list to the generic refusal, since a partial list would mislead by leaving an option out.
+A [gate of your own](/gates/your-own) joins that list once its `Notice` sets `summary`. A single arm without a summary drops the whole list to the generic refusal, since a partial list would mislead by leaving an option out.
 
 ## Wording it yourself
 
@@ -192,4 +192,4 @@ or(OwnerOnly());
 
 The options object never counts as an arm, so `or(A(), { fail })` fails the same way.
 
-An effect gate inside a refused `or` arm rolls its pending commit back, which [Effect gates](/gates/effect-gates) covers.
+An [effect gate](/gates/effect-gates) inside a refused `or` arm rolls its pending commit back.

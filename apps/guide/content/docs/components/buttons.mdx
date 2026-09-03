@@ -26,9 +26,9 @@ export class Appeal extends ButtonHandler<[typeof AppealId]> {
 }
 ```
 
-[`@ButtonRoute`](ref:core/ButtonRoute) takes the [`CustomId`](ref:core/CustomId) your component used, and the generic lists the same one as a tuple. Passing the decorator one definition and the generic another is a compile error.
+[`@ButtonRoute`](ref:core/ButtonRoute) takes the [`CustomId`](ref:custom-id/CustomId) your component used, and the generic lists the same one as a tuple. Passing the decorator one definition and the generic another is a compile error.
 
-A click is an interaction like any other, so every reply method works here. [Replying](/replying) covers them.
+A click is an interaction like any other, so every [reply method](/replying) works here.
 
 ## Rewriting the source message
 
@@ -113,4 +113,4 @@ You key each arm by its route's prefix, and each one receives that route's own v
 
 </Callout>
 
-Decoding runs once, before any arm, so a wire from an older shape throws before your code executes. [When a custom id goes stale](/components/stale) covers that.
+Decoding runs once, before any arm, so a wire from an [older shape](/components/stale) throws before your code executes.

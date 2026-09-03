@@ -81,7 +81,7 @@ Discord's `<t:...:R>` markup takes seconds. Pass `resetAt` through [`toEpochSeco
 
 ## Keys
 
-That first argument is where you decide what the window counts. A key is any string. [`buildKey`](ref:rate-limiter/buildKey) joins a prefix and the values you scope by with `:`, and writes `global` for a part that is null or undefined.
+That first argument decides what the window counts. A key is any string. [`buildKey`](ref:rate-limiter/buildKey) joins a prefix and the values you scope by with `:`, and writes `global` for a part that is null or undefined.
 
 ```ts twoslash
 import { buildKey } from '@seedcord/gateway';
@@ -125,7 +125,7 @@ async function awardsLeft(memberId: string): Promise<number> {
 
 </Callout>
 
-`Cooldown` peeks in its check and charges in its commit. [Effect gates](/gates/effect-gates) covers that split.
+`Cooldown` peeks in its check and charges in its commit. Every [effect gate](/gates/effect-gates) splits that way.
 
 ## Clearing a key
 

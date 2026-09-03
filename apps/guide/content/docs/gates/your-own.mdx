@@ -5,7 +5,7 @@ description: defineGate takes a name and a check. The check reads the context, r
 
 The catalog covers owners, roles, permissions, and cooldowns. [`defineGate`](ref:core/defineGate) builds a gate for anything else you want to check.
 
-It takes a name and a check. The check reads the context, refuses by throwing, and passes by returning. Here's an example that keeps a command to one channel. [Throwing](/throwing) covers the [`Notice`](ref:core/Notice) it throws and the card `render()` builds.
+It takes a name and a check. The check reads the context, refuses by [throwing](/throwing), and passes by returning. Here's an example that keeps a command to one channel.
 
 ```ts twoslash hovers title="src/gates/InChannel.ts"
 import {
@@ -197,6 +197,6 @@ Gates run one after another, so a slow check delays every gate behind it. Discor
 
 ## What to throw
 
-Throw a [`Notice`](ref:core/Notice) and seedcord replies with the card its `render()` builds. Throw a [`Silence`](ref:core/Silence) and seedcord drops the request with no reply, which suits an event handler. [Throwing](/throwing) covers both, plus what happens when a check throws something else.
+Throw a [`Notice`](ref:core/Notice) and seedcord replies with the card its `render()` builds. Throw a [`Silence`](ref:core/Silence) and seedcord drops the request without replying, which suits an event handler. [Throwing](/throwing) has both in full, plus what a check throwing anything else produces.
 
-Set `summary` on a `Notice` you throw from a gate when you plan to pass that gate to an [`or`](ref:core/or). [Combining gates](/gates/combining) covers what `or` does with it.
+Set `summary` on a `Notice` you throw from a gate when you plan to pass that gate to an [`or`](ref:core/or).

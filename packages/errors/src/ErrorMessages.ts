@@ -114,6 +114,9 @@ const messages = {
         `${className} is missing its route decorator (@ButtonRoute, @ModalRoute, or @SelectMenuRoute).`,
     [SeedcordErrorCode.CustomIdMatchArmMissing]: (prefix: string) =>
         `match() has no arm for the decoded route ${JSON.stringify(prefix)}.`,
+    [SeedcordErrorCode.CustomIdWireStale]: (prefix: string) =>
+        `customId ${JSON.stringify(prefix)} was minted under an older shape of this definition. Adding, removing, changing, or moving a field changes the layout hash.`,
+    [SeedcordErrorCode.CustomIdWireInvalid]: (detail: string) => `customId could not be decoded. ${detail}.`,
     [SeedcordErrorCode.SlashMatchArmMissing]: (route: string) =>
         `match() has no arm for the command route ${JSON.stringify(route)}.`,
     [SeedcordErrorCode.AutocompleteMatchArmMissing]: (field: string) =>

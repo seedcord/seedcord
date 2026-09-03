@@ -94,7 +94,7 @@ Step two finishes before step three starts. A handler that throws runs after eve
 
 ## Inside an or
 
-An [`or`](ref:core/or) arm can hold more than one gate, which is where a queued commit gets thrown away. Here is a handler with an effect gate buried two levels down.
+An [`or`](ref:core/or) arm can hold more than one gate. Nesting them that way throws a queued commit away. Here is a handler with an effect gate buried two levels down.
 
 ```ts twoslash hovers
 import {
@@ -174,4 +174,4 @@ Either half can return a promise. A synchronous one works too, so a commit writi
 
 ## Cooldown
 
-[`Cooldown`](ref:core/Cooldown) is an effect gate. It peeks at the window in `check` and charges the slot in `commit`, which is why a later refusal never records a use. [Cooldowns](/gates/cooldown) covers it.
+[`Cooldown`](ref:core/Cooldown) is an effect gate. It peeks at the window in `check` and charges the slot in `commit`, which is why a later refusal never records a use.

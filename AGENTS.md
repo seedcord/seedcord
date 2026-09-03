@@ -41,6 +41,8 @@ The root [`README.md`](README.md) lists every published package. `private` in a 
 
 Never wire a cross-package source path. Never point `paths` or `include` at another package's `src`.
 
+A re-export from another package goes in `src/index.ts`. One file then says which of a package's names come from elsewhere.
+
 `./internal` entries are framework wiring. A symbol reachable only through one gets no TSDoc and no changeset line.
 
 ---
@@ -113,7 +115,9 @@ Tests live in `<package>/tests/` mirroring `src/`, never beside the source. Vite
 
 Reproduce a bug with a failing test before fixing it. A test that passes before the fix proves nothing. This holds however the bug surfaced.
 
-Tests reach behavior through public interfaces. A test that reads a private method breaks on the next refactor and tells you nothing about the contract.
+Tests reach behavior through the public members of a class or a module. A test that reads a private method, or mocks a collaborator you own, breaks on the next refactor and tells you nothing about the contract.
+
+The import path is a separate question. Every test imports through its own package's `#src/*` alias, which resolves to the same module the barrel re-exports. A consuming package imports by package name, so a missing barrel export already fails that package's `tc`.
 
 A test pins behavior. `tsc`, ESLint, and the build already reject a missing export, a renamed symbol, a wrong type, and a malformed manifest, so a test asserting any of those gives you a second place to edit when the rule changes.
 

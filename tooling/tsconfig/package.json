@@ -46,7 +46,7 @@
     "scripts": {
         "build": "echo 'Are you seriously trying to build .json files?'",
         "clean": "echo 'What build artifacts?'",
-        "fmt": "prettier --write '*.{json,md}' --cache",
-        "fmt:check": "prettier --check '*.{json,md}' --cache"
+        "fmt": "prettier --write '*.{json,md}' --cache --no-error-on-unmatched-pattern",
+        "fmt:check": "prettier --check '*.{json,md}' --cache --no-error-on-unmatched-pattern"
     }
 }

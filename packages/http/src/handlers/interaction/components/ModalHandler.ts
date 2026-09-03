@@ -7,7 +7,7 @@ import { ModalFields } from '#inputs/ModalFields';
 import { ComponentHandler } from './ComponentHandler';
 
 import type { SentMessage } from '#reply/ReplySender';
-import type { AnyCustomId } from '@seedcord/core/internal';
+import type { AnyCustomId } from '@seedcord/custom-id';
 import type { ReplyResponse } from '@seedcord/types';
 import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
 

@@ -35,7 +35,7 @@ export class RolesList extends SlashHandler<'roles'> {
 }
 ```
 
-`prefix` names the route every nav button carries, the same way a [`CustomId`](ref:core/CustomId) prefix names one. Pick a name nothing else in your bot uses.
+`prefix` names the route every nav button carries, the same way a [`CustomId`](ref:custom-id/CustomId) prefix names one. Pick a name nothing else in your bot uses.
 
 The paginator builds its own nav handler and puts it on [`Roles.Handler`](ref:gateway/Paginator.Handler). Extend that with an empty body, hand `Roles.cursor` to [`@ButtonRoute`](ref:core/ButtonRoute), and export it from wherever seedcord scans your handlers. Clicks do not route until that class exists.
 

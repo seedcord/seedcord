@@ -1,3 +1,5 @@
+import { setCustomIdErrors } from '@seedcord/custom-id';
+
 import { Notice } from '#stops/Notice';
 import { NoticeCard } from '#stops/NoticeCard';
 
@@ -38,3 +40,10 @@ export class InvalidCustomId extends Notice {
         return { components: [card.component] };
     }
 }
+
+// core's entry imports this file for the call below. a decode failure then reaches the boundary as a
+// Notice and renders a card.
+setCustomIdErrors({
+    stale: (prefix) => new StaleCustomId(prefix),
+    invalid: (detail) => new InvalidCustomId(detail)
+});
