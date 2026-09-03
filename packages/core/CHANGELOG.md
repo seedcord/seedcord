@@ -1,5 +1,18 @@
 # @seedcord/core
 
+## 0.4.1
+
+### Patch Changes
+
+- 71c1896: `CustomId` moved to `@seedcord/custom-id`. Core still exports it under the same name. The new `setCustomIdErrors` swaps the card a stale or corrupt button shows.
+- Updated dependencies [71c1896]
+- Updated dependencies [71c1896]
+- Updated dependencies [71c1896]
+- Updated dependencies [71c1896]
+    - @seedcord/custom-id@0.1.0
+    - @seedcord/types@0.10.1
+    - @seedcord/errors@0.5.1
+
 ## 0.4.0
 
 ### Minor Changes
