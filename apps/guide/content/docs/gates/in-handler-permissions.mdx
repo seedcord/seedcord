@@ -89,7 +89,7 @@ The Administrator rule from [permissions](/gates/permissions) applies here too. 
 
 `missingNotice` and `dangerousNotice` take a [`Notice`](ref:core/Notice) subclass for each of the two refusals. Both constructors receive the same three arguments, a message, the `subject` string, and the permission names.
 
-[Throwing](/throwing) covers writing the subclass itself.
+[Throwing](/throwing) shows how to write one.
 
 ```ts twoslash
 import { assertPermissions, Notice } from '@seedcord/gateway';
@@ -183,4 +183,4 @@ checkBotPermissions(channel, [
 
 When the bot member is uncached, the refusal lists every permission in `scope` as missing. The channel form logs a warning first.
 
-Role position blocks a write these checks let through. [Changing roles](/gates/changing-roles) covers that, plus the two functions for it.
+[Role position](/gates/changing-roles) blocks a write these checks let through.

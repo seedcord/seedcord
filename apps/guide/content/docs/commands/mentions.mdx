@@ -5,7 +5,7 @@ description: A command mention needs the id Discord assigned at deploy. Your bot
 
 Discord turns `</role remove:1287>` into a clickable mention that runs the command. The number is the id Discord assigned when your bot deployed it, so writing that string by hand means fetching the id first.
 
-Your bot already received that id at startup. [`Commands`](ref:core/Commands) is where you read it.
+Your bot already received that id at startup. You read it off [`Commands`](ref:core/Commands).
 
 ```ts twoslash title="src/handlers/RoleAdd.ts"
 import {

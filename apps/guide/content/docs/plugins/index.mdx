@@ -35,7 +35,7 @@ export default seedcord;
 
 [`attach`](ref:gateway/Seedcord.attach) takes the key, the plugin class, and whatever that class's constructor takes after the host. A plugin that takes only the host attaches with two arguments.
 
-The `export default` on the last line matters as much as the attach call, since `seedcord codegen` reads it to type `this.core.db`. [Typing a plugin](/plugins/typing) covers what it writes.
+The `export default` on the last line matters as much as the attach call, since `seedcord codegen` reads it to [type `this.core.db`](/plugins/typing).
 
 ## Reading it from a handler
 
@@ -188,4 +188,4 @@ A plugin can name the transport and the runtime it supports. Both default to `'a
     until edge support ships.
 </Callout>
 
-[Typing a plugin](/plugins/typing) covers the codegen step behind `this.core.db`. [The lifecycle](/plugins/lifecycle) covers when a plugin connects and when it closes down. To write one, start at [Writing your own](/plugins/your-own).
+[Typing a plugin](/plugins/typing) explains the codegen step behind `this.core.db`. [The lifecycle](/plugins/lifecycle) says when a plugin connects and when it closes down. To write one, start at [Writing your own](/plugins/your-own).

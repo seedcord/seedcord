@@ -95,5 +95,3 @@ class History extends SlashHandler<'history'> {
 ```
 
 TypeScript treats `connection` as always present. The plugin assigns it once `mongoose.connect()` returns, so reading it before `init()` resolves returns `undefined`.
-
-[Services](/plugins/mongoose-services) covers the typed layer over your collections.

@@ -147,7 +147,7 @@ You pass that null back through `encode`, and `Board.encode({ page: 0, roleId: n
 
 <Callout type="warning">
 
-Marking a field nullable changes the shape, which changes the hash in the route key. Every button already on a message refuses with `StaleCustomId` on the next click. [When a custom id goes stale](/components/stale) covers what the user sees.
+Marking a field nullable changes the shape, which changes the hash in the route key. Every button already on a message refuses with `StaleCustomId` on the next click. You can customize what the user sees [when a custom id goes stale](/components/stale).
 
 </Callout>
 
@@ -198,7 +198,7 @@ if (TicketAction.owns(wire)) {
 }
 ```
 
-`owns` compares the prefix and ignores everything after it. `decode` checks the whole thing and throws when the string came from a different shape, which [When a custom id goes stale](/components/stale) covers.
+`owns` compares the prefix and ignores everything after it. `decode` checks the whole thing and throws when the string came from a different shape, which [is a stale CustomId](/components/stale).
 
 <Callout type="danger">
 

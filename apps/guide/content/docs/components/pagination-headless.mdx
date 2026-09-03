@@ -129,5 +129,3 @@ A `perPage` of zero, a fraction, or a negative throws `PaginationInvalidPerPage`
 `renderBoard` builds a plain object, so any call taking Discord's message shape accepts it. Both handlers above pass it straight to an ack.
 
 Those buttons route from any message, since the custom id carries everything the handler reads. [`@ButtonRoute`](ref:core/ButtonRoute) matches on its prefix alone.
-
-[Buttons](/components/buttons) covers `@ButtonRoute` and `this.params` in full.
