@@ -1,5 +1,12 @@
 # @seedcord/mock-http
 
+## 0.0.10-next.0
+
+### Patch Changes
+
+- Updated dependencies [71c1896]
+    - @seedcord/http@0.5.1-next.0
+
 ## 0.0.9
 
 ### Patch Changes

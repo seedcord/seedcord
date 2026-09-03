@@ -33,5 +33,10 @@
     "@seedcord/ui": "0.2.0",
     "@seedcord/vitest-config": "0.0.1"
   },
-  "changesets": []
+  "changesets": [
+    "khaki-pumas-wonder",
+    "lucky-jars-repeat",
+    "olive-donkeys-shave",
+    "tidy-moons-tickle"
+  ]
 }

@@ -1,5 +1,13 @@
 # @seedcord/mock-gateway
 
+## 0.2.32-next.0
+
+### Patch Changes
+
+- Updated dependencies [71c1896]
+    - @seedcord/gateway@0.4.1-next.0
+    - @seedcord/plugin-mongoose@0.3.1-next.0
+
 ## 0.2.31
 
 ### Patch Changes

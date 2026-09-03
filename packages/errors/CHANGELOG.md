@@ -1,5 +1,11 @@
 # @seedcord/errors
 
+## 0.5.1-next.0
+
+### Patch Changes
+
+- 71c1896: Two codes for a customId that fails to decode. `CustomIdWireStale` fires when the wire predates a shape change, and `CustomIdWireInvalid` when it is corrupt or came from a different definition.
+
 ## 0.5.0
 
 ### Minor Changes
