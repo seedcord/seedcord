@@ -13,7 +13,7 @@ export const TicketAction = new CustomId('ticket')
     .oneOf('action', ['close', 'reopen']);
 ```
 
-`TicketAction.routeKey` reads `ticketMXf`, the prefix `ticket` followed by the hash `MXf`. Every id [`encode`](ref:core/CustomId.encode) mints starts with it.
+`TicketAction.routeKey` reads `ticketMXf`, the prefix `ticket` followed by the hash `MXf`. Every id [`encode`](ref:custom-id/CustomId.encode) mints starts with it.
 
 ## What changes the hash
 
@@ -50,7 +50,7 @@ A modal and a select menu route by prefix the same way, so both go stale on the 
 
 ## A wire from a different id
 
-[`decode`](ref:core/CustomId.decode) separates two failures. A matching prefix with a different hash is the stale case above. A wire minted by some other `CustomId` refuses with a message naming both route keys.
+[`decode`](ref:custom-id/CustomId.decode) separates two failures. A matching prefix with a different hash is the stale case above. A wire minted by some other `CustomId` refuses with a message naming both route keys.
 
 ```txt output
 Invalid customId. routeKey "pollM4x" is not "ticketF3A"
@@ -64,3 +64,52 @@ Something went wrong. Please try again.
 ```
 
 A corrupt string throws here, and so does one you wrote by hand. [Custom IDs](/components/custom-ids) covers minting one through `encode`.
+
+## Replacing both cards
+
+Both cards above come from `Notice` subclasses seedcord registers at startup. [`setCustomIdErrors`](ref:custom-id/setCustomIdErrors) replaces them with your own.
+
+```ts twoslash title="src/bot.ts"
+import { TextDisplayBuilder } from '@discordjs/builders';
+import {
+    BuilderComponent,
+    Notice,
+    setCustomIdErrors
+} from '@seedcord/gateway';
+
+import type { ReplyResponse } from '@seedcord/gateway';
+// ---cut---
+class OutdatedCard extends BuilderComponent<'container'> {
+    public constructor(message: string) {
+        super('container');
+        this.instance.addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(message)
+        );
+    }
+}
+
+class Outdated extends Notice {
+    public constructor(message: string) {
+        super(message);
+    }
+
+    public render(): ReplyResponse {
+        return {
+            components: [
+                new OutdatedCard(
+                    '### Try again\nThat button is from an older deploy.'
+                ).component
+            ]
+        };
+    }
+}
+
+setCustomIdErrors({
+    stale: (prefix) => new Outdated(`stale customId for ${prefix}`),
+    invalid: (detail) => new Outdated(detail)
+});
+```
+
+Call it once, before your bot starts. One registration covers every `CustomId` in the process, and a later call replaces the earlier one.
+
+The stale arm receives the route prefix. The invalid arm receives a detail string naming what failed. Neither one receives the interaction, so a card built here reads the same for every user. Return a `Notice` from both arms. A plain `Error` sends the generic fault card.

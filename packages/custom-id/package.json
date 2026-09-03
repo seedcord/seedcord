@@ -1,23 +1,22 @@
 {
-    "name": "@seedcord/gateway",
+    "name": "@seedcord/custom-id",
     "type": "module",
-    "version": "0.4.0",
-    "engines": {
-        "node": ">=24.11"
-    },
-    "description": "Gateway transport for seedcord bots, built on discord.js",
+    "version": "0.0.1",
+    "description": "Typed customId encoding and decoding",
     "keywords": [
         "discord",
         "discord-bot",
-        "discordjs",
-        "gateway",
-        "framework",
+        "seedcord",
+        "custom-id",
         "typescript"
     ],
+    "engines": {
+        "node": ">=24.11"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
-        "directory": "packages/gateway"
+        "directory": "packages/custom-id"
     },
     "homepage": "https://seedcord.org",
     "bugs": "https://github.com/seedcord/seedcord/issues",
@@ -51,31 +50,18 @@
         "test:watch": "vitest dev",
         "coverage": "vitest run --coverage"
     },
-    "peerDependencies": {
-        "discord.js": "catalog:peer",
-        "envapt": "catalog:peer",
-        "typescript": "catalog:peer"
-    },
     "dependencies": {
-        "@discordjs/builders": "catalog:deps",
-        "@discordjs/rest": "catalog:deps",
-        "@seedcord/core": "workspace:^",
-        "@seedcord/custom-id": "workspace:^",
         "@seedcord/errors": "workspace:^",
-        "@seedcord/event-emitter": "workspace:^",
-        "@seedcord/logger": "workspace:^",
-        "@seedcord/rate-limiter": "workspace:^",
-        "@seedcord/types": "workspace:^",
-        "@seedcord/utils": "workspace:^",
-        "reflect-metadata": "catalog:deps"
+        "discord-api-types": "catalog:deps"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
-        "discord.js": "catalog:peer",
-        "envapt": "catalog:peer",
         "type-fest": "catalog:deps"
     },
     "publishConfig": {

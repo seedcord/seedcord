@@ -1,4 +1,4 @@
-import { CustomId } from '#customId/CustomId';
+import { CustomId } from '#src/CustomId';
 
 const Board = new CustomId('board').int('page', 0, 999).snowflake('roleId', { nullable: true });
 type BoardParams = ReturnType<typeof Board.decode>;

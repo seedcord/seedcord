@@ -1,13 +1,11 @@
 import 'reflect-metadata';
 
+import { decodeFor } from '@seedcord/custom-id';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { decodeFor } from './CustomId';
-
 import type { ComponentDefsBrand } from '#src/decorators/brands';
-import type { AnyCustomId } from './CustomId';
-import type { DecodedParams } from './Field';
+import type { AnyCustomId, DecodedParams } from '@seedcord/custom-id';
 import type { Promisable } from 'type-fest';
 
 /**

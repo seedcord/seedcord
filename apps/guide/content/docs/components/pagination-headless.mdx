@@ -10,7 +10,7 @@ description: paginate() gives you the slicing math on its own. The cursor, the b
 Two things rule out a [`Paginator`](ref:gateway/Paginator).
 
 - **An embed.** Discord forbids an embed on a ComponentsV2 message, which is what seedcord's reply methods send.
-- **Extra values on the button.** A paginator's cursor carries a page and a slot. A filter, a sort key, or a target user id takes a [`CustomId`](ref:core/CustomId) you declare yourself.
+- **Extra values on the button.** A paginator's cursor carries a page and a slot. A filter, a sort key, or a target user id takes a [`CustomId`](ref:custom-id/CustomId) you declare yourself.
 
 ```ts twoslash title="src/handlers/Leaderboard.ts"
 import {

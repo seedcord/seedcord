@@ -8,7 +8,6 @@ import {
 } from '#decorators/interactionRoutes';
 import { InteractionRoutes } from '#src/metadataKeys';
 
-import type { AnyCustomId } from '#customId/CustomId';
 import type { SelectMenuKind } from '#decorators/interactionRoutes';
 import type { ContextMenuKind, NamesFor } from '#registries/ContextMenuRegistry';
 import type { SlashRegistry } from '#registries/SlashRegistry';
@@ -20,6 +19,7 @@ import type {
     ContextMenuNamesBrand,
     SlashRouteBrand
 } from './brands';
+import type { AnyCustomId } from '@seedcord/custom-id';
 import type { Constructor } from 'type-fest';
 
 type ComponentBrand = 'button' | 'modal' | SelectMenuKind;

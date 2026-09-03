@@ -8,7 +8,7 @@ turbo gen package
 turbo gen package --args <name> "<one-line description>" <dir>
 ```
 
-It prompts for the unscoped name, a description, and the workspace folder, then writes `package.json`, `tsconfig.json`, `tsdown.config.ts`, `eslint.config.ts`, `tsdoc.json`, `README.md`, `LICENSE`, `src/index.ts`, `tests/basic.test.ts`, and `vitest.config.ts` from the templates in `templates/`.
+It prompts for the unscoped name, a description, and the workspace folder, then writes `package.json`, `tsconfig.json`, `tsdown.config.ts`, `eslint.config.ts`, `tsdoc.json`, `README.md`, `LICENSE`, `src/index.ts`, `tests/.gitkeep`, and `vitest.config.ts` from the templates in `templates/`.
 
 Under `packages/` the folder basename matches the unscoped package name. Under `plugins/` the folder omits the `plugin-` prefix, so `@seedcord/plugin-mongoose` scaffolds into `plugins/mongoose/`. The prefix earns its place on npm, where a package name carries no parent folder.
 

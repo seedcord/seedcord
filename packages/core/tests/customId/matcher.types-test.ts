@@ -1,4 +1,4 @@
-import { CustomId } from '#customId/CustomId';
+import { CustomId } from '@seedcord/custom-id';
 
 import type { Config, CustomIdMatcher } from '@seedcord/types';
 

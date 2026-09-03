@@ -5,8 +5,8 @@ import { ApplicationCommandType } from 'discord-api-types/v10';
 import { ComponentDefsKey } from '#customId/routing';
 import { InteractionMetadataKey, InteractionRouteKeys, InteractionRoutes } from '#src/metadataKeys';
 
-import type { AnyCustomId } from '#customId/CustomId';
 import type { ContextMenuKind } from '#registries/ContextMenuRegistry';
+import type { AnyCustomId } from '@seedcord/custom-id';
 
 /** The select menu kinds the select route decorators take. */
 export enum SelectMenuKind {

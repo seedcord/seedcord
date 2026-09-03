@@ -6,13 +6,8 @@ import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { SentMessage } from '#bot/ReplySender';
 import type { GatewayReplyResponse } from '#interfaces/ReplyResponse';
-import type {
-    AnyCustomId,
-    DecodedComponentRoute,
-    HasComponentDefs,
-    MatchArms,
-    SingleParams
-} from '@seedcord/core/internal';
+import type { DecodedComponentRoute, HasComponentDefs, MatchArms, SingleParams } from '@seedcord/core/internal';
+import type { AnyCustomId } from '@seedcord/custom-id';
 import type { AnySelectMenuInteraction, ButtonInteraction, ModalSubmitInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';
 

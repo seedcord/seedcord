@@ -10,7 +10,6 @@ import {
     queuedMsFor,
     reportDispatch,
     MiddlewareMetadataKey,
-    prefixOf,
     PublishDefault,
     routeIdOf,
     runHandlerGates,
@@ -18,6 +17,7 @@ import {
     areRoutes
 } from '@seedcord/core/internal';
 import { settleWithin } from '@seedcord/core/node/internal';
+import { prefixOf } from '@seedcord/custom-id';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';

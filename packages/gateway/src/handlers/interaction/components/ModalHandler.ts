@@ -6,7 +6,7 @@ import { ComponentHandler } from './ComponentHandler';
 
 import type { SentMessage } from '#bot/ReplySender';
 import type { GatewayReplyResponse } from '#interfaces/ReplyResponse';
-import type { AnyCustomId } from '@seedcord/core/internal';
+import type { AnyCustomId } from '@seedcord/custom-id';
 import type { CacheType, ModalSubmitFields, ModalSubmitInteraction } from 'discord.js';
 
 /**

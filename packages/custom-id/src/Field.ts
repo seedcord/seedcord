@@ -3,7 +3,8 @@
 /**
  * One field in a customId shape, its wire kind plus the type it decodes to.
  *
- * @internal
+ * The chain methods build these for you. Write one by hand to name a shape in a type position, as
+ * `CustomId<'page', { index: CustomIdField<number> }>`.
  */
 export interface CustomIdField<Decoded> {
     /** Which wire encoding this field uses. */
@@ -23,14 +24,28 @@ export interface CustomIdField<Decoded> {
 /**
  * The set of fields a customId carries, keyed by name.
  *
- * @internal
+ * Write it as a constraint when a helper of your own takes a definition and its params together.
+ * {@link AnyCustomId} covers the looser case where the fields do not matter.
+ *
+ * @example
+ * ```ts
+ * function label<Shape extends CustomIdShape>(id: CustomId<string, Shape>, params: DecodedParams<Shape>): string {
+ *     return `${id.prefix} ${JSON.stringify(params)}`;
+ * }
+ * ```
  */
 export type CustomIdShape = Record<string, CustomIdField<unknown>>;
 
 /**
  * The decoded result, each field name mapped to its decoded type.
  *
- * @internal
+ * @example
+ * ```ts
+ * const Ticket = new CustomId('ticket').snowflake('ownerId').bool('urgent');
+ *
+ * // { ownerId: string; urgent: boolean }
+ * function open(params: DecodedParams<(typeof Ticket)['shape']>) {}
+ * ```
  */
 export type DecodedParams<Shape extends CustomIdShape> = {
     [Name in keyof Shape]: Shape[Name] extends CustomIdField<infer Decoded> ? Decoded : never;

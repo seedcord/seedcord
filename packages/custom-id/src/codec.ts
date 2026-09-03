@@ -3,7 +3,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordRangeError } from '@seedcord/errors/internal';
 
-import { InvalidCustomId } from './Errors';
+import { invalidError } from './errors';
 
 import type { CustomIdField, CustomIdShape } from './Field';
 
@@ -42,7 +42,7 @@ function base64ToBigint(text: string): bigint {
     let value = 0n;
     for (const char of text) {
         const digit = CHAR_TO_VALUE.get(char);
-        if (digit === undefined) throw new InvalidCustomId(`bad character ${JSON.stringify(char)}`);
+        if (digit === undefined) throw invalidError(`bad character ${JSON.stringify(char)}`);
         value = value * BASE + BigInt(digit);
     }
     return value;
@@ -68,7 +68,7 @@ function unescapeToken(text: string): string {
             continue;
         }
         const next = text.charAt(i + 1);
-        if (next === '') throw new InvalidCustomId('dangling escape at end of token');
+        if (next === '') throw invalidError('dangling escape at end of token');
         out += next;
         i++;
     }
@@ -118,18 +118,18 @@ function kindRadix(field: CustomIdField<unknown>): bigint {
         case 'oneOf': {
             // oneOf() rejects an empty list at define time, so an empty one here came from a
             // hand-built shape.
-            if (!field.choices?.length) throw new InvalidCustomId('oneOf field has no choices');
+            if (!field.choices?.length) throw invalidError('oneOf field has no choices');
             return BigInt(field.choices.length);
         }
         case 'int': {
             // isBounded only lets a min-and-max int through. a missing bound means the shape is corrupt.
             if (field.min === undefined || field.max === undefined)
-                throw new InvalidCustomId('bounded int field is missing a bound');
+                throw invalidError('bounded int field is missing a bound');
             // bigint before the math, max - min + 1 in float64 drops the +1 at 2^53.
             return BigInt(field.max) - BigInt(field.min) + 1n;
         }
         default: {
-            throw new InvalidCustomId(`field kind ${field.kind} has no radix`);
+            throw invalidError(`field kind ${field.kind} has no radix`);
         }
     }
 }
@@ -208,7 +208,7 @@ function kindValue(field: CustomIdField<unknown>, slot: bigint): unknown {
             return Number(slot) + (field.min ?? 0);
         }
         default: {
-            throw new InvalidCustomId(`field kind ${field.kind} is not bounded`);
+            throw invalidError(`field kind ${field.kind} is not bounded`);
         }
     }
 }
@@ -238,15 +238,15 @@ function decodeUnboundedToken(field: CustomIdField<unknown>, piece: string): unk
     if (field.nullable === true) {
         const marker = piece.charAt(0);
         if (marker === ABSENT && piece.length === 1) return null;
-        if (marker !== PRESENT) throw new InvalidCustomId(`bad presence marker ${JSON.stringify(marker)}`);
+        if (marker !== PRESENT) throw invalidError(`bad presence marker ${JSON.stringify(marker)}`);
         return decodeUnboundedToken({ ...field, nullable: false }, piece.slice(1));
     }
     if (field.kind !== 'int') return unescapeToken(piece);
     // an empty piece means a truncated wire
-    if (piece === '') throw new InvalidCustomId('empty integer token');
+    if (piece === '') throw invalidError('empty integer token');
     const decoded = zigzagDecode(base64ToBigint(piece));
     // encode only ever takes a js number. anything past 2^53 came from somewhere else.
-    if (decoded > SAFE_MAX || decoded < SAFE_MIN) throw new InvalidCustomId('integer out of safe range');
+    if (decoded > SAFE_MAX || decoded < SAFE_MIN) throw invalidError('integer out of safe range');
     return Number(decoded);
 }
 
@@ -299,7 +299,7 @@ function unpackBounded(
     result: Record<string, unknown>
 ): void {
     // zero still packs to one char. an empty block means the body was cut short.
-    if (blob === undefined || blob === '') throw new InvalidCustomId('empty packed block');
+    if (blob === undefined || blob === '') throw invalidError('empty packed block');
     let packed = base64ToBigint(blob);
     // last field packed is the first one back out.
     for (const [name, field] of [...bounded].reverse()) {
@@ -307,7 +307,7 @@ function unpackBounded(
         result[name] = bigintToBoundedValue(field, packed % radix);
         packed /= radix;
     }
-    if (packed !== 0n) throw new InvalidCustomId('leftover bits after unpacking');
+    if (packed !== 0n) throw invalidError('leftover bits after unpacking');
 }
 
 /** @internal */
@@ -319,12 +319,12 @@ export function decodeBody(shape: CustomIdShape, body: string): Record<string, u
     // a shape with no fields encodes to an empty body.
     const expected = (bounded.length > 0 ? 1 : 0) + unbounded.length;
     if (expected === 0) {
-        if (body !== '') throw new InvalidCustomId(`expected an empty body, got ${JSON.stringify(body)}`);
+        if (body !== '') throw invalidError(`expected an empty body, got ${JSON.stringify(body)}`);
         return {};
     }
 
     const pieces = splitTokens(body);
-    if (pieces.length !== expected) throw new InvalidCustomId(`expected ${expected} piece(s), got ${pieces.length}`);
+    if (pieces.length !== expected) throw invalidError(`expected ${expected} piece(s), got ${pieces.length}`);
 
     const result: Record<string, unknown> = {};
     let cursor = 0;
@@ -337,7 +337,7 @@ export function decodeBody(shape: CustomIdShape, body: string): Record<string, u
     for (const [name, field] of unbounded) {
         const piece = pieces[cursor];
         cursor++;
-        if (piece === undefined) throw new InvalidCustomId('missing trailing piece');
+        if (piece === undefined) throw invalidError('missing trailing piece');
         result[name] = decodeUnboundedToken(field, piece);
     }
 

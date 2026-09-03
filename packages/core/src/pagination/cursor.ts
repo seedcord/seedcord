@@ -1,6 +1,6 @@
-import { CustomId } from '#customId/CustomId';
+import { CustomId } from '@seedcord/custom-id';
 
-import type { CustomIdField } from '#customId/Field';
+import type { CustomIdField } from '@seedcord/custom-id';
 
 // Included in the layout hash so it is fixed per prefix. Reducing it marks every active button as StaleCustomId.
 // @internal
