@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, SegmentedControl, cn, easeOutStrong, type SegmentedControlOption } from '@seedcord/ui';
+import { Button, SegmentedControl, cn, easeOutStrong, tw, type SegmentedControlOption } from '@seedcord/ui';
 import { ExternalLink } from 'lucide-react';
 import { AnimatePresence, m } from 'motion/react';
 import Link from 'next/link';
@@ -18,6 +18,9 @@ const panelVariants: Variants = {
     center: { x: 0, opacity: 1, filter: 'blur(0px)' },
     exit: (dir: number) => ({ x: dir * SLIDE_X, opacity: 0, filter: `blur(${BLUR_PX}px)` })
 };
+
+// an auto column grows to the widest line in the readme's code block
+const panelGridClassName = tw`grid grid-cols-[minmax(0,1fr)] items-start overflow-hidden`;
 
 type OverviewTab = 'readme' | 'reference';
 
@@ -132,7 +135,7 @@ export function PackageOverviewTabs({
                 </div>
                 <hr className={cn('border-(--border)')} />
             </div>
-            <div className={cn('grid items-start overflow-hidden')}>
+            <div className={panelGridClassName}>
                 <AnimatePresence initial={false} custom={direction}>
                     <m.div
                         key={tab}
