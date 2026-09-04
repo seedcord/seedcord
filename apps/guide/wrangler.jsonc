@@ -10,7 +10,8 @@
         "binding": "ASSETS",
         "not_found_handling": "404-page",
         "html_handling": "auto-trailing-slash",
-        // worker.ts answers a markdown request from a different asset than the url names
-        "run_worker_first": true
+        // worker.ts serves the .md twin when a request accepts markdown
+        // cloudflare skips _headers for anything the worker returns
+        "run_worker_first": ["/*", "!/_next/static/*"]
     }
 }

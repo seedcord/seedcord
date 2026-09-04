@@ -12,7 +12,8 @@
         "binding": "ASSETS",
         "not_found_handling": "404-page",
         "html_handling": "auto-trailing-slash",
-        // route every request through worker.ts so it can noindex non-production hosts
-        "run_worker_first": true
+        // worker.ts sets X-Robots-Tag on non-production hosts and redirects www to the main website
+        // cloudflare skips _headers for anything the worker returns
+        "run_worker_first": ["/*", "!/_next/static/*"]
     }
 }
