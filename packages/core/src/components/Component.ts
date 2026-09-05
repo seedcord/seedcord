@@ -79,7 +79,7 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
 }
 
 // instanceof fails across the cli's separate module registry
-const BUILDER_COMPONENT = Symbol.for('seedcord.core.builderComponent');
+const BUILDER_COMPONENT = Symbol.for('seedcord:core:builderComponent');
 
 Object.defineProperty(BuilderComponent.prototype, BUILDER_COMPONENT, { value: true });
 

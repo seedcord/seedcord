@@ -34,11 +34,11 @@ describe('isSeedcordError across two copies of the package', () => {
         const [, catcher] = await loadTwoCopies();
         const { SeedcordErrorCode } = await import('#src/ErrorCodes');
 
-        const renumbered = Object.defineProperty(new Error('from an older copy'), Symbol.for('seedcord.errors.coded'), {
+        const renumbered = Object.defineProperty(new Error('from an older copy'), Symbol.for('seedcord:errors:coded'), {
             value: true
         });
         Object.assign(renumbered, { type: 'SeedcordError', code: 9999 });
-        Object.defineProperty(renumbered, Symbol.for('seedcord.errors.identifier'), {
+        Object.defineProperty(renumbered, Symbol.for('seedcord:errors:identifier'), {
             value: 'CorePluginAfterInit'
         });
 
