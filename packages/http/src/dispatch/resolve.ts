@@ -1,3 +1,4 @@
+import { InteractionKind } from '@seedcord/core';
 import { prefixOf } from '@seedcord/custom-id';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -9,7 +10,6 @@ import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 import { slashRouteOf } from './slashRouteOf';
 
 import type { ComponentRoute, RouteManifest, RouteModule } from '#src/manifest/RouteManifest';
-import type { InteractionKind } from '@seedcord/core';
 import type { APIInteraction } from 'discord-api-types/v10';
 
 type ResolvedKind = `${InteractionKind}`;
@@ -22,7 +22,6 @@ export interface ResolvedRoute {
      * unhandled default, which matches no row.
      */
     readonly routeId: string | null;
-    /** The key the router looked up. */
     readonly attemptedKey?: string;
     /** Resolves the one export the row registers. */
     readonly load: () => Promise<unknown>;
@@ -40,19 +39,6 @@ export interface RouteMaps {
     readonly autocomplete: RouteMap;
     readonly components: Readonly<Record<ComponentMapKey, RouteMap>>;
 }
-
-// the manifest names selects `xSelect`, the resolved kinds name them `xMenu`
-type ResolvedKindOf<Kind extends ComponentMapKey> = Kind extends `${infer Base}Select` ? `${Base}Menu` : Kind;
-
-const COMPONENT_KIND = {
-    button: 'button',
-    stringSelect: 'stringMenu',
-    userSelect: 'userMenu',
-    roleSelect: 'roleMenu',
-    channelSelect: 'channelMenu',
-    mentionableSelect: 'mentionableMenu',
-    modal: 'modal'
-} satisfies { [Kind in ComponentMapKey]: ResolvedKindOf<Kind> & ResolvedKind };
 
 type CommandMapKey = Exclude<keyof RouteMaps, 'components' | 'autocomplete'>;
 
@@ -73,25 +59,25 @@ function commandKind(type: ApplicationCommandType): CommandMapKey | null {
     }
 }
 
-function componentMapKey(type: ComponentType): Exclude<ComponentMapKey, 'modal'> | null {
+function componentMapKey(type: ComponentType): Exclude<ComponentMapKey, InteractionKind.Modal> | null {
     switch (type) {
         case ComponentType.Button: {
-            return 'button';
+            return InteractionKind.Button;
         }
         case ComponentType.StringSelect: {
-            return 'stringSelect';
+            return InteractionKind.StringMenu;
         }
         case ComponentType.UserSelect: {
-            return 'userSelect';
+            return InteractionKind.UserMenu;
         }
         case ComponentType.RoleSelect: {
-            return 'roleSelect';
+            return InteractionKind.RoleMenu;
         }
         case ComponentType.ChannelSelect: {
-            return 'channelSelect';
+            return InteractionKind.ChannelMenu;
         }
         case ComponentType.MentionableSelect: {
-            return 'mentionableSelect';
+            return InteractionKind.MentionableMenu;
         }
         default: {
             return null;
@@ -134,13 +120,13 @@ export function buildRouteMaps(manifest: RouteManifest): RouteMaps {
         messageContextMenu: new Map(),
         autocomplete: new Map(),
         components: {
-            button: new Map(),
-            stringSelect: new Map(),
-            userSelect: new Map(),
-            roleSelect: new Map(),
-            channelSelect: new Map(),
-            mentionableSelect: new Map(),
-            modal: new Map()
+            [InteractionKind.Button]: new Map(),
+            [InteractionKind.StringMenu]: new Map(),
+            [InteractionKind.UserMenu]: new Map(),
+            [InteractionKind.RoleMenu]: new Map(),
+            [InteractionKind.ChannelMenu]: new Map(),
+            [InteractionKind.MentionableMenu]: new Map(),
+            [InteractionKind.Modal]: new Map()
         }
     };
     const owners = new Map<string, RouteModule>();
@@ -168,7 +154,7 @@ export function buildRouteMaps(manifest: RouteManifest): RouteMaps {
         set(maps.autocomplete, 'autocomplete', row.name, row);
     }
     for (const row of manifest.componentRoutes) {
-        set(maps.components[row.kind], COMPONENT_KIND[row.kind], row.prefix, row);
+        set(maps.components[row.kind], row.kind, row.prefix, row);
     }
     return maps;
 }
@@ -208,11 +194,11 @@ export function resolve(maps: RouteMaps, interaction: APIInteraction): ResolvedR
             const key = componentMapKey(interaction.data.component_type);
             if (!key) return null;
             const prefix = prefixOf(interaction.data.custom_id);
-            return maps.components[key].get(prefix) ?? unhandled(COMPONENT_KIND[key], prefix);
+            return maps.components[key].get(prefix) ?? unhandled(key, prefix);
         }
         case InteractionType.ModalSubmit: {
             const prefix = prefixOf(interaction.data.custom_id);
-            return maps.components.modal.get(prefix) ?? unhandled('modal', prefix);
+            return maps.components[InteractionKind.Modal].get(prefix) ?? unhandled(InteractionKind.Modal, prefix);
         }
         default: {
             return null;

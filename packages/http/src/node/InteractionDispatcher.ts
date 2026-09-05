@@ -14,19 +14,14 @@ import { buildRouteMaps } from '#src/dispatch/resolve';
 import { EMPTY_MANIFEST } from '#src/manifest/RouteManifest';
 
 import type { HandlerConstructor } from '#handlers/constructors';
-import type { ResolvedRoute, RouteMap, RouteMaps } from '#src/dispatch/resolve';
+import type { RouteMap, RouteMaps } from '#src/dispatch/resolve';
 import type { Initializeable, ContextMenuLeaves } from '@seedcord/core/internal';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
-interface RouteTarget {
-    readonly map: RouteMap;
-    readonly kind: ResolvedRoute['kind'];
-}
-
-// hmr swaps entries live and resolve() reads per request, but edge builds from manifest instead
+// hmr swaps entries live and resolve() reads per request
 export class InteractionDispatcher implements Initializeable, HmrAware {
     public readonly maps: RouteMaps;
-    private readonly targets: Record<InteractionKind, RouteTarget>;
+    private readonly targets: Record<InteractionKind, RouteMap>;
 
     /** @internal */
     public readonly logger = new Logger('Interactions', { channel: 'interactions' });
@@ -36,7 +31,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     // routeId -> owner row, the duplicate guard and the hmr unregister index
     private readonly rowOwners = new Map<
         string,
-        { ctor: HandlerConstructor; target: RouteTarget; key: string; from: string }
+        { ctor: HandlerConstructor; map: RouteMap; key: string; from: string }
     >();
 
     private loading = false;
@@ -124,40 +119,32 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         return routeIds;
     }
 
-    private targetFor(route: InteractionKind): RouteTarget {
+    private targetFor(route: InteractionKind): RouteMap {
         return this.targets[route];
     }
 
-    private buildTargets(): Record<InteractionKind, RouteTarget> {
+    private buildTargets(): Record<InteractionKind, RouteMap> {
+        const { slash, userContextMenu, messageContextMenu, autocomplete, components } = this.maps;
         return {
-            [InteractionKind.Slash]: { map: this.maps.slash, kind: 'slash' },
-            [InteractionKind.UserContextMenu]: { map: this.maps.userContextMenu, kind: 'userContextMenu' },
-            [InteractionKind.MessageContextMenu]: { map: this.maps.messageContextMenu, kind: 'messageContextMenu' },
-            [InteractionKind.Autocomplete]: { map: this.maps.autocomplete, kind: 'autocomplete' },
-            [InteractionKind.Button]: { map: this.maps.components.button, kind: 'button' },
-            [InteractionKind.StringMenu]: { map: this.maps.components.stringSelect, kind: 'stringMenu' },
-            [InteractionKind.UserMenu]: { map: this.maps.components.userSelect, kind: 'userMenu' },
-            [InteractionKind.RoleMenu]: { map: this.maps.components.roleSelect, kind: 'roleMenu' },
-            [InteractionKind.ChannelMenu]: { map: this.maps.components.channelSelect, kind: 'channelMenu' },
-            [InteractionKind.MentionableMenu]: {
-                map: this.maps.components.mentionableSelect,
-                kind: 'mentionableMenu'
-            },
-            [InteractionKind.Modal]: { map: this.maps.components.modal, kind: 'modal' }
+            [InteractionKind.Slash]: slash,
+            [InteractionKind.UserContextMenu]: userContextMenu,
+            [InteractionKind.MessageContextMenu]: messageContextMenu,
+            [InteractionKind.Autocomplete]: autocomplete,
+            ...components
         };
     }
 
     private registerHandler(ctor: HandlerConstructor, relativePath: string): void {
         const from = formatFilePath(relativePath);
         // a partial registration would orphan routes and break hmr rollback
-        const writes: [RouteTarget, string][] = [];
+        const writes: { map: RouteMap; kind: InteractionKind; key: string }[] = [];
 
-        for (const [route, keys] of interactionRoutesOf(ctor)) {
-            const target = this.targetFor(route);
+        for (const [kind, keys] of interactionRoutesOf(ctor)) {
+            const map = this.targetFor(kind);
             for (const key of keys) {
-                const routeId = `${target.kind}:${key}`;
+                const routeId = `${kind}:${key}`;
                 const existing = this.rowOwners.get(routeId);
-                // a different class on the same route silently shadows the existing one (last write wins)
+                // a different class on the same route would silently shadow the existing one (last write wins)
                 if (existing && existing.ctor !== ctor) {
                     throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
                         routeId,
@@ -165,15 +152,15 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                         `${ctor.name} (${from})`
                     ]);
                 }
-                writes.push([target, key]);
+                writes.push({ map, kind, key });
             }
         }
 
         if (writes.length === 0) return;
-        for (const [target, key] of writes) {
-            const routeId = `${target.kind}:${key}`;
-            target.map.set(key, { kind: target.kind, routeId, load: () => Promise.resolve(ctor) });
-            this.rowOwners.set(routeId, { ctor, target, key, from });
+        for (const { map, kind, key } of writes) {
+            const routeId = `${kind}:${key}`;
+            map.set(key, { kind, routeId, load: () => Promise.resolve(ctor) });
+            this.rowOwners.set(routeId, { ctor, map, key, from });
         }
 
         if (this.loading) this.loadedHandlers.push({ name: ctor.name, from });
@@ -185,7 +172,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             const owner = this.rowOwners.get(routeId);
             if (owner?.ctor !== ctor) continue;
             this.rowOwners.delete(routeId);
-            owner.target.map.delete(owner.key);
+            owner.map.delete(owner.key);
         }
     }
 }
