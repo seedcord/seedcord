@@ -21,7 +21,6 @@ import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 // hmr swaps entries live and resolve() reads per request
 export class InteractionDispatcher implements Initializeable, HmrAware {
     public readonly maps: RouteMaps;
-    private readonly targets: Record<InteractionKind, RouteMap>;
 
     /** @internal */
     public readonly logger = new Logger('Interactions', { channel: 'interactions' });
@@ -31,7 +30,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     // routeId -> owner row, the duplicate guard and the hmr unregister index
     private readonly rowOwners = new Map<
         string,
-        { ctor: HandlerConstructor; map: RouteMap; key: string; from: string }
+        { ctor: HandlerConstructor; kind: InteractionKind; key: string; from: string }
     >();
 
     private loading = false;
@@ -39,7 +38,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     constructor(private readonly handlersDir: string) {
         this.maps = buildRouteMaps(EMPTY_MANIFEST);
-        this.targets = this.buildTargets();
 
         if (!Envapter.isDevelopment && !Envapter.isTest) return;
         this.hmrHandler = new HmrModuleHandler({
@@ -87,12 +85,14 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     public warnUnhandledRoutes(commandLeaves: Iterable<string>): void {
-        this.warnMissing(commandLeaves, this.maps.slash, 'Slash route', '@SlashRoute');
+        this.warnMissing(commandLeaves, this.maps[InteractionKind.Slash], 'Slash route', '@SlashRoute');
     }
 
     public warnUnhandledContextMenuRoutes(leaves: ContextMenuLeaves): void {
-        this.warnMissing(leaves.user, this.maps.userContextMenu, 'User context menu', '@ContextMenuRoute');
-        this.warnMissing(leaves.message, this.maps.messageContextMenu, 'Message context menu', '@ContextMenuRoute');
+        const user = this.maps[InteractionKind.UserContextMenu];
+        const message = this.maps[InteractionKind.MessageContextMenu];
+        this.warnMissing(leaves.user, user, 'User context menu', '@ContextMenuRoute');
+        this.warnMissing(leaves.message, message, 'Message context menu', '@ContextMenuRoute');
     }
 
     private warnMissing(names: Iterable<string>, map: RouteMap, label: string, decorator: string): void {
@@ -119,28 +119,12 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         return routeIds;
     }
 
-    private targetFor(route: InteractionKind): RouteMap {
-        return this.targets[route];
-    }
-
-    private buildTargets(): Record<InteractionKind, RouteMap> {
-        const { slash, userContextMenu, messageContextMenu, autocomplete, components } = this.maps;
-        return {
-            [InteractionKind.Slash]: slash,
-            [InteractionKind.UserContextMenu]: userContextMenu,
-            [InteractionKind.MessageContextMenu]: messageContextMenu,
-            [InteractionKind.Autocomplete]: autocomplete,
-            ...components
-        };
-    }
-
     private registerHandler(ctor: HandlerConstructor, relativePath: string): void {
         const from = formatFilePath(relativePath);
         // a partial registration would orphan routes and break hmr rollback
-        const writes: { map: RouteMap; kind: InteractionKind; key: string }[] = [];
+        const writes: { kind: InteractionKind; key: string }[] = [];
 
         for (const [kind, keys] of interactionRoutesOf(ctor)) {
-            const map = this.targetFor(kind);
             for (const key of keys) {
                 const routeId = `${kind}:${key}`;
                 const existing = this.rowOwners.get(routeId);
@@ -152,15 +136,15 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                         `${ctor.name} (${from})`
                     ]);
                 }
-                writes.push({ map, kind, key });
+                writes.push({ kind, key });
             }
         }
 
         if (writes.length === 0) return;
-        for (const { map, kind, key } of writes) {
+        for (const { kind, key } of writes) {
             const routeId = `${kind}:${key}`;
-            map.set(key, { kind, routeId, load: () => Promise.resolve(ctor) });
-            this.rowOwners.set(routeId, { ctor, map, key, from });
+            this.maps[kind].set(key, { kind, routeId, load: () => Promise.resolve(ctor) });
+            this.rowOwners.set(routeId, { ctor, kind, key, from });
         }
 
         if (this.loading) this.loadedHandlers.push({ name: ctor.name, from });
@@ -172,7 +156,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             const owner = this.rowOwners.get(routeId);
             if (owner?.ctor !== ctor) continue;
             this.rowOwners.delete(routeId);
-            owner.map.delete(owner.key);
+            this.maps[owner.kind].delete(owner.key);
         }
     }
 }

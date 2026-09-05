@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+import { InteractionKind } from '@seedcord/core';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -42,7 +43,7 @@ async function routerThrows(thrown: unknown): Promise<{
     core.bus.on('unhandledInteractionError', (payload) => seen.push(payload));
 
     const maps = buildRouteMaps(emptyManifest());
-    vi.spyOn(maps.slash, 'get').mockImplementation(() => {
+    vi.spyOn(maps[InteractionKind.Slash], 'get').mockImplementation(() => {
         throw thrown;
     });
     const { handle } = buildEngine(core, maps);

@@ -1,3 +1,4 @@
+import { InteractionKind } from '@seedcord/core';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { interactionsOf } from '#bot/Bot';
@@ -10,7 +11,7 @@ import { TestEnvironment } from '../utils/test-env';
 import '../utils/mock-env';
 
 interface PrivateDispatcher {
-    slashMap: Map<string, unknown>;
+    maps: Record<InteractionKind, Map<string, unknown>>;
     init(): Promise<void>;
 }
 
@@ -59,7 +60,7 @@ describe('interaction route metadata key isolation', () => {
         const controller = dispatcherOf(seedcord);
         await controller.init();
 
-        expect(controller.slashMap.has('mycmd')).toBe(true);
-        expect(controller.slashMap.has('hijacked')).toBe(false);
+        expect(controller.maps[InteractionKind.Slash].has('mycmd')).toBe(true);
+        expect(controller.maps[InteractionKind.Slash].has('hijacked')).toBe(false);
     });
 });
