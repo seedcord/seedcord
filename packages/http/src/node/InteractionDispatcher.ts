@@ -1,5 +1,6 @@
+import { InteractionKind } from '@seedcord/core';
 import { HmrModuleHandler } from '@seedcord/core/hmr';
-import { interactionRoutesOf, InteractionMetadataKey, InteractionRoutes } from '@seedcord/core/internal';
+import { interactionRoutesOf, InteractionMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -25,7 +26,7 @@ interface RouteTarget {
 // hmr swaps entries live and resolve() reads per request, but edge builds from manifest instead
 export class InteractionDispatcher implements Initializeable, HmrAware {
     public readonly maps: RouteMaps;
-    private readonly targets: Record<InteractionRoutes, RouteTarget>;
+    private readonly targets: Record<InteractionKind, RouteTarget>;
 
     /** @internal */
     public readonly logger = new Logger('Interactions', { channel: 'interactions' });
@@ -123,26 +124,26 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         return routeIds;
     }
 
-    private targetFor(route: InteractionRoutes): RouteTarget {
+    private targetFor(route: InteractionKind): RouteTarget {
         return this.targets[route];
     }
 
-    private buildTargets(): Record<InteractionRoutes, RouteTarget> {
+    private buildTargets(): Record<InteractionKind, RouteTarget> {
         return {
-            [InteractionRoutes.Slash]: { map: this.maps.slash, kind: 'slash' },
-            [InteractionRoutes.UserContextMenu]: { map: this.maps.userContextMenu, kind: 'userContextMenu' },
-            [InteractionRoutes.MessageContextMenu]: { map: this.maps.messageContextMenu, kind: 'messageContextMenu' },
-            [InteractionRoutes.Autocomplete]: { map: this.maps.autocomplete, kind: 'autocomplete' },
-            [InteractionRoutes.Button]: { map: this.maps.components.button, kind: 'button' },
-            [InteractionRoutes.StringMenu]: { map: this.maps.components.stringSelect, kind: 'stringMenu' },
-            [InteractionRoutes.UserMenu]: { map: this.maps.components.userSelect, kind: 'userMenu' },
-            [InteractionRoutes.RoleMenu]: { map: this.maps.components.roleSelect, kind: 'roleMenu' },
-            [InteractionRoutes.ChannelMenu]: { map: this.maps.components.channelSelect, kind: 'channelMenu' },
-            [InteractionRoutes.MentionableMenu]: {
+            [InteractionKind.Slash]: { map: this.maps.slash, kind: 'slash' },
+            [InteractionKind.UserContextMenu]: { map: this.maps.userContextMenu, kind: 'userContextMenu' },
+            [InteractionKind.MessageContextMenu]: { map: this.maps.messageContextMenu, kind: 'messageContextMenu' },
+            [InteractionKind.Autocomplete]: { map: this.maps.autocomplete, kind: 'autocomplete' },
+            [InteractionKind.Button]: { map: this.maps.components.button, kind: 'button' },
+            [InteractionKind.StringMenu]: { map: this.maps.components.stringSelect, kind: 'stringMenu' },
+            [InteractionKind.UserMenu]: { map: this.maps.components.userSelect, kind: 'userMenu' },
+            [InteractionKind.RoleMenu]: { map: this.maps.components.roleSelect, kind: 'roleMenu' },
+            [InteractionKind.ChannelMenu]: { map: this.maps.components.channelSelect, kind: 'channelMenu' },
+            [InteractionKind.MentionableMenu]: {
                 map: this.maps.components.mentionableSelect,
                 kind: 'mentionableMenu'
             },
-            [InteractionRoutes.Modal]: { map: this.maps.components.modal, kind: 'modal' }
+            [InteractionKind.Modal]: { map: this.maps.components.modal, kind: 'modal' }
         };
     }
 

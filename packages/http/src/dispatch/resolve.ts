@@ -9,10 +9,10 @@ import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 import { slashRouteOf } from './slashRouteOf';
 
 import type { ComponentRoute, RouteManifest, RouteModule } from '#src/manifest/RouteManifest';
-import type { InteractionRoutes } from '@seedcord/core/internal';
+import type { InteractionKind } from '@seedcord/core';
 import type { APIInteraction } from 'discord-api-types/v10';
 
-type ResolvedKind = `${InteractionRoutes}`;
+type ResolvedKind = `${InteractionKind}`;
 
 /** A manifest row matched to an incoming interaction, keyed the way the gateway dispatcher keys. */
 export interface ResolvedRoute {

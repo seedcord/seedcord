@@ -31,7 +31,7 @@ export class SlowDispatch extends Subscriber<'interactionDispatched'> {
 | --- | --- | --- |
 | `routeId` | `string` | the route that ran, `slash:ban` shaped |
 | `interactionId` | `string` | Discord's id for this interaction |
-| `kind` | [`InteractionRoutes`](ref:core/InteractionRoutes) | `slash`, `button`, `modal`, `autocomplete`, the five `*Menu` kinds, and the two `*ContextMenu` kinds |
+| `kind` | [`InteractionKind`](ref:core/InteractionKind) | `slash`, `button`, `modal`, `autocomplete`, the five `*Menu` kinds, and the two `*ContextMenu` kinds |
 | `outcome` | [`DispatchOutcome`](ref:core/DispatchOutcome) | `handled`, `refused`, or `failed` |
 | `fallback` | `boolean` | true when no route matched and the unhandled default ran |
 | `durationMs` | `number` | dispatch entry until the user has a response |

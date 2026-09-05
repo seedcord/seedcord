@@ -26,6 +26,8 @@ export {
     SlashRoute
 } from '#decorators/routes';
 
+export { InteractionKind } from '#src/metadataKeys';
+
 export { DispatchContext } from '#src/dispatch/DispatchContext';
 export type { DispatchState } from '#src/dispatch/DispatchContext';
 

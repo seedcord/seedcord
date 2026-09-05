@@ -1,9 +1,8 @@
-import { ButtonRoute } from '@seedcord/core';
+import { ButtonRoute, InteractionKind } from '@seedcord/core';
 import {
     ComponentDefsKey,
     InteractionMetadataKey,
     InteractionRouteKeys,
-    InteractionRoutes,
     PublishDefault
 } from '@seedcord/core/internal';
 import { ComponentType, MessageFlags } from 'discord.js';
@@ -240,7 +239,7 @@ describe('Paginator registration', () => {
     it('the decorated .Handler subclass is a discoverable InteractionHandler routed by the cursor prefix', () => {
         expect(BansNav.prototype).toBeInstanceOf(InteractionHandler);
         expect(Reflect.hasMetadata(InteractionMetadataKey, BansNav)).toBe(true);
-        const routeKeys = Reflect.getMetadata(InteractionRouteKeys[InteractionRoutes.Button], BansNav) as string[];
+        const routeKeys = Reflect.getMetadata(InteractionRouteKeys[InteractionKind.Button], BansNav) as string[];
         expect(routeKeys).toContain(pager.cursor.prefix);
         const defs = Reflect.getMetadata(ComponentDefsKey, BansNav) as unknown[];
         expect(defs).toContain(pager.cursor);

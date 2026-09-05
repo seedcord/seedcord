@@ -1,10 +1,9 @@
 /* eslint-disable max-lines -- one handler method per interaction type keeps the router in one file */
-import { DispatchContext } from '@seedcord/core';
+import { DispatchContext, InteractionKind } from '@seedcord/core';
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import {
     InteractionMetadataKey,
     InteractionRouteKeys,
-    InteractionRoutes,
     asError,
     outcomeFor,
     queuedMsFor,
@@ -60,7 +59,7 @@ import type {
 } from 'discord.js';
 
 interface InteractionArtifact {
-    routeType: InteractionRoutes;
+    routeType: InteractionKind;
     routes: string[];
 }
 
@@ -108,18 +107,18 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         InteractionArtifact[]
     >;
 
-    private readonly routeTypes: [InteractionRoutes, Map<string, HandlerConstructor>][] = [
-        [InteractionRoutes.Slash, this.slashMap],
-        [InteractionRoutes.Button, this.buttonMap],
-        [InteractionRoutes.Modal, this.modalMap],
-        [InteractionRoutes.StringMenu, this.stringSelectMap],
-        [InteractionRoutes.UserMenu, this.userSelectMap],
-        [InteractionRoutes.RoleMenu, this.roleSelectMap],
-        [InteractionRoutes.ChannelMenu, this.channelSelectMap],
-        [InteractionRoutes.MentionableMenu, this.mentionableSelectMap],
-        [InteractionRoutes.MessageContextMenu, this.messageContextMenuMap],
-        [InteractionRoutes.UserContextMenu, this.userContextMenuMap],
-        [InteractionRoutes.Autocomplete, this.autocompleteMap]
+    private readonly routeTypes: [InteractionKind, Map<string, HandlerConstructor>][] = [
+        [InteractionKind.Slash, this.slashMap],
+        [InteractionKind.Button, this.buttonMap],
+        [InteractionKind.Modal, this.modalMap],
+        [InteractionKind.StringMenu, this.stringSelectMap],
+        [InteractionKind.UserMenu, this.userSelectMap],
+        [InteractionKind.RoleMenu, this.roleSelectMap],
+        [InteractionKind.ChannelMenu, this.channelSelectMap],
+        [InteractionKind.MentionableMenu, this.mentionableSelectMap],
+        [InteractionKind.MessageContextMenu, this.messageContextMenuMap],
+        [InteractionKind.UserContextMenu, this.userContextMenuMap],
+        [InteractionKind.Autocomplete, this.autocompleteMap]
     ];
 
     constructor(protected core: Core) {
@@ -400,13 +399,12 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private async handleCustomIdInteraction<TInteraction extends Interaction & { customId: string }>(
         interaction: TInteraction,
-        kind: InteractionRoutes,
+        kind: InteractionKind,
         getMap: () => Map<string, HandlerConstructor>
     ): Promise<void> {
         if ([...this.keysToIgnore].some((matcher) => matcher.owns(interaction.customId))) return;
 
-        // route by the stable prefix (the routeKey minus its shape hash) so an older-shape wire still
-        // reaches its handler, where reading this.params throws StaleCustomId and the boundary replies
+        // the stable prefix (the routeKey minus its shape hash) routes an older-shape wire to its handler
         const prefix = prefixOf(interaction.customId);
         // no route matches an empty prefix. the unhandled default answers it like http does
         if (!prefix)
@@ -422,7 +420,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private async processInteraction<TInteraction extends Interaction>(
         interaction: TInteraction,
-        kind: InteractionRoutes,
+        kind: InteractionKind,
         extractKey: (i: TInteraction) => string,
         getHandler: (key: string) => HandlerConstructor | undefined,
         fallback: HandlerConstructor = UnhandledRepliable
@@ -433,9 +431,9 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const queuedMs = queuedMsFor(interaction.id);
         const matched = getHandler(key);
 
-        // an empty key means a customId seedcord never minted. a real routeKey outlives its 3-char hash
+        // an empty key means a customId seedcord never minted
         let routeId = `${kind}:${key || 'unrouted'}`;
-        // answering a refusal can throw into the catch and answer twice
+        // answering a refusal can throw into the catch and report twice
         let reported = false;
         const report = (outcome: DispatchOutcome): void => {
             if (reported) return;
@@ -591,40 +589,40 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const route = slashRouteOf(interaction);
         await this.processInteraction(
             interaction,
-            InteractionRoutes.Slash,
+            InteractionKind.Slash,
             () => route,
             (key) => this.slashMap.get(key)
         );
     }
 
     private async handleButton(interaction: ButtonInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, InteractionRoutes.Button, () => this.buttonMap);
+        await this.handleCustomIdInteraction(interaction, InteractionKind.Button, () => this.buttonMap);
     }
 
     private async handleModal(interaction: ModalSubmitInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, InteractionRoutes.Modal, () => this.modalMap);
+        await this.handleCustomIdInteraction(interaction, InteractionKind.Modal, () => this.modalMap);
     }
 
     private async handleStringSelectMenu(interaction: StringSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, InteractionRoutes.StringMenu, () => this.stringSelectMap);
+        await this.handleCustomIdInteraction(interaction, InteractionKind.StringMenu, () => this.stringSelectMap);
     }
 
     private async handleUserSelectMenu(interaction: UserSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, InteractionRoutes.UserMenu, () => this.userSelectMap);
+        await this.handleCustomIdInteraction(interaction, InteractionKind.UserMenu, () => this.userSelectMap);
     }
 
     private async handleRoleSelectMenu(interaction: RoleSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, InteractionRoutes.RoleMenu, () => this.roleSelectMap);
+        await this.handleCustomIdInteraction(interaction, InteractionKind.RoleMenu, () => this.roleSelectMap);
     }
 
     private async handleChannelSelectMenu(interaction: ChannelSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, InteractionRoutes.ChannelMenu, () => this.channelSelectMap);
+        await this.handleCustomIdInteraction(interaction, InteractionKind.ChannelMenu, () => this.channelSelectMap);
     }
 
     private async handleMentionableSelectMenu(interaction: MentionableSelectMenuInteraction): Promise<void> {
         await this.handleCustomIdInteraction(
             interaction,
-            InteractionRoutes.MentionableMenu,
+            InteractionKind.MentionableMenu,
             () => this.mentionableSelectMap
         );
     }
@@ -632,7 +630,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private async handleMessageContextMenu(interaction: MessageContextMenuCommandInteraction): Promise<void> {
         await this.processInteraction(
             interaction,
-            InteractionRoutes.MessageContextMenu,
+            InteractionKind.MessageContextMenu,
             () => interaction.commandName,
             (key) => this.messageContextMenuMap.get(key)
         );
@@ -641,7 +639,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private async handleUserContextMenu(interaction: UserContextMenuCommandInteraction): Promise<void> {
         await this.processInteraction(
             interaction,
-            InteractionRoutes.UserContextMenu,
+            InteractionKind.UserContextMenu,
             () => interaction.commandName,
             (key) => this.userContextMenuMap.get(key)
         );
@@ -651,7 +649,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const route = slashRouteOf(interaction);
         await this.processInteraction(
             interaction,
-            InteractionRoutes.Autocomplete,
+            InteractionKind.Autocomplete,
             () => route,
             (key) => this.autocompleteMap.get(key),
             UnhandledAutocomplete

@@ -1,4 +1,7 @@
-export enum InteractionRoutes {
+/**
+ * Every interaction kind seedcord routes.
+ */
+export enum InteractionKind {
     Slash = 'slash',
     Button = 'button',
     Modal = 'modal',
@@ -14,18 +17,18 @@ export enum InteractionRoutes {
 
 export const InteractionMetadataKey = Symbol('seedcord:interaction:metadata');
 
-export const InteractionRouteKeys: Record<InteractionRoutes, symbol> = {
-    [InteractionRoutes.Slash]: Symbol('seedcord:interaction:slash'),
-    [InteractionRoutes.Button]: Symbol('seedcord:interaction:button'),
-    [InteractionRoutes.Modal]: Symbol('seedcord:interaction:modal'),
-    [InteractionRoutes.StringMenu]: Symbol('seedcord:interaction:stringMenu'),
-    [InteractionRoutes.UserMenu]: Symbol('seedcord:interaction:userMenu'),
-    [InteractionRoutes.RoleMenu]: Symbol('seedcord:interaction:roleMenu'),
-    [InteractionRoutes.ChannelMenu]: Symbol('seedcord:interaction:channelMenu'),
-    [InteractionRoutes.MentionableMenu]: Symbol('seedcord:interaction:mentionableMenu'),
-    [InteractionRoutes.MessageContextMenu]: Symbol('seedcord:interaction:messageContextMenu'),
-    [InteractionRoutes.UserContextMenu]: Symbol('seedcord:interaction:userContextMenu'),
-    [InteractionRoutes.Autocomplete]: Symbol('seedcord:interaction:autocomplete')
+export const InteractionRouteKeys: Record<InteractionKind, symbol> = {
+    [InteractionKind.Slash]: Symbol('seedcord:interaction:slash'),
+    [InteractionKind.Button]: Symbol('seedcord:interaction:button'),
+    [InteractionKind.Modal]: Symbol('seedcord:interaction:modal'),
+    [InteractionKind.StringMenu]: Symbol('seedcord:interaction:stringMenu'),
+    [InteractionKind.UserMenu]: Symbol('seedcord:interaction:userMenu'),
+    [InteractionKind.RoleMenu]: Symbol('seedcord:interaction:roleMenu'),
+    [InteractionKind.ChannelMenu]: Symbol('seedcord:interaction:channelMenu'),
+    [InteractionKind.MentionableMenu]: Symbol('seedcord:interaction:mentionableMenu'),
+    [InteractionKind.MessageContextMenu]: Symbol('seedcord:interaction:messageContextMenu'),
+    [InteractionKind.UserContextMenu]: Symbol('seedcord:interaction:userContextMenu'),
+    [InteractionKind.Autocomplete]: Symbol('seedcord:interaction:autocomplete')
 };
 
 export const MiddlewareMetadataKey = Symbol('seedcord:middleware:metadata');

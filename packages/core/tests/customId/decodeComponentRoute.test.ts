@@ -6,7 +6,7 @@ import { decodeComponentRoute } from '#customId/routing';
 // the barrel registers the notices. a bot always loads it
 import '#src/index';
 import { storeComponentRoute } from '#decorators/interactionRoutes';
-import { InteractionRoutes } from '#src/metadataKeys';
+import { InteractionKind } from '#src/metadataKeys';
 import { Notice } from '#stops/Notice';
 
 const ApproveId = new CustomId('approve').snowflake('userId');
@@ -26,7 +26,7 @@ describe('decodeComponentRoute', () => {
     it('decodes the wire against the stored defs', () => {
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- a bare metadata target
         class Approve {}
-        storeComponentRoute(InteractionRoutes.Button, [ApproveId], Approve);
+        storeComponentRoute(InteractionKind.Button, [ApproveId], Approve);
 
         const decoded = decodeComponentRoute(Approve, ApproveId.encode({ userId: '42' }));
 
@@ -49,7 +49,7 @@ describe('decodeComponentRoute', () => {
     it('refuses a wire no stored def owns with InvalidCustomId', () => {
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- a bare metadata target
         class Approve {}
-        storeComponentRoute(InteractionRoutes.Button, [ApproveId], Approve);
+        storeComponentRoute(InteractionKind.Button, [ApproveId], Approve);
         const StrangerId = new CustomId('stranger').snowflake('userId');
 
         expect(noticeNameFrom(() => decodeComponentRoute(Approve, StrangerId.encode({ userId: '1' })))).toBe(
@@ -61,7 +61,7 @@ describe('decodeComponentRoute', () => {
         const NewApprove = new CustomId('approve').snowflake('userId').str('reason');
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- a bare metadata target
         class Approve {}
-        storeComponentRoute(InteractionRoutes.Button, [NewApprove], Approve);
+        storeComponentRoute(InteractionKind.Button, [NewApprove], Approve);
 
         expect(noticeNameFrom(() => decodeComponentRoute(Approve, ApproveId.encode({ userId: '1' })))).toBe(
             'StaleCustomId'
