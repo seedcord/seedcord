@@ -111,7 +111,7 @@ const messages = {
     [SeedcordErrorCode.CustomIdDuplicateFieldName]: (field: string) =>
         `customId field ${JSON.stringify(field)} is already defined in this chain.`,
     [SeedcordErrorCode.CustomIdHandlerRouteMissing]: (className: string) =>
-        `${className} is missing its route decorator (@ButtonRoute, @ModalRoute, or @SelectMenuRoute).`,
+        `${className} is missing its route decorator. Add the one that matches its base, for example @ButtonRoute or @UserMenuRoute.`,
     [SeedcordErrorCode.CustomIdMatchArmMissing]: (prefix: string) =>
         `match() has no arm for the decoded route ${JSON.stringify(prefix)}.`,
     [SeedcordErrorCode.CustomIdWireStale]: (prefix: string) =>

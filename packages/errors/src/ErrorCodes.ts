@@ -112,7 +112,7 @@ export enum SeedcordErrorCode {
     CustomIdWireTooLong = 1606,
     /** A field name is declared more than once in the same customId chain. */
     CustomIdDuplicateFieldName = 1607,
-    /** A component handler is missing its route decorator (\@ButtonRoute / \@ModalRoute / \@SelectMenuRoute). */
+    /** A component handler is missing the route decorator that matches its base. */
     CustomIdHandlerRouteMissing = 1608,
     /** match() received a decoded route with no matching arm. */
     CustomIdMatchArmMissing = 1609,
