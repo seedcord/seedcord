@@ -10,7 +10,7 @@ import {
     storeComponentRoute,
     storeInteractionRoute
 } from '#decorators/interactionRoutes';
-import { InteractionMetadataKey, InteractionRouteKeys, InteractionRoutes } from '#src/metadataKeys';
+import { InteractionMetadataKey, InteractionRouteKeys, InteractionKind } from '#src/metadataKeys';
 
 import type { AnyCustomId } from '@seedcord/custom-id';
 
@@ -19,8 +19,8 @@ describe('storeInteractionRoute', () => {
         class Handler {
             execute(): void {}
         }
-        storeInteractionRoute(InteractionRoutes.Slash, ['ban'], Handler);
-        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionRoutes.Slash], Handler)).toEqual(['ban']);
+        storeInteractionRoute(InteractionKind.Slash, ['ban'], Handler);
+        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionKind.Slash], Handler)).toEqual(['ban']);
         expect(Reflect.getMetadata(InteractionMetadataKey, Handler)).toBe(true);
     });
 
@@ -28,17 +28,17 @@ describe('storeInteractionRoute', () => {
         class Handler {
             execute(): void {}
         }
-        storeInteractionRoute(InteractionRoutes.Slash, ['ban'], Handler);
-        storeInteractionRoute(InteractionRoutes.Slash, ['kick'], Handler);
-        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionRoutes.Slash], Handler)).toEqual(['ban', 'kick']);
+        storeInteractionRoute(InteractionKind.Slash, ['ban'], Handler);
+        storeInteractionRoute(InteractionKind.Slash, ['kick'], Handler);
+        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionKind.Slash], Handler)).toEqual(['ban', 'kick']);
     });
 
     it('accepts a single route string', () => {
         class Handler {
             execute(): void {}
         }
-        storeInteractionRoute(InteractionRoutes.Autocomplete, 'search', Handler);
-        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionRoutes.Autocomplete], Handler)).toEqual(['search']);
+        storeInteractionRoute(InteractionKind.Autocomplete, 'search', Handler);
+        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionKind.Autocomplete], Handler)).toEqual(['search']);
     });
 });
 
@@ -49,8 +49,8 @@ describe('storeComponentRoute', () => {
         }
         // justified: only the prefix is read by the writer
         const def = { prefix: 'inv' } as unknown as AnyCustomId;
-        storeComponentRoute(InteractionRoutes.Button, [def], Handler);
-        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionRoutes.Button], Handler)).toEqual(['inv']);
+        storeComponentRoute(InteractionKind.Button, [def], Handler);
+        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionKind.Button], Handler)).toEqual(['inv']);
         expect(Reflect.getMetadata(ComponentDefsKey, Handler)).toEqual([def]);
     });
 });
@@ -63,8 +63,8 @@ describe('storeComponentRoute multi-def', () => {
         // justified: only the prefix is read by the writer
         const a = { prefix: 'inv' } as unknown as AnyCustomId;
         const b = { prefix: 'shop' } as unknown as AnyCustomId;
-        storeComponentRoute(InteractionRoutes.Button, [a, b], Handler);
-        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionRoutes.Button], Handler)).toEqual(['inv', 'shop']);
+        storeComponentRoute(InteractionKind.Button, [a, b], Handler);
+        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionKind.Button], Handler)).toEqual(['inv', 'shop']);
         expect(Reflect.getMetadata(ComponentDefsKey, Handler)).toEqual([a, b]);
     });
 
@@ -75,25 +75,25 @@ describe('storeComponentRoute multi-def', () => {
         // justified: only the prefix is read by the writer
         const a = { prefix: 'inv' } as unknown as AnyCustomId;
         const b = { prefix: 'shop' } as unknown as AnyCustomId;
-        storeComponentRoute(InteractionRoutes.Button, [a], Handler);
-        storeComponentRoute(InteractionRoutes.Button, [b], Handler);
-        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionRoutes.Button], Handler)).toEqual(['inv', 'shop']);
+        storeComponentRoute(InteractionKind.Button, [a], Handler);
+        storeComponentRoute(InteractionKind.Button, [b], Handler);
+        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionKind.Button], Handler)).toEqual(['inv', 'shop']);
         expect(Reflect.getMetadata(ComponentDefsKey, Handler)).toEqual([b]);
     });
 });
 
 describe('route maps', () => {
     it('maps every select menu kind to its route', () => {
-        expect(selectMenuRouteOf(SelectMenuKind.String)).toBe(InteractionRoutes.StringMenu);
-        expect(selectMenuRouteOf(SelectMenuKind.User)).toBe(InteractionRoutes.UserMenu);
-        expect(selectMenuRouteOf(SelectMenuKind.Role)).toBe(InteractionRoutes.RoleMenu);
-        expect(selectMenuRouteOf(SelectMenuKind.Channel)).toBe(InteractionRoutes.ChannelMenu);
-        expect(selectMenuRouteOf(SelectMenuKind.Mentionable)).toBe(InteractionRoutes.MentionableMenu);
+        expect(selectMenuRouteOf(SelectMenuKind.String)).toBe(InteractionKind.StringMenu);
+        expect(selectMenuRouteOf(SelectMenuKind.User)).toBe(InteractionKind.UserMenu);
+        expect(selectMenuRouteOf(SelectMenuKind.Role)).toBe(InteractionKind.RoleMenu);
+        expect(selectMenuRouteOf(SelectMenuKind.Channel)).toBe(InteractionKind.ChannelMenu);
+        expect(selectMenuRouteOf(SelectMenuKind.Mentionable)).toBe(InteractionKind.MentionableMenu);
     });
 
     it('maps both context menu kinds to their routes', () => {
-        expect(contextMenuRouteOf(ApplicationCommandType.User)).toBe(InteractionRoutes.UserContextMenu);
-        expect(contextMenuRouteOf(ApplicationCommandType.Message)).toBe(InteractionRoutes.MessageContextMenu);
+        expect(contextMenuRouteOf(ApplicationCommandType.User)).toBe(InteractionKind.UserContextMenu);
+        expect(contextMenuRouteOf(ApplicationCommandType.Message)).toBe(InteractionKind.MessageContextMenu);
     });
 });
 

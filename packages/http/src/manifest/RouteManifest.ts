@@ -1,4 +1,4 @@
-import type { SelectMenuKind, SubscriptionKey } from '@seedcord/core';
+import type { InteractionKind, SubscriptionKey } from '@seedcord/core';
 import type { EventFrequency } from '@seedcord/types';
 import type { ApplicationCommandType } from 'discord-api-types/v10';
 
@@ -31,7 +31,14 @@ interface CommandRoute extends RouteModule {
  * the receiver routes by (the routeKey minus its layout hash).
  */
 export interface ComponentRoute extends RouteModule {
-    readonly kind: 'button' | `${SelectMenuKind}Select` | 'modal';
+    readonly kind:
+        | InteractionKind.Button
+        | InteractionKind.Modal
+        | InteractionKind.StringMenu
+        | InteractionKind.UserMenu
+        | InteractionKind.RoleMenu
+        | InteractionKind.ChannelMenu
+        | InteractionKind.MentionableMenu;
     readonly prefix: string;
 }
 

@@ -6,7 +6,7 @@ import {
     storeComponentRoute,
     storeInteractionRoute
 } from '#decorators/interactionRoutes';
-import { InteractionRoutes } from '#src/metadataKeys';
+import { InteractionKind } from '#src/metadataKeys';
 
 import type { SelectMenuKind } from '#decorators/interactionRoutes';
 import type { ContextMenuKind, NamesFor } from '#registries/ContextMenuRegistry';
@@ -114,7 +114,7 @@ type AssertContextMenuRoute<
           >
     : Constructor<['ContextMenuRoute does not match the ContextMenuHandler generic', Kind]>;
 
-// one assignability direction for the defs, a bidirectional check would reject const-inferred readonly tuples
+// only one assignability direction, since a bidirectional check would reject const-inferred readonly tuples
 type AssertComponentRoute<
     Brand extends ComponentBrand,
     Defs extends readonly AnyCustomId[],
@@ -148,7 +148,7 @@ type AssertComponentRoute<
  */
 export function SlashRoute<const Route extends keyof SlashRegistry>(...routes: Route[]) {
     return function <TCtor extends AnyHandlerCtor>(constructor: AssertSlashRoute<Route, TCtor>): void {
-        storeInteractionRoute(InteractionRoutes.Slash, routes, constructor);
+        storeInteractionRoute(InteractionKind.Slash, routes, constructor);
     };
 }
 
@@ -174,7 +174,7 @@ export function SlashRoute<const Route extends keyof SlashRegistry>(...routes: R
  */
 export function AutocompleteRoute<const Route extends keyof SlashRegistry>(...routes: Route[]) {
     return function <TCtor extends AnyHandlerCtor>(constructor: AssertAutocompleteRoute<Route, TCtor>): void {
-        storeInteractionRoute(InteractionRoutes.Autocomplete, routes, constructor);
+        storeInteractionRoute(InteractionKind.Autocomplete, routes, constructor);
     };
 }
 
@@ -245,7 +245,7 @@ export function MessageContextMenuRoute<const Names extends NamesFor<Application
  */
 export function ButtonRoute<const Defs extends readonly AnyCustomId[]>(...defs: Defs) {
     return function <TCtor extends AnyHandlerCtor>(constructor: AssertComponentRoute<'button', Defs, TCtor>): void {
-        storeComponentRoute(InteractionRoutes.Button, defs, constructor);
+        storeComponentRoute(InteractionKind.Button, defs, constructor);
     };
 }
 
@@ -261,7 +261,7 @@ export function ButtonRoute<const Defs extends readonly AnyCustomId[]>(...defs: 
  */
 export function ModalRoute<const Defs extends readonly AnyCustomId[]>(...defs: Defs) {
     return function <TCtor extends AnyHandlerCtor>(constructor: AssertComponentRoute<'modal', Defs, TCtor>): void {
-        storeComponentRoute(InteractionRoutes.Modal, defs, constructor);
+        storeComponentRoute(InteractionKind.Modal, defs, constructor);
     };
 }
 

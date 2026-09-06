@@ -16,7 +16,7 @@ function freshCommand(): new () => BuilderComponent<'command'> {
 // under the cli, BuilderComponent.prototype is a different object carrying the same registered brand.
 // this rebuilds that shape without loading the module twice
 function foreignCopySubclass(): new () => unknown {
-    const foreignBase = Object.defineProperty({}, Symbol.for('seedcord.core.builderComponent'), { value: true });
+    const foreignBase = Object.defineProperty({}, Symbol.for('seedcord:core:builder-component'), { value: true });
     const Sub = class {
         public readonly type = 'command';
     };

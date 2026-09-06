@@ -61,7 +61,6 @@ export {
     GatedMetadataKey,
     InteractionMetadataKey,
     InteractionRouteKeys,
-    InteractionRoutes,
     MiddlewareMetadataKey,
     SubscribeMetadataKey,
     WebhookUrlMetadataKey

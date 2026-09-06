@@ -20,7 +20,7 @@ import {
     SelectMenuRoute,
     SlashRoute
 } from '#decorators/routes';
-import { InteractionRouteKeys, InteractionRoutes } from '#src/metadataKeys';
+import { InteractionRouteKeys, InteractionKind } from '#src/metadataKeys';
 
 import type { HasComponentDefs } from '#customId/routing';
 import type { SlashRegistry } from '#registries/SlashRegistry';
@@ -73,7 +73,7 @@ abstract class ComponentBase<
 const ApproveId = new CustomId('approve');
 const RejectId = new CustomId('reject');
 
-function routes(route: InteractionRoutes, ctor: object): unknown {
+function routes(route: InteractionKind, ctor: object): unknown {
     return Reflect.getMetadata(InteractionRouteKeys[route], ctor);
 }
 
@@ -133,7 +133,7 @@ describe('route metadata writes', () => {
         class Mod extends SlashBase<'rtBan' | 'rtKick'> {
             async execute(): Promise<void> {}
         }
-        expect(routes(InteractionRoutes.Slash, Mod)).toEqual(['rtBan', 'rtKick']);
+        expect(routes(InteractionKind.Slash, Mod)).toEqual(['rtBan', 'rtKick']);
     });
 
     it('AutocompleteRoute stores the routes under the autocomplete key', () => {
@@ -141,7 +141,7 @@ describe('route metadata writes', () => {
         class Find extends AutocompleteBase<'rtFind'> {
             async execute(): Promise<void> {}
         }
-        expect(routes(InteractionRoutes.Autocomplete, Find)).toEqual(['rtFind']);
+        expect(routes(InteractionKind.Autocomplete, Find)).toEqual(['rtFind']);
     });
 
     it('ContextMenuRoute stores the names under the kind key', () => {
@@ -149,7 +149,7 @@ describe('route metadata writes', () => {
         class Profile extends ContextMenuBase<ApplicationCommandType.User, 'View Profile'> {
             async execute(): Promise<void> {}
         }
-        expect(routes(InteractionRoutes.UserContextMenu, Profile)).toEqual(['View Profile']);
+        expect(routes(InteractionKind.UserContextMenu, Profile)).toEqual(['View Profile']);
     });
 
     it('ButtonRoute stores the prefixes and the defs', () => {
@@ -157,7 +157,7 @@ describe('route metadata writes', () => {
         class Review extends ComponentBase<'button', [typeof ApproveId, typeof RejectId]> {
             async execute(): Promise<void> {}
         }
-        expect(routes(InteractionRoutes.Button, Review)).toEqual(['approve', 'reject']);
+        expect(routes(InteractionKind.Button, Review)).toEqual(['approve', 'reject']);
         expect(Reflect.getMetadata(ComponentDefsKey, Review)).toEqual([ApproveId, RejectId]);
     });
 
@@ -166,7 +166,7 @@ describe('route metadata writes', () => {
         class Assign extends ComponentBase<SelectMenuKind.User, [typeof ApproveId]> {
             async execute(): Promise<void> {}
         }
-        expect(routes(InteractionRoutes.UserMenu, Assign)).toEqual(['approve']);
+        expect(routes(InteractionKind.UserMenu, Assign)).toEqual(['approve']);
     });
 
     it('ModalRoute stores under the modal key', () => {
@@ -174,6 +174,6 @@ describe('route metadata writes', () => {
         class Config extends ComponentBase<'modal', [typeof ApproveId]> {
             async execute(): Promise<void> {}
         }
-        expect(routes(InteractionRoutes.Modal, Config)).toEqual(['approve']);
+        expect(routes(InteractionKind.Modal, Config)).toEqual(['approve']);
     });
 });

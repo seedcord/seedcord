@@ -1,4 +1,4 @@
-import { expectTypeOf, it } from 'vitest';
+import { expectTypeOf } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
@@ -41,12 +41,8 @@ class Claimed extends SlashHandler<'support', 'cached'> {
 }
 void Claimed;
 
-it('derives one cache state for a handler serving several routes', () => {
-    expectTypeOf<CacheFor<'roll' | 'streak'>>().toEqualTypeOf<'cached'>();
-    expectTypeOf<CacheFor<'roll' | 'support' | 'streak'>>().toEqualTypeOf<undefined>();
-});
+expectTypeOf<CacheFor<'roll' | 'streak'>>().toEqualTypeOf<'cached'>();
+expectTypeOf<CacheFor<'roll' | 'support' | 'streak'>>().toEqualTypeOf<undefined>();
 
-it('claims no guild for a row the registry cannot answer for', () => {
-    expectTypeOf<CacheFor<'legacy'>>().toEqualTypeOf<undefined>();
-    expectTypeOf<CacheFor<never>>().toEqualTypeOf<undefined>();
-});
+expectTypeOf<CacheFor<'legacy'>>().toEqualTypeOf<undefined>();
+expectTypeOf<CacheFor<never>>().toEqualTypeOf<undefined>();

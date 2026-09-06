@@ -1,4 +1,7 @@
-export enum InteractionRoutes {
+/**
+ * Every interaction kind seedcord routes.
+ */
+export enum InteractionKind {
     Slash = 'slash',
     Button = 'button',
     Modal = 'modal',
@@ -12,31 +15,25 @@ export enum InteractionRoutes {
     Autocomplete = 'autocomplete'
 }
 
-export const InteractionMetadataKey = Symbol('seedcord:interaction:metadata');
-
-export const InteractionRouteKeys: Record<InteractionRoutes, symbol> = {
-    [InteractionRoutes.Slash]: Symbol('seedcord:interaction:slash'),
-    [InteractionRoutes.Button]: Symbol('seedcord:interaction:button'),
-    [InteractionRoutes.Modal]: Symbol('seedcord:interaction:modal'),
-    [InteractionRoutes.StringMenu]: Symbol('seedcord:interaction:stringMenu'),
-    [InteractionRoutes.UserMenu]: Symbol('seedcord:interaction:userMenu'),
-    [InteractionRoutes.RoleMenu]: Symbol('seedcord:interaction:roleMenu'),
-    [InteractionRoutes.ChannelMenu]: Symbol('seedcord:interaction:channelMenu'),
-    [InteractionRoutes.MentionableMenu]: Symbol('seedcord:interaction:mentionableMenu'),
-    [InteractionRoutes.MessageContextMenu]: Symbol('seedcord:interaction:messageContextMenu'),
-    [InteractionRoutes.UserContextMenu]: Symbol('seedcord:interaction:userContextMenu'),
-    [InteractionRoutes.Autocomplete]: Symbol('seedcord:interaction:autocomplete')
-};
-
-export const MiddlewareMetadataKey = Symbol('seedcord:middleware:metadata');
-
-export const EventMetadataKey = Symbol('seedcord:event:metadata');
-
-// Symbol.for so the cli's own copy of this module reads the same slot
+// Symbol.for so a second copy of this module reads the same slots
 export const CommandMetadataKey = Symbol.for('seedcord:command:metadata');
+export const InteractionMetadataKey = Symbol.for('seedcord:interaction:metadata');
+export const MiddlewareMetadataKey = Symbol.for('seedcord:middleware:metadata');
+export const SubscribeMetadataKey = Symbol.for('seedcord:subscribe:metadata');
+export const EventMetadataKey = Symbol.for('seedcord:event:metadata');
+export const GatedMetadataKey = Symbol.for('seedcord:gated:metadata');
+export const WebhookUrlMetadataKey = Symbol.for('seedcord:webhook-url:metadata');
 
-export const GatedMetadataKey = Symbol('seedcord:gated:metadata');
-
-export const SubscribeMetadataKey = Symbol('seedcord:subscribe:metadata');
-
-export const WebhookUrlMetadataKey = Symbol('seedcord:webhookUrl:metadata');
+export const InteractionRouteKeys: Record<InteractionKind, symbol> = {
+    [InteractionKind.Slash]: Symbol.for('seedcord:interaction:slash'),
+    [InteractionKind.Button]: Symbol.for('seedcord:interaction:button'),
+    [InteractionKind.Modal]: Symbol.for('seedcord:interaction:modal'),
+    [InteractionKind.StringMenu]: Symbol.for('seedcord:interaction:string-menu'),
+    [InteractionKind.UserMenu]: Symbol.for('seedcord:interaction:user-menu'),
+    [InteractionKind.RoleMenu]: Symbol.for('seedcord:interaction:role-menu'),
+    [InteractionKind.ChannelMenu]: Symbol.for('seedcord:interaction:channel-menu'),
+    [InteractionKind.MentionableMenu]: Symbol.for('seedcord:interaction:mentionable-menu'),
+    [InteractionKind.MessageContextMenu]: Symbol.for('seedcord:interaction:message-context-menu'),
+    [InteractionKind.UserContextMenu]: Symbol.for('seedcord:interaction:user-context-menu'),
+    [InteractionKind.Autocomplete]: Symbol.for('seedcord:interaction:autocomplete')
+};

@@ -96,7 +96,11 @@
             ]
         },
         "tooling/eslint-utils": {},
-        "packages/event-emitter": {},
+        "packages/event-emitter": {
+            "entry": [
+                "**/*.types-test.ts"
+            ]
+        },
         "packages/gateway": {
             "entry": [
                 "**/*.types-test.ts"

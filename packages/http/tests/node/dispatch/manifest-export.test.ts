@@ -1,3 +1,4 @@
+import { InteractionKind } from '@seedcord/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { capturingCtx, emptyManifest, readyEngine, signedRequest } from './harness';
@@ -43,7 +44,7 @@ function modalSubmit(): object {
 }
 
 function modalRow(exportName: string): RouteManifest['componentRoutes'][number] {
-    return { kind: 'modal', prefix: 'discoverynote', exportName, from: FIXTURE, load: loadFixture };
+    return { kind: InteractionKind.Modal, prefix: 'discoverynote', exportName, from: FIXTURE, load: loadFixture };
 }
 
 describe('a manifest row states the export it loads', () => {

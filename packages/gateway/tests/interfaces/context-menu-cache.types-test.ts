@@ -1,4 +1,4 @@
-import { expectTypeOf, it } from 'vitest';
+import { expectTypeOf } from 'vitest';
 
 import { UserContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
 
@@ -21,8 +21,6 @@ class ViewProfile extends UserContextMenuHandler<'View Profile'> {
 }
 void ViewProfile;
 
-it('derives one cache state across every name a handler serves', () => {
-    expectTypeOf<MenuCacheFor<ApplicationCommandType.User, 'View Profile'>>().toEqualTypeOf<'cached'>();
-    expectTypeOf<MenuCacheFor<ApplicationCommandType.User, 'Say Hello'>>().toEqualTypeOf<undefined>();
-    expectTypeOf<MenuCacheFor<ApplicationCommandType.User, 'View Profile' | 'Say Hello'>>().toEqualTypeOf<undefined>();
-});
+expectTypeOf<MenuCacheFor<ApplicationCommandType.User, 'View Profile'>>().toEqualTypeOf<'cached'>();
+expectTypeOf<MenuCacheFor<ApplicationCommandType.User, 'Say Hello'>>().toEqualTypeOf<undefined>();
+expectTypeOf<MenuCacheFor<ApplicationCommandType.User, 'View Profile' | 'Say Hello'>>().toEqualTypeOf<undefined>();

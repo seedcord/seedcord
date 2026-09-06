@@ -69,7 +69,7 @@ function formatErrorName(name: string, _identifier: SeedcordErrorIdentifier, cod
 export type SeedcordErrorTypeString = `Seedcord${'Error' | 'TypeError' | 'RangeError' | 'AggregateError'}`;
 
 // Symbol.for so two installed copies read the same slot
-const kIdentifier: unique symbol = Symbol.for('seedcord.errors.identifier');
+const kIdentifier: unique symbol = Symbol.for('seedcord:errors:identifier');
 
 interface BaseSeedcordError {
     readonly code: SeedcordErrorCode;
@@ -78,7 +78,7 @@ interface BaseSeedcordError {
 }
 
 // instanceof fails across two installed copies of this package
-const CODED = Symbol.for('seedcord.errors.coded');
+const CODED = Symbol.for('seedcord:errors:coded');
 
 function brand(prototype: object): void {
     Object.defineProperty(prototype, CODED, { value: true });

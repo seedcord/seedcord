@@ -1,4 +1,4 @@
-import { CustomId } from '@seedcord/core';
+import { CustomId, InteractionKind } from '@seedcord/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
@@ -153,7 +153,7 @@ describe('createSeedcord dispatch', () => {
             ...emptyManifest(),
             componentRoutes: [
                 {
-                    kind: 'button' as const,
+                    kind: InteractionKind.Button as const,
                     prefix: 'approve',
                     exportName: 'Approve',
                     from: FROM,

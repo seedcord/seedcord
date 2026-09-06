@@ -1,6 +1,6 @@
 /* eslint-disable max-lines -- one integration suite per dispatcher, splitting fragments the shared test env */
 
-import { CustomId } from '@seedcord/core';
+import { CustomId, InteractionKind } from '@seedcord/core';
 import { shutdownOf } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
@@ -19,9 +19,7 @@ import type { SubscriptionData } from '@seedcord/core';
 import '../utils/mock-env';
 
 interface PrivateInteractionDispatcher {
-    slashMap: Map<string, unknown>;
-    buttonMap: Map<string, unknown>;
-    modalMap: Map<string, unknown>;
+    maps: Record<InteractionKind, Map<string, unknown>>;
     init(): Promise<void>;
     onHmr(event: unknown): Promise<void>;
     // only ever spied on, so the parameters stay loose
@@ -125,7 +123,7 @@ describe('InteractionDispatcher Integration', () => {
         const controller = controllerOf(seedcord);
         await controller.init();
 
-        expect(controller.slashMap.has('ping')).toBe(true);
+        expect(controller.maps[InteractionKind.Slash].has('ping')).toBe(true);
     });
 
     it('a throwing anyInteraction observer does not abort the dispatch', async () => {
@@ -454,13 +452,13 @@ describe('InteractionDispatcher Integration', () => {
         seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
-        expect(controller.slashMap.has('ping')).toBe(true);
+        expect(controller.maps[InteractionKind.Slash].has('ping')).toBe(true);
 
         // a broken edit, the reload import throws
         await testEnv.createFile(`${interactionsDir}/Ping.ts`, 'export const broken = {{{ not valid');
         await controller.onHmr({ file: filePath, type: 'update' });
 
-        expect(controller.slashMap.has('ping')).toBe(true);
+        expect(controller.maps[InteractionKind.Slash].has('ping')).toBe(true);
     });
 
     it('rolls back both handlers when a reload introduces a duplicate route in one file', async () => {
@@ -491,8 +489,8 @@ describe('InteractionDispatcher Integration', () => {
         seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
-        expect(controller.slashMap.has('alpha')).toBe(true);
-        expect(controller.slashMap.has('beta')).toBe(true);
+        expect(controller.maps[InteractionKind.Slash].has('alpha')).toBe(true);
+        expect(controller.maps[InteractionKind.Slash].has('beta')).toBe(true);
 
         // a broken edit, both handlers now claim 'alpha', so the reload throws a duplicate-route mid-registration
         await testEnv.createFile(
@@ -518,8 +516,8 @@ describe('InteractionDispatcher Integration', () => {
 
         // rollback must clear the partial registration first, so restoring both old routes does not re-collide
         await expect(controller.onHmr({ file: filePath, type: 'update' })).resolves.toBeUndefined();
-        expect(controller.slashMap.has('alpha')).toBe(true);
-        expect(controller.slashMap.has('beta')).toBe(true);
+        expect(controller.maps[InteractionKind.Slash].has('alpha')).toBe(true);
+        expect(controller.maps[InteractionKind.Slash].has('beta')).toBe(true);
     });
 
     it('rolls back when a multi-route handler reload collides on a later route owned by another file', async () => {
@@ -562,9 +560,9 @@ describe('InteractionDispatcher Integration', () => {
         seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
-        expect(controller.buttonMap.has('own')).toBe(true);
-        expect(controller.buttonMap.has('shared')).toBe(true);
-        const lastGood = controller.buttonMap.get('own');
+        expect(controller.maps[InteractionKind.Button].has('own')).toBe(true);
+        expect(controller.maps[InteractionKind.Button].has('shared')).toBe(true);
+        const lastGood = controller.maps[InteractionKind.Button].get('own');
 
         // the edit claims a route Keeper owns, so registration throws after setting 'own', orphaning it
         await testEnv.createFile(
@@ -586,8 +584,8 @@ describe('InteractionDispatcher Integration', () => {
 
         // rollback restores the last-good handler and must not re-collide on the orphaned route
         await expect(controller.onHmr({ file: multiPath, type: 'update' })).resolves.toBeUndefined();
-        expect(controller.buttonMap.get('own')).toBe(lastGood);
-        expect(controller.buttonMap.has('shared')).toBe(true);
+        expect(controller.maps[InteractionKind.Button].get('own')).toBe(lastGood);
+        expect(controller.maps[InteractionKind.Button].has('shared')).toBe(true);
     });
 
     it('drops the failed unit when the event disables rollback', async () => {
@@ -611,13 +609,13 @@ describe('InteractionDispatcher Integration', () => {
         seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
-        expect(controller.slashMap.has('ping')).toBe(true);
+        expect(controller.maps[InteractionKind.Slash].has('ping')).toBe(true);
 
         // a broken edit with rollback disabled
         await testEnv.createFile(`${interactionsDir}/Ping.ts`, 'export const broken = {{{ not valid');
         await controller.onHmr({ file: filePath, type: 'update', rollback: false });
 
-        expect(controller.slashMap.has('ping')).toBe(false);
+        expect(controller.maps[InteractionKind.Slash].has('ping')).toBe(false);
     });
 
     it('should handle HMR updates for interaction handlers', async () => {
@@ -644,7 +642,7 @@ describe('InteractionDispatcher Integration', () => {
         let controller = controllerOf(seedcord);
         await controller.init();
 
-        expect(controller.buttonMap.has('click-me')).toBe(true);
+        expect(controller.maps[InteractionKind.Button].has('click-me')).toBe(true);
 
         await testEnv.createFile(
             `${interactionsDir}/Button.ts`,
@@ -668,8 +666,8 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         controller = controllerOf(seedcord);
-        expect(controller.buttonMap.has('click-me')).toBe(false);
-        expect(controller.buttonMap.has('dont-click-me')).toBe(true);
+        expect(controller.maps[InteractionKind.Button].has('click-me')).toBe(false);
+        expect(controller.maps[InteractionKind.Button].has('dont-click-me')).toBe(true);
     });
 
     describe('gates', () => {

@@ -9,8 +9,6 @@ import { ReplySender } from '#bot/ReplySender';
 import { stubBus } from '../utils/stubBus';
 
 import type { DefaultConfirmOptions } from '#bot/confirm';
-import type { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
-import type { ModalHandler } from '#handlers/interaction/components/ModalHandler';
 import type { NonModalInteraction } from '#src/handlers/interactionTypes';
 import type { RepliableHandler } from '#src/handlers/RepliableHandler';
 import type { Bus } from '@seedcord/core';
@@ -201,21 +199,5 @@ describe('getConfirmation', () => {
         const [a, b] = await Promise.all([flow(confirmWire, 'userA'), flow(cancelWire, 'userB')]);
         expect(a).toBe(true);
         expect(b).toBe(false);
-    });
-});
-
-// type-level checks, validated by tc. the runtime body only anchors the file.
-describe('getConfirmation typing', () => {
-    it('accepts a non-modal handler and rejects a modal handler', () => {
-        function probe(button: ButtonHandler<never>, modal: ModalHandler<never>): void {
-            void getConfirmation(button, 'sure?');
-            void getConfirmation(button, () => ({ components: [new ContainerBuilder()] }), {
-                onConfirm: { components: [new ContainerBuilder()] }
-            });
-            // @ts-expect-error getConfirmation excludes a modal handler
-            void getConfirmation(modal, 'sure?');
-        }
-
-        expect(probe).toBeTypeOf('function');
     });
 });
