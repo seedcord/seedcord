@@ -11,8 +11,8 @@ import type { Repliables } from './interactionTypes';
  * Shared base the repliable interaction handlers extend.
  *
  * Not a public entry point. Extend {@link SlashHandler}, {@link ButtonHandler}, {@link ModalHandler},
- * {@link SelectMenuHandler}, or {@link ContextMenuHandler} instead. This class binds the core reply base
- * to the gateway sender.
+ * {@link ContextMenuHandler}, or one of the select menu bases instead. This class binds the core
+ * reply base to the gateway sender.
  *
  * @typeParam Event - The repliable interaction type this handler processes
  */

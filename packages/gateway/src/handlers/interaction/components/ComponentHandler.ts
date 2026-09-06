@@ -16,8 +16,8 @@ type ComponentInteraction = ButtonInteraction | ModalSubmitInteraction | AnySele
 /**
  * Shared base the customId-routed component handlers extend.
  *
- * Not a public entry point. Extend {@link ButtonHandler}, {@link SelectMenuHandler}, or {@link ModalHandler}
- * instead. This class defines the customId decode and the route matching those bases share.
+ * Not a public entry point. Extend {@link ButtonHandler}, {@link ModalHandler}, or one of the select menu
+ * bases instead. This class defines the customId decode and the route matching those bases share.
  *
  * @typeParam Event - The component interaction type this handler processes
  * @typeParam Defs - The customId route definitions registered on the concrete handler

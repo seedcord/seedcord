@@ -1,7 +1,7 @@
-import { CustomId, SelectMenuKind, ButtonRoute, SelectMenuRoute } from '@seedcord/core';
+import { CustomId, ButtonRoute, RoleMenuRoute, UserMenuRoute } from '@seedcord/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { ButtonHandler, SelectMenuHandler } from '#handlers/interaction/components';
+import { ButtonHandler, UserMenuHandler } from '#handlers/interaction/components';
 
 // each @ts-expect-error fails the typecheck if the mistake it guards stops being a compile error.
 
@@ -65,16 +65,16 @@ class MultiParams extends ButtonHandler<[typeof Approve, typeof Deny]> {
     }
 }
 
-// @ts-expect-error a user-select handler cannot be routed as a role select.
-@SelectMenuRoute(SelectMenuKind.Role, Assign)
-class MismatchedSelect extends SelectMenuHandler<SelectMenuKind.User, [typeof Assign]> {
+// @ts-expect-error a user menu handler cannot be routed as a role menu.
+@RoleMenuRoute(Assign)
+class MismatchedSelect extends UserMenuHandler<[typeof Assign]> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }
 }
 
-@SelectMenuRoute(SelectMenuKind.User, Assign)
-class GoodSelect extends SelectMenuHandler<SelectMenuKind.User, [typeof Assign]> {
+@UserMenuRoute(Assign)
+class GoodSelect extends UserMenuHandler<[typeof Assign]> {
     async execute(): Promise<void> {
         expectTypeOf(this.params).toEqualTypeOf<{ roleId: string }>();
         await Promise.resolve();
