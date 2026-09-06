@@ -16,7 +16,6 @@ export {
     areRoutes,
     contextMenuRouteOf,
     interactionRoutesOf,
-    selectMenuRouteOf,
     storeComponentRoute,
     storeInteractionRoute,
     type RoutableConstructor

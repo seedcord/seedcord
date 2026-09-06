@@ -3,10 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import { ComponentDefsKey } from '#customId/routing';
 import {
-    SelectMenuKind,
     areRoutes,
     contextMenuRouteOf,
-    selectMenuRouteOf,
     storeComponentRoute,
     storeInteractionRoute
 } from '#decorators/interactionRoutes';
@@ -83,14 +81,6 @@ describe('storeComponentRoute multi-def', () => {
 });
 
 describe('route maps', () => {
-    it('maps every select menu kind to its route', () => {
-        expect(selectMenuRouteOf(SelectMenuKind.String)).toBe(InteractionKind.StringMenu);
-        expect(selectMenuRouteOf(SelectMenuKind.User)).toBe(InteractionKind.UserMenu);
-        expect(selectMenuRouteOf(SelectMenuKind.Role)).toBe(InteractionKind.RoleMenu);
-        expect(selectMenuRouteOf(SelectMenuKind.Channel)).toBe(InteractionKind.ChannelMenu);
-        expect(selectMenuRouteOf(SelectMenuKind.Mentionable)).toBe(InteractionKind.MentionableMenu);
-    });
-
     it('maps both context menu kinds to their routes', () => {
         expect(contextMenuRouteOf(ApplicationCommandType.User)).toBe(InteractionKind.UserContextMenu);
         expect(contextMenuRouteOf(ApplicationCommandType.Message)).toBe(InteractionKind.MessageContextMenu);
