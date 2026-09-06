@@ -116,15 +116,13 @@ export class RolePicker extends
 }`;
 
 export const codecHandler = `import {
-    SelectMenuHandler,
-    SelectMenuKind,
-    SelectMenuRoute
+    RoleMenuHandler,
+    RoleMenuRoute
 } from '@seedcord/gateway';
 import { Roles } from '#components/role-picker';
 
-@SelectMenuRoute(SelectMenuKind.Role, Roles)
-export class RolePickerHandler extends SelectMenuHandler<
-    SelectMenuKind.Role,
+@RoleMenuRoute(Roles)
+export class RolePickerHandler extends RoleMenuHandler<
     [typeof Roles]
 > {
     public async execute(): Promise<void> {
