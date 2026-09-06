@@ -1,5 +1,11 @@
 # @seedcord/types
 
+## 0.11.0
+
+### Minor Changes
+
+- f89d8c9: **BREAKING:** Every shared symbol key now reads `seedcord:` plus kebab-case. Plugin service metadata moved to the same global registry the core keys use. Make sure to update your packages together! You don't need to change any code for this.
+
 ## 0.10.1
 
 ### Patch Changes

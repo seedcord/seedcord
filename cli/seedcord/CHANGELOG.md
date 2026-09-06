@@ -1,5 +1,20 @@
 # seedcord
 
+## 0.19.3
+
+### Patch Changes
+
+- Updated dependencies [f89d8c9]
+- Updated dependencies [f89d8c9]
+- Updated dependencies [af1b2f8]
+- Updated dependencies [af1b2f8]
+- Updated dependencies [f89d8c9]
+    - @seedcord/core@0.5.0
+    - @seedcord/errors@0.6.0
+    - @seedcord/types@0.11.0
+    - @seedcord/logger@0.3.0
+    - @seedcord/utils@0.8.9
+
 ## 0.19.2
 
 ### Patch Changes

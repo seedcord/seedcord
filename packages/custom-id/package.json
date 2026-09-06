@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/custom-id",
     "type": "module",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Typed customId encoding and decoding",
     "keywords": [
         "discord",
