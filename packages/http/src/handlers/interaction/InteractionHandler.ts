@@ -9,8 +9,8 @@ import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
  * Shared base the repliable interaction handlers extend.
  *
  * Not a public entry point. Extend {@link SlashHandler}, {@link ContextMenuHandler}, {@link ButtonHandler},
- * {@link SelectMenuHandler}, or {@link ModalHandler} instead. This class adds `showModal` on top of the
- * reply members.
+ * {@link ModalHandler}, or one of the select menu bases instead. This class adds `showModal` on top
+ * of the reply members.
  *
  * @typeParam Event - The repliable interaction type this handler processes
  */

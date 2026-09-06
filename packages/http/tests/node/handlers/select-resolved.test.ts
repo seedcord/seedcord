@@ -1,8 +1,15 @@
-import { CustomId, SelectMenuKind } from '@seedcord/core';
+import { Collection } from '@discordjs/collection';
+import { CustomId } from '@seedcord/core';
 import { describe, expect, it } from 'vitest';
 
-import { SelectMenuHandler } from '#handlers/interaction/components/SelectMenuHandler';
-import { SelectMenuRoute } from '#src/index';
+import {
+    ChannelMenuHandler,
+    MentionableMenuHandler,
+    RoleMenuHandler,
+    StringMenuHandler,
+    UserMenuHandler
+} from '#handlers/interaction/components/SelectMenuHandler';
+import { ChannelMenuRoute, MentionableMenuRoute, RoleMenuRoute, StringMenuRoute, UserMenuRoute } from '#src/index';
 
 import type { Core } from '#interfaces/Core';
 import type {
@@ -52,8 +59,8 @@ describe('picked ids', () => {
     it('reads the raw values off any kind', async () => {
         let values: unknown;
 
-        @SelectMenuRoute(SelectMenuKind.String, AssignId)
-        class Assign extends SelectMenuHandler<SelectMenuKind.String, [typeof AssignId]> {
+        @StringMenuRoute(AssignId)
+        class Assign extends StringMenuHandler<[typeof AssignId]> {
             async execute(): Promise<void> {
                 values = this.values;
                 await Promise.resolve();
@@ -75,8 +82,8 @@ describe('a payload carrying no values key', () => {
         let values: unknown;
         let users: unknown;
 
-        @SelectMenuRoute(SelectMenuKind.User, AssignId)
-        class Assign extends SelectMenuHandler<SelectMenuKind.User, [typeof AssignId]> {
+        @UserMenuRoute(AssignId)
+        class Assign extends UserMenuHandler<[typeof AssignId]> {
             async execute(): Promise<void> {
                 values = this.values;
                 users = this.users;
@@ -91,7 +98,7 @@ describe('a payload carrying no values key', () => {
         await new Assign(event, core).execute();
 
         expect(values).toEqual([]);
-        expect(users).toEqual(new Map());
+        expect(users).toEqual(new Collection());
     });
 });
 
@@ -100,8 +107,8 @@ describe('user select', () => {
         let users: unknown;
         let members: unknown;
 
-        @SelectMenuRoute(SelectMenuKind.User, AssignId)
-        class Assign extends SelectMenuHandler<SelectMenuKind.User, [typeof AssignId]> {
+        @UserMenuRoute(AssignId)
+        class Assign extends UserMenuHandler<[typeof AssignId]> {
             async execute(): Promise<void> {
                 users = this.users;
                 members = this.members;
@@ -116,15 +123,15 @@ describe('user select', () => {
         });
         await new Assign(event, core).execute();
 
-        expect(users).toEqual(new Map([['u1', ada]]));
-        expect(members).toEqual(new Map([['u1', boss]]));
+        expect(users).toEqual(new Collection([['u1', ada]]));
+        expect(members).toEqual(new Collection([['u1', boss]]));
     });
 
     it('returns an empty map when the guild resolved no member', async () => {
         let members: unknown;
 
-        @SelectMenuRoute(SelectMenuKind.User, AssignId)
-        class Assign extends SelectMenuHandler<SelectMenuKind.User, [typeof AssignId]> {
+        @UserMenuRoute(AssignId)
+        class Assign extends UserMenuHandler<[typeof AssignId]> {
             async execute(): Promise<void> {
                 members = this.members;
                 await Promise.resolve();
@@ -138,7 +145,7 @@ describe('user select', () => {
         });
         await new Assign(event, core).execute();
 
-        expect(members).toEqual(new Map());
+        expect(members).toEqual(new Collection());
     });
 });
 
@@ -146,8 +153,8 @@ describe('role and channel selects', () => {
     it('resolves the picked roles', async () => {
         let roles: unknown;
 
-        @SelectMenuRoute(SelectMenuKind.Role, AssignId)
-        class Assign extends SelectMenuHandler<SelectMenuKind.Role, [typeof AssignId]> {
+        @RoleMenuRoute(AssignId)
+        class Assign extends RoleMenuHandler<[typeof AssignId]> {
             async execute(): Promise<void> {
                 roles = this.roles;
                 await Promise.resolve();
@@ -161,14 +168,14 @@ describe('role and channel selects', () => {
         });
         await new Assign(event, core).execute();
 
-        expect(roles).toEqual(new Map([['r1', mods]]));
+        expect(roles).toEqual(new Collection([['r1', mods]]));
     });
 
     it('resolves the picked channels', async () => {
         let channels: unknown;
 
-        @SelectMenuRoute(SelectMenuKind.Channel, AssignId)
-        class Assign extends SelectMenuHandler<SelectMenuKind.Channel, [typeof AssignId]> {
+        @ChannelMenuRoute(AssignId)
+        class Assign extends ChannelMenuHandler<[typeof AssignId]> {
             async execute(): Promise<void> {
                 channels = this.channels;
                 await Promise.resolve();
@@ -182,7 +189,7 @@ describe('role and channel selects', () => {
         });
         await new Assign(event, core).execute();
 
-        expect(channels).toEqual(new Map([['c1', general]]));
+        expect(channels).toEqual(new Collection([['c1', general]]));
     });
 });
 
@@ -192,8 +199,8 @@ describe('mentionable select', () => {
         let members: unknown;
         let roles: unknown;
 
-        @SelectMenuRoute(SelectMenuKind.Mentionable, AssignId)
-        class Assign extends SelectMenuHandler<SelectMenuKind.Mentionable, [typeof AssignId]> {
+        @MentionableMenuRoute(AssignId)
+        class Assign extends MentionableMenuHandler<[typeof AssignId]> {
             async execute(): Promise<void> {
                 users = this.users;
                 members = this.members;
@@ -209,8 +216,8 @@ describe('mentionable select', () => {
         });
         await new Assign(event, core).execute();
 
-        expect(users).toEqual(new Map([['u1', ada]]));
-        expect(members).toEqual(new Map([['u1', boss]]));
-        expect(roles).toEqual(new Map([['r1', mods]]));
+        expect(users).toEqual(new Collection([['u1', ada]]));
+        expect(members).toEqual(new Collection([['u1', boss]]));
+        expect(roles).toEqual(new Collection([['r1', mods]]));
     });
 });
