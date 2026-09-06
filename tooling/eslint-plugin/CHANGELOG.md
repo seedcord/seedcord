@@ -1,5 +1,11 @@
 # @seedcord/eslint-plugin
 
+## 0.3.1-next.0
+
+### Patch Changes
+
+- af1b2f8: `interaction-handler-missing-route` and `no-raw-interaction-acks` now match the per-kind select menu bases.
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,5 +1,24 @@
 # @seedcord/plugin-mongoose
 
+## 1.0.0-next.0
+
+### Minor Changes
+
+- f89d8c9: **BREAKING:** Every shared symbol key now reads `seedcord:` plus kebab-case. Plugin service metadata moved to the same global registry the core keys use. Make sure to update your packages together!!
+
+### Patch Changes
+
+- Updated dependencies [f89d8c9]
+- Updated dependencies [f89d8c9]
+- Updated dependencies [af1b2f8]
+- Updated dependencies [af1b2f8]
+- Updated dependencies [f89d8c9]
+    - @seedcord/core@0.5.0-next.0
+    - @seedcord/errors@0.6.0-next.0
+    - @seedcord/types@0.11.0-next.0
+    - @seedcord/logger@0.3.0-next.0
+    - @seedcord/utils@0.8.9-next.0
+
 ## 0.3.0
 
 ### Minor Changes

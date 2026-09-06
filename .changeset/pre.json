@@ -33,5 +33,13 @@
     "@seedcord/ui": "0.2.0",
     "@seedcord/vitest-config": "0.0.1"
   },
-  "changesets": []
+  "changesets": [
+    "http-picks-are-collections",
+    "interaction-kind-is-public",
+    "lint-rules-know-the-menu-bases",
+    "metadata-keys-are-shared",
+    "one-base-per-select-kind",
+    "route-decorator-error-names-a-base",
+    "symbol-keys-use-one-shape"
+  ]
 }

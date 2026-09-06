@@ -1,5 +1,27 @@
 # @seedcord/gateway
 
+## 0.5.0-next.0
+
+### Minor Changes
+
+- f89d8c9: `InteractionKind` now ships from the package root. Use its members to compare against the `kind` you read off `interactionDispatched`.
+- af1b2f8: **BREAKING:** Select menus get one decorator and one base per kind, so `@UserMenuRoute` pairs with `UserMenuHandler` as an example. `@SelectMenuRoute` and `SelectMenuKind` are removed, and `SelectMenuHandler` stays as the shared base your kind's base extends. Each base declares only the members its own menu resolves. Check the updated guide page for select menus.
+
+### Patch Changes
+
+- Updated dependencies [f89d8c9]
+- Updated dependencies [f89d8c9]
+- Updated dependencies [af1b2f8]
+- Updated dependencies [af1b2f8]
+- Updated dependencies [f89d8c9]
+    - @seedcord/core@0.5.0-next.0
+    - @seedcord/errors@0.6.0-next.0
+    - @seedcord/types@0.11.0-next.0
+    - @seedcord/logger@0.3.0-next.0
+    - @seedcord/custom-id@0.1.1-next.0
+    - @seedcord/utils@0.8.9-next.0
+    - @seedcord/rate-limiter@0.1.6-next.0
+
 ## 0.4.1
 
 ### Patch Changes

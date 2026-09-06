@@ -1,5 +1,12 @@
 # @seedcord/eslint-config
 
+## 2.1.1-next.0
+
+### Patch Changes
+
+- Updated dependencies [af1b2f8]
+    - @seedcord/eslint-plugin@0.3.1-next.0
+
 ## 2.1.0
 
 ### Minor Changes
