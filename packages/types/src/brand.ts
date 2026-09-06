@@ -1,5 +1,5 @@
 // CLI checks this symbol to confirm an unknown export is a real seedcord instance
-export const SeedcordBrand = Symbol.for('SeedcordInstance');
+export const SeedcordBrand = Symbol.for('seedcord:brand');
 
 export interface Brandable {
     readonly [SeedcordBrand]: boolean;
@@ -9,5 +9,5 @@ export interface Brandable {
 export const HostShutdown = Symbol.for('seedcord:host:shutdown');
 export const HostStartup = Symbol.for('seedcord:host:startup');
 export const HostVersion = Symbol.for('seedcord:host:version');
-export const HostAugmentTarget = Symbol.for('seedcord:host:augmentTarget');
-export const HostPluginKeys = Symbol.for('seedcord:host:pluginKeys');
+export const HostAugmentTarget = Symbol.for('seedcord:host:augment-target');
+export const HostPluginKeys = Symbol.for('seedcord:host:plugin-keys');

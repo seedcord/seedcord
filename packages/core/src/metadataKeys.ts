@@ -22,18 +22,18 @@ export const MiddlewareMetadataKey = Symbol.for('seedcord:middleware:metadata');
 export const SubscribeMetadataKey = Symbol.for('seedcord:subscribe:metadata');
 export const EventMetadataKey = Symbol.for('seedcord:event:metadata');
 export const GatedMetadataKey = Symbol.for('seedcord:gated:metadata');
-export const WebhookUrlMetadataKey = Symbol.for('seedcord:webhookUrl:metadata');
+export const WebhookUrlMetadataKey = Symbol.for('seedcord:webhook-url:metadata');
 
 export const InteractionRouteKeys: Record<InteractionKind, symbol> = {
     [InteractionKind.Slash]: Symbol.for('seedcord:interaction:slash'),
     [InteractionKind.Button]: Symbol.for('seedcord:interaction:button'),
     [InteractionKind.Modal]: Symbol.for('seedcord:interaction:modal'),
-    [InteractionKind.StringMenu]: Symbol.for('seedcord:interaction:stringMenu'),
-    [InteractionKind.UserMenu]: Symbol.for('seedcord:interaction:userMenu'),
-    [InteractionKind.RoleMenu]: Symbol.for('seedcord:interaction:roleMenu'),
-    [InteractionKind.ChannelMenu]: Symbol.for('seedcord:interaction:channelMenu'),
-    [InteractionKind.MentionableMenu]: Symbol.for('seedcord:interaction:mentionableMenu'),
-    [InteractionKind.MessageContextMenu]: Symbol.for('seedcord:interaction:messageContextMenu'),
-    [InteractionKind.UserContextMenu]: Symbol.for('seedcord:interaction:userContextMenu'),
+    [InteractionKind.StringMenu]: Symbol.for('seedcord:interaction:string-menu'),
+    [InteractionKind.UserMenu]: Symbol.for('seedcord:interaction:user-menu'),
+    [InteractionKind.RoleMenu]: Symbol.for('seedcord:interaction:role-menu'),
+    [InteractionKind.ChannelMenu]: Symbol.for('seedcord:interaction:channel-menu'),
+    [InteractionKind.MentionableMenu]: Symbol.for('seedcord:interaction:mentionable-menu'),
+    [InteractionKind.MessageContextMenu]: Symbol.for('seedcord:interaction:message-context-menu'),
+    [InteractionKind.UserContextMenu]: Symbol.for('seedcord:interaction:user-context-menu'),
     [InteractionKind.Autocomplete]: Symbol.for('seedcord:interaction:autocomplete')
 };

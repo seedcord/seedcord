@@ -2,6 +2,9 @@
 '@seedcord/core': minor
 '@seedcord/errors': minor
 '@seedcord/types': minor
+'@seedcord/logger': minor
+'@seedcord/plugin-kysely-postgres': minor
+'@seedcord/plugin-mongoose': minor
 ---
 
-Renamed the shared `Symbol.for` keys to one `seedcord:` shape. Upgrade these three together, since a mixed pair stops recognizing each other's errors and components.
+**BREAKING:** Every shared symbol key now reads `seedcord:` plus kebab-case. Plugin service metadata moved to the same global registry the core keys use.

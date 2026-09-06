@@ -14,7 +14,8 @@ import type { Promisable } from 'type-fest';
  *
  * @internal
  */
-export const ComponentDefsKey = Symbol('seedcord:customId:componentDefs');
+// storeComponentRoute writes this beside the route keys in metadataKeys.ts
+export const ComponentDefsKey = Symbol.for('seedcord:custom-id:component-defs');
 
 /**
  * the phantom a component handler base carries. a route decorator constrains its argument to this, so

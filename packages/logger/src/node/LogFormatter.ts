@@ -16,8 +16,8 @@ const MEMBER_FRAME_CAP = 6;
 const STACK_FRAME = /^\s+at /;
 const SPLAT = Symbol.for('splat'); // winston triple-beam splat key
 // local symbols keep this internal state out of the global Symbol.for registry
-const HAD_FORMAT_KEY = Symbol('hadFormatSpecifiers');
-const SAVED_SPLAT_KEY = Symbol('savedSplat');
+const HAD_FORMAT_KEY = Symbol('seedcord:logger:had-format-specifiers');
+const SAVED_SPLAT_KEY = Symbol('seedcord:logger:saved-splat');
 // %% takes no arg. ObjectConsoleSink matches %% because it substitutes it inline.
 const FORMAT_SPECIFIERS = /%[sdifjoO]/gu;
 

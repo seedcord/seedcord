@@ -1,2 +1,2 @@
 /** @internal PublishableKey excludes this key so publish() never emits it externally. */
-export const PublishDefault = Symbol('seedcord:publishDefault');
+export const PublishDefault = Symbol('seedcord:bus:publish-default');
