@@ -43,19 +43,19 @@ type KindName<Ctx> = Ctx extends Ungateable
       ? R extends ChatInputCommandInteraction
           ? 'Slash'
           : R extends MessageContextMenuCommandInteraction
-            ? 'MessageMenu'
+            ? 'MessageContextMenu'
             : R extends UserContextMenuCommandInteraction
-              ? 'UserMenu'
+              ? 'UserContextMenu'
               : R extends StringSelectMenuInteraction
-                ? 'StringSelect'
+                ? 'StringMenu'
                 : R extends UserSelectMenuInteraction
-                  ? 'UserSelect'
+                  ? 'UserMenu'
                   : R extends RoleSelectMenuInteraction
-                    ? 'RoleSelect'
+                    ? 'RoleMenu'
                     : R extends ChannelSelectMenuInteraction
-                      ? 'ChannelSelect'
+                      ? 'ChannelMenu'
                       : R extends MentionableSelectMenuInteraction
-                        ? 'MentionableSelect'
+                        ? 'MentionableMenu'
                         : R extends ButtonInteraction
                           ? 'Button'
                           : R extends ModalSubmitInteraction
@@ -65,7 +65,7 @@ type KindName<Ctx> = Ctx extends Ungateable
         ? `${N & string} event`
         : 'an agnostic';
 
-// core defines the fit, this labels the kinds
+// core defines the fit and this labels the kinds
 export type FitAll<TCtor extends AnyHandlerCtor, Gates extends readonly Gate<GateContextBase>[]> = {
     [Index in keyof Gates]: GateFitsWith<
         ProvidedContext<TCtor>,

@@ -7,15 +7,14 @@ import {
     ModalRoute,
     RequireBotPermissions,
     RequirePermissions,
-    SelectMenuKind,
-    SelectMenuRoute
+    UserMenuRoute
 } from '@seedcord/core';
 import { PermissionFlagsBits } from 'discord-api-types/v10';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
-import { SelectMenuHandler } from '#handlers/interaction/components/SelectMenuHandler';
+import { UserMenuHandler } from '#handlers/interaction/components/SelectMenuHandler';
 import { UserContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { Gated } from '#src/gates/Gated';
@@ -56,8 +55,8 @@ class AttachesRequirePermissions2 extends ButtonHandler<[typeof ButtonProbeId]> 
 void AttachesRequirePermissions2;
 
 @Gated(RequirePermissions([PermissionFlagsBits.ManageMessages]))
-@SelectMenuRoute(SelectMenuKind.User, SelectProbeId)
-class AttachesRequirePermissions3 extends SelectMenuHandler<SelectMenuKind.User, [typeof SelectProbeId]> {
+@UserMenuRoute(SelectProbeId)
+class AttachesRequirePermissions3 extends UserMenuHandler<[typeof SelectProbeId]> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }

@@ -5,12 +5,17 @@ import { expectTypeOf } from 'vitest';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
-import { SelectMenuHandler } from '#handlers/interaction/components/SelectMenuHandler';
+import {
+    ChannelMenuHandler,
+    MentionableMenuHandler,
+    RoleMenuHandler,
+    StringMenuHandler,
+    UserMenuHandler
+} from '#handlers/interaction/components/SelectMenuHandler';
 import { UserContextMenuHandler, MessageContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import type { AnyHandlerCtor, FitAll } from '#src/gates/matching';
-import type { SelectMenuKind } from '@seedcord/core';
 import type { Constructor } from 'type-fest';
 
 declare module '@seedcord/core' {
@@ -48,31 +53,31 @@ class ProbeUserMenu extends UserContextMenuHandler<never> {
     }
 }
 
-class ProbeStringSelect extends SelectMenuHandler<SelectMenuKind.String, [typeof ProbeId]> {
+class ProbeStringSelect extends StringMenuHandler<[typeof ProbeId]> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }
 }
 
-class ProbeUserSelect extends SelectMenuHandler<SelectMenuKind.User, [typeof ProbeId]> {
+class ProbeUserSelect extends UserMenuHandler<[typeof ProbeId]> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }
 }
 
-class ProbeRoleSelect extends SelectMenuHandler<SelectMenuKind.Role, [typeof ProbeId]> {
+class ProbeRoleSelect extends RoleMenuHandler<[typeof ProbeId]> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }
 }
 
-class ProbeChannelSelect extends SelectMenuHandler<SelectMenuKind.Channel, [typeof ProbeId]> {
+class ProbeChannelSelect extends ChannelMenuHandler<[typeof ProbeId]> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }
 }
 
-class ProbeMentionableSelect extends SelectMenuHandler<SelectMenuKind.Mentionable, [typeof ProbeId]> {
+class ProbeMentionableSelect extends MentionableMenuHandler<[typeof ProbeId]> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }
@@ -99,13 +104,13 @@ class ProbeAutocomplete extends AutocompleteHandler<'httpkindprobe'> {
 // compile-only. tc is the assertion.
 function typeChecks(): void {
     expectTypeOf<LabelOf<typeof ProbeSlash>>().toEqualTypeOf<Mismatch<'Slash'>>();
-    expectTypeOf<LabelOf<typeof ProbeMessageMenu>>().toEqualTypeOf<Mismatch<'MessageMenu'>>();
-    expectTypeOf<LabelOf<typeof ProbeUserMenu>>().toEqualTypeOf<Mismatch<'UserMenu'>>();
-    expectTypeOf<LabelOf<typeof ProbeStringSelect>>().toEqualTypeOf<Mismatch<'StringSelect'>>();
-    expectTypeOf<LabelOf<typeof ProbeUserSelect>>().toEqualTypeOf<Mismatch<'UserSelect'>>();
-    expectTypeOf<LabelOf<typeof ProbeRoleSelect>>().toEqualTypeOf<Mismatch<'RoleSelect'>>();
-    expectTypeOf<LabelOf<typeof ProbeChannelSelect>>().toEqualTypeOf<Mismatch<'ChannelSelect'>>();
-    expectTypeOf<LabelOf<typeof ProbeMentionableSelect>>().toEqualTypeOf<Mismatch<'MentionableSelect'>>();
+    expectTypeOf<LabelOf<typeof ProbeMessageMenu>>().toEqualTypeOf<Mismatch<'MessageContextMenu'>>();
+    expectTypeOf<LabelOf<typeof ProbeUserMenu>>().toEqualTypeOf<Mismatch<'UserContextMenu'>>();
+    expectTypeOf<LabelOf<typeof ProbeStringSelect>>().toEqualTypeOf<Mismatch<'StringMenu'>>();
+    expectTypeOf<LabelOf<typeof ProbeUserSelect>>().toEqualTypeOf<Mismatch<'UserMenu'>>();
+    expectTypeOf<LabelOf<typeof ProbeRoleSelect>>().toEqualTypeOf<Mismatch<'RoleMenu'>>();
+    expectTypeOf<LabelOf<typeof ProbeChannelSelect>>().toEqualTypeOf<Mismatch<'ChannelMenu'>>();
+    expectTypeOf<LabelOf<typeof ProbeMentionableSelect>>().toEqualTypeOf<Mismatch<'MentionableMenu'>>();
     expectTypeOf<LabelOf<typeof ProbeButton>>().toEqualTypeOf<Mismatch<'Button'>>();
     expectTypeOf<LabelOf<typeof ProbeModal>>().toEqualTypeOf<Mismatch<'Modal'>>();
     expectTypeOf<LabelOf<typeof ProbeAutocomplete>>().toEqualTypeOf<Mismatch<'autocomplete'>>();
