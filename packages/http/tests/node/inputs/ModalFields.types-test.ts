@@ -4,6 +4,7 @@ import { expectTypeOf } from 'vitest';
 import { ModalFields } from '#inputs/ModalFields';
 
 import type { SelectedMentionables } from '#inputs/ModalFields';
+import type { Collection } from '@discordjs/collection';
 import type {
     APIAttachment,
     APIInteractionDataResolvedChannel,
@@ -25,18 +26,23 @@ const fields = new ModalFields({
     ]
 });
 
-expectTypeOf(fields.getSelectedUsers('owners', true)).toEqualTypeOf<Map<string, APIUser>>();
-expectTypeOf(fields.getSelectedUsers('owners')).toEqualTypeOf<Map<string, APIUser> | null>();
-expectTypeOf(fields.getSelectedUsers('owners', false)).toEqualTypeOf<Map<string, APIUser> | null>();
+expectTypeOf(fields.getSelectedUsers('owners', true)).toEqualTypeOf<Collection<string, APIUser>>();
+expectTypeOf(fields.getSelectedUsers('owners')).toEqualTypeOf<Collection<string, APIUser> | null>();
+expectTypeOf(fields.getSelectedUsers('owners', false)).toEqualTypeOf<Collection<string, APIUser> | null>();
 
-expectTypeOf(fields.getSelectedRoles('r', true)).toEqualTypeOf<Map<string, APIRole>>();
-expectTypeOf(fields.getSelectedRoles('r')).toEqualTypeOf<Map<string, APIRole> | null>();
+expectTypeOf(fields.getSelectedRoles('r', true)).toEqualTypeOf<Collection<string, APIRole>>();
+expectTypeOf(fields.getSelectedRoles('r')).toEqualTypeOf<Collection<string, APIRole> | null>();
 
-expectTypeOf(fields.getSelectedChannels('c', true)).toEqualTypeOf<Map<string, APIInteractionDataResolvedChannel>>();
-expectTypeOf(fields.getSelectedChannels('c')).toEqualTypeOf<Map<string, APIInteractionDataResolvedChannel> | null>();
+expectTypeOf(fields.getSelectedChannels('c', true)).toEqualTypeOf<
+    Collection<string, APIInteractionDataResolvedChannel>
+>();
+expectTypeOf(fields.getSelectedChannels('c')).toEqualTypeOf<Collection<
+    string,
+    APIInteractionDataResolvedChannel
+> | null>();
 
-expectTypeOf(fields.getUploadedFiles('f', true)).toEqualTypeOf<Map<string, APIAttachment>>();
-expectTypeOf(fields.getUploadedFiles('f')).toEqualTypeOf<Map<string, APIAttachment> | null>();
+expectTypeOf(fields.getUploadedFiles('f', true)).toEqualTypeOf<Collection<string, APIAttachment>>();
+expectTypeOf(fields.getUploadedFiles('f')).toEqualTypeOf<Collection<string, APIAttachment> | null>();
 
 expectTypeOf(fields.getSelectedMentionables('m', true)).toEqualTypeOf<SelectedMentionables>();
 expectTypeOf(fields.getSelectedMentionables('m')).toEqualTypeOf<SelectedMentionables | null>();
