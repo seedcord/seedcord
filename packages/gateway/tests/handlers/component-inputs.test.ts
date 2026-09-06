@@ -1,10 +1,25 @@
-import { CustomId, ModalRoute, SelectMenuKind, SelectMenuRoute } from '@seedcord/core';
+import {
+    ChannelMenuRoute,
+    CustomId,
+    MentionableMenuRoute,
+    ModalRoute,
+    RoleMenuRoute,
+    StringMenuRoute,
+    UserMenuRoute
+} from '@seedcord/core';
 import { describe, expect, it } from 'vitest';
 
-import { ModalHandler, SelectMenuHandler } from '#handlers/interaction/components';
+import {
+    ChannelMenuHandler,
+    MentionableMenuHandler,
+    ModalHandler,
+    RoleMenuHandler,
+    StringMenuHandler,
+    UserMenuHandler
+} from '#handlers/interaction/components';
 
 import type { Core } from '#interfaces/Core';
-import type { ModalSubmitInteraction, UserSelectMenuInteraction } from 'discord.js';
+import type { ModalSubmitInteraction } from 'discord.js';
 
 const core = {} as unknown as Core;
 
@@ -19,8 +34,9 @@ function modal(customId: string, inputs: Record<string, string>): ModalSubmitInt
     } as unknown as ModalSubmitInteraction<'cached'>;
 }
 
-function userSelect(customId: string, resolved: object): UserSelectMenuInteraction<'cached'> {
-    return { customId, values: ['u1'], ...resolved } as unknown as UserSelectMenuInteraction<'cached'>;
+// justified: the bases read only customId, values, and their kind's resolved collections
+function select<Event>(customId: string, values: string[], resolved: object = {}): Event {
+    return { customId, values, ...resolved } as unknown as Event;
 }
 
 describe('modal fields', () => {
@@ -42,10 +58,12 @@ describe('modal fields', () => {
     });
 });
 
-describe('select accessors', () => {
-    it('reads the picked ids off the interaction', () => {
-        @SelectMenuRoute(SelectMenuKind.User, AssignId)
-        class Assign extends SelectMenuHandler<SelectMenuKind.User, [typeof AssignId]> {
+describe('every menu base reads its own members', () => {
+    const wire = AssignId.encode({ roleId: 'r1' });
+
+    it('a string menu reads the picked values', () => {
+        @StringMenuRoute(AssignId)
+        class Topics extends StringMenuHandler<[typeof AssignId]> {
             async execute(): Promise<void> {
                 await Promise.resolve();
             }
@@ -55,28 +73,81 @@ describe('select accessors', () => {
             }
         }
 
-        const event = userSelect(AssignId.encode({ roleId: 'r1' }), {});
-
-        expect(new Assign(event, core).read()).toEqual(['u1']);
+        expect(new Topics(select(wire, ['releases', 'outages']), core).read()).toEqual(['releases', 'outages']);
     });
 
-    it('reads the resolved users and members off the interaction', () => {
+    it('a user menu reads the resolved users and members', () => {
         const users = new Map([['u1', { id: 'u1' }]]);
         const members = new Map([['u1', { nick: 'boss' }]]);
 
-        @SelectMenuRoute(SelectMenuKind.User, AssignId)
-        class Assign extends SelectMenuHandler<SelectMenuKind.User, [typeof AssignId]> {
+        @UserMenuRoute(AssignId)
+        class Assign extends UserMenuHandler<[typeof AssignId]> {
             async execute(): Promise<void> {
                 await Promise.resolve();
             }
 
-            read(): [unknown, unknown] {
-                return [this.users, this.members];
+            read(): [string[], unknown, unknown] {
+                return [this.values, this.users, this.members];
             }
         }
 
-        const event = userSelect(AssignId.encode({ roleId: 'r1' }), { users, members });
+        const handler = new Assign(select(wire, ['u1'], { users, members }), core);
 
-        expect(new Assign(event, core).read()).toEqual([users, members]);
+        expect(handler.read()).toEqual([['u1'], users, members]);
+    });
+
+    it('a role menu reads the resolved roles', () => {
+        const roles = new Map([['r9', { id: 'r9' }]]);
+
+        @RoleMenuRoute(AssignId)
+        class Grant extends RoleMenuHandler<[typeof AssignId]> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+            }
+
+            read(): unknown {
+                return this.roles;
+            }
+        }
+
+        expect(new Grant(select(wire, ['r9'], { roles }), core).read()).toEqual(roles);
+    });
+
+    it('a channel menu reads the resolved channels', () => {
+        const channels = new Map([['c4', { id: 'c4' }]]);
+
+        @ChannelMenuRoute(AssignId)
+        class LogTarget extends ChannelMenuHandler<[typeof AssignId]> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+            }
+
+            read(): unknown {
+                return this.channels;
+            }
+        }
+
+        expect(new LogTarget(select(wire, ['c4'], { channels }), core).read()).toEqual(channels);
+    });
+
+    it('a mentionable menu reads users, members, and roles together', () => {
+        const users = new Map([['u1', { id: 'u1' }]]);
+        const members = new Map([['u1', { nick: 'boss' }]]);
+        const roles = new Map([['r9', { id: 'r9' }]]);
+
+        @MentionableMenuRoute(AssignId)
+        class Invite extends MentionableMenuHandler<[typeof AssignId]> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+            }
+
+            read(): [unknown, unknown, unknown] {
+                return [this.users, this.members, this.roles];
+            }
+        }
+
+        const handler = new Invite(select(wire, ['u1', 'r9'], { users, members, roles }), core);
+
+        expect(handler.read()).toEqual([users, members, roles]);
     });
 });

@@ -6,7 +6,7 @@ import { Notice } from '#stops/Notice';
 import { Silence } from '#stops/Silence';
 import { PublishDefault } from '#subscribers/publishDefault';
 
-import type { InteractionRoutes } from '#src/metadataKeys';
+import type { InteractionKind } from '#src/metadataKeys';
 import type { Bus } from '#subscribers/Bus';
 import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
 
@@ -28,11 +28,10 @@ export function outcomeFor(caught: unknown): DispatchOutcome {
     return 'failed';
 }
 
-/** The values a dispatcher has once its handler chain settles. */
 interface DispatchReport {
     readonly routeId: string;
     readonly interactionId: string;
-    readonly kind: `${InteractionRoutes}`;
+    readonly kind: `${InteractionKind}`;
     readonly outcome: DispatchOutcome;
     /** True when no route matched and the unhandled default ran. */
     readonly fallback: boolean;
@@ -69,7 +68,7 @@ export function reportDispatch(bus: Bus, report: DispatchReport): void {
         queuedMs: report.queuedMs
     });
 
-    // after publish so a throwing sink doesn't reach the publish above
+    // a throwing log sink must not stop the publish above
     logger().trace(
         `${paint.sky.bold(report.routeId)} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
     );

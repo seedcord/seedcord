@@ -4,6 +4,7 @@ import { ChannelType, ComponentType } from 'discord-api-types/v10';
 
 import { pick } from '#inputs/pick';
 
+import type { Collection } from '@discordjs/collection';
 import type {
     APIAttachment,
     APIInteractionDataResolved,
@@ -55,9 +56,9 @@ function isKind<Kind extends FieldKind>(
 
 /** The users, members, and roles a mentionable select picked. */
 export interface SelectedMentionables {
-    users: Map<string, APIUser>;
-    members: Map<string, APIInteractionDataResolvedGuildMember>;
-    roles: Map<string, APIRole>;
+    users: Collection<string, APIUser>;
+    members: Collection<string, APIInteractionDataResolvedGuildMember>;
+    roles: Collection<string, APIRole>;
 }
 
 /**
@@ -67,7 +68,7 @@ export interface SelectedMentionables {
  * kind that getter does not read. The message names the getter that does.
  *
  * A select getter resolves the ids its field picked against the interaction's `resolved` data and returns a
- * `Map` keyed by id. A field that picked nothing returns null. Pass `required` to throw there instead.
+ * `Collection` keyed by id. A field that picked nothing returns null. Pass `required` to throw there instead.
  */
 export class ModalFields {
     private readonly entries = new Map<string, ModalSubmitComponent>();
@@ -112,7 +113,7 @@ export class ModalFields {
         kinds: readonly KindWithValues[],
         bucket: Record<string, Value> | undefined,
         required: boolean
-    ): Map<string, Value> | null {
+    ): Collection<string, Value> | null {
         const { values } = this.field(customId, kinds);
         const found = pick(values, bucket);
         if (found.size > 0) return found;
@@ -140,22 +141,22 @@ export class ModalFields {
         return listOf(this.field(customId, [ComponentType.StringSelect]).values);
     }
 
-    getSelectedUsers(customId: string, required: true): Map<string, APIUser>;
-    getSelectedUsers(customId: string, required?: boolean): Map<string, APIUser> | null;
-    getSelectedUsers(customId: string, required = false): Map<string, APIUser> | null {
+    getSelectedUsers(customId: string, required: true): Collection<string, APIUser>;
+    getSelectedUsers(customId: string, required?: boolean): Collection<string, APIUser> | null;
+    getSelectedUsers(customId: string, required = false): Collection<string, APIUser> | null {
         const kinds = [ComponentType.UserSelect, ComponentType.MentionableSelect] as const;
         return this.selected(customId, kinds, this.resolved?.users, required);
     }
 
     /** The guild members behind the picked users. Discord resolves these only inside a guild. */
-    getSelectedMembers(customId: string): Map<string, APIInteractionDataResolvedGuildMember> | null {
+    getSelectedMembers(customId: string): Collection<string, APIInteractionDataResolvedGuildMember> | null {
         const kinds = [ComponentType.UserSelect, ComponentType.MentionableSelect] as const;
         return this.selected(customId, kinds, this.resolved?.members, false);
     }
 
-    getSelectedRoles(customId: string, required: true): Map<string, APIRole>;
-    getSelectedRoles(customId: string, required?: boolean): Map<string, APIRole> | null;
-    getSelectedRoles(customId: string, required = false): Map<string, APIRole> | null {
+    getSelectedRoles(customId: string, required: true): Collection<string, APIRole>;
+    getSelectedRoles(customId: string, required?: boolean): Collection<string, APIRole> | null;
+    getSelectedRoles(customId: string, required = false): Collection<string, APIRole> | null {
         const kinds = [ComponentType.RoleSelect, ComponentType.MentionableSelect] as const;
         return this.selected(customId, kinds, this.resolved?.roles, required);
     }
@@ -165,17 +166,17 @@ export class ModalFields {
         customId: string,
         required: true,
         channelTypes?: readonly ChannelType[]
-    ): Map<string, APIInteractionDataResolvedChannel>;
+    ): Collection<string, APIInteractionDataResolvedChannel>;
     getSelectedChannels(
         customId: string,
         required?: boolean,
         channelTypes?: readonly ChannelType[]
-    ): Map<string, APIInteractionDataResolvedChannel> | null;
+    ): Collection<string, APIInteractionDataResolvedChannel> | null;
     getSelectedChannels(
         customId: string,
         required = false,
         channelTypes: readonly ChannelType[] = []
-    ): Map<string, APIInteractionDataResolvedChannel> | null {
+    ): Collection<string, APIInteractionDataResolvedChannel> | null {
         const kinds = [ComponentType.ChannelSelect] as const;
         const picked = this.selected(customId, kinds, this.resolved?.channels, required);
         if (!picked || channelTypes.length === 0) return picked;
@@ -206,9 +207,9 @@ export class ModalFields {
         return null;
     }
 
-    getUploadedFiles(customId: string, required: true): Map<string, APIAttachment>;
-    getUploadedFiles(customId: string, required?: boolean): Map<string, APIAttachment> | null;
-    getUploadedFiles(customId: string, required = false): Map<string, APIAttachment> | null {
+    getUploadedFiles(customId: string, required: true): Collection<string, APIAttachment>;
+    getUploadedFiles(customId: string, required?: boolean): Collection<string, APIAttachment> | null;
+    getUploadedFiles(customId: string, required = false): Collection<string, APIAttachment> | null {
         const kinds = [ComponentType.FileUpload] as const;
         return this.selected(customId, kinds, this.resolved?.attachments, required);
     }

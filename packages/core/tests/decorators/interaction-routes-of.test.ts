@@ -1,17 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
-import { interactionRoutesOf, InteractionRoutes, storeInteractionRoute } from '#src/internal.index';
+import { interactionRoutesOf, storeInteractionRoute } from '#src/internal.index';
+import { InteractionKind } from '#src/metadataKeys';
 
 describe('interactionRoutesOf', () => {
     it('returns every stored kind with its route strings', () => {
         // eslint-disable-next-line @typescript-eslint/no-extraneous-class -- a bare metadata carrier
         class Probe {}
-        storeInteractionRoute(InteractionRoutes.Slash, ['ping', 'config/set'], Probe);
-        storeInteractionRoute(InteractionRoutes.Autocomplete, 'ping', Probe);
+        storeInteractionRoute(InteractionKind.Slash, ['ping', 'config/set'], Probe);
+        storeInteractionRoute(InteractionKind.Autocomplete, 'ping', Probe);
 
         expect(interactionRoutesOf(Probe)).toEqual([
-            [InteractionRoutes.Slash, ['ping', 'config/set']],
-            [InteractionRoutes.Autocomplete, ['ping']]
+            [InteractionKind.Slash, ['ping', 'config/set']],
+            [InteractionKind.Autocomplete, ['ping']]
         ]);
     });
 

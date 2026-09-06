@@ -3,19 +3,10 @@ import 'reflect-metadata';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import { ComponentDefsKey } from '#customId/routing';
-import { InteractionMetadataKey, InteractionRouteKeys, InteractionRoutes } from '#src/metadataKeys';
+import { InteractionMetadataKey, InteractionRouteKeys, InteractionKind } from '#src/metadataKeys';
 
 import type { ContextMenuKind } from '#registries/ContextMenuRegistry';
 import type { AnyCustomId } from '@seedcord/custom-id';
-
-/** The select menu kinds the select route decorators take. */
-export enum SelectMenuKind {
-    String = 'string',
-    User = 'user',
-    Role = 'role',
-    Channel = 'channel',
-    Mentionable = 'mentionable'
-}
 
 // loose on purpose, each transport's typed decorators pass their asserted ctors straight in
 export type RoutableConstructor = new (...args: never[]) => unknown;
@@ -24,13 +15,10 @@ export function areRoutes(routes: unknown): routes is string[] {
     return Array.isArray(routes) && routes.every((route) => typeof route === 'string');
 }
 
-/**
- * every stored route kind and its route strings on a decorated constructor. the build's manifest
- * emitter reads the same pairs.
- */
-export function interactionRoutesOf(constructor: RoutableConstructor): [InteractionRoutes, string[]][] {
-    const pairs: [InteractionRoutes, string[]][] = [];
-    for (const route of Object.values(InteractionRoutes)) {
+// the build's manifest emitter reads the same pairs
+export function interactionRoutesOf(constructor: RoutableConstructor): [InteractionKind, string[]][] {
+    const pairs: [InteractionKind, string[]][] = [];
+    for (const route of Object.values(InteractionKind)) {
         const meta: unknown = Reflect.getMetadata(InteractionRouteKeys[route], constructor);
         if (areRoutes(meta)) pairs.push([route, meta]);
     }
@@ -38,7 +26,7 @@ export function interactionRoutesOf(constructor: RoutableConstructor): [Interact
 }
 
 export function storeInteractionRoute(
-    route: InteractionRoutes,
+    route: InteractionKind,
     routes: string | readonly string[],
     constructor: RoutableConstructor
 ): void {
@@ -50,10 +38,8 @@ export function storeInteractionRoute(
     Reflect.defineMetadata(InteractionMetadataKey, true, constructor);
 }
 
-// each definition's stable prefix is the routing key
-// the full defs stay on the ctor for decoding
 export function storeComponentRoute(
-    route: InteractionRoutes,
+    route: InteractionKind,
     defs: readonly AnyCustomId[],
     constructor: RoutableConstructor
 ): void {
@@ -65,20 +51,6 @@ export function storeComponentRoute(
     Reflect.defineMetadata(ComponentDefsKey, defs, constructor);
 }
 
-const SELECT_ROUTES: Record<SelectMenuKind, InteractionRoutes> = {
-    [SelectMenuKind.String]: InteractionRoutes.StringMenu,
-    [SelectMenuKind.User]: InteractionRoutes.UserMenu,
-    [SelectMenuKind.Role]: InteractionRoutes.RoleMenu,
-    [SelectMenuKind.Channel]: InteractionRoutes.ChannelMenu,
-    [SelectMenuKind.Mentionable]: InteractionRoutes.MentionableMenu
-};
-
-export function selectMenuRouteOf(kind: SelectMenuKind): InteractionRoutes {
-    return SELECT_ROUTES[kind];
-}
-
-export function contextMenuRouteOf(kind: ContextMenuKind): InteractionRoutes {
-    return kind === ApplicationCommandType.User
-        ? InteractionRoutes.UserContextMenu
-        : InteractionRoutes.MessageContextMenu;
+export function contextMenuRouteOf(kind: ContextMenuKind): InteractionKind {
+    return kind === ApplicationCommandType.User ? InteractionKind.UserContextMenu : InteractionKind.MessageContextMenu;
 }

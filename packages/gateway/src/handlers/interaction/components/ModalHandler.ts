@@ -6,6 +6,7 @@ import { ComponentHandler } from './ComponentHandler';
 
 import type { SentMessage } from '#bot/ReplySender';
 import type { GatewayReplyResponse } from '#interfaces/ReplyResponse';
+import type { InteractionKind } from '@seedcord/core';
 import type { AnyCustomId } from '@seedcord/custom-id';
 import type { CacheType, ModalSubmitFields, ModalSubmitInteraction } from 'discord.js';
 
@@ -38,7 +39,7 @@ export abstract class ModalHandler<
 > extends ComponentHandler<ModalSubmitInteraction<Cache>, Defs> {
     // phantom, never set at runtime.
     /** @internal */
-    declare readonly [ComponentKindBrand]?: 'modal';
+    declare readonly [ComponentKindBrand]?: InteractionKind.Modal;
 
     /** The fields this modal submitted, read by custom id. */
     protected get fields(): ModalSubmitFields<Cache> {

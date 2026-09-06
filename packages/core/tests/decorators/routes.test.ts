@@ -10,17 +10,20 @@ import {
     ContextMenuNamesBrand,
     SlashRouteBrand
 } from '#decorators/brands';
-import { SelectMenuKind } from '#decorators/interactionRoutes';
 import {
     AutocompleteRoute,
     ButtonRoute,
+    ChannelMenuRoute,
+    MentionableMenuRoute,
     MessageContextMenuRoute,
     UserContextMenuRoute,
     ModalRoute,
-    SelectMenuRoute,
-    SlashRoute
+    RoleMenuRoute,
+    SlashRoute,
+    StringMenuRoute,
+    UserMenuRoute
 } from '#decorators/routes';
-import { InteractionRouteKeys, InteractionRoutes } from '#src/metadataKeys';
+import { InteractionRouteKeys, InteractionKind } from '#src/metadataKeys';
 
 import type { HasComponentDefs } from '#customId/routing';
 import type { SlashRegistry } from '#registries/SlashRegistry';
@@ -62,7 +65,7 @@ abstract class ContextMenuBase<
     abstract execute(): Promise<void>;
 }
 abstract class ComponentBase<
-    Brand extends 'button' | 'modal' | SelectMenuKind,
+    Brand extends InteractionKind,
     Defs extends readonly AnyCustomId[]
 > implements HasComponentDefs<Defs> {
     declare readonly [ComponentKindBrand]?: Brand;
@@ -73,7 +76,7 @@ abstract class ComponentBase<
 const ApproveId = new CustomId('approve');
 const RejectId = new CustomId('reject');
 
-function routes(route: InteractionRoutes, ctor: object): unknown {
+function routes(route: InteractionKind, ctor: object): unknown {
     return Reflect.getMetadata(InteractionRouteKeys[route], ctor);
 }
 
@@ -103,19 +106,19 @@ class RejectsMismatchesAtCompile4 extends ContextMenuBase<ApplicationCommandType
 
 // @ts-expect-error a button decorator rejects a modal handler
 @ButtonRoute(ApproveId)
-class RejectsMismatchesAtCompile5 extends ComponentBase<'modal', [typeof ApproveId]> {
+class RejectsMismatchesAtCompile5 extends ComponentBase<InteractionKind.Modal, [typeof ApproveId]> {
     async execute(): Promise<void> {}
 }
 
 // @ts-expect-error the defs do not match the handler generic
 @ButtonRoute(ApproveId)
-class RejectsMismatchesAtCompile6 extends ComponentBase<'button', [typeof ApproveId, typeof RejectId]> {
+class RejectsMismatchesAtCompile6 extends ComponentBase<InteractionKind.Button, [typeof ApproveId, typeof RejectId]> {
     async execute(): Promise<void> {}
 }
 
-// @ts-expect-error the select kind does not match the handler generic
-@SelectMenuRoute(SelectMenuKind.Role, ApproveId)
-class RejectsMismatchesAtCompile7 extends ComponentBase<SelectMenuKind.User, [typeof ApproveId]> {
+// @ts-expect-error a role menu decorator rejects a user menu handler
+@RoleMenuRoute(ApproveId)
+class RejectsMismatchesAtCompile7 extends ComponentBase<InteractionKind.UserMenu, [typeof ApproveId]> {
     async execute(): Promise<void> {}
 }
 
@@ -133,7 +136,7 @@ describe('route metadata writes', () => {
         class Mod extends SlashBase<'rtBan' | 'rtKick'> {
             async execute(): Promise<void> {}
         }
-        expect(routes(InteractionRoutes.Slash, Mod)).toEqual(['rtBan', 'rtKick']);
+        expect(routes(InteractionKind.Slash, Mod)).toEqual(['rtBan', 'rtKick']);
     });
 
     it('AutocompleteRoute stores the routes under the autocomplete key', () => {
@@ -141,7 +144,7 @@ describe('route metadata writes', () => {
         class Find extends AutocompleteBase<'rtFind'> {
             async execute(): Promise<void> {}
         }
-        expect(routes(InteractionRoutes.Autocomplete, Find)).toEqual(['rtFind']);
+        expect(routes(InteractionKind.Autocomplete, Find)).toEqual(['rtFind']);
     });
 
     it('ContextMenuRoute stores the names under the kind key', () => {
@@ -149,31 +152,74 @@ describe('route metadata writes', () => {
         class Profile extends ContextMenuBase<ApplicationCommandType.User, 'View Profile'> {
             async execute(): Promise<void> {}
         }
-        expect(routes(InteractionRoutes.UserContextMenu, Profile)).toEqual(['View Profile']);
+        expect(routes(InteractionKind.UserContextMenu, Profile)).toEqual(['View Profile']);
     });
 
     it('ButtonRoute stores the prefixes and the defs', () => {
         @ButtonRoute(ApproveId, RejectId)
-        class Review extends ComponentBase<'button', [typeof ApproveId, typeof RejectId]> {
+        class Review extends ComponentBase<InteractionKind.Button, [typeof ApproveId, typeof RejectId]> {
             async execute(): Promise<void> {}
         }
-        expect(routes(InteractionRoutes.Button, Review)).toEqual(['approve', 'reject']);
+        expect(routes(InteractionKind.Button, Review)).toEqual(['approve', 'reject']);
         expect(Reflect.getMetadata(ComponentDefsKey, Review)).toEqual([ApproveId, RejectId]);
-    });
-
-    it('SelectMenuRoute stores under the kind-specific key', () => {
-        @SelectMenuRoute(SelectMenuKind.User, ApproveId)
-        class Assign extends ComponentBase<SelectMenuKind.User, [typeof ApproveId]> {
-            async execute(): Promise<void> {}
-        }
-        expect(routes(InteractionRoutes.UserMenu, Assign)).toEqual(['approve']);
     });
 
     it('ModalRoute stores under the modal key', () => {
         @ModalRoute(ApproveId)
-        class Config extends ComponentBase<'modal', [typeof ApproveId]> {
+        class Config extends ComponentBase<InteractionKind.Modal, [typeof ApproveId]> {
             async execute(): Promise<void> {}
         }
-        expect(routes(InteractionRoutes.Modal, Config)).toEqual(['approve']);
+        expect(routes(InteractionKind.Modal, Config)).toEqual(['approve']);
+    });
+});
+
+describe('each menu decorator writes its own kind', () => {
+    it('StringMenuRoute stores under the string menu key', () => {
+        @StringMenuRoute(ApproveId)
+        class Topics extends ComponentBase<InteractionKind.StringMenu, [typeof ApproveId]> {
+            async execute(): Promise<void> {}
+        }
+        expect(routes(InteractionKind.StringMenu, Topics)).toEqual(['approve']);
+    });
+
+    it('UserMenuRoute stores under the user menu key', () => {
+        @UserMenuRoute(ApproveId)
+        class Assign extends ComponentBase<InteractionKind.UserMenu, [typeof ApproveId]> {
+            async execute(): Promise<void> {}
+        }
+        expect(routes(InteractionKind.UserMenu, Assign)).toEqual(['approve']);
+    });
+
+    it('RoleMenuRoute stores under the role menu key', () => {
+        @RoleMenuRoute(ApproveId)
+        class Grant extends ComponentBase<InteractionKind.RoleMenu, [typeof ApproveId]> {
+            async execute(): Promise<void> {}
+        }
+        expect(routes(InteractionKind.RoleMenu, Grant)).toEqual(['approve']);
+    });
+
+    it('ChannelMenuRoute stores under the channel menu key', () => {
+        @ChannelMenuRoute(ApproveId)
+        class LogTarget extends ComponentBase<InteractionKind.ChannelMenu, [typeof ApproveId]> {
+            async execute(): Promise<void> {}
+        }
+        expect(routes(InteractionKind.ChannelMenu, LogTarget)).toEqual(['approve']);
+    });
+
+    it('MentionableMenuRoute stores under the mentionable menu key', () => {
+        @MentionableMenuRoute(ApproveId)
+        class Invite extends ComponentBase<InteractionKind.MentionableMenu, [typeof ApproveId]> {
+            async execute(): Promise<void> {}
+        }
+        expect(routes(InteractionKind.MentionableMenu, Invite)).toEqual(['approve']);
+    });
+
+    it('a menu decorator stores every prefix it is given', () => {
+        @StringMenuRoute(ApproveId, RejectId)
+        class Filters extends ComponentBase<InteractionKind.StringMenu, [typeof ApproveId, typeof RejectId]> {
+            async execute(): Promise<void> {}
+        }
+        expect(routes(InteractionKind.StringMenu, Filters)).toEqual(['approve', 'reject']);
+        expect(Reflect.getMetadata(ComponentDefsKey, Filters)).toEqual([ApproveId, RejectId]);
     });
 });

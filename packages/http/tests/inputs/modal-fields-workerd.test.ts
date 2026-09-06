@@ -1,3 +1,4 @@
+import { Collection } from '@discordjs/collection';
 import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
@@ -31,6 +32,6 @@ describe('modal fields on workerd', () => {
     });
 
     it('resolves a user select against the payload', () => {
-        expect(fields.getSelectedUsers('owners')).toEqual(new Map([['u1', ada]]));
+        expect(fields.getSelectedUsers('owners')).toEqual(new Collection([['u1', ada]]));
     });
 });

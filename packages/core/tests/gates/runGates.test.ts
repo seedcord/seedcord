@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { and, or } from '#gates/combinators';
 import { defineEffectGate, defineGate } from '#gates/Gate';
 import { runGates, runHandlerGates } from '#gates/runGates';
-import { GatedMetadataKey, InteractionRouteKeys, InteractionRoutes } from '#src/metadataKeys';
+import { GatedMetadataKey, InteractionRouteKeys, InteractionKind } from '#src/metadataKeys';
 import { Notice } from '#stops/Notice';
 
 import { TestNotice } from '../utils/TestNotice';
@@ -227,7 +227,7 @@ describe('runHandlerGates', () => {
         });
         // runHandlerGates only reads metadata off the ctor, so a plain object stands in for the handler class
         const dailyHandler = {};
-        Reflect.defineMetadata(InteractionRouteKeys[InteractionRoutes.Slash], ['daily'], dailyHandler);
+        Reflect.defineMetadata(InteractionRouteKeys[InteractionKind.Slash], ['daily'], dailyHandler);
         Reflect.defineMetadata(GatedMetadataKey, [probe], dailyHandler);
 
         await runHandlerGates(dailyHandler, ctx);
@@ -241,7 +241,7 @@ describe('runHandlerGates', () => {
             seen = c.routeId;
         });
         const dailyHandler = {};
-        Reflect.defineMetadata(InteractionRouteKeys[InteractionRoutes.Slash], ['daily'], dailyHandler);
+        Reflect.defineMetadata(InteractionRouteKeys[InteractionKind.Slash], ['daily'], dailyHandler);
         Reflect.defineMetadata(GatedMetadataKey, [probe], dailyHandler);
 
         await runHandlerGates(dailyHandler, ctx, 'slash:manifest');

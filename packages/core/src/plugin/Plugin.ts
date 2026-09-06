@@ -17,9 +17,9 @@ export interface Initializeable {
 }
 
 /** @internal */
-const resolvedSpecSlot = Symbol('seedcord.plugin.spec');
+const resolvedSpecSlot = Symbol('seedcord:plugin:spec');
 /** @internal */
-const loggerSlot = Symbol('seedcord.plugin.logger');
+const loggerSlot = Symbol('seedcord:plugin:logger');
 
 /**
  * Base class for a seedcord plugin. Extend it and implement `init()`. `this.core` is the running

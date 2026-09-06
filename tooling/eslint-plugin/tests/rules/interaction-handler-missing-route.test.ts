@@ -67,11 +67,11 @@ ruleTester.run('interaction-handler-missing-route', rule, {
             import { SlashHandler } from './local';
             export class Local extends SlashHandler {}
         `,
-        // select menu handler with its route
+        // menu handler with its route
         dedent`
-            import { SelectMenuHandler, SelectMenuRoute } from 'seedcord';
-            @SelectMenuRoute(Menu)
-            export class Picker extends SelectMenuHandler<[typeof Menu]> {}
+            import { UserMenuHandler, UserMenuRoute } from 'seedcord';
+            @UserMenuRoute(Menu)
+            export class Picker extends UserMenuHandler<[typeof Menu]> {}
         `,
         // autocomplete handler with its route
         dedent`
@@ -146,12 +146,20 @@ ruleTester.run('interaction-handler-missing-route', rule, {
             errors: [{ messageId: 'missingRoute', data: { base: 'ModalHandler', decorator: 'ModalRoute' } }]
         },
         {
-            // select menu handler without a route
+            // menu handler without a route
+            code: dedent`
+                import { UserMenuHandler } from 'seedcord';
+                export class Picker extends UserMenuHandler<[typeof Menu]> {}
+            `,
+            errors: [{ messageId: 'missingRoute', data: { base: 'UserMenuHandler', decorator: 'UserMenuRoute' } }]
+        },
+        {
+            // a class on the shared select base can never register
             code: dedent`
                 import { SelectMenuHandler } from 'seedcord';
                 export class Picker extends SelectMenuHandler<[typeof Menu]> {}
             `,
-            errors: [{ messageId: 'missingRoute', data: { base: 'SelectMenuHandler', decorator: 'SelectMenuRoute' } }]
+            errors: [{ messageId: 'sharedSelectBase' }]
         },
         {
             // context menu handler without a route

@@ -1,10 +1,11 @@
 import { Fault, Notice, Silence } from '@seedcord/core';
-import { InteractionRoutes, outcomeFor, queuedMsFor } from '@seedcord/core/internal';
+import { outcomeFor, queuedMsFor } from '@seedcord/core/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { timestampFromSnowflake } from '@seedcord/utils';
 import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
 import { reportDispatch } from '#src/dispatch/dispatchReport';
+import { InteractionKind } from '#src/metadataKeys';
 import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -29,7 +30,7 @@ function reportFor(queuedMs = 0): Parameters<typeof reportDispatch>[1] {
     return {
         routeId: 'slash:ping',
         interactionId: 'i1',
-        kind: InteractionRoutes.Slash,
+        kind: InteractionKind.Slash,
         outcome: 'handled',
         fallback: false,
         startedAt: performance.now(),

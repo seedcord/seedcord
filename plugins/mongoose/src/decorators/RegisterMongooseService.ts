@@ -6,8 +6,8 @@ import type { MongooseServiceKeys, MongooseServices } from '../types/MongooseSer
 import type mongoose from 'mongoose';
 import type { Constructor } from 'type-fest';
 
-export const ServiceMetadataKey = Symbol('seedcord:mongoose:service');
-export const ModelNameMetadataKey = Symbol('seedcord:mongoose:model-name');
+export const ServiceMetadataKey = Symbol.for('seedcord:mongoose:service');
+export const ModelNameMetadataKey = Symbol.for('seedcord:mongoose:model-name');
 
 /**
  * Registers a database service with a typed key.

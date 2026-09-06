@@ -3,7 +3,7 @@ title: Select menus
 description: One select menu carries options you write. The other kinds resolve users, roles, or channels for you.
 ---
 
-Discord ships five select menus. One carries options you write, and four resolve users, roles, channels, or a mix of the three. [`SelectMenuKind`](ref:core/SelectMenuKind) names them, and every kind routes to a handler the way a button does.
+A select menu is a dropdown someone picks from. One kind carries options you write yourself. For the rest, Discord resolves the picks into users, roles, channels, or a mix of the three, then sends the objects behind those ids. Every kind gets its own handler base, and each one routes the way a button does.
 
 ```ts twoslash title="src/components/TopicPicker.ts"
 import { StringSelectMenuBuilder } from '@discordjs/builders';
@@ -35,24 +35,20 @@ Discord allows one select menu per row and nothing beside it. `setMinValues` and
 
 ## Routing the pick
 
-[`@SelectMenuRoute`](ref:core/SelectMenuRoute) takes the kind first and the customId definitions after it. The handler's generic has to repeat both in the same order.
+The menu above carries options you wrote, so it routes through [`@StringMenuRoute`](ref:core/StringMenuRoute) to a `StringMenuHandler`. Pass the same [`CustomId`](ref:custom-id/CustomId) definitions to the decorator and the generic. Passing different ones is a compile error.
 
 ```ts twoslash title="src/handlers/Topics.ts"
 import {
     CustomId,
-    SelectMenuHandler,
-    SelectMenuKind,
-    SelectMenuRoute
+    StringMenuHandler,
+    StringMenuRoute
 } from '@seedcord/gateway';
 
-// in your project this lives in the component file that mints it
+// in your project this is defined in the component file that mints it
 const TopicsId = new CustomId('topics').snowflake('userId');
 
-@SelectMenuRoute(SelectMenuKind.String, TopicsId)
-export class Topics extends SelectMenuHandler<
-    SelectMenuKind.String,
-    [typeof TopicsId]
-> {
+@StringMenuRoute(TopicsId)
+export class Topics extends StringMenuHandler<[typeof TopicsId]> {
     public async execute(): Promise<void> {
         const { userId } = this.params;
         const picked = this.values;
@@ -69,23 +65,19 @@ export class Topics extends SelectMenuHandler<
 
 ## The resolving kinds
 
-`SelectMenuKind.User`, `Role`, `Channel`, and `Mentionable` fill `this.values` with ids, and the handler carries the resolved objects alongside them.
+The resolving kinds fill `this.values` with ids and carry the objects those ids point at. A user menu routes through [`@UserMenuRoute`](ref:core/UserMenuRoute) to a `UserMenuHandler`, which declares `this.users` and `this.members` beside the ids.
 
 ```ts twoslash title="src/handlers/Assign.ts"
 import {
     CustomId,
-    SelectMenuHandler,
-    SelectMenuKind,
-    SelectMenuRoute
+    UserMenuHandler,
+    UserMenuRoute
 } from '@seedcord/gateway';
 
 const AssignId = new CustomId('assign').snowflake('roleId');
 // ---cut---
-@SelectMenuRoute(SelectMenuKind.User, AssignId)
-export class Assign extends SelectMenuHandler<
-    SelectMenuKind.User,
-    [typeof AssignId]
-> {
+@UserMenuRoute(AssignId)
+export class Assign extends UserMenuHandler<[typeof AssignId]> {
     public async execute(): Promise<void> {
         const { roleId } = this.params;
         const chosen = this.users;
@@ -98,46 +90,46 @@ export class Assign extends SelectMenuHandler<
 }
 ```
 
+Each base declares only the members its menu resolves.
+
 {/* prettier-ignore-start */}
 
-| kind | what the handler carries |
-| --- | --- |
-| `String` | `this.values` |
-| `User` | `this.values`, `this.users`, `this.members` |
-| `Role` | `this.values`, `this.roles` |
-| `Channel` | `this.values`, `this.channels` |
-| `Mentionable` | `this.values`, `this.users`, `this.members`, `this.roles` |
+| base | decorator | what the handler carries |
+| --- | --- | --- |
+| `StringMenuHandler` | [`@StringMenuRoute`](ref:core/StringMenuRoute) | `this.values` |
+| `UserMenuHandler` | [`@UserMenuRoute`](ref:core/UserMenuRoute) | `this.values`, `this.users`, `this.members` |
+| `RoleMenuHandler` | [`@RoleMenuRoute`](ref:core/RoleMenuRoute) | `this.values`, `this.roles` |
+| `ChannelMenuHandler` | [`@ChannelMenuRoute`](ref:core/ChannelMenuRoute) | `this.values`, `this.channels` |
+| `MentionableMenuHandler` | [`@MentionableMenuRoute`](ref:core/MentionableMenuRoute) | `this.values`, `this.users`, `this.members`, `this.roles` |
 
 {/* prettier-ignore-end */}
 
-The kind decides which of the four resolved sets the handler carries, and the rest are `never`. Read one your kind leaves out and the compiler stops you.
+Read a member that the base leaves out and the compiler stops you at the property.
 
-A `Mentionable` menu accepts users and roles together. `this.users` and `this.roles` each hold whatever matched, so either one can be empty.
+Discord resolves `this.members` only inside a guild, so it comes back empty in a DM. A mentionable menu accepts users and roles together. `this.users` and `this.roles` each hold whatever matched, so either one can be empty.
 
 <Callout type="transport">
 
-The member names match on both transports, and only the container differs. Gateway returns a discord.js `Collection` of live `User`, `GuildMember`, `Role`, and `Channel` objects. Http returns a `Map` of `discord-api-types` payloads. `Collection` extends `Map`, so `get`, `has`, `size`, and iteration read the same either way.
+Both transports return a `Collection` keyed by id. The values differ. Gateway returns live discord.js `User`, `GuildMember`, `Role`, and `Channel` instances. Http returns the `discord-api-types` payloads Discord sent.
 
 </Callout>
 
 ## One handler, several menus
 
-Two menus on the same message can share one class. Name the kind, then every id, and give `this.match` an arm per prefix.
+Two menus of the same kind can share one class. Name every id on the decorator, then give `this.match` an arm per prefix.
 
 ```ts twoslash title="src/handlers/Filters.ts"
 import {
     CustomId,
-    SelectMenuHandler,
-    SelectMenuKind,
-    SelectMenuRoute
+    StringMenuHandler,
+    StringMenuRoute
 } from '@seedcord/gateway';
 
 const RegionId = new CustomId('region').snowflake('userId');
 const LanguageId = new CustomId('language').snowflake('userId');
 // ---cut---
-@SelectMenuRoute(SelectMenuKind.String, RegionId, LanguageId)
-export class Filters extends SelectMenuHandler<
-    SelectMenuKind.String,
+@StringMenuRoute(RegionId, LanguageId)
+export class Filters extends StringMenuHandler<
     [typeof RegionId, typeof LanguageId]
 > {
     public async execute(): Promise<void> {
@@ -155,8 +147,8 @@ export class Filters extends SelectMenuHandler<
 
 <Callout type="warning">
 
-A string menu and a user menu need a handler each, and the compiler says so at the decorator line with `the decorator does not match the handler kind`.
+A string menu and a user menu need a handler each. Point one kind's decorator at another kind's base and the compiler stops you at the decorator line with `the decorator does not match the handler kind`.
 
 </Callout>
 
-Putting several menus on one message takes a row each. Give each menu its own id, and route them to the same handler when they share a kind.
+Putting several menus on one message takes a row each. Give each menu its own id. Route them to the same handler when they share a kind.

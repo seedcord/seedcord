@@ -1,3 +1,4 @@
+import { InteractionKind } from '@seedcord/core';
 import { pageCursor } from '@seedcord/core/internal';
 import { ComponentType } from 'discord.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -14,7 +15,7 @@ import '../utils/mock-env';
 import type { APIContainerComponent } from 'discord.js';
 
 interface PrivateDispatcher {
-    buttonMap: Map<string, unknown>;
+    maps: Record<InteractionKind, Map<string, unknown>>;
     init(): Promise<void>;
     handleButton(interaction: unknown): Promise<void>;
 }
@@ -102,7 +103,7 @@ describe('Paginator end-to-end through the real dispatcher', () => {
         await controller.init();
 
         // the file-scan discovered the paginator's minted nav handler and registered it by the cursor prefix.
-        expect(controller.buttonMap.has('e2e-letters')).toBe(true);
+        expect(controller.maps[InteractionKind.Button].has('e2e-letters')).toBe(true);
 
         // a click minted from page 2's wire (pageCursor is deterministic, same prefix + layout) routes through.
         const click = fakeButton(pageCursor('e2e-letters').encode({ page: 2, slot: 0 }));

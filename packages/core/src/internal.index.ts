@@ -16,7 +16,6 @@ export {
     areRoutes,
     contextMenuRouteOf,
     interactionRoutesOf,
-    selectMenuRouteOf,
     storeComponentRoute,
     storeInteractionRoute,
     type RoutableConstructor
@@ -61,7 +60,6 @@ export {
     GatedMetadataKey,
     InteractionMetadataKey,
     InteractionRouteKeys,
-    InteractionRoutes,
     MiddlewareMetadataKey,
     SubscribeMetadataKey,
     WebhookUrlMetadataKey

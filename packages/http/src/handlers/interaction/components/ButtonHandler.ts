@@ -2,6 +2,7 @@ import { ComponentKindBrand } from '@seedcord/core/internal';
 
 import { ComponentHandler } from './ComponentHandler';
 
+import type { InteractionKind } from '@seedcord/core';
 import type { AnyCustomId } from '@seedcord/custom-id';
 import type { APIMessageComponentButtonInteraction } from 'discord-api-types/v10';
 
@@ -21,5 +22,5 @@ export abstract class ButtonHandler<Defs extends readonly AnyCustomId[]> extends
 > {
     // phantom, never set at runtime.
     /** @internal */
-    declare readonly [ComponentKindBrand]?: 'button';
+    declare readonly [ComponentKindBrand]?: InteractionKind.Button;
 }

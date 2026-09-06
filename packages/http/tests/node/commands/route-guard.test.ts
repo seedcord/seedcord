@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { InteractionKind } from '@seedcord/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { InteractionDispatcher } from '#src/node/InteractionDispatcher';
@@ -26,7 +27,9 @@ function dispatcherWith(seed: (d: InteractionDispatcher) => void): {
 
 describe('warnUnhandledRoutes', () => {
     it('warns for a deployed route with no registered handler', () => {
-        const { dispatcher, warn } = dispatcherWith((d) => d.maps.slash.set('ping', row('slash', 'ping')));
+        const { dispatcher, warn } = dispatcherWith((d) =>
+            d.maps[InteractionKind.Slash].set('ping', row(InteractionKind.Slash, 'ping'))
+        );
 
         dispatcher.warnUnhandledRoutes(['ping', 'admin/ban']);
 
@@ -38,7 +41,9 @@ describe('warnUnhandledRoutes', () => {
     });
 
     it('stays quiet when every route is registered', () => {
-        const { dispatcher, warn } = dispatcherWith((d) => d.maps.slash.set('ping', row('slash', 'ping')));
+        const { dispatcher, warn } = dispatcherWith((d) =>
+            d.maps[InteractionKind.Slash].set('ping', row(InteractionKind.Slash, 'ping'))
+        );
 
         dispatcher.warnUnhandledRoutes(['ping']);
 
@@ -49,7 +54,10 @@ describe('warnUnhandledRoutes', () => {
 describe('warnUnhandledContextMenuRoutes', () => {
     it('checks each kind against its own map', () => {
         const { dispatcher, warn } = dispatcherWith((d) => {
-            d.maps.userContextMenu.set('View Profile', row('userContextMenu', 'View Profile'));
+            d.maps[InteractionKind.UserContextMenu].set(
+                'View Profile',
+                row(InteractionKind.UserContextMenu, 'View Profile')
+            );
         });
 
         dispatcher.warnUnhandledContextMenuRoutes({
@@ -63,7 +71,7 @@ describe('warnUnhandledContextMenuRoutes', () => {
 
     it('warns per kind for a name registered only on the other kind', () => {
         const { dispatcher, warn } = dispatcherWith((d) => {
-            d.maps.userContextMenu.set('Report', row('userContextMenu', 'Report'));
+            d.maps[InteractionKind.UserContextMenu].set('Report', row(InteractionKind.UserContextMenu, 'Report'));
         });
 
         dispatcher.warnUnhandledContextMenuRoutes({ user: new Set(['Report']), message: new Set(['Report']) });

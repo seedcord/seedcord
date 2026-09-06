@@ -1,4 +1,4 @@
-import { CustomId } from '@seedcord/core';
+import { CustomId, InteractionKind } from '@seedcord/core';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
@@ -162,7 +162,9 @@ describe('resolve', () => {
 
     it('resolves a button by the stable prefix of its minted wire', () => {
         const approve = new CustomId('approve').snowflake('userId');
-        const maps = buildRouteMaps(manifestWith({ componentRoutes: [componentRow('button', 'approve')] }));
+        const maps = buildRouteMaps(
+            manifestWith({ componentRoutes: [componentRow(InteractionKind.Button, 'approve')] })
+        );
 
         const match = resolve(maps, component(2, approve.encode({ userId: '123' })));
 
@@ -171,7 +173,9 @@ describe('resolve', () => {
 
     it('routes a wire whose layout hash drifted to the same prefix, the handler decode validates later', () => {
         const drifted = new CustomId('approve').snowflake('userId').bool('force');
-        const maps = buildRouteMaps(manifestWith({ componentRoutes: [componentRow('button', 'approve')] }));
+        const maps = buildRouteMaps(
+            manifestWith({ componentRoutes: [componentRow(InteractionKind.Button, 'approve')] })
+        );
 
         const match = resolve(maps, component(2, drifted.encode({ userId: '123', force: true })));
 
@@ -182,7 +186,10 @@ describe('resolve', () => {
         const feed = new CustomId('feed').snowflake('channelId');
         const maps = buildRouteMaps(
             manifestWith({
-                componentRoutes: [componentRow('stringSelect', 'feed'), componentRow('channelSelect', 'feed')]
+                componentRoutes: [
+                    componentRow(InteractionKind.StringMenu, 'feed'),
+                    componentRow(InteractionKind.ChannelMenu, 'feed')
+                ]
             })
         );
         const wire = feed.encode({ channelId: '5' });
@@ -197,7 +204,9 @@ describe('resolve', () => {
     });
 
     it('resolves null for an unrecognized component type', () => {
-        const maps = buildRouteMaps(manifestWith({ componentRoutes: [componentRow('button', 'approve')] }));
+        const maps = buildRouteMaps(
+            manifestWith({ componentRoutes: [componentRow(InteractionKind.Button, 'approve')] })
+        );
 
         expect(resolve(maps, component(99, 'approve:1'))).toBeNull();
     });
@@ -207,9 +216,9 @@ describe('resolve', () => {
         const maps = buildRouteMaps(
             manifestWith({
                 componentRoutes: [
-                    componentRow('userSelect', 'pick'),
-                    componentRow('roleSelect', 'pick'),
-                    componentRow('mentionableSelect', 'pick')
+                    componentRow(InteractionKind.UserMenu, 'pick'),
+                    componentRow(InteractionKind.RoleMenu, 'pick'),
+                    componentRow(InteractionKind.MentionableMenu, 'pick')
                 ]
             })
         );
@@ -222,7 +231,7 @@ describe('resolve', () => {
 
     it('resolves a modal submit by prefix through the modal map', () => {
         const config = new CustomId('cfg').str('section');
-        const maps = buildRouteMaps(manifestWith({ componentRoutes: [componentRow('modal', 'cfg')] }));
+        const maps = buildRouteMaps(manifestWith({ componentRoutes: [componentRow(InteractionKind.Modal, 'cfg')] }));
         // justified: resolve reads only type and data off the payload
         const payload = {
             type: 5,
@@ -233,7 +242,9 @@ describe('resolve', () => {
     });
 
     it('resolves the unhandled default for a wire no prefix owns', () => {
-        const maps = buildRouteMaps(manifestWith({ componentRoutes: [componentRow('button', 'approve')] }));
+        const maps = buildRouteMaps(
+            manifestWith({ componentRoutes: [componentRow(InteractionKind.Button, 'approve')] })
+        );
 
         // no colon in the wire, so prefixOf reads an empty key, which the reporter renders as unrouted
         expect(resolve(maps, component(2, 'other-app-id'))).toMatchObject({

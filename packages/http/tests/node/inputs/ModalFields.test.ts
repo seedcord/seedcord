@@ -1,3 +1,4 @@
+import { Collection } from '@discordjs/collection';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { ChannelType, ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
@@ -159,7 +160,7 @@ describe('user select', () => {
 
     it('resolves the ids the field picked', () => {
         expect(fields.getSelectedUsers('owners')).toEqual(
-            new Map([
+            new Collection([
                 ['u1', ada],
                 ['u3', linus]
             ])
@@ -167,7 +168,7 @@ describe('user select', () => {
     });
 
     it('keeps two fields in one modal apart', () => {
-        expect(fields.getSelectedUsers('reviewers')).toEqual(new Map([['u2', grace]]));
+        expect(fields.getSelectedUsers('reviewers')).toEqual(new Collection([['u2', grace]]));
     });
 });
 
@@ -210,16 +211,16 @@ describe('mentionable select', () => {
     });
 
     it('splits one field into its users, members, and roles', () => {
-        expect(fields.getSelectedUsers('targets')).toEqual(new Map([['u1', ada]]));
-        expect(fields.getSelectedMembers('targets')).toEqual(new Map([['u1', boss]]));
-        expect(fields.getSelectedRoles('targets')).toEqual(new Map([['r1', mods]]));
+        expect(fields.getSelectedUsers('targets')).toEqual(new Collection([['u1', ada]]));
+        expect(fields.getSelectedMembers('targets')).toEqual(new Collection([['u1', boss]]));
+        expect(fields.getSelectedRoles('targets')).toEqual(new Collection([['r1', mods]]));
     });
 
     it('groups the picks into users, members, and roles', () => {
         expect(fields.getSelectedMentionables('targets')).toEqual({
-            users: new Map([['u1', ada]]),
-            members: new Map([['u1', boss]]),
-            roles: new Map([['r1', mods]])
+            users: new Collection([['u1', ada]]),
+            members: new Collection([['u1', boss]]),
+            roles: new Collection([['r1', mods]])
         });
     });
 
@@ -273,7 +274,7 @@ describe('channel select', () => {
 
     it('resolves every picked channel', () => {
         expect(fields.getSelectedChannels('where')).toEqual(
-            new Map([
+            new Collection([
                 ['c1', general],
                 ['c2', lounge]
             ])
@@ -315,7 +316,7 @@ describe('file upload', () => {
     });
 
     it('resolves the uploaded attachments', () => {
-        expect(fields.getUploadedFiles('proof')).toEqual(new Map([['a1', shot]]));
+        expect(fields.getUploadedFiles('proof')).toEqual(new Collection([['a1', shot]]));
     });
 
     it('throws when a required read finds no upload', () => {
