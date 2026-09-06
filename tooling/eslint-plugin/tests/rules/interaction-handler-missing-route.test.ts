@@ -73,11 +73,6 @@ ruleTester.run('interaction-handler-missing-route', rule, {
             @UserMenuRoute(Menu)
             export class Picker extends UserMenuHandler<[typeof Menu]> {}
         `,
-        // the shared select base takes no route decorator of its own
-        dedent`
-            import { SelectMenuHandler } from 'seedcord';
-            export class Picker extends SelectMenuHandler<[typeof Menu]> {}
-        `,
         // autocomplete handler with its route
         dedent`
             import { AutocompleteHandler, AutocompleteRoute } from 'seedcord';
@@ -157,6 +152,14 @@ ruleTester.run('interaction-handler-missing-route', rule, {
                 export class Picker extends UserMenuHandler<[typeof Menu]> {}
             `,
             errors: [{ messageId: 'missingRoute', data: { base: 'UserMenuHandler', decorator: 'UserMenuRoute' } }]
+        },
+        {
+            // a class on the shared select base can never register
+            code: dedent`
+                import { SelectMenuHandler } from 'seedcord';
+                export class Picker extends SelectMenuHandler<[typeof Menu]> {}
+            `,
+            errors: [{ messageId: 'sharedSelectBase' }]
         },
         {
             // context menu handler without a route

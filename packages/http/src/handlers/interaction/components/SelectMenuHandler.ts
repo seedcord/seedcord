@@ -22,12 +22,19 @@ import type {
 
 type SelectInteraction<Data> = APIMessageComponentSelectMenuInteraction & { data: Data };
 
+// discord-api-types marks resolved required. discord.js guards it anyway, since a menu that resolved
+// nothing arrives without the key.
+function resolvedOf<Data extends { resolved: object }>(data: Data): Partial<Data['resolved']> {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- the declared type overstates the wire
+    return data.resolved ?? {};
+}
+
 /**
  * Shared base the select menu handlers extend on the HTTP transport.
  *
  * Not a public entry point. Extend {@link StringMenuHandler}, {@link UserMenuHandler},
  * {@link RoleMenuHandler}, {@link ChannelMenuHandler}, or {@link MentionableMenuHandler} instead. This
- * class defines the `values` getter and the resolve helper those bases share.
+ * class defines the `values` getter those bases share.
  *
  * @typeParam Event - The select menu interaction type this handler processes
  * @typeParam Defs - The customId route definitions registered on the concrete handler
@@ -101,12 +108,12 @@ export abstract class UserMenuHandler<Defs extends readonly AnyCustomId[]> exten
 
     /** The users this select picked. */
     protected get users(): Collection<string, APIUser> {
-        return pick(this.values, this.event.data.resolved.users);
+        return pick(this.values, resolvedOf(this.event.data).users);
     }
 
     /** The guild members behind the picked users. Discord resolves these only inside a guild. */
     protected get members(): Collection<string, APIInteractionDataResolvedGuildMember> {
-        return pick(this.values, this.event.data.resolved.members);
+        return pick(this.values, resolvedOf(this.event.data).members);
     }
 }
 
@@ -138,7 +145,7 @@ export abstract class RoleMenuHandler<Defs extends readonly AnyCustomId[]> exten
 
     /** The roles this select picked. */
     protected get roles(): Collection<string, APIRole> {
-        return pick(this.values, this.event.data.resolved.roles);
+        return pick(this.values, resolvedOf(this.event.data).roles);
     }
 }
 
@@ -170,7 +177,7 @@ export abstract class ChannelMenuHandler<Defs extends readonly AnyCustomId[]> ex
 
     /** The channels this select picked. */
     protected get channels(): Collection<string, APIInteractionDataResolvedChannel> {
-        return pick(this.values, this.event.data.resolved.channels);
+        return pick(this.values, resolvedOf(this.event.data).channels);
     }
 }
 
@@ -202,16 +209,16 @@ export abstract class MentionableMenuHandler<Defs extends readonly AnyCustomId[]
 
     /** The users this select picked. */
     protected get users(): Collection<string, APIUser> {
-        return pick(this.values, this.event.data.resolved.users);
+        return pick(this.values, resolvedOf(this.event.data).users);
     }
 
     /** The guild members behind the picked users. Discord resolves these only inside a guild. */
     protected get members(): Collection<string, APIInteractionDataResolvedGuildMember> {
-        return pick(this.values, this.event.data.resolved.members);
+        return pick(this.values, resolvedOf(this.event.data).members);
     }
 
     /** The roles this select picked. */
     protected get roles(): Collection<string, APIRole> {
-        return pick(this.values, this.event.data.resolved.roles);
+        return pick(this.values, resolvedOf(this.event.data).roles);
     }
 }

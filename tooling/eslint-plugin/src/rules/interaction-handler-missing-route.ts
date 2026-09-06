@@ -19,7 +19,9 @@ const BASE_TO_DECORATOR = {
     MentionableMenuHandler: 'MentionableMenuRoute',
     UserContextMenuHandler: 'UserContextMenuRoute',
     MessageContextMenuHandler: 'MessageContextMenuRoute',
-    AutocompleteHandler: 'AutocompleteRoute'
+    AutocompleteHandler: 'AutocompleteRoute',
+    // keep last. every per-kind menu base extends this one. the structural search takes the first match.
+    SelectMenuHandler: 'StringMenuRoute'
 } as const;
 
 type HandlerBase = keyof typeof BASE_TO_DECORATOR;
@@ -39,7 +41,9 @@ export default createRule({
         },
         messages: {
             missingRoute:
-                'This {{base}} has no @{{decorator}} decorator, so it never registers and its interactions fall through to the unhandled default.'
+                'This {{base}} has no @{{decorator}} decorator, so it never registers and its interactions fall through to the unhandled default.',
+            sharedSelectBase:
+                'SelectMenuHandler is the shared base and takes no route decorator. Extend the base for the kind you need, such as StringMenuHandler or UserMenuHandler.'
         },
         schema: []
     },
@@ -70,6 +74,10 @@ export default createRule({
                 if (base === undefined) return;
                 if (node.abstract) {
                     if (node.id) bases.set(node.id.name, base);
+                    return;
+                }
+                if (base === 'SelectMenuHandler') {
+                    context.report({ node: node.id ?? node, messageId: 'sharedSelectBase' });
                     return;
                 }
                 if (decorators.hasDecorator(node, BASE_TO_DECORATOR[base])) return;

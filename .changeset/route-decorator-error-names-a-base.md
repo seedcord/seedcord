@@ -2,4 +2,4 @@
 '@seedcord/errors': patch
 ---
 
-`CustomIdHandlerRouteMissing` now points at the decorator matching your handler's base and gives two examples.
+`CustomIdHandlerRouteMissing` now tells you to add the decorator that matches your handler's base, with two examples.

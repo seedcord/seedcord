@@ -102,6 +102,92 @@ describe('a payload carrying no values key', () => {
     });
 });
 
+// discord omits resolved when a menu resolved nothing, which discord.js guards against too
+describe('a payload carrying no resolved key', () => {
+    it('reads every user menu member as an empty collection', async () => {
+        let users: unknown;
+        let members: unknown;
+
+        @UserMenuRoute(AssignId)
+        class Assign extends UserMenuHandler<[typeof AssignId]> {
+            async execute(): Promise<void> {
+                users = this.users;
+                members = this.members;
+                await Promise.resolve();
+            }
+        }
+
+        const event = selectEvent<UserSelectEvent>(AssignId.encode({ roleId: 'r1' }), {
+            component_type: 5,
+            values: []
+        });
+        await new Assign(event, core).execute();
+
+        expect(users).toEqual(new Collection());
+        expect(members).toEqual(new Collection());
+    });
+
+    it('reads the role menu roles as an empty collection', async () => {
+        let roles: unknown;
+
+        @RoleMenuRoute(AssignId)
+        class Grant extends RoleMenuHandler<[typeof AssignId]> {
+            async execute(): Promise<void> {
+                roles = this.roles;
+                await Promise.resolve();
+            }
+        }
+
+        const event = selectEvent<RoleSelectEvent>(AssignId.encode({ roleId: 'r1' }), {
+            component_type: 6,
+            values: []
+        });
+        await new Grant(event, core).execute();
+
+        expect(roles).toEqual(new Collection());
+    });
+
+    it('reads the channel menu channels as an empty collection', async () => {
+        let channels: unknown;
+
+        @ChannelMenuRoute(AssignId)
+        class LogTarget extends ChannelMenuHandler<[typeof AssignId]> {
+            async execute(): Promise<void> {
+                channels = this.channels;
+                await Promise.resolve();
+            }
+        }
+
+        const event = selectEvent<ChannelSelectEvent>(AssignId.encode({ roleId: 'r1' }), {
+            component_type: 8,
+            values: []
+        });
+        await new LogTarget(event, core).execute();
+
+        expect(channels).toEqual(new Collection());
+    });
+
+    it('reads all three mentionable menu members as empty collections', async () => {
+        let picked: unknown[] = [];
+
+        @MentionableMenuRoute(AssignId)
+        class Invite extends MentionableMenuHandler<[typeof AssignId]> {
+            async execute(): Promise<void> {
+                picked = [this.users, this.members, this.roles];
+                await Promise.resolve();
+            }
+        }
+
+        const event = selectEvent<MentionableSelectEvent>(AssignId.encode({ roleId: 'r1' }), {
+            component_type: 7,
+            values: []
+        });
+        await new Invite(event, core).execute();
+
+        expect(picked).toEqual([new Collection(), new Collection(), new Collection()]);
+    });
+});
+
 describe('user select', () => {
     it('resolves the picked users and members', async () => {
         let users: unknown;
@@ -127,7 +213,7 @@ describe('user select', () => {
         expect(members).toEqual(new Collection([['u1', boss]]));
     });
 
-    it('returns an empty map when the guild resolved no member', async () => {
+    it('returns an empty collection when the guild resolved no member', async () => {
         let members: unknown;
 
         @UserMenuRoute(AssignId)
