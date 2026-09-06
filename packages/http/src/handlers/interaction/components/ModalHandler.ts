@@ -7,6 +7,7 @@ import { ModalFields } from '#inputs/ModalFields';
 import { ComponentHandler } from './ComponentHandler';
 
 import type { SentMessage } from '#reply/ReplySender';
+import type { InteractionKind } from '@seedcord/core';
 import type { AnyCustomId } from '@seedcord/custom-id';
 import type { ReplyResponse } from '@seedcord/types';
 import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
@@ -38,7 +39,7 @@ export abstract class ModalHandler<Defs extends readonly AnyCustomId[]> extends 
 > {
     // phantom, never set at runtime.
     /** @internal */
-    declare readonly [ComponentKindBrand]?: 'modal';
+    declare readonly [ComponentKindBrand]?: InteractionKind.Modal;
 
     private reader?: ModalFields;
 

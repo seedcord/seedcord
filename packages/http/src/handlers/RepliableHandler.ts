@@ -12,8 +12,8 @@ import type { API } from '@discordjs/core/http-only';
  * Shared base the repliable HTTP interaction handlers extend.
  *
  * Not a public entry point. Extend {@link SlashHandler}, {@link ButtonHandler}, {@link ModalHandler},
- * {@link SelectMenuHandler}, or {@link ContextMenuHandler} instead. This class binds the core reply base
- * to the http sender.
+ * {@link ContextMenuHandler}, or one of the select menu bases instead. This class binds the core
+ * reply base to the http sender.
  *
  * @typeParam Event - The repliable interaction type this handler processes
  */

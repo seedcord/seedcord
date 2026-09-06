@@ -1,14 +1,10 @@
+/* eslint-disable max-lines -- this one file has all the route defs */
+
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
-import {
-    contextMenuRouteOf,
-    selectMenuRouteOf,
-    storeComponentRoute,
-    storeInteractionRoute
-} from '#decorators/interactionRoutes';
+import { contextMenuRouteOf, storeComponentRoute, storeInteractionRoute } from '#decorators/interactionRoutes';
 import { InteractionKind } from '#src/metadataKeys';
 
-import type { SelectMenuKind } from '#decorators/interactionRoutes';
 import type { ContextMenuKind, NamesFor } from '#registries/ContextMenuRegistry';
 import type { SlashRegistry } from '#registries/SlashRegistry';
 import type {
@@ -20,9 +16,20 @@ import type {
     SlashRouteBrand
 } from './brands';
 import type { AnyCustomId } from '@seedcord/custom-id';
+import type { TypedExtract } from '@seedcord/types';
 import type { Constructor } from 'type-fest';
 
-type ComponentBrand = 'button' | 'modal' | SelectMenuKind;
+// Extract over Exclude so a kind added to the enum stays out until someone gives it a decorator
+type ComponentBrand = TypedExtract<
+    InteractionKind,
+    | InteractionKind.Button
+    | InteractionKind.Modal
+    | InteractionKind.StringMenu
+    | InteractionKind.UserMenu
+    | InteractionKind.RoleMenu
+    | InteractionKind.ChannelMenu
+    | InteractionKind.MentionableMenu
+>;
 
 // phantom brands keep the decorators off transport-specific classes
 type AnyHandlerCtor = new (...args: any[]) => unknown;
@@ -244,7 +251,9 @@ export function MessageContextMenuRoute<const Names extends NamesFor<Application
  * @decorator
  */
 export function ButtonRoute<const Defs extends readonly AnyCustomId[]>(...defs: Defs) {
-    return function <TCtor extends AnyHandlerCtor>(constructor: AssertComponentRoute<'button', Defs, TCtor>): void {
+    return function <TCtor extends AnyHandlerCtor>(
+        constructor: AssertComponentRoute<InteractionKind.Button, Defs, TCtor>
+    ): void {
         storeComponentRoute(InteractionKind.Button, defs, constructor);
     };
 }
@@ -260,32 +269,142 @@ export function ButtonRoute<const Defs extends readonly AnyCustomId[]>(...defs: 
  * @decorator
  */
 export function ModalRoute<const Defs extends readonly AnyCustomId[]>(...defs: Defs) {
-    return function <TCtor extends AnyHandlerCtor>(constructor: AssertComponentRoute<'modal', Defs, TCtor>): void {
+    return function <TCtor extends AnyHandlerCtor>(
+        constructor: AssertComponentRoute<InteractionKind.Modal, Defs, TCtor>
+    ): void {
         storeComponentRoute(InteractionKind.Modal, defs, constructor);
     };
 }
 
 /**
- * Routes select menu interactions to handler classes.
+ * Routes string select menu interactions to a `StringMenuHandler`.
  *
- * Pass the select kind and the {@link CustomId} definition(s) this handler decodes. The handler's
- * generic must list the same kind and definitions, or it is a compile error.
+ * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
+ * generic. The handler reads the chosen option values from `this.values`.
  *
- * @param type - Select menu kind from {@link SelectMenuKind}.
  * @param defs - The customId definition(s) this handler decodes, one per route.
  * @decorator
- *
  * @example
- * ```typescript
- * \@SelectMenuRoute(SelectMenuKind.User, AssignId)
- * class AssignSelect extends SelectMenuHandler<SelectMenuKind.User, [typeof AssignId]> {}
+ * ```ts
+ * \@StringMenuRoute(TopicsId)
+ * class Topics extends StringMenuHandler<[typeof TopicsId]> {
+ *     async execute() {
+ *         await this.update(`following ${this.values.join(', ')}`);
+ *     }
+ * }
  * ```
  */
-export function SelectMenuRoute<const Kind extends SelectMenuKind, const Defs extends readonly AnyCustomId[]>(
-    type: Kind,
-    ...defs: Defs
-) {
-    return function <TCtor extends AnyHandlerCtor>(constructor: AssertComponentRoute<Kind, Defs, TCtor>): void {
-        storeComponentRoute(selectMenuRouteOf(type), defs, constructor);
+export function StringMenuRoute<const Defs extends readonly AnyCustomId[]>(...defs: Defs) {
+    return function <TCtor extends AnyHandlerCtor>(
+        constructor: AssertComponentRoute<InteractionKind.StringMenu, Defs, TCtor>
+    ): void {
+        storeComponentRoute(InteractionKind.StringMenu, defs, constructor);
+    };
+}
+
+/**
+ * Routes user select menu interactions to a `UserMenuHandler`.
+ *
+ * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
+ * generic. Beside `this.values` the handler declares `this.users` and `this.members`. Discord resolves
+ * the members only inside a guild.
+ *
+ * @param defs - The customId definition(s) this handler decodes, one per route.
+ * @decorator
+ * @example
+ * ```ts
+ * \@UserMenuRoute(AssignId)
+ * class Assign extends UserMenuHandler<[typeof AssignId]> {
+ *     async execute() {
+ *         const { roleId } = this.params;
+ *         await this.reply(`assigning ${this.users.size} member(s) to <@&${roleId}>`);
+ *     }
+ * }
+ * ```
+ */
+export function UserMenuRoute<const Defs extends readonly AnyCustomId[]>(...defs: Defs) {
+    return function <TCtor extends AnyHandlerCtor>(
+        constructor: AssertComponentRoute<InteractionKind.UserMenu, Defs, TCtor>
+    ): void {
+        storeComponentRoute(InteractionKind.UserMenu, defs, constructor);
+    };
+}
+
+/**
+ * Routes role select menu interactions to a `RoleMenuHandler`.
+ *
+ * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
+ * generic. Beside `this.values` the handler declares `this.roles`.
+ *
+ * @param defs - The customId definition(s) this handler decodes, one per route.
+ * @decorator
+ * @example
+ * ```ts
+ * \@RoleMenuRoute(GrantId)
+ * class Grant extends RoleMenuHandler<[typeof GrantId]> {
+ *     async execute() {
+ *         await this.update(`granting ${this.roles.size} role(s)`);
+ *     }
+ * }
+ * ```
+ */
+export function RoleMenuRoute<const Defs extends readonly AnyCustomId[]>(...defs: Defs) {
+    return function <TCtor extends AnyHandlerCtor>(
+        constructor: AssertComponentRoute<InteractionKind.RoleMenu, Defs, TCtor>
+    ): void {
+        storeComponentRoute(InteractionKind.RoleMenu, defs, constructor);
+    };
+}
+
+/**
+ * Routes channel select menu interactions to a `ChannelMenuHandler`.
+ *
+ * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
+ * generic. Beside `this.values` the handler declares `this.channels`.
+ *
+ * @param defs - The customId definition(s) this handler decodes, one per route.
+ * @decorator
+ * @example
+ * ```ts
+ * \@ChannelMenuRoute(LogTargetId)
+ * class LogTarget extends ChannelMenuHandler<[typeof LogTargetId]> {
+ *     async execute() {
+ *         await this.update(`logging to ${this.channels.size} channel(s)`);
+ *     }
+ * }
+ * ```
+ */
+export function ChannelMenuRoute<const Defs extends readonly AnyCustomId[]>(...defs: Defs) {
+    return function <TCtor extends AnyHandlerCtor>(
+        constructor: AssertComponentRoute<InteractionKind.ChannelMenu, Defs, TCtor>
+    ): void {
+        storeComponentRoute(InteractionKind.ChannelMenu, defs, constructor);
+    };
+}
+
+/**
+ * Routes mentionable select menu interactions to a `MentionableMenuHandler`.
+ *
+ * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
+ * generic. A mentionable menu accepts users and roles together. `this.users`, `this.members`, and
+ * `this.roles` can each come back empty.
+ *
+ * @param defs - The customId definition(s) this handler decodes, one per route.
+ * @decorator
+ * @example
+ * ```ts
+ * \@MentionableMenuRoute(InviteId)
+ * class Invite extends MentionableMenuHandler<[typeof InviteId]> {
+ *     async execute() {
+ *         await this.update(`inviting ${this.users.size} user(s) and ${this.roles.size} role(s)`);
+ *     }
+ * }
+ * ```
+ */
+export function MentionableMenuRoute<const Defs extends readonly AnyCustomId[]>(...defs: Defs) {
+    return function <TCtor extends AnyHandlerCtor>(
+        constructor: AssertComponentRoute<InteractionKind.MentionableMenu, Defs, TCtor>
+    ): void {
+        storeComponentRoute(InteractionKind.MentionableMenu, defs, constructor);
     };
 }

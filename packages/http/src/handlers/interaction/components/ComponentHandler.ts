@@ -14,9 +14,9 @@ import type { Promisable } from 'type-fest';
 /**
  * Shared base the customId-routed component handlers extend on the HTTP transport.
  *
- * Not a public entry point. Extend {@link ButtonHandler}, {@link SelectMenuHandler}, or {@link ModalHandler}
- * instead. This class defines the customId decode, the route matching, and the source-message verbs
- * `update` and `deferUpdate`.
+ * Not a public entry point. Extend {@link ButtonHandler}, {@link ModalHandler}, or one of the select menu
+ * bases instead. This class defines the customId decode, the route matching, and the source-message
+ * verbs `update` and `deferUpdate`.
  *
  * @typeParam Event - The component or modal interaction type this handler processes
  * @typeParam Defs - The customId route definitions registered on the concrete handler

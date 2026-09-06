@@ -3,12 +3,12 @@ import {
     CustomId,
     defineGate,
     or,
-    SelectMenuKind,
     ButtonRoute,
     UserContextMenuRoute,
     MessageContextMenuRoute,
     ModalRoute,
-    SelectMenuRoute
+    StringMenuRoute,
+    UserMenuRoute
 } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vitest';
@@ -16,7 +16,7 @@ import { describe, expect, it } from 'vitest';
 import { Gated } from '#bDecorators/Gated';
 import { EventHandler } from '#handlers/event';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
-import { ButtonHandler, ModalHandler, SelectMenuHandler } from '#handlers/interaction/components';
+import { ButtonHandler, ModalHandler, StringMenuHandler, UserMenuHandler } from '#handlers/interaction/components';
 import { UserContextMenuHandler, MessageContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
@@ -294,8 +294,8 @@ class AcceptsModalGateModalHandler extends ModalHandler<[typeof ModalProbeId]> {
 void AcceptsModalGateModalHandler;
 
 @Gated(UserSelectGate)
-@SelectMenuRoute(SelectMenuKind.User, SelectProbeId)
-class AcceptsUserSelectGateUserSelect extends SelectMenuHandler<SelectMenuKind.User, [typeof SelectProbeId]> {
+@UserMenuRoute(SelectProbeId)
+class AcceptsUserSelectGateUserSelect extends UserMenuHandler<[typeof SelectProbeId]> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }
@@ -342,8 +342,8 @@ void RejectsUserMenuGateMessage;
 
 // @ts-expect-error the two select kinds do not interchange
 @Gated(UserSelectGate)
-@SelectMenuRoute(SelectMenuKind.String, SelectProbeId)
-class RejectsUserSelectGateString extends SelectMenuHandler<SelectMenuKind.String, [typeof SelectProbeId]> {
+@StringMenuRoute(SelectProbeId)
+class RejectsUserSelectGateString extends StringMenuHandler<[typeof SelectProbeId]> {
     async execute(): Promise<void> {
         await Promise.resolve();
     }

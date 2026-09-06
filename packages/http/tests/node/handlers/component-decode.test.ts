@@ -1,11 +1,11 @@
-import { CustomId, Notice, SelectMenuKind } from '@seedcord/core';
+import { CustomId, Notice } from '@seedcord/core';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
-import { SelectMenuHandler } from '#handlers/interaction/components/SelectMenuHandler';
-import { ButtonRoute, ModalRoute, SelectMenuRoute } from '#src/index';
+import { UserMenuHandler } from '#handlers/interaction/components/SelectMenuHandler';
+import { ButtonRoute, ModalRoute, UserMenuRoute } from '#src/index';
 
 import type { Core } from '#interfaces/Core';
 import type { MatchArms } from '@seedcord/core/internal';
@@ -208,8 +208,8 @@ describe('select menu decode', () => {
     it('decodes params and narrows values for the declared kind', async () => {
         let role: string | null = null;
         let picked: readonly string[] = [];
-        @SelectMenuRoute(SelectMenuKind.User, AssignId)
-        class Assign extends SelectMenuHandler<SelectMenuKind.User, [typeof AssignId]> {
+        @UserMenuRoute(AssignId)
+        class Assign extends UserMenuHandler<[typeof AssignId]> {
             async execute(): Promise<void> {
                 expectTypeOf(this.event.data.values).toEqualTypeOf<Snowflake[]>();
                 role = this.params.roleId;

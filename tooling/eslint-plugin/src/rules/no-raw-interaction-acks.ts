@@ -16,6 +16,11 @@ const HANDLER_BASE_NAMES = new Set([
     'ButtonHandler',
     'ModalHandler',
     'SelectMenuHandler',
+    'StringMenuHandler',
+    'UserMenuHandler',
+    'RoleMenuHandler',
+    'ChannelMenuHandler',
+    'MentionableMenuHandler',
     'UserContextMenuHandler',
     'MessageContextMenuHandler'
 ]);

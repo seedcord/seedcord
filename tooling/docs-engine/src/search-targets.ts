@@ -53,13 +53,13 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     { query: 'BotPermissionScopeGroups' },
 
     // Enums
-    { query: 'SelectMenuKind' },
+    { query: 'InteractionKind' },
 
     // Functions
     { query: 'prettify' },
     { query: 'fyShuffle' },
     { query: 'RegisterCommand' },
-    { query: 'SelectMenuRoute' },
+    { query: 'UserMenuRoute' },
     { query: 'AutocompleteRoute' },
     { query: 'checkPermissions' },
     { query: 'hasPermsToAssign' },

@@ -32,15 +32,15 @@ type ProvidedContext<TCtor extends AnyHandlerCtor> =
 type SelectData<Repliable> = Repliable extends APIMessageComponentSelectMenuInteraction ? Repliable['data'] : never;
 
 type SelectKindName<Data> = Data extends APIMessageStringSelectInteractionData
-    ? 'StringSelect'
+    ? 'StringMenu'
     : Data extends APIMessageUserSelectInteractionData
-      ? 'UserSelect'
+      ? 'UserMenu'
       : Data extends APIMessageRoleSelectInteractionData
-        ? 'RoleSelect'
+        ? 'RoleMenu'
         : Data extends APIMessageChannelSelectInteractionData
-          ? 'ChannelSelect'
+          ? 'ChannelMenu'
           : Data extends APIMessageMentionableSelectInteractionData
-            ? 'MentionableSelect'
+            ? 'MentionableMenu'
             : 'an interaction';
 
 // TS truncates the raw API type in a mismatch error
@@ -53,9 +53,9 @@ type KindName<Ctx> = Ctx extends Ungateable
         ? Repliable extends APIChatInputApplicationCommandInteraction
             ? 'Slash'
             : Repliable extends APIMessageApplicationCommandInteraction
-              ? 'MessageMenu'
+              ? 'MessageContextMenu'
               : Repliable extends APIUserApplicationCommandInteraction
-                ? 'UserMenu'
+                ? 'UserContextMenu'
                 : // keep this guard. SelectData is never for a button, and never is assignable to StringSelect.
                   Repliable extends APIMessageComponentSelectMenuInteraction
                   ? SelectKindName<SelectData<Repliable>>

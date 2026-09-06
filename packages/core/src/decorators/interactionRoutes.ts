@@ -8,15 +8,6 @@ import { InteractionMetadataKey, InteractionRouteKeys, InteractionKind } from '#
 import type { ContextMenuKind } from '#registries/ContextMenuRegistry';
 import type { AnyCustomId } from '@seedcord/custom-id';
 
-/** The select menu kinds the select route decorators take. */
-export enum SelectMenuKind {
-    String = 'string',
-    User = 'user',
-    Role = 'role',
-    Channel = 'channel',
-    Mentionable = 'mentionable'
-}
-
 // loose on purpose, each transport's typed decorators pass their asserted ctors straight in
 export type RoutableConstructor = new (...args: never[]) => unknown;
 
@@ -58,18 +49,6 @@ export function storeComponentRoute(
         constructor
     );
     Reflect.defineMetadata(ComponentDefsKey, defs, constructor);
-}
-
-const SELECT_MENU_ROUTES: Record<SelectMenuKind, InteractionKind> = {
-    [SelectMenuKind.String]: InteractionKind.StringMenu,
-    [SelectMenuKind.User]: InteractionKind.UserMenu,
-    [SelectMenuKind.Role]: InteractionKind.RoleMenu,
-    [SelectMenuKind.Channel]: InteractionKind.ChannelMenu,
-    [SelectMenuKind.Mentionable]: InteractionKind.MentionableMenu
-};
-
-export function selectMenuRouteOf(kind: SelectMenuKind): InteractionKind {
-    return SELECT_MENU_ROUTES[kind];
 }
 
 export function contextMenuRouteOf(kind: ContextMenuKind): InteractionKind {

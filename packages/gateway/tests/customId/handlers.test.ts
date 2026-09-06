@@ -1,8 +1,8 @@
-import { Notice, CustomId, SelectMenuKind, ButtonRoute, ModalRoute, SelectMenuRoute } from '@seedcord/core';
+import { Notice, CustomId, ButtonRoute, ModalRoute, UserMenuRoute } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { ButtonHandler, ModalHandler, SelectMenuHandler } from '#handlers/interaction/components';
+import { ButtonHandler, ModalHandler, UserMenuHandler } from '#handlers/interaction/components';
 
 import type { Core } from '#interfaces/Core';
 import type { MatchArms } from '@seedcord/core/internal';
@@ -101,8 +101,8 @@ class ConfigModal extends ModalHandler<[typeof Config]> {
 
 const Assign = new CustomId('assign').snowflake('roleId');
 
-@SelectMenuRoute(SelectMenuKind.User, Assign)
-class AssignSelect extends SelectMenuHandler<SelectMenuKind.User, [typeof Assign]> {
+@UserMenuRoute(Assign)
+class AssignSelect extends UserMenuHandler<[typeof Assign]> {
     public summary = '';
     execute(): Promise<void> {
         const { roleId } = this.params;

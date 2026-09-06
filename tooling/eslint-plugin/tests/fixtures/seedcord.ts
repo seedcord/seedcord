@@ -102,6 +102,16 @@ export abstract class ModalHandler<Defs> extends ComponentHandler<ModalSubmitInt
 
 export abstract class SelectMenuHandler<Defs> extends ComponentHandler<AnySelectMenuInteraction, Defs> {}
 
+export abstract class StringMenuHandler<Defs> extends SelectMenuHandler<Defs> {}
+
+export abstract class UserMenuHandler<Defs> extends SelectMenuHandler<Defs> {}
+
+export abstract class RoleMenuHandler<Defs> extends SelectMenuHandler<Defs> {}
+
+export abstract class ChannelMenuHandler<Defs> extends SelectMenuHandler<Defs> {}
+
+export abstract class MentionableMenuHandler<Defs> extends SelectMenuHandler<Defs> {}
+
 // AutocompleteHandler extends BaseHandler directly, so it never passes the InteractionHandler gate.
 export abstract class AutocompleteHandler<Route extends string> extends BaseHandler<AutocompleteInteraction> {
     declare protected readonly route: Route;

@@ -15,15 +15,18 @@ export type {
 } from '#src/commands/CommandInjector';
 
 export { RegisterCommand } from '#decorators/Command';
-export { SelectMenuKind } from '#decorators/interactionRoutes';
 export {
     AutocompleteRoute,
     ButtonRoute,
+    ChannelMenuRoute,
+    MentionableMenuRoute,
     MessageContextMenuRoute,
     UserContextMenuRoute,
     ModalRoute,
-    SelectMenuRoute,
-    SlashRoute
+    RoleMenuRoute,
+    SlashRoute,
+    StringMenuRoute,
+    UserMenuRoute
 } from '#decorators/routes';
 
 export { InteractionKind } from '#src/metadataKeys';
