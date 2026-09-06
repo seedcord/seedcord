@@ -82,6 +82,7 @@ class FocusedTypes extends AutocompleteHandler<'search'> {
         await Promise.resolve();
     }
 }
+void FocusedTypes;
 
 // match branches by focused field, each arm gets the partial value (string) and a respond pinned to the field's kind
 class SearchMatch extends AutocompleteHandler<'search'> {
@@ -238,10 +239,6 @@ describe('AutocompleteHandler', () => {
     it('decodes the focused option once and reuses the cached result', () => {
         const handler = new SearchFocused(autocomplete('query', 'sp'), core);
         expect(handler.read()).toBe(handler.read()); // same cached object across reads
-    });
-
-    it('exposes the focused type spec', () => {
-        expect(FocusedTypes).toBeTypeOf('function');
     });
 
     it('runs the arm for the focused field with the partial value', async () => {

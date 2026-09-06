@@ -7,4 +7,4 @@
 '@seedcord/plugin-mongoose': minor
 ---
 
-**BREAKING:** Every shared symbol key now reads `seedcord:` plus kebab-case. Plugin service metadata moved to the same global registry the core keys use.
+**BREAKING:** Every shared symbol key now reads `seedcord:` plus kebab-case. Plugin service metadata moved to the same global registry the core keys use. Make sure to update your packages together!!

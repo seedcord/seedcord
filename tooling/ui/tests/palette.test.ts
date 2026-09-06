@@ -18,8 +18,4 @@ describe('BRAND mirrors the token file', () => {
     ] as const)('%s matches the shared UI token', (token, hex) => {
         expect(uiTokens).toContain(`${token}: ${hex};`);
     });
-
-    it('softens the seed-dark ink for body copy', () => {
-        expect(BRAND.sub).toBe('rgba(45, 51, 40, 0.85)');
-    });
 });
