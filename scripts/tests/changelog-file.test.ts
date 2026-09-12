@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ChangelogFile } from '#src/lib/ChangelogFile';
+import { ChangelogFile } from '#src/release/ChangelogFile';
 
 const lines = (...rows: string[]): string => `${rows.join('\n')}\n`;
 

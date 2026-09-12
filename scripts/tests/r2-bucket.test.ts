@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { R2Bucket } from '#src/lib/R2Bucket';
+import { R2Bucket } from '#src/docs/R2Bucket';
 
 import type { S3Client } from '@aws-sdk/client-s3';
 import type { IndexJson } from '@seedcord/docs-engine';
