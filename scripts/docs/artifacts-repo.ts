@@ -8,9 +8,8 @@ import {
     PutObjectCommand,
     S3Client
 } from '@aws-sdk/client-s3';
-import { Converters, Envapter } from 'envapt';
-
 import { validateIndex } from '@seedcord/docs-engine';
+import { Converters, Envapter } from 'envapt';
 
 import type { IndexJson } from '@seedcord/docs-engine';
 

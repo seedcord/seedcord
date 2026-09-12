@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import { buildIndex } from '@seedcord/docs-engine';
+import { describe, expect, it } from 'vitest';
 
 import { withoutDeprecated } from '../docs/deprecated-versions';
 
