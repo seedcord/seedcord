@@ -24,6 +24,7 @@
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.1101.0",
+        "@manypkg/get-packages": "^3.1.0",
         "@seedcord/docs-engine": "workspace:^",
         "@seedcord/docs-generator": "workspace:^",
         "envapt": "catalog:peer"
