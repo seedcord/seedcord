@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { Workspace } from '../lib/Workspace';
+import { Workspace } from '#src/lib/Workspace';
 
 const snapshot = {
     rootDir: '/repo',

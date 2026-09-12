@@ -29,7 +29,7 @@
                 "seedcord#build"
             ],
             "inputs": [
-                "scripts/docs/extract-docs.ts",
+                "scripts/src/docs/extract-docs.ts",
                 "packages/*/dist/**/*.d.mts",
                 "packages/*/package.json",
                 "plugins/*/dist/**/*.d.mts",
@@ -43,7 +43,7 @@
         },
         "//#docs:artifacts": {
             "dependsOn": ["//#docs:extract", "@seedcord/docs-engine#build"],
-            "inputs": ["scripts/docs/build-docs-artifacts.ts", "generated/*.json"],
+            "inputs": ["scripts/src/docs/build-docs-artifacts.ts", "generated/*.json"],
             "outputs": ["generated/artifacts/**"]
         },
         "@seedcord/docs#build": {
@@ -53,7 +53,7 @@
             "env": ["SEEDCORD_DOCS_INDEX_URL"]
         },
         "//#check:catalog": {
-            "inputs": ["scripts/check-workspace-catalog.ts", "pnpm-workspace.yaml", "**/package.json"]
+            "inputs": ["scripts/src/check-workspace-catalog.ts", "pnpm-workspace.yaml", "**/package.json"]
         },
         "//#tc:root": {
             "dependsOn": ["@seedcord/eslint-config#build"],

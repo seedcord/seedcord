@@ -5,8 +5,8 @@ import { resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { ChangelogFile } from '../lib/ChangelogFile';
-import { Workspace } from '../lib/Workspace';
+import { ChangelogFile } from '#src/lib/ChangelogFile';
+import { Workspace } from '#src/lib/Workspace';
 
 async function tidyEveryChangelog(): Promise<void> {
     const workspace = await Workspace.load(import.meta.dirname);

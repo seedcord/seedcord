@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { distinctPackageCount } from '../check-workspace-catalog';
+import { distinctPackageCount } from '#src/check-workspace-catalog';
 
 type Field = 'devDependencies' | 'peerDependencies';
 

@@ -23,7 +23,7 @@ jobs:
             - name: Setup workspace
               uses: ./.github/actions/setup
             - name: Apply semver label
-              run: pnpm exec tsx scripts/semver-label.ts
+              run: pnpm exec tsx scripts/src/semver-label.ts
               env:
                   GITHUB_TOKEN: ${{ github.token }}
                   PR_NUMBER: ${{ github.event.pull_request.number }}

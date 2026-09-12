@@ -1,7 +1,7 @@
 import { buildIndex } from '@seedcord/docs-engine';
 import { describe, expect, it } from 'vitest';
 
-import { withoutDeprecated } from '../docs/deprecated-versions';
+import { withoutDeprecated } from '#src/docs/deprecated-versions';
 
 import type { PackageVersionsInput } from '@seedcord/docs-engine';
 

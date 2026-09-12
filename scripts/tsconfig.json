@@ -2,7 +2,11 @@
     "$schema": "https://www.schemastore.org/tsconfig.json",
     "extends": "@seedcord/tsconfig/node",
     "compilerOptions": {
-        "rootDir": "."
+        "rootDir": ".",
+        "paths": {
+            "#src/*": ["./src/*"]
+        }
     },
-    "include": ["**/*.ts"]
+    "include": ["src/**/*.ts", "tests/**/*.ts", "eslint.config.ts", "vitest.config.ts"],
+    "exclude": ["node_modules"]
 }

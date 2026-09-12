@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { GitHubApi } from '../lib/GitHubApi';
+import { GitHubApi } from '#src/lib/GitHubApi';
 
 interface Call {
     url: string;

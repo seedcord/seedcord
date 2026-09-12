@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CliFlags } from '../lib/CliFlags';
+import { CliFlags } from '#src/lib/CliFlags';
 
 const flags = new CliFlags('probe [options]', {
     output: { type: 'string', short: 'o', describe: 'Directory to write into' },

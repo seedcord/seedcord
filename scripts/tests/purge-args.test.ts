@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildPurgeBody } from '../docs/purge-args';
+import { buildPurgeBody } from '#src/docs/purge-args';
 
 describe('buildPurgeBody', () => {
     it('purges everything when no targeting flags are passed', () => {

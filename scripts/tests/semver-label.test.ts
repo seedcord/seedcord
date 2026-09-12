@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { changesetPathsFromFiles, encodeContentsPath, maxBump } from '../semver-label';
+import { changesetPathsFromFiles, encodeContentsPath, maxBump } from '#src/semver-label';
 
 const changeset = (frontmatter: string): string => `---\n${frontmatter}\n---\n\nSome description.`;
 

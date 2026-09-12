@@ -1,7 +1,7 @@
 import { buildIndex } from '@seedcord/docs-engine';
 import { describe, expect, it } from 'vitest';
 
-import { buildUnionInputs, type EmittedEntry } from '../docs/union-inputs';
+import { buildUnionInputs, type EmittedEntry } from '#src/docs/union-inputs';
 
 import type { IndexJson, PackageVersionsInput } from '@seedcord/docs-engine';
 
