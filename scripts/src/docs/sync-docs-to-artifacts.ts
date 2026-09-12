@@ -11,22 +11,14 @@ import {
 } from '@seedcord/docs-engine';
 import { ApiDocsGenerator, documentedPackageNames } from '@seedcord/docs-generator';
 
-import {
-    cacheControlFor,
-    createR2Client,
-    deleteFromR2,
-    fetchRemoteIndex,
-    listRemoteKeys,
-    objectExists,
-    putToR2,
-    r2ConfigFromEnv
-} from './artifacts-repo';
-import { deprecatedByPackage, withoutDeprecated } from './deprecated-versions';
-import { buildUnionInputs } from './union-inputs';
-import { workspaceOf } from './workspace-of';
+import { artifactKeys, isArtifactKey, versionDir } from '#src/docs/artifact-keys';
+import { deprecatedByPackage, withoutDeprecated } from '#src/docs/deprecated-versions';
+import { R2Bucket } from '#src/docs/R2Bucket';
+import { buildUnionInputs } from '#src/docs/union-inputs';
+import { workspaceOf } from '#src/docs/workspace-of';
+import { CliFlags } from '#src/lib/CliFlags';
 
-import type { RemoteRef } from './artifacts-repo';
-import type { EmittedEntry } from './union-inputs';
+import type { EmittedEntry } from '#src/docs/union-inputs';
 import type { PackageVersionsInput } from '@seedcord/docs-engine';
 
 // Additive publish. Merges freshly-published versions into the remote R2 index without dropping a
@@ -39,6 +31,19 @@ const DEFAULT_PROJECT_FOLDER_URL = 'https://github.com/seedcord/seedcord';
 
 // a union-reconstruction bug could otherwise let --prune wipe the whole catalog
 const PRUNE_DELETE_CAP = 0.5;
+
+const flags = new CliFlags('pnpm docs:sync [options]', {
+    published: { type: 'string', describe: 'JSON array of { name, version } objects to sync' },
+    'published-file': { type: 'string', describe: 'Path to a file holding that JSON array' },
+    extract: { type: 'boolean', describe: 'Run the API extractor before emitting version dirs' },
+    'project-folder-url': { type: 'string', describe: 'GitHub repo base for source links' },
+    prefix: { type: 'string', describe: 'Key prefix inside the bucket' },
+    bucket: { type: 'string', describe: 'Bucket name, overriding R2_BUCKET' },
+    prune: { type: 'boolean', describe: 'Delete objects the rebuilt index no longer lists' },
+    'prune-force': { type: 'boolean', describe: 'Allow a prune that drops more than half the keys' },
+    overwrite: { type: 'boolean', describe: 'Re-upload version dirs R2 already holds' },
+    'dry-run': { type: 'boolean', describe: 'Print what would be written and send nothing' }
+});
 
 interface PublishedPackage {
     name: string;
@@ -56,16 +61,6 @@ interface Options {
     dryRun: boolean;
     /** Re-uploads version dirs that R2 already holds, to repair artifacts a generator bug wrote. */
     overwrite: boolean;
-}
-
-function flagValue(argv: readonly string[], flag: string): string | undefined {
-    const index = argv.indexOf(flag);
-    if (index === -1) return undefined;
-    const value = argv[index + 1];
-    if (value === undefined || value.startsWith('--')) {
-        throw new Error(`${flag} requires a value`);
-    }
-    return value;
 }
 
 function parsePublished(raw: string): PublishedPackage[] {
@@ -86,22 +81,24 @@ function parsePublished(raw: string): PublishedPackage[] {
     });
 }
 
-async function parseArgs(argv: readonly string[]): Promise<Options> {
-    const publishedFile = flagValue(argv, '--published-file');
-    const raw = publishedFile ? await readFile(publishedFile, 'utf8') : flagValue(argv, '--published');
-    if (!raw) {
+async function readOptions(argv: readonly string[]): Promise<Options> {
+    const parsed = flags.parse(argv);
+    const file = parsed['published-file'];
+    const raw = file === undefined ? parsed.published : await readFile(file, 'utf8');
+    if (raw === undefined) {
         throw new Error('--published <json> or --published-file <path> is required');
     }
+
     return {
         published: parsePublished(raw),
-        extract: argv.includes('--extract'),
-        projectFolderUrl: flagValue(argv, '--project-folder-url') ?? DEFAULT_PROJECT_FOLDER_URL,
-        prefix: flagValue(argv, '--prefix') ?? '',
-        bucket: flagValue(argv, '--bucket'),
-        prune: argv.includes('--prune'),
-        pruneForce: argv.includes('--prune-force'),
-        overwrite: argv.includes('--overwrite'),
-        dryRun: argv.includes('--dry-run')
+        extract: parsed.extract,
+        projectFolderUrl: parsed['project-folder-url'] ?? DEFAULT_PROJECT_FOLDER_URL,
+        prefix: parsed.prefix ?? '',
+        bucket: parsed.bucket,
+        prune: parsed.prune,
+        pruneForce: parsed['prune-force'],
+        overwrite: parsed.overwrite,
+        dryRun: parsed['dry-run']
     };
 }
 
@@ -116,9 +113,7 @@ async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promis
         return null;
     }
     const folder = formatDisplayPackageName(pkg.name);
-    const channel: EmittedEntry['channel'] = isPrerelease(pkg.version) ? 'prerelease' : 'stable';
-    const relDir = channel === 'stable' ? 'releases' : 'prerelease';
-    const destDir = path.join(ARTIFACTS_ROOT, 'packages', folder, relDir, pkg.version);
+    const destDir = path.join(ARTIFACTS_ROOT, versionDir(folder, pkg.version));
     const apiSource = path.join(GENERATED_ROOT, `${pkg.name.split('/').pop() ?? pkg.name}.api.json`);
     await mkdir(destDir, { recursive: true });
     await writeFile(path.join(destDir, 'project.json'), `${JSON.stringify(serializeProject(found))}\n`);
@@ -127,7 +122,7 @@ async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promis
         folder,
         fullName: pkg.name,
         version: pkg.version,
-        channel,
+        channel: isPrerelease(pkg.version) ? 'prerelease' : 'stable',
         entities: found.directory.toneMap(),
         description: found.manifest.description,
         workspace: workspaceOf(found.manifest.sources)
@@ -157,21 +152,10 @@ async function collectEmitted(opts: Options): Promise<EmittedEntry[]> {
 }
 
 // nothing on the publish path calls this, which is what keeps the sync additive
-async function prune(opts: Options, ref: RemoteRef, inputs: readonly PackageVersionsInput[]): Promise<void> {
-    const desired = new Set<string>([`${opts.prefix}index.json`]);
-    for (const input of inputs) {
-        for (const version of input.versions) {
-            const relDir = isPrerelease(version) ? 'prerelease' : 'releases';
-            const base = `${opts.prefix}packages/${input.folder}/${relDir}/${version}`;
-            desired.add(`${base}/project.json`);
-            desired.add(`${base}/api.json`);
-        }
-    }
-
-    const isArtifactKey = (key: string): boolean =>
-        key === `${opts.prefix}index.json` || key.endsWith('/project.json') || key.endsWith('/api.json');
-    const remoteKeys = await listRemoteKeys(ref);
-    const actual = remoteKeys.filter(isArtifactKey);
+async function prune(opts: Options, bucket: R2Bucket, inputs: readonly PackageVersionsInput[]): Promise<void> {
+    const desired = artifactKeys(inputs);
+    const stored = await bucket.list();
+    const actual = stored.filter((key) => isArtifactKey(key));
     const orphans = actual.filter((key) => !desired.has(key));
 
     if (actual.length > 0 && orphans.length > actual.length * PRUNE_DELETE_CAP && !opts.pruneForce) {
@@ -185,59 +169,43 @@ async function prune(opts: Options, ref: RemoteRef, inputs: readonly PackageVers
             console.log(`DELETE ${key}`);
             continue;
         }
-        await deleteFromR2({ client: ref.client, bucket: ref.bucket, key });
+        await bucket.delete(key);
     }
     console.log(`🧹 prune: ${String(orphans.length)} orphan(s) ${opts.dryRun ? 'would be' : ''} deleted`);
 }
 
 async function finalize(opts: Options, emitted: readonly EmittedEntry[]): Promise<void> {
-    const config = r2ConfigFromEnv(opts.bucket);
-    const ref: RemoteRef = { client: createR2Client(config), bucket: config.bucket, prefix: opts.prefix };
+    const bucket = R2Bucket.fromEnv(opts.bucket, opts.prefix);
 
-    const remote = await fetchRemoteIndex(ref);
+    const remote = await bucket.getIndex();
     const union = buildUnionInputs(remote, emitted);
     const inputs = withoutDeprecated(union, await deprecatedByPackage(union, (message) => console.warn(message)));
     const index = buildIndex(inputs, { updatedAt: new Date().toISOString() });
 
     // already-uploaded versions are immutable. skip them on a re-run.
-    for (const e of emitted) {
-        const relDir = e.channel === 'stable' ? 'releases' : 'prerelease';
+    for (const entry of emitted) {
         for (const file of ['project.json', 'api.json'] as const) {
-            const rel = `packages/${e.folder}/${relDir}/${e.version}/${file}`;
-            const key = `${opts.prefix}${rel}`;
-            if (!opts.overwrite && (await objectExists({ client: ref.client, bucket: ref.bucket, key }))) continue;
+            const key = `${versionDir(entry.folder, entry.version)}/${file}`;
+            if (!opts.overwrite && (await bucket.exists(key))) continue;
             if (opts.dryRun) {
                 console.log(`PUT ${key}`);
                 continue;
             }
-            // cacheControlFor must see the un-prefixed rel, else a --prefix makes index.json immutable.
-            await putToR2({
-                client: ref.client,
-                bucket: ref.bucket,
-                key,
-                filePath: path.join(ARTIFACTS_ROOT, rel),
-                cacheControl: cacheControlFor(rel)
-            });
+            await bucket.put(key, path.join(ARTIFACTS_ROOT, key));
         }
     }
 
     await mkdir(ARTIFACTS_ROOT, { recursive: true });
     const indexLocal = path.join(ARTIFACTS_ROOT, 'index.json');
     await writeFile(indexLocal, `${JSON.stringify(index, null, 2)}\n`);
-    const indexKey = `${opts.prefix}index.json`;
+
     if (opts.dryRun) {
-        console.log(`PUT ${indexKey}`);
+        console.log('PUT index.json');
     } else {
-        await putToR2({
-            client: ref.client,
-            bucket: ref.bucket,
-            key: indexKey,
-            filePath: indexLocal,
-            cacheControl: cacheControlFor('index.json')
-        });
+        await bucket.put('index.json', indexLocal);
     }
 
-    if (opts.prune) await prune(opts, ref, inputs);
+    if (opts.prune) await prune(opts, bucket, inputs);
 
     console.log(
         `✅ synced ${String(emitted.length)} version dir(s); index now covers ${String(inputs.length)} package(s)`
@@ -245,7 +213,13 @@ async function finalize(opts: Options, emitted: readonly EmittedEntry[]): Promis
 }
 
 async function main(): Promise<void> {
-    const opts = await parseArgs(process.argv.slice(2));
+    const argv = process.argv.slice(2);
+    if (flags.wantsHelp(argv)) {
+        console.log(flags.help());
+        return;
+    }
+
+    const opts = await readOptions(argv);
     const emitted = await collectEmitted(opts);
     await finalize(opts, emitted);
 }
