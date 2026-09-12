@@ -41,7 +41,7 @@ jobs:
         timeout-minutes: 30
         outputs:
             published: ${{ steps.changesets.outputs.published }}
-            publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
+            publishedPackages: ${{ steps.changesets.outputs['published-packages'] }}
         permissions:
             contents: write
             id-token: write
@@ -70,15 +70,15 @@ jobs:
               run: pnpm exec turbo run build --filter=@seedcord/eslint-config
 
             - id: changesets
-              uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
+              uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
               with:
-                  version: pnpm run release:version
-                  publish: pnpm run release
-                  commit: 'chore(release): version packages'
-                  title: 'chore: release packages'
-                  branch: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  version-script: pnpm run release:version
+                  publish-script: pnpm run release
+                  commit-message: 'chore(release): version packages'
+                  pr-title: 'chore: release packages'
+                  pr-base-branch: ${{ github.event.workflow_run.head_branch || github.ref_name }}
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   NPM_CONFIG_PROVENANCE: 'true'
                   HUSKY: 0
 

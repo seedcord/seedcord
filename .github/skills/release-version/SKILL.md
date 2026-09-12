@@ -59,7 +59,7 @@ Run on `main` so the clean version reaches `latest`. Exiting pre mode and versio
 ```sh
 git switch main && git pull
 git merge next                       # resolve any changelog or pre.json conflicts
-pnpm changeset pre exit              # leave pre mode
+pnpm changeset pre exit              # leave pre mode, then review the changesets left in .changeset/pre
 pnpm changeset version               # write the clean X.Y.Z for every package
 pnpm install                         # update the lockfile
 git commit -am "chore(release): version packages"
@@ -89,9 +89,8 @@ This push publishes nothing (the versions are already on `latest`), and the gate
 
 ## Adding a new package to the release line
 
-A new published package needs two things before its first release, both easy to miss in pre mode:
+A new published package needs one thing before its first release:
 
-- Add it to `initialVersions` in `.changeset/pre.json` with its starting version (for example `"@seedcord/newpkg": "0.1.0"`). `pnpm changeset version` errors in pre mode when a package that has a changeset is absent from `initialVersions`.
 - Its first publish cannot be done locally with provenance, because provenance needs the CI OIDC environment. If you must publish it by hand once, use `pnpm publish --filter @seedcord/newpkg --no-provenance`. Prefer letting CI do it.
 
 Confirm the package is public (the changesets config sets `access: "public"`) before the first publish.
