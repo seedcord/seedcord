@@ -1,120 +1,25 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console -- justified: developer-facing CLI script */
 import path from 'node:path';
 
 import { ApiDocsGenerator } from '@seedcord/docs-generator';
 
+import { CliFlags } from '#src/lib/CliFlags';
+
 import type { ApiDocsGeneratorOptions, ApiDocsGeneratorResult } from '@seedcord/docs-generator';
 
-const HELP_TEXT = `Usage: tsx extract-docs.ts [options]
-
-Options:
-    --output <dir>              Directory where generated JSON files will be written.
-    --package <name>            Extract only this package (e.g. @seedcord/utils or utils).
-    --project-folder-url <url>  GitHub repo base for source links (e.g. https://github.com/seedcord/seedcord).
-    --ref <ref>                 Git ref the source links point at (default branch locally, the tag per archive).
-    --repo <dir>                Repository root used to compute relative paths.
-    --manifest <path>           Custom manifest.json path to write inside the output directory.
-    --help                      Show this message and exit.
-`;
-
-interface SmokeOptions {
-    outputDir?: string;
-    packageName?: string;
-    githubBase?: string;
-    ref?: string;
-    repoRoot?: string;
-    manifestPath?: string;
-}
+const flags = new CliFlags('tsx extract-docs.ts [options]', {
+    output: { type: 'string', short: 'o', describe: 'Directory where generated JSON files will be written.' },
+    package: { type: 'string', describe: 'Extract only this package (e.g. @seedcord/utils or utils).' },
+    'project-folder-url': { type: 'string', describe: 'GitHub repo base for source links.' },
+    ref: { type: 'string', describe: 'Git ref the source links point at.' },
+    repo: { type: 'string', short: 'r', describe: 'Repository root used to compute relative paths.' },
+    manifest: { type: 'string', short: 'm', describe: 'Custom manifest.json path inside the output directory.' }
+});
 
 const INITIAL_CWD = process.env.INIT_CWD ? path.resolve(process.env.INIT_CWD) : undefined;
 
 const resolvePath = (value: string): string =>
     path.isAbsolute(value) ? path.normalize(value) : path.normalize(path.resolve(INITIAL_CWD ?? process.cwd(), value));
-
-const FLAG_ALIASES: Record<string, string> = {
-    '-o': '--output',
-    '-r': '--repo',
-    '-m': '--manifest',
-    '-h': '--help'
-};
-
-type FlagHandler = (value: string, options: SmokeOptions) => void;
-
-const FLAG_HANDLERS = new Map<string, FlagHandler>([
-    [
-        '--output',
-        (value, options) => {
-            options.outputDir = resolvePath(value);
-        }
-    ],
-    [
-        '--package',
-        (value, options) => {
-            options.packageName = value;
-        }
-    ],
-    [
-        '--project-folder-url',
-        (value, options) => {
-            options.githubBase = value;
-        }
-    ],
-    [
-        '--ref',
-        (value, options) => {
-            options.ref = value;
-        }
-    ],
-    [
-        '--repo',
-        (value, options) => {
-            options.repoRoot = resolvePath(value);
-        }
-    ],
-    [
-        '--manifest',
-        (value, options) => {
-            options.manifestPath = resolvePath(value);
-        }
-    ]
-]);
-
-const normalizeFlag = (flag: string): string => FLAG_ALIASES[flag] ?? flag;
-
-const parseArgs = (args: string[]): SmokeOptions | null => {
-    if (args.some((arg) => normalizeFlag(arg) === '--help')) {
-        return null;
-    }
-
-    const options: SmokeOptions = {};
-
-    for (let index = 0; index < args.length; index += 1) {
-        const rawFlag = args[index];
-        if (!rawFlag) {
-            throw new Error('Unexpected end of arguments');
-        }
-
-        const flag = normalizeFlag(rawFlag);
-        if (flag === '--help') {
-            return null;
-        }
-
-        const handler = FLAG_HANDLERS.get(flag);
-        if (!handler) {
-            throw new Error(`Unknown argument: ${rawFlag}`);
-        }
-
-        const value = args[index + 1];
-        if (!value || value.startsWith('-')) {
-            throw new Error(`Missing value for ${rawFlag}`);
-        }
-
-        handler(value, options);
-        index += 1;
-    }
-
-    return options;
-};
 
 const formatResultSummary = (result: ApiDocsGeneratorResult): string => {
     const succeeded = result.results.filter((res) => res.succeeded).length;
@@ -148,26 +53,28 @@ const logPackageResult = (result: ApiDocsGeneratorResult['results'][number]): vo
     }
 };
 
-const createGeneratorOptions = (options: SmokeOptions): ApiDocsGeneratorOptions => {
-    const generatorOptions: ApiDocsGeneratorOptions = {};
-    if (options.outputDir) generatorOptions.outputDir = options.outputDir;
-    if (options.packageName) generatorOptions.packageName = options.packageName;
-    if (options.githubBase) generatorOptions.githubBase = options.githubBase;
-    if (options.ref) generatorOptions.ref = options.ref;
-    if (options.repoRoot) generatorOptions.repoRoot = options.repoRoot;
-    if (options.manifestPath) generatorOptions.manifestPath = options.manifestPath;
-    return generatorOptions;
+const createGeneratorOptions = (argv: readonly string[]): ApiDocsGeneratorOptions => {
+    const parsed = flags.parse(argv);
+    const options: ApiDocsGeneratorOptions = {};
+
+    if (parsed.output) options.outputDir = resolvePath(parsed.output);
+    if (parsed.package) options.packageName = parsed.package;
+    if (parsed['project-folder-url']) options.githubBase = parsed['project-folder-url'];
+    if (parsed.ref) options.ref = parsed.ref;
+    if (parsed.repo) options.repoRoot = resolvePath(parsed.repo);
+    if (parsed.manifest) options.manifestPath = resolvePath(parsed.manifest);
+
+    return options;
 };
 
 const main = async (): Promise<void> => {
-    const parsed = parseArgs(process.argv.slice(2));
-    if (parsed === null) {
-        console.log(HELP_TEXT);
+    const argv = process.argv.slice(2);
+    if (flags.wantsHelp(argv)) {
+        console.log(flags.help());
         return;
     }
 
-    const generatorOptions = createGeneratorOptions(parsed);
-    const generator = new ApiDocsGenerator(generatorOptions);
+    const generator = new ApiDocsGenerator(createGeneratorOptions(argv));
 
     console.log('Running API docs extraction...');
     const result = await generator.run();
@@ -190,8 +97,8 @@ const main = async (): Promise<void> => {
     result.results.forEach((packageResult) => logPackageResult(packageResult));
 };
 
-main().catch((error) => {
-    console.error('\n❌ smoke.ts encountered an error:\n');
+main().catch((error: unknown) => {
+    console.error('\n❌ extract-docs.ts encountered an error:\n');
     console.error(error);
     process.exitCode = 1;
 });
