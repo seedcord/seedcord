@@ -1,0 +1,236 @@
+---
+name: guide-voice
+description: Use this when writing or reviewing a page of the seedcord guide, anything under apps/guide/content. Covers how a page explains why the framework is shaped the way it is, how it talks to the reader, the sentence rhythm it needs, and the two review passes a page runs before anyone reads it.
+---
+
+# Guide voice
+
+A guide page teaches. Someone reads it on purpose, having chosen to spend their afternoon getting a bot working, and they can leave at any point. That reader wants two things from every page: what to type, and why it is shaped that way.
+
+This skill sits on top of [`writing-voice`](../writing-voice/SKILL.md), which still applies in full. Plain words over compressed abstractions, a verb in place of an invented noun, the anthropomorphism test, the punctuation bans, and the ban-list all hold here.
+
+Two rules in it change on a guide page, and both changes are stated where they apply.
+
+1. **One claim per sentence, cut at the connective.** Right for a comment, a changeset, and a commit. On a guide page it deletes the reason, because a reason attaches at a connective by construction. Effective Go reads "This rule arises because pointer methods can modify the receiver," and cutting at the connective leaves half of it.
+2. **`and` as a splice repair.** `writing-voice` lists it among the connectors that name a real relation. On a guide page `and` leaves the relation unstated, so the prose review reports every `and` holding two complete clauses together and the writer picks a connector that says how the halves relate.
+
+---
+
+## 1. Two kinds of why, and they go in different places
+
+**A reason that names a mechanism goes on the page, beside the thing it explains.** One or two sentences. This is most of them. Real one, from the pagination page:
+
+> Every button carries its target page inside the custom id, so a click still works after your bot restarts.
+
+**An argument about why the framework has this shape at all goes on the page that teaches the thing**, as a paragraph, near the top, before the reader has typed anything.
+
+Five of these exist. The framework asks a reader to do five things that need defending:
+
+1. Write classes with decorators, and write the route twice.
+2. Subclass a base for a component.
+3. Run a codegen step.
+4. Send every reply and every refusal through one boundary.
+5. Pick one of two transports.
+
+Each gets argued once, on the page that teaches it. Whoever sends the content review fills in which argument the page under review is responsible for, and the review reports whether the page carries it.
+
+This skill sets no page template. A page carries whatever headings its content needs.
+
+### The shape an argument takes
+
+Four beats, from Effective Go. State the rule. Attach the mechanical reason. Name the consequence. Disclose the cost or the exception on the spot rather than saving it for a callout further down.
+
+Drafted for the codegen page, which does not argue for itself today:
+
+> Run `seedcord codegen` after you change a command.
+>
+> An option's name and its required flag are arguments to a builder call. `.addStringOption((o) => o.setName('reason'))` runs when your bot starts, so TypeScript cannot see it. Codegen imports each command file, builds the command, and reads the JSON the builder produced.
+>
+> After it runs, `this.options.getString('reason')` comes back typed from your own declaration, and a typo in the name stops the build.
+>
+> The cost is a generated file you rerun and commit.
+
+Ground every beat before you write it. The first draft of that passage said codegen "reads those files", which reads as static parsing and is wrong. Codegen imports each command file and executes it, and that is the fact that explains why a separate step exists rather than a compiler plugin.
+
+### Say what was declined
+
+An argument is worth more when it names the alternative that lost and why.
+
+The route being written twice, once in the decorator and once in the generic, is the clearest case. A form that writes it once was built and measured, and it was declined for v1 because a call in an `extends` clause reads as mixin machinery and go-to-definition lands on a synthesized base. Assert types check that the pair agrees. A reader who wondered why they type the route twice now has their answer.
+
+Never invent one. Where no alternative was weighed, state the reason and stop.
+
+### Set up the problem before naming the mechanism
+
+The Rust Book's ownership chapter builds a problem the reader can feel across several sections before the rule falls out as the answer. A guide page has less room, and a few sentences usually do it. Real one, from the effect-gates page:
+
+> Say a command costs one credit. Your gate reads the balance and deducts one. A later gate then refuses. The command never ran, and the caller lost a credit anyway.
+
+A sentence that sets up a problem the section then solves does not state a fact of its own, and it is doing a job. The prose review is told to leave it alone.
+
+---
+
+## 2. Talking to the reader
+
+### Contractions
+
+Use them. `doesn't`, `you'll`, `it's`, `won't`, `don't`. Google, Microsoft, and GitLab each recommend them by name, and Google's reason for the negated ones is that a scanning reader misses `not` and cannot misread `don't`.
+
+No quota, and no need to force one into a sentence that reads better without it. This rule exists because most pages in the guide once had zero.
+
+Skip the nonstandard ones. No `guides're`, no three-word forms like `mightn't've`.
+
+### Second person
+
+`you` is the default subject for anything the reader does. On a page where the reader is doing something and can fail, most sentences address them directly, which is where Django's tutorial and Rust's early chapters sit. A reference table runs much lower and that is correct.
+
+A page that teaches a hard idea and never says `you` is the failure. It has happened here, on a page whose motivating example is one of the best in the guide and which addressed the reader once in three paragraphs.
+
+### `we` and `I`
+
+`we` covers the reader and the guide together. "In the next section we'll add a gate."
+
+`I` stays in the Start tab. The Philosophy section on the guide's first page is one person explaining why they built this, and it reads like it. No feature page gains an `I`.
+
+### Question headings
+
+A heading may ask a question where the section answers one. Every heading on Go's FAQ is a question, and Diátaxis says a real or imagined why question is the right prompt for an argument.
+
+A heading that picks for the reader stays banned. `How to pick` covers both options and `Pick gateway if...` decides for them.
+
+### Warmth, and where it goes
+
+Warmth goes two places. At a seam, meaning a page opening, a line under a heading, or a page ending. And next to a failure, meaning a broken sample, a trap, or something the reader is about to get wrong.
+
+The second one is where the best lines in the model guides sit. Rust writes "Try the code in Listing 4-6. Spoiler alert: It doesn't work!" directly above a block that fails to compile. Django writes "Wait a minute." above output that is unhelpful. Both are mid-page, both are body prose, and both are the most useful sentences on their page.
+
+It comes off a reference table and off a page stating policy. Django's design-philosophies page carries none at all.
+
+Keep it to a few words. The move is to flag a coming failure and hand the reader forward, so a version that takes three sentences to arrive has the right instinct and the wrong length.
+
+**Cringe stays banned.** A joke, a wink, an exclamation mark, and a sentence performing enthusiasm all read worse than the flat version. Google says to avoid humour, because most of it does not survive a reader who learned English second. What does survive that reader is a plainly stated complaint about a real annoyance. Rust's "It's quite annoying that anything we pass in also needs to be passed back" does the work without a joke in it.
+
+---
+
+## 3. Reasons, consequences, and rhythm
+
+### `because` for a reason, `so` for a consequence
+
+A `so` clause states a consequence that follows from a mechanism. A `because` clause gives the reason for a claim. They point opposite ways, and the guide has reached for `so` roughly twenty times for every `because`.
+
+A consequence, where `so` is right:
+
+> Codegen writes the declarations, so a typo in an option name stops the build.
+
+A reason, where `because` is right:
+
+> The route is written twice because the decorator and the generic are separate declarations, and assert types check the pair.
+
+`since` works for a reason too. `though` carries a concession. The prose review counts all of them, and one connector carrying most of a page is the defect whichever word it is.
+
+### Sentence spread
+
+A person writes unevenly. Aim for a range on every page:
+
+- At least one sentence past 22 words, where the thing was genuinely hard.
+- Several under 8.
+- No run of three consecutive sentences under 8 words.
+- A one-word sentence is a deliberate beat, at most one per page.
+
+The ceiling and the floor both exist because both failures have happened here. A page of long clause-stacked sentences is the first draft. A page of short declaratives back to back is what the fix produces when every comma becomes a period, and it reads worse. Google's only number is under 26 words per sentence, which caps one sentence rather than setting a target for all of them.
+
+### Vary what replaces a connector
+
+Cutting `, so` at the comma leaves two stubby sentences, and doing it eight times leaves a page of them. The repairs, in rough order of preference:
+
+1. One clause absorbs the other.
+2. `because` or `since` opens the second half.
+3. A relative clause.
+4. A fronted participle.
+5. A concessive `though`.
+6. A period.
+
+Read the paragraph after each fix. Never the sentence.
+
+---
+
+## 4. What goes wrong
+
+Fourteen shapes, drawn from real corrections. Judge whether a sentence does the same thing, however it is worded.
+
+**Refer to one by its name, never its number.** A reviewer reports a finding by name, so a renumbering cannot make a report point at the wrong rule. The worked example for each lives in the review prompt that enforces it.
+
+The prose review covers these twelve. It reads the page and nothing else.
+
+1. **A sentence about the page instead of a sentence with a fact.** A line restating its heading. Announcing a list and not delivering one. Test: delete the first sentence under a heading and see whether anything is lost. A line naming what a fence shows survives that test, and so does a sentence setting up a problem the section then solves.
+2. **Overclaiming, or a reason that does not hold.** `Everything`, `always`, `never` where the truth is narrower. A list of three reading as the complete set. A because-clause that falls apart when you check it, which is worse than giving no reason at all, because the reader takes it as settled. Also any count a non-breaking release could change.
+3. **Explaining what the reader already knows.** Defending why a requirement is a requirement. Spelling out a consequence that is the next sentence anyway. An argument for the design is never this finding.
+4. **A rhetorical shape standing in for the thing.** Verbless fragments as beats. Wordplay. Any sentence that would be shorter and clearer said plainly.
+5. **Written from the framework's side instead of the reader's.** The deepest one, and it comes from writing what seedcord does before asking what the reader is trying to build. Gates once led with the catalog seedcord ships, where the point is that you write your own.
+6. **Content that does not earn its space.** An error a reader will rarely hit. Anything that does not serve the one thing this page is for. An argument the page is responsible for under section 1 always earns its space.
+7. **A claim about behavior with the value left out.** The sentence says something happens and omits the argument, the type, the default, or the option set. "Call it yourself to widen that" hands the reader a task they cannot finish. A claim that grew to cover more cases and dropped its values counts too, and widening needs a table.
+8. **An example picked because it was available to name.** A section covering a surface nobody reaches for, with whichever member the writer could name first inside it. A one-line fact wearing a callout.
+9. **One phrasing carrying every cross-reference.** A guide is mostly links to other pages, and one shape for all of them turns the whole thing into a chant. Fold the link into a noun the sentence already has, or verb the link, or give the other page a verb that fits what it does.
+10. **A requirement on the author written as behavior.** A sentence describing what a symbol does reads as automatic. Where the author writes it by hand, the reader waits for something the framework never does. The repair names the obligation and what enforces it.
+11. **A rule with the reason left out.** The page says to do something a certain way and never says what goes wrong otherwise. A recommendation hedged with no criterion the reader can apply. A style preference welded to an unrelated mechanism, so the mechanism reads as the reason for the preference.
+12. **Inline code long enough to hold a line open.** Backticks do not wrap, so a full error message or a chained expression pushes past the column on a narrow screen.
+
+The content review covers these two, plus everything in section 7. It opens the declarations.
+
+13. **A way of using the surface the page never shows.** Read every declaration whole, including the variadic parameters, the overloads, the optional arguments, and the generic bounds. Each distinct form appears once. This settles at a different level from the example rule above, which decides how deep one member goes where this one decides which forms appear at all.
+14. **An optional parameter or field stated flatly.** A parameter read as required costs the reader an argument they never needed. A field read as always present costs them a guard they skipped. The reverse counts too.
+
+---
+
+## 5. The loop
+
+Run these one at a time and apply each pass's fixes before starting the next. Each pass has to read the sentences the pass before it wrote, since those are the ones nothing has checked.
+
+1. Answer the four questions in section 6.
+2. Read the kit page, `apps/guide/content/dev/mdx-kit.mdx`. It holds every element a page can use.
+3. Write the whole page in one pass, start to finish.
+4. Read [`writing-voice`](../writing-voice/SKILL.md) and this file, then read the page top to bottom and fix every line they flag.
+5. Do step 4 again.
+6. **Negation.** Find every verb followed by `no`, the `takes no flags` shape. Each one becomes not-negation or a positive statement.
+7. **Connectors.** Count `and`, `so`, `which`, `while`, `because`, `since`. Any one connector carrying most of the page is the defect. Then check the reason-versus-consequence split from section 3, and every `and` holding two complete clauses together.
+8. **The garden path.** Read every sentence once at speed. Stopping and starting over means rewriting it. Three shapes cause it: a clause wedged between a subject and its verb, a cleft that parks the verb behind an `is`, and a trailing participle whose subject the reader has to guess.
+9. **Shape.** Read the page whole, out loud, as someone who has never seen it. Two questions. Does a person explaining this sound like this? Would a reader who learned English second get through without re-reading? Then check the spread against section 3.
+10. Run both reviewers, in parallel. One Sonnet agent each. [`PROSE-REVIEW.md`](./PROSE-REVIEW.md) and [`CONTENT-REVIEW.md`](./CONTENT-REVIEW.md).
+11. Fix what they find, then run step 9 again, since every fix is a sentence nothing has checked.
+
+A count tells you which word to look at. It never decides whether one sentence is wrong. Answer no to every frequency check and the page still ships whatever instances it has, so read each one and repair it on its own terms.
+
+---
+
+## 6. Answer these before writing
+
+**Who reads this page?** Someone who has built a Discord bot, or is about to. They know JavaScript and Discord. They may know nothing about seedcord.
+
+**What do they already know?** Anything you would have to teach them to make a sentence land does not belong here unless the page is about that thing.
+
+**What is the one thing they need from this page?** Everything that does not serve it comes off.
+
+**What are all the ways to use it?** Open the declaration of every symbol the page teaches and read it whole. A variadic parameter, an overload, a generic accepting a union, and an optional argument are each a separate way to use the surface.
+
+Writing from the framework's side is the failure that keeps recurring, and it comes from skipping these.
+
+---
+
+## 7. Mechanics every page follows
+
+The content review checks this section as a list. A page that breaks one of these still renders, which is why nothing else catches them.
+
+- **A seedcord symbol named in prose gets a `ref:` link on its first mention.** `[BuilderComponent](ref:core/BuilderComponent)`, package segment then symbol. A fence tagged `hovers` already links its own tokens.
+- **The import line shows on the first fence and gets cut on the rest**, with `// ---cut---` under it. A later fence keeps its imports when its symbols are new to the page. Start-tab pages keep imports on every fence. Prose around a fence can only name what the fence still shows, since a cut hides those lines from everyone except the writer.
+- **A fence states how it shows types.** `^?` when the prose is about one or two of them. `hovers` when the reader has a shape worth exploring, at roughly five times the bytes and build time. `^|` when the reader's question is what they can type here. Untagged when the sample is a fragment that does not compile alone.
+- **Five twoslash blocks per page is the ceiling.** Ten drive `next dev` out of memory at 8 GB.
+- **A config key appears inside a real `new Seedcord({ ... })` sample**, on the page that teaches its subject, with any note as a `//` comment on the line.
+- **A sample reads like shipped code.** Prettier prints a fence at 68 columns, so work done inline in a callback buries the lesson under four levels of indent. Pull it into a private method.
+- **A sample builds components through `BuilderComponent`**, never a raw discord.js builder inline. A page teaching the framework while using the thing the framework replaces teaches the anti-pattern.
+- **A symbol whose type differs between the two transport packages takes a `<Callout type="transport">` naming both types.** Check each member separately, since one callout over a class does not cover a second member that differs on its own.
+- **No page names an `./internal` entry**, or a symbol reachable only through one. Read the `exports` map in the package's `package.json` to tell. Name the public surface and stop.
+- **Inline code stays short.** Backticks do not wrap, so a full error message or a chained expression pushes past the column on a narrow screen. Use quotes, a fence, or a table cell.
+- **A trap uses the exact error string as its heading**, so a pasted error hits an anchor.
+- **A callout takes whole blocks, including a fence.** Use the blank-line form: `<Callout type="warning">`, a blank line, the blocks, a blank line, the close.
+- **A page outside the Start tab assumes no prior page was read.** Someone opens it cold from search or the sidebar, so it names what it needs and links the rest. The Start tab is an ordered path and its pages do build on each other, which is how the core page opens on the ping handler two pages earlier.
+- **No page's code sample depends on a prior page**, wherever the page sits.
