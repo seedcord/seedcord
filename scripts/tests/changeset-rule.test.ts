@@ -1,0 +1,237 @@
+import { describe, expect, it } from 'vitest';
+
+import { ChangesetRule } from '#src/release/ChangesetRule';
+
+const PUBLISHED = new Set(['@seedcord/core', '@seedcord/gateway']);
+
+const changeset = (frontmatter: string, summary: string): string => `---\n${frontmatter}\n---\n\n${summary}\n`;
+
+describe('ChangesetRule package names', () => {
+    it('flags a package the workspace does not publish', () => {
+        const rule = new ChangesetRule(PUBLISHED);
+
+        const found = rule.violations('add-thing.md', changeset("'@seedcord/nope': minor", 'A thing changed.'));
+
+        expect(found).toEqual([{ file: 'add-thing.md', reason: 'unknown-package', detail: '@seedcord/nope' }]);
+    });
+
+    it('accepts a published package', () => {
+        const rule = new ChangesetRule(PUBLISHED);
+
+        expect(rule.violations('add-thing.md', changeset("'@seedcord/core': minor", 'A thing changed.'))).toEqual([]);
+    });
+});
+
+describe('ChangesetRule bump types', () => {
+    it('flags a major bump while the repo is pre-1.0', () => {
+        const rule = new ChangesetRule(PUBLISHED);
+
+        const found = rule.violations('big.md', changeset("'@seedcord/core': major", 'A thing changed.'));
+
+        expect(found).toEqual([{ file: 'big.md', reason: 'pre-1.0-major', detail: '@seedcord/core' }]);
+    });
+
+    it('accepts minor and patch', () => {
+        const rule = new ChangesetRule(PUBLISHED);
+
+        expect(rule.violations('a.md', changeset("'@seedcord/core': minor", 'A thing changed.'))).toEqual([]);
+        expect(rule.violations('b.md', changeset("'@seedcord/gateway': patch", 'Fixed a thing.'))).toEqual([]);
+    });
+});
+
+describe('ChangesetRule breaking marker', () => {
+    it('flags a marker with the colon outside the bold', () => {
+        const rule = new ChangesetRule(PUBLISHED);
+
+        const found = rule.violations('old.md', changeset("'@seedcord/core': minor", '**BREAKING**: A thing changed.'));
+
+        expect(found).toEqual([{ file: 'old.md', reason: 'breaking-marker', detail: '**BREAKING**:' }]);
+    });
+
+    it('flags the italic variant', () => {
+        const rule = new ChangesetRule(PUBLISHED);
+
+        const found = rule.violations(
+            'peer.md',
+            changeset("'@seedcord/core': minor", '_Kinda BREAKING?:_ envapt is a peer dependency now.')
+        );
+
+        expect(found).toEqual([{ file: 'peer.md', reason: 'breaking-marker', detail: 'BREAKING?:_' }]);
+    });
+
+    it('accepts the marker opening a later paragraph', () => {
+        const rule = new ChangesetRule(PUBLISHED);
+
+        const summary = 'Every handler constructor now takes a `DispatchContext`.\n\n**BREAKING:** the bag moved.';
+
+        expect(rule.violations('ctx.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
+    });
+
+    it('flags the marker sitting inside a sentence', () => {
+        const rule = new ChangesetRule(PUBLISHED);
+
+        const found = rule.violations(
+            'mid.md',
+            changeset("'@seedcord/core': minor", 'This one is **BREAKING:** for gateway.')
+        );
+
+        expect(found).toEqual([{ file: 'mid.md', reason: 'breaking-marker', detail: '**BREAKING:**' }]);
+    });
+
+    it('accepts the shipped cooldown changeset', () => {
+        const rule = new ChangesetRule(PUBLISHED);
+
+        const summary =
+            '**BREAKING:** Fixed the cooldown on a handler registered on two buttons. Because its route id joined both into `button:confirm,cancel`, clicking either one put both on cooldown. Now it would just be `button:confirm`, for example.';
+
+        expect(rule.violations('cooldown.md', changeset("'@seedcord/gateway': minor", summary))).toEqual([]);
+    });
+});
+
+describe('ChangesetRule length', () => {
+    const rule = new ChangesetRule(PUBLISHED);
+
+    it('accepts three sentences on a minor', () => {
+        const summary =
+            'Added `dispatchId` to every bus key a dispatch publishes, and `dispatch.id` to the bag behind it. A fault used to carry no way back to the dispatch that raised it, so pairing one with its `interactionDispatched` meant guessing from the route and the clock. Key a store on it to line up a dispatch, its writes, and its faults.';
+
+        expect(rule.violations('dispatch-id.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
+    });
+
+    it('flags a fourth sentence', () => {
+        const summary = 'One thing changed. A second thing changed. A third thing changed. A fourth thing changed.';
+
+        expect(rule.violations('long.md', changeset("'@seedcord/core': minor", summary))).toEqual([
+            { file: 'long.md', reason: 'too-long', detail: '4 sentences' }
+        ]);
+    });
+
+    it('counts a multi-paragraph body as one run', () => {
+        const summary =
+            '**BREAKING:** every handler constructor now takes a `DispatchContext`.\n\n`@RegisterInteractionMiddleware` registers an interaction middleware and filters it with `{ kinds }`. Middleware, gates, and error cards read one typed bag per dispatch through `this.dispatch`.';
+
+        expect(rule.violations('ctx.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
+    });
+
+    it('reads a period inside a code span as prose, never a sentence end', () => {
+        const summary = 'Reading `dispatch.id` on `discord.js` 0.7.0 now returns the matched route.';
+
+        expect(rule.violations('spans.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
+    });
+
+    it('holds a patch to one sentence', () => {
+        const summary = 'Fixed the reload. It also logs the duration now.';
+
+        expect(rule.violations('fix.md', changeset("'@seedcord/gateway': patch", summary))).toEqual([
+            { file: 'fix.md', reason: 'too-long', detail: '2 sentences' }
+        ]);
+    });
+
+    it('accepts one sentence on a patch', () => {
+        const summary = 'Fixed a plugin whose `init()` outlasts its timeout.';
+
+        expect(rule.violations('fix.md', changeset("'@seedcord/gateway': patch", summary))).toEqual([]);
+    });
+});
+
+describe('ChangesetRule punctuation', () => {
+    const rule = new ChangesetRule(PUBLISHED);
+
+    it('flags an em dash', () => {
+        const summary = 'The client retries on 429 — up to three times.';
+
+        expect(rule.violations('dash.md', changeset("'@seedcord/core': minor", summary))).toEqual([
+            { file: 'dash.md', reason: 'banned-punctuation', detail: '—' }
+        ]);
+    });
+
+    it('flags an en dash', () => {
+        const summary = 'The window covers 5–10 seconds.';
+
+        expect(rule.violations('en.md', changeset("'@seedcord/core': minor", summary))).toEqual([
+            { file: 'en.md', reason: 'banned-punctuation', detail: '–' }
+        ]);
+    });
+
+    it('flags a semicolon', () => {
+        const summary = 'The cache is keyed by file; a rename lands as a fresh entry.';
+
+        expect(rule.violations('semi.md', changeset("'@seedcord/core': minor", summary))).toEqual([
+            { file: 'semi.md', reason: 'banned-punctuation', detail: ';' }
+        ]);
+    });
+
+    it('leaves a semicolon inside a code span alone', () => {
+        const summary = 'Reading `a; b` now returns the matched route.';
+
+        expect(rule.violations('span.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
+    });
+});
+
+describe('ChangesetRule banned words', () => {
+    const rule = new ChangesetRule(PUBLISHED);
+
+    it('flags a hype word', () => {
+        const summary = 'The dispatcher is more performant now.';
+
+        expect(rule.violations('hype.md', changeset("'@seedcord/core': minor", summary))).toEqual([
+            { file: 'hype.md', reason: 'banned-word', detail: 'performant' }
+        ]);
+    });
+
+    it('flags a reader-reaction opener', () => {
+        const summary = 'Worth noting that the bag now carries the route.';
+
+        expect(rule.violations('note.md', changeset("'@seedcord/core': minor", summary))).toEqual([
+            { file: 'note.md', reason: 'banned-word', detail: 'worth noting' }
+        ]);
+    });
+
+    it('reads a banned word inside a longer word as prose', () => {
+        const summary = 'The leverages field on the payout record now parses.';
+
+        expect(rule.violations('sub.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
+    });
+});
+
+describe('ChangesetRule fix opener', () => {
+    const rule = new ChangesetRule(PUBLISHED);
+
+    it('flags the imperative opener', () => {
+        const summary = 'Fix the cooldown on a handler registered on two buttons.';
+
+        expect(rule.violations('imp.md', changeset("'@seedcord/gateway': patch", summary))).toEqual([
+            { file: 'imp.md', reason: 'fix-opener', detail: 'Fix' }
+        ]);
+    });
+
+    it('flags the third-person opener', () => {
+        const summary = 'Fixes the reload on a deleted file.';
+
+        expect(rule.violations('third.md', changeset("'@seedcord/gateway': patch", summary))).toEqual([
+            { file: 'third.md', reason: 'fix-opener', detail: 'Fixes' }
+        ]);
+    });
+
+    it('flags a lowercase opener', () => {
+        const summary = 'fixed the reload on a deleted file.';
+
+        expect(rule.violations('lower.md', changeset("'@seedcord/gateway': patch", summary))).toEqual([
+            { file: 'lower.md', reason: 'fix-opener', detail: 'fixed' }
+        ]);
+    });
+
+    it('accepts Fixed and Also fixed', () => {
+        const first = 'Fixed a plugin whose `init()` outlasts its timeout.';
+        const second = '**BREAKING:** Fixed the cooldown on two buttons. Also fixed the reload.';
+
+        expect(rule.violations('a.md', changeset("'@seedcord/gateway': patch", first))).toEqual([]);
+        expect(rule.violations('b.md', changeset("'@seedcord/gateway': minor", second))).toEqual([]);
+    });
+
+    it('leaves a body that opens on something else alone', () => {
+        const summary = 'The transport packages now export `prefixOf` and `decodeFor`.';
+
+        expect(rule.violations('export.md', changeset("'@seedcord/core': patch", summary))).toEqual([]);
+    });
+});

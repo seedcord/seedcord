@@ -43,6 +43,7 @@ jobs:
                   enable_fallback_cache: 'true'
             - uses: ./.github/actions/setup
             - run: pnpm check:catalog
+            - run: pnpm lint:changesets
             - run: pnpm lint
 
     format:

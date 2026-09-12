@@ -55,6 +55,14 @@
         "//#check:catalog": {
             "inputs": ["scripts/src/check-workspace-catalog.ts", "pnpm-workspace.yaml", "**/package.json"]
         },
+        "//#lint:changesets": {
+            "inputs": [
+                ".changeset/*.md",
+                "scripts/src/release/lint-changesets.ts",
+                "scripts/src/release/ChangesetRule.ts",
+                "**/package.json"
+            ]
+        },
         "//#tc:root": {
             "dependsOn": ["@seedcord/eslint-config#build"],
             "inputs": ["*.ts", "turbo/**/*.ts", "tsconfig.json", "tooling/tsconfig/**", "tooling/eslint-config/dist/**"]
