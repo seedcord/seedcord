@@ -38,6 +38,13 @@ describe('Workspace', () => {
         ]);
     });
 
+    it('lists every package, private ones included', () => {
+        expect(new Workspace(snapshot).all().map((one) => one.packageJson.name)).toEqual([
+            '@seedcord/core',
+            '@seedcord/scripts'
+        ]);
+    });
+
     it('keeps only the packages that publish', () => {
         expect(new Workspace(snapshot).published().map((one) => one.packageJson.name)).toEqual(['@seedcord/core']);
     });

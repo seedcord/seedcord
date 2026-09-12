@@ -21,6 +21,10 @@ export class Workspace {
 
     constructor(private readonly snapshot: WorkspaceSnapshot) {}
 
+    all(): readonly WorkspacePackage[] {
+        return this.snapshot.packages;
+    }
+
     published(): readonly WorkspacePackage[] {
         return this.snapshot.packages.filter((one) => one.packageJson.private !== true);
     }
