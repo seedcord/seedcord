@@ -61,6 +61,7 @@
         "@types/react-dom": "catalog:react",
         "discord-api-types": "catalog:deps",
         "discord.js": "catalog:peer",
+        "envapt": "catalog:peer",
         "eslint": "^9.39.4",
         "eslint-config-next": "catalog:eslint",
         "eslint-plugin-better-tailwindcss": "catalog:eslint",

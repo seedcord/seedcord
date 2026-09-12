@@ -599,6 +599,9 @@ importers:
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
       eslint:
         specifier: ^9.39.4
         version: 9.39.4(jiti@2.7.0)(supports-color@10.2.2)
