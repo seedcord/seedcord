@@ -1,11 +1,53 @@
 ---
 title: Codegen
-description: Codegen writes your slash routes into seedcord-gen.d.ts, along with the other tables your handlers compile against.
+description: A command declares its options through builder calls, which TypeScript cannot read, so codegen runs your command files and writes the types down.
 ---
 
-[Commands](/commands) teaches the slash routes `seedcord codegen` writes into `src/seedcord-gen.d.ts`. That file carries four other tables alongside them.
+Here's a command that declares one option.
+
+```ts twoslash title="src/commands/Search.ts"
+import {
+    BuilderComponent,
+    RegisterCommand
+} from '@seedcord/gateway';
+
+@RegisterCommand('global')
+export class SearchCommand extends BuilderComponent<'command'> {
+    constructor() {
+        super('command');
+
+        this.instance
+            .setName('search')
+            .setDescription('Look something up')
+            .addStringOption((o) =>
+                o
+                    .setName('query')
+                    .setDescription('The term')
+                    .setRequired(true)
+            );
+    }
+}
+```
+
+An option's name and its required flag are arguments to method calls. Those calls run when something constructs the class. TypeScript reads the source of that chain and cannot evaluate it, so the name `query` only exists once the chain has run.
+
+`seedcord codegen` records those names for you. It imports every `.ts` and `.js` file under your commands folder, constructs each decorated class it finds, reads the JSON that class's builder produced, and writes what it found to `seedcord-gen.d.ts`.
 
 <Shell run="codegen" />
+
+Run it after you add a command, change its options, attach a plugin, or edit your emoji block.
+
+Your handler then reads its options through `this.options`. `getString('query')` comes back as `string`, because you marked that option required. A typo in the name stops the build. [Command options](/commands/options) tables what each kind returns.
+
+The cost is a file you rerun and commit. `seedcord dev` offers to run codegen whenever it re-registers your commands, so most of the time you'll answer `y`.
+
+<Callout type="note">
+
+The file lands beside the `root` on your `seedcord.config.ts`. A scaffolded project sets `root: './src'`, which puts it at `src/seedcord-gen.d.ts`.
+
+</Callout>
+
+## What it writes
 
 Every run rewrites the whole file from scratch.
 
@@ -16,43 +58,53 @@ Every run rewrites the whole file from scratch.
 | [`SlashRegistry`](ref:core/SlashRegistry) | every command class in your `commands` folder |
 | [`UserContextMenuRegistry`](ref:core/UserContextMenuRegistry) | the same folder, for right-click commands on a user |
 | [`MessageContextMenuRegistry`](ref:core/MessageContextMenuRegistry) | the same folder, for right-click commands on a message |
-| [`EmojiMap`](ref:types/EmojiMap) | the `bot.emojis` block on your config |
+| [`EmojiMap`](ref:types/EmojiMap) | the `bot.emojis` block on your config, which [Components](/components) shows in full |
 | [`Core`](ref:gateway/Core) | the key you gave each attached plugin |
 
 {/* prettier-ignore-end */}
 
 `Core` only appears once you attach a plugin. It [types `this.core.db`](/plugins/typing), for example.
 
+Codegen fills the plugin row by name alone. It writes down the keys you attached. TypeScript then resolves each plugin's type off the bot you built, because you already wrote the generic at the `attach()` call. Codegen never has to understand a plugin type. A plugin like `KyselyPostgres<Database>` is still fully typed in your handler.
+
+<Callout type="transport">
+
+The rows codegen adds are the same either way. The interface it adds them to differs, since gateway's [`Core`](ref:gateway/Core) carries a `bot` member holding the discord.js client and its token, and http's [`Core`](ref:http/Core) has no connection to hold.
+
+</Callout>
+
 ## Codegen constructs your bot
 
-To read your commands folder and your emoji block, codegen imports the module your `instance` setting points at. Constructing your bot runs your plugin setup. Those plugin log lines during a codegen run come from there.
+To read your commands folder and your emoji block, codegen imports the module your `instance` setting points at. Constructing your bot runs every `attach()` call and every plugin constructor.
 
-Your bot never starts, though. It stays offline for the whole run, so nothing you have written reaches Discord.
+Your bot never starts, though. Nothing calls `start()`, so no plugin connects, no task runs, and nothing you've written reaches Discord.
+
+A command constructor that throws fails the whole run, since codegen has to construct the class to read its options. `CliCodegenCommandConstructorThrew` names the class, the file, and what your constructor threw. Keep anything that can fail out of a command constructor.
 
 ## Catching a stale file in CI
 
-Some drift breaks the build for you. Add a command without rerunning codegen, then the handler naming its route fails to compile. Your editor flags it immediately.
+Some drift breaks the build for you. If you add a command without rerunning codegen, the handler naming its route fails to compile. Your editor flags it immediately.
 
-Other drift compiles perfectly. Delete a command and the registry keeps its old entry, still typing a route your bot stopped answering. Passing `--check` renders the file in memory and compares it to the copy on disk, which catches the quiet kind.
+Other drift compiles perfectly. If you delete a command, the registry keeps its old entry, still typing a route your bot stopped answering. Passing `--check` renders the file in memory and compares it to the copy on disk, which catches the kind that still compiles.
 
 <Shell exec="seedcord codegen --check" />
 
-Matching output exits `0` in silence. A difference prints this and exits `1`.
+Matching output exits `0` in silence. A difference prints the path it compared and exits `1`.
 
 ```txt output
-Augmentations are out of date. Run `seedcord codegen` and commit src/seedcord-gen.d.ts.
+Augmentations are out of date. Run `seedcord codegen` and commit /home/you/my-bot/src/seedcord-gen.d.ts.
 ```
 
-`--check` only reports, so fixing the drift needs a plain `seedcord codegen` run. The scaffold does not wire a script for it, which leaves it free for your own pipeline.
+`--check` only reports, so fixing the drift needs a plain `seedcord codegen` run. The scaffold does not wire a script for it, so you can put it wherever your pipeline wants it.
+
+A commands folder codegen cannot read throws `CliCodegenCommandsDirUnreadable`. An empty registry there would pass `--check` against a file that's already stale.
 
 ## Commands codegen passes over
 
 A command class reaches the registry once it carries [`@RegisterCommand`](ref:core/RegisterCommand). Without the decorator codegen skips that export entirely. Your route never appears in `SlashRegistry`, so the handler naming it fails to compile.
 
-Your commands folder can hold helpers and constants too. Codegen imports every file it finds there. It keeps the exports that are decorated command classes and ignores the rest.
+Your commands folder can hold helpers and constants too. Codegen imports each of those files as well, keeps the exports that are decorated command classes, and ignores everything else.
 
 ## Two commands, one name
 
-Discord scopes command names per kind. seedcord holds you to the same rule. Two commands resolving to one slash route throw `CliCodegenDuplicateRoute`. Two context menus of one kind sharing a name throw `CliCodegenDuplicateContextMenu`. Both errors name the two files, so you know which one to rename.
-
-A commands folder that codegen cannot read throws `CliCodegenCommandsDirUnreadable`. Writing an empty registry there would pass `--check` against a file that is already stale.
+Discord scopes command names per kind. seedcord enforces the same rule. Two commands resolving to one slash route throw `CliCodegenDuplicateRoute`. Two context menus of one kind sharing a name throw `CliCodegenDuplicateContextMenu`. Both errors name the two files, so you know which one to rename.
