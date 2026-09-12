@@ -3,10 +3,19 @@
     "root": true,
     "pages": [
         "index",
+        "---Sending---",
         "deferring",
         "more-messages",
         "ack-states",
         "files",
-        "raw-acks"
+        "raw-acks",
+        "---Throwing---",
+        "throwing",
+        "faults",
+        "reporting",
+        "error-behavior",
+        "---Formatting a message---",
+        "formatting",
+        "render-table"
     ]
 }

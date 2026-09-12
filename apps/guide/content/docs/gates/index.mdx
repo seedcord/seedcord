@@ -33,7 +33,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 ## A gate refuses by throwing
 
-seedcord catches a gate's throw at the same boundary it catches your handler's. The user sees the same card either way. [Throwing](/throwing) covers what each class produces.
+seedcord catches a gate's throw at the same boundary it catches your handler's. The user sees the same card either way. [Throwing](/replying/throwing) covers what each class produces.
 
 Every catalog gate throws a [`Notice`](ref:core/Notice). [`IgnoreBots`](ref:gateway/IgnoreBots) is the exception. It throws a [`Silence`](ref:core/Silence), so the message gets dropped and your bot does not reply.
 

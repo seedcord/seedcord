@@ -35,7 +35,7 @@ export class SkipMuted extends EventMiddleware<Events.MessageCreate> {
 
 ## Stopping the event
 
-Any throw stops the event. The class you throw decides what the user sees. With a [`Silence`](ref:core/Silence) the user sees nothing. A reason passed to it goes to a debug log. Anything else goes down the same path that a handler's [throw](/throwing) takes.
+Any throw stops the event. The class you throw decides what the user sees. With a [`Silence`](ref:core/Silence) the user sees nothing. A reason passed to it goes to a debug log. Anything else goes down the same path that a handler's [throw](/replying/throwing) takes.
 
 That stops one dispatch. The next message runs the chain again from the top.
 

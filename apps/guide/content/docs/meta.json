@@ -9,12 +9,10 @@
         "where-to-go-next",
         "commands",
         "replying",
-        "throwing",
         "components",
         "gates",
         "events",
         "plugins",
-        "utilities",
         "tooling"
     ]
 }

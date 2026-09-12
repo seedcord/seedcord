@@ -79,7 +79,7 @@ Your logs and your fault reports read the string you pass to `super()`. The user
 
 {/* prettier-ignore-end */}
 
-Reported means seedcord logs the throw and puts it on the bus, where a [webhook reporter](/throwing/reporting) can send it to a Discord channel. [Faults](/throwing/faults) explains the bottom three rows.
+Reported means seedcord logs the throw and puts it on the bus, where a [webhook reporter](/replying/reporting) can send it to a Discord channel. [Faults](/replying/faults) explains the bottom three rows.
 
 ## The fields on a Notice
 
@@ -134,7 +134,7 @@ Throwing a custom `Notice` for a real bug shows its card and produces nothing el
 | field | holds |
 | --- | --- |
 | `ctx.uuid` | the id seedcord logs and reports for this throw |
-| `ctx.developerUsername` | `notifications.developerUsername` from your bot config, set on [Faults](/throwing/faults). `undefined` when you have not set it |
+| `ctx.developerUsername` | `notifications.developerUsername` from your bot config, set on [Faults](/replying/faults). `undefined` when you have not set it |
 
 {/* prettier-ignore-end */}
 
