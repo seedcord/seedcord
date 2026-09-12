@@ -1,42 +1,39 @@
 /* eslint-disable no-console -- CLI script so console is ok */
 import { Converters, Envapter } from 'envapt';
 
-import { buildPurgeBody } from './purge-args';
+import { CdnPurge } from '#src/docs/CdnPurge';
+import { CliFlags } from '#src/lib/CliFlags';
 
 // Purges the Cloudflare edge cache for the docs CDN.
 //
 // Needs CLOUDFLARE_CACHE_PURGE_TOKEN (Zone -> Cache Purge) + CLOUDFLARE_ZONE_ID
-//   pnpm docs:purge                     # purge everything on the zone
-//   pnpm docs:purge --files <url...>    # purge specific full URLs
-//   pnpm docs:purge --prefixes <p...>   # purge by URL prefix, host plus path, no scheme, max 30
-//   pnpm docs:purge --dry-run           # print the request, but don't actually send it
+//   pnpm docs:purge                                      # purge everything on the zone
+//   pnpm docs:purge --files <url> --files <url>          # purge specific full URLs
+//   pnpm docs:purge --prefixes <p> --prefixes <p>        # purge by URL prefix, host plus path, no scheme, max 30
+//   pnpm docs:purge --dry-run                            # print the request, but don't actually send it
 
-const CF_API = 'https://api.cloudflare.com/client/v4';
+const flags = new CliFlags('pnpm docs:purge [options]', {
+    prefixes: { type: 'string', multiple: true, describe: 'URL prefix to purge, repeat for several' },
+    files: { type: 'string', multiple: true, describe: 'Full URL to purge, repeat for several' },
+    'dry-run': { type: 'boolean', describe: 'Print the request and send nothing' }
+});
 
-function read(key: string): string {
-    return Envapter.getRequired(key, Converters.String);
-}
+const read = (key: string): string => Envapter.getRequired(key, Converters.String);
 
 async function main(): Promise<void> {
     const argv = process.argv.slice(2);
-    const dryRun = argv.includes('--dry-run');
-    const token = read('CLOUDFLARE_CACHE_PURGE_TOKEN');
-    const zoneId = read('CLOUDFLARE_ZONE_ID');
+    if (flags.wantsHelp(argv)) {
+        console.log(flags.help());
+        return;
+    }
 
-    const body = buildPurgeBody(argv);
+    const { prefixes, files, 'dry-run': dryRun } = flags.parse(argv);
+    const body = CdnPurge.bodyFor({ prefixes, files });
+
     console.log(`${dryRun ? '[dry-run] would purge' : 'purging'}: ${JSON.stringify(body)}`);
     if (dryRun) return;
 
-    const res = await fetch(`${CF_API}/zones/${zoneId}/purge_cache`, {
-        method: 'POST',
-        headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-        body: JSON.stringify(body)
-    });
-    // justified: the Cloudflare REST response shape is external and untyped here.
-    const result = (await res.json()) as { success?: boolean; errors?: unknown[] };
-    if (!res.ok || result.success !== true) {
-        throw new Error(`Cloudflare purge failed (HTTP ${String(res.status)}): ${JSON.stringify(result.errors)}`);
-    }
+    await new CdnPurge(read('CLOUDFLARE_ZONE_ID'), read('CLOUDFLARE_CACHE_PURGE_TOKEN')).purge(body);
     console.log('✅ Cloudflare cache purged');
 }
 
