@@ -1,4 +1,5 @@
 import { assetPath, generatedPathFor, publicPath, TWIN } from './src/lib/pageAssets';
+import { redirectFor } from './src/lib/redirects';
 
 interface Env {
     ASSETS: { fetch(request: Request): Promise<Response> };
@@ -76,6 +77,10 @@ async function fromAssets(env: Env, request: Request, pathname: string): Promise
 const handler = {
     async fetch(request: Request, env: Env): Promise<Response> {
         const { pathname } = new URL(request.url);
+
+        const moved = redirectFor(pathname);
+        if (moved !== undefined) return new Response(null, { status: PERMANENT_REDIRECT, headers: { location: moved } });
+
         const asset = await fromAssets(env, request, pathname);
 
         // collapse the slash/non-slash duplicate into one permanent redirect
