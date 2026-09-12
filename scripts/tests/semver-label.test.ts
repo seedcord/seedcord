@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { changesetPathsFromFiles, encodeContentsPath, maxBump } from '#src/semver-label';
+import { changesetPathsFromFiles, maxBump } from '#src/semver-label';
 
 const changeset = (frontmatter: string): string => `---\n${frontmatter}\n---\n\nSome description.`;
 
@@ -15,6 +15,7 @@ describe('maxBump', () => {
             changeset("'@seedcord/b': major"),
             changeset("'@seedcord/c': minor")
         ];
+
         expect(maxBump(bodies)).toBe('major');
     });
 
@@ -26,16 +27,20 @@ describe('maxBump', () => {
         expect(maxBump([changeset('')])).toBeNull();
     });
 
-    it('ignores non-bump frontmatter lines', () => {
-        expect(maxBump([changeset("'@seedcord/a': patch\nnote: ignore me")])).toBe('patch');
+    it('ignores a package released as none', () => {
+        expect(maxBump([changeset("'@seedcord/a': none")])).toBeNull();
     });
 
     it('handles CRLF line endings and double-quoted keys', () => {
         expect(maxBump(['---\r\n"@seedcord/a": minor\r\n---\r\n'])).toBe('minor');
     });
 
-    it('returns null when a body has no frontmatter block', () => {
-        expect(maxBump(['just a summary, no frontmatter'])).toBeNull();
+    it('throws on a body with no frontmatter block', () => {
+        expect(() => maxBump(['just a summary, no frontmatter'])).toThrow(/frontmatter/);
+    });
+
+    it('throws on a frontmatter value that names no bump', () => {
+        expect(() => maxBump([changeset("'@seedcord/a': patch\nnote: ignore me")])).toThrow(/version type/);
     });
 });
 
@@ -66,15 +71,5 @@ describe('changesetPathsFromFiles', () => {
             { filename: '.changeset/dropped.md', status: 'removed' }
         ];
         expect(changesetPathsFromFiles(files)).to.deep.equal([]);
-    });
-});
-
-describe('encodeContentsPath', () => {
-    it('leaves a normal changeset path untouched', () => {
-        expect(encodeContentsPath('.changeset/funny-lions-dance.md')).toBe('.changeset/funny-lions-dance.md');
-    });
-
-    it('percent-encodes # and ? within a segment while keeping the slash', () => {
-        expect(encodeContentsPath('.changeset/weird#name?.md')).toBe('.changeset/weird%23name%3F.md');
     });
 });
