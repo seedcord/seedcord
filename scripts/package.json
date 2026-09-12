@@ -31,7 +31,8 @@
         "@manypkg/get-packages": "^3.1.0",
         "@seedcord/docs-engine": "workspace:^",
         "@seedcord/docs-generator": "workspace:^",
-        "envapt": "catalog:peer"
+        "envapt": "catalog:peer",
+        "yaml": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",

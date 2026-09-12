@@ -21,6 +21,10 @@ export class Workspace {
 
     constructor(private readonly snapshot: WorkspaceSnapshot) {}
 
+    get rootDir(): string {
+        return this.snapshot.rootDir;
+    }
+
     all(): readonly WorkspacePackage[] {
         return this.snapshot.packages;
     }

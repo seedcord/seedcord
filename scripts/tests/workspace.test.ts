@@ -38,6 +38,10 @@ describe('Workspace', () => {
         ]);
     });
 
+    it('names the directory the workspace was found in', () => {
+        expect(new Workspace(snapshot).rootDir).toBe('/repo');
+    });
+
     it('lists every package, private ones included', () => {
         expect(new Workspace(snapshot).all().map((one) => one.packageJson.name)).toEqual([
             '@seedcord/core',
