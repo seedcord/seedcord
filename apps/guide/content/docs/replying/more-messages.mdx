@@ -3,7 +3,7 @@ title: Follow-ups and edits
 description: Every reply method resolves to the message it wrote. Pass one back to edit() when you want to rewrite it.
 ---
 
-Once you have replied or deferred, [`this.followUp()`](ref:gateway/RepliableHandler.followUp) sends another message. Every one of [`reply()`](ref:gateway/RepliableHandler.reply), `followUp()`, and [`edit()`](ref:gateway/RepliableHandler.edit) resolves to the message it wrote. Pass one back to `edit()` to rewrite it.
+Once you've replied or deferred, [`this.followUp()`](ref:gateway/RepliableHandler.followUp) sends another message. Every one of [`reply()`](ref:gateway/RepliableHandler.reply), `followUp()`, and [`edit()`](ref:gateway/RepliableHandler.edit) resolves to the message it wrote. Pass one back to `edit()` to rewrite it.
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -39,7 +39,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 ## Targets have to come from this interaction
 
-seedcord stores the id of every message it sends. A targeted `edit()` or `delete()` accepts those ids alone.
+Discord lets an interaction's token edit and delete only the messages sent with that token. seedcord stores the id of every message it sends, and a targeted `edit()` or `delete()` checks the id against that list before calling Discord.
 
 ```txt output
 edit() was passed message 1287, which this interaction did not send.
@@ -47,7 +47,7 @@ Pass a message this interaction sent, returned by reply(),
 followUp(), edit(), or update(). (route slash:ban)
 ```
 
-[`delete()`](ref:gateway/RepliableHandler.delete) with no argument removes the first reply. `delete(message)` removes the one you pass, and that id stops working as a target afterwards.
+[`delete()`](ref:gateway/RepliableHandler.delete) checks the same list. With no argument it removes the first reply. `delete(message)` removes the one you pass, so that id leaves the list and a later edit of it throws.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -67,7 +67,7 @@ class Ban extends SlashHandler<'ban'> {
 
 ## send() picks the verb for you
 
-[`this.send()`](ref:gateway/RepliableHandler.send) works from every state, so it never throws the illegal-ack error the other verbs can.
+[`this.send()`](ref:gateway/RepliableHandler.send) works from every state, so it never throws [the wrong-state error](/replying/ack-states) that the other methods throw.
 
 {/* prettier-ignore-start */}
 
@@ -79,3 +79,7 @@ class Ban extends SlashHandler<'ban'> {
 | already replied | `followUp()` |
 
 {/* prettier-ignore-end */}
+
+`ephemeral` and `silent` apply only when `send()` creates a message. On the `edit()` row it drops them, since `edit()` doesn't take options.
+
+Use `send()` in code that runs from more than one state, like a helper that a deferring handler and a replying handler both call. Where a handler always reaches the call from one state, write the method itself. A `send()` that you meant as a new message rewrites the placeholder when it runs after a deferral.

@@ -29,11 +29,11 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-The person who ran the command sees your bot thinking until [`edit()`](ref:gateway/RepliableHandler.edit) runs. Discord expires the interaction token fifteen minutes after the interaction, and every call you make on it has to arrive before that.
+The person who ran the command sees your bot thinking until [`edit()`](ref:gateway/RepliableHandler.edit) runs. Discord expires the interaction token fifteen minutes after the interaction, so every call you make on it has to arrive before then.
 
 ## Set ephemeral when you defer
 
-`defer()` takes one option, `ephemeral`, and it is on by default.
+`defer()` takes an `ephemeral` option, and it's on by default. Only the person who ran the command sees the placeholder and the reply that fills it.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -48,7 +48,7 @@ class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-`edit()` does not take options, so whatever you pass `defer()` is what the reply carries.
+`edit()` doesn't take options, so whatever you pass `defer()` is what the reply carries.
 
 ## reply() after a deferral throws
 
@@ -64,6 +64,6 @@ message. (route slash:ban)
 
 ## Defer before anything slow
 
-[`reply()`](ref:gateway/RepliableHandler.reply) past the three seconds throws Discord's own error, `DiscordAPIError[10062]`, since the interaction is gone by then. seedcord rethrows it untouched and skips the fault card, because there is nowhere left to send one. Your bot goes quiet and the person who ran the command sees the interaction fail.
+[`reply()`](ref:gateway/RepliableHandler.reply) after the three seconds throws Discord's own error, `DiscordAPIError[10062]`, since the interaction is gone by then. seedcord rethrows it untouched, then sends its [error card](/replying/faults) to that same interaction. Discord rejects the card too, and seedcord drops that rejection with a debug line. The person who ran the command sees the interaction fail.
 
-Defer first whenever you cannot predict how long the handler takes.
+Defer first whenever you can't predict how long the handler takes.

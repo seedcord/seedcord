@@ -20,15 +20,27 @@ export class Ban extends SlashHandler<'ban'> {
 
 Passing a string is the short form. seedcord wraps it in one text component.
 
-<Callout type="warning">
+## Why answer through the handler?
 
-seedcord sets Discord's ComponentsV2 flag on every reply it sends. Discord forbids `content`, `embeds`, and `poll` on a message carrying that flag. `reply`, `edit`, `followUp`, `update`, and `send` all build their message out of components.
+On gateway, `this.event` is the discord.js interaction, so `this.event.reply()` sends a message too. On http it is Discord's raw payload, and you answer it through [`this.api`](ref:http/RepliableHandler.api). The handler's own methods take the same names on both transports, and each one records what it sent.
 
-To send an embed or a poll, use discord.js's own methods on `this.event`. That skips seedcord's ack tracking, so a later `this.edit()` throws. Read [Raw acks](/replying/raw-acks) before you do.
+That record is the interaction's ack state. `this.reply()` in the handler above moves it to replied, and every method checks it before calling Discord. A second `reply()` throws at that line.
 
-</Callout>
+```txt output
+reply() was called when this interaction was already replied to.
+Use followUp() for a new message or edit() to rewrite the reply.
+(route slash:ban)
+```
+
+discord.js checks too, and its error reads "The reply to this interaction has already been sent or deferred." seedcord's says which method works from there and which route threw. Its `cause` carries a stack pointing at the line that answered first. On http, `this.api` doesn't check at all, so a second callback comes back from Discord as an API error. [When a reply throws](/replying/ack-states) covers every case.
+
+The state matters most when your handler refuses. You refuse by throwing a [`Notice`](ref:core/Notice). seedcord then sends its card through the same handler with [`send()`](ref:gateway/RepliableHandler.send), which reads the state to pick a method. If nothing went out yet, the card is the reply. After `defer()` it fills the thinking placeholder, and after a reply it arrives as a follow-up. You write the same `throw` from any of those points.
+
+That holds while every answer goes through the handler. `this.event.reply()` reaches Discord and leaves the state at `unacked`. A callback on `this.api.interactions` does the same on http. seedcord then sends a `Notice` thrown after it as a first reply, which Discord rejects because the interaction was already acknowledged. seedcord drops that rejection with a debug line. The person who ran the command sees your message and never sees the refusal.
 
 ## A reply is a list of components
+
+A string gives you one block of text. A heading, a card, or a row of buttons goes in `components`, one entry per top-level component.
 
 ```ts twoslash hovers title="src/handlers/Ban.ts"
 import {
@@ -59,36 +71,51 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-[`BuilderComponent`](ref:core/BuilderComponent) wraps a discord.js builder, and `.component` gives you the builder to put in `components`. The card can live in the handler's file or its own.
+[`BuilderComponent`](ref:core/BuilderComponent) wraps a discord.js builder, and `.component` gives you the builder to put in `components`. A card that only `Ban` sends can stay in its file. Move `BanCard` to a file of its own once a second handler sends one, so rewording it takes one edit.
 
-`files` uploads bytes alongside the components, covered in [Files and attachments](/replying/files). The whole shape is [`ReplyResponse`](ref:types/ReplyResponse). Name it when a helper builds a reply and returns it.
+`files` uploads bytes alongside the components, covered in [Files and attachments](/replying/files). The whole shape is [`ReplyResponse`](ref:types/ReplyResponse). Put it on a helper's return type when the helper builds a reply, so a wrong field fails inside the helper.
+
+<Callout type="warning">
+
+seedcord sets Discord's ComponentsV2 flag on every reply it sends. Discord forbids `content`, `embeds`, and `poll` on a message carrying that flag. `reply`, `edit`, `followUp`, `update`, and `send` all build their message out of components.
+
+To send an embed or a poll, use discord.js's own methods on `this.event`. That skips the handler's ack state, so a later `this.edit()` throws and a thrown `Notice` never shows. Read [Raw acks](/replying/raw-acks) before you do.
+
+</Callout>
 
 ## Mentions inside your components
 
 seedcord sends `allowedMentions` only when you set one. Discord's default for an interaction reply is `{ parse: ['users'] }`, so a `<@id>` in your text pings that person. A role or `@everyone` mention stays plain text.
 
 ```ts twoslash
-import { TextDisplayBuilder } from '@discordjs/builders';
-import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+import {
+    BuilderComponent,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+// ---cut---
+class ReasonText extends BuilderComponent<'text_display'> {
+    constructor(reason: string) {
+        super('text_display');
+
+        this.instance.setContent(reason);
+    }
+}
 
 @SlashRoute('ban')
-class Ban extends SlashHandler<'ban'> {
+export class Ban extends SlashHandler<'ban'> {
     public async execute(): Promise<void> {
-        // ---cut---
         const reason = this.options.getString('reason') ?? '';
 
         await this.reply({
-            components: [
-                new TextDisplayBuilder().setContent(reason)
-            ],
+            components: [new ReasonText(reason).component],
             allowedMentions: { parse: [] }
         });
-        // ---cut-after---
     }
 }
 ```
 
-An empty `parse` blocks every mention.
+`reason` there is text someone typed into your command, so it can hold anyone's `<@id>`. The empty `parse` blocks every mention in it, so your bot doesn't ping anyone. Set one on any reply that repeats what a person typed.
 
 {/* prettier-ignore-start */}
 
@@ -120,11 +147,11 @@ class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-`followUp()` takes the same two options. `edit()` does not take options.
+`followUp()` takes `ephemeral` and `silent` the same way. `edit()` doesn't take options, since it rewrites a message that already has its flags.
 
 ## The message you get back
 
-`reply()` resolves to the message it created. Keep that message and you can rewrite or delete it later, both covered in [Follow-ups and edits](/replying/more-messages).
+`reply()` resolves to the message it created. Keep that message and you can rewrite or delete it later, which [Follow-ups and edits](/replying/more-messages) shows.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -143,5 +170,6 @@ class Ban extends SlashHandler<'ban'> {
 <Callout type="transport">
     On gateway you get a discord.js `Message`. On http you get an
     `APIMessage`, which is Discord's raw payload. `followUp()`,
-    `edit()`, and `update()` all return the same type.
+    `edit()`, and [`update()`](ref:gateway/ComponentHandler.update)
+    all return the same type.
 </Callout>
