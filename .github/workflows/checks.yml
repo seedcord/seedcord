@@ -3,18 +3,22 @@ name: checks
 on:
     pull_request:
         types: [opened, reopened, synchronize, ready_for_review]
-        paths-ignore:
-            - '**/*.md'
-            - 'docs/**'
-            - 'assets/**'
+        paths:
+            - '**'
+            - '!**/*.md'
+            - '!docs/**'
+            - '!assets/**'
+            - '.changeset/**'
     push:
         branches:
             - main
             - next
-        paths-ignore:
-            - '**/*.md'
-            - 'docs/**'
-            - 'assets/**'
+        paths:
+            - '**'
+            - '!**/*.md'
+            - '!docs/**'
+            - '!assets/**'
+            - '.changeset/**'
     merge_group:
         types: [checks_requested]
     workflow_dispatch:

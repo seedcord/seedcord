@@ -47,17 +47,7 @@ export class ReleaseNotes {
             return `| [${pkg.name}](${url}) | ${versions} |`;
         });
 
-        return [
-            '## 📦 Packages',
-            '',
-            '<!-- prettier-ignore-start -->',
-            '',
-            '| package | version |',
-            '| --- | --- |',
-            ...rows,
-            '',
-            '<!-- prettier-ignore-end -->'
-        ].join('\n');
+        return ['## 📦 Packages', '', '| package | version |', '| --- | --- |', ...rows].join('\n');
     }
 }
 

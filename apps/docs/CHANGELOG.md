@@ -107,10 +107,9 @@
 
 ### 🩹 Patch
 
-- `@seedcord/rate-limiter` 0.1.0
-
 #### 📦 Seedcord packages
 
+- `@seedcord/rate-limiter` 0.1.0 (new)
 - `@seedcord/types` 0.7.2-next.0 → 0.8.0
 - `@seedcord/docs-engine` 0.3.1 → 0.3.2
 - `@seedcord/eslint-config` 1.4.3 → 1.5.0
@@ -133,10 +132,9 @@
 
 ### 🩹 Patch
 
-- `@seedcord/ui` 0.1.0
-
 #### 📦 Seedcord packages
 
+- `@seedcord/ui` 0.1.0 (new)
 - `@seedcord/eslint-config` 1.4.1 → 1.4.2
 - `@seedcord/types` 0.6.0 → 0.7.0
 - `@seedcord/docs-engine` 0.2.2 → 0.3.0
@@ -145,10 +143,9 @@
 
 ### 🩹 Patch
 
-- `@seedcord/ui` 0.1.0
-
 #### 📦 Seedcord packages
 
+- `@seedcord/ui` 0.1.0 (new)
 - `@seedcord/types` 0.5.0 → 0.6.0
 - `@seedcord/eslint-config` 1.4.0 → 1.4.1
 - `@seedcord/docs-engine` 0.2.2 → 0.3.0
@@ -167,10 +164,10 @@
 
 - export "version" variable with the actual semantic version of each package ([`225977a`](https://github.com/seedcord/seedcord/commit/225977a))
 - bump deps ([`d938005`](https://github.com/seedcord/seedcord/commit/d938005))
-- `@seedcord/ui` 0.1.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/ui` 0.1.0 (new)
 - `@seedcord/eslint-config` 1.3.3 → 1.4.0
 - `@seedcord/docs-engine` 0.2.2 → 0.3.0
 - `@seedcord/types` 0.3.5 → 0.4.0

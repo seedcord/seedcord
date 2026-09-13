@@ -19,7 +19,7 @@ export interface ApiDocsGeneratorOptions extends ApiDocsPathConfig {
     packageName?: string;
     /** GitHub repo base for source links, e.g. `https://github.com/seedcord/seedcord`. */
     githubBase?: string;
-    /** Git ref the source links point at: the default branch locally, the release commit sha when publishing. */
+    /** Git ref for source and changelog links. Defaults to `next`. */
     ref?: string;
 }
 

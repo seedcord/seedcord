@@ -40,7 +40,6 @@ export function bucketOf(heading: string): Bucket | undefined {
     return BUCKET[heading];
 }
 
-/** Splits a section body into its `- ` entries, each trimmed of trailing blank lines. */
 export function splitEntries(body: string): string[] {
     return body
         .split(ENTRY_START)
@@ -55,7 +54,6 @@ export function joinEntries(entries: readonly string[]): string {
         .join('\n');
 }
 
-/** The part of a section above its nested block. */
-export function ownBody(section: string): string {
+export function bodyWithoutNested(section: string): string {
     return (section.split(NESTED_START)[0] ?? '').slice(section.indexOf('\n') + 1);
 }

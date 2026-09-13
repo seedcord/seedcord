@@ -2,21 +2,21 @@ import { describe, expect, it } from 'vitest';
 
 import { ChangesetRule } from '#src/release/ChangesetRule';
 
-const PUBLISHED = new Set(['@seedcord/core', '@seedcord/gateway']);
+const PACKAGES = new Set(['@seedcord/core', '@seedcord/gateway']);
 
 const changeset = (frontmatter: string, summary: string): string => `---\n${frontmatter}\n---\n\n${summary}\n`;
 
 describe('ChangesetRule package names', () => {
-    it('flags a package the workspace does not publish', () => {
-        const rule = new ChangesetRule(PUBLISHED);
+    it('flags a package outside the workspace', () => {
+        const rule = new ChangesetRule(PACKAGES);
 
         const found = rule.violations('add-thing.md', changeset("'@seedcord/nope': minor", 'A thing changed.'));
 
         expect(found).toEqual([{ file: 'add-thing.md', reason: 'unknown-package', detail: '@seedcord/nope' }]);
     });
 
-    it('accepts a published package', () => {
-        const rule = new ChangesetRule(PUBLISHED);
+    it('accepts a workspace package', () => {
+        const rule = new ChangesetRule(PACKAGES);
 
         expect(rule.violations('add-thing.md', changeset("'@seedcord/core': minor", 'A thing changed.'))).toEqual([]);
     });
@@ -24,7 +24,7 @@ describe('ChangesetRule package names', () => {
 
 describe('ChangesetRule bump types', () => {
     it('flags a major bump while the repo is pre-1.0', () => {
-        const rule = new ChangesetRule(PUBLISHED);
+        const rule = new ChangesetRule(PACKAGES);
 
         const found = rule.violations('big.md', changeset("'@seedcord/core': major", 'A thing changed.'));
 
@@ -32,7 +32,7 @@ describe('ChangesetRule bump types', () => {
     });
 
     it('accepts minor and patch', () => {
-        const rule = new ChangesetRule(PUBLISHED);
+        const rule = new ChangesetRule(PACKAGES);
 
         expect(rule.violations('a.md', changeset("'@seedcord/core': minor", 'A thing changed.'))).toEqual([]);
         expect(rule.violations('b.md', changeset("'@seedcord/gateway': patch", 'Fixed a thing.'))).toEqual([]);
@@ -41,7 +41,7 @@ describe('ChangesetRule bump types', () => {
 
 describe('ChangesetRule breaking marker', () => {
     it('flags a marker with the colon outside the bold', () => {
-        const rule = new ChangesetRule(PUBLISHED);
+        const rule = new ChangesetRule(PACKAGES);
 
         const found = rule.violations('old.md', changeset("'@seedcord/core': minor", '**BREAKING**: A thing changed.'));
 
@@ -49,7 +49,7 @@ describe('ChangesetRule breaking marker', () => {
     });
 
     it('flags the italic variant', () => {
-        const rule = new ChangesetRule(PUBLISHED);
+        const rule = new ChangesetRule(PACKAGES);
 
         const found = rule.violations(
             'peer.md',
@@ -60,7 +60,7 @@ describe('ChangesetRule breaking marker', () => {
     });
 
     it('accepts the marker opening a later paragraph', () => {
-        const rule = new ChangesetRule(PUBLISHED);
+        const rule = new ChangesetRule(PACKAGES);
 
         const summary = 'Every handler constructor now takes a `DispatchContext`.\n\n**BREAKING:** the bag moved.';
 
@@ -68,7 +68,7 @@ describe('ChangesetRule breaking marker', () => {
     });
 
     it('flags the marker sitting inside a sentence', () => {
-        const rule = new ChangesetRule(PUBLISHED);
+        const rule = new ChangesetRule(PACKAGES);
 
         const found = rule.violations(
             'mid.md',
@@ -79,7 +79,7 @@ describe('ChangesetRule breaking marker', () => {
     });
 
     it('flags the marker alone on its line, which the changelog would file under minor', () => {
-        const rule = new ChangesetRule(PUBLISHED);
+        const rule = new ChangesetRule(PACKAGES);
 
         const found = rule.violations(
             'alone.md',
@@ -89,8 +89,16 @@ describe('ChangesetRule breaking marker', () => {
         expect(found).toEqual([{ file: 'alone.md', reason: 'breaking-marker', detail: '**BREAKING:**' }]);
     });
 
+    it('leaves a BREAKING inside a code span alone', () => {
+        const rule = new ChangesetRule(PACKAGES);
+
+        const found = rule.violations('span.md', changeset("'@seedcord/core': minor", 'Reads `BREAKING_CHANGE` now.'));
+
+        expect(found).toEqual([]);
+    });
+
     it('accepts the shipped cooldown changeset', () => {
-        const rule = new ChangesetRule(PUBLISHED);
+        const rule = new ChangesetRule(PACKAGES);
 
         const summary =
             '**BREAKING:** Fixed the cooldown on a handler registered on two buttons. Because its route id joined both into `button:confirm,cancel`, clicking either one put both on cooldown. Now it would just be `button:confirm`, for example.';
@@ -100,7 +108,7 @@ describe('ChangesetRule breaking marker', () => {
 });
 
 describe('ChangesetRule length', () => {
-    const rule = new ChangesetRule(PUBLISHED);
+    const rule = new ChangesetRule(PACKAGES);
 
     it('accepts three sentences on a minor', () => {
         const summary =
@@ -138,6 +146,18 @@ describe('ChangesetRule length', () => {
         ]);
     });
 
+    it('reads e.g. as part of its sentence', () => {
+        const summary = 'Fixed a route, e.g. `button:confirm`, that matched two handlers.';
+
+        expect(rule.violations('eg.md', changeset("'@seedcord/gateway': patch", summary))).toEqual([]);
+    });
+
+    it('counts no sentence end in a numbered list marker', () => {
+        const summary = 'Added four gates.\n\n1. `OwnerOnly`\n2. `GuildOnly`\n3. `DmOnly`\n4. `Cooldown`';
+
+        expect(rule.violations('list.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
+    });
+
     it('accepts one sentence on a patch', () => {
         const summary = 'Fixed a plugin whose `init()` outlasts its timeout.';
 
@@ -146,7 +166,7 @@ describe('ChangesetRule length', () => {
 });
 
 describe('ChangesetRule punctuation', () => {
-    const rule = new ChangesetRule(PUBLISHED);
+    const rule = new ChangesetRule(PACKAGES);
 
     it('flags an em dash', () => {
         const summary = 'The client retries on 429 — up to three times.';
@@ -180,7 +200,7 @@ describe('ChangesetRule punctuation', () => {
 });
 
 describe('ChangesetRule banned words', () => {
-    const rule = new ChangesetRule(PUBLISHED);
+    const rule = new ChangesetRule(PACKAGES);
 
     it('flags a hype word', () => {
         const summary = 'The dispatcher is more performant now.';
@@ -206,7 +226,7 @@ describe('ChangesetRule banned words', () => {
 });
 
 describe('ChangesetRule fix opener', () => {
-    const rule = new ChangesetRule(PUBLISHED);
+    const rule = new ChangesetRule(PACKAGES);
 
     it('flags the imperative opener', () => {
         const summary = 'Fix the cooldown on a handler registered on two buttons.';
@@ -238,6 +258,14 @@ describe('ChangesetRule fix opener', () => {
 
         expect(rule.violations('a.md', changeset("'@seedcord/gateway': patch", first))).toEqual([]);
         expect(rule.violations('b.md', changeset("'@seedcord/gateway': minor", second))).toEqual([]);
+    });
+
+    it('flags a second fix spelled Also fixes', () => {
+        const summary = 'Fixed the cooldown on two buttons. Also fixes the reload.';
+
+        expect(rule.violations('also.md', changeset("'@seedcord/gateway': minor", summary))).toEqual([
+            { file: 'also.md', reason: 'fix-opener', detail: 'Also fixes' }
+        ]);
     });
 
     it('leaves a body that opens on something else alone', () => {

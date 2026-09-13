@@ -153,10 +153,9 @@
 
 ### 🩹 Patch
 
-- `@seedcord/logger` 0.1.0
-
 #### 📦 Seedcord packages
 
+- `@seedcord/logger` 0.1.0 (new)
 - `@seedcord/types` 0.7.2-next.0 → 0.8.0
 - `@seedcord/utils` 0.7.1-next.0 → 0.8.0
 - `@seedcord/errors` 0.2.2-next.0 → 0.3.0

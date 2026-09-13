@@ -1,4 +1,4 @@
-/* eslint-disable no-console -- CLI script so console is ok */
+/* eslint-disable no-console -- CLI script */
 import { readdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 

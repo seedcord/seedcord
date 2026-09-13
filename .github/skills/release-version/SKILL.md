@@ -59,14 +59,14 @@ Run on `main` so the clean version reaches `latest`. Exiting pre mode and versio
 ```sh
 git switch main && git pull
 git merge next                       # resolve any changelog or pre.json conflicts
-pnpm changeset pre exit              # leave pre mode, then review the changesets left in .changeset/pre
+pnpm changeset pre exit              # set pre.json to exit mode, then review the changesets still in .changeset/
 pnpm release:version                 # write the clean X.Y.Z and drop the superseded prerelease sections
 pnpm install                         # update the lockfile
 git commit -am "chore(release): version packages"
 git push origin main                 # or open a PR if main is branch-protected, then merge it
 ```
 
-Then **wait for the `main` publish workflow to finish green**, because CI does the actual publish. The `Protect Publishers` ruleset requires a PR with one approval on `main`. Push directly with a bypass, or run the same steps on a branch and merge the PR.
+Then **wait for the `main` publish workflow to finish green**, because CI does the actual publish. The `Require PR for main or next` ruleset requires a PR on `main`. Push directly with a bypass, or run the same steps on a branch and merge the PR.
 
 ```sh
 npm dist-tag ls seedcord             # latest now points at the clean X.Y.Z

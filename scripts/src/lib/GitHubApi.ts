@@ -1,4 +1,5 @@
 const API = 'https://api.github.com';
+// justified: every response cast below matches GitHub's REST schema for this version
 const API_VERSION = '2022-11-28';
 const PAGE_SIZE = 100;
 
@@ -48,7 +49,6 @@ export class GitHubApi {
             const response = await this.send('GET', path);
             if (!response.ok) throw failed(`listing files on pull request #${String(pull)}`, response);
 
-            // justified: GitHub returns an array of file entries for this route
             const batch = (await response.json()) as PullRequestFile[];
             files.push(...batch);
             if (batch.length < PAGE_SIZE) return files;
@@ -59,7 +59,6 @@ export class GitHubApi {
         const response = await this.send('GET', `/repos/${this.repo}/contents/${encodePath(path)}?ref=${ref}`);
         if (!response.ok) throw failed(`reading ${path}`, response);
 
-        // justified: GitHub returns the file body base64 encoded
         const { content } = (await response.json()) as { content: string };
         return Buffer.from(content, 'base64').toString('utf8');
     }
@@ -68,7 +67,6 @@ export class GitHubApi {
         const response = await this.send('GET', `/repos/${this.repo}/pulls/${String(pull)}`);
         if (!response.ok) throw failed(`reading pull request #${String(pull)}`, response);
 
-        // justified: GitHub returns the pull request object for this route
         const { user } = (await response.json()) as { user: Account | null };
         return humanLogin(user);
     }
@@ -78,7 +76,6 @@ export class GitHubApi {
         const response = await this.send('GET', path);
         if (!response.ok) throw failed(`listing commits on pull request #${String(pull)}`, response);
 
-        // justified: GitHub returns an array of commit objects for this route
         const commits = (await response.json()) as { author: Account | null }[];
         return commits.map((one) => humanLogin(one.author)).filter((login) => login !== undefined);
     }
@@ -87,7 +84,6 @@ export class GitHubApi {
         const response = await this.send('GET', `/repos/${this.repo}/issues/${String(issue)}/labels`);
         if (!response.ok) throw failed(`listing labels on #${String(issue)}`, response);
 
-        // justified: GitHub returns an array of label objects for this route
         const found = (await response.json()) as { name: string }[];
         return found.map(({ name }) => name);
     }

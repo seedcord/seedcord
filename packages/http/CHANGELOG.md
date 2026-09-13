@@ -72,10 +72,10 @@
 ### 🩹 Patch
 
 - `CustomId` moved to `@seedcord/custom-id`. Core still exports it under the same name. The new `setCustomIdErrors` swaps the card a stale or corrupt button shows. ([#299](https://github.com/seedcord/seedcord/pull/299))
-- `@seedcord/custom-id` 0.1.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/custom-id` 0.1.0 (new)
 - `@seedcord/core` 0.4.0 → 0.4.1
 - `@seedcord/types` 0.10.0 → 0.10.1
 - `@seedcord/errors` 0.5.0 → 0.5.1
@@ -292,12 +292,12 @@
 
 - Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`. ([`789f17a`](https://github.com/seedcord/seedcord/commit/789f17a))
 - Require envapt `^8.1.0`. An older pin in your own bot installs a second copy whose `Envapter` state splits from the framework's. ([#196](https://github.com/seedcord/seedcord/pull/196))
-- `@seedcord/core` 0.1.0
-- `@seedcord/logger` 0.1.0
-- `@seedcord/rate-limiter` 0.1.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/core` 0.1.0 (new)
+- `@seedcord/logger` 0.1.0 (new)
+- `@seedcord/rate-limiter` 0.1.0 (new)
 - `@seedcord/types` 0.7.2-next.0 → 0.8.0
 - `@seedcord/utils` 0.7.1-next.0 → 0.8.0
 - `@seedcord/errors` 0.2.2-next.0 → 0.3.0

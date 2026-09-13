@@ -115,8 +115,10 @@
 
 ### 🩹 Patch
 
-- `@seedcord/eslint-plugin` 0.1.0
-- `eslint-plugin-discordjs` 0.1.0
+#### 📦 Seedcord packages
+
+- `@seedcord/eslint-plugin` 0.1.0 (new)
+- `eslint-plugin-discordjs` 0.1.0 (new)
 
 ## 1.4.3
 

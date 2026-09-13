@@ -45,6 +45,15 @@ describe('ChangelogRenderer release line', () => {
         );
     });
 
+    it('labels the full sha changesets passes with its first seven characters', async () => {
+        const sha = '3b5e4c600ef961b674170d31f0364709a423576b';
+        const full = new ChangelogRenderer({ repo: 'seedcord/seedcord', subjectOf: () => Promise.resolve('fix: a') });
+
+        expect(await full.releaseLine({ summary: 'Fixed a thing.', commit: sha })).toBe(
+            `- Fixed a thing. ([\`3b5e4c6\`](https://github.com/seedcord/seedcord/commit/${sha}))`
+        );
+    });
+
     it('leaves an uncommitted changeset without a link', async () => {
         expect(await renderer.releaseLine({ summary: 'A thing changed.' })).toBe('- A thing changed.');
     });

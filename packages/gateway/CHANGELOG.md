@@ -71,10 +71,10 @@
 ### 🩹 Patch
 
 - `CustomId` moved to `@seedcord/custom-id`. Core still exports it under the same name. The new `setCustomIdErrors` swaps the card a stale or corrupt button shows. ([#299](https://github.com/seedcord/seedcord/pull/299))
-- `@seedcord/custom-id` 0.1.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/custom-id` 0.1.0 (new)
 - `@seedcord/core` 0.4.0 → 0.4.1
 - `@seedcord/types` 0.10.0 → 0.10.1
 - `@seedcord/errors` 0.5.0 → 0.5.1
@@ -324,13 +324,12 @@
 
     A `once` event handler no longer runs twice when its event fires concurrently. A throwing `core.bus.on()` listener no longer escapes `publish` or skips the listeners after it. Editing a subscriber file hot-reloads it in dev.
 
-- `@seedcord/core` 0.1.0
-- `@seedcord/logger` 0.1.0
-- `@seedcord/event-emitter` 0.1.0
-- `@seedcord/rate-limiter` 0.1.0
-
 #### 📦 Seedcord packages
 
+- `@seedcord/core` 0.1.0-next.2 → 0.1.0
+- `@seedcord/logger` 0.1.0 (new)
+- `@seedcord/event-emitter` 0.1.0 (new)
+- `@seedcord/rate-limiter` 0.1.0-next.0 → 0.1.0
 - `@seedcord/types` 0.7.2-next.0 → 0.8.0
 - `@seedcord/utils` 0.7.1-next.0 → 0.8.0
 - `@seedcord/errors` 0.2.2-next.0 → 0.3.0
@@ -352,12 +351,15 @@
 ### 🩹 Patch
 
 - Move the interaction metadata keys, the gate notices, and `RegisterCommand` from `seedcord` to `@seedcord/core`. `seedcord` re-exports them. `OnCooldown` is created with `resetAt` (renamed from the unpublished `expires`). ([#175](https://github.com/seedcord/seedcord/pull/175))
-- `@seedcord/core` 0.1.0-next.2
-- `@seedcord/types` 0.8.0-next.3
-- `@seedcord/services` 0.9.0-next.4
-- `@seedcord/rate-limiter` 0.1.0-next.0
-- `@seedcord/utils` 0.8.0-next.3
-- `@seedcord/errors` 0.3.0-next.2
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.1.0-next.1 → 0.1.0-next.2
+- `@seedcord/types` 0.8.0-next.2 → 0.8.0-next.3
+- `@seedcord/services` 0.9.0-next.3 → 0.9.0-next.4
+- `@seedcord/rate-limiter` 0.1.0-next.0 (new)
+- `@seedcord/utils` 0.8.0-next.2 → 0.8.0-next.3
+- `@seedcord/errors` 0.3.0-next.1 → 0.3.0-next.2
 
 ## 0.16.0-next.3
 
@@ -373,11 +375,13 @@
 
 ### 🩹 Patch
 
-- `@seedcord/errors` 0.3.0-next.2
-- `@seedcord/core` 0.1.0-next.1
-- `@seedcord/services` 0.9.0-next.3
-- `@seedcord/types` 0.8.0-next.2
-- `@seedcord/utils` 0.8.0-next.2
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.3.0-next.1 → 0.3.0-next.2
+- `@seedcord/core` 0.1.0-next.0 → 0.1.0-next.1
+- `@seedcord/services` 0.9.0-next.2 → 0.9.0-next.3
+- `@seedcord/types` 0.8.0-next.1 → 0.8.0-next.2
+- `@seedcord/utils` 0.8.0-next.1 → 0.8.0-next.2
 
 ## 0.16.0-next.2
 
@@ -387,11 +391,13 @@
 
 ### 🩹 Patch
 
-- `@seedcord/core` 0.1.0-next.0
-- `@seedcord/types` 0.8.0-next.2
-- `@seedcord/kit` 0.3.0-next.2
-- `@seedcord/services` 0.9.0-next.2
-- `@seedcord/utils` 0.8.0-next.2
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.1.0-next.0 (new)
+- `@seedcord/types` 0.8.0-next.1 → 0.8.0-next.2
+- `@seedcord/kit` 0.3.0-next.1 → 0.3.0-next.2
+- `@seedcord/services` 0.9.0-next.1 → 0.9.0-next.2
+- `@seedcord/utils` 0.8.0-next.1 → 0.8.0-next.2
 
 ## 0.16.0-next.1
 
@@ -402,11 +408,14 @@
 ### 🩹 Patch
 
 - Modernize internals via the curated eslint-plugin-unicorn rules (modern array, string, and number APIs, and `Error.isError` in error checks). Behavior-preserving, no public API change. ([#168](https://github.com/seedcord/seedcord/pull/168))
-- `@seedcord/services` 0.9.0-next.1
-- `@seedcord/utils` 0.8.0-next.1
-- `@seedcord/kit` 0.3.0-next.1
-- `@seedcord/types` 0.8.0-next.1
-- `@seedcord/errors` 0.3.0-next.1
+
+#### 📦 Seedcord packages
+
+- `@seedcord/services` 0.8.3-next.0 → 0.9.0-next.1
+- `@seedcord/utils` 0.7.1-next.0 → 0.8.0-next.1
+- `@seedcord/kit` 0.2.1-next.0 → 0.3.0-next.1
+- `@seedcord/types` 0.7.2-next.0 → 0.8.0-next.1
+- `@seedcord/errors` 0.2.2-next.0 → 0.3.0-next.1
 
 ## 0.16.0-next.0
 
@@ -420,11 +429,11 @@
 - Register the subscriber bus for HMR so editing a subscriber file hot-reloads it in dev. The wiring existed but was never invoked, so subscriber edits silently needed a full restart. ([#163](https://github.com/seedcord/seedcord/pull/163))
 - Throw on a duplicate interaction route, and on two interaction middleware classes sharing a name. Before, the later registration silently overwrote the earlier one. ([#163](https://github.com/seedcord/seedcord/pull/163))
 - Fix a `once` event handler running twice when the same event fired concurrently. Two overlapping fires both passed the spent-handler check before either marked it spent. ([#163](https://github.com/seedcord/seedcord/pull/163))
-- `@seedcord/kit` 0.2.1-next.0
-- `@seedcord/services` 0.8.3-next.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/kit` 0.2.0 → 0.2.1-next.0
+- `@seedcord/services` 0.8.2 → 0.8.3-next.0
 - `@seedcord/errors` 0.2.1 → 0.2.2-next.0
 - `@seedcord/types` 0.7.1 → 0.7.2-next.0
 - `@seedcord/utils` 0.7.0 → 0.7.1-next.0
@@ -443,11 +452,11 @@
 - add examples to some utils that should have them ([#152](https://github.com/seedcord/seedcord/pull/152))
 - `__componentDefs` phantom field should be internal ([`51006e2`](https://github.com/seedcord/seedcord/commit/51006e2))
 - update LICENSE copyright year ([#152](https://github.com/seedcord/seedcord/pull/152))
-- `@seedcord/kit` 0.2.0
-- `@seedcord/services` 0.8.2
 
 #### 📦 Seedcord packages
 
+- `@seedcord/kit` 0.1.1 → 0.2.0
+- `@seedcord/services` 0.8.1 → 0.8.2
 - `@seedcord/utils` 0.6.1 → 0.7.0
 - `@seedcord/errors` 0.2.0 → 0.2.1
 - `@seedcord/types` 0.7.0 → 0.7.1
@@ -464,11 +473,11 @@
 
 - Bump non-breaking runtime dependencies (envapt 6.0.2, discord-api-types 0.38.49, mongoose 9.7.1, ink 7.1.0, typescript-eslint 8.61.1, tailwindcss peer 4.3.1). ([`043e2a1`](https://github.com/seedcord/seedcord/commit/043e2a1))
 - Add `seedcord commands` to find and delete guild application commands that duplicate a global command (or, with `--purge`, every command in a guild). Run it with no flags for a guided wizard, or headlessly with `--clean --guild <ids>` or `--all-guilds` plus `--apply`, `--purge`, and `--yes`. It reads deployed state over REST, dry-runs by default, and never touches global commands. ([#147](https://github.com/seedcord/seedcord/pull/147))
-- `@seedcord/services` 0.8.1
-- `@seedcord/kit` 0.1.1
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.8.0 → 0.8.1
+- `@seedcord/kit` 0.1.0 → 0.1.1
 - `@seedcord/utils` 0.6.0 → 0.6.1
 - `@seedcord/errors` 0.1.0 → 0.2.0
 - `@seedcord/types` 0.6.0 → 0.7.0
@@ -532,12 +541,12 @@
 - Upgrade the envapt runtime dependency to 6.0.0. ([`180b5a9`](https://github.com/seedcord/seedcord/commit/180b5a9))
 - HMR now explicitly also runs in the test environment, not only in development. ([`74ea604`](https://github.com/seedcord/seedcord/commit/74ea604))
 - Harden interaction routing against metadata-key collisions. Route metadata is now keyed by unique Symbols instead of plain strings, so a third-party `Reflect.defineMetadata` call using a generic string key can no longer overwrite a handler's routes. ([#144](https://github.com/seedcord/seedcord/pull/144))
-- `@seedcord/services` 0.8.0
-- `@seedcord/errors` 0.1.0
-- `@seedcord/kit` 0.1.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.7.1 → 0.8.0
+- `@seedcord/errors` 0.1.0 (new)
+- `@seedcord/kit` 0.1.0 (new)
 - `@seedcord/types` 0.5.0 → 0.6.0
 - `@seedcord/utils` 0.5.0 → 0.6.0
 
@@ -561,12 +570,12 @@
 -   - Add end-to-end typed context menus. Author a context-menu command as a plain discord.js `ContextMenuCommandBuilder`, run `seedcord codegen` to emit committed `UserContextMenuRegistry` and `MessageContextMenuRegistry` augmentations, then handlers extend `ContextMenuHandler<ApplicationCommandType.User>` or `ContextMenuHandler<ApplicationCommandType.Message>` and read `this.target`, a `User` for a user menu or a `Message` for a message menu, plus `this.targetMember` on user menus. `@ContextMenuRoute(ApplicationCommandType.Message, 'Report Message')` checks the name against its kind's registry and is cross-checked against the handler generic both directions, so a typo or a kind mismatch is a compile error. The two registries stay separate because Discord allows a user command and a message command to share a name. ([#139](https://github.com/seedcord/seedcord/pull/139))
         - Warn at boot for any registered context-menu command with no handler, parallel to the slash route guard.
         - `@ContextMenuRoute` now takes `(ApplicationCommandType.User | ApplicationCommandType.Message, ...names)` rather than `('user' | 'message', string | string[])`, and a context-menu handler extends the new `ContextMenuHandler` base rather than `InteractionHandler`.
-        - **BREAKING**: `seedcord codegen` writes `command-registry.gen.ts` rather than `slash-registry.gen.ts`, since one file now holds the slash and context-menu registries. Delete the old file and re-run `seedcord codegen`.
+        - `seedcord codegen` writes `command-registry.gen.ts` rather than `slash-registry.gen.ts`, since one file now holds the slash and context-menu registries. Delete the old file and re-run `seedcord codegen`.
 
 -   - Add a typed customId system for buttons, modals, and select menus. Define a customId once with `new CustomId('approve').snowflake('userId').oneOf('action', ['approve', 'deny'])`, encode it onto a component, and read the decoded values back in the handler through `this.params` (single route) or `this.match` (several routes), fully typed end to end. Component handlers extend the new `ButtonHandler`, `ModalHandler`, and `SelectHandler` bases. ([#139](https://github.com/seedcord/seedcord/pull/139))
         - Components route by a stable prefix, so a customId minted before its shape changed still reaches its handler and replies with a `StaleCustomId` message instead of failing silently.
         - `@ButtonRoute`, `@ModalRoute`, and `@SelectMenuRoute` now take `CustomId` definitions instead of string prefixes. Passing a different definition to the decorator than the one in the handler's generic is a compile error.
-        - **BREAKING**: removed `getArgs()` and `getArg()` from handlers, along with the `-` delimited positional customId arguments. Read decoded values from `this.params` or `this.match` instead.
+        - removed `getArgs()` and `getArg()` from handlers, along with the `-` delimited positional customId arguments. Read decoded values from `this.params` or `this.match` instead.
 
 -   - Type event middleware by the events it runs for. A middleware that lists a single event in `{ events }` and its `EventMiddleware` generic reads `this.event` as that event's payload tuple, fully typed. A middleware that spans several events, or omits `{ events }` to run for every event, reads `this.eventName` to know which event fired, and `this.event` is `never`, because a middleware runs the same for every event it handles and so has no `match`. The controller threads the fired event name into the middleware. The `{ events }` list and the `EventMiddleware` generic are cross-checked, so listing an event in one but not the other is a compile error in both directions. ([#139](https://github.com/seedcord/seedcord/pull/139))
         - on a middleware registered for two or more events, or a catchall with no `{ events }`, `this.event` is now `never`. Read `this.eventName` and do work that does not depend on the payload shape, or write one middleware per event to read a typed payload. Single-event middleware is unaffected.
@@ -588,10 +597,9 @@
 
 ### 🩹 Patch
 
-- `@seedcord/services` 0.7.1
-
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.7.0 → 0.7.1
 - `@seedcord/types` 0.4.0 → 0.5.0
 - `@seedcord/utils` 0.4.0 → 0.5.0
 
@@ -629,11 +637,11 @@
 - make sure `@RegisterEffect` can only be used on an EffectHandler. this is the expected behavior so it isn't a breaking change. ([`cf9766d`](https://github.com/seedcord/seedcord/commit/cf9766d))
 - build pipeline migrated from `tsup` to `tsdown`. each published package now ships `dist/index.d.mts` + `dist/index.d.cts` (cjs is a one-line re-export stub) with a per-condition `exports` map. source-level public API unchanged. `@seedcord/tsup-config` renamed to `@seedcord/tsdown-config` and made private. ([`fe77998`](https://github.com/seedcord/seedcord/commit/fe77998))
 - bump peer floor: typescript `^6.0.3`, node `^22.13`. shared `tsconfig/base.json` now sets `esModuleInterop: true` and `types: ["node"]` for ts6's removed implicit defaults. no public API changes. ([`fe77998`](https://github.com/seedcord/seedcord/commit/fe77998))
-- `@seedcord/services` 0.7.0
-- `@seedcord/cli` 0.1.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.6.0 → 0.7.0
+- `@seedcord/cli` 0.1.0 (new)
 - `@seedcord/types` 0.3.5 → 0.4.0
 - `@seedcord/utils` 0.3.8 → 0.4.0
 
@@ -643,10 +651,10 @@
 
 - discord.js was bumped a patch version ([`f8fbe70`](https://github.com/seedcord/seedcord/commit/f8fbe70))
 - bump general dependencies ([`f8fbe70`](https://github.com/seedcord/seedcord/commit/f8fbe70))
-- `@seedcord/services` 0.6.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.5.1 → 0.6.0
 - `@seedcord/types` 0.3.4 → 0.3.5
 - `@seedcord/utils` 0.3.7 → 0.3.8
 
@@ -656,10 +664,10 @@
 
 - bump deps ([`1d8986b`](https://github.com/seedcord/seedcord/commit/1d8986b))
 - bump djs to 14.25.0 ([`1d8986b`](https://github.com/seedcord/seedcord/commit/1d8986b))
-- `@seedcord/services` 0.5.1
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.5.0 → 0.5.1
 - `@seedcord/types` 0.3.3 → 0.3.4
 - `@seedcord/utils` 0.3.6 → 0.3.7
 
@@ -702,10 +710,10 @@
 ### 🩹 Patch
 
 - add optional custom error input for hasPermsToAssign function as well ([`485670a`](https://github.com/seedcord/seedcord/commit/485670a))
-- `@seedcord/services` 0.5.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.4.0 → 0.5.0
 - `@seedcord/utils` 0.3.5 → 0.3.6
 
 ## 0.9.1
@@ -748,10 +756,10 @@
 - custom seedcord errors and error codes ([#62](https://github.com/seedcord/seedcord/pull/62))
 - better validation for UNKNOWN_EXCEPTION_WEBHOOK_URL ([#62](https://github.com/seedcord/seedcord/pull/62))
 - make sure that a registered command can only ever be guild OR global. this should not be breaking. If it is, your code was not following best practices. ([#62](https://github.com/seedcord/seedcord/pull/62))
-- `@seedcord/services` 0.4.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.3.3 → 0.4.0
 - `@seedcord/utils` 0.3.4 → 0.3.5
 
 ## 0.7.1
@@ -771,10 +779,10 @@
 ### 🩹 Patch
 
 - bump deps (mainly djs to 14.24.2)
-- `@seedcord/services` 0.3.3
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.3.2 → 0.3.3
 - `@seedcord/types` 0.3.2 → 0.3.3
 - `@seedcord/utils` 0.3.3 → 0.3.4
 
@@ -783,10 +791,10 @@
 ### 🩹 Patch
 
 - bump discord.js version to latest
-- `@seedcord/services` 0.3.2
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.3.1 → 0.3.2
 - `@seedcord/types` 0.3.1 → 0.3.2
 - `@seedcord/utils` 0.3.2 → 0.3.3
 
@@ -814,10 +822,10 @@
 ### 🩹 Patch
 
 - bump deps, update djs to 14.24.0, make file_upload available in BuilderComponent ([`aaa59b7`](https://github.com/seedcord/seedcord/commit/aaa59b7))
-- `@seedcord/services` 0.3.1
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.3.0 → 0.3.1
 - `@seedcord/types` 0.3.0 → 0.3.1
 - `@seedcord/utils` 0.3.0 → 0.3.1
 
@@ -842,10 +850,10 @@
 - improve type exports and tsdoc ([#56](https://github.com/seedcord/seedcord/pull/56))
 - update effects related docs for clarity ([#56](https://github.com/seedcord/seedcord/pull/56))
 - export missing classes and entities ([#56](https://github.com/seedcord/seedcord/pull/56))
-- `@seedcord/services` 0.3.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.2.2 → 0.3.0
 - `@seedcord/types` 0.2.2 → 0.3.0
 - `@seedcord/utils` 0.2.3 → 0.3.0
 
@@ -856,10 +864,10 @@
 - set up project-wide ci/cd ([#47](https://github.com/seedcord/seedcord/pull/47))
 - bump deps ([`31d1a56`](https://github.com/seedcord/seedcord/commit/31d1a56))
 - add a way to specify HOST for healthcheck ([#45](https://github.com/seedcord/seedcord/pull/45))
-- `@seedcord/services` 0.2.2
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.2.1 → 0.2.2
 - `@seedcord/types` 0.2.1 → 0.2.2
 - `@seedcord/utils` 0.2.2 → 0.2.3
 
@@ -876,10 +884,10 @@
 ### 🩹 Patch
 
 - bump deps
-- `@seedcord/services` 0.2.1
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.2.0 → 0.2.1
 - `@seedcord/types` 0.2.0 → 0.2.1
 - `@seedcord/utils` 0.2.0 → 0.2.1
 
@@ -891,10 +899,9 @@
 
 ### 🩹 Patch
 
-- `@seedcord/services` 0.2.0
-
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.1.1 → 0.2.0
 - `@seedcord/types` 0.1.4 → 0.2.0
 - `@seedcord/utils` 0.1.1 → 0.2.0
 
@@ -911,10 +918,10 @@
 - validate existence of unknown_interaction_url ([`e47636a`](https://github.com/seedcord/seedcord/commit/e47636a))
 - bump deps ([`8a7591a`](https://github.com/seedcord/seedcord/commit/8a7591a))
 - use djs Collection object ([`ad2e3c3`](https://github.com/seedcord/seedcord/commit/ad2e3c3))
-- `@seedcord/services` 0.1.1
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.1.0 → 0.1.1
 - `@seedcord/types` 0.1.3 → 0.1.4
 - `@seedcord/utils` 0.1.0 → 0.1.1
 
@@ -938,8 +945,11 @@
 ### 🩹 Patch
 
 - debug logging in emoji injector ([`0ed832b`](https://github.com/seedcord/seedcord/commit/0ed832b))
-- `@seedcord/utils` 0.1.0
-- `@seedcord/services` 0.1.0
+
+#### 📦 Seedcord packages
+
+- `@seedcord/utils` 0.1.0 (new)
+- `@seedcord/services` 0.1.0 (new)
 
 ## 0.1.1
 
@@ -966,4 +976,7 @@
 - Added eslint for TSDoc ([#22](https://github.com/seedcord/seedcord/pull/22))
 - add LICENSE to all package roots ([#19](https://github.com/seedcord/seedcord/pull/19))
 - add TSDoc to almost everything ([#19](https://github.com/seedcord/seedcord/pull/19))
-- `@seedcord/types` 0.1.0
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.1.0 (new)

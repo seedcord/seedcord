@@ -1,10 +1,11 @@
 import { readFile } from 'node:fs/promises';
 
-import { isStable, ownBody, SECTION_START, splitEntries, VERSION_START } from '#src/release/changelog-format';
+import { isStable, bodyWithoutNested, SECTION_START, splitEntries, VERSION_START } from '#src/release/changelog-format';
 
 const VERSION_HEADING = /^## (\S+)/;
 const PRERELEASE = /^(\d+\.\d+\.\d+)-/;
 const NOTE = /^---$/m;
+const DEPENDENCY_NAME = /^- `([^`]+)` \S+/gm;
 
 const versionOf = (section: string): string | undefined => VERSION_HEADING.exec(section)?.[1];
 
@@ -35,7 +36,6 @@ export class ChangelogFile {
     }
 
     withoutSupersededPrereleases(): ChangelogFile {
-        // a stable below a prerelease is an older line from before a package rename
         let stable: { version: string; section: string } | undefined;
         const kept: string[] = [];
 
@@ -44,6 +44,7 @@ export class ChangelogFile {
             if (version && isStable(version)) stable = { version, section };
 
             const base = PRERELEASE.exec(version ?? '')?.[1];
+            // after a package rename, an older prerelease can carry a higher version than the stable above it
             const superseded =
                 base !== undefined &&
                 stable !== undefined &&
@@ -51,7 +52,7 @@ export class ChangelogFile {
                     (compareCore(base, stable.version) < 0 && carriesEveryEntry(stable.section, section)));
 
             if (superseded) {
-                // changesets never writes a --- block, so one here was added by hand
+                // a --- block is a note someone added by hand
                 const note = NOTE.exec(section);
                 if (note) kept.push(section.slice(note.index));
                 continue;
@@ -72,9 +73,12 @@ function carriesEveryEntry(stable: string, prerelease: string): boolean {
     const entries = prerelease
         .split(SECTION_START)
         .slice(1)
-        .flatMap((part) => splitEntries(ownBody(part)));
+        .flatMap((part) => splitEntries(bodyWithoutNested(part)));
+    const packages = [...prerelease.matchAll(DEPENDENCY_NAME)].map((match) => match[1] ?? '');
 
-    return entries.every((entry) => stable.includes(entry));
+    return (
+        entries.every((entry) => stable.includes(entry)) && packages.every((name) => stable.includes(`- \`${name}\` `))
+    );
 }
 
 function compareCore(left: string, right: string): number {

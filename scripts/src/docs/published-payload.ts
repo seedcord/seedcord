@@ -1,4 +1,4 @@
-/* eslint-disable no-console -- CLI script so console is ok */
+/* eslint-disable no-console -- CLI script */
 /**
  * Prints the `published` input for a manual `docs-publish` run, as a JSON array of
  * `{ name, version }` for every documented package at the version the extractor recorded.

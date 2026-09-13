@@ -60,11 +60,9 @@ describe('ReleaseNotes', () => {
         expect(body).toContain(
             '| [@seedcord/core](https://github.com/seedcord/seedcord/blob/release-2026.09.11/packages/core/CHANGELOG.md) | 0.6.0 → 0.7.0 |'
         );
-        expect(body).toContain('<!-- prettier-ignore-start -->');
-        expect(body).toContain('<!-- prettier-ignore-end -->');
     });
 
-    it('marks a first publish as new instead of an arrow from nothing', () => {
+    it('marks a first publish as new', () => {
         const kit = {
             name: '@seedcord/kit',
             version: '0.1.0',

@@ -2,8 +2,6 @@ import console from 'node:console';
 import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import process from 'node:process';
-import { fileURLToPath } from 'node:url';
 
 import { Workspace } from '#src/lib/Workspace';
 import { ChangelogFile } from '#src/release/ChangelogFile';
@@ -30,6 +28,4 @@ async function tidyEveryChangelog(): Promise<void> {
     if (!tidied) console.log('Every changelog is already tidy');
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
-    await tidyEveryChangelog();
-}
+await tidyEveryChangelog();

@@ -78,4 +78,7 @@
 ### 🩹 Patch
 
 - Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`. ([`789f17a`](https://github.com/seedcord/seedcord/commit/789f17a))
-- `eslint-plugin-discordjs` 0.1.0
+
+#### 📦 Seedcord packages
+
+- `eslint-plugin-discordjs` 0.1.0 (new)

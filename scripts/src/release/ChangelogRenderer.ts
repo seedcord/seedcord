@@ -18,6 +18,7 @@ interface RendererConfig {
 
 // github puts the pull request number at the end of a squash merge subject
 const PULL_NUMBER = /\(#(\d+)\)$/;
+const SHORT_SHA = 7;
 
 export class ChangelogRenderer {
     private readonly thanks = new Map<string, Promise<string>>();
@@ -41,12 +42,12 @@ export class ChangelogRenderer {
 
         const base = `https://github.com/${this.config.repo}`;
         const pull = PULL_NUMBER.exec((await this.config.subjectOf(sha)) ?? '')?.[1];
-        if (pull === undefined) return `[\`${sha}\`](${base}/commit/${sha})`;
+        if (pull === undefined) return `[\`${sha.slice(0, SHORT_SHA)}\`](${base}/commit/${sha})`;
 
         return `[#${pull}](${base}/pull/${pull})${await this.thanksFor(pull)}`;
     }
 
-    // changesets renders one line per package a changeset bumps
+    // changesets calls getReleaseLine once for every package a changeset bumps
     private thanksFor(pull: string): Promise<string> {
         const known = this.thanks.get(pull) ?? this.creditFor(pull);
         this.thanks.set(pull, known);

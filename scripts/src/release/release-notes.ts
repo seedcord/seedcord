@@ -1,7 +1,6 @@
-/* eslint-disable no-console -- CLI script so console is ok */
+/* eslint-disable no-console -- CLI script */
 import { execFile } from 'node:child_process';
 import { writeFile } from 'node:fs/promises';
-import path from 'node:path';
 import process from 'node:process';
 import { promisify } from 'node:util';
 
@@ -9,13 +8,10 @@ import { CliFlags } from '#src/lib/CliFlags';
 import { PUBLISHED_FLAGS, readPublished } from '#src/lib/published-packages';
 import { Workspace } from '#src/lib/Workspace';
 import { isStable } from '#src/release/changelog-format';
-import { ChangelogFile } from '#src/release/ChangelogFile';
+import { resolvePackages } from '#src/release/release-packages';
 import { ReleaseEntries } from '#src/release/ReleaseEntries';
 import { ReleaseName } from '#src/release/ReleaseName';
 import { ReleaseNotes } from '#src/release/ReleaseNotes';
-
-import type { PublishedPackage } from '#src/lib/published-packages';
-import type { ReleasePackage } from '#src/release/ReleaseNotes';
 
 const run = promisify(execFile);
 
@@ -31,28 +27,6 @@ async function releaseTags(...extra: string[]): Promise<string[]> {
     return stdout.split('\n').filter((tag) => tag !== '');
 }
 
-async function resolvePackages(entries: readonly PublishedPackage[]): Promise<ReleasePackage[]> {
-    const workspace = await Workspace.load(import.meta.dirname);
-    const published: ReleasePackage[] = [];
-
-    for (const entry of entries) {
-        const dir = workspace.directoryOf(entry.name);
-        if (dir === undefined) throw new Error(`${entry.name} is not a package in this workspace`);
-
-        const changelog = await ChangelogFile.read(path.join(dir, 'CHANGELOG.md'));
-        const oldVersion = changelog.versionBefore(entry.version);
-        published.push({
-            name: entry.name,
-            version: entry.version,
-            ...(oldVersion !== undefined && { oldVersion }),
-            directory: path.relative(workspace.rootDir, dir),
-            changelog: changelog.contents
-        });
-    }
-
-    return published;
-}
-
 async function main(): Promise<void> {
     const argv = process.argv.slice(2);
     if (flags.wantsHelp(argv)) {
@@ -62,7 +36,7 @@ async function main(): Promise<void> {
 
     const parsed = flags.parse(argv);
     const repo = parsed.repo ?? 'seedcord/seedcord';
-    const published = await resolvePackages(await readPublished(parsed));
+    const published = await resolvePackages(await Workspace.load(import.meta.dirname), await readPublished(parsed));
 
     const [onCommit] = await releaseTags('--points-at', 'HEAD');
     const name = onCommit

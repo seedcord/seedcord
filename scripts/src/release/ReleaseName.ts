@@ -1,4 +1,5 @@
 const LETTERS = 'abcdefghijklmnopqrstuvwxyz';
+const FIRST_LETTERED_PUBLISH = 2;
 const TAG = /^release-(\d{4})\.(\d{2})\.(\d{2})([a-z]?)$/;
 
 const TITLE = new Intl.DateTimeFormat('en-US', {
@@ -38,7 +39,7 @@ export class ReleaseName {
         const date = TITLE.format(new Date(this.day.toString()));
         if (this.letter === '') return date;
 
-        return `${date} (${String(LETTERS.indexOf(this.letter) + 2)})`;
+        return `${date} (${String(LETTERS.indexOf(this.letter) + FIRST_LETTERED_PUBLISH)})`;
     }
 }
 

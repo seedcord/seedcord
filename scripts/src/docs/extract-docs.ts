@@ -1,4 +1,4 @@
-/* eslint-disable no-console -- justified: developer-facing CLI script */
+/* eslint-disable no-console -- CLI script */
 import path from 'node:path';
 
 import { ApiDocsGenerator } from '@seedcord/docs-generator';

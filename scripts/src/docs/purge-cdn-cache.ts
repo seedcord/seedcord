@@ -1,10 +1,9 @@
-/* eslint-disable no-console -- CLI script so console is ok */
+/* eslint-disable no-console -- CLI script */
 import { Converters, Envapter } from 'envapt';
 
 import { CdnPurge } from '#src/docs/CdnPurge';
 import { CliFlags } from '#src/lib/CliFlags';
 
-// the token needs the Zone > Cache Purge permission
 const flags = new CliFlags('pnpm docs:purge [options]', {
     prefixes: {
         type: 'string',
@@ -30,6 +29,7 @@ async function main(): Promise<void> {
     console.log(`${dryRun ? '[dry-run] would purge' : 'purging'}: ${JSON.stringify(body)}`);
     if (dryRun) return;
 
+    // the token needs the Zone > Cache Purge permission
     await new CdnPurge(read('CLOUDFLARE_ZONE_ID'), read('CLOUDFLARE_CACHE_PURGE_TOKEN')).purge(body);
     console.log('✅ Cloudflare cache purged');
 }

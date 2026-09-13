@@ -1,4 +1,4 @@
-/* eslint-disable no-console -- CLI script so console is ok */
+/* eslint-disable no-console -- CLI script */
 import { copyFile, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -123,7 +123,7 @@ async function collectEmitted(opts: Options): Promise<EmittedEntry[]> {
     return emitted;
 }
 
-// nothing on the publish path calls this
+// docs-publish.yml never passes --prune
 async function prune(opts: Options, bucket: R2Bucket, inputs: readonly PackageVersionsInput[]): Promise<void> {
     const desired = artifactKeys(inputs);
     const stored = await bucket.list();

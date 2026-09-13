@@ -1,4 +1,4 @@
-/* eslint-disable no-console -- CLI script so console is ok */
+/* eslint-disable no-console -- CLI script */
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
@@ -9,7 +9,7 @@ import { ChangesetRule } from '#src/release/ChangesetRule';
 import type { Violation } from '#src/release/ChangesetRule';
 
 const MESSAGES: Record<Violation['reason'], string> = {
-    'unknown-package': 'names a package the workspace does not publish',
+    'unknown-package': 'names a package outside the workspace',
     'pre-1.0-major': 'asks for a major bump while the repo is pre-1.0',
     'breaking-marker': 'spells the breaking marker as something other than **BREAKING:**',
     'too-long': 'runs past the sentence cap, one when every bump is a patch and three otherwise',
@@ -27,7 +27,7 @@ async function changesetFiles(dir: string): Promise<string[]> {
 async function main(): Promise<void> {
     const workspace = await Workspace.load(import.meta.dirname);
     const dir = path.join(workspace.rootDir, '.changeset');
-    const rule = new ChangesetRule(new Set(workspace.published().map((pkg) => pkg.packageJson.name)));
+    const rule = new ChangesetRule(new Set(workspace.all().map((pkg) => pkg.packageJson.name)));
 
     const found: Violation[] = [];
     for (const file of await changesetFiles(dir)) {

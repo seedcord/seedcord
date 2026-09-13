@@ -114,6 +114,26 @@ describe('ChangelogSections marker placement', () => {
         expect(out).toContain('Better encapsulate framework internals.');
         expect(out).not.toContain('🩹 Patch');
     });
+
+    it('drops every marker in an entry in one pass', () => {
+        const once = regrouped(
+            lines(
+                '## 0.1.0',
+                '',
+                '### Minor Changes',
+                '',
+                '- Plugins moved. ([#240](url))',
+                '',
+                '    **BREAKING:** `attach` takes no `startupPhase`.',
+                '',
+                '    **BREAKING:** a plugin constructor takes `CoreBase` first.',
+                ''
+            )
+        );
+
+        expect(once).not.toContain('**BREAKING:**');
+        expect(regrouped(once)).toBe(once);
+    });
 });
 
 describe('ChangelogSections dependency lines', () => {
@@ -189,6 +209,26 @@ describe('ChangelogSections dependency lines', () => {
 
         expect(out).toContain('    A continuation paragraph.\n\n#### 📦 Seedcord packages');
         expect(out).toContain('#### 📦 Seedcord packages\n\n- @seedcord/errors 0.6.0 → 0.7.0');
+    });
+
+    it('files a first dependency on a package into the nested block', () => {
+        const out = regrouped(
+            lines(
+                '## 0.16.0',
+                '',
+                '### Patch Changes',
+                '',
+                '- Fixed a thing. ([#196](url))',
+                '- `@seedcord/core` 0.1.0 (new)',
+                '- `@seedcord/types` 0.7.2 → 0.8.0',
+                ''
+            )
+        );
+
+        expect(out).toContain(
+            '#### 📦 Seedcord packages\n\n- `@seedcord/core` 0.1.0 (new)\n- `@seedcord/types` 0.7.2 → 0.8.0\n'
+        );
+        expect(regrouped(out)).toBe(out);
     });
 
     it('keeps the patch heading when the bumps are the only change', () => {

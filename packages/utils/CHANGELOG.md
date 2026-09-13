@@ -233,10 +233,10 @@
 ### 🩹 Patch
 
 - bump general dependencies ([`f8fbe70`](https://github.com/seedcord/seedcord/commit/f8fbe70))
-- `@seedcord/services` 0.6.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.5.1 → 0.6.0
 - `@seedcord/types` 0.3.4 → 0.3.5
 
 ## 0.3.7
@@ -244,10 +244,10 @@
 ### 🩹 Patch
 
 - bump deps ([`1d8986b`](https://github.com/seedcord/seedcord/commit/1d8986b))
-- `@seedcord/services` 0.5.1
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.5.0 → 0.5.1
 - `@seedcord/types` 0.3.3 → 0.3.4
 
 ## 0.3.6
@@ -255,24 +255,30 @@
 ### 🩹 Patch
 
 - remove extra line(s) after tsdoc comments ([`6e067da`](https://github.com/seedcord/seedcord/commit/6e067da))
-- `@seedcord/services` 0.5.0
+
+#### 📦 Seedcord packages
+
+- `@seedcord/services` 0.4.0 → 0.5.0
 
 ## 0.3.5
 
 ### 🩹 Patch
 
 - custom seedcord errors and error codes ([#62](https://github.com/seedcord/seedcord/pull/62))
-- `@seedcord/services` 0.4.0
+
+#### 📦 Seedcord packages
+
+- `@seedcord/services` 0.3.3 → 0.4.0
 
 ## 0.3.4
 
 ### 🩹 Patch
 
 - bump deps (mainly djs to 14.24.2)
-- `@seedcord/services` 0.3.3
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.3.2 → 0.3.3
 - `@seedcord/types` 0.3.2 → 0.3.3
 
 ## 0.3.3
@@ -280,10 +286,10 @@
 ### 🩹 Patch
 
 - bump discord.js version to latest
-- `@seedcord/services` 0.3.2
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.3.1 → 0.3.2
 - `@seedcord/types` 0.3.1 → 0.3.2
 
 ## 0.3.2
@@ -297,10 +303,10 @@
 ### 🩹 Patch
 
 - bump deps, update djs to 14.24.0, make file_upload available in BuilderComponent ([`aaa59b7`](https://github.com/seedcord/seedcord/commit/aaa59b7))
-- `@seedcord/services` 0.3.1
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.3.0 → 0.3.1
 - `@seedcord/types` 0.3.0 → 0.3.1
 
 ## 0.3.0
@@ -312,10 +318,10 @@
 ### 🩹 Patch
 
 - improve type exports and tsdoc ([#56](https://github.com/seedcord/seedcord/pull/56))
-- `@seedcord/services` 0.3.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.2.2 → 0.3.0
 - `@seedcord/types` 0.2.2 → 0.3.0
 
 ## 0.2.3
@@ -324,10 +330,10 @@
 
 - set up project-wide ci/cd ([#47](https://github.com/seedcord/seedcord/pull/47))
 - bump deps ([`31d1a56`](https://github.com/seedcord/seedcord/commit/31d1a56))
-- `@seedcord/services` 0.2.2
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.2.1 → 0.2.2
 - `@seedcord/types` 0.2.1 → 0.2.2
 
 ## 0.2.2
@@ -341,10 +347,10 @@
 ### 🩹 Patch
 
 - bump deps
-- `@seedcord/services` 0.2.1
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.2.0 → 0.2.1
 - `@seedcord/types` 0.2.0 → 0.2.1
 
 ## 0.2.0
@@ -355,10 +361,9 @@
 
 ### 🩹 Patch
 
-- `@seedcord/services` 0.2.0
-
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.1.1 → 0.2.0
 - `@seedcord/types` 0.1.4 → 0.2.0
 
 ## 0.1.1
@@ -366,10 +371,10 @@
 ### 🩹 Patch
 
 - bump deps ([`8a7591a`](https://github.com/seedcord/seedcord/commit/8a7591a))
-- `@seedcord/services` 0.1.1
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.1.0 → 0.1.1
 - `@seedcord/types` 0.1.3 → 0.1.4
 
 ## 0.1.0
@@ -381,4 +386,6 @@
 
 ### 🩹 Patch
 
-- `@seedcord/services` 0.1.0
+#### 📦 Seedcord packages
+
+- `@seedcord/services` 0.1.0 (new)

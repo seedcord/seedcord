@@ -231,12 +231,12 @@
 
 - Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`. ([`789f17a`](https://github.com/seedcord/seedcord/commit/789f17a))
 - Require envapt `^8.1.0`. An older pin in your own bot installs a second copy whose `Envapter` state splits from the framework's. ([#196](https://github.com/seedcord/seedcord/pull/196))
-- `@seedcord/core` 0.1.0
-- `@seedcord/logger` 0.1.0
-- `@seedcord/event-emitter` 0.1.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/core` 0.1.0-next.2 → 0.1.0
+- `@seedcord/logger` 0.1.0 (new)
+- `@seedcord/event-emitter` 0.1.0 (new)
 - `@seedcord/types` 0.7.2-next.0 → 0.8.0
 - `@seedcord/utils` 0.7.1-next.0 → 0.8.0
 - `@seedcord/errors` 0.2.2-next.0 → 0.3.0
@@ -246,21 +246,26 @@
 ### 🩹 Patch
 
 - The dev sidebar no longer shows the config paths and now shows the framework version. The rail width locks at the first running render of each run. ([#175](https://github.com/seedcord/seedcord/pull/175))
-- `@seedcord/core` 0.1.0-next.2
-- `@seedcord/types` 0.8.0-next.3
-- `@seedcord/services` 0.9.0-next.4
-- `@seedcord/utils` 0.8.0-next.3
-- `@seedcord/errors` 0.3.0-next.2
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.1.0-next.1 → 0.1.0-next.2
+- `@seedcord/types` 0.8.0-next.2 → 0.8.0-next.3
+- `@seedcord/services` 0.9.0-next.3 → 0.9.0-next.4
+- `@seedcord/utils` 0.8.0-next.2 → 0.8.0-next.3
+- `@seedcord/errors` 0.3.0-next.1 → 0.3.0-next.2
 
 ## 0.4.0-next.3
 
 ### 🩹 Patch
 
-- `@seedcord/errors` 0.3.0-next.2
-- `@seedcord/core` 0.1.0-next.1
-- `@seedcord/services` 0.9.0-next.3
-- `@seedcord/types` 0.8.0-next.2
-- `@seedcord/utils` 0.8.0-next.2
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.3.0-next.1 → 0.3.0-next.2
+- `@seedcord/core` 0.1.0-next.0 → 0.1.0-next.1
+- `@seedcord/services` 0.9.0-next.2 → 0.9.0-next.3
+- `@seedcord/types` 0.8.0-next.1 → 0.8.0-next.2
+- `@seedcord/utils` 0.8.0-next.1 → 0.8.0-next.2
 
 ## 0.4.0-next.2
 
@@ -270,10 +275,12 @@
 
 ### 🩹 Patch
 
-- `@seedcord/core` 0.1.0-next.0
-- `@seedcord/types` 0.8.0-next.2
-- `@seedcord/services` 0.9.0-next.2
-- `@seedcord/utils` 0.8.0-next.2
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.1.0-next.0 (new)
+- `@seedcord/types` 0.8.0-next.1 → 0.8.0-next.2
+- `@seedcord/services` 0.9.0-next.1 → 0.9.0-next.2
+- `@seedcord/utils` 0.8.0-next.1 → 0.8.0-next.2
 
 ## 0.4.0-next.1
 
@@ -285,10 +292,13 @@
 
 - Measure the `seedcord dev` layout in `useLayoutEffect` so the first frame renders at the correct size. ([#168](https://github.com/seedcord/seedcord/pull/168))
 - Modernize internals via the curated eslint-plugin-unicorn rules (modern array, string, and number APIs, and `Error.isError` in error checks). Behavior-preserving, no public API change. ([#168](https://github.com/seedcord/seedcord/pull/168))
-- `@seedcord/services` 0.9.0-next.1
-- `@seedcord/utils` 0.8.0-next.1
-- `@seedcord/types` 0.8.0-next.1
-- `@seedcord/errors` 0.3.0-next.1
+
+#### 📦 Seedcord packages
+
+- `@seedcord/services` 0.8.3-next.0 → 0.9.0-next.1
+- `@seedcord/utils` 0.7.1-next.0 → 0.8.0-next.1
+- `@seedcord/types` 0.7.2-next.0 → 0.8.0-next.1
+- `@seedcord/errors` 0.2.2-next.0 → 0.3.0-next.1
 
 ## 0.4.0-next.0
 
@@ -299,10 +309,10 @@
 ### 🩹 Patch
 
 - Decouple HMR from vite's `import.meta.hot` behind a typed `DevChannel`. Drop the `HmrModuleHandler` `name` option where you construct the handler, it was only an internal cache key and is no longer accepted. ([#163](https://github.com/seedcord/seedcord/pull/163))
-- `@seedcord/services` 0.8.3-next.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.8.2 → 0.8.3-next.0
 - `@seedcord/errors` 0.2.1 → 0.2.2-next.0
 - `@seedcord/types` 0.7.1 → 0.7.2-next.0
 - `@seedcord/utils` 0.7.0 → 0.7.1-next.0
@@ -313,10 +323,10 @@
 
 - small fix in the command desc ([#154](https://github.com/seedcord/seedcord/pull/154))
 - update LICENSE copyright year ([#152](https://github.com/seedcord/seedcord/pull/152))
-- `@seedcord/services` 0.8.2
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.8.1 → 0.8.2
 - `@seedcord/utils` 0.6.1 → 0.7.0
 - `@seedcord/errors` 0.2.0 → 0.2.1
 - `@seedcord/types` 0.7.0 → 0.7.1
@@ -331,10 +341,10 @@
 ### 🩹 Patch
 
 - Bump non-breaking runtime dependencies (envapt 6.0.2, discord-api-types 0.38.49, mongoose 9.7.1, ink 7.1.0, typescript-eslint 8.61.1, tailwindcss peer 4.3.1). ([`043e2a1`](https://github.com/seedcord/seedcord/commit/043e2a1))
-- `@seedcord/services` 0.8.1
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.8.0 → 0.8.1
 - `@seedcord/utils` 0.6.0 → 0.6.1
 - `@seedcord/errors` 0.1.0 → 0.2.0
 - `@seedcord/types` 0.6.0 → 0.7.0
@@ -344,11 +354,11 @@
 ### 🩹 Patch
 
 - Depend on `@seedcord/errors` directly for the CLI's own throws, and correct the config-schema default-value tsdoc tags. ([#143](https://github.com/seedcord/seedcord/pull/143))
-- `@seedcord/services` 0.8.0
-- `@seedcord/errors` 0.1.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.7.1 → 0.8.0
+- `@seedcord/errors` 0.1.0 (new)
 - `@seedcord/types` 0.5.0 → 0.6.0
 - `@seedcord/utils` 0.5.0 → 0.6.0
 
@@ -362,7 +372,7 @@
 -   - Add end-to-end typed context menus. Author a context-menu command as a plain discord.js `ContextMenuCommandBuilder`, run `seedcord codegen` to emit committed `UserContextMenuRegistry` and `MessageContextMenuRegistry` augmentations, then handlers extend `ContextMenuHandler<ApplicationCommandType.User>` or `ContextMenuHandler<ApplicationCommandType.Message>` and read `this.target`, a `User` for a user menu or a `Message` for a message menu, plus `this.targetMember` on user menus. `@ContextMenuRoute(ApplicationCommandType.Message, 'Report Message')` checks the name against its kind's registry and is cross-checked against the handler generic both directions, so a typo or a kind mismatch is a compile error. The two registries stay separate because Discord allows a user command and a message command to share a name. ([#139](https://github.com/seedcord/seedcord/pull/139))
         - Warn at boot for any registered context-menu command with no handler, parallel to the slash route guard.
         - `@ContextMenuRoute` now takes `(ApplicationCommandType.User | ApplicationCommandType.Message, ...names)` rather than `('user' | 'message', string | string[])`, and a context-menu handler extends the new `ContextMenuHandler` base rather than `InteractionHandler`.
-        - **BREAKING**: `seedcord codegen` writes `command-registry.gen.ts` rather than `slash-registry.gen.ts`, since one file now holds the slash and context-menu registries. Delete the old file and re-run `seedcord codegen`.
+        - `seedcord codegen` writes `command-registry.gen.ts` rather than `slash-registry.gen.ts`, since one file now holds the slash and context-menu registries. Delete the old file and re-run `seedcord codegen`.
 
 -   - Add end-to-end typed slash commands. Author commands as plain discord.js builders, run `seedcord codegen` to read each command's `toJSON()` and emit a committed `declare module 'seedcord'` registry, then handlers extend the new `SlashHandler<'route'>` base and read `this.options`. Options are typed off the registry, a required option drops the null, choices narrow to their literal union, and only the getters for kinds a command actually uses appear. A handler bound to several commands branches with `this.match`, each arm typed for its own route. ([#139](https://github.com/seedcord/seedcord/pull/139))
         - `seedcord codegen --check` regenerates in memory and exits non-zero, naming the fix, when the committed registry is stale.
@@ -381,10 +391,10 @@
 ### 🩹 Patch
 
 - Fix duplicate colors and misalignment in the CLI ([#139](https://github.com/seedcord/seedcord/pull/139))
-- `@seedcord/services` 0.7.1
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.7.0 → 0.7.1
 - `@seedcord/types` 0.4.0 → 0.5.0
 - `@seedcord/utils` 0.4.0 → 0.5.0
 
@@ -412,9 +422,9 @@
 - `seedcord build` now emits self-contained source maps (`--sourceMap --inlineSources`), so production stack traces resolve back to the original TypeScript. Run the built output with `node --enable-source-maps`. ([`7308d36`](https://github.com/seedcord/seedcord/commit/7308d36))
 - build pipeline migrated from `tsup` to `tsdown`. each published package now ships `dist/index.d.mts` + `dist/index.d.cts` (cjs is a one-line re-export stub) with a per-condition `exports` map. source-level public API unchanged. `@seedcord/tsup-config` renamed to `@seedcord/tsdown-config` and made private. ([`fe77998`](https://github.com/seedcord/seedcord/commit/fe77998))
 - bump peer floor: typescript `^6.0.3`, node `^22.13`. shared `tsconfig/base.json` now sets `esModuleInterop: true` and `types: ["node"]` for ts6's removed implicit defaults. no public API changes. ([`fe77998`](https://github.com/seedcord/seedcord/commit/fe77998))
-- `@seedcord/services` 0.7.0
 
 #### 📦 Seedcord packages
 
+- `@seedcord/services` 0.7.0 (new)
 - `@seedcord/types` 0.3.5 → 0.4.0
 - `@seedcord/utils` 0.3.8 → 0.4.0

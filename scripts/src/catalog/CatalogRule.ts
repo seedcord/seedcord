@@ -12,8 +12,7 @@ export interface Violation {
     reason: 'duplicate-literal' | 'catalog-missing-entry' | 'catalog-underused';
 }
 
-// eslint stays split until eslint-config-next supports eslint 10. The framework and cli run
-// catalog eslint 10 while the Next apps pin 9.
+// the Next apps pin eslint 9 until eslint-config-next supports eslint 10
 const IGNORED: ReadonlySet<string> = new Set(['eslint']);
 
 export class CatalogRule {
@@ -22,6 +21,7 @@ export class CatalogRule {
     }
 
     static fromYaml(text: string): CatalogRule {
+        // justified: pnpm-workspace.yaml keeps catalogs as name to version maps
         const parsed = parse(text) as { catalogs?: Record<string, Record<string, string>> } | null;
         const buckets = Object.values(parsed?.catalogs ?? {});
 
@@ -38,7 +38,6 @@ export class CatalogRule {
             if (IGNORED.has(depName)) continue;
 
             const refs = index.refsFor(depName);
-            // an optional peer is often also a devDependency
             if (distinctPackages(refs) < 2) continue;
 
             if (refs.some((one) => !isInternal(one.version))) {

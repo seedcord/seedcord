@@ -34,7 +34,7 @@ export class CdnPurge {
             body: JSON.stringify(body)
         });
 
-        // justified: the Cloudflare REST response shape is external and untyped here
+        // justified: cloudflare's purge endpoint returns untyped JSON
         const result = (await response.json()) as { success?: boolean; errors?: unknown[] };
         if (!response.ok || result.success !== true) {
             throw new Error(`Cloudflare purge failed (HTTP ${response.status}): ${JSON.stringify(result.errors)}`);

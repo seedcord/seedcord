@@ -13,8 +13,8 @@ import {
 
 import type { Bucket } from '#src/release/changelog-format';
 
-const DEPENDENCY = /^- \S+ \S+ → \S+$/;
-const MARKER = /\*\*BREAKING:\*\* /;
+const DEPENDENCY = /^- \S+ (?:\S+ → \S+|\S+ \(new\))$/;
+const MARKER = '**BREAKING:** ';
 
 export class ChangelogSections {
     constructor(private readonly text: string) {}
@@ -59,9 +59,9 @@ function regroupVersion(chunk: string): string {
                 continue;
             }
 
-            const breaking = MARKER.test(entry);
+            const breaking = entry.includes(MARKER);
             const target = breaking ? 'breaking' : bucket;
-            const text = breaking ? entry.replace(MARKER, '') : entry;
+            const text = entry.replaceAll(MARKER, '');
             buckets.set(target, [...(buckets.get(target) ?? []), text]);
         }
     }

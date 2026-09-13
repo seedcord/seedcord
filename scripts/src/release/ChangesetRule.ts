@@ -18,7 +18,9 @@ const MENTION = /\S*BREAKING\S*/g;
 const PARAGRAPH = /\n\s*\n/;
 const CODE_SPAN = /`[^`]*`/g;
 const SENTENCE_END = /[.!?](?=\s|$)/g;
+const NOT_A_SENTENCE_END = /\be\.g\.|^\s*\d+\.(?=\s)/gm;
 const OPENER = /^(Fix|Fixes|fix|fixes|fixed)\b/;
+const ALSO_OPENER = /\b(Also fix(?:es)?)\b/;
 
 const PATCH_SENTENCES = 1;
 const SENTENCES = 3;
@@ -39,7 +41,7 @@ const WORDS = [
 ];
 
 export class ChangesetRule {
-    constructor(private readonly published: ReadonlySet<string>) {}
+    constructor(private readonly packages: ReadonlySet<string>) {}
 
     violations(file: string, text: string): Violation[] {
         const { releases, summary } = parseChangesetFile(text);
@@ -59,7 +61,7 @@ export class ChangesetRule {
         const found: Violation[] = [];
 
         for (const { name, type } of releases) {
-            if (!this.published.has(name)) {
+            if (!this.packages.has(name)) {
                 found.push({ file, reason: 'unknown-package', detail: name });
                 continue;
             }
@@ -73,7 +75,8 @@ export class ChangesetRule {
 
 function markerViolations(file: string, summary: string): Violation[] {
     return summary.split(PARAGRAPH).flatMap((paragraph) => {
-        const rest = paragraph.startsWith(`${MARKER} `) ? paragraph.slice(MARKER.length) : paragraph;
+        const spoken = paragraph.replaceAll(CODE_SPAN, 'code');
+        const rest = spoken.startsWith(`${MARKER} `) ? spoken.slice(MARKER.length) : spoken;
 
         return [...rest.matchAll(MENTION)].map((match) => ({
             file,
@@ -85,7 +88,7 @@ function markerViolations(file: string, summary: string): Violation[] {
 
 function lengthViolations(file: string, summary: string, patchOnly: boolean): Violation[] {
     const cap = patchOnly ? PATCH_SENTENCES : SENTENCES;
-    const counted = [...prose(summary).matchAll(SENTENCE_END)].length;
+    const counted = [...prose(summary).replaceAll(NOT_A_SENTENCE_END, '').matchAll(SENTENCE_END)].length;
 
     if (counted <= cap) return [];
 
@@ -113,7 +116,7 @@ function wordViolations(file: string, summary: string): Violation[] {
 }
 
 function openerViolations(file: string, summary: string): Violation[] {
-    const opener = OPENER.exec(summary.replace(MARKER, '').trim())?.[1];
+    const opener = OPENER.exec(summary.replace(MARKER, '').trim())?.[1] ?? ALSO_OPENER.exec(prose(summary))?.[1];
 
     return opener === undefined ? [] : [{ file, reason: 'fix-opener', detail: opener }];
 }

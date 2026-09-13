@@ -166,6 +166,64 @@ describe('ChangelogFile prerelease pruning', () => {
         expect(out).toContain('- Fixed a duplicate route.');
     });
 
+    it('keeps a lower dependency-only prerelease that bumps a package the stable above never names', () => {
+        const nested = (...deps: string[]): string[] => [
+            '### 🩹 Patch',
+            '',
+            '#### 📦 Seedcord packages',
+            '',
+            ...deps,
+            ''
+        ];
+        const out = pruned(
+            lines(
+                '# seedcord',
+                '',
+                '## 0.16.0',
+                '',
+                ...nested('- `@seedcord/types` 0.7.2 → 0.8.0'),
+                '## 0.4.0-next.3',
+                '',
+                ...nested('- `@seedcord/services` 0.9.0-next.2 → 0.9.0-next.3'),
+                '## 0.3.1',
+                '',
+                '- older stable',
+                ''
+            )
+        );
+
+        expect(out).toContain('## 0.4.0-next.3');
+    });
+
+    it('drops a lower dependency-only prerelease once the stable above bumps the same packages', () => {
+        const nested = (...deps: string[]): string[] => [
+            '### 🩹 Patch',
+            '',
+            '#### 📦 Seedcord packages',
+            '',
+            ...deps,
+            ''
+        ];
+        const out = pruned(
+            lines(
+                '# @seedcord/utils',
+                '',
+                '## 0.8.0',
+                '',
+                ...nested('- `@seedcord/types` 0.7.1 → 0.8.0'),
+                '## 0.7.1-next.0',
+                '',
+                ...nested('- `@seedcord/types` 0.7.1 → 0.7.2-next.0'),
+                '## 0.7.0',
+                '',
+                '- older stable',
+                ''
+            )
+        );
+
+        expect(out).not.toContain('-next.');
+    });
+
     it('keeps a prerelease that has no stable counterpart yet', () => {
         expect(pruned(lines('# @seedcord/core', '', '## 0.3.0-next.0', '', '- pending', ''))).toContain('0.3.0-next.0');
     });

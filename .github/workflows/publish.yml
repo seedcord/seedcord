@@ -11,7 +11,7 @@ permissions:
     contents: read
 
 concurrency:
-    # head_branch (not ref_name) tells main from next: workflow_run sets ref_name to the default branch.
+    # workflow_run sets ref_name to the default branch. head_branch holds the branch checks ran on.
     group: release-${{ github.event.workflow_run.head_branch || github.ref_name }}
     cancel-in-progress: false
 
