@@ -2,76 +2,92 @@
 
 ## 0.1.8
 
-### Patch Changes
+### 🩹 Patch
 
-- Updated dependencies [d4b9108, 359748d]
-    - @seedcord/types@0.13.0
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.12.0 → 0.13.0
 
 ## 0.1.7
 
-### Patch Changes
+### 🩹 Patch
 
-- Updated dependencies [4013669]
-    - @seedcord/types@0.12.0
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.11.0 → 0.12.0
 
 ## 0.1.6
 
-### Patch Changes
+### 🩹 Patch
 
-- Updated dependencies [f89d8c9]
-    - @seedcord/types@0.11.0
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.10.1 → 0.11.0
 
 ## 0.1.5
 
-### Patch Changes
+### 🩹 Patch
 
-- Updated dependencies [9b6a31c, 554129a]
-    - @seedcord/types@0.10.0
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.9.1 → 0.10.0
 
 ## 0.1.4
 
-### Patch Changes
+### 🩹 Patch
 
-- 1d2f1e3: Updated TSDoc reference generation.
-- Updated dependencies [1d2f1e3]
-    - @seedcord/types@0.9.1
+- Updated TSDoc reference generation. ([`1d2f1e3`](https://github.com/seedcord/seedcord/commit/1d2f1e3))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.9.0 → 0.9.1
 
 ## 0.1.3
 
-### Patch Changes
+### 🩹 Patch
 
-- f39cde0: These packages now ship ESM only. `eslint-plugin-discordjs` keeps its CommonJS build.
-- a259cdc: Use `#` instead of `@` for tsconfig path aliases.
-- a8d7b5f: Rewrote package descriptions for all packages. Also added keywords.
-- 660a94d: Every package now declares Apache-2.0 along with its homepage, issue tracker, author, and funding link.
-- c50ad6c: Every package now has a README describing that package, with badges and an install line. Seven of them previously shipped a copy of the root README that named no package at all.
-- Updated dependencies [f39cde0, a259cdc, a8d7b5f, 660a94d, c50ad6c, e11cbb3]
-    - @seedcord/types@0.9.0
+- These packages now ship ESM only. `eslint-plugin-discordjs` keeps its CommonJS build. ([`f39cde0`](https://github.com/seedcord/seedcord/commit/f39cde0))
+- Use `#` instead of `@` for tsconfig path aliases. ([`a259cdc`](https://github.com/seedcord/seedcord/commit/a259cdc))
+- Rewrote package descriptions for all packages. Also added keywords. ([`a8d7b5f`](https://github.com/seedcord/seedcord/commit/a8d7b5f))
+- Every package now declares Apache-2.0 along with its homepage, issue tracker, author, and funding link. ([`660a94d`](https://github.com/seedcord/seedcord/commit/660a94d))
+- Every package now has a README describing that package, with badges and an install line. Seven of them previously shipped a copy of the root README that named no package at all. ([`c50ad6c`](https://github.com/seedcord/seedcord/commit/c50ad6c))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.8.2 → 0.9.0
 
 ## 0.1.2
 
-### Patch Changes
+### 🩹 Patch
 
-- 272b729: Update comments
-- Updated dependencies [272b729]
-    - @seedcord/types@0.8.2
+- Update comments ([`272b729`](https://github.com/seedcord/seedcord/commit/272b729))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.8.1 → 0.8.2
 
 ## 0.1.1
 
-### Patch Changes
+### 🩹 Patch
 
-- c567fea: Set all packages' node floor to LTS.
-- Updated dependencies [c567fea, 0642de5]
-    - @seedcord/types@0.8.1
+- Set all packages' node floor to LTS. ([#228](https://github.com/seedcord/seedcord/pull/228))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.8.0 → 0.8.1
 
 ## 0.1.0
 
-### Minor Changes
+### 💥 Breaking
 
-- 789f17a: **BREAKING:** Node 24.3 or newer is required.
-- 789f17a: New `@seedcord/rate-limiter`, with `MemoryRateLimiter` (exact sliding window) and `buildKey`. Pass your own `config.store` for a durable backend.
+- Node 24.3 or newer is required. ([`789f17a`](https://github.com/seedcord/seedcord/commit/789f17a))
 
-### Patch Changes
+### ✨ Minor
 
-- Updated dependencies [789f17a]
-    - @seedcord/types@0.8.0
+- New `@seedcord/rate-limiter`, with `MemoryRateLimiter` (exact sliding window) and `buildKey`. Pass your own `config.store` for a durable backend. ([`789f17a`](https://github.com/seedcord/seedcord/commit/789f17a))
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.7.2-next.0 → 0.8.0

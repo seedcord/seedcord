@@ -96,7 +96,7 @@ describe('ChangelogRenderer dependency block', () => {
             { name: '@seedcord/errors', oldVersion: '0.7.0', newVersion: '0.8.0' }
         ]);
 
-        expect(block).toBe('- @seedcord/types 0.12.0 → 0.13.0\n- @seedcord/errors 0.7.0 → 0.8.0');
+        expect(block).toBe('- `@seedcord/types` 0.12.0 → 0.13.0\n- `@seedcord/errors` 0.7.0 → 0.8.0');
     });
 
     it('writes nothing when no dependency moved', () => {

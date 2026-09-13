@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ChangelogSections } from '#src/release/ChangelogSections';
 
-const lines = (...rows: string[]): string => `${rows.join('\n')}\n`;
+const lines = (...rows: string[]): string => `${rows.join('\n').replace(/\n+$/, '')}\n`;
 
 const regrouped = (text: string): string => new ChangelogSections(text).regrouped().contents;
 
@@ -95,6 +95,27 @@ describe('ChangelogSections breaking split', () => {
     });
 });
 
+describe('ChangelogSections marker placement', () => {
+    it('routes an entry carrying the marker in a later paragraph', () => {
+        const out = regrouped(
+            lines(
+                '## 0.2.0',
+                '',
+                '### Patch Changes',
+                '',
+                '- Better encapsulate framework internals. ([#253](url))',
+                '',
+                '    **BREAKING:** `SeedcordError.identifier` is accessed via a symbol now.',
+                ''
+            )
+        );
+
+        expect(out).toContain('### 💥 Breaking');
+        expect(out).toContain('Better encapsulate framework internals.');
+        expect(out).not.toContain('🩹 Patch');
+    });
+});
+
 describe('ChangelogSections dependency lines', () => {
     it('lifts the dependency lines into their own section', () => {
         const out = regrouped(
@@ -118,7 +139,7 @@ describe('ChangelogSections dependency lines', () => {
                 '',
                 '- Fixed a thing. ([#311](url))',
                 '',
-                '### 📦 Updated dependencies',
+                '#### 📦 Seedcord packages',
                 '',
                 '- @seedcord/core 0.7.0 → 0.8.0',
                 '- @seedcord/types 0.12.0 → 0.13.0',
@@ -150,10 +171,40 @@ describe('ChangelogSections dependency lines', () => {
         expect(regrouped(once)).toBe(once);
     });
 
-    it('drops a patch section that carried only dependency lines', () => {
+    it('separates a continuation paragraph from the nested block', () => {
+        const out = regrouped(
+            lines(
+                '## 0.6.0',
+                '',
+                '### 🩹 Patch',
+                '',
+                '- Fixed a thing. ([#308](url))',
+                '',
+                '    A continuation paragraph.',
+                '',
+                '- @seedcord/errors 0.6.0 → 0.7.0',
+                ''
+            )
+        );
+
+        expect(out).toContain('    A continuation paragraph.\n\n#### 📦 Seedcord packages');
+        expect(out).toContain('#### 📦 Seedcord packages\n\n- @seedcord/errors 0.6.0 → 0.7.0');
+    });
+
+    it('keeps the patch heading when the bumps are the only change', () => {
         const out = regrouped(lines('## 0.8.11', '', '### Patch Changes', '', '- @seedcord/core 0.7.0 → 0.8.0', ''));
 
-        expect(out).toContain('### 📦 Updated dependencies');
-        expect(out).not.toContain('🩹 Patch');
+        expect(out).toBe(
+            lines(
+                '## 0.8.11',
+                '',
+                '### 🩹 Patch',
+                '',
+                '#### 📦 Seedcord packages',
+                '',
+                '- @seedcord/core 0.7.0 → 0.8.0',
+                ''
+            )
+        );
     });
 });

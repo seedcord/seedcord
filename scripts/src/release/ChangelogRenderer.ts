@@ -32,7 +32,7 @@ export class ChangelogRenderer {
     }
 
     dependencyLine(updated: readonly UpdatedDependency[]): string {
-        return updated.map((one) => `- ${one.name} ${one.oldVersion} → ${one.newVersion}`).join('\n');
+        return updated.map((one) => `- \`${one.name}\` ${one.oldVersion} → ${one.newVersion}`).join('\n');
     }
 
     private async referenceFor(sha: string | undefined): Promise<string | undefined> {

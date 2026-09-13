@@ -2,128 +2,151 @@
 
 ## 0.3.2
 
-### Patch Changes
+### 🩹 Patch
 
-- Updated dependencies [d4b9108, 359748d]
-    - @seedcord/types@0.13.0
-    - @seedcord/errors@0.8.0
-    - @seedcord/utils@0.8.11
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.12.0 → 0.13.0
+- `@seedcord/errors` 0.7.0 → 0.8.0
+- `@seedcord/utils` 0.8.10 → 0.8.11
 
 ## 0.3.1
 
-### Patch Changes
+### 🩹 Patch
 
-- Updated dependencies [b3d1713, 4013669]
-    - @seedcord/errors@0.7.0
-    - @seedcord/types@0.12.0
-    - @seedcord/utils@0.8.10
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.6.0 → 0.7.0
+- `@seedcord/types` 0.11.0 → 0.12.0
+- `@seedcord/utils` 0.8.9 → 0.8.10
 
 ## 0.3.0
 
-### Minor Changes
+### 💥 Breaking
 
-- f89d8c9: **BREAKING:** Every shared symbol key now reads `seedcord:` plus kebab-case. Plugin service metadata moved to the same global registry the core keys use. Make sure to update your packages together! You don't need to change any code for this.
+- Every shared symbol key now reads `seedcord:` plus kebab-case. Plugin service metadata moved to the same global registry the core keys use. Make sure to update your packages together! You don't need to change any code for this. ([#301](https://github.com/seedcord/seedcord/pull/301))
 
-### Patch Changes
+### 🩹 Patch
 
-- Updated dependencies [af1b2f8, f89d8c9]
-    - @seedcord/errors@0.6.0
-    - @seedcord/types@0.11.0
-    - @seedcord/utils@0.8.9
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.5.1 → 0.6.0
+- `@seedcord/types` 0.10.1 → 0.11.0
+- `@seedcord/utils` 0.8.8 → 0.8.9
 
 ## 0.2.2
 
-### Patch Changes
+### 🩹 Patch
 
-- 9b6a31c: A log sink whose `onLog` returns a rejected promise used to crash the process. It now prints the same one-time console warning a synchronous throw does.
-- 554129a: Fix a sink that threw was still receiving records. The error line already said it won't. Now it does what the line said all this time.
-- Updated dependencies [1bf7d89, 9b6a31c, 5b15463, 554129a, 0ad8bd1, 64c9a0e, e4e8605]
-    - @seedcord/errors@0.5.0
-    - @seedcord/types@0.10.0
-    - @seedcord/utils@0.8.8
+- A log sink whose `onLog` returns a rejected promise used to crash the process. It now prints the same one-time console warning a synchronous throw does. ([#293](https://github.com/seedcord/seedcord/pull/293))
+- Fix a sink that threw was still receiving records. The error line already said it won't. Now it does what the line said all this time. ([#296](https://github.com/seedcord/seedcord/pull/296))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.4.3 → 0.5.0
+- `@seedcord/types` 0.9.1 → 0.10.0
+- `@seedcord/utils` 0.8.7 → 0.8.8
 
 ## 0.2.1
 
-### Patch Changes
+### 🩹 Patch
 
-- 1d2f1e3: Updated TSDoc reference generation.
-- Updated dependencies [1d2f1e3]
-    - @seedcord/errors@0.4.1
-    - @seedcord/utils@0.8.6
-    - @seedcord/types@0.9.1
+- Updated TSDoc reference generation. ([`1d2f1e3`](https://github.com/seedcord/seedcord/commit/1d2f1e3))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.4.0 → 0.4.1
+- `@seedcord/utils` 0.8.5 → 0.8.6
+- `@seedcord/types` 0.9.0 → 0.9.1
 
 ## 0.2.0
 
-### Minor Changes
+### 💥 Breaking
 
-- e11cbb3: **BREAKING:** `paint` now comes from `@seedcord/errors`, and `ILogSink`, `LogLevel`, `LogRecord`, `LogSinkHandle`, `LoggerConfig`, `LoggerChannelId`, and `FrameworkChannel` now come from `@seedcord/types`. `@seedcord/logger` no longer re-exports them. Both transports still expose every one of these.
+- `paint` now comes from `@seedcord/errors`, and `ILogSink`, `LogLevel`, `LogRecord`, `LogSinkHandle`, `LoggerConfig`, `LoggerChannelId`, and `FrameworkChannel` now come from `@seedcord/types`. `@seedcord/logger` no longer re-exports them. Both transports still expose every one of these. ([`e11cbb3`](https://github.com/seedcord/seedcord/commit/e11cbb3))
 
-### Patch Changes
+### 🩹 Patch
 
-- 97b62ef: Update log colors in some places.
-- f39cde0: These packages now ship ESM only. `eslint-plugin-discordjs` keeps its CommonJS build.
-- a259cdc: Use `#` instead of `@` for tsconfig path aliases.
-- a8d7b5f: Rewrote package descriptions for all packages. Also added keywords.
-- 660a94d: Every package now declares Apache-2.0 along with its homepage, issue tracker, author, and funding link.
-- c50ad6c: Every package now has a README describing that package, with badges and an install line. Seven of them previously shipped a copy of the root README that named no package at all.
-- 1364c82: Render aggregate errors
-- Updated dependencies [1364c82, 97b62ef, aa6bb3a, 7553449, f39cde0, a259cdc, a8d7b5f, 660a94d, c50ad6c, c343f4a, e11cbb3]
-    - @seedcord/errors@0.4.0
-    - @seedcord/types@0.9.0
-    - @seedcord/utils@0.8.5
+- Update log colors in some places. ([`97b62ef`](https://github.com/seedcord/seedcord/commit/97b62ef))
+- These packages now ship ESM only. `eslint-plugin-discordjs` keeps its CommonJS build. ([`f39cde0`](https://github.com/seedcord/seedcord/commit/f39cde0))
+- Use `#` instead of `@` for tsconfig path aliases. ([`a259cdc`](https://github.com/seedcord/seedcord/commit/a259cdc))
+- Rewrote package descriptions for all packages. Also added keywords. ([`a8d7b5f`](https://github.com/seedcord/seedcord/commit/a8d7b5f))
+- Every package now declares Apache-2.0 along with its homepage, issue tracker, author, and funding link. ([`660a94d`](https://github.com/seedcord/seedcord/commit/660a94d))
+- Every package now has a README describing that package, with badges and an install line. Seven of them previously shipped a copy of the root README that named no package at all. ([`c50ad6c`](https://github.com/seedcord/seedcord/commit/c50ad6c))
+- Render aggregate errors ([#249](https://github.com/seedcord/seedcord/pull/249))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.3.4 → 0.4.0
+- `@seedcord/types` 0.8.2 → 0.9.0
+- `@seedcord/utils` 0.8.4 → 0.8.5
 
 ## 0.1.4
 
-### Patch Changes
+### 💥 Breaking
 
-- 71a0b99: _Kinda BREAKING?:_ envapt is a peer dependency now. Your project and seedcord load one copy, so the framework reads the config you set through `Envapter`.
-- Updated dependencies [8e8e952, 527a465]
-    - @seedcord/errors@0.3.4
-    - @seedcord/types@0.8.2
-    - @seedcord/utils@0.8.4
+- envapt is a peer dependency now. Your project and seedcord load one copy, so the framework reads the config you set through `Envapter`. ([`71a0b99`](https://github.com/seedcord/seedcord/commit/71a0b99))
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.3.3 → 0.3.4
+- `@seedcord/types` 0.8.1 → 0.8.2
+- `@seedcord/utils` 0.8.3 → 0.8.4
 
 ## 0.1.3
 
-### Patch Changes
+### 🩹 Patch
 
-- dfd7dc2: Moved `paint` to the errors package
-- Updated dependencies [dfd7dc2]
-    - @seedcord/errors@0.3.3
-    - @seedcord/utils@0.8.3
+- Moved `paint` to the errors package ([#238](https://github.com/seedcord/seedcord/pull/238))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.3.2 → 0.3.3
+- `@seedcord/utils` 0.8.2 → 0.8.3
 
 ## 0.1.2
 
-### Patch Changes
+### 🩹 Patch
 
-- 272b729: Update comments
-- Updated dependencies [272b729]
-    - @seedcord/types@0.8.2
-    - @seedcord/utils@0.8.2
+- Update comments ([`272b729`](https://github.com/seedcord/seedcord/commit/272b729))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.8.1 → 0.8.2
+- `@seedcord/utils` 0.8.1 → 0.8.2
 
 ## 0.1.1
 
-### Patch Changes
+### 🩹 Patch
 
-- c567fea: Bump deps.
-- c567fea: Set all packages' node floor to LTS.
-- 814902a: The logger now catches a sink that throws. Your logging call returns normally, the other sinks still get the record, and the broken sink is reported once on the console.
-- Updated dependencies [c567fea, 0642de5]
-    - @seedcord/types@0.8.1
-    - @seedcord/utils@0.8.1
+- Bump deps. ([#228](https://github.com/seedcord/seedcord/pull/228))
+- Set all packages' node floor to LTS. ([#228](https://github.com/seedcord/seedcord/pull/228))
+- The logger now catches a sink that throws. Your logging call returns normally, the other sinks still get the record, and the broken sink is reported once on the console. ([#234](https://github.com/seedcord/seedcord/pull/234))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.8.0 → 0.8.1
+- `@seedcord/utils` 0.8.0 → 0.8.1
 
 ## 0.1.0
 
-### Minor Changes
+### 💥 Breaking
 
-- 789f17a: New `@seedcord/logger`. `Logger` assembles a record and routes it through a level gate and two sink layers.
+- Node 24.3 or newer is required. ([`789f17a`](https://github.com/seedcord/seedcord/commit/789f17a))
+
+### ✨ Minor
+
+- New `@seedcord/logger`. `Logger` assembles a record and routes it through a level gate and two sink layers. ([`789f17a`](https://github.com/seedcord/seedcord/commit/789f17a))
 
     The core has no `node:*` imports and runs in edge workers. The winston console and file sinks come from `@seedcord/logger/node` and is set up automatically during dev.
 
-- 789f17a: **BREAKING:** Node 24.3 or newer is required.
+### 🩹 Patch
 
-### Patch Changes
+- Require envapt `^8.1.0`. An older pin in your own bot installs a second copy whose `Envapter` state splits from the framework's. ([#196](https://github.com/seedcord/seedcord/pull/196))
 
-- 701b669: Require envapt `^8.1.0`. An older pin in your own bot installs a second copy whose `Envapter` state splits from the framework's.
-- Updated dependencies [789f17a, 93544a8]
-    - @seedcord/types@0.8.0
-    - @seedcord/utils@0.8.0
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.7.2-next.0 → 0.8.0
+- `@seedcord/utils` 0.7.1-next.0 → 0.8.0

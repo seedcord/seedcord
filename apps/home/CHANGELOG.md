@@ -2,7 +2,8 @@
 
 ## 0.0.1
 
-### Patch Changes
+### 🩹 Patch
 
-- Updated dependencies [0a19719, 78377fa]
-    - @seedcord/ui@0.2.0
+#### 📦 Seedcord packages
+
+- `@seedcord/ui` 0.1.1-next.0 → 0.2.0
