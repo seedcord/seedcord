@@ -43,7 +43,7 @@ export class Maintenance extends BuilderComponent<'command'> {
 }
 ```
 
-The handler reads them by name.
+The handler reads `notify`, `target`, and `reason` back by name.
 
 ```ts twoslash hovers title="src/handlers/Maintenance.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -61,7 +61,45 @@ export class Maintenance extends SlashHandler<'maintenance'> {
 }
 ```
 
-Run `seedcord codegen` after you add or change an option as the handler uses the old shape until you do.
+Run `seedcord codegen` after you add or change an option, since the handler keeps the old shape until you do.
+
+## The kinds
+
+Each getter only accepts the names that command declared for its own kind. A typo is a compile error.
+
+`maintenance` declares a user, a channel, and a string. That gives it four getters, since a user option answers both `getUser` and `getMember`.
+
+```ts twoslash
+// @noErrors
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('maintenance')
+class Maintenance extends SlashHandler<'maintenance'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        this.options.
+        //           ^|
+        // ---cut-after---
+    }
+}
+```
+
+Each one then offers that command's options of its own kind. `maintenance` declared one string, so `getString` lists `reason`.
+
+```ts twoslash
+// @noErrors
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+
+@SlashRoute('maintenance')
+class Maintenance extends SlashHandler<'maintenance'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        this.options.getString('
+        //                      ^|
+        // ---cut-after---
+    }
+}
+```
 
 ## Required options drop the null
 
@@ -83,10 +121,6 @@ class Maintenance extends SlashHandler<'maintenance'> {
 }
 ```
 
-## The kinds
-
-Each builder method has one getter, and the name you pass is restricted to that command's options of that kind. A typo is a compile error.
-
 {/* prettier-ignore-start */}
 
 | you declare | you call | you get |
@@ -95,6 +129,7 @@ Each builder method has one getter, and the name you pass is restricted to that 
 | `addIntegerOption` | `getInteger` | `number`, whole |
 | `addNumberOption` | `getNumber` | `number`, decimal allowed |
 | `addBooleanOption` | `getBoolean` | `boolean` |
+| |
 | `addUserOption` | `getUser` | the user |
 | `addUserOption` | `getMember` | the member, or `null` |
 | `addChannelOption` | `getChannel` | the channel |
@@ -105,14 +140,16 @@ Each builder method has one getter, and the name you pass is restricted to that 
 {/* prettier-ignore-end */}
 
 <Callout type="transport">
-    The last six return live discord.js objects on gateway and raw
-    `discord-api-types` payloads on http. `id` and `username` are on
-    both.
+
+The last six return live discord.js objects on gateway and raw `discord-api-types` payloads on http. Every one of them carries `id` on both transports. The exception is an http `getMember` payload, which holds the guild fields alone, since Discord sends that person's user object once under `resolved.users`.
+
+`getUser` carries `username`, and `getMentionable` carries it when someone picked a user. A role has `name`, a channel has `name`, and an attachment has `filename`.
+
 </Callout>
 
 `getMember` returns `null` even for a required user option, since the person picked may have left the server.
 
-These getters cover the options. The rest of the discord.js resolver is on `this.event.options`.
+Those are the option getters. On gateway the rest of the discord.js resolver is on `this.event.options`.
 
 ## Choices
 
@@ -179,7 +216,7 @@ class Maintenance extends SlashHandler<'maintenance'> {
 }
 ```
 
-Without `addChannelTypes` you get every channel kind Discord might send, and a forum channel has no `send`.
+Without `addChannelTypes` you get every channel kind Discord might send, so `send` is no longer guaranteed. A forum channel doesn't have it.
 
 Threads are the one pair you cannot split. Asking for `PublicThread` alone gives you `PublicThread | AnnouncementThread`, since discord.js types a thread's `type` as both at once.
 
@@ -201,4 +238,4 @@ class Maintenance extends SlashHandler<'maintenance'> {
 }
 ```
 
-Seeing that on a getter you believe you declared means codegen has not read the change yet.
+Seeing this error on a getter you believe you declared means codegen hasn't run since. Run it to update the types.
