@@ -1,9 +1,9 @@
 ---
 title: Reporting faults
-description: When a fault has report set to true, seedcord posts it to a Discord webhook whose URL you set in your environment.
+description: Send reported throws to Discord channels through webhooks, what seedcord checks at boot, and writing a reporter of your own.
 ---
 
-A fault with `report` set to `true` goes to a reporter. seedcord ships two and registers both while your bot starts. Each one reads a webhook url from an environment variable, then sends comprehensive information about the fault to that webhook. Make sure to set both of them up to know what happens when your bot throws when you're not expecting it to.
+seedcord logs every reported throw, and nobody watches a production bot's terminal. A reporter posts each one to a Discord channel instead. seedcord ships two and registers both while your bot starts. Each one reads a webhook url from an environment variable. Set both, so a throw you didn't expect reaches a channel you read.
 
 ```txt title=".env"
 HANDLED_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
@@ -19,9 +19,23 @@ UNKNOWN_EXCEPTION_WEBHOOK_URL=https://discord.com/api/webhooks/...
 
 {/* prettier-ignore-end */}
 
-The `handledException` card opens with the class name and its message, then the kind, the command or the customId, and the user, guild, channel, and interaction ids. The uuid and the cause's stack come under that, and seedcord attaches the raw interaction as `source.json`. A fault raised in an event handler names the event and the handler where the kind and command would sit.
+The `handledException` card shows, from the top:
 
-The `unknownException` card names the guild and the user, then the uuid with the error's stack. seedcord attaches any metadata on the throw as `metadata.json`. A `DiscordAPIError` from an interaction callback adds three timestamps, when Discord sent the interaction, when the error reached the log, and the gap between them.
+- the class name and its message
+- the kind, the command, and the customId
+- the user, guild, channel, and interaction ids
+- the uuid and a stack, taken from the cause when the throw has one and from the throw itself otherwise
+
+seedcord attaches the raw interaction as `source.json`. A fault raised in an event handler shows the event and the handler in place of the kind, and it drops the command, customId, and interaction id.
+
+<Image
+    src="/handled-exception-card.webp"
+    alt="The handled exception card in Discord for a Fault thrown from the ban command, with the kind, command, and ids, the uuid, the cause's stack, and a source.json attachment"
+    width={1336}
+    height={1270}
+/>
+
+The `unknownException` card shows the guild and the user, then the uuid with the error's stack. Under that, seedcord attaches any metadata on the throw as `metadata.json`. Three timestamps appear only when the error is a `DiscordAPIError` from an interaction callback, like the 10062 a late reply throws. They show when Discord sent the interaction, when the error reached the log, and the gap between them. The card below came from a plain `Error`, so it has none.
 
 <Image
     src="/unknown-exception-card.webp"
@@ -40,13 +54,13 @@ HandledException disabled, HANDLED_EXCEPTION_WEBHOOK_URL is not set
 
 <Callout type="warning">
 
-seedcord matches every url it finds against Discord's webhook form and throws on a miss. It then asks Discord about every webhook it accepted, and a 404 or a 401 throws too. That second throw names every dead variable at once, so a first boot reports all of them together.
+seedcord matches every url it finds against Discord's webhook form and throws when one doesn't match. It then asks Discord about every webhook it accepted, and a 404 or a 401 throws too. That second throw names every dead variable at once, so a first boot reports all of them together.
 
 </Callout>
 
 ## Your own reporter
 
-A reporter delivers one bus key to one webhook. Subclass [`WebhookLog`](ref:gateway/WebhookLog), name the key with [`@Subscribe`](ref:core/Subscribe), and name the environment variable with [`@WebhookUrl`](ref:core/WebhookUrl).
+A reporter delivers one bus key to one webhook. Write your own when a kind of throw should go to a channel of its own, or when the shipped card is missing something you need. Subclass [`WebhookLog`](ref:gateway/WebhookLog), pass the key to [`@Subscribe`](ref:core/Subscribe), and pass the environment variable to [`@WebhookUrl`](ref:core/WebhookUrl).
 
 ```ts twoslash title="src/subscribers/FaultMirror.ts"
 import {
@@ -84,7 +98,7 @@ export class FaultMirror extends WebhookLog<'handledException'> {
 }
 ```
 
-`this.data` is that key's payload. The generic on `WebhookLog` has to name the same key you gave `@Subscribe`. Return a promise from `report()` when you have to load something before the card can be built.
+`this.data` is that key's payload. Give the generic on `WebhookLog` the same key you passed `@Subscribe`, since `this.data` takes its type from the generic. Return a promise from `report()` when you have to load something before the card can be built.
 
 {/* prettier-ignore-start */}
 
@@ -97,9 +111,9 @@ export class FaultMirror extends WebhookLog<'handledException'> {
 
 {/* prettier-ignore-end */}
 
-Both shipped reporters use `files` to attach the raw payload as json.
+The shipped `handledException` reporter uses `files` to attach `source.json` every time. The `unknownException` one attaches `metadata.json` only when the throw carries metadata, so a process listener's card arrives without a file.
 
-seedcord scans the folder named by `subscribers.path` for your reporters. The scaffold ships `null` there, so point it at your folder.
+seedcord scans the folder set in `subscribers.path` for your reporters. The scaffold ships `null` there, so point it at your folder.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -124,11 +138,13 @@ export const seedcord = new Seedcord({
 });
 ```
 
-seedcord registers the two shipped reporters whether or not you set that path. The Events tab covers the bus and the rest of what a subscriber can do.
+seedcord registers the two shipped reporters whether or not you set that path. A reporter is one kind of bus subscriber, and the Events tab covers the bus and the rest of what a subscriber like `FaultMirror` can do.
 
 ## One card a minute
 
-seedcord calls `throttleKey()` before every send. The base returns `null`, so each publish sends its own card. Override it to return a string. Events that share that string collapse into one card a minute.
+One bug in a busy command can throw on every interaction. Unthrottled, that's a card per throw, and the first one scrolls away under the rest.
+
+seedcord calls `throttleKey()` before it sends each card. The base returns `null`, so each publish sends its own card. Override it to return a string to make events that share that string collapse into one card a minute.
 
 seedcord then calls `report()` with the number it dropped while the minute was running. Here is `FaultMirror` again with both methods.
 
@@ -177,7 +193,7 @@ export class FaultMirror extends WebhookLog<'handledException'> {
 }
 ```
 
-Both shipped reporters key on the origin and the error's class name, and they end their card with the count.
+`FaultMirror` keys on `origin` and ends its card with `+N more`. The two shipped reporters key on the origin plus the error's class name, and they end their card with this line.
 
 ```txt output
 -# 12 more of these since the last report
