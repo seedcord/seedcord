@@ -1,6 +1,6 @@
 ---
 title: One handler, several commands
-description: 'Pass @SlashRoute several routes, subcommand paths included, and this.match branches on whichever one ran.'
+description: One handler class can answer several slash commands or subcommands and branch on the route that ran.
 ---
 
 Two commands that share most of their work become two handler classes, plus a helper you import into both. Instead, just handle both in a single handler class. The decorator and the generic both take the list.

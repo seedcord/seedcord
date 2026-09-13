@@ -139,6 +139,10 @@ Eight checks.
    breaks one still renders, so nothing else catches them. Walk that list
    against this page and report every miss with the line.
 
+   Read the frontmatter `description` last, against the finished page. Report one
+   that states a single fact from the body in place of what the feature is and
+   what the page covers, and one that names a section the page does not have.
+
    Several need a file open, which is why they are here rather than in the prose
    review. The ref: link targets, the import-line cut convention, the fence type
    against what the paragraph is about, the twoslash ceiling, a config key

@@ -1,6 +1,6 @@
 ---
 title: The core object
-description: Every handler reads this.core, which holds your config, your plugins, and whatever else your bot set up at startup.
+description: this.core, the object every handler reads for your config and plugins, and how to run work while your bot starts and stops.
 ---
 
 Your `/ping` handler replied and stopped there. Most handlers need more than that. They read your own config, or a database, or the rate limiter that a cooldown charges. seedcord builds one object holding all of it while your bot starts, and every handler reaches that object as `this.core`.

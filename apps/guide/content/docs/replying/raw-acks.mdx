@@ -1,6 +1,6 @@
 ---
 title: Raw acks
-description: this.event.reply() reaches Discord and skips the handler's ack state. A later edit() then throws, and a thrown Notice never shows.
+description: Replying through discord.js's own methods on this.event, what it breaks, the lint rule that reports it, and the two cases that need it.
 ---
 
 On gateway, `this.event` is the discord.js interaction, so you can call `this.event.reply()` and it reaches Discord the same way `this.reply()` does. It skips the ack state that seedcord's own methods keep.

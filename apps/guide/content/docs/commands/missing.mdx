@@ -1,6 +1,6 @@
 ---
 title: Why your command has not appeared
-description: Scope, permissions, and Discord's per-application cap each hide a command your logs say deployed fine.
+description: What to check when your logs say a command deployed and Discord doesn't show it, from its scope to who can see it and Discord's command limits.
 ---
 
 Your bot started and the logs list the command. Discord still doesn't show it.
@@ -16,6 +16,8 @@ Register to a guild while you're still changing a command. Move it to global onc
 ## Nobody can see it
 
 Discord hides a command from the picker when the person lacks permission to use it. A command you cannot run looks exactly like a command nobody deployed.
+
+Two places set that permission. `setDefaultMemberPermissions` in your command file sets who can use it by default. A server's admins can then change it for their server under Server Settings, Integrations, where they can limit your command to some roles or channels or turn it off for everyone. Your bot's token can't change those settings, so check that page when a command shows up in one server and not in another.
 
 Your commands also stay inside servers by default, since [`BuilderComponent`](ref:core/BuilderComponent) sets `InteractionContextType.Guild`. A command missing from a DM needs `BotDM` in your own `setContexts` call, passed alongside `Guild`, since that call replaces the whole list.
 
