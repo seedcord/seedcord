@@ -1,6 +1,6 @@
 import { parseChangesetFile } from '@changesets/parse';
 
-import { carriesMarker, MARKER } from '#src/release/changelog-format';
+import { MARKER } from '#src/release/changelog-format';
 
 export interface Violation {
     file: string;
@@ -8,6 +8,7 @@ export interface Violation {
         | 'unknown-package'
         | 'pre-1.0-major'
         | 'empty-summary'
+        | 'multi-line'
         | 'breaking-marker'
         | 'breaking-patch'
         | 'too-long'
@@ -18,10 +19,10 @@ export interface Violation {
 }
 
 const MENTION = /\S*(?<![A-Za-z_])BREAKING(?![A-Za-z_])\S*|\*\*(?!BREAKING)[Bb]reaking\S*/g;
-const LEADING_MARKER = /^\s*(?:- )?\*\*BREAKING:\*\* /;
+const LEADING_MARKER = `${MARKER} `;
 const CODE_SPAN = /`[^`]*`/g;
 const SENTENCE_END = /[.!?](?=\s|$)/g;
-const NOT_A_SENTENCE_END = /\b(?:e\.g|i\.e)\.|\betc\.(?=\s+[a-z])|^\s*\d+\.(?=\s)/gm;
+const NOT_A_SENTENCE_END = /\b(?:e\.g|i\.e)\.|\betc\.(?=\s+[a-z])/g;
 const OPENER = /^(Fix|Fixes|Fixing|fix|fixes|fixing|fixed)\b/;
 const PATCH_SENTENCES = 1;
 const SENTENCES = 3;
@@ -51,6 +52,7 @@ export class ChangesetRule {
         return [
             ...this.packageViolations(file, releases),
             ...(summary.trim() === '' ? [{ file, reason: 'empty-summary' as const, detail: 'no summary' }] : []),
+            ...lineViolations(file, summary),
             ...markerViolations(file, summary),
             ...breakingPatchViolations(file, summary, patchOnly ? releases : []),
             ...lengthViolations(file, summary, patchOnly),
@@ -76,21 +78,22 @@ export class ChangesetRule {
     }
 }
 
-function markerViolations(file: string, summary: string): Violation[] {
-    return summary.split('\n').flatMap((line) => {
-        const rest = line.replaceAll(CODE_SPAN, 'code').replace(LEADING_MARKER, '');
+function lineViolations(file: string, summary: string): Violation[] {
+    const lines = summary.split('\n').filter((line) => line.trim() !== '').length;
 
-        return [...rest.matchAll(MENTION)].map((match) => ({
-            file,
-            reason: 'breaking-marker' as const,
-            detail: match[0]
-        }));
-    });
+    return lines > 1 ? [{ file, reason: 'multi-line', detail: `${String(lines)} lines` }] : [];
+}
+
+function markerViolations(file: string, summary: string): Violation[] {
+    const spoken = summary.replaceAll(CODE_SPAN, 'code');
+    const rest = spoken.startsWith(LEADING_MARKER) ? spoken.slice(LEADING_MARKER.length) : spoken;
+
+    return [...rest.matchAll(MENTION)].map((match) => ({ file, reason: 'breaking-marker', detail: match[0] }));
 }
 
 // pre-1.0, a breaking change ships as a minor
 function breakingPatchViolations(file: string, summary: string, patches: readonly { name: string }[]): Violation[] {
-    if (patches.length === 0 || !carriesMarker(summary.replaceAll(CODE_SPAN, 'code'))) return [];
+    if (patches.length === 0 || !summary.startsWith(LEADING_MARKER)) return [];
 
     return [{ file, reason: 'breaking-patch', detail: patches.map((one) => one.name).join(', ') }];
 }

@@ -9,6 +9,12 @@ A changeset becomes a changelog entry, which someone scans while deciding whethe
 
 This skill decides what a changeset says. `writing-voice` covers how any sentence in this repo sounds. `release-version` covers cutting the release itself.
 
+The shape is fixed, and `pnpm lint:changesets` rejects anything else:
+
+- One paragraph on one line. No second paragraph, list, or code block.
+- One sentence for a patch, three at most otherwise.
+- `**BREAKING:**` plus a space opens the summary when the change breaks, and only on a `minor`.
+
 ---
 
 ## 1. Behavior decides the release type

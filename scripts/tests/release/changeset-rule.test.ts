@@ -39,6 +39,26 @@ describe('ChangesetRule bump types', () => {
     });
 });
 
+describe('ChangesetRule shape', () => {
+    const rule = new ChangesetRule(PACKAGES);
+
+    it('flags a second paragraph', () => {
+        const summary = 'Every handler takes a `DispatchContext`.\n\nThe bag moved to `this.dispatch`.';
+
+        expect(rule.violations('two.md', changeset("'@seedcord/core': minor", summary))).toEqual([
+            { file: 'two.md', reason: 'multi-line', detail: '2 lines' }
+        ]);
+    });
+
+    it('flags a list', () => {
+        const summary = 'Added gates.\n- `OwnerOnly`\n- `GuildOnly`';
+
+        expect(rule.violations('list.md', changeset("'@seedcord/core': minor", summary))).toEqual([
+            { file: 'list.md', reason: 'multi-line', detail: '3 lines' }
+        ]);
+    });
+});
+
 describe('ChangesetRule breaking marker', () => {
     it('flags a marker with the colon outside the bold', () => {
         const rule = new ChangesetRule(PACKAGES);
@@ -57,14 +77,6 @@ describe('ChangesetRule breaking marker', () => {
         );
 
         expect(found).toEqual([{ file: 'peer.md', reason: 'breaking-marker', detail: 'BREAKING?:_' }]);
-    });
-
-    it('accepts the marker opening a later paragraph', () => {
-        const rule = new ChangesetRule(PACKAGES);
-
-        const summary = 'Every handler constructor now takes a `DispatchContext`.\n\n**BREAKING:** the bag moved.';
-
-        expect(rule.violations('ctx.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
     });
 
     it('flags the marker sitting inside a sentence', () => {
@@ -86,7 +98,10 @@ describe('ChangesetRule breaking marker', () => {
             changeset("'@seedcord/core': minor", '**BREAKING:**\nRenamed a thing.')
         );
 
-        expect(found).toEqual([{ file: 'alone.md', reason: 'breaking-marker', detail: '**BREAKING:**' }]);
+        expect(found).toEqual([
+            { file: 'alone.md', reason: 'multi-line', detail: '2 lines' },
+            { file: 'alone.md', reason: 'breaking-marker', detail: '**BREAKING:**' }
+        ]);
     });
 
     it('leaves a BREAKING inside a code span alone', () => {
@@ -114,13 +129,6 @@ describe('ChangesetRule breaking marker', () => {
         expect(rule.violations('id.md', changeset("'@seedcord/core': minor", 'Added the NON_BREAKING flag.'))).toEqual(
             []
         );
-    });
-
-    it('accepts the marker opening a sub-bullet', () => {
-        const rule = new ChangesetRule(PACKAGES);
-        const summary = 'Added checkbox builders.\n\n- **BREAKING:** Renamed `ActionRowComponentType` to `RowType`.';
-
-        expect(rule.violations('sub.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
     });
 
     it('flags the marker on a changeset that bumps only patches', () => {
@@ -167,14 +175,6 @@ describe('ChangesetRule length', () => {
         ]);
     });
 
-    it('counts the sentences across every paragraph', () => {
-        const summary = 'One thing changed. A second thing changed.\n\nA third thing changed. A fourth thing changed.';
-
-        expect(rule.violations('split.md', changeset("'@seedcord/core': minor", summary))).toEqual([
-            { file: 'split.md', reason: 'too-long', detail: '4 sentences' }
-        ]);
-    });
-
     it('reads etc. and i.e. inside a sentence as part of it', () => {
         const summary = 'Fixed buttons, menus, etc. on reply, i.e. every component.';
 
@@ -199,12 +199,6 @@ describe('ChangesetRule length', () => {
         const summary = 'Fixed a route, e.g. `button:confirm`, that matched two handlers.';
 
         expect(rule.violations('eg.md', changeset("'@seedcord/gateway': patch", summary))).toEqual([]);
-    });
-
-    it('counts no sentence end in a numbered list marker', () => {
-        const summary = 'Added four gates.\n\n1. `OwnerOnly`\n2. `GuildOnly`\n3. `DmOnly`\n4. `Cooldown`';
-
-        expect(rule.violations('list.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
     });
 
     it('accepts one sentence on a patch', () => {

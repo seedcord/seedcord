@@ -1,5 +1,3 @@
-import { joinEntries } from '#src/release/changelog-format';
-
 import type { ReleaseEntries, ReleaseEntry } from '#src/release/ReleaseEntries';
 
 export interface ReleasePackage {
@@ -65,5 +63,5 @@ function section(heading: string, entries: readonly ReleaseEntry[]): string {
 
     const rows = entries.map((entry) => `- **${entry.packages.join(', ')}**: ${entry.summary}`);
 
-    return [`## ${heading}`, '', joinEntries(rows)].join('\n');
+    return [`## ${heading}`, '', ...rows].join('\n');
 }

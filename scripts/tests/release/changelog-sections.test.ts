@@ -96,44 +96,20 @@ describe('ChangelogSections breaking split', () => {
 });
 
 describe('ChangelogSections marker placement', () => {
-    it('routes an entry carrying the marker in a later paragraph', () => {
-        const out = regrouped(
-            lines(
-                '## 0.2.0',
-                '',
-                '### Patch Changes',
-                '',
-                '- Better encapsulate framework internals. ([#253](url))',
-                '',
-                '    **BREAKING:** `SeedcordError.identifier` is accessed via a symbol now.',
-                ''
-            )
+    it('leaves the labels inside an older breaking entry as they are', () => {
+        const text = lines(
+            '## 0.1.0',
+            '',
+            '### 💥 Breaking',
+            '',
+            '- Added checkbox builders. ([#136](url))',
+            '    - **BREAKING:** Renamed `ActionRowComponentType` to `RowType`.',
+            '',
+            '    **BREAKING:** a plugin constructor takes `CoreBase` first.',
+            ''
         );
 
-        expect(out).toContain('### 💥 Breaking');
-        expect(out).toContain('Better encapsulate framework internals.');
-        expect(out).not.toContain('🩹 Patch');
-    });
-
-    it('keeps the marker as a label on a later paragraph or sub-bullet', () => {
-        const once = regrouped(
-            lines(
-                '## 0.1.0',
-                '',
-                '### Minor Changes',
-                '',
-                '- Added checkbox builders. ([#136](url))',
-                '    - **BREAKING:** Renamed `ActionRowComponentType` to `RowType`.',
-                '',
-                '    **BREAKING:** a plugin constructor takes `CoreBase` first.',
-                ''
-            )
-        );
-
-        expect(once).toContain('### 💥 Breaking');
-        expect(once).toContain('    - **BREAKING:** Renamed `ActionRowComponentType` to `RowType`.');
-        expect(once).toContain('    **BREAKING:** a plugin constructor takes `CoreBase` first.');
-        expect(regrouped(once)).toBe(once);
+        expect(regrouped(text)).toBe(text);
     });
 
     it('leaves a marker inside a code span out of the routing', () => {

@@ -1,10 +1,8 @@
 import {
     bucketOf,
-    carriesMarker,
     DEPENDENCIES,
     HEADING,
     headingOf,
-    joinEntries,
     MARKER,
     NESTED_START,
     ORDER,
@@ -73,8 +71,9 @@ function regroupHead(head: string): string | undefined {
                 continue;
             }
 
-            const target = carriesMarker(entry) ? 'breaking' : bucket;
-            const text = entry.startsWith(LEADING_MARKER) ? `- ${entry.slice(LEADING_MARKER.length)}` : entry;
+            const breaking = entry.startsWith(LEADING_MARKER);
+            const text = breaking ? `- ${entry.slice(LEADING_MARKER.length)}` : entry;
+            const target = breaking ? 'breaking' : bucket;
             buckets.set(target, [...(buckets.get(target) ?? []), text]);
         }
     }
@@ -91,4 +90,11 @@ function block(bucket: Bucket, entries: readonly string[], dependencies: readonl
     const nested = dependencies.length > 0 ? `${own ? '\n' : ''}${DEPENDENCIES}\n\n${dependencies.join('\n')}\n` : '';
 
     return `${HEADING[bucket]}\n\n${own}${nested}`;
+}
+
+// older entries carry continuation paragraphs, and prettier puts a blank line after one
+function joinEntries(entries: readonly string[]): string {
+    return entries
+        .map((entry, index) => (entry.includes('\n') && index < entries.length - 1 ? `${entry}\n` : entry))
+        .join('\n');
 }

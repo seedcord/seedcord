@@ -27,10 +27,8 @@ export class ChangelogRenderer {
 
     async releaseLine(changeset: RenderedChangeset): Promise<string> {
         const reference = await this.referenceFor(changeset.commit);
-        const [first = '', ...rest] = changeset.summary.split('\n');
-        const opening = reference === undefined ? `- ${first}` : `- ${first} (${reference})`;
 
-        return [opening, ...rest.map((line) => (line === '' ? '' : `  ${line}`))].join('\n');
+        return reference === undefined ? `- ${changeset.summary}` : `- ${changeset.summary} (${reference})`;
     }
 
     dependencyLine(updated: readonly UpdatedDependency[]): string {

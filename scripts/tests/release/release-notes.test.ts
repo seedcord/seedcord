@@ -99,38 +99,4 @@ describe('ReleaseNotes', () => {
     it('leaves out a bucket that carries no entry', () => {
         expect(notes()).not.toContain('🩹 Patch changes');
     });
-
-    it('separates a continuation paragraph from the entry after it', () => {
-        const withParagraph = lines(
-            '# @seedcord/http',
-            '',
-            '## 0.8.0',
-            '',
-            '### 💥 Breaking',
-            '',
-            '- Every handler takes a `DispatchContext`. ([#310](url))',
-            '',
-            '    The node host runs the chain before its gates.',
-            '',
-            '- A second breaking entry. ([#311](url))',
-            ''
-        );
-
-        const body = new ReleaseNotes({
-            repo: 'seedcord/seedcord',
-            tag: 'release-2026.09.11',
-            published: [
-                {
-                    name: '@seedcord/http',
-                    version: '0.8.0',
-                    oldVersion: '0.7.0',
-                    directory: 'packages/http',
-                    changelog: withParagraph
-                }
-            ],
-            entries: new ReleaseEntries([{ name: '@seedcord/http', version: '0.8.0', changelog: withParagraph }])
-        }).body();
-
-        expect(body).toContain('    The node host runs the chain before its gates.\n\n- **http**: A second breaking');
-    });
 });

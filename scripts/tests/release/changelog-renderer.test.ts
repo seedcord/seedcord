@@ -57,17 +57,6 @@ describe('ChangelogRenderer release line', () => {
     it('leaves an uncommitted changeset without a link', async () => {
         expect(await renderer.releaseLine({ summary: 'A thing changed.' })).toBe('- A thing changed.');
     });
-
-    it('links on the first line and indents the paragraphs after it into the entry', async () => {
-        const line = await renderer.releaseLine({
-            summary: 'Renamed `foo` to `bar`.\n\n```ts\nbar();\n```',
-            commit: '359748d'
-        });
-
-        expect(line).toBe(
-            '- Renamed `foo` to `bar`. ([#310](https://github.com/seedcord/seedcord/pull/310))\n\n  ```ts\n  bar();\n  ```'
-        );
-    });
 });
 
 describe('ChangelogRenderer contributor credit', () => {

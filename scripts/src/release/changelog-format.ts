@@ -16,9 +16,8 @@ export const DEPENDENCIES = '#### 📦 Seedcord packages';
 
 export const ORDER: readonly Bucket[] = ['breaking', 'minor', 'patch'];
 
-// changesets writes the plain names
+// changesets writes the plain names. `Major Changes` never appears while the lint rejects a major bump
 const BUCKET: Record<string, Bucket> = {
-    'Major Changes': 'breaking',
     'Minor Changes': 'minor',
     'Patch Changes': 'patch',
     '💥 Breaking': 'breaking',
@@ -29,15 +28,9 @@ const BUCKET: Record<string, Bucket> = {
 const ENTRY_START = /(?=^- )/m;
 
 export const MARKER = '**BREAKING:**';
-const MARKER_AT_LINE_START = /^\s*(?:- )?\*\*BREAKING:\*\* /m;
 
 export function isStable(version: string): boolean {
     return STABLE.test(version);
-}
-
-// a paragraph or a bullet opens with the marker, which a code span never does
-export function carriesMarker(text: string): boolean {
-    return MARKER_AT_LINE_START.test(text);
 }
 
 export function textBeforeFirstEntry(body: string): string {
@@ -57,13 +50,6 @@ export function splitEntries(body: string): string[] {
         .split(ENTRY_START)
         .map((entry) => entry.replace(/\s+$/, ''))
         .filter((entry) => entry.startsWith('- '));
-}
-
-// prettier puts a blank line between a continuation paragraph and the entry after it
-export function joinEntries(entries: readonly string[]): string {
-    return entries
-        .map((entry, index) => (entry.includes('\n') && index < entries.length - 1 ? `${entry}\n` : entry))
-        .join('\n');
 }
 
 export function bodyWithoutNested(section: string): string {
