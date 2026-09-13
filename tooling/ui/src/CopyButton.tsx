@@ -1,6 +1,6 @@
 'use client';
 
-import { ClipboardCheck, ClipboardCopy } from 'lucide-react';
+import { ClipboardCheck, Copy } from 'lucide-react';
 import { useCallback } from 'react';
 
 import { Button } from './Button';
@@ -51,7 +51,7 @@ export function CopyButton({
             )}
         >
             <span className={cn('sr-only')}>{copied ? copiedLabel : idleLabel}</span>
-            <IconSwap active={copied} idleIcon={ClipboardCopy} activeIcon={ClipboardCheck} size={18} />
+            <IconSwap active={copied} idleIcon={Copy} activeIcon={ClipboardCheck} size={18} />
         </Button>
     );
 }
