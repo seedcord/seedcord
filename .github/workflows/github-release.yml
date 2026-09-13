@@ -1,0 +1,52 @@
+name: github-release
+
+on:
+    workflow_call:
+        inputs:
+            published:
+                required: true
+                type: string
+    workflow_dispatch:
+        inputs:
+            published:
+                description: 'JSON array of { "name", "version" } objects that published'
+                required: true
+                type: string
+
+permissions:
+    contents: read
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+                  fetch-depth: 0
+            - name: Setup workspace
+              uses: ./.github/actions/setup
+
+            - name: Build the release notes
+              id: notes
+              run: |
+                  pnpm release:notes --published "$PUBLISHED" --out release-body.md | tee names.txt
+                  {
+                    echo "tag=$(sed -n 's/^tag: //p' names.txt)"
+                    echo "title=$(sed -n 's/^title: //p' names.txt)"
+                  } >> "$GITHUB_OUTPUT"
+              env:
+                  PUBLISHED: ${{ inputs.published }}
+
+            - name: Create the release
+              run: |
+                  git tag "$TAG"
+                  git push origin "$TAG"
+                  gh release create "$TAG" --title "$TITLE" --notes-file release-body.md
+              env:
+                  TAG: ${{ steps.notes.outputs.tag }}
+                  TITLE: ${{ steps.notes.outputs.title }}
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

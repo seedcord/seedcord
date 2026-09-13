@@ -73,10 +73,20 @@ jobs:
                   commit-message: 'chore(release): version packages'
                   pr-title: 'chore: release packages'
                   pr-base-branch: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+                  create-github-releases: false
+                  push-git-tags: false
               env:
                   NPM_CONFIG_PROVENANCE: 'true'
                   HUSKY: 0
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    github-release:
+        needs: npm-publish
+        if: ${{ needs.npm-publish.outputs.published == 'true' }}
+        uses: ./.github/workflows/github-release.yml
+        with:
+            published: ${{ needs.npm-publish.outputs.publishedPackages }}
+        secrets: inherit
 
     docs-publish:
         needs: npm-publish

@@ -1,33 +1,19 @@
-type Bucket = 'breaking' | 'minor' | 'patch';
+import {
+    bucketOf,
+    DEPENDENCIES,
+    HEADING,
+    headingOf,
+    NESTED_START,
+    ORDER,
+    SECTION_START,
+    splitEntries,
+    VERSION_START
+} from '#src/release/changelog-format';
 
-const VERSION_START = /(?=^## )/m;
-const SECTION_START = /(?=^### )/m;
-const NESTED_START = /(?=^#### )/m;
-const ENTRY_START = /(?=^- )/m;
+import type { Bucket } from '#src/release/changelog-format';
+
 const DEPENDENCY = /^- \S+ \S+ → \S+$/;
 const MARKER = /\*\*BREAKING:\*\* /;
-
-const DEPENDENCIES = '#### 📦 Seedcord packages';
-
-const HEADING: Record<Bucket, string> = {
-    breaking: '### 💥 Breaking',
-    minor: '### ✨ Minor',
-    patch: '### 🩹 Patch'
-};
-
-const ORDER: readonly Bucket[] = ['breaking', 'minor', 'patch'];
-
-// the emoji names are here too, so a second run over an already grouped file reads its own headings
-const BUCKET: Record<string, Bucket> = {
-    'Major Changes': 'breaking',
-    'Minor Changes': 'minor',
-    'Patch Changes': 'patch',
-    '💥 Breaking': 'breaking',
-    '✨ Minor': 'minor',
-    '🩹 Patch': 'patch',
-    '📦 Updated dependencies': 'patch',
-    '📦 Seedcord packages': 'patch'
-};
 
 export class ChangelogSections {
     constructor(private readonly text: string) {}
@@ -59,17 +45,22 @@ function regroupVersion(chunk: string): string {
     const dependencies: string[] = [];
 
     for (const section of sections) {
-        const name = section.slice(0, section.indexOf('\n')).replace('### ', '').trim();
-        const bucket = BUCKET[name];
+        const name = headingOf(section);
+        const bucket = bucketOf(name);
         if (bucket === undefined) return chunk;
 
-        for (const entry of entriesOf(section)) {
-            if (DEPENDENCY.test(entry) || name === '📦 Updated dependencies') {
+        const [own, ...nested] = section.slice(section.indexOf('\n') + 1).split(NESTED_START);
+        const body = [own ?? '', ...nested.map((part) => part.slice(part.indexOf('\n') + 1))].join('');
+
+        for (const entry of splitEntries(body)) {
+            if (DEPENDENCY.test(entry) || name === '📦 Seedcord packages') {
                 dependencies.push(entry);
                 continue;
             }
 
-            const [target, text] = classify(entry, bucket);
+            const breaking = MARKER.test(entry);
+            const target = breaking ? 'breaking' : bucket;
+            const text = breaking ? entry.replace(MARKER, '') : entry;
             buckets.set(target, [...(buckets.get(target) ?? []), text]);
         }
     }
@@ -93,19 +84,4 @@ function joinEntries(entries: readonly string[]): string {
     return entries
         .map((entry, index) => (entry.includes('\n') && index < entries.length - 1 ? `${entry}\n` : entry))
         .join('\n');
-}
-
-function entriesOf(section: string): string[] {
-    return section
-        .slice(section.indexOf('\n') + 1)
-        .split(NESTED_START)
-        .flatMap((part) => part.split(ENTRY_START))
-        .map((entry) => entry.replace(/\s+$/, ''))
-        .filter((entry) => entry.startsWith('- '));
-}
-
-function classify(entry: string, bucket: Bucket): [Bucket, string] {
-    if (MARKER.test(entry)) return ['breaking', entry.replace(MARKER, '')];
-
-    return [bucket, entry];
 }
