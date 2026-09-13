@@ -15,7 +15,7 @@ const MESSAGES: Record<Violation['reason'], string> = {
     'too-long': 'runs past the sentence cap, one when every bump is a patch and three otherwise',
     'banned-punctuation': 'carries punctuation the writing rules ban',
     'banned-word': 'carries a banned word',
-    'fix-opener': 'opens a fix with something other than Fixed or Also fixed'
+    'fix-opener': 'opens a fix with something other than Fixed'
 };
 
 async function changesetFiles(dir: string): Promise<string[]> {

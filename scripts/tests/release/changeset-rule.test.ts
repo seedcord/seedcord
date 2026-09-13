@@ -252,20 +252,12 @@ describe('ChangesetRule fix opener', () => {
         ]);
     });
 
-    it('accepts Fixed and Also fixed', () => {
-        const first = 'Fixed a plugin whose `init()` outlasts its timeout.';
-        const second = '**BREAKING:** Fixed the cooldown on two buttons. Also fixed the reload.';
+    it('accepts Fixed, with or without the breaking marker', () => {
+        const plain = 'Fixed a plugin whose `init()` outlasts its timeout.';
+        const breaking = '**BREAKING:** Fixed the cooldown on two buttons.';
 
-        expect(rule.violations('a.md', changeset("'@seedcord/gateway': patch", first))).toEqual([]);
-        expect(rule.violations('b.md', changeset("'@seedcord/gateway': minor", second))).toEqual([]);
-    });
-
-    it('flags a second fix spelled Also fixes', () => {
-        const summary = 'Fixed the cooldown on two buttons. Also fixes the reload.';
-
-        expect(rule.violations('also.md', changeset("'@seedcord/gateway': minor", summary))).toEqual([
-            { file: 'also.md', reason: 'fix-opener', detail: 'Also fixes' }
-        ]);
+        expect(rule.violations('a.md', changeset("'@seedcord/gateway': patch", plain))).toEqual([]);
+        expect(rule.violations('b.md', changeset("'@seedcord/gateway': minor", breaking))).toEqual([]);
     });
 
     it('leaves a body that opens on something else alone', () => {

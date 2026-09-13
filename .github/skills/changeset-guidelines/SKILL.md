@@ -21,9 +21,9 @@ A durable store keyed on the old behavior changes silently. In the worked exampl
 
 ## 2. Open with what kind of entry this is
 
-A bug fix opens with `Fixed`. A second fix in the same changeset opens its own sentence with `Also fixed`.
+A bug fix opens with `Fixed`. A second fix gets its own changeset.
 
-Why: a changelog gets scanned, so the first word has to say what kind of entry this is.
+Why: a changelog gets scanned, so the first word has to say what kind of entry this is. `pnpm lint:changesets` holds a patch changeset to one sentence, and each changeset becomes one changelog entry.
 
 ---
 

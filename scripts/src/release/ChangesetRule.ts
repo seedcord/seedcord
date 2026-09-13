@@ -20,8 +20,6 @@ const CODE_SPAN = /`[^`]*`/g;
 const SENTENCE_END = /[.!?](?=\s|$)/g;
 const NOT_A_SENTENCE_END = /\be\.g\.|^\s*\d+\.(?=\s)/gm;
 const OPENER = /^(Fix|Fixes|fix|fixes|fixed)\b/;
-const ALSO_OPENER = /\b(Also fix(?:es)?)\b/;
-
 const PATCH_SENTENCES = 1;
 const SENTENCES = 3;
 
@@ -116,7 +114,7 @@ function wordViolations(file: string, summary: string): Violation[] {
 }
 
 function openerViolations(file: string, summary: string): Violation[] {
-    const opener = OPENER.exec(summary.replace(MARKER, '').trim())?.[1] ?? ALSO_OPENER.exec(prose(summary))?.[1];
+    const opener = OPENER.exec(summary.replace(MARKER, '').trim())?.[1];
 
     return opener === undefined ? [] : [{ file, reason: 'fix-opener', detail: opener }];
 }
