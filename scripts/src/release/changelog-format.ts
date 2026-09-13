@@ -1,5 +1,7 @@
 export type Bucket = 'breaking' | 'minor' | 'patch';
 
+const STABLE = /^\d+\.\d+\.\d+$/;
+
 export const VERSION_START = /(?=^## )/m;
 export const SECTION_START = /(?=^### )/m;
 export const NESTED_START = /(?=^#### )/m;
@@ -14,19 +16,21 @@ export const DEPENDENCIES = '#### 📦 Seedcord packages';
 
 export const ORDER: readonly Bucket[] = ['breaking', 'minor', 'patch'];
 
-// the emoji names are here too, so a second pass over an already grouped file reads its own headings
+// changesets writes the plain names
 const BUCKET: Record<string, Bucket> = {
     'Major Changes': 'breaking',
     'Minor Changes': 'minor',
     'Patch Changes': 'patch',
     '💥 Breaking': 'breaking',
     '✨ Minor': 'minor',
-    '🩹 Patch': 'patch',
-    '📦 Updated dependencies': 'patch',
-    '📦 Seedcord packages': 'patch'
+    '🩹 Patch': 'patch'
 };
 
 const ENTRY_START = /(?=^- )/m;
+
+export function isStable(version: string): boolean {
+    return STABLE.test(version);
+}
 
 export function headingOf(section: string): string {
     return section.slice(0, section.indexOf('\n')).replace('### ', '').trim();
@@ -42,6 +46,13 @@ export function splitEntries(body: string): string[] {
         .split(ENTRY_START)
         .map((entry) => entry.replace(/\s+$/, ''))
         .filter((entry) => entry.startsWith('- '));
+}
+
+// prettier puts a blank line between a continuation paragraph and the entry after it
+export function joinEntries(entries: readonly string[]): string {
+    return entries
+        .map((entry, index) => (entry.includes('\n') && index < entries.length - 1 ? `${entry}\n` : entry))
+        .join('\n');
 }
 
 /** The part of a section above its nested block. */

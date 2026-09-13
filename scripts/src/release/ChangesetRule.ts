@@ -1,17 +1,15 @@
 import { parseChangesetFile } from '@changesets/parse';
 
-export type ViolationReason =
-    | 'unknown-package'
-    | 'pre-1.0-major'
-    | 'breaking-marker'
-    | 'too-long'
-    | 'banned-punctuation'
-    | 'banned-word'
-    | 'fix-opener';
-
 export interface Violation {
     file: string;
-    reason: ViolationReason;
+    reason:
+        | 'unknown-package'
+        | 'pre-1.0-major'
+        | 'breaking-marker'
+        | 'too-long'
+        | 'banned-punctuation'
+        | 'banned-word'
+        | 'fix-opener';
     detail: string;
 }
 
@@ -75,7 +73,7 @@ export class ChangesetRule {
 
 function markerViolations(file: string, summary: string): Violation[] {
     return summary.split(PARAGRAPH).flatMap((paragraph) => {
-        const rest = paragraph.startsWith(MARKER) ? paragraph.slice(MARKER.length) : paragraph;
+        const rest = paragraph.startsWith(`${MARKER} `) ? paragraph.slice(MARKER.length) : paragraph;
 
         return [...rest.matchAll(MENTION)].map((match) => ({
             file,

@@ -78,6 +78,17 @@ describe('ChangesetRule breaking marker', () => {
         expect(found).toEqual([{ file: 'mid.md', reason: 'breaking-marker', detail: '**BREAKING:**' }]);
     });
 
+    it('flags the marker alone on its line, which the changelog would file under minor', () => {
+        const rule = new ChangesetRule(PUBLISHED);
+
+        const found = rule.violations(
+            'alone.md',
+            changeset("'@seedcord/core': minor", '**BREAKING:**\nRenamed a thing.')
+        );
+
+        expect(found).toEqual([{ file: 'alone.md', reason: 'breaking-marker', detail: '**BREAKING:**' }]);
+    });
+
     it('accepts the shipped cooldown changeset', () => {
         const rule = new ChangesetRule(PUBLISHED);
 

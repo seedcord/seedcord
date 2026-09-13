@@ -1,13 +1,13 @@
 import { parseArgs } from 'node:util';
 
-export interface FlagDefinition {
+interface FlagDefinition {
     type: 'string' | 'boolean';
     short?: string;
     multiple?: true;
     describe: string;
 }
 
-export type FlagSpec = Record<string, FlagDefinition>;
+type FlagSpec = Record<string, FlagDefinition>;
 
 type ValueOf<Definition extends FlagDefinition> = Definition extends { type: 'boolean' }
     ? boolean
@@ -15,7 +15,7 @@ type ValueOf<Definition extends FlagDefinition> = Definition extends { type: 'bo
       ? string[]
       : string | undefined;
 
-export type FlagValues<Spec extends FlagSpec> = { [Key in keyof Spec]: ValueOf<Spec[Key]> };
+type FlagValues<Spec extends FlagSpec> = { [Key in keyof Spec]: ValueOf<Spec[Key]> };
 
 interface ParseArgsOption {
     type: 'string' | 'boolean';

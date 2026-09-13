@@ -2,34 +2,24 @@ import path from 'node:path';
 
 import { getPackages } from '@manypkg/get-packages';
 
-export interface WorkspacePackage {
-    dir: string;
-    relativeDir: string;
-    packageJson: { name: string; private?: boolean };
-}
-
-export interface WorkspaceSnapshot {
-    rootDir: string;
-    rootPackage?: WorkspacePackage;
-    packages: WorkspacePackage[];
-}
+import type { Package, Packages } from '@manypkg/get-packages';
 
 export class Workspace {
     static async load(dir: string): Promise<Workspace> {
         return new Workspace(await getPackages(dir));
     }
 
-    constructor(private readonly snapshot: WorkspaceSnapshot) {}
+    constructor(private readonly snapshot: Omit<Packages, 'tool'>) {}
 
     get rootDir(): string {
         return this.snapshot.rootDir;
     }
 
-    all(): readonly WorkspacePackage[] {
+    all(): readonly Package[] {
         return this.snapshot.packages;
     }
 
-    published(): readonly WorkspacePackage[] {
+    published(): readonly Package[] {
         return this.snapshot.packages.filter((one) => one.packageJson.private !== true);
     }
 

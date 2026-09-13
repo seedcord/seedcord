@@ -139,14 +139,6 @@
 - `@seedcord/types` 0.7.2-next.0 → 0.8.0
 - `@seedcord/errors` 0.2.2-next.0 → 0.3.0
 
-## 0.7.1-next.0
-
-### 🩹 Patch
-
-#### 📦 Seedcord packages
-
-- `@seedcord/types` 0.7.1 → 0.7.2-next.0
-
 ## 0.7.0
 
 ### ✨ Minor

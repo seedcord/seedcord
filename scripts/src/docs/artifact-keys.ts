@@ -1,6 +1,6 @@
 import { isPrerelease } from '@seedcord/docs-engine';
 
-export interface VersionedPackage {
+interface VersionedPackage {
     folder: string;
     versions: readonly string[];
 }

@@ -9,13 +9,10 @@ export interface UpdatedDependency {
     newVersion: string;
 }
 
-export type SubjectLookup = (sha: string) => Promise<string | undefined>;
-export type ContributorLookup = (pull: string) => Promise<readonly string[]>;
-
-export interface RendererConfig {
+interface RendererConfig {
     repo: string;
-    subjectOf: SubjectLookup;
-    contributorsOf?: ContributorLookup;
+    subjectOf: (sha: string) => Promise<string | undefined>;
+    contributorsOf?: (pull: string) => Promise<readonly string[]>;
     maintainers?: readonly string[];
 }
 
@@ -23,12 +20,16 @@ export interface RendererConfig {
 const PULL_NUMBER = /\(#(\d+)\)$/;
 
 export class ChangelogRenderer {
+    private readonly thanks = new Map<string, Promise<string>>();
+
     constructor(private readonly config: RendererConfig) {}
 
     async releaseLine(changeset: RenderedChangeset): Promise<string> {
         const reference = await this.referenceFor(changeset.commit);
+        const [first = '', ...rest] = changeset.summary.split('\n');
+        const opening = reference === undefined ? `- ${first}` : `- ${first} (${reference})`;
 
-        return reference === undefined ? `- ${changeset.summary}` : `- ${changeset.summary} (${reference})`;
+        return [opening, ...rest.map((line) => (line === '' ? '' : `  ${line}`))].join('\n');
     }
 
     dependencyLine(updated: readonly UpdatedDependency[]): string {
@@ -45,11 +46,19 @@ export class ChangelogRenderer {
         return `[#${pull}](${base}/pull/${pull})${await this.thanksFor(pull)}`;
     }
 
-    private async thanksFor(pull: string): Promise<string> {
+    // changesets renders one line per package a changeset bumps
+    private thanksFor(pull: string): Promise<string> {
+        const known = this.thanks.get(pull) ?? this.creditFor(pull);
+        this.thanks.set(pull, known);
+
+        return known;
+    }
+
+    private async creditFor(pull: string): Promise<string> {
         const { contributorsOf, maintainers = [] } = this.config;
         if (contributorsOf === undefined) return '';
 
-        const contributors = await contributorsOf(pull);
+        const contributors = await contributorsOf(pull).catch(() => []);
         const credited = contributors.filter((login) => !maintainers.includes(login));
         if (credited.length === 0) return '';
 

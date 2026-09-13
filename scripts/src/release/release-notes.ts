@@ -1,49 +1,29 @@
 /* eslint-disable no-console -- CLI script so console is ok */
 import { execFile } from 'node:child_process';
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { promisify } from 'node:util';
 
-import { isPrerelease } from '@seedcord/docs-engine';
-
 import { CliFlags } from '#src/lib/CliFlags';
+import { PUBLISHED_FLAGS, readPublished } from '#src/lib/published-packages';
 import { Workspace } from '#src/lib/Workspace';
+import { isStable } from '#src/release/changelog-format';
 import { ChangelogFile } from '#src/release/ChangelogFile';
 import { ReleaseEntries } from '#src/release/ReleaseEntries';
 import { ReleaseName } from '#src/release/ReleaseName';
 import { ReleaseNotes } from '#src/release/ReleaseNotes';
 
+import type { PublishedPackage } from '#src/lib/published-packages';
 import type { ReleasePackage } from '#src/release/ReleaseNotes';
 
 const run = promisify(execFile);
 
 const flags = new CliFlags('pnpm release:notes [options]', {
-    published: { type: 'string', describe: 'JSON array of { name, version } objects that published' },
-    'published-file': { type: 'string', describe: 'Path to a file holding that JSON array' },
+    ...PUBLISHED_FLAGS,
     repo: { type: 'string', describe: 'GitHub repo slug, defaulting to seedcord/seedcord' },
     out: { type: 'string', describe: 'File to write the release body to' }
 });
-
-interface Published {
-    name: string;
-    version: string;
-}
-
-function parsePublished(raw: string): Published[] {
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) throw new TypeError('--published must be a JSON array of { name, version }');
-
-    return parsed.map((entry) => {
-        // justified: validated as a non-null object below before its fields are read
-        const { name, version } = (entry ?? {}) as { name?: unknown; version?: unknown };
-        if (typeof name !== 'string' || typeof version !== 'string') {
-            throw new TypeError('each published entry needs a string name and version');
-        }
-
-        return { name, version };
-    });
-}
 
 async function releaseTags(...extra: string[]): Promise<string[]> {
     const { stdout } = await run('git', ['tag', '--list', 'release-*', ...extra]);
@@ -51,7 +31,7 @@ async function releaseTags(...extra: string[]): Promise<string[]> {
     return stdout.split('\n').filter((tag) => tag !== '');
 }
 
-async function resolvePackages(entries: readonly Published[]): Promise<ReleasePackage[]> {
+async function resolvePackages(entries: readonly PublishedPackage[]): Promise<ReleasePackage[]> {
     const workspace = await Workspace.load(import.meta.dirname);
     const published: ReleasePackage[] = [];
 
@@ -60,10 +40,11 @@ async function resolvePackages(entries: readonly Published[]): Promise<ReleasePa
         if (dir === undefined) throw new Error(`${entry.name} is not a package in this workspace`);
 
         const changelog = await ChangelogFile.read(path.join(dir, 'CHANGELOG.md'));
+        const oldVersion = changelog.versionBefore(entry.version);
         published.push({
             name: entry.name,
             version: entry.version,
-            oldVersion: changelog.versionBefore(entry.version) ?? '',
+            ...(oldVersion !== undefined && { oldVersion }),
             directory: path.relative(workspace.rootDir, dir),
             changelog: changelog.contents
         });
@@ -80,12 +61,8 @@ async function main(): Promise<void> {
     }
 
     const parsed = flags.parse(argv);
-    const file = parsed['published-file'];
-    const raw = file === undefined ? parsed.published : await readFile(file, 'utf8');
-    if (raw === undefined) throw new Error('--published <json> or --published-file <path> is required');
-
     const repo = parsed.repo ?? 'seedcord/seedcord';
-    const published = await resolvePackages(parsePublished(raw));
+    const published = await resolvePackages(await readPublished(parsed));
 
     const [onCommit] = await releaseTags('--points-at', 'HEAD');
     const name = onCommit
@@ -98,7 +75,7 @@ async function main(): Promise<void> {
     console.log(`tag: ${name.tag}`);
     console.log(`title: ${name.title}`);
     console.log(`tagged: ${String(onCommit !== undefined)}`);
-    console.log(`prerelease: ${String(published.some((pkg) => isPrerelease(pkg.version)))}`);
+    console.log(`prerelease: ${String(!published.every((pkg) => isStable(pkg.version)))}`);
     if (parsed.out === undefined) console.log(`\n${body}`);
 }
 

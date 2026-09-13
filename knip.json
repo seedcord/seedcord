@@ -12,7 +12,12 @@
             "project": ["turbo/generators/**/*.ts"]
         },
         "scripts": {
-            "entry": ["**/*.ts"],
+            "entry": [
+                "src/*.ts",
+                "src/docs/{build-docs-artifacts,extract-docs,published-payload,purge-cdn-cache,sync-docs-to-artifacts}.ts",
+                "src/release/{changelog,lint-changesets,release-notes,tidy-changelogs}.ts",
+                "tests/**/*.test.ts"
+            ],
             "project": ["**/*.ts"]
         },
         "apps/docs": {

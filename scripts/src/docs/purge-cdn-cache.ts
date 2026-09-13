@@ -4,16 +4,13 @@ import { Converters, Envapter } from 'envapt';
 import { CdnPurge } from '#src/docs/CdnPurge';
 import { CliFlags } from '#src/lib/CliFlags';
 
-// Purges the Cloudflare edge cache for the docs CDN.
-//
-// Needs CLOUDFLARE_CACHE_PURGE_TOKEN (Zone -> Cache Purge) + CLOUDFLARE_ZONE_ID
-//   pnpm docs:purge                                      # purge everything on the zone
-//   pnpm docs:purge --files <url> --files <url>          # purge specific full URLs
-//   pnpm docs:purge --prefixes <p> --prefixes <p>        # purge by URL prefix, host plus path, no scheme, max 30
-//   pnpm docs:purge --dry-run                            # print the request, but don't actually send it
-
+// the token needs the Zone > Cache Purge permission
 const flags = new CliFlags('pnpm docs:purge [options]', {
-    prefixes: { type: 'string', multiple: true, describe: 'URL prefix to purge, repeat for several' },
+    prefixes: {
+        type: 'string',
+        multiple: true,
+        describe: 'URL prefix to purge as host plus path, repeat for several. Wins over --files'
+    },
     files: { type: 'string', multiple: true, describe: 'Full URL to purge, repeat for several' },
     'dry-run': { type: 'boolean', describe: 'Print the request and send nothing' }
 });

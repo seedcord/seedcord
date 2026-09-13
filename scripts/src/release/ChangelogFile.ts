@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 
-const HEADING = /^## (\S+)/;
-const SECTION_START = /(?=^## )/m;
-const STABLE = /^\d+\.\d+\.\d+$/;
+import { isStable, ownBody, SECTION_START, splitEntries, VERSION_START } from '#src/release/changelog-format';
+
+const VERSION_HEADING = /^## (\S+)/;
 const PRERELEASE = /^(\d+\.\d+\.\d+)-/;
 const NOTE = /^---$/m;
 
-const versionOf = (section: string): string | undefined => HEADING.exec(section)?.[1];
+const versionOf = (section: string): string | undefined => VERSION_HEADING.exec(section)?.[1];
 
 export class ChangelogFile {
     static async read(filePath: string): Promise<ChangelogFile> {
@@ -28,21 +28,29 @@ export class ChangelogFile {
             .map((section) => versionOf(section))
             .filter((one) => one !== undefined);
         const index = versions.indexOf(version);
+        if (index === -1) return undefined;
 
-        return index === -1 ? undefined : versions[index + 1];
+        const older = versions.slice(index + 1);
+        return isStable(version) ? older.find((one) => isStable(one)) : older[0];
     }
 
     withoutSupersededPrereleases(): ChangelogFile {
         // a stable below a prerelease is an older line from before a package rename
-        const stableAbove = new Set<string>();
+        let stable: { version: string; section: string } | undefined;
         const kept: string[] = [];
 
         for (const section of this.sections()) {
             const version = versionOf(section);
-            if (version && STABLE.test(version)) stableAbove.add(version);
+            if (version && isStable(version)) stable = { version, section };
 
             const base = PRERELEASE.exec(version ?? '')?.[1];
-            if (base && stableAbove.has(base)) {
+            const superseded =
+                base !== undefined &&
+                stable !== undefined &&
+                (base === stable.version ||
+                    (compareCore(base, stable.version) < 0 && carriesEveryEntry(stable.section, section)));
+
+            if (superseded) {
                 // changesets never writes a --- block, so one here was added by hand
                 const note = NOTE.exec(section);
                 if (note) kept.push(section.slice(note.index));
@@ -55,6 +63,27 @@ export class ChangelogFile {
     }
 
     private sections(): string[] {
-        return this.text.split(SECTION_START);
+        return this.text.split(VERSION_START);
     }
+}
+
+// history rewritten by hand left some prerelease entries that no stable section repeats
+function carriesEveryEntry(stable: string, prerelease: string): boolean {
+    const entries = prerelease
+        .split(SECTION_START)
+        .slice(1)
+        .flatMap((part) => splitEntries(ownBody(part)));
+
+    return entries.every((entry) => stable.includes(entry));
+}
+
+function compareCore(left: string, right: string): number {
+    const theirs = right.split('.').map(Number);
+
+    for (const [index, part] of left.split('.').map(Number).entries()) {
+        const diff = part - (theirs[index] ?? 0);
+        if (diff !== 0) return diff;
+    }
+
+    return 0;
 }

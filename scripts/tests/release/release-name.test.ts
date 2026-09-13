@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { ReleaseName } from '#src/release/ReleaseName';
 
@@ -27,9 +27,17 @@ describe('ReleaseName', () => {
     });
 
     it('reads the day in utc when the local clock still says yesterday', () => {
-        const name = ReleaseName.next(Temporal.Instant.from('2026-09-11T02:03:07Z'), []);
+        vi.stubEnv('TZ', 'America/Los_Angeles');
 
-        expect(name.tag).toBe('release-2026.09.11');
+        try {
+            expect(AT.toZonedDateTimeISO(Temporal.Now.timeZoneId()).day).toBe(10);
+
+            const name = ReleaseName.next(AT, []);
+            expect(name.tag).toBe('release-2026.09.11');
+            expect(name.title).toBe('September 11, 2026');
+        } finally {
+            vi.unstubAllEnvs();
+        }
     });
 
     it('reads the tag and title back from a tag already on the commit', () => {

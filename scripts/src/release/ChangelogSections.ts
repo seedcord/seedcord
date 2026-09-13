@@ -3,6 +3,7 @@ import {
     DEPENDENCIES,
     HEADING,
     headingOf,
+    joinEntries,
     NESTED_START,
     ORDER,
     SECTION_START,
@@ -53,7 +54,7 @@ function regroupVersion(chunk: string): string {
         const body = [own ?? '', ...nested.map((part) => part.slice(part.indexOf('\n') + 1))].join('');
 
         for (const entry of splitEntries(body)) {
-            if (DEPENDENCY.test(entry) || name === '📦 Seedcord packages') {
+            if (DEPENDENCY.test(entry)) {
                 dependencies.push(entry);
                 continue;
             }
@@ -77,11 +78,4 @@ function block(bucket: Bucket, entries: readonly string[], dependencies: readonl
     const nested = dependencies.length > 0 ? `${own ? '\n' : ''}${DEPENDENCIES}\n\n${dependencies.join('\n')}\n` : '';
 
     return `${HEADING[bucket]}\n\n${own}${nested}`;
-}
-
-// prettier puts a blank line between a continuation paragraph and the entry after it
-function joinEntries(entries: readonly string[]): string {
-    return entries
-        .map((entry, index) => (entry.includes('\n') && index < entries.length - 1 ? `${entry}\n` : entry))
-        .join('\n');
 }

@@ -1,9 +1,4 @@
 /* eslint-disable no-console -- justified: developer-facing CLI script */
-/**
- * The workspace catalog rule, both directions. A dep used by 2+ packages must be referenced as
- * `catalog:*` in `pnpm-workspace.yaml`, and a catalog entry used by fewer than 2 packages belongs
- * inline in the one package that needs it. Runs in `prePush`.
- */
 import path from 'node:path';
 import process from 'node:process';
 
@@ -26,7 +21,7 @@ function advice(violation: Violation): string {
     }
 
     const count = distinctPackages(violation.refs);
-    const usedBy = count === 1 ? '1 package' : `${count} packages`;
+    const usedBy = count === 1 ? '1 package' : `${String(count)} packages`;
 
     return (
         `      → Catalog entry "${violation.depName}" is used by ${usedBy}. Catalog is for shared deps (≥2 packages).\n` +
@@ -41,8 +36,8 @@ function report(violations: readonly Violation[], repoRoot: string): void {
     }
 
     console.error(
-        `Workspace catalog check failed. ${violations.length} dep(s) violate the catalog rule.\n` +
-            `See AGENTS.md "Workspace catalog rule".\n`
+        `Workspace catalog check failed. ${String(violations.length)} dep(s) violate the catalog rule.\n` +
+            `A dep two or more packages use goes in the pnpm-workspace.yaml catalog, and one only a single package uses stays inline.\n`
     );
 
     for (const violation of violations) {
@@ -53,7 +48,7 @@ function report(violations: readonly Violation[], repoRoot: string): void {
         console.error(advice(violation));
     }
 
-    process.exit(1);
+    process.exitCode = 1;
 }
 
 const workspace = await Workspace.load(import.meta.dirname);

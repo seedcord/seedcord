@@ -1,14 +1,16 @@
+import { joinEntries } from '#src/release/changelog-format';
+
 import type { ReleaseEntries, ReleaseEntry } from '#src/release/ReleaseEntries';
 
 export interface ReleasePackage {
     name: string;
     version: string;
-    oldVersion: string;
+    oldVersion?: string;
     directory: string;
     changelog: string;
 }
 
-export interface NotesConfig {
+interface NotesConfig {
     repo: string;
     tag: string;
     published: readonly ReleasePackage[];
@@ -39,7 +41,10 @@ export class ReleaseNotes {
         const rows = packages.map((pkg) => {
             const url = `https://github.com/${this.config.repo}/blob/${this.config.tag}/${pkg.directory}/CHANGELOG.md`;
 
-            return `| [${pkg.name}](${url}) | ${pkg.oldVersion} → ${pkg.version} |`;
+            const versions =
+                pkg.oldVersion === undefined ? `${pkg.version} (new)` : `${pkg.oldVersion} → ${pkg.version}`;
+
+            return `| [${pkg.name}](${url}) | ${versions} |`;
         });
 
         return [
@@ -68,12 +73,7 @@ function dependencyBlock(packages: readonly ReleasePackage[]): string {
 function section(heading: string, entries: readonly ReleaseEntry[]): string {
     if (entries.length === 0) return '';
 
-    // an entry carrying a continuation paragraph needs a blank line before the next bullet
-    const rows = entries.map((entry, index) => {
-        const row = `- **${entry.packages.join(', ')}**: ${entry.summary}`;
+    const rows = entries.map((entry) => `- **${entry.packages.join(', ')}**: ${entry.summary}`);
 
-        return row.includes('\n') && index < entries.length - 1 ? `${row}\n` : row;
-    });
-
-    return [`## ${heading}`, '', ...rows].join('\n');
+    return [`## ${heading}`, '', joinEntries(rows)].join('\n');
 }

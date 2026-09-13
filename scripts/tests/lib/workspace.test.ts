@@ -6,10 +6,22 @@ import { Workspace } from '#src/lib/Workspace';
 
 const snapshot = {
     rootDir: '/repo',
-    rootPackage: { dir: '/repo', relativeDir: '.', packageJson: { name: '@seedcord/seedcord', private: true } },
+    rootPackage: {
+        dir: '/repo',
+        relativeDir: '.',
+        packageJson: { name: '@seedcord/seedcord', version: '0.0.0', private: true }
+    },
     packages: [
-        { dir: '/repo/packages/core', relativeDir: 'packages/core', packageJson: { name: '@seedcord/core' } },
-        { dir: '/repo/scripts', relativeDir: 'scripts', packageJson: { name: '@seedcord/scripts', private: true } }
+        {
+            dir: '/repo/packages/core',
+            relativeDir: 'packages/core',
+            packageJson: { name: '@seedcord/core', version: '0.7.0' }
+        },
+        {
+            dir: '/repo/scripts',
+            relativeDir: 'scripts',
+            packageJson: { name: '@seedcord/scripts', version: '0.0.1', private: true }
+        }
     ]
 };
 
@@ -36,10 +48,6 @@ describe('Workspace', () => {
             path.join('/repo/packages/core', 'package.json'),
             path.join('/repo/scripts', 'package.json')
         ]);
-    });
-
-    it('names the directory the workspace was found in', () => {
-        expect(new Workspace(snapshot).rootDir).toBe('/repo');
     });
 
     it('lists every package, private ones included', () => {

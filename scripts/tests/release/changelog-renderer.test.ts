@@ -48,6 +48,17 @@ describe('ChangelogRenderer release line', () => {
     it('leaves an uncommitted changeset without a link', async () => {
         expect(await renderer.releaseLine({ summary: 'A thing changed.' })).toBe('- A thing changed.');
     });
+
+    it('links on the first line and indents the paragraphs after it into the entry', async () => {
+        const line = await renderer.releaseLine({
+            summary: 'Renamed `foo` to `bar`.\n\n```ts\nbar();\n```',
+            commit: '359748d'
+        });
+
+        expect(line).toBe(
+            '- Renamed `foo` to `bar`. ([#310](https://github.com/seedcord/seedcord/pull/310))\n\n  ```ts\n  bar();\n  ```'
+        );
+    });
 });
 
 describe('ChangelogRenderer contributor credit', () => {
@@ -86,6 +97,35 @@ describe('ChangelogRenderer contributor credit', () => {
         const line = await crediting.releaseLine({ summary: 'A thing changed.', commit: 'd4b9108' });
 
         expect(line).toBe('- A thing changed. ([#311](https://github.com/seedcord/seedcord/pull/311))');
+    });
+
+    it('drops the thanks when the contributor lookup fails', async () => {
+        const failing = new ChangelogRenderer({
+            repo: 'seedcord/seedcord',
+            subjectOf: (sha) => Promise.resolve(SUBJECTS.get(sha)),
+            contributorsOf: () => Promise.reject(new Error('rate limited'))
+        });
+
+        const line = await failing.releaseLine({ summary: 'A thing changed.', commit: 'aaa1111' });
+
+        expect(line).toBe('- A thing changed. ([#312](https://github.com/seedcord/seedcord/pull/312))');
+    });
+
+    it('looks up the contributors of a pull request once for every package it bumps', async () => {
+        const asked: string[] = [];
+        const counting = new ChangelogRenderer({
+            repo: 'seedcord/seedcord',
+            subjectOf: (sha) => Promise.resolve(SUBJECTS.get(sha)),
+            contributorsOf: (pull) => {
+                asked.push(pull);
+                return Promise.resolve(['cara']);
+            }
+        });
+
+        await counting.releaseLine({ summary: 'A thing changed.', commit: 'aaa1111' });
+        await counting.releaseLine({ summary: 'A thing changed.', commit: 'aaa1111' });
+
+        expect(asked).toEqual(['312']);
     });
 });
 

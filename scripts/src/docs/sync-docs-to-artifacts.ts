@@ -1,5 +1,5 @@
 /* eslint-disable no-console -- CLI script so console is ok */
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
@@ -17,8 +17,10 @@ import { R2Bucket } from '#src/docs/R2Bucket';
 import { buildUnionInputs } from '#src/docs/union-inputs';
 import { workspaceOf } from '#src/docs/workspace-of';
 import { CliFlags } from '#src/lib/CliFlags';
+import { PUBLISHED_FLAGS, readPublished } from '#src/lib/published-packages';
 
 import type { EmittedEntry } from '#src/docs/union-inputs';
+import type { PublishedPackage } from '#src/lib/published-packages';
 import type { PackageVersionsInput } from '@seedcord/docs-engine';
 
 // Additive publish. Merges freshly-published versions into the remote R2 index without dropping a
@@ -33,8 +35,7 @@ const DEFAULT_PROJECT_FOLDER_URL = 'https://github.com/seedcord/seedcord';
 const PRUNE_DELETE_CAP = 0.5;
 
 const flags = new CliFlags('pnpm docs:sync [options]', {
-    published: { type: 'string', describe: 'JSON array of { name, version } objects to sync' },
-    'published-file': { type: 'string', describe: 'Path to a file holding that JSON array' },
+    ...PUBLISHED_FLAGS,
     extract: { type: 'boolean', describe: 'Run the API extractor before emitting version dirs' },
     'project-folder-url': { type: 'string', describe: 'GitHub repo base for source links' },
     ref: { type: 'string', describe: 'Git ref the source links point at, normally the release commit sha' },
@@ -45,11 +46,6 @@ const flags = new CliFlags('pnpm docs:sync [options]', {
     overwrite: { type: 'boolean', describe: 'Re-upload version dirs R2 already holds' },
     'dry-run': { type: 'boolean', describe: 'Print what would be written and send nothing' }
 });
-
-interface PublishedPackage {
-    name: string;
-    version: string;
-}
 
 interface Options {
     published: PublishedPackage[];
@@ -65,34 +61,11 @@ interface Options {
     overwrite: boolean;
 }
 
-function parsePublished(raw: string): PublishedPackage[] {
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) {
-        throw new TypeError('--published must be a JSON array of { name, version }');
-    }
-    return parsed.map((entry) => {
-        if (typeof entry !== 'object' || entry === null) {
-            throw new TypeError('each published entry must be an object');
-        }
-        // justified: validated as a non-null object above, read its optional fields
-        const { name, version } = entry as { name?: unknown; version?: unknown };
-        if (typeof name !== 'string' || typeof version !== 'string') {
-            throw new TypeError('each published entry needs a string name + version');
-        }
-        return { name, version };
-    });
-}
-
 async function readOptions(argv: readonly string[]): Promise<Options> {
     const parsed = flags.parse(argv);
-    const file = parsed['published-file'];
-    const raw = file === undefined ? parsed.published : await readFile(file, 'utf8');
-    if (raw === undefined) {
-        throw new Error('--published <json> or --published-file <path> is required');
-    }
 
     return {
-        published: parsePublished(raw),
+        published: await readPublished(parsed),
         extract: parsed.extract,
         projectFolderUrl: parsed['project-folder-url'] ?? DEFAULT_PROJECT_FOLDER_URL,
         ref: parsed.ref,
@@ -150,7 +123,7 @@ async function collectEmitted(opts: Options): Promise<EmittedEntry[]> {
     return emitted;
 }
 
-// nothing on the publish path calls this, which is what keeps the sync additive
+// nothing on the publish path calls this
 async function prune(opts: Options, bucket: R2Bucket, inputs: readonly PackageVersionsInput[]): Promise<void> {
     const desired = artifactKeys(inputs);
     const stored = await bucket.list();

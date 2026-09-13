@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 
-export type DepField = 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies';
+type DepField = 'dependencies' | 'devDependencies' | 'peerDependencies' | 'optionalDependencies';
 
 export interface DepRef {
     packageJsonPath: string;
@@ -8,7 +8,7 @@ export interface DepRef {
     version: string;
 }
 
-export interface PackageManifest {
+interface PackageManifest {
     path: string;
     json: object;
 }

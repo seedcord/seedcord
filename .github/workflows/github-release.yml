@@ -33,7 +33,8 @@ jobs:
             - name: Build the release notes
               id: notes
               run: |
-                  pnpm release:notes --published "$PUBLISHED" --out release-body.md | tee names.txt
+                  pnpm release:notes --published "$PUBLISHED" --out release-body.md > names.txt
+                  cat names.txt
                   for key in tag title tagged prerelease; do
                     echo "$key=$(sed -n "s/^$key: //p" names.txt)" >> "$GITHUB_OUTPUT"
                   done

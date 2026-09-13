@@ -3,7 +3,7 @@
     "type": "module",
     "version": "0.0.1",
     "engines": {
-        "node": ">=24.11"
+        "node": ">=26"
     },
     "private": true,
     "description": "Repo scripts for docs, releases, and workspace checks",

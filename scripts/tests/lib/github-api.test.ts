@@ -192,4 +192,20 @@ describe('GitHubApi labels', () => {
         expect(calls[0]?.method).toBe('DELETE');
         expect(calls[0]?.url).toContain(`/issues/311/labels/${encodeURIComponent('✨ minor')}`);
     });
+
+    it('throws naming the issue when adding a label fails', async () => {
+        const fetcher: Fetcher = () => Promise.resolve(failure(403, 'Forbidden'));
+
+        await expect(new GitHubApi('seedcord/seedcord', 'token', fetcher).addLabels(311, ['✨ minor'])).rejects.toThrow(
+            /311/
+        );
+    });
+
+    it('throws naming the label when removing it fails', async () => {
+        const fetcher: Fetcher = () => Promise.resolve(failure(403, 'Forbidden'));
+
+        await expect(new GitHubApi('seedcord/seedcord', 'token', fetcher).removeLabel(311, '✨ minor')).rejects.toThrow(
+            /✨ minor/
+        );
+    });
 });

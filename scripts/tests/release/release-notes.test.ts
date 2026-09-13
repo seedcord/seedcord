@@ -64,6 +64,24 @@ describe('ReleaseNotes', () => {
         expect(body).toContain('<!-- prettier-ignore-end -->');
     });
 
+    it('marks a first publish as new instead of an arrow from nothing', () => {
+        const kit = {
+            name: '@seedcord/kit',
+            version: '0.1.0',
+            directory: 'packages/kit',
+            changelog: GATEWAY.replace('0.6.0', '0.1.0')
+        };
+
+        const body = new ReleaseNotes({
+            repo: 'seedcord/seedcord',
+            tag: 'release-2026.09.11',
+            published: [kit],
+            entries: new ReleaseEntries([kit])
+        }).body();
+
+        expect(body).toContain('/packages/kit/CHANGELOG.md) | 0.1.0 (new) |');
+    });
+
     it('collapses the dependency-only packages behind a summary', () => {
         const body = notes();
 

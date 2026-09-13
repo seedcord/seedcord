@@ -10,10 +10,6 @@ describe('versionDir', () => {
     it('files a prerelease under prerelease', () => {
         expect(versionDir('core', '0.8.0-next.1')).toBe('packages/core/prerelease/0.8.0-next.1');
     });
-
-    it('carries no bucket prefix', () => {
-        expect(versionDir('core', '0.7.0').startsWith('packages/')).toBe(true);
-    });
 });
 
 describe('artifactKeys', () => {

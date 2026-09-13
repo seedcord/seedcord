@@ -121,14 +121,13 @@ describe('CatalogRule', () => {
         expect(noEntries.violations(index)).toEqual([]);
     });
 
-    it('skips a dep the rule ignores', () => {
-        const ignoring = new CatalogRule(new Set(), new Set(['eslint']));
+    it('skips eslint, which the Next apps pin a major behind', () => {
         const index = new DependencyIndex([
             manifest('packages/core/package.json', { devDependencies: { eslint: '^10.8.0' } }),
             manifest('apps/guide/package.json', { devDependencies: { eslint: '^9.0.0' } })
         ]);
 
-        expect(ignoring.violations(index)).toEqual([]);
+        expect(noEntries.violations(index)).toEqual([]);
     });
 });
 

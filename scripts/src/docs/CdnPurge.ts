@@ -1,6 +1,6 @@
 const CF_API = 'https://api.cloudflare.com/client/v4';
 
-export type PurgeBody = { purge_everything: true } | { files: string[] } | { prefixes: string[] };
+type PurgeBody = { purge_everything: true } | { files: string[] } | { prefixes: string[] };
 
 interface HttpResponse {
     ok: boolean;
@@ -14,7 +14,6 @@ type HttpFetch = (
 ) => Promise<HttpResponse>;
 
 export class CdnPurge {
-    // prefixes win, so the more targeted flag applies when both are passed by mistake
     static bodyFor(targets: { prefixes: string[]; files: string[] }): PurgeBody {
         if (targets.prefixes.length > 0) return { prefixes: targets.prefixes };
         if (targets.files.length > 0) return { files: targets.files };

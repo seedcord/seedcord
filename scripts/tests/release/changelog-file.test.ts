@@ -37,6 +37,12 @@ describe('ChangelogFile sections', () => {
         expect(new ChangelogFile(changelog).versionBefore('0.7.0')).toBe('0.6.0');
         expect(new ChangelogFile(changelog).versionBefore('0.6.0')).toBeUndefined();
     });
+
+    it('skips prerelease sections when naming the stable version before a stable one', () => {
+        const text = lines('# @seedcord/core', '', '## 0.4.0', '', '## 0.3.1-next.0', '', '## 0.3.0', '');
+
+        expect(new ChangelogFile(text).versionBefore('0.4.0')).toBe('0.3.0');
+    });
 });
 
 describe('ChangelogFile prerelease pruning', () => {
@@ -92,6 +98,72 @@ describe('ChangelogFile prerelease pruning', () => {
         expect(out).not.toContain('-next.');
         expect(out).toContain('#### 📦 Seedcord packages\n\n- `@seedcord/types` 0.13.0 → 0.14.0\n\n## 0.7.0');
         expect(out.endsWith('- Older. ([#311](url))\n')).toBe(true);
+    });
+
+    it('drops a prerelease of a lower version that a later bump folded into the stable above', () => {
+        const out = pruned(
+            lines(
+                '# @seedcord/core',
+                '',
+                '## 0.4.0',
+                '',
+                '### ✨ Minor',
+                '',
+                '- Added a thing.',
+                '',
+                '### 🩹 Patch',
+                '',
+                '- Fixed a thing.',
+                '',
+                '## 0.4.0-next.1',
+                '',
+                '### ✨ Minor',
+                '',
+                '- Added a thing.',
+                '',
+                '## 0.3.1-next.0',
+                '',
+                '### 🩹 Patch',
+                '',
+                '- Fixed a thing.',
+                '',
+                '## 0.3.0',
+                '',
+                '- older stable',
+                ''
+            )
+        );
+
+        expect(out).not.toContain('-next.');
+        expect(out).toContain('## 0.3.0\n');
+    });
+
+    it('keeps a prerelease of a lower version whose entries the stable above never carried', () => {
+        const out = pruned(
+            lines(
+                '# @seedcord/errors',
+                '',
+                '## 0.3.0',
+                '',
+                '### 💥 Breaking',
+                '',
+                '- Reworked the codes.',
+                '',
+                '## 0.2.2-next.0',
+                '',
+                '### 🩹 Patch',
+                '',
+                '- Fixed a duplicate route.',
+                '',
+                '## 0.2.1',
+                '',
+                '- older stable',
+                ''
+            )
+        );
+
+        expect(out).toContain('## 0.2.2-next.0');
+        expect(out).toContain('- Fixed a duplicate route.');
     });
 
     it('keeps a prerelease that has no stable counterpart yet', () => {

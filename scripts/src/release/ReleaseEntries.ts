@@ -3,7 +3,7 @@ import { ChangelogFile } from '#src/release/ChangelogFile';
 
 import type { Bucket } from '#src/release/changelog-format';
 
-export interface PublishedPackage {
+interface PublishedPackage {
     name: string;
     version: string;
     changelog: string;
@@ -50,7 +50,6 @@ export class ReleaseEntries {
             const bucket = bucketOf(headingOf(part));
             if (bucket === undefined) continue;
 
-            // the nested block lists seedcord bumps, which the release body covers through its table
             for (const entry of splitEntries(ownBody(part))) {
                 this.add(bucket, entry.slice(2), pkg);
                 added += 1;

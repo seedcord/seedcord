@@ -17,7 +17,7 @@ interface HttpRequest {
 
 type HttpFetch = (url: string, init?: HttpRequest) => Promise<HttpResponse>;
 
-export interface PullRequestFile {
+interface PullRequestFile {
     filename: string;
     status: string;
 }
@@ -30,6 +30,9 @@ interface Account {
 const humanLogin = (account: Account | null | undefined): string | undefined =>
     account && account.type !== 'Bot' ? account.login : undefined;
 
+const failed = (what: string, response: HttpResponse): Error =>
+    new Error(`${what} failed: ${String(response.status)} ${response.statusText}`);
+
 export class GitHubApi {
     constructor(
         private readonly repo: string,
@@ -41,13 +44,9 @@ export class GitHubApi {
         const files: PullRequestFile[] = [];
 
         for (let page = 1; ; page++) {
-            const path = `/repos/${this.repo}/pulls/${pull}/files?per_page=${PAGE_SIZE}&page=${page}`;
+            const path = `/repos/${this.repo}/pulls/${String(pull)}/files?per_page=${String(PAGE_SIZE)}&page=${String(page)}`;
             const response = await this.send('GET', path);
-            if (!response.ok) {
-                throw new Error(
-                    `listing files on pull request #${pull} failed: ${response.status} ${response.statusText}`
-                );
-            }
+            if (!response.ok) throw failed(`listing files on pull request #${String(pull)}`, response);
 
             // justified: GitHub returns an array of file entries for this route
             const batch = (await response.json()) as PullRequestFile[];
@@ -58,9 +57,7 @@ export class GitHubApi {
 
     async fileContents(path: string, ref: string): Promise<string> {
         const response = await this.send('GET', `/repos/${this.repo}/contents/${encodePath(path)}?ref=${ref}`);
-        if (!response.ok) {
-            throw new Error(`reading ${path} failed: ${response.status} ${response.statusText}`);
-        }
+        if (!response.ok) throw failed(`reading ${path}`, response);
 
         // justified: GitHub returns the file body base64 encoded
         const { content } = (await response.json()) as { content: string };
@@ -69,9 +66,7 @@ export class GitHubApi {
 
     async pullRequestAuthor(pull: number): Promise<string | undefined> {
         const response = await this.send('GET', `/repos/${this.repo}/pulls/${String(pull)}`);
-        if (!response.ok) {
-            throw new Error(`reading pull request #${String(pull)} failed: ${response.status} ${response.statusText}`);
-        }
+        if (!response.ok) throw failed(`reading pull request #${String(pull)}`, response);
 
         // justified: GitHub returns the pull request object for this route
         const { user } = (await response.json()) as { user: Account | null };
@@ -79,15 +74,9 @@ export class GitHubApi {
     }
 
     async pullRequestCommitAuthors(pull: number): Promise<string[]> {
-        const response = await this.send(
-            'GET',
-            `/repos/${this.repo}/pulls/${String(pull)}/commits?per_page=${PAGE_SIZE}`
-        );
-        if (!response.ok) {
-            throw new Error(
-                `listing commits on pull request #${String(pull)} failed: ${response.status} ${response.statusText}`
-            );
-        }
+        const path = `/repos/${this.repo}/pulls/${String(pull)}/commits?per_page=${String(PAGE_SIZE)}`;
+        const response = await this.send('GET', path);
+        if (!response.ok) throw failed(`listing commits on pull request #${String(pull)}`, response);
 
         // justified: GitHub returns an array of commit objects for this route
         const commits = (await response.json()) as { author: Account | null }[];
@@ -95,10 +84,8 @@ export class GitHubApi {
     }
 
     async labels(issue: number): Promise<string[]> {
-        const response = await this.send('GET', `/repos/${this.repo}/issues/${issue}/labels`);
-        if (!response.ok) {
-            throw new Error(`listing labels on #${issue} failed: ${response.status} ${response.statusText}`);
-        }
+        const response = await this.send('GET', `/repos/${this.repo}/issues/${String(issue)}/labels`);
+        if (!response.ok) throw failed(`listing labels on #${String(issue)}`, response);
 
         // justified: GitHub returns an array of label objects for this route
         const found = (await response.json()) as { name: string }[];
@@ -106,11 +93,14 @@ export class GitHubApi {
     }
 
     async addLabels(issue: number, labels: string[]): Promise<void> {
-        await this.send('POST', `/repos/${this.repo}/issues/${issue}/labels`, { labels });
+        const response = await this.send('POST', `/repos/${this.repo}/issues/${String(issue)}/labels`, { labels });
+        if (!response.ok) throw failed(`adding ${labels.join(', ')} to #${String(issue)}`, response);
     }
 
     async removeLabel(issue: number, label: string): Promise<void> {
-        await this.send('DELETE', `/repos/${this.repo}/issues/${issue}/labels/${encodeURIComponent(label)}`);
+        const path = `/repos/${this.repo}/issues/${String(issue)}/labels/${encodeURIComponent(label)}`;
+        const response = await this.send('DELETE', path);
+        if (!response.ok) throw failed(`removing ${label} from #${String(issue)}`, response);
     }
 
     private send(method: string, path: string, body?: unknown): Promise<HttpResponse> {

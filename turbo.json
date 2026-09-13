@@ -53,15 +53,10 @@
             "env": ["SEEDCORD_DOCS_INDEX_URL"]
         },
         "//#check:catalog": {
-            "inputs": ["scripts/src/check-workspace-catalog.ts", "pnpm-workspace.yaml", "**/package.json"]
+            "inputs": ["scripts/src/**/*.ts", "pnpm-workspace.yaml", "**/package.json"]
         },
         "//#lint:changesets": {
-            "inputs": [
-                ".changeset/*.md",
-                "scripts/src/release/lint-changesets.ts",
-                "scripts/src/release/ChangesetRule.ts",
-                "**/package.json"
-            ]
+            "inputs": [".changeset/*.md", "scripts/src/**/*.ts", "**/package.json"]
         },
         "//#tc:root": {
             "dependsOn": ["@seedcord/eslint-config#build"],

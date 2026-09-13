@@ -12,7 +12,7 @@ const MESSAGES: Record<Violation['reason'], string> = {
     'unknown-package': 'names a package the workspace does not publish',
     'pre-1.0-major': 'asks for a major bump while the repo is pre-1.0',
     'breaking-marker': 'spells the breaking marker as something other than **BREAKING:**',
-    'too-long': 'runs past the sentence cap, three for a minor and one for a patch',
+    'too-long': 'runs past the sentence cap, one when every bump is a patch and three otherwise',
     'banned-punctuation': 'carries punctuation the writing rules ban',
     'banned-word': 'carries a banned word',
     'fix-opener': 'opens a fix with something other than Fixed or Also fixed'

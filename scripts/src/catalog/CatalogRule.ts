@@ -6,12 +6,10 @@ import { distinctPackages } from '#src/catalog/DependencyIndex';
 
 import type { DependencyIndex, DepRef } from '#src/catalog/DependencyIndex';
 
-export type ViolationReason = 'duplicate-literal' | 'catalog-missing-entry' | 'catalog-underused';
-
 export interface Violation {
     depName: string;
     refs: readonly DepRef[];
-    reason: ViolationReason;
+    reason: 'duplicate-literal' | 'catalog-missing-entry' | 'catalog-underused';
 }
 
 // eslint stays split until eslint-config-next supports eslint 10. The framework and cli run
@@ -30,17 +28,14 @@ export class CatalogRule {
         return new CatalogRule(new Set(buckets.flatMap((bucket) => Object.keys(bucket))));
     }
 
-    constructor(
-        private readonly entries: ReadonlySet<string>,
-        private readonly ignored: ReadonlySet<string> = IGNORED
-    ) {}
+    constructor(private readonly entries: ReadonlySet<string>) {}
 
     violations(index: DependencyIndex): Violation[] {
         const found: Violation[] = [];
         const flagged = new Set<string>();
 
         for (const depName of index.names()) {
-            if (this.ignored.has(depName)) continue;
+            if (IGNORED.has(depName)) continue;
 
             const refs = index.refsFor(depName);
             // an optional peer is often also a devDependency
@@ -59,7 +54,7 @@ export class CatalogRule {
         }
 
         for (const entry of this.entries) {
-            if (this.ignored.has(entry) || flagged.has(entry)) continue;
+            if (IGNORED.has(entry) || flagged.has(entry)) continue;
 
             const refs = index.refsFor(entry).filter((one) => one.version.startsWith('catalog:'));
             if (distinctPackages(refs) < 2) found.push({ depName: entry, refs, reason: 'catalog-underused' });

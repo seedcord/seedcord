@@ -14,7 +14,7 @@ Under `packages/` the folder basename matches the unscoped package name. Under `
 
 Every tool that walks the workspace reads each package's name from its `package.json`, so the folder name stays a human-facing label. The globs below are the exception and name the folder directly.
 
-A new workspace root (a sibling of `packages/`, `plugins/`, `cli/`, and `tooling/`) goes in `pnpm-workspace.yaml` first. Docs extraction reads its package roots from there and skips every package marked `private`. `scripts/src/check-workspace-catalog.ts` lists the roots separately in `WORKSPACE_GLOBS`, so add the root there too.
+A new workspace root (a sibling of `packages/`, `plugins/`, `cli/`, and `tooling/`) goes in `pnpm-workspace.yaml` first. Docs extraction and the catalog check both read the package roots from there, and docs extraction skips every package marked `private`.
 
 A minimal published scoped package, `version` `0.0.0`, no runtime dependencies, only the three internal config devDeps plus the `typescript` peer (`catalog:peer`), a single `.` export with one tsdown entry, `publishConfig` access public with provenance, tsconfig extending `@seedcord/tsconfig/node`, tsdown via `createTsdownConfig`, and the `version` export line.
 

@@ -9,9 +9,3 @@
 ### 🩹 Patch
 
 - update LICENSE copyright year ([#152](https://github.com/seedcord/seedcord/pull/152))
-
-## 0.1.1-next.0
-
-### 🩹 Patch
-
-- update LICENSE copyright year ([#152](https://github.com/seedcord/seedcord/pull/152))
