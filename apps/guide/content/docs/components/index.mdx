@@ -1,6 +1,6 @@
 ---
 title: Components
-description: Anything your bot sends with structure gets a class over its discord.js builder, which names it, types it, and carries your bot color.
+description: Anything your bot sends with structure gets a class over its discord.js builder, which gives it a name, types it, and carries your bot color.
 ---
 
 A line of text needs nothing more than `this.reply('Banned.')`. A card with a heading, a body, and a row of buttons under it needs a discord.js builder. You put that builder in a class.
@@ -226,7 +226,17 @@ export const seedcord = new Seedcord({
 });
 ```
 
-A plain string names an application emoji, one you upload to your app in the developer portal. Run `seedcord codegen` after you change that block. It writes the key names into [`EmojiMap`](ref:types/EmojiMap), which types the [`Emojis`](ref:gateway/Emojis) accessor.
+A plain string is the name of an application emoji, one you upload to your app in the developer portal. Run `seedcord codegen` after you change that block. It writes the key names into [`EmojiMap`](ref:types/EmojiMap), which types the [`Emojis`](ref:gateway/Emojis) accessor.
+
+Your editor then offers those keys the moment you type the dot.
+
+```ts twoslash
+// @noErrors
+import { Emojis } from '@seedcord/gateway';
+
+Emojis.
+//     ^|
+```
 
 ```ts twoslash hovers title="src/components/StreakCard.ts"
 import { BuilderComponent, Emojis } from '@seedcord/gateway';

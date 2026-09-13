@@ -42,11 +42,13 @@ The rest of your code reaches the same object. A gate reads it as `ctx.core`. A 
 
 [`CoreBase`](ref:core/CoreBase) is the part both transports share. Each one adds its own members to it.
 
-`config` reaches your handler exactly as you wrote it in `src/bot.ts`. `ownerIds` is optional, which is why the sample above guards it, and [`OwnerOnly`](ref:core/OwnerOnly) reads that same key.
+`config` reaches your handler exactly as you wrote it in `src/bot.ts`. `ownerIds` is optional. That's why the sample above guards it. ([`OwnerOnly`](ref:core/OwnerOnly) reads that same key by the way)
 
 ## Running work while your bot starts and stops
 
-Say your bot opens a cache of its own. Something has to fill it before the first command runs, then close it again when the bot stops. [`startup.addTask`](ref:core/CoordinatedStartup.addTask) and [`shutdown.addTask`](ref:core/CoordinatedShutdown.addTask) put that work in the right phase.
+Say your bot opens a cache of its own. Something has to fill it before the first command runs, then close it again when the bot stops. Doing that yourself means racing your own startup on one end and wiring up `SIGTERM` on the other.
+
+[`startup.addTask`](ref:core/CoordinatedStartup.addTask) and [`shutdown.addTask`](ref:core/CoordinatedShutdown.addTask) put that work in a phase, and seedcord runs the phases in order. Although, it's better to write a small [plugin](/plugins/) for yourself instead. It provides hooks for startup and shutdown tasks, timeouts, and more, keeping your initialization and cleanup logic organized and consistent with the framework's lifecycle.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -92,7 +94,7 @@ export default seedcord;
 
 Each call takes the phase, a name for the logs, the work itself, and an optional timeout in milliseconds. A startup task gets 10000 and a shutdown task gets 5000 unless you pass your own.
 
-Pick the phase by what has to be true when your task runs. The sample fills its cache in `Configuration`, before anything connects, and closes it in `Disconnect`, the phase for closing external resources. [Plugin lifecycle](/plugins/lifecycle) tables every startup and shutdown phase with what has already happened by each one.
+Pick the phase by what has to be true when your task runs. The sample fills its cache in `Configuration`, before anything connects, and closes it in `Disconnect`, the phase for closing external resources. [Plugin lifecycle](/plugins/lifecycle) has a table of every startup and shutdown phase, with what has already happened by each one.
 
 <Callout type="transport" only="gateway">
 
@@ -102,13 +104,15 @@ Pick the phase by what has to be true when your task runs. The sample fills its 
 
 <Callout type="transport" only="http">
 
-`createSeedcord` builds a core without these phases. Both `addTask` calls compile on an edge bot and throw `CoreLifecycleUnavailable` when they run.
+`createSeedcord` builds a core without these phases, since its build never runs startup or shutdown at all. Both `addTask` calls still compile on an edge bot, and both throw `CoreLifecycleUnavailable` when they run. Do that work inside your handler.
 
 </Callout>
 
 ## A plugin becomes a property
 
-[`attach()`](ref:gateway/Seedcord.attach) takes a key, a plugin class, and whatever that plugin's constructor needs after the host. The key turns into a property on the same object your handlers read.
+Constructing a plugin yourself leaves you passing it down through imports and ordering its setup by hand. Attaching it puts it on the core, where every handler already reaches.
+
+[`attach()`](ref:gateway/Seedcord.attach) takes a key, a plugin class, and whatever that plugin's constructor needs after the host. The key becomes a property on the same object your handlers read.
 
 ```ts twoslash
 import { resolve } from 'node:path';
@@ -116,6 +120,7 @@ import { resolve } from 'node:path';
 import { Seedcord } from '@seedcord/gateway';
 import { KyselyPostgres } from '@seedcord/plugin-kysely-postgres';
 import { GatewayIntentBits } from 'discord.js';
+// ---cut-start---
 
 const seedcord = new Seedcord({
     bot: {
@@ -128,8 +133,8 @@ const seedcord = new Seedcord({
     },
     subscribers: { path: null }
 });
+// ---cut-end---
 
-// ---cut---
 seedcord.attach('db', KyselyPostgres, {
     dir: resolve(import.meta.dirname, './services'),
     connectionString: 'postgres://localhost:5432/seedcord',
@@ -141,4 +146,4 @@ seedcord.attach('db', KyselyPostgres, {
 
 `attach()` sets the property at runtime. `seedcord codegen` then writes the type that makes `this.core.db` compile inside a handler.
 
-Every tab ahead uses `this.core` somewhere. Now. [Where do you want to go next](/where-to-go-next)?
+Every tab ahead uses `this.core` somewhere.

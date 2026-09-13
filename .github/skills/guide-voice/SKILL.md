@@ -12,7 +12,7 @@ This skill sits on top of [`writing-voice`](../writing-voice/SKILL.md), which st
 Two rules in it change on a guide page, and both changes are stated where they apply.
 
 1. **One claim per sentence, cut at the connective.** Right for a comment, a changeset, and a commit. On a guide page it deletes the reason, because a reason attaches at a connective by construction. Effective Go reads "This rule arises because pointer methods can modify the receiver," and cutting at the connective leaves half of it.
-2. **`and` as a splice repair.** `writing-voice` lists it among the connectors that name a real relation. On a guide page `and` leaves the relation unstated, so the prose review reports every `and` holding two complete clauses together and the writer picks a connector that says how the halves relate.
+2. **`and` as a splice repair.** `writing-voice` lists it among the connectors that name a real relation. On a guide page `and` leaves the relation unstated, so the prose review reads every connector against the relation it promises and the writer picks the one that says how the halves relate.
 
 ---
 
@@ -34,7 +34,7 @@ The emoji section opened on "Name each custom emoji in your config, then read it
 
 Write it as the thing they have already done, in the words they would use for it. The maintainer's note on the first attempt, which stated the same facts flatly: the reader has to recognise themselves in it.
 
-Ground every cost you name. A re-upload really does mint a new id. A rename leaves a hardcoded id working, so the cost there is a stale label, and claiming a broken message would be pattern 2.
+Ground every cost you name. A re-upload really does mint a new id. A rename leaves a hardcoded id working, so the cost there is a stale label, and claiming a broken message would be overclaiming.
 
 **Then answer the problem in the next breath.** A why-paragraph opens a new seam in the section, between the work the reader does today and the line telling them what to type. The first words after that break point back at the complaint. "Some emojis come from your app and some from one guild, so each of those is its own lookup" is answered by "seedcord does those lookups for you", where the repeated noun is what carries the reader across. The first draft of that section ended the problem and opened the next paragraph on "Name each custom emoji in your config", which leaves the reader to make the join themselves. The maintainer caught it as a failure mode of its own.
 
@@ -76,7 +76,7 @@ Ground every beat before you write it. The first draft said codegen "reads those
 
 After a fence, point at something in it. Name a value, a line, a token the reader can go and look at. The codegen page does this with one word:
 
-> TypeScript reads the source of that chain and cannot evaluate it, so the name `query` only exists once the chain has run.
+> TypeScript reads the source of that chain without running it, so the name `query` only exists once the chain has run.
 
 `query` is in the fence above that sentence. The reader looks up, finds it, and the claim lands on code they just read.
 
@@ -94,7 +94,7 @@ Subclassing a component base is a choice. Nothing stops anyone building a `Conta
 2. Name the decision they are making.
 3. Say what the choice does to their code, in their terms, and carry it to the payoff. "You edit `BanCard.ts` once" is the mechanism and it stops one beat short. "To reword the card, you change one line in `BanCard.ts`. Every handler that sends one gets the new wording" is the same fact taken as far as the reader cares about.
 
-    Reach for the fact, never a scene. An invented moment, a made-up timescale, a hypothetical afternoon six months out, all of that is pattern 4 wearing a payoff.
+    Reach for the fact, never a scene. An invented moment, a made-up timescale, a hypothetical afternoon six months out, all of that is a rhetorical shape wearing a payoff.
 
 4. Name what it costs.
 5. Say when to skip it.
@@ -205,11 +205,11 @@ Read the paragraph after each fix. Never the sentence.
 
 ## 4. What goes wrong
 
-Fourteen shapes, drawn from real corrections. Judge whether a sentence does the same thing, however it is worded.
+Seventeen shapes, drawn from real corrections. Judge whether a sentence does the same thing, however it is worded.
 
-**Refer to one by its name, never its number.** A reviewer reports a finding by name, so a renumbering cannot make a report point at the wrong rule. The worked example for each lives in the review prompt that enforces it.
+**Refer to one by its name, never its number.** A reviewer reports a finding by name, so a renumbering cannot make a report point at the wrong rule. The worked example for each lives in the review prompt that enforces it, and the numbers here match the prose review's.
 
-The prose review covers these twelve. It reads the page and nothing else.
+The prose review covers these fourteen. It reads the page and nothing else.
 
 1. **A sentence about the page instead of a sentence with a fact.** A line restating its heading. Announcing a list and not delivering one. Test: delete the first sentence under a heading and see whether anything is lost. A line naming what a fence shows survives that test, and so does a sentence setting up a problem the section then solves.
 2. **Overclaiming, or a reason that does not hold.** `Everything`, `always`, `never` where the truth is narrower. A list of three reading as the complete set. A because-clause that falls apart when you check it, which is worse than giving no reason at all, because the reader takes it as settled. Also any count a non-breaking release could change.
@@ -223,12 +223,14 @@ The prose review covers these twelve. It reads the page and nothing else.
 10. **A requirement on the author written as behavior.** A sentence describing what a symbol does reads as automatic. Where the author writes it by hand, the reader waits for something the framework never does. The repair names the obligation and what enforces it.
 11. **A rule with the reason left out.** The page says to do something a certain way and never says what goes wrong otherwise. A recommendation hedged with no criterion the reader can apply. A style preference welded to an unrelated mechanism, so the mechanism reads as the reason for the preference.
 12. **Inline code long enough to hold a line open.** Backticks do not wrap, so a full error message or a chained expression pushes past the column on a narrow screen.
+13. **Prose that runs beside a sample without reading it.** After a fence, the paragraph points at something in it, a value, a line, a token the reader can go and look at. Could it sit under a different sample unchanged? Then it is written beside the code. Section 1 has the worked example.
+14. **A design presented as a list of its good properties.** Where a page asks the reader to adopt a shape nothing forces on them, a run of sentences each naming one nice thing about that shape reads as marketing. The five beats under "A forced decision argues differently from a chosen one" are the repair. A page covering something the framework forces is exempt.
 
 The content review covers these three, plus everything in section 7. It opens the declarations.
 
-13. **A way of using the surface the page never shows.** Read every declaration whole, including the variadic parameters, the overloads, the optional arguments, and the generic bounds. Each distinct form appears once. This settles at a different level from the example rule above, which decides how deep one member goes where this one decides which forms appear at all.
-14. **An optional parameter or field stated flatly.** A parameter read as required costs the reader an argument they never needed. A field read as always present costs them a guard they skipped. The reverse counts too.
-15. **A feature taught with no reason to exist.** The section says how to turn the thing on and never says what the reader does without it. Read the section's opening and name what it would cost someone to go without the feature, sourced from the code and from what the platform requires.
+15. **A way of using the surface the page never shows.** Read every declaration whole, including the variadic parameters, the overloads, the optional arguments, and the generic bounds. Each distinct form appears once. This settles at a different level from the example rule above, which decides how deep one member goes where this one decides which forms appear at all.
+16. **An optional parameter or field stated flatly.** A parameter read as required costs the reader an argument they never needed. A field read as always present costs them a guard they skipped. The reverse counts too.
+17. **A feature taught with no reason to exist.** The section says how to turn the thing on and never says what the reader does without it. Read the section's opening and name what it would cost someone to go without the feature, sourced from the code and from what the platform requires.
 
 ---
 
@@ -243,6 +245,8 @@ Run these one at a time and apply each pass's fixes before starting the next. Ea
 5. Do step 4 again.
 6. **Negation.** Find every verb followed by `no`, the `takes no flags` shape. Each one becomes not-negation or a positive statement.
 7. **Connectors.** Count `and`, `so`, `which`, `while`, `because`, `since`, `then`. Any one connector carrying most of the page is the defect. Then check the reason-versus-consequence split from section 3, and read every connector against the relation it promises.
+
+    Count `names` in the same pass. It covers three unrelated jobs across this guide, an error message telling you which one, a symbol being the whole set, and you writing them somewhere. One page carrying it for two of those is the defect whatever the count, and it hid for a long time because no single page held more than three. The prose review has the repairs.
 8. **The garden path.** Read every sentence once at speed. Stopping and starting over means rewriting it. Four shapes cause it.
     - A clause wedged between a subject and its verb.
     - A cleft that parks the verb behind an `is`.
@@ -314,7 +318,7 @@ The content review checks this section as a list. A page that breaks one of thes
 - **A seedcord symbol named in prose gets a `ref:` link on its first mention.** `[BuilderComponent](ref:core/BuilderComponent)`, package segment then symbol. A fence tagged `hovers` already links its own tokens.
 - **The import line shows on the first fence and gets cut on the rest**, with `// ---cut---` under it. A later fence keeps its imports when its symbols are new to the page. Start-tab pages keep imports on every fence. Prose around a fence can only name what the fence still shows, since a cut hides those lines from everyone except the writer.
 - **A fence states how it shows types.** `^?` when the prose is about one or two of them. `hovers` when the reader has a shape worth exploring, at roughly five times the bytes and build time. `^|` when the reader's question is what they can type here. A bare `twoslash` with no marker when the sample only needs checking, which is most samples. Drop `twoslash` entirely when the sample is a fragment that cannot compile alone.
-- **Five twoslash blocks per page is the ceiling.** Ten drive `next dev` out of memory at 8 GB.
+- **Ten twoslash blocks per page is the ceiling.** Past that `next dev` has run out of memory at 8 GB. A page needing more than ten compiled samples is usually two pages.
 - **A config key appears inside a real `new Seedcord({ ... })` sample**, on the page that teaches its subject, with any note as a `//` comment on the line.
 - **A sample reads like shipped code.** Prettier prints a fence at 68 columns, so work done inline in a callback buries the lesson under four levels of indent. Pull it into a private method.
 - **A sample builds components through `BuilderComponent`**, never a raw discord.js builder inline. A page teaching the framework while using the thing the framework replaces teaches the anti-pattern.

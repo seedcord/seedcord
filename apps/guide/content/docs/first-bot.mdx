@@ -12,33 +12,33 @@ You need the token from the last page.
 - **Where the project goes.** The folder name becomes the package name, so it takes lowercase letters, digits, and `. _ -`.
 - **TypeScript or JavaScript.**
 - **How Discord reaches your bot.** Gateway or http, the choice from two pages ago.
-- **What your bot should react to.** Gateway only. A checklist covering messages in servers, reactions, member joins, polls, and more. Each one names the intents and partials it needs, and the privileged ones are marked. The scaffolder writes the set into your `bot.ts`.
+- **What your bot should react to.** Gateway only. A checklist covering messages in servers, reactions, member joins, polls, and more. Each one says which intents and partials it needs, and the privileged ones are marked. The scaffolder writes the set into your `bot.ts`.
 - **Your bot token.**
 - **Your app public key.** Http only.
 - **Your bot color.** Every embed and container you build takes it, unless you set a color on that one yourself.
 
-Then it installs your dependencies, formats the project, runs `seedcord codegen`, and makes a git commit.
+Then the scaffolder installs your dependencies, formats the project, runs `seedcord codegen`, and makes a git commit.
 
 ## Run it
 
 <Shell run="dev" before="cd my-bot" />
 
-Your bot logs in, sends its commands to Discord, and the terminal turns into a dev console.
+Your bot logs in and sends its commands to Discord. The terminal turns into a dev console.
 
 ## Run the ping command
 
 The scaffold ships a `ping` command. Type `/ping` in a server your bot is in.
 
-It probably will not be there yet. Global commands take time to appear, and Discord publishes no number for how long.
+The command probably won't be there yet. Global commands take time to appear, and Discord doesn't publish how long that takes.
 
 <Callout type="tip">
-    Restart your Discord client with Ctrl+R or Cmd+R. That pulls a
+    Restart your Discord client with Ctrl+R or Cmd+R. That fetches a
     fresh command list and usually ends the wait.
 </Callout>
 
 ## What the scaffolder made
 
-That command came from a file the scaffolder wrote. Here is everything else it put in the folder.
+The `ping` command came from a file the scaffolder wrote, along with everything else in this tree.
 
 ```txt title="my-bot" output
 my-bot/
@@ -71,6 +71,7 @@ my-bot/
 - **`src/seedcord-gen.d.ts`** carries the types generated from your config and your commands. `seedcord codegen` writes it and you commit it.
 - **`tsconfig.json`** type-checks the project. **`tsconfig.build.json`** compiles `src` into `dist`.
 - **`.env`** holds your token. `bot.ts` sets `Envapter.baseDir` to the project root, which is where [envapt](https://envapt.materwelon.dev) then looks for the file.
+- **`src/events/`** holds `Ready.ts`. Picking any of the message capabilities swaps that for `Mentioned.ts`, which answers when someone mentions your bot.
 
 <Callout type="transport" only="http">
     Discord posts only interactions to an http bot, so the
@@ -92,8 +93,7 @@ Envapter.baseDir = resolve(import.meta.dirname, '..');
 
 export const seedcord = new Seedcord({
     bot: {
-        // this is passed directly to the discord.js Client constructor.
-        // http doesn't have this option
+        // passed straight to the discord.js Client constructor
         clientOptions: {
             intents: [GatewayIntentBits.Guilds]
         },
@@ -119,7 +119,7 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-The `path` keys are the folders seedcord scans at startup. Each tab that teaches a folder's contents covers its key.
+The `path` keys name the folders seedcord scans at startup. The tab that teaches each folder covers its key.
 
 <Callout type="transport" only="http">
 
@@ -181,7 +181,7 @@ export class Ping extends SlashHandler<'ping'> {
 }
 ```
 
-That runs when someone uses it. `'ping'` appears twice, on the decorator and on the generic, and both have to be the name the command set. The compiler catches a mismatch. [`this.options`](ref:gateway/SlashHandler.options) carries `detailed` because `seedcord codegen` read the command file.
+That runs when someone uses it. `'ping'` appears twice, on the decorator and on the generic, and both have to match the name the command sets. The compiler catches a mismatch. [`this.options`](ref:gateway/SlashHandler.options) carries `detailed` because `seedcord codegen` recorded it off the command file.
 
 <Callout type="transport" only="http">
     An http scaffold writes the same two files and imports from
@@ -194,20 +194,23 @@ Open `src/handlers/Ping.ts` and change what it replies with. Save.
 
 The dev server reloads the handler while the bot stays connected. Run `/ping` again and the new reply comes back.
 
-Now open `src/commands/Ping.ts` and change the command itself, the description for example. Save, and the dev server asks whether to re-register.
+Now open `src/commands/Ping.ts` and change the command itself, its description for example. Save, then look at the terminal. The dev server asks whether to re-register.
 
 ```txt output
-1 command updated
-refresh? y/n
+Commands updated:
+- src/commands/Ping.ts
+Refresh commands? (y/n)
 ```
+
+A handler edit needs no confirmation because nothing leaves your machine. A command edit does, since the new definition has to go to Discord before anyone sees it.
 
 Press `y`. That sends the new command to Discord and runs `seedcord codegen`, which rewrites `src/seedcord-gen.d.ts` so your handler's types match what the command now declares.
 
-Press `n` and Discord keeps the old command.
+Press `n` if you want Discord to keep the old command.
 
 ## When a file fails to import
 
-seedcord imports every file under `src/commands`, `src/handlers`, and `src/events` at startup. A syntax error in any one of them stops the whole scan.
+seedcord imports every file under `src/commands`, `src/handlers`, and `src/events` at startup. A syntax error in any one of them stops the whole scan. A half-typed file saved mid-edit does it too, so the restart below is the normal way back.
 
 ```txt output
 src/handlers/Ping.ts threw while importing.

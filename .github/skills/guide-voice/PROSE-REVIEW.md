@@ -24,7 +24,7 @@ The reader has built a Discord bot or is about to. They know JavaScript and
 Discord. They may know nothing about the framework this guide documents. Many
 of them learned English second.
 
-Twelve things go wrong on this guide. The examples under each show the shape of
+Fourteen things go wrong on this guide. The examples under each show the shape of
 the problem. They are not strings to match. Judge whether a sentence does the
 same thing, however it is worded.
 
@@ -149,37 +149,25 @@ finding, and a tic is a habit rather than a single sentence.
     the page never says. A page covering something the framework forces is
     exempt, since there the reader had no decision to make.
 
-Then five counted passes. Report these as 13 through 17.
+Then six counted passes, numbered 15 through 20.
 
-13. Reasons against consequences. A `so` clause states a consequence that
-    follows from a mechanism. A `because` or `since` clause gives the reason for a claim. They
-    point opposite ways. Count every `so`, `because`, `since`, `and`, `which`,
-    and `while`. Report the count for each. Then report every place a `so`
-    clause is carrying a reason, and every place one connector
-    carries most of the page, whichever word it is.
+15. Connectors. Count every `so`, `because`, `since`, `and`, `which`, `while`,
+    and `then`. Report the count for each, and report any one of them carrying
+    most of the page.
 
-14. Sentence spread. Report the word count of the longest sentence, the
-    shortest, and how many fall in each bucket: 1-7, 8-14, 15-22, 23-30, 31+.
-    Then report these as findings when they hold:
+    Then judge each one twice.
 
-    - No sentence past 22 words, where the page covers something genuinely hard.
-    - A run of three or more consecutive sentences under 8 words.
-    - More than one one-word sentence.
-    - One bucket holding most of the page.
+    First, reasons against consequences. A `so` clause states a consequence that
+    follows from a mechanism. A `because` or `since` clause gives the reason for
+    a claim. They point opposite ways, so report every `so` clause carrying a
+    reason.
 
-15. Contractions. Count them. A page at zero is a finding, and name three
-    sentences where one would read better.
-
-16. Reader address. Count `you` and `your`. Report the count per 100 words of
-    prose. A page teaching something the reader does, at under 1 per 100 words,
-    is a finding.
-
-17. Connectors against the relation they promise. Every connector tells the
+    Second, the relation each connector promises. Every connector tells the
     reader where the sentence goes before they read it. `and` promises more of
     the same, `then` a step after a step, `so` a result, `because` a reason, `if`
-    a condition. Take each one, read what follows it on its own, and compare the
-    promised relation against the real one. Report every mismatch, however few
-    the page has. A page with two is not leaning on the word, and both are still
+    a condition. Read what follows each one on its own and compare the promised
+    relation against the real one. Report every mismatch, however few the page
+    has. A page with two is not leaning on the word, and both are still
     findings.
 
     Report one kind first and say so, the `and` that starts a new clause right
@@ -196,11 +184,57 @@ Then five counted passes. Report these as 13 through 17.
     second step where the first sentence was already the moment. Report it and
     say the connector comes out.
 
+    Leave the English conditional imperative alone. "Edit a handler and the
+    running bot loads it" is idiomatic and reads in one pass. Report one of
+    those only where it reads badly.
+
+16. Sentence spread. Report the word count of the longest sentence, the
+    shortest, and how many fall in each bucket: 1-7, 8-14, 15-22, 23-30, 31+.
+    Then report these as findings when they hold:
+
+    - No sentence past 22 words, where the page covers something genuinely hard.
+    - A run of three or more consecutive sentences under 8 words.
+    - More than one one-word sentence.
+    - One bucket holding most of the page.
+
+    Treat a bolded list label as a label rather than a sentence, and say so if
+    you exclude any.
+
+17. Contractions. Count them. A page at zero is a finding, and name three
+    sentences where one would read better. Where a page has no natural site,
+    say that instead of forcing one.
+
+18. `names`, the verb. Count it. Then read each one and say which of three
+    unrelated jobs it is doing, since one verb covering all three teaches the
+    reader nothing:
+
+    - an error message tells you which one. Reach for `says which`, `tells you
+      which`, `points at`, or put the value in the message and drop the verb.
+    - a symbol is the whole set. Reach for `has a member for`, or flip the
+      subject, "every kind seedcord routes is a member of X".
+    - you write them somewhere. Reach for `you write in`, `you put in`,
+      `declares`.
+
+    Report every page carrying `names` for two different jobs, whatever the
+    count. Leave the ones where `names` is the right word. `lists` and `covers`
+    already carry load elsewhere in this guide, so a repair reaching for either
+    moves the repetition instead of fixing it.
+
+19. Reader address. Count `you` and `your`. Report the count per 100 words of
+    prose. A page teaching something the reader does, at under 1 per 100 words,
+    is a finding.
+
+20. Repeated phrases. Report any phrase of three words or more that appears
+    twice. Say what job each instance is doing, since two sentences doing
+    different jobs can need the same words and the repeat is the cheapest part
+    of either one. Report it as a finding only where both instances do the same
+    job, and then say which one to cut whole.
+
 A count tells you which shape to look at. It never sets the bar for reporting
 one instance of it. That holds for every count above. Where a sentence is wrong
 on its own, report it whatever the page's totals say.
 
-Then a pass numbered 18, on shape. Start with the page whole, then set the
+Then a pass numbered 21, on shape. Start with the page whole, then set the
 content aside.
 
 Check one seam by name first. Where a section opens by naming the problem the
@@ -239,7 +273,7 @@ the items in one container", which reads as advice on a page someone opened
 because they want render. A gerund makes the condition the subject and drops a
 clause on the way. Leave a real instruction alone, as in "Clamp n yourself".
 
-Then a pass numbered 19, read as someone whose first language is not English.
+Then a pass numbered 22, read as someone whose first language is not English.
 
 Most people building Discord bots learned English second. Read every sentence
 again and ask whether it lands without native intuition behind it.

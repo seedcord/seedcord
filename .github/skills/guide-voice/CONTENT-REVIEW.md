@@ -134,6 +134,16 @@ Eight checks.
    without a real constructor sample around it, a raw discord.js builder where
    BuilderComponent belongs, and prose naming code that a cut hides.
 
+   Check the completion marker by name. `^?` answers "what type is this" and
+   `^|` draws the list an editor would offer at that point. Report every place
+   the paragraph's real question is "what can I type here" and the page answers
+   it by writing the names out in prose, since the marker replaces that
+   sentence. The typed-registry surfaces are where this lands: a route
+   decorator's first argument, an option getter's key, dispatch require() and
+   get() against the keys a bot declared, an emoji lookup against EmojiMap, and
+   a custom-id field name. A `^|` fence needs `// @noErrors`, since the sample
+   is a partial expression by construction. Name the fence and the line.
+
 Two rules on how you answer.
 
 Never invent a reason. Where the code shows a decision and no record explains
