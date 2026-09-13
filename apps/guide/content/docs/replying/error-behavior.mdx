@@ -1,6 +1,6 @@
 ---
 title: Tuning error behavior
-description: The errors block on your bot config, where you replace the card every fault renders and name the API codes to ignore.
+description: The errors block on your bot config, from replacing the card an unknown fault shows to choosing which Discord API codes to ignore, and catching seedcord's own errors by code.
 ---
 
 [`Seedcord`](ref:gateway/Seedcord) takes an `errors` block on its config, with six keys. Every one is optional.
@@ -61,6 +61,8 @@ export const seedcord = new Seedcord({
 
 ## Replacing the card
 
+Every unknown fault shows the same generic card, asking the user to contact the person set in `notifications.developerUsername`. Replace it when your bot needs its own wording, or an action the user can take from the card.
+
 `defaultError` takes a class that seedcord constructs with the fault's uuid and then renders. Subclass [`Notice`](ref:core/Notice) and build your own card.
 
 ```ts twoslash title="src/stops/BrandedFault.ts"
@@ -95,7 +97,7 @@ export class BrandedFault extends Notice {
 
 Put a button on that card. The user can then file the fault themselves. The customId carries the uuid, so the click arrives with the code on it.
 
-```ts twoslash hovers title="src/handlers/ReportFault.ts"
+```ts twoslash title="src/handlers/ReportFault.ts"
 import { ButtonBuilder } from '@discordjs/builders';
 import {
     ButtonHandler,
@@ -136,15 +138,15 @@ export class OpenTicket extends ButtonHandler<
 }
 ```
 
-Add the row to `BrandedCard` with `.addActionRowComponents(new ReportRow(uuid).component)`. The Components tab covers customIds and routing.
+Add the row to `BrandedCard` through `addActionRowComponents`, passing it `new ReportRow(uuid).component`. [Custom ids](/components/custom-ids) explains how a customId carries a value like that uuid.
 
 </Callout>
 
 ## The two ignore lists
 
-Both ignore lists start empty, so every api code your own work throws reports as a fault. A real bug surfaces that way, like a double ack from a misplaced `defer()`. Add a code once you have confirmed it is a dead end your bot reaches on purpose. A swallowed code still writes a debug line.
+Both ignore lists start empty, so every api code your own work throws reports as a fault. A real bug surfaces that way, like a double ack from a misplaced `defer()`. Add a code once you've confirmed it's an expected dead end for your bot. A swallowed code still writes a debug line.
 
-The reply surface always swallows the harmless reply-token codes on its own send, whatever these lists hold.
+Sending the fault card itself is a separate case. seedcord always drops a 10062, 40060, or 10008 that comes back from that send, whatever these lists hold. `UnknownInteraction` (10062) means the interaction expired. `InteractionHasAlreadyBeenAcknowledged` (40060) means something already answered it. `UnknownMessage` (10008) means the message the card would edit is gone.
 
 <Callout type="transport" only="gateway">
 
@@ -154,14 +156,13 @@ The reply surface always swallows the harmless reply-token codes on its own send
 
 ## Catching a framework error
 
-`@seedcord/errors` exports four things.
+When you wrap a seedcord call in `try`, branch on the error's code. The message wording can change in any release. A change to a code is always marked as breaking, so the changelog tells you when to update your check. Your transport package re-exports what you need from `@seedcord/errors`.
 
 - [`SeedcordErrorCode`](ref:errors/SeedcordErrorCode), every code the framework throws
 - [`isSeedcordError`](ref:errors/isSeedcordError), the guard below
 - [`paint`](ref:errors/paint), the terminal colors seedcord logs with
-- `version`, the installed package version
 
-Every error the framework throws carries one of those codes. `isSeedcordError` narrows a caught value down to it.
+Every error the framework throws carries one of those codes. `isSeedcordError` narrows a caught value to a seedcord error.
 
 ```ts twoslash
 import {
@@ -187,6 +188,13 @@ if (isSeedcordError(caught, undefined, taken)) {
     const exact = caught.code;
     //    ^?
 }
+
+const priority =
+    SeedcordErrorCode.DecoratorInvalidMiddlewarePriority;
+
+if (isSeedcordError(caught, 'SeedcordTypeError', priority)) {
+    const both = caught;
+}
 ```
 
-The second argument narrows by class, one of `'SeedcordError'`, `'SeedcordTypeError'`, `'SeedcordRangeError'`, or `'SeedcordAggregateError'`. The third matches one exact code, and it takes `undefined` in the second slot when the class makes no difference.
+The second argument narrows by class, one of `'SeedcordError'`, `'SeedcordTypeError'`, `'SeedcordRangeError'`, or `'SeedcordAggregateError'`. The third matches one exact code. Pass `undefined` as the second argument when the class makes no difference, or pass both when you need the class and the code to match together.

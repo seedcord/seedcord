@@ -1,11 +1,9 @@
 ---
 title: Formatting helpers
-description: Small functions your transport package re-exports for building the text you send, each one carrying a Discord fact or a trap.
+description: Helpers for the text your bot sends, from snowflake timestamps and Discord time tags to durations, big numbers, readable names, shuffles, and objects that won't stringify.
 ---
 
 Your transport package re-exports `@seedcord/utils`. Everything here imports from `@seedcord/gateway` or `@seedcord/http` alongside the rest.
-
-The functions below each carry a Discord fact or a trap. [Rendering a table](/replying/render-table) has its own page.
 
 ## A snowflake carries its own timestamp
 
@@ -32,7 +30,7 @@ The scaffold's `/ping` measures a roundtrip this way, storing nothing. Discord s
 
 <Callout type="warning">
 
-`BigInt` throws a `SyntaxError` on a string holding anything other than digits. Guard it when the id came from user input.
+`timestampFromSnowflake` passes the id to `BigInt`, which throws a `SyntaxError` on a string holding anything other than digits. Check the string first when the id came from user input.
 
 </Callout>
 
@@ -57,7 +55,7 @@ const line = `Account created <t:${created}:R>`;
 
 ## Duration strings
 
-[`parseDuration`](ref:utils/parseDuration) turns `'30m'` into milliseconds. It is the same parser [`Cooldown`](ref:core/Cooldown) uses, exported so your own options can take the same shape.
+[`parseDuration`](ref:utils/parseDuration) turns `'30m'` into milliseconds. It's the same parser [`Cooldown`](ref:core/Cooldown) uses, exported so your own options can take the same shape.
 
 ```ts twoslash
 import { parseDuration } from '@seedcord/gateway';
@@ -74,7 +72,7 @@ The grammar is one or more digits followed by one lowercase unit, `ms`, `s`, `m`
 
 ## Shortening a big number
 
-An embed showing `12345678` makes someone count digits. [`roundToDenomination`](ref:utils/roundToDenomination) shortens it.
+An embed showing `12345678` makes someone count digits. [`roundToDenomination`](ref:utils/roundToDenomination) shortens it to a suffixed form like `12.3M`.
 
 ```ts twoslash
 import { roundToDenomination } from '@seedcord/gateway';
@@ -86,11 +84,13 @@ roundToDenomination(12_345_678, { precision: 2 }); // '12.35M'
 roundToDenomination(12_345_678, { suffixes: ['k'] }); // '12345.7k'
 ```
 
-Anything below 1000 comes back unchanged. `precision` defaults to `1`. `suffixes` replaces the default `['K', 'M', 'B', 'T', 'Q']` with a list of any length. Shortening stops at the last suffix you give it, which is what leaves five digits in front of the `k` above.
+Anything below 1000 comes back unchanged. `precision` defaults to `1`. `suffixes` replaces the default `['K', 'M', 'B', 'T', 'Q']` with a list of any length. Shortening stops at the last suffix you give it, which leaves five digits in front of the `k` above.
 
 999,999 rounds to 1000K. A label reading `1000K` looks wrong, so it carries to `1M`.
 
 Shortening costs you precision, since 1234 and 1240 both read as `1.2K`. Keep the digits where the exact number is the point, as in a currency balance.
+
+## Ranks
 
 [`ordinal`](ref:utils/ordinal) adds the rank suffix a leaderboard prints. It covers 11th, 12th, and 13th, which a hand-rolled version usually gets wrong.
 
@@ -112,6 +112,7 @@ import { prettify } from '@seedcord/gateway';
 // ---cut---
 prettify('ManageMessages'); // 'Manage Messages'
 prettify('snake_case_string'); // 'snake case string'
+prettify('kebab-case-string'); // 'kebab case string'
 prettify('someLongOption', { capitalize: true }); // 'Some long option'
 ```
 
@@ -132,13 +133,13 @@ const [winner] = fyShuffle(entrants);
 
 <Callout type="tip">
 
-`items.sort(() => Math.random() - 0.5)` is the common way to write this by hand. It is measurably biased. A comparator has to give the same answer every time it sees a pair. That one answers at random on each call, which leaves some orderings far more likely than others.
+`items.sort(() => Math.random() - 0.5)` is the common way to write this by hand. It's measurably biased. A comparator has to give the same answer every time it sees a pair. That one answers at random on each call, which leaves some orderings far more likely than others.
 
 </Callout>
 
-[`generateCode`](ref:utils/generateCode) returns a random number with exactly that many digits, never starting with a zero. It draws from `Math.random()`, which suits a pairing code. Use `node:crypto` for a code that guards something.
+[`generateCode`](ref:utils/generateCode) returns a random number with exactly that many digits, never starting with a zero. It draws from `Math.random()`, which suits a pairing code. Someone who sees enough of its earlier outputs can predict the next one, so use `node:crypto` for a code that guards something.
 
-## Objects that will not stringify
+## Objects that won't stringify
 
 discord.js structures point back at the client, which points back at them. `JSON.stringify` on one throws. [`filterCirculars`](ref:utils/filterCirculars) returns a copy with each cycle replaced by a marker.
 
@@ -146,15 +147,19 @@ discord.js structures point back at the client, which points back at them. `JSON
 import { filterCirculars } from '@seedcord/gateway';
 
 declare const payload: { name: string; self?: unknown };
+declare const logger: NonNullable<
+    NonNullable<Parameters<typeof filterCirculars>[1]>['logger']
+>;
 
 // ---cut---
 const safe = filterCirculars(payload);
 const withMarker = filterCirculars(payload, { marker: '[loop]' });
+const viaJson = filterCirculars(payload, { mode: 'json', logger });
 ```
 
-`mode` picks how the copy is built. The default `'decycle'` clones the value directly. `'json'` runs stringify and parse, which lets a `toJSON()` method rewrite its own object on the way through. Both read own enumerable properties, so a getter defined on a class prototype is absent from the result.
+`mode` picks how the copy is built. The default `'decycle'` clones the value directly. `'json'` runs stringify and parse, which lets a `toJSON()` method rewrite its own object while that runs. Both read own enumerable properties, so a getter defined on a class prototype is absent from the result.
 
-Pass a `logger` to see why a copy failed. Without one the failure returns quietly as `{ '[unserializable]': ... }`.
+Pass a `logger`, as the `viaJson` line does, to see why a copy failed. Without one the failure returns quietly as `{ '[unserializable]': ... }`.
 
 [`hasKeys`](ref:utils/hasKeys) checks a nested path and narrows the type when it passes.
 
