@@ -31,7 +31,7 @@ Use the codebase-memory MCP for structure, then open every declaration yourself
 and read it whole. Never assert a claim about the code you have not opened. Give
 a file and line for every finding.
 
-Seven checks.
+Eight checks.
 
 1. The argument this page is responsible for.
 
@@ -48,7 +48,23 @@ Seven checks.
 
    Where the field above says none, say so in one line and move on.
 
-2. Every claim about behavior, checked against the source.
+2. Every feature's reason to exist.
+
+   Take each section of the page and read its opening. A section that teaches a
+   feature says what the reader does without it and what that costs them, in one
+   or two sentences, before it says how to configure the thing.
+
+   A real miss. The emoji section opened on "Name each custom emoji in your
+   config, then read it back by that name", where the fact the reader needed is
+   that Discord takes a custom emoji as <:name:id>, so without the map those ids
+   spread through the message code and go stale on a re-upload.
+
+   For each section report whether it answers this, and where it does not, write
+   the answer yourself from the declarations and from what the platform
+   requires. Name the file and line, or name the platform rule. Report the ones
+   you cannot source rather than reasoning one out.
+
+3. Every claim about behavior, checked against the source.
 
    Read every sentence stating what the code does. Open the declaration and
    confirm it. Report every claim that is wrong, and every claim that is true of
@@ -58,7 +74,7 @@ Seven checks.
    your bot color" beside an example using RowComponent, where that getter
    returns the builder and leaves the color alone.
 
-3. Every way of using the surface.
+4. Every way of using the surface.
 
    Open the declaration of each symbol the page teaches and read the variadic
    parameters, the overloads, the optional arguments, and the bounds on every
@@ -70,7 +86,7 @@ Seven checks.
    Report the form that is missing and name the file and line of the declaration
    that offers it.
 
-4. Optional markers.
+5. Optional markers.
 
    Report every parameter or field the page states flatly where the declaration
    marks it optional, gives it a default, or makes the whole options argument
@@ -81,7 +97,7 @@ Seven checks.
 
    Report the sentence and the declaration's file and line.
 
-5. Transport differences.
+6. Transport differences.
 
    This framework ships two transports as two packages. For each symbol the page
    teaches, open its declaration in packages/gateway/src and in packages/http/src
@@ -99,14 +115,14 @@ Seven checks.
 
    Where nothing on the page differs, say that in one line.
 
-6. Internal surface.
+7. Internal surface.
 
    Report any symbol the page names that is reachable only through the package's
    ./internal entry. Read the exports map in the package's package.json to tell.
    That split exists because JavaScript does not have package-private, which
    makes it a packaging detail. Name the public surface that replaces it.
 
-7. The page mechanics.
+8. The page mechanics.
 
    Section 7 of the skill lists the conventions a page follows. A page that
    breaks one still renders, so nothing else catches them. Walk that list

@@ -29,7 +29,7 @@ export class SearchCommand extends BuilderComponent<'command'> {
 }
 ```
 
-An option's name and its required flag are arguments to method calls. Those calls run when something constructs the class. TypeScript reads the source of that chain and cannot evaluate it, so the name `query` only exists once the chain has run.
+An option's name and its required flag are arguments to method calls. Those calls run when something constructs the class. TypeScript reads the source of that chain without running it, so the name `query` only exists once the chain has run.
 
 `seedcord codegen` records those names for you. It imports every `.ts` and `.js` file under your commands folder, constructs each decorated class it finds, reads the JSON that class's builder produced, and writes what it found to `seedcord-gen.d.ts`.
 
@@ -39,11 +39,11 @@ Run it after you add a command, change its options, attach a plugin, or edit you
 
 Your handler then reads its options through `this.options`. `getString('query')` comes back as `string`, because you marked that option required. A typo in the name stops the build. [Command options](/commands/options) tables what each kind returns.
 
-The cost is a file you rerun and commit. `seedcord dev` offers to run codegen whenever it re-registers your commands, so most of the time you'll answer `y`.
+The cost is a generated file you commit. `seedcord dev` offers to run codegen whenever it re-registers your commands, so most of the time you'll answer `y`.
 
 <Callout type="note">
 
-The file lands beside the `root` on your `seedcord.config.ts`. A scaffolded project sets `root: './src'`, which puts it at `src/seedcord-gen.d.ts`.
+Codegen writes the file beside the `root` on your `seedcord.config.ts`. A scaffolded project sets `root: './src'`, which puts it at `src/seedcord-gen.d.ts`.
 
 </Callout>
 
@@ -65,11 +65,11 @@ Every run rewrites the whole file from scratch.
 
 `Core` only appears once you attach a plugin. It [types `this.core.db`](/plugins/typing), for example.
 
-Codegen fills the plugin row by name alone. It writes down the keys you attached. TypeScript then resolves each plugin's type off the bot you built, because you already wrote the generic at the `attach()` call. Codegen never has to understand a plugin type. A plugin like `KyselyPostgres<Database>` is still fully typed in your handler.
+Codegen fills the plugin row by name alone. It writes down the keys you attached. TypeScript then resolves each plugin's type off the bot you built, because you already wrote the generic at the `attach()` call. Codegen never reads a plugin's type. A plugin like `KyselyPostgres<Database>` is still fully typed in your handler.
 
 <Callout type="transport">
 
-The rows codegen adds are the same either way. The interface it adds them to differs, since gateway's [`Core`](ref:gateway/Core) carries a `bot` member holding the discord.js client and its token, and http's [`Core`](ref:http/Core) has no connection to hold.
+The rows codegen adds are the same either way. The interface it adds them to differs, since gateway's [`Core`](ref:gateway/Core) carries a `bot` member holding the discord.js client and its token. http's [`Core`](ref:http/Core) does not hold a connection.
 
 </Callout>
 
@@ -95,9 +95,9 @@ Matching output exits `0` in silence. A difference prints the path it compared a
 Augmentations are out of date. Run `seedcord codegen` and commit /home/you/my-bot/src/seedcord-gen.d.ts.
 ```
 
-`--check` only reports, so fixing the drift needs a plain `seedcord codegen` run. The scaffold does not wire a script for it, so you can put it wherever your pipeline wants it.
+`--check` only reports, so fixing the drift needs a plain `seedcord codegen` run. The scaffold does not wire a script for it, so put it wherever your pipeline runs its checks.
 
-A commands folder codegen cannot read throws `CliCodegenCommandsDirUnreadable`. An empty registry there would pass `--check` against a file that's already stale.
+Codegen throws `CliCodegenCommandsDirUnreadable` when it cannot read your commands folder, because an empty registry would pass `--check` against a file that's already stale.
 
 ## Commands codegen passes over
 

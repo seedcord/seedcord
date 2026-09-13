@@ -16,11 +16,29 @@ Two rules in it change on a guide page, and both changes are stated where they a
 
 ---
 
-## 1. Two kinds of why, and they go in different places
+## 1. Three kinds of why which should go in different places
 
 **A reason that names a mechanism goes on the page, beside the thing it explains.** One or two sentences. This is most of them. Real one, from the pagination page:
 
 > Every button carries its target page inside the custom id, so a click still works after your bot restarts.
+
+**Every feature says what it is for, at the top of the section that teaches it.** One or two sentences naming what the reader does without it and what that costs them. This covers every feature in the guide, and the five arguments below are the few that need more than a paragraph.
+
+A section opening on how to configure a thing tells a reader who already wanted it how to get it. It tells everyone else nothing, and everyone else is most of them.
+
+The emoji section opened on "Name each custom emoji in your config, then read it back by that name", which tells someone already sold on the feature how to use it. What went in above it is the work they are doing today:
+
+> You've gone hunting for an emoji id before. Copy `<:streak_flame:1872389747982323426>` out of the client, paste it into a constants file, then do the next one. From then on you keep that file in sync by hand.
+>
+> A re-upload gives the emoji a new id, so every copy of the old one points at nothing. A rename leaves the name in your code out of step with the one in Discord.
+
+Write it as the thing they have already done, in the words they would use for it. The maintainer's note on the first attempt, which stated the same facts flatly: the reader has to recognise themselves in it.
+
+Ground every cost you name. A re-upload really does mint a new id. A rename leaves a hardcoded id working, so the cost there is a stale label, and claiming a broken message would be pattern 2.
+
+**Then answer the problem in the next breath.** A why-paragraph opens a new seam in the section, between the work the reader does today and the line telling them what to type. The first words after that break point back at the complaint. "Some emojis come from your app and some from one guild, so each of those is its own lookup" is answered by "seedcord does those lookups for you", where the repeated noun is what carries the reader across. The first draft of that section ended the problem and opened the next paragraph on "Name each custom emoji in your config", which leaves the reader to make the join themselves. The maintainer caught it as a failure mode of its own.
+
+Test: read a section's first paragraph and ask what the reader would be doing without this feature. Where the section never says, it never argued for the feature at all.
 
 **An argument about why the framework has this shape at all goes on the page that teaches the thing**, as a paragraph, near the top, before the reader has typed anything.
 
@@ -51,6 +69,35 @@ Drafted for the codegen page, which does not argue for itself today:
 > The cost is a generated file you rerun and commit.
 
 Ground every beat before you write it. The first draft of that passage said codegen "reads those files", which reads as static parsing and is wrong. Codegen imports each command file and executes it, and that is the fact that explains why a separate step exists rather than a compiler plugin.
+
+### Read the sample, never write beside it
+
+After a fence, point at something in it. Name a value, a line, a token the reader can go and look at. The codegen page does this with one word:
+
+> TypeScript reads the source of that chain and cannot evaluate it, so the name `query` only exists once the chain has run.
+
+`query` is in the fence above that sentence. The reader looks up, finds it, and the claim lands on code they just read.
+
+The failure is a sentence that states a true general fact beside a fence and never enters it. The components page ran three paragraphs of those and read as a wall of instructions, because every sentence would have been just as true with no fence on the page at all.
+
+Test: could this paragraph sit under a different sample without changing a word? Then it is written beside the code rather than about it.
+
+### A forced decision argues differently from a chosen one
+
+Codegen is forced. TypeScript cannot evaluate a builder call, so the page shows the wall, names the tool that gets past it, and states the cost. The reader had no choice to make.
+
+Subclassing a component base is a choice. Nothing stops anyone building a `ContainerBuilder` inline in a handler. A page covering that kind of decision earns it instead of asserting it:
+
+1. Name the moment the reader is in, with the code they already write.
+2. Name the decision they are making.
+3. Say what the choice does to their code, in their terms, and carry it to the payoff. "You edit `BanCard.ts` once" is the mechanism and it stops one beat short. "To reword the card, you change one line in `BanCard.ts`. Every handler that sends one gets the new wording" is the same fact taken as far as the reader cares about.
+
+    Reach for the fact, never a scene. An invented moment, a made-up timescale, a hypothetical afternoon six months out, all of that is pattern 4 wearing a payoff.
+
+4. Name what it costs.
+5. Say when to skip it.
+
+A list of the design's good properties skips all five and reads as marketing. Three true sentences about what a base class gives you leave the reader with no reason to want any of it.
 
 ### Say what was declined
 
@@ -175,10 +222,11 @@ The prose review covers these twelve. It reads the page and nothing else.
 11. **A rule with the reason left out.** The page says to do something a certain way and never says what goes wrong otherwise. A recommendation hedged with no criterion the reader can apply. A style preference welded to an unrelated mechanism, so the mechanism reads as the reason for the preference.
 12. **Inline code long enough to hold a line open.** Backticks do not wrap, so a full error message or a chained expression pushes past the column on a narrow screen.
 
-The content review covers these two, plus everything in section 7. It opens the declarations.
+The content review covers these three, plus everything in section 7. It opens the declarations.
 
 13. **A way of using the surface the page never shows.** Read every declaration whole, including the variadic parameters, the overloads, the optional arguments, and the generic bounds. Each distinct form appears once. This settles at a different level from the example rule above, which decides how deep one member goes where this one decides which forms appear at all.
 14. **An optional parameter or field stated flatly.** A parameter read as required costs the reader an argument they never needed. A field read as always present costs them a guard they skipped. The reverse counts too.
+15. **A feature taught with no reason to exist.** The section says how to turn the thing on and never says what the reader does without it. Read the section's opening and name what it would cost someone to go without the feature, sourced from the code and from what the platform requires.
 
 ---
 
@@ -192,13 +240,52 @@ Run these one at a time and apply each pass's fixes before starting the next. Ea
 4. Read [`writing-voice`](../writing-voice/SKILL.md) and this file, then read the page top to bottom and fix every line they flag.
 5. Do step 4 again.
 6. **Negation.** Find every verb followed by `no`, the `takes no flags` shape. Each one becomes not-negation or a positive statement.
-7. **Connectors.** Count `and`, `so`, `which`, `while`, `because`, `since`. Any one connector carrying most of the page is the defect. Then check the reason-versus-consequence split from section 3, and every `and` holding two complete clauses together.
-8. **The garden path.** Read every sentence once at speed. Stopping and starting over means rewriting it. Three shapes cause it: a clause wedged between a subject and its verb, a cleft that parks the verb behind an `is`, and a trailing participle whose subject the reader has to guess.
+7. **Connectors.** Count `and`, `so`, `which`, `while`, `because`, `since`, `then`. Any one connector carrying most of the page is the defect. Then check the reason-versus-consequence split from section 3, and read every connector against the relation it promises.
+8. **The garden path.** Read every sentence once at speed. Stopping and starting over means rewriting it. Four shapes cause it.
+    - A clause wedged between a subject and its verb.
+    - A cleft that parks the verb behind an `is`.
+    - A trailing participle whose subject the reader has to guess.
+    - A connector naming a relation the sentence does not have. See below, since this one has its own section.
+
+### A connector promises a relation. Write the one that is there
+
+Every connector tells the reader where the sentence goes next before they read it. `and` promises more of the same. `then` promises a step after a step. `so` promises a result, `because` a reason, `if` a condition. The reader acts on that promise, and a wrong one sends them off in a direction the sentence never takes.
+
+Real ones, all caught by the maintainer, all in prose written the same week:
+
+<!-- prettier-ignore-start -->
+
+| written | what it promised | the real relation |
+| --- | --- | --- |
+| "A card needs a builder. Then you decide where that builder's code lives." | a second step | no sequence at all. Needing a builder is the moment. Cut the connector |
+| "`this.instance` there is a `ContainerBuilder` and `setTitle` would stop the build" | a second item on that noun | opposition. The first names what works, the second what fails |
+| "The next handler imports the same file, and changing the wording is one edit" | more of the same | consequence, so `so` |
+| "Reword the card later and you edit `BanCard.ts` once" | more of the same | condition, so `if` |
+| "the class decides what a ban card looks like, and a setter at the call site splits that description" | more of the same | contrast. The second clause is the case being argued against |
+
+<!-- prettier-ignore-end -->
+
+**The test.** Read what follows the connector on its own. Ask what relation the word just promised, then ask what relation the two halves actually have. Where they differ, the reader pays for it.
+
+The repairs, by relation. A result takes `so`. A reason takes `because` or `since`. A condition takes `if`, with the condition first. A contrast becomes two sentences, since naming the rejected case inside one sentence runs into the contrast ban. Where no relation exists, delete the connector and let the sentence stand on its own.
+
+`and` carries most of these, and it hides in sentences that already spent a `so` or a `because`, where it becomes the place a third clause gets dumped. A sequence word is the other common one, since a page of steps makes `then` feel free to type.
+
+A grep finds none of this. The tell is the direction the second half travels and no pattern sees that. Read every connector on the page and ask which way the words after it go.
+
+### The rest of the loop
+
 9. **Shape.** Read the page whole, out loud, as someone who has never seen it. Two questions. Does a person explaining this sound like this? Would a reader who learned English second get through without re-reading? Then check the spread against section 3.
 10. Run both reviewers, in parallel. One Sonnet agent each. [`PROSE-REVIEW.md`](./PROSE-REVIEW.md) and [`CONTENT-REVIEW.md`](./CONTENT-REVIEW.md).
 11. Fix what they find, then run step 9 again, since every fix is a sentence nothing has checked.
 
 A count tells you which word to look at. It never decides whether one sentence is wrong. Answer no to every frequency check and the page still ships whatever instances it has, so read each one and repair it on its own terms.
+
+**A repeated phrase is a count too.** Finding the same words twice tells you to go and look. It never says the second one is wrong. Ask what job each sentence is doing first, because two sentences doing different jobs can need the same words, and the repeat is the cheapest part of either one.
+
+The emoji section had "while the bot starts" in two places. The opener used it to answer a complaint about doing a lookup per send, where `once` was the whole answer. The paragraph further down used it as decoration around the real fact, which is what happens when a name fails to resolve. Stripping the phrase took the answer out of the opener and left the decoration standing. The repair re-aimed the second sentence at its own job and left the first alone.
+
+Where two sentences really are doing one job, cut the weaker one whole. Trimming a shared phrase out of both leaves two sentences that each say less.
 
 ---
 
@@ -209,6 +296,8 @@ A count tells you which word to look at. It never decides whether one sentence i
 **What do they already know?** Anything you would have to teach them to make a sentence land does not belong here unless the page is about that thing.
 
 **What is the one thing they need from this page?** Everything that does not serve it comes off.
+
+**What does the reader do without each feature on this page?** Answer it per feature, in their terms, and the answer opens the section that teaches it.
 
 **What are all the ways to use it?** Open the declaration of every symbol the page teaches and read it whole. A variadic parameter, an overload, a generic accepting a union, and an optional argument are each a separate way to use the surface.
 
@@ -222,7 +311,7 @@ The content review checks this section as a list. A page that breaks one of thes
 
 - **A seedcord symbol named in prose gets a `ref:` link on its first mention.** `[BuilderComponent](ref:core/BuilderComponent)`, package segment then symbol. A fence tagged `hovers` already links its own tokens.
 - **The import line shows on the first fence and gets cut on the rest**, with `// ---cut---` under it. A later fence keeps its imports when its symbols are new to the page. Start-tab pages keep imports on every fence. Prose around a fence can only name what the fence still shows, since a cut hides those lines from everyone except the writer.
-- **A fence states how it shows types.** `^?` when the prose is about one or two of them. `hovers` when the reader has a shape worth exploring, at roughly five times the bytes and build time. `^|` when the reader's question is what they can type here. Untagged when the sample is a fragment that does not compile alone.
+- **A fence states how it shows types.** `^?` when the prose is about one or two of them. `hovers` when the reader has a shape worth exploring, at roughly five times the bytes and build time. `^|` when the reader's question is what they can type here. A bare `twoslash` with no marker when the sample only needs checking, which is most samples. Drop `twoslash` entirely when the sample is a fragment that cannot compile alone.
 - **Five twoslash blocks per page is the ceiling.** Ten drive `next dev` out of memory at 8 GB.
 - **A config key appears inside a real `new Seedcord({ ... })` sample**, on the page that teaches its subject, with any note as a `//` comment on the line.
 - **A sample reads like shipped code.** Prettier prints a fence at 68 columns, so work done inline in a callback buries the lesson under four levels of indent. Pull it into a private method.

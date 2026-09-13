@@ -133,6 +133,22 @@ finding, and a tic is a habit rather than a single sentence.
     full error message, an option object, or a chained expression pushes past
     the column on a narrow screen. Report the token and say where it belongs.
 
+13. Prose that runs beside a sample without reading it. After a fence, the
+    paragraph should point at something in it, a value, a line, a token the
+    reader can go and look at. Take each paragraph that follows a fence and ask
+    whether it could sit under a different sample unchanged. If it could, it is
+    written beside the code rather than about it. Report the paragraph and name
+    what in the fence it should be pointing at.
+
+14. A design presented as a list of its good properties. Where a page asks the
+    reader to adopt a shape nothing forces on them, a run of sentences each
+    naming one nice thing about that shape reads as marketing and leaves the
+    reader with no reason to want it. The repair names the moment the reader is
+    in, the decision they are making, what the choice does to their code, what
+    it costs, and when to skip it. Report the run and say which of those five
+    the page never says. A page covering something the framework forces is
+    exempt, since there the reader had no decision to make.
+
 Then five counted passes. Report these as 13 through 17.
 
 13. Reasons against consequences. A `so` clause states a consequence that
@@ -158,9 +174,27 @@ Then five counted passes. Report these as 13 through 17.
     prose. A page teaching something the reader does, at under 1 per 100 words,
     is a finding.
 
-17. Every `and` holding two complete clauses together, however few the page has.
-    `and` leaves the relation unstated. A page with two is not leaning on `and`,
-    and both are still findings.
+17. Connectors against the relation they promise. Every connector tells the
+    reader where the sentence goes before they read it. `and` promises more of
+    the same, `then` a step after a step, `so` a result, `because` a reason, `if`
+    a condition. Take each one, read what follows it on its own, and compare the
+    promised relation against the real one. Report every mismatch, however few
+    the page has. A page with two is not leaning on the word, and both are still
+    findings.
+
+    Report one kind first and say so, the `and` that starts a new clause right
+    after a noun phrase. The reader takes the next words as a second item on
+    that noun and gets several words further before the sentence falls apart.
+    "`this.instance` there is a `ContainerBuilder` and `setTitle` would stop the
+    build" parses as "is a `ContainerBuilder` and `setTitle`". That one is
+    unreadable rather than merely vague, and it hides inside sentences that
+    already spent a `so` or a `because` earlier, where `and` becomes the place a
+    third clause gets dumped. Quote it and split it into two sentences.
+
+    A sequence word with no sequence behind it is the other common one. "A card
+    needs a builder. Then you decide where that builder's code lives" promises a
+    second step where the first sentence was already the moment. Report it and
+    say the connector comes out.
 
 A count tells you which shape to look at. It never sets the bar for reporting
 one instance of it. That holds for every count above. Where a sentence is wrong
@@ -169,8 +203,23 @@ on its own, report it whatever the page's totals say.
 Then a pass numbered 18, on shape. Start with the page whole, then set the
 content aside.
 
-Read the page top to bottom the way a person reads, and report every paragraph
-and every section that nothing connects. The failure looks like correct
+Check one seam by name first. Where a section opens by naming the problem the
+feature solves, the paragraph after it has to answer that problem in its first
+words, usually by repeating a noun the complaint just used. A section that ends
+the problem and opens the next paragraph on the instruction leaves the reader to
+make the join. Report it with the noun that should carry across.
+
+Then check every `this`, `that`, `those` and `it` that opens a paragraph. Each
+one points at a noun, and the noun it points at should be in the sentence just
+above. Report the ones reaching back past a fence or past another paragraph,
+where the reader has to go hunting, and name the noun that belongs there
+instead. "Keep those calls in the constructor anyway" is the shape, reaching
+back over two paragraphs and a code sample to a constructor, while the sentence
+above it had already said "a setter you call on it". A `though` or an `anyway`
+carrying the turn on its own is the tell.
+
+Then read the page top to bottom the way a person reads, and report every
+paragraph and every section that nothing connects. The failure looks like correct
 sentences with nothing holding them together. Each one drops a fact and ends,
 the next starts somewhere new, and no pronoun points back, no cause sits ahead
 of its effect, no noun repeats, and no line under a heading places the section

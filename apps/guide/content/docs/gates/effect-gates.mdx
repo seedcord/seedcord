@@ -5,7 +5,7 @@ description: When a gate deducts a credit and a later gate refuses, the caller p
 
 Say a command costs one credit. Your gate reads the balance and deducts one. A later gate then refuses. The command never ran, and the caller lost a credit anyway.
 
-[`defineEffectGate`](ref:core/defineEffectGate) splits the gate in two. `check` reads and refuses. `commit` applies the change, and seedcord runs it only after every gate on the handler has passed.
+[`defineEffectGate`](ref:core/defineEffectGate) splits your gate in two. `check` reads and refuses. `commit` applies the change, and seedcord holds that half back until every gate on the handler has passed.
 
 ```ts twoslash title="src/gates/SpendCredit.ts"
 import { defineEffectGate, Notice } from '@seedcord/gateway';
@@ -88,13 +88,13 @@ A refusal anywhere in step one drops every queued commit. The same holds when a 
 
 <Callout type="warning">
 
-Step two finishes before step three starts. A handler that throws runs after every commit, so the credit stays spent. Refund it in the handler when that matters.
+Step two finishes before step three starts. Your handler runs after every commit, so a throw inside it leaves the credit spent. Refund it there when that matters.
 
 </Callout>
 
 ## Inside an or
 
-An [`or`](ref:core/or) arm can hold more than one gate. Nesting them that way throws a queued commit away. Here is a handler with an effect gate buried two levels down.
+An [`or`](ref:core/or) arm can hold more than one gate. When an arm refuses, seedcord drops every commit queued inside it. Here's a handler with an effect gate buried two levels down.
 
 ```ts twoslash hovers
 import {
@@ -158,7 +158,7 @@ A bot owner who lacks that role runs it. Read the checks down, then the commits.
 3. execute()
 ```
 
-The owner keeps their credit and still spends a cooldown slot. Only the arm that passes keeps its commit, and `OwnerOnly` queued none.
+The owner keeps their credit and still spends a cooldown slot. Only the arm that passes keeps its commit. `OwnerOnly` passed and queued none.
 
 <Callout type="note">
 
@@ -168,10 +168,10 @@ Every commit runs after every check. A check never reads what another gate's com
 
 ## What the two halves share
 
-Annotate `ctx` on either half and both take that context. The gate then fits the same handlers as a [`defineGate`](ref:core/defineGate) gate with that annotation.
+If you annotate `ctx` on either half, both take that context. Your gate then fits the same handlers as a [`defineGate`](ref:core/defineGate) gate carrying that annotation.
 
-Either half can return a promise. A synchronous one works too, so a commit writing to a `Map` does not need `async`.
+Either half can return a promise. A synchronous one works too, so a commit that writes to a `Map` doesn't need `async`.
 
 ## Cooldown
 
-[`Cooldown`](ref:core/Cooldown) is an effect gate. It peeks at the window in `check` and charges the slot in `commit`, which is why a later refusal never records a use.
+[`Cooldown`](ref:core/Cooldown) is an effect gate. It reads the window in `check` and charges the slot in `commit`, which is why a later refusal never records a use.
