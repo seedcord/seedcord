@@ -1,6 +1,6 @@
 ---
 title: Buttons
-description: '@ButtonRoute takes the CustomId your component minted, and this.update() rewrites the message the click came from.'
+description: Handle a button click with ButtonHandler, from reading the values its custom id carries and rewriting the message it came from to one handler serving several buttons.
 ---
 
 A click arrives as its own interaction carrying the custom id your component minted. [`ButtonHandler`](ref:gateway/ButtonHandler) decodes that id and puts the values on [`this.params`](ref:gateway/ComponentHandler.params).
@@ -30,9 +30,17 @@ export class Appeal extends ButtonHandler<[typeof AppealId]> {
 
 A click is an interaction like any other, so every [reply method](/replying) works here.
 
+<Callout type="transport" only="gateway">
+
+A gateway `ButtonHandler` takes a second type argument, discord.js's `CacheType`, which defaults to `'cached'`. That default types `this.event.member` as a `GuildMember`, and seedcord doesn't check it at runtime. A button in a DM has no member, so pass `'raw'` or `CacheType` for a handler that can get one. An http `ButtonHandler` takes only the route tuple.
+
+</Callout>
+
 ## Rewriting the source message
 
-[`this.update()`](ref:gateway/ComponentHandler.update) replaces the message the button came from. It takes the same response shape every reply method takes, so a new `components` list drops the old buttons along with them.
+A `reply` to a click posts a new message under the old one. The old buttons stay there, so someone can click them again.
+
+[`this.update()`](ref:gateway/ComponentHandler.update) rewrites the message the button came from. It takes the same response shape every reply method takes, so a new `components` list replaces the old buttons.
 
 ```ts twoslash
 import type { ContainerBuilder } from '@discordjs/builders';
@@ -65,9 +73,7 @@ class Appeal extends ButtonHandler<[typeof AppealId]> {
 }
 ```
 
-A plain string works too, which seedcord wraps in one text component.
-
-[`this.deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) acknowledges the click and leaves the message as it is.
+Discord shows "This interaction failed" on a click that nobody answers within three seconds. For a click that changes nothing on the message, [`this.deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) answers it and leaves the message unchanged.
 
 <Callout type="transport">
     `update()` resolves to a discord.js `Message` on gateway and an
@@ -76,7 +82,7 @@ A plain string works too, which seedcord wraps in one text component.
 
 ## One handler, several buttons
 
-Approve and reject sit next to each other on the same message, and one handler can take both. Pass every id to the decorator, list them in the generic, then branch with [`this.match`](ref:gateway/ComponentHandler.match).
+Approve and reject sit next to each other on the same message, and one handler can serve both. Pass every id to the decorator, list them in the generic, then branch with [`this.match`](ref:gateway/ComponentHandler.match).
 
 ```ts twoslash hovers title="src/handlers/Review.ts"
 import {
@@ -105,12 +111,14 @@ export class Review extends ButtonHandler<
 }
 ```
 
-You key each arm by its route's prefix, and each one receives that route's own values. `reject` reads a `reason` that `approve` never declared. The compiler requires one arm per registered prefix.
+You key each arm by its route's prefix, and each one receives that route's own values. `reject` reads a `reason` that `approve` never declared. Both arms pass `update` a plain string, which seedcord wraps in one text component. Leave an arm out and the build stops, since the compiler requires one per registered prefix.
+
+Keep two buttons in one handler when both arms need the same code first, like a check that the clicker is staff. Two buttons that share nothing belong in two handlers, where each file holds only the code its own button runs.
 
 <Callout type="warning">
 
 `this.params` is `never` on a handler registered for several routes, since the decoded shape depends on which button someone clicked. `this.match` is the only read there.
 
-</Callout>
-
 Decoding runs once, before any arm, so a wire from an [older shape](/components/stale) throws before your code executes.
+
+</Callout>

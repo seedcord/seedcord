@@ -1,13 +1,15 @@
 ---
 title: When a custom id goes stale
-description: A message keeps its buttons long after you change their shape, which is why every id carries a shape hash.
+description: What happens when someone clicks a component minted under an older CustomId shape, from the edits that change the shape hash to the cards the user gets and replacing them with your own.
 ---
 
-A message with a button or a select menu on it stays in the channel for as long as the channel does. Your shape changes on the next deploy. Every id seedcord mints carries three characters of shape hash, and `decode` compares that hash against the current shape.
+A message with a button or a select menu on it stays in the channel until someone deletes it. Your shape changes on the next deploy. Decoded against the new shape, an old button's values would fill the wrong fields, and your handler would use them.
+
+seedcord stops that with a three-character shape hash in every id it mints. An old button's hash doesn't match the new shape, so seedcord refuses its values before your handler reads them.
 
 ```ts twoslash title="src/components/TicketActions.ts"
 import { CustomId } from '@seedcord/gateway';
-// ---cut---
+
 export const TicketAction = new CustomId('ticket')
     .snowflake('ownerId')
     .oneOf('action', ['close', 'reopen']);
@@ -17,7 +19,7 @@ export const TicketAction = new CustomId('ticket')
 
 ## What changes the hash
 
-The hash covers each field's name, its position in the chain, its kind, the choices on a `oneOf` or a `someOf`, and an `int`'s bounds. Change any one of those and every id already in Discord belongs to the old shape.
+The hash covers each field's name, its position in the chain, its kind, whether it's nullable, the choices on a `oneOf` or a `someOf`, and an `int`'s bounds. Change any one of those and every id already in Discord belongs to the old shape.
 
 {/* prettier-ignore-start */}
 
@@ -31,11 +33,13 @@ The hash covers each field's name, its position in the chain, its kind, the choi
 
 {/* prettier-ignore-end */}
 
-Bounds count the same way. `int('n', 0, 100)` and `int('n', 0, 200)` produce different hashes, so widening a page range invalidates the buttons already out there.
+Bounds count the same way. `int('n', 0, 100)` and `int('n', 0, 200)` produce different hashes, so widening a page range invalidates the buttons you already sent.
+
+Weigh an edit against how long its messages stay in use. A reply someone clicks once and scrolls past can change shape on any deploy. A role menu pinned in a rules channel stops working after the same edit, so plan to send that message again when you ship it.
 
 ## What your user sees
 
-Routing reads the prefix alone, so an interaction from an old message still reaches your handler. Reading [`this.params`](ref:gateway/ComponentHandler.params) decodes the wire, compares its route key against the current one, and refuses when they differ.
+Routing reads the prefix _alone_, so an interaction from an old message still reaches your handler. Reading [`this.params`](ref:gateway/ComponentHandler.params) decodes the wire, compares its route key against the current one, and refuses when they differ.
 
 That refusal is a [`Notice`](ref:core/Notice), so the boundary catches it and replies with a card.
 
@@ -44,7 +48,7 @@ That refusal is a [`Notice`](ref:core/Notice), so the boundary catches it and re
 This button or menu is from an older version. Please run the command again.
 ```
 
-The card is ephemeral and it does not report, so nothing reaches your logs or the `handledException` bus. Editing a shape is normal work, and every component already minted from that shape goes stale.
+The card is ephemeral, and nothing reaches your logs or the `handledException` bus. seedcord doesn't report a stale click, because it's the normal result of editing a shape.
 
 A modal and a select menu route by prefix the same way, so both go stale on the same rule.
 
@@ -56,18 +60,20 @@ A modal and a select menu route by prefix the same way, so both go stale on the 
 Invalid customId. routeKey "pollM4x" is not "ticketVrl"
 ```
 
-That one does report, so seedcord logs it and publishes it to the `handledException` bus, where the report carries the name `InvalidCustomId`. The user sees the generic card.
+That one does report, since a working bot never produces it. seedcord logs it and publishes it to the `handledException` bus, where the report carries the name `InvalidCustomId`. The user sees the generic card.
 
 ```txt output
 ### Cannot Proceed
 Something went wrong. Please try again.
 ```
 
-A corrupt string throws here, and so does one you wrote by hand.
+`decode` also throws on a corrupt string, or on one you wrote by hand.
 
 ## Replacing both cards
 
-Both cards above come from `Notice` subclasses seedcord registers at startup. [`setCustomIdErrors`](ref:custom-id/setCustomIdErrors) replaces them with your own.
+Both cards above use seedcord's wording. Replace them when your bot needs its own, like a card naming the command that sends a fresh menu.
+
+The defaults are `Notice` subclasses seedcord registers when it loads. [`setCustomIdErrors`](ref:custom-id/setCustomIdErrors) replaces them with yours.
 
 ```ts twoslash title="src/bot.ts"
 import { TextDisplayBuilder } from '@discordjs/builders';
@@ -110,6 +116,6 @@ setCustomIdErrors({
 });
 ```
 
-Call it once, before your bot starts. One registration covers every `CustomId` in the process, and a later call replaces the earlier one.
+Call it once, before your bot starts. A click that arrives before the call still gets the built-in card. One registration covers every `CustomId` in the process, and a later call replaces the earlier one.
 
-The stale arm receives the route prefix. The invalid arm receives a detail string naming what failed. Neither one receives the interaction, so a card built here reads the same for every user. Return a `Notice` from both arms. A plain `Error` sends the generic fault card.
+The stale arm receives the route prefix. The invalid arm receives a detail string naming what failed. Neither arm receives the interaction. The `Notice` you return still gets a [`RenderContext`](ref:types/RenderContext) when seedcord calls its `render()`, carrying the fault's `uuid` and the [dispatch context](/gates/dispatch-context) your gates and middleware filled, so read per-user details there. Return a `Notice` from both arms. A plain `Error` sends the generic fault card.
