@@ -42,9 +42,10 @@ jobs:
               run: pnpm build
 
             - name: Sync published docs to R2
-              run: pnpm docs:sync --extract --published "$PUBLISHED"
+              run: pnpm docs:sync --extract --published "$PUBLISHED" --ref "$REF"
               env:
                   PUBLISHED: ${{ inputs.published }}
+                  REF: ${{ github.event.workflow_run.head_sha || github.sha }}
                   R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
                   R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
                   R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}

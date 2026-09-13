@@ -37,6 +37,7 @@ const flags = new CliFlags('pnpm docs:sync [options]', {
     'published-file': { type: 'string', describe: 'Path to a file holding that JSON array' },
     extract: { type: 'boolean', describe: 'Run the API extractor before emitting version dirs' },
     'project-folder-url': { type: 'string', describe: 'GitHub repo base for source links' },
+    ref: { type: 'string', describe: 'Git ref the source links point at, normally the release commit sha' },
     prefix: { type: 'string', describe: 'Key prefix inside the bucket' },
     bucket: { type: 'string', describe: 'Bucket name, overriding R2_BUCKET' },
     prune: { type: 'boolean', describe: 'Delete objects the rebuilt index no longer lists' },
@@ -54,6 +55,7 @@ interface Options {
     published: PublishedPackage[];
     extract: boolean;
     projectFolderUrl: string;
+    ref: string | undefined;
     prefix: string;
     bucket: string | undefined;
     prune: boolean;
@@ -93,6 +95,7 @@ async function readOptions(argv: readonly string[]): Promise<Options> {
         published: parsePublished(raw),
         extract: parsed.extract,
         projectFolderUrl: parsed['project-folder-url'] ?? DEFAULT_PROJECT_FOLDER_URL,
+        ref: parsed.ref,
         prefix: parsed.prefix ?? '',
         bucket: parsed.bucket,
         prune: parsed.prune,
@@ -101,10 +104,6 @@ async function readOptions(argv: readonly string[]): Promise<Options> {
         dryRun: parsed['dry-run']
     };
 }
-
-// <name>@<version> is the immutable release tag. Source links pinned to it never drift.
-const releaseTags = (published: readonly PublishedPackage[]): Record<string, string> =>
-    Object.fromEntries(published.map((pkg) => [pkg.name, `${pkg.name}@${pkg.version}`]));
 
 async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promise<EmittedEntry | null> {
     const found = engine.getPackage(pkg.name);
@@ -138,7 +137,7 @@ async function collectEmitted(opts: Options): Promise<EmittedEntry[]> {
         await new ApiDocsGenerator({
             outputDir: GENERATED_ROOT,
             githubBase: opts.projectFolderUrl,
-            refs: releaseTags(published)
+            ...(opts.ref !== undefined && { ref: opts.ref })
         }).run();
     }
 
