@@ -1,18 +1,16 @@
 ---
 title: Paging it yourself
-description: paginate() gives you the slicing math on its own. The cursor, the buttons, and the routing are yours to write.
+description: Page a message without a Paginator using paginate, from the cases that need it to declaring your own cursor, what paginate returns, and where the buttons keep working.
 ---
-
-[Custom rendering](/components/pagination-render) took the message back from seedcord. This page takes the rest.
 
 [`paginate()`](ref:core/paginate) is the slicing math on its own. It takes a list, a page number, and a page size, then returns a [`PageView`](ref:core/PageView) with `totalPages` filled in. The cursor, the buttons, and the routing are all yours to write.
 
-Two things rule out a [`Paginator`](ref:gateway/Paginator).
+You page by hand when a [`Paginator`](ref:gateway/Paginator) can't carry what your message needs, as in these two cases.
 
 - **An embed.** Discord forbids an embed on a ComponentsV2 message, which is what seedcord's reply methods send.
 - **Extra values on the button.** A paginator's cursor carries a page and a slot. A filter, a sort key, or a target user id takes a [`CustomId`](ref:custom-id/CustomId) you declare yourself.
 
-```ts twoslash title="src/handlers/Leaderboard.ts"
+```ts twoslash hovers title="src/handlers/Leaderboard.ts"
 import {
     ButtonHandler,
     ButtonRoute,
@@ -21,12 +19,12 @@ import {
     SlashHandler,
     SlashRoute
 } from '@seedcord/gateway';
-// ---cut-start---
 
 interface Score {
     name: string;
     points: number;
 }
+// ---cut-start---
 
 declare const SCORES: Score[];
 
@@ -85,11 +83,11 @@ export class LeaderboardNav extends ButtonHandler<[typeof Board]> {
 }
 ```
 
-Both handlers call `renderBoard`.
+Both handlers call `renderBoard`, so the first reply and every click build the same message from the page number alone.
 
 <Callout type="transport">
 
-`this.event` is the discord.js interaction on gateway, which declares `reply` and `update` itself. Http delivers `this.event` as a raw payload with no ack methods, so the same job goes through [`this.api`](ref:http/RepliableHandler.api), whose `api.interactions` callbacks answer Discord themselves.
+`this.event` is the discord.js interaction on gateway, which declares `reply` and `update` itself. Http delivers `this.event` as a raw payload that doesn't have ack methods, so the same job goes through [`this.api`](ref:http/RepliableHandler.api), whose `api.interactions` callbacks answer Discord themselves.
 
 [Raw acks](/replying/raw-acks) covers both routes and the lint rule the two handlers above disable.
 
@@ -97,13 +95,13 @@ Both handlers call `renderBoard`.
 
 ## The cursor you declare
 
-`Board` here carries a page and nothing else. Prev targets `page - 1` while next targets `page + 1`, two numbers that never collide.
+`Board` here carries a page and nothing else. **Prev** targets `page - 1` while **Next** targets `page + 1`, two numbers that never collide.
 
-A third button breaks that. From page 1, First and prev both target page 0. Discord rejects a message carrying two identical custom ids, so give the cursor a second field, `.int('slot', 0, 4)`, and pass each button its own slot.
+A third button breaks that. From page 1, **First** and **Prev** both target page 0. Discord rejects a message carrying two identical custom ids, so you give the cursor a second field, `.int('slot', 0, 4)`, and pass each button its own slot.
 
 <Callout type="warning">
 
-`encode` throws once a value passes the bound its field declared. Clamp the target page on both ends before you encode it, the way `Math.min` and `Math.max` do in the fence above.
+`encode` throws `CustomIdValueRejected` once a value passes the bound its field declared. Clamp the target page on both ends before you encode it, the way `Math.min` and `Math.max` do in the fence above.
 
 </Callout>
 
@@ -118,9 +116,9 @@ const view = paginate(scores, 12, 5);
 //    ^?
 ```
 
-`page` comes back clamped into `[0, totalPages - 1]`, so a button carrying a stale page number resolves to the nearest real one. A fractional page truncates.
+Say `scores` holds 20 entries. At 5 per page that's 4 pages, numbered 0 to 3. Asking for page 12 gives back a `view.page` of `3`, which is the fourth and last page. `page` is clamped into `[0, totalPages - 1]`, so a button carrying a stale page number resolves to the nearest real one. A fractional page truncates.
 
-`totalPages` is always a number here, since the whole list was in the argument. An empty list still reports 1.
+`totalPages` in the hover is a plain `number`, since the whole list was in the argument. An empty list still reports 1.
 
 A `perPage` of zero, a fraction, or a negative throws `PaginationInvalidPerPage`.
 
@@ -128,4 +126,4 @@ A `perPage` of zero, a fraction, or a negative throws `PaginationInvalidPerPage`
 
 `renderBoard` builds a plain object, so any call taking Discord's message shape accepts it. Both handlers above pass it straight to an ack.
 
-Those buttons route from any message, since the custom id carries everything the handler reads. [`@ButtonRoute`](ref:core/ButtonRoute) matches on its prefix alone.
+The **Prev** and **Next** buttons route from any message, since the custom id carries everything the handler reads. [`@ButtonRoute`](ref:core/ButtonRoute) matches on its prefix alone. On gateway, a weekly job that posts `renderBoard(0)` with `channel.send` gets working buttons too.

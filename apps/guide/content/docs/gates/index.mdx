@@ -1,9 +1,11 @@
 ---
 title: Gates
-description: A check that runs before your handler and refuses by throwing. The first one to refuse stops the rest.
+description: Run checks before a handler with @Gated, from the gates seedcord ships and the order they run in to who counts as an owner and rewording a refusal.
 ---
 
-A gate runs before `execute()`. It passes and your handler runs, or it refuses and the call stops there. Attach one with [`@Gated`](ref:gateway/Gated), above the route decorator. Check this example below that gates a slash command to users that have the `BanMembers` permission in a server.
+Most handlers open with the same few checks. Is this a server? Can this person ban? If you write those checks inside `execute()`, every handler starts with its own copy of them. If you forget to copy one into a handler, that command runs for anyone.
+
+A gate puts that check on the class and runs before `execute()`. If it passes, your handler runs, and if it refuses, the call stops there. Attach one with [`@Gated`](ref:gateway/Gated), above the route decorator. The `Ban` handler below runs only for someone in a server who holds `BanMembers`.
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import {
@@ -29,19 +31,21 @@ export class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-`execute()` runs once every gate has passed. Anyone in a DM gets a refusal, and so does anyone in a server who cannot ban.
+`execute()` runs once both gates pass. `GuildOnly()` refuses a call from a DM, and `RequirePermissions` refuses a caller without `BanMembers`.
 
 ## A gate refuses by throwing
 
 seedcord catches a gate's throw at the same boundary it catches your handler's. The user sees the same card either way. [Throwing](/replying/throwing) covers what each class produces.
 
-Every catalog gate throws a [`Notice`](ref:core/Notice). [`IgnoreBots`](ref:gateway/IgnoreBots) is the exception. It throws a [`Silence`](ref:core/Silence), so the message gets dropped and your bot does not reply.
+Every gate in the table below throws a [`Notice`](ref:core/Notice) except [`IgnoreBots`](ref:gateway/IgnoreBots), which throws a [`Silence`](ref:core/Silence). The message gets dropped and your bot doesn't reply.
 
 ## Several gates on one handler
 
 `@Gated` takes one gate or several, and all of them have to pass. They run left to right, and the first one to refuse stops the rest.
 
-The order you pick matters once a gate does real work. Put the cheap checks first so a caller who fails one never reaches the database read behind it, for example.
+The order you pick matters once a gate does something costly, like reading a database. Put the cheap checks first, so a caller who fails one never reaches the read behind it.
+
+A second `@Gated` on the same class adds its gates to the list. TypeScript applies class decorators from the bottom up, so the one nearer the class runs first. One `@Gated` with every gate in it keeps the order where you can read it.
 
 ## The catalog gates
 
@@ -56,12 +60,18 @@ The order you pick matters once a gate does real work. Put the cheap checks firs
 | [`RequirePermissions(bits)`](ref:core/RequirePermissions) | the caller holds every bit you name |
 | [`RequireBotPermissions(bits)`](ref:core/RequireBotPermissions) | your bot holds every bit you name |
 | [`Cooldown(duration)`](ref:core/Cooldown) | uses remain in the current window |
-| [`Nsfw()`](ref:gateway/Nsfw) | the channel is age-restricted. Gateway only |
+| [`Nsfw()`](ref:gateway/Nsfw) | the channel is age-restricted. Gateway interaction handlers only, modals excluded |
 | [`IgnoreBots`](ref:gateway/IgnoreBots) | the actor is a person. Gateway only, and event handlers only |
 
 {/* prettier-ignore-end */}
 
-Most of these are functions, so you call one and pass the result. `IgnoreBots` does not take options, so you attach it directly.
+<Callout type="transport" only="gateway">
+
+`Nsfw` and `IgnoreBots` ship in `@seedcord/gateway` alone. `Nsfw` reads the discord.js channel object on the interaction, and `IgnoreBots` attaches to event handlers, which an http bot doesn't have.
+
+</Callout>
+
+Most of these are functions, so you call one and pass the result. `IgnoreBots` doesn't take options, so you attach it directly.
 
 ```ts twoslash title="src/events/Mentioned.ts"
 import {
@@ -83,7 +93,7 @@ export class Mentioned extends EventHandler<Events.MessageCreate> {
 }
 ```
 
-Every gate carries the context it reads, and `@Gated` checks that against the handler you put it on. Attaching `IgnoreBots` to a slash handler fails to compile, and the message names both.
+Every gate carries the context it reads, and `@Gated` checks that against the handler you put it on. `Nsfw()` reads an interaction's channel, so attaching it to the event handler below fails to compile. The error names the gate and the handler kind.
 
 ```ts twoslash
 // @errors: 1238
@@ -103,11 +113,11 @@ export class Welcome extends EventHandler<Events.MessageCreate> {
 }
 ```
 
-You can read about the [permission gates](/gates/permissions) and [cooldowns](/gates/cooldown) in their own pages.
+`Cooldown` has [a page of its own](/gates/cooldown).
 
 ## Who counts as an owner
 
-`OwnerOnly` reads `ownerIds` off your bot config. Leaving it unset refuses everyone.
+`OwnerOnly` fits a command only you should run, like a reload or a shutdown. It reads `ownerIds` from your bot config, and with that key unset it refuses _everyone_.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -132,6 +142,8 @@ export const seedcord = new Seedcord({
 ```
 
 ## Rewording a refusal
+
+Each refusal card uses seedcord's default wording. Reword it when your command has a next step to offer, like pointing someone at the server where it works.
 
 `OwnerOnly`, `GuildOnly`, `DmOnly`, and `Nsfw` take the same [`GateNoticeOptions`](ref:core/GateNoticeOptions). `message` swaps the text and keeps the card. `notice` replaces the whole refusal with a [`Notice`](ref:core/Notice) you wrote.
 
@@ -171,6 +183,6 @@ GuildOnly({ message: 'Try this in a server.' });
 OwnerOnly({ notice: new Locked() });
 ```
 
-The `Require` gates nest that shape one level deeper, since each can refuse for two different reasons. `Cooldown` takes a function in both slots, so its refusal can print the retry time.
+The `Require` gates nest that shape one level deeper, since each can refuse for two different reasons. `RequirePermissions` takes a `notInGuild` and a `missing` object, each holding its own `message` or `notice`. `Cooldown` takes `message` and `notice` as functions of `resetAt`, the time in milliseconds when the caller can try again, so its refusal can print that time. Each gate in [the catalog table](#the-catalog-gates) links to its API page, which lists every option it takes.
 
-[Permissions](/gates/permissions) takes the permission gates in turn, including what Administrator does to them. When none of the shipped gates fits, you [write your own](/gates/your-own), and [combine them](/gates/combining) to fold several into one.
+[Permissions](/gates/permissions) takes the permission gates in turn, including what Administrator does to them. When none of the shipped gates fits, you can [write your own](/gates/your-own) or [combine several into one](/gates/combining).
