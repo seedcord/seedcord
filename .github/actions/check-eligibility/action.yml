@@ -21,9 +21,15 @@ runs:
           run: |
               set -euo pipefail
               mode=$([ -f .changeset/pre.json ] && jq -r '.mode // empty' .changeset/pre.json || true)
-              # changesets/action counts .changeset/pre/ as pending outside pre mode
-              depth=$([ "$mode" = "pre" ] && echo 1 || echo 2)
-              pending=$(find .changeset -maxdepth "$depth" -name '*.md' ! -name 'README.md' | wc -l | tr -d ' ')
+              # @changesets/read skips these file names
+              count() {
+                [ -d "$1" ] || { echo 0; return; }
+                find "$1" -maxdepth 1 -type f -name '*.md' ! -name '.*' ! -iname 'readme.md' \
+                  ! -name 'AGENTS.md' ! -name 'CLAUDE.md' ! -name 'GEMINI.md' | wc -l | tr -d ' '
+              }
+              pending=$(count .changeset)
+              # changesets/action counts .changeset/pre/ outside pre mode
+              if [ "$mode" != "pre" ]; then pending=$((pending + $(count .changeset/pre))); fi
               if [ "$pending" -gt 0 ]; then
                 echo "$pending changeset(s) pending. Run pnpm release:version and push the result. Skipping publish."
                 echo "publish=false" >> "$GITHUB_OUTPUT"

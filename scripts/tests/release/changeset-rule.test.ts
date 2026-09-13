@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { ChangesetRule } from '#src/release/ChangesetRule';
 
-const PACKAGES = new Set(['@seedcord/core', '@seedcord/gateway']);
+const PACKAGES = new Map([
+    ['@seedcord/core', '0.7.0'],
+    ['@seedcord/gateway', '0.6.0'],
+    ['@seedcord/eslint-config', '2.2.1']
+]);
 
 const changeset = (frontmatter: string, summary: string): string => `---\n${frontmatter}\n---\n\n${summary}\n`;
 
@@ -31,6 +35,14 @@ describe('ChangesetRule bump types', () => {
         expect(found).toEqual([{ file: 'big.md', reason: 'pre-1.0-major', detail: '@seedcord/core' }]);
     });
 
+    it('accepts a major bump on a package past 1.0', () => {
+        const rule = new ChangesetRule(PACKAGES);
+
+        const summary = '**BREAKING:** Dropped the `legacy` preset.';
+
+        expect(rule.violations('v3.md', changeset("'@seedcord/eslint-config': major", summary))).toEqual([]);
+    });
+
     it('accepts minor and patch', () => {
         const rule = new ChangesetRule(PACKAGES);
 
@@ -48,6 +60,19 @@ describe('ChangesetRule shape', () => {
         expect(rule.violations('two.md', changeset("'@seedcord/core': minor", summary))).toEqual([
             { file: 'two.md', reason: 'multi-line', detail: '2 lines' }
         ]);
+    });
+
+    it('flags one line that opens as a list, a heading or a quote', () => {
+        for (const [summary, start] of [
+            ['- Added `x`.', '-'],
+            ['1. Added `x`.', '1.'],
+            ['## Added `x`.', '##'],
+            ['> Added `x`.', '>']
+        ] as const) {
+            expect(rule.violations('block.md', changeset("'@seedcord/core': minor", summary))).toEqual([
+                { file: 'block.md', reason: 'block-start', detail: start }
+            ]);
+        }
     });
 
     it('flags a list', () => {
@@ -139,6 +164,36 @@ describe('ChangesetRule breaking marker', () => {
         expect(found).toEqual([{ file: 'patch.md', reason: 'breaking-patch', detail: '@seedcord/core' }]);
     });
 
+    it('flags the marker when any release in the changeset is a patch', () => {
+        const rule = new ChangesetRule(PACKAGES);
+        const text = changeset(
+            "'@seedcord/core': minor\n'@seedcord/gateway': patch",
+            '**BREAKING:** Renamed `a` to `b`.'
+        );
+
+        expect(rule.violations('mixed.md', text)).toEqual([
+            { file: 'mixed.md', reason: 'breaking-patch', detail: '@seedcord/gateway' }
+        ]);
+    });
+
+    it('flags the underscore spellings of the marker', () => {
+        const rule = new ChangesetRule(PACKAGES);
+
+        for (const marker of ['_BREAKING:_', '__BREAKING:__']) {
+            expect(rule.violations('u.md', changeset("'@seedcord/core': minor", `${marker} Renamed a thing.`))).toEqual(
+                [{ file: 'u.md', reason: 'breaking-marker', detail: marker }]
+            );
+        }
+    });
+
+    it('leaves a hyphenated word and a link target alone', () => {
+        const rule = new ChangesetRule(PACKAGES);
+
+        for (const summary of ['Added a NON-BREAKING option.', 'Moved the [notes](https://x.dev/BREAKING.md).']) {
+            expect(rule.violations('ok.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
+        }
+    });
+
     it('flags an empty summary', () => {
         const rule = new ChangesetRule(PACKAGES);
 
@@ -199,6 +254,12 @@ describe('ChangesetRule length', () => {
         const summary = 'Fixed a route, e.g. `button:confirm`, that matched two handlers.';
 
         expect(rule.violations('eg.md', changeset("'@seedcord/gateway': patch", summary))).toEqual([]);
+    });
+
+    it('reads vs. as part of its sentence', () => {
+        const summary = 'Fixed the order of `reply` vs. `followUp` on a deferred interaction.';
+
+        expect(rule.violations('vs.md', changeset("'@seedcord/gateway': patch", summary))).toEqual([]);
     });
 
     it('accepts one sentence on a patch', () => {

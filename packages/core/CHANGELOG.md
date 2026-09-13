@@ -130,7 +130,7 @@
 - Starting a bot or running the CLI on a Node version below the `engines` range now throws, naming the required range and the version you are running. The floor stays at `>=24.11`. ([#288](https://github.com/seedcord/seedcord/pull/288))
 - `Plugin`, `PluginLifecycleSpec`, and `PluginOptions` are better documented now with examples and explanations. ([`aa4d4c0`](https://github.com/seedcord/seedcord/commit/aa4d4c0))
 
-    `Initializeable` moved to `@seedcord/core/internal`. It describes framework wiring, and `Plugin` already declares `abstract init()` for you. This was supposed to be internal anyway. No one should have been implementing it.
+    **BREAKING:** `Initializeable` moved to `@seedcord/core/internal`. It describes framework wiring, and `Plugin` already declares `abstract init()` for you. This was supposed to be internal anyway. No one should have been implementing it.
 
 ### 🩹 Patch
 

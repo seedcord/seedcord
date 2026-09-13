@@ -22,6 +22,10 @@ description: Release seedcord's packages through changesets pre mode. Cut a prer
 - It reads only git-tracked changeset files, so `git add .changeset` first or a new `.md` is invisible to it.
 - On the `next` line, run `pnpm cs:status --since next` so the baseline is the prerelease tip. The config `baseBranch` is `main`, so the default compares against stable.
 
+## Pushing to `main` and `next`
+
+The `Require PR for main or next` ruleset covers both branches. It requires a pull request, linear history and signed commits, and it lets admins bypass all three. Every direct `git push` below, and every `git merge` that makes a merge commit, needs that bypass.
+
 ## Flow 1, cut a prerelease from `next`
 
 The publish ends on the `next` dist-tag as `X.Y.Z-next.N`. The changesets must already be on `next`.
@@ -53,10 +57,10 @@ pnpm release:version                 # write the clean X.Y.Z and drop the supers
 pnpm install                         # update the lockfile
 git add .changeset
 git commit -am "chore(release): version packages"
-git push origin main                 # or open a PR if main is branch-protected, then merge it
+git push origin main
 ```
 
-Then **wait for the `main` publish workflow to finish green**, because CI does the actual publish. The `Require PR for main or next` ruleset requires a PR on `main`. Push directly with a bypass, or run the same steps on a branch and merge the PR.
+Then **wait for the `main` publish workflow to finish green**, because CI does the actual publish.
 
 ```sh
 npm dist-tag ls seedcord             # latest now points at the clean X.Y.Z
@@ -100,6 +104,7 @@ npm dist-tag ls seedcord
 - Don't run `pnpm changeset version` directly. Node cannot load the TypeScript changelog module without `--import tsx`, and the changelogs skip the tidy pass.
 - Don't run `npm publish` or `pnpm publish` by hand, except for a new package's first release. CI publishes through changesets.
 - Don't push `main` while it is in pre mode. Exit pre mode first.
+- Don't let a new changeset land between versioning and the publish. The gate skips the publish while one is pending, and the next versioning run bumps past the skipped version.
 - Don't rename `.github/workflows/publish.yml`. Its filename is bound to the npm OIDC trust.
 
 ## Related

@@ -13,6 +13,7 @@ const MESSAGES: Record<Violation['reason'], string> = {
     'pre-1.0-major': 'asks for a major bump while the repo is pre-1.0',
     'empty-summary': 'has no summary',
     'multi-line': 'runs past one paragraph on one line',
+    'block-start': 'opens as a list, a heading or a quote',
     'breaking-marker': 'spells the breaking marker as something other than **BREAKING:** opening the summary',
     'breaking-patch': 'marks a patch as breaking, which needs a minor bump pre-1.0',
     'too-long': 'runs past the sentence cap, one when every bump is a patch and three otherwise',
@@ -30,7 +31,9 @@ async function changesetFiles(dir: string): Promise<string[]> {
 async function main(): Promise<void> {
     const workspace = await Workspace.load(import.meta.dirname);
     const dir = path.join(workspace.rootDir, '.changeset');
-    const rule = new ChangesetRule(new Set(workspace.all().map((pkg) => pkg.packageJson.name)));
+    const rule = new ChangesetRule(
+        new Map(workspace.all().map((pkg) => [pkg.packageJson.name, pkg.packageJson.version]))
+    );
 
     const found: Violation[] = [];
     for (const file of await changesetFiles(dir)) {

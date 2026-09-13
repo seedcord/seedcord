@@ -16,8 +16,9 @@ export const DEPENDENCIES = '#### 📦 Seedcord packages';
 
 export const ORDER: readonly Bucket[] = ['breaking', 'minor', 'patch'];
 
-// changesets writes the plain names. `Major Changes` never appears while the lint rejects a major bump
+// changesets writes the plain names
 const BUCKET: Record<string, Bucket> = {
+    'Major Changes': 'breaking',
     'Minor Changes': 'minor',
     'Patch Changes': 'patch',
     '💥 Breaking': 'breaking',

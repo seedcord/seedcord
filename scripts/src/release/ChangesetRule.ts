@@ -9,6 +9,7 @@ export interface Violation {
         | 'pre-1.0-major'
         | 'empty-summary'
         | 'multi-line'
+        | 'block-start'
         | 'breaking-marker'
         | 'breaking-patch'
         | 'too-long'
@@ -18,11 +19,15 @@ export interface Violation {
     detail: string;
 }
 
-const MENTION = /\S*(?<![A-Za-z_])BREAKING(?![A-Za-z_])\S*|\*\*(?!BREAKING)[Bb]reaking\S*/g;
+// an identifier like NON_BREAKING or BREAKING-CHANGE is prose, and _BREAKING:_ is a misspelled marker
+const MENTION =
+    /\S*(?<![A-Za-z0-9])(?<![A-Za-z0-9][_-])BREAKING(?![A-Za-z0-9])(?![_-][A-Za-z0-9])\S*|\*\*(?!BREAKING)[Bb]reaking\S*/g;
 const LEADING_MARKER = `${MARKER} `;
+const BLOCK_START = /^(-|\*|\+|\d+\.|#+|>)(?=\s)/;
 const CODE_SPAN = /`[^`]*`/g;
+const LINK_TARGET = /\]\([^)]*\)/g;
 const SENTENCE_END = /[.!?](?=\s|$)/g;
-const NOT_A_SENTENCE_END = /\b(?:e\.g|i\.e)\.|\betc\.(?=\s+[a-z])/g;
+const NOT_A_SENTENCE_END = /\b(?:e\.g|i\.e)\.|\bvs\.|\betc\.(?=\s+[a-z])/g;
 const OPENER = /^(Fix|Fixes|Fixing|fix|fixes|fixing|fixed)\b/;
 const PATCH_SENTENCES = 1;
 const SENTENCES = 3;
@@ -43,19 +48,20 @@ const WORDS = [
 ];
 
 export class ChangesetRule {
-    constructor(private readonly packages: ReadonlySet<string>) {}
+    // package name to its current version
+    constructor(private readonly packages: ReadonlyMap<string, string>) {}
 
     violations(file: string, text: string): Violation[] {
         const { releases, summary } = parseChangesetFile(text);
-        const patchOnly = releases.every((release) => release.type === 'patch');
+        const patches = releases.filter((release) => release.type === 'patch');
 
         return [
             ...this.packageViolations(file, releases),
             ...(summary.trim() === '' ? [{ file, reason: 'empty-summary' as const, detail: 'no summary' }] : []),
             ...lineViolations(file, summary),
             ...markerViolations(file, summary),
-            ...breakingPatchViolations(file, summary, patchOnly ? releases : []),
-            ...lengthViolations(file, summary, patchOnly),
+            ...breakingPatchViolations(file, summary, patches),
+            ...lengthViolations(file, summary, patches.length === releases.length),
             ...punctuationViolations(file, summary),
             ...wordViolations(file, summary),
             ...openerViolations(file, summary)
@@ -66,12 +72,14 @@ export class ChangesetRule {
         const found: Violation[] = [];
 
         for (const { name, type } of releases) {
-            if (!this.packages.has(name)) {
+            const version = this.packages.get(name);
+            if (version === undefined) {
                 found.push({ file, reason: 'unknown-package', detail: name });
                 continue;
             }
 
-            if (type === 'major') found.push({ file, reason: 'pre-1.0-major', detail: name });
+            if (type === 'major' && version.startsWith('0.'))
+                found.push({ file, reason: 'pre-1.0-major', detail: name });
         }
 
         return found;
@@ -81,17 +89,20 @@ export class ChangesetRule {
 function lineViolations(file: string, summary: string): Violation[] {
     const lines = summary.split('\n').filter((line) => line.trim() !== '').length;
 
-    return lines > 1 ? [{ file, reason: 'multi-line', detail: `${String(lines)} lines` }] : [];
+    if (lines > 1) return [{ file, reason: 'multi-line', detail: `${String(lines)} lines` }];
+
+    const start = BLOCK_START.exec(summary.trim())?.[1];
+    return start === undefined ? [] : [{ file, reason: 'block-start', detail: start }];
 }
 
 function markerViolations(file: string, summary: string): Violation[] {
-    const spoken = summary.replaceAll(CODE_SPAN, 'code');
+    const spoken = summary.replaceAll(CODE_SPAN, 'code').replaceAll(LINK_TARGET, '](link)');
     const rest = spoken.startsWith(LEADING_MARKER) ? spoken.slice(LEADING_MARKER.length) : spoken;
 
     return [...rest.matchAll(MENTION)].map((match) => ({ file, reason: 'breaking-marker', detail: match[0] }));
 }
 
-// pre-1.0, a breaking change ships as a minor
+// a breaking change needs at least a minor bump
 function breakingPatchViolations(file: string, summary: string, patches: readonly { name: string }[]): Violation[] {
     if (patches.length === 0 || !summary.startsWith(LEADING_MARKER)) return [];
 

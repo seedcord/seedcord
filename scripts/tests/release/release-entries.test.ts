@@ -83,6 +83,29 @@ describe('ReleaseEntries', () => {
         expect(entries.patch).toEqual([]);
     });
 
+    it('keeps a shared summary under the higher heading when the lower one arrives second', () => {
+        const http = lines(
+            '# @seedcord/http',
+            '',
+            '## 0.8.1',
+            '',
+            '### 🩹 Patch',
+            '',
+            '- Added `dispatchId` to every bus key. ([#311](url))',
+            ''
+        );
+
+        const entries = new ReleaseEntries([
+            { name: '@seedcord/gateway', version: '0.6.0', changelog: GATEWAY },
+            { name: '@seedcord/http', version: '0.8.1', changelog: http }
+        ]);
+
+        expect(entries.minor).toEqual([
+            { summary: 'Added `dispatchId` to every bus key. ([#311](url))', packages: ['gateway', 'http'] }
+        ]);
+        expect(entries.patch).toEqual([]);
+    });
+
     it('leaves the seedcord package block out of the entries', () => {
         const entries = new ReleaseEntries([{ name: '@seedcord/core', version: '0.7.0', changelog: CORE }]);
 

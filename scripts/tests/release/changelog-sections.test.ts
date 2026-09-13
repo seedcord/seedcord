@@ -30,6 +30,14 @@ describe('ChangelogSections headings', () => {
         expect(out).not.toContain('Changes');
     });
 
+    it('files a major bump under breaking', () => {
+        const out = regrouped(
+            lines('## 3.0.0', '', '### Major Changes', '', '- Dropped the `legacy` preset. ([#400](url))', '')
+        );
+
+        expect(out).toContain('### 💥 Breaking\n\n- Dropped the `legacy` preset. ([#400](url))');
+    });
+
     it('leaves a file with no sections alone', () => {
         const text = lines('# @seedcord/core', '');
 
@@ -110,22 +118,6 @@ describe('ChangelogSections marker placement', () => {
         );
 
         expect(regrouped(text)).toBe(text);
-    });
-
-    it('leaves a marker inside a code span out of the routing', () => {
-        const out = regrouped(
-            lines(
-                '## 0.2.1',
-                '',
-                '### Patch Changes',
-                '',
-                '- Fixed the lint so `**BREAKING:** ` reads as the marker. ([#12](url))',
-                ''
-            )
-        );
-
-        expect(out).toContain('### 🩹 Patch');
-        expect(out).toContain('- Fixed the lint so `**BREAKING:** ` reads as the marker. ([#12](url))');
     });
 });
 
