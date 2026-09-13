@@ -7,9 +7,9 @@ You're picking how Discord reaches your bot. Pages after this one assume you alr
 
 ## Gateway
 
-Your bot opens a websocket to Discord and holds it open. Discord can send anything happening in the servers your bot is in, from messages and joins to reactions and voice.
+Your bot opens a websocket to Discord and holds it open. Discord can send anything happening in the servers your bot is in, from messages and joins to reactions and voice. A few of those need an intent you turn on in the portal.
 
-discord.js caches guilds, channels, roles, and members off that connection, and its collections and helpers read from the cache. `interaction.guild` is filled in because the cache holds it.
+discord.js caches guilds, channels, roles, and members off that connection. Its collections and helpers read from that cache, so `interaction.guild` comes back filled in.
 
 Holding the connection means a process running somewhere all the time.
 
@@ -17,10 +17,26 @@ Holding the connection means a process running somewhere all the time.
 
 An http bot waits for Discord to call it. Discord posts each interaction to a URL you own, one request at a time. Nothing else is sent.
 
-No connection means no cache. Anything you need about a guild or a member you fetch from Discord's REST API.
+No connection means no cache. Anything you need about a guild or a member you fetch from Discord's REST API, which spends a request from your rate limit every time.
+
+Nothing has to run between those requests.
+
+## How to pick
+
+Start from what your bot reacts to.
+
+Does anything in your bot happen without someone running a command? Welcoming a member who joins, logging a deleted message, watching for a keyword. All of that arrives down the websocket, so a bot doing any of it is a gateway bot.
+
+A bot that only answers commands, buttons, and modals runs on either one. The next question is where it lives. Gateway needs a process up all the time. Http needs a URL Discord can reach.
+
+Reading a lot of server state is a second reason for gateway, since the cache answers those reads and http spends a REST call on each one.
 
 ## Switching later
 
-seedcord's transports are written with parity in mind. Most of the code you write for one **will** work for the other. You'll only really find yourself rewriting the import line and a few lines in handlers that deal with specific types from the methods. Also, an http bot never receives server events, so event handlers do not work there.
+Most of what you import comes from `@seedcord/core`, which both packages re-export, so a handler often moves across on its import line alone.
+
+The code that changes is whatever touches discord.js types. `getUser` returns a discord.js `User` on gateway and an `APIUser` on http, so a call into a method only discord.js has needs rewriting.
+
+Event handlers don't work on http, since Discord posts only interactions there.
 
 Either choice needs the same setup on Discord's side. Go ahead and [create your Discord application](/discord-application).

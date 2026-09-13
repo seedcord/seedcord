@@ -58,17 +58,19 @@ This skill sets no page template. A page carries whatever headings its content n
 
 Four beats, from Effective Go. State the rule. Attach the mechanical reason. Name the consequence. Disclose the cost or the exception on the spot rather than saving it for a callout further down.
 
-Drafted for the codegen page, which does not argue for itself today:
+The codegen page carries this one. What shipped, spread over the top of the page with a sample between the first two beats:
 
-> Run `seedcord codegen` after you change a command.
+> An option's name and its required flag are arguments to method calls. Those calls run when something constructs the class. TypeScript reads the source of that chain without running it, so the name `query` only exists once the chain has run.
 >
-> An option's name and its required flag are arguments to a builder call. `.addStringOption((o) => o.setName('reason'))` runs when your bot starts, so TypeScript cannot see it. Codegen imports each command file, builds the command, and reads the JSON the builder produced.
+> `seedcord codegen` records those names for you. It imports every `.ts` and `.js` file under your commands folder, constructs each decorated class it finds, reads the JSON that class's builder produced, and writes what it found to `seedcord-gen.d.ts`.
 >
-> After it runs, `this.options.getString('reason')` comes back typed from your own declaration, and a typo in the name stops the build.
+> Your handler then reads its options through `this.options`. `getString('query')` comes back as `string`, because you marked that option required. A typo in the name stops the build.
 >
-> The cost is a generated file you rerun and commit.
+> The cost is a generated file you commit.
 
-Ground every beat before you write it. The first draft of that passage said codegen "reads those files", which reads as static parsing and is wrong. Codegen imports each command file and executes it, and that is the fact that explains why a separate step exists rather than a compiler plugin.
+The reason runs ahead of the rule there. Both orders work, since what the four beats settle is that all four appear and that the cost appears with them.
+
+Ground every beat before you write it. The first draft said codegen "reads those files", which reads as static parsing and is wrong. Codegen imports each command file and executes it, and that is the fact that explains why a separate step exists rather than a compiler plugin. The same draft priced the cost as "a file you rerun and commit", where you rerun the command.
 
 ### Read the sample, never write beside it
 
