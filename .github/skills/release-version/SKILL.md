@@ -10,8 +10,8 @@ description: Release seedcord's packages through changesets pre mode. Cut a prer
 - `next` is the prerelease line. Its publishes go to the `next` dist-tag as `X.Y.Z-next.N`.
 - `main` is stable. Its publishes go to `latest` as a clean `X.Y.Z`.
 - seedcord is a monorepo, so one release versions and publishes every package that has a pending changeset at once, under the `@seedcord` scope (plus the unscoped `seedcord`).
-- Publishing is CI-only. `.github/workflows/publish.yml` runs after the `checks` workflow finishes green on `main` or `next`, through a `workflow_run` trigger, then hands off to `changesets/action`. With changesets pending it opens or updates a "chore: release packages" PR. With none pending (versions already bumped) it runs `pnpm run release` and publishes. A `docs-publish` job then syncs docs to R2, purges the CDN, and redeploys Railway. On `main`, a `github-release` job also pushes one `release-YYYY.MM.DD` tag and creates one GitHub release for the whole publish. A prerelease gets neither.
-- The gate `.github/actions/check-eligibility` refuses any publish on `next` unless `.changeset/pre.json` exists and is in `pre` mode. Exiting pre mode on `next` makes the gate skip the publish, so a clean version can never reach the `next` tag.
+- Publishing is CI-only. `.github/workflows/publish.yml` runs after the `checks` workflow finishes green on `main` or `next`, through a `workflow_run` trigger, then hands off to `changesets/action`, which runs `pnpm run release` and publishes. You version locally with `pnpm release:version`. CI never versions and never opens a release PR, and a push with changesets still pending skips the publish. A `docs-publish` job then syncs docs to R2, purges the CDN, and redeploys Railway. On `main`, a `github-release` job also pushes one `release-YYYY.MM.DD` tag and creates one GitHub release for the whole publish. A prerelease gets neither.
+- The gate `.github/actions/check-eligibility` skips the publish on any branch while a changeset is pending, and on `next` unless `.changeset/pre.json` exists and is in `pre` mode. Exiting pre mode on `next` makes the gate skip the publish, so a clean version can never reach the `next` tag.
 - npm's OIDC trusted publishing is bound to `publish.yml` by its filename. Renaming the workflow breaks publishing.
 - A published version is permanent on npm. Only the dist-tag can move.
 
@@ -24,24 +24,13 @@ description: Release seedcord's packages through changesets pre mode. Cut a prer
 
 ## Flow 1, cut a prerelease from `next`
 
-Both ways end on the `next` dist-tag as `X.Y.Z-next.N`. Pick by whether you want the version bumps reviewed in a PR.
-
-Via the PR (CI versions for you):
-
-```sh
-git switch next && git pull
-pnpm cs                              # write a changeset for each change
-git add .changeset && git commit -m "chore: add changesets"
-git push origin next                 # checks -> publish.yml -> changesets/action opens the release PR
-# review the "chore: release packages" PR, then merge it, which publishes the prerelease
-```
-
-Version locally (no PR):
+The publish ends on the `next` dist-tag as `X.Y.Z-next.N`. The changesets must already be on `next`.
 
 ```sh
 git switch next && git pull
 pnpm release:version                 # bump every pending package to X.Y.Z-next.N and tidy the changelogs
 pnpm install                         # rewrite internal ranges into the lockfile
+git add .changeset                   # pre mode moves each used changeset into .changeset/pre/, which -a would skip
 git commit -am "chore(release): version packages"
 git push origin next                 # no changesets pending, so publish.yml publishes directly
 ```
@@ -59,9 +48,10 @@ Run on `main` so the clean version reaches `latest`. Exiting pre mode and versio
 ```sh
 git switch main && git pull
 git merge next                       # resolve any changelog or pre.json conflicts
-pnpm changeset pre exit              # set pre.json to exit mode, then review the changesets still in .changeset/
+pnpm changeset pre exit              # set pre.json to exit mode, then review the changesets in .changeset/pre/
 pnpm release:version                 # write the clean X.Y.Z and drop the superseded prerelease sections
 pnpm install                         # update the lockfile
+git add .changeset
 git commit -am "chore(release): version packages"
 git push origin main                 # or open a PR if main is branch-protected, then merge it
 ```

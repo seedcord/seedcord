@@ -97,6 +97,48 @@ describe('ChangesetRule breaking marker', () => {
         expect(found).toEqual([]);
     });
 
+    it('flags the marker spelled in mixed case', () => {
+        const rule = new ChangesetRule(PACKAGES);
+
+        const found = rule.violations(
+            'case.md',
+            changeset("'@seedcord/core': minor", '**Breaking:** Renamed a thing.')
+        );
+
+        expect(found).toEqual([{ file: 'case.md', reason: 'breaking-marker', detail: '**Breaking:**' }]);
+    });
+
+    it('leaves an identifier that contains BREAKING alone', () => {
+        const rule = new ChangesetRule(PACKAGES);
+
+        expect(rule.violations('id.md', changeset("'@seedcord/core': minor", 'Added the NON_BREAKING flag.'))).toEqual(
+            []
+        );
+    });
+
+    it('accepts the marker opening a sub-bullet', () => {
+        const rule = new ChangesetRule(PACKAGES);
+        const summary = 'Added checkbox builders.\n\n- **BREAKING:** Renamed `ActionRowComponentType` to `RowType`.';
+
+        expect(rule.violations('sub.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
+    });
+
+    it('flags the marker on a changeset that bumps only patches', () => {
+        const rule = new ChangesetRule(PACKAGES);
+
+        const found = rule.violations('patch.md', changeset("'@seedcord/core': patch", '**BREAKING:** Removed `x`.'));
+
+        expect(found).toEqual([{ file: 'patch.md', reason: 'breaking-patch', detail: '@seedcord/core' }]);
+    });
+
+    it('flags an empty summary', () => {
+        const rule = new ChangesetRule(PACKAGES);
+
+        expect(rule.violations('empty.md', changeset("'@seedcord/core': patch", ''))).toEqual([
+            { file: 'empty.md', reason: 'empty-summary', detail: 'no summary' }
+        ]);
+    });
+
     it('accepts the shipped cooldown changeset', () => {
         const rule = new ChangesetRule(PACKAGES);
 
@@ -125,11 +167,18 @@ describe('ChangesetRule length', () => {
         ]);
     });
 
-    it('counts a multi-paragraph body as one run', () => {
-        const summary =
-            '**BREAKING:** every handler constructor now takes a `DispatchContext`.\n\n`@RegisterInteractionMiddleware` registers an interaction middleware and filters it with `{ kinds }`. Middleware, gates, and error cards read one typed bag per dispatch through `this.dispatch`.';
+    it('counts the sentences across every paragraph', () => {
+        const summary = 'One thing changed. A second thing changed.\n\nA third thing changed. A fourth thing changed.';
 
-        expect(rule.violations('ctx.md', changeset("'@seedcord/core': minor", summary))).toEqual([]);
+        expect(rule.violations('split.md', changeset("'@seedcord/core': minor", summary))).toEqual([
+            { file: 'split.md', reason: 'too-long', detail: '4 sentences' }
+        ]);
+    });
+
+    it('reads etc. and i.e. inside a sentence as part of it', () => {
+        const summary = 'Fixed buttons, menus, etc. on reply, i.e. every component.';
+
+        expect(rule.violations('etc.md', changeset("'@seedcord/gateway': patch", summary))).toEqual([]);
     });
 
     it('reads a period inside a code span as prose, never a sentence end', () => {
@@ -249,6 +298,14 @@ describe('ChangesetRule fix opener', () => {
 
         expect(rule.violations('lower.md', changeset("'@seedcord/gateway': patch", summary))).toEqual([
             { file: 'lower.md', reason: 'fix-opener', detail: 'fixed' }
+        ]);
+    });
+
+    it('flags the -ing opener', () => {
+        const summary = 'Fixing the reload on a deleted file.';
+
+        expect(rule.violations('ing.md', changeset("'@seedcord/gateway': patch", summary))).toEqual([
+            { file: 'ing.md', reason: 'fix-opener', detail: 'Fixing' }
         ]);
     });
 

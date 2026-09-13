@@ -37,6 +37,7 @@
                 "@types/pg",
                 "discord-api-types",
                 "discord.js",
+                "envapt",
                 "kysely",
                 "mongoose",
                 "pg",

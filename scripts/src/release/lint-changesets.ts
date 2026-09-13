@@ -11,7 +11,9 @@ import type { Violation } from '#src/release/ChangesetRule';
 const MESSAGES: Record<Violation['reason'], string> = {
     'unknown-package': 'names a package outside the workspace',
     'pre-1.0-major': 'asks for a major bump while the repo is pre-1.0',
-    'breaking-marker': 'spells the breaking marker as something other than **BREAKING:**',
+    'empty-summary': 'has no summary',
+    'breaking-marker': 'spells the breaking marker as something other than **BREAKING:** at the start of a line',
+    'breaking-patch': 'marks a patch as breaking, which needs a minor bump pre-1.0',
     'too-long': 'runs past the sentence cap, one when every bump is a patch and three otherwise',
     'banned-punctuation': 'carries punctuation the writing rules ban',
     'banned-word': 'carries a banned word',

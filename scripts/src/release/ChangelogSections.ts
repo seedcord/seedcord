@@ -1,20 +1,24 @@
 import {
     bucketOf,
+    carriesMarker,
     DEPENDENCIES,
     HEADING,
     headingOf,
     joinEntries,
+    MARKER,
     NESTED_START,
     ORDER,
     SECTION_START,
     splitEntries,
+    textBeforeFirstEntry,
     VERSION_START
 } from '#src/release/changelog-format';
 
 import type { Bucket } from '#src/release/changelog-format';
 
-const DEPENDENCY = /^- \S+ (?:\S+ → \S+|\S+ \(new\))$/;
-const MARKER = '**BREAKING:** ';
+const DEPENDENCY = /^- `[^`]+` (?:\S+ → \S+|\S+ \(new\))$/;
+const NOTE = /^---$/m;
+const LEADING_MARKER = `- ${MARKER} `;
 
 export class ChangelogSections {
     constructor(private readonly text: string) {}
@@ -33,11 +37,19 @@ export class ChangelogSections {
 }
 
 function regroupVersion(chunk: string): string {
-    const firstLineEnd = chunk.indexOf('\n');
-    if (firstLineEnd === -1) return chunk;
+    const note = NOTE.exec(chunk);
+    const head = note ? chunk.slice(0, note.index) : chunk;
+    const tail = note ? chunk.slice(note.index) : '';
 
-    const heading = chunk.slice(0, firstLineEnd);
-    const sections = chunk
+    const regrouped = regroupHead(head);
+    return regrouped === undefined ? chunk : `${regrouped}${tail}`;
+}
+
+function regroupHead(head: string): string | undefined {
+    const firstLineEnd = head.indexOf('\n');
+    if (firstLineEnd === -1) return undefined;
+
+    const sections = head
         .slice(firstLineEnd + 1)
         .split(SECTION_START)
         .filter((section) => section.trim() !== '');
@@ -46,12 +58,14 @@ function regroupVersion(chunk: string): string {
     const dependencies: string[] = [];
 
     for (const section of sections) {
-        const name = headingOf(section);
-        const bucket = bucketOf(name);
-        if (bucket === undefined) return chunk;
+        const bucket = bucketOf(headingOf(section));
+        if (bucket === undefined) return undefined;
 
-        const [own, ...nested] = section.slice(section.indexOf('\n') + 1).split(NESTED_START);
-        const body = [own ?? '', ...nested.map((part) => part.slice(part.indexOf('\n') + 1))].join('');
+        const [own = '', ...nested] = section.slice(section.indexOf('\n') + 1).split(NESTED_START);
+        if (textBeforeFirstEntry(own) !== '') return undefined;
+        if (nested.some((part) => !part.startsWith(`${DEPENDENCIES}\n`))) return undefined;
+
+        const body = [own, ...nested.map((part) => part.slice(part.indexOf('\n') + 1))].join('');
 
         for (const entry of splitEntries(body)) {
             if (DEPENDENCY.test(entry)) {
@@ -59,9 +73,8 @@ function regroupVersion(chunk: string): string {
                 continue;
             }
 
-            const breaking = entry.includes(MARKER);
-            const target = breaking ? 'breaking' : bucket;
-            const text = entry.replaceAll(MARKER, '');
+            const target = carriesMarker(entry) ? 'breaking' : bucket;
+            const text = entry.startsWith(LEADING_MARKER) ? `- ${entry.slice(LEADING_MARKER.length)}` : entry;
             buckets.set(target, [...(buckets.get(target) ?? []), text]);
         }
     }
@@ -70,7 +83,7 @@ function regroupVersion(chunk: string): string {
         (bucket) => block(bucket, buckets.get(bucket) ?? [], bucket === 'patch' ? dependencies : [])
     );
 
-    return `${heading}\n\n${blocks.join('\n')}\n`;
+    return `${head.slice(0, firstLineEnd)}\n\n${blocks.join('\n')}\n`;
 }
 
 function block(bucket: Bucket, entries: readonly string[], dependencies: readonly string[]): string {

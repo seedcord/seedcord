@@ -45,7 +45,6 @@ jobs:
         permissions:
             contents: write
             id-token: write
-            pull-requests: write
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
               with:
@@ -68,11 +67,7 @@ jobs:
               uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
               with:
                   github-token: ${{ secrets.GITHUB_TOKEN }}
-                  version-script: pnpm run release:version
                   publish-script: pnpm run release
-                  commit-message: 'chore(release): version packages'
-                  pr-title: 'chore: release packages'
-                  pr-base-branch: ${{ github.event.workflow_run.head_branch || github.ref_name }}
                   create-github-releases: false
                   push-git-tags: false
               env:

@@ -28,8 +28,20 @@ const BUCKET: Record<string, Bucket> = {
 
 const ENTRY_START = /(?=^- )/m;
 
+export const MARKER = '**BREAKING:**';
+const MARKER_AT_LINE_START = /^\s*(?:- )?\*\*BREAKING:\*\* /m;
+
 export function isStable(version: string): boolean {
     return STABLE.test(version);
+}
+
+// a paragraph or a bullet opens with the marker, which a code span never does
+export function carriesMarker(text: string): boolean {
+    return MARKER_AT_LINE_START.test(text);
+}
+
+export function textBeforeFirstEntry(body: string): string {
+    return (body.split(ENTRY_START)[0] ?? '').trim();
 }
 
 export function headingOf(section: string): string {

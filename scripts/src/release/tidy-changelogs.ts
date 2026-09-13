@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 
 import { Workspace } from '#src/lib/Workspace';
 import { ChangelogFile } from '#src/release/ChangelogFile';
-import { ChangelogSections } from '#src/release/ChangelogSections';
+import { tidyChangelog } from '#src/release/tidy';
 
 async function tidyEveryChangelog(): Promise<void> {
     const workspace = await Workspace.load(import.meta.dirname);
@@ -16,8 +16,7 @@ async function tidyEveryChangelog(): Promise<void> {
         if (!existsSync(changelogPath)) continue;
 
         const before = await ChangelogFile.read(changelogPath);
-        const pruned = before.withoutSupersededPrereleases();
-        const after = new ChangelogSections(pruned.contents).regrouped().contents;
+        const after = tidyChangelog(before.contents);
         if (after === before.contents) continue;
 
         await writeFile(changelogPath, after, 'utf8');

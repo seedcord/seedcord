@@ -1,5 +1,5 @@
 name: 'Check release eligibility'
-description: "Decide whether the given branch may publish. 'next' is pre-release only and must be in changesets pre mode."
+description: "Decide whether the given branch may publish. A pending changeset blocks every branch, and 'next' must be in changesets pre mode."
 
 inputs:
     branch:
@@ -16,11 +16,19 @@ runs:
     steps:
         - id: gate
           shell: bash
+          env:
+              BRANCH: ${{ inputs.branch }}
           run: |
               set -euo pipefail
-              if [ "${{ inputs.branch }}" = "next" ] \
-                 && { [ ! -f .changeset/pre.json ] || [ "$(jq -r '.mode // empty' .changeset/pre.json)" != "pre" ]; }; then
-                echo "On 'next' without pre-release mode; skipping publish."
+              mode=$([ -f .changeset/pre.json ] && jq -r '.mode // empty' .changeset/pre.json || true)
+              # changesets/action counts .changeset/pre/ as pending outside pre mode
+              depth=$([ "$mode" = "pre" ] && echo 1 || echo 2)
+              pending=$(find .changeset -maxdepth "$depth" -name '*.md' ! -name 'README.md' | wc -l | tr -d ' ')
+              if [ "$pending" -gt 0 ]; then
+                echo "$pending changeset(s) pending. Run pnpm release:version and push the result. Skipping publish."
+                echo "publish=false" >> "$GITHUB_OUTPUT"
+              elif [ "$BRANCH" = "next" ] && [ "$mode" != "pre" ]; then
+                echo "On 'next' without pre-release mode. Skipping publish."
                 echo "publish=false" >> "$GITHUB_OUTPUT"
               else
                 echo "publish=true" >> "$GITHUB_OUTPUT"

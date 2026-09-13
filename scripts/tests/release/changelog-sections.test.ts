@@ -115,24 +115,75 @@ describe('ChangelogSections marker placement', () => {
         expect(out).not.toContain('🩹 Patch');
     });
 
-    it('drops every marker in an entry in one pass', () => {
+    it('keeps the marker as a label on a later paragraph or sub-bullet', () => {
         const once = regrouped(
             lines(
                 '## 0.1.0',
                 '',
                 '### Minor Changes',
                 '',
-                '- Plugins moved. ([#240](url))',
-                '',
-                '    **BREAKING:** `attach` takes no `startupPhase`.',
+                '- Added checkbox builders. ([#136](url))',
+                '    - **BREAKING:** Renamed `ActionRowComponentType` to `RowType`.',
                 '',
                 '    **BREAKING:** a plugin constructor takes `CoreBase` first.',
                 ''
             )
         );
 
-        expect(once).not.toContain('**BREAKING:**');
+        expect(once).toContain('### 💥 Breaking');
+        expect(once).toContain('    - **BREAKING:** Renamed `ActionRowComponentType` to `RowType`.');
+        expect(once).toContain('    **BREAKING:** a plugin constructor takes `CoreBase` first.');
         expect(regrouped(once)).toBe(once);
+    });
+
+    it('leaves a marker inside a code span out of the routing', () => {
+        const out = regrouped(
+            lines(
+                '## 0.2.1',
+                '',
+                '### Patch Changes',
+                '',
+                '- Fixed the lint so `**BREAKING:** ` reads as the marker. ([#12](url))',
+                ''
+            )
+        );
+
+        expect(out).toContain('### 🩹 Patch');
+        expect(out).toContain('- Fixed the lint so `**BREAKING:** ` reads as the marker. ([#12](url))');
+    });
+});
+
+describe('ChangelogSections text it does not recognize', () => {
+    it('leaves a version alone when a section carries an unknown #### heading', () => {
+        const text = lines(
+            '## 0.1.0',
+            '',
+            '### Minor Changes',
+            '',
+            '- A thing. ([#1](url))',
+            '',
+            '#### Notes',
+            '',
+            'Read this.',
+            ''
+        );
+
+        expect(regrouped(text)).toBe(text);
+    });
+
+    it('leaves a version alone when text sits above the first entry', () => {
+        const text = lines(
+            '## 0.1.0',
+            '',
+            '### Minor Changes',
+            '',
+            'Hand-written intro.',
+            '',
+            '- A thing. ([#1](url))',
+            ''
+        );
+
+        expect(regrouped(text)).toBe(text);
     });
 });
 
@@ -145,8 +196,8 @@ describe('ChangelogSections dependency lines', () => {
                 '### Patch Changes',
                 '',
                 '- Fixed a thing. ([#311](url))',
-                '- @seedcord/core 0.7.0 → 0.8.0',
-                '- @seedcord/types 0.12.0 → 0.13.0',
+                '- `@seedcord/core` 0.7.0 → 0.8.0',
+                '- `@seedcord/types` 0.12.0 → 0.13.0',
                 ''
             )
         );
@@ -161,8 +212,8 @@ describe('ChangelogSections dependency lines', () => {
                 '',
                 '#### 📦 Seedcord packages',
                 '',
-                '- @seedcord/core 0.7.0 → 0.8.0',
-                '- @seedcord/types 0.12.0 → 0.13.0',
+                '- `@seedcord/core` 0.7.0 → 0.8.0',
+                '- `@seedcord/types` 0.12.0 → 0.13.0',
                 ''
             )
         );
@@ -183,7 +234,7 @@ describe('ChangelogSections dependency lines', () => {
                 '### Patch Changes',
                 '',
                 '- Fixed a thing. ([#312](url))',
-                '- @seedcord/core 0.7.0 → 0.8.0',
+                '- `@seedcord/core` 0.7.0 → 0.8.0',
                 ''
             )
         );
@@ -202,13 +253,20 @@ describe('ChangelogSections dependency lines', () => {
                 '',
                 '    A continuation paragraph.',
                 '',
-                '- @seedcord/errors 0.6.0 → 0.7.0',
+                '- `@seedcord/errors` 0.6.0 → 0.7.0',
                 ''
             )
         );
 
         expect(out).toContain('    A continuation paragraph.\n\n#### 📦 Seedcord packages');
-        expect(out).toContain('#### 📦 Seedcord packages\n\n- @seedcord/errors 0.6.0 → 0.7.0');
+        expect(out).toContain('#### 📦 Seedcord packages\n\n- `@seedcord/errors` 0.6.0 → 0.7.0');
+    });
+
+    it('keeps an entry with an arrow in its prose among the entries', () => {
+        const out = regrouped(lines('## 0.8.0', '', '### Minor Changes', '', '- Renamed `Foo` → `Bar`', ''));
+
+        expect(out).toContain('### ✨ Minor\n\n- Renamed `Foo` → `Bar`');
+        expect(out).not.toContain('📦');
     });
 
     it('files a first dependency on a package into the nested block', () => {
@@ -232,7 +290,7 @@ describe('ChangelogSections dependency lines', () => {
     });
 
     it('keeps the patch heading when the bumps are the only change', () => {
-        const out = regrouped(lines('## 0.8.11', '', '### Patch Changes', '', '- @seedcord/core 0.7.0 → 0.8.0', ''));
+        const out = regrouped(lines('## 0.8.11', '', '### Patch Changes', '', '- `@seedcord/core` 0.7.0 → 0.8.0', ''));
 
         expect(out).toBe(
             lines(
@@ -242,7 +300,7 @@ describe('ChangelogSections dependency lines', () => {
                 '',
                 '#### 📦 Seedcord packages',
                 '',
-                '- @seedcord/core 0.7.0 → 0.8.0',
+                '- `@seedcord/core` 0.7.0 → 0.8.0',
                 ''
             )
         );

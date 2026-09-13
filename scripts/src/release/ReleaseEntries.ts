@@ -1,4 +1,11 @@
-import { bucketOf, headingOf, bodyWithoutNested, SECTION_START, splitEntries } from '#src/release/changelog-format';
+import {
+    bodyWithoutNested,
+    bucketOf,
+    headingOf,
+    ORDER,
+    SECTION_START,
+    splitEntries
+} from '#src/release/changelog-format';
 import { ChangelogFile } from '#src/release/ChangelogFile';
 
 import type { Bucket } from '#src/release/changelog-format';
@@ -58,14 +65,29 @@ export class ReleaseEntries {
         return added;
     }
 
+    // one changeset can bump core as a minor and gateway as a patch
     private add(bucket: Bucket, summary: string, pkg: string): void {
-        const entries = this.buckets.get(bucket) ?? [];
-        const existing = entries.find((entry) => entry.summary === summary);
+        const found = this.find(summary);
+        const entry = found?.entry ?? { summary, packages: [] };
+        entry.packages.push(pkg);
 
-        if (existing) existing.packages.push(pkg);
-        else entries.push({ summary, packages: [pkg] });
+        if (found && ORDER.indexOf(found.bucket) <= ORDER.indexOf(bucket)) return;
+        if (found)
+            this.buckets.set(
+                found.bucket,
+                (this.buckets.get(found.bucket) ?? []).filter((one) => one !== entry)
+            );
 
-        this.buckets.set(bucket, entries);
+        this.buckets.set(bucket, [...(this.buckets.get(bucket) ?? []), entry]);
+    }
+
+    private find(summary: string): { bucket: Bucket; entry: ReleaseEntry } | undefined {
+        for (const [bucket, entries] of this.buckets) {
+            const entry = entries.find((one) => one.summary === summary);
+            if (entry) return { bucket, entry };
+        }
+
+        return undefined;
     }
 }
 

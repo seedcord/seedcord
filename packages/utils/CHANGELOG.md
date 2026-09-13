@@ -124,7 +124,7 @@
 - Node 24.3 or newer is required. ([`789f17a`](https://github.com/seedcord/seedcord/commit/789f17a))
 - `traverseDirectory` and `isTsOrJsFile` moved to `@seedcord/utils/node`, and `traverseDirectory` no longer takes a logger. ([#188](https://github.com/seedcord/seedcord/pull/188))
 
-    an unreadable directory and a file that throws while importing both reject. An unreadable directory used to resolve empty, which started a bot with none of its handlers registered.
+    **BREAKING:** an unreadable directory and a file that throws while importing both reject. An unreadable directory used to resolve empty, which started a bot with none of its handlers registered.
 
 ### ✨ Minor
 
@@ -186,9 +186,9 @@
 
 ### 💥 Breaking
 
--   - removed the public `buildSlashRoute` builder and the `CommandRouteString` type from `seedcord`. Slash routes are autocompletable typed literals from the generated registry now, so write them directly, e.g. `@SlashRoute('demo/setup')`. ([#139](https://github.com/seedcord/seedcord/pull/139))
-        - Moved the route-string assembly to `@seedcord/utils/internal`, shared by the framework and `seedcord codegen` so a dispatched interaction and a generated registry key can never diverge. The interaction-to-route extraction is internal now.
-        - Removed the unused `SeedcordErrorCode.UtilInvalidSlashRouteArgument`.
+- removed the public `buildSlashRoute` builder and the `CommandRouteString` type from `seedcord`. Slash routes are autocompletable typed literals from the generated registry now, so write them directly, e.g. `@SlashRoute('demo/setup')`. ([#139](https://github.com/seedcord/seedcord/pull/139))
+    - Moved the route-string assembly to `@seedcord/utils/internal`, shared by the framework and `seedcord codegen` so a dispatched interaction and a generated registry key can never diverge. The interaction-to-route extraction is internal now.
+    - Removed the unused `SeedcordErrorCode.UtilInvalidSlashRouteArgument`.
 
 ### ✨ Minor
 
