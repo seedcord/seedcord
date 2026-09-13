@@ -78,6 +78,13 @@ describe('GitHubApi pull request files', () => {
         expect(calls[0]?.headers['x-github-api-version']).toBe('2022-11-28');
     });
 
+    it('sends no authorization header without a token', async () => {
+        const { calls, fetcher } = recorder(ok([]));
+        await new GitHubApi('seedcord/seedcord', undefined, fetcher).pullRequestFiles(1);
+
+        expect(calls[0]?.headers.authorization).toBeUndefined();
+    });
+
     it('throws naming the pull request when the listing fails', async () => {
         const fetcher: Fetcher = () => Promise.resolve(failure(403, 'Forbidden'));
         const api = new GitHubApi('seedcord/seedcord', 'token', fetcher);
@@ -111,6 +118,52 @@ describe('GitHubApi file contents', () => {
         const api = new GitHubApi('seedcord/seedcord', 'token', fetcher);
 
         await expect(api.fileContents('.changeset/gone.md', 'main')).rejects.toThrow(/gone\.md/);
+    });
+});
+
+describe('GitHubApi contributors', () => {
+    it('reads the login that opened the pull request', async () => {
+        const { calls, fetcher } = recorder(ok({ user: { login: 'alice', type: 'User' } }));
+        const api = new GitHubApi('seedcord/seedcord', 'token', fetcher);
+
+        await expect(api.pullRequestAuthor(311)).resolves.toBe('alice');
+        expect(calls[0]?.url).toContain('/repos/seedcord/seedcord/pulls/311');
+    });
+
+    it('reads every commit author on the pull request', async () => {
+        const { fetcher } = recorder(
+            ok([
+                { author: { login: 'alice', type: 'User' } },
+                { author: { login: 'bob', type: 'User' } },
+                { author: { login: 'alice', type: 'User' } }
+            ])
+        );
+        const api = new GitHubApi('seedcord/seedcord', 'token', fetcher);
+
+        await expect(api.pullRequestCommitAuthors(311)).resolves.toEqual(['alice', 'bob', 'alice']);
+    });
+
+    it('drops a bot account', async () => {
+        const { fetcher } = recorder(
+            ok([{ author: { login: 'dependabot[bot]', type: 'Bot' } }, { author: { login: 'cara', type: 'User' } }])
+        );
+        const api = new GitHubApi('seedcord/seedcord', 'token', fetcher);
+
+        await expect(api.pullRequestCommitAuthors(311)).resolves.toEqual(['cara']);
+    });
+
+    it('skips a commit github matched to no account', async () => {
+        const { fetcher } = recorder(ok([{ author: null }, { author: { login: 'cara', type: 'User' } }]));
+        const api = new GitHubApi('seedcord/seedcord', 'token', fetcher);
+
+        await expect(api.pullRequestCommitAuthors(311)).resolves.toEqual(['cara']);
+    });
+
+    it('gives no author when the pull request opener is a bot', async () => {
+        const { fetcher } = recorder(ok({ user: { login: 'github-actions[bot]', type: 'Bot' } }));
+        const api = new GitHubApi('seedcord/seedcord', 'token', fetcher);
+
+        await expect(api.pullRequestAuthor(311)).resolves.toBeUndefined();
     });
 });
 

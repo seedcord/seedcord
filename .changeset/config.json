@@ -1,6 +1,9 @@
 {
     "$schema": "https://unpkg.com/@changesets/config@4.0.0/schema.json",
-    "changelog": ["../scripts/src/release/changelog.ts", { "repo": "seedcord/seedcord" }],
+    "changelog": [
+        "../scripts/src/release/changelog.ts",
+        { "repo": "seedcord/seedcord", "maintainers": ["materwelonDhruv"] }
+    ],
     "commit": false,
     "fixed": [],
     "linked": [],

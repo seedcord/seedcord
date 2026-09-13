@@ -22,10 +22,18 @@ export interface PullRequestFile {
     status: string;
 }
 
+interface Account {
+    login: string;
+    type: string;
+}
+
+const humanLogin = (account: Account | null | undefined): string | undefined =>
+    account && account.type !== 'Bot' ? account.login : undefined;
+
 export class GitHubApi {
     constructor(
         private readonly repo: string,
-        private readonly token: string,
+        private readonly token?: string,
         private readonly http: HttpFetch = fetch
     ) {}
 
@@ -59,6 +67,33 @@ export class GitHubApi {
         return Buffer.from(content, 'base64').toString('utf8');
     }
 
+    async pullRequestAuthor(pull: number): Promise<string | undefined> {
+        const response = await this.send('GET', `/repos/${this.repo}/pulls/${String(pull)}`);
+        if (!response.ok) {
+            throw new Error(`reading pull request #${String(pull)} failed: ${response.status} ${response.statusText}`);
+        }
+
+        // justified: GitHub returns the pull request object for this route
+        const { user } = (await response.json()) as { user: Account | null };
+        return humanLogin(user);
+    }
+
+    async pullRequestCommitAuthors(pull: number): Promise<string[]> {
+        const response = await this.send(
+            'GET',
+            `/repos/${this.repo}/pulls/${String(pull)}/commits?per_page=${PAGE_SIZE}`
+        );
+        if (!response.ok) {
+            throw new Error(
+                `listing commits on pull request #${String(pull)} failed: ${response.status} ${response.statusText}`
+            );
+        }
+
+        // justified: GitHub returns an array of commit objects for this route
+        const commits = (await response.json()) as { author: Account | null }[];
+        return commits.map((one) => humanLogin(one.author)).filter((login) => login !== undefined);
+    }
+
     async labels(issue: number): Promise<string[]> {
         const response = await this.send('GET', `/repos/${this.repo}/issues/${issue}/labels`);
         if (!response.ok) {
@@ -84,7 +119,7 @@ export class GitHubApi {
         return this.http(`${API}${path}`, {
             method,
             headers: {
-                authorization: `Bearer ${this.token}`,
+                ...(this.token !== undefined && { authorization: `Bearer ${this.token}` }),
                 accept: 'application/vnd.github+json',
                 'x-github-api-version': API_VERSION,
                 ...(sends && { 'content-type': 'application/json' })

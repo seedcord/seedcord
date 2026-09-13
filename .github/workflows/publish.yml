@@ -76,6 +76,7 @@ jobs:
               env:
                   NPM_CONFIG_PROVENANCE: 'true'
                   HUSKY: 0
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     docs-publish:
         needs: npm-publish
