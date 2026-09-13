@@ -292,6 +292,8 @@ Real ones, all caught by the maintainer, all in prose written the same week:
 
 An imperative joined to its result by `and` hides the relation every time, even when the imperative is good advice. "Pass `true` and the getter throws" reads word by word as two facts, and a reader who learned English second has no intuition telling them the `and` means "if". Pick the connector by whether the reader wants the result. A result they want takes `to`: "Pass `true` to make the getter throw." A mistake or a side effect takes `if`: "If you read a member the base leaves out, TypeScript reports an error." Two instructions in a row keep their `and`, as in "Put them on your own buttons and return the whole reply".
 
+A condition hidden in a trailing phrase has the same cost. "`ArraySource` opens the last page for a number past the end" is correct, and a native reader gets it. A reader who learned English second meets the result first and has to go back for the condition. Lead with it: "If the number is higher than the last page, `ArraySource` opens the last page."
+
 A verb makes the same kind of promise. "Discord also allows one select menu per row" reads as an extra capability, and the fact is a limit. Write the limit as one: "A select menu takes a whole row."
 
 **The test.** Read what follows the connector on its own. Ask what relation the word just promised, then ask what relation the two halves actually have. Where they differ, the reader pays for it.

@@ -308,7 +308,12 @@ Report a phrasal verb or an idiom where one plain verb carries the same fact.
 down to", and "on the fly" are the shape. Report a common word used in an
 uncommon sense. Report a sentence that leaves out a word the reader has to
 supply, as in "So does anyone in a server who cannot ban", where "so does"
-stands in for a verb three words back. A long sentence is fine when it reads in
+stands in for a verb three words back. Report a condition tucked into a
+trailing phrase, as in "ArraySource opens the last page for a number past the
+end", where the reader meets the result before learning when it happens. The
+repair leads with `if`: "If the number is higher than the last page,
+ArraySource opens the last page." Report a squeezed comparison too, as in "a
+number bigger than the list has pages". A long sentence is fine when it reads in
 one pass, so report the ones stacking clauses the reader has to hold at once
 rather than counting words.
 
