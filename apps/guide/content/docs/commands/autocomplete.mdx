@@ -3,7 +3,9 @@ title: Autocomplete
 description: Suggesting values while someone types, with the options they already filled in available to read.
 ---
 
-An option offers suggestions once you call `setAutocomplete(true)` on it.
+`addChoices` covers a list you know when you deploy, up to Discord's limit of 25. A catalogue you query, or anything that changes while the bot runs, needs the suggestions built per keystroke.
+
+An option offers those once you call `setAutocomplete(true)` on it.
 
 ```ts twoslash title="src/commands/Search.ts"
 import {
@@ -45,7 +47,7 @@ export class Search extends BuilderComponent<'command'> {
 }
 ```
 
-Suggestions arrive as their own interaction, so they get their own class and their own decorator. You give it the command's own name, and a mismatch is a compile error.
+Suggestions arrive as their own interaction, so you write them their own class and decorator. You give it the command's own name, so a mismatch is a compile error.
 
 ```ts twoslash hovers title="src/handlers/SearchAutocomplete.ts"
 import {
@@ -84,17 +86,17 @@ export class SearchAutocomplete extends AutocompleteHandler<'search'> {
 }
 ```
 
-Discord sends one of these every time the person edits the field, so `value` is whatever they have typed so far.
+Discord sends one of these every time the person edits the field, so `value` is whatever they've typed so far.
 
 ## One arm per field
 
-An autocomplete interaction names which field is focused, so every handler branches on it. `this.match` takes one arm per autocompletable field, and a missing arm fails to compile.
+An autocomplete interaction says which field is focused, so every handler branches on it. `this.match` takes one arm per autocompletable field, and an arm you leave out fails to compile.
 
 Each arm receives the partial value and a `respond` typed to that field's choice values.
 
 ## One handler for several commands
 
-Name every command in the decorator, and repeat those names in the generic. The arms then cover every autocompletable field across all of them.
+Name every command in the decorator, and repeat those names in the generic, so the arms reach every autocompletable field across all of them.
 
 `search` completes `query` and `limit`. A second command, `probe`, completes `query`, `count`, and `ratio`. One handler for both needs four arms.
 
@@ -140,7 +142,7 @@ class Catalog extends AutocompleteHandler<'search' | 'probe'> {
 
 ## The value is always a string
 
-`limit` is an integer option, and its partial still arrives as a string.
+`limit` is an integer option. Its partial still arrives as a string.
 
 ```ts twoslash
 import {
@@ -168,7 +170,7 @@ What you send back carries the real type. `limit` takes `{ value: number }`.
 
 ## Reading the other options
 
-`this.options` covers what the person has already filled in, which is how a suggestion narrows to their earlier answers.
+`this.options` holds what the person has already filled in, which is how a suggestion narrows to their earlier answers.
 
 ```ts twoslash
 import {
@@ -187,6 +189,6 @@ class SearchAutocomplete extends AutocompleteHandler<'search'> {
 }
 ```
 
-Every read here is nullable, since the person may not have reached that option yet.
+`category` comes back nullable, along with every other read here, since the person might still be on an earlier option.
 
 Discord resolves these option kinds mid-type, so `getString`, `getInteger`, `getNumber`, and `getBoolean` are the only getters you get here.

@@ -3,7 +3,7 @@ title: One handler, several commands
 description: 'Pass @SlashRoute several routes, subcommand paths included, and this.match branches on whichever one ran.'
 ---
 
-One class can answer several commands. The decorator and the generic both take the list.
+Two commands that share most of their work become two handler classes, plus a helper you import into both. Instead, just handle both in a single handler class. The decorator and the generic both take the list.
 
 ```ts twoslash title="src/handlers/Moderation.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -48,7 +48,7 @@ export class Role extends SlashHandler<'role/add' | 'role/remove'> {
 
 ## Options every route shares
 
-`this.options` on the class covers the options every route in the list declares. `ban` and `kick` both take `target`, so it is there.
+`this.options` on the class holds the options every route in the list declares. `ban` and `kick` both take `target`, so it's there.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -79,11 +79,17 @@ class Moderation extends SlashHandler<'ban' | 'kick'> {
 }
 ```
 
-`reason` belongs to `ban` alone, so reading it takes an arm.
+`reason` belongs to `ban` alone, so you read it inside that arm.
 
 ## Both lists must carry the same routes
 
-Adding a route to one list and forgetting the other is a compile error on the decorator line. TS's error is long, but you can look for the sentence `SlashHandler declares a route the SlashRoute decorator does not list`. Most seedcord type errors will be like that, so you can skim for the first line of the message.
+Adding a route to one list and forgetting the other is a compile error on the decorator line. TypeScript opens that error on a generic line about the decorator, and the sentence you want sits a couple of lines further in:
+
+```txt output
+SlashHandler declares a route that the SlashRoute decorator does not list
+```
+
+Most seedcord type errors carry a plain sentence like that one somewhere in the type noise. Read past the first line and look for it.
 
 ```ts twoslash
 // @errors: 1238

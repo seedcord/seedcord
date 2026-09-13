@@ -24,7 +24,7 @@ export class ViewProfile extends BuilderComponent<'context_menu'> {
 }
 ```
 
-The name is the route, spaces and capitals included.
+That name is the route you write on the handler, including its spaces and capitals.
 
 ```ts twoslash hovers title="src/handlers/ViewProfile.ts"
 import {
@@ -69,7 +69,9 @@ The clicked thing arrives as a discord.js object on gateway and as a `discord-ap
 
 {/* prettier-ignore-end */}
 
-`id` and `username` are on both.
+Both transports give `this.target` an `id`. A user target carries `username` too, and a message target reaches its author through `author`.
+
+`this.targetMember` differs further. Gateway gives it `id` and `displayName`. Http holds the guild fields alone there, since Discord sends that person's user object once under `resolved.users`.
 
 </Callout>
 
@@ -116,7 +118,7 @@ class ViewProfile extends UserContextMenuHandler<'View Profile'> {
 
 ## Several commands in one handler
 
-Both commands go on one class. Its decorator takes every name, its generic repeats them, and each arm receives the clicked user and their server member, narrowed to that one command.
+You put both commands on one class. Its decorator takes every name and its generic repeats them. Each arm then receives the clicked user and their server member, narrowed to that one command.
 
 ```ts twoslash title="src/handlers/Moderation.ts"
 import {
@@ -141,11 +143,11 @@ export class Moderation extends UserContextMenuHandler<
 }
 ```
 
-Leaving a name out of the arms is a compile error, the same as a slash handler.
+Leaving `Warn` out of the arms is a compile error, the same as it is on a slash handler.
 
-`this.commandName` gives you the name that fired, typed to the union, for the times you want it without branching.
+`this.commandName` gives you the name that fired, typed to the union, for when you want it without branching.
 
-Message commands work the same way, with each arm receiving the clicked message.
+Message commands work the same way, and each of your arms receives the clicked message.
 
 ## Each kind keeps its own names
 
