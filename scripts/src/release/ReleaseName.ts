@@ -1,4 +1,5 @@
 const LETTERS = 'abcdefghijklmnopqrstuvwxyz';
+const TAG = /^release-(\d{4})\.(\d{2})\.(\d{2})([a-z]?)$/;
 
 const TITLE = new Intl.DateTimeFormat('en-US', {
     month: 'long',
@@ -8,16 +9,29 @@ const TITLE = new Intl.DateTimeFormat('en-US', {
 });
 
 export class ReleaseName {
-    private readonly day: Temporal.PlainDate;
-    private readonly letter: string;
+    static next(at: Temporal.Instant, tags: readonly string[]): ReleaseName {
+        const day = at.toZonedDateTimeISO('UTC').toPlainDate();
 
-    constructor(at: Temporal.Instant, tags: readonly string[]) {
-        this.day = at.toZonedDateTimeISO('UTC').toPlainDate();
-        this.letter = freeLetter(new Set(tags), `release-${this.day.toString().replaceAll('-', '.')}`);
+        return new ReleaseName(day, freeLetter(new Set(tags), baseTag(day)));
     }
 
+    static fromTag(tag: string): ReleaseName {
+        const found = TAG.exec(tag);
+        if (!found) throw new Error(`${tag} is not a release tag, expected release-YYYY.MM.DD`);
+
+        const [, year, month, day, letter] = found;
+        const date = Temporal.PlainDate.from({ year: Number(year), month: Number(month), day: Number(day) });
+
+        return new ReleaseName(date, letter ?? '');
+    }
+
+    private constructor(
+        private readonly day: Temporal.PlainDate,
+        private readonly letter: string
+    ) {}
+
     get tag(): string {
-        return `release-${this.day.toString().replaceAll('-', '.')}${this.letter}`;
+        return `${baseTag(this.day)}${this.letter}`;
     }
 
     get title(): string {
@@ -26,6 +40,10 @@ export class ReleaseName {
 
         return `${date} (${String(LETTERS.indexOf(this.letter) + 2)})`;
     }
+}
+
+function baseTag(day: Temporal.PlainDate): string {
+    return `release-${day.toString().replaceAll('-', '.')}`;
 }
 
 function freeLetter(taken: ReadonlySet<string>, base: string): string {

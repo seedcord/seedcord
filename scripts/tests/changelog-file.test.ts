@@ -51,6 +51,49 @@ describe('ChangelogFile prerelease pruning', () => {
         expect(out).toContain('## 0.2.0\n');
     });
 
+    it('drops prerelease sections written in the emoji shape', () => {
+        const out = pruned(
+            lines(
+                '# @seedcord/core',
+                '',
+                '## 0.8.0',
+                '',
+                '### ✨ Minor',
+                '',
+                '- Added a thing. ([#320](url))',
+                '',
+                '### 🩹 Patch',
+                '',
+                '#### 📦 Seedcord packages',
+                '',
+                '- `@seedcord/types` 0.13.0 → 0.14.0',
+                '',
+                '## 0.8.0-next.1',
+                '',
+                '### ✨ Minor',
+                '',
+                '- Added a thing. ([#320](url))',
+                '',
+                '## 0.8.0-next.0',
+                '',
+                '### 💥 Breaking',
+                '',
+                '- Renamed it. ([#319](url))',
+                '',
+                '## 0.7.0',
+                '',
+                '### ✨ Minor',
+                '',
+                '- Older. ([#311](url))',
+                ''
+            )
+        );
+
+        expect(out).not.toContain('-next.');
+        expect(out).toContain('#### 📦 Seedcord packages\n\n- `@seedcord/types` 0.13.0 → 0.14.0\n\n## 0.7.0');
+        expect(out.endsWith('- Older. ([#311](url))\n')).toBe(true);
+    });
+
     it('keeps a prerelease that has no stable counterpart yet', () => {
         expect(pruned(lines('# @seedcord/core', '', '## 0.3.0-next.0', '', '- pending', ''))).toContain('0.3.0-next.0');
     });

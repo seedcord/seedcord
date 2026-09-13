@@ -82,7 +82,7 @@ jobs:
 
     github-release:
         needs: npm-publish
-        if: ${{ needs.npm-publish.outputs.published == 'true' }}
+        if: ${{ needs.npm-publish.outputs.published == 'true' && (github.event.workflow_run.head_branch || github.ref_name) == 'main' }}
         uses: ./.github/workflows/github-release.yml
         with:
             published: ${{ needs.npm-publish.outputs.publishedPackages }}

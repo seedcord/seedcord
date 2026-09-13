@@ -5,6 +5,8 @@ import path from 'node:path';
 import process from 'node:process';
 import { promisify } from 'node:util';
 
+import { isPrerelease } from '@seedcord/docs-engine';
+
 import { CliFlags } from '#src/lib/CliFlags';
 import { Workspace } from '#src/lib/Workspace';
 import { ChangelogFile } from '#src/release/ChangelogFile';
@@ -43,10 +45,31 @@ function parsePublished(raw: string): Published[] {
     });
 }
 
-async function releaseTags(): Promise<string[]> {
-    const { stdout } = await run('git', ['tag', '--list', 'release-*']);
+async function releaseTags(...extra: string[]): Promise<string[]> {
+    const { stdout } = await run('git', ['tag', '--list', 'release-*', ...extra]);
 
     return stdout.split('\n').filter((tag) => tag !== '');
+}
+
+async function resolvePackages(entries: readonly Published[]): Promise<ReleasePackage[]> {
+    const workspace = await Workspace.load(import.meta.dirname);
+    const published: ReleasePackage[] = [];
+
+    for (const entry of entries) {
+        const dir = workspace.directoryOf(entry.name);
+        if (dir === undefined) throw new Error(`${entry.name} is not a package in this workspace`);
+
+        const changelog = await ChangelogFile.read(path.join(dir, 'CHANGELOG.md'));
+        published.push({
+            name: entry.name,
+            version: entry.version,
+            oldVersion: changelog.versionBefore(entry.version) ?? '',
+            directory: path.relative(workspace.rootDir, dir),
+            changelog: changelog.contents
+        });
+    }
+
+    return published;
 }
 
 async function main(): Promise<void> {
@@ -61,31 +84,21 @@ async function main(): Promise<void> {
     const raw = file === undefined ? parsed.published : await readFile(file, 'utf8');
     if (raw === undefined) throw new Error('--published <json> or --published-file <path> is required');
 
-    const workspace = await Workspace.load(import.meta.dirname);
     const repo = parsed.repo ?? 'seedcord/seedcord';
+    const published = await resolvePackages(parsePublished(raw));
 
-    const published: ReleasePackage[] = [];
-    for (const entry of parsePublished(raw)) {
-        const dir = workspace.directoryOf(entry.name);
-        if (dir === undefined) throw new Error(`${entry.name} is not a package in this workspace`);
-
-        const changelog = await ChangelogFile.read(path.join(dir, 'CHANGELOG.md'));
-        published.push({
-            name: entry.name,
-            version: entry.version,
-            oldVersion: changelog.versionBefore(entry.version) ?? '',
-            directory: path.relative(workspace.rootDir, dir),
-            changelog: changelog.contents
-        });
-    }
-
-    const name = new ReleaseName(Temporal.Now.instant(), await releaseTags());
+    const [onCommit] = await releaseTags('--points-at', 'HEAD');
+    const name = onCommit
+        ? ReleaseName.fromTag(onCommit)
+        : ReleaseName.next(Temporal.Now.instant(), await releaseTags());
     const notes = new ReleaseNotes({ repo, tag: name.tag, published, entries: new ReleaseEntries(published) });
     const body = notes.body();
 
     if (parsed.out !== undefined) await writeFile(parsed.out, body, 'utf8');
     console.log(`tag: ${name.tag}`);
     console.log(`title: ${name.title}`);
+    console.log(`tagged: ${String(onCommit !== undefined)}`);
+    console.log(`prerelease: ${String(published.some((pkg) => isPrerelease(pkg.version)))}`);
     if (parsed.out === undefined) console.log(`\n${body}`);
 }
 

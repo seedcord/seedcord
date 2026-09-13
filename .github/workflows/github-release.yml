@@ -34,17 +34,24 @@ jobs:
               id: notes
               run: |
                   pnpm release:notes --published "$PUBLISHED" --out release-body.md | tee names.txt
-                  {
-                    echo "tag=$(sed -n 's/^tag: //p' names.txt)"
-                    echo "title=$(sed -n 's/^title: //p' names.txt)"
-                  } >> "$GITHUB_OUTPUT"
+                  for key in tag title tagged prerelease; do
+                    echo "$key=$(sed -n "s/^$key: //p" names.txt)" >> "$GITHUB_OUTPUT"
+                  done
               env:
                   PUBLISHED: ${{ inputs.published }}
 
-            - name: Create the release
+            - name: Push the tag
+              if: ${{ steps.notes.outputs.prerelease != 'true' && steps.notes.outputs.tagged != 'true' }}
               run: |
                   git tag "$TAG"
                   git push origin "$TAG"
+              env:
+                  TAG: ${{ steps.notes.outputs.tag }}
+
+            - name: Create the release
+              if: ${{ steps.notes.outputs.prerelease != 'true' }}
+              run: |
+                  if gh release view "$TAG" > /dev/null 2>&1; then exit 0; fi
                   gh release create "$TAG" --title "$TITLE" --notes-file release-body.md
               env:
                   TAG: ${{ steps.notes.outputs.tag }}
