@@ -39,7 +39,7 @@
         "cs:status": "changeset status --output .changeset/status.json",
         "cs:preview": "changeset preview",
         "release": "pnpm run build && pnpm run cs:publish",
-        "release:version": "changeset version && pnpm tsx scripts/src/release/prune-changelog.ts && prettier --write '**/CHANGELOG.md'",
+        "release:version": "NODE_OPTIONS='--import tsx' changeset version && pnpm tsx scripts/src/release/prune-changelog.ts && prettier --write '**/CHANGELOG.md'",
         "prepublishOnly": "pnpm run clean && pnpm run build",
         "deps:check": "taze major",
         "deps:bump": "taze major -w -i",
