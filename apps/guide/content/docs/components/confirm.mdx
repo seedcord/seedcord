@@ -1,9 +1,11 @@
 ---
 title: Confirmation prompts
-description: getConfirmation sends a prompt with two buttons and resolves to true only when the caller clicks confirm.
+description: Ask for a second click before a destructive action with getConfirmation, from its options and replacing the prompt after an answer to building the prompt's buttons yourself.
 ---
 
-[`getConfirmation`](ref:gateway/getConfirmation) sends a prompt with Confirm and Cancel buttons and resolves to `true` only when the person who ran the command clicks confirm. A cancel click and a timeout both resolve to `false`.
+A ban or a wipe should ask before it runs. Written by hand, that's a message with two buttons, a collector that ignores everyone but the caller, a timeout, and a cleanup of the prompt once someone answers.
+
+[`getConfirmation`](ref:gateway/getConfirmation) does all of that in one `await`. It sends a prompt with **Confirm** and **Cancel** buttons and resolves to `true` only when the person who ran the command clicks confirm. A cancel click and a timeout both resolve to `false`.
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import {
@@ -30,7 +32,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 Pass `this` as the first argument. The prompt uses your handler's own reply surface. That surface picks reply, edit, or follow-up from the interaction's current state.
 
-seedcord ignores a click from anyone else, whether the prompt is ephemeral or public.
+seedcord ignores a click from anyone else, whether the prompt is ephemeral or public. Nothing answers that click, so Discord shows the other person its own failure message.
 
 ## The options
 
@@ -53,33 +55,36 @@ Only the string form takes the three label and style options.
 
 ## Replacing the prompt
 
-seedcord deletes the prompt once the user answers. Set one of the three outcome options and it replaces the prompt with your reply.
+seedcord deletes the prompt once someone answers or the wait runs out. A prompt that vanishes leaves your caller guessing what happened. Set one of the three outcome options to replace the prompt with your reply.
 
 ```ts twoslash
-import { TextDisplayBuilder } from '@discordjs/builders';
+import type { ContainerBuilder } from '@discordjs/builders';
 import {
     getConfirmation,
     SlashHandler,
     SlashRoute
 } from '@seedcord/gateway';
 
+declare class StatusCard {
+    constructor(text: string);
+    readonly component: ContainerBuilder;
+}
+
 @SlashRoute('ban')
 class Ban extends SlashHandler<'ban'> {
     public async execute(): Promise<void> {
         const target = this.options.getUser('target');
         // ---cut---
-        const text = (content: string) => ({
-            components: [
-                new TextDisplayBuilder().setContent(content)
-            ]
+        const status = (text: string) => ({
+            components: [new StatusCard(text).component]
         });
 
         const confirmed = await getConfirmation(
             this,
             `Ban ${target.username}?`,
             {
-                onConfirm: () => text('Banned.'),
-                onTimeout: text('Timed out.')
+                onConfirm: () => status('Banning now.'),
+                onTimeout: status('No answer. Nobody was banned.')
             }
         );
         // ---cut-after---
@@ -88,13 +93,13 @@ class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-Each one takes a reply or a function returning one. The fence above passes both shapes. seedcord calls the function after the click, so it reads whatever is true by then.
+Each one takes a reply or a function returning one. The fence above passes both shapes, a function to `onConfirm` and a plain reply to `onTimeout`. seedcord calls the function after the click, so it reads whatever is true by then.
 
-Send the result with a fresh [`this.followUp()`](ref:gateway/RepliableHandler.followUp), since a deleted prompt leaves nothing to edit.
+Without an outcome option, send the result with a fresh [`this.followUp()`](ref:gateway/RepliableHandler.followUp), since a deleted prompt leaves nothing to edit.
 
 ## Building the prompt yourself
 
-The second form takes a function and hands it the two button ids. Put them on your own buttons and return the whole reply.
+The string form draws one line of text above **Confirm** and **Cancel**. For a card, an image, or a summary of what's about to change, use the second form. You pass a function, and seedcord hands it the two button ids. Put them on your own buttons and return the whole reply.
 
 ```ts twoslash
 import { ButtonBuilder } from '@discordjs/builders';
@@ -136,18 +141,18 @@ class AddRole extends SlashHandler<'role/add'> {
 }
 ```
 
-Those two ids come from a reserved customId with no route behind it, so the collector reads the click.
+seedcord's router skips those two ids, so only the prompt's collector gets the click. Use `ids.confirm` and `ids.cancel` as is, since a button carrying any other id never reaches the collector.
+
+Calling `getConfirmation` from a [`ModalHandler`](ref:gateway/ModalHandler) fails to compile, since its first parameter accepts every handler kind except a modal one.
 
 <Callout type="transport" only="gateway">
 
-`getConfirmation` holds a collector in the running process. An http bot answers each interaction as its own request and keeps nothing between them.
+`getConfirmation` ships in `@seedcord/gateway` alone. It holds a collector in the running process. An http bot answers each interaction as its own request, with nothing kept between them.
 
 </Callout>
 
-<Callout type="warning">
+## When a prompt is the wrong tool
 
-Once a restart kills an open prompt, a later click gets Discord's own failure message.
+The collector runs inside your bot's process. A restart ends every open prompt, and a later click gets Discord's own failure message.
 
-</Callout>
-
-Calling it from a [`ModalHandler`](ref:gateway/ModalHandler) fails to compile.
+Use a prompt for a decision someone makes in seconds. `timeoutMs` defaults to 30 seconds. Put an approval a moderator might answer hours later on a routed button with a [custom id](/components/custom-ids), which still works after a restart.

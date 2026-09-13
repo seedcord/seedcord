@@ -155,9 +155,13 @@ Eight checks.
    it by writing the names out in prose, since the marker replaces that
    sentence. The typed-registry surfaces are where this lands: a route
    decorator's first argument, an option getter's key, dispatch require() and
-   get() against the keys a bot declared, an emoji lookup against EmojiMap, and
-   a custom-id field name. A `^|` fence needs `// @noErrors`, since the sample
-   is a partial expression by construction. Name the fence and the line.
+   get() against the keys a bot declared, an emoji lookup against EmojiMap, a
+   custom-id field name, and the arms of this.match. A `^|` fence needs
+   `// @noErrors`, since the sample is a partial expression by construction.
+   Name the fence and the line.
+
+   Check that every symbol in a table carries its ref: link, even where the
+   prose above already linked it.
 
 Two rules on how you answer.
 

@@ -1,9 +1,11 @@
 ---
 title: Modals
-description: You open a form with showModal(), then the submit arrives as its own interaction carrying the modal's id.
+description: Collect text, menu picks, files, and checkboxes with a modal, from building the form and opening it with showModal to reading each field back and rewriting the message it came from.
 ---
 
-A modal is a form that Discord opens on top of the client. You open it with `showModal()`, and the submit arrives as a separate interaction carrying the modal's custom id.
+A button can't ask for text. A slash command option can, but only when someone runs the command. Its text box also takes a single line, so a paragraph of feedback won't fit. A modal is a form that Discord opens on top of the client. One submit can carry a paragraph of feedback, a role picked from a menu, an uploaded screenshot, and a ticked checkbox.
+
+You open it with [`showModal()`](ref:gateway/InteractionHandler.showModal), and the submit arrives as a separate interaction carrying the modal's custom id.
 
 ```ts twoslash title="src/components/AppealModal.ts"
 import type { LabelBuilder } from '@discordjs/builders';
@@ -37,9 +39,11 @@ export class AppealModal extends BuilderComponent<'modal'> {
 }
 ```
 
-A modal carries two kinds of custom id. You mint the modal's own id with [`CustomId`](ref:custom-id/CustomId), since seedcord routes the submit by it. Each input takes a plain string id you pick, and you read that field back by the same string.
+A modal carries two kinds of custom id. You mint the modal's own id with [`CustomId`](ref:custom-id/CustomId), since seedcord routes the submit by it. Each input takes a plain string id you pick, like `'reason'` above, and you read that field back by the same string.
 
-A modal holds up to five labels, and each label wraps one input. `addTextDisplayComponents` adds a line of plain text.
+A modal holds up to five top-level components, and each label wraps one input. `addTextDisplayComponents` adds a line of plain text, which counts toward the same five as a label.
+
+The label above holds a text input. A label can hold a select menu, a file upload, a checkbox, a checkbox group, or a radio group in its place. [What a label can hold](#what-a-label-can-hold) pairs each kind with the getter that reads it back.
 
 ## Opening it
 
@@ -66,7 +70,7 @@ export class Appeal extends SlashHandler<'ban'> {
 
 <Callout type="danger">
 
-`showModal()` has to be the initial response. Calling it after `reply()`, `defer()`, or `deferUpdate()` throws `ReplyIllegalAckState`, covered in [When a reply throws](/replying/ack-states). Discord also forbids a modal opening another modal, so the call fails to compile inside a [`ModalHandler`](ref:gateway/ModalHandler).
+`showModal()` has to be the _initial_ response. Calling it after `reply()`, `defer()`, or `deferUpdate()` throws `ReplyIllegalAckState`, covered in [When a reply throws](/replying/ack-states). You can't defer first, so any lookup the form needs has to finish inside Discord's three seconds. Discord also forbids a modal opening another modal, so the call fails to compile inside a [`ModalHandler`](ref:gateway/ModalHandler).
 
 </Callout>
 
@@ -100,7 +104,21 @@ export class AppealSubmit extends ModalHandler<
 }
 ```
 
-Read the modal id's values from [`this.params`](ref:gateway/ComponentHandler.params), and the submitted inputs from `this.fields`. Each getter takes the input's own custom id.
+Read the modal id's values from [`this.params`](ref:gateway/ComponentHandler.params), and the submitted inputs from [`this.fields`](ref:gateway/ModalHandler.fields). Each getter takes the input's own custom id, `'reason'` here, and throws when no field has it.
+
+That string isn't typed, so a typo compiles and throws only when someone submits. Put each input id in a constant beside the modal and import it into the handler, so both sides read the same value.
+
+<Callout type="transport" only="gateway">
+
+A gateway `ModalHandler` takes discord.js's `CacheType` as a second type argument, defaulting to `'cached'`. [Buttons](/components/buttons) explains what that default claims about a DM. An http `ModalHandler` takes only the route tuple.
+
+</Callout>
+
+<Callout type="transport">
+
+`this.fields` has the same getter names on both transports, and each getter throws on an unknown id either way. Gateway returns discord.js's `ModalSubmitFields`, whose select getters return live `User`, `GuildMember`, `Role`, and channel instances. Http returns seedcord's `ModalFields`, whose select getters return the payloads Discord sent, like `APIUser` and `APIRole`.
+
+</Callout>
 
 ## What a label can hold
 
@@ -123,12 +141,12 @@ A label wraps a text input or one of the other input kinds, and each kind has it
 
 {/* prettier-ignore-end */}
 
-`getCheckbox` returns a boolean and `getCheckboxGroup` returns the checked values. `getSelectedChannels` takes an optional list of allowed channel types and throws when someone picks outside it. Leave it out to accept any channel type.
+`getCheckbox` returns a boolean. `getCheckboxGroup` returns the checked values. `getSelectedChannels` takes an optional list of allowed channel types and throws when someone picks outside it. Leave it out to accept any channel type.
 
-Most getters that can come back empty take a `required` flag, and passing `true` narrows away the `null`. `getSelectedMembers` takes the custom id alone, so its result stays nullable.
+Most getters that can return `null` take a `required` flag. Pass `true` to make the getter throw on an empty field. Its return type then drops the `null`. `getSelectedMembers` takes the custom id alone, so its result stays nullable.
 
 ## Rewriting the message it came from
 
 A modal opened from a button keeps that button's message as its source, so `this.update()` rewrites it.
 
-A slash command can open the same modal. Discord omits the source message in that case, so `update()` and `deferUpdate()` both throw `ReplyUpdateWithoutSource`. The message says `Use reply() or defer() instead`. `followUp()` throws there as well, since nothing has acknowledged the submit yet.
+A slash command can open the same modal. Discord omits the source message in that case, so `update()` and `deferUpdate()` both throw `ReplyUpdateWithoutSource`. The message says "Use reply() or defer() instead". `followUp()` throws there as well, since nothing has acknowledged the submit yet.

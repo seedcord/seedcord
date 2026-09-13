@@ -57,7 +57,14 @@ finding, and a tic is a habit rather than a single sentence.
 
    Also report any count a non-breaking release could change, as in "seedcord
    ships two plugins". A closed set the types enforce keeps its count, and a
-   table listing the members already is the count.
+   table listing the members already is the count. Report a promise about
+   future releases too, as in an error code that "stays the same".
+
+   Read the opener and the first sample as a reader who stops there. Report
+   them when they show one form of a surface and read as all of it, as in a
+   modals page that opens on text and shows one text input while a table at
+   the bottom lists nine more input kinds. Name the forms the top should
+   mention.
 
 3. Explaining what the reader already knows. Defending why a requirement is a
    requirement. Spelling out a consequence that is the next sentence anyway.
@@ -99,6 +106,11 @@ finding, and a tic is a habit rather than a single sentence.
    grew to cover more cases and lost its values counts, as in three named types
    collapsing into "discord-api-types payloads". Widening needs a table.
 
+   Two more shapes of the same miss. A sentence saying what a surface lacks
+   and stopping, as in "Neither arm receives the interaction", where the
+   reader needs to know what it gets instead. And a number the reader matches
+   in code with its name left out, as in 10062 with no `UnknownInteraction`.
+
 8. An example picked because it was available to name. A section covers a
    surface the reader is unlikely to use, and the example inside it is
    whichever member the writer could name first. A one-line fact given a whole
@@ -139,6 +151,10 @@ finding, and a tic is a habit rather than a single sentence.
     whether it could sit under a different sample unchanged. If it could, it is
     written beside the code rather than about it. Report the paragraph and name
     what in the fence it should be pointing at.
+
+    A hand-written version set against a sample carries the same fields as that
+    sample. A string with one value beside a declaration of three hides the
+    cost the comparison is there to show.
 
 14. A design presented as a list of its good properties. Where a page asks the
     reader to adopt a shape nothing forces on them, a run of sentences each
@@ -184,9 +200,18 @@ Then six counted passes, numbered 15 through 20.
     second step where the first sentence was already the moment. Report it and
     say the connector comes out.
 
-    Leave the English conditional imperative alone. "Edit a handler and the
-    running bot loads it" is idiomatic and reads in one pass. Report one of
-    those only where it reads badly.
+    Report every imperative joined to its result by `and`, as in "Pass true
+    and the getter throws on an empty field" or "Edit a handler and the running
+    bot loads it". Native readers hear the `and` as "if". A reader who learned
+    English second reads two facts. The repair depends on the result. One the
+    reader wants takes `to`, as in "Pass true to make the getter throw". A
+    mistake or a side effect takes `if`, as in "If you read a member the base
+    leaves out, TypeScript reports an error". Two instructions in a row are a
+    different shape and keep their `and`.
+
+    Report a verb that words a limit as a permission. "Discord also allows one
+    select menu per row" reads as an extra feature, where the fact is that a
+    menu takes the whole row.
 
 16. Sentence spread. Report the word count of the longest sentence, the
     shortest, and how many fall in each bucket: 1-7, 8-14, 15-22, 23-30, 31+.

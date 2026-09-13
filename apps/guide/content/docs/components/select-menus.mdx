@@ -1,9 +1,11 @@
 ---
 title: Select menus
-description: One select menu carries options you write. The other kinds resolve users, roles, or channels for you.
+description: Handle select menu picks, from a string menu with options you write to the menus that resolve users, roles, and channels, and one handler serving several menus.
 ---
 
-A select menu is a dropdown someone picks from. One kind carries options you write yourself. For the rest, Discord resolves the picks into users, roles, channels, or a mix of the three, then sends the objects behind those ids. Every kind gets its own handler base, and each one routes the way a button does.
+A row holds five buttons. Once a choice needs more than five, or someone should pick several things at once, a select menu fits better. It's a dropdown of up to 25 options.
+
+One kind carries options you write yourself. For the rest, Discord resolves the picks into users, roles, channels, or a mix of users and roles, and sends the objects behind those ids. You skip asking for an id as text and fetching it yourself. Every kind gets its own handler base, and each one routes the way a button does.
 
 ```ts twoslash title="src/components/TopicPicker.ts"
 import { StringSelectMenuBuilder } from '@discordjs/builders';
@@ -31,11 +33,11 @@ export class TopicPicker extends RowComponent<'menu_string'> {
 }
 ```
 
-Discord allows one select menu per row and nothing beside it. `setMinValues` and `setMaxValues` bound how many someone picks. Both default to 1, and Discord caps each at 25.
+`setMinValues(1)` and `setMaxValues(3)` above let someone pick one topic, two, or all three. Both default to 1, and Discord caps each at 25. A select menu takes a whole row. Discord rejects a message that puts a button or a second menu beside it.
 
 ## Routing the pick
 
-The menu above carries options you wrote, so it routes through [`@StringMenuRoute`](ref:core/StringMenuRoute) to a `StringMenuHandler`. Pass the same [`CustomId`](ref:custom-id/CustomId) definitions to the decorator and the generic. Passing different ones is a compile error.
+The menu above carries options you wrote, so it routes through [`@StringMenuRoute`](ref:core/StringMenuRoute) to a [`StringMenuHandler`](ref:gateway/StringMenuHandler). Pass the same [`CustomId`](ref:custom-id/CustomId) definitions to the decorator and the generic. Passing different ones is a compile error.
 
 ```ts twoslash title="src/handlers/Topics.ts"
 import {
@@ -61,11 +63,17 @@ export class Topics extends StringMenuHandler<[typeof TopicsId]> {
 }
 ```
 
-`this.values` holds what someone picked. On a string menu those are the values you set on the options. `this.params`, `this.match`, `this.update`, and `this.deferUpdate` all work as they do on [Buttons](/components/buttons).
+`this.values` holds what someone picked. On a string menu those are the `value` strings you set on the options, like `'releases'`. `this.params`, `this.match`, `this.update`, and `this.deferUpdate` all work as they do on [Buttons](/components/buttons).
+
+<Callout type="transport" only="gateway">
+
+Every gateway menu base takes discord.js's `CacheType` as a second type argument, defaulting to `'cached'`. [Buttons](/components/buttons) explains what that default claims about a DM. An http menu base takes only the route tuple.
+
+</Callout>
 
 ## The resolving kinds
 
-The resolving kinds fill `this.values` with ids and carry the objects those ids point at. A user menu routes through [`@UserMenuRoute`](ref:core/UserMenuRoute) to a `UserMenuHandler`, which declares `this.users` and `this.members` beside the ids.
+The resolving kinds fill `this.values` with ids and carry the objects those ids point at. A user menu routes through [`@UserMenuRoute`](ref:core/UserMenuRoute) to a [`UserMenuHandler`](ref:gateway/UserMenuHandler), which declares `this.users` and `this.members` beside the ids.
 
 ```ts twoslash title="src/handlers/Assign.ts"
 import {
@@ -90,27 +98,38 @@ export class Assign extends UserMenuHandler<[typeof AssignId]> {
 }
 ```
 
-Each base declares only the members its menu resolves.
+Each base declares _only_ the members its menu resolves.
 
 {/* prettier-ignore-start */}
 
 | base | decorator | what the handler carries |
 | --- | --- | --- |
-| `StringMenuHandler` | [`@StringMenuRoute`](ref:core/StringMenuRoute) | `this.values` |
-| `UserMenuHandler` | [`@UserMenuRoute`](ref:core/UserMenuRoute) | `this.values`, `this.users`, `this.members` |
-| `RoleMenuHandler` | [`@RoleMenuRoute`](ref:core/RoleMenuRoute) | `this.values`, `this.roles` |
-| `ChannelMenuHandler` | [`@ChannelMenuRoute`](ref:core/ChannelMenuRoute) | `this.values`, `this.channels` |
-| `MentionableMenuHandler` | [`@MentionableMenuRoute`](ref:core/MentionableMenuRoute) | `this.values`, `this.users`, `this.members`, `this.roles` |
+| [`StringMenuHandler`](ref:gateway/StringMenuHandler) | [`@StringMenuRoute`](ref:core/StringMenuRoute) | `this.values` |
+| [`UserMenuHandler`](ref:gateway/UserMenuHandler) | [`@UserMenuRoute`](ref:core/UserMenuRoute) | `this.values`, `this.users`, `this.members` |
+| [`RoleMenuHandler`](ref:gateway/RoleMenuHandler) | [`@RoleMenuRoute`](ref:core/RoleMenuRoute) | `this.values`, `this.roles` |
+| [`ChannelMenuHandler`](ref:gateway/ChannelMenuHandler) | [`@ChannelMenuRoute`](ref:core/ChannelMenuRoute) | `this.values`, `this.channels` |
+| [`MentionableMenuHandler`](ref:gateway/MentionableMenuHandler) | [`@MentionableMenuRoute`](ref:core/MentionableMenuRoute) | `this.values`, `this.users`, `this.members`, `this.roles` |
 
 {/* prettier-ignore-end */}
 
-Read a member that the base leaves out and the compiler stops you at the property.
+If you read a member the base leaves out, like `this.channels` on a `UserMenuHandler`, TypeScript reports an error on that property.
 
 Discord resolves `this.members` only inside a guild, so it comes back empty in a DM. A mentionable menu accepts users and roles together. `this.users` and `this.roles` each hold whatever matched, so either one can be empty.
 
 <Callout type="transport">
 
-Both transports return a `Collection` keyed by id. The values differ. Gateway returns live discord.js `User`, `GuildMember`, `Role`, and `Channel` instances. Http returns the `discord-api-types` payloads Discord sent.
+Both transports return a `Collection` keyed by id. The values differ. Gateway returns live discord.js instances, and http returns the payloads Discord sent.
+
+{/* prettier-ignore-start */}
+
+| getter | gateway, `'cached'` | http |
+| --- | --- | --- |
+| `this.users` | `User` | `APIUser` |
+| `this.members` | `GuildMember` | `APIInteractionDataResolvedGuildMember` |
+| `this.roles` | `Role` | `APIRole` |
+| `this.channels` | a discord.js channel | `APIInteractionDataResolvedChannel` |
+
+{/* prettier-ignore-end */}
 
 </Callout>
 
@@ -145,9 +164,37 @@ export class Filters extends StringMenuHandler<
 }
 ```
 
+`picked` is read once, before `match`, and both arms use it. Share a class like this when both menus run the same code first. Two menus that share nothing read better as two handlers, one file each.
+
+`this.match` takes one arm for each id in the generic, keyed by that id's prefix, so your editor offers `region` and `language`.
+
+```ts twoslash
+// @noErrors
+import {
+    CustomId,
+    StringMenuHandler,
+    StringMenuRoute
+} from '@seedcord/gateway';
+
+const RegionId = new CustomId('region').snowflake('userId');
+const LanguageId = new CustomId('language').snowflake('userId');
+
+@StringMenuRoute(RegionId, LanguageId)
+export class Filters extends StringMenuHandler<
+    [typeof RegionId, typeof LanguageId]
+> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        await this.match({ '
+        //                  ^|
+        // ---cut-after---
+    }
+}
+```
+
 <Callout type="warning">
 
-A string menu and a user menu need a handler each. Point one kind's decorator at another kind's base and the compiler stops you at the decorator line with `the decorator does not match the handler kind`.
+A string menu and a user menu need a handler each. If you point one kind's decorator at another kind's base, TypeScript reports "the decorator does not match the handler kind" on the decorator line.
 
 </Callout>
 

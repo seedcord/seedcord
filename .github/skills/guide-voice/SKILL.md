@@ -99,6 +99,8 @@ The failure is a sentence that states a true general fact beside a fence and nev
 
 Test: could this paragraph sit under a different sample without changing a word? Then it is written beside the code rather than about it.
 
+The same holds for a hand-written version set against a sample. The custom-ids page showed `ticket:123:close` beside a declaration carrying three fields, so the comparison hid the cost it was there to show. `ticket:184580573574955008:close:true` carries all three, and the reader sees every value come back as text.
+
 ### A forced decision argues differently from a chosen one
 
 Codegen is forced. TypeScript cannot evaluate a builder call, so the page shows the wall, names the tool that gets past it, and states the cost. The reader had no choice to make.
@@ -227,12 +229,12 @@ Seventeen shapes, drawn from real corrections. Judge whether a sentence does the
 The prose review covers these fourteen. It reads the page and nothing else.
 
 1. **A sentence about the page instead of a sentence with a fact.** A line restating its heading. Announcing a list and not delivering one. Test: delete the first sentence under a heading and see whether anything is lost. A line naming what a fence shows survives that test, and so does a sentence setting up a problem the section then solves.
-2. **Overclaiming, or a reason that does not hold.** `Everything`, `always`, `never` where the truth is narrower. A list of three reading as the complete set. A because-clause that falls apart when you check it, which is worse than giving no reason at all, because the reader takes it as settled. Also any count a non-breaking release could change.
+2. **Overclaiming, or a reason that does not hold.** `Everything`, `always`, `never` where the truth is narrower. A list of three reading as the complete set. A because-clause that falls apart when you check it, which is worse than giving no reason at all, because the reader takes it as settled. Also any count a non-breaking release could change, and any promise about future releases the project does not make. An opener and a first sample that read as the whole surface count too. The modals page opened on text and showed one text input, so a reader stopped there thinking a modal holds only text.
 3. **Explaining what the reader already knows.** Defending why a requirement is a requirement. Spelling out a consequence that is the next sentence anyway. An argument for the design is never this finding.
 4. **A rhetorical shape standing in for the thing.** Verbless fragments as beats. Wordplay. Any sentence that would be shorter and clearer said plainly.
 5. **Written from the framework's side instead of the reader's.** The deepest one, and it comes from writing what seedcord does before asking what the reader is trying to build. Gates once led with the catalog seedcord ships, where the point is that you write your own.
 6. **Content that does not earn its space.** An error a reader will rarely hit. Anything that does not serve the one thing this page is for. An argument the page is responsible for under section 1 always earns its space.
-7. **A claim about behavior with the value left out.** The sentence says something happens and omits the argument, the type, the default, or the option set. "Call it yourself to widen that" hands the reader a task they cannot finish. A claim that grew to cover more cases and dropped its values counts too, and widening needs a table.
+7. **A claim about behavior with the value left out.** The sentence says something happens and omits the argument, the type, the default, or the option set. "Call it yourself to widen that" hands the reader a task they cannot finish. A claim that grew to cover more cases and dropped its values counts too, and widening needs a table. So does a sentence saying what a surface lacks without saying where the reader gets it, and a number the reader matches in code written without the name they would type, like 10062 without `UnknownInteraction`.
 8. **An example picked because it was available to name.** A section covering a surface nobody reaches for, with whichever member the writer could name first inside it. A one-line fact wearing a callout.
 9. **One phrasing carrying every cross-reference.** A guide is mostly links to other pages, and one shape for all of them turns the whole thing into a chant. Fold the link into a noun the sentence already has, or verb the link, or give the other page a verb that fits what it does.
 10. **A requirement on the author written as behavior.** A sentence describing what a symbol does reads as automatic. Where the author writes it by hand, the reader waits for something the framework never does. The repair names the obligation and what enforces it.
@@ -283,8 +285,14 @@ Real ones, all caught by the maintainer, all in prose written the same week:
 | "The next handler imports the same file, and changing the wording is one edit" | more of the same | consequence, so `so` |
 | "Reword the card later and you edit `BanCard.ts` once" | more of the same | condition, so `if` |
 | "the class decides what a ban card looks like, and a setter at the call site splits that description" | more of the same | contrast. The second clause is the case being argued against |
+| "List the id under `ignoreCustomIds`, and the router returns before it answers" | more of the same | purpose, so "to make the router return" |
+| "Read a member that the base leaves out and the compiler stops you" | an instruction to follow | a condition on a mistake, so `if` |
 
 <!-- prettier-ignore-end -->
+
+An imperative joined to its result by `and` hides the relation every time, even when the imperative is good advice. "Pass `true` and the getter throws" reads word by word as two facts, and a reader who learned English second has no intuition telling them the `and` means "if". Pick the connector by whether the reader wants the result. A result they want takes `to`: "Pass `true` to make the getter throw." A mistake or a side effect takes `if`: "If you read a member the base leaves out, TypeScript reports an error." Two instructions in a row keep their `and`, as in "Put them on your own buttons and return the whole reply".
+
+A verb makes the same kind of promise. "Discord also allows one select menu per row" reads as an extra capability, and the fact is a limit. Write the limit as one: "A select menu takes a whole row."
 
 **The test.** Read what follows the connector on its own. Ask what relation the word just promised, then ask what relation the two halves actually have. Where they differ, the reader pays for it.
 
@@ -337,11 +345,12 @@ Writing from the framework's side is the failure that keeps recurring, and it co
 The content review checks this section as a list. A page that breaks one of these still renders, which is why nothing else catches them.
 
 - **The frontmatter `description` says what the feature is and what the page covers.** It becomes the meta description, the link preview, and the first line of the page's Markdown copy, so the reader deciding whether to open the page reads it with nothing else. The page's sharpest fact belongs in the body. "Discord hides an upload that no component references" is a fact the files page proves. "Upload files with a reply and show them through a file, thumbnail, or media gallery component" tells someone in a search result that this is their page. Keep a colon followed by a space out of it, since the value is unquoted YAML.
-- **A seedcord symbol named in prose gets a `ref:` link on its first mention.** `[BuilderComponent](ref:core/BuilderComponent)`, package segment then symbol. A fence tagged `hovers` already links its own tokens.
+- **A seedcord symbol named in prose gets a `ref:` link on its first mention.** `[BuilderComponent](ref:core/BuilderComponent)`, package segment then symbol. A fence tagged `hovers` already links its own tokens. A table links every symbol in it again, since a reader lands on one row without the paragraph that held the first link.
+- **Emphasis earns its place per word.** Italic stresses a word a reader would misread without it, as in "Routing reads the prefix _alone_". Bold marks a Discord UI label, like **Confirm**, or a list label. There is no quota, and most paragraphs carry none.
 - **The import line shows on the first fence and gets cut on the rest**, with `// ---cut---` under it. A later fence keeps its imports when its symbols are new to the page. Start-tab pages keep imports on every fence. Prose around a fence can only name what the fence still shows, since a cut hides those lines from everyone except the writer.
 - **A fence states how it shows types.** `^?` when the prose is about one or two of them. `hovers` when the reader has a shape worth exploring, at roughly five times the bytes and build time. `^|` when the reader's question is what they can type here. A bare `twoslash` with no marker when the sample only needs checking, which is most samples. Drop `twoslash` entirely when the sample is a fragment that cannot compile alone.
 - **Ten twoslash blocks per page is the ceiling.** Past that `next dev` has run out of memory at 8 GB. A page needing more than ten compiled samples is usually two pages.
-- **One `^|` per fence.** Two markers in one sample break it, since a line ending in a dangling dot swallows the line below into that member access and the second marker then resolves against nothing. Two questions want two fences. A failed marker throws at render and takes the whole page to a 500, so check any page carrying one in the browser before you move on.
+- **One `^|` per fence.** Two markers in one sample break it, since a line ending in a dangling dot swallows the line below into that member access and the second marker then resolves against nothing. Two questions want two fences. A failed marker throws at render and takes the whole page to a 500, so check any page carrying one in the browser before you move on. For an object key with nothing typed yet, end the line on a quote, as in `this.match({ '`. twoslash hands TypeScript the character before the caret as a trigger character, and `{` throws "Illegal value" while a space returns nothing.
 - **A config key appears inside a real `new Seedcord({ ... })` sample**, on the page that teaches its subject, with any note as a `//` comment on the line.
 - **A sample reads like shipped code.** Prettier prints a fence at 68 columns, so work done inline in a callback buries the lesson under four levels of indent. Pull it into a private method.
 - **A sample builds components through `BuilderComponent`**, never a raw discord.js builder inline. A page teaching the framework while using the thing the framework replaces teaches the anti-pattern.
