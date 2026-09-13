@@ -4,7 +4,6 @@ const HEADING = /^## (\S+)/;
 const SECTION_START = /(?=^## )/m;
 const STABLE = /^\d+\.\d+\.\d+$/;
 const PRERELEASE = /^(\d+\.\d+\.\d+)-/;
-const UPDATED_DEPENDENCIES = /^- Updated dependencies \[([^\]]*)\]$/;
 const NOTE = /^---$/m;
 
 const versionOf = (section: string): string | undefined => HEADING.exec(section)?.[1];
@@ -53,31 +52,6 @@ export class ChangelogFile {
         }
 
         return new ChangelogFile(kept.join('').replace(/\n*$/, '\n'));
-    }
-
-    withCollapsedDependencyLines(): ChangelogFile {
-        const out: string[] = [];
-        let run: string[] = [];
-
-        const flush = (): void => {
-            if (run.length === 0) return;
-            out.push(`- Updated dependencies [${[...new Set(run)].join(', ')}]`);
-            run = [];
-        };
-
-        for (const line of this.text.split('\n')) {
-            // changesets writes one of these per contributing commit, repeats included
-            const shas = UPDATED_DEPENDENCIES.exec(line)?.[1];
-            if (shas === undefined) {
-                flush();
-                out.push(line);
-                continue;
-            }
-            run.push(...shas.split(',').map((sha) => sha.trim()));
-        }
-        flush();
-
-        return new ChangelogFile(out.join('\n'));
     }
 
     private sections(): string[] {

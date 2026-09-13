@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { Workspace } from '#src/lib/Workspace';
 import { ChangelogFile } from '#src/release/ChangelogFile';
+import { ChangelogSections } from '#src/release/ChangelogSections';
 
 async function tidyEveryChangelog(): Promise<void> {
     const workspace = await Workspace.load(import.meta.dirname);
@@ -17,10 +18,11 @@ async function tidyEveryChangelog(): Promise<void> {
         if (!existsSync(changelogPath)) continue;
 
         const before = await ChangelogFile.read(changelogPath);
-        const after = before.withoutSupersededPrereleases().withCollapsedDependencyLines();
-        if (after.contents === before.contents) continue;
+        const pruned = before.withoutSupersededPrereleases();
+        const after = new ChangelogSections(pruned.contents).regrouped().contents;
+        if (after === before.contents) continue;
 
-        await writeFile(changelogPath, after.contents, 'utf8');
+        await writeFile(changelogPath, after, 'utf8');
         console.log(`Tidied ${changelogPath}`);
         tidied = true;
     }

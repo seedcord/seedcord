@@ -127,6 +127,29 @@ describe('ChangelogSections dependency lines', () => {
         );
     });
 
+    it('repeats clean', () => {
+        const once = regrouped(
+            lines(
+                '# @seedcord/core',
+                '',
+                '## 0.8.0',
+                '',
+                '### Minor Changes',
+                '',
+                '- **BREAKING:** Renamed `routeId` to `origin`. ([#311](url))',
+                '- A thing changed. ([#310](url))',
+                '',
+                '### Patch Changes',
+                '',
+                '- Fixed a thing. ([#312](url))',
+                '- @seedcord/core 0.7.0 → 0.8.0',
+                ''
+            )
+        );
+
+        expect(regrouped(once)).toBe(once);
+    });
+
     it('drops a patch section that carried only dependency lines', () => {
         const out = regrouped(lines('## 0.8.11', '', '### Patch Changes', '', '- @seedcord/core 0.7.0 → 0.8.0', ''));
 
