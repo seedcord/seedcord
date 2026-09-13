@@ -1,17 +1,26 @@
 ---
 title: When a reply throws
-description: seedcord checks your reply call before it reaches Discord, so the error you get names the method that works from there.
+description: seedcord checks your reply call before it reaches Discord, so the error says which method works from there and where the first reply went out.
 ---
 
-seedcord checks the verb against the interaction's current state before it calls Discord. An illegal call throws without reaching the API. The message names the method you called, the reason, and the verb that works in that state.
+seedcord checks the verb against the interaction's current state before it calls Discord. An illegal call throws without reaching the API, where Discord would reject it with an error that doesn't say which method to use. The message says which method you called, why it can't run, and which method works in that state.
 
 ```txt output
 reply() was called when this interaction was already replied to.
-Use followUp() for a new message or edit() to rewrite the reply.
-(route slash:ban)
+Use followUp() for a new message or edit() to rewrite the reply. (route slash:ban)
 ```
 
-Its `cause` holds a second error whose stack points at the line that acknowledged the interaction first. This means that you'll always know exactly where that pesky double ack happened and what you need to use instead.
+The error's `cause` is a second error, such as `reply() acknowledged this interaction`, whose stack points at the line that answered first. One throw gives you both lines of a double ack, including a first one inside a helper in another file.
+
+<Image
+    src="/double-ack-stack.webp"
+    alt="The seedcord dev terminal showing SeedcordError 1501 for a second reply() at Ban.ts line 7, then Caused by AckTrace, reply() acknowledged this interaction, at Ban.ts line 6"
+    width={2176}
+    height={644}
+    frame="thin"
+/>
+
+The top stack ends at `Ban.ts:7`, the second `reply()`. The `AckTrace` under it ends at `Ban.ts:6`, the reply that went out first. Your terminal prints both stacks when [`errorStack`](/replying/error-behavior) is on.
 
 ## The four states
 
@@ -26,7 +35,7 @@ Its `cause` holds a second error whose stack points at the line that acknowledge
 
 {/* prettier-ignore-end */}
 
-[`update()`](ref:gateway/ComponentHandler.update), [`deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate), and [`showModal()`](ref:gateway/InteractionHandler.showModal) are defined on component and modal handlers, covered in the Components tab.
+[`update()`](ref:gateway/ComponentHandler.update) and [`deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) are defined on component and modal handlers, covered in the Components tab. [`showModal()`](ref:gateway/InteractionHandler.showModal) is on every command and component handler. A modal handler doesn't have it, since Discord doesn't let a modal open another modal.
 
 ## Which verb each state allows
 
@@ -45,17 +54,26 @@ Its `cause` holds a second error whose stack points at the line that acknowledge
 
 ## A component that fails to serialize
 
-seedcord calls `toJSON()` on every component in your reply, and discord.js validates the builder there. seedcord catches that throw and rewrites it as one line, naming the class, its index in `components`, and what went wrong.
+seedcord calls `toJSON()` on every component in your reply, and discord.js validates the builder there. Its own throw is a nested shapeshift error, which doesn't say which entry in `components` failed. seedcord catches it and rewrites it as one line with the class, its index in `components`, and what went wrong.
 
 ```ts twoslash title="src/handlers/Ban.ts"
-import { TextDisplayBuilder } from '@discordjs/builders';
-import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+import {
+    BuilderComponent,
+    SlashHandler,
+    SlashRoute
+} from '@seedcord/gateway';
+
+class BanText extends BuilderComponent<'text_display'> {
+    constructor() {
+        super('text_display');
+    }
+}
 
 @SlashRoute('ban')
 export class Ban extends SlashHandler<'ban'> {
     public async execute(): Promise<void> {
         await this.reply({
-            components: [new TextDisplayBuilder()]
+            components: [new BanText().component]
         });
     }
 }
@@ -66,7 +84,7 @@ TextDisplayBuilder at components[0] failed to serialize: need a
 string, got nothing. (route slash:ban)
 ```
 
-The detail after the colon reads `need <the rule>, got <your value>`. A bound uses `at most`, `at least`, `fewer than`, or `more than`, and a rule carrying two bounds joins them with `and`. A failure on a named field puts the field first, as in `url: Invalid protocol for file URL`.
+`BanText` above never calls `setContent`, so its builder has no string to send. The detail after the colon reads `need <the rule>, got <your value>`. A bound uses `at most`, `at least`, `fewer than`, or `more than`, and a rule carrying two bounds joins them with `and`. A failure on a named field puts that field and a colon first, as with `url:` on a file component's link.
 
 The `got` half describes the value you passed.
 
@@ -86,7 +104,7 @@ The `got` half describes the value you passed.
 
 {/* prettier-ignore-end */}
 
-A discord.js throw that never reaches its validator keeps its own message, like `Non-premium buttons must have a label and/or an emoji.`
+A discord.js throw that never reaches its validator keeps its own message, like "Non-premium buttons must have a label and/or an emoji."
 
 The original throw stays on the error as its `cause`, so you can still read the nested shapeshift error underneath.
 
@@ -99,7 +117,7 @@ The interaction callback for reply() returned no message.
 (route slash:ban)
 ```
 
-Your handler cannot cause this throw. The callback carries that message on every documented path, so this one fires when Discord's response leaves it out.
+Your handler can't cause this throw. The callback carries that message on every documented path, so this one fires when Discord's response doesn't include it.
 
 ## update() on a modal a command opened
 

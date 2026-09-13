@@ -1,6 +1,6 @@
 ---
 title: Deferring
-description: defer() carries the ephemeral flag, since edit() does not take options. Discord expires the token fifteen minutes later.
+description: Defer when a handler can take longer than Discord's three seconds. Set ephemeral on defer(), since the edit() that fills it doesn't take options.
 ---
 
 Some handlers need longer than the three seconds Discord allows for a first response. [`this.defer()`](ref:gateway/RepliableHandler.defer) answers inside that with a loading state, which leaves the real reply for later.

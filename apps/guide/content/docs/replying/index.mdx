@@ -1,6 +1,6 @@
 ---
 title: Replying
-description: reply() sends the first response, defer() holds the interaction open, and followUp() adds a message after either one.
+description: A handler's reply methods record what each interaction already got, so a wrong call throws with the fix and a thrown Notice still reaches the user.
 ---
 
 Discord gives your bot three seconds to answer an interaction. seedcord puts the methods for answering on the handler. [`this.reply()`](ref:gateway/RepliableHandler.reply) sends the first response. [`this.defer()`](ref:gateway/RepliableHandler.defer) shows a thinking placeholder while you work, then [`this.edit()`](ref:gateway/RepliableHandler.edit) fills it in. [`this.followUp()`](ref:gateway/RepliableHandler.followUp) sends another message after either one.
@@ -28,8 +28,7 @@ That record is the interaction's ack state. `this.reply()` in the handler above 
 
 ```txt output
 reply() was called when this interaction was already replied to.
-Use followUp() for a new message or edit() to rewrite the reply.
-(route slash:ban)
+Use followUp() for a new message or edit() to rewrite the reply. (route slash:ban)
 ```
 
 discord.js checks too, and its error reads "The reply to this interaction has already been sent or deferred." seedcord's says which method works from there and which route threw. Its `cause` carries a stack pointing at the line that answered first. On http, `this.api` doesn't check at all, so a second callback comes back from Discord as an API error. [When a reply throws](/replying/ack-states) covers every case.

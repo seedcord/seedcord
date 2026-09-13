@@ -3,7 +3,7 @@ title: Files and attachments
 description: Discord hides an upload that no component references. Point a component's URL at attachment:// plus your filename.
 ---
 
-You upload bytes through `files` on a reply. Both transports take a [`ReplyFile`](ref:types/ReplyFile), the bytes plus the name Discord shows.
+A seedcord reply is made of components, so a file you upload needs two things: the bytes in `files`, and a component that points at them. Both transports take a [`ReplyFile`](ref:types/ReplyFile), the bytes plus the name Discord shows.
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import {
@@ -46,6 +46,8 @@ export class Ban extends SlashHandler<'ban'> {
 ## A component has to reference the upload
 
 Under ComponentsV2, Discord renders an attachment where a component references it. Set the component's URL to `attachment://` plus the name you gave the file. A file component, a thumbnail, and a media gallery item all take that URL.
+
+Use a media gallery for images and video you want shown inline, a thumbnail for one small image beside a section's text, and a file component for a download row like `report.pdf` above.
 
 An upload that no component references still reaches Discord, but stays hidden from everyone reading the message.
 
@@ -91,7 +93,7 @@ files: [
 ];
 ```
 
-That covers `AttachmentBuilder`, an `Attachment` off an existing message, a bare `Buffer`, a node `Stream`, a path or URL string, and an `{ attachment, name }` payload. One `files` array mixes them with `ReplyFile` entries freely, since each element types on its own.
+That includes `AttachmentBuilder`, an `Attachment` from an existing message, a bare `Buffer`, a node `Stream`, a path or URL string, and an `{ attachment, name }` payload. One `files` array mixes them with `ReplyFile` entries freely, since each element types on its own.
 
 Use [`GatewayReplyResponse`](ref:gateway/GatewayReplyResponse) to type a helper that returns one of these.
 
