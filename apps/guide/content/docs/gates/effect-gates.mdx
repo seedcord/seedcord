@@ -1,6 +1,6 @@
 ---
 title: Effect gates
-description: When a gate deducts a credit and a later gate refuses, the caller pays for a command that never ran.
+description: Write a gate that changes something, like spending a credit, with defineEffectGate(). Covers when the change runs, what happens when a later gate refuses, and effect gates inside an or().
 ---
 
 Say a command costs one credit. Your gate reads the balance and deducts one. A later gate then refuses. The command never ran, and the caller lost a credit anyway.
@@ -44,7 +44,7 @@ export const SpendCredit = defineEffectGate(
 );
 ```
 
-Attach it like any other gate.
+You attach `SpendCredit` like any other gate.
 
 ```ts twoslash
 import {
@@ -76,25 +76,29 @@ export class Search extends SlashHandler<'search'> {
 
 ## The order
 
-seedcord runs every check before it runs any commit.
+seedcord runs every check _before_ it runs any commit.
 
 1. Each gate's `check`, left to right, stopping at the first refusal.
 2. Every queued `commit`, in the order its gate ran.
 3. `execute()`.
 
-Say someone runs that command in a DM. `SpendCredit` checks their balance first and queues its commit. [`GuildOnly`](ref:core/GuildOnly) then refuses. Step two never runs, so nothing deducts the credit.
+If someone runs that command in a DM, `SpendCredit` checks their balance first and queues its commit. [`GuildOnly`](ref:core/GuildOnly) then refuses. Step two never runs, so the caller keeps the credit.
 
 A refusal anywhere in step one drops every queued commit. The same holds when a check throws a [`Fault`](ref:core/Fault), a [`Silence`](ref:core/Silence), or a plain error.
 
 <Callout type="warning">
 
-Step two finishes before step three starts. Your handler runs after every commit, so a throw inside it leaves the credit spent. Refund it there when that matters.
+Step two finishes before step three starts. Your handler runs after every commit, so a throw inside it leaves the credit spent. If your users paid for that credit or can see their balance, catch the throw in your handler and refund the credit there.
+
+Commits run one at a time. If a commit throws, the commits after it don't run, and neither does your handler. The commits before it already ran, so their changes stay.
+
+The same happens inside a single commit. If it writes twice and throws between the two writes, the first write stays. Give each commit one write.
 
 </Callout>
 
 ## Inside an or
 
-An [`or`](ref:core/or) arm can hold more than one gate. When an arm refuses, seedcord drops every commit queued inside it. Here's a handler with an effect gate buried two levels down.
+Each arm of an [`or`](ref:core/or) can be a group of gates, like an `and`. If that group refuses, seedcord throws away the commits its gates queued, so they never run. The handler below passes `SpendCredit` to an `and`, and passes that `and` to an `or`.
 
 ```ts twoslash hovers
 import {
@@ -158,7 +162,7 @@ A bot owner who lacks that role runs it. Read the checks down, then the commits.
 3. execute()
 ```
 
-The owner keeps their credit and still spends a cooldown slot. Only the arm that passes keeps its commit. `OwnerOnly` passed and queued none.
+The owner keeps their credit and still spends a cooldown slot. Only the arm that passes keeps its commit. `OwnerOnly` passed without queuing a commit.
 
 <Callout type="note">
 
@@ -171,6 +175,23 @@ Every commit runs after every check. A check never reads what another gate's com
 If you annotate `ctx` on either half, both take that context. Your gate then fits the same handlers as a [`defineGate`](ref:core/defineGate) gate carrying that annotation.
 
 Either half can return a promise. A synchronous one works too, so a commit that writes to a `Map` doesn't need `async`.
+
+```ts twoslash
+import { defineEffectGate } from '@seedcord/gateway';
+// ---cut---
+const uses = new Map<string, number>();
+
+export const CountUse = defineEffectGate(
+    'CountUse',
+    () => {},
+    (ctx) => {
+        if (ctx.userId === null) return;
+        uses.set(ctx.userId, (uses.get(ctx.userId) ?? 0) + 1);
+    }
+);
+```
+
+`CountUse` never refuses, so its `check` is empty. Its `commit` records the use in `uses` without awaiting anything.
 
 ## Cooldown
 

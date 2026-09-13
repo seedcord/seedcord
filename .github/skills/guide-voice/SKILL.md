@@ -264,6 +264,7 @@ Run these one at a time and apply each pass's fixes before starting the next. Ea
 7. **Connectors.** Count `and`, `so`, `which`, `while`, `because`, `since`, `then`. Any one connector carrying most of the page is the defect. Then check the reason-versus-consequence split from section 3, and read every connector against the relation it promises.
 
     Count `names` in the same pass. It covers three unrelated jobs across this guide, an error message telling you which one, a symbol being the whole set, and you writing them somewhere. One page carrying it for two of those is the defect whatever the count, and it hid for a long time because no single page held more than three. The prose review has the repairs.
+
 8. **The garden path.** Read every sentence once at speed. Stopping and starting over means rewriting it. Four shapes cause it.
     - A clause wedged between a subject and its verb.
     - A cleft that parks the verb behind an `is`.
@@ -292,8 +293,6 @@ Real ones, all caught by the maintainer, all in prose written the same week:
 
 An imperative joined to its result by `and` hides the relation every time, even when the imperative is good advice. "Pass `true` and the getter throws" reads word by word as two facts, and a reader who learned English second has no intuition telling them the `and` means "if". Pick the connector by whether the reader wants the result. A result they want takes `to`: "Pass `true` to make the getter throw." A mistake or a side effect takes `if`: "If you read a member the base leaves out, TypeScript reports an error." Two instructions in a row keep their `and`, as in "Put them on your own buttons and return the whole reply".
 
-A condition hidden in a trailing phrase has the same cost. "`ArraySource` opens the last page for a number past the end" is correct, and a native reader gets it. A reader who learned English second meets the result first and has to go back for the condition. Lead with it: "If the number is higher than the last page, `ArraySource` opens the last page."
-
 A verb makes the same kind of promise. "Discord also allows one select menu per row" reads as an extra capability, and the fact is a limit. Write the limit as one: "A select menu takes a whole row."
 
 **The test.** Read what follows the connector on its own. Ask what relation the word just promised, then ask what relation the two halves actually have. Where they differ, the reader pays for it.
@@ -303,6 +302,33 @@ The repairs, by relation. A result takes `so`. A reason takes `because` or `sinc
 `and` carries most of these, and it hides in sentences that already spent a `so` or a `because`, where it becomes the place a third clause gets dumped. A sequence word is the other common one, since a page of steps makes `then` feel free to type.
 
 A grep finds none of this. The tell is the direction the second half travels and no pattern sees that. Read every connector on the page and ask which way the words after it go.
+
+### Unpack what you packed
+
+A sentence can be correct and short and still take the reader two reads. It happens when a fact gets packed into fewer words than it needs, so the reader has to take it apart before the sentence means anything. A reader who learned English second pays the most. Every row below came from the maintainer's review of the Gates and Components tabs.
+
+**The test.** Find the actor and the verb. If the reader has to hold a condition, a relation, or a list before reaching them, unpack the sentence.
+
+<!-- prettier-ignore-start -->
+
+| packed | what the reader has to unpack | unpacked |
+| --- | --- | --- |
+| "A commit that throws stops the rest and the handler" | a condition inside the subject | "If a commit throws, the commits after it don't run, and neither does your handler" |
+| "one arm without a summary drops the list to a generic refusal" | a condition inside the subject | "If one arm doesn't set a summary, the `or` shows a generic refusal" |
+| "`ArraySource` opens the last page for a number past the end" | a condition after the result | "If the number is higher than the last page, `ArraySource` opens the last page" |
+| "every handler repeats them above its real work" | a position word standing in for where the code goes | "every handler starts with its own copy of them" |
+| "an effect gate nested two levels inside an `or`" | a position word standing in for how the code is built | "passes `SpendCredit` to an `and`, and passes that `and` to an `or`" |
+| "a number bigger than the list has pages" | a squeezed comparison | "a number higher than the last page" |
+
+<!-- prettier-ignore-end -->
+
+The repairs:
+
+1. Pull a condition out of the subject or the end of the sentence, and put it first with `if` or `when`.
+2. Replace a position word, like above, inside, nested, or past, with what the code does. Use the names the sample shows.
+3. Once a sentence holds two facts, give the second its own sentence.
+
+A frontmatter description packs hardest, because it tries to fit a whole page into a line. Section 7 gives it a shape.
 
 ### The rest of the loop
 
@@ -346,7 +372,7 @@ Writing from the framework's side is the failure that keeps recurring, and it co
 
 The content review checks this section as a list. A page that breaks one of these still renders, which is why nothing else catches them.
 
-- **The frontmatter `description` says what the feature is and what the page covers.** It becomes the meta description, the link preview, and the first line of the page's Markdown copy, so the reader deciding whether to open the page reads it with nothing else. The page's sharpest fact belongs in the body. "Discord hides an upload that no component references" is a fact the files page proves. "Upload files with a reply and show them through a file, thumbnail, or media gallery component" tells someone in a search result that this is their page. Keep a colon followed by a space out of it, since the value is unquoted YAML.
+- **The frontmatter `description` says what the feature is and what the page covers.** It becomes the meta description, the link preview, and the first line of the page's Markdown copy, so the reader deciding whether to open the page reads it with nothing else. The page's sharpest fact belongs in the body. "Discord hides an upload that no component references" is a fact the files page proves. "Upload files with a reply and show them through a file, thumbnail, or media gallery component" tells someone in a search result that this is their page. Keep a colon followed by a space out of it, since the value is unquoted YAML. Write it as two sentences. The first says what the feature does, in the reader's words, and the second opens on "Covers" and lists what the page covers. A single sentence shaped "from X to Y and Z" packs the page into one clause, which three Gates descriptions did before review. Backticks don't render in a description, so write a function name as `or()` to keep it from reading as the English word.
 - **A seedcord symbol named in prose gets a `ref:` link on its first mention.** `[BuilderComponent](ref:core/BuilderComponent)`, package segment then symbol. A fence tagged `hovers` already links its own tokens. A table links every symbol in it again, since a reader lands on one row without the paragraph that held the first link.
 - **Emphasis earns its place per word.** Italic stresses a word a reader would misread without it, as in "Routing reads the prefix _alone_". Bold marks a Discord UI label, like **Confirm**, or a list label. There is no quota, and most paragraphs carry none.
 - **The import line shows on the first fence and gets cut on the rest**, with `// ---cut---` under it. A later fence keeps its imports when its symbols are new to the page. Start-tab pages keep imports on every fence. Prose around a fence can only name what the fence still shows, since a cut hides those lines from everyone except the writer.

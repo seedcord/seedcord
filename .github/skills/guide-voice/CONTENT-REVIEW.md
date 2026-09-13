@@ -142,6 +142,9 @@ Eight checks.
    Read the frontmatter `description` last, against the finished page. Report one
    that states a single fact from the body in place of what the feature is and
    what the page covers, and one that names a section the page does not have.
+   Report one shaped "from X to Y and Z", which packs the page into a single
+   clause. The shape section 7 asks for is one sentence on what the feature does
+   and a second opening on "Covers".
 
    Several need a file open, which is why they are here rather than in the prose
    review. The ref: link targets, the import-line cut convention, the fence type

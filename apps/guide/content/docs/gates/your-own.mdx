@@ -1,9 +1,9 @@
 ---
 title: Your own gates
-description: defineGate takes a name and a check. The check reads the context, refuses by throwing, and passes by returning.
+description: Write your own gate with defineGate, from what a check reads and narrowing it to certain handlers to async checks and what to throw.
 ---
 
-The catalog covers owners, roles, permissions, and cooldowns. [`defineGate`](ref:core/defineGate) builds a gate for anything else you want to check.
+Some checks belong to your bot alone, like keeping a command to one channel or requiring a linked account. The shipped gates cover owners, roles, permissions, and cooldowns, so a check like that would otherwise go back to the top of every handler that needs it. [`defineGate`](ref:core/defineGate) turns that check into a gate you attach with the rest.
 
 It takes a name and a check. The check reads the context, refuses by [throwing](/replying/throwing), and passes by returning. Here's an example that keeps a command to one channel.
 
@@ -77,7 +77,7 @@ export class Leaderboard extends SlashHandler<'leaderboard'> {
 }
 ```
 
-The name you pass appears in the compile error when you attach a gate to a handler it does not fit. [`and`](ref:core/and) and [`or`](ref:core/or) join the names of their arms into one.
+The `'InChannel'` string you passed to `defineGate` appears in the compile error when you attach the gate to a handler it doesn't fit. [`and`](ref:core/and) and [`or`](ref:core/or) join the names of their arms into one.
 
 ## What a check reads
 
@@ -95,10 +95,11 @@ Leaving the `ctx` parameter unannotated makes it a [`GateContextBase`](ref:core/
 | `memberPermissions` | `bigint \| null` | the caller's permission bits, channel-scoped on an interaction and role-derived on a gateway event, null outside a server |
 | `appPermissions` | `bigint \| null` | your bot's permission bits in the invoked channel, null on gateway events |
 | `declaredRoute` | `string \| null` | the route this dispatch matched, such as `slash:daily`, null off a route |
+| `dispatch` | `DispatchContext` | the [dispatch context](/gates/dispatch-context), holding what a middleware wrote before the first gate ran |
 
 {/* prettier-ignore-end */}
 
-A gate that reads only these fields fits any handler you attach it to. `InChannel` above reads one of them, so it works on a slash command, a button, and a message event.
+A gate that reads _only_ these fields fits any handler you attach it to. `InChannel` above reads one of them, so it works on a slash command, a button, and a message event.
 
 ## Narrowing what the gate accepts
 
@@ -127,7 +128,7 @@ export const NoAttachments = defineGate(
 
 <Callout type="tip">
 
-`NoAttachments` does not take an argument. Export the gate itself and attach it without calling, the way [`IgnoreBots`](ref:gateway/IgnoreBots) does. `InChannel` above stays a function because it closes over a channel id.
+`NoAttachments` doesn't take an argument. Export the gate itself and attach it without calling, the way [`IgnoreBots`](ref:gateway/IgnoreBots) does. `InChannel` above stays a function because it closes over a channel id.
 
 </Callout>
 
@@ -137,7 +138,7 @@ The two gateway arms carry different fields. Narrow on `ctx.kind` before reading
 
 | annotation | fits | adds |
 | --- | --- | --- |
-| `GateContextBase` | every handler, both transports | the eight fields above |
+| `GateContextBase` | every handler, both transports | the nine fields above |
 | [`InteractionGateContext`](ref:gateway/InteractionGateContext) | any interaction handler | `interaction`, `user`, `guild`, `member` |
 | `InteractionGateContext<ButtonInteraction>` | button handlers | the same, with `interaction` typed to a button |
 | [`EventGateContext`](ref:gateway/EventGateContext) | any event handler | `eventName`, `payload`, `user`, `guild`, `member` |
@@ -148,15 +149,15 @@ The two gateway arms carry different fields. Narrow on `ctx.kind` before reading
 
 <Callout type="transport">
 
-Both transports export a type called `InteractionGateContext`, and the two carry different fields. Gateway's holds live discord.js objects, a `User`, a `Guild`, and a `GuildMember`. Http's holds an `APIUser` and an `APIInteractionGuildMember`, and it does not carry `guild` at all. A gate reading `ctx.guild` compiles on gateway and fails on http.
+Both transports export a type called `InteractionGateContext`. Each transport's version has its own fields. Gateway's holds live discord.js objects: a `User` that's always present, plus a `Guild` and a `GuildMember` that can each be `null`, outside a server or when the cache lacks them. Http's holds an `APIUser` and an `APIInteractionGuildMember`, and it doesn't carry `guild` at all. A gate reading `ctx.guild` compiles on gateway. The same gate fails to compile on http.
 
-The gateway cache builds that discord.js `Guild`. An http bot does not run one. Discord sends it a partial guild carrying `id`, `features`, and `locale`, which `ctx.interaction.guild` reaches.
+The gateway cache builds that discord.js `Guild`. An http bot doesn't run one. Discord sends it a partial guild carrying `id`, `features`, and `locale`, which `ctx.interaction.guild` reaches.
 
 </Callout>
 
 ## The two guild permission fields
 
-[`GuildPermissionsContext`](ref:core/GuildPermissionsContext) adds `memberGuildPermissions` and `appGuildPermissions`, the permission sets computed from roles alone.
+On an interaction, `memberPermissions` and `appPermissions` hold the set for the channel the command ran in, after overwrites. A gate about the whole server, like one guarding a server-wide setting, needs what the roles grant instead. [`GuildPermissionsContext`](ref:core/GuildPermissionsContext) adds `memberGuildPermissions` and `appGuildPermissions`, the permission sets computed from roles alone.
 
 <Callout type="transport" only="gateway">
 
@@ -193,10 +194,10 @@ export const NotBanned = defineGate('NotBanned', async (ctx) => {
 });
 ```
 
-Gates run one after another, so a slow check delays every gate behind it. Discord gives you three seconds to answer an interaction, and the checks use part of it. seedcord prints a console warning when one handler's checks total more than 750ms. That warning is off in production.
+Gates run one after another, so the `await bans.has` above delays every gate behind it until the lookup returns. Discord gives you three seconds to answer an interaction, and the checks use part of it. seedcord logs a warning naming each gate's share when one handler's checks total more than 750ms. That warning is off in production.
 
 ## What to throw
 
-Throw a [`Notice`](ref:core/Notice) and seedcord replies with the card its `render()` builds. Throw a [`Silence`](ref:core/Silence) and seedcord drops the request without replying, which suits an event handler. [Throwing](/replying/throwing) has both in full, plus what a check throwing anything else produces.
+If you throw a [`Notice`](ref:core/Notice), seedcord replies with the card its `render()` builds. If you throw a [`Silence`](ref:core/Silence), seedcord drops the request without replying, which suits an event handler. [Throwing](/replying/throwing) has both in full, plus what a check throwing anything else produces.
 
-Set `summary` on a `Notice` you throw from a gate when you plan to pass that gate to an [`or`](ref:core/or).
+If you plan to pass a gate to an [`or`](ref:core/or), set `summary` in your `Notice`'s constructor, as in `this.summary = 'run it in #bots'`. When every arm refuses, the `or` [lists each arm's summary](/gates/combining#the-refusal-when-every-arm-refuses). If one arm doesn't set a summary, the `or` shows a generic refusal.

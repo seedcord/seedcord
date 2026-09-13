@@ -313,7 +313,17 @@ trailing phrase, as in "ArraySource opens the last page for a number past the
 end", where the reader meets the result before learning when it happens. The
 repair leads with `if`: "If the number is higher than the last page,
 ArraySource opens the last page." Report a squeezed comparison too, as in "a
-number bigger than the list has pages". A long sentence is fine when it reads in
+number bigger than the list has pages".
+
+Report a condition packed into the subject, as in "A commit that throws stops
+the rest and the handler". The repair pulls it out and puts it first: "If a
+commit throws, the commits after it don't run." Report a position word standing
+in for a relation, as in "repeats them above its real work" or "an effect gate
+nested two levels inside an or", and give the repair in terms of what the code
+does, using the names the sample shows. The skill's "Unpack what you packed"
+section has the table.
+
+A long sentence is fine when it reads in
 one pass, so report the ones stacking clauses the reader has to hold at once
 rather than counting words.
 
