@@ -105,6 +105,8 @@ class Maintenance extends SlashHandler<'maintenance'> {
 
 `notify` and `target` were declared with `setRequired(true)`, so they arrive as values. `reason` was left optional, so it arrives as `string | null`. Discord rejects the command before your handler runs when a required option is missing.
 
+Mark an option required when your handler has nothing sensible to do without it. Discord then turns the caller away at the picker, where they can still fix it, and your handler reads the value with no guard.
+
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 

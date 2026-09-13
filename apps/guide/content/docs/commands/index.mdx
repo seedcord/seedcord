@@ -59,6 +59,10 @@ The file goes under the `commands` path your `bot.ts` declares. seedcord imports
 
 For one server, pass `'guild'` with the ids. The command appears there right away.
 
+That speed is why a command you're still shaping belongs in a guild. You edit it, restart, and run it. Move it to `'global'` once the shape has settled, since every change after that waits on Discord.
+
+The guild copy stays behind when you move it, and Discord shows both in the picker. [`seedcord commands`](/commands/deployed) finds the duplicates and deletes them.
+
 ```ts
 @RegisterCommand('guild', ['613425648685547541'])
 ```

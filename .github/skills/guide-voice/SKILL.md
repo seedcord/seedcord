@@ -40,6 +40,21 @@ Ground every cost you name. A re-upload really does mint a new id. A rename leav
 
 Test: read a section's first paragraph and ask what the reader would be doing without this feature. Where the section never says, it never argued for the feature at all.
 
+**Teach the judgment that comes with the surface, where there is one.** This guide teaches someone to use seedcord and to write a decent bot with it. Once a reader has a surface in hand they face a call: where the code goes, which of two shapes fits, what today's choice costs them later. A page that answers only "how do I type this" leaves them to find that out in production.
+
+Two tests before a line of judgment goes in.
+
+1. Would a reader who skipped it write something they later regret, in a way specific to this surface? General advice about small functions and clear names belongs in someone else's book.
+2. Can you name the cost in their terms, with a mechanism behind it?
+
+Both real ones in the guide pass on the same shape, a specific surface and a specific cost:
+
+> Keep that declaration in the file with the component that encodes it. Both sides read the field names off one `CustomId`, so a rename cannot reach one and miss the other.
+
+> Make that call in the constructor anyway. `this.instance` is protected to keep a ban card's whole description in one file.
+
+A paragraph is the size of this. Advice that grows a heading of its own has become a page about advice, and the reader came for the surface. A reference table, a flag list, and a troubleshooting page each answer a question the reader already arrived with, so none of them wants this.
+
 **An argument about why the framework has this shape at all goes on the page that teaches the thing**, as a paragraph, near the top, before the reader has typed anything.
 
 Five of these exist. The framework asks a reader to do five things that need defending:
@@ -307,7 +322,9 @@ Where two sentences really are doing one job, cut the weaker one whole. Trimming
 
 **What is the one thing they need from this page?** Everything that does not serve it comes off.
 
-**What does the reader do without each feature on this page?** Answer it per feature, in their terms, and the answer opens the section that teaches it.
+**What does the reader do without each feature on this page?** Answer it per feature, in their terms, and the answer opens the section that teaches it. Per feature means per section, so a page carrying its why in one place has answered this once and owes the rest.
+
+**What call does this surface hand them once they have it?** Where the code goes, which shape fits, what it costs later. Where there is a real one, a paragraph of it belongs on the page. Where there is none, write nothing.
 
 **What are all the ways to use it?** Open the declaration of every symbol the page teaches and read it whole. A variadic parameter, an overload, a generic accepting a union, and an optional argument are each a separate way to use the surface.
 

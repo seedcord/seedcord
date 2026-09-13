@@ -64,6 +64,17 @@ Eight checks.
    requires. Name the file and line, or name the platform rule. Report the ones
    you cannot source rather than reasoning one out.
 
+   Take this per section. A page carrying one reason near the top has answered
+   it for that section alone, so keep going through the rest.
+
+   Then, for each section, ask what call the surface hands the reader once they
+   have it. Where the code goes, which of two shapes fits, what today's choice
+   costs them later. Report a section that teaches a surface carrying a real
+   decision and says nothing about it, and name the decision, sourced from the
+   declarations. Two things disqualify one: advice that would read the same
+   about any library, and a section whose surface genuinely offers no choice.
+   A reference table, a flag list, and a troubleshooting page are all exempt.
+
 3. Every claim about behavior, checked against the source.
 
    Read every sentence stating what the code does. Open the declaration and

@@ -11,13 +11,13 @@ Nothing in your build or your deploy pipeline calls Discord.
 
 Your bot sends one request per scope. One carries every global command. Each server with a guild command gets its own.
 
-Discord replaces the whole scope with what arrives. Delete a command file and that command is gone the next time your bot starts. Rename one and the old name goes with it.
+Discord replaces the whole scope with what arrives. Delete a command file and that command is gone the next time your bot starts. Rename one and the old name disappears with it.
 
 ## Deleting your last global command leaves it live
 
 Your bot skips the request when a scope has nothing left in it.
 
-That leaves one gap. Remove your **last** global command and your bot sends nothing, so the copy Discord already has stays. The same happens to the last guild command in a server.
+That leaves one gap. Remove your **last** global command and your bot sends nothing, so the copy that Discord already has stays. The same happens to the last guild command in a server.
 
 Adding another global command fixes the global scope on the next start. Guild commands need `seedcord commands`.
 
@@ -27,7 +27,7 @@ Adding another global command fixes the global scope on the next start. Guild co
 
 <Shell exec="seedcord commands" />
 
-With no flags it asks which servers to look at and what to remove.
+With no flags and a real terminal, it asks which servers to look at and what to remove. Anywhere without a terminal, or with `CI` set, it prints what it would need and exits.
 
 Flags do the same work without the prompts. The common case is a command you moved from one server to global, which Discord then shows twice in the picker.
 
@@ -35,11 +35,11 @@ Flags do the same work without the prompts. The common case is a command you mov
 
 `--clean` finds every guild command whose name also exists globally. Drop `--apply` and it only prints them.
 
-To empty a server completely, `--purge` takes everything in the servers you name.
+To empty a server completely, `--purge` deletes every command in the servers you name.
 
 <Shell exec="seedcord commands --purge --guild 613425648685547541 --apply" />
 
-For CI, `--all-guilds` covers every server your bot is in and `--yes` skips the confirmation.
+For CI, `--all-guilds` covers every server your bot is in. `--yes` is required there, since `--apply` asks you to confirm the count and throws `CliCleanApplyNeedsYes` when it has no terminal to ask on.
 
 <Shell exec="seedcord commands --clean --all-guilds --apply --yes" />
 
@@ -50,9 +50,9 @@ For CI, `--all-guilds` covers every server your bot is in and `--yes` skips the 
 | flag | what it does |
 | --- | --- |
 | `--clean` | Find guild commands that duplicate a global command |
-| `--guild <ids...>` | The servers to look at |
+| `--guild <ids...>` | The servers to look at, one id or several |
 | `--all-guilds` | Every server your bot is in |
-| `--purge` | Take every command in the named servers |
+| `--purge` | Delete every command in the named servers |
 | `--apply` | Delete what was found |
 | `--yes` | Skip the prompts, for CI |
 
@@ -60,12 +60,12 @@ For CI, `--all-guilds` covers every server your bot is in and `--yes` skips the 
 
 <Callout type="warning">
 
-`--purge` needs named servers. It throws next to `--all-guilds`, since that pair would delete every guild command your bot has. It throws again when you pass no `--guild` and no `--all-guilds`.
+`--purge` needs named servers. Passing `--all-guilds` alongside it throws, since that pair would delete every guild command your bot has. Passing neither `--guild` nor `--all-guilds` throws too, since `--purge` then has nothing to aim at.
 
 </Callout>
 
 <Callout type="note">
 
-`seedcord commands` never touches global commands. To remove one of those, delete its file and let a later start replace the scope.
+`seedcord commands` only ever deletes guild commands. To remove a global one, delete its file and let a later start replace the scope.
 
 </Callout>
