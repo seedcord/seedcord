@@ -3,7 +3,7 @@ title: The dispatch context
 description: Pass values from a middleware to the rest of a dispatch with the dispatch context. Covers typing its keys and reading them in a handler, a gate, and a fault card.
 ---
 
-A middleware often computes something the rest of the dispatch needs, like the caller's account row or their language. Without somewhere to put it, every handler and gate would load that row again. The dispatch context is where you put that value.
+A middleware often computes something the rest of the [dispatch](/checks#what-a-dispatch-is) needs, like the caller's account row or their language. Without somewhere to put it, every handler and gate would load that row again. The dispatch context is where you put that value.
 
 Each interaction gets one _bag_ of values, which your code reads and writes through `this.dispatch`. The handler, its middleware, its gates, and any card seedcord renders for that interaction all share the same bag.
 
@@ -142,7 +142,7 @@ export const KnownActor = defineGate('KnownActor', (ctx) => {
 });
 ```
 
-[`GateContextBase`](ref:core/GateContextBase) declares the bag, so any gate that reads it fits any handler on either transport. Its [other fields](/gates/your-own) carry the caller's ids and permission bits.
+[`GateContextBase`](ref:core/GateContextBase) declares the bag, so any gate that reads it fits any handler on either transport. Its [other fields](/checks/your-own) carry the caller's ids and permission bits.
 
 <Callout type="warning">
 

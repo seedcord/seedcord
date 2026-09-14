@@ -31,7 +31,7 @@ export class SkipMuted extends EventMiddleware<Events.MessageCreate> {
 }
 ```
 
-[`@RegisterEventMiddleware`](ref:gateway/RegisterEventMiddleware) takes one options object. An [interaction runs its own chain](/gates/middleware) through [`@RegisterInteractionMiddleware`](ref:core/RegisterInteractionMiddleware), which filters on `{ kinds }`.
+[`@RegisterEventMiddleware`](ref:gateway/RegisterEventMiddleware) takes one options object. An [interaction runs its own chain](/checks/middleware) through [`@RegisterInteractionMiddleware`](ref:core/RegisterInteractionMiddleware), which filters on `{ kinds }`.
 
 ## Stopping the event
 
@@ -122,7 +122,7 @@ export class Locale extends EventMiddleware<Events.MessageCreate> {
 }
 ```
 
-Declaring the key and reading it back works the same way it does on [an interaction dispatch](/gates/dispatch-context). The one difference is scope, since one event shares its bag across every handler it runs while an interaction has a single handler.
+Declaring the key and reading it back works the same way it does on [an interaction dispatch](/checks/dispatch-context). The one difference is scope, since one event shares its bag across every handler it runs while an interaction has a single handler.
 
 ## After the event
 

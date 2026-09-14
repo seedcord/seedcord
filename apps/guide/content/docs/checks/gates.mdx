@@ -113,7 +113,7 @@ export class Welcome extends EventHandler<Events.MessageCreate> {
 }
 ```
 
-`Cooldown` has [a page of its own](/gates/cooldown).
+`Cooldown` has [a page of its own](/checks/cooldown).
 
 ## Who counts as an owner
 
@@ -185,4 +185,4 @@ OwnerOnly({ notice: new Locked() });
 
 The `Require` gates nest that shape one level deeper, since each can refuse for two different reasons. `RequirePermissions` takes a `notInGuild` and a `missing` object, each holding its own `message` or `notice`. `Cooldown` takes `message` and `notice` as functions of `resetAt`, the time in milliseconds when the caller can try again, so its refusal can print that time. Each gate in [the catalog table](#the-catalog-gates) links to its API page, which lists every option it takes.
 
-[Permissions](/gates/permissions) takes the permission gates in turn, including what Administrator does to them. When none of the shipped gates fits, you can [write your own](/gates/your-own) or [combine several into one](/gates/combining).
+[Permissions](/checks/permissions) takes the permission gates in turn, including what Administrator does to them. When none of the shipped gates fits, you can [write your own](/checks/your-own) or [combine several into one](/checks/combining).

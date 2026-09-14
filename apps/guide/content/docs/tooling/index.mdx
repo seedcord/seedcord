@@ -82,8 +82,8 @@ Your `package.json` already carries `dev`, `codegen`, and `build` as scripts, an
 | `errors` | how a fault renders, what gets logged, which api codes get swallowed | [Tuning error behavior](/replying/error-behavior) |
 | `notifications` | the contact name in the generic unknown-error message | [Faults](/replying/faults) |
 | `botColor` | the accent on every [`BuilderComponent`](ref:core/BuilderComponent) you build | [Components](/components) |
-| `ownerIds` | the ids [`OwnerOnly`](ref:core/OwnerOnly) treats as owners | [Gates](/gates) |
-| `store` | where framework state survives a restart | [The rate limiter](/gates/rate-limiter) |
+| `ownerIds` | the ids [`OwnerOnly`](ref:core/OwnerOnly) treats as owners | [Gates](/checks/gates) |
+| `store` | where framework state survives a restart | [The rate limiter](/checks/rate-limiter) |
 | `logger` | the level, the sinks, and the per-channel overrides | [Configuring the logger](/tooling/logger-config) |
 | `runtime` | `'server'` for a node process, `'edge'` for a Cloudflare Worker | [Building](/tooling/build) |
 

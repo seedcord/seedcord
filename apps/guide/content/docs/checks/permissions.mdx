@@ -170,7 +170,7 @@ Combine several with [`or`](ref:core/or) when holding any one of the roles is en
 
 ## Wording each refusal
 
-Each of these gates refuses for two different reasons. Its options carry one slot per reason, and each slot takes the `message` and `notice` pair from [Gates](/gates).
+Each of these gates refuses for two different reasons. Its options carry one slot per reason, and each slot takes the `message` and `notice` pair from [Gates](/checks/gates).
 
 {/* prettier-ignore-start */}
 
@@ -201,4 +201,4 @@ RequireRole('221439658686939136', {
 
 Leaving a slot out keeps the default card. The permission gates list every missing bit on it by name, and `RequireRole` mentions the role.
 
-A check these gates don't cover, like whether the caller linked an account, is [a gate you write yourself](/gates/your-own).
+A check these gates don't cover, like whether the caller linked an account, is [a gate you write yourself](/checks/your-own).

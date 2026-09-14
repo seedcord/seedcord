@@ -119,7 +119,7 @@ If the target holds Administrator, `assertPermissions` throws before `target.ban
 
 <Callout type="warning">
 
-The Administrator rule from [permissions](/gates/permissions) applies here too. The inverse check reports every bit in `scope` as present for anyone holding Administrator. Put only the bits you mean in `scope`, and read the refusal as "holds at least one of these".
+The Administrator rule from [permissions](/checks/permissions) applies here too. The inverse check reports every bit in `scope` as present for anyone holding Administrator. Put only the bits you mean in `scope`, and read the refusal as "holds at least one of these".
 
 </Callout>
 
@@ -228,4 +228,4 @@ Its arguments after `scope` match `checkPermissions`, with `inverse` third and a
 
 If your bot's member isn't cached, the refusal lists every permission in `scope` as missing. The channel form also logs a warning on the `errors` log channel.
 
-A passing check for Manage Roles still leaves role position to check. Discord rejects a role your bot assigns if that role is at or above the bot's highest role. [Changing roles](/gates/changing-roles) covers that check.
+A passing check for Manage Roles still leaves role position to check. Discord rejects a role your bot assigns if that role is at or above the bot's highest role. [Changing roles](/checks/changing-roles) covers that check.

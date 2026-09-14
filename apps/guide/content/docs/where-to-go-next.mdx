@@ -8,7 +8,7 @@ description: What each tab of the guide covers, the example bots in the repo, th
 - **Commands.** Declaring one, the options it takes, subcommands, autocomplete, and context menus.
 - **Replying.** Which reply method Discord allows from which state, how one `throw` stops a command and tells the user why, and the helpers for building the text you send.
 - **Components.** The class that wraps a discord.js builder, then buttons, select menus, modals, and pagination. Discord hands a click back as a plain string, and seedcord gives you back the fields you put in it, typed.
-- **Gates.** A check that runs before your handler and refuses by throwing. Permissions, cooldowns, and rules you write.
+- **Checks.** Gates that run before your handler and refuse by throwing, like permissions, cooldowns, and rules you write. Middleware that runs around every handler, and the order seedcord runs them all in.
 - **Events.** Messages, members, reactions, and the rest of what discord.js emits, on gateway. Publishing and subscribing to your own works on either transport.
 - **Plugins.** Extending seedcord with your own functionality, reachable from every handler and typed. Attaching one, its lifecycle, and writing your own.
 - **Tooling.** The dev loop, codegen, the build, logging, and the lint rules for a seedcord project.

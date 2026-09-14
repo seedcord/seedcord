@@ -140,7 +140,7 @@ class OpenCaseExists extends Notice {
 
 {/* prettier-ignore-end */}
 
-Only the `or` gate reads `summary`. [Combining gates](/gates/combining) shows where it appears.
+Only the `or` gate reads `summary`. [Combining gates](/checks/combining) shows where it appears.
 
 <Callout type="warning">
 
@@ -158,7 +158,7 @@ Throwing a custom `Notice` for a real bug shows its card and produces nothing el
 | --- | --- |
 | `ctx.uuid` | the id seedcord logs and reports for this throw |
 | `ctx.developerUsername` | `notifications.developerUsername` from your bot config, set on [Faults](/replying/faults). `undefined` when you have not set it |
-| `ctx.dispatch` | the [dispatch context](/gates/dispatch-context) the handler and its gates read |
+| `ctx.dispatch` | the [dispatch context](/checks/dispatch-context) the handler and its gates read |
 
 {/* prettier-ignore-end */}
 

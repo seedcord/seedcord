@@ -206,7 +206,7 @@ It sets `message` and leaves `notice` out, since `notice` would replace the rewo
 
 <Callout type="note">
 
-If two requests for the same key arrive at the same moment, both can read a free slot before either records its use. A tight burst can go over `limit` that way. Every [effect gate](/gates/effect-gates) has this gap between its check and its commit.
+If two requests for the same key arrive at the same moment, both can read a free slot before either records its use. A tight burst can go over `limit` that way. Every [effect gate](/checks/effect-gates) has this gap between its check and its commit.
 
 `Cooldown` doesn't guard against it, since bursts that tight are rare. If your command can't allow even one extra use, write your own effect gate. In its `commit`, call [`ctx.core.rateLimiter.charge`](ref:types/IRateLimiter.charge), which records a use only when a slot is free. Throw when `result.limited` comes back `true`, and put that gate first so no other commit runs before it.
 
@@ -214,4 +214,4 @@ If two requests for the same key arrive at the same moment, both can read a free
 
 ## Keeping windows across restarts
 
-[`core.rateLimiter`](ref:types/IRateLimiter) holds the cooldown windows and counts them in memory by default. A restart clears every cooldown, and on a serverless deploy each running copy keeps its own counts. A durable [`store`](/gates/rate-limiter) keeps the windows through both.
+[`core.rateLimiter`](ref:types/IRateLimiter) holds the cooldown windows and counts them in memory by default. A restart clears every cooldown, and on a serverless deploy each running copy keeps its own counts. A durable [`store`](/checks/rate-limiter) keeps the windows through both.

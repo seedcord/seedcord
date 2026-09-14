@@ -5,24 +5,11 @@ description: Run code before your interaction handlers with middleware. Covers w
 
 A middleware runs before your handler. Write one when several handlers all need the same thing done first, like loading the caller's record, or when you want to refuse an interaction before it reaches your code.
 
-A middleware runs for every handler of the kinds it lists, without being attached to any of them. A [gate](/gates) runs _only_ on the handlers you put it on. Put work that every dispatch needs in a middleware. Put a check that only some commands need in a gate on those commands.
+A middleware runs for every handler of the kinds it lists, without being attached to any of them. A [gate](/checks/gates) runs _only_ on the handlers you put it on. Put work that every [dispatch](/checks#what-a-dispatch-is) needs in a middleware. Put a check that only some commands need in a gate on those commands.
 
-Every dispatch runs in the same order.
+A middleware's `execute()` runs after seedcord builds your handler and before any gate.
 
-```txt output
-an interaction arrives
-│
-├─ 1. seedcord builds your handler    your constructor runs here
-├─ 2. each middleware's execute()     lowest priority first
-├─ 3. the handler's gates             left to right
-├─ 4. your handler's execute()
-│
-└─ 5. each middleware's after()       reverse of step 2, every time
-
-a throw or a refusal in 2, 3, or 4 skips straight to 5
-```
-
-The smallest middleware is a class with the decorator and an `execute()`. `Trace` below runs at step 2 and logs the route every dispatch matched.
+The smallest middleware is a class with the decorator and an `execute()`. `Trace` logs the route every dispatch matched.
 
 ```ts twoslash title="src/handlers/middlewares/Trace.ts"
 import {
@@ -146,7 +133,7 @@ A middleware uses the same reply methods as its handler. `reply`, `defer`, `foll
 
 <Callout type="warning">
 
-seedcord builds your handler at step 1, before any middleware or gate runs. If your constructor queries your database, that query runs even when a middleware or a gate refuses the interaction afterwards. Only set fields in the constructor. Put database calls and other work in `execute()`, which runs only after every middleware and gate has passed.
+seedcord builds your handler first, before any middleware or gate runs. If your constructor queries your database, that query runs even when a middleware or a gate refuses the interaction afterwards. Only set fields in the constructor. Put database calls and other work in `execute()`, which runs only after every middleware and gate has passed.
 
 </Callout>
 
@@ -244,4 +231,4 @@ If a class in that directory doesn't have the decorator, seedcord loads it and n
 
 If two middleware classes share a name, seedcord throws `DuplicateMiddleware` when it loads the second one. Give every class a unique name.
 
-A middleware passes values to the handler and its gates through [the dispatch context](/gates/dispatch-context).
+A middleware passes values to the handler and its gates through [the dispatch context](/checks/dispatch-context).

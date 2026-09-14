@@ -5,7 +5,18 @@ export const RENAMED_PAGES: Record<string, string> = {
     '/throwing/reporting': '/replying/reporting',
     '/throwing/configuring': '/replying/error-behavior',
     '/utilities': '/replying/formatting',
-    '/utilities/render-table': '/replying/render-table'
+    '/utilities/render-table': '/replying/render-table',
+    '/gates': '/checks/gates',
+    '/gates/permissions': '/checks/permissions',
+    '/gates/your-own': '/checks/your-own',
+    '/gates/combining': '/checks/combining',
+    '/gates/effect-gates': '/checks/effect-gates',
+    '/gates/middleware': '/checks/middleware',
+    '/gates/dispatch-context': '/checks/dispatch-context',
+    '/gates/cooldown': '/checks/cooldown',
+    '/gates/rate-limiter': '/checks/rate-limiter',
+    '/gates/in-handler-permissions': '/checks/in-handler-permissions',
+    '/gates/changing-roles': '/checks/changing-roles'
 };
 
 function withoutTrailingSlash(pathname: string): string {

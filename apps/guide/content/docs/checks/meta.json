@@ -1,8 +1,10 @@
 {
-    "title": "Gates",
+    "title": "Checks",
     "root": true,
     "pages": [
         "index",
+        "---Gates---",
+        "gates",
         "permissions",
         "your-own",
         "combining",

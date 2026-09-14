@@ -95,7 +95,7 @@ Leaving the `ctx` parameter unannotated makes it a [`GateContextBase`](ref:core/
 | `memberPermissions` | `bigint \| null` | the caller's permission bits, channel-scoped on an interaction and role-derived on a gateway event, null outside a server |
 | `appPermissions` | `bigint \| null` | your bot's permission bits in the invoked channel, null on gateway events |
 | `declaredRoute` | `string \| null` | the route this dispatch matched, such as `slash:daily`, null off a route |
-| `dispatch` | `DispatchContext` | the [dispatch context](/gates/dispatch-context), holding what a middleware wrote before the first gate ran |
+| `dispatch` | `DispatchContext` | the [dispatch context](/checks/dispatch-context), holding what a middleware wrote before the first gate ran |
 
 {/* prettier-ignore-end */}
 
@@ -200,4 +200,4 @@ Gates run one after another, so the `await bans.has` above delays every gate beh
 
 If you throw a [`Notice`](ref:core/Notice), seedcord replies with the card its `render()` builds. If you throw a [`Silence`](ref:core/Silence), seedcord drops the request without replying, which suits an event handler. [Throwing](/replying/throwing) has both in full, plus what a check throwing anything else produces.
 
-If you plan to pass a gate to an [`or`](ref:core/or), set `summary` in your `Notice`'s constructor, as in `this.summary = 'run it in #bots'`. When every arm refuses, the `or` [lists each arm's summary](/gates/combining#the-refusal-when-every-arm-refuses). If one arm doesn't set a summary, the `or` shows a generic refusal.
+If you plan to pass a gate to an [`or`](ref:core/or), set `summary` in your `Notice`'s constructor, as in `this.summary = 'run it in #bots'`. When every arm refuses, the `or` [lists each arm's summary](/checks/combining#the-refusal-when-every-arm-refuses). If one arm doesn't set a summary, the `or` shows a generic refusal.

@@ -1,0 +1,38 @@
+---
+title: Checks
+description: Decide whether a handler runs, and run code around it. Covers the order seedcord runs a dispatch in, gates, middleware, rate limits, and checks inside a handler.
+---
+
+Most commands need a few things settled before they run. Is the caller in a server? Do they hold the permission? Have they used this command in the last minute? This tab covers the checks that decide whether a handler runs, and the middleware that runs around them.
+
+## What a dispatch is
+
+A _dispatch_ is one interaction arriving and everything seedcord runs for it, from building your handler to the last `after()` call. Every click, command, and modal submit is its own dispatch. Each one runs in this order.
+
+```txt output
+an interaction arrives
+│
+├─ 1. seedcord builds your handler      your constructor runs here
+├─ 2. each middleware's execute()       lowest priority first
+├─ 3. each gate's check                 left to right
+├─ 4. each effect gate's commit         only once every check passed
+├─ 5. your handler's execute()          your handler runs here
+└─ 6. each middleware's after()         reverse of step 2, every time
+
+a throw or a refusal in 2, 3, 4, or 5 skips straight to 6
+```
+
+A gate can read what a middleware wrote, since every middleware runs first.
+
+## In this tab
+
+- [Gates](/checks/gates) put a check on a handler with `@Gated`. The pages after it cover the [permission gates](/checks/permissions), [writing your own](/checks/your-own), [combining several](/checks/combining), and [gates that change state](/checks/effect-gates).
+- [Middleware](/checks/middleware) runs for every handler of the kinds it lists. The [dispatch context](/checks/dispatch-context) carries what it computes to the handler and its gates.
+- [Cooldowns](/checks/cooldown) limit how often a command runs. [The rate limiter](/checks/rate-limiter) counts uses against any key you build.
+- [Permissions in a handler](/checks/in-handler-permissions) and [changing roles](/checks/changing-roles) cover checks that need a value your handler reads first, like the member a command targets.
+
+<Callout type="transport" only="gateway">
+
+A gateway event runs its own order, with event middleware ahead of every handler registered for it. [Event middleware](/events/middleware) covers that order.
+
+</Callout>
