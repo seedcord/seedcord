@@ -9,7 +9,7 @@ import { easeOutStrong } from './lib/motion';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactElement } from 'react';
 
-const ICON_SWAP_DURATION_S = 0.14;
+const ICON_SWAP_DURATION_S = 0.2;
 
 export interface IconSwapProps {
     active: boolean;

@@ -1,17 +1,17 @@
 ---
 title: The rate limiter
-description: Charge a window yourself when your limit belongs to something other than the caller, the server, or the channel.
+description: Count uses against any key you build with the rate limiter. Covers charging and reading a window, building keys, clearing a key, and writing a durable store.
 ---
 
-[`Cooldown`](ref:core/Cooldown) keys its window on the handler plus the caller, the server, or the channel. Charge a window yourself when your limit belongs to anything else.
+Some limits don't belong to whoever ran the command. A member can receive three awards a day, however many people hand them out. A [`Cooldown`](ref:core/Cooldown) gate can't express that, since it counts per caller, per server, or per channel.
 
-[`core.rateLimiter`](ref:types/IRateLimiter) holds those windows, the same store `Cooldown` charges. A handler reads it through `this.core.rateLimiter`, and a gate through `ctx.core.rateLimiter`.
+For those limits you charge a window yourself. [`core.rateLimiter`](ref:types/IRateLimiter) is the same store `Cooldown` charges. It counts uses against any key you build. A handler reads it through `this.core.rateLimiter`. A gate reads it through `ctx.core.rateLimiter`.
 
 ## Charging a key
 
-`charge` records a use when the window has a free slot and reports whether the key is limited.
+`charge` reports whether the key is limited. When a slot is free, it also records a use.
 
-Say `/award` gives a member points, and each member can receive three a day. That limit belongs to the member being awarded. `Cooldown` scopes by caller, server, or channel, so none of its options reach them.
+Say `/award` gives a member points. The limit of three a day belongs to the member being awarded, so `Award` builds the key from their id.
 
 ```ts twoslash hovers title="src/handlers/Award.ts"
 import {
@@ -52,7 +52,9 @@ export class Award extends SlashHandler<'award'> {
 }
 ```
 
-The second argument is a [`RateLimitWindow`](ref:types/RateLimitWindow). `windowMs` is milliseconds, and `limit` defaults to `1`, so leave it out for one use per window.
+`THREE_A_DAY` is a sliding window, so each award counts for one day after it happens. Once the oldest of the three awards is a day old, a fourth award passes.
+
+The second argument is a [`RateLimitWindow`](ref:types/RateLimitWindow). `windowMs` is the window's length in milliseconds. `limit` is how many uses fit in one window. If you leave `limit` out, the window allows one use. This window leaves it out, so it allows one use per minute.
 
 ```ts twoslash
 import type { RateLimitWindow } from '@seedcord/gateway';
@@ -60,11 +62,9 @@ import type { RateLimitWindow } from '@seedcord/gateway';
 const ONE_A_MINUTE: RateLimitWindow = { windowMs: 60_000 };
 ```
 
-The window slides. Once the oldest of the three leaves it, a fourth award passes.
-
 ## The result
 
-The sample above read `limited`, `resetAt`, and `remaining` off that call. Both `charge` and `peek` return a [`RateLimitResult`](ref:types/RateLimitResult).
+`Award` reads `limited`, `resetAt`, and `remaining` off its `charge` result. Both `charge` and `peek` return a [`RateLimitResult`](ref:types/RateLimitResult).
 
 {/* prettier-ignore-start */}
 
@@ -81,7 +81,7 @@ Discord's `<t:...:R>` markup takes seconds. Pass `resetAt` through [`toEpochSeco
 
 ## Keys
 
-That first argument decides what the window counts. A key is any string. [`buildKey`](ref:rate-limiter/buildKey) joins a prefix and the values you scope by with `:`, and writes `global` for a part that is null or undefined.
+The key you pass to `charge` sets whose uses the window counts. A key is any string. [`buildKey`](ref:rate-limiter/buildKey) joins a prefix and your other parts with `:`. A part that's `null` or `undefined` becomes `global`.
 
 ```ts twoslash
 import { buildKey } from '@seedcord/gateway';
@@ -92,15 +92,15 @@ buildKey('award', '123', '456'); // 'award:123:456'
 buildKey('award', null); // 'award:global'
 ```
 
-Pass as many parts as the scope needs. Two ids give one window per pair, so `'award:123:456'` limits that member inside that server alone.
+Pass as many parts as the limit needs. `buildKey('award', guildId, memberId)` gives each member their own window in each server.
 
-Scoping a key by guild id gives every direct-message caller one shared window, since `ctx.guildId` is null there. Pair that key with [`GuildOnly`](ref:core/GuildOnly) when it matters.
+In a DM the guild id is `null`, so `buildKey` writes `global` in its place. If your key includes the guild id, every DM caller shares that one window. If your command only makes sense in a server, pair that key with [`GuildOnly`](ref:core/GuildOnly) to keep DM callers from spending the shared uses.
 
-`Cooldown` writes its own keys under the `cooldown` prefix in this store, so give yours a prefix nothing else uses.
+`Cooldown` writes its own keys under the `cooldown` prefix in this store. Give your keys a prefix nothing else uses. If two features build the same key, their uses count against one window.
 
 ## Reading without charging
 
-`peek` takes the same two arguments and records nothing.
+A profile card that shows "2 awards left today" needs the count without spending an award. `peek` takes the same two arguments as `charge` and doesn't record a use.
 
 ```ts twoslash
 import { buildKey } from '@seedcord/gateway';
@@ -121,15 +121,15 @@ async function awardsLeft(memberId: string): Promise<number> {
 
 <Callout type="note">
 
-`remaining` is advisory on a peek. Another request can charge the same key before you act on what you read, so show the number and take the limit from `charge`.
+`remaining` can be out of date by the time you use it. Another request can charge the same key right after your peek. Show `remaining` to the caller, and call `charge` when the use happens.
 
 </Callout>
 
-`Cooldown` peeks in its check and charges in its commit. Every [effect gate](/gates/effect-gates) splits that way.
+`Cooldown` peeks in its check and charges in its commit. Every [effect gate](/gates/effect-gates) separates its check from its commit the same way.
 
 ## Clearing a key
 
-`reset` drops every use recorded against a key. The next `charge` opens a fresh window.
+A window sometimes counts a use that shouldn't have counted, like an award a moderator revoked. `reset` drops every use recorded against a key, so the next `charge` starts a fresh window.
 
 ```ts twoslash
 import { buildKey } from '@seedcord/gateway';
@@ -146,15 +146,17 @@ async function clearAwards(memberId: string): Promise<void> {
 
 ## The default store
 
-Everything above charged an in-memory store (the default). seedcord builds a [`MemoryRateLimiter`](ref:rate-limiter/MemoryRateLimiter) for you, which counts inside one process. A restart clears every window. On a serverless deploy each running copy keeps its own counts.
+Every sample on this page charges the default store. seedcord builds a [`MemoryRateLimiter`](ref:rate-limiter/MemoryRateLimiter) for you, which keeps its counts in the memory of one process. A restart clears every window. On a serverless deploy each running copy keeps its own counts.
 
-The `store` config key replaces it. What you pass becomes `core.rateLimiter`, which every `charge` on this page and every `Cooldown` gate reads.
+Set the `store` config key to replace it. `core.rateLimiter` then points at your store, for your own `charge` calls and for every `Cooldown` gate.
 
 ## Writing a store
 
-[`Store`](ref:types/Store) is typed by the verbs a backend supports, and `'charge'` is the rate-limiting one. A `Store<'charge'>` carries two fields plus the three [`IRateLimiter`](ref:types/IRateLimiter) methods.
+If a limit has to survive a restart, or several copies of your bot share one count, write a store. It wraps a backend like Redis or SQLite behind the same three methods.
 
-The generic takes a union. One backend serving several features declares `Store<'charge' | 'claim'>`, for example, and lists both in `caps`. Rate limiting reads `'charge'` alone.
+[`Store`](ref:types/Store) takes the verbs a backend supports as its generic. `'charge'` is the verb for rate limiting. A `Store<'charge'>` carries two fields plus the three [`IRateLimiter`](ref:types/IRateLimiter) methods.
+
+The generic takes a union. If one backend serves several features, it declares `Store<'charge' | 'claim'>` and lists both verbs in `caps`. The type rejects a verb in `caps` that the generic leaves out. It doesn't check that `caps` lists every verb in the generic, so keep the two matching yourself. Rate limiting reads `'charge'` alone.
 
 {/* prettier-ignore-start */}
 
@@ -168,9 +170,9 @@ The generic takes a union. One backend serving several features declares `Store<
 
 {/* prettier-ignore-end */}
 
-`implements Store<'charge'>` reports any of the five as missing at compile time.
+With `implements Store<'charge'>`, TypeScript reports any of the five you leave out. In `SharedStore`, `recordUse`, `readUses`, and `clearUses` stand in for your own database code.
 
-```ts twoslash title="src/RedisStore.ts"
+```ts twoslash title="src/SharedStore.ts"
 import type {
     RateLimitResult,
     RateLimitWindow,
@@ -178,52 +180,53 @@ import type {
     StoreKind
 } from '@seedcord/gateway';
 
-declare const redis: {
-    charge(
-        key: string,
-        ms: number,
-        limit: number
-    ): Promise<RateLimitResult>;
-    peek(
-        key: string,
-        ms: number,
-        limit: number
-    ): Promise<RateLimitResult>;
-    del(key: string): Promise<void>;
-};
+declare function recordUse(
+    key: string,
+    ms: number,
+    limit: number
+): Promise<RateLimitResult>;
+declare function readUses(
+    key: string,
+    ms: number,
+    limit: number
+): Promise<RateLimitResult>;
+declare function clearUses(key: string): Promise<void>;
 
 // ---cut---
 function slots(window: RateLimitWindow): number {
     return Math.max(1, window.limit ?? 1);
 }
 
-export class RedisStore implements Store<'charge'> {
-    public readonly kind: StoreKind = 'redis';
+export class SharedStore implements Store<'charge'> {
+    public readonly kind: StoreKind = 'sqlite';
     public readonly caps = new Set(['charge'] as const);
 
     public charge(
         key: string,
         window: RateLimitWindow
     ): Promise<RateLimitResult> {
-        return redis.charge(key, window.windowMs, slots(window));
+        return recordUse(key, window.windowMs, slots(window));
     }
 
     public peek(
         key: string,
         window: RateLimitWindow
     ): Promise<RateLimitResult> {
-        return redis.peek(key, window.windowMs, slots(window));
+        return readUses(key, window.windowMs, slots(window));
     }
 
     public async reset(key: string): Promise<void> {
-        await redis.del(key);
+        await clearUses(key);
     }
 }
 ```
 
-Two things the type cannot check for you. Resolve `limit` with `Math.max(1, window.limit ?? 1)`, since it is optional and a zero or negative value would otherwise block every call. Then make `charge` read and write in one atomic step, through a Lua script on Redis or a transaction elsewhere. Two requests can each read a free slot before either records a use, and then both pass.
+The type can't check two things for you.
 
-Pass it as `store`. Both transports read the key the same way.
+1. Resolve `limit` the way `slots` does. It's optional, and a zero or negative value would block every call.
+2. Make `recordUse` read and write in one step, such as inside a transaction. Otherwise two requests can each read a free slot before either records a use. Both of them then pass.
+
+Pass a `SharedStore` as `store`. Both transports read the key the same way.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -233,11 +236,11 @@ import { GatewayIntentBits } from 'discord.js';
 
 import type { Store } from '@seedcord/gateway';
 
-declare const redisStore: Store<'charge'>;
+declare const SharedStore: new () => Store<'charge'>;
 
 // ---cut---
 export const seedcord = new Seedcord({
-    store: redisStore,
+    store: new SharedStore(),
     bot: {
         clientOptions: { intents: [GatewayIntentBits.Guilds] },
         interactions: {
@@ -251,5 +254,3 @@ export const seedcord = new Seedcord({
     subscribers: { path: null }
 });
 ```
-
-Every gate so far runs before `execute()` does. However, some checks need a value your handler has already read. And some of those might deal with permissions. Fortunately, for you, seedcord ships some nice [permission helpers](/gates/in-handler-permissions) that you can use in your handlers.

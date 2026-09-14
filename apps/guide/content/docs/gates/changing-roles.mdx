@@ -1,42 +1,57 @@
 ---
 title: Changing roles
-description: hasPermsToAssign checks whether a role write can succeed, and mergeRoles builds the list to send.
+description: Check that your bot can assign a role, then build and write a member's new role list. Covers hasPermsToAssign(), rewording its refusals, mergeRoles(), and writing the list on each transport.
 ---
 
-Your bot holds Manage Roles and `roles.add` still fails. Role position overrides permission bits. A bot changes only the roles sitting below its own highest role, and Discord rejects a write against anything above.
+Your bot holds Manage Roles, yet `roles.add` still fails. Holding the permission isn't enough, because Discord also checks role position. A bot can change only the roles below its own highest role. Discord rejects a write to a role at or above it. Without a check first, you only find out from the error Discord returns.
 
-[`hasPermsToAssign`](ref:gateway/hasPermsToAssign) checks whether the write can succeed. [`mergeRoles`](ref:core/mergeRoles) returns the list to write.
+[`hasPermsToAssign`](ref:gateway/hasPermsToAssign) checks role position and two other rules before the write. If one fails, it refuses with a card the caller can read. [`mergeRoles`](ref:core/mergeRoles) returns the list to write.
 
 ## Checking before you write
 
-`hasPermsToAssign` runs these checks and throws a [`Notice`](ref:core/Notice) on the first one that refuses.
+`hasPermsToAssign` refuses in these cases, checked in order. The first case that matches throws a [`Notice`](ref:core/Notice).
 
-1. The target role sits at or above the bot's highest role.
+1. The target role is at or above the bot's highest role.
 2. The target role is managed.
 3. The bot lacks Manage Roles.
 
+A managed role belongs to an integration. Every bot's own role and the Nitro booster role have `managed` set to `true`. So does any role a linked service hands out, like a Twitch subscriber tier. Discord assigns those roles itself, so nobody else can assign one.
+
+You pass the role you're about to assign.
+
 ```ts twoslash
 import { hasPermsToAssign } from '@seedcord/gateway';
+// ---cut-start---
 
 import type { Role } from 'discord.js';
 
 declare const role: Role;
+// ---cut-end---
 
-// ---cut---
 hasPermsToAssign(role);
 ```
 
-A managed role belongs to an integration. Every bot's own role, the Nitro booster role, and any role a linked service hands out, such as a Twitch subscriber tier, all carry the flag. Discord assigns those itself, so nobody else can assign one.
+To compare positions, `hasPermsToAssign` reads your bot's own role from the guild's role cache. If the cache doesn't have it, the call throws a `SeedcordError` with the code `CoreBotRoleMissing`.
 
 <Callout type="transport" only="gateway">
 
-`hasPermsToAssign` takes a discord.js `Role`, so it exists on gateway alone. An http bot compares `position` on the two role payloads itself, then checks Manage Roles with [`assertPermissions`](ref:core/assertPermissions).
+`hasPermsToAssign` takes a discord.js `Role`, so it's gateway only. On http, compare `position` on the two role payloads and read `managed` on the target yourself. Then check Manage Roles with [`assertPermissions`](ref:core/assertPermissions).
 
 </Callout>
 
 ## Replacing the notices
 
-An options object takes the same role plus a replacement for each refusal. Every constructor takes a message first. `higherNotice` then takes the target role and the bot's role. `managedNotice` takes only that message. `missingNotice` then takes the subject and the permission names.
+The default cards say what went wrong in general terms. If you want to tell the caller something specific, like which role to move up in server settings, pass your own. You pass an options object with the role and a replacement for any refusal you want to reword. Every replacement constructor takes a message first.
+
+{/* prettier-ignore-start */}
+
+| override | constructor takes after the message |
+| --- | --- |
+| `higherNotice` | the target role, then the bot's role |
+| `managedNotice` | nothing |
+| `missingNotice` | the subject, then the permission names |
+
+{/* prettier-ignore-end */}
 
 ```ts twoslash
 import { hasPermsToAssign, Notice } from '@seedcord/gateway';
@@ -57,11 +72,15 @@ hasPermsToAssign({
 });
 ```
 
-Reading the bot's own role needs the guild's role cache. A cold cache throws with the code `CoreBotRoleMissing`.
+`TooHigh` replaces only the position refusal. The other two refusals keep their default cards.
 
 ## Building the list
 
-[`mergeRoles`](ref:core/mergeRoles) takes the ids a member holds, the ids to add, and the ids to remove, and returns the merged list. A removal wins over an addition of the same id.
+discord.js has `member.roles.add()` and `member.roles.remove()`. Each call sends its own request. Swapping a trial role for a staff role that way takes two requests. Between them, the member holds both roles, or neither.
+
+To make every change in one request, set the member's whole role list at once. That list holds every role they keep, since Discord removes any role you leave out. Building it by hand means copying the held ids, pushing one, filtering one out, and removing duplicates.
+
+`mergeRoles` does that in one call. You pass it the ids a member holds, the ids to add, and the ids to remove. It returns the merged list without duplicates. If an id is in both the add list and the remove list, `mergeRoles` leaves it out.
 
 ```ts twoslash title="src/handlers/AddRole.ts"
 import {
@@ -71,7 +90,6 @@ import {
     SlashRoute
 } from '@seedcord/gateway';
 
-// ---cut---
 @SlashRoute('role/add')
 export class AddRole extends SlashHandler<'role/add'> {
     public async execute(): Promise<void> {
@@ -93,8 +111,22 @@ export class AddRole extends SlashHandler<'role/add'> {
 }
 ```
 
-Fill both lists to add and remove in one write, as in `mergeRoles(ids, [staff], [trial])`.
+`AddRole` passes one id to add and an empty removal list. To swap a trial role for a staff role, fill both lists in the same call.
+
+```ts
+member.roles.set(mergeRoles(ids, [staff], [trial]));
+```
 
 ## Writing it back
 
-`mergeRoles` computes the list and writes nothing. Gateway applies it with `member.roles.set()`. Http applies it through `this.api.guilds.editMember(guildId, userId, { roles: ids })`, the typed REST client every repliable handler carries.
+`mergeRoles` only returns the list. You write it yourself. The call differs by transport.
+
+<Callout type="transport">
+
+On gateway, pass the list to `member.roles.set()`. On http, send it through `this.api`, the typed REST client on every repliable http handler.
+
+```ts
+await this.api.guilds.editMember(guildId, userId, { roles: ids });
+```
+
+</Callout>
