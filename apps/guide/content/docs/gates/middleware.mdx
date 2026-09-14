@@ -1,11 +1,28 @@
 ---
 title: Interaction middleware
-description: Running ahead of your handler over the same reply surface, a middleware stops the whole dispatch when it throws.
+description: Run code before your interaction handlers with middleware. Covers which interactions it runs for, the order, stopping a dispatch, replying, and cleaning up in after().
 ---
 
-A middleware runs before your handler. Write one when several handlers all need the same thing done first, like loading the caller's record, or when you want to turn an interaction away before it reaches your code.
+A middleware runs before your handler. Write one when several handlers all need the same thing done first, like loading the caller's record, or when you want to refuse an interaction before it reaches your code.
 
-On every dispatch seedcord builds the handler, runs the middleware chain, then runs that handler's gates, and finally the handler itself.
+A middleware runs for every handler of the kinds it lists, without being attached to any of them. A [gate](/gates) runs _only_ on the handlers you put it on. Put work that every dispatch needs in a middleware. Put a check that only some commands need in a gate on those commands.
+
+Every dispatch runs in the same order.
+
+```txt output
+an interaction arrives
+│
+├─ 1. seedcord builds your handler    your constructor runs here
+├─ 2. each middleware's execute()     lowest priority first
+├─ 3. the handler's gates             left to right
+├─ 4. your handler's execute()
+│
+└─ 5. each middleware's after()       reverse of step 2, every time
+
+a throw or a refusal in 2, 3, or 4 skips straight to 5
+```
+
+The smallest middleware is a class with the decorator and an `execute()`. `Trace` below runs at step 2 and logs the route every dispatch matched.
 
 ```ts twoslash title="src/handlers/middlewares/Trace.ts"
 import {
@@ -22,11 +39,11 @@ export class Trace extends InteractionMiddleware {
 }
 ```
 
-You can omit the options object on [`@RegisterInteractionMiddleware`](ref:core/RegisterInteractionMiddleware) entirely, the way `Trace` does. Both of its keys are optional on their own too. Omitting them runs the middleware on every kind that carries a reply target.
+You can omit the options object on [`@RegisterInteractionMiddleware`](ref:core/RegisterInteractionMiddleware) entirely, the way `Trace` does. Both of its keys are optional on their own too. If you omit both, the middleware runs on every kind that carries a reply target.
 
 ## Which interactions it runs for
 
-You write the kinds twice, once in `{ kinds }` and once in the generic on [`InteractionMiddleware`](ref:gateway/InteractionMiddleware). The two have to agree. Where they differ, applying the decorator is a compile error whose message says which side is missing a kind.
+You write the kinds twice, once in `{ kinds }` and once in the generic on [`InteractionMiddleware`](ref:gateway/InteractionMiddleware). The two have to agree. If they differ, the decorator line fails to compile. The error says which side is missing a kind.
 
 ```ts twoslash title="src/handlers/middlewares/ClickLog.ts"
 import {
@@ -68,7 +85,17 @@ export class ComponentTrace extends InteractionMiddleware<
 }
 ```
 
-Every kind seedcord routes is a member of [`InteractionKind`](ref:core/InteractionKind). Autocomplete is the one a middleware cannot list, since Discord accepts only a list of choices in reply to one.
+`ComponentTrace` runs for buttons and modals, and its `this.event` is a union of those two payloads. Every kind seedcord routes is a member of [`InteractionKind`](ref:core/InteractionKind).
+
+```ts twoslash
+// @noErrors
+import { InteractionKind } from '@seedcord/gateway';
+// ---cut---
+InteractionKind.
+//              ^|
+```
+
+`Autocomplete` is the one a middleware can't list, since Discord accepts only a list of choices in reply to one.
 
 <Callout type="transport">
 
@@ -78,17 +105,17 @@ Every kind seedcord routes is a member of [`InteractionKind`](ref:core/Interacti
 
 ## Order
 
-`priority` takes any finite number and decides the order, with lower running earlier. Leaving it out puts the middleware at `0`.
+`priority` takes any finite number. The middleware with the lower number runs first. If you leave `priority` out, the middleware gets `0`.
 
-Two middleware sharing a number run in the order seedcord loaded them. Give anything order-dependent a number of its own.
+If two middleware share a number, they run in the order seedcord loaded them. That order can change when you add, rename, or move a middleware file, so give anything order-dependent a distinct priority.
 
 A negative priority puts a middleware ahead of every one that took the default.
 
 ## Stopping the dispatch
 
-Throwing from `execute()` ends the dispatch before the handler or its gates run.
+If you throw from `execute()`, the dispatch ends before the handler or its gates run.
 
-What you throw decides what the caller sees. A [`Notice`](ref:core/Notice) renders its card. A [`Silence`](ref:core/Silence) drops the interaction with no reply, so the caller sees Discord's own failed-interaction message. Anything else reports as a fault, the same as a throw from a handler.
+What you throw decides what the caller sees. A [`Notice`](ref:core/Notice) renders its card. A [`Silence`](ref:core/Silence) drops the interaction without replying, so the caller sees Discord's own failed-interaction message. Anything else reports as a fault, the same as a throw from a handler.
 
 ```ts twoslash title="src/handlers/middlewares/Maintenance.ts"
 import {
@@ -113,21 +140,26 @@ export class Maintenance extends InteractionMiddleware {
 
 ## Replying from a middleware
 
-A middleware holds the reply surface its handler built. `reply`, `defer`, `followUp`, `edit`, `send`, and `delete` all read the one ack state.
+A middleware uses the same reply methods as its handler. `reply`, `defer`, `followUp`, `edit`, `send`, and `delete` all share one record of whether the interaction has been answered yet.
 
-**A middleware that acks leaves its handler an acknowledged interaction.** `send()` carries on working there, since it picks whichever verb the current state allows. A `reply()` after the ack throws [`ReplyIllegalAckState`](/replying/ack-states).
+**If a middleware acks, its handler gets an interaction that's already acknowledged.** Keep track of what the middleware called, so the handler uses a method that fits. After a middleware calls `defer()`, the handler can `edit()` or `followUp()`. If the handler calls `reply()` there, it throws [`ReplyIllegalAckState`](/replying/ack-states). If you'd rather not track that, call `send()`. It checks what already happened, then replies, edits, or follows up to match.
 
 <Callout type="warning">
 
-seedcord builds your handler before the chain and the gates run. A constructor that queries your database therefore runs that query even when a middleware or a gate refuses the interaction. Keep the constructor to assigning fields and put the work in `execute()`.
+seedcord builds your handler at step 1, before any middleware or gate runs. If your constructor queries your database, that query runs even when a middleware or a gate refuses the interaction afterwards. Only set fields in the constructor. Put database calls and other work in `execute()`, which runs only after every middleware and gate has passed.
 
 </Callout>
 
 ## After the handler runs
 
-seedcord calls `after()` in reverse once the dispatch ends, newest middleware first. It records a middleware as its `execute()` begins, so a middleware that throws still gets its `after()`. The ones behind it in the chain never started, and they get none.
+A middleware can also have an `after()` method. seedcord calls it once the whole dispatch is over, after your handler's `execute()` has finished or something stopped the dispatch early.
 
-Nothing skips those calls. A gate refusal, a handler that threw, and a card whose `render()` threw while answering that refusal all still run them. Use `after()` to release whatever `execute()` held open, a lock or a tracing span.
+A middleware gets its `after()` call as long as its own `execute()` started, even if that `execute()` threw. Say middleware `A` runs before middleware `B`.
+
+- If both ran, `B.after()` runs first, then `A.after()`.
+- If `A` threw, only `A.after()` runs. `B` never started, so it doesn't get one.
+
+Those calls always run. They run after a gate refuses, after a handler throws, and even after the `render()` of a refusal card throws. Use `after()` to release whatever `execute()` held open, a lock or a tracing span.
 
 ```ts twoslash hovers title="src/handlers/middlewares/Span.ts"
 import {
@@ -136,11 +168,13 @@ import {
 } from '@seedcord/gateway';
 
 import type { DispatchResult } from '@seedcord/gateway';
+// ---cut-start---
 
 declare const tracer: {
     open(route: string): { end(status: string): void };
 };
-// ---cut---
+// ---cut-end---
+
 @RegisterInteractionMiddleware()
 export class Span extends InteractionMiddleware {
     private span?: ReturnType<(typeof tracer)['open']>;
@@ -159,11 +193,21 @@ export class Span extends InteractionMiddleware {
 }
 ```
 
-The base declares `after()` optional, so your implementation has to carry `override`. Leaving it off is a compile error.
+The base class declares `after()`, so your version overrides it. Mark it `override`, since leaving that off is a compile error under TypeScript's `noImplicitOverride`.
 
-[`DispatchResult`](ref:core/DispatchResult) reports how the dispatch ended. `outcome` reads `handled`, `refused`, or `failed`. Both failure states carry the thrown value on `caught`.
+`after()` receives a [`DispatchResult`](ref:core/DispatchResult) that says how the dispatch ended. The `Span` sample ends its tracing span with `result.outcome`.
 
-A throw inside `after()` reaches the log and stops there. The rest of the chain still runs.
+{/* prettier-ignore-start */}
+
+| `outcome` | when | `caught` |
+| --- | --- | --- |
+| `'handled'` | the handler finished without throwing | not present |
+| `'refused'` | something threw a `Silence`, or a `Notice` with `report` false | the thrown value |
+| `'failed'` | something threw a reported `Notice` or any other error | the thrown value |
+
+{/* prettier-ignore-end */}
+
+An `after()` that throws doesn't stop the other `after()` calls. If `B.after()` throws, seedcord logs the error and still calls `A.after()`.
 
 ## Where middleware lives
 
@@ -196,6 +240,8 @@ export const seedcord = new Seedcord({
 });
 ```
 
-A class in that directory without the decorator loads and never runs, the same way a handler missing its route decorator does. That one is caught while you write by `@seedcord/middleware-missing-register-decorator`.
+If a class in that directory doesn't have the decorator, seedcord loads it and never runs it. A handler missing its route decorator behaves the same way. seedcord's `middleware-missing-register-decorator` lint rule flags that class while you write it.
+
+If two middleware classes share a name, seedcord throws `DuplicateMiddleware` when it loads the second one. Give every class a unique name.
 
 A middleware passes values to the handler and its gates through [the dispatch context](/gates/dispatch-context).

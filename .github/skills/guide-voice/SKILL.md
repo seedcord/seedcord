@@ -327,6 +327,7 @@ The repairs:
 1. Pull a condition out of the subject or the end of the sentence, and put it first with `if` or `when`.
 2. Replace a position word, like above, inside, nested, or past, with what the code does. Use the names the sample shows.
 3. Once a sentence holds two facts, give the second its own sentence.
+4. When a rule depends on order or covers several cases, name a small example and walk each case. The middleware page said `after()` runs "in the reverse of the order the middleware ran", and the reader had to work out what that meant for two middleware. "Say middleware `A` runs before middleware `B`", followed by one bullet per case, answered it at a glance. A sequence the rest of the page leans on gets a `txt output` diagram near the top, so later sections can point at a step.
 
 A frontmatter description packs hardest, because it tries to fit a whole page into a line. Section 7 gives it a shape.
 

@@ -1,9 +1,11 @@
 ---
 title: Cooldowns
-description: Cooldown allows a set number of uses per window. The refusal card tells the caller when to try again.
+description: Limit how often a command runs with the Cooldown() gate. Covers durations, uses per window, who shares a window, wording the refusal, and keeping windows across restarts.
 ---
 
-[`Cooldown`](ref:core/Cooldown) allows a set number of uses per window and refuses once they run out. The refusal card shows when the caller can try again.
+A command that calls a paid API or posts in a channel needs a limit, or one person can run it dozens of times a minute. By hand, that's a map of last-use times in every handler that needs one, plus a reply telling the caller when to try again.
+
+[`Cooldown`](ref:core/Cooldown) is that limit as a gate. It allows a set number of uses per window and refuses once they're used up, with a card that shows when the caller can try again.
 
 ```ts twoslash title="src/handlers/Feed.ts"
 import {
@@ -22,9 +24,28 @@ export class Feed extends SlashHandler<'feed'> {
 }
 ```
 
+## Adding options
+
+Start with a duration alone, then add options as the command needs them. Each line below adds one option to the line above it.
+
+```ts twoslash
+import { Cooldown } from '@seedcord/gateway';
+// ---cut---
+// one use per caller every 30 seconds
+Cooldown(30);
+
+// three uses per caller every ten minutes
+Cooldown('10m', { limit: 3 });
+
+// three uses per server every ten minutes
+Cooldown('10m', { limit: 3, per: 'guild' });
+```
+
+The sections below cover each option in detail.
+
 ## The duration
 
-A string is a duration literal. A number is seconds.
+You pass a duration literal as a string, or a number of seconds.
 
 ```ts twoslash
 import { Cooldown } from '@seedcord/gateway';
@@ -51,13 +72,13 @@ A duration literal is digits followed by one lowercase unit.
 
 The type accepts any number in front of the unit. The parser accepts whole digits alone. So this compiles, then throws as the module loads.
 
-    ```ts twoslash
-    import { Cooldown } from '@seedcord/gateway';
-    // ---cut---
-    Cooldown('1.5h');
-    ```
+```ts twoslash
+import { Cooldown } from '@seedcord/gateway';
+// ---cut---
+Cooldown('1.5h');
+```
 
-    Your bot never starts, and the error names the code `GateInvalidCooldownDuration`. Write `Cooldown('90m')`.
+That throw stops your bot from starting. The error's code is `GateInvalidCooldownDuration`. Write `Cooldown('90m')` instead.
 
 </Callout>
 
@@ -69,7 +90,7 @@ Everything else the parser rejects throws the same way.
 
 ## Several uses per window
 
-`limit` sets how many uses fit in one window. It defaults to `1`.
+You set how many uses fit in one window with `limit`. It defaults to `1`.
 
 ```ts twoslash
 import { Cooldown } from '@seedcord/gateway';
@@ -77,19 +98,27 @@ import { Cooldown } from '@seedcord/gateway';
 Cooldown('10m', { limit: 3 });
 ```
 
-Three calls inside ten minutes pass. The fourth refuses until the earliest of the three leaves the window.
+The window is a _sliding window_, so each use counts for ten minutes after it happens. If someone runs the command at 12:00, 12:02, and 12:05, all three pass. A fourth run at 12:06 is refused. At 12:10 the 12:00 use expires, so the next run after that passes.
 
 ## Who shares a window
 
-Leaving `per` out gives every caller their own window. Pass `'guild'` or `'channel'` to widen it.
+If you leave `per` out, every caller gets their own window. Pass `'guild'` or `'channel'` to widen it.
+
+```ts twoslash
+// @noErrors
+import { Cooldown } from '@seedcord/gateway';
+// ---cut---
+Cooldown('10m', { per: '
+//                      ^|
+```
 
 {/* prettier-ignore-start */}
 
 | `per` | one window per | falls back to |
 | --- | --- | --- |
-| `'user'`, the default | caller | one shared window when the source carries no user |
-| `'guild'` | server | one shared window when the source carries no server |
-| `'channel'` | channel | one shared window when the source carries no channel |
+| `'user'`, the default | caller | one shared window when the source doesn't carry a user |
+| `'guild'` | server | one shared window when the source doesn't carry a server |
+| `'channel'` | channel | one shared window when the source doesn't carry a channel |
 
 {/* prettier-ignore-end */}
 
@@ -99,17 +128,17 @@ import { Cooldown } from '@seedcord/gateway';
 Cooldown('1h', { per: 'guild' });
 ```
 
-Every caller outside a server then shares one global window. Pair `per: 'guild'` with [`GuildOnly`](ref:core/GuildOnly) when that matters.
+With `per: 'guild'`, every caller outside a server shares one global window. If one person uses the command in a DM, they can use up the window for every other DM caller. Pair it with [`GuildOnly`](ref:core/GuildOnly) when your command should only run in a server anyway.
 
-Two handlers with the same settings still get separate windows, since the key includes the route. Two `Cooldown` calls with different settings stay apart even on the same handler.
+If two handlers use the same settings, they still get separate windows, since the key includes the route. If one handler has two `Cooldown` calls with different settings, their windows stay separate too.
 
 ## Wording the refusal
 
-`message` rewords the card and `notice` replaces it. Both take a function that receives the epoch milliseconds when the window frees up.
+`message` rewords the refusal. `notice` replaces it with a `Notice` you write. If you set both, seedcord uses `notice`. Both take a function, and seedcord calls it with `resetAt`. That's the time the caller can use the command again, as an `EpochMs` number of milliseconds since 1970.
 
 ```ts twoslash
 import { Cooldown, toEpochSeconds } from '@seedcord/gateway';
-// ---cut---
+
 Cooldown('10s', {
     per: 'channel',
     message: (resetAt) =>
@@ -140,16 +169,49 @@ class SlowDown extends Notice {
 Cooldown('1m', { notice: (resetAt) => new SlowDown(resetAt) });
 ```
 
+## Putting it together
+
+This handler sets every option that works together. Each server gets three feeds every ten minutes. When a server has used all three, the refusal says when the caller can try again.
+
+```ts twoslash title="src/handlers/Feed.ts"
+import {
+    Cooldown,
+    Gated,
+    SlashHandler,
+    SlashRoute,
+    toEpochSeconds
+} from '@seedcord/gateway';
+
+@Gated(
+    Cooldown('10m', {
+        limit: 3,
+        per: 'guild',
+        message: (resetAt) =>
+            `Out of feeds. Try again <t:${toEpochSeconds(resetAt)}:R>.`
+    })
+)
+@SlashRoute('feed')
+export class Feed extends SlashHandler<'feed'> {
+    public async execute(): Promise<void> {
+        await this.reply('Fed.');
+    }
+}
+```
+
+It sets `message` and leaves `notice` out, since `notice` would replace the reworded refusal.
+
 ## When the slot is charged
 
-`Cooldown` is an effect gate. It reads the window during the check and records the use only after every gate on the handler has passed. A gate refusing later means the commit never runs, so the caller keeps their use.
+`Cooldown` is an effect gate. It reads the window during the check and records the use only after every gate on the handler has passed. If a later gate refuses, the commit never runs, so the caller keeps their use.
 
 <Callout type="note">
 
-Two requests racing the same key can both read a free slot before either records its use. A tight burst can exceed `limit` that way. This comes from the check and commit split every [effect gate](/gates/effect-gates) makes.
+If two requests for the same key arrive at the same moment, both can read a free slot before either records its use. A tight burst can go over `limit` that way. Every [effect gate](/gates/effect-gates) has this gap between its check and its commit.
+
+`Cooldown` doesn't guard against it, since bursts that tight are rare. If your command can't allow even one extra use, write your own effect gate. In its `commit`, call [`ctx.core.rateLimiter.charge`](ref:types/IRateLimiter.charge), which records a use only when a slot is free. Throw when `result.limited` comes back `true`, and put that gate first so no other commit runs before it.
 
 </Callout>
 
 ## Keeping windows across restarts
 
-[`core.rateLimiter`](ref:types/IRateLimiter) holds the cooldown windows and counts them in memory by default. A restart clears every cooldown. On a serverless deploy each running copy keeps its own counts. Unless you set a [`store`](/gates/rate-limiter), that is.
+[`core.rateLimiter`](ref:types/IRateLimiter) holds the cooldown windows and counts them in memory by default. A restart clears every cooldown, and on a serverless deploy each running copy keeps its own counts. A durable [`store`](/gates/rate-limiter) keeps the windows through both.
