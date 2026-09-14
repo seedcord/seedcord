@@ -72,12 +72,17 @@ export class GitHubApi {
     }
 
     async pullRequestCommitAuthors(pull: number): Promise<string[]> {
-        const path = `/repos/${this.repo}/pulls/${String(pull)}/commits?per_page=${String(PAGE_SIZE)}`;
-        const response = await this.send('GET', path);
-        if (!response.ok) throw failed(`listing commits on pull request #${String(pull)}`, response);
+        const authors: string[] = [];
 
-        const commits = (await response.json()) as { author: Account | null }[];
-        return commits.map((one) => humanLogin(one.author)).filter((login) => login !== undefined);
+        for (let page = 1; ; page++) {
+            const path = `/repos/${this.repo}/pulls/${String(pull)}/commits?per_page=${String(PAGE_SIZE)}&page=${String(page)}`;
+            const response = await this.send('GET', path);
+            if (!response.ok) throw failed(`listing commits on pull request #${String(pull)}`, response);
+
+            const batch = (await response.json()) as { author: Account | null }[];
+            authors.push(...batch.map((one) => humanLogin(one.author)).filter((login) => login !== undefined));
+            if (batch.length < PAGE_SIZE) return authors;
+        }
     }
 
     async labels(issue: number): Promise<string[]> {

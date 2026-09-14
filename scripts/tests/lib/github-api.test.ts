@@ -143,6 +143,17 @@ describe('GitHubApi contributors', () => {
         await expect(api.pullRequestCommitAuthors(311)).resolves.toEqual(['alice', 'bob', 'alice']);
     });
 
+    it('reads every page of commits on a pull request', async () => {
+        const firstPage = Array.from({ length: 100 }, () => ({ author: { login: 'alice', type: 'User' } }));
+        const { calls, fetcher } = recorder(ok(firstPage), ok([{ author: { login: 'bob', type: 'User' } }]));
+        const api = new GitHubApi('seedcord/seedcord', 'token', fetcher);
+
+        const authors = await api.pullRequestCommitAuthors(311);
+
+        expect(authors).toContain('bob');
+        expect(calls[1]?.url).toContain('/pulls/311/commits?per_page=100&page=2');
+    });
+
     it('drops a bot account', async () => {
         const { fetcher } = recorder(
             ok([{ author: { login: 'dependabot[bot]', type: 'Bot' } }, { author: { login: 'cara', type: 'User' } }])
