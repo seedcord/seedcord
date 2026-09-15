@@ -1,5 +1,5 @@
 import { BRAND } from '@seedcord/ui/palette';
-import { MotionProvider, ThemeProvider, cn } from '@seedcord/ui';
+import { MotionProvider, ThemeProvider, cn, seedcordJsonLd } from '@seedcord/ui';
 import { Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
@@ -25,6 +25,8 @@ export const viewport: Viewport = {
     ]
 };
 
+const jsonLd = seedcordJsonLd({ name: SITE_NAME, url: SITE_URL, description: SITE_DESCRIPTION });
+
 interface RootLayoutProps {
     children: ReactNode;
 }
@@ -37,6 +39,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 suppressHydrationWarning
                 className={cn(display.variable, 'antialiased', 'flex min-h-screen flex-col')}
             >
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
                 <ThemeProvider>
                     {/* apps/docs repeats this class string, change both */}
                     <a

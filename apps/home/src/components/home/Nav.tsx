@@ -26,7 +26,6 @@ export function Nav(): ReactNode {
                             seedcord
                         </span>
                     </Link>
-                    <NpmVersion />
                 </div>
                 <div className={cn('flex items-center gap-2')}>
                     <nav aria-label="Primary" className={cn('hidden items-center gap-1 sm:flex')}>
@@ -45,6 +44,7 @@ export function Nav(): ReactNode {
                             </Link>
                         ))}
                     </nav>
+                    <NpmVersion />
                     <PosterButton href={REPO_URL} variant="ink" className={cn('font-mono-code px-3 py-1.5 text-sm')}>
                         <Icon icon={GithubIcon} size={20} className={cn('md:hidden')} />
                         <span className={cn('sr-only md:not-sr-only')}>GitHub</span>

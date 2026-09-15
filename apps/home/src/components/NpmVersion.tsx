@@ -1,10 +1,9 @@
 'use client';
 
-import { cn } from '@seedcord/ui';
-import Link from 'next/link';
+import { cn, Icon, NpmIcon } from '@seedcord/ui';
 import { useEffect, useState } from 'react';
 
-import { pressable } from '#components/ui/press';
+import { PosterButton } from '#components/ui/PosterButton';
 import { NPM_URL } from '#lib/site';
 
 import type { ReactNode } from 'react';
@@ -28,17 +27,14 @@ export function NpmVersion(): ReactNode {
 
     if (version === null) return null;
     return (
-        <Link
+        <PosterButton
             href={NPM_URL}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`seedcord v${version} on npm`}
-            className={cn(
-                'font-mono-code rounded-sm bg-(--rind-deep) px-1.5 py-0.5 text-[11px] font-semibold text-(--pith)',
-                pressable
-            )}
+            variant="ink"
+            ariaLabel={`seedcord v${version} on npm`}
+            className={cn('font-mono-code group px-3 py-1.5 text-sm whitespace-nowrap')}
         >
-            v{version}
-        </Link>
+            <Icon icon={NpmIcon} size={20} className={cn('text-(--flesh) group-hover:text-(--pith) md:size-4')} />
+            <span className={cn('sr-only md:not-sr-only')}>v{version}</span>
+        </PosterButton>
     );
 }

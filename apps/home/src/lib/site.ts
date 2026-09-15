@@ -1,16 +1,16 @@
+import { HOME_URL } from '@seedcord/ui';
 import { OG_SIZE } from '@seedcord/ui/og';
 
-const FALLBACK_URL = 'https://seedcord.org';
+export { AUTHOR_GITHUB_URL, AUTHOR_URL, DISCORD_URL, NPM_ORG_URL, REPO_URL } from '@seedcord/ui';
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? FALLBACK_URL;
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? HOME_URL;
 export const SITE_NAME = 'seedcord';
 export const SITE_DESCRIPTION =
     'A TypeScript framework for Discord bots. Generated slash-option types, a typed customId codec, composable gates, and hot reload, all on top of discord.js.';
-export const REPO_URL = 'https://github.com/seedcord/seedcord';
 export const GUIDE_URL = 'https://guide.seedcord.org';
 export const DOCS_URL = 'https://docs.seedcord.org';
 export const NPM_URL = 'https://www.npmjs.com/package/seedcord';
-export const DISCORD_URL = 'https://discord.gg/DzFxY58WXf';
+export const ROADMAP_URL = 'https://github.com/orgs/seedcord/projects/1';
 export const CDN_URL = 'https://cdn.seedcord.org';
 
 export function canonicalUrl(path: string): string {

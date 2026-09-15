@@ -1,4 +1,4 @@
-import { ThemeProvider, TooltipProvider, cn } from '@seedcord/ui';
+import { ThemeProvider, TooltipProvider, cn, seedcordJsonLd } from '@seedcord/ui';
 import { Space_Grotesk } from 'next/font/google';
 import Script from 'next/script';
 import { preconnect } from 'react-dom';
@@ -10,7 +10,7 @@ import { HotkeyProvider } from '#components/providers/HotkeyProvider';
 import { MotionProvider } from '#components/providers/MotionProvider';
 import { CommandPalette } from '#components/search/command-palette';
 import { FOREGROUND_HEX } from '#lib/entityColors';
-import { OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
+import { OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
 
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
@@ -48,18 +48,7 @@ export const viewport: Viewport = {
     ]
 };
 
-const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'SoftwareSourceCode',
-    name: SITE_NAME,
-    description: SITE_DESCRIPTION,
-    url: SITE_URL,
-    codeRepository: REPO_URL,
-    programmingLanguage: 'TypeScript',
-    runtimePlatform: 'Node.js',
-    license: 'https://www.apache.org/licenses/LICENSE-2.0',
-    author: { '@type': 'Person', name: 'Dhruv', url: 'https://github.com/materwelonDhruv' }
-};
+const jsonLd = seedcordJsonLd({ name: OG_SITE_NAME, url: SITE_URL, description: SITE_DESCRIPTION });
 
 interface RootLayoutProps {
     children: ReactNode;
@@ -77,11 +66,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 data-new-gr-c-s-check-loaded=""
                 data-gr-ext-installed=""
             >
-                <script
-                    type="application/ld+json"
-                    // escape < so the JSON can't break out of the script tag
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
-                />
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
                 <Script id="strip-grammarly-attributes" strategy="beforeInteractive">
                     {`
                         (function () {

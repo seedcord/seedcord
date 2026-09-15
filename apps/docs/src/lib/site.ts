@@ -9,9 +9,8 @@ export const SITE_NAME = 'seedcord';
 export const OG_SITE_NAME = 'seedcord documentation'; // reads clearer than plain 'seedcord' on docs link embeds
 export const SITE_DESCRIPTION =
     'API documentation for seedcord, a TypeScript framework for Discord bots built on discord.js.';
-export const REPO_URL = 'https://github.com/seedcord/seedcord';
+export { HOME_URL, REPO_URL } from '@seedcord/ui';
 export const GUIDE_URL = 'https://guide.seedcord.org';
-export const HOME_URL = 'https://seedcord.org';
 
 export function canonicalUrl(path: string): string {
     return new URL(path, SITE_URL).toString();

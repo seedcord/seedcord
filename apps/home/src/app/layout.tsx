@@ -1,11 +1,11 @@
 import { BRAND } from '@seedcord/ui/palette';
-import { cn } from '@seedcord/ui';
+import { cn, HOME_URL, seedcordJsonLd } from '@seedcord/ui';
 import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
 
 import { ConsoleGreeting } from '#components/ConsoleGreeting';
-import { DEFAULT_OG_IMAGE, REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
+import { DEFAULT_OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
 
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
@@ -45,18 +45,7 @@ export const viewport: Viewport = {
     ]
 };
 
-const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'SoftwareSourceCode',
-    name: SITE_NAME,
-    description: SITE_DESCRIPTION,
-    url: SITE_URL,
-    codeRepository: REPO_URL,
-    programmingLanguage: 'TypeScript',
-    runtimePlatform: 'Node.js',
-    license: 'https://www.apache.org/licenses/LICENSE-2.0',
-    author: { '@type': 'Person', name: 'Dhruv', url: 'https://github.com/materwelonDhruv' }
-};
+const jsonLd = seedcordJsonLd({ name: SITE_NAME, url: HOME_URL, description: SITE_DESCRIPTION });
 
 interface RootLayoutProps {
     children: ReactNode;
@@ -70,11 +59,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 suppressHydrationWarning
                 className={cn(display.variable, monoCode.variable, 'antialiased')}
             >
-                <script
-                    type="application/ld+json"
-                    // escape < so the JSON can't break out of the script tag
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
-                />
+                <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
                 <a
                     href="#main-content"
                     className={cn(

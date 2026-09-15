@@ -21,11 +21,18 @@ type PosterButtonVariant = keyof typeof VARIANTS;
 interface PosterButtonProps {
     href: string;
     variant?: PosterButtonVariant;
+    ariaLabel?: string;
     className?: string;
     children: ReactNode;
 }
 
-export function PosterButton({ href, variant = 'solid', className, children }: PosterButtonProps): ReactNode {
+export function PosterButton({
+    href,
+    variant = 'solid',
+    ariaLabel,
+    className,
+    children
+}: PosterButtonProps): ReactNode {
     const external = href.startsWith('http');
     const { socket, button } = VARIANTS[variant];
     return (
@@ -38,6 +45,7 @@ export function PosterButton({ href, variant = 'solid', className, children }: P
             ) : null}
             <Link
                 href={href}
+                aria-label={ariaLabel}
                 {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
                 className={cn(
                     'relative inline-flex items-center justify-center gap-2 rounded-sm font-semibold',
