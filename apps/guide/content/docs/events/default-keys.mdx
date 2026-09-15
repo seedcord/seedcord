@@ -14,13 +14,13 @@ The `where` column says which transport publishes each key.
 | `unknownException` | both | a raw throw reaches the fault boundary, or the Node process catches an unhandled error |
 | `handledException` | both | a [`Notice`](ref:core/Notice) with `report` true is caught |
 | `unhandledInteractionError` | both | an interaction dispatch throws past the boundary |
-| `interactionDispatched` | both | one dispatch settles |
+| `interactionDispatched` | both | one dispatch finishes |
 | `responseAttempted` | both | any write through the reply surface |
 | `commandsDeployed` | both | a command deploy finishes |
 | `anyInteraction` | both | an interaction arrives, before routing |
 | `unhandledEventError` | gateway | an event dispatch throws past the boundary |
 | `eventDispatching` | gateway | before the handlers for an event run |
-| `eventDispatched` | gateway | those handlers settle |
+| `eventDispatched` | gateway | those handlers finish |
 
 {/* prettier-ignore-end */}
 
@@ -86,7 +86,7 @@ export class Trace extends Subscriber<'eventDispatching'> {
 
 </Callout>
 
-`eventDispatched` fires once the handlers settle. Its fields, including each handler's outcome, are on [the telemetry page](/events/telemetry).
+`eventDispatched` fires once the handlers finish. Its fields, including each handler's outcome, are on [the telemetry page](/events/telemetry).
 
 ## The two unhandled errors
 
@@ -126,7 +126,7 @@ A reported `Notice` thrown from an autocomplete also publishes here, since [`Fau
 
 {/* prettier-ignore-end */}
 
-An event `origin` carries a third segment naming the handler, since one fire runs several of them.
+An event `origin` carries a third segment naming the handler, since one dispatch runs several of them.
 
 seedcord ships a subscriber for each of these keys and registers it for you. Each one [posts a card to a Discord webhook](/replying/reporting) once you set its environment variable.
 

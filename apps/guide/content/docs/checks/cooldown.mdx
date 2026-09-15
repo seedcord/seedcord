@@ -43,7 +43,7 @@ Cooldown('10m', { limit: 3, per: 'guild' });
 
 The sections below cover each option in detail.
 
-## The duration
+### The duration
 
 You pass a duration literal as a string, or a number of seconds.
 
@@ -88,7 +88,7 @@ Everything else the parser rejects throws the same way.
 - a bare number in a string, as in `'30'`
 - a zero duration, as in `0s`
 
-## Several uses per window
+### Several uses per window
 
 You set how many uses fit in one window with `limit`. It defaults to `1`.
 
@@ -100,7 +100,7 @@ Cooldown('10m', { limit: 3 });
 
 The window is a _sliding window_, so each use counts for ten minutes after it happens. If someone runs the command at 12:00, 12:02, and 12:05, all three pass. A fourth run at 12:06 is refused. At 12:10 the 12:00 use expires, so the next run after that passes.
 
-## Who shares a window
+### Who shares a window
 
 If you leave `per` out, every caller gets their own window. Pass `'guild'` or `'channel'` to widen it.
 
@@ -132,7 +132,7 @@ With `per: 'guild'`, every caller outside a server shares one global window. If 
 
 If two handlers use the same settings, they still get separate windows, since the key includes the route. If one handler has two `Cooldown` calls with different settings, their windows stay separate too.
 
-## Wording the refusal
+### Wording the refusal
 
 `message` rewords the refusal. `notice` replaces it with a `Notice` you write. If you set both, seedcord uses `notice`. Both take a function, and seedcord calls it with `resetAt`. That's the time the caller can use the command again, as an `EpochMs` number of milliseconds since 1970.
 

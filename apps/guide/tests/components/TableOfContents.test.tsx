@@ -27,7 +27,7 @@ describe('TableOfContents', () => {
     it('indents one step further for every heading level', () => {
         render(
             <MotionProvider>
-                <TableOfContents items={NESTED} activeIds={[]} />
+                <TableOfContents items={NESTED} activeIds={new Set()} />
             </MotionProvider>
         );
 

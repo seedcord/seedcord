@@ -82,7 +82,7 @@ To send an embed or a poll, use discord.js's own methods on `this.event`. That s
 
 </Callout>
 
-## Mentions inside your components
+### Mentions inside your components
 
 seedcord sends `allowedMentions` only when you set one. Discord's default for an interaction reply is `{ parse: ['users'] }`, so a `<@id>` in your text pings that person. A role or `@everyone` mention stays plain text.
 

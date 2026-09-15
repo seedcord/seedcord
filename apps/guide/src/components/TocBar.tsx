@@ -14,10 +14,9 @@ import {
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 
-import { idOf, indentOf, rowClassName } from './TableOfContents';
+import { idOf, TocRows } from './TableOfContents';
 
-import type { TableOfContentsProps } from './TableOfContents';
-import type { TOCItemType } from 'fumadocs-core/toc';
+import type { TableOfContentsProps, TocRowsProps } from './TableOfContents';
 import type { Variants } from 'motion/react';
 import type { CSSProperties, ReactElement, RefObject } from 'react';
 
@@ -92,51 +91,7 @@ function useReadProgress(target: RefObject<HTMLElement | null>): void {
     }, [target]);
 }
 
-function PanelRows({
-    items,
-    active,
-    onPick
-}: {
-    items: readonly TOCItemType[];
-    active: ReadonlySet<string>;
-    onPick: () => void;
-}): ReactElement {
-    return (
-        <div
-            className={cn('nice-scroll max-h-[50dvh] overflow-y-auto overscroll-contain px-4 py-3 text-[13px] md:px-6')}
-        >
-            {items.map((item) => {
-                const isActive = active.has(idOf(item.url));
-                return (
-                    <a
-                        key={item.url}
-                        href={item.url}
-                        onClick={onPick}
-                        aria-current={isActive ? 'location' : undefined}
-                        className={cn(
-                            rowClassName,
-                            tw`border-l`,
-                            indentOf(item.depth),
-                            isActive ? tw`border-(--flesh) text-(--flesh)` : tw`border-(--border) text-(--text-muted)`
-                        )}
-                    >
-                        {item.title}
-                    </a>
-                );
-            })}
-        </div>
-    );
-}
-
-function Panel({
-    items,
-    active,
-    onPick
-}: {
-    items: readonly TOCItemType[];
-    active: ReadonlySet<string>;
-    onPick: () => void;
-}): ReactElement {
+function Panel(rows: TocRowsProps): ReactElement {
     const { open, panelId } = useDisclosure();
     const reducedMotion = useReducedMotion() ?? false;
 
@@ -151,7 +106,13 @@ function Panel({
                     exit="gone"
                     className={cn(panelClassName, 'overflow-hidden')}
                 >
-                    <PanelRows items={items} active={active} onPick={onPick} />
+                    <div
+                        className={cn(
+                            'nice-scroll max-h-[50dvh] overflow-y-auto overscroll-contain px-4 py-3 text-[13px] md:px-6'
+                        )}
+                    >
+                        <TocRows {...rows} />
+                    </div>
                 </m.div>
             ) : null}
         </AnimatePresence>
@@ -168,7 +129,6 @@ export function TocBar({ items, activeIds, currentId, pageTitle, className }: To
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
-    const active = new Set(activeIds);
     const current = items.find((item) => idOf(item.url) === currentId);
 
     useReadProgress(ref);
@@ -212,7 +172,7 @@ export function TocBar({ items, activeIds, currentId, pageTitle, className }: To
                     <DisclosureChevron />
                 </DisclosureTrigger>
                 {open ? null : <span aria-hidden className={cn(progressClassName)} style={progressStyle} />}
-                <Panel items={items} active={active} onPick={() => setOpen(false)} />
+                <Panel items={items} activeIds={activeIds} onPick={() => setOpen(false)} />
             </Disclosure>
         </div>
     );

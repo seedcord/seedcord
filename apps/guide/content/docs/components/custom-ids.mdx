@@ -165,7 +165,7 @@ const { roles } = Assign.decode(wire); // ['reader', 'vip']
 
 The `'vip'` passed twice comes back once. `decode` returns the picks in the order the list declares them, which puts `'reader'` first.
 
-## Fields that can be absent
+### Fields that can be absent
 
 A `/leaderboard [role]` command takes a filter the caller can leave out, and every page button has to carry that filter either way. Every kind takes `{ nullable: true }` for a value like that, which decodes the field as `T | null`.
 
@@ -188,7 +188,7 @@ Marking a field nullable changes the shape, which changes the hash in the route 
 
 </Callout>
 
-## What a field costs
+### What a field costs
 
 Discord caps a `custom_id` at 100 characters, and that covers the prefix, the shape hash, and every value.
 

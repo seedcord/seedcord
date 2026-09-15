@@ -64,7 +64,7 @@ export function NavTabs({ items, activeHref, linkAs, className }: NavTabsProps):
                                     layoutId={underlineId}
                                     aria-hidden
                                     transition={reducedMotion ? { duration: 0 } : layoutSpring}
-                                    className={cn('absolute inset-x-0 -bottom-px h-0.5 bg-(--flesh)')}
+                                    className={cn('absolute inset-x-0 bottom-0 h-0.5 bg-(--flesh)')}
                                 />
                             ) : null}
                         </Link>

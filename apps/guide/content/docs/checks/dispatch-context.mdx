@@ -122,7 +122,7 @@ The next dispatch of the same route gets a new `id`. The [bus events](/events/de
 
 Use `get` where the value is genuinely optional.
 
-## Reading it from a gate
+### Reading it from a gate
 
 A gate's context carries the same bag. `KnownActor` below refuses on something a middleware computed.
 
@@ -150,7 +150,7 @@ Every middleware runs _before_ the first gate, which is what makes this read saf
 
 </Callout>
 
-## Reading it from a `Notice`
+### Reading it from a `Notice`
 
 [`RenderContext`](ref:types/RenderContext) carries the bag too, which matters most when seedcord builds the reply itself, like the one for an unknown fault. seedcord constructs that `Notice` with only the fault's uuid, so `render(ctx)` is the one place your code reads the dispatch.
 

@@ -17,7 +17,7 @@ const TRIGGER = /On this page/;
 function renderBar(): void {
     render(
         <MotionProvider>
-            <TocBar items={ITEMS} activeIds={['do-this']} currentId="do-this" pageTitle="The dev loop" />
+            <TocBar items={ITEMS} activeIds={new Set(['do-this'])} currentId="do-this" pageTitle="The dev loop" />
             <a href="#elsewhere">elsewhere</a>
         </MotionProvider>
     );

@@ -96,7 +96,7 @@ The same happens inside a single commit. If it writes twice and throws between t
 
 </Callout>
 
-## Inside an or
+### Inside an or
 
 Each arm of an [`or`](ref:core/or) can be a group of gates, like an `and`. If that group refuses, seedcord throws away the commits its gates queued, so they never run. The handler below passes `SpendCredit` to an `and`, and passes that `and` to an `or`.
 

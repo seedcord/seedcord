@@ -143,7 +143,7 @@ export const Feed = new Paginator({
 
 The `controls.row('prev', 'indicator', 'next')` call inside `FeedCard` builds each button with its target page already set, and disables it at the ends of the list. **Prev** on page one comes back greyed out with nothing left for you to wire.
 
-## The control keys
+### The control keys
 
 `row()` and `button()` both take one of five keys.
 
@@ -163,7 +163,7 @@ An [`ArraySource`](ref:gateway/ArraySource) knows its total, so a row there can 
 
 `row()` throws on an empty list, on more than five keys, and on the same key twice. Two copies of one control get the same custom id, which Discord rejects.
 
-## One button at a time
+### One button at a time
 
 `row()` builds every button with its default label and color. [`controls.button()`](ref:core/PaginatorControls.button) returns them one at a time so you can pass cosmetics.
 

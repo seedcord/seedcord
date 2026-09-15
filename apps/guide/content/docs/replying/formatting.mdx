@@ -34,7 +34,7 @@ The scaffold's `/ping` measures a roundtrip this way, storing nothing. Discord s
 
 </Callout>
 
-## Discord timestamps take seconds
+### Discord timestamps take seconds
 
 `<t:1735689600:R>` renders as a live relative time in a message. Discord reads that number as **seconds**. JavaScript gives you milliseconds everywhere, so [`toEpochSeconds`](ref:utils/toEpochSeconds) does the divide and the rounding.
 
