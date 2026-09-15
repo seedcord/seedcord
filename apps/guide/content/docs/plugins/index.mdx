@@ -1,9 +1,11 @@
 ---
 title: Plugins
-description: A plugin extends your bot with its own lifecycle, arguments, and log channel. You attach it under a key and read it back typed on this.core.
+description: Add your own services to a bot with plugins, which seedcord starts and stops with it. Covers attaching a plugin, reading it from a handler, and where a plugin can run.
 ---
 
-A plugin extends your bot with additional functionality. It has its own lifecycle, arguments, logging channel, and more. You attach it under a key you pick, then read it back from `this.core` anywhere `core` is available, like a handler.
+Most bots need something beside Discord, like a database, a cache, or a client for another API. Wiring one up by hand means starting it before the bot logs in, handing it to every handler through a global or an import, and stopping it on shutdown before the process exits.
+
+A plugin packages that work. It starts and stops at defined points in your bot's lifecycle, takes its own options, and logs on its own channel. You attach it under a key you pick, then read it from `this.core` anywhere `core` is available, like a handler.
 
 ```ts twoslash hovers title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -33,13 +35,13 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
-[`attach`](ref:gateway/Seedcord.attach) takes the key, the plugin class, and whatever that class's constructor takes after the host. A plugin that takes only the host attaches with two arguments.
+[`attach`](ref:gateway/Seedcord.attach) takes the key, the plugin class, and whatever that class's constructor takes after the host. Here that's `'db'`, `Mongoose`, and its options object. If a plugin's constructor takes only the host, attach it with two arguments.
 
-The `export default` on the last line matters as much as the attach call, since `seedcord codegen` reads it to [type `this.core.db`](/plugins/typing).
+Keep the `export default`. `seedcord codegen` imports that default export to [type `this.core.db`](/plugins/typing). Without it, `this.core.db` doesn't compile.
 
 ## Reading it from a handler
 
-`this.core` carries every attached plugin under its key, which is how the handler below reaches the mongoose service through `this.core.db`.
+`this.core` carries every attached plugin under its key.
 
 ```ts twoslash title="src/handlers/History.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -95,11 +97,13 @@ export class History extends SlashHandler<'history'> {
 }
 ```
 
-`seedcord codegen` writes that `declare module` block for you. Without it `this.core.db` fails to compile. The plugin itself still runs.
+`History` reaches the mongoose service through `this.core.db`.
+
+The sample declares its `Core` block by hand so it compiles on this page. In your project, `seedcord codegen` writes that block for you.
 
 ## Attaching more than one
 
-Inside one startup phase the plugins connect one after another, in the order you attached them. That order matters once one plugin reads another.
+A bot can attach more than one plugin, each under its own key. Chain another `attach` for each one. Inside one startup phase the plugins start one after another, in the order you attached them. If your plugin's `init()` reads another plugin, attach that one first. Otherwise your `init()` runs before the other plugin has started.
 
 ```ts twoslash
 import { resolve } from 'node:path';
@@ -139,7 +143,7 @@ export const seedcord = new Seedcord({
 
 ## The key also names a log channel
 
-Every mongoose line above prints under `db`, since a plugin logs on the channel its attach key names. The framework already logs on reserved channels of its own, which rules those names out as keys.
+Every mongoose log line prints on the `db` channel, since a plugin logs on the channel named after its attach key. That lets you filter or silence one plugin's logs by the key you gave it. seedcord already logs on reserved channels of its own, so those names can't be keys.
 
 ```ts twoslash
 // @errors: 2345
@@ -173,19 +177,27 @@ seedcord.attach('commands', Mongoose, {
 
 <Callout type="warning">
 
-`commands` is one of those reserved channels, so that attach fails to compile. [Logging](/tooling/logging) lists them with what each one carries.
+`commands` is one of those reserved channels, so that attach fails to compile. If the compiler can't see the key, like one read from an environment variable, `attach` throws `CorePluginReservedChannel` when it runs. [Logging](/tooling/logging) lists the reserved channels with what each one carries.
 
 </Callout>
 
-Two more mistakes throw once the bot is running. Reusing a key you already attached throws `CorePluginKeyExists`, and attaching anything at all after startup throws `CorePluginAfterInit`.
+`attach` throws in two more cases when it runs:
+
+- If the bot has already started, it throws `CorePluginAfterInit`.
+- If another plugin or seedcord itself already uses the key on `core`, like `bus`, it throws `CorePluginKeyExists`.
 
 ## A plugin declares where it runs
 
-A plugin can name the transport and the runtime it supports. Both default to `'any'`, which attaches to any bot. Naming one and then attaching it somewhere that does not match fails to compile, with "this plugin declares transport 'gateway' but this bot runs 'http'".
+Some plugins only work in one setup, like one that reads discord.js objects on gateway. A plugin can declare the transport it supports, `'gateway'` or `'http'`, and the runtime, `'server'` or `'edge'`. Both default to `'any'`, which attaches to any bot. If you attach a plugin to a bot that doesn't match, TypeScript reports the mismatch in your editor before the bot runs.
+
+```txt output
+this plugin declares transport 'gateway' but this bot runs 'http'
+```
 
 <Callout type="transport" only="http">
-    An edge bot does not take plugins. `attach` rejects every one
-    until edge support ships.
+
+An edge bot can't use plugins. `createSeedcord` from `@seedcord/http/edge` returns a request handler, which doesn't have `attach`.
+
 </Callout>
 
-[Typing a plugin](/plugins/typing) explains the codegen step behind `this.core.db`. [The lifecycle](/plugins/lifecycle) says when a plugin connects and when it closes down. To write one, start at [Writing your own](/plugins/your-own).
+[Typing a plugin](/plugins/typing) explains the codegen step behind `this.core.db`. [The lifecycle](/plugins/lifecycle) says when a plugin starts and when it stops. To write one, start at [Writing your own](/plugins/your-own).

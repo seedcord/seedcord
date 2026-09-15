@@ -1,9 +1,11 @@
 ---
 title: Reading the telemetry
-description: interactionDispatched fires once per interaction. responseAttempted fires on every write, so one interaction can produce several.
+description: Measure how long your bot takes to answer with the telemetry keys on the bus. Covers what each interaction, write, and event reports, the two timing clocks, catching a failed write, joining the keys on dispatchId, and typing a payload.
 ---
 
-Some bus keys carry numbers. `interactionDispatched` fires once per interaction, after the handler chain settles. `responseAttempted` fires on every write through the reply surface, so one interaction can produce several. That count includes the error card seedcord sends when your handler throws.
+When a command feels slow, you want to know whether your code or Discord caused the delay. Timing each handler yourself means a stopwatch in every `execute()`, which still misses the gates and the replies around it.
+
+seedcord measures each dispatch for you and publishes the numbers on the bus. `interactionDispatched` fires once per interaction, after your handler finishes. `responseAttempted` fires on every write through the reply surface, so one interaction can produce several. That count includes the error card seedcord sends when your handler throws.
 
 ```ts twoslash title="src/subscribers/SlowDispatch.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
@@ -23,7 +25,9 @@ export class SlowDispatch extends Subscriber<'interactionDispatched'> {
 }
 ```
 
-## What one dispatch reports
+`SlowDispatch` logs any dispatch that took longer than `SLOW_MS`, two seconds, with its route and outcome.
+
+## What one `interactionDispatched` reports
 
 {/* prettier-ignore-start */}
 
@@ -35,19 +39,25 @@ export class SlowDispatch extends Subscriber<'interactionDispatched'> {
 | `kind` | [`InteractionKind`](ref:core/InteractionKind) | `slash`, `button`, `modal`, `autocomplete`, the five `*Menu` kinds, and the two `*ContextMenu` kinds |
 | `outcome` | [`DispatchOutcome`](ref:core/DispatchOutcome) | `handled`, `refused`, or `failed` |
 | `fallback` | `boolean` | true when no route matched and the unhandled default ran |
-| `userId` | `string \| null` | who ran the route, null when the payload carried no user |
+| `userId` | `string \| null` | who ran the route, null when the payload didn't carry a user |
 | `guildId` | `string \| null` | the guild it came from, null in DMs |
-| `durationMs` | `number` | dispatch entry until the user has a response |
+| `durationMs` | `number` | dispatch entry until the handler returns or its error card is sent |
 | `queuedMs` | `number` | Discord's interaction creation until dispatch entry |
 
 {/* prettier-ignore-end */}
 
-`outcome` comes from the class you threw, wherever you threw it. A [`Silence`](ref:core/Silence) and a [`Notice`](ref:core/Notice) with `report` false both read `refused`. A `Notice` with `report` true reads `failed`, as does any other throw. A handler that returns without throwing reads `handled`.
+`outcome` comes from what you threw, whether from a middleware, a gate, or the handler.
 
-## The two clocks
+- `handled` means nothing threw.
+- `refused` means a [`Silence`](ref:core/Silence), or a [`Notice`](ref:core/Notice) with `report` false.
+- `failed` means a `Notice` with `report` true, or any other throw.
+
+### The two clocks
+
+A slow command has two possible causes: the interaction reached your bot late, or your bot took long once it arrived. The dispatch reports each one on its own clock.
 
 ```txt output
-discord creates it      dispatch entry             settled
+discord creates it      dispatch entry            finished
         │                     │                       │
         └───── queuedMs ──────┘                       │
                               │                       │
@@ -59,7 +69,7 @@ discord creates it      dispatch entry             settled
                               each with its own durationMs
 ```
 
-`durationMs` runs on a monotonic clock, so a system clock change never moves it. It covers your gates, your handler, and the replies your handler sends.
+`durationMs` runs on a monotonic clock, so a system clock change never moves it. The clock stops once your handler returns, or once the error card for a throw has gone out. That covers your middleware, your gates, and every reply your handler awaited. Middleware `after` callbacks run after seedcord publishes `interactionDispatched`, so their time isn't part of `durationMs`.
 
 Every interaction id carries the moment Discord created it, built into the id itself. seedcord reads that moment back out and subtracts it from your server's clock as the dispatch starts.
 
@@ -70,15 +80,17 @@ your bot reached it  12:00:00.180
 queuedMs                      180
 ```
 
-So `queuedMs` is how long the interaction waited before your bot got to it. It grows when the network is slow, and it grows when your bot was busy with other work.
+Here the bot reached the interaction 180ms after Discord created it, so `queuedMs` reports `180`. If the network is slow, or your bot was busy with other work, the number grows.
 
 <Callout type="warning">
 
-`queuedMs` compares your server's clock against Discord's. The two never agree exactly, so a server running a little behind reports a negative number. A run of negatives means your server's clock needs a look. seedcord reports `0` when the interaction id will not parse.
+`queuedMs` compares your server's clock against Discord's. The two never agree exactly, so a server running a little behind reports a negative number. A run of negatives means your server's clock is behind, so check that it syncs over NTP. If the interaction id doesn't parse, seedcord reports `0`.
 
 </Callout>
 
-## What one write reports
+## What one `responseAttempted` reports
+
+A dispatch can be slow because one Discord call was slow. `responseAttempted` times each write on its own, so you can tell a slow `reply` apart from a slow handler.
 
 {/* prettier-ignore-start */}
 
@@ -87,7 +99,7 @@ So `queuedMs` is how long the interaction waited before your bot got to it. It g
 | `dispatchId` | `string` | the dispatch this write belongs to |
 | `routeId` | `string` | the same route id the dispatch reports |
 | `interactionId` | `string` | the same interaction id |
-| `method` | [`WriteMethod`](ref:core/WriteMethod) | `reply`, `defer`, `deferUpdate`, `update`, `followUp`, `edit`, `delete`, `showModal`, or `respond` |
+| `method` | `string` union | `reply`, `defer`, `deferUpdate`, `update`, `followUp`, `edit`, `delete`, `showModal`, or `respond` |
 | `outcome` | [`ResponseOutcome`](ref:core/ResponseOutcome) | `sent` or `failed` |
 | `durationMs` | `number` | the write itself, monotonic |
 | `messageId` | `string \| null` | the id of the message Discord returned |
@@ -95,15 +107,13 @@ So `queuedMs` is how long the interaction waited before your bot got to it. It g
 
 {/* prettier-ignore-end */}
 
-`send` picks a verb from the [ack state](/replying/ack-states). `method` reports the one that ran.
+`send` picks a verb from the [ack state](/replying/ack-states), and `method` reports the one that ran. The type also allows `send`, but a published write never carries it.
 
-`messageId` carries an id for `reply`, `update`, `followUp`, and `edit`. Every other verb reports `null`, and so does any failed write.
+`messageId` carries an id for `reply`, `update`, `followUp`, and `edit`. Every other verb reports `null`, as does a failed write.
 
-Both keys carry `interactionId`, which is Discord's own id for the interaction.
+### Catching a failed write
 
-## Catching a failed write
-
-When a write throws, seedcord publishes `outcome` `failed` with the throw on `error`. Check `outcome` first, because only the failed shape carries an `error` field.
+Your handler sees its own failed write as a throw. seedcord also sends writes of its own, like the error card after a throw. Those don't run through your handler. When any write throws, seedcord publishes `outcome` `failed` with the throw on `error`. Check `outcome` first, because only the failed shape carries an `error` field.
 
 ```ts twoslash title="src/subscribers/WriteAudit.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
@@ -122,25 +132,33 @@ export class WriteAudit extends Subscriber<'responseAttempted'> {
 }
 ```
 
-A `reply` or an `update` can come back from Discord without the message it should carry. seedcord throws `ReplyCallbackMissingMessage` there, and that write publishes nothing, since the call itself succeeded and named no message.
+`WriteAudit` returns early on `'sent'`, so TypeScript knows `write.error` exists on the next line.
 
-## What one event fire reports
+Discord can return a `reply` or an `update` without the message it should carry. seedcord throws `ReplyCallbackMissingMessage` there. That write doesn't publish anything, since the call itself succeeded without naming a message.
 
-One event fire runs every handler you registered for it, each behind its own fault boundary. `eventDispatched` reports the fire once they settle, on the gateway transport.
+## What one `eventDispatched` reports
+
+When an event fires, seedcord runs every handler you registered for it, each behind its own fault boundary. A failing handler doesn't stop the others, so without a report per handler you'd only find it in the error log. `eventDispatched` publishes once all of those handlers have finished.
+
+<Callout type="transport" only="gateway">
+
+`eventDispatched` is declared in `@seedcord/gateway` alone. An http bot doesn't receive client events, so it never publishes this key.
+
+</Callout>
 
 {/* prettier-ignore-start */}
 
 | field | type | what it holds |
 | --- | --- | --- |
-| `dispatchId` | `string` | this fire, the same id `eventDispatching` published |
+| `dispatchId` | `string` | this dispatch of the event, the same id `eventDispatching` published |
 | `name` | `keyof ClientEvents` | the event, `messageCreate` shaped |
 | `outcome` | [`DispatchOutcome`](ref:core/DispatchOutcome) | how the middleware chain ended |
 | `handlers` | [`HandlerOutcome[]`](ref:core/HandlerOutcome) | one entry per handler that ran, in order |
-| `durationMs` | `number` | dispatch entry until every handler settles, monotonic |
+| `durationMs` | `number` | dispatch entry until every handler finishes, monotonic |
 
 {/* prettier-ignore-end */}
 
-`outcome` describes the middleware chain alone. Where the chain refuses the event, it reads `refused` and leaves `handlers` empty, since the handlers never started. Each entry in `handlers` carries its own class name and outcome, which surfaces one failing handler while the ones beside it still report success.
+`outcome` describes the middleware chain alone. Where the chain refuses the event, it reads `refused` and leaves `handlers` empty, since the handlers never started. Each entry in `handlers` carries its own class name and outcome.
 
 ```ts twoslash title="src/subscribers/FlakyHandlers.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
@@ -160,19 +178,26 @@ export class FlakyHandlers extends Subscriber<'eventDispatched'> {
 }
 ```
 
-The thrown value stays off this key, since `unknownException` carries it under an `origin` like `event:messageCreate:AutoMod`. Pairing a failed entry here with its throw takes both `dispatchId` and that origin. The id picks the fire, and the handler segment picks which handler threw. Two fires of one event share an `origin`, so that string on its own can point at the wrong throw.
+`FlakyHandlers` skips the `handled` entries and logs the rest, so one failing handler shows up even while the others succeed.
+
+`entry` holds only the handler's name and its outcome. seedcord publishes the error itself on a fault key, with the same `dispatchId`:
+
+- a raw throw publishes `unknownException`
+- a `Notice` with `report` true publishes `handledException`
+
+To tell which handler threw, read the fault's `origin`. On an event it names the event and the handler, like `event:messageCreate:AutoMod`. Match on `dispatchId` as well, since every dispatch of that event carries the same `origin`.
 
 <Callout type="warning">
 
-`queuedMs` comes from the interaction's snowflake. An event does not carry one, so this key omits the field. Both keys publish only when at least one handler is about to run, which keeps them paired.
+`queuedMs` comes from the interaction's snowflake. An event doesn't carry one, so this key omits the field. `eventDispatching` and `eventDispatched` both publish only when at least one handler is about to run, which keeps them paired.
 
 </Callout>
 
 ## Joining the keys
 
-Every key above carries a `dispatchId`. Two runs of the same route get two different ones, so keying a store on it lines up a single dispatch with everything it published.
+A slow dispatch, its writes, and the fault it threw arrive as separate publishes. To see them as one story, you need a value they share. Every key on this page carries a `dispatchId`. Two runs of the same route get different ids, so keying a store on it lines up a single dispatch with everything it published.
 
-Your handlers, your gates, and your error cards read that same string off the bag, before any of these keys fire.
+Your code can write the same id from inside the dispatch.
 
 ```ts twoslash title="src/handlers/middlewares/Trace.ts"
 import {
@@ -194,11 +219,11 @@ export class Trace extends InteractionMiddleware {
 }
 ```
 
-A handler reaches it through `this.dispatch.id`, a gate through `ctx.dispatch.id`, and an error card through its render context. Whatever you write from inside the dispatch already shares a key with what seedcord publishes about it.
+`Trace` records `this.dispatch.id` before any of these keys fire. A handler reaches it through `this.dispatch.id`, a gate through `ctx.dispatch.id`, and an error card through its render context.
 
-Across subscribers, write that column and query on it.
+On the subscriber side, write `dispatchId` as a column in every row and query on it.
 
-```ts twoslash title="src/subscribers/Trace.ts"
+```ts twoslash title="src/subscribers/Dispatches.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
 declare const db: { insert(row: object): Promise<void> };
 // ---cut---
@@ -229,6 +254,8 @@ export class Faults extends Subscriber<'unknownException'> {
 }
 ```
 
+`Dispatches` and `Faults` store rows you can join on that column.
+
 <Callout type="warning">
 
 `unknownException.dispatchId` is `string | null`. An unhandled rejection reaches Node outside any dispatch, which is the case that reports `null`.
@@ -237,7 +264,7 @@ export class Faults extends Subscriber<'unknownException'> {
 
 ## Typing a payload yourself
 
-[`SubscriptionData`](ref:core/SubscriptionData) takes a key and gives back that key's payload type. Use it to type a function that receives one.
+Once a subscriber grows helpers, each helper needs the payload type, and a hand-written copy of the fields goes stale when seedcord adds one. [`SubscriptionData`](ref:core/SubscriptionData) takes a key and returns that key's payload type.
 
 ```ts twoslash title="src/subscribers/rows.ts"
 import type { SubscriptionData } from '@seedcord/gateway';
@@ -254,8 +281,8 @@ function rowFor(
 }
 ```
 
-Since `AllSubscriptions` merges the framework's keys with yours, a key you declared yourself types the same way.
+`rowFor` uses it to type its parameter. A key you declared on [`Subscriptions`](ref:core/Subscriptions) works the same way, as in `SubscriptionData<'levelUp'>`.
 
 ## Storing them yourself
 
-seedcord publishes these and keeps none of them. A subscriber is the whole surface. Anything you want to keep, you write somewhere yourself.
+seedcord publishes these keys and doesn't store any of them. To keep history, like a dashboard of slow routes, write a subscriber that saves each payload to your own database or metrics service.
