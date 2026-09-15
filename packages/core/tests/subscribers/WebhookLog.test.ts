@@ -2,9 +2,12 @@ import { Logger } from '@seedcord/logger';
 import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
+import { PublishDefault } from '#src/subscribers/publishDefault';
 import { WebhookLog } from '#subscribers/bases/WebhookLog';
+import { Bus, registrationFor } from '#subscribers/Bus';
 import { Subscribe } from '#subscribers/decorators/Subscribe';
 import { WebhookUrl } from '#subscribers/decorators/WebhookUrl';
+import { RegisterSubscriber } from '#subscribers/slots';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { WebhookReport } from '#subscribers/bases/WebhookLog';
@@ -136,7 +139,7 @@ describe('WebhookLog', () => {
         errorSpy.mockRestore();
     });
 
-    it('warns and drops the report when the env var is unset', async () => {
+    it('warns at registration and never registers a reporter whose env var is unset', () => {
         @Subscribe('unknownException')
         @WebhookUrl('NEVER_SET_WEBHOOK_URL')
         class UnsetReporter extends WebhookLog<'unknownException', CoreBase> {
@@ -146,10 +149,13 @@ describe('WebhookLog', () => {
         }
 
         const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+        const bus = new Bus(core);
 
-        await expect(new UnsetReporter(data, core).execute()).resolves.toBeUndefined();
+        bus[RegisterSubscriber](registrationFor(UnsetReporter));
+        bus[PublishDefault]('unknownException', data);
+
+        expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('UnsetReporter'));
         expect(hoisted.postMock).not.toHaveBeenCalled();
-        expect(warnSpy).toHaveBeenCalled();
         warnSpy.mockRestore();
     });
 

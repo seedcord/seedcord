@@ -76,12 +76,10 @@ const messages = {
         `Two interaction handlers resolve to the same route \`${route}\`. Registered by ${first} and ${second}. Rename one.`,
     [SeedcordErrorCode.DuplicateMiddleware]: (name: string) =>
         `Two different middleware classes share the name \`${name}\`. Rename one so they do not collide.`,
-    [SeedcordErrorCode.InteractionRouteExportMissing]: (route: string, exportName: string, from: string) =>
-        `Route \`${route}\` loads \`${exportName}\` from ${from}, which exports no such name.`,
-    [SeedcordErrorCode.SubscriberRouteNotASubscriber]: (keys: string, exportName: string, from: string) =>
-        `Subscriber row for \`${keys}\` loads \`${exportName}\` from ${from}, which does not extend Subscriber.`,
-    [SeedcordErrorCode.RouteModuleLoadFailed]: (route: string, from: string) =>
-        `Route \`${route}\` failed to import ${from}.`,
+    [SeedcordErrorCode.ManifestEntryWrongClass]: (array: string, className: string, base: string) =>
+        `The manifest lists \`${className}\` under \`${array}\`, but \`${className}\` doesn't extend ${base}. Move it to the array for its own base, or drop it.`,
+    [SeedcordErrorCode.ManifestEntryNoRoutes]: (array: string, className: string, decorator: string) =>
+        `The manifest lists \`${className}\` under \`${array}\`, but \`${className}\` carries no ${decorator}. Add the decorator, or drop the entry.`,
 
     [SeedcordErrorCode.ReplyIllegalAckState]: (method: string, reason: string, alternative: string, routeId: string) =>
         `${paint.sky(`${method}()`)} was called when ${reason}.\n${alternative} (route ${paint.mute(routeId)})`,

@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { defineGate } from '@seedcord/core';
+import { defineGate, InteractionKind } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
@@ -8,11 +8,12 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import { FROM, capturingCtx, emptyManifest, signedRequest, slashPayload } from './harness';
+import { capturingCtx, manifestFor, signedRequest, slashPayload } from './harness';
 import { createSigner } from '../../helpers/ed25519';
 import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
 import type { EngineContext } from '#src/createSeedcord';
+import type { Manifest } from '#src/manifest/Manifest';
 import type { Gate, GateContextBase } from '@seedcord/core';
 
 const rest = vi.hoisted(() => {
@@ -43,25 +44,19 @@ vi.mock('@discordjs/rest', async (importOriginal) => ({
 
 type Engine = (request: Request, ctx?: EngineContext) => Promise<Response>;
 
-function guarded(gates: Gate<GateContextBase>[]): ReturnType<typeof emptyManifest> {
+function guarded(gates: Gate<GateContextBase>[]): Manifest {
     class Guarded extends SlashHandler<never> {
         async execute(): Promise<void> {
             await this.reply('ran');
         }
     }
     Reflect.defineMetadata(GatedMetadataKey, gates, Guarded);
-    return {
-        ...emptyManifest(),
-        commandRoutes: [
-            { name: 'guarded', type: 1, exportName: 'Guarded', from: FROM, load: () => Promise.resolve({ Guarded }) }
-        ]
-    };
+    return manifestFor(InteractionKind.Slash, 'guarded', Guarded);
 }
 
-// createSeedcord reads the public key and token off the environment at build time, so bind them per engine,
-// with ENVIRONMENT=production for the prod case
+// createSeedcord reads the public key and token off the environment at build time. bind them per engine.
 async function engineFor(
-    manifest: ReturnType<typeof emptyManifest>,
+    manifest: Manifest,
     production: boolean
 ): Promise<{ handle: Engine; signer: Awaited<ReturnType<typeof createSigner>> }> {
     const signer = await createSigner();
@@ -72,8 +67,7 @@ async function engineFor(
     return { handle: createSeedcord(nullPathConfig, manifest), signer };
 }
 
-// the gate bodies advance this, so a performance.now() reader anywhere else in the dispatch cannot
-// shift what core's timedCheck measures
+// this clock moves only when a gate body advances it
 function fakeClock(): (ms: number) => void {
     let now = 0;
     vi.spyOn(performance, 'now').mockImplementation(() => now);
@@ -115,7 +109,6 @@ describe('slow-gate dev warning', () => {
     it('warns once when several gate checks sum past the threshold together', async () => {
         const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
         const advance = fakeClock();
-        // 400ms per gate, 800ms combined
         const first = defineGate('firstgate', () => advance(400));
         const second = defineGate('secondgate', () => advance(400));
         const { handle, signer } = await engineFor(guarded([first, second]), false);

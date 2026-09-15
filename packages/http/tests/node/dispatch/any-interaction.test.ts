@@ -5,12 +5,12 @@ import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createCore } from '#src/dispatch/dispatchInteraction';
-import { buildRouteMaps } from '#src/dispatch/resolve';
+import { emptyRouteMaps } from '#src/dispatch/resolve';
 import { buildEngine } from '#src/engine';
 
 import { signedRequest, slashPayload } from './harness';
 import { createSigner } from '../../helpers/ed25519';
-import { emptyManifest, nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
+import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { SubscriptionData } from '@seedcord/core';
@@ -37,7 +37,7 @@ async function published(payload: object): Promise<SubscriptionData<'anyInteract
 
     const { handle } = buildEngine(
         core,
-        buildRouteMaps(emptyManifest()),
+        emptyRouteMaps(),
         new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)
     );
     await handle(await signedRequest(signer, payload));

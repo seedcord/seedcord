@@ -31,10 +31,9 @@ import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/i
 import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
-import { buildRouteMaps } from '#src/dispatch/resolve';
+import { emptyRouteMaps } from '#src/dispatch/resolve';
 import { EmojiInjector } from '#src/emojis/EmojiInjector';
 import { buildEngine } from '#src/engine';
-import { EMPTY_MANIFEST } from '#src/manifest/RouteManifest';
 
 import { InteractionDispatcher } from './InteractionDispatcher';
 import { toWebRequest, writeWebResponse } from './webBridge';
@@ -216,7 +215,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     }
 
     private async listen(): Promise<void> {
-        const maps = this.interactions?.maps ?? buildRouteMaps(EMPTY_MANIFEST);
+        const maps = this.interactions?.maps ?? emptyRouteMaps();
         const middlewares =
             this.interactions?.middlewares ??
             new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
@@ -280,7 +279,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
                 this.logger.info(paint.coral.bold('Interactions server stopped'));
                 resolveClose();
             });
-            // node's close() waits out idle keep-alive sockets
+            // node's close() leaves idle keep-alive sockets open
             server.closeIdleConnections();
         });
     }

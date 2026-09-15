@@ -22,19 +22,17 @@ function slashPayload(name: string): APIInteraction {
     return { type: 2, data: { type: 1, name, options: [] } } as unknown as APIInteraction;
 }
 
-async function loadedClassName(dispatcher: InteractionDispatcher, payload: APIInteraction): Promise<string | null> {
+function registeredClassName(dispatcher: InteractionDispatcher, payload: APIInteraction): string | null {
     const match = resolve(dispatcher.maps, payload);
     if (!match?.routeId) return null;
-    // justified: a discovered row resolves to the handler class it registered
-    const exported = (await match.load()) as { name: string };
-    return exported.name;
+    return match.ctor.name;
 }
 
 describe('http InteractionDispatcher discovery', () => {
     it('registers a slash handler by its route path', async () => {
         const dispatcher = await readyDispatcher();
 
-        await expect(loadedClassName(dispatcher, slashPayload('ping'))).resolves.toBe('PingCommand');
+        expect(registeredClassName(dispatcher, slashPayload('ping'))).toBe('PingCommand');
     });
 
     it('registers a nested subcommand route from the decorator string', async () => {
@@ -45,7 +43,7 @@ describe('http InteractionDispatcher discovery', () => {
             // justified: resolve only reads type and data
         } as unknown as APIInteraction;
 
-        await expect(loadedClassName(dispatcher, payload)).resolves.toBe('ConfigSet');
+        expect(registeredClassName(dispatcher, payload)).toBe('ConfigSet');
     });
 
     it('registers a user context menu by name', async () => {
@@ -53,7 +51,7 @@ describe('http InteractionDispatcher discovery', () => {
         // justified: resolve only reads type and data
         const payload = { type: 2, data: { type: 2, name: 'User Info' } } as unknown as APIInteraction;
 
-        await expect(loadedClassName(dispatcher, payload)).resolves.toBe('UserInfoMenu');
+        expect(registeredClassName(dispatcher, payload)).toBe('UserInfoMenu');
     });
 
     it('registers autocomplete as its own route', async () => {
@@ -64,7 +62,7 @@ describe('http InteractionDispatcher discovery', () => {
             // justified: resolve only reads type and data
         } as unknown as APIInteraction;
 
-        await expect(loadedClassName(dispatcher, payload)).resolves.toBe('BanAutocomplete');
+        expect(registeredClassName(dispatcher, payload)).toBe('BanAutocomplete');
     });
 
     it('routes each class of a multi-handler file to its own row', async () => {
@@ -75,13 +73,22 @@ describe('http InteractionDispatcher discovery', () => {
             // justified: resolve only reads type and data
         } as unknown as APIInteraction;
 
-        await expect(loadedClassName(dispatcher, payload)).resolves.toBe('ConfirmButton');
+        expect(registeredClassName(dispatcher, payload)).toBe('ConfirmButton');
     });
 
     it('an unregistered route resolves to the unhandled default', async () => {
         const dispatcher = await readyDispatcher();
 
         const match = resolve(dispatcher.maps, slashPayload('missing'));
+        expect(match?.routeId).toBeNull();
+    });
+
+    it('drops every route a handler owned when its file goes away', async () => {
+        const dispatcher = await readyDispatcher();
+
+        await dispatcher.onHmr({ type: 'delete', file: path.join(HANDLERS_DIR, 'PingCommand.ts') });
+
+        const match = resolve(dispatcher.maps, slashPayload('ping'));
         expect(match?.routeId).toBeNull();
     });
 });
