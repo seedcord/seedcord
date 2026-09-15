@@ -1,5 +1,6 @@
 import { Card, CodeBlock, CopyAnchorButton, cn, tw } from '@seedcord/ui';
 import { highlightInlineToHtml, isHighlightable } from '@seedcord/ui/shiki';
+import { ArrowUpRight } from 'lucide-react';
 
 import { Callout } from '#components/Callout';
 import { HoverHint } from '#components/HoverHint';
@@ -68,7 +69,12 @@ function GuideTable({ children, ...props }: ComponentProps<'table'>): ReactEleme
     return (
         <Card as="div" size="none" data-table className={cn('overflow-hidden')}>
             <div className={cn('nice-scroll overflow-x-auto')}>
-                <table {...props} className={cn('w-full border-collapse text-left text-sm')}>
+                <table
+                    {...props}
+                    className={cn(
+                        'w-full border-collapse text-left text-sm [&_td_code]:whitespace-nowrap sm:[&_td:first-child]:whitespace-nowrap sm:[&_th:first-child]:whitespace-nowrap'
+                    )}
+                >
                     {children}
                 </table>
             </div>
@@ -172,16 +178,20 @@ async function Fence({ children }: FenceProps): Promise<ReactElement> {
 
 const OFF_SITE = /^[a-z]+:/i;
 
-function GuideLink({ href, ...props }: ComponentProps<'a'>): ReactElement {
-    const offSite = href !== undefined && OFF_SITE.test(href);
+function GuideLink({ href, children, ...props }: ComponentProps<'a'>): ReactElement {
+    if (href === undefined || !OFF_SITE.test(href)) {
+        return (
+            <a {...props} href={href} className={cn(LINK)}>
+                {children}
+            </a>
+        );
+    }
 
     return (
-        <a
-            {...props}
-            href={href}
-            {...(offSite && { target: '_blank', rel: 'noreferrer noopener' })}
-            className={cn(LINK)}
-        />
+        <a {...props} href={href} target="_blank" rel="noreferrer noopener" className={cn(LINK)}>
+            {children} <ArrowUpRight aria-hidden className={cn('inline size-[0.8em] align-[-0.05em]')} />
+            <span className={cn('sr-only')}>(opens in a new tab)</span>
+        </a>
     );
 }
 

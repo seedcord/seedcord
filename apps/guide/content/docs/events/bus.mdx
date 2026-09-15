@@ -1,13 +1,20 @@
 ---
 title: The bus
-description: Declaration merging puts your own event keys on Subscriptions, then a subscriber reacts to whichever one it names.
+description: Send your own events between parts of your bot with the bus. Covers declaring a key, writing a subscriber, publishing, running once, listening with a callback, and the keys seedcord publishes.
 ---
 
-The bus carries named events inside your bot. Any code with a `core` can publish one, and every subscriber on that key runs. Nothing here reaches Discord.
+Say a member levels up in `/award`, and three things should follow: an announcement, a role, and a log line. If the handler calls all three itself, adding a fourth follow-up means editing `/award` again.
 
-Start by naming the key and its payload. Declaration merging puts them on the [`Subscriptions`](ref:core/Subscriptions) interface that your transport package exports.
+The bus separates the two sides. `/award` publishes one named event, so its file holds only the award itself. Each follow-up moves into its own subscriber class, which runs when that event is published. A fourth follow-up is one more subscriber file, with `/award` left as it is.
+
+Event handlers, middleware, subscribers, and plugin services get `core` too, so any of them can publish. If members also level up by chatting, a `messageCreate` handler publishes the same `levelUp`. The same three follow-ups run with none of their code copied.
+
+Everything on the bus stays inside your bot. To show members something, like the announcement, a subscriber sends that message to Discord itself.
+
+Start by declaring the key and its payload. Declaration merging puts them on the [`Subscriptions`](ref:core/Subscriptions) interface that your transport package exports.
 
 ```ts twoslash title="src/subscriptions.ts"
+// the augmentation below fails to compile without this import
 import '@seedcord/gateway';
 
 declare module '@seedcord/gateway' {
@@ -17,9 +24,23 @@ declare module '@seedcord/gateway' {
 }
 ```
 
-TypeScript augments only a module that the file already imports. Leaving that import out gives `Invalid module name in augmentation`.
+Now `levelUp` and its payload type exist everywhere in your project. `@Subscribe` offers it next to the keys seedcord publishes.
 
-Now the key exists everywhere in your project. A subscriber reacts to it.
+```ts twoslash
+// @noErrors
+import { Subscribe } from '@seedcord/gateway';
+
+declare module '@seedcord/gateway' {
+    interface Subscriptions {
+        levelUp: { userId: string; level: number };
+    }
+}
+// ---cut---
+@Subscribe('
+//          ^|
+```
+
+A subscriber class runs each time its key is published.
 
 ```ts twoslash hovers title="src/subscribers/Announce.ts"
 import { Subscribe, Subscriber } from '@seedcord/gateway';
@@ -42,7 +63,7 @@ export class Announce extends Subscriber<'levelUp'> {
 }
 ```
 
-[`@Subscribe`](ref:core/Subscribe) names the key, and the generic on [`Subscriber`](ref:gateway/Subscriber) has to repeat it. A mismatch is a compile error, since `this.data` would carry the wrong payload.
+You write the key in [`@Subscribe`](ref:core/Subscribe) and again in the generic on [`Subscriber`](ref:gateway/Subscriber). The generic sets the type of `this.data`, here `{ userId, level }`. If the key in `@Subscribe` and the generic differ, the class fails to compile.
 
 ## Publishing
 
@@ -76,17 +97,17 @@ export class Award extends SlashHandler<'award'> {
 
 <Callout type="warning">
 
-`publish` returns before your subscribers finish. Code after the call cannot read anything a subscriber wrote. seedcord catches a throwing subscriber and logs it on the `subscribers` channel, so nothing surfaces at the call site.
+`publish` returns before your subscribers finish, so code after the call can't read anything a subscriber wrote. If a subscriber or listener throws, seedcord catches the error and logs it on the `subscribers` log channel. The call to `publish` never sees it.
 
 </Callout>
 
-The return value tells you whether any `on` listener existed for the key. It counts those listeners only, so a key with three subscribers and no listeners returns `false`.
+`publish` returns `true` if the key had at least one `on` listener. It counts those listeners only, so a key with three subscribers and no listeners returns `false`.
 
-Several subscribers on one key all run at once. Any of them can finish first. Write each one so it stands alone.
+Subscribers on the same key start at the same time, so any of them can finish first. Don't make one subscriber depend on another's result, since nothing guarantees the order.
 
 ## Running once
 
-`@Subscribe` takes a `frequency` option, the same one [`@RegisterEvent`](ref:gateway/RegisterEvent) takes.
+Some follow-ups belong to the first publish only, like a "first level-up on the server" message. `@Subscribe` takes a `frequency` option for that, the same one [`@RegisterEvent`](ref:gateway/RegisterEvent) takes.
 
 ```ts twoslash
 import { Subscribe, Subscriber } from '@seedcord/gateway';
@@ -107,11 +128,11 @@ export class FirstLevel extends Subscriber<'levelUp'> {
 }
 ```
 
-seedcord marks a `'once'` subscriber as spent when it starts, so a throw partway through leaves it spent.
+seedcord marks `FirstLevel` as run as soon as it starts. If it throws partway through, it still counts as run. The next publish won't retry it.
 
 ## Where subscribers live
 
-Your subscribers get their own folder, named by `subscribers.path`. The scaffold ships `null` there, so point it at your folder when you write your first one.
+seedcord loads subscribers from the folder you set in `subscribers.path`. The scaffold sets it to `null`, so point it at your folder when you write your first subscriber.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -134,7 +155,7 @@ export const seedcord = new Seedcord({
 });
 ```
 
-A class without `@Subscribe` loads and never runs. The `@seedcord/subscriber-missing-decorators` rule reports it.
+If a class in that folder doesn't have `@Subscribe`, it still loads but never runs. The `subscriber-missing-decorators` lint rule flags the missing decorator while you write the class.
 
 ## Listening without a class
 
@@ -162,37 +183,40 @@ const [data] = await core.bus.waitFor('levelUp', {
 });
 ```
 
-`on`, `once`, and `off` each take a key and a callback. `waitFor` resolves with the next payload. Pass an optional second argument to add a `filter`, a `timeoutMs`, or an abort `signal`. A timeout rejects with a `WaitForError`.
+`on`, `once`, and `off` each take a key and a callback. `waitFor` resolves with the next payload. Its optional second argument takes three fields:
 
-Use a subscriber first, since a class gets `this.core`, `this.logger`, and its own file. `waitFor` suits code that has to block until the next publish.
+- `filter`, a function that receives the payload and returns a boolean
+- `timeoutMs`, how long to wait
+- `signal`, an abort signal
 
-<Callout type="danger">
+If the timeout passes or the signal aborts, `waitFor` rejects with a `WaitForError`. Its `reason` is `'timeout'` or `'aborted'`.
 
-Your editor offers `core.bus.emit` beside `publish`, and it does something else. `emit` reaches your `on` listeners and skips every subscriber, so a class decorated with `@Subscribe` never runs. It also drops the catch that `publish` wraps each listener in, which sends a throw to the process. `publish` is the one to call.
+Write a subscriber by default. It gets `this.core` and `this.logger` without any setup. seedcord loads its file at startup, so nothing in your code has to register it. Each publish runs a new instance, so a field on the class doesn't keep its value between publishes. A callback registered with `on` suits code that already holds `core`, like a plugin. `waitFor` suits code that has to pause until the next publish.
+
+<Callout type="warning">
+
+Don't call `core.bus.emit`. Your editor still offers it beside `publish`, crossed out as deprecated. It throws a `SeedcordTypeError` with the code `CoreBusEmitUnavailable`. Call `publish`, which reaches your subscribers and your `on` listeners together.
 
 </Callout>
 
 ## The framework's own keys
 
-seedcord publishes its own keys onto the same bus, and every one of them is yours to listen to.
-
-<Callout type="transport">
-
-Some of these exist on gateway alone. `anyInteraction` exists on both and carries a discord.js `Interaction` on gateway against an `APIInteraction` on http.
-
-</Callout>
+seedcord publishes its own keys onto the same bus, like `interactionDispatched` once per [dispatch](/checks#what-a-dispatch-is). You subscribe to them the same way you subscribe to `levelUp`.
 
 ```ts twoslash hovers
-import type { Core } from '@seedcord/gateway';
-
-declare const core: Core;
+import { Subscribe, Subscriber } from '@seedcord/gateway';
 // ---cut---
-core.bus.on('interactionDispatched', (data) => {
-    console.log(data.routeId, data.durationMs);
-});
+@Subscribe('interactionDispatched')
+export class DispatchTimes extends Subscriber<'interactionDispatched'> {
+    public async execute(): Promise<void> {
+        const { routeId, durationMs } = this.data;
+
+        this.logger.info(`${routeId} took ${durationMs}ms`);
+    }
+}
 ```
 
-Publishing one is a compile error, since seedcord is the only thing that produces them.
+`durationMs` is how long that dispatch took. Only seedcord publishes these keys, so calling `publish` with one is a compile error.
 
 ```ts twoslash
 // @errors: 2345
@@ -208,7 +232,8 @@ declare module '@seedcord/gateway' {
 
 declare const core: Core;
 // ---cut---
+// publish accepts only the keys you declared, levelUp on this page
 core.bus.publish('interactionDispatched', {} as never);
 ```
 
-A subscriber that posts a framework key to a Discord channel is a [`WebhookLog`](ref:gateway/WebhookLog). [Reporting faults](/replying/reporting) has them.
+[The framework's bus keys](/events/default-keys) lists every key, which transport publishes it, and its payload. To post one of them to a Discord channel, write a [`WebhookLog`](ref:gateway/WebhookLog). [Reporting faults](/replying/reporting) shows how.

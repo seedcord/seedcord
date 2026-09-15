@@ -21,6 +21,7 @@ export const metadata: Metadata = pageMetadata({
 export const revalidate = 300; // 5 mins
 
 const TRANSPORT_PACKAGES = new Set(['@seedcord/gateway', '@seedcord/http']);
+const CORE_PACKAGES = new Set(['seedcord', '@seedcord/core']);
 
 // matches the entity chips on a package's reference tab
 const cardClassName = tw`shadow-soft border-border flex flex-col gap-3 rounded-md border bg-(--surface-moderate) p-4 transition`;
@@ -134,7 +135,6 @@ function Section({
 }
 
 const WORKSPACE_TITLES: Record<string, string> = {
-    cli: 'CLI',
     packages: 'Packages',
     plugins: 'Plugins',
     tooling: 'Tooling'
@@ -160,7 +160,10 @@ function groupByWorkspace(cards: PackageCard[]): [string, PackageCard[]][] {
 export default async function DocsIndexPage(): Promise<ReactElement> {
     const cards = (await loadDocsCatalog()).map(toCard);
     const transports = cards.filter((card) => TRANSPORT_PACKAGES.has(card.entry.manifestName));
-    const rest = cards.filter((card) => !TRANSPORT_PACKAGES.has(card.entry.manifestName));
+    const core = cards.filter((card) => CORE_PACKAGES.has(card.entry.manifestName));
+    const rest = cards.filter(
+        (card) => !TRANSPORT_PACKAGES.has(card.entry.manifestName) && !CORE_PACKAGES.has(card.entry.manifestName)
+    );
 
     return (
         <main className={cn('mx-auto w-full max-w-6xl space-y-8 px-5 py-10 sm:px-6 sm:py-14')}>
@@ -170,6 +173,7 @@ export default async function DocsIndexPage(): Promise<ReactElement> {
             </div>
 
             <Section title="Transports" cards={transports} columns="sm:grid-cols-2" bar />
+            <Section title="Core" cards={core} columns="sm:grid-cols-2" bar />
             {groupByWorkspace(rest).map(([workspace, group]) => (
                 <Section
                     key={workspace}

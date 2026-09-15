@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronRight } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 import { cn } from './lib/cn';
 import { tw } from './lib/tw';
@@ -65,10 +65,10 @@ export function CaretTrigger({
                 </span>
             ) : null}
             <span className={cn('flex-1 truncate text-left')}>{label}</span>
-            <ChevronRight
+            <ChevronDown
                 size={16}
                 aria-hidden
-                className={cn('text-subtle shrink-0 transition-transform duration-200 ease-out', open && 'rotate-90')}
+                className={cn('text-subtle shrink-0 transition-transform duration-200 ease-out', open && 'rotate-180')}
             />
         </button>
     );

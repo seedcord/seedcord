@@ -91,6 +91,18 @@ describe('a link', () => {
 
         expect(screen.getByRole('link')).not.toHaveAttribute('target');
     });
+
+    it('tells a screen reader that a link off the guide opens a new tab', () => {
+        render(<Link href="https://discord.com/developers/applications">the portal</Link>);
+
+        expect(screen.getByRole('link')).toHaveAccessibleName('the portal (opens in a new tab)');
+    });
+
+    it('leaves the name of a link in the guide as written', () => {
+        render(<Link href="/gateway-or-http">gateway or http</Link>);
+
+        expect(screen.getByRole('link')).toHaveAccessibleName('gateway or http');
+    });
 });
 
 describe('the image component', () => {
