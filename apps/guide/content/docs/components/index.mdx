@@ -65,7 +65,7 @@ seedcord imports your commands, handlers, events, and subscribers from the paths
 
 A card is a building block, and a row of buttons is another. A modal is a building block, and a row of inputs is another, maybe you have a menu builder that dynamically creates its values, or you want to create items in one conditionally. Each one is a `BuilderComponent` subclass in that folder. Your handlers import the ones they send.
 
-For example, a `BanCard` and a `BanActions` row of buttons live in the same folder, and your `Ban` handler imports both.
+For example, you put a `BanCard` and a `BanActions` row of buttons in that folder, and your `Ban` handler imports both.
 
 ```txt title="my-bot" output
 src/

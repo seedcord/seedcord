@@ -1,9 +1,11 @@
 ---
 title: Kysely services
-description: You never construct a service yourself. seedcord builds it at startup, then you read it back by the key you registered.
+description: Write a service class for each Postgres table with the kysely plugin. Covers its table and key, overriding the table name, typing the services map, and reading a service from a handler.
 ---
 
-A service is one class per table. Extend [`KyselyService`](ref:plugin-kysely-postgres/KyselyService), name the table in its type argument, then decorate the class with the key you use to read it back.
+If every handler that looks up a user writes its own Kysely query, the same query ends up in several files. Changing how you find a user then means finding every copy.
+
+A service keeps one table's queries in one class. Extend [`KyselyService`](ref:plugin-kysely-postgres/KyselyService), pass the table name as its type argument, and decorate the class with a key. Handlers then call its methods through that key.
 
 ```ts twoslash title="src/postgres/Users.ts"
 import {
@@ -11,6 +13,7 @@ import {
     RegisterKyselyService
 } from '@seedcord/plugin-kysely-postgres';
 
+// ---cut-start---
 import type { Generated } from 'kysely';
 
 interface UsersTable {
@@ -25,8 +28,8 @@ declare module '@seedcord/plugin-kysely-postgres' {
         schema: { users: UsersTable };
     }
 }
+// ---cut-end---
 
-// ---cut---
 @RegisterKyselyService('users')
 export class Users extends KyselyService<'users'> {
     public findByDiscordId(discordId: string) {
@@ -45,21 +48,27 @@ declare module '@seedcord/plugin-kysely-postgres' {
 }
 ```
 
-`this.db` holds the same Kysely instance as `connection`, so every service queries through one pool. `this.table` holds the table name, typed to the argument you gave. That keeps `selectFrom(this.table)` on the one table this class covers.
+Here's what each part of `Users.ts` does.
+
+- **`@RegisterKyselyService('users')`** gives the class its key. Your handlers read the service from `services` under that key, and the plugin also uses it as the table name unless you [pass another one](#the-key-is-also-the-table-name).
+- **`KyselyService<'users'>`** is the base class, and its type argument is a table from [your schema](/plugins/kysely-schema). `this.table` holds that name, so `selectFrom(this.table)` checks `discord_id` against the `users` columns.
+- **`this.db`** returns the plugin's [`connection`](ref:plugin-kysely-postgres/KyselyPostgres.connection), so every service queries through the same pool. It can query every table in your schema, so a method can join `users` with another table.
+- **`findByDiscordId`** keeps the lookup inside the class. A handler calls that method and never writes the query itself.
+- **The `declare module` block** adds `users` to the keys the decorator accepts. [Typing the registry](#typing-the-registry) explains why you write it.
 
 ## You never construct a service
 
-During startup the plugin loads `dir` and constructs every service class it finds. Constructing a class registers it, which is why `new Users()` never appears in your code.
+The plugin builds your services itself, after it has connected and run your migrations, so `this.db` has a working connection by the time any method runs. It imports every `.ts` and `.js` file under the `dir` you gave the [kysely plugin](/plugins/kysely), including subfolders. For each exported class that extends `KyselyService` and carries the decorator, it constructs the class. That constructor call adds the instance to the plugin's `services` map under its key.
 
 <Callout type="warning">
 
-The plugin skips a class missing [`@RegisterKyselyService`](ref:plugin-kysely-postgres/RegisterKyselyService). Nothing throws, nothing reaches the log, and `services.users` reads back as `undefined`.
+If a class isn't exported or has no [`@RegisterKyselyService`](ref:plugin-kysely-postgres/RegisterKyselyService), the plugin skips it without throwing or logging anything. `services.users` then reads `undefined` even though TypeScript types it as `Users`.
 
 </Callout>
 
-## The key names the table
+## The key is also the table name
 
-`@RegisterKyselyService('users')` reads and writes the `users` table, since the key doubles as the table name. Pass `table` when the two differ.
+A service registered as `'users'` reads and writes the `users` table, because the plugin uses the key as the table name. That fits most services. When the table's name isn't one you want as a key, like an `app_users` table named with a prefix, pass `table`.
 
 ```ts twoslash
 import {
@@ -74,34 +83,89 @@ interface UsersTable {
     username: string;
 }
 
+// ---cut---
 declare module '@seedcord/plugin-kysely-postgres' {
+    // write this in src/database.ts. it's only here for the example
     interface KyselyDatabase {
-        schema: { users: UsersTable };
+        schema: { app_users: UsersTable };
+    }
+
+    interface KyselyServices {
+        users: Users;
     }
 }
 
-declare module '@seedcord/plugin-kysely-postgres' {
-    interface KyselyServices {
-        people: People;
-    }
+@RegisterKyselyService('users', { table: 'app_users' })
+export class Users extends KyselyService<'app_users'> {}
+```
+
+`Users` queries the `app_users` table, while handlers use it as `services.users`. The two names come from the two interfaces in that `declare module` block:
+
+- **`'users'`** is a key in `KyselyServices`. The decorator's first argument only accepts keys declared there.
+- **`'app_users'`** is a table in the `schema` you declared on `KyselyDatabase`, which [Your schema](/plugins/kysely-schema) covers. `table` only accepts a table from that schema, and the decorator checks the class's type argument against it.
+
+That schema is also where your editor gets the table names it suggests for `table`. With a `bans` table added, it offers both:
+
+```ts twoslash
+// @noErrors
+import { RegisterKyselyService } from '@seedcord/plugin-kysely-postgres';
+
+declare class Users {}
+interface UsersTable {
+    id: number;
+}
+interface BansTable {
+    id: number;
 }
 
 // ---cut---
-@RegisterKyselyService('people', { table: 'users' })
-export class People extends KyselyService<'users'> {}
+declare module '@seedcord/plugin-kysely-postgres' {
+    // write this in src/database.ts. it's only here for the example
+    interface KyselyDatabase {
+        schema: { app_users: UsersTable; bans: BansTable };
+    }
+
+    interface KyselyServices {
+        users: Users;
+    }
+}
+
+RegisterKyselyService('users', { table: '
+//                                       ^|
 ```
 
-That queries `users` while you reach the class as `services.people`.
-
-Whichever name `table` resolves to has to match the type argument on the class. Decorating a `KyselyService<'products'>` with `{ table: 'users' }` fails to compile. Leaving the override out fails the same way when the key names a different table.
+The decorator checks that `table` matches the class's type argument, so TypeScript reports an error if you pass `{ table: 'app_users' }` for a `KyselyService<'bans'>`. When you leave `table` out, the decorator uses the key as the table name. `users` isn't a table in that schema, so `Users` needs `table`, and TypeScript reports an error on the decorator without it.
 
 ## Typing the registry
 
-The `declare module` block at the bottom of the first example fills [`KyselyServices`](ref:plugin-kysely-postgres/KyselyServices), which starts out empty. You write that block by hand, since codegen never touches it. [Typing a plugin](/plugins/typing) covers the `Core` augmentation codegen does write.
+[`KyselyServices`](ref:plugin-kysely-postgres/KyselyServices) starts empty, so the decorator doesn't accept any key until you declare one. The `declare module` block in `src/postgres/Users.ts` above adds `users`. The decorator then takes `'users'` and checks that the class matches `Users`, the type you declared for that key. If you pass `'guilds'` to the decorator before adding a `guilds` entry, TypeScript reports an error.
 
-Once a key is declared there, the decorator accepts it. Passing one you have not declared fails to compile.
+```ts twoslash
+// @noErrors
+import { RegisterKyselyService } from '@seedcord/plugin-kysely-postgres';
+
+declare class Users {}
+declare class Guilds {}
+
+// ---cut---
+declare module '@seedcord/plugin-kysely-postgres' {
+    interface KyselyServices {
+        users: Users;
+        guilds: Guilds;
+    }
+}
+
+RegisterKyselyService('
+//                     ^|
+```
+
+The decorator offers the two keys that `declare module` block adds to `KyselyServices`, `users` and `guilds`.
+
+You add each entry by hand when you write a new service, since codegen doesn't write this block. It only writes the `Core` block from [Typing a plugin](/plugins/typing).
 
 ## Reading a service
+
+A handler gets a service from the plugin's [`services`](ref:plugin-kysely-postgres/KyselyPostgres.services) map, under the key you declared.
 
 ```ts twoslash hovers
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -166,4 +230,6 @@ class Leaderboard extends SlashHandler<'leaderboard'> {
 }
 ```
 
-The plugin fills `services` after it connects and loads every class. Reading it before that throws `PluginKyselyServicesNotReady`.
+`findByDiscordId` resolves to `undefined` when no row matches, so the handler checks `found` before it reads `streak`.
+
+If you read `services` before the plugin's `init()` has connected, migrated, and loaded every class, it throws `PluginKyselyServicesNotReady`. Your handlers never read it that early, though, because they only start receiving interactions once `init()` has finished.

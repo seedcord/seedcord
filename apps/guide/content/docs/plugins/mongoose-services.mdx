@@ -43,7 +43,7 @@ declare module '@seedcord/plugin-mongoose' {
 `Users.ts` does several things at once, so let's go through it one part at a time.
 
 - **`IUser`** lists the fields a user document has. It extends [`MongooseDocument`](ref:plugin-mongoose/MongooseDocument), which declares `_id: string`, the one field every document has.
-- **`@RegisterMongooseService('users')`** gives the class its key. Your handlers reach the service under that key.
+- **`@RegisterMongooseService('users')`** gives the class its key. Your handlers read the service from `services` under that key.
 - **`MongooseService<IUser>`** is the base class. Passing `IUser` types `this.model` as `Model<IUser>`, so TypeScript checks the fields in every query on that model against `username` and `streak`. Without the type argument, the model's type only has `_id`.
 - **`schema`** is the Mongoose schema the plugin builds the model from. Make sure it's `static`, because the decorator fails to compile without it.
 - **`findByName`** keeps the lookup inside the class. A handler calls that method and never writes the query itself.
@@ -76,13 +76,13 @@ interface IUser extends MongooseDocument {
     username: string;
 }
 
+// ---cut---
 declare module '@seedcord/plugin-mongoose' {
     interface MongooseServices {
         users: Users;
     }
 }
 
-// ---cut---
 @RegisterMongooseService('users', { modelName: 'app_user' })
 export class Users extends MongooseService<IUser> {
     public static schema = new mongoose.Schema<IUser>({
@@ -91,7 +91,7 @@ export class Users extends MongooseService<IUser> {
 }
 ```
 
-With `modelName: 'app_user'`, mongoose reads the `app_users` collection. Your handlers still reach the class as `services.users`.
+With `modelName: 'app_user'`, mongoose reads the `app_users` collection, while your handlers still use the class as `services.users`. The decorator only accepts `'users'` because the `declare module` block adds it to `MongooseServices`. `modelName` takes any string, so your editor doesn't suggest one and TypeScript can't catch a misspelled model name.
 
 ## Typing the registry
 

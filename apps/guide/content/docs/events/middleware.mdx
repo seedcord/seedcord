@@ -187,7 +187,7 @@ The base class declares `after()`, so `Timing` marks its version `override`. Lea
 
 An `after()` that throws doesn't stop the other `after()` calls. If `B.after()` throws, seedcord logs the error and still calls `A.after()`.
 
-## Where middleware lives
+## Where to put middleware
 
 seedcord loads event middleware from the folder you set in `bot.events.middlewares`. If you leave the key out, seedcord skips the middleware scan. Leave it out when your bot doesn't use any event middleware.
 

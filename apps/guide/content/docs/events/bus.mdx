@@ -130,7 +130,7 @@ export class FirstLevel extends Subscriber<'levelUp'> {
 
 seedcord marks `FirstLevel` as run as soon as it starts. If it throws partway through, it still counts as run. The next publish won't retry it.
 
-## Where subscribers live
+## Where to put subscribers
 
 seedcord loads subscribers from the folder you set in `subscribers.path`. The scaffold sets it to `null`, so point it at your folder when you write your first subscriber.
 

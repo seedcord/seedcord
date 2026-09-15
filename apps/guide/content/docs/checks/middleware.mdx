@@ -196,7 +196,7 @@ The base class declares `after()`, so your version overrides it. Mark it `overri
 
 An `after()` that throws doesn't stop the other `after()` calls. If `B.after()` throws, seedcord logs the error and still calls `A.after()`.
 
-## Where middleware lives
+## Where to put middleware
 
 seedcord loads middleware from `bot.interactions.middlewares`. The key is optional.
 

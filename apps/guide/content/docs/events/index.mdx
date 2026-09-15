@@ -60,7 +60,7 @@ If the content didn't change, `EditLog` returns early. discord.js also fires `me
 
 The log line goes through [`this.logger`](ref:core/BaseHandler.logger), which writes to the `events` log channel. [Tooling](/tooling) lists the channels and the levels.
 
-## Where handlers live
+## Where to put handlers
 
 seedcord scans the folder you set in `bot.events.path` at startup and registers every handler class it finds. The scan reaches every subfolder, so you can group handlers by feature.
 
