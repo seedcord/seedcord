@@ -46,7 +46,7 @@ The rest of your code reaches the same object. A gate reads it as `ctx.core`. A 
 
 ## Running work while your bot starts and stops
 
-Say your bot opens a cache of its own. Something has to fill it before the first command runs, then close it again when the bot stops. Doing that yourself means racing your own startup on one end and wiring up `SIGTERM` on the other.
+Suppose your bot opens a cache of its own. Something has to fill it before the first command runs, then close it again when the bot stops. Doing that yourself means racing your own startup on one end and wiring up `SIGTERM` on the other.
 
 [`startup.addTask`](ref:core/CoordinatedStartup.addTask) and [`shutdown.addTask`](ref:core/CoordinatedShutdown.addTask) put that work in a phase, and seedcord runs the phases in order. Although, it's better to write a small [plugin](/plugins/) for yourself instead. It provides hooks for startup and shutdown tasks, timeouts, and more, keeping your initialization and cleanup logic organized and consistent with the framework's lifecycle.
 
@@ -59,9 +59,11 @@ import {
     StartupPhase
 } from '@seedcord/gateway';
 import { GatewayIntentBits } from 'discord.js';
+// ---cut-start---
 
 declare function openCache(): Promise<void>;
 declare function closeCache(): Promise<void>;
+// ---cut-end---
 
 export const seedcord = new Seedcord({
     bot: {
@@ -96,6 +98,8 @@ Each call takes the phase, a name for the logs, the work itself, and an optional
 
 Pick the phase by what has to be true when your task runs. The sample fills its cache in `Configuration`, before anything connects, and closes it in `Disconnect`, the phase for closing external resources. [Plugin lifecycle](/plugins/lifecycle) has a table of every startup and shutdown phase, with what has already happened by each one.
 
+Tasks in the same phase run in parallel, including seedcord's own. The next phase starts once all of them have finished. If one task needs another task's result, put it in a later phase.
+
 <Callout type="transport" only="gateway">
 
 `core.applicationId` comes from the discord.js client, so it resolves during the Login phase. Reading it from a `Configuration` task throws. Every handler runs long after login, which makes it safe there.
@@ -104,7 +108,7 @@ Pick the phase by what has to be true when your task runs. The sample fills its 
 
 <Callout type="transport" only="http">
 
-`createSeedcord` builds a core without these phases, since its build never runs startup or shutdown at all. Both `addTask` calls still compile on an edge bot, and both throw `CoreLifecycleUnavailable` when they run. Do that work inside your handler.
+`createSeedcord` builds a core without these phases, since its build never runs startup or shutdown at all. Both `addTask` calls still compile on an edge bot, though they throw `CoreLifecycleUnavailable` when they run. Do that work inside your handler.
 
 </Callout>
 

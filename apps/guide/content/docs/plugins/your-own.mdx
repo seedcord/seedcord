@@ -1,9 +1,11 @@
 ---
 title: Writing your own
-description: Extend Plugin and write init(). Everything else on the base is there when you want it.
+description: Write your own plugin by extending Plugin. Covers which base to import, declaring where it runs, constructor options, rejecting bad options, logging, and dev reloads.
 ---
 
-Extend [`Plugin`](ref:core/Plugin) and write `init()`. Everything else on the base is optional.
+Let's assume your bot talks to an outside service, like a metrics API or a cache. You created its client in `bot.ts` and exported it. Nothing closes that client when the bot shuts down, and a handler can import it before it has connected. As a plugin, the client starts and stops with your bot, and handlers read it from `core` under the key you attach it with.
+
+To write one, extend [`Plugin`](ref:core/Plugin) and write `init()`. Everything else on the base is optional.
 
 ```ts twoslash title="src/plugins/Uptime.ts"
 import { Plugin } from '@seedcord/gateway';
@@ -21,7 +23,7 @@ export class Uptime extends Plugin {
 }
 ```
 
-Attach it with two arguments, since its constructor takes only the host.
+`Uptime` records the time in `init()` and reports it from `elapsed()`. Attach it with two arguments, since its constructor takes only the host.
 
 ```ts twoslash
 import { Plugin, Seedcord } from '@seedcord/gateway';
@@ -38,31 +40,31 @@ seedcord.attach('uptime', Uptime);
 
 ## Which base to import
 
-Each transport exports its own `Plugin`. The one you pick sets the type of `this.core`.
+Each transport exports its own `Plugin` class. The one you extend sets the type of `this.core`. Extend a transport's `Plugin` when your plugin reads something only that transport has, like `this.core.bot` on gateway. Extend the `Plugin` from `@seedcord/core/plugin` when your plugin only uses what both transports share, so a bot on either transport can attach it.
 
 {/* prettier-ignore-start */}
 
-| import from | `this.core` carries | write this one for |
+| import from | `this.core` carries | extend it when your plugin |
 | --- | --- | --- |
-| `@seedcord/gateway` | the gateway `Core`, including `bot` | a plugin inside a gateway bot |
-| `@seedcord/http` | the http `Core` | a plugin inside an http bot |
-| `@seedcord/core/plugin` | [`CoreBase`](ref:core/CoreBase), the members both transports share | a plugin you publish for both |
+| `@seedcord/gateway` | the gateway `Core`, including `bot` | reads gateway members, like `bot` |
+| `@seedcord/http` | the http `Core` | reads http members |
+| `@seedcord/core/plugin` | [`CoreBase`](ref:core/CoreBase), the members both transports share | only uses what both transports share |
 
 {/* prettier-ignore-end */}
 
 `CoreBase` carries `config`, `rest`, `applicationId`, `rateLimiter`, and `bus`. Anything beyond those needs a transport base.
 
 <Callout type="transport">
-    `config` narrows with the base you extend. A transport base
-    types it as that transport's own config. `CoreBase` types it as
-    the shared `Config`.
+
+`config` narrows with the base you extend. A transport base types it as that transport's own config. `CoreBase` types it as the shared `Config`.
+
 </Callout>
 
 ## Declaring where it runs
 
 The gateway base declares `transport: 'gateway'` and `runtime: 'server'`. The http base declares `transport: 'http'`.
 
-The base from `@seedcord/core/plugin` leaves both at `'any'`. Pass the [`PluginOptions`](ref:core/PluginOptions) generic to narrow them.
+The base from `@seedcord/core/plugin` leaves both at `'any'`. When a shared plugin only works in one setup, like one that opens a voice connection, pass the [`PluginOptions`](ref:core/PluginOptions) generic to narrow them. If someone attaches it to the wrong kind of bot, their `attach` call fails to compile.
 
 ```ts twoslash
 import { Plugin } from '@seedcord/core/plugin';
@@ -75,13 +77,31 @@ export class Voice extends Plugin<{
 }
 ```
 
-Either field stands alone. `Plugin<{ runtime: 'server' }>` keeps a plugin off the edge runtime and takes either transport.
+You can set either field without the other. `Plugin<{ runtime: 'server' }>` keeps a plugin off the edge runtime and takes either transport.
 
-Attaching `Voice` to an http bot fails to compile. [The index](/plugins) shows the error.
+```ts twoslash
+// @errors: 2345
+import { Plugin } from '@seedcord/core/plugin';
+import { Seedcord } from '@seedcord/http';
+
+class Voice extends Plugin<{
+    transport: 'gateway';
+    runtime: 'server';
+}> {
+    public async init(): Promise<void> {}
+}
+
+declare const seedcord: Seedcord;
+
+// ---cut---
+seedcord.attach('voice', Voice);
+```
+
+`seedcord` here is an http bot, so passing `Voice` to its `attach` fails to compile. The error names the transport `Voice` declares and the one the bot runs.
 
 ## What the constructor takes
 
-The host comes first. Its type has to be `CoreBase`. Every parameter after it is yours, and `attach` passes them through.
+Most plugins need settings, like a connection string or a label. The constructor's first parameter is the bot itself, which seedcord passes in when you call `attach`. Type it as `CoreBase`. Every parameter after it is yours. You pass their values to `attach` after the plugin class, where TypeScript checks their types.
 
 ```ts twoslash
 import { Plugin } from '@seedcord/gateway';
@@ -103,15 +123,35 @@ export class Uptime extends Plugin {
 }
 ```
 
-Narrowing that first parameter to the gateway `Core` fails to compile. The error reads:
+`Uptime` takes a `label` after the bot, so you attach it with `attach('uptime', Uptime, label)`.
 
-```txt output
-this plugin constructor must take CoreBase as its first parameter and read the transport Core off this.core
+If you type that first parameter as the gateway `Core`, your `attach` call fails to compile.
+
+```ts twoslash
+// @errors: 2345
+import { Plugin, Seedcord } from '@seedcord/gateway';
+
+import type { Core } from '@seedcord/gateway';
+
+declare const seedcord: Seedcord;
+
+// ---cut---
+class Uptime extends Plugin {
+    public constructor(host: Core) {
+        super(host);
+    }
+
+    public async init(): Promise<void> {}
+}
+
+seedcord.attach('uptime', Uptime);
 ```
+
+`attach` rejects `Uptime` because its constructor types `host` as `Core`. `seedcord codegen` adds every plugin you attach to that same `Core` type, so a plugin whose constructor takes `Core` ends up depending on itself, which TypeScript can't resolve. Keep the parameter as `CoreBase`, then read the transport's `Core` from `this.core`, which your base class already types for you.
 
 ## Rejecting bad options
 
-Call [`rejectOptions`](ref:core/Plugin.rejectOptions) from the constructor. It throws with your class name before the reason.
+A bad option, like an empty label, is cheapest to catch while the bot starts. Call [`rejectOptions`](ref:core/Plugin.rejectOptions) from the constructor to stop the bot at the `attach` call, before anything connects.
 
 ```ts twoslash
 import { Plugin } from '@seedcord/gateway';
@@ -131,15 +171,15 @@ export class Uptime extends Plugin {
 }
 ```
 
-That throws `PluginOptionsRejected`. Your class name comes first in the message, then whatever reason you passed.
+Calling `rejectOptions` throws `PluginOptionsRejected`. Your class name comes first in the message, then whatever reason you passed.
 
 ## Logging
 
-`this.logger` exists from the constructor onward. It prints under your class name, on the [channel your attach key names](/plugins#the-key-also-names-a-log-channel).
+`this.logger` exists from the constructor onward. It prints under your class name, on the [channel your attach key sets](/plugins#the-key-also-names-a-log-channel), so if someone attaches your plugin as `metrics`, they can filter its lines by that name.
 
 ## Reacting to a dev reload
 
-Override [`onHmr`](ref:core/Plugin.onHmr) to react when `seedcord dev` swaps a changed file. Call [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles) with glob patterns that should force a full restart.
+`seedcord dev` swaps a changed file into the running bot. If your plugin loads files itself, the way the mongoose plugin loads its service classes, it keeps the old copies. Override [`onHmr`](ref:core/Plugin.onHmr) to reload them. Reloading only helps with files your plugin reads again, though. A schema that a connection read at startup stays as it was, since swapping the file doesn't repeat that read. Pass glob patterns for files like that to [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles). When one of them changes, the dev terminal shows a **Restart required** card telling you to press `r`, which restarts the whole bot.
 
 ```ts twoslash hovers
 import { Plugin } from '@seedcord/gateway';
@@ -160,6 +200,6 @@ export class Uptime extends Plugin {
 }
 ```
 
-Both do nothing outside dev. But dev's where you'll be most of the time so this is actually very useful for you as a plugin author.
+`Uptime` logs each changed file and marks everything under `src/schema/` as needing a restart. Both calls do nothing outside `seedcord dev`.
 
-seedcord's own plugins are built this way. Find all the official plugins seedcord ships starting in the next section.
+seedcord's own plugins extend this same base, starting with [Mongoose](/plugins/mongoose).

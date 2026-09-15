@@ -1,9 +1,9 @@
 ---
 title: Mongoose
-description: A thin wrapper over mongoose that opens the connection during startup and loads your service classes.
+description: Connect a gateway or http bot to MongoDB with the mongoose plugin. Covers installing and attaching it, its options, how it starts and stops, and reading the mongoose instance.
 ---
 
-[`@seedcord/plugin-mongoose`](ref:plugin-mongoose) opens a MongoDB connection during startup and loads your service classes from a directory. You'll also need to be familiar with [Mongoose](https://mongoosejs.com/docs/), since the plugin is a thin wrapper over it.
+A bot that stores data in MongoDB needs the connection open before the first handler reads it, and closed when the bot shuts down. [`@seedcord/plugin-mongoose`](ref:plugin-mongoose) opens that connection during startup and loads your service classes from a directory. The plugin opens and closes the connection. Everything else is plain [Mongoose](https://mongoosejs.com/docs/), so schemas and queries you've written with Mongoose before work the same here.
 
 <Shell add="@seedcord/plugin-mongoose mongoose" />
 
@@ -37,6 +37,8 @@ export const seedcord = new Seedcord({
 export default seedcord;
 ```
 
+This sample builds a gateway bot. The same `attach` call works on an http `Seedcord` from `@seedcord/http`. An edge bot can't [attach plugins](/plugins) at all.
+
 ## The options
 
 {/* prettier-ignore-start */}
@@ -51,25 +53,25 @@ export default seedcord;
 
 {/* prettier-ignore-end */}
 
-`connectionOptions` merges last over everything the plugin passes to `mongoose.connect()`. A `dbName` key in there replaces the database your `name` picked.
+`connectionOptions` merges last over everything the plugin passes to `mongoose.connect()`, so you can override any setting the plugin chose. A `dbName` key in that object replaces the database your `name` picked.
 
 <Callout type="warning">
 
-The plugin adds `tls: true` and `ssl: true` when the environment is set to `production`. seedcord takes that from the first of `ENVIRONMENT`, `ENV`, `NODE_ENV`, or `MODE` that you set.
+When the environment is `production`, the plugin adds `tls: true` and `ssl: true`. seedcord reads the environment from the first of `ENVIRONMENT`, `ENV`, `NODE_ENV`, or `MODE` that you set. If you run production mode against a local database without TLS, that database refuses the connection, so set `tls: false` and `ssl: false` in `connectionOptions`.
 
 </Callout>
 
 ## Startup and shutdown
 
-`init()` connects, then reads every service class from `dir`. A failure at either step disconnects and rethrows.
+A bot that fails halfway through startup can leave its MongoDB connection open. The mongoose plugin closes that connection for you. `init()` connects, then loads every service class from `dir`. If either step fails, `init()` closes the connection before it rethrows the error.
 
-A failed connection throws `PluginMongooseConnectionFailed`, which names your `name` option in the message and carries mongoose's own error on the `cause`.
+If the connection fails, `init()` throws `PluginMongooseConnectionFailed`. Its message names the database from your `name` option, and mongoose's own error is on its `cause`.
 
-Shutdown runs the same steps backwards. `dispose()` clears the service registry and every loaded model, then closes the connection. A failure at that last step throws `PluginMongooseDisconnectFailed`.
+Shutdown runs the same steps backwards. `dispose()` clears the service registry and every loaded model, then closes the connection. If closing fails, `dispose()` throws `PluginMongooseDisconnectFailed`.
 
 ## The mongoose instance
 
-`connection` holds what `mongoose.connect()` returned, the mongoose instance itself. `connection.connection` is the driver's `Connection`. `connection.model()` builds a model.
+Most of your queries go through [service classes](/plugins/mongoose-services). Some work doesn't belong in a service, like checking whether the bot is still connected to MongoDB. For that, use `this.core.db.connection`, the Mongoose instance that `mongoose.connect()` returned. Its `connection` property is Mongoose's `Connection` object, and its `model()` method builds a model.
 
 ```ts hovers twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -94,4 +96,8 @@ class History extends SlashHandler<'history'> {
 }
 ```
 
-TypeScript treats `connection` as always present. The plugin assigns it once `mongoose.connect()` returns, so reading it before `init()` resolves returns `undefined`.
+The handler reads `readyState` from Mongoose's `Connection`, which is `1` while the bot is connected. `this.core.db` only has a type once you've run [`seedcord codegen`](/plugins/typing).
+
+`connection` and `services` are only ready after `init()` resolves. If you read `connection` before then, you get `undefined`, even though its type says it's always set. Reading `services` before then throws `PluginMongooseServicesNotReady`.
+
+Next, write the [service classes](/plugins/mongoose-services) the plugin loads from `dir`.

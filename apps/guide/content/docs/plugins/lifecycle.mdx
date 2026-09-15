@@ -1,9 +1,11 @@
 ---
 title: The lifecycle
-description: seedcord calls init(), ready(), and dispose() at fixed points in startup and shutdown, each with its own timeout.
+description: Control when a plugin starts and stops with init(), ready(), and dispose(). Covers the startup and shutdown phases, moving a method to another phase, timeouts, and what happens when init() or dispose() fails.
 ---
 
-You write up to three methods on a plugin. `init()` is the one method every plugin writes. seedcord calls `ready()` and `dispose()` when you add them.
+A plugin's setup often depends on timing. A database has to connect before the first handler reads it, a status update needs a logged-in client, and a timer should stop before the process exits. Code in a constructor runs too early for all three.
+
+seedcord calls your plugin at those points instead. `init()` is the one method every plugin writes. If you add `ready()` or `dispose()`, seedcord calls those too.
 
 ```ts twoslash title="src/plugins/Presence.ts"
 import { Plugin } from '@seedcord/gateway';
@@ -27,12 +29,12 @@ export class Presence extends Plugin {
 }
 ```
 
-`setActivity` needs a logged-in client, so that call belongs in `ready()`.
+`setActivity` needs a logged-in client, so `Presence` starts its timer in `ready()`. `dispose()` clears that timer, since an interval left running keeps calling a client that has logged out.
 
 <Callout type="transport" only="gateway">
-    `this.core.bot` is a gateway member. The phases and the three
-    methods work the same on http, where the Ready phase is the one
-    that binds the port.
+
+`this.core.bot` holds the discord.js client, which only a gateway bot has. Discord takes a presence update over the gateway alone, so an http bot can't run `Presence`, though `init()`, `ready()`, and `dispose()` work the same there.
+
 </Callout>
 
 ## Where each one runs
@@ -49,24 +51,45 @@ Startup runs three phases in order.
 
 {/* prettier-ignore-end */}
 
-Shutdown then runs four.
+Shutdown runs four phases.
 
 {/* prettier-ignore-start */}
 
 | shutdown phase | what happens | plugins |
 | --- | --- | --- |
 | `Unbind` | new interactions and requests stop | |
-| `Drain` | in-flight work settles and internal services stop | |
+| `Drain` | in-flight work finishes and internal services stop | |
 | `Disconnect` | external resources close | `dispose()` runs here by default |
 | `Logout` | the client disconnects last, so a draining handler can still reference it | |
 
 {/* prettier-ignore-end */}
 
-Inside one phase your plugins run one after another in attach order. Every `ready()` waits for every `init()` to resolve, including an `init()` you moved into the Ready phase itself.
+Say you attach `db`, then `settings`, which loads each server's settings from `db`. Both write all three methods and keep the default phases.
+
+```txt output
+startup
+├─ Configuration
+│  ├─ db.init()
+│  └─ settings.init()     starts once db.init() has finished
+├─ Login
+└─ Ready
+   ├─ db.ready()          every init() has finished
+   └─ settings.ready()
+
+shutdown
+├─ Unbind
+├─ Drain
+├─ Disconnect
+│  ├─ settings.dispose()  db is still open
+│  └─ db.dispose()
+└─ Logout
+```
+
+Your plugins start in the order you attach them and stop in the _reverse_ order. Attach a plugin before any plugin that reads from it. seedcord puts all of a phase's plugin calls in one task, so they run one after another while the phase's [other tasks](/core#running-work-while-your-bot-starts-and-stops) run in parallel with them. Your handlers can already receive interactions and events while `ready()` is still running. Set up anything a handler needs in `init()`.
 
 ## Moving a method to another phase
 
-Pass a [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec) as the second argument to `super()`. Leaving a field out keeps its default.
+The defaults fit most plugins, but some don't. If your `dispose()` writes a final batch into a database that another plugin connects, that write has to finish before the database plugin disconnects. Your `dispose()` then belongs in Drain, one phase earlier. Pass a [`PluginLifecycleSpec`](ref:core/PluginLifecycleSpec) as the second argument to `super()`. If you leave a field out, it keeps its default.
 
 ```ts twoslash
 import {
@@ -91,13 +114,13 @@ export class Presence extends Plugin {
 }
 ```
 
-The `ready` field takes a timeout and no phase, since `ready()` always runs in the Ready phase.
+`Presence` moves `init()` to Login, gives `ready()` 20 seconds, and moves `dispose()` to Drain with 30 seconds. The `ready` field takes a timeout without a phase, since `ready()` always runs in the Ready phase. If you move an `init()` to Ready, it still runs before every plugin's `ready()`.
 
 ## Timeouts
 
-Each method gets its own timeout. `init()` and `ready()` default to 15000ms, `dispose()` to 10000ms.
+An `init()` waiting on a service that never answers would hang your bot's startup forever, so each method gets its own timeout. `init()` and `ready()` default to 15000ms, and `dispose()` defaults to 10000ms.
 
-A method that runs past its timeout throws `LifecycleTaskTimeout`. The task name in the message carries the attach key and which method ran.
+If a method runs past its timeout, seedcord throws `LifecycleTaskTimeout`. The task name in the message carries the attach key and which method ran.
 
 ```txt output
 Task "Plugin (db)" timed out after 15000ms.
@@ -105,13 +128,15 @@ Task "Plugin:db:ready" timed out after 15000ms.
 Task "Plugin:db:dispose" timed out after 10000ms.
 ```
 
-Declaring a timeout of zero, a negative number, or `Infinity` throws `PluginInvalidLifecycleTimeout` in the constructor, before any of your code runs.
+A timeout of zero, a negative number, or `Infinity` throws `PluginInvalidLifecycleTimeout` in the constructor, before any of your code runs.
 
-A single deadline bounds the whole shutdown, 25000ms by default. Once it elapses seedcord skips the phases it never reached and exits. A task already running keeps going until the process exits three seconds later. A deadline of zero, a negative number, or `Infinity` throws `LifecycleInvalidShutdownDeadline` in the constructor.
+### The shutdown deadline
 
-A shutdown that arrives mid-startup waits for that startup out of the same budget. Where the budget runs out first, seedcord skips the teardowns for whatever finished starting after it.
+Those timeouts limit one method each. Your hosting platform kills the process if shutdown as a whole takes too long, so seedcord also bounds the whole shutdown with a single deadline, 25000ms by default. Once it elapses seedcord skips the phases it never reached and exits. A task already running keeps going until the process exits three seconds later. A deadline of zero, a negative number, or `Infinity` throws `LifecycleInvalidShutdownDeadline`.
 
-That default assumes the 30 seconds Kubernetes waits before SIGKILL. Since `docker stop` allows 10, drop the deadline to 5000 there, or widen the window with `docker stop -t`.
+If shutdown starts while the bot is still starting, it waits for startup to finish, and that wait counts against the same deadline. If the deadline passes first, seedcord doesn't dispose the plugins that finish starting after that.
+
+The 25000ms default fits the 30 seconds Kubernetes waits before SIGKILL, with the three-second exit delay added. `docker stop` allows 10 seconds, so set `shutdownDeadline` to 5000 there, which leaves two seconds after the exit delay. You can also widen the window with `docker stop -t`.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -136,18 +161,48 @@ const seedcord = new Seedcord({
 
 ## When init fails
 
-A throw from `init()` stops startup. seedcord disposes every plugin whose `init()` already finished, in reverse attach order, and rethrows what you threw.
+An `init()` usually fails because a service it connects to is down or can't be reached. When that happens, startup stops and `start()` rejects with `LifecyclePhaseFailures`, carrying your error in its `errors` array. What gets cleaned up depends on whether `init()` threw or ran out of time.
 
-The plugin that threw never gets its `dispose()` call, so close whatever `init()` already opened before you throw.
+### When it throws
 
-A timeout takes a different path. `init()` keeps running after the wait rejects. seedcord calls `dispose()` once that `init()` finally resolves. Put the cleanup for a late `init()` there. That call runs outside any shutdown phase. The phase you declared applies to a real shutdown.
+seedcord calls `dispose()` on every plugin whose `init()` had already finished, in reverse attach order. The plugin that threw doesn't get a `dispose()` call. Anything its `init()` opened before the error stays open unless `init()` closes it.
 
-That call requires a live process. A failed `start()` rejects, and an entry that never catches it exits before a slow `init()` resolves. Catch it when your `init()` claimed a lock, a lease, or a registration somewhere else, since those stay claimed until something releases them.
+```ts twoslash title="src/plugins/Feeds.ts"
+import { Plugin } from '@seedcord/gateway';
 
-seedcord never calls `dispose()` for an `init()` that hangs forever. Give whatever `init()` awaits its own timeout. That turns a hang into a throw you can catch.
+declare class FeedClient {
+    connect(): Promise<void>;
+    subscribe(topic: string): Promise<void>;
+    close(): Promise<void>;
+}
 
-That host cannot start again either. Calling `start()` on it a second time throws `LifecycleRestartAfterFailure`.
+// ---cut---
+export class Feeds extends Plugin {
+    private readonly client = new FeedClient();
+
+    public async init(): Promise<void> {
+        await this.client.connect();
+        try {
+            await this.client.subscribe('updates');
+        } catch (error) {
+            await this.client.close();
+            throw error;
+        }
+    }
+}
+```
+
+If `subscribe` throws, `Feeds` closes the connection in its `catch`, then rethrows so startup still fails.
+
+### When it times out
+
+Startup fails, but your `init()` keeps running in the background. What happens next depends on whether it finishes:
+
+- **It finishes later.** seedcord calls that plugin's `dispose()` as soon as it does, without waiting for the other plugins' `dispose()` calls. If that `dispose()` throws, seedcord only logs a warning.
+- **It never finishes.** `dispose()` never runs. Give whatever `init()` waits on its own timeout, so a hang turns into an error your `catch` handles.
+
+Once startup has failed, the same `Seedcord` can't start again. Calling `start()` on it a second time throws `LifecycleRestartAfterFailure`, so exit and let your process manager start a fresh one. When using `seedcord dev`, press `r` instead, which loads your bot into a fresh `Seedcord`.
 
 ## When dispose fails
 
-One failing `dispose()` never stops the others. seedcord runs them all, then throws the single failure it caught. Several failures throw as one `AggregateError` carrying `PluginDisposeFailures`, with each individual error on its `errors` array.
+If one `dispose()` fails, the others still run. With `db` and `settings` from earlier, a throw from `settings.dispose()` still lets `db.dispose()` close the connection. Once they've all run, seedcord throws the failure it caught. If several failed, it throws one `AggregateError` carrying `PluginDisposeFailures`, with each error in its `errors` array.

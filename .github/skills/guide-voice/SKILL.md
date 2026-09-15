@@ -99,6 +99,8 @@ The failure is a sentence that states a true general fact beside a fence and nev
 
 Test: could this paragraph sit under a different sample without changing a word? Then it is written beside the code rather than about it.
 
+The sentence saying what a sample's code does goes right after the fence too, where the reader can find what it names. Before the fence keep only the rule or the question the sample answers.
+
 The same holds for a hand-written version set against a sample. The custom-ids page showed `ticket:123:close` beside a declaration carrying three fields, so the comparison hid the cost it was there to show. `ticket:184580573574955008:close:true` carries all three, and the reader sees every value come back as text.
 
 ### A forced decision argues differently from a chosen one
@@ -265,6 +267,8 @@ Run these one at a time and apply each pass's fixes before starting the next. Ea
 
     Count `names` in the same pass. It covers three unrelated jobs across this guide, an error message telling you which one, a symbol being the whole set, and you writing them somewhere. One page carrying it for two of those is the defect whatever the count, and it hid for a long time because no single page held more than three. The prose review has the repairs.
 
+    Read `fire` and `settle` in the same pass. "One fire of the event" and "once the handlers settle" make the reader translate a picture back into the fact, so write "dispatch" and "finishes".
+
 8. **The garden path.** Read every sentence once at speed. Stopping and starting over means rewriting it. Four shapes cause it.
     - A clause wedged between a subject and its verb.
     - A cleft that parks the verb behind an `is`.
@@ -327,7 +331,7 @@ The repairs:
 1. Pull a condition out of the subject or the end of the sentence, and put it first with `if` or `when`.
 2. Replace a position word, like above, inside, nested, or past, with what the code does. Use the names the sample shows.
 3. Once a sentence holds two facts, give the second its own sentence.
-4. When a rule depends on order or covers several cases, name a small example and walk each case. The middleware page said `after()` runs "in the reverse of the order the middleware ran", and the reader had to work out what that meant for two middleware. "Say middleware `A` runs before middleware `B`", followed by one bullet per case, answered it at a glance. A sequence the rest of the page leans on gets a `txt output` diagram near the top, so later sections can point at a step.
+4. When a rule depends on order or covers several cases, name a small example and walk each case. The middleware page said `after()` runs "in the reverse of the order the middleware ran", and the reader had to work out what that meant for two middleware. "Say middleware `A` runs before middleware `B`", followed by one bullet per case, answered it at a glance. A sequence the rest of the page leans on gets a `txt output` diagram near the top, so later sections can point at a step. Draw it as a tree with `├─` and `└─`, the shape the effect-gates page uses, since columns of padded text are hard to follow.
 
 A frontmatter description packs hardest, because it tries to fit a whole page into a line. Section 7 gives it a shape.
 
@@ -348,6 +352,8 @@ A count tells you which word to look at. It never decides whether one sentence i
 The emoji section had "while the bot starts" in two places. The opener used it to answer a complaint about doing a lookup per send, where `once` was the whole answer. The paragraph further down used it as decoration around the real fact, which is what happens when a name fails to resolve. Stripping the phrase took the answer out of the opener and left the decoration standing. The repair re-aimed the second sentence at its own job and left the first alone.
 
 Where two sentences really are doing one job, cut the weaker one whole. Trimming a shared phrase out of both leaves two sentences that each say less.
+
+The same count runs across the pages of one batch. Three pages that each open a setup on "Say" read as a template. English has many ways to set up an example, so write each one fresh for its page. Keep the wording one a reader who learned English second gets on the first read.
 
 ---
 
@@ -387,6 +393,7 @@ The content review checks this section as a list. A page that breaks one of thes
 - **No page names an `./internal` entry**, or a symbol reachable only through one. Read the `exports` map in the package's `package.json` to tell. Name the public surface and stop.
 - **Inline code stays short.** Backticks do not wrap, so a full error message or a chained expression pushes past the column on a narrow screen. Use quotes, a fence, or a table cell.
 - **A trap uses the exact error string as its heading**, so a pasted error hits an anchor.
+- **A section that narrows the one above it takes an H3.** One option inside "Adding options" nests under that H2, so the table of contents shows which section it belongs to.
 - **A callout takes whole blocks, including a fence.** Use the blank-line form: `<Callout type="warning">`, a blank line, the blocks, a blank line, the close.
 - **A page outside the Start tab assumes no prior page was read.** Someone opens it cold from search or the sidebar, so it names what it needs and links the rest. The Start tab is an ordered path and its pages do build on each other, which is how the core page opens on the ping handler two pages earlier.
 - **No page's code sample depends on a prior page**, wherever the page sits.
