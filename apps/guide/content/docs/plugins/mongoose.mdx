@@ -65,7 +65,7 @@ When the environment is `production`, the plugin adds `tls: true` and `ssl: true
 
 A bot that fails halfway through startup can leave its MongoDB connection open. The mongoose plugin closes that connection for you. `init()` connects, then loads every service class from `dir`. If either step fails, `init()` closes the connection before it rethrows the error.
 
-If the connection fails, `init()` throws `PluginMongooseConnectionFailed`. Its message names the database from your `name` option, and mongoose's own error is on its `cause`.
+If the connection fails, `init()` throws `PluginMongooseConnectionFailed`. Its message names the database from your `name` option, and mongoose's own error is in its `cause`.
 
 Shutdown runs the same steps backwards. `dispose()` clears the service registry and every loaded model, then closes the connection. If closing fails, `dispose()` throws `PluginMongooseDisconnectFailed`.
 

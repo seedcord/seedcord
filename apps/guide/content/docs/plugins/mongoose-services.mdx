@@ -1,9 +1,11 @@
 ---
 title: Mongoose services
-description: The model name you give mongoose picks the collection it writes to. You reach the service itself by its decorator key.
+description: Write a service class for each MongoDB collection with the mongoose plugin. Covers its schema and key, the model name, typing the services map, and reading a service from a handler.
 ---
 
-A service is one class per collection. Extend [`MongooseService`](ref:plugin-mongoose/MongooseService), declare the schema as a static, and decorate it with a key. That key is what you read it back by.
+Without services, every handler that looks up a user imports the model and writes its own `findOne` call. You copy the same query into several handlers, so changing how you look a user up means finding every copy.
+
+A service keeps a collection's queries in one class. Extend [`MongooseService`](ref:plugin-mongoose/MongooseService), declare the schema as a static, and decorate the class with a key. Handlers then call its methods through that key.
 
 ```ts twoslash title="src/services/Users.ts"
 import {
@@ -38,23 +40,28 @@ declare module '@seedcord/plugin-mongoose' {
 }
 ```
 
-[`MongooseDocument`](ref:plugin-mongoose/MongooseDocument) declares `_id: string`, the one field every document has. Passing your own document type makes `this.model` a `Model<IUser>`, with every mongoose query method typed against your fields. Leaving the type argument off falls back to a bare `_id`.
+`Users.ts` does several things at once, so let's go through it one part at a time.
+
+- **`IUser`** lists the fields a user document has. It extends [`MongooseDocument`](ref:plugin-mongoose/MongooseDocument), which declares `_id: string`, the one field every document has.
+- **`@RegisterMongooseService('users')`** gives the class its key. Your handlers reach the service under that key.
+- **`MongooseService<IUser>`** is the base class. Passing `IUser` types `this.model` as `Model<IUser>`, so TypeScript checks the fields in every query on that model against `username` and `streak`. Without the type argument, the model's type only has `_id`.
+- **`schema`** is the Mongoose schema the plugin builds the model from. Make sure it's `static`, because the decorator fails to compile without it.
+- **`findByName`** keeps the lookup inside the class. A handler calls that method and never writes the query itself.
+- **The `declare module` block** adds `users` to the keys the decorator accepts. [Typing the registry](#typing-the-registry) explains why you write it.
 
 ## You never construct a service
 
-The plugin reads every class in the `dir` you passed to `attach`, builds its model, then constructs it. That constructor call is the registration, so `new Users()` never appears in your code.
+The constructor takes the plugin, the core, and a model. The plugin only has all three once it has connected, so it builds your services itself during startup. It imports every `.ts` and `.js` file under the `dir` you gave the [mongoose plugin](/plugins/mongoose), including subfolders. For each exported class that extends `MongooseService` and carries the decorator, it builds the model from `schema` and constructs the class. That constructor call adds the instance to the plugin's [`services`](ref:plugin-mongoose/Mongoose.services) map under its key.
 
 <Callout type="warning">
 
-The plugin only picks up a class carrying `@RegisterMongooseService`. An undecorated one is skipped in silence, so `services.users` comes back undefined with nothing thrown and nothing logged.
+If a class isn't exported or has no `@RegisterMongooseService`, the plugin skips it without throwing or logging anything. `services.users` then reads `undefined` even though TypeScript types it as `Users`.
 
 </Callout>
 
 ## The model name sets the collection
 
-The key is also the mongoose model name, which mongoose then pluralizes to find the collection. So a key of `user` reads and writes the `users` collection.
-
-Pass `modelName` when the two should differ.
+The plugin uses your key as the Mongoose model name. Mongoose pluralizes that name to pick the collection, so a key of `user` reads and writes the `users` collection. That's fine for a new database. If your collection already exists under a different name, pass `modelName` so the model name can differ from the key.
 
 ```ts twoslash
 import {
@@ -84,15 +91,38 @@ export class Users extends MongooseService<IUser> {
 }
 ```
 
-That reads the `app_users` collection while you still reach it as `services.users`.
+With `modelName: 'app_user'`, mongoose reads the `app_users` collection. Your handlers still reach the class as `services.users`.
 
 ## Typing the registry
 
-[`MongooseServices`](ref:plugin-mongoose/MongooseServices) starts empty, so you fill it in yourself with the `declare module` block at the bottom of the first example. Write that block by hand, since codegen never touches it. Codegen writes the `Core` augmentation covered in [Typing a plugin](/plugins/typing).
+[`MongooseServices`](ref:plugin-mongoose/MongooseServices) starts empty, so the decorator doesn't accept any key until you declare one. The `declare module` block in `src/services/Users.ts` above adds `users`. The decorator then takes `'users'` and checks that the class matches `Users`, the type you declared for that key. If you pass `'guilds'` to the decorator before adding a `guilds` entry, TypeScript reports an error.
 
-After you declare it, the key you pass to the decorator must match one of those entries. If you forget to declare a key, TypeScript will fail to compile.
+```ts twoslash
+// @noErrors
+import { RegisterMongooseService } from '@seedcord/plugin-mongoose';
+
+declare class Users {}
+declare class Guilds {}
+
+// ---cut---
+declare module '@seedcord/plugin-mongoose' {
+    interface MongooseServices {
+        users: Users;
+        guilds: Guilds;
+    }
+}
+
+RegisterMongooseService('
+//                       ^|
+```
+
+The decorator offers the two keys that `declare module` block adds to `MongooseServices`, `users` and `guilds`.
+
+You add each entry by hand when you write a new service, since codegen doesn't write this block. It only writes the `Core` block from [Typing a plugin](/plugins/typing).
 
 ## Reading a service
+
+A handler gets a service from the plugin's `services` map, under the key you declared.
 
 ```ts twoslash hovers
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -149,4 +179,6 @@ class History extends SlashHandler<'history'> {
 }
 ```
 
-`services` fills up only after the plugin has connected and loaded every class. Reading it before then throws `PluginMongooseServicesNotReady`.
+`findByName` resolves to an `IUser` or `null`, so the handler checks `found` before it reads `username`.
+
+If you read `services` before the plugin's `init()` has finished, it throws `PluginMongooseServicesNotReady`. Your handlers never read it that early, though, because they only start receiving interactions once `init()` has finished.
