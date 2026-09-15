@@ -1,9 +1,11 @@
 ---
 title: Event middleware
-description: The decorator's events and the generic have to list the same ones, since a mismatch is a compile error.
+description: Run code before your event handlers with event middleware. Covers stopping an event, choosing which events it runs for, the order, passing values along, cleaning up in after(), and where middleware files go.
 ---
 
-Middleware runs before the handlers for an event. Throwing from it stops all of them.
+Suppose three handlers respond to `messageCreate`, and none of them should answer a muted member. Each handler would repeat the same mute lookup. If you add a fourth handler and forget the lookup, it answers anyway.
+
+An event middleware runs that check once, before every handler registered for the event. If the middleware throws, none of those handlers run.
 
 ```ts twoslash title="src/events/middlewares/SkipMuted.ts"
 import {
@@ -31,19 +33,19 @@ export class SkipMuted extends EventMiddleware<Events.MessageCreate> {
 }
 ```
 
-[`@RegisterEventMiddleware`](ref:gateway/RegisterEventMiddleware) takes one options object. An [interaction runs its own chain](/checks/middleware) through [`@RegisterInteractionMiddleware`](ref:core/RegisterInteractionMiddleware), which filters on `{ kinds }`.
+[`@RegisterEventMiddleware`](ref:gateway/RegisterEventMiddleware) takes one options object. Interactions have [their own middleware](/checks/middleware), registered with [`@RegisterInteractionMiddleware`](ref:core/RegisterInteractionMiddleware), which filters on `{ kinds }`.
 
 ## Stopping the event
 
-Any throw stops the event. The class you throw decides what the user sees. With a [`Silence`](ref:core/Silence) the user sees nothing. A reason passed to it goes to a debug log. Anything else goes down the same path that a handler's [throw](/replying/throwing) takes.
+Any throw stops the event. What happens next depends on the class you throw. `SkipMuted` throws a [`Silence`](ref:core/Silence), which ends the event without reporting anything. seedcord logs its reason, `'author is muted'`, as a debug line on the `errors` log channel. To turn that line off, set `errors.logSilences` to `false`. If a `Silence` has no reason, seedcord doesn't log anything. Anything else is reported the same way as a handler's [throw](/replying/throwing).
 
-That stops one dispatch. The next message runs the chain again from the top.
+That stops one [event dispatch](/events#several-handlers-for-one-event). The next message runs every middleware again from the start.
 
 ## Which events it runs for
 
-Whatever you put in `{ events }`, the generic on [`EventMiddleware`](ref:gateway/EventMiddleware) has to list too. Applying the decorator with a mismatch is a compile error. `SkipMuted` above takes one, so [`this.event`](ref:gateway/EventMiddleware.event) is that event's payload.
+You write the events twice, once in `{ events }` and once in the generic on [`EventMiddleware`](ref:gateway/EventMiddleware). If the two differ, the decorator line fails to compile. `SkipMuted` lists one event, so [`this.event`](ref:gateway/EventMiddleware.event) is that event's payload.
 
-With several, the payload could be any of them, so `this.event` turns `never`. [`this.eventName`](ref:gateway/EventMiddleware.eventName) returns the event that fired.
+With several events, the payload could be any of them, so `this.event` is `never`. [`this.eventName`](ref:gateway/EventMiddleware.eventName) returns the event that fired, which is enough for work that doesn't read the payload, like counting.
 
 ```ts twoslash title="src/events/middlewares/CountMessages.ts"
 import {
@@ -67,7 +69,7 @@ export class CountMessages extends EventMiddleware<
 }
 ```
 
-Leaving `{ events }` off gives a catchall, which runs on every event that your handlers registered. Drop the generic with it.
+`name` is `Events.MessageCreate | Events.MessageDelete`. Without `{ events }`, the middleware runs on every event your handlers registered. Leave the generic off too, since a generic without `{ events }` fails to compile.
 
 ```ts twoslash title="src/events/middlewares/Trace.ts"
 import {
@@ -83,17 +85,19 @@ export class Trace extends EventMiddleware {
 }
 ```
 
-Write one class per event when you need each payload shape.
+`Trace` reads only `this.eventName`, which is all a catchall can read. An event middleware doesn't have `match`, because it runs the same code for every event it lists. When your check reads the payload of several events, write one middleware class per event.
 
 ## Order
 
-`priority` decides the order, with lower running first. It takes any finite number and defaults to `0`. That puts `SkipMuted` first at `0`, then `CountMessages` at `1`, then `Trace` at `2`.
+`priority` takes any finite number, including negative ones. The middleware with the lower number runs first. If you leave `priority` out, the middleware gets `0`. That puts `SkipMuted` first at `0`, then `CountMessages` at `1`, then `Trace` at `2`. All three run before seedcord builds the first handler, as [the event dispatch order](/events#several-handlers-for-one-event) lays out.
 
-Two middlewares at the same priority run in the order that seedcord loaded them. Give anything order-dependent its own number.
+If two middleware share a number, they run in the order seedcord loaded their files. That order can change when you add, rename, or move a middleware file, so give anything order-dependent its own number.
 
 ## Passing a value along
 
-Every handler for one event shares a single bag with the chain ahead of it. A middleware writes a value there, then each handler reads that same value back.
+A middleware often looks up something every handler needs, like the server's language. Without somewhere to put it, each handler would look it up again.
+
+Each event dispatch gets one _bag_ of values, which your code reads and writes through `this.dispatch`. The middleware and every handler for that event share it. `Locale` writes the language once. Each handler reads it back.
 
 ```ts twoslash title="src/events/middlewares/Locale.ts"
 import '@seedcord/gateway';
@@ -122,13 +126,16 @@ export class Locale extends EventMiddleware<Events.MessageCreate> {
 }
 ```
 
-Declaring the key and reading it back works the same way it does on [an interaction dispatch](/checks/dispatch-context). The one difference is scope, since one event shares its bag across every handler it runs while an interaction has a single handler.
+You declare the key and read it back the same way you do on [an interaction dispatch](/checks/dispatch-context). An interaction's bag has one handler reading it. An event's bag is shared by every handler registered for that event. On an event, `routeId` reads `event:<name>`. The bag lasts until every handler for that event has finished and every middleware's `after()` has run. The next time the event fires, it gets a new, empty bag.
 
 ## After the event
 
-When the event finishes, `after()` runs on every middleware whose `execute()` began, newest first. That includes a middleware that throws, since seedcord records it before `execute()` runs. The ones behind it never started and get nothing.
+A middleware that opens something in `execute()`, like a timer or a lock, needs a place to close it once the handlers are done. That place is `after()`, an optional method seedcord calls when the event finishes.
 
-A middleware that stopped the event reaches its `after()` the same way. Use it to release whatever `execute()` held open.
+A middleware gets its `after()` call as long as its own `execute()` started, even if that `execute()` threw. Say middleware `A` runs before middleware `B`.
+
+- If both ran, `B.after()` runs first, then `A.after()`.
+- If `A` threw, only `A.after()` runs. `B` never started, so it doesn't get one.
 
 ```ts twoslash hovers title="src/events/middlewares/Timing.ts"
 import {
@@ -162,15 +169,27 @@ export class Timing extends EventMiddleware {
 }
 ```
 
-`after()` is optional on the base, which means an implementation marks itself `override`. TypeScript reports a missing one.
+The base class declares `after()`, so `Timing` marks its version `override`. Leaving that off is a compile error under TypeScript's `noImplicitOverride`.
 
-[`EventDispatchResult`](ref:core/EventDispatchResult) reports how the event ended, in two parts. `outcome` describes the chain alone, so a handler that throws still leaves it `handled`. `handlers` holds one entry per handler that ran, each carrying its class name and its own outcome.
+`after()` receives an [`EventDispatchResult`](ref:core/EventDispatchResult) that says how the event ended. The `Timing` sample logs how many handlers ran, from `result.handlers`.
 
-That list is empty exactly when the chain stopped the event. A throw inside `after()` reaches the log and stops there, which leaves the rest of the chain running.
+{/* prettier-ignore-start */}
+
+| `outcome` | when | `caught` | `handlers` |
+| --- | --- | --- | --- |
+| `'handled'` | every middleware finished without throwing | not present | one entry per handler that ran |
+| `'refused'` | a middleware threw a `Silence`, or a `Notice` with `report` false | the thrown value | empty |
+| `'failed'` | a middleware threw a reported `Notice` or any other error | the thrown value | empty |
+
+{/* prettier-ignore-end */}
+
+`outcome` only covers the middleware. If a handler throws, `outcome` still reads `'handled'`. That handler's own result is in its `handlers` entry, which carries the handler's class name as `handler`, plus its own `outcome` and `caught` with the same three values.
+
+An `after()` that throws doesn't stop the other `after()` calls. If `B.after()` throws, seedcord logs the error and still calls `A.after()`.
 
 ## Where middleware lives
 
-Middlewares live under `bot.events.middlewares`. The key is optional in case you don't want middlewares.
+seedcord loads event middleware from the folder you set in `bot.events.middlewares`. If you leave the key out, seedcord skips the middleware scan. Leave it out when your bot doesn't use any event middleware.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -199,18 +218,21 @@ export const seedcord = new Seedcord({
 });
 ```
 
-A class without `@RegisterEventMiddleware` loads and never runs, the same way a handler without `@RegisterEvent` does. The `@seedcord/middleware-missing-register-decorator` rule reports it.
+seedcord imports every file in that `./events/middlewares` folder. If a class there doesn't have `@RegisterEventMiddleware`, it still loads but never runs, the same as an event handler without `@RegisterEvent`. The `middleware-missing-register-decorator` lint rule flags the missing decorator while you write the class.
 
 <Callout type="warning">
 
-Middleware runs only when a handler is about to run. seedcord checks for a handler left to run before it starts the chain. So a catchall middleware skips any event that nothing handles, and any event whose handlers were all registered `once` and have already run.
+Middleware runs only when a handler is about to run. seedcord checks for a handler left to run before it starts any middleware. A catchall middleware therefore skips two kinds of events:
+
+- an event that no handler registered
+- an event whose handlers were all registered `once` and have already run
 
 </Callout>
 
 <Callout type="transport" only="gateway">
 
-`@RegisterEventMiddleware` and `EventMiddleware` ship on `@seedcord/gateway`. An http bot has no client events to run them on.
+`@RegisterEventMiddleware` and `EventMiddleware` ship on `@seedcord/gateway`. An http bot doesn't receive client events to run them on.
 
 </Callout>
 
-[Message events](/events/messages) carry some rules that no middleware can work around.
+[Message events](/events/messages) come with rules that middleware can't work around.

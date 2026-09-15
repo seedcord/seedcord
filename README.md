@@ -32,10 +32,12 @@ You pick one of two transports when you scaffold. `@seedcord/gateway` holds a we
 - A typed customId codec for buttons, selects, and modals
 - Gates that refuse before the handler runs
 - One `throw` that replies, logs, and reports
+- Middlewares that run around your handler
 - The same handlers on both gateway and http
 - Vite HMR that holds the Discord connection
 - Startup and shutdown that run in ordered phases
 - Typed plugins with `init`, `ready`, and `dispose`
+- and much more...
 
 ## Get started
 

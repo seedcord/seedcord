@@ -1,9 +1,11 @@
 ---
 title: Your first event handler
-description: '@RegisterEvent names the event you want, and this.event holds the arguments discord.js passes with it.'
+description: Run code when a discord.js event fires, with an event handler class. Covers registering an event, reading its payload, where handler files go, intents, running a handler once, and several handlers for one event.
 ---
 
-A member joins, someone posts a message, someone edits it. Each one is a discord.js event. You answer one with a handler class.
+A member joins, someone posts a message, someone edits it. Each one is a discord.js event. With plain discord.js you'd call `client.on` for each event in a startup file. That file grows with every listener you add. When an async listener throws, nothing catches the rejection unless you wrap every listener yourself.
+
+seedcord gives each listener its own class. It finds those classes in your events folder, attaches one `client.on` per event, and catches a throw from each handler separately.
 
 ```ts twoslash title="src/events/Welcome.ts"
 import { EventHandler, RegisterEvent } from '@seedcord/gateway';
@@ -21,19 +23,19 @@ export class Welcome extends EventHandler<Events.GuildMemberAdd> {
 }
 ```
 
-[`@RegisterEvent`](ref:gateway/RegisterEvent) takes the event in a tuple. The generic on [`EventHandler`](ref:gateway/EventHandler) has to name the same one, and the compiler catches a mismatch.
+[`@RegisterEvent`](ref:gateway/RegisterEvent) takes the event in a tuple, here `Events.GuildMemberAdd`. You also write the event in the generic on [`EventHandler`](ref:gateway/EventHandler). If the two differ, the class fails to compile.
 
-`Events.InteractionCreate` fails to compile here. Every interaction kind has its own handler base, taught in [Commands](/commands) and [Components](/components).
+If you pass `Events.InteractionCreate` in either place, it also fails to compile. Every interaction kind has its own handler base. [Commands](/commands) and [Components](/components) cover them.
 
 <Callout type="transport" only="gateway">
 
-Discord delivers server events down the gateway websocket. An http bot only receives interactions, so `EventHandler` ships on `@seedcord/gateway`.
+Discord delivers server events down the gateway websocket. An http bot only receives interactions, so `EventHandler` only ships on `@seedcord/gateway`.
 
 </Callout>
 
 ## Reading the payload
 
-discord.js emits a tuple for each event, and [`this.event`](ref:gateway/EventHandler.event) is that tuple. `guildMemberAdd` emits one member. `messageUpdate` emits two, the message before the edit and the message after it.
+discord.js emits a tuple for each event. [`this.event`](ref:gateway/EventHandler.event) is that tuple. `guildMemberAdd` emits one member. `messageUpdate` emits two, the message before the edit and the message after it.
 
 ```ts twoslash title="src/events/EditLog.ts"
 import { EventHandler, RegisterEvent } from '@seedcord/gateway';
@@ -52,13 +54,15 @@ export class EditLog extends EventHandler<Events.MessageUpdate> {
 }
 ```
 
-You answer with the objects in `this.event` itself. On a message event that is `message.reply(...)`.
+If the content didn't change, `EditLog` returns early. discord.js also fires `messageUpdate` when an embed loads on a message.
 
-[`this.logger`](ref:core/BaseHandler.logger) writes to the `events` channel. [Tooling](/tooling) names the channels and the levels.
+`EditLog` only writes a log line. To respond in Discord, you use the objects in `this.event`, like `after.reply(...)` on a message. An event handler doesn't have `this.reply`, because Discord isn't waiting for a reply to an event.
+
+The log line goes through [`this.logger`](ref:core/BaseHandler.logger), which writes to the `events` log channel. [Tooling](/tooling) lists the channels and the levels.
 
 ## Where handlers live
 
-seedcord scans the folder named by `bot.events.path` at startup and registers every handler class it finds. Subfolders work, since the scan goes all the way down.
+seedcord scans the folder you set in `bot.events.path` at startup and registers every handler class it finds. The scan reaches every subfolder, so you can group handlers by feature.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
@@ -86,11 +90,19 @@ export const seedcord = new Seedcord({
 });
 ```
 
-If you scaffolded the project, `create-seedcord` already asked what your bot should react to and wrote this folder with the intents to match.
+If your bot has no event handlers, set `events: { path: null }`. seedcord then skips the scan.
+
+## Intents
+
+Discord sends an event to your bot only if the bot asked for it with an intent. You list intents in `clientOptions.intents`. The `bot.ts` sample lists `GuildMembers` because the `Welcome` handler at the top of the page listens for member joins. Without that intent, `Welcome` never runs.
+
+`GuildMembers` is a privileged intent, so it also needs its switch turned on in the [developer portal](/discord-application#turn-on-the-intents-you-need).
+
+If you created your bot with [`create-seedcord`](/first-bot), it asked what your bot should react to. It then wrote the events folder and the matching intents into `bot.ts`.
 
 ## Running once
 
-The tuple takes a second entry for options. `frequency: 'once'` runs the handler on the first fire and never again.
+Some work belongs to the first time an event fires, like logging which account your bot connected as. The tuple takes an options object as its second entry. Set `frequency: 'once'` to run the handler only the first time the event fires. It won't run again until your bot restarts.
 
 ```ts twoslash title="src/events/Boot.ts"
 import { EventHandler, RegisterEvent } from '@seedcord/gateway';
@@ -106,14 +118,34 @@ export class Boot extends EventHandler<Events.ClientReady> {
 }
 ```
 
-Leaving the options out gives `frequency: 'on'`, so the handler runs every time.
+Without the options entry, `frequency` is `'on'` and the handler runs every time.
 
 <Callout type="warning">
 
-A handler without `@RegisterEvent` never runs, and nothing warns you. seedcord only attaches a listener for the events you registered. The `@seedcord/event-handler-missing-register-event` rule catches it, and it's on in a scaffolded project.
+If you forget `@RegisterEvent` on a handler class, that handler never runs. seedcord attaches listeners only for the events you registered, so nothing calls the class and nothing warns you at runtime. To catch it while you write the class, seedcord's `event-handler-missing-register-event` lint rule flags the missing decorator. If you scaffolded your project, that rule is already on.
 
 </Callout>
 
-Several handlers can register the same event. They run one after another. One of them throwing leaves the rest to run, and [Throwing](/replying/throwing) says what your bot sends when that happens.
+## Several handlers for one event
 
-A class can also take more than one event. [Several events in one class](/events/several-events) picks that up.
+Several handlers can register the same event, so a welcome message and a join log can stay in separate files. They run one after another, in the order seedcord loaded their files. If one of them throws, the rest still run. [Throwing](/replying/throwing) covers what seedcord does with the error.
+
+One event firing, with every handler registered for it, is an _event dispatch_. The [event middleware](/events/middleware) for that event runs once per event dispatch, ahead of all of those handlers. Each event dispatch runs in this order.
+
+```txt output
+an event fires
+│
+├─ 1. seedcord lists the event's handlers      leaves out a once handler that already ran
+├─ 2. each event middleware's execute()        lowest priority first
+├─ 3. for each handler, in load order
+│     ├─ seedcord builds the handler           your constructor runs here
+│     ├─ the handler's gates                   checks, then commits
+│     └─ the handler's execute()
+└─ 4. each middleware's after()                reverse of step 2, every time
+
+if step 1 leaves no handlers, steps 2 to 4 don't run
+a throw in 2 skips straight to 4
+a throw in 3 stops that handler, and the next handler still runs
+```
+
+An interaction runs in [a different order](/checks#what-a-dispatch-is), with its one handler built before any middleware.

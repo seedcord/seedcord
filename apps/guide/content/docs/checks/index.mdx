@@ -16,7 +16,7 @@ an interaction arrives
 ├─ 2. each middleware's execute()       lowest priority first
 ├─ 3. each gate's check                 left to right
 ├─ 4. each effect gate's commit         only once every check passed
-├─ 5. your handler's execute()          your handler runs here
+├─ 5. your handler's execute()
 └─ 6. each middleware's after()         reverse of step 2, every time
 
 a throw or a refusal in 2, 3, 4, or 5 skips straight to 6
@@ -33,6 +33,6 @@ A gate can read what a middleware wrote, since every middleware runs first.
 
 <Callout type="transport" only="gateway">
 
-A gateway event runs its own order, with event middleware ahead of every handler registered for it. [Event middleware](/events/middleware) covers that order.
+A gateway event runs its own order, with event middleware ahead of every handler registered for it. [The event dispatch order](/events#several-handlers-for-one-event) lists every step.
 
 </Callout>
