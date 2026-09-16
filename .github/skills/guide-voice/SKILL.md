@@ -49,9 +49,14 @@ Two tests before a line of judgment goes in.
 
 Both real ones in the guide pass on the same shape, a specific surface and a specific cost:
 
+<!-- two separate quotes, so the blank line between them is deliberate -->
+<!-- markdownlint-disable MD028 -->
+
 > Keep that declaration in the file with the component that encodes it. Both sides read the field names off one `CustomId`, so a rename cannot reach one and miss the other.
 
 > Make that call in the constructor anyway. `this.instance` is protected to keep a ban card's whole description in one file.
+
+<!-- markdownlint-enable MD028 -->
 
 A paragraph is the size of this. Advice that grows a heading of its own has become a page about advice, and the reader came for the surface. A reference table, a flag list, and a troubleshooting page each answer a question the reader already arrived with, so none of them wants this.
 
@@ -247,9 +252,14 @@ The prose review covers these fourteen. It reads the page and nothing else.
 
 The content review covers these three, plus everything in section 7. It opens the declarations.
 
+<!-- the numbering continues the list above, since a reviewer cites a shape by its number -->
+<!-- markdownlint-disable MD029 -->
+
 15. **A way of using the surface the page never shows.** Read every declaration whole, including the variadic parameters, the overloads, the optional arguments, and the generic bounds. Each distinct form appears once. This settles at a different level from the example rule above, which decides how deep one member goes where this one decides which forms appear at all.
 16. **An optional parameter or field stated flatly.** A parameter read as required costs the reader an argument they never needed. A field read as always present costs them a guard they skipped. The reverse counts too.
 17. **A feature taught with no reason to exist.** The section says how to turn the thing on and never says what the reader does without it. Read the section's opening and name what it would cost someone to go without the feature, sourced from the code and from what the platform requires.
+
+<!-- markdownlint-enable MD029 -->
 
 ---
 
@@ -266,6 +276,10 @@ Run these one at a time and apply each pass's fixes before starting the next. Ea
 7. **Connectors.** Count `and`, `so`, `which`, `while`, `because`, `since`, `then`. Any one connector carrying most of the page is the defect. Then check the reason-versus-consequence split from section 3, and read every connector against the relation it promises.
 
     Count `names` in the same pass. It covers three unrelated jobs across this guide, an error message telling you which one, a symbol being the whole set, and you writing them somewhere. One page carrying it for two of those is the defect whatever the count, and it hid for a long time because no single page held more than three. The prose review has the repairs.
+
+    `names` is one instance of a wider rule. **One word does one job across the whole guide.** `verb` meant a reply method on the Replying tab and a store operation on the rate-limiter page, so a reader who met both learned neither. The repair picked a plain word for each, `method` and `operation`, rather than defining the same word twice.
+
+    **A term the guide leans on gets defined the first time a reader can reach it, and that is tab order rather than the order you wrote the pages in.** `verb` debuted in a heading on `more-messages`, while `ack-states`, the page that could have defined it, sits after it in `meta.json`. A reviewer reading one page cannot catch this, so check it yourself against the tab's `meta.json` whenever you introduce a word the reader has to learn. Where no page is a good home for the definition, that is the sign to drop the word.
 
     Read `fire` and `settle` in the same pass. "One fire of the event" and "once the handlers settle" make the reader translate a picture back into the fact, so write "dispatch" and "finishes".
 
@@ -292,12 +306,16 @@ Real ones, all caught by the maintainer, all in prose written the same week:
 | "the class decides what a ban card looks like, and a setter at the call site splits that description" | more of the same | contrast. The second clause is the case being argued against |
 | "List the id under `ignoreCustomIds`, and the router returns before it answers" | more of the same | purpose, so "to make the router return" |
 | "Read a member that the base leaves out and the compiler stops you" | an instruction to follow | a condition on a mistake, so `if` |
+| "Where a handler only ever reaches that line in one state, name the verb yourself" | a place | a condition, so `if`. "If you already know the state, call `reply()` or `edit()` directly" |
+| "`send()` rewrites the placeholder, even where you meant it as a new message" | a place | a concession on a condition, so `even when`, or cut the clause and give the reader the fix |
 
 <!-- prettier-ignore-end -->
 
 An imperative joined to its result by `and` hides the relation every time, even when the imperative is good advice. "Pass `true` and the getter throws" reads word by word as two facts, and a reader who learned English second has no intuition telling them the `and` means "if". Pick the connector by whether the reader wants the result. A result they want takes `to`: "Pass `true` to make the getter throw." A mistake or a side effect takes `if`: "If you read a member the base leaves out, TypeScript reports an error." Two instructions in a row keep their `and`, as in "Put them on your own buttons and return the whole reply".
 
 A verb makes the same kind of promise. "Discord also allows one select menu per row" reads as an extra capability, and the fact is a limit. Write the limit as one: "A select menu takes a whole row."
+
+`where` standing in for `when` or `if` is the same defect wearing a place word, and it is a habit worth watching for. "Where a handler only ever reaches that line in one state" and "even where you meant it as a new message" both point the reader at a location and hand them a condition. `where` earns its place naming a real place, as in "where the type-aware rules look for `tsconfig.json`". Say the condition out loud and the wrong one gives itself away, since nobody speaks either of those sentences.
 
 **The test.** Read what follows the connector on its own. Ask what relation the word just promised, then ask what relation the two halves actually have. Where they differ, the reader pays for it.
 
@@ -337,9 +355,14 @@ A frontmatter description packs hardest, because it tries to fit a whole page in
 
 ### The rest of the loop
 
+<!-- these continue the loop's numbering from before the heading -->
+<!-- markdownlint-disable MD029 -->
+
 9. **Shape.** Read the page whole, out loud, as someone who has never seen it. Two questions. Does a person explaining this sound like this? Would a reader who learned English second get through without re-reading? Then check the spread against section 3.
 10. Run both reviewers, in parallel. One Sonnet agent each. [`PROSE-REVIEW.md`](./PROSE-REVIEW.md) and [`CONTENT-REVIEW.md`](./CONTENT-REVIEW.md).
 11. Fix what they find, then run step 9 again, since every fix is a sentence nothing has checked.
+
+<!-- markdownlint-enable MD029 -->
 
 A count tells you which word to look at. It never decides whether one sentence is wrong. Answer no to every frequency check and the page still ships whatever instances it has, so read each one and repair it on its own terms.
 
@@ -386,6 +409,8 @@ The content review checks this section as a list. A page that breaks one of thes
 - **A fence states how it shows types.** `^?` when the prose is about one or two of them. `hovers` when the reader has a shape worth exploring, at roughly five times the bytes and build time. `^|` when the reader's question is what they can type here. A bare `twoslash` with no marker when the sample only needs checking, which is most samples. Drop `twoslash` entirely when the sample is a fragment that cannot compile alone.
 - **Ten twoslash blocks per page is the ceiling.** Past that `next dev` has run out of memory at 8 GB. A page needing more than ten compiled samples is usually two pages.
 - **One `^|` per fence.** Two markers in one sample break it, since a line ending in a dangling dot swallows the line below into that member access and the second marker then resolves against nothing. Two questions want two fences. A failed marker throws at render and takes the whole page to a 500, so check any page carrying one in the browser before you move on. For an object key with nothing typed yet, end the line on a quote, as in `this.match({ '`. twoslash hands TypeScript the character before the caret as a trigger character, and `{` throws "Illegal value" while a space returns nothing.
+- **Read the rendered list before writing the sentence above a `^|` fence.** The list holds what the type offers, which is often narrower than the prose assumes. `Commands.` offered the routes that are valid identifiers and left the slashed ones out, so a lead-in claiming it listed every route was false against the fence directly under it. Confirming the marker rendered is a separate question from confirming the sentence matches it.
+- **A cut that hides trailing lines takes `---cut-after---`, and a fence carrying `@errors` takes no trailing cut at all.** `---cut---` alone leaves the closing braces on screen with nothing above them, closing a block the reader cannot see. `---cut-after---` fixes that on a `@noErrors` fence. On an `@errors` fence any cut after the error drops the annotation while the page still returns 200, so show the whole enclosing class and cut only the import, since cutting before the error is safe. After touching one of these, count `twoslash-error-line` in the rendered html, two per error. A line count misses a drop.
 - **A config key appears inside a real `new Seedcord({ ... })` sample**, on the page that teaches its subject, with any note as a `//` comment on the line.
 - **A sample reads like shipped code.** Prettier prints a fence at 68 columns, so work done inline in a callback buries the lesson under four levels of indent. Pull it into a private method.
 - **A sample builds components through `BuilderComponent`**, never a raw discord.js builder inline. A page teaching the framework while using the thing the framework replaces teaches the anti-pattern.

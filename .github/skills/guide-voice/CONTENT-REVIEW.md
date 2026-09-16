@@ -85,6 +85,15 @@ Eight checks.
    your bot color" beside an example using RowComponent, where that getter
    returns the builder and leaves the color alone.
 
+   A third kind hides in prose that compresses a table. Where the page carries
+   a per-member map, a legality table, a flag list, or a state machine, some
+   sentence further down sums it up in a clause, and the summary is where the
+   overclaim lands. Check each summarizing sentence against the map entry by
+   entry and name the members it gets wrong. "They throw when the state is
+   something else" covered two methods at once, where one of them has a single
+   illegal state out of four. The table three sections above it was right the
+   whole time, which is why reading the page alone does not catch this.
+
 4. Every way of using the surface.
 
    Open the declaration of each symbol the page teaches and read the variadic
@@ -162,6 +171,28 @@ Eight checks.
    custom-id field name, and the arms of this.match. A `^|` fence needs
    `// @noErrors`, since the sample is a partial expression by construction.
    Name the fence and the line.
+
+   Check the cut markers on every fence that carries one, since two failures
+   here render without an error and nothing else catches them.
+
+   First, a `---cut---` inside a method body hides the class and the signature
+   while the trailing `}` lines stay on screen, so the render ends on braces
+   closing a block the reader cannot see. Report the fence. A `@noErrors` fence
+   adds `---cut-after---` under its last visible line. A fence carrying
+   `@errors` shows the whole enclosing class and cuts only the import.
+
+   Second, a fence carrying `@errors` plus any cut after the error drops the
+   error annotation while the page still returns 200. Report every `@errors`
+   fence holding a `---cut-after---`, a `---cut-start---`, or a `---cut-end---`,
+   then confirm against the rendered page which of them actually lost its
+   annotation, counting `twoslash-error-line` at two occurrences per error. A
+   line count misses a drop.
+
+   Read the rendered completion list too, and compare it against the sentence
+   above the fence. The list holds what the type offers, which is often
+   narrower than the prose assumes. `Commands.` offered the routes that are
+   valid identifiers and left the slashed ones out, under a lead-in claiming it
+   listed every route.
 
    Check that every symbol in a table carries its ref: link, even where the
    prose above already linked it.

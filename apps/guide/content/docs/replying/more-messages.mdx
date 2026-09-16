@@ -84,6 +84,6 @@ class Ban extends SlashHandler<'ban'> {
 
 Use `send()` in code that runs from more than one state, like a helper that a deferring handler and a replying handler both call.
 
-If you already know the state, call `reply()` or `edit()` directly. They throw when the state is something else, and that throw is how you find a misplaced `defer()`.
+If you already know the state, call `reply()` or `edit()` directly. Each one throws on a state it can't run in, so a misplaced `defer()` surfaces as a throw from `reply()`.
 
 After a deferral, `send()` edits the placeholder. Call `followUp()` for a new message.

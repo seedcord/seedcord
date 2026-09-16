@@ -60,6 +60,11 @@ finding, and a tic is a habit rather than a single sentence.
    table listing the members already is the count. Report a promise about
    future releases too, as in an error code that "stays the same".
 
+   Read the headings for this as well as the prose. "The four fields" and "The
+   four states" sat above tables whose row count a release changes, and a
+   heading is the copy a reader lands on from the table of contents. The repair
+   drops the number, since the table under it is already the count.
+
    Read the opener and the first sample as a reader who stops there. Report
    them when they show one form of a surface and read as all of it, as in a
    modals page that opens on text and shows one text input while a table at
@@ -110,6 +115,11 @@ finding, and a tic is a habit rather than a single sentence.
    and stopping, as in "Neither arm receives the interaction", where the
    reader needs to know what it gets instead. And a number the reader matches
    in code with its name left out, as in 10062 with no `UnknownInteraction`.
+
+   A third shape points at a symbol without naming it. "Write the method
+   itself" told the reader to call something and left "itself" pointing at
+   nothing, where the repair names `reply()` and `edit()`. Report any noun
+   phrase standing in for a symbol the reader has to type.
 
 8. An example picked because it was available to name. A section covers a
    surface the reader is unlikely to use, and the example inside it is
@@ -245,6 +255,15 @@ Then six counted passes, numbered 15 through 20.
     already carry load elsewhere in this guide, so a repair reaching for either
     moves the repetition instead of fixing it.
 
+    Then the same question about any other word this page leans on. Report a
+    word the page uses as a term of art and never defines, and say where the
+    definition belongs. `verb` for the reply methods is the case that got
+    through: it arrived in a heading, recurred five times, and no sentence ever
+    said it meant `reply()`, `edit()`, and `followUp()`. A term the reader has
+    to learn either gets a definition on its first appearance or gets replaced
+    by the plain word the page already uses elsewhere. You read one page, so
+    report the term and leave the cross-page decision to the author.
+
 19. Reader address. Count `you` and `your`. Report the count per 100 words of
     prose. A page teaching something the reader does, at under 1 per 100 words,
     is a finding.
@@ -322,6 +341,12 @@ in for a relation, as in "repeats them above its real work" or "an effect gate
 nested two levels inside an or", and give the repair in terms of what the code
 does, using the names the sample shows. The skill's "Unpack what you packed"
 section has the table.
+
+Report `where` standing in for `when` or `if`. "Where a handler only ever
+reaches that line in one state" and "even where you meant it as a new message"
+both point the reader at a place and hand them a condition. `where` naming a
+real place is correct and stays, as in "where the type-aware rules look for
+tsconfig.json". The repair is `if` or `when`, with the condition first.
 
 A long sentence is fine when it reads in
 one pass, so report the ones stacking clauses the reader has to hold at once
