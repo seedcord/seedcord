@@ -46,7 +46,7 @@ export default defineConfig({
 
 A relative `bootstrap` resolves against `outDir`, which turns `index.mjs` into `dist/index.mjs`. That's also the default.
 
-A separate `tsconfig.build.json` lets you exclude tests and scripts from the build while your editor still type-checks them. Without `tsconfig`, seedcord looks for `tsconfig.build.json` first, then `tsconfig.json`. When neither exists, or the path you set doesn't, it throws `CliBuildTsconfigNotFound`.
+With a separate `tsconfig.build.json` you exclude tests and scripts from the build while your editor still type-checks them. Without `tsconfig`, seedcord looks for `tsconfig.build.json` first, then `tsconfig.json`. When neither exists, or the path you set doesn't, it throws `CliBuildTsconfigNotFound`.
 
 ## When the build fails
 

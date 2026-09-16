@@ -55,7 +55,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 `card.component` there is the live builder, so a setter you call on it does change the message. Nothing stops you.
 
-Make that call in the constructor anyway. `this.instance` is protected to keep a ban card's whole description in one file. A call from your handler splits that description across two, so opening `BanCard.ts` tells you less than the whole story.
+Make that call in the constructor anyway. `this.instance` is protected to keep a ban card's whole description in one file. A call from your handler splits that description across two. Then, if you go to `BanCard.ts`, you no longer see the complete card.
 
 Reading `.component` also applies your [bot color](#your-bot-color). The color resolves on that read. Resolving it in the constructor would give the default color to every component built before your config loads.
 

@@ -41,7 +41,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 All three render the same card.
 
-Letting the error escape shows that card too. The difference is which report it reaches. A `Fault` goes to `handledException`, beside the refusals you chose to report. An error nobody caught goes to `unknownException`. Catch and wrap the calls you expect to fail, and `unknownException` then holds mostly bugs you haven't found yet.
+Letting the error escape shows that card too. The difference is which report it reaches. A `Fault` goes to `handledException`, beside the refusals you chose to report. An error nobody caught goes to `unknownException`. Catch and wrap the calls you expect to fail, so `unknownException` only shows you the bugs you haven't found yet.
 
 ## The card every fault renders
 
@@ -153,7 +153,7 @@ seedcord registers an `unhandledRejection` and an `uncaughtException` listener w
 
 {/* prettier-ignore-end */}
 
-Both fire outside any interaction, so no user sees a reply. When your application registers its own pair, set `errors.catchProcessErrors` to `false`, which [Configuring](/replying/error-behavior) shows in a real config.
+Both fire outside any interaction, so nobody sees a reply. When your application registers its own pair, set `errors.catchProcessErrors` to `false`, which [Configuring](/replying/error-behavior) shows in a real config.
 
 <Callout type="transport" only="http">
 

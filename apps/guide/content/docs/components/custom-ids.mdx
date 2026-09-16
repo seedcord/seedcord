@@ -180,7 +180,7 @@ const { roleId } = Board.decode('...');
 //      ^?
 ```
 
-When the caller leaves the role out, pass `roleId: null` to `encode`. Each button then decodes `roleId` as `null`, which tells your handler the list has no filter.
+When the caller leaves the role out, pass `roleId: null` to `encode`. Each button then decodes `roleId` as `null`, which your handler reads as no filter.
 
 <Callout type="warning">
 

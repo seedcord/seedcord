@@ -94,6 +94,26 @@ An autocomplete interaction says which field is focused, so every handler branch
 
 Each arm receives the partial value and a `respond` typed to that field's choice values.
 
+Typing the opening quote shows the fields that command declared.
+
+```ts twoslash
+// @noErrors
+import {
+    AutocompleteHandler,
+    AutocompleteRoute
+} from '@seedcord/gateway';
+
+@AutocompleteRoute('search')
+class SearchAutocomplete extends AutocompleteHandler<'search'> {
+    public async execute(): Promise<void> {
+        // ---cut---
+        await this.match({ '
+        //                  ^|
+        // ---cut-after---
+    }
+}
+```
+
 ## One handler for several commands
 
 Name every command in the decorator, and repeat those names in the generic, so the arms reach every autocompletable field across all of them.

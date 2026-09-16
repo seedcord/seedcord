@@ -1,3 +1,5 @@
+import { assetExtensionOf } from './pageAssets';
+
 // Add a line here whenever a page's slug changes. Nothing detects a rename.
 export const RENAMED_PAGES: Record<string, string> = {
     '/throwing': '/replying/throwing',
@@ -26,10 +28,16 @@ function withoutTrailingSlash(pathname: string): string {
 /**
  * The route a renamed page moved to, or `undefined` when nothing moved.
  *
- * The returned path carries a trailing slash, since `trailingSlash` in `next.config.ts` makes that
- * the canonical form and a redirect to the bare path would bounce again.
+ * A page url gets a trailing slash back, since `trailingSlash` in `next.config.ts` makes that the
+ * canonical form and a redirect to the bare path would bounce again. A twin or card keeps its
+ * extension, because those urls are advertised in the `Link` header and the `og:image` tag.
  */
 export function redirectFor(pathname: string): string | undefined {
-    const target = RENAMED_PAGES[withoutTrailingSlash(pathname)];
-    return target === undefined ? undefined : `${target}/`;
+    const bare = withoutTrailingSlash(pathname);
+    const extension = assetExtensionOf(bare);
+    const route = extension === undefined ? bare : bare.slice(0, -extension.length);
+
+    const target = RENAMED_PAGES[route];
+    if (target === undefined) return undefined;
+    return extension === undefined ? `${target}/` : `${target}${extension}`;
 }

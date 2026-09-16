@@ -154,16 +154,16 @@ Set the `store` config key to replace it. `core.rateLimiter` then points at your
 
 If a limit has to survive a restart, or several copies of your bot share one count, write a store. It wraps a backend like Redis or SQLite behind the same three methods.
 
-[`Store`](ref:types/Store) takes the verbs a backend supports as its generic. `'charge'` is the verb for rate limiting. A `Store<'charge'>` carries two fields plus the three [`IRateLimiter`](ref:types/IRateLimiter) methods.
+[`Store`](ref:types/Store) takes the operations a backend supports as its generic. `'charge'` is the one rate limiting uses. A `Store<'charge'>` carries two fields plus the three [`IRateLimiter`](ref:types/IRateLimiter) methods.
 
-The generic takes a union. If one backend serves several features, it declares `Store<'charge' | 'claim'>` and lists both verbs in `caps`. The type rejects a verb in `caps` that the generic leaves out. It doesn't check that `caps` lists every verb in the generic, so keep the two matching yourself. Rate limiting reads `'charge'` alone.
+The generic takes a union. If one backend serves several features, it declares `Store<'charge' | 'claim'>` and lists both operations in `caps`. The type rejects an operation in `caps` that the generic leaves out. It doesn't check that `caps` lists every operation in the generic, so keep the two matching yourself. Rate limiting reads `'charge'` alone.
 
 {/* prettier-ignore-start */}
 
 | member | type | holds |
 | --- | --- | --- |
 | `kind` | [`StoreKind`](ref:types/StoreKind) | which backend this is, one of `'memory'`, `'sqlite'`, `'d1'`, `'turso'`, `'durable-object'`, `'redis'` |
-| `caps` | `ReadonlySet<'charge'>` | the verbs it implements, so `new Set(['charge'])` here |
+| `caps` | `ReadonlySet<'charge'>` | the operations it implements, so `new Set(['charge'])` here |
 | `charge` | `(key, window) => Promise<RateLimitResult>` | records a use when a slot is free |
 | `peek` | `(key, window) => Promise<RateLimitResult>` | reads without recording |
 | `reset` | `(key) => Promise<void>` | clears the key's uses |

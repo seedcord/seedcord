@@ -41,6 +41,16 @@ const addRole = Commands['role/add'].mention; // '</role add:1287>'
 
 `</role add:1287>` up there is the whole path with a space in it, which is the form Discord reads.
 
+Typing the dot lists the routes that take one. These are the commands this guide uses in its examples.
+
+```ts twoslash
+// @noErrors
+import { Commands } from '@seedcord/gateway';
+// ---cut---
+Commands.
+//       ^|
+```
+
 ## What an entry holds
 
 {/* prettier-ignore-start */}

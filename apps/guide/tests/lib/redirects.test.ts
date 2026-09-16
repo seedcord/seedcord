@@ -29,7 +29,19 @@ describe('the rename log', () => {
         expect(redirectFor('/throwing/faults')).toBe('/replying/faults/');
     });
 
-    it('leaves a path nobody renamed alone', () => {
+    it("leaves a path that wasn't renamed alone", () => {
         expect(redirectFor('/commands/options/')).toBeUndefined();
+    });
+
+    it('sends a renamed page markdown twin to the new twin', () => {
+        expect(redirectFor('/gates/permissions.md')).toBe('/checks/permissions.md');
+    });
+
+    it('sends a renamed page card to the new card', () => {
+        expect(redirectFor('/gates/permissions.png')).toBe('/checks/permissions.png');
+    });
+
+    it("leaves an asset for a page that wasn't renamed alone", () => {
+        expect(redirectFor('/commands/options.md')).toBeUndefined();
     });
 });

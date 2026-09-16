@@ -107,9 +107,9 @@ A dispatch can be slow because one Discord call was slow. `responseAttempted` ti
 
 {/* prettier-ignore-end */}
 
-`send` picks a verb from the [ack state](/replying/ack-states), and `method` reports the one that ran. The type also allows `send`, but a published write never carries it.
+`send` picks a method from the [ack state](/replying/ack-states), and `method` reports the one that ran. The type also allows `send`, but a published write never carries it.
 
-`messageId` carries an id for `reply`, `update`, `followUp`, and `edit`. Every other verb reports `null`, as does a failed write.
+`messageId` carries an id for `reply`, `update`, `followUp`, and `edit`. Every other method reports `null`, as does a failed write.
 
 ### Catching a failed write
 

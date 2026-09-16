@@ -232,4 +232,14 @@ describe('the guide worker', () => {
 
         expect(response.status).toBe(200);
     });
+
+    it('sends a renamed page twin to the new twin without asking for the file', async () => {
+        const assets = recording();
+
+        const response = await get('https://guide.seedcord.org/gates/permissions.md', assets);
+
+        expect(response.status).toBe(308);
+        expect(response.headers.get('location')).toBe('/checks/permissions.md');
+        expect(assets.asked).toEqual([]);
+    });
 });

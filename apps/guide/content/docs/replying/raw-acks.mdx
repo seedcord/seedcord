@@ -7,7 +7,7 @@ On gateway, `this.event` is the discord.js interaction, so you can call `this.ev
 
 ## A raw ack leaves the state stale
 
-The reply sender reads the interaction's state once, when seedcord constructs your handler. That happens before `execute()` runs, and only seedcord's own verbs move it afterwards. If you send an ack yourself, the copy stays where the last seedcord verb left it.
+The reply sender reads the interaction's state once, when seedcord constructs your handler. That happens before `execute()` runs, and only seedcord's own reply methods move it afterwards. If you send an ack yourself, the copy stays where the last seedcord call left it.
 
 ```ts twoslash title="src/handlers/Ban.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -30,7 +30,7 @@ Send with reply() or defer() first, then edit() rewrites it.
 (route slash:ban)
 ```
 
-Every later verb reads that same stale state, so [`followUp()`](ref:gateway/RepliableHandler.followUp) and [`delete()`](ref:gateway/RepliableHandler.delete) throw too.
+Every later call reads that same stale state, so [`followUp()`](ref:gateway/RepliableHandler.followUp) and [`delete()`](ref:gateway/RepliableHandler.delete) throw too.
 
 ## The lint rule
 

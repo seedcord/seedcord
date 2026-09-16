@@ -143,7 +143,7 @@ export const seedcord = new Seedcord({
 
 ## The key also names a log channel
 
-Every mongoose log line prints on the `db` channel, since a plugin logs on the channel named after its attach key. That lets you filter or silence one plugin's logs by the key you gave it. seedcord already logs on reserved channels of its own, so those names can't be keys.
+Every mongoose log line prints on the `db` channel, since a plugin logs on the channel named after its attach key. You can then filter or silence one plugin's logs by the key you gave it. seedcord already logs on reserved channels of its own, so those names can't be keys.
 
 ```ts twoslash
 // @errors: 2345

@@ -41,6 +41,10 @@ export function publicPath(pathname: string, asset: PageAsset): string {
     return `/${tail(pathname, asset)}`;
 }
 
+export function assetExtensionOf(pathname: string): string | undefined {
+    return ASSETS.find((candidate) => pathname.endsWith(candidate.extension))?.extension;
+}
+
 export function generatedPathFor(pathname: string): string | undefined {
     const asset = ASSETS.find((candidate) => pathname.endsWith(candidate.extension));
     return asset === undefined ? undefined : assetPath(pathname, asset);

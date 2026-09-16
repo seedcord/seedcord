@@ -1,9 +1,9 @@
 ---
 title: When a reply throws
-description: Discord tracks what state an interaction is in, and that decides which reply methods still work. Covers the four states, the verb each one allows, and three errors a reply call throws.
+description: Discord tracks what state an interaction is in, and that decides which reply methods still work. Covers the states, the methods each one allows, and three errors a reply call throws.
 ---
 
-seedcord checks the verb against the interaction's current state before it calls Discord. An illegal call throws without reaching the API, where Discord would reject it with an error that doesn't say which method to use. The message says which method you called, why it can't run, and which method works in that state.
+seedcord checks the method against the interaction's current state before it calls Discord. An illegal call throws without reaching the API, where Discord would reject it with an error that doesn't say which method to use. The message says which method you called, why it can't run, and which method works in that state.
 
 ```txt output
 reply() was called when this interaction was already replied to.
@@ -22,7 +22,7 @@ The error's `cause` is a second error, such as `reply() acknowledged this intera
 
 The top stack ends at `Ban.ts:7`, the second `reply()`. The `AckTrace` under it ends at `Ban.ts:6`, the reply that went out first. Your terminal prints both stacks when [`errorStack`](/replying/error-behavior) is on.
 
-## The four states
+## The states
 
 {/* prettier-ignore-start */}
 
@@ -37,7 +37,7 @@ The top stack ends at `Ban.ts:7`, the second `reply()`. The `AckTrace` under it 
 
 [`update()`](ref:gateway/ComponentHandler.update) and [`deferUpdate()`](ref:gateway/ComponentHandler.deferUpdate) are defined on component and modal handlers, covered in the Components tab. [`showModal()`](ref:gateway/InteractionHandler.showModal) is on every command and component handler. A modal handler doesn't have it, since Discord doesn't let a modal open another modal.
 
-## Which verb each state allows
+## Which method each state allows
 
 {/* prettier-ignore-start */}
 
@@ -50,7 +50,7 @@ The top stack ends at `Ban.ts:7`, the second `reply()`. The `AckTrace` under it 
 
 {/* prettier-ignore-end */}
 
-[`send()`](ref:gateway/RepliableHandler.send) runs from every state, since it picks whichever verb the state allows. [Follow-ups and edits](/replying/more-messages) shows the mapping.
+[`send()`](ref:gateway/RepliableHandler.send) runs from every state, since it picks whichever method the state allows. [Follow-ups and edits](/replying/more-messages) shows the mapping.
 
 ## A component that fails to serialize
 

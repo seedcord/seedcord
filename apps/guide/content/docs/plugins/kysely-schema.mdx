@@ -56,7 +56,7 @@ declare const table: KyselyTable;
 //            ^?
 ```
 
-A typo like `selectFrom('user')` then compiles. Postgres rejects the query because no `user` table exists, so you only find the typo when someone runs that command and it fails for them. A misspelled column name compiles the same way. Every column you select is typed `never`. TypeScript lets you pass a `never` value anywhere, so it can't tell you when you use a column as the wrong type either.
+A typo like `selectFrom('user')` then compiles. Postgres rejects the query because no `user` table exists, so you only find the typo when someone runs that command and it fails for them. A misspelled column name compiles the same way. Every column you select is typed `never`. TypeScript accepts a `never` value anywhere, so it can't report a column used as the wrong type either.
 
 ## What the declaration catches
 

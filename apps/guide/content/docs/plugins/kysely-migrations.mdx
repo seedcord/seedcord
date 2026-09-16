@@ -1,6 +1,6 @@
 ---
 title: Migrations
-description: Create and change your Postgres tables with Kysely migrations in the kysely plugin. Covers where the files live, how they're ordered, when they run, running them yourself, and what happens when one fails.
+description: Create and change your Postgres tables with Kysely migrations in the kysely plugin. Covers where the files go, how they're ordered, when they run, running them yourself, and what happens when one fails.
 ---
 
 Your bot's tables have to exist on every database it uses, like your laptop, a teammate's machine, and production. If you create them by running `CREATE TABLE` yourself, each database needs the same statements in the same order. Miss one, and your bot fails at the first query that touches a table or column that database doesn't have.

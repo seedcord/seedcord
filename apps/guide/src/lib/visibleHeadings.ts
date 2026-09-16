@@ -36,7 +36,9 @@ export function useVisibleHeadingIds(items: readonly TOCItemType[]): ReadonlySet
         const observer = new IntersectionObserver(
             (entries) => {
                 for (const entry of entries) {
-                    if (entry.isIntersecting) intersecting.add(entry.target.id);
+                    // threshold only decides when the observer fires. isIntersecting is true at any overlap
+                    if (entry.isIntersecting && entry.intersectionRatio >= VISIBLE_THRESHOLD)
+                        intersecting.add(entry.target.id);
                     else intersecting.delete(entry.target.id);
                 }
 

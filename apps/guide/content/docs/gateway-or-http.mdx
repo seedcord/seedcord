@@ -15,7 +15,7 @@ Holding the connection means a process running somewhere all the time.
 
 ## Http
 
-An http bot waits for Discord to call it. Discord posts each interaction to a URL you own, one request at a time. Nothing else is sent.
+An http bot waits for Discord to call it. Discord posts each interaction to a URL you own, one request at a time. Discord sends nothing else.
 
 No connection means no cache. Anything you need about a guild or a member you fetch from Discord's REST API, which spends a request from your rate limit every time.
 
@@ -27,7 +27,7 @@ Start from what your bot reacts to.
 
 Does anything in your bot happen without someone running a command? Welcoming a member who joins, logging a deleted message, watching for a keyword. All of that arrives down the websocket, so a bot doing any of it is a gateway bot.
 
-A bot that only answers commands, buttons, and modals runs on either one. The next question is where it lives. Gateway needs a process up all the time. Http needs a URL Discord can reach.
+A bot that only answers commands, buttons, and modals runs on either one. The next question is where it runs. Gateway needs a process up all the time. Http needs a URL Discord can reach.
 
 Reading a lot of server state is a second reason for gateway, since the cache answers those reads and http spends a REST call on each one.
 

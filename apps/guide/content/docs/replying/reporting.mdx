@@ -144,7 +144,7 @@ seedcord registers the two shipped reporters whether or not you set that path. A
 
 One bug in a busy command can throw on every interaction. Unthrottled, that's a card per throw, and the first one scrolls away under the rest.
 
-seedcord calls `throttleKey()` before it sends each card. The base returns `null`, so each publish sends its own card. Override it to return a string to make events that share that string collapse into one card a minute.
+seedcord calls `throttleKey()` before it sends each card. The base returns `null`, so each publish sends its own card. Return a string from your override. Events sharing that string then collapse into one card a minute.
 
 seedcord then calls `report()` with the number it dropped while the minute was running. Here is `FaultMirror` again with both methods.
 

@@ -1,6 +1,6 @@
 ---
 title: Follow-ups and edits
-description: Send more messages after the first reply, then edit or delete them later. Covers the targets that have to come from this interaction, and send() picking the verb for you.
+description: Send more messages after the first reply, then edit or delete them later. Covers the targets that have to come from this interaction, and send() picking the method for you.
 ---
 
 Once you've replied or deferred, [`this.followUp()`](ref:gateway/RepliableHandler.followUp) sends another message. Every one of [`reply()`](ref:gateway/RepliableHandler.reply), `followUp()`, and [`edit()`](ref:gateway/RepliableHandler.edit) resolves to the message it wrote. Pass one back to `edit()` to rewrite it.
@@ -47,7 +47,7 @@ Pass a message this interaction sent, returned by reply(),
 followUp(), edit(), or update(). (route slash:ban)
 ```
 
-[`delete()`](ref:gateway/RepliableHandler.delete) checks the same list. With no argument it removes the first reply. `delete(message)` removes the one you pass, so that id leaves the list and a later edit of it throws.
+[`delete()`](ref:gateway/RepliableHandler.delete) checks the same list. Without an argument it removes the first reply. `delete(message)` removes the one you pass, so that id leaves the list and a later edit of it throws.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -65,7 +65,7 @@ class Ban extends SlashHandler<'ban'> {
 }
 ```
 
-## send() picks the verb for you
+## send() picks the method for you
 
 [`this.send()`](ref:gateway/RepliableHandler.send) works from every state, so it never throws [the wrong-state error](/replying/ack-states) that the other methods throw.
 
@@ -82,4 +82,8 @@ class Ban extends SlashHandler<'ban'> {
 
 `ephemeral` and `silent` apply only when `send()` creates a message. On the `edit()` row it drops them, since `edit()` doesn't take options.
 
-Use `send()` in code that runs from more than one state, like a helper that a deferring handler and a replying handler both call. Where a handler always reaches the call from one state, write the method itself. A `send()` that you meant as a new message rewrites the placeholder when it runs after a deferral.
+Use `send()` in code that runs from more than one state, like a helper that a deferring handler and a replying handler both call.
+
+If you already know the state, call `reply()` or `edit()` directly. They throw when the state is something else, and that throw is how you find a misplaced `defer()`.
+
+After a deferral, `send()` edits the placeholder. Call `followUp()` for a new message.

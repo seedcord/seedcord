@@ -13,6 +13,7 @@ const ITEMS: readonly TOCItemType[] = [
 interface FakeEntryInput {
     target: Element;
     isIntersecting: boolean;
+    intersectionRatio?: number;
 }
 
 // jsdom ships no IntersectionObserver
@@ -43,7 +44,7 @@ class FakeIntersectionObserver {
     public emit(entries: readonly FakeEntryInput[]): void {
         const fullEntries = entries.map((entry) => ({
             ...entry,
-            intersectionRatio: entry.isIntersecting ? 1 : 0,
+            intersectionRatio: entry.intersectionRatio ?? (entry.isIntersecting ? 1 : 0),
             boundingClientRect: entry.target.getBoundingClientRect(),
             intersectionRect: entry.target.getBoundingClientRect(),
             rootBounds: null,
@@ -106,6 +107,46 @@ describe('useVisibleHeadingIds', () => {
             observer.emit([{ target: opts, isIntersecting: false }]);
         });
 
+        expect(result.current.has('the-options')).toBe(false);
+    });
+
+    it('leaves a partly visible heading inactive', () => {
+        const { result } = renderHook(() => useVisibleHeadingIds(ITEMS));
+        const [observer] = FakeIntersectionObserver.instances;
+        if (!observer) throw new Error('no observer created');
+
+        const opts = document.getElementById('the-options');
+        const replacing = document.getElementById('replacing-the-prompt');
+        if (!opts || !replacing) throw new Error('missing heading elements');
+        opts.getBoundingClientRect = () => ({ top: 500 }) as DOMRect;
+        replacing.getBoundingClientRect = () => ({ top: 0 }) as DOMRect;
+
+        act(() => {
+            observer.emit([{ target: opts, isIntersecting: true, intersectionRatio: 0.5 }]);
+        });
+
+        expect(result.current.has('the-options')).toBe(false);
+    });
+
+    it('drops a heading that falls below the threshold while still on screen', () => {
+        const { result } = renderHook(() => useVisibleHeadingIds(ITEMS));
+        const [observer] = FakeIntersectionObserver.instances;
+        if (!observer) throw new Error('no observer created');
+
+        const opts = document.getElementById('the-options');
+        const replacing = document.getElementById('replacing-the-prompt');
+        if (!opts || !replacing) throw new Error('missing heading elements');
+        opts.getBoundingClientRect = () => ({ top: 500 }) as DOMRect;
+        replacing.getBoundingClientRect = () => ({ top: 0 }) as DOMRect;
+
+        act(() => {
+            observer.emit([{ target: opts, isIntersecting: true, intersectionRatio: 1 }]);
+        });
+        expect(result.current.has('the-options')).toBe(true);
+
+        act(() => {
+            observer.emit([{ target: opts, isIntersecting: true, intersectionRatio: 0.4 }]);
+        });
         expect(result.current.has('the-options')).toBe(false);
     });
 });
