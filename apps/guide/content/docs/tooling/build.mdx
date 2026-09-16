@@ -1,6 +1,6 @@
 ---
 title: Building
-description: Compile your bot for production with seedcord build, from the steps it runs and starting the output to its config keys, build failures, and the runtime key.
+description: Compile your bot for production with seedcord build. Covers the steps it runs, starting the output, its config keys, build failures, the runtime key, and the health server your host calls.
 ---
 
 Node can't run your `src` folder in production as it is. Your handlers use decorators, and node's built-in TypeScript support stops with a parser error on decorator syntax. Running `tsc` yourself compiles the decorators, but node then fails on any extensionless import or path alias that `tsc` copied into the output as written.
@@ -9,7 +9,7 @@ Node can't run your `src` folder in production as it is. Your handlers use decor
 
 <Shell run="build" />
 
-It checks that your `entry` file exists, throwing `CliEntryNotFound` if it doesn't, then runs these steps in order.
+It starts by checking that your `entry` file exists, and a missing one throws `CliEntryNotFound`. After that check it runs these steps in order.
 
 1. Your project's own `tsc` compiles the project. seedcord always passes `--inlineSources`, and adds `--sourceMap` unless your tsconfig already sets `inlineSourceMap`. Both give you readable stack traces in production.
 2. `tsc-alias` rewrites every import specifier in the output to a full relative path ending in `.js`, since TypeScript emits each one exactly as you wrote it.
@@ -25,7 +25,7 @@ The scaffold sets that script to run `dist/index.mjs` with node's `--enable-sour
 
 ## The build keys
 
-Your CLI config holds these under `build`, and every one is optional.
+Your CLI config holds these under `build`, all of them optional.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -50,7 +50,7 @@ A separate `tsconfig.build.json` lets you exclude tests and scripts from the bui
 
 ## When the build fails
 
-A type error stops the build. seedcord throws `CliBuildFailed` with the compiler's own output, shortened to its first 24,000 characters. The same code covers a project without `typescript` installed, since seedcord runs the `tsc` from your own dependencies.
+A type error stops the build. seedcord throws `CliBuildFailed` with the compiler's own output, shortened to its first 24,000 characters. seedcord runs the `tsc` from your project's own `typescript`, so your build uses the compiler version you pinned, and a project missing that dependency gets `CliBuildFailed` too.
 
 Once `tsc` finishes, seedcord checks that the compiled entry exists at the path above. Sometimes the compiler reports success while that file is still missing. You get `CliBuildFailed` again, with the path seedcord checked.
 
@@ -58,7 +58,7 @@ Two things usually cause this. Your tsconfig may exclude the entry file, or its 
 
 ## Where your bot runs
 
-You set `runtime` on your bot's own config in `src/bot.ts`, beside `bot` and `subscribers`. It says which kind of deployment your bot is built for, and leaving it out means `'server'`.
+You set `runtime` on your bot's own config in `src/bot.ts`, beside `bot` and `subscribers`. It says which kind of deployment your bot is built for. Leaving it out means `'server'`.
 
 ```ts twoslash title="src/bot.ts"
 import { resolve } from 'node:path';
