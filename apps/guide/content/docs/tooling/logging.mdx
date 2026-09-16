@@ -1,9 +1,9 @@
 ---
 title: Logging
-description: Every line carries the class it came from plus a channel, which the dev terminal turns into a filter.
+description: Log from your handlers, subscribers, and plugins through the logger each of them carries. Covers the five levels, the label on every line, extra arguments, format specifiers, channels, and logging several lines at once.
 ---
 
-Every handler, subscriber, and plugin carries a `logger`. You call it with one of five methods.
+A `console.log` in a handler prints a bare string. You can't tell which handler wrote it, you can't hide it in production without deleting it, and the [dev terminal](/tooling/dev) can't filter it. Every handler, subscriber, and plugin carries a `logger` that fixes all three, and you call it with one of five methods.
 
 ```ts twoslash title="src/handlers/Ping.ts"
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -17,7 +17,11 @@ export class Ping extends SlashHandler<'ping'> {
 }
 ```
 
+`Ping` logs `checking latency` at the `info` level before it replies.
+
 ## The five levels
+
+A level marks how much a line matters, so you can keep detailed logging in your code and print only part of it in production.
 
 {/* prettier-ignore-start */}
 
@@ -31,15 +35,15 @@ export class Ping extends SlashHandler<'ping'> {
 
 {/* prettier-ignore-end */}
 
-You pick one of these as your floor. seedcord then prints that level plus everything above it in the table. Development uses `trace`, so every line prints. Staging starts at `debug`, and everything else at `info`, which hides `debug` and `trace`. Check out how to [configure the logger](/tooling/logger-config).
+The level you configure is a floor. seedcord prints that level and every more serious one. Your environment sets the default: `trace` in development, so every line prints, `debug` in staging, and `info` everywhere else, which hides `debug` and `trace`. [Configuring the logger](/tooling/logger-config) shows how to change it.
 
 ## Every line carries your class name
 
-A logger takes its label from the class holding it, so a line from `Ping` shows `Ping` as its label.
+When two handlers log the same message, the label tells you which one wrote it. A logger takes its label from the class holding it, so a line from `Ping` shows `Ping` as its label.
 
 ## More than a string
 
-Every method takes extra arguments after the message.
+A message alone often omits the one value you needed, like which user ran the command. Every method takes extra arguments after the message.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -68,29 +72,45 @@ export class Ping extends SlashHandler<'ping'> {
 }
 ```
 
-A plain object merges into the record as its own fields. An `Error` becomes its name, message, and stack. Anything else prints beside the message. Those merged fields stay searchable once a hosting platform indexes your logs.
+Those three calls print this in the dev terminal.
 
-The message itself takes format specifiers. Each one consumes the next argument.
+```txt output
+materwelon ran ping
+replying
+{
+  "userId": "1176558419439161344"
+}
+reply failed
+TypeError: Cannot read properties of undefined
+    at Ping.execute (src/handlers/Ping.ts:14:19)
+```
+
+An object prints as a block under the message, and the caught `error` prints its stack there. A string or a number prints on the same line, after the message. A JSON sink writes one _record_ per call, a single object. Every one of those arguments arrives in an `extras` array on it, and the first `Error` fills its `stack` as well.
+
+### Format specifiers
+
+The message itself takes format specifiers, like the two `%s` in the `debug` call. Each one consumes the next argument.
 
 {/* prettier-ignore-start */}
 
 | specifier | the argument | what prints |
 | --- | --- | --- |
-| `%s` | `'Ada'` | `Ada` |
+| `%s` | `'materwelon'` | `materwelon` |
 | `%d` and `%i` | `3.7` | `3` |
 | `%f` | `3.7` | `3.7` |
-| `%j`, `%o`, and `%O` | `{ id: 4 }` | the value, serialized |
+| `%j` | `{ id: 4 }` | `{"id":4}` |
+| `%o` and `%O` | `{ id: 4 }` | `{ id: 4 }` |
 | `%%` | none | `%` |
 
 {/* prettier-ignore-end */}
 
-The three serializing ones split by sink. A node sink prints an object the way `console.log` does. [`ObjectConsoleSink`](ref:logger/ObjectConsoleSink), which an edge bot runs, prints JSON. Whatever the specifiers do not consume goes the same way as the arguments above.
+`%o` and `%O` print an object the way `console.log` does. [`ObjectConsoleSink`](ref:logger/ObjectConsoleSink), which an edge bot runs, prints `{"id":4}` for `%o` and `%O` too. Any argument the specifiers don't consume is treated like the extra arguments above.
 
 ## Channels
 
-Every line also carries a channel, which is a label for the part of your bot the line came from. seedcord sets one for you. An interaction handler logs on `interactions`, an event handler on `events`, and a subscriber on `subscribers`.
+A bot writes lines about commands, events, plugins, and startup all at once, and you usually care about one of those at a time. Every line also carries a channel, which is a label for the part of your bot the line came from. seedcord picks the channel for its own classes. For example, an interaction handler logs on `interactions`, an event handler on `events`, and a subscriber on `subscribers`.
 
-All of these are reserved for the framework. They're called the [`FRAMEWORK_CHANNELS`](ref:logger/FRAMEWORK_CHANNELS).
+These names belong to the framework, and [`FRAMEWORK_CHANNELS`](ref:logger/FRAMEWORK_CHANNELS) holds every one of them.
 
 {/* prettier-ignore-start */}
 
@@ -113,13 +133,13 @@ All of these are reserved for the framework. They're called the [`FRAMEWORK_CHAN
 
 {/* prettier-ignore-end */}
 
-Your own bot adds to that set. A plugin gets a channel named after the attach key you chose, so attaching one as `db` sends its lines to the `db` channel. Picking a name from the table above throws `CorePluginReservedChannel` instead.
+Your own bot adds channels to that set. A plugin logs on a channel named after the attach key you chose, so attaching one as `db` sends its lines to the `db` channel. If your attach key matches one of the names above, `attach` throws `CorePluginReservedChannel`.
 
-Dividing your bot this way pays off in the [dev terminal](/tooling/dev), which draws every channel as a filter chip. Give each subject its own channel and you can watch one part of your bot at a time.
+The [dev terminal](/tooling/dev) draws every channel as a filter chip, so the more you split your bot into channels, the more precisely you can filter it.
 
-## Sending one line somewhere else
+### Sending one line somewhere else
 
-[`inChannel`](ref:logger/Logger.inChannel) returns a second logger. It keeps the same label and uses the channel you name.
+A handler that charges a user belongs on `interactions`, but you'd want its payment lines next to the rest of your payment logs. [`inChannel`](ref:logger/Logger.inChannel) returns a second logger with the same label, on the channel you pass.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -134,11 +154,11 @@ export class Ping extends SlashHandler<'ping'> {
 }
 ```
 
-Your own channel names are free, so pick whatever divides your bot usefully. [`setChannel`](ref:logger/Logger.setChannel) changes the channel on the logger you already have.
+That line shows `Ping` as its label and arrives on `payments`. Name your own channels after the parts of your bot you'll want to filter. [`setChannel`](ref:logger/Logger.setChannel) moves the logger you already have to a new channel for every later line.
 
 ## Several lines at once
 
-Logging a list one call at a time gives the dev terminal several records. Other output can then appear between them. [`logger.utils`](ref:logger/Logger.utils) writes the whole group as a single record.
+Logging a list one call at a time gives the dev terminal several records, and output from elsewhere in your bot can appear between them. `block` on [`logger.utils`](ref:logger/Logger.utils) writes the whole group as a single record.
 
 ```ts twoslash
 import { SlashHandler, SlashRoute } from '@seedcord/gateway';
@@ -147,13 +167,14 @@ import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 export class Ping extends SlashHandler<'ping'> {
     public async execute(): Promise<void> {
         // ---cut---
-        this.logger.utils.block('Cache warmed', [
-            'guilds 41',
-            'members 1204'
-        ]);
+        this.logger.utils.block(
+            'Cache warmed',
+            ['guilds 41', 'members 1204'],
+            'info'
+        );
         // ---cut-after---
     }
 }
 ```
 
-`block` takes a heading and its lines. `list` takes items with an optional heading above them. [`LoggerUtilities`](ref:logger/LoggerUtilities) carries the rest, among them counts, progress, and registration lines.
+`block` takes a heading (`Cache warmed` here), its lines, and a level. The level defaults to `trace`, which only prints in development, so the sample passes `'info'`. The other helpers on `logger.utils` default to `info`, and `list` writes one record per line, so it gets the interleaving `block` avoids. [`LoggerUtilities`](ref:logger/LoggerUtilities) lists all of them.

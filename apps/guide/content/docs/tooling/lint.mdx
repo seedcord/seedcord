@@ -1,7 +1,9 @@
 ---
 title: Linting
-description: 'The seedcord rules catch a handler missing its route, a command missing @RegisterCommand, and calls that bypass the framework.'
+description: Catch bot mistakes in your editor with the shared ESLint config and its seedcord and discord.js rules. Covers the config file, what each rule set catches, turning one rule off, the other options, formatting, and adding all of it to an existing project.
 ---
+
+Some bot mistakes compile cleanly and only fail when a user clicks. A handler without its route decorator never answers, and a builder with a name Discord rejects fails when you deploy. The seedcord and discord.js lint rules report both in your editor, before the bot ever starts.
 
 The scaffold writes `eslint.config.ts` for you, plus two scripts that run ESLint over your `src` folder.
 
@@ -11,7 +13,7 @@ The scaffold writes `eslint.config.ts` for you, plus two scripts that run ESLint
 
 ## The config file
 
-Here is what the scaffold puts there.
+Setting up typescript-eslint, import ordering, and several more plugins by hand takes a long config file that you then maintain. The scaffold's file is one call instead.
 
 ```ts twoslash title="eslint.config.ts"
 import createConfig from '@seedcord/eslint-config';
@@ -24,9 +26,9 @@ export default createConfig({
 });
 ```
 
-[`createConfig`](ref:eslint-config/createConfig) returns a flat config array, so ESLint reads it directly. By default it turns on the typescript-eslint presets, import ordering, TSDoc syntax checking, unicorn, the security plugin, and prettier compatibility. `tsconfigRootDir` points the type-aware rules at your `tsconfig.json`. In almost every project `import.meta.dirname` is the right value.
+[`createConfig`](ref:eslint-config/createConfig) returns a flat config array, so ESLint reads it directly. By default it turns on the typescript-eslint presets, import ordering, TSDoc syntax checking, unicorn, the security plugin, and prettier compatibility. `tsconfigRootDir` points the type-aware rules at your `tsconfig.json`. `import.meta.dirname` is the folder holding `eslint.config.ts`. That value is right whenever your `tsconfig.json` is in the same folder as `eslint.config.ts`.
 
-The two `register` flags above add the rules written for bots. Both tables below list what those two bring in.
+`registerDiscordjsPlugin` and `registerSeedcordPlugin` add the rules written for bots. If you leave either one out, its rules never run. The next two sections list what each one brings in.
 
 ## What the seedcord rules catch
 
@@ -75,9 +77,9 @@ Builders get their own set. Most of these rules stop a payload Discord would rej
 
 ## Turning one off
 
-The seedcord rules carry a `@seedcord/` prefix, and the discord.js rules carry `discordjs/`. Both tables above drop those prefixes, so write the full name to change a rule.
+Sometimes a rule fits most of your bot and not one folder, like old code you haven't moved to v2 components yet. The seedcord rules carry a `@seedcord/` prefix, and the discord.js rules carry `discordjs/`. The rule tables leave those prefixes out, so write the full name when you change a rule.
 
-`userConfigs` goes in last, so anything you put there overrides the blocks above it.
+`userConfigs` goes in last, so anything you put there overrides the blocks above it. This one turns `prefer-v2-component` off for `src/legacy` only.
 
 ```ts twoslash title="eslint.config.ts"
 // ---cut-start---
@@ -117,13 +119,13 @@ Every one of these is optional. The defaults suit a normal bot. For the full set
 
 <Callout type="tip">
 
-When your lint run gets slow, `registerTypescriptConfigs: 'no-type-checked'` saves the most. Dropping the rules that read the type checker cuts about a fifth of the run time on the seedcord packages. `registerImportPlugin: 'fast'` removes the two rules that parse every file an import resolves to. That one saves closer to a tenth.
+When your lint run gets slow, setting `registerTypescriptConfigs` to `'no-type-checked'` saves the most. Dropping the rules that read the type checker cuts about a fifth of the run time on the seedcord packages. `registerImportPlugin: 'fast'` removes the two rules that parse every file an import resolves to. That one saves closer to a tenth.
 
 </Callout>
 
 ## Formatting
 
-Prettier reads its own file, and the scaffold points it at the shared config.
+Prettier formats your code and reads its own config file. The scaffold points that file at the shared prettier config, so formatting matches across seedcord projects.
 
 ```ts twoslash title="prettier.config.ts"
 import { createPrettierConfig } from '@seedcord/eslint-config/prettier';
@@ -131,7 +133,7 @@ import { createPrettierConfig } from '@seedcord/eslint-config/prettier';
 export default createPrettierConfig();
 ```
 
-[`createPrettierConfig`](ref:eslint-config/createPrettierConfig) also takes per-glob `overrides`.
+[`createPrettierConfig`](ref:eslint-config/createPrettierConfig) also takes per-glob `overrides`, and a `tailwind` option for web projects that sort Tailwind classes.
 
 ```ts twoslash title="prettier.config.ts"
 // ---cut-start---
@@ -142,13 +144,13 @@ export default createPrettierConfig({
 });
 ```
 
-`createConfig` already turns off every ESLint rule that overlaps prettier's formatting, so you can skip adding `eslint-config-prettier` yourself.
+`createConfig` already applies `eslint-config-prettier`, which switches off every ESLint rule that overlaps prettier's formatting. You don't install it or add it to `userConfigs`.
 
 ## Starting from an existing project
 
 <Shell add="-D @seedcord/eslint-config eslint jiti typescript" />
 
-The two plugins come with it, so the `register` flags are all you write. ESLint loads a TypeScript config file through `jiti`. Then add the `eslint.config.ts` from the top of this page along with the two scripts.
+`@seedcord/eslint-config` brings the seedcord and discord.js rule plugins with it, so that one line installs everything. ESLint loads a TypeScript config file through `jiti`. Add the `eslint.config.ts` from the top of this page along with the two scripts.
 
 ```json title="package.json"
 {
