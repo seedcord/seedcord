@@ -1,6 +1,6 @@
 ---
 title: Tuning error behavior
-description: The errors block on your bot config, from replacing the card an unknown fault shows to choosing which Discord API codes to ignore, and catching seedcord's own errors by code.
+description: Set what your bot does with an error through the errors block on your config. Covers replacing the card an unknown fault shows, the two ignore lists, and catching seedcord's own errors by code.
 ---
 
 [`Seedcord`](ref:gateway/Seedcord) takes an `errors` block on its config, with six keys. Every one is optional.
@@ -197,4 +197,4 @@ if (isSeedcordError(caught, 'SeedcordTypeError', priority)) {
 }
 ```
 
-The second argument narrows by class, one of `'SeedcordError'`, `'SeedcordTypeError'`, `'SeedcordRangeError'`, or `'SeedcordAggregateError'`. The third matches one exact code. Pass `undefined` as the second argument when the class makes no difference, or pass both when you need the class and the code to match together.
+The second argument narrows by class, one of `'SeedcordError'`, `'SeedcordTypeError'`, `'SeedcordRangeError'`, or `'SeedcordAggregateError'`. The third matches one exact code. Pass `undefined` as the second argument when the class doesn't matter, or pass both when you need the class and the code to match together.

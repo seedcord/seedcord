@@ -1,6 +1,6 @@
 ---
 title: Buttons
-description: Handle a button click with ButtonHandler, from reading the values its custom id carries and rewriting the message it came from to one handler serving several buttons.
+description: Answer a button click with ButtonHandler, reading the values its custom id carries. Covers rewriting the message the click came from, and one handler serving several buttons.
 ---
 
 A click arrives as its own interaction carrying the custom id your component minted. [`ButtonHandler`](ref:gateway/ButtonHandler) decodes that id and puts the values on [`this.params`](ref:gateway/ComponentHandler.params).

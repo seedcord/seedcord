@@ -1,6 +1,6 @@
 ---
 title: Gates
-description: Run checks before a handler with @Gated, from the gates seedcord ships and the order they run in to who counts as an owner and rewording a refusal.
+description: Run checks before your handler with @Gated, so a caller who fails one never reaches your code. Covers how a gate refuses, stacking several on one handler, the gates seedcord ships, and rewording the refusal a user sees.
 ---
 
 Most handlers open with the same few checks. Is this a server? Can this person ban? If you write those checks inside `execute()`, every handler starts with its own copy of them. If you forget to copy one into a handler, that command runs for anyone.

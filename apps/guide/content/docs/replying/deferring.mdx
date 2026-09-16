@@ -1,6 +1,6 @@
 ---
 title: Deferring
-description: Keep an interaction open past Discord's three-second limit, then fill in the reply when your handler finishes.
+description: Keep an interaction open past Discord's three-second limit, then fill the reply in when your handler finishes. Covers setting ephemeral at deferral time, the throw when you call reply() after, and deferring before anything slow.
 ---
 
 Some handlers need longer than the three seconds Discord allows for a first response. [`this.defer()`](ref:gateway/RepliableHandler.defer) answers inside that with a loading state, which leaves the real reply for later.

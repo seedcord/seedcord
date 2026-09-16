@@ -1,6 +1,6 @@
 ---
 title: Deployed commands
-description: How your bot sends its commands to Discord each time it starts, and how seedcord commands removes the guild commands left behind.
+description: Your bot sends its commands to Discord every time it starts. Covers the request that replaces a whole scope, the last global command that stays live, removing guild commands, and the flags.
 ---
 
 Discord keeps its own copy of your commands. Your bot sends that copy every time it starts, so your command folder decides what people see.
@@ -11,7 +11,7 @@ Nothing in your build or your deploy pipeline calls Discord.
 
 Your bot sends one request per scope. One carries every global command. Each server with a guild command gets its own.
 
-Discord replaces the whole scope with what arrives. Delete a command file and that command is gone the next time your bot starts. Rename one and the old name disappears with it.
+Discord replaces the whole scope with what arrives. If you delete a command file, that command is gone the next time your bot starts. A rename does the same to the old name.
 
 ## Deleting your last global command leaves it live
 
@@ -33,13 +33,13 @@ Flags do the same work without the prompts. The common case is a command you mov
 
 <Shell exec="seedcord commands --clean --guild 613425648685547541 --apply" />
 
-`--clean` finds every guild command whose name also exists globally. Drop `--apply` and it only prints them.
+`--clean` finds every guild command whose name also exists globally. Drop `--apply` to print them without removing anything.
 
 To empty a server completely, `--purge` deletes every command in the servers you name.
 
 <Shell exec="seedcord commands --purge --guild 613425648685547541 --apply" />
 
-For CI, `--all-guilds` covers every server your bot is in. `--yes` is required there, since `--apply` asks you to confirm the count and throws `CliCleanApplyNeedsYes` when it has no terminal to ask on.
+For CI, `--all-guilds` covers every server your bot is in. `--yes` is required there, since `--apply` asks you to confirm the count and throws `CliCleanApplyNeedsYes` when it can't find a terminal to ask on.
 
 <Shell exec="seedcord commands --clean --all-guilds --apply --yes" />
 

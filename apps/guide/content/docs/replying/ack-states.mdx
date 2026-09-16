@@ -1,6 +1,6 @@
 ---
 title: When a reply throws
-description: Which reply methods each interaction state allows, and how to read the errors a reply call throws.
+description: Discord tracks what state an interaction is in, and that decides which reply methods still work. Covers the four states, the verb each one allows, and three errors a reply call throws.
 ---
 
 seedcord checks the verb against the interaction's current state before it calls Discord. An illegal call throws without reaching the API, where Discord would reject it with an error that doesn't say which method to use. The message says which method you called, why it can't run, and which method works in that state.
@@ -84,7 +84,7 @@ TextDisplayBuilder at components[0] failed to serialize: need a
 string, got nothing. (route slash:ban)
 ```
 
-`BanText` above never calls `setContent`, so its builder has no string to send. The detail after the colon reads `need <the rule>, got <your value>`. A bound uses `at most`, `at least`, `fewer than`, or `more than`, and a rule carrying two bounds joins them with `and`. A failure on a named field puts that field and a colon first, as with `url:` on a file component's link.
+`BanText` above never calls `setContent`, so its builder never got a string to send. The detail after the colon reads `need <the rule>, got <your value>`. A bound uses `at most`, `at least`, `fewer than`, or `more than`, and a rule carrying two bounds joins them with `and`. A failure on a named field puts that field and a colon first, as with `url:` on a file component's link.
 
 The `got` half describes the value you passed.
 

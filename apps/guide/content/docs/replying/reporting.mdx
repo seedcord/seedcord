@@ -1,6 +1,6 @@
 ---
 title: Reporting faults
-description: Send reported throws to Discord channels through webhooks, what seedcord checks at boot, and writing a reporter of your own.
+description: Send the throws your bot reports to a Discord channel through a webhook. Covers what seedcord checks at boot, writing a reporter of your own, and the one card a minute limit.
 ---
 
 seedcord logs every reported throw, and nobody watches a production bot's terminal. A reporter posts each one to a Discord channel instead. seedcord ships two and registers both while your bot starts. Each one reads a webhook url from an environment variable. Set both, so a throw you didn't expect reaches a channel you read.

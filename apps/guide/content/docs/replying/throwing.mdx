@@ -1,6 +1,6 @@
 ---
 title: Throwing
-description: Refuse from a handler by throwing a Notice, and what each kind of throw shows the user and reports.
+description: Refuse from a handler by throwing a Notice, so the user gets a reason rather than silence. Covers what each kind of throw produces, the fields on a Notice, and what render receives.
 ---
 
 A handler refuses by throwing. seedcord catches the throw at one boundary and sends the reply through the handler, so the class you throw sets what the reply says. A gate throws into the same boundary, and its refusal reaches the user the same way.

@@ -1,6 +1,6 @@
 ---
 title: Faults
-description: The generic card for an error you catch, what seedcord does with any other throw, stopping a handler without a reply, and throws outside any handler.
+description: A throw your handler doesn't catch still owes the user an answer. Covers the card every fault renders, anything else you throw, stopping without a reply, and throws outside any handler.
 ---
 
 Some calls fail in ways the user can't fix, like a database write. Catch the error and throw a [`Fault`](ref:core/Fault). The user gets a generic card with a tracking id, and the error you caught goes to your fault report along with the command and the user who ran it.
