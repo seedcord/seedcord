@@ -1,33 +1,35 @@
 ---
 title: Hot reload
-description: Most saves swap in while your bot keeps its Discord connection, though a few files force a full restart.
+description: Save a file and seedcord dev swaps it into your running bot. Covers the saves that need a restart, marking your own files as one of them, rolling back a file that throws, and type-checking while you work.
 ---
 
-Most of the time seedcord reloads a saved file on its own. It drops that one file, imports the fresh copy, then wires the new handlers in. Your bot keeps its connection to Discord through all of it, so you can immediately go back to Discord to test your changes.
+When you save a file under `seedcord dev`, seedcord unloads that file, imports the fresh copy, and registers its handlers again. Your bot keeps its connection to Discord the whole time, so you can switch back to Discord and test the change immediately.
 
-A few files cannot work that way.
+Node has no way to drop a module once it has imported it. A plain watcher like `node --watch`, `nodemon`, or `tsx watch` works around that by restarting the process, which for a gateway bot means logging in to Discord again, and Discord limits how many sessions a bot may start per day. `seedcord dev` runs your bot inside Vite's module runner instead, which keeps its own graph of the modules it evaluated. seedcord drops the saved file from that graph and imports it again, inside the process that's already running.
+
+The graph also records which modules imported which, so seedcord reloads the modules that imported your saved file, and the ones that imported those. Saving a card every handler builds therefore updates all of them. Vite's watcher reports each save, its transform step reads your TypeScript and your tsconfig paths, and its message channel carries what the CLI and your bot say to each other, like the restart prompt below.
+
+A few files can't be swapped this way, because something read them once when the bot started.
 
 ## Saves that need a restart
 
-Saving any of these forces a full restart:
+seedcord asks for a full restart when you save one of these, since the CLI or the bot reads each of them once at startup:
 
-- `seedcord.config.ts`, since the CLI read it at startup
-- any `package.json`
-- any `tsconfig.json`
-- any `.env`
+- `seedcord.config.ts`
+- a `package.json`, `tsconfig.json`, or `.env` file under `root`
 - the two files `entry` and `instance` point at
 
-Your bot keeps running the old code. The terminal switches to this.
+The watcher only covers `root` and the config file itself. With the scaffold's `root: './src'`, saving the `package.json` or `.env` beside `seedcord.config.ts` doesn't trigger anything, so press `r` yourself after changing one. A file named `.env.local` or `tsconfig.build.json` doesn't count either.
+
+After one of those saves, your bot keeps running the old code, and the terminal prints this.
 
 ```txt output
 Restart required. Press r to restart.
 ```
 
-Nothing restarts by itself. Press `r` once you are ready to lose the connection for a moment.
+Nothing restarts automatically. Press `r` once you're ready to drop the connection for a moment.
 
-A plugin can add to that list too. The Kysely plugin registers your migrations folder, which [Writing your own](/plugins/your-own) covers under `registerCriticalFiles`.
-
-You might want the same for some of your own files. The usual candidate opens a connection or computes something once at import, since a reload imports it again and runs that work a second time. `hmr.restart` takes glob patterns, matched against paths under `root`.
+Your own files can need a restart too. The usual case is a file that opens a connection or computes something once at import, since a reload imports it again and repeats that work. `hmr.restart` takes glob patterns, matched against paths relative to `root`.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -42,15 +44,19 @@ export default defineConfig({
 });
 ```
 
-## A save that does not compile
+With this config, saving anything under `src/config/` or `src/constants.ts` asks for a restart. A plugin can add patterns to the same list with [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles), which [Writing your own](/plugins/your-own#reacting-to-a-dev-reload) shows.
 
-Typos happen. A file that throws on import would normally leave you without a working handler, so seedcord keeps the last good version live instead.
+## A save that throws on import
+
+Typos happen. If a file throws while seedcord imports it, its handlers would disappear and the route would stop answering until you fixed it. seedcord keeps the last working version of those handlers registered instead.
 
 ```txt output
 Rolled back ./src/handlers/Ping.ts to the last-good version
 ```
 
-Your old handler stays live until your next good save replaces it. Setting `hmr.rollback` to `false` turns that off. A broken file then drops its handlers, so the route stops answering until you fix it.
+`Ping` keeps answering with its old code until your next working save replaces it, so a quick test in Discord can pass against the version you meant to replace. A new file that has never loaded doesn't have a last working version, so it registers nothing until it imports cleanly.
+
+Setting `hmr.rollback` to `false` turns rollback off. A broken file drops its handlers, so the route stops answering until you fix it.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -67,7 +73,7 @@ export default defineConfig({
 
 ## Type errors while you work
 
-`seedcord dev` runs your code without checking types first, so a type error only reaches you when your editor shows it. Turning on `hmr.typecheck` runs `tsc --watch` beside the bot. It reports what it finds on the `tsc` channel, which the log filters can reach.
+`seedcord dev` runs your code without checking types, so a type error only reaches you when your editor shows it. A handler with a wrong type still loads and can fail at runtime. Turning on `hmr.typecheck` runs `tsc --watch` alongside the bot and reports what it finds on the `tsc` channel, which you can [filter to](/tooling/dev#filtering-the-log).
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -82,9 +88,9 @@ export default defineConfig({
 });
 ```
 
-A second node process is the price, so it starts switched off. It also waits until your bot is ready. Your first login stays quick that way.
+`typecheck` starts switched off because it costs a second node process. With `typecheck: true`, `tsc` waits until your bot is ready, which keeps your first login quick.
 
-Pass an object when your build uses a different tsconfig.
+`typecheck` also takes an object with a `tsconfig` path, for checking against a different tsconfig.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -98,3 +104,5 @@ export default defineConfig({
     }
 });
 ```
+
+The path resolves against `root`, like the other paths in `hmr`.

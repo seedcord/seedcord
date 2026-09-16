@@ -1,11 +1,11 @@
 ---
 title: Tooling
-description: The CLI reads seedcord.config.ts. Your bot reads the new Seedcord({ ... }) call in src/bot.ts.
+description: Configure a seedcord project through its two config files, one for the CLI and one for your bot. Covers every key in seedcord.config.ts, the commands that read it, and where each key of your bot's own config gets taught.
 ---
 
-Two files configure a seedcord project, and each one has its own job. `seedcord.config.ts` names where your code is, which is what the CLI needs. The `new Seedcord({ ... })` call in `src/bot.ts` configures the bot itself.
+A seedcord project has two config files, because two different programs read them. `seedcord dev` and `seedcord codegen` have to import your bot before it runs, so they need its path from somewhere other than the bot itself. `seedcord.config.ts` holds those paths for the CLI. The `new Seedcord({ ... })` call in `src/bot.ts` configures the bot while it runs.
 
-Start with the CLI's file.
+The CLI looks for `seedcord.config.ts` or `seedcord.config.mts` in the directory you run it from.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -26,7 +26,7 @@ export default defineConfig({
 });
 ```
 
-`instance` and `entry` are the two you have to write. The rest carry defaults.
+You have to write `instance` and `entry`. Every other key has a default.
 
 {/* prettier-ignore-start */}
 
@@ -34,10 +34,10 @@ export default defineConfig({
 | --- | --- | --- |
 | `instance` | required | the module whose default export is your configured [`Seedcord`](ref:gateway/Seedcord) |
 | `entry` | required | the file that starts the bot, and the one the build copies |
-| `root` | the config's own folder | what every other path here resolves against |
-| `tunnel` | `true` | `true` opens a cloudflared quick tunnel to your http bot. An https string is a URL you already serve. Gateway ignores it |
+| `root` | the config's own folder | the folder `instance` and `entry` resolve against |
+| `tunnel` | `true` | `true` opens a cloudflared quick tunnel to your http bot, and `false` turns it off. An https string is a URL you already serve. A gateway bot ignores it |
 | `idleAnimation` | `true` | whether the dev terminal animates while nothing happens |
-| `build` | `{}` | `outDir`, `tsconfig`, and `bootstrap` for `seedcord build` |
+| `build` | `{}` | `outDir` (default `dist`), `tsconfig`, and `bootstrap` for `seedcord build`, resolved against the config's folder |
 | `hmr` | omitted | `restart` globs, `rollback`, and `typecheck` for `seedcord dev` |
 
 {/* prettier-ignore-end */}
@@ -46,32 +46,32 @@ export default defineConfig({
 
 ## The commands
 
-Your `package.json` already carries `dev`, `codegen`, and `build` as scripts, and all three read the config above.
+A project from `create-seedcord` has `dev`, `codegen`, and `build` as scripts in its `package.json`, and all three read the config above.
 
 {/* prettier-ignore-start */}
 
 | command | what it does |
 | --- | --- |
 | [`seedcord dev`](/tooling/dev) | runs your bot, reloads a changed file in place, and prints its logs in a terminal you can filter |
-| [`seedcord codegen`](/tooling/codegen) | reads your command files and writes `seedcord-gen.d.ts` |
+| [`seedcord codegen`](/tooling/codegen) | imports your bot and command files, then writes `seedcord-gen.d.ts` into `root` |
 | [`seedcord build`](/tooling/build) | compiles `src` and writes a bootstrap file beside it |
-| [`seedcord commands`](/commands/deployed) | inspects and cleans up the commands Discord is holding |
+| [`seedcord commands`](/commands/deployed) | inspects and cleans up the commands Discord has registered for your bot |
 
 {/* prettier-ignore-end */}
 
-`seedcord commands` skips the config and reads your bot token, so run it through your package manager's runner.
+`seedcord commands` doesn't read the config. It reads `DISCORD_BOT_TOKEN` from your environment. It isn't one of the scripts either, so run it through your package manager's runner.
 
 <Shell exec="seedcord commands" />
 
 ## Your bot's config
 
-`src/bot.ts` holds the second config, the one your bot reads while it runs. Each row below links to the page that teaches its key, where you will find it inside a real `new Seedcord({ ... })` sample.
+`src/bot.ts` holds the second config, the one your bot reads. Every key gets taught on the page that needs it, inside a real `new Seedcord({ ... })` sample. The last column names that page.
 
-`bot`, `subscribers`, `bot.interactions`, and `bot.commands` are required. A gateway bot also sets `bot.events` and `bot.clientOptions`. Every other key is optional.
+`bot`, `subscribers`, `bot.interactions`, and `bot.commands` are required. A gateway bot also has to set `bot.events` and `bot.clientOptions`. Every other key is optional.
 
 {/* prettier-ignore-start */}
 
-| key | what it sets | where it is taught |
+| key | what it sets | where it's taught |
 | --- | --- | --- |
 | `bot.interactions` | the folder seedcord scans for handlers, plus middleware and ignored ids | [Components](/components) |
 | `bot.commands` | the folder seedcord scans for commands | [Commands](/commands) |
@@ -79,18 +79,27 @@ Your `package.json` already carries `dev`, `codegen`, and `build` as scripts, an
 | `bot.events` | the folder seedcord scans for event handlers. Gateway only | [Events](/events) |
 | `bot.clientOptions` | passed straight to the discord.js `Client`. Gateway only | [Your first bot](/first-bot) |
 | `subscribers` | the folder seedcord scans for bus subscribers | [The bus](/events/bus) |
-| `errors` | how a fault renders, what gets logged, which api codes get swallowed | [Tuning error behavior](/replying/error-behavior) |
+| `errors` | how a fault renders, what gets logged, which api error codes get ignored | [Tuning error behavior](/replying/error-behavior) |
 | `notifications` | the contact name in the generic unknown-error message | [Faults](/replying/faults) |
 | `botColor` | the accent on every [`BuilderComponent`](ref:core/BuilderComponent) you build | [Components](/components) |
 | `ownerIds` | the ids [`OwnerOnly`](ref:core/OwnerOnly) treats as owners | [Gates](/checks/gates) |
-| `store` | where framework state survives a restart | [The rate limiter](/checks/rate-limiter) |
+| `store` | a durable store for framework state. The default keeps it in memory and loses it on restart | [The rate limiter](/checks/rate-limiter) |
 | `logger` | the level, the sinks, and the per-channel overrides | [Configuring the logger](/tooling/logger-config) |
-| `runtime` | `'server'` for a node process, `'edge'` for a Cloudflare Worker | [Building](/tooling/build) |
+| `lifecycle` | `shutdownDeadline`, how long shutdown may take | [The lifecycle](/plugins/lifecycle) |
+| `runtime` | `'server'` for a node process, `'edge'` for a bundled isolate like a Cloudflare Worker. A gateway bot only accepts `'server'` | [Building](/tooling/build) |
 
 {/* prettier-ignore-end */}
 
-An http server takes `port`, which defaults to 3000. An edge bot declares `runtime: 'edge'` and does not accept `port` at all. On gateway, `healthCheck` runs a small http server on port 6967 that answers `/health`, and `false` turns it off.
+<Callout type="transport">
 
-The reference site carries the full shape of every one of these, down to each nested field.
+Each transport package declares its own `Seedcord` and its own config type, and a few keys only exist on one of them.
 
-That is everything you configure. The rest of the tab is about what runs: [the dev terminal](/tooling/dev), [how it reloads a changed file](/tooling/hot-reload), [the tunnel](/tooling/tunnel) an http bot needs while you work locally, [logging](/tooling/logging), and [the lint rules](/tooling/lint) that catch a broken handler before your bot ever starts.
+- An http server takes `port`, which defaults to 3000. An edge bot sets `runtime: 'edge'`, so TypeScript rejects `port` and `lifecycle` on it.
+- A gateway bot runs a small health server on port 6967 that answers `/health`. Its `healthCheck` key takes `false` to turn that off, or an object with `port`, `path`, and `host`.
+- `Emojis` resolves each name to a discord.js emoji on gateway, and to a plain resolved emoji object on http.
+
+</Callout>
+
+The reference site has the full type of every one of these, down to each nested field.
+
+Next, [the dev terminal](/tooling/dev) runs your bot while you edit it. An http bot also needs [a tunnel](/tooling/tunnel) before Discord can reach it on your machine.

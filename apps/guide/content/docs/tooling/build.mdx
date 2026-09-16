@@ -1,29 +1,31 @@
 ---
 title: Building
-description: Compiling your bot into a dist folder that plain node can run, with source maps so a crash still names your own lines.
+description: Compile your bot for production with seedcord build, from the steps it runs and starting the output to its config keys, build failures, and the runtime key.
 ---
 
-`seedcord build` turns your `src` folder into a `dist` folder that plain node can run. It does not take flags, so everything it needs comes from `seedcord.config.ts`.
+Node can't run your `src` folder in production as it is. Your handlers use decorators, and node's built-in TypeScript support stops with a parser error on decorator syntax. Running `tsc` yourself compiles the decorators, but node then fails on any extensionless import or path alias that `tsc` copied into the output as written.
+
+`seedcord build` compiles the decorators and rewrites those imports, turning `src` into a `dist` folder that plain node can run. It doesn't take flags, so everything it needs comes from `seedcord.config.ts`.
 
 <Shell run="build" />
 
-Three things happen, in this order.
+It checks that your `entry` file exists, throwing `CliEntryNotFound` if it doesn't, then runs these steps in order.
 
-1. Your project's own `tsc` compiles the project. seedcord always passes `--inlineSources`. It adds `--sourceMap` too, unless your tsconfig already sets `inlineSourceMap`. Both give you readable stack traces in production.
-2. `tsc-alias` rewrites every import specifier in the output. TypeScript emits each one exactly as you wrote it, so a path alias or an extensionless import would fail at runtime under node.
-3. seedcord writes a bootstrap file. It holds a single import of the compiled entry.
+1. Your project's own `tsc` compiles the project. seedcord always passes `--inlineSources`, and adds `--sourceMap` unless your tsconfig already sets `inlineSourceMap`. Both give you readable stack traces in production.
+2. `tsc-alias` rewrites every import specifier in the output to a full relative path ending in `.js`, since TypeScript emits each one exactly as you wrote it.
+3. seedcord writes a bootstrap file that holds a single import of the compiled entry.
 
-Your source layout decides where the compiled `entry` goes under `outDir`. The bootstrap file always has the same path, so your start script points at that.
+seedcord expects the compiled `entry` under `outDir` at the same path it has under `root`, so `src/index.ts` becomes `dist/index.js`. The bootstrap file always has one fixed path, so your start script can point at it however you arrange your source.
 
 ## Running what it built
 
 <Shell run="start" />
 
-The scaffold wires that script to `node --enable-source-maps dist/index.mjs`. That flag turns the source maps from step 1 into line numbers you recognize.
+The scaffold sets that script to run `dist/index.mjs` with node's `--enable-source-maps` flag. Without `--enable-source-maps`, a stack trace points at lines in the compiled `.js` files, and the flag maps them back to your `.ts` lines.
 
-## The three build keys
+## The build keys
 
-Your CLI config holds all three under `build`. Every one is optional.
+Your CLI config holds these under `build`, and every one is optional.
 
 ```ts twoslash title="seedcord.config.ts"
 import { defineConfig } from 'seedcord';
@@ -40,28 +42,87 @@ export default defineConfig({
 });
 ```
 
-`outDir` defaults to `./dist` beside your config.
+`outDir` defaults to `./dist` beside your config, and `tsconfig` resolves from the same folder.
 
-A relative `bootstrap` resolves against `outDir`. That turns `index.mjs` into `dist/index.mjs`.
+A relative `bootstrap` resolves against `outDir`, which turns `index.mjs` into `dist/index.mjs`. That's also the default.
 
-Leave `tsconfig` out and seedcord looks for `tsconfig.build.json` first, then `tsconfig.json`. When both are missing, it throws `CliBuildTsconfigNotFound` and names the two filenames.
+A separate `tsconfig.build.json` lets you exclude tests and scripts from the build while your editor still type-checks them. Without `tsconfig`, seedcord looks for `tsconfig.build.json` first, then `tsconfig.json`. When neither exists, or the path you set doesn't, it throws `CliBuildTsconfigNotFound`.
 
 ## When the build fails
 
-A type error stops the build. seedcord throws `CliBuildFailed` and shows you the compiler's own output, trimmed if it runs long.
+A type error stops the build. seedcord throws `CliBuildFailed` with the compiler's own output, shortened to its first 24,000 characters. The same code covers a project without `typescript` installed, since seedcord runs the `tsc` from your own dependencies.
 
-When `tsc` finishes, seedcord checks that the compiled entry file is there. Sometimes the compiler reports success and that file is still missing. You get the same `CliBuildFailed` error. It prints the path seedcord checked.
+Once `tsc` finishes, seedcord checks that the compiled entry exists at the path above. Sometimes the compiler reports success while that file is still missing. You get `CliBuildFailed` again, with the path seedcord checked.
 
-Two things usually cause this. Your tsconfig may exclude the entry file. Or `rootDir` may send the output to a folder you did not expect.
+Two things usually cause this. Your tsconfig may exclude the entry file, or its `rootDir` may place the output somewhere other than the path under `outDir` that matches `root`.
 
 ## Where your bot runs
 
-You set `runtime` on your bot's own config in `src/bot.ts`, beside `bot` and `subscribers`. It says which shape your bot is built for.
+You set `runtime` on your bot's own config in `src/bot.ts`, beside `bot` and `subscribers`. It says which kind of deployment your bot is built for, and leaving it out means `'server'`.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/http';
+
+export const seedcord = new Seedcord({
+    bot: {
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers')
+        },
+        commands: { path: null }
+    },
+    subscribers: { path: null },
+    runtime: 'edge'
+});
+```
+
+An edge bot has to write `runtime: 'edge'` itself.
 
 <Callout type="transport">
 
-A gateway bot only accepts `'server'`, since its websocket needs a process that stays up. An http bot takes `'server'` for a long-running node process, or `'edge'` for a Cloudflare Worker.
+A gateway bot only accepts `'server'`, since its websocket needs a process that stays up. An http bot takes `'server'` for a long-running node process, or `'edge'` for a bundled isolate like a Cloudflare Worker.
 
 </Callout>
 
-`seedcord build` compiles the same way for both today, because the edge build is still being written.
+`seedcord build` doesn't read `runtime` yet, so it compiles both kinds of bot the same way.
+
+## The health server
+
+Most hosting platforms call an http endpoint to check that your process is still alive. A gateway bot opens a small server that answers `/health` on port 6967 once it reaches the Ready phase, and it does this under `seedcord dev` too.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+// ---cut-start---
+
+const paths = {
+    interactions: {
+        path: resolve(import.meta.dirname, './handlers')
+    },
+    commands: { path: resolve(import.meta.dirname, './commands') },
+    events: { path: null }
+} as const;
+// ---cut-end---
+
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        ...paths
+    },
+    subscribers: { path: null },
+    healthCheck: { port: 8080, path: '/healthz' }
+});
+```
+
+This bot answers `/healthz` on port 8080. All three keys are optional. Without `port` the server uses 6967, and without `path` it answers `/health`. Without `host` it listens on every network interface. `healthCheck: false` turns the server off.
+
+Change `port` or `path` when your host expects its health check somewhere else, and set `host` when the server should only listen inside a container network. Turn it off when nothing calls it, or when port 6967 is already taken on the machine.
+
+<Callout type="transport" only="gateway">
+
+An http bot's config doesn't accept `healthCheck`, because an http bot already answers on a port of its own.
+
+</Callout>
