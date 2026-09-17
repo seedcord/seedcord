@@ -107,13 +107,13 @@ A command decorated with [`@RegisterCommand()`](ref:core/RegisterCommand) deploy
 
 With `guilds` left out, or with no ids in it, those same commands deploy globally. Delete that one line in `bot.ts` to take your bot public. Every command file stays as it is, and the copies already sitting in those servers stay too, so run [`seedcord commands`](/commands/deployed) to clear them if need be.
 
-When you pass a scope yourself, seedcord skips the list. `'global'` keeps the command global. `'guild'` with ids sends it to those servers. To reach the configured servers plus more of your own, pass `'config'` among the ids.
+When you pass a scope yourself, seedcord skips the list. `'global'` keeps the command global. `'guild'` with ids sends it to those servers. Add `'config'` to that array to send the command to the configured servers as well.
 
 ```ts
 @RegisterCommand('guild', ['config', '613425648685547541'])
 ```
 
-`'config'` there stands for every id under `commands.guilds`, so that command reaches those servers and `613425648685547541`. If `commands.guilds` is empty, the same line throws `CoreCommandGuildsEmpty` at startup, and the message points to your command class.
+`'config'` there stands for every id under `commands.guilds`, so this command goes to those servers and to `613425648685547541`. If `commands.guilds` is empty, the same line throws `CoreCommandGuildsEmpty` at startup, and the message points to your command class.
 
 ## Codegen
 
