@@ -9,17 +9,12 @@ const DESCRIPTION =
 const BODY = `---
 name: seedcord
 description: ${DESCRIPTION}
-license: MIT
+license: Apache-2.0
 compatibility: TypeScript projects on Node 24.11 or newer.
 metadata:
     documentation: ${GUIDE}
     reference: https://docs.seedcord.org
     llms_txt: ${GUIDE}/llms.txt
-allowed-tools:
-    - Bash
-    - Read
-    - Edit
-    - Write
 ---
 
 # Building a bot with seedcord
@@ -42,7 +37,7 @@ Run \`seedcord codegen\` after you add or change a command. The handler generics
 
 ## 5. Check every claim before you write it
 
-Fetch the page for the surface you are using. Every page answers at its own url plus \`.md\`, so ${GUIDE}/gates.md is the Gates page.
+Fetch the page for the surface you are using. Every page answers at its own url plus \`.md\`, so ${GUIDE}/checks/gates.md is the Gates page.
 `;
 
 export const SEEDCORD_SKILL: Skill = { name: 'seedcord', description: DESCRIPTION, body: BODY };

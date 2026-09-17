@@ -34,9 +34,9 @@ export class Award extends SlashHandler<'award'> {
 
 A bot owner passes the first arm and never reaches the role check. Anyone holding the role passes the second.
 
-## and, for a reusable pair
+## and, to treat several gates as one
 
-`@Gated(A(), B())` and `and(A(), B())` refuse under the same conditions. Use `and` when you want that pair as one value, usually to put it inside an `or`.
+`@Gated(A(), B())` and `and(A(), B())` refuse under the same conditions. Use `and` when you want those gates as one value, usually to put it inside an `or`.
 
 ```ts twoslash
 import {
@@ -183,7 +183,7 @@ or(OwnerOnly(), RequireRole('221439658686939136'), {
 
 ## Two arms, at least
 
-An `or` with one arm is that gate on its own, so the compiler rejects it.
+You can pass `and` or `or` as many arms as you like past two. With one arm, either is that gate on its own, so the compiler rejects it.
 
 ```ts twoslash
 // @errors: 2555
