@@ -15,6 +15,7 @@ export type {
 } from '#src/commands/CommandInjector';
 
 export { RegisterCommand } from '#decorators/Command';
+export type { GuildTarget } from '#decorators/Command';
 export {
     AutocompleteRoute,
     ButtonRoute,

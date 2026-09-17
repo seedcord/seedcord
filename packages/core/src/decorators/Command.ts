@@ -6,9 +6,14 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { CommandMetadataKey } from '#src/metadataKeys';
 
 import type { BuilderComponent } from '#components/Component';
-import type { Constructor } from 'type-fest';
+import type { Constructor, LiteralUnion } from 'type-fest';
 
 type CommandCtor = Constructor<BuilderComponent<'command' | 'context_menu'>>;
+
+export const ConfigGuilds = 'config';
+
+/** A guild id, or `'config'` for every id in `commands.guilds`. */
+export type GuildTarget = LiteralUnion<typeof ConfigGuilds, string>;
 
 interface GlobalMeta {
     scope: 'global';
@@ -16,15 +21,32 @@ interface GlobalMeta {
 
 interface GuildMeta {
     scope: 'guild';
-    guilds: string[];
+    guilds: GuildTarget[];
 }
 
-export type CommandMeta = GlobalMeta | GuildMeta;
+interface ConfigMeta {
+    scope: 'config';
+}
+
+export type CommandMeta = GlobalMeta | GuildMeta | ConfigMeta;
 
 type CommandScope = CommandMeta['scope'];
 
 /**
- * Attaches deployment metadata so the framework registers this command globally or in specific guilds.
+ * Registers a command in the guilds listed under `commands.guilds`. With no ids listed there, the
+ * command deploys globally.
+ *
+ * @decorator
+ * @example
+ * ```typescript
+ * \@RegisterCommand()
+ * class PingCommand extends BuilderComponent<'command'> {} // or BuilderComponent<'context_menu'>
+ * ```
+ */
+export function RegisterCommand(): (ctor: CommandCtor) => void;
+
+/**
+ * Registers a command globally, ignoring `commands.guilds`.
  *
  * @decorator
  * @example
@@ -33,22 +55,23 @@ type CommandScope = CommandMeta['scope'];
  * class PingCommand extends BuilderComponent<'command'> {} // or BuilderComponent<'context_menu'>
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/unified-signatures -- merging these puts two different deploy targets under one doc block
 export function RegisterCommand(scope: 'global'): (ctor: CommandCtor) => void;
 
 /**
- * Registers a command for specific guild deployment.
+ * Registers a command in the guilds you pass. These ids replace `commands.guilds`. Include
+ * `'config'` among them to keep that list too.
  *
- * @param guilds - Array of guild IDs where the command should be registered
  * @decorator
  * @example
  * ```typescript
- * \@RegisterCommand('guild', ['123456789'])
+ * \@RegisterCommand('guild', ['config', '123456789'])
  * class AdminCommand extends BuilderComponent<'command'> {} // or BuilderComponent<'context_menu'>
  * ```
  */
-export function RegisterCommand(scope: 'guild', guilds: string[]): (ctor: CommandCtor) => void;
+export function RegisterCommand(scope: 'guild', guilds: GuildTarget[]): (ctor: CommandCtor) => void;
 
-export function RegisterCommand(scope: CommandScope, guilds: string[] = []) {
+export function RegisterCommand(scope: CommandScope = 'config', guilds: GuildTarget[] = []) {
     return (ctor: CommandCtor): void => {
         const existingMeta = Reflect.getOwnMetadata(CommandMetadataKey, ctor) as CommandMeta | undefined;
         if (existingMeta) {
@@ -67,7 +90,7 @@ export function RegisterCommand(scope: CommandScope, guilds: string[] = []) {
             throw new SeedcordTypeError(SeedcordErrorCode.DecoratorCommandGuildWithoutGuilds);
         }
 
-        const meta: GlobalMeta | GuildMeta = scope === 'global' ? { scope } : { scope, guilds };
+        const meta: CommandMeta = scope === 'guild' ? { scope, guilds } : { scope };
         Reflect.defineMetadata(CommandMetadataKey, meta, ctor);
     };
 }

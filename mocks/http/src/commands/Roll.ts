@@ -1,6 +1,6 @@
 import { BuilderComponent, RegisterCommand } from '@seedcord/http';
 
-@RegisterCommand('global')
+@RegisterCommand()
 export class Roll extends BuilderComponent<'command'> {
     constructor() {
         super('command');

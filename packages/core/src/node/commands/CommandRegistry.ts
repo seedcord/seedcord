@@ -13,6 +13,7 @@ import { getDevChannel } from '#hmr/devChannel';
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
 import { CommandInjector } from '#src/commands/CommandInjector';
 import { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
+import { resolveDeployTarget } from '#src/commands/deployTarget';
 import { isCommandClass } from '#src/commands/isCommandClass';
 import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 import { CommandMetadataKey } from '#src/metadataKeys';
@@ -21,6 +22,7 @@ import { PublishDefault } from '#subscribers/publishDefault';
 import type { CommandMeta } from '#decorators/Command';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
+import type { DeployTarget } from '#src/commands/deployTarget';
 import type { CommandCtor } from '#src/commands/isCommandClass';
 import type { CommandBuilder, DeployResult } from '#src/commands/types';
 import type { Initializeable } from '#src/plugin/Plugin';
@@ -28,11 +30,7 @@ import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
-interface CommandArtifact {
-    name: string;
-    scope: 'global' | 'guild';
-    guilds?: string[];
-}
+type CommandArtifact = DeployTarget & { name: string };
 
 function indexById(commands: readonly APIApplicationCommand[]): Map<string, APIApplicationCommand> {
     return new Map(commands.map((command) => [command.id, command]));
@@ -61,17 +59,19 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private readonly injector = new CommandInjector();
 
     private readonly dir: string;
+    private readonly configuredGuilds: readonly string[];
 
     public constructor(private readonly core: CoreBase) {
-        const dir = core.config.bot.commands.path;
-        if (!dir) {
+        const { commands } = core.config.bot;
+        if (!commands.path) {
             throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, ['CommandRegistry', 'commands']);
         }
-        this.dir = dir;
+        this.dir = commands.path;
+        this.configuredGuilds = commands.guilds ?? [];
 
         if (!Envapter.isDevelopment && !Envapter.isTest) return;
         this.hmrHandler = new HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>({
-            handlersDir: dir,
+            handlersDir: this.dir,
             isHandler: isCommandClass,
             registerHandler: this.registerCommand.bind(this),
             unregisterHandler: this.unregisterCommand.bind(this),
@@ -178,21 +178,19 @@ export class CommandRegistry implements Initializeable, HmrAware {
         const comp = instance.component;
         const kind = comp instanceof SlashCommandBuilder ? 'slash command' : 'context menu';
 
-        if (meta.scope === 'global') {
+        const target = resolveDeployTarget(meta, this.configuredGuilds, Ctor.name);
+
+        if (target.scope === 'global') {
             this.globalCommands.push(comp);
         } else {
-            for (const g of meta.guilds) {
+            for (const g of target.guilds) {
                 const arr = this.guildCommands.get(g) ?? [];
                 arr.push(comp);
                 this.guildCommands.set(g, arr);
             }
         }
 
-        this.ctorToCommand.set(Ctor, {
-            name: comp.name,
-            scope: meta.scope,
-            ...(meta.scope === 'guild' && { guilds: meta.guilds })
-        });
+        this.ctorToCommand.set(Ctor, { name: comp.name, ...target });
 
         if (this.loading) {
             this.loadedCommands.push({ name: comp.name, from: formatFilePath(rel), kind });
@@ -207,7 +205,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
             const idx = this.globalCommands.findIndex((c) => c.name === info.name);
             if (idx !== -1) this.globalCommands.splice(idx, 1);
         } else {
-            for (const g of info.guilds ?? []) {
+            for (const g of info.guilds) {
                 const arr = this.guildCommands.get(g);
                 if (arr) {
                     const idx = arr.findIndex((c) => c.name === info.name);

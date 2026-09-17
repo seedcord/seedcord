@@ -3,18 +3,20 @@ import { resolve } from 'node:path';
 import { Seedcord } from '@seedcord/gateway';
 import { Mongoose } from '@seedcord/plugin-mongoose';
 import { GatewayIntentBits, Partials } from 'discord.js';
-import { Envapter } from 'envapt';
+import { Converters, Envapter } from 'envapt';
 import { Envapt } from 'envapt/legacy';
 
 Envapter.baseDir = resolve(import.meta.dirname, '..');
 
 export class Vars extends Envapter {
-    // Mongoose Plugin
     @Envapt('MONGO_URI', { fallback: 'mongodb://localhost:27017/' })
     public static readonly mongoUri: string;
 
     @Envapt('DB_NAME', { fallback: 'seedcord' })
     public static readonly dbName: string;
+
+    @Envapt('COMMAND_GUILD_IDS', { converter: Converters.array(), fallback: [] })
+    public static readonly commandGuilds: string[];
 }
 
 export const seedcord = new Seedcord({
@@ -35,7 +37,8 @@ export const seedcord = new Seedcord({
             middlewares: resolve(import.meta.dirname, './handlers/middlewares')
         },
         commands: {
-            path: resolve(import.meta.dirname, './commands')
+            path: resolve(import.meta.dirname, './commands'),
+            guilds: Vars.commandGuilds
         },
         events: {
             path: resolve(import.meta.dirname, './events'),

@@ -45,6 +45,12 @@ describe('RegisterCommand', () => {
         });
     });
 
+    it('stores config scope metadata when it takes no scope', () => {
+        const Cmd = freshCommand();
+        RegisterCommand()(Cmd);
+        expect(Reflect.getOwnMetadata(CommandMetadataKey, Cmd) as CommandMeta).toEqual({ scope: 'config' });
+    });
+
     it('throws when the same class is registered twice', () => {
         const Cmd = freshCommand();
         RegisterCommand('global')(Cmd);

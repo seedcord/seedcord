@@ -56,6 +56,9 @@ const messages = {
     [SeedcordErrorCode.CoreBusEmitUnavailable]: (event: string) =>
         `core.bus.emit('${event}') would reach your on() listeners and skip every Subscriber class. Call core.bus.publish('${event}', data) to run both.`,
 
+    [SeedcordErrorCode.CoreCommandGuildsEmpty]: (commandName: string) =>
+        `${paint.sky(commandName)} registers to the 'config' guilds while commands.guilds is empty.\nList the ids under commands.guilds, or pass them to @RegisterCommand('guild', [...]).`,
+
     [SeedcordErrorCode.DecoratorCommandAlreadyRegistered]: (
         commandName: string,
         existingScope: string,

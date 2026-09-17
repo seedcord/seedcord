@@ -40,6 +40,17 @@ export type CommandsConfig =
            * Path to dir containing commands and context menus to register.
            */
           path: string;
+          /**
+           * Guilds that every `@RegisterCommand()` command deploys to. An empty list, or no key at
+           * all, sends those commands to every server your bot is in.
+           *
+           * @example
+           * ```ts
+           * // one guild while you develop, global once you ship
+           * guilds: Envapter.isDevelopment ? ['613425648685547541'] : []
+           * ```
+           */
+          guilds?: string[];
       }
     | {
           /** No commands configured */
