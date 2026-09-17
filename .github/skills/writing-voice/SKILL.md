@@ -271,6 +271,7 @@ Illustrative. When a word is missing from the table, apply section 1 and the tes
 | rich set of / suite of | list them |
 | exercises (a test exercises X) | calls X, runs X, tests X |
 | does more than X | state what it does |
+| names / naming, as a verb | banned. write the verb for what actually happens and rephrase the sentence in simple words if needed |
 | worth noting / surprisingly / you may notice | delete, state the fact |
 | good catch / fair point / great question | delete |
 | to be honest / frankly | delete |

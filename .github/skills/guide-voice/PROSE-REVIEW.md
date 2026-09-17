@@ -268,21 +268,14 @@ Then six counted passes, numbered 15 through 20.
     sentences where one would read better. Where a page has no natural site,
     say that instead of forcing one.
 
-18. `names`, the verb. Count it. Then read each one and say which of three
-    unrelated jobs it is doing, since one verb covering all three teaches the
-    reader nothing:
+18. `names`, the verb. Banned outright, so report every one on the page. The
+    noun stays legal, since a command has a name and a field has a name.
 
-    - an error message tells you which one. Reach for `says which`, `tells you
-      which`, `points at`, or put the value in the message and drop the verb.
-    - a symbol is the whole set. Reach for `has a member for`, or flip the
-      subject, "every kind seedcord routes is a member of X".
-    - you write them somewhere. Reach for `you write in`, `you put in`,
-      `declares`.
-
-    Report every page carrying `names` for two different jobs, whatever the
-    count. Leave the ones where `names` is the right word. `lists` and `covers`
-    already carry load elsewhere in this guide, so a repair reaching for either
-    moves the repetition instead of fixing it.
+    Quote each sentence and leave the repair to the writer, who writes the verb
+    for what actually happens and rephrases the sentence in simple words if it
+    needs it. A suggested word here would land on every page this review
+    touches, and one verb standing in for three unrelated jobs is what got the
+    old one banned.
 
     Then the same question about any other word this page leans on. Report a
     word the page uses as a term of art and never defines, and say where the
