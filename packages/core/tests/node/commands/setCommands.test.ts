@@ -1,4 +1,5 @@
 import { ContextMenuCommandBuilder, SlashCommandBuilder } from '@discordjs/builders';
+import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -110,12 +111,17 @@ describe('CommandRegistry.setCommands', () => {
         expect(body[0]?.name).toBe('ping');
     });
 
-    it('rejects when a guild deploy fails', async () => {
-        const put = vi.fn().mockRejectedValue(new Error('Missing Access'));
+    it('reports the guild whose deploy failed, keeping discord’s reason as the cause', async () => {
+        const refused = new Error('Missing Access');
+        const put = vi.fn().mockRejectedValue(refused);
         const registry = registryWith(put);
         registry.guildCommands.set('999', [new SlashCommandBuilder().setName('config').setDescription('Config')]);
 
-        await expect(registry.setCommands()).rejects.toThrow('Missing Access');
+        const caught: unknown = await registry.setCommands().catch((error: unknown) => error);
+
+        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.CoreCommandGuildDeployFailed)).toBe(true);
+        expect(Error.isError(caught) ? caught.message : '').toContain('999');
+        expect(Error.isError(caught) ? caught.cause : undefined).toBe(refused);
     });
 
     it('puts nothing when no commands are registered', async () => {

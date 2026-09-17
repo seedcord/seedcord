@@ -233,7 +233,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         }
 
         for (const [guildId, commands] of this.guildCommands.entries()) {
-            const deployed = await this.put(Routes.applicationGuildCommands(appId, guildId), commands);
+            const deployed = await this.putGuild(appId, guildId, commands);
             result.guilds.set(guildId, indexById(deployed));
             const tag = commands.length === 1 ? 'command' : 'commands';
             this.logger.utils.block(
@@ -246,6 +246,18 @@ export class CommandRegistry implements Initializeable, HmrAware {
         this.injector.inject(result, this.allCommands());
         this.core.bus[PublishDefault]('commandsDeployed', deployedPayload(result));
         return result;
+    }
+
+    private async putGuild(
+        appId: string,
+        guildId: string,
+        commands: readonly CommandBuilder[]
+    ): Promise<APIApplicationCommand[]> {
+        try {
+            return await this.put(Routes.applicationGuildCommands(appId, guildId), commands);
+        } catch (error) {
+            throw new SeedcordError(SeedcordErrorCode.CoreCommandGuildDeployFailed, [guildId], { cause: error });
+        }
     }
 
     private async put(route: `/${string}`, commands: readonly CommandBuilder[]): Promise<APIApplicationCommand[]> {

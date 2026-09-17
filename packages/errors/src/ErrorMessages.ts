@@ -59,6 +59,9 @@ const messages = {
     [SeedcordErrorCode.CoreCommandGuildsEmpty]: (commandName: string) =>
         `${paint.sky(commandName)} registers to the 'config' guilds while commands.guilds is empty.\nList the ids under commands.guilds, or pass them to @RegisterCommand('guild', [...]).`,
 
+    [SeedcordErrorCode.CoreCommandGuildDeployFailed]: (guildId: string) =>
+        `Discord refused the command deploy for guild ${paint.sky(guildId)}.\nCheck that the id is right, and that your bot is in that server.`,
+
     [SeedcordErrorCode.DecoratorCommandAlreadyRegistered]: (
         commandName: string,
         existingScope: string,
