@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { agentLinkHeader, siteLinks } from '../src/agents';
+import { agentLinkHeader, agentRules, readmeFeatures, siteLinks } from '../src/agents';
 
 import type { SeedcordSite } from '../src/agents';
 
@@ -70,5 +70,70 @@ describe('siteLinks', () => {
     // pageMetadata already renders the twin
     it('leaves the page twin out', () => {
         expect(siteLinks('guide').some((entry) => entry.rel === 'alternate')).toBe(false);
+    });
+});
+
+describe('agentRules', () => {
+    it('warns every site that seedcord is absent from training data', () => {
+        for (const site of SITES) {
+            expect(agentRules(site)[0]).toContain('no presence in training data');
+        }
+    });
+
+    it('sends every site to the skill the guide serves', () => {
+        for (const site of SITES) {
+            expect(agentRules(site).join('\n')).toContain(
+                'https://guide.seedcord.org/.well-known/agent-skills/seedcord/SKILL.md'
+            );
+        }
+    });
+
+    it('leaves out the site a reader is already on', () => {
+        expect(agentRules('docs').join('\n')).not.toContain('The API reference is at');
+        expect(agentRules('guide').join('\n')).not.toContain('The guide is at');
+        expect(agentRules('home').join('\n')).not.toContain('The project site is at');
+    });
+
+    it('points every site at the other two', () => {
+        const openings = ['The API reference is at', 'The guide is at', 'The project site is at'];
+
+        for (const site of SITES) {
+            const rules = agentRules(site).join('\n');
+
+            expect(openings.filter((opening) => rules.includes(opening))).toHaveLength(2);
+        }
+    });
+});
+
+const README = `# seedcord
+
+Some prose above.
+
+## Features
+
+- Option types generated from your discord.js builders
+- Pagination that survives a restart
+- and much more...
+
+## Get started
+
+- this bullet belongs to another section
+`;
+
+describe('readmeFeatures', () => {
+    it('reads the bullets under the Features heading', () => {
+        expect(readmeFeatures(README)).toEqual([
+            'Option types generated from your discord.js builders',
+            'Pagination that survives a restart',
+            'and much more...'
+        ]);
+    });
+
+    it('stops at the next heading', () => {
+        expect(readmeFeatures(README)).not.toContain('this bullet belongs to another section');
+    });
+
+    it('comes back empty when the heading is gone', () => {
+        expect(readmeFeatures('# seedcord\n\n- a loose bullet\n')).toEqual([]);
     });
 });

@@ -1,6 +1,6 @@
-import type { Skill } from '../skills';
+import { DOCS_URL, GUIDE_URL as GUIDE } from '../sites';
 
-const GUIDE = 'https://guide.seedcord.org';
+import type { Skill } from '../skills';
 
 const DESCRIPTION =
     'Build a Discord bot with seedcord, a TypeScript framework on top of discord.js. Covers picking a transport, declaring slash commands with generated option types, replying, gates, components, and the CLI.';
@@ -13,7 +13,7 @@ license: Apache-2.0
 compatibility: TypeScript projects on Node 24.11 or newer.
 metadata:
     documentation: ${GUIDE}
-    reference: https://docs.seedcord.org
+    reference: ${DOCS_URL}
     llms_txt: ${GUIDE}/llms.txt
 ---
 

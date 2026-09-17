@@ -1,3 +1,5 @@
+import { agentRules } from '@seedcord/ui/agents';
+
 import { loadDocsCatalog } from '#lib/docs/catalog';
 import { GUIDE_URL, REPO_URL, SITE_DESCRIPTION, SITE_NAME, canonicalUrl } from '#lib/site';
 
@@ -16,6 +18,8 @@ export async function GET(): Promise<Response> {
         `# ${SITE_NAME}`,
         '',
         `> ${SITE_DESCRIPTION}`,
+        '',
+        ...agentRules('docs').map((rule) => `- ${rule}`),
         '',
         '## Packages',
         '',
