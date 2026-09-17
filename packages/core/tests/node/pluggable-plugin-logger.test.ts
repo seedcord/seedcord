@@ -72,4 +72,11 @@ describe('the plugin logger', () => {
 
         expect(sink.records[0]?.channel).toBe('db');
     });
+
+    it('keeps the whole dotted key as the channel of a grouped plugin', async () => {
+        const host = new TestHost();
+        await host.attach('services.users', Database).services.users.init();
+
+        expect(sink.records[0]?.channel).toBe('services.users');
+    });
 });

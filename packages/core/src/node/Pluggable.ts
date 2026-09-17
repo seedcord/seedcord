@@ -14,8 +14,15 @@ import type { CoreBase } from '#interfaces/CoreBase';
 import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import type { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
 import type { ShutdownPhase } from '#src/lifecycle/phases';
-import type { ChannelKeyAssert, Runtime, RuntimeAssert, Transport, TransportAssert } from '#src/plugin/options';
-import type { CoreParamAssert, PluginArgs, PluginCtor, PluginLike } from '#src/plugin/Plugin';
+import type { Runtime, RuntimeAssert, Transport, TransportAssert } from '#src/plugin/options';
+import type {
+    Attached,
+    AttachKeyAssert,
+    CoreParamAssert,
+    PluginArgs,
+    PluginCtor,
+    PluginLike
+} from '#src/plugin/Plugin';
 import type { Bus } from '#subscribers/Bus';
 import type { REST } from '@discordjs/rest';
 import type { Config, IRateLimiter } from '@seedcord/types';
@@ -55,6 +62,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     protected isInitialized = false;
     protected startFailed = false;
     protected readonly plugins: PluginLike[] = [];
+    private readonly groups = new Map<string, Record<string, PluginLike>>();
 
     private readonly pluginLogger = new Logger('Plugins', { channel: 'plugins' });
 
@@ -164,30 +172,64 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
      */
     public attach<Key extends string, Ctor extends PluginCtor>(
         this: this,
-        key: ChannelKeyAssert<Key>,
+        key: AttachKeyAssert<Key, this>,
         Plugin: Ctor &
             TransportAssert<InstanceType<Ctor>, BotT> &
             RuntimeAssert<InstanceType<Ctor>, BotRt> &
             CoreParamAssert<Ctor>,
         ...args: PluginArgs<Ctor>
-    ): this & Record<Key, InstanceType<Ctor>> {
+    ): this & Attached<Key, InstanceType<Ctor>> {
         if (this.isInitialized) {
             throw new SeedcordError(SeedcordErrorCode.CorePluginAfterInit);
         }
+
+        const dot = key.indexOf('.');
+        const head = dot === -1 ? key : key.slice(0, dot);
+
         // several reserved channels are also members on a host, which the next check would report first
-        if (RESERVED_KEYS.has(key)) {
-            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginReservedChannel, [key]);
+        if (RESERVED_KEYS.has(head)) {
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginReservedChannel, [head]);
         }
-        if (key in this) {
-            throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
-        }
+
+        const leaf = dot === -1 ? undefined : key.slice(dot + 1);
+        this.assertFree(head, leaf, key);
 
         const instance = new Plugin(this, ...args);
         pluginLoggerOf(instance).setChannel(key);
         this.plugins.push(instance);
         this.attachments.push({ key, instance });
 
-        return Object.assign(this, { [key]: instance } as Record<Key, InstanceType<Ctor>>);
+        if (leaf === undefined) {
+            return Object.assign(this, { [key]: instance }) as this & Attached<Key, InstanceType<Ctor>>;
+        }
+
+        this.groupFor(head)[leaf] = instance;
+        return this as this & Attached<Key, InstanceType<Ctor>>;
+    }
+
+    private assertFree(head: string, leaf: string | undefined, key: string): void {
+        if (leaf === undefined) {
+            if (this.groups.has(key)) throw new SeedcordError(SeedcordErrorCode.CorePluginKeyHoldsGroup, [key]);
+            if (key in this) throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
+            return;
+        }
+
+        const group = this.groups.get(head);
+        if (!group) {
+            if (head in this) throw new SeedcordError(SeedcordErrorCode.CorePluginGroupTaken, [head, key]);
+            return;
+        }
+        if (leaf in group) throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
+    }
+
+    private groupFor(head: string): Record<string, PluginLike> {
+        const existing = this.groups.get(head);
+        if (existing) return existing;
+
+        const group: Record<string, PluginLike> = {};
+        this.groups.set(head, group);
+        Object.assign(this, { [head]: group });
+        return group;
     }
 
     // one combined task per phase keeps plugin inits sequential while the phase's other tasks run concurrently

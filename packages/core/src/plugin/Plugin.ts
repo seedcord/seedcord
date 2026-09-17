@@ -10,7 +10,7 @@ import { resolveLifecycleSpec } from './lifecycle';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { ResolvedPluginLifecycleSpec, PluginLifecycleSpec } from './lifecycle';
 import type { TransportOf, PluginOptions, RuntimeOf } from './options';
-import type { Tail, HmrAware, HmrUpdateEvent } from '@seedcord/types';
+import type { Tail, FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
 export interface Initializeable {
     init(): Promise<void>;
@@ -156,6 +156,33 @@ export type PluginCtor<TPlugin extends PluginLike = PluginLike> = new (...args: 
 
 /** @internal */
 export type PluginArgs<Ctor extends PluginCtor> = Tail<ConstructorParameters<Ctor>>;
+
+/** @internal */
+export type Attached<Key extends string, Instance> = Key extends `${infer Group}.${infer Leaf}`
+    ? Record<Group, Record<Leaf, Instance>>
+    : Record<Key, Instance>;
+
+// a group carries no PluginLike member, which is what tells it apart from an attached plugin
+/** @internal */
+export type AttachKeyAssert<Key extends string, Host> = Key extends `${infer Group}.${infer Leaf}`
+    ? Leaf extends `${string}.${string}`
+        ? `'${Key}' nests more than once. A plugin key takes one dot at most.`
+        : Group extends FrameworkChannel
+          ? `'${Group}' is a channel the framework logs on. Pick another group name.`
+          : Group extends keyof Host
+            ? Host[Group] extends PluginLike
+                ? `'${Group}' already holds a plugin, so '${Leaf}' cannot nest inside it.`
+                : Leaf extends keyof Host[Group]
+                  ? `'${Key}' is already attached.`
+                  : Key
+            : Key
+    : Key extends FrameworkChannel
+      ? `'${Key}' is a channel the framework logs on. Pick another plugin key.`
+      : Key extends keyof Host
+        ? Host[Key] extends PluginLike
+            ? `'${Key}' is already attached.`
+            : `'${Key}' holds a group of plugins. Attach this one under a name of its own.`
+        : Key;
 
 type CoreParamTooNarrow = Record<
     'this plugin constructor must take CoreBase as its first parameter and read the transport Core off this.core',
