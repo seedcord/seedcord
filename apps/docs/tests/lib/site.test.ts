@@ -8,9 +8,9 @@ describe('pageMetadata', () => {
             title: 'Seedcord',
             description: 'The core orchestrator.',
             path: '/packages/seedcord/1.0.0/classes/seedcord',
-            markdownPath: '/llms/packages/seedcord/1.0.0/classes/seedcord'
+            markdownPath: '/packages/seedcord/1.0.0/classes/seedcord.md'
         });
-        expect(meta.alternates?.types?.['text/markdown']).toContain('/llms/packages/seedcord/1.0.0/classes/seedcord');
+        expect(meta.alternates?.types?.['text/markdown']).toContain('/packages/seedcord/1.0.0/classes/seedcord.md');
     });
 
     it('omits the markdown alternate when no markdownPath is given', () => {

@@ -8,9 +8,10 @@ export const dynamic = 'force-static';
 export async function GET(): Promise<Response> {
     const catalog = await loadDocsCatalog();
 
+    // a page's markdown answers at its own url plus .md
     const packageLines = catalog.map((pkg) => {
         const latest = pkg.versions.find((version) => version.isLatest) ?? pkg.versions[0];
-        const url = canonicalUrl(`/packages/${pkg.id}/${latest?.id ?? 'latest'}`);
+        const url = canonicalUrl(`/packages/${pkg.id}/${latest?.id ?? 'latest'}.md`);
         return `- [${pkg.label}](${url})`;
     });
 

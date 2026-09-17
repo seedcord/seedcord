@@ -7,11 +7,6 @@ import { OG_SCALE } from '#lib/site';
 export const dynamic = 'force-static';
 export const revalidate = false;
 
-// without this, the static export emits an extension-less file with the wrong content-type
-export function generateStaticParams(): { slug: string[] }[] {
-    return [{ slug: ['image.png'] }];
-}
-
 export function GET(): ImageResponse {
     return new ImageResponse(
         <div style={{ display: 'flex', width: OG_SIZE.width * OG_SCALE, height: OG_SIZE.height * OG_SCALE }}>

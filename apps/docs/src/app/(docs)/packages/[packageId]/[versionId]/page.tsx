@@ -18,12 +18,14 @@ export const dynamic = 'force-static';
 
 export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
     const { entry, version } = await getCatalogContext(await params);
+    const path = `/packages/${entry.id}/${version.id}`;
+
     return pageMetadata({
         title: `${entry.label} ${version.label}`,
         description: entry.description,
-        path: `/packages/${entry.id}/${version.id}`,
-        image: `/og/packages/${entry.id}/${version.id}`,
-        markdownPath: `/llms/packages/${entry.id}/${version.id}`
+        path,
+        image: `${path}.png`,
+        markdownPath: `${path}.md`
     });
 }
 

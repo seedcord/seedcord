@@ -18,7 +18,7 @@ export function canonicalUrl(path: string): string {
 export const OG_SCALE = 3;
 
 export const DEFAULT_OG_IMAGE = {
-    url: '/og/image.png',
+    url: '/og.png',
     width: OG_SIZE.width * OG_SCALE,
     height: OG_SIZE.height * OG_SCALE,
     alt: 'seedcord, the whole Discord bot, wired and typed'

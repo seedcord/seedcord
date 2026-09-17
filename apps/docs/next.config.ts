@@ -23,10 +23,19 @@ const nextConfig: NextConfig = {
         '@microsoft/tsdoc',
         '@microsoft/tsdoc-config'
     ],
+    // afterFiles keeps a real file in public/ ahead of the sugar
+    rewrites() {
+        return {
+            afterFiles: [
+                { source: '/:path*.md', destination: '/llms/:path*' },
+                { source: '/:path*.png', destination: '/og/:path*' }
+            ]
+        };
+    },
     headers() {
         return [
             {
-                source: '/((?!_next/|og/|llms/|\\.well-known/|llms.txt|sitemap.xml|robots.txt).*)',
+                source: '/((?!_next/|og/|llms/|\\.well-known/|llms.txt|sitemap.xml|robots.txt).*(?<!\\.md|\\.png))',
                 headers: [{ key: 'Link', value: agentLinkHeader('docs') }]
             }
         ];

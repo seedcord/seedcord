@@ -18,10 +18,6 @@ function entityPath({ entry, version, segments }: ResolvedEntity): string {
     return `/packages/${entry.id}/${version.id}/${segments.join('/')}`;
 }
 
-function entityOgPath({ entry, version, segments }: ResolvedEntity): string {
-    return `/og/packages/${entry.id}/${version.id}/${segments.join('/')}`;
-}
-
 function entityJsonLd(resolved: ResolvedEntity): Record<string, unknown> {
     const { entry, version, entity } = resolved;
     const url = canonicalUrl(entityPath(resolved));
@@ -71,13 +67,15 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
     const description =
         summary && summary.length > 0 ? summary : `${entity.name}, a ${entity.kind} in ${entity.displayPackage}.`;
 
+    const path = entityPath(resolved);
+
     return pageMetadata({
         title: entity.name,
         description,
-        path: entityPath(resolved),
+        path,
         type: 'article',
-        image: entityOgPath(resolved),
-        markdownPath: `/llms${entityPath(resolved)}`
+        image: `${path}.png`,
+        markdownPath: `${path}.md`
     });
 }
 
