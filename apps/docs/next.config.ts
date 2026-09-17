@@ -1,5 +1,7 @@
 import path from 'node:path';
 
+import { agentLinkHeader } from '@seedcord/ui/agents';
+
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
@@ -23,9 +25,8 @@ const nextConfig: NextConfig = {
     headers() {
         return [
             {
-                // rfc 8288 alternate link
-                source: '/((?!_next/|og/|llms/|llms.txt|sitemap.xml|robots.txt).*)',
-                headers: [{ key: 'Link', value: '</llms.txt>; rel="alternate"; type="text/plain"' }]
+                source: '/((?!_next/|og/|llms/|\\.well-known/|llms.txt|sitemap.xml|robots.txt).*)',
+                headers: [{ key: 'Link', value: agentLinkHeader('docs') }]
             }
         ];
     },

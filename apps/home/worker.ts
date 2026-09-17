@@ -1,3 +1,5 @@
+import { agentLinkHeader } from '@seedcord/ui/agents';
+
 interface Env {
     ASSETS: { fetch(request: Request): Promise<Response> };
 }
@@ -10,8 +12,7 @@ const TRAILING_SLASH_REDIRECT = 307;
 const PERMANENT_REDIRECT = 308;
 const MOVED_PERMANENTLY = 301;
 
-// RFC 8288 discovery hints for agents, points at the human docs + the machine-readable index
-const LINK_HEADER = '<https://docs.seedcord.org/>; rel="service-doc", </llms.txt>; rel="alternate"; type="text/plain"';
+const LINK_HEADER = agentLinkHeader('home');
 
 // cloudflare serves the extension-less file next writes here with no content-type at all
 const ICON_PATH = '/icon';

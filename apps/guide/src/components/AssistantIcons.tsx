@@ -22,7 +22,7 @@ const MARKS = {
     }
 } as const;
 
-export type AssistantBrand = keyof typeof MARKS;
+type AssistantBrand = keyof typeof MARKS;
 
 export interface AssistantIconProps {
     brand: AssistantBrand;

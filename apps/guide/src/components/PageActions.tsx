@@ -44,8 +44,8 @@ function itemsFor(viewHref: string, links: PageActionLinks): ActionItem[] {
             icon: <GithubIcon size={16} strokeWidth={16} aria-hidden className={cn('shrink-0 text-(--text-faint)')} />
         },
         { href: links.report, label: 'Report a problem', icon: lucide(MessageSquareWarning) },
-        { href: links.chatgpt, label: 'Open in ChatGPT', icon: <AssistantIcon brand="openai" /> },
         { href: links.claude, label: 'Open in Claude', icon: <AssistantIcon brand="claude" /> },
+        { href: links.chatgpt, label: 'Open in ChatGPT', icon: <AssistantIcon brand="openai" /> },
         { href: links.cursor, label: 'Open in Cursor', icon: <AssistantIcon brand="cursor" /> }
     ];
 }

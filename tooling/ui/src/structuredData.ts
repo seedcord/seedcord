@@ -1,10 +1,13 @@
-export const HOME_URL = 'https://seedcord.org';
-export const REPO_URL = 'https://github.com/seedcord/seedcord';
-const GITHUB_ORG_URL = 'https://github.com/seedcord';
-export const NPM_ORG_URL = 'https://www.npmjs.com/org/seedcord';
-export const DISCORD_URL = 'https://discord.gg/DzFxY58WXf';
-export const AUTHOR_URL = 'https://materwelon.dev';
-export const AUTHOR_GITHUB_URL = 'https://github.com/materwelonDhruv';
+import {
+    AUTHOR_GITHUB_URL,
+    AUTHOR_URL,
+    DISCORD_URL,
+    GITHUB_ORG_URL,
+    HOME_URL,
+    NPM_ORG_URL,
+    REPO_URL
+} from './sites';
+
 // matches the GitHub repository description
 const SEEDCORD_DESCRIPTION =
     "seedcord is a strongly typed TypeScript framework for making discord.js bots. It wires and types your bot for you, on both gateway and http interactions. You write your bot's features, and nothing else.";

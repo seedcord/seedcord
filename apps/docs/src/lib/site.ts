@@ -1,16 +1,15 @@
+import { DOCS_URL } from '@seedcord/ui';
+
 import { plainSummary } from '#lib/docs/plainSummary';
 
 import type { Metadata } from 'next';
 
-const FALLBACK_URL = 'https://docs.seedcord.org';
-
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? FALLBACK_URL;
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? DOCS_URL;
 export const SITE_NAME = 'seedcord';
 export const OG_SITE_NAME = 'seedcord documentation'; // reads clearer than plain 'seedcord' on docs link embeds
 export const SITE_DESCRIPTION =
     'API documentation for seedcord, a TypeScript framework for Discord bots built on discord.js.';
-export { HOME_URL, REPO_URL } from '@seedcord/ui';
-export const GUIDE_URL = 'https://guide.seedcord.org';
+export { GUIDE_URL, HOME_URL, REPO_URL } from '@seedcord/ui';
 
 export function canonicalUrl(path: string): string {
     return new URL(path, SITE_URL).toString();

@@ -1,16 +1,16 @@
+import { DOCS_URL as DOCS_PRODUCTION, GUIDE_URL } from '@seedcord/ui';
+
 import { CARD, publicPath, TWIN } from '#lib/pageAssets';
 
 import type { Metadata, MetadataRoute } from 'next';
 
-const FALLBACK_URL = 'https://guide.seedcord.org';
-
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? FALLBACK_URL;
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? GUIDE_URL;
 export const SITE_NAME = 'seedcord guide';
 export const SITE_DESCRIPTION = 'The guide to building Discord bots with seedcord.';
 export { HOME_URL, REPO_URL } from '@seedcord/ui';
 
 // run the docs app on 3001 next to the guide to check docs links in dev mode
-const DOCS_FALLBACK = process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : 'https://docs.seedcord.org';
+const DOCS_FALLBACK = process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : DOCS_PRODUCTION;
 
 export const DOCS_URL = process.env.NEXT_PUBLIC_DOCS_URL ?? DOCS_FALLBACK;
 

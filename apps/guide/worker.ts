@@ -1,3 +1,5 @@
+import { agentLinkHeader } from '@seedcord/ui/agents';
+
 import { assetPath, generatedPathFor, publicPath, TWIN } from './src/lib/pageAssets';
 import { redirectFor } from './src/lib/redirects';
 
@@ -8,19 +10,6 @@ interface Env {
 const TRAILING_SLASH_REDIRECT = 307;
 const PERMANENT_REDIRECT = 308;
 const NOT_FOUND = 404;
-
-// RFC 8288 discovery hints for agents
-const SITE_LINKS = [
-    '</llms.txt>; rel="describedby"',
-    '</.well-known/agent-skills/index.json>; rel="service-meta"',
-    '<https://docs.seedcord.org/>; rel="service-doc"',
-    '<https://seedcord.org/>; rel="index"'
-].join(', ');
-
-// alternate and describedby are the llms.txt v2 relations
-function linkHeader(pathname: string): string {
-    return `<${publicPath(pathname, TWIN)}>; rel="alternate"; type="text/markdown", ${SITE_LINKS}`;
-}
 
 const MARKDOWN = 'text/markdown';
 const HTML = 'text/html';
@@ -95,7 +84,9 @@ const handler = {
         if (typed !== undefined) response.headers.set('Content-Type', typed);
 
         const contentType = normalized.headers.get('content-type') ?? '';
-        if (contentType.includes('text/html')) response.headers.set('Link', linkHeader(pathname));
+        if (contentType.includes('text/html')) {
+            response.headers.set('Link', agentLinkHeader('guide', publicPath(pathname, TWIN)));
+        }
         // a cache that ignores Accept would serve an agent the html
         if (contentType.includes('text/html') || contentType.includes(MARKDOWN)) {
             response.headers.set('Vary', 'Accept');
