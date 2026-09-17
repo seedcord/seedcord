@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, IconSwap, cn, useTimedToggle } from '@seedcord/ui';
+import { Button, IconSwap, LabelSwap, cn, useTimedToggle } from '@seedcord/ui';
 import { ClipboardCheck, ClipboardCopy } from 'lucide-react';
 import { useCallback } from 'react';
 
@@ -41,7 +41,13 @@ export function CopyPageButton({ source, className }: CopyPageButtonProps): Reac
             )}
         >
             <IconSwap active={copied} idleIcon={ClipboardCopy} activeIcon={ClipboardCheck} size={16} />
-            <span>{copied ? 'Copied' : 'Copy as Markdown'}</span>
+            {/* a button centres its text by default. the shorter label would drift off the icon */}
+            <LabelSwap
+                active={copied}
+                idleLabel="Copy as Markdown"
+                activeLabel="Copied"
+                itemClassName={cn('text-start')}
+            />
         </Button>
     );
 }

@@ -1,6 +1,6 @@
 import { GuideShell } from '#components/GuideShell';
 import { GUIDE_TABS, sidebarsByTab } from '#lib/nav';
-import { assetPath, TWIN } from '#lib/pageAssets';
+import { pageActionsFor } from '#lib/pageActions';
 import { source } from '#lib/source';
 
 import type { ReactNode } from 'react';
@@ -21,7 +21,7 @@ export default async function Layout({ params, children }: LayoutProps): Promise
             sidebars={sidebarsByTab()}
             toc={page?.data.toc}
             pageTitle={page?.data.title}
-            markdownPath={page === undefined ? undefined : assetPath(page.url, TWIN)}
+            actions={page === undefined ? undefined : pageActionsFor(page)}
         >
             {children}
         </GuideShell>

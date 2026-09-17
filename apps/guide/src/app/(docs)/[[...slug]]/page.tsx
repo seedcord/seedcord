@@ -1,12 +1,12 @@
 import { cn, CopyAnchorButton } from '@seedcord/ui';
 import { notFound } from 'next/navigation';
 
-import { CopyPageButton } from '#components/CopyPageButton';
+import { PageActions } from '#components/PageActions';
 import { PageNav } from '#components/PageNav';
 import { ANCHOR, ANCHOR_DROP, ANCHOR_SIZE, mdxComponents } from '#lib/mdxComponents';
 import { guideOrder } from '#lib/nav';
 import { neighboursOf } from '#lib/neighbours';
-import { assetPath, TWIN } from '#lib/pageAssets';
+import { pageActionsFor } from '#lib/pageActions';
 import { pageMetadata } from '#lib/site';
 import { source } from '#lib/source';
 
@@ -42,10 +42,7 @@ export default async function Page(props: PageParams): Promise<ReactNode> {
                     ) : null}
                 </div>
                 {/* the button's own px-3 would inset it from the content column */}
-                <CopyPageButton
-                    source={assetPath(page.url, TWIN)}
-                    className={cn('order-first -me-3 -mt-6 flex-row-reverse self-end lg:hidden')}
-                />
+                <PageActions {...pageActionsFor(page)} className={cn('order-first -me-3 -mt-6 self-end lg:hidden')} />
             </div>
             <div className={cn('mt-10 flex flex-col gap-5')}>
                 <MDX components={mdxComponents} />

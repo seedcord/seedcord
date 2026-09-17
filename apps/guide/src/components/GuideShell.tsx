@@ -23,14 +23,15 @@ import { useMemo, useState } from 'react';
 import { DOCS_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site';
 import { useVisibleHeadingIds } from '#lib/visibleHeadings';
 
-import { CopyPageButton } from './CopyPageButton';
 import { DocsSidebar } from './DocsSidebar';
 import { GuideSearch, SEARCH_LABEL } from './GuideSearch';
 import { MobileNav } from './MobileNav';
+import { PageActions } from './PageActions';
 import { TableOfContents } from './TableOfContents';
 import { TocBar } from './TocBar';
 
 import type { GuideTab, SidebarsByTab } from '#lib/nav';
+import type { PageActionProps } from '#lib/pageActions';
 import type { SiteDestination } from '@seedcord/ui';
 import type { TocBarProps } from './TocBar';
 import type { TOCItemType } from 'fumadocs-core/toc';
@@ -95,18 +96,18 @@ const contentsColumnClassName = tw`sticky top-(--nav-h) hidden max-h-[calc(100dv
 
 function ContentsColumn({
     items,
-    markdownPath
+    actions
 }: {
     items: readonly TOCItemType[];
-    markdownPath: string | undefined;
+    actions: PageActionProps | undefined;
 }): ReactElement {
     const activeIds = useVisibleHeadingIds(items);
 
     return (
         <div className={cn(contentsColumnClassName)}>
-            {markdownPath === undefined ? null : (
+            {actions === undefined ? null : (
                 // 14px is the button's px-3 plus the blank lucide leaves inside the icon
-                <CopyPageButton source={markdownPath} className={cn('-ms-3.5 self-start')} />
+                <PageActions {...actions} className={cn('-ms-3.5 self-start')} />
             )}
             <TableOfContents items={items} activeIds={activeIds} className={cn('min-h-0')} />
         </div>
@@ -118,7 +119,7 @@ export interface GuideShellProps {
     sidebars: SidebarsByTab;
     toc?: readonly TOCItemType[] | undefined;
     pageTitle?: string | undefined;
-    markdownPath?: string | undefined;
+    actions?: PageActionProps | undefined;
     pathname?: string | undefined;
     children: ReactNode;
 }
@@ -128,7 +129,7 @@ export function GuideShell({
     sidebars,
     toc = NO_TOC,
     pageTitle = '',
-    markdownPath,
+    actions,
     pathname: override,
     children
 }: GuideShellProps): ReactElement {
@@ -178,7 +179,7 @@ export function GuideShell({
                         <main id="main-content" className={cn('min-w-0 flex-1 py-10')}>
                             {children}
                         </main>
-                        {hasContents ? <ContentsColumn items={toc} markdownPath={markdownPath} /> : null}
+                        {hasContents ? <ContentsColumn items={toc} actions={actions} /> : null}
                     </div>
                 </div>
             </AnchorProvider>
