@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 // next loads this file under the require condition. ./agents exports a bare default to match
-import { agentLinkHeader } from '@seedcord/ui/agents';
+import { agentLinkHeader, canonicalSkillHeader } from '@seedcord/ui/agents';
 
 import type { NextConfig } from 'next';
 
@@ -37,6 +37,11 @@ const nextConfig: NextConfig = {
             {
                 source: '/((?!_next/|og/|llms/|\\.well-known/|llms.txt|sitemap.xml|robots.txt).*(?<!\\.md|\\.png))',
                 headers: [{ key: 'Link', value: agentLinkHeader('docs') }]
+            },
+            {
+                // path-to-regexp v8 dropped inline groups. `:spec(skills|agent-skills)` matches nothing here
+                source: '/.well-known/:spec/:name/SKILL.md',
+                headers: [{ key: 'Link', value: canonicalSkillHeader() }]
             }
         ];
     },

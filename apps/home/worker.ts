@@ -1,4 +1,4 @@
-import { agentLinkHeader } from '@seedcord/ui/agents';
+import { agentLinkHeader, canonicalSkillHeader } from '@seedcord/ui/agents';
 
 interface Env {
     ASSETS: { fetch(request: Request): Promise<Response> };
@@ -13,6 +13,8 @@ const PERMANENT_REDIRECT = 308;
 const MOVED_PERMANENTLY = 301;
 
 const LINK_HEADER = agentLinkHeader('home');
+const CANONICAL_SKILL = canonicalSkillHeader();
+const SKILL_PATH = /^\/\.well-known\/(?:skills|agent-skills)\/[^/]+\/SKILL\.md$/;
 
 // cloudflare serves the extension-less file next writes here with no content-type at all
 const ICON_PATH = '/icon';
@@ -36,12 +38,14 @@ const handler = {
         const isHtml = (normalized.headers.get('content-type') ?? '').includes('text/html');
         const isProduction = url.hostname === PRODUCTION_HOST;
         const isIcon = url.pathname === ICON_PATH;
+        const isSkill = SKILL_PATH.test(url.pathname);
 
-        if (isProduction && !isHtml && !isIcon) return normalized;
+        if (isProduction && !isHtml && !isIcon && !isSkill) return normalized;
 
         const response = new Response(normalized.body, normalized);
         if (isIcon) response.headers.set('Content-Type', 'image/png');
         if (isHtml) response.headers.set('Link', LINK_HEADER);
+        if (isSkill) response.headers.set('Link', CANONICAL_SKILL);
         if (!isProduction) response.headers.set('X-Robots-Tag', 'noindex, nofollow');
         return response;
     }
