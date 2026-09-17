@@ -12,7 +12,8 @@ function CopyAnchorButtonPage(): ReactElement {
                 <p className={cn('text-subtle text-sm')}>
                     Composes <code>Button variant=&quot;ghost&quot; size=&quot;icon&quot;</code> with 32px override
                     (size-8, smallest icon button). Click copies the current URL with the given anchor id appended as
-                    #hash. Hash icon → Check icon on success for 1.6s.
+                    #hash, or the page URL on its own when no anchor id is given. Hash icon → Check icon on success for
+                    1.6s.
                 </p>
             </header>
             <section className={cn('space-y-3')}>
@@ -33,6 +34,10 @@ function CopyAnchorButtonPage(): ReactElement {
                     <div className={cn('flex items-center gap-2 rounded-md border border-(--border) p-3')}>
                         <span className={cn('text-sm')}>always-visible variant</span>
                         <CopyAnchorButton anchorId="always-visible" label="Always visible" />
+                    </div>
+                    <div className={cn('flex items-center gap-2 rounded-md border border-(--border) p-3')}>
+                        <span className={cn('text-sm')}>no anchor id, copies the page url</span>
+                        <CopyAnchorButton label="This page" />
                     </div>
                 </div>
             </section>

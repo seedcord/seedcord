@@ -120,29 +120,43 @@ function readFence(children: ReactNode): Fenced | null {
     };
 }
 
-const HEADING_SIZES = {
-    h2: tw`mt-6 text-2xl/snug`,
-    h3: tw`mt-4 text-xl/snug`,
-    h4: tw`mt-3 text-lg/snug`
+export const ANCHOR_SIZE = { h1: 24, h2: 18, h3: 15, h4: 14 } as const;
+
+// lucide draws the hash across the middle 18 of its 24 box. centred on the cap band it stops short
+// of the baseline. the translate drops it the rest of the way.
+// the hit area stays 32px at every glyph size
+export const ANCHOR_DROP = {
+    h1: tw`ms-[2px] translate-y-[3px]`,
+    h2: tw`-ms-px translate-y-[1.5px]`,
+    h3: tw`ms-[-2.5px] translate-y-[1.5px]`,
+    h4: tw`ms-[-3px] translate-y-px`
 } as const;
 
-const ANCHOR = tw`ms-1 shrink-0 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-has-focus-visible:opacity-100 md:data-[copied=true]:opacity-100`;
+// the anchor glyph tracks each heading's text size
+const HEADINGS = {
+    h2: { className: tw`mt-6 text-2xl/snug`, anchorSize: ANCHOR_SIZE.h2, anchorDrop: ANCHOR_DROP.h2 },
+    h3: { className: tw`mt-4 text-xl/snug`, anchorSize: ANCHOR_SIZE.h3, anchorDrop: ANCHOR_DROP.h3 },
+    h4: { className: tw`mt-3 text-lg/snug`, anchorSize: ANCHOR_SIZE.h4, anchorDrop: ANCHOR_DROP.h4 }
+} as const;
 
-function headingFor(tag: keyof typeof HEADING_SIZES): (props: ComponentProps<'h2'>) => ReactElement {
+export const ANCHOR = tw`shrink-0 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-has-focus-visible:opacity-100 md:data-[copied=true]:opacity-100`;
+
+function headingFor(tag: keyof typeof HEADINGS): (props: ComponentProps<'h2'>) => ReactElement {
     // the button stays a sibling, since a labelled control inside a heading joins the heading's own name
     return function Heading({ id, children, ...props }: ComponentProps<'h2'>): ReactElement {
         const Tag = tag;
 
         return (
-            <div className={cn('group flex items-center', HEADING_SIZES[tag])}>
-                <Tag {...props} id={id} className={cn('font-display font-semibold text-(--text)')}>
+            <div className={cn('group', HEADINGS[tag].className)}>
+                <Tag {...props} id={id} className={cn('font-display inline font-semibold text-(--text)')}>
                     {children}
                 </Tag>
                 {id === undefined ? null : (
                     <CopyAnchorButton
                         anchorId={id}
                         label={typeof children === 'string' ? children : id}
-                        className={cn(ANCHOR)}
+                        iconSize={HEADINGS[tag].anchorSize}
+                        className={cn(ANCHOR, HEADINGS[tag].anchorDrop)}
                     />
                 )}
             </div>

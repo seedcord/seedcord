@@ -1,9 +1,9 @@
-import { cn } from '@seedcord/ui';
+import { cn, CopyAnchorButton } from '@seedcord/ui';
 import { notFound } from 'next/navigation';
 
 import { CopyPageButton } from '#components/CopyPageButton';
 import { PageNav } from '#components/PageNav';
-import { mdxComponents } from '#lib/mdxComponents';
+import { ANCHOR, ANCHOR_DROP, ANCHOR_SIZE, mdxComponents } from '#lib/mdxComponents';
 import { guideOrder } from '#lib/nav';
 import { neighboursOf } from '#lib/neighbours';
 import { assetPath, TWIN } from '#lib/pageAssets';
@@ -29,7 +29,14 @@ export default async function Page(props: PageParams): Promise<ReactNode> {
         <article>
             <div className={cn('flex flex-col items-start gap-1')}>
                 <div className={cn('min-w-0')}>
-                    <h1 className={cn('font-display text-4xl/tight font-semibold text-(--text)')}>{page.data.title}</h1>
+                    <div className={cn('group text-4xl/tight')}>
+                        <h1 className={cn('font-display inline font-semibold text-(--text)')}>{page.data.title}</h1>
+                        <CopyAnchorButton
+                            label={page.data.title}
+                            iconSize={ANCHOR_SIZE.h1}
+                            className={cn(ANCHOR, ANCHOR_DROP.h1)}
+                        />
+                    </div>
                     {page.data.description ? (
                         <p className={cn('mt-3 text-lg/relaxed text-(--text-muted)')}>{page.data.description}</p>
                     ) : null}
