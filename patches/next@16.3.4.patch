@@ -1,0 +1,44 @@
+diff --git a/dist/compiled/@vercel/og/index.edge.js b/dist/compiled/@vercel/og/index.edge.js
+index 629fd6190d237addda9981acc1912770995b1074..a3fc4524b39eda4ff7dc356961a8e6e33d2aed6c 100644
+--- a/dist/compiled/@vercel/og/index.edge.js
++++ b/dist/compiled/@vercel/og/index.edge.js
+@@ -17901,7 +17901,7 @@ async function* Ji(e, t) {
+   let ve = s.getEngine(P2, T, r, h2), Re = m2 ? Ve(ue, "grapheme").filter((Y) => !wd(Y) && !ve.has(Y)) : [];
+   yield Re.map((Y) => ({ word: Y, locale: h2 })), Re.length && (ve = s.getEngine(P2, T, r, h2));
+   function Ee(Y) {
+-    return !!(p && p[Y]);
++    return !!(p && Object.prototype.hasOwnProperty.call(p, Y) && p[Y]);
+   }
+   let { measureGrapheme: Ye, measureGraphemeArray: Me, measureText: Oe } = Qa(ve, Ee, { fontSize: P2, letterSpacing: O }), le = Bn(S2) ? X(S2, P2, 1, r) : Ye(nr) * S2, H = (Y, j) => {
+     if (Y.length === 0)
+@@ -17984,7 +17984,7 @@ async function* Ji(e, t) {
+     let j = De[Y], fe = De[Y + 1];
+     if (!j)
+       continue;
+-    let K2 = Le[Y], ye = null, ae = false, xe = p ? p[K2] : null, ee = j.y, te = j.x, ot = j.width, Q = j.line, We = r.textDecorationLine === "underline" && (r.textDecorationSkipInk || "auto") !== "none";
++    let K2 = Le[Y], ye = null, ae = false, xe = p && Object.prototype.hasOwnProperty.call(p, K2) ? p[K2] : null, ee = j.y, te = j.x, ot = j.width, Q = j.line, We = r.textDecorationLine === "underline" && (r.textDecorationSkipInk || "auto") !== "none";
+     if (Q === qt)
+       continue;
+     let ze = false;
+diff --git a/dist/compiled/@vercel/og/index.node.js b/dist/compiled/@vercel/og/index.node.js
+index 416de7e6420f1784f6cad3186d5b159f5097c382..6ee30653acb0b0e9bc82f1d636c6ee1b21394bad 100644
+--- a/dist/compiled/@vercel/og/index.node.js
++++ b/dist/compiled/@vercel/og/index.node.js
+@@ -18903,7 +18903,7 @@ async function* ci(A, e) {
+   let aA = o.getEngine(F, k, r, C), FA = d2 ? ge(sA, "grapheme").filter((V) => !kl(V) && !aA.has(V)) : [];
+   yield FA.map((V) => ({ word: V, locale: C })), FA.length && (aA = o.getEngine(F, k, r, C));
+   function kA(V) {
+-    return !!(E && E[V]);
++    return !!(E && Object.prototype.hasOwnProperty.call(E, V) && E[V]);
+   }
+   let { measureGrapheme: te, measureGraphemeArray: TA, measureText: xA } = oa(aA, kA, { fontSize: F, letterSpacing: M }), fA = Xr(v2) ? tA(v2, F, 1, r) : te(Qt) * v2, q = (V, Z) => {
+     if (V.length === 0)
+@@ -18986,7 +18986,7 @@ async function* ci(A, e) {
+     let Z = OA[V], nA = OA[V + 1];
+     if (!Z)
+       continue;
+-    let $ = Y[V], IA = null, lA = false, DA = E ? E[$] : null, cA = Z.y, gA = Z.x, Ee = Z.width, eA = Z.line, JA = r.textDecorationLine === "underline" && (r.textDecorationSkipInk || "auto") !== "none";
++    let $ = Y[V], IA = null, lA = false, DA = E && Object.prototype.hasOwnProperty.call(E, $) ? E[$] : null, cA = Z.y, gA = Z.x, Ee = Z.width, eA = Z.line, JA = r.textDecorationLine === "underline" && (r.textDecorationSkipInk || "auto") !== "none";
+     if (eA === De)
+       continue;
+     let RA = false;
