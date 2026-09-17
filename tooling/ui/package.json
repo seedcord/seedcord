@@ -21,10 +21,8 @@
             }
         },
         "./agents": {
-            "import": {
-                "types": "./dist/agents.d.mts",
-                "default": "./dist/agents.mjs"
-            }
+            "types": "./dist/agents.d.mts",
+            "default": "./dist/agents.mjs"
         },
         "./palette": {
             "import": {

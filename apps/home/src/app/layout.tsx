@@ -1,5 +1,5 @@
 import { BRAND } from '@seedcord/ui/palette';
-import { cn, HOME_URL, seedcordJsonLd } from '@seedcord/ui';
+import { AgentLinks, cn, HOME_URL, seedcordJsonLd } from '@seedcord/ui';
 import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
@@ -59,6 +59,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 suppressHydrationWarning
                 className={cn(display.variable, monoCode.variable, 'antialiased')}
             >
+                <AgentLinks site="home" />
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
                 <a
                     href="#main-content"

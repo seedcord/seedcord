@@ -1,4 +1,4 @@
-import { ThemeProvider, TooltipProvider, cn, seedcordJsonLd } from '@seedcord/ui';
+import { AgentLinks, ThemeProvider, TooltipProvider, cn, seedcordJsonLd } from '@seedcord/ui';
 import { Space_Grotesk } from 'next/font/google';
 import Script from 'next/script';
 import { preconnect } from 'react-dom';
@@ -66,6 +66,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 data-new-gr-c-s-check-loaded=""
                 data-gr-ext-installed=""
             >
+                <AgentLinks site="docs" />
                 <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
                 <Script id="strip-grammarly-attributes" strategy="beforeInteractive">
                     {`

@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+// next loads this file under the require condition. ./agents exports a bare default to match
 import { agentLinkHeader } from '@seedcord/ui/agents';
 
 import type { NextConfig } from 'next';

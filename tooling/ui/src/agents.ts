@@ -19,9 +19,31 @@ export type SeedcordSite = keyof typeof SEEDCORD_SITES;
 const LLMS_TXT = '/llms.txt';
 const SKILLS_INDEX = `${AGENT_SKILLS_BASE}/index.json`;
 
-function link(target: string, rel: string, type?: string): string {
+export interface AgentLink {
+    rel: string;
+    href: string;
+    type?: string;
+}
+
+/** The relations a site repeats on every page, for the html head and the `Link` header alike. */
+export function siteLinks(site: SeedcordSite): AgentLink[] {
+    const own: SiteRelations = SEEDCORD_SITES[site];
+    const links: AgentLink[] = [
+        { rel: 'describedby', href: LLMS_TXT },
+        { rel: 'service-meta', href: SKILLS_INDEX }
+    ];
+
+    for (const rel of RELATIONS) {
+        const href = own[rel];
+        if (href !== undefined) links.push({ rel, href });
+    }
+
+    return links;
+}
+
+function serialize({ rel, href, type }: AgentLink): string {
     const media = type === undefined ? '' : `; type="${type}"`;
-    return `<${target}>; rel="${rel}"${media}`;
+    return `<${href}>; rel="${rel}"${media}`;
 }
 
 /**
@@ -30,14 +52,7 @@ function link(target: string, rel: string, type?: string): string {
  * Pass `twin` on a site that publishes a markdown copy of the page, as the path that serves it.
  */
 export function agentLinkHeader(site: SeedcordSite, twin?: string): string {
-    const own: SiteRelations = SEEDCORD_SITES[site];
-    const links = twin === undefined ? [] : [link(twin, 'alternate', 'text/markdown')];
+    const twinLink: AgentLink[] = twin === undefined ? [] : [{ rel: 'alternate', href: twin, type: 'text/markdown' }];
 
-    links.push(link(LLMS_TXT, 'describedby'), link(SKILLS_INDEX, 'service-meta'));
-    for (const rel of RELATIONS) {
-        const target = own[rel];
-        if (target !== undefined) links.push(link(target, rel));
-    }
-
-    return links.join(', ');
+    return [...twinLink, ...siteLinks(site)].map(serialize).join(', ');
 }

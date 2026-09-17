@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { agentLinkHeader } from '../src/agents';
+import { agentLinkHeader, siteLinks } from '../src/agents';
 
 import type { SeedcordSite } from '../src/agents';
 
@@ -26,9 +26,7 @@ describe('agentLinkHeader', () => {
 
     it('points every site at its own agent-skills index', () => {
         for (const site of SITES) {
-            expect(relationsOf(agentLinkHeader(site)).get('service-meta')).toBe(
-                '/.well-known/agent-skills/index.json'
-            );
+            expect(relationsOf(agentLinkHeader(site)).get('service-meta')).toBe('/.well-known/agent-skills/index.json');
         }
     });
 
@@ -57,5 +55,20 @@ describe('agentLinkHeader', () => {
 
     it('offers no alternate on a page with no twin', () => {
         expect(relationsOf(agentLinkHeader('guide')).has('alternate')).toBe(false);
+    });
+});
+
+describe('siteLinks', () => {
+    it('carries the same relations the header sends', () => {
+        for (const site of SITES) {
+            const rels = siteLinks(site).map((entry) => entry.rel);
+
+            expect(rels).toEqual([...relationsOf(agentLinkHeader(site)).keys()]);
+        }
+    });
+
+    // pageMetadata already renders the twin
+    it('leaves the page twin out', () => {
+        expect(siteLinks('guide').some((entry) => entry.rel === 'alternate')).toBe(false);
     });
 });
