@@ -93,6 +93,8 @@ ping is deployed to multiple guilds, falling back to plain text (not clickable).
 
 A global command has one id everywhere, so it always gets a clickable mention.
 
+With two ids under [`commands.guilds`](/commands#one-list-of-servers-for-every-command), every `@RegisterCommand()` command deploys to both servers, so none of them gets a clickable mention.
+
 ## Commands fills during startup
 
 Your bot sends its commands to Discord after it connects, then `Commands` fills from what comes back. A read before that throws.

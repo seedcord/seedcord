@@ -1,6 +1,6 @@
 ---
 title: Commands
-description: Create a slash command from two files, one that declares it to Discord and one that answers it. Covers the command file, deploying globally or to one server, codegen, the handler file, a command with no handler, and a constructor that throws.
+description: Create a slash command from two files, one that declares it to Discord and one that answers it. Covers the command file, where each command deploys, codegen, the handler file, and what happens when a command has no handler or its constructor throws.
 ---
 
 Slash commands are the way Discord gives people to reach your bot, and they run without a privileged intent. Discord needs your command's shape before anyone can run one, and when someone does, the interaction it sends back names that command. Uploading a shape and routing a name are different jobs.
@@ -69,7 +69,51 @@ The guild copy stays behind when you move it, and Discord shows both in the pick
 @RegisterCommand('guild', ['613425648685547541'])
 ```
 
-The ids are required. [`@RegisterCommand('guild')`](ref:core/RegisterCommand) on its own matches neither overload, so TypeScript rejects it before you run anything. A JavaScript caller reaching the same line throws `DecoratorCommandGuildWithoutGuilds` at startup.
+`'guild'` needs its ids. [`@RegisterCommand('guild')`](ref:core/RegisterCommand) on its own matches no overload, so TypeScript rejects it before you run anything. A JavaScript caller reaching the same line throws `DecoratorCommandGuildWithoutGuilds` at startup.
+
+### One list of servers for every command
+
+You paste the same ids into every command file. Eighty commands means eighty copies of one array, and a new server would mean editing all of them.
+
+`commands.guilds` holds the list once to save you that effort.
+
+```ts twoslash title="src/bot.ts"
+import { resolve } from 'node:path';
+
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits } from 'discord.js';
+
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: { intents: [GatewayIntentBits.Guilds] },
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers')
+        },
+        commands: {
+            path: resolve(import.meta.dirname, './commands'),
+            guilds: ['613425648685547541']
+        },
+        events: { path: null }
+    },
+    subscribers: { path: null }
+});
+```
+
+A command decorated with [`@RegisterCommand()`](ref:core/RegisterCommand) deploys to every server in that list.
+
+```ts
+@RegisterCommand()
+```
+
+With `guilds` left out, or with no ids in it, those same commands deploy globally. Delete that one line in `bot.ts` to take your bot public. Every command file stays as it is, and the copies already sitting in those servers stay too, so run [`seedcord commands`](/commands/deployed) to clear them if need be.
+
+When you pass a scope yourself, seedcord skips the list. `'global'` keeps the command global. `'guild'` with ids sends it to those servers. To reach the configured servers plus more of your own, pass `'config'` among the ids.
+
+```ts
+@RegisterCommand('guild', ['config', '613425648685547541'])
+```
+
+`'config'` there stands for every id under `commands.guilds`, so that command reaches those servers and `613425648685547541`. If `commands.guilds` is empty, the same line throws `CoreCommandGuildsEmpty` at startup, and the message points to your command class.
 
 ## Codegen
 
