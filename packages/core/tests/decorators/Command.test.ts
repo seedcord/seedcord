@@ -63,6 +63,21 @@ describe('RegisterCommand', () => {
         expect(isSeedcordError(caught, undefined, SeedcordErrorCode.DecoratorCommandAlreadyRegistered)).toBe(true);
     });
 
+    it('prints both decorator calls when a class is registered twice', () => {
+        const Cmd = freshCommand();
+        RegisterCommand('global')(Cmd);
+        let caught: unknown;
+        try {
+            RegisterCommand()(Cmd);
+        } catch (error) {
+            caught = error;
+        }
+
+        const message = Error.isError(caught) ? caught.message : '';
+        expect(message).toContain("@RegisterCommand('global')");
+        expect(message).toContain('@RegisterCommand()');
+    });
+
     it('throws when global scope carries guild ids', () => {
         let caught: unknown;
         try {

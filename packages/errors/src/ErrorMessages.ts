@@ -64,10 +64,10 @@ const messages = {
 
     [SeedcordErrorCode.DecoratorCommandAlreadyRegistered]: (
         commandName: string,
-        existingScope: string,
-        requestedScope: string
+        existingCall: string,
+        requestedCall: string
     ) =>
-        `Command "${commandName}" is already registered as a "${existingScope}" command and cannot be re-registered as a "${requestedScope}" command.`,
+        `${paint.sky(commandName)} is registered twice, first with ${existingCall}, then with ${requestedCall}. Keep one.`,
     [SeedcordErrorCode.DecoratorCommandGlobalWithGuilds]: () =>
         'RegisterCommand("global") cannot have guilds specified.',
     [SeedcordErrorCode.DecoratorCommandGuildWithoutGuilds]: () =>

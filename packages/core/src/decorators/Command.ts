@@ -77,8 +77,8 @@ export function RegisterCommand(scope: CommandScope = 'config', guilds: GuildTar
         if (existingMeta) {
             throw new SeedcordError(SeedcordErrorCode.DecoratorCommandAlreadyRegistered, [
                 ctor.name,
-                existingMeta.scope,
-                scope
+                decoratorCall(existingMeta.scope),
+                decoratorCall(scope)
             ]);
         }
 
@@ -93,4 +93,11 @@ export function RegisterCommand(scope: CommandScope = 'config', guilds: GuildTar
         const meta: CommandMeta = scope === 'guild' ? { scope, guilds } : { scope };
         Reflect.defineMetadata(CommandMetadataKey, meta, ctor);
     };
+}
+
+function decoratorCall(scope: CommandScope): string {
+    if (scope === 'global') return "@RegisterCommand('global')";
+    if (scope === 'guild') return "@RegisterCommand('guild', [...])";
+
+    return '@RegisterCommand()';
 }
