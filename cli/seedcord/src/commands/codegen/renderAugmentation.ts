@@ -16,7 +16,7 @@ interface AttachedPlugins {
 }
 
 export function renderAugmentation(registry: Augmentation, target: string, plugins?: AttachedPlugins): string {
-    const keys = (plugins?.keys ?? []).toSorted(compare);
+    const keys = groupNames(plugins?.keys ?? []).toSorted(compare);
     const attached = plugins !== undefined && keys.length > 0;
     const botImport = attached ? `import type ${BOT_BINDING} from '${escapeLiteral(plugins.specifier)}';\n\n` : '';
     const coreRows = attached ? `    interface Core {\n${renderPluginRows(keys)}\n    }\n` : '';
@@ -31,6 +31,18 @@ export function renderAugmentation(registry: Augmentation, target: string, plugi
         `    interface EmojiMap {\n${renderEmojiRows(registry.emojis)}\n    }\n` +
         `}\n\nexport {};\n`
     );
+}
+
+// a grouped plugin sits at `core.services.users`, and `services` is the member Core declares
+function groupNames(keys: readonly string[]): string[] {
+    return [
+        ...new Set(
+            keys.map((key) => {
+                const dot = key.indexOf('.');
+                return dot === -1 ? key : key.slice(0, dot);
+            })
+        )
+    ];
 }
 
 // the indexed access defers resolution. an `extends Pick<typeof Bot, ...>` clause resolves while the bot

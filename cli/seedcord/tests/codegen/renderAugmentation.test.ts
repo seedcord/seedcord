@@ -502,6 +502,17 @@ export {};
         expect(output).not.toContain('interface Core');
     });
 
+    it('writes one row per group when keys nest', () => {
+        const output = renderAugmentation(empty, AUGMENT_TARGET, {
+            specifier: './bot',
+            keys: ['db', 'services.users', 'services.tickets']
+        });
+
+        expect(output).toContain("        db: (typeof Bot)['db'];");
+        expect(output).toContain("        services: (typeof Bot)['services'];");
+        expect(output).not.toContain('services.users');
+    });
+
     it('is byte-stable across attach-key order', () => {
         const first = renderAugmentation(empty, AUGMENT_TARGET, { specifier: './bot', keys: ['db', 'cache'] });
         const second = renderAugmentation(empty, AUGMENT_TARGET, { specifier: './bot', keys: ['cache', 'db'] });
