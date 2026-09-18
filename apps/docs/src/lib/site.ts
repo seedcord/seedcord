@@ -36,8 +36,11 @@ export function pageMetadata(opts: {
     image?: string;
     // emits <link rel="alternate" type="text/markdown">, the agent-discoverable Markdown mirror of this page
     markdownPath?: string;
+    // an older version points at the same page in the latest one. see indexingFor
+    canonicalPath?: string;
+    robots?: Metadata['robots'];
 }): Metadata {
-    const url = canonicalUrl(opts.path);
+    const url = canonicalUrl(opts.canonicalPath ?? opts.path);
     // reduced to plain text because social embeds render markdown and newlines literally
     const description = truncate(plainSummary(opts.description), DESCRIPTION_MAX);
     const imageUrl = opts.image ? canonicalUrl(opts.image) : undefined;
@@ -47,6 +50,7 @@ export function pageMetadata(opts: {
         title: opts.title,
         description,
         alternates: { canonical: url, ...(markdown ? { types: markdown } : {}) },
+        ...(opts.robots ? { robots: opts.robots } : {}),
         openGraph: {
             type: opts.type ?? 'website',
             siteName: OG_SITE_NAME,

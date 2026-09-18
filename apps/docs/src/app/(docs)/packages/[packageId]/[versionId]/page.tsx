@@ -1,3 +1,4 @@
+import { DEFAULT_VERSION } from '@seedcord/docs-engine';
 import { cn } from '@seedcord/ui';
 import { Suspense } from 'react';
 
@@ -5,9 +6,10 @@ import { MovedEntityNotice } from '#components/docs/MovedEntityNotice';
 import { PackageOverviewTabs } from '#components/docs/PackageOverviewTabs';
 import { PackageVersionOverview } from '#components/docs/PackageVersionOverview';
 import { ReadmeBlock } from '#components/docs/ReadmeBlock';
-import { loadActiveVersion, loadChangelogUrl, loadReadme, loadReexports } from '#lib/docs/catalog';
+import { findCatalogVersion, loadActiveVersion, loadChangelogUrl, loadReadme, loadReexports } from '#lib/docs/catalog';
 import { getCatalogContext } from '#lib/docs/pageContext';
 import { renderReadme } from '#lib/docs/renderReadme';
+import { indexingFor } from '#lib/indexing';
 import { pageMetadata } from '#lib/site';
 
 import type { PageParams } from '#lib/docs/pageContext';
@@ -19,13 +21,16 @@ export const dynamic = 'force-static';
 export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
     const { entry, version } = await getCatalogContext(await params);
     const path = `/packages/${entry.id}/${version.id}`;
+    const latest = findCatalogVersion(entry, DEFAULT_VERSION);
 
     return pageMetadata({
         title: `${entry.label} ${version.label}`,
         description: entry.description,
         path,
         image: `${path}.png`,
-        markdownPath: `${path}.md`
+        markdownPath: `${path}.md`,
+        // every package has a latest overview. an overview page always has a twin
+        ...indexingFor(`/packages/${entry.id}/${latest?.id ?? version.id}`)
     });
 }
 

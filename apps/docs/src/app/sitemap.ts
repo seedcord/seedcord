@@ -13,15 +13,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // setVersion mutates the engine's active version. don't parallelize this loop.
     for (const pkg of catalog) {
-        for (const version of pkg.versions) {
-            paths.add(`/packages/${pkg.id}/${version.id}`);
-        }
-
-        // only the latest versions because one project.json per version
-        // reached 62 fetches and 21 MBpast next's 60s page limit
+        // a sitemap carries canonical urls alone. every older version canonicals to this one
         const latest = findCatalogVersion(pkg, DEFAULT_VERSION);
         if (!latest) continue;
 
+        paths.add(`/packages/${pkg.id}/${latest.id}`);
+
+        // one project.json per version reached 62 fetches and 21 MB, past next's 60s page limit
         const categories = await collectCategories(engine, pkg.id, latest.id);
         for (const category of categories) {
             for (const item of category.items) {

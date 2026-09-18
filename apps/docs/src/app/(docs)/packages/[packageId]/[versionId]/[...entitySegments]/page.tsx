@@ -1,9 +1,13 @@
+import { DEFAULT_VERSION, parseEntityPathSegments } from '@seedcord/docs-engine';
 import { notFound } from 'next/navigation';
 
 import { EntityContent } from '#components/docs/entity/EntityContent';
+import { findCatalogVersion } from '#lib/docs/catalog';
+import { getDocsEngine } from '#lib/docs/engine';
 import { plainSummary } from '#lib/docs/plainSummary';
 import { resolveEntity } from '#lib/docs/resolveEntity';
 import { ENTITY_TONE_HEX } from '#lib/entityColors';
+import { indexingFor, latestHasEntity } from '#lib/indexing';
 import { SITE_NAME, canonicalUrl, pageMetadata } from '#lib/site';
 
 import type { PageParams } from '#lib/docs/pageContext';
@@ -75,8 +79,22 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
         path,
         type: 'article',
         image: `${path}.png`,
-        markdownPath: `${path}.md`
+        markdownPath: `${path}.md`,
+        ...indexingFor(await pathInLatest(resolved))
     });
+}
+
+// getEntry reads the index alone. resolveEntity would move the engine off this page's version
+async function pathInLatest({ entry, segments }: ResolvedEntity): Promise<string | undefined> {
+    const latest = findCatalogVersion(entry, DEFAULT_VERSION);
+    if (!latest) return undefined;
+
+    const engine = await getDocsEngine();
+    const index = await engine.getEntry(entry.id);
+    const { slug } = parseEntityPathSegments(segments);
+    if (!latestHasEntity(index?.entities, slug)) return undefined;
+
+    return `/packages/${entry.id}/${latest.id}/${segments.join('/')}`;
 }
 
 export async function generateViewport({ params }: { params: Promise<PageParams> }): Promise<Viewport> {
