@@ -71,7 +71,7 @@ export function PageActions({ copySource, viewHref, links, className }: PageActi
 
     return (
         <div className={cn('inline-flex items-center', className)}>
-            {/* grow fills a stretched row. the caret keeps its own width */}
+            {/* grow fills a stretched row */}
             <CopyPageButton source={copySource} className={cn('grow justify-start rounded-e-none pe-2')} />
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
@@ -79,7 +79,6 @@ export function PageActions({ copySource, viewHref, links, className }: PageActi
                         variant="ghost"
                         size="sm"
                         aria-label="More actions for this page"
-                        aria-haspopup="menu"
                         className={cn('text-subtle rounded-s-none px-1.5 hover:text-(--text)')}
                     >
                         <ChevronDown

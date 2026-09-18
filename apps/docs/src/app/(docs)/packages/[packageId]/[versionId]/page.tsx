@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
         path,
         image: `${path}.png`,
         markdownPath: `${path}.md`,
-        card: { pill: 'package', meta: [version.label] },
+        card: { pill: 'package', name: entry.label, meta: [version.label] },
         // every package has a latest overview. an overview page always has a twin
         ...indexingFor(`/packages/${entry.id}/${latest?.id ?? version.id}`)
     });

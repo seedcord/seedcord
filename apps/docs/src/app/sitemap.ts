@@ -13,7 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // setVersion mutates the engine's active version. don't parallelize this loop.
     for (const pkg of catalog) {
-        // a sitemap carries canonical urls alone. every older version canonicals to this one
+        // every older version canonicals to this one
         const latest = findCatalogVersion(pkg, DEFAULT_VERSION);
         if (!latest) continue;
 

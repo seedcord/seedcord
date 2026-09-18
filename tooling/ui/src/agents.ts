@@ -2,7 +2,7 @@ import { DOCS_URL, GUIDE_URL, HOME_URL } from './sites';
 import { AGENT_SKILLS_BASE, skillUrl } from './skills';
 import { SEEDCORD_SKILL } from './skills/seedcord';
 
-// RFC 8288 registers all three
+// all three are in the IANA link relation registry
 const RELATIONS = ['service-doc', 'index', 'related'] as const;
 
 type SiteRelations = Partial<Record<(typeof RELATIONS)[number], string>>;

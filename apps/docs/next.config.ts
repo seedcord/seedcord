@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
         '@microsoft/tsdoc',
         '@microsoft/tsdoc-config'
     ],
-    // afterFiles keeps a real file in public/ ahead of the sugar
+    // afterFiles keeps a real file in public/ ahead of these two
     rewrites() {
         return {
             afterFiles: [
@@ -39,8 +39,7 @@ const nextConfig: NextConfig = {
                 headers: [{ key: 'Link', value: agentLinkHeader('docs') }]
             },
             {
-                // path-to-regexp v8 dropped inline groups. `:spec(skills|agent-skills)` matches nothing here
-                source: '/.well-known/:spec/:name/SKILL.md',
+                source: '/.well-known/:spec(skills|agent-skills)/:name/SKILL.md',
                 headers: [{ key: 'Link', value: canonicalSkillHeader() }]
             }
         ];

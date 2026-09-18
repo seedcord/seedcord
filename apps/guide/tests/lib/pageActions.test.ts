@@ -20,7 +20,7 @@ describe('pageActionsFor', () => {
 
     it('hands each assistant the markdown url to read', () => {
         const { links } = pageActionsFor(page);
-        const prompt = `Read ${MARKDOWN_URL}, I want to ask questions about it.`;
+        const prompt = `Read ${MARKDOWN_URL}. I want to ask questions about it.`;
 
         expect(new URL(links.chatgpt).searchParams.get('prompt')).toBe(prompt);
         expect(new URL(links.claude).searchParams.get('q')).toBe(prompt);

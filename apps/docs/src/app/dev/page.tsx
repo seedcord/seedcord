@@ -20,11 +20,6 @@ const PRIMITIVES = [
         label: 'CopyAnchorButton',
         description: '32px hash-icon button that copies #anchored URL'
     },
-    {
-        href: '/dev/scroll-to-top',
-        label: 'ScrollToTopButton',
-        description: '48px fixed-position button, fades in past scroll threshold'
-    },
     { href: '/dev/code-panel', label: 'CodePanel', description: 'panel-variant code viewport with title/description' },
     { href: '/dev/code-block', label: 'CodeBlock', description: 'card-variant code viewport with label + copy header' },
     {

@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { agentLinkHeader, agentRules, canonicalSkillHeader, readmeFeatures, siteLinks } from '../src/agents';
+import { agentLinkHeader, agentRules, canonicalSkillHeader, readmeFeatures, siteLinks } from '#src/agents';
 
-import type { SeedcordSite } from '../src/agents';
+import type { SeedcordSite } from '#src/agents';
 
 const SITES: SeedcordSite[] = ['home', 'guide', 'docs'];
 
-// one entry per comma that sits outside angle brackets
+// one entry per <target>; rel="x" pair
 function relationsOf(header: string): Map<string, string> {
     const found = new Map<string, string>();
 

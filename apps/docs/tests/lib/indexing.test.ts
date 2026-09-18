@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { indexingFor, latestHasEntity } from '#lib/indexing';
+import { indexingFor, latestEntitySegments } from '#lib/indexing';
+
+import type { EntityTone, ParsedEntityPath } from '@seedcord/docs-engine/client';
 
 const IN_LATEST = '/packages/types/0.13.0/interfaces/bot-config';
 
@@ -22,27 +24,77 @@ describe('indexingFor', () => {
     });
 });
 
-describe('latestHasEntity', () => {
-    const entities = { 'bot-config': 'interface', logger: 'class' };
+describe('latestEntitySegments', () => {
+    const LATEST = '0.14.0';
+    const index = {
+        entities: { 'bot-config': 'interface', logger: 'class' },
+        entitiesVersion: LATEST
+    } as const;
 
-    it('finds a slug the latest version documents', () => {
-        expect(latestHasEntity(entities, 'bot-config')).toBe(true);
+    function parsed(tone: EntityTone | null, slug: string | null, rawSegments: string[]): ParsedEntityPath {
+        return { tone, slug, rawSegments };
+    }
+
+    it('keeps the directory a symbol still lives under', () => {
+        expect(latestEntitySegments(index, LATEST, parsed('class', 'logger', ['classes', 'logger']))).toEqual([
+            'classes',
+            'logger'
+        ]);
     });
 
-    it('misses a slug the latest version dropped', () => {
-        expect(latestHasEntity(entities, 'old-thing')).toBe(false);
+    it('swaps the directory for a symbol whose kind changed since', () => {
+        expect(latestEntitySegments(index, LATEST, parsed('class', 'bot-config', ['classes', 'bot-config']))).toEqual([
+            'interfaces',
+            'bot-config'
+        ]);
+    });
+
+    it('gives a directory to a path that carried none', () => {
+        expect(latestEntitySegments(index, LATEST, parsed(null, 'logger', ['logger']))).toEqual(['classes', 'logger']);
+    });
+
+    it('keeps a multi-part slug whole', () => {
+        const nested = { entities: { 'nested/thing': 'type' }, entitiesVersion: LATEST } as const;
+        const path = parsed('class', 'nested/thing', ['classes', 'nested', 'thing']);
+        expect(latestEntitySegments(nested, LATEST, path)).toEqual(['types', 'nested', 'thing']);
+    });
+
+    it('drops a symbol the latest version stopped documenting', () => {
+        expect(
+            latestEntitySegments(index, LATEST, parsed('class', 'old-thing', ['classes', 'old-thing']))
+        ).toBeUndefined();
+    });
+
+    it('drops a path that parsed to no slug', () => {
+        expect(latestEntitySegments(index, LATEST, parsed('class', null, ['classes']))).toBeUndefined();
     });
 
     it('reads a slug named after an Object prototype member off the map alone', () => {
-        expect(latestHasEntity(entities, 'constructor')).toBe(false);
-        expect(latestHasEntity({ constructor: 'class' }, 'constructor')).toBe(true);
+        const path = parsed('class', 'constructor', ['classes', 'constructor']);
+        const own = { entities: { constructor: 'function' }, entitiesVersion: LATEST } as const;
+        expect(latestEntitySegments(index, LATEST, path)).toBeUndefined();
+        expect(latestEntitySegments(own, LATEST, path)).toEqual(['functions', 'constructor']);
     });
 
-    it('keeps every page canonical when the index carries no entity map', () => {
-        expect(latestHasEntity(undefined, 'anything')).toBe(true);
+    it('keeps the original path when the index carries no entity map', () => {
+        expect(latestEntitySegments(undefined, LATEST, parsed('class', 'logger', ['classes', 'logger']))).toEqual([
+            'classes',
+            'logger'
+        ]);
     });
 
-    it('misses a path that parsed to no slug', () => {
-        expect(latestHasEntity(entities, null)).toBe(false);
+    it('keeps the original path when the map describes some other version', () => {
+        const fromPrerelease = { entities: { logger: 'interface' }, entitiesVersion: '0.15.0-next.0' } as const;
+        expect(latestEntitySegments(fromPrerelease, LATEST, parsed('class', 'logger', ['classes', 'logger']))).toEqual([
+            'classes',
+            'logger'
+        ]);
+    });
+
+    it('keeps a stable page indexed when a prerelease map has dropped its symbol', () => {
+        const fromPrerelease = { entities: { 'new-thing': 'class' }, entitiesVersion: '0.15.0-next.0' } as const;
+        expect(
+            latestEntitySegments(fromPrerelease, LATEST, parsed('class', 'old-thing', ['classes', 'old-thing']))
+        ).toEqual(['classes', 'old-thing']);
     });
 });

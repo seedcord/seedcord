@@ -30,6 +30,18 @@ describe('pageMetadata', () => {
         expect(meta.twitter?.description).not.toMatch(/\n/);
     });
 
+    it('builds the image alt from the name the card draws', () => {
+        const meta = pageMetadata({
+            title: '@seedcord/types 0.13.0',
+            description: 'Shared types.',
+            path: '/packages/types/0.13.0',
+            image: '/packages/types/0.13.0.png',
+            card: { pill: 'package', name: '@seedcord/types', meta: ['0.13.0'] }
+        });
+        const images = meta.openGraph?.images as { alt: string }[];
+        expect(images[0]?.alt).toBe('A seedcord card reading @seedcord/types, labelled package, 0.13.0');
+    });
+
     it('strips markdown links and code spans from the meta description', () => {
         const meta = pageMetadata({
             title: 'ContextMenuRoute',

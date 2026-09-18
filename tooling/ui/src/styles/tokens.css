@@ -94,7 +94,7 @@
     /* Popover/Tooltip surface */
     --bg-popover: color-mix(in oklab, var(--bg) 98%, var(--color-base-dark) 2%);
 
-    /* Shadows. a shadow stays dark in both themes. --color-text flips and painted a pale line on dark */
+    /* Shadows. a shadow stays dark in both themes. --color-text flips and paints a pale line on dark */
     --shadow-ink: var(--color-base-dark);
     --shadow-soft-token: 0 28px 60px -36px color-mix(in oklab, var(--shadow-ink) 28%, transparent);
     --shadow-card:

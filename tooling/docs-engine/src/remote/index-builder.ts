@@ -8,6 +8,7 @@ export interface PackageVersionsInput {
     fullName: string;
     versions: readonly string[];
     entities?: Record<string, EntityTone>;
+    entitiesVersion?: string;
     description?: string;
     workspace?: string;
 }
@@ -54,6 +55,9 @@ function buildEntry(pkg: PackageVersionsInput): PackageIndexEntry {
 
     if (pkg.entities && Object.keys(pkg.entities).length > 0) {
         entry.entities = pkg.entities;
+        if (pkg.entitiesVersion) {
+            entry.entitiesVersion = pkg.entitiesVersion;
+        }
     }
 
     if (pkg.description) {

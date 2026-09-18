@@ -15,7 +15,7 @@ export const metadata: Metadata = pageMetadata({
     description: SITE_DESCRIPTION,
     path: '/',
     image: '/og',
-    card: { pill: 'docs', meta: [] }
+    card: { pill: 'docs', name: 'Reference', meta: [] }
 });
 
 // the publish pipeline rewrites index.json between builds

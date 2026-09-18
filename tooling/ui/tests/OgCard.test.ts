@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ogPageCardAlt } from '../src/OgCard';
+import { ogPageCardAlt } from '#src/OgCard';
 
 describe('ogPageCardAlt', () => {
     it('reads the name and the pill the card draws', () => {

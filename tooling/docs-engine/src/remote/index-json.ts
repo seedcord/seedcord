@@ -24,10 +24,13 @@ export interface PackageIndexEntry {
     fullName: string;
     stable: StableChannel | null;
     prerelease: { latest: string } | null;
-    // Entity slug -> tone for the latest version (`logger` -> `class`). The lazy engine reads this to
-    // build `/tone/version/slug` URLs for an unloaded package and to drop links to non-entities
-    // (params, mis-attributed externals).
+    // Entity slug -> tone (`logger` -> `class`). The lazy engine reads this to build
+    // `/tone/version/slug` URLs for an unloaded package and to drop links to non-entities (params,
+    // mis-attributed externals).
     entities?: Record<string, EntityTone>; // Absent on legacy indexes.
+    // Which version `entities` came from. A prerelease publish overwrites the map, leaving this
+    // ahead of `stable.latest`.
+    entitiesVersion?: string; // Absent on legacy indexes.
     // package.json description of the latest version.
     description?: string; // Absent on legacy indexes.
     // the workspace glob the package sits under.
@@ -77,6 +80,10 @@ function validateEntry(folder: string, value: unknown): PackageIndexEntry {
 
     if (!isNullish(entry.entities)) {
         base.entities = asEntityToneRecord(entry.entities, `${where}.entities`);
+    }
+
+    if (typeof entry.entitiesVersion === 'string') {
+        base.entitiesVersion = entry.entitiesVersion;
     }
 
     if (typeof entry.description === 'string') {

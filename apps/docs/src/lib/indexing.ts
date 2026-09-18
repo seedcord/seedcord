@@ -1,3 +1,6 @@
+import { toneToDirectory } from '@seedcord/docs-engine/client';
+
+import type { EntityTone, ParsedEntityPath } from '@seedcord/docs-engine/client';
 import type { Metadata } from 'next';
 
 export interface IndexingChoice {
@@ -19,12 +22,23 @@ export function indexingFor(latestPath: string | undefined): IndexingChoice {
 }
 
 /**
- * Whether the latest version still documents a slug. An index built before `entities` shipped
- * carries none. Every page there keeps its canonical.
+ * The same symbol's path in the latest version, as segments. Returns `undefined` when the latest
+ * version no longer documents the symbol. A page keeps the segments it came in with when the index
+ * carries no entity map, or when that map describes a version other than `latestId`.
  */
-export function latestHasEntity(entities: Record<string, unknown> | undefined, slug: string | null): boolean {
-    if (entities === undefined) return true;
+export function latestEntitySegments(
+    index: { entities?: Record<string, EntityTone>; entitiesVersion?: string } | null | undefined,
+    latestId: string,
+    { tone, slug, rawSegments }: ParsedEntityPath
+): string[] | undefined {
+    const entities = index?.entitiesVersion === latestId ? index.entities : undefined;
+    if (entities === undefined) return rawSegments;
 
-    // a slug called `constructor` or `toString` answers true without this
-    return slug !== null && Object.hasOwn(entities, slug);
+    // entities['constructor'] finds Object.prototype.constructor without this guard
+    const latestTone = slug !== null && Object.hasOwn(entities, slug) ? entities[slug] : undefined;
+    if (latestTone === undefined) return undefined;
+
+    // a symbol can change kind between releases
+    const directory = toneToDirectory(latestTone);
+    return tone === null ? [directory, ...rawSegments] : [directory, ...rawSegments.slice(1)];
 }

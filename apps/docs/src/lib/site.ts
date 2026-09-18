@@ -40,14 +40,14 @@ export function pageMetadata(opts: {
     // an older version points at the same page in the latest one. see indexingFor
     canonicalPath?: string;
     robots?: Metadata['robots'];
-    /** The pill and badges the og route draws on this page's card. */
-    card?: { pill: string; meta: readonly string[] };
+    /** What the og route draws on this page's card. The name can differ from the page title. */
+    card?: { pill: string; name: string; meta: readonly string[] };
 }): Metadata {
     const url = canonicalUrl(opts.canonicalPath ?? opts.path);
     // reduced to plain text because social embeds render markdown and newlines literally
     const description = truncate(plainSummary(opts.description), DESCRIPTION_MAX);
     const imageUrl = opts.image ? canonicalUrl(opts.image) : undefined;
-    const alt = opts.card ? ogPageCardAlt({ ...opts.card, name: opts.title }) : opts.title;
+    const alt = opts.card ? ogPageCardAlt(opts.card) : opts.title;
     const images = imageUrl ? [{ url: imageUrl, width: OG_IMAGE_W, height: OG_IMAGE_H, alt }] : undefined;
     const markdown = opts.markdownPath ? { 'text/markdown': canonicalUrl(opts.markdownPath) } : undefined;
     return {

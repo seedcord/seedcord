@@ -122,9 +122,7 @@ function readFence(children: ReactNode): Fenced | null {
 
 export const ANCHOR_SIZE = { h1: 24, h2: 18, h3: 15, h4: 14 } as const;
 
-// lucide draws the hash across the middle 18 of its 24 box. centred on the cap band it stops short
-// of the baseline. the translate drops it the rest of the way.
-// the hit area stays 32px at every glyph size
+// need to translate because lucide centres the hash based on the center of the text. it looks weird
 export const ANCHOR_DROP = {
     h1: tw`ms-[2px] translate-y-[3px]`,
     h2: tw`-ms-px translate-y-[1.5px]`,
@@ -132,7 +130,6 @@ export const ANCHOR_DROP = {
     h4: tw`ms-[-3px] translate-y-px`
 } as const;
 
-// the anchor glyph tracks each heading's text size
 const HEADINGS = {
     h2: { className: tw`mt-6 text-2xl/snug`, anchorSize: ANCHOR_SIZE.h2, anchorDrop: ANCHOR_DROP.h2 },
     h3: { className: tw`mt-4 text-xl/snug`, anchorSize: ANCHOR_SIZE.h3, anchorDrop: ANCHOR_DROP.h3 },

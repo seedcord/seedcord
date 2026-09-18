@@ -1,7 +1,7 @@
 import { assetPath, publicPath, TWIN } from '#lib/pageAssets';
 import { canonicalUrl, REPO_URL, SITE_NAME } from '#lib/site';
 
-// pull requests land on next
+// pull requests merge into next
 const CONTENT_SOURCE = `${REPO_URL}/edit/next/apps/guide/content/docs`;
 
 interface PageActionSource {
@@ -48,7 +48,7 @@ export function pageActionsFor(page: GuidePage): PageActionProps {
 }
 
 function pageActionLinks(page: PageActionSource): PageActionLinks {
-    const prompt = `Read ${page.markdownUrl}, I want to ask questions about it.`;
+    const prompt = `Read ${page.markdownUrl}. I want to ask questions about it.`;
 
     return {
         chatgpt: `https://chatgpt.com/?${new URLSearchParams({ prompt, hints: 'search' }).toString()}`,
