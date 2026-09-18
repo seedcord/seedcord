@@ -1,4 +1,5 @@
 import { AgentLinks, ThemeProvider, TooltipProvider, cn, seedcordJsonLd } from '@seedcord/ui';
+import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 import { Space_Grotesk } from 'next/font/google';
 import Script from 'next/script';
 import { preconnect } from 'react-dom';
@@ -18,6 +19,9 @@ import type { ReactNode } from 'react';
 // code keeps tailwind's ui-monospace default. a webfont mono at 12px renders a pixel high in the chips
 const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
 
+// /og draws the same card the docs root page carries
+const ROOT_CARD_ALT = ogPageCardAlt({ pill: 'docs', name: 'Reference', meta: [] });
+
 export const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
     title: { default: 'seedcord docs', template: '%s · seedcord' },
@@ -30,7 +34,7 @@ export const metadata: Metadata = {
         locale: 'en_US',
         title: 'seedcord docs',
         description: SITE_DESCRIPTION,
-        images: [{ url: '/og', width: OG_IMAGE_W, height: OG_IMAGE_H, alt: 'seedcord docs' }]
+        images: [{ url: '/og', width: OG_IMAGE_W, height: OG_IMAGE_H, alt: ROOT_CARD_ALT }]
     },
     twitter: {
         card: 'summary_large_image',

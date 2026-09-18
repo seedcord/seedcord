@@ -6,6 +6,7 @@ import { PageNav } from '#components/PageNav';
 import { ANCHOR, ANCHOR_DROP, ANCHOR_SIZE, mdxComponents } from '#lib/mdxComponents';
 import { guideOrder } from '#lib/nav';
 import { neighboursOf } from '#lib/neighbours';
+import { pillFor } from '#lib/og/card';
 import { pageActionsFor } from '#lib/pageActions';
 import { pageMetadata } from '#lib/site';
 import { source } from '#lib/source';
@@ -61,5 +62,10 @@ export async function generateMetadata(props: PageParams): Promise<Metadata> {
     const page = source.getPage(slug);
     if (!page) notFound();
 
-    return pageMetadata({ title: page.data.title, description: page.data.description, path: page.url });
+    return pageMetadata({
+        title: page.data.title,
+        description: page.data.description,
+        path: page.url,
+        pill: pillFor(page)
+    });
 }

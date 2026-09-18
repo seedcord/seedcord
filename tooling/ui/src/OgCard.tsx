@@ -179,6 +179,12 @@ export function OgPageCard(props: OgPageCardProps): ReactElement {
     );
 }
 
+/** Reads back what the card draws, for the `alt` on a page's `og:image`. */
+export function ogPageCardAlt({ pill, name, meta }: Pick<OgPageCardProps, 'pill' | 'name' | 'meta'>): string {
+    const badges = meta.length > 0 ? `, ${meta.join(' ')}` : '';
+    return `A seedcord card reading ${name}, labelled ${pill}${badges}`;
+}
+
 export function OgFooter({
     height,
     paddingX,

@@ -4,7 +4,7 @@ import { BRAND } from '@seedcord/ui/palette';
 import { notFound } from 'next/navigation';
 import { ImageResponse } from 'next/og';
 
-import { tabPillFor } from '#lib/og/card';
+import { pillFor } from '#lib/og/card';
 import { assetSegments, CARD, slugsFromAsset } from '#lib/pageAssets';
 import { SITE_DESCRIPTION } from '#lib/site';
 import { source } from '#lib/source';
@@ -12,8 +12,6 @@ import { source } from '#lib/source';
 export const dynamic = 'force-static';
 
 const DOMAIN = 'guide.seedcord.org';
-
-const SITE_PILL = 'guide';
 
 export function generateStaticParams(): { slug: string[] }[] {
     return source.getPages().map((page) => ({ slug: assetSegments(page.slugs, CARD) }));
@@ -28,7 +26,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ slug: s
 
     return new ImageResponse(
         <OgPageCard
-            pill={page.slugs.length === 0 ? SITE_PILL : tabPillFor(page.path)}
+            pill={pillFor(page)}
             accent={BRAND.seedDark}
             meta={[]}
             name={page.data.title}

@@ -14,7 +14,8 @@ export const metadata: Metadata = pageMetadata({
     title: 'seedcord reference',
     description: SITE_DESCRIPTION,
     path: '/',
-    image: '/og'
+    image: '/og',
+    card: { pill: 'docs', meta: [] }
 });
 
 // the publish pipeline rewrites index.json between builds

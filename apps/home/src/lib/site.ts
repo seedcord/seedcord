@@ -21,5 +21,5 @@ export const DEFAULT_OG_IMAGE = {
     url: '/og.png',
     width: OG_SIZE.width * OG_SCALE,
     height: OG_SIZE.height * OG_SCALE,
-    alt: 'seedcord, the whole Discord bot, wired and typed'
+    alt: 'A seedcord card. The materwelon mark sits above the headline The whole Discord bot, wired and typed, with pnpm create seedcord in the footer'
 };

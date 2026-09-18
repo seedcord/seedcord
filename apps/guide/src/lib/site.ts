@@ -1,4 +1,5 @@
 import { DOCS_URL as DOCS_PRODUCTION, GUIDE_URL } from '@seedcord/ui';
+import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 
 import { CARD, publicPath, TWIN } from '#lib/pageAssets';
 
@@ -56,12 +57,15 @@ export interface PageMetadataOptions {
     title: string;
     description?: string | undefined;
     path: string;
+    /** The pill the og route draws on this page's card. */
+    pill: string;
 }
 
-export function pageMetadata({ title, description, path }: PageMetadataOptions): Metadata {
+export function pageMetadata({ title, description, path, pill }: PageMetadataOptions): Metadata {
     const url = canonicalUrl(path);
     const summary = description ?? SITE_DESCRIPTION;
-    const images = [{ url: ogImageUrl(path), width: OG_IMAGE_W, height: OG_IMAGE_H, alt: title }];
+    const alt = ogPageCardAlt({ pill, name: title, meta: [] });
+    const images = [{ url: ogImageUrl(path), width: OG_IMAGE_W, height: OG_IMAGE_H, alt }];
 
     return {
         title,

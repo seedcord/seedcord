@@ -80,6 +80,7 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
         type: 'article',
         image: `${path}.png`,
         markdownPath: `${path}.md`,
+        card: { pill: entity.kind, meta: [entity.displayPackage, resolved.version.label] },
         ...indexingFor(await pathInLatest(resolved))
     });
 }

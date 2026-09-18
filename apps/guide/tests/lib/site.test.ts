@@ -22,7 +22,12 @@ describe('the canonical url for a path', () => {
 });
 
 describe('the metadata a guide page carries', () => {
-    const page = { title: 'Tooling', description: 'Configuring and running your bot.', path: '/tooling' };
+    const page = {
+        title: 'Tooling',
+        description: 'Configuring and running your bot.',
+        path: '/tooling',
+        pill: 'tooling'
+    };
 
     it('points the canonical link at the page itself', () => {
         expect(pageMetadata(page).alternates?.canonical).toBe('https://guide.seedcord.org/tooling/');
@@ -34,7 +39,12 @@ describe('the metadata a guide page carries', () => {
 
     it('points the card at the page url plus .png', () => {
         expect(pageMetadata(page).openGraph?.images).toEqual([
-            { url: 'https://guide.seedcord.org/tooling.png', width: 1200, height: 630, alt: 'Tooling' }
+            {
+                url: 'https://guide.seedcord.org/tooling.png',
+                width: 1200,
+                height: 630,
+                alt: 'A seedcord card reading Tooling, labelled tooling'
+            }
         ]);
     });
 
@@ -42,12 +52,17 @@ describe('the metadata a guide page carries', () => {
         const root = pageMetadata({ ...page, path: '/' });
 
         expect(root.openGraph?.images).toEqual([
-            { url: 'https://guide.seedcord.org/index.png', width: 1200, height: 630, alt: 'Tooling' }
+            {
+                url: 'https://guide.seedcord.org/index.png',
+                width: 1200,
+                height: 630,
+                alt: 'A seedcord card reading Tooling, labelled tooling'
+            }
         ]);
     });
 
     it('falls back to the site description when a page carries none', () => {
-        const bare = pageMetadata({ title: 'Tooling', path: '/tooling' });
+        const bare = pageMetadata({ title: 'Tooling', path: '/tooling', pill: 'tooling' });
 
         expect(bare.description).toBe('The guide to building Discord bots with seedcord.');
     });
