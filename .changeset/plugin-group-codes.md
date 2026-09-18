@@ -2,4 +2,4 @@
 '@seedcord/errors': minor
 ---
 
-Added `CorePluginGroupTaken` (1215), `CorePluginKeyHoldsGroup` (1216), and `CorePluginKeyEmptySegment` (1217). A grouped plugin key throws one of them when it collides with something the bot already holds, or when a part around the dot is empty.
+Added `CorePluginGroupTaken` (1215) for nesting under a name the bot already uses, `CorePluginKeyHoldsGroup` (1216) for attaching a plugin where a group sits, and `CorePluginKeyMalformed` (1217) for a key with an empty part or a second dot. A repeated key still throws `CorePluginKeyExists`.

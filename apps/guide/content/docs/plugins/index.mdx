@@ -172,8 +172,24 @@ A key takes one dot. `seedcord codegen` writes one row for the group, which type
 
 A name holds one plugin or one group. If `services.users` exists, attaching a plugin at `services` fails to compile. Nesting under `db`, which already holds your database, fails the same way.
 
-```txt output
-'services' holds a group of plugins. Attach this one under a name of its own.
+```ts twoslash
+// @errors: 2345
+import { Plugin, Seedcord } from '@seedcord/gateway';
+
+declare const seedcord: Seedcord;
+
+class Users extends Plugin {
+    public async init(): Promise<void> {}
+}
+
+class Tickets extends Plugin {
+    public async init(): Promise<void> {}
+}
+
+// ---cut---
+seedcord
+    .attach('services.users', Users)
+    .attach('services', Tickets);
 ```
 
 ## The key also names a log channel
@@ -216,12 +232,13 @@ seedcord.attach('commands', Mongoose, {
 
 </Callout>
 
-`attach` throws in two more cases when it runs:
+`attach` throws in five more cases when it runs:
 
 - If the bot has already started, it throws `CorePluginAfterInit`.
 - If another plugin or seedcord itself already uses the key on `core`, like `bus`, it throws `CorePluginKeyExists`.
-- Nesting under a key that already holds a plugin throws `CorePluginGroupTaken`.
+- Nesting under a name the bot already uses, like `db`, throws `CorePluginGroupTaken`.
 - Attaching a plugin at a name that holds a group throws `CorePluginKeyHoldsGroup`.
+- If the key has an empty part or a second dot, it throws `CorePluginKeyMalformed`.
 
 ## A plugin declares where it runs
 

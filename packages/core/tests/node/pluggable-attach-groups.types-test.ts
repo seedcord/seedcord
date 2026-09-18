@@ -55,6 +55,12 @@ function rejectsBadKeys(): void {
 
     // @ts-expect-error every object carries toString, and the host would shadow it
     bot.attach('toString', Users);
+
+    // @ts-expect-error an empty key
+    bot.attach('', Users);
+
+    // @ts-expect-error applicationId is a member on the bot, so nothing nests under it
+    bot.attach('applicationId.users', Users);
 }
 
 function rejectsCollisions(): void {

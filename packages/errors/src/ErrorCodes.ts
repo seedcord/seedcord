@@ -72,8 +72,8 @@ export enum SeedcordErrorCode {
     CorePluginGroupTaken = 1215,
     /** A plugin was attached at a name that holds a group of plugins. */
     CorePluginKeyHoldsGroup = 1216,
-    /** A plugin key has an empty group or leaf, like `services.` or `.users`. */
-    CorePluginKeyEmptySegment = 1217,
+    /** A plugin key is empty, has an empty part, or carries more than one dot. */
+    CorePluginKeyMalformed = 1217,
 
     /** A command decorator attempted to re-register an existing command scope. */
     DecoratorCommandAlreadyRegistered = 1301,

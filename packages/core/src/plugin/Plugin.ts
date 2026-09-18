@@ -168,33 +168,37 @@ type HostMember<Host> = keyof Host | keyof Object;
 
 // a group is a plain record of plugins, so it fails the PluginLike check the branches below use
 /** @internal */
-export type AttachKeyAssert<Key extends string, Host> = Key extends `${infer Group}.${infer Leaf}`
-    ? Leaf extends `${string}.${string}`
-        ? `'${Key}' nests more than once. A plugin key takes one dot at most.`
-        : '' extends Group | Leaf
-          ? `'${Key}' has an empty part. Write a group and a leaf around the dot, like 'services.users'.`
-          : Group extends FrameworkChannel
-            ? `'${Group}' is a channel the framework logs on. Pick another group name.`
-            : Group extends keyof Host
-              ? Host[Group] extends PluginLike
-                  ? `'${Group}' already holds a plugin, so '${Leaf}' cannot nest inside it.`
-                  : Leaf extends keyof Host[Group]
-                    ? `'${Key}' is already attached.`
-                    : Key
-              : Group extends HostMember<Host>
-                ? `'${Group}' is already a member on the bot. Pick another group name.`
-                : Key
-    : Key extends FrameworkChannel
-      ? `'${Key}' is a channel the framework logs on. Pick another plugin key.`
-      : Key extends keyof Host
-        ? Host[Key] extends PluginLike
-            ? `'${Key}' is already attached.`
-            : Host[Key] extends Record<string, PluginLike>
-              ? `'${Key}' holds a group of plugins. Attach this one under a name of its own.`
-              : `'${Key}' is already a member on the bot. Pick another plugin key.`
-        : Key extends HostMember<Host>
-          ? `'${Key}' is already a member on the bot. Pick another plugin key.`
-          : Key;
+export type AttachKeyAssert<Key extends string, Host> = Key extends ''
+    ? 'A plugin key needs a name.'
+    : Key extends `${infer Group}.${infer Leaf}`
+      ? Leaf extends `${string}.${string}`
+          ? `'${Key}' has more than one dot. A plugin key takes one dot at most.`
+          : '' extends Group | Leaf
+            ? `'${Key}' has an empty part. Write a group and a plugin name around the dot, like 'services.users'.`
+            : Group extends FrameworkChannel
+              ? `'${Group}' is a channel the framework logs on. Pick another group name.`
+              : Group extends keyof Host
+                ? Host[Group] extends PluginLike
+                    ? `'${Group}' already holds a plugin, so '${Leaf}' cannot nest inside it.`
+                    : Host[Group] extends Record<string, PluginLike>
+                      ? Leaf extends keyof Host[Group]
+                          ? `'${Key}' is already attached.`
+                          : Key
+                      : `'${Group}' is already a member on the bot. Pick another group name.`
+                : Group extends HostMember<Host>
+                  ? `'${Group}' is already a member on the bot. Pick another group name.`
+                  : Key
+      : Key extends FrameworkChannel
+        ? `'${Key}' is a channel the framework logs on. Pick another plugin key.`
+        : Key extends keyof Host
+          ? Host[Key] extends PluginLike
+              ? `'${Key}' is already attached.`
+              : Host[Key] extends Record<string, PluginLike>
+                ? `'${Key}' already holds a group of plugins. Attach this one under a name of its own.`
+                : `'${Key}' is already a member on the bot. Pick another plugin key.`
+          : Key extends HostMember<Host>
+            ? `'${Key}' is already a member on the bot. Pick another plugin key.`
+            : Key;
 
 type CoreParamTooNarrow = Record<
     'this plugin constructor must take CoreBase as its first parameter and read the transport Core off this.core',

@@ -196,7 +196,10 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
 
         const leaf = dot === -1 ? undefined : key.slice(dot + 1);
         if (head === '' || leaf === '') {
-            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginKeyEmptySegment, [key]);
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginKeyMalformed, [key, 'has an empty part.']);
+        }
+        if (leaf?.includes('.')) {
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginKeyMalformed, [key, 'has more than one dot.']);
         }
         this.assertFree(head, leaf, key);
 

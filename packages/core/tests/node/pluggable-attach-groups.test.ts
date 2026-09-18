@@ -125,13 +125,26 @@ describe('Pluggable.attach with a grouped key', () => {
         expect(Object.keys(bot.services)).toEqual(['__proto__']);
     });
 
-    it('refuses an empty group or leaf', () => {
+    it('refuses a malformed key, saying which part is wrong', () => {
         const host = makeHost();
         // bypasses the assert to hit the runtime guard a javascript caller still reaches
         const attachRaw = host.attach.bind(host) as (key: string, plugin: typeof TestPlugin, tag: string) => unknown;
 
-        expect(() => attachRaw('services.', TestPlugin, 'x')).toThrow();
-        expect(() => attachRaw('.users', TestPlugin, 'x')).toThrow();
+        const caughtFor = (key: string): unknown => {
+            try {
+                attachRaw(key, TestPlugin, 'x');
+            } catch (error) {
+                return error;
+            }
+            return null;
+        };
+
+        for (const key of ['services.users.admin', 'services.', '.users']) {
+            expect(isSeedcordError(caughtFor(key), undefined, SeedcordErrorCode.CorePluginKeyMalformed)).toBe(true);
+        }
+
+        expect(String(caughtFor('services.users.admin')).includes('more than one dot')).toBe(true);
+        expect(String(caughtFor('services.')).includes('empty part')).toBe(true);
     });
 
     it('refuses a second plugin on a leaf that is already attached', () => {
