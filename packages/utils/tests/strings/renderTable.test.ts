@@ -330,6 +330,16 @@ describe('renderTable maxWidth wrap', () => {
         expect(rows[2]).toBe('│ gh  │');
     });
 
+    it('puts a grapheme wider than maxWidth on its own line', () => {
+        const rows = bodyLines(renderTable([['😀x']], { maxWidth: 1 }));
+        expect(rows).toEqual(['│ 😀 │', '│ x  │']);
+    });
+
+    it('hard-breaks around a wide grapheme that fills maxWidth', () => {
+        const rows = bodyLines(renderTable([['a😀b']], { maxWidth: 2 }));
+        expect(rows).toEqual(['│ a  │', '│ 😀 │', '│ b  │']);
+    });
+
     it('pads shorter cells in a wrapped row with blank lines, top-aligned', () => {
         const table = renderTable([['hello world', 'x']], { maxWidth: 5 });
         const rows = bodyLines(table);
