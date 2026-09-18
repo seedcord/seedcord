@@ -2,19 +2,22 @@ import type { PlopTypes } from '@turbo/gen';
 
 // eslint-disable-next-line max-lines-per-function -- one add action per scaffolded file, splitting only fragments the list
 export default function generator(plop: PlopTypes.NodePlopAPI): void {
-    // every directory under plugins/ is a plugin, so the folder omits the prefix the package name keeps for npm
-    plop.setHelper('folder', (dir: string, name: string) => (dir === 'plugins' ? name.replace(/^plugin-/, '') : name));
+    plop.setHelper('folder', (dir: string, name: string) => {
+        const unscoped = name.replace(/^@seedcord\//, '');
+        // every directory under plugins/ is a plugin, so the folder omits the prefix the package name keeps for npm
+        return dir === 'plugins' ? unscoped.replace(/^plugin-/, '') : unscoped;
+    });
 
     plop.setGenerator('package', {
-        description: 'Scaffold a new published @seedcord/<name> leaf package',
+        description: 'Scaffold a new published leaf package',
         prompts: [
             {
                 type: 'input',
                 name: 'name',
-                message: 'Unscoped package name (becomes @seedcord/<name> in <dir>/<name>)',
+                message: 'npm package name, like @seedcord/<name> or a bare <name>',
                 validate: (input: string) => {
-                    if (!/^[a-z][a-z0-9-]*$/.test(input)) {
-                        return 'Use a lowercase name (letters, digits, hyphens), starting with a letter';
+                    if (!/^(@seedcord\/)?[a-z][a-z0-9-]*$/.test(input)) {
+                        return 'Use a lowercase name (letters, digits, hyphens) starting with a letter, optionally scoped to @seedcord/';
                     }
                     return true;
                 }
