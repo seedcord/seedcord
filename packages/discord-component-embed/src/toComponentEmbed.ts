@@ -304,6 +304,8 @@ function toActionRow({ children }: ActionRowProps): APIActionRowComponent<APIBut
 }
 
 function toLinkButton({ url, label, emoji, disabled }: LinkButtonProps): APIButtonComponentWithURL {
+    // message buttons accept these three schemes. we assume embeds do too
+    checkUrl('The <LinkButton> url', url, ['http:', 'https:', 'discord:'], MAX_BUTTON_URL_LENGTH);
     checkType('The <LinkButton> label', label, 'string');
     checkType('The <LinkButton> disabled', disabled, 'boolean');
 
@@ -315,8 +317,6 @@ function toLinkButton({ url, label, emoji, disabled }: LinkButtonProps): APIButt
         );
     }
 
-    // message buttons accept these three schemes. embeds are assumed to match
-    checkUrl('The <LinkButton> url', url, ['http:', 'https:', 'discord:'], MAX_BUTTON_URL_LENGTH);
     if (isFilled(label)) checkLength('The <LinkButton> label', label, MAX_LABEL_LENGTH);
 
     return {

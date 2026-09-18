@@ -12,7 +12,7 @@ import {
     toComponentEmbed
 } from '#src/index';
 
-import { expectEmbedError, inContainer } from './helpers';
+import { expectEmbedError, inContainer, thrownBy } from './helpers';
 
 import type { ReactElement } from 'react';
 
@@ -79,12 +79,49 @@ describe('toComponentEmbed with untyped props', () => {
             'The <LinkButton> emoji animated must be a boolean, got "yes".'
         ],
         [
+            'a media url that is a symbol',
+            loose(MediaGallery, null, loose(MediaGalleryItem, { url: Symbol('x') })),
+            'The media url must be a string, got Symbol(x).'
+        ],
+        [
+            'a media url object that serializes to another url',
+            loose(
+                MediaGallery,
+                null,
+                loose(MediaGalleryItem, { url: { toString: () => IMAGE, toJSON: () => 'ftp://example.com' } })
+            ),
+            'The media url must be a string, got "ftp://example.com".'
+        ],
+        [
+            'a button url that is a symbol',
+            loose(ActionRow, null, loose(LinkButton, { url: Symbol('x'), label: 'go' })),
+            'The <LinkButton> url must be a string, got Symbol(x).'
+        ],
+        [
+            'a button url that is a symbol on a button with no label',
+            loose(ActionRow, null, loose(LinkButton, { url: Symbol('x') })),
+            'The <LinkButton> url must be a string, got Symbol(x).'
+        ],
+        [
             'a symbol in a text display',
             loose(TextDisplay, null, 'a', Symbol('x')),
             '<TextDisplay> only takes text, got Symbol(x).'
         ]
     ])('rejects %s', (_label, child, message) => {
         expectEmbedError(() => toComponentEmbed(inContainer(child)), message);
+    });
+
+    it('rejects a component that returns a promise-like object', () => {
+        const promise = Promise.resolve(null);
+        function Preview(): PromiseLike<null> {
+            // eslint-disable-next-line unicorn/no-thenable -- the object with a then method is the input under test
+            return { then: promise.then.bind(promise) };
+        }
+
+        const error = thrownBy(() => toComponentEmbed(inContainer(loose(Preview, null))));
+
+        expect(error.code).toBe('UnsupportedComponent');
+        expect(error.message).toBe('<Preview> is async. Load its data first and pass it in as props.');
     });
 
     it('rejects a container spoiler that is a string', () => {

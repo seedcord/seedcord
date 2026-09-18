@@ -52,6 +52,7 @@ function orList(words: readonly string[]): string {
 }
 
 export function checkUrl(what: string, url: string, schemes: readonly string[], max: number): void {
+    checkType(what, url, 'string');
     // URL.parse ignores whitespace that the raw url still carries
     if (/\s/.test(url)) {
         throw new ComponentEmbedError('InvalidProp', `${what} has whitespace in it, got ${describeValue(url)}.`);

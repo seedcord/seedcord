@@ -74,7 +74,7 @@ function renderUserComponent({ type, props }: ReactElement): ReactNode {
         );
     }
 
-    if (output instanceof Promise) {
+    if (isThenable(output)) {
         throw new ComponentEmbedError(
             'UnsupportedComponent',
             `<${nameOf(component)}> is async. Load its data first and pass it in as props.`
@@ -82,6 +82,11 @@ function renderUserComponent({ type, props }: ReactElement): ReactNode {
     }
 
     return output as ReactNode;
+}
+
+// instanceof Promise is false for a promise made in an iframe or a vm context
+function isThenable(value: unknown): value is PromiseLike<unknown> {
+    return typeof value === 'object' && value !== null && 'then' in value && typeof value.then === 'function';
 }
 
 export function childrenOf(parent: unknown, children: ReactNode, kind: unknown, max: number): ReactElement[] {
