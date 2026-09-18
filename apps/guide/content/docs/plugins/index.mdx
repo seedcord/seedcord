@@ -1,6 +1,6 @@
 ---
 title: Plugins
-description: Add your own services to a bot with plugins, which seedcord starts and stops with it. Covers attaching a plugin, reading it from a handler, and where a plugin can run.
+description: Add your own services to a bot with plugins, which seedcord starts and stops with it. Covers attaching a plugin, reading it from a handler, grouping several under one name, and where a plugin can run.
 ---
 
 Most bots need something beside Discord, like a database, a cache, or a client for another API. Wiring one up by hand means starting it before the bot logs in, handing it to every handler through a global or an import, and stopping it on shutdown before the process exits.
@@ -141,9 +141,44 @@ export const seedcord = new Seedcord({
     });
 ```
 
+### Grouping plugins under one name
+
+Your own services are plugins too, so each one takes its own key on `core`. Ten of them means ten keys, `core.usersService`, `core.ticketsService`, `core.economyService`, and seven more, in one list with your database.
+
+Put a dot in the key to attach the plugin under a group.
+
+```ts twoslash
+import { Plugin, Seedcord } from '@seedcord/gateway';
+
+declare const seedcord: Seedcord;
+
+class Users extends Plugin {
+    public async init(): Promise<void> {}
+}
+
+class Tickets extends Plugin {
+    public async init(): Promise<void> {}
+}
+
+// ---cut---
+seedcord
+    .attach('services.users', Users)
+    .attach('services.tickets', Tickets);
+```
+
+`services` is a plain object on `core`. Each plugin takes the key after the dot, so a handler reads one as `this.core.services.users`. seedcord still starts both in attach order, stops them during shutdown, and reloads them while you develop.
+
+A key takes one dot. `seedcord codegen` writes one row for the group, which types every plugin inside it.
+
+A name holds one plugin or one group. If `services.users` exists, attaching a plugin at `services` fails to compile. Nesting under `db`, which already holds your database, fails the same way.
+
+```txt output
+'services' holds a group of plugins. Attach this one under a name of its own.
+```
+
 ## The key also names a log channel
 
-Every mongoose log line prints on the `db` channel, since a plugin logs on the channel named after its attach key. You can then filter or silence one plugin's logs by the key you gave it. seedcord already logs on reserved channels of its own, so those names can't be keys.
+Every mongoose log line prints on the `db` channel, since a plugin logs on the channel named after its attach key. You can then filter or silence one plugin's logs by the key you gave it. A grouped plugin keeps its whole key, dot included, as its channel. seedcord already logs on reserved channels of its own, so those names can't be keys.
 
 ```ts twoslash
 // @errors: 2345
@@ -185,6 +220,8 @@ seedcord.attach('commands', Mongoose, {
 
 - If the bot has already started, it throws `CorePluginAfterInit`.
 - If another plugin or seedcord itself already uses the key on `core`, like `bus`, it throws `CorePluginKeyExists`.
+- Nesting under a key that already holds a plugin throws `CorePluginGroupTaken`.
+- Attaching a plugin at a name that holds a group throws `CorePluginKeyHoldsGroup`.
 
 ## A plugin declares where it runs
 
