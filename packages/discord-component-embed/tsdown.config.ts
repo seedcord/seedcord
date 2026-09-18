@@ -1,0 +1,7 @@
+import { createTsdownConfig } from '@seedcord/tsdown-config';
+
+export default createTsdownConfig({
+    entry: ['src/index.ts'],
+    platform: 'neutral',
+    shims: false
+});

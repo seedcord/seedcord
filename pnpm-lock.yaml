@@ -1080,6 +1080,37 @@ importers:
         specifier: catalog:deps
         version: 5.8.0
 
+  packages/discord-component-embed:
+    dependencies:
+      discord-api-types:
+        specifier: ^0.38.52
+        version: 0.38.52
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:^
+        version: link:../../tooling/eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:^
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:^
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:^
+        version: link:../../tooling/vitest-config
+      '@types/react':
+        specifier: catalog:react
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: catalog:react
+        version: 19.2.4(@types/react@19.2.18)
+      react:
+        specifier: catalog:react
+        version: 19.2.8
+      react-dom:
+        specifier: catalog:react
+        version: 19.2.8(react@19.2.8)
+
   packages/errors:
     dependencies:
       chalk:

@@ -54,6 +54,7 @@
         "packages/custom-id": {
             "entry": ["**/*.types-test.ts"]
         },
+        "packages/discord-component-embed": {},
         "packages/errors": {
             "entry": ["**/*.types-test.ts"]
         },

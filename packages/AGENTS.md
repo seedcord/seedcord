@@ -38,7 +38,7 @@ The shared `tsconfig` turns on `exactOptionalPropertyTypes`. An optional propert
 
 ## Errors
 
-Every throw carries a registered code from `SeedcordErrorCode`. Message strings get reworded between releases. The codes stay, so branch on the code.
+In a package that depends on `@seedcord/errors`, every throw carries a registered code from `SeedcordErrorCode`. Message strings get reworded between releases. The codes stay, so branch on the code. A small library that does not depend on seedcord throws its own `Error` subclass, like `ComponentEmbedError` in `discord-component-embed`.
 
 `isSeedcordError(error)` narrows to any seedcord error. Passing the class name and a code narrows to one specific failure.
 

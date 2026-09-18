@@ -28,7 +28,7 @@ Six workspace globs, declared in `pnpm-workspace.yaml`.
 
 | glob | what belongs there |
 | --- | --- |
-| `packages/*` | framework leaves |
+| `packages/*` | framework leaves, plus small libraries that do not depend on seedcord |
 | `plugins/*` | one plugin per backing service |
 | `cli/*` | command-line tools |
 | `tooling/*` | shared configs, the lint rules, the docs pipeline, and the UI kit |

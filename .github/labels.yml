@@ -29,6 +29,9 @@
   description: logging core and winston node sink
 - name: '📦 ui'
   color: 62bc9b
+- name: '📦 discord-component-embed'
+  color: 7c62bc
+  description: Discord component embed link previews from JSX
 - name: '📦 types'
   color: 62bcbc
 - name: '📦 utils'

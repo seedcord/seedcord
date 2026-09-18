@@ -84,6 +84,7 @@ From `pnpm create seedcord` to a running bot.
 | [`eslint-plugin-discordjs`](tooling/eslint-plugin-discordjs) | [![version](https://img.shields.io/npm/v/eslint-plugin-discordjs?style=flat-square&logo=npm&logoColor=c8341f&label=&labelColor=1f1f1f&color=c8341f)](tooling/eslint-plugin-discordjs/CHANGELOG.md) | ESLint rules for discord.js bots |
 | [`@seedcord/eslint-config`](tooling/eslint-config) | [![version](https://img.shields.io/npm/v/%40seedcord%2Feslint-config?style=flat-square&logo=npm&logoColor=c8341f&label=&labelColor=1f1f1f&color=c8341f)](tooling/eslint-config/CHANGELOG.md) | shared ESLint config |
 | [`@seedcord/tsconfig`](tooling/tsconfig) | [![version](https://img.shields.io/npm/v/%40seedcord%2Ftsconfig?style=flat-square&logo=npm&logoColor=c8341f&label=&labelColor=1f1f1f&color=c8341f)](tooling/tsconfig/CHANGELOG.md) | shared TypeScript config |
+| [`discord-component-embed`](packages/discord-component-embed) | [![version](https://img.shields.io/npm/v/discord-component-embed?style=flat-square&logo=npm&logoColor=c8341f&label=&labelColor=1f1f1f&color=c8341f)](packages/discord-component-embed/CHANGELOG.md) | Discord link previews built from JSX |
 
 <!-- prettier-ignore-end -->
 

@@ -52,6 +52,9 @@
 '📦 eslint-plugin-discordjs':
   - changed-files:
       - any-glob-to-any-file: 'tooling/eslint-plugin-discordjs/**'
+'📦 discord-component-embed':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/discord-component-embed/**'
 '📦 eslint-utils':
   - changed-files:
       - any-glob-to-any-file: 'tooling/eslint-utils/**'
