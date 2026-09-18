@@ -1,6 +1,6 @@
 import { Fragment, isValidElement } from 'react';
 
-import { checkLength, checkNoWhitespace, checkType, hasScheme } from './checks';
+import { checkLength, checkNoWhitespace, checkType, describeValue, hasScheme, isIterable } from './checks';
 import { ComponentEmbedError } from './ComponentEmbedError';
 import {
     ActionRow,
@@ -122,9 +122,9 @@ function countComponents(component: Counted): number {
 function expand(node: ReactNode): ReactElement[] {
     if (node === null || node === undefined || typeof node === 'boolean') return [];
     if (Array.isArray(node)) return node.flatMap(expand);
-    if (typeof node === 'object' && Symbol.iterator in node) return [...node].flatMap(expand);
+    if (isIterable(node)) return [...node].flatMap(expand);
     if (!isValidElement(node)) {
-        throw new ComponentEmbedError(`Text has to go inside a <TextDisplay>, got ${JSON.stringify(node)}.`);
+        throw new ComponentEmbedError(`Text has to go inside a <TextDisplay>, got ${describeValue(node)}.`);
     }
 
     if (node.type === Fragment) return expand((node.props as { children?: ReactNode }).children);
@@ -265,8 +265,7 @@ function toTextDisplay({ children }: TextDisplayProps): APITextDisplayComponent 
 
     const stray = parts.find((part) => typeof part !== 'string' && typeof part !== 'number');
     if (stray !== undefined) {
-        const shown = typeof stray === 'symbol' ? stray.toString() : JSON.stringify(stray);
-        throw new ComponentEmbedError(`<TextDisplay> only takes text, got ${shown}.`);
+        throw new ComponentEmbedError(`<TextDisplay> only takes text, got ${describeValue(stray)}.`);
     }
 
     const content = parts.join('');
@@ -333,7 +332,7 @@ function toSeparator({ divider, spacing }: SeparatorProps): APISeparatorComponen
     checkType('The <Separator> divider', divider, 'boolean');
     if (spacing !== undefined && !Object.hasOwn(SPACING, spacing)) {
         throw new ComponentEmbedError(
-            `The <Separator> spacing must be 'small' or 'large', got ${JSON.stringify(spacing)}.`
+            `The <Separator> spacing must be 'small' or 'large', got ${describeValue(spacing)}.`
         );
     }
 

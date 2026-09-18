@@ -97,4 +97,25 @@ describe('toComponentEmbed with untyped props', () => {
             'The <Container> spoiler must be a boolean, got "yes".'
         );
     });
+
+    it('rejects an object whose Symbol.iterator is not a function', () => {
+        expectEmbedError(
+            () => toComponentEmbed(loose(Container, null, { [Symbol.iterator]: 1 })),
+            'Text has to go inside a <TextDisplay>, got {}.'
+        );
+    });
+
+    it('describes values that JSON.stringify cannot print', () => {
+        const circular: Record<string, unknown> = {};
+        circular.self = circular;
+
+        expectEmbedError(
+            inContainer(loose(ActionRow, null, loose(LinkButton, { url: 'https://example.com', label: 5n }))),
+            'The <LinkButton> label must be a string, got 5n.'
+        );
+        expectEmbedError(
+            inContainer(loose(MediaGallery, null, loose(MediaGalleryItem, { url: IMAGE, description: circular }))),
+            'The media description must be a string, got an object.'
+        );
+    });
 });
