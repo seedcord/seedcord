@@ -40,7 +40,7 @@ const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
  * You attach plugins while configuring the bot. Within one startup phase, their `init()` calls run
  * one after another in attach order.
  */
-// no defaults, a default runtime of the full union contains 'edge' and RuntimeAssert rejects every plugin on that
+// a default for BotRt would include 'edge', and RuntimeAssert rejects every plugin on an edge bot
 export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
     public abstract readonly config: Config;
     public abstract readonly rest: REST;
@@ -92,14 +92,14 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         Pluggable.liveShutdown = shutdown;
         this[HostShutdown] = shutdown;
         this[HostStartup] = startup;
-        // a getter returning the slot would hand back run() and the signal handlers with it
+        // a getter returning the slot would expose run() and the signal handlers too
         this.shutdown = { addTask: shutdown.addTask.bind(shutdown) };
         this.startup = { addTask: startup.addTask.bind(startup) };
     }
 
     /** @internal */
     protected init(): Promise<this> {
-        // clearing the slot on a rejection lets a later retry throw its own error
+        // clearing the slot on a rejection means a later retry throws its own error
         this.initPromise ??= this.runInit().catch((caught: unknown) => {
             this.initPromise = undefined;
             throw caught;
@@ -156,13 +156,16 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
      * Attaches a plugin under `key`. Read the instance back as `core[key]`. `seedcord codegen`
      * writes the `Core` augmentation that types it there.
      *
+     * A key with one dot attaches under a group, so `'services.users'` reads back as
+     * `core.services.users`. A name holds one plugin or one group.
+     *
      * Startup runs each plugin's `init()` in attach order within its phase.
      *
      * Attaching a plugin whose `transport` or `runtime` differs from this host fails to compile.
      * Your constructor takes `CoreBase` as its first parameter (you don't need to pass it though).
      * A narrower one fails to compile here.
      *
-     * @param key - Also the channel the plugin logs on. Reserved channel names throw.
+     * @param key - Also the channel the plugin logs on, dots included. Reserved channel names throw.
      * @param args - Whatever your constructor takes after the host.
      * @throws A **SeedcordError** if you attach after the bot has started. A taken or reserved key throws too.
      * @example
@@ -192,6 +195,9 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         }
 
         const leaf = dot === -1 ? undefined : key.slice(dot + 1);
+        if (head === '' || leaf === '') {
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginKeyEmptySegment, [key]);
+        }
         this.assertFree(head, leaf, key);
 
         const instance = new Plugin(this, ...args);
@@ -219,14 +225,15 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
             if (head in this) throw new SeedcordError(SeedcordErrorCode.CorePluginGroupTaken, [head, key]);
             return;
         }
-        if (leaf in group) throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
+        if (Object.hasOwn(group, leaf)) throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
     }
 
     private groupFor(head: string): Record<string, PluginLike> {
         const existing = this.groups.get(head);
         if (existing) return existing;
 
-        const group: Record<string, PluginLike> = {};
+        // a null prototype keeps a leaf called valueOf or __proto__ an ordinary key
+        const group = Object.create(null) as Record<string, PluginLike>;
         this.groups.set(head, group);
         Object.assign(this, { [head]: group });
         return group;
@@ -341,7 +348,6 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
 
     private async runDisposals(phase: ShutdownPhase): Promise<void> {
         const failures: unknown[] = [];
-        // keep disposing the rest even when one fails
         await this.disposeCompleted(phase, (caught) => failures.push(caught));
         if (failures.length === 1) throw failures[0];
         if (failures.length > 1) {

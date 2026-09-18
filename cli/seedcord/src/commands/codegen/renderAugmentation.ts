@@ -33,7 +33,7 @@ export function renderAugmentation(registry: Augmentation, target: string, plugi
     );
 }
 
-// a grouped plugin sits at `core.services.users`, and `services` is the member Core declares
+// Core declares one member per group, so `services.users` becomes the `services` row
 function groupNames(keys: readonly string[]): string[] {
     return [
         ...new Set(

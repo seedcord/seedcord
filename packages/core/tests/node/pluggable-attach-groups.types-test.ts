@@ -46,6 +46,15 @@ function rejectsBadKeys(): void {
 
     // @ts-expect-error the host already carries a shutdown member
     bot.attach('shutdown', Users);
+
+    // @ts-expect-error an empty group
+    bot.attach('.users', Users);
+
+    // @ts-expect-error an empty leaf
+    bot.attach('services.', Users);
+
+    // @ts-expect-error every object carries toString, and the host would shadow it
+    bot.attach('toString', Users);
 }
 
 function rejectsCollisions(): void {

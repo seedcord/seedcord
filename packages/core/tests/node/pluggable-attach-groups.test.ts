@@ -108,6 +108,48 @@ describe('Pluggable.attach with a grouped key', () => {
         expect(isSeedcordError(caught, undefined, SeedcordErrorCode.CorePluginKeyHoldsGroup)).toBe(true);
     });
 
+    it('attaches a leaf whose name matches an Object.prototype member', () => {
+        const host = makeHost();
+
+        const bot = host.attach('services.users', TestPlugin, 'ada').attach('services.valueOf', TestPlugin, 'grace');
+
+        expect(bot.services.valueOf.tag).toBe('grace');
+        expect(Object.keys(bot.services)).toEqual(['users', 'valueOf']);
+    });
+
+    it('stores a leaf called __proto__ as a key of the group', () => {
+        const host = makeHost();
+
+        const bot = host.attach('services.__proto__', TestPlugin, 'ada');
+
+        expect(Object.keys(bot.services)).toEqual(['__proto__']);
+    });
+
+    it('refuses an empty group or leaf', () => {
+        const host = makeHost();
+        // bypasses the assert to hit the runtime guard a javascript caller still reaches
+        const attachRaw = host.attach.bind(host) as (key: string, plugin: typeof TestPlugin, tag: string) => unknown;
+
+        expect(() => attachRaw('services.', TestPlugin, 'x')).toThrow();
+        expect(() => attachRaw('.users', TestPlugin, 'x')).toThrow();
+    });
+
+    it('refuses a second plugin on a leaf that is already attached', () => {
+        const host = makeHost();
+        const bot = host.attach('services.users', TestPlugin, 'ada');
+        // bypasses the assert to hit the runtime guard a javascript caller still reaches
+        const attachRaw = bot.attach.bind(bot) as (key: string, plugin: typeof TestPlugin, tag: string) => unknown;
+
+        let caught: unknown;
+        try {
+            attachRaw('services.users', TestPlugin, 'grace');
+        } catch (error) {
+            caught = error;
+        }
+
+        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.CorePluginKeyExists)).toBe(true);
+    });
+
     it('runs init for a grouped plugin like any other', async () => {
         const host = makeHost();
         const bot = host.attach('services.users', TestPlugin, 'ada');

@@ -162,27 +162,39 @@ export type Attached<Key extends string, Instance> = Key extends `${infer Group}
     ? Record<Group, Record<Leaf, Instance>>
     : Record<Key, Instance>;
 
-// a group carries no PluginLike member, which is what tells it apart from an attached plugin
+// `attach` writes the key onto the host, so a name every object carries would shadow it.
+// eslint-disable-next-line @typescript-eslint/no-wrapper-object-types -- `keyof object` is never, and this needs Object.prototype's members
+type HostMember<Host> = keyof Host | keyof Object;
+
+// a group is a plain record of plugins, so it fails the PluginLike check the branches below use
 /** @internal */
 export type AttachKeyAssert<Key extends string, Host> = Key extends `${infer Group}.${infer Leaf}`
     ? Leaf extends `${string}.${string}`
         ? `'${Key}' nests more than once. A plugin key takes one dot at most.`
-        : Group extends FrameworkChannel
-          ? `'${Group}' is a channel the framework logs on. Pick another group name.`
-          : Group extends keyof Host
-            ? Host[Group] extends PluginLike
-                ? `'${Group}' already holds a plugin, so '${Leaf}' cannot nest inside it.`
-                : Leaf extends keyof Host[Group]
-                  ? `'${Key}' is already attached.`
-                  : Key
-            : Key
+        : '' extends Group | Leaf
+          ? `'${Key}' has an empty part. Write a group and a leaf around the dot, like 'services.users'.`
+          : Group extends FrameworkChannel
+            ? `'${Group}' is a channel the framework logs on. Pick another group name.`
+            : Group extends keyof Host
+              ? Host[Group] extends PluginLike
+                  ? `'${Group}' already holds a plugin, so '${Leaf}' cannot nest inside it.`
+                  : Leaf extends keyof Host[Group]
+                    ? `'${Key}' is already attached.`
+                    : Key
+              : Group extends HostMember<Host>
+                ? `'${Group}' is already a member on the bot. Pick another group name.`
+                : Key
     : Key extends FrameworkChannel
       ? `'${Key}' is a channel the framework logs on. Pick another plugin key.`
       : Key extends keyof Host
         ? Host[Key] extends PluginLike
             ? `'${Key}' is already attached.`
-            : `'${Key}' holds a group of plugins. Attach this one under a name of its own.`
-        : Key;
+            : Host[Key] extends Record<string, PluginLike>
+              ? `'${Key}' holds a group of plugins. Attach this one under a name of its own.`
+              : `'${Key}' is already a member on the bot. Pick another plugin key.`
+        : Key extends HostMember<Host>
+          ? `'${Key}' is already a member on the bot. Pick another plugin key.`
+          : Key;
 
 type CoreParamTooNarrow = Record<
     'this plugin constructor must take CoreBase as its first parameter and read the transport Core off this.core',
