@@ -211,7 +211,8 @@ Discord doesn't report an invalid payload anywhere. It drops the payload and sho
 - the root is anything other than one `Container`
 - a component sits somewhere it isn't allowed, or text sits outside a `TextDisplay`
 - a parent has too many or too few children, and a `Container` needs at least one
-- a `TextDisplay` is empty or holds an element
+- a `TextDisplay` is empty or holds anything besides text
+- a prop has the wrong type, like the string `'yes'` where Discord needs a boolean, or a `spacing` other than `'small'` or `'large'`
 - one of your components throws, uses a hook, or is anything but a plain function
 - `accentColor` is outside `0` to `0xFFFFFF`
 - a `LinkButton` has neither a `label` nor an `emoji`, has a label over 80 characters, or has a `url` that is over 512 characters or not `http`, `https`, or `discord`

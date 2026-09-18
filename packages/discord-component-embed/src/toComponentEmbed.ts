@@ -1,5 +1,6 @@
 import { Fragment, isValidElement } from 'react';
 
+import { checkLength, checkNoWhitespace, checkType, hasScheme } from './checks';
 import { ComponentEmbedError } from './ComponentEmbedError';
 import {
     ActionRow,
@@ -121,6 +122,7 @@ function countComponents(component: Counted): number {
 function expand(node: ReactNode): ReactElement[] {
     if (node === null || node === undefined || typeof node === 'boolean') return [];
     if (Array.isArray(node)) return node.flatMap(expand);
+    if (typeof node === 'object' && Symbol.iterator in node) return [...node].flatMap(expand);
     if (!isValidElement(node)) {
         throw new ComponentEmbedError(`Text has to go inside a <TextDisplay>, got ${JSON.stringify(node)}.`);
     }
@@ -213,6 +215,7 @@ function toContainer({ accentColor, spoiler, children }: ContainerProps): APICon
     ) {
         throw new ComponentEmbedError(`accentColor must be an integer from 0 to 0xFFFFFF, got ${String(accentColor)}.`);
     }
+    checkType('The <Container> spoiler', spoiler, 'boolean');
 
     const elements = expand(children);
     if (elements.length === 0) throw new ComponentEmbedError('<Container> needs at least one component.');
@@ -260,6 +263,12 @@ function toTextDisplay({ children }: TextDisplayProps): APITextDisplayComponent 
         );
     }
 
+    const stray = parts.find((part) => typeof part !== 'string' && typeof part !== 'number');
+    if (stray !== undefined) {
+        const shown = typeof stray === 'symbol' ? stray.toString() : JSON.stringify(stray);
+        throw new ComponentEmbedError(`<TextDisplay> only takes text, got ${shown}.`);
+    }
+
     const content = parts.join('');
     if (content === '') throw new ComponentEmbedError('<TextDisplay> needs some text.');
 
@@ -290,28 +299,14 @@ function toSectionAccessory(accessory: ReactNode): APISectionComponent['accessor
     );
 }
 
-function checkLength(what: string, value: string, max: number): void {
-    if (value.length > max) {
-        throw new ComponentEmbedError(`${what} is longer than ${String(max)} characters (${String(value.length)}).`);
-    }
-}
-
-function hasScheme(url: string, schemes: readonly string[]): boolean {
-    const protocol = URL.parse(url)?.protocol;
-    return protocol !== undefined && schemes.includes(protocol);
-}
-
-// URL.parse ignores whitespace that the raw url still carries
-function checkNoWhitespace(what: string, url: string): void {
-    if (/\s/.test(url)) throw new ComponentEmbedError(`${what} has whitespace in it, got ${JSON.stringify(url)}.`);
-}
-
 function toMedia({ url, description, spoiler }: MediaProps): APIMediaGalleryItem {
     checkNoWhitespace('The media url', url);
     if (!hasScheme(url, ['http:', 'https:'])) {
         throw new ComponentEmbedError(`The media url must be an http or https URL, got ${url}.`);
     }
     checkLength('The media url', url, MAX_MEDIA_URL_LENGTH);
+    checkType('The media description', description, 'string');
+    checkType('The media spoiler', spoiler, 'boolean');
     if (description !== undefined) checkLength('The media description', description, MAX_DESCRIPTION_LENGTH);
 
     return {
@@ -335,6 +330,13 @@ function toMediaGallery({ children }: MediaGalleryProps): APIMediaGalleryCompone
 }
 
 function toSeparator({ divider, spacing }: SeparatorProps): APISeparatorComponent {
+    checkType('The <Separator> divider', divider, 'boolean');
+    if (spacing !== undefined && !Object.hasOwn(SPACING, spacing)) {
+        throw new ComponentEmbedError(
+            `The <Separator> spacing must be 'small' or 'large', got ${JSON.stringify(spacing)}.`
+        );
+    }
+
     return {
         type: TYPE.Separator,
         ...(divider !== undefined && { divider }),
@@ -352,8 +354,11 @@ function toActionRow({ children }: ActionRowProps): APIActionRowComponent<APIBut
 }
 
 function toLinkButton({ url, label, emoji, disabled }: LinkButtonProps): APIButtonComponentWithURL {
+    checkType('The <LinkButton> label', label, 'string');
+    checkType('The <LinkButton> disabled', disabled, 'boolean');
+
     const hasLabel = label !== undefined && label !== '';
-    const hasEmoji = (emoji?.id !== undefined && emoji.id !== '') || (emoji?.name !== undefined && emoji.name !== '');
+    const hasEmoji = emojiIsSet(emoji);
     if (!hasLabel && !hasEmoji) {
         throw new ComponentEmbedError(`<LinkButton> needs a label, an emoji, or both. Its url is ${url}.`);
     }
@@ -374,6 +379,13 @@ function toLinkButton({ url, label, emoji, disabled }: LinkButtonProps): APIButt
         ...(emoji && hasEmoji && { emoji: toEmoji(emoji) }),
         ...(disabled !== undefined && { disabled })
     };
+}
+
+function emojiIsSet(emoji: LinkButtonProps['emoji']): boolean {
+    checkType('The <LinkButton> emoji id', emoji?.id, 'string');
+    checkType('The <LinkButton> emoji name', emoji?.name, 'string');
+    checkType('The <LinkButton> emoji animated', emoji?.animated, 'boolean');
+    return (emoji?.id !== undefined && emoji.id !== '') || (emoji?.name !== undefined && emoji.name !== '');
 }
 
 // an emoji object from discord's API also carries roles and user
