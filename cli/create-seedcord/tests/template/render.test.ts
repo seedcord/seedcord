@@ -81,6 +81,42 @@ describe('renderTemplates', () => {
     });
 });
 
+describe('the agent instructions', () => {
+    it('warns that seedcord is absent from training data', async () => {
+        const agents = await renderOne(GATEWAY, 'AGENTS.md');
+
+        expect(agents).toContain('no presence in your training data');
+    });
+
+    it('sends an agent to the index and to a page markdown url', async () => {
+        const agents = await renderOne(HTTP, 'AGENTS.md');
+
+        expect(agents).toContain('https://guide.seedcord.org/llms.txt');
+        expect(agents).toContain('https://guide.seedcord.org/commands/options.md');
+    });
+
+    it('names the transport this project picked', async () => {
+        expect(await renderOne(GATEWAY, 'AGENTS.md')).toContain('`@seedcord/gateway`');
+        expect(await renderOne(HTTP, 'AGENTS.md')).toContain('`@seedcord/http`');
+    });
+
+    it('lists the events folder on gateway alone', async () => {
+        expect(await renderOne(GATEWAY, 'AGENTS.md')).toContain('`src/events/`');
+        expect(await renderOne(HTTP, 'AGENTS.md')).not.toContain('`src/events/`');
+    });
+
+    it('spells the commands with the package manager the scaffold picked', async () => {
+        expect(await renderOne(GATEWAY, 'AGENTS.md')).toContain('pnpm run codegen');
+    });
+
+    // a symlink here breaks on a windows checkout
+    it('points CLAUDE.md at the same file', async () => {
+        const claude = await renderOne(GATEWAY, 'CLAUDE.md');
+
+        expect(claude.trim()).toBe('@AGENTS.md');
+    });
+});
+
 describe('the sample event handler', () => {
     it('replies to a mention once a message capability is picked', async () => {
         const files = await render({ ...GATEWAY, capabilities: ['guild-messages'] });
