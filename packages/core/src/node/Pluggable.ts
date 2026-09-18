@@ -40,7 +40,7 @@ const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
  * You attach plugins while configuring the bot. Within one startup phase, their `init()` calls run
  * one after another in attach order.
  */
-// a default for BotRt would include 'edge', and RuntimeAssert rejects every plugin on an edge bot
+// BotRt has no default because RuntimeAssert rejects every plugin once 'edge' is in the union
 export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
     public abstract readonly config: Config;
     public abstract readonly rest: REST;
@@ -156,8 +156,8 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
      * Attaches a plugin under `key`. Read the instance back as `core[key]`. `seedcord codegen`
      * writes the `Core` augmentation that types it there.
      *
-     * A key with one dot attaches under a group, so `'services.users'` reads back as
-     * `core.services.users`. A name holds one plugin or one group.
+     * Put one dot in the key to nest the plugin under a group, so `'services.users'` reads back as
+     * `core.services.users`. Each name holds one plugin or one group.
      *
      * Startup runs each plugin's `init()` in attach order within its phase.
      *
@@ -235,7 +235,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         const existing = this.groups.get(head);
         if (existing) return existing;
 
-        // a null prototype keeps a leaf called valueOf or __proto__ an ordinary key
+        // a null prototype makes a leaf called __proto__ or valueOf an ordinary key
         const group = Object.create(null) as Record<string, PluginLike>;
         this.groups.set(head, group);
         Object.assign(this, { [head]: group });

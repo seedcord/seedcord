@@ -95,7 +95,6 @@ describe('Pluggable.attach with a grouped key', () => {
     it('refuses to attach a plugin at a name that holds a group', () => {
         const host = makeHost();
         const bot = host.attach('services.users', TestPlugin, 'ada');
-        // bypasses the assert to hit the runtime guard a javascript caller still reaches
         const attachRaw = bot.attach.bind(bot) as (key: string, plugin: typeof TestPlugin, tag: string) => unknown;
 
         let caught: unknown;
@@ -127,7 +126,6 @@ describe('Pluggable.attach with a grouped key', () => {
 
     it('refuses a malformed key, saying which part is wrong', () => {
         const host = makeHost();
-        // bypasses the assert to hit the runtime guard a javascript caller still reaches
         const attachRaw = host.attach.bind(host) as (key: string, plugin: typeof TestPlugin, tag: string) => unknown;
 
         const caughtFor = (key: string): unknown => {
@@ -150,7 +148,6 @@ describe('Pluggable.attach with a grouped key', () => {
     it('refuses a second plugin on a leaf that is already attached', () => {
         const host = makeHost();
         const bot = host.attach('services.users', TestPlugin, 'ada');
-        // bypasses the assert to hit the runtime guard a javascript caller still reaches
         const attachRaw = bot.attach.bind(bot) as (key: string, plugin: typeof TestPlugin, tag: string) => unknown;
 
         let caught: unknown;

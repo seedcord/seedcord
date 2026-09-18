@@ -33,7 +33,7 @@ export function renderAugmentation(registry: Augmentation, target: string, plugi
     );
 }
 
-// Core declares one member per group, so `services.users` becomes the `services` row
+// Core declares one member per group
 function groupNames(keys: readonly string[]): string[] {
     return [
         ...new Set(

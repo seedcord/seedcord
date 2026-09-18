@@ -1,3 +1,4 @@
+// compile-only. tc is the assertion here, since an unused @ts-expect-error fails it.
 import { Plugin } from '#src/plugin/Plugin';
 
 import type { Pluggable } from '#node/Pluggable';
@@ -20,7 +21,6 @@ class Tickets extends Plugin {
 
 declare const bot: Pluggable<'gateway', 'server'>;
 
-// compile-only. tc is the assertion, and an unused @ts-expect-error fails it.
 function readsBothLeaves(): void {
     const grouped = bot.attach('services.users', Users).attach('services.tickets', Tickets);
 
@@ -41,7 +41,7 @@ function rejectsBadKeys(): void {
     // @ts-expect-error the group name is a channel the framework logs on
     bot.attach('commands.users', Users);
 
-    // @ts-expect-error a flat key that is a framework channel
+    // @ts-expect-error events is one of those channels
     bot.attach('events', Users);
 
     // @ts-expect-error the host already carries a shutdown member
@@ -53,7 +53,7 @@ function rejectsBadKeys(): void {
     // @ts-expect-error an empty leaf
     bot.attach('services.', Users);
 
-    // @ts-expect-error every object carries toString, and the host would shadow it
+    // @ts-expect-error every object already has toString
     bot.attach('toString', Users);
 
     // @ts-expect-error an empty key
@@ -67,7 +67,7 @@ function rejectsCollisions(): void {
     const grouped = bot.attach('services.users', Users);
     // @ts-expect-error that leaf is already attached
     grouped.attach('services.users', Tickets);
-    // @ts-expect-error the group 'services' already carries a nested plugin, so it cannot hold a flat plugin
+    // @ts-expect-error services already holds a group
     grouped.attach('services', Tickets);
 
     const flat = bot.attach('db', Users);

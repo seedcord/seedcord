@@ -162,11 +162,11 @@ export type Attached<Key extends string, Instance> = Key extends `${infer Group}
     ? Record<Group, Record<Leaf, Instance>>
     : Record<Key, Instance>;
 
-// `attach` writes the key onto the host, so a name every object carries would shadow it.
-// eslint-disable-next-line @typescript-eslint/no-wrapper-object-types -- `keyof object` is never, and this needs Object.prototype's members
+// attach writes the key onto the host, so a key like toString would shadow the one on Object.prototype
+// eslint-disable-next-line @typescript-eslint/no-wrapper-object-types -- lint:fix swaps this for `keyof object`, which is never
 type HostMember<Host> = keyof Host | keyof Object;
 
-// a group is a plain record of plugins, so it fails the PluginLike check the branches below use
+// a string argument against an object type renders only as `string is not assignable`
 /** @internal */
 export type AttachKeyAssert<Key extends string, Host> = Key extends ''
     ? 'A plugin key needs a name.'
