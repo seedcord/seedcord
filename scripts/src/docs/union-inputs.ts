@@ -20,7 +20,6 @@ export function buildUnionInputs(remote: IndexJson | null, emitted: readonly Emi
             fullName: string;
             versions: Set<string>;
             entities: PackageVersionsInput['entities'];
-            entitiesVersion: string | undefined;
             description: string | undefined;
             workspace: string | undefined;
         }
@@ -39,7 +38,6 @@ export function buildUnionInputs(remote: IndexJson | null, emitted: readonly Emi
                 fullName: entry.fullName,
                 versions,
                 entities: entry.entities,
-                entitiesVersion: entry.entitiesVersion,
                 description: entry.description,
                 workspace: entry.workspace
             });
@@ -51,13 +49,12 @@ export function buildUnionInputs(remote: IndexJson | null, emitted: readonly Emi
             fullName: e.fullName,
             versions: new Set<string>(),
             entities: undefined,
-            entitiesVersion: undefined,
             description: undefined,
             workspace: undefined
         };
         current.versions.add(e.version);
-        current.entities = e.entities;
-        current.entitiesVersion = e.version;
+        // the docs site reads this map as the symbols the latest stable version documents
+        if (e.channel === 'stable') current.entities = e.entities;
         current.description = e.description;
         current.workspace = e.workspace;
         byFolder.set(e.folder, current);
@@ -70,7 +67,6 @@ export function buildUnionInputs(remote: IndexJson | null, emitted: readonly Emi
             fullName: value.fullName,
             versions: [...value.versions],
             ...(value.entities && { entities: value.entities }),
-            ...(value.entitiesVersion && { entitiesVersion: value.entitiesVersion }),
             ...(value.description && { description: value.description }),
             ...(value.workspace && { workspace: value.workspace })
         });

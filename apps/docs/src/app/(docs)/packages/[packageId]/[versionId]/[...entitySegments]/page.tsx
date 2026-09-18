@@ -3,12 +3,13 @@ import { notFound } from 'next/navigation';
 
 import { EntityContent } from '#components/docs/entity/EntityContent';
 import { findCatalogVersion } from '#lib/docs/catalog';
+import { DocsPage } from '#lib/docs/DocsPage';
 import { getDocsEngine } from '#lib/docs/engine';
 import { plainSummary } from '#lib/docs/plainSummary';
 import { resolveEntity } from '#lib/docs/resolveEntity';
 import { ENTITY_TONE_HEX } from '#lib/entityColors';
-import { indexingFor, latestEntitySegments } from '#lib/indexing';
-import { SITE_NAME, canonicalUrl, pageMetadata } from '#lib/site';
+import { latestEntitySegments } from '#lib/indexing';
+import { SITE_NAME, canonicalUrl } from '#lib/site';
 
 import type { PageParams } from '#lib/docs/pageContext';
 import type { ResolvedEntity } from '#lib/docs/resolveEntity';
@@ -65,24 +66,14 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
     // an unresolved path renders a soft-404, so this keeps it out of the index.
     // it would otherwise inherit the root's og image and title
     if (!resolved) return { robots: { index: false } };
-    const { entity } = resolved;
 
-    const summary = entity.summary[0]?.plain.trim();
-    const description =
-        summary && summary.length > 0 ? summary : `${entity.name}, a ${entity.kind} in ${entity.displayPackage}.`;
-
-    const path = entityPath(resolved);
-
-    return pageMetadata({
-        title: entity.name,
-        description,
-        path,
-        type: 'article',
-        image: `${path}.png`,
-        markdownPath: `${path}.md`,
-        card: { pill: entity.kind, name: entity.name, meta: [entity.displayPackage, resolved.version.label] },
-        ...indexingFor(await pathInLatest(resolved))
-    });
+    const page = DocsPage.forEntity(
+        entityPath(resolved),
+        resolved.entity,
+        resolved.version,
+        await pathInLatest(resolved)
+    );
+    return page.metadata();
 }
 
 // getEntry reads the index alone. resolveEntity would move the engine off this page's version
@@ -92,7 +83,7 @@ async function pathInLatest({ entry, segments }: ResolvedEntity): Promise<string
 
     const engine = await getDocsEngine();
     const index = await engine.getEntry(entry.id);
-    const inLatest = latestEntitySegments(index, latest.id, parseEntityPathSegments(segments));
+    const inLatest = latestEntitySegments(index?.entities, parseEntityPathSegments(segments));
     if (!inLatest) return undefined;
 
     return `/packages/${entry.id}/${latest.id}/${inLatest.join('/')}`;

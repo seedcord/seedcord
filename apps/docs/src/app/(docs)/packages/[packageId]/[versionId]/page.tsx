@@ -7,10 +7,9 @@ import { PackageOverviewTabs } from '#components/docs/PackageOverviewTabs';
 import { PackageVersionOverview } from '#components/docs/PackageVersionOverview';
 import { ReadmeBlock } from '#components/docs/ReadmeBlock';
 import { findCatalogVersion, loadActiveVersion, loadChangelogUrl, loadReadme, loadReexports } from '#lib/docs/catalog';
+import { DocsPage } from '#lib/docs/DocsPage';
 import { getCatalogContext } from '#lib/docs/pageContext';
 import { renderReadme } from '#lib/docs/renderReadme';
-import { indexingFor } from '#lib/indexing';
-import { pageMetadata } from '#lib/site';
 
 import type { PageParams } from '#lib/docs/pageContext';
 import type { Metadata } from 'next';
@@ -20,19 +19,9 @@ export const dynamic = 'force-static';
 
 export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
     const { entry, version } = await getCatalogContext(await params);
-    const path = `/packages/${entry.id}/${version.id}`;
     const latest = findCatalogVersion(entry, DEFAULT_VERSION);
 
-    return pageMetadata({
-        title: `${entry.label} ${version.label}`,
-        description: entry.description,
-        path,
-        image: `${path}.png`,
-        markdownPath: `${path}.md`,
-        card: { pill: 'package', name: entry.label, meta: [version.label] },
-        // every package has a latest overview. an overview page always has a twin
-        ...indexingFor(`/packages/${entry.id}/${latest?.id ?? version.id}`)
-    });
+    return DocsPage.forPackage(entry, version, latest?.id ?? version.id).metadata();
 }
 
 async function PackageOverviewPage({ params }: { params: Promise<PageParams> }): Promise<ReactElement> {

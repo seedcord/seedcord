@@ -217,4 +217,34 @@ describe('buildUnionInputs', () => {
 
         expect(inputs[0]).not.toHaveProperty('workspace');
     });
+
+    it('keeps the stable entity map when a prerelease publishes', () => {
+        const remote = remoteWith({
+            folder: 'core',
+            fullName: '@seedcord/core',
+            versions: ['0.7.0'],
+            entities: { logger: 'class' }
+        });
+
+        const inputs = buildUnionInputs(remote, [
+            emit('core', '0.8.0-next.0', { fullName: '@seedcord/core', entities: { 'new-thing': 'interface' } })
+        ]);
+
+        expect(inputs.find((input) => input.folder === 'core')?.entities).toEqual({ logger: 'class' });
+    });
+
+    it('takes the entity map from a stable publish', () => {
+        const remote = remoteWith({
+            folder: 'core',
+            fullName: '@seedcord/core',
+            versions: ['0.7.0'],
+            entities: { logger: 'class' }
+        });
+
+        const inputs = buildUnionInputs(remote, [
+            emit('core', '0.8.0', { fullName: '@seedcord/core', entities: { logger: 'interface' } })
+        ]);
+
+        expect(inputs.find((input) => input.folder === 'core')?.entities).toEqual({ logger: 'interface' });
+    });
 });

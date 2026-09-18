@@ -2,7 +2,7 @@ import { cn, tw } from '@seedcord/ui';
 import Link from 'next/link';
 
 import { loadDocsCatalog } from '#lib/docs/catalog';
-import { pageMetadata, SITE_DESCRIPTION } from '#lib/site';
+import { DocsPage } from '#lib/docs/DocsPage';
 import { getToneConfig, getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
 
 import type { PackageCatalogEntry } from '#lib/docs/types';
@@ -10,13 +10,7 @@ import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { Metadata } from 'next';
 import type { ReactElement } from 'react';
 
-export const metadata: Metadata = pageMetadata({
-    title: 'seedcord reference',
-    description: SITE_DESCRIPTION,
-    path: '/',
-    image: '/og',
-    card: { pill: 'docs', name: 'Reference', meta: [] }
-});
+export const metadata: Metadata = DocsPage.root().metadata();
 
 // the publish pipeline rewrites index.json between builds
 export const revalidate = 300; // 5 mins
