@@ -1,6 +1,6 @@
 import { isValidElement } from 'react';
 
-import { checkLength, checkNoWhitespace, checkType, describeValue, hasScheme, messageOf } from './checks';
+import { checkLength, checkType, checkUrl, describeValue, isFilled, messageOf } from './checks';
 import { ComponentEmbedError } from './ComponentEmbedError';
 import {
     ActionRow,
@@ -253,11 +253,7 @@ function toSectionAccessory(accessory: ReactNode): APISectionComponent['accessor
 }
 
 function toMedia({ url, description, spoiler }: MediaProps): APIMediaGalleryItem {
-    checkNoWhitespace('The media url', url);
-    if (!hasScheme(url, ['http:', 'https:'])) {
-        throw new ComponentEmbedError('InvalidProp', `The media url must be an http or https URL, got ${url}.`);
-    }
-    checkLength('The media url', url, MAX_MEDIA_URL_LENGTH);
+    checkUrl('The media url', url, ['http:', 'https:'], MAX_MEDIA_URL_LENGTH);
     checkType('The media description', description, 'string');
     checkType('The media spoiler', spoiler, 'boolean');
     if (description !== undefined) checkLength('The media description', description, MAX_DESCRIPTION_LENGTH);
@@ -311,41 +307,33 @@ function toLinkButton({ url, label, emoji, disabled }: LinkButtonProps): APIButt
     checkType('The <LinkButton> label', label, 'string');
     checkType('The <LinkButton> disabled', disabled, 'boolean');
 
-    const hasLabel = label !== undefined && label !== '';
-    const hasEmoji = emojiIsSet(emoji);
-    if (!hasLabel && !hasEmoji) {
+    const shownEmoji = emojiToShow(emoji);
+    if (!isFilled(label) && !shownEmoji) {
         throw new ComponentEmbedError(
             'InvalidProp',
             `<LinkButton> needs a label, an emoji, or both. Its url is ${url}.`
         );
     }
 
-    checkNoWhitespace('The <LinkButton> url', url);
     // message buttons accept these three schemes. embeds are assumed to match
-    if (!hasScheme(url, ['http:', 'https:', 'discord:'])) {
-        throw new ComponentEmbedError(
-            'InvalidProp',
-            `The <LinkButton> url must be an http, https, or discord URL, got ${url}.`
-        );
-    }
-    checkLength('The <LinkButton> url', url, MAX_BUTTON_URL_LENGTH);
-    if (hasLabel) checkLength('The <LinkButton> label', label, MAX_LABEL_LENGTH);
+    checkUrl('The <LinkButton> url', url, ['http:', 'https:', 'discord:'], MAX_BUTTON_URL_LENGTH);
+    if (isFilled(label)) checkLength('The <LinkButton> label', label, MAX_LABEL_LENGTH);
 
     return {
         type: TYPE.Button,
         style: LINK_STYLE,
         url,
-        ...(hasLabel && { label }),
-        ...(emoji && hasEmoji && { emoji: toEmoji(emoji) }),
+        ...(isFilled(label) && { label }),
+        ...(shownEmoji && { emoji: toEmoji(shownEmoji) }),
         ...(disabled !== undefined && { disabled })
     };
 }
 
-function emojiIsSet(emoji: LinkButtonProps['emoji']): boolean {
+function emojiToShow(emoji: LinkButtonProps['emoji']): APIMessageComponentEmoji | undefined {
     checkType('The <LinkButton> emoji id', emoji?.id, 'string');
     checkType('The <LinkButton> emoji name', emoji?.name, 'string');
     checkType('The <LinkButton> emoji animated', emoji?.animated, 'boolean');
-    return (emoji?.id !== undefined && emoji.id !== '') || (emoji?.name !== undefined && emoji.name !== '');
+    return isFilled(emoji?.id) || isFilled(emoji?.name) ? emoji : undefined;
 }
 
 // an emoji object from discord's API also carries roles and user

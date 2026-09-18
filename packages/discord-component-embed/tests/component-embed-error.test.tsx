@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 
 import {
     ActionRow,
-    ComponentEmbedError,
     componentEmbedResponse,
     Container,
     LinkButton,
@@ -12,26 +11,10 @@ import {
     toComponentEmbed
 } from '#src/index';
 
+import { thrownBy, withText } from './helpers';
+
 import type { ComponentEmbedErrorCode } from '#src/index';
 import type { ReactElement } from 'react';
-
-function thrownBy(run: () => unknown): ComponentEmbedError {
-    try {
-        run();
-    } catch (error) {
-        if (error instanceof ComponentEmbedError) return error;
-        throw new Error(`expected a ComponentEmbedError, got ${String(error)}`, { cause: error });
-    }
-    throw new Error('expected a ComponentEmbedError, nothing was thrown');
-}
-
-function text(content: string): ReactElement {
-    return (
-        <Container>
-            <TextDisplay>{content}</TextDisplay>
-        </Container>
-    );
-}
 
 describe('ComponentEmbedError', () => {
     it.each<[ComponentEmbedErrorCode, () => unknown]>([
@@ -57,7 +40,7 @@ describe('ComponentEmbedError', () => {
                     </Container>
                 )
         ],
-        ['OverLimit', () => componentEmbedResponse(text('€'.repeat(1000)))],
+        ['OverLimit', () => componentEmbedResponse(withText('€'.repeat(1000)))],
         [
             'UnsupportedComponent',
             () => {

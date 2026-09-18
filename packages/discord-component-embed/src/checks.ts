@@ -42,14 +42,26 @@ export function checkLength(what: string, value: string, max: number): void {
     }
 }
 
-export function hasScheme(url: string, schemes: readonly string[]): boolean {
-    const protocol = URL.parse(url)?.protocol;
-    return protocol !== undefined && schemes.includes(protocol);
+export function isFilled(value: string | undefined): value is string {
+    return value !== undefined && value !== '';
 }
 
-// URL.parse ignores whitespace that the raw url still carries
-export function checkNoWhitespace(what: string, url: string): void {
+function orList(words: readonly string[]): string {
+    const last = words.at(-1) ?? '';
+    return words.length > 2 ? `${words.slice(0, -1).join(', ')}, or ${last}` : words.join(' or ');
+}
+
+export function checkUrl(what: string, url: string, schemes: readonly string[], max: number): void {
+    // URL.parse ignores whitespace that the raw url still carries
     if (/\s/.test(url)) {
         throw new ComponentEmbedError('InvalidProp', `${what} has whitespace in it, got ${describeValue(url)}.`);
     }
+
+    const protocol = URL.parse(url)?.protocol;
+    if (protocol === undefined || !schemes.includes(protocol)) {
+        const names = orList(schemes.map((scheme) => scheme.replace(':', '')));
+        throw new ComponentEmbedError('InvalidProp', `${what} must be an ${names} URL, got ${url}.`);
+    }
+
+    checkLength(what, url, max);
 }

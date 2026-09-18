@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 
 import {
     ActionRow,
-    ComponentEmbedError,
     Container,
     LinkButton,
     MediaGallery,
@@ -15,7 +14,7 @@ import {
     toComponentEmbed
 } from '#src/index';
 
-import { expectEmbedError } from './helpers';
+import { expectEmbedError, thrownBy } from './helpers';
 
 import type { ReactElement } from 'react';
 
@@ -187,13 +186,10 @@ describe('toComponentEmbed', () => {
     });
 
     it('allows 40 components, counting the container, buttons, and accessories', () => {
-        const row = (
-            <ActionRow>
-                {Array.from({ length: 5 }, (_, index) => (
-                    <LinkButton key={index} url="https://example.com" label="go" />
-                ))}
-            </ActionRow>
-        );
+        const buttons = Array.from({ length: 5 }, (_, index) => (
+            <LinkButton key={index} url="https://example.com" label="go" />
+        ));
+        const rows = Array.from({ length: 6 }, (_, index) => <ActionRow key={index}>{buttons}</ActionRow>);
         const section = (
             <Section accessory={<Thumbnail url={IMAGE} />}>
                 <TextDisplay>hi</TextDisplay>
@@ -204,12 +200,7 @@ describe('toComponentEmbed', () => {
         expect(() =>
             toComponentEmbed(
                 <Container>
-                    {row}
-                    {row}
-                    {row}
-                    {row}
-                    {row}
-                    {row}
+                    {rows}
                     {section}
                 </Container>
             )
@@ -218,12 +209,7 @@ describe('toComponentEmbed', () => {
             () =>
                 toComponentEmbed(
                     <Container>
-                        {row}
-                        {row}
-                        {row}
-                        {row}
-                        {row}
-                        {row}
+                        {rows}
                         {section}
                         <Separator />
                     </Container>
@@ -482,18 +468,12 @@ describe('toComponentEmbed with your own components', () => {
             return <TextDisplay>{count}</TextDisplay>;
         }
 
-        let thrown: unknown;
-        try {
-            toComponentEmbed(<Container>{<Counter />}</Container>);
-        } catch (error) {
-            thrown = error;
-        }
+        const error = thrownBy(() => toComponentEmbed(<Container>{<Counter />}</Container>));
 
-        expect(thrown).toBeInstanceOf(ComponentEmbedError);
-        expect((thrown as ComponentEmbedError).code).toBe('ReadFailed');
-        expect((thrown as ComponentEmbedError).message).toMatch(
+        expect(error.code).toBe('ReadFailed');
+        expect(error.message).toMatch(
             /^<Counter> threw while the package read it: .+\. Components here run outside React's renderer, so hooks don't work in them\.$/
         );
-        expect((thrown as ComponentEmbedError).cause).toBeInstanceOf(TypeError);
+        expect(error.cause).toBeInstanceOf(TypeError);
     });
 });

@@ -12,7 +12,7 @@ import {
     toComponentEmbed
 } from '#src/index';
 
-import { expectEmbedError } from './helpers';
+import { expectEmbedError, inContainer } from './helpers';
 
 import type { ReactElement } from 'react';
 
@@ -21,10 +21,6 @@ const IMAGE = 'https://example.com/image.png';
 // how a JS caller or a Svelte server file builds the tree. TypeScript does not check these props
 function loose(type: unknown, props: Record<string, unknown> | null, ...children: unknown[]): ReactElement {
     return (createElement as (...args: unknown[]) => ReactElement)(type, props, ...children);
-}
-
-function inContainer(child: ReactElement): () => unknown {
-    return () => toComponentEmbed(loose(Container, null, child));
 }
 
 describe('toComponentEmbed with untyped props', () => {
@@ -88,7 +84,7 @@ describe('toComponentEmbed with untyped props', () => {
             '<TextDisplay> only takes text, got Symbol(x).'
         ]
     ])('rejects %s', (_label, child, message) => {
-        expectEmbedError(inContainer(child), message);
+        expectEmbedError(() => toComponentEmbed(inContainer(child)), message);
     });
 
     it('rejects a container spoiler that is a string', () => {
@@ -109,12 +105,19 @@ describe('toComponentEmbed with untyped props', () => {
         const circular: Record<string, unknown> = {};
         circular.self = circular;
 
+        const badLabel = loose(ActionRow, null, loose(LinkButton, { url: 'https://example.com', label: 5n }));
+        const badDescription = loose(
+            MediaGallery,
+            null,
+            loose(MediaGalleryItem, { url: IMAGE, description: circular })
+        );
+
         expectEmbedError(
-            inContainer(loose(ActionRow, null, loose(LinkButton, { url: 'https://example.com', label: 5n }))),
+            () => toComponentEmbed(inContainer(badLabel)),
             'The <LinkButton> label must be a string, got 5n.'
         );
         expectEmbedError(
-            inContainer(loose(MediaGallery, null, loose(MediaGalleryItem, { url: IMAGE, description: circular }))),
+            () => toComponentEmbed(inContainer(badDescription)),
             'The media description must be a string, got an object.'
         );
     });

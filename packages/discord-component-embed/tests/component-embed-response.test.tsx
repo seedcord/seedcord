@@ -1,18 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { componentEmbedResponse, Container, TextDisplay } from '#src/index';
+import { componentEmbedResponse } from '#src/index';
 
-import { expectEmbedError } from './helpers';
-
-import type { ReactElement } from 'react';
-
-function withText(content: string): ReactElement {
-    return (
-        <Container>
-            <TextDisplay>{content}</TextDisplay>
-        </Container>
-    );
-}
+import { expectEmbedError, withText } from './helpers';
 
 // bytes the payload takes around the text content
 const OVERHEAD = JSON.stringify({ component: { type: 17, components: [{ type: 10, content: '' }] } }).length;

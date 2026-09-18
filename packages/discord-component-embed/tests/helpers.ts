@@ -1,6 +1,9 @@
+import { createElement } from 'react';
 import { expect } from 'vitest';
 
-import { ComponentEmbedError } from '#src/index';
+import { ComponentEmbedError, Container, TextDisplay } from '#src/index';
+
+import type { ReactElement, ReactNode } from 'react';
 
 export function scriptBody(html: string): string {
     const match = /^<script id="discord:component-embed" type="application\/json">(.*)<\/script>$/s.exec(html);
@@ -8,8 +11,26 @@ export function scriptBody(html: string): string {
     return match[1];
 }
 
-// toThrow(message) alone also passes for a TypeError carrying the same text
+export function inContainer(child: ReactNode): ReactElement {
+    return createElement(Container, null, child);
+}
+
+export function withText(content: string): ReactElement {
+    return inContainer(createElement(TextDisplay, null, content));
+}
+
+export function thrownBy(run: () => unknown): ComponentEmbedError {
+    try {
+        run();
+    } catch (error) {
+        if (error instanceof ComponentEmbedError) return error;
+        throw new Error(`expected a ComponentEmbedError, got ${String(error)}`, { cause: error });
+    }
+    throw new Error('expected a ComponentEmbedError, nothing was thrown');
+}
+
 export function expectEmbedError(run: () => unknown, message: string | RegExp): void {
-    expect(run).toThrow(ComponentEmbedError);
-    expect(run).toThrow(message);
+    const { message: actual } = thrownBy(run);
+    if (typeof message === 'string') expect(actual).toContain(message);
+    else expect(actual).toMatch(message);
 }
