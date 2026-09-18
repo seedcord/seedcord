@@ -72,6 +72,9 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     },
     'eslint-plugin-discordjs': {
         aliases: ['eslint-plugin-discordjs', 'eslint-plugin-djs']
+    },
+    'discord-component-embed': {
+        aliases: ['discord-component-embed', 'component-embed', 'link-preview']
     }
 };
 

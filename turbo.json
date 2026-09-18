@@ -25,6 +25,7 @@
                 "@seedcord/rate-limiter#build",
                 "@seedcord/types#build",
                 "@seedcord/utils#build",
+                "discord-component-embed#build",
                 "eslint-plugin-discordjs#build",
                 "seedcord#build"
             ],
