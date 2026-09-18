@@ -233,6 +233,21 @@ describe('buildUnionInputs', () => {
         expect(inputs.find((input) => input.folder === 'core')?.entities).toEqual({ logger: 'class' });
     });
 
+    it('keeps the newest stable entity map when an older minor gets a backport', () => {
+        const remote = remoteWith({
+            folder: 'core',
+            fullName: '@seedcord/core',
+            versions: ['0.8.0', '0.9.0'],
+            entities: { logger: 'class' }
+        });
+
+        const inputs = buildUnionInputs(remote, [
+            emit('core', '0.8.1', { fullName: '@seedcord/core', entities: { 'old-thing': 'interface' } })
+        ]);
+
+        expect(inputs.find((input) => input.folder === 'core')?.entities).toEqual({ logger: 'class' });
+    });
+
     it('takes the entity map from a stable publish', () => {
         const remote = remoteWith({
             folder: 'core',

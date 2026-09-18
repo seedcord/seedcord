@@ -26,7 +26,7 @@ export { IndexLoader, type Fetcher, type ResolvedVersion } from '#remote/IndexLo
 export { ProjectLoader } from '#remote/ProjectLoader';
 export { serializeProject, deserializeProject, validateProjectFile, type DocProjectFile } from '#remote/project-file';
 export { validateIndex, type IndexJson, type PackageIndexEntry, type StableChannel } from '#remote/index-json';
-export { buildIndex, type PackageVersionsInput, type BuildIndexOptions } from '#remote/index-builder';
+export { buildIndex, newestStable, type PackageVersionsInput, type BuildIndexOptions } from '#remote/index-builder';
 export { IndexFetchError, ProjectFetchError, PackageVersionNotFoundError } from '#remote/errors';
 
 export const version = process.env.PACKAGE_VERSION ?? '0.0.0';

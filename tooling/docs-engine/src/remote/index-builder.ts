@@ -67,6 +67,12 @@ function buildEntry(pkg: PackageVersionsInput): PackageIndexEntry {
     return entry;
 }
 
+/** The highest stable version in a list, ignoring prereleases and anything unparseable. */
+export function newestStable(versions: readonly string[]): string | undefined {
+    const stable = versions.filter((version) => valid(version) !== null && prerelease(version) === null);
+    return [...stable].sort(rcompare)[0];
+}
+
 function buildStable(versions: readonly string[]): StableChannel | null {
     const sorted = [...versions].sort(rcompare);
     const [latest] = sorted;
