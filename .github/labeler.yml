@@ -88,6 +88,7 @@
 '🧪 tests':
   - changed-files:
       - any-glob-to-any-file: '**/*.test.ts'
+      - any-glob-to-any-file: '**/*.test.tsx'
       - any-glob-to-any-file: '**/*.spec.ts'
       - any-glob-to-any-file: '**/__tests__/**/*'
 '🤖 ci':
