@@ -166,7 +166,7 @@ seedcord
     .attach('services.tickets', Tickets);
 ```
 
-`services` is a plain object on `core`. Each plugin takes the key after the dot, so a handler reads one as `this.core.services.users`. seedcord still starts both in attach order, stops them during shutdown, and reloads them while you develop.
+`services` here is a plain object on `core`. Each plugin takes the key after the dot, so a handler reads one as `this.core.services.users`. seedcord still starts both in attach order and stops them during shutdown.
 
 A key takes one dot. `seedcord codegen` writes one row for the group, which types every plugin inside it.
 

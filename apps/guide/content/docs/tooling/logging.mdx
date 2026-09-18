@@ -133,7 +133,7 @@ These names belong to the framework, and [`FRAMEWORK_CHANNELS`](ref:logger/FRAME
 
 {/* prettier-ignore-end */}
 
-Your own bot adds channels to that set. A plugin logs on a channel named after the attach key you chose, so attaching one as `db` sends its lines to the `db` channel. If your attach key matches one of the names above, `attach` throws `CorePluginReservedChannel`.
+Your own bot adds channels to that set. A plugin logs on a channel named after the attach key you chose, so attaching one as `db` sends its lines to the `db` channel, and one as `services.users` to `services.users`. If your attach key matches one of the names above, or the group in front of your dot does, `attach` throws `CorePluginReservedChannel`.
 
 The [dev terminal](/tooling/dev) draws every channel as a filter chip, so the more you split your bot into channels, the more precisely you can filter it.
 

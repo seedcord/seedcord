@@ -50,4 +50,12 @@ describe('pluginKeys', () => {
 
         expect(attached[HostPluginKeys]).toEqual(['db', 'cache']);
     });
+
+    it('reports a grouped key whole', () => {
+        const host = new TestHost();
+
+        const attached = host.attach('services.users', TestPlugin);
+
+        expect(attached[HostPluginKeys]).toEqual(['services.users']);
+    });
 });

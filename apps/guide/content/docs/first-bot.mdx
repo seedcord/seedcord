@@ -121,6 +121,8 @@ export default seedcord;
 
 The `path` keys name the folders seedcord scans at startup. The tab that teaches each folder covers its key.
 
+Build your bot with `new Seedcord(...)` and export it, the way this file does. seedcord's types read the object you built, so a subclass of `Seedcord` loses the checks that come with [attaching a plugin](/plugins) and the types [codegen](/tooling/codegen) writes.
+
 <Callout type="transport" only="http">
 
 An http config takes a top-level `port`, which defaults to 3000. `clientOptions` and `events` belong to gateway alone.
