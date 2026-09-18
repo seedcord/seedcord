@@ -30,7 +30,7 @@
 - name: '📦 ui'
   color: 62bc9b
 - name: '📦 discord-component-embed'
-  color: 7c62bc
+  color: 5865f2
   description: Discord component embed link previews from JSX
 - name: '📦 types'
   color: 62bcbc
