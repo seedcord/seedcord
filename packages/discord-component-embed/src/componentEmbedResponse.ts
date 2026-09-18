@@ -27,6 +27,7 @@ export function componentEmbedResponse(root: ReactElement): Response {
 
     if (body.byteLength > MAX_LINKED_BYTES) {
         throw new ComponentEmbedError(
+            'OverLimit',
             `Linked component embed JSON is limited to ${String(MAX_LINKED_BYTES)} bytes, this one is ${String(body.byteLength)}.`
         );
     }

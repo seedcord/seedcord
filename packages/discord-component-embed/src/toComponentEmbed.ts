@@ -1,6 +1,6 @@
-import { Fragment, isValidElement } from 'react';
+import { isValidElement } from 'react';
 
-import { checkLength, checkNoWhitespace, checkType, describeValue, hasScheme, isIterable } from './checks';
+import { checkLength, checkNoWhitespace, checkType, describeValue, hasScheme, messageOf } from './checks';
 import { ComponentEmbedError } from './ComponentEmbedError';
 import {
     ActionRow,
@@ -13,6 +13,7 @@ import {
     TextDisplay,
     Thumbnail
 } from './components';
+import { childrenOf, expand, nameOf } from './tree';
 
 import type {
     ActionRowProps,
@@ -60,6 +61,18 @@ const TYPE: { readonly [Name in UsedComponentType]: (typeof ComponentType)[Name]
 const LINK_STYLE: ButtonStyle.Link = 5;
 const SPACING: Readonly<Record<'small' | 'large', SeparatorSpacingSize>> = { small: 1, large: 2 };
 
+// assumption: component embeds share discord's limits for message components
+const MAX_SECTION_TEXTS = 3;
+const MAX_ROW_BUTTONS = 5;
+const MAX_GALLERY_ITEMS = 10;
+const MAX_LABEL_LENGTH = 80;
+const MAX_BUTTON_URL_LENGTH = 512;
+const MAX_DESCRIPTION_LENGTH = 1024;
+const MAX_ACCENT_COLOR = 0xff_ff_ff;
+// these two come from the component embed docs
+const MAX_MEDIA_URL_LENGTH = 2048;
+const MAX_COMPONENTS = 40;
+
 /** The JSON document Discord reads from a page to build a component embed. */
 export interface ComponentEmbedPayload {
     component: APIContainerComponent;
@@ -68,7 +81,8 @@ export interface ComponentEmbedPayload {
 /**
  * Converts a `<Container>` tree into the JSON document Discord reads for a component embed.
  *
- * @throws {@link ComponentEmbedError} when the tree breaks a rule of the format.
+ * @throws {@link ComponentEmbedError} when the tree breaks a rule of the format, or when your own code throws while
+ * the tree is read. Check `error.code` to see which.
  *
  * @example
  * ```tsx
@@ -90,25 +104,40 @@ export interface ComponentEmbedPayload {
  * ```
  */
 export function toComponentEmbed(root: ReactElement): ComponentEmbedPayload {
+    try {
+        return buildPayload(root);
+    } catch (error) {
+        if (error instanceof ComponentEmbedError) throw error;
+        throw new ComponentEmbedError('ReadFailed', `Reading the component tree threw: ${messageOf(error)}.`, {
+            cause: error
+        });
+    }
+}
+
+function buildPayload(root: ReactElement): ComponentEmbedPayload {
     const [container, ...rest] = expand(root);
     if (rest.length > 0) {
-        throw new ComponentEmbedError(`The root must be one <Container>, got ${String(rest.length + 1)} elements.`);
+        throw new ComponentEmbedError(
+            'InvalidStructure',
+            `The root must be one <Container>, got ${String(rest.length + 1)} elements.`
+        );
     }
-    if (container?.type !== Container) throw new ComponentEmbedError('The root element must be a <Container>.');
+    if (container?.type !== Container) {
+        throw new ComponentEmbedError('InvalidStructure', 'The root element must be a <Container>.');
+    }
 
     const component = toContainer(container.props as ContainerProps);
 
     const count = countComponents(component);
     if (count > MAX_COMPONENTS) {
         throw new ComponentEmbedError(
+            'OverLimit',
             `A component embed holds at most ${String(MAX_COMPONENTS)} components, this one has ${String(count)}.`
         );
     }
 
     return { component };
 }
-
-const MAX_COMPONENTS = 40;
 
 type Counted = APIContainerComponent | APIComponentInContainer | APIComponentInMessageActionRow;
 
@@ -119,106 +148,23 @@ function countComponents(component: Counted): number {
     return 1 + nested + accessory;
 }
 
-function expand(node: ReactNode): ReactElement[] {
-    if (node === null || node === undefined || typeof node === 'boolean') return [];
-    if (Array.isArray(node)) return node.flatMap(expand);
-    if (isIterable(node)) return [...node].flatMap(expand);
-    if (!isValidElement(node)) {
-        throw new ComponentEmbedError(`Text has to go inside a <TextDisplay>, got ${describeValue(node)}.`);
-    }
-
-    if (node.type === Fragment) return expand((node.props as { children?: ReactNode }).children);
-    if (typeof node.type === 'string' || NAMES.has(node.type)) return [node];
-    return expand(renderUserComponent(node));
-}
-
-function renderUserComponent({ type, props }: ReactElement): ReactNode {
-    // memo, lazy, forwardRef, and context types are objects. a class component has isReactComponent on its prototype
-    if (
-        typeof type !== 'function' ||
-        (type.prototype as { isReactComponent?: unknown } | undefined)?.isReactComponent
-    ) {
-        throw new ComponentEmbedError('Only plain function components work inside a component embed.');
-    }
-
-    const component = type as (props: unknown) => unknown;
-    let output: unknown;
-    try {
-        output = component(props);
-    } catch (error) {
-        throw new ComponentEmbedError(
-            `<${nameOf(component)}> threw while the package read it. Components here run outside React's renderer, so hooks don't work.`,
-            { cause: error }
-        );
-    }
-
-    if (output instanceof Promise) {
-        throw new ComponentEmbedError(`<${nameOf(component)}> is async. Load its data first and pass it in as props.`);
-    }
-
-    return output as ReactNode;
-}
-
-// a user's bundler can minify the .name of these functions
-const NAMES = new Map<unknown, string>([
-    [ActionRow, 'ActionRow'],
-    [Container, 'Container'],
-    [LinkButton, 'LinkButton'],
-    [MediaGallery, 'MediaGallery'],
-    [MediaGalleryItem, 'MediaGalleryItem'],
-    [Section, 'Section'],
-    [Separator, 'Separator'],
-    [TextDisplay, 'TextDisplay'],
-    [Thumbnail, 'Thumbnail']
-]);
-
-function nameOf(type: unknown): string {
-    if (typeof type === 'string') return type;
-    return NAMES.get(type) ?? (typeof type === 'function' ? type.name : 'unknown');
-}
-
-// assumption: component embeds share discord's limits for message components
-const MAX_SECTION_TEXTS = 3;
-const MAX_ROW_BUTTONS = 5;
-const MAX_GALLERY_ITEMS = 10;
-const MAX_LABEL_LENGTH = 80;
-const MAX_BUTTON_URL_LENGTH = 512;
-const MAX_DESCRIPTION_LENGTH = 1024;
-const MAX_ACCENT_COLOR = 0xff_ff_ff;
-// this one comes from the component embed docs
-const MAX_MEDIA_URL_LENGTH = 2048;
-
-function childrenOf(parent: unknown, children: ReactNode, kind: unknown, max: number): ReactElement[] {
-    const elements = expand(children);
-
-    const stray = elements.find((element) => element.type !== kind);
-    if (stray) {
-        throw new ComponentEmbedError(
-            `<${nameOf(parent)}> only takes <${nameOf(kind)}> children, got <${nameOf(stray.type)}>.`
-        );
-    }
-
-    if (elements.length === 0 || elements.length > max) {
-        throw new ComponentEmbedError(
-            `<${nameOf(parent)}> takes 1 to ${String(max)} <${nameOf(kind)}> children, got ${String(elements.length)}.`
-        );
-    }
-
-    return elements;
-}
-
 // every props cast below comes after a check of element.type, here or in childrenOf
 function toContainer({ accentColor, spoiler, children }: ContainerProps): APIContainerComponent {
     if (
         accentColor !== undefined &&
         !(Number.isSafeInteger(accentColor) && accentColor >= 0 && accentColor <= MAX_ACCENT_COLOR)
     ) {
-        throw new ComponentEmbedError(`accentColor must be an integer from 0 to 0xFFFFFF, got ${String(accentColor)}.`);
+        throw new ComponentEmbedError(
+            'InvalidProp',
+            `accentColor must be an integer from 0 to 0xFFFFFF, got ${describeValue(accentColor)}.`
+        );
     }
     checkType('The <Container> spoiler', spoiler, 'boolean');
 
     const elements = expand(children);
-    if (elements.length === 0) throw new ComponentEmbedError('<Container> needs at least one component.');
+    if (elements.length === 0) {
+        throw new ComponentEmbedError('InvalidStructure', '<Container> needs at least one component.');
+    }
 
     return {
         type: TYPE.Container,
@@ -246,7 +192,10 @@ function toContainerChild(element: ReactElement): APIComponentInContainer {
             return toActionRow(element.props as ActionRowProps);
         }
         default: {
-            throw new ComponentEmbedError(`<${nameOf(element.type)}> cannot go directly inside a <Container>.`);
+            throw new ComponentEmbedError(
+                'InvalidStructure',
+                `<${nameOf(element.type)}> cannot go directly inside a <Container>.`
+            );
         }
     }
 }
@@ -259,17 +208,18 @@ function toTextDisplay({ children }: TextDisplayProps): APITextDisplayComponent 
     const element = parts.find((part) => isValidElement(part));
     if (element) {
         throw new ComponentEmbedError(
+            'InvalidStructure',
             `<TextDisplay> only takes text. Write Discord markdown like **bold** in place of <${nameOf(element.type)}>.`
         );
     }
 
     const stray = parts.find((part) => typeof part !== 'string' && typeof part !== 'number');
     if (stray !== undefined) {
-        throw new ComponentEmbedError(`<TextDisplay> only takes text, got ${describeValue(stray)}.`);
+        throw new ComponentEmbedError('InvalidProp', `<TextDisplay> only takes text, got ${describeValue(stray)}.`);
     }
 
     const content = parts.join('');
-    if (content === '') throw new ComponentEmbedError('<TextDisplay> needs some text.');
+    if (content === '') throw new ComponentEmbedError('InvalidStructure', '<TextDisplay> needs some text.');
 
     return { type: TYPE.TextDisplay, content };
 }
@@ -287,13 +237,17 @@ function toSection({ accessory, children }: SectionProps): APISectionComponent {
 function toSectionAccessory(accessory: ReactNode): APISectionComponent['accessory'] {
     const [element, ...rest] = expand(accessory);
     if (!element || rest.length > 0) {
-        throw new ComponentEmbedError('A <Section> takes exactly one accessory, a <Thumbnail> or a <LinkButton>.');
+        throw new ComponentEmbedError(
+            'InvalidStructure',
+            'A <Section> takes exactly one accessory, a <Thumbnail> or a <LinkButton>.'
+        );
     }
 
     if (element.type === Thumbnail) return toThumbnail(element.props as MediaProps);
     if (element.type === LinkButton) return toLinkButton(element.props as LinkButtonProps);
 
     throw new ComponentEmbedError(
+        'InvalidStructure',
         `A <Section> accessory must be a <Thumbnail> or a <LinkButton>, got <${nameOf(element.type)}>.`
     );
 }
@@ -301,7 +255,7 @@ function toSectionAccessory(accessory: ReactNode): APISectionComponent['accessor
 function toMedia({ url, description, spoiler }: MediaProps): APIMediaGalleryItem {
     checkNoWhitespace('The media url', url);
     if (!hasScheme(url, ['http:', 'https:'])) {
-        throw new ComponentEmbedError(`The media url must be an http or https URL, got ${url}.`);
+        throw new ComponentEmbedError('InvalidProp', `The media url must be an http or https URL, got ${url}.`);
     }
     checkLength('The media url', url, MAX_MEDIA_URL_LENGTH);
     checkType('The media description', description, 'string');
@@ -332,6 +286,7 @@ function toSeparator({ divider, spacing }: SeparatorProps): APISeparatorComponen
     checkType('The <Separator> divider', divider, 'boolean');
     if (spacing !== undefined && !Object.hasOwn(SPACING, spacing)) {
         throw new ComponentEmbedError(
+            'InvalidProp',
             `The <Separator> spacing must be 'small' or 'large', got ${describeValue(spacing)}.`
         );
     }
@@ -359,13 +314,19 @@ function toLinkButton({ url, label, emoji, disabled }: LinkButtonProps): APIButt
     const hasLabel = label !== undefined && label !== '';
     const hasEmoji = emojiIsSet(emoji);
     if (!hasLabel && !hasEmoji) {
-        throw new ComponentEmbedError(`<LinkButton> needs a label, an emoji, or both. Its url is ${url}.`);
+        throw new ComponentEmbedError(
+            'InvalidProp',
+            `<LinkButton> needs a label, an emoji, or both. Its url is ${url}.`
+        );
     }
 
     checkNoWhitespace('The <LinkButton> url', url);
     // message buttons accept these three schemes. embeds are assumed to match
     if (!hasScheme(url, ['http:', 'https:', 'discord:'])) {
-        throw new ComponentEmbedError(`The <LinkButton> url must be an http, https, or discord URL, got ${url}.`);
+        throw new ComponentEmbedError(
+            'InvalidProp',
+            `The <LinkButton> url must be an http, https, or discord URL, got ${url}.`
+        );
     }
     checkLength('The <LinkButton> url', url, MAX_BUTTON_URL_LENGTH);
     if (hasLabel) checkLength('The <LinkButton> label', label, MAX_LABEL_LENGTH);

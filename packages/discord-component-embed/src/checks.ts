@@ -15,6 +15,10 @@ export function describeValue(value: unknown): string {
     }
 }
 
+export function messageOf(thrown: unknown): string {
+    return Error.isError(thrown) ? thrown.message : describeValue(thrown);
+}
+
 export function isIterable(value: unknown): value is Iterable<ReactNode> {
     return (
         typeof value === 'object' &&
@@ -25,13 +29,16 @@ export function isIterable(value: unknown): value is Iterable<ReactNode> {
 
 export function checkType(what: string, value: unknown, type: 'boolean' | 'string'): void {
     if (value !== undefined && typeof value !== type) {
-        throw new ComponentEmbedError(`${what} must be a ${type}, got ${describeValue(value)}.`);
+        throw new ComponentEmbedError('InvalidProp', `${what} must be a ${type}, got ${describeValue(value)}.`);
     }
 }
 
 export function checkLength(what: string, value: string, max: number): void {
     if (value.length > max) {
-        throw new ComponentEmbedError(`${what} is longer than ${String(max)} characters (${String(value.length)}).`);
+        throw new ComponentEmbedError(
+            'OverLimit',
+            `${what} is longer than ${String(max)} characters (${String(value.length)}).`
+        );
     }
 }
 
@@ -42,5 +49,7 @@ export function hasScheme(url: string, schemes: readonly string[]): boolean {
 
 // URL.parse ignores whitespace that the raw url still carries
 export function checkNoWhitespace(what: string, url: string): void {
-    if (/\s/.test(url)) throw new ComponentEmbedError(`${what} has whitespace in it, got ${describeValue(url)}.`);
+    if (/\s/.test(url)) {
+        throw new ComponentEmbedError('InvalidProp', `${what} has whitespace in it, got ${describeValue(url)}.`);
+    }
 }

@@ -490,8 +490,9 @@ describe('toComponentEmbed with your own components', () => {
         }
 
         expect(thrown).toBeInstanceOf(ComponentEmbedError);
-        expect((thrown as ComponentEmbedError).message).toBe(
-            "<Counter> threw while the package read it. Components here run outside React's renderer, so hooks don't work."
+        expect((thrown as ComponentEmbedError).code).toBe('ReadFailed');
+        expect((thrown as ComponentEmbedError).message).toMatch(
+            /^<Counter> threw while the package read it: .+\. Components here run outside React's renderer, so hooks don't work in them\.$/
         );
         expect((thrown as ComponentEmbedError).cause).toBeInstanceOf(TypeError);
     });

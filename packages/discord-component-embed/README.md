@@ -221,4 +221,6 @@ Discord doesn't report an invalid payload anywhere. It drops the payload and sho
 - the embed has more than 40 components, counting the container
 - linked JSON is larger than 3000 bytes
 
+Every `ComponentEmbedError` carries a `code` to branch on: `InvalidStructure`, `InvalidProp`, `OverLimit`, `UnsupportedComponent`, or `ReadFailed`. The messages can change between releases. The codes stay. If a component or an iterator of yours throws while the tree is read, you get a `ReadFailed` with the original error on `cause`.
+
 Discord also has to fetch the page and every image within 10 seconds, without a login or a bot challenge. This package can't check that for you. If your site sits behind bot protection, allow user agents containing `Discordbot`.
