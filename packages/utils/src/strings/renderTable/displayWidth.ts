@@ -65,7 +65,11 @@ function hardBreak(token: string, maxColumns: number): string[] {
     const pieces: string[] = [];
     let rest = token;
     while (displayWidth(rest) > maxColumns) {
-        const head = takeWidth(rest, maxColumns);
+        let head = takeWidth(rest, maxColumns);
+        if (head.length === 0) {
+            head = segmenter.segment(rest)[Symbol.iterator]().next().value?.segment ?? '';
+            if (head.length === 0) break;
+        }
         pieces.push(head);
         rest = rest.slice(head.length);
     }
