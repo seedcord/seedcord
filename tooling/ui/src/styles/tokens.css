@@ -94,17 +94,18 @@
     /* Popover/Tooltip surface */
     --bg-popover: color-mix(in oklab, var(--bg) 98%, var(--color-base-dark) 2%);
 
-    /* Shadows */
-    --shadow-soft-token: 0 28px 60px -36px color-mix(in oklab, var(--color-text) 28%, transparent);
+    /* Shadows. a shadow stays dark in both themes. --color-text flips and painted a pale line on dark */
+    --shadow-ink: var(--color-base-dark);
+    --shadow-soft-token: 0 28px 60px -36px color-mix(in oklab, var(--shadow-ink) 28%, transparent);
     --shadow-card:
-        0 1px 2px color-mix(in oklab, var(--color-text) 4%, transparent),
-        0 1px 1px color-mix(in oklab, var(--color-text) 4%, transparent);
+        0 1px 2px color-mix(in oklab, var(--shadow-ink) 4%, transparent),
+        0 1px 1px color-mix(in oklab, var(--shadow-ink) 4%, transparent);
     --shadow-card-md:
-        0 4px 12px color-mix(in oklab, var(--color-text) 6%, transparent),
-        0 1px 2px color-mix(in oklab, var(--color-text) 4%, transparent);
+        0 4px 12px color-mix(in oklab, var(--shadow-ink) 6%, transparent),
+        0 1px 2px color-mix(in oklab, var(--shadow-ink) 4%, transparent);
     --shadow-card-lg:
-        0 12px 32px color-mix(in oklab, var(--color-text) 10%, transparent),
-        0 2px 6px color-mix(in oklab, var(--color-text) 4%, transparent);
+        0 12px 32px color-mix(in oklab, var(--shadow-ink) 10%, transparent),
+        0 2px 6px color-mix(in oklab, var(--shadow-ink) 4%, transparent);
 
     /* Badge tones */
     --badge-package-border: color-mix(in oklab, var(--rind) 38%, var(--border));
@@ -126,7 +127,8 @@
     --text-accent-b-strong: color-mix(in oklab, var(--color-text) 65%, var(--rind) 35%);
     --text-accent-b-intense: color-mix(in oklab, var(--rind) 80%, var(--color-text) 20%);
 
-    --bg-surface-subtle: color-mix(in oklab, var(--bg) 95%, var(--surface) 5%);
+    /* the opaque twin of --surface-subtle. mixing --surface in would carry its alpha through */
+    --bg-surface-subtle: color-mix(in oklab, var(--bg) 98%, var(--text) 2%);
     --bg-surface-moderate: color-mix(in oklab, var(--bg) 90%, var(--surface) 10%);
     --bg-code: color-mix(in oklab, var(--bg) 96%, var(--text) 4%);
     --bg-code-header: color-mix(in oklab, var(--bg) 94%, var(--text) 6%);
@@ -179,6 +181,9 @@
 [data-theme='dark'] {
     --text-muted: color-mix(in oklab, var(--color-text) 70%, transparent);
     --text-faint: color-mix(in oklab, var(--color-text) 28%, transparent);
+
+    /* --surface is white at 4% here against black at 2% in light. the opaque twin follows */
+    --bg-surface-subtle: color-mix(in oklab, var(--bg) 95.5%, var(--text) 4.5%);
 
     /* plain black reads deeper than the brand ink on the dark ground */
     --command-overlay: color-mix(in oklab, var(--bg) 55%, black 45%);

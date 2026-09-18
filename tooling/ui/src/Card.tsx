@@ -5,9 +5,10 @@ import type { ComponentPropsWithoutRef, ElementType, HTMLAttributes, ReactElemen
 
 const cardBaseClassName = tw`relative border border-(--border)`;
 
+// an opaque fill. a card inside a tinted container would otherwise take that container's colour
 const cardVariantClasses = {
-    default: tw`rounded-md bg-(--surface-subtle) shadow-(--shadow-card)`,
-    flat: tw`rounded-md bg-(--surface-subtle)`
+    default: tw`rounded-md bg-(--bg-surface-subtle) shadow-(--shadow-card)`,
+    flat: tw`rounded-md bg-(--bg-surface-subtle)`
 } as const;
 
 export type CardVariant = keyof typeof cardVariantClasses;

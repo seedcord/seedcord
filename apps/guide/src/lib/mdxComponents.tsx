@@ -58,7 +58,7 @@ function GuideImage({ alt, frame = false, align = 'left', className, ...props }:
                 'block h-auto max-w-full rounded-md',
                 pick(ALIGNMENTS, align, 'align'),
                 frame !== false &&
-                    cn(pick(FRAME_WEIGHTS, frame, 'frame'), 'border-(--border) bg-(--surface-subtle) p-2'),
+                    cn(pick(FRAME_WEIGHTS, frame, 'frame'), 'border-(--border) bg-(--bg-surface-subtle) p-2'),
                 className
             )}
         />
