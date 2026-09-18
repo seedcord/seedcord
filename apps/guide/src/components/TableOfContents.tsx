@@ -15,7 +15,7 @@ export interface TableOfContentsProps {
 
 // GuideShell's ContentsColumn sets the width and the sticky offset
 const columnClassName = tw`nice-scroll overflow-y-auto text-[13px]`;
-const labelClassName = tw`mb-2 text-xs font-semibold tracking-widest text-(--text-faint) uppercase`;
+const labelClassName = tw`mb-2 text-xs font-semibold text-(--text-faint)`;
 const rowClassName = cn(
     tw`block py-1.5`,
     tw`transition-colors duration-100 ease-out`,

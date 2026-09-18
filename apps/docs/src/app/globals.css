@@ -4,6 +4,20 @@
 
 :root {
     --nav-h: 4.5rem; /* fallback until the navbar measures its own height */
+    /* the content column pads by this and the floating jump button sits this far from the right edge */
+    --page-gutter: 0.75rem;
+}
+
+@media (width >= 48rem) {
+    :root {
+        --page-gutter: 1.75rem;
+    }
+}
+
+@media (width >= 64rem) {
+    :root {
+        --page-gutter: 2.5rem;
+    }
 }
 
 @layer base {

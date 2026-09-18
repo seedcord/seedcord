@@ -7,6 +7,14 @@
     --nav-h: 4.5rem; /* fallback until the navbar measures its own height */
     /* the collapsed toc bar sits under the navbar below lg and would cover a scrolled-to heading */
     --heading-gap: 3.5rem;
+    /* the shell pads by this and the floating jump button sits this far from the right edge */
+    --page-gutter: 1rem;
+}
+
+@media (width >= 48rem) {
+    :root {
+        --page-gutter: 1.5rem;
+    }
 }
 
 /* the navbar shows its tab row from lg up */

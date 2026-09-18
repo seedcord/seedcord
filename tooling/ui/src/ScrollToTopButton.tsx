@@ -10,8 +10,12 @@ import { tw } from './lib/tw';
 import type { ReactElement } from 'react';
 
 export interface ScrollToTopButtonProps {
+    /** `floating` hovers over the page. `inline` matches a labelled toolbar row such as CopyPageButton. */
+    variant?: 'floating' | 'inline';
     className?: string;
 }
+
+const LABEL = 'Jump to top';
 
 const VIEWPORT_THRESHOLD_MULTIPLIER = 0.4;
 const MIN_SCROLL_THRESHOLD = 180;
@@ -21,7 +25,7 @@ function scrollToTop(): void {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-export function ScrollToTopButton({ className }: ScrollToTopButtonProps): ReactElement {
+export function ScrollToTopButton({ variant = 'floating', className }: ScrollToTopButtonProps): ReactElement {
     const [visible, setVisible] = useState(false);
     const thresholdRef = useRef(0);
 
@@ -60,14 +64,31 @@ export function ScrollToTopButton({ className }: ScrollToTopButtonProps): ReactE
         };
     }, []);
 
+    if (variant === 'inline') {
+        return (
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={scrollToTop}
+                className={cn('text-subtle shrink-0 gap-2 hover:text-(--text)', className)}
+            >
+                <ArrowUp size={16} aria-hidden className={cn('shrink-0')} />
+                {LABEL}
+            </Button>
+        );
+    }
+
     return (
         <Button
             variant="ghost"
             size="icon"
             onClick={scrollToTop}
-            aria-label="Jump to top"
+            aria-label={LABEL}
             className={cn(
-                'border-border/80 shadow-soft size-12 rounded-full border bg-(--surface-moderate) text-(--text) transition-all duration-300 hover:-translate-y-1 hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-moderate)',
+                // both backgrounds are opaque. body text shows through the --surface-* family
+                'border-border/80 shadow-soft z-50 border bg-(--bg-popover) text-(--text) transition-all duration-300 hover:-translate-y-1 hover:border-(--border-accent-a-subtle) hover:bg-(--bg-accent-a-moderate)',
+                // a page clears this with pb-(--jump-clearance)
+                'fixed bottom-(--jump-bottom) size-(--jump-size)',
                 visible
                     ? tw`pointer-events-auto transform-[translate3d(0,0,0)] opacity-100`
                     : tw`pointer-events-none transform-[translate3d(0,16px,0)] opacity-0`,

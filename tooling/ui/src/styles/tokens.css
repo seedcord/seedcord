@@ -134,6 +134,8 @@
     --bg-accent-b-subtle: color-mix(in oklab, var(--bg) 94%, var(--rind) 6%);
     --bg-accent-b-moderate: color-mix(in oklab, var(--bg) 85%, var(--rind) 15%);
     --bg-accent-b-strong: color-mix(in oklab, var(--bg) 76%, var(--rind) 24%);
+    /* the --surface-accent-a pair is see-through. this one tints an element that floats over text */
+    --bg-accent-a-moderate: color-mix(in oklab, var(--bg) 85%, var(--flesh) 15%);
 
     --surface-accent-b-subtle: color-mix(in oklab, var(--surface) 92%, var(--rind) 8%);
     --surface-accent-a-subtle: color-mix(in oklab, var(--surface) 92%, var(--flesh) 8%);
@@ -164,6 +166,14 @@
     --command-overlay: color-mix(in oklab, var(--bg) 55%, var(--seed-dark) 45%);
     --overlay-dim: color-mix(in oklab, var(--bg) 72%, color-mix(in srgb, var(--color-base-slate), transparent 20%) 28%);
     --bg-dim-subtle: color-mix(in oklab, var(--bg) 96%, var(--color-base-slate) 4%);
+
+    /* ScrollToTopButton sets its own size and bottom offset. a page pads its end by the clearance */
+    --jump-size: 3rem;
+    --jump-bottom: 2.5rem;
+    --jump-clearance: calc(var(--jump-bottom) + var(--jump-size) + 1.5rem);
+
+    /* pulls a ghost row's box left so its icon lands on the column edge. 12px of px-3 plus the 2px lucide leaves blank */
+    --ghost-row-pull: 0.875rem;
 }
 
 [data-theme='dark'] {

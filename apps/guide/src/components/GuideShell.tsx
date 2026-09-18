@@ -8,6 +8,7 @@ import {
     MobilePanel,
     Navbar,
     NavTabs,
+    ScrollToTopButton,
     SearchIconButton,
     SiteSwitcher,
     ThemeToggle,
@@ -94,6 +95,9 @@ function ContentsBar({ items, pageTitle }: Omit<TocBarProps, 'activeIds' | 'curr
 // 214px is the column width in the guide layouts mock
 const contentsColumnClassName = tw`sticky top-(--nav-h) hidden max-h-[calc(100dvh-var(--nav-h))] w-53.5 shrink-0 flex-col gap-4 self-start py-10 lg:flex`;
 
+// a ghost row spans the column with its icon on the left edge
+const ghostRow = tw`-ms-(--ghost-row-pull) self-stretch`;
+
 function ContentsColumn({
     items,
     actions
@@ -105,11 +109,9 @@ function ContentsColumn({
 
     return (
         <div className={cn(contentsColumnClassName)}>
-            {actions === undefined ? null : (
-                // 14px is the button's px-3 plus the blank lucide leaves inside the icon
-                <PageActions {...actions} className={cn('-ms-3.5 self-start')} />
-            )}
+            {actions === undefined ? null : <PageActions {...actions} className={cn(ghostRow)} />}
             <TableOfContents items={items} activeIds={activeIds} className={cn('min-h-0')} />
+            <ScrollToTopButton variant="inline" className={cn(ghostRow, 'justify-start')} />
         </div>
     );
 }
@@ -166,7 +168,7 @@ export function GuideShell({
             <AnchorProvider toc={anchors}>
                 <div className={cn('pt-(--nav-h)')}>
                     {hasContents ? <ContentsBar items={toc} pageTitle={pageTitle} /> : null}
-                    <div className={cn('mx-auto flex w-full max-w-(--content-max) gap-10 px-4 md:px-6')}>
+                    <div className={cn('mx-auto flex w-full max-w-(--content-max) gap-10 px-(--page-gutter)')}>
                         {sections.length > 0 ? (
                             <DocsSidebar
                                 sections={sections}
@@ -176,12 +178,15 @@ export function GuideShell({
                                 )}
                             />
                         ) : null}
-                        <main id="main-content" className={cn('min-w-0 flex-1 py-10')}>
+                        {/* below lg the floating button would cover PageNav */}
+                        <main id="main-content" className={cn('min-w-0 flex-1 pt-10 pb-(--jump-clearance) lg:pb-10')}>
                             {children}
                         </main>
                         {hasContents ? <ContentsColumn items={toc} actions={actions} /> : null}
                     </div>
                 </div>
+                {/* the contents column carries its own from lg up */}
+                <ScrollToTopButton className={cn('right-(--page-gutter) lg:hidden')} />
             </AnchorProvider>
 
             <MobilePanel

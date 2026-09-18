@@ -85,7 +85,7 @@ export function Container({
                 <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col')}>
                     <div
                         className={cn(
-                            'mx-auto w-full max-w-none min-w-0 px-3 pt-6 pb-12 md:px-7 md:pt-8 lg:px-10 lg:pt-10'
+                            'mx-auto w-full max-w-none min-w-0 px-(--page-gutter) pt-6 pb-(--jump-clearance) md:pt-8 lg:pt-10'
                         )}
                     >
                         {children}
@@ -93,7 +93,7 @@ export function Container({
                 </div>
             </div>
 
-            <ScrollToTopButton className={cn('fixed right-6 bottom-10')} />
+            <ScrollToTopButton className={cn('right-(--page-gutter)')} />
         </div>
     );
 }

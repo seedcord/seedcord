@@ -71,7 +71,8 @@ export function PageActions({ copySource, viewHref, links, className }: PageActi
 
     return (
         <div className={cn('inline-flex items-center', className)}>
-            <CopyPageButton source={copySource} className={cn('rounded-e-none pe-2')} />
+            {/* grow fills a stretched row. the caret keeps its own width */}
+            <CopyPageButton source={copySource} className={cn('grow justify-start rounded-e-none pe-2')} />
             <Popover open={open} onOpenChange={setOpen}>
                 <PopoverTrigger asChild>
                     <Button
