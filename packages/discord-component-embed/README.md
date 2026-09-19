@@ -1,16 +1,15 @@
 <div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://cdn.seedcord.org/assets/wordmark-dark.webp" />
-    <img src="https://cdn.seedcord.org/assets/wordmark-light.webp" alt="seedcord" width="440" />
-  </picture>
+  <h1>discord-component-embed</h1>
+  <p>Show your own card when someone shares your link on Discord.</p>
+  <a href="https://github.com/seedcord/seedcord/blob/next/packages/discord-component-embed/CHANGELOG.md">Changelog</a> ·
+  <a href="https://docs.seedcord.org/packages/discord-component-embed/latest">Reference</a> ·
+  <a href="https://discord.gg/DzFxY58WXf">Discord</a>
 </div>
 
+<br />
+
 <div align="center">
-  <h3>The whole Discord bot, wired and typed</h3>
-  <a href="https://seedcord.org">Website</a> ·
-  <a href="https://guide.seedcord.org">Guide</a> ·
-  <a href="https://docs.seedcord.org">Reference</a> ·
-  <a href="https://discord.gg/DzFxY58WXf">Discord</a>
+  <img src="https://cdn.seedcord.org/assets/discord-component-embed.png" alt="A link to materwelon.dev in Discord. The preview card has a linked title, a line about the author, three projects with their emojis, a thumbnail, and GitHub, npm, and X buttons." width="640" />
 </div>
 
 <br />
@@ -21,13 +20,29 @@
 
 </div>
 
+## Contents
+
+- [About](#about)
+- [Installation](#installation)
+- [Build a card](#build-a-card)
+- [Put it in your page](#put-it-in-your-page)
+- [JSX setup](#jsx-setup)
+- [Linked JSON](#linked-json)
+- [Your own components](#your-own-components)
+- [Custom emoji](#custom-emoji)
+- [Testing your card](#testing-your-card)
+- [Components](#components)
+- [Errors](#errors)
+
 ## About
 
-When someone pastes a link to your site into Discord, Discord fetches the page and builds a preview card from its Open Graph tags. A [component embed](https://github.com/discord/discord-api-docs/pull/8606) swaps that card for a layout you build out of Discord's message components: markdown, images, a gallery, an accent color, and link buttons.
+When someone pastes a link to your site into Discord, Discord fetches the page and builds a preview card from its Open Graph tags. A [component embed](https://github.com/discord/discord-api-docs/pull/8606) replaces that card with a layout made of Discord's message components: markdown, images, a gallery, an accent color, and link buttons. The card above is one.
 
-With this package you write that layout in JSX. It checks the tree against Discord's rules for the format, then writes the JSON Discord reads from your page.
+You describe the card with JSX or with `h()`, in any framework or none. The package checks it against Discord's rules for the format, then writes the JSON Discord reads from your page.
 
 Discord marks link previews as subject to change. Until v1.0.0, a minor version of this package can break too.
+
+<div align="right"><a href="#contents">back to top</a></div>
 
 ## Installation
 
@@ -35,134 +50,320 @@ Discord marks link previews as subject to change. Until v1.0.0, a minor version 
 pnpm add discord-component-embed
 ```
 
-It needs React 19.2 or newer as a peer. Nothing in it imports from Node, so it runs on Node, Bun, Deno, and edge runtimes.
+You don't need React. Only `discord-component-embed/react` uses it, and it works with React 17, 18, and 19. Nothing in the package imports from Node, so it runs on Node, Bun, Deno, and edge runtimes.
 
-## Usage
+<div align="right"><a href="#contents">back to top</a></div>
 
-Discord doesn't run JavaScript when it fetches your page, so the embed has to be in the HTML your server sends. Render [`<ComponentEmbed>`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/component-embed) there.
+## Build a card
+
+A card is a tree of components with one `<Container>` at the root.
 
 ```tsx
-import {
-    ActionRow,
-    ComponentEmbed,
-    Container,
-    LinkButton,
-    MediaGallery,
-    MediaGalleryItem,
-    Section,
-    Separator,
-    TextDisplay
-} from 'discord-component-embed';
+// src/cards/PostCard.tsx
+import { ActionRow, Container, LinkButton, Section, TextDisplay, Thumbnail } from 'discord-component-embed';
+import type { Post } from '../lib/posts';
 
-export function GuidePreview({ page }: { page: GuidePage }) {
+export function PostCard({ post }: { post: Post }) {
     return (
-        <Container accentColor={0xf8f6e8}>
-            <Section accessory={<LinkButton url={page.url} label="Read" />}>
+        <Container accentColor={0x45a44f}>
+            <Section accessory={<Thumbnail url={post.cover} description={post.coverAlt} />}>
                 <TextDisplay>
-                    # **[{page.title}]({page.url})**{'\n'}
-                    {page.description}
+                    # [{post.title}]({post.url}){'\n'}
+                    {post.summary}
                 </TextDisplay>
+                <TextDisplay>-# {post.readingTime} min read</TextDisplay>
             </Section>
-            <MediaGallery>
-                <MediaGalleryItem url={page.ogImage} description={page.title} />
-            </MediaGallery>
-            <Separator />
             <ActionRow>
-                <LinkButton url="https://guide.seedcord.org" label="Guide" />
-                <LinkButton url="https://docs.seedcord.org" label="Reference" />
-                <LinkButton url="https://github.com/seedcord/seedcord" label="GitHub" />
+                <LinkButton url={post.url} label="Read" />
+                <LinkButton url="https://example.com/rss.xml" label="RSS" />
             </ActionRow>
         </Container>
     );
 }
-
-// only Discord's crawler reads this. put it in the page, typically its <head>
-<ComponentEmbed>
-    <GuidePreview page={page} />
-</ComponentEmbed>;
 ```
 
-`GuidePreview` is a plain function component, and the `<Container>` it returns is the one root Discord allows. `0xf8f6e8` colors the bar down the card's left edge. At the bottom, `<ComponentEmbed>` turns the tree into the `<script>` tag Discord looks for.
+`0x45a44f` colors the bar down the card's left edge. Discord shows the `<Thumbnail>` to the right of the two blocks of text. JSX turns a line break in your source into a space. The `{'\n'}` after the title puts `post.summary` on its own line.
 
-JSX turns a line break in your source into a space. The `{'\n'}` after the title is what puts `page.description` on its own line in Discord.
+This file compiles with React's JSX, Preact's, or the package's own. If your project has no JSX yet, [JSX setup](#jsx-setup) shows the two lines to add.
 
-Keep your Open Graph tags. Discord shows the standard card from them whenever it can't use the component embed.
+Without JSX, build the same card with `h()`. It takes a component, its props, then its children.
 
-### Linked JSON
+```ts
+// src/cards/buildPostCard.ts
+import { ActionRow, Container, LinkButton, Section, TextDisplay, Thumbnail, h } from 'discord-component-embed';
+import type { Post } from '../lib/posts';
 
-If you'd rather keep the JSON out of the page, Discord can fetch it from its own URL on the same site. [`componentEmbedResponse`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/component-embed-response) builds the response for that URL.
-
-```tsx
-// app/embeds/[...slug]/route.tsx in Next.js
-import { componentEmbedResponse } from 'discord-component-embed';
-
-export async function GET(_request: Request, { params }: { params: Promise<{ slug: string[] }> }) {
-    const page = await getGuidePage((await params).slug);
-    return componentEmbedResponse(<GuidePreview page={page} />);
+export function buildPostCard(post: Post) {
+    return h(
+        Container,
+        { accentColor: 0x45a44f },
+        h(
+            Section,
+            { accessory: h(Thumbnail, { url: post.cover, description: post.coverAlt }) },
+            h(TextDisplay, null, `# [${post.title}](${post.url})\n${post.summary}`),
+            h(TextDisplay, null, `-# ${post.readingTime} min read`)
+        ),
+        h(
+            ActionRow,
+            null,
+            h(LinkButton, { url: post.url, label: 'Read' }),
+            h(LinkButton, { url: 'https://example.com/rss.xml', label: 'RSS' })
+        )
+    );
 }
 ```
 
-The route builds the same `GuidePreview` for whichever page `slug` points at. `componentEmbedResponse` checks the JSON against Discord's 3,000-byte limit for linked payloads, then returns a Web `Response` with an `application/json` content type.
+TypeScript checks each `h()` call against the component's props. A `Section` without an `accessory` fails to compile, and so does a `TextDisplay` without text.
 
-Point the page at that URL with a `<link>` tag. The `href` has to be an absolute `https` URL on the page's host, a subdomain of it, or its parent domain.
+<div align="right"><a href="#contents">back to top</a></div>
 
-```html
-<link
-    rel="discord:component-embed"
-    type="application/json"
-    href="https://guide.seedcord.org/embeds/components/custom-ids"
-/>
+## Put it in your page
+
+Discord doesn't run JavaScript when it fetches your page. The card has to be in the HTML your site serves, as a `<script>` tag with the card's JSON inside. It works in the `<head>` or the `<body>`.
+
+<!-- prettier-ignore-start -->
+
+| your site | works | how |
+| --- | --- | --- |
+| server rendering (Next, Nuxt, SvelteKit, Astro) | yes | the server writes the tag into each page |
+| static build (Astro, Next `output: 'export'`, SvelteKit prerender, Eleventy) | yes | the build writes the tag into each HTML file |
+| plain HTML | yes | generate the tag once and paste it in |
+| client-only app, where `index.html` starts empty | one card for the whole site | a tag added in the browser never reaches Discord, so put one tag in `index.html` |
+
+<!-- prettier-ignore-end -->
+
+Keep your Open Graph tags. Discord shows the standard card from them whenever it can't use the component embed.
+
+<details>
+<summary><b>React and Next.js</b></summary>
+
+`<ComponentEmbed>` renders the tag.
+
+```tsx
+// app/blog/[slug]/page.tsx
+import { ComponentEmbed } from 'discord-component-embed/react';
+import { PostCard } from '@/cards/PostCard';
+import { getPost } from '@/lib/posts';
+
+export default async function BlogPost({ params }: PageProps<'/blog/[slug]'>) {
+    const post = await getPost((await params).slug);
+
+    return (
+        <>
+            <ComponentEmbed>
+                <PostCard post={post} />
+            </ComponentEmbed>
+            <article>{post.body}</article>
+        </>
+    );
+}
 ```
 
-If a page carries both tags, Discord uses the inline `<script>` and skips the `<link>`.
+Render it on the server or at build time. In a client component, the tag only exists in the browser.
 
-### Without React
+</details>
 
-The components are React components, but nothing here renders them. The package only reads the tree they form, so it works in any framework once `react` is installed as an ordinary dependency. Build the tree with React's `createElement`, and turn it into HTML with [`toComponentEmbedScript`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/to-component-embed-script). A SvelteKit page:
+<details>
+<summary><b>Preact</b></summary>
+
+Preact's JSX builds elements the package reads, so `PostCard` works as written. `toComponentEmbedScript` returns the tag as a string, ready for the `<head>` of the HTML your server sends.
+
+```tsx
+import { toComponentEmbedScript } from 'discord-component-embed';
+import { PostCard } from './cards/PostCard';
+import { getPost } from './lib/posts';
+
+const post = await getPost(slug);
+const tag = toComponentEmbedScript(<PostCard post={post} />);
+```
+
+</details>
+
+<details>
+<summary><b>Vue and Nuxt</b></summary>
+
+Build the card with `h()`, since Vue's JSX makes Vue elements. Pass its JSON to `useHead`.
+
+```vue
+<!-- pages/blog/[slug].vue -->
+<script setup lang="ts">
+import { toComponentEmbed } from 'discord-component-embed';
+import { buildPostCard } from '~/cards/buildPostCard';
+import { getPost } from '~/lib/posts';
+
+const post = await getPost(useRoute().params.slug);
+
+useHead({
+    script: [
+        {
+            id: 'discord:component-embed',
+            type: 'application/json',
+            innerHTML: JSON.stringify(toComponentEmbed(buildPostCard(post)))
+        }
+    ]
+});
+</script>
+```
+
+Discord reads only a script with the id `discord:component-embed`. `useHead` escapes `</script` in `innerHTML`, so text in the card can't close the tag early.
+
+</details>
+
+<details>
+<summary><b>Svelte and SvelteKit</b></summary>
+
+Build the card with `h()` in a server load function, and return the finished tag.
 
 ```ts
-// src/routes/[...slug]/+page.server.ts
-import { createElement as h } from 'react';
-import { Container, TextDisplay, toComponentEmbedScript } from 'discord-component-embed';
-import type { PageServerLoad } from './$types';
+// src/routes/blog/[slug]/+page.server.ts
+import { toComponentEmbedScript } from 'discord-component-embed';
+import { buildPostCard } from '$lib/cards/buildPostCard';
+import { getPost } from '$lib/posts';
 
-export const load: PageServerLoad = async ({ params }) => {
-    const page = await getGuidePage(params.slug);
-    const title = h(TextDisplay, null, `# ${page.title}`);
-    const preview = h(Container, { accentColor: 0xf8f6e8 }, title);
-
-    return { page, preview: toComponentEmbedScript(preview) };
+export const load = async ({ params }) => {
+    const post = await getPost(params.slug);
+    return { post, card: toComponentEmbedScript(buildPostCard(post)) };
 };
 ```
 
 ```svelte
-<!-- src/routes/[...slug]/+page.svelte -->
+<!-- src/routes/blog/[slug]/+page.svelte -->
 <script>
     let { data } = $props();
 </script>
 
 <svelte:head>
-    {@html data.preview}
+    {@html data.card}
 </svelte:head>
 ```
 
-`h(Container, …)` builds the same element that `<Container>` does in JSX. `toComponentEmbedScript` returns the finished `<script>` tag as a string, with every `<` in the JSON escaped so text in your payload can't close the tag early. `{@html}` then writes that string into the head as it is.
+`toComponentEmbedScript` escapes every `<` in the JSON, so `{@html}` can write it as it is.
 
-Any framework with a way to put raw HTML in the `<head>` works the same way. For linked JSON, return `componentEmbedResponse` from any route that answers with a Web `Response`, like a SvelteKit `+server.ts`.
+</details>
 
-### Your own components
+<details>
+<summary><b>Astro</b></summary>
 
-Split a big layout into plain function components, the way you would a page. They work anywhere in the tree, including as the root and as a `<Section>` accessory.
+JSX inside an `.astro` file compiles to Astro elements, so build the card in its own file. `buildPostCard` from [Build a card](#build-a-card) works as it is. For JSX, follow the [JSX setup](#jsx-setup) and export a function from a `.tsx` file that returns `<PostCard post={post} />`.
+
+```astro
+---
+// src/layouts/Post.astro
+import { toComponentEmbedScript } from 'discord-component-embed';
+import { buildPostCard } from '../cards/buildPostCard';
+
+const { post } = Astro.props;
+---
+
+<html>
+    <head>
+        <Fragment set:html={toComponentEmbedScript(buildPostCard(post))} />
+    </head>
+    <body><slot /></body>
+</html>
+```
+
+</details>
+
+<details>
+<summary><b>Solid</b></summary>
+
+<!-- TODO: Solid's innerHTML doesn't escape </script. Waiting on the escaped-JSON helper decision. -->
+
+Build the card with `h()`, since Solid's Vite plugin compiles every `.tsx` file with Solid's JSX.
+
+</details>
+
+<details>
+<summary><b>Plain HTML</b></summary>
+
+Generate the tag with a short Node script, then paste what it prints into your page's `<head>`.
+
+```js
+// card.mjs, run with: node card.mjs
+import { Container, TextDisplay, h, toComponentEmbedScript } from 'discord-component-embed';
+
+const card = h(Container, { accentColor: 0x45a44f }, h(TextDisplay, null, '# My site\nWhat it is about.'));
+
+console.log(toComponentEmbedScript(card));
+```
+
+</details>
+
+<div align="right"><a href="#contents">back to top</a></div>
+
+## JSX setup
+
+If your project already uses React or Preact, you're set. Their JSX builds elements this package reads.
+
+In a project without a JSX framework, like Astro, Svelte, or a Node script, point TypeScript at the package's JSX:
+
+```json
+{
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "jsxImportSource": "discord-component-embed"
+    }
+}
+```
+
+TypeScript applies these two settings to `.tsx` and `.jsx` files only, so `.astro` and `.svelte` files compile as before. If you add React later, move `jsxImportSource` into the one file that builds the card:
 
 ```tsx
+/** @jsxImportSource discord-component-embed */
+```
+
+That comment only works while `jsx` is set to `react-jsx`. If `jsx` isn't set, TypeScript reports "Cannot use JSX unless the '--jsx' flag is provided".
+
+Vue's and Solid's Vite plugins compile every `.tsx` file with their own JSX and ignore the comment. In those projects, use `h()`.
+
+<div align="right"><a href="#contents">back to top</a></div>
+
+## Linked JSON
+
+You can also keep the JSON out of the page. Discord then fetches it from its own URL on your site, and [`componentEmbedResponse`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/component-embed-response) builds the response for that URL.
+
+```tsx
+// app/embeds/blog/[slug]/route.tsx in Next.js
+import { componentEmbedResponse } from 'discord-component-embed';
+import { PostCard } from '@/cards/PostCard';
+import { getPost } from '@/lib/posts';
+
+export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+    const post = await getPost((await params).slug);
+    return componentEmbedResponse(<PostCard post={post} />);
+}
+```
+
+The route builds `PostCard` for whichever post `slug` points at. `componentEmbedResponse` checks the JSON against Discord's 3,000-byte limit for linked payloads, then returns a Web `Response` with an `application/json` content type. Any framework whose routes return a Web `Response` works the same way, like a SvelteKit `+server.ts`.
+
+Point the page at that URL with a `<link>` tag. The `href` has to be an absolute `https` URL on the page's host, a subdomain of it, or its parent domain.
+
+```html
+<link rel="discord:component-embed" type="application/json" href="https://example.com/embeds/blog/hello-world" />
+```
+
+<div align="right"><a href="#contents">back to top</a></div>
+
+## Your own components
+
+Split a big card into plain function components, the way you would a page. They work anywhere in the tree, including as the root and as a `<Section>` accessory.
+
+```tsx
+import { TextDisplay } from 'discord-component-embed';
+
 function Headline({ title }: { title: string }) {
     return <TextDisplay># {title}</TextDisplay>;
 }
 ```
 
-The package calls `Headline` with its props while it reads the tree, outside React's renderer. A hook inside it throws a `ComponentEmbedError`, and so do `memo`, `lazy`, `forwardRef`, context, and class components. An async component throws too, so load your data first and pass it in as props.
+The package calls `Headline` with its props while it reads the tree, outside any framework's renderer. So a component that calls a hook or reads context throws a `ComponentEmbedError`, and so do `memo`, `lazy`, `forwardRef`, and class components. A component that is async or suspends throws too, so load your data first and pass it in as props.
 
-### Custom emoji
+If your component passes its `children` into one of the package's components, type that prop as `EmbedNode`.
+
+<div align="right"><a href="#contents">back to top</a></div>
+
+## Custom emoji
 
 A custom emoji in text uses Discord's markdown form, `<:name:id>`, or `<a:name:id>` for an animated one. On a button, it's an object.
 
@@ -172,19 +373,27 @@ A custom emoji in text uses Discord's markdown form, `<:name:id>`, or `<a:name:i
 <LinkButton url="https://seedcord.org" label="seedcord" emoji={{ name: 'seedcord', id: '1538077321318236281' }} />
 ```
 
-The emoji in the `TextDisplay` sits inside `{'…'}` because JSX reads a bare `<` as the start of a tag. Written straight into the text, `<:seedcord:…>` won't compile. The button takes the same `id` and `name`, plus `animated: true` for a gif.
+Write the emoji in a `TextDisplay` as a string, `{'…'}`, because JSX reads a bare `<` as the start of a tag. The button takes the same `id` and `name`, plus `animated: true` for a gif.
 
-To find an emoji's id, send `\:seedcord:` in Discord. The message comes out in the markdown form, id included.
+Emojis you upload to your app in the Discord Developer Portal work. To find an emoji's id, send `\:seedcord:` in Discord. The message shows the markdown form, id included.
 
-### Getting the JSON
+<div align="right"><a href="#contents">back to top</a></div>
 
-[`toComponentEmbed`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/to-component-embed) returns the payload as an object. Use it to write the tag or the response yourself, or in a test that checks every page's preview before you deploy.
+## Testing your card
 
-### Testing a preview
+Discord has to reach the page, so a card on `localhost` needs a public URL. A [cloudflared quick tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/) gives you one without an account:
+
+```sh
+cloudflared tunnel --url http://localhost:4321
+```
+
+It prints a `trycloudflare.com` URL to paste into Discord. A Vite dev server rejects a host it doesn't recognize, so either serve a build or add the tunnel's host to `server.allowedHosts`.
 
 Discord caches a preview for about 30 minutes, so an edit won't show on a link you've already shared. Add a new query string, like `?v=2`, to see it right away. Changing only the `#fragment` doesn't help, since Discord leaves the fragment out of its cache key. Discord's [Embed Debugger](https://discord.com/developers/embeds) shows which tags it read from any URL.
 
-The [reference](https://docs.seedcord.org/packages/discord-component-embed/latest) covers every export, with an example on each.
+To check a card without Discord, [`toComponentEmbed`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/to-component-embed) returns the payload as an object. A test can build every page's card with it before you deploy.
+
+<div align="right"><a href="#contents">back to top</a></div>
 
 ## Components
 
@@ -204,16 +413,21 @@ The [reference](https://docs.seedcord.org/packages/discord-component-embed/lates
 
 <!-- prettier-ignore-end -->
 
+The [reference](https://docs.seedcord.org/packages/discord-component-embed/latest) lists every export, with an example on each.
+
+<div align="right"><a href="#contents">back to top</a></div>
+
 ## Errors
 
 Discord doesn't report an invalid payload anywhere. It drops the payload and shows the Open Graph card. So `toComponentEmbed`, `toComponentEmbedScript`, `<ComponentEmbed>`, and `componentEmbedResponse` throw a [`ComponentEmbedError`](https://docs.seedcord.org/packages/discord-component-embed/latest/classes/component-embed-error) when:
 
 - the root is anything other than one `Container`
-- a component sits somewhere it isn't allowed, or text sits outside a `TextDisplay`
+- a component is somewhere it isn't allowed, or text is outside a `TextDisplay`
 - a parent has too many or too few children, and a `Container` needs at least one
 - a `TextDisplay` is empty or holds anything besides text
 - a prop has the wrong type, like the string `'yes'` where Discord needs a boolean, or a `spacing` other than `'small'` or `'large'`
-- one of your components throws, uses a hook, or is anything but a plain function
+- one of your components throws, uses a hook, suspends, is async, or is anything but a plain function
+- the tree holds an element from Vue's `h()`
 - `accentColor` is outside `0` to `0xFFFFFF`
 - a `LinkButton` has neither a `label` nor an `emoji`, has a label over 80 characters, or has a `url` that is over 512 characters or not `http`, `https`, or `discord`
 - a media `url` is over 2048 characters or not `http` or `https`, or its `description` is over 1024 characters
@@ -221,6 +435,14 @@ Discord doesn't report an invalid payload anywhere. It drops the payload and sho
 - the embed has more than 40 components, counting the container
 - linked JSON is larger than 3000 bytes
 
-Every `ComponentEmbedError` carries a `code` to branch on: `InvalidStructure`, `InvalidProp`, `OverLimit`, `UnsupportedComponent`, or `ReadFailed`. The messages can change between releases. The codes stay. If a component or an iterator of yours throws while the tree is read, you get a `ReadFailed` with the original error on `cause`.
+Every `ComponentEmbedError` carries a `code`: `InvalidStructure`, `InvalidProp`, `OverLimit`, `UnsupportedComponent`, or `ReadFailed`. Branch on the code, since the message wording can change in any release. If a component or an iterator of yours throws while the tree is read, you get a `ReadFailed` with the original error on `cause`.
 
-Discord also has to fetch the page and every image within 10 seconds, without a login or a bot challenge. This package can't check that for you. If your site sits behind bot protection, allow user agents containing `Discordbot`.
+Discord also has to fetch the page and every image within 10 seconds, without a login or a bot challenge. This package can't check that for you. If your site uses bot protection, allow user agents containing `Discordbot`.
+
+<div align="right"><a href="#contents">back to top</a></div>
+
+---
+
+<div align="center">
+  Part of <a href="https://seedcord.org">seedcord</a> · Built by <a href="https://materwelon.dev">materwelonDhruv</a>
+</div>
