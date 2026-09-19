@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 
-import { SCRIPT_ID, toScriptJson } from './scriptJson';
+import { SCRIPT_ID } from './scriptId';
+import { toComponentEmbedJson } from './toComponentEmbedJson';
 
 import type { ReactElement } from 'react';
 
@@ -37,6 +38,6 @@ export function ComponentEmbed({ children }: ComponentEmbedProps): ReactElement 
         id: SCRIPT_ID,
         type: 'application/json',
         // react 18 and older HTML-escape a script's text children
-        dangerouslySetInnerHTML: { __html: toScriptJson(children) }
+        dangerouslySetInnerHTML: { __html: toComponentEmbedJson(children) }
     });
 }

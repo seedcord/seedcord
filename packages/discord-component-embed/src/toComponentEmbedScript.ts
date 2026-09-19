@@ -1,4 +1,5 @@
-import { SCRIPT_ID, toScriptJson } from './scriptJson';
+import { SCRIPT_ID } from './scriptId';
+import { toComponentEmbedJson } from './toComponentEmbedJson';
 
 import type { EmbedElement } from './element';
 
@@ -23,5 +24,5 @@ import type { EmbedElement } from './element';
  * ```
  */
 export function toComponentEmbedScript(root: EmbedElement): string {
-    return `<script id="${SCRIPT_ID}" type="application/json">${toScriptJson(root)}</script>`;
+    return `<script id="${SCRIPT_ID}" type="application/json">${toComponentEmbedJson(root)}</script>`;
 }

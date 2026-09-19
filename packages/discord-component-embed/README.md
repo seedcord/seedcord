@@ -132,7 +132,9 @@ Discord doesn't run JavaScript when it fetches your page. The card has to be in 
 
 <!-- prettier-ignore-end -->
 
-Keep your Open Graph tags. Discord shows the standard card from them whenever it can't use the component embed.
+Keep your Open Graph tags. Other sites and apps build their previews from them, and Discord falls back to them whenever it can't use the component embed.
+
+Discord reads the tag from each page separately. If you add it to a layout that every page shares, every page shows the card, so add it only to the pages that should show one.
 
 <details>
 <summary><b>React and Next.js</b></summary>
@@ -187,7 +189,7 @@ Build the card with `h()`, since Vue's JSX makes Vue elements. Pass its JSON to 
 ```vue
 <!-- pages/blog/[slug].vue -->
 <script setup lang="ts">
-import { toComponentEmbed } from 'discord-component-embed';
+import { toComponentEmbedJson } from 'discord-component-embed';
 import { buildPostCard } from '~/cards/buildPostCard';
 import { getPost } from '~/lib/posts';
 
@@ -198,14 +200,14 @@ useHead({
         {
             id: 'discord:component-embed',
             type: 'application/json',
-            innerHTML: JSON.stringify(toComponentEmbed(buildPostCard(post)))
+            innerHTML: toComponentEmbedJson(buildPostCard(post))
         }
     ]
 });
 </script>
 ```
 
-Discord reads only a script with the id `discord:component-embed`. `useHead` escapes `</script` in `innerHTML`, so text in the card can't close the tag early.
+Discord reads only a script with the id `discord:component-embed`. `toComponentEmbedJson` escapes every `<` in the JSON, so text in the card can't close the tag early.
 
 </details>
 
@@ -268,9 +270,16 @@ const { post } = Astro.props;
 <details>
 <summary><b>Solid</b></summary>
 
-<!-- TODO: Solid's innerHTML doesn't escape </script. Waiting on the escaped-JSON helper decision. -->
+Build the card with `h()`, since Solid's Vite plugin compiles every `.tsx` file with Solid's JSX. Then render the script in a server-rendered route, with the JSON from `toComponentEmbedJson`.
 
-Build the card with `h()`, since Solid's Vite plugin compiles every `.tsx` file with Solid's JSX.
+```tsx
+import { toComponentEmbedJson } from 'discord-component-embed';
+import { buildPostCard } from '~/cards/buildPostCard';
+
+<script id="discord:component-embed" type="application/json" innerHTML={toComponentEmbedJson(buildPostCard(post))} />;
+```
+
+Solid writes `innerHTML` into the page as it is. `toComponentEmbedJson` escapes every `<` in the JSON, so text in the card can't close the tag early.
 
 </details>
 
@@ -391,7 +400,7 @@ It prints a `trycloudflare.com` URL to paste into Discord. A Vite dev server rej
 
 Discord caches a preview for about 30 minutes, so an edit won't show on a link you've already shared. Add a new query string, like `?v=2`, to see it right away. Changing only the `#fragment` doesn't help, since Discord leaves the fragment out of its cache key. Discord's [Embed Debugger](https://discord.com/developers/embeds) shows which tags it read from any URL.
 
-To check a card without Discord, [`toComponentEmbed`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/to-component-embed) returns the payload as an object. A test can build every page's card with it before you deploy.
+To check a card without Discord, [`toComponentEmbed`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/to-component-embed) returns the payload as an object. A test can build every page's card with it before you deploy. To write the JSON into a page yourself, use `toComponentEmbedJson`. It escapes the JSON for HTML.
 
 <div align="right"><a href="#contents">back to top</a></div>
 
@@ -419,7 +428,7 @@ The [reference](https://docs.seedcord.org/packages/discord-component-embed/lates
 
 ## Errors
 
-Discord doesn't report an invalid payload anywhere. It drops the payload and shows the Open Graph card. So `toComponentEmbed`, `toComponentEmbedScript`, `<ComponentEmbed>`, and `componentEmbedResponse` throw a [`ComponentEmbedError`](https://docs.seedcord.org/packages/discord-component-embed/latest/classes/component-embed-error) when:
+Discord doesn't report an invalid payload anywhere. It drops the payload and shows the Open Graph card. So `toComponentEmbed`, `toComponentEmbedJson`, `toComponentEmbedScript`, `<ComponentEmbed>`, and `componentEmbedResponse` throw a [`ComponentEmbedError`](https://docs.seedcord.org/packages/discord-component-embed/latest/classes/component-embed-error) when:
 
 - the root is anything other than one `Container`
 - a component is somewhere it isn't allowed, or text is outside a `TextDisplay`
