@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { Component, lazy, memo, useState } from 'react';
 import { describe, expect, it } from 'vitest';
 
@@ -456,10 +457,15 @@ describe('toComponentEmbed with your own components', () => {
             }
         }
 
+        class FieldRender extends Component {
+            override render = (): ReactElement => <TextDisplay>hi</TextDisplay>;
+        }
+
         const plainOnly = /^Only plain function components work inside a component embed\.$/;
         expectEmbedError(() => toComponentEmbed(<Container>{<Memoized />}</Container>), plainOnly);
         expectEmbedError(() => toComponentEmbed(<Container>{<Lazy />}</Container>), plainOnly);
         expectEmbedError(() => toComponentEmbed(<Container>{<Classy />}</Container>), plainOnly);
+        expectEmbedError(() => toComponentEmbed(<Container>{<FieldRender />}</Container>), plainOnly);
     });
 
     it('turns an error inside your component into a ComponentEmbedError', () => {
