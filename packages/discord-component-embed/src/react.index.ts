@@ -1,4 +1,6 @@
-import { toComponentEmbed } from './toComponentEmbed';
+import { createElement } from 'react';
+
+import { SCRIPT_ID, toScriptJson } from './scriptJson';
 
 import type { ReactElement } from 'react';
 
@@ -30,10 +32,11 @@ export interface ComponentEmbedProps {
  * ```
  */
 export function ComponentEmbed({ children }: ComponentEmbedProps): ReactElement {
-    // react 19 escapes <script and </script inside a script's text
-    return (
-        <script id="discord:component-embed" type="application/json">
-            {JSON.stringify(toComponentEmbed(children))}
-        </script>
-    );
+    // no JSX in this file. react 17 has no exports map for react/jsx-runtime
+    return createElement('script', {
+        id: SCRIPT_ID,
+        type: 'application/json',
+        // react 18 and older HTML-escape a script's text children
+        dangerouslySetInnerHTML: { __html: toScriptJson(children) }
+    });
 }

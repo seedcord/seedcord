@@ -1,7 +1,9 @@
+/** @jsxImportSource react */
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
-import { ComponentEmbed, Container, TextDisplay } from '#src/index';
+import { Container, TextDisplay, toComponentEmbedScript } from '#src/index';
+import { ComponentEmbed } from '#src/react.index';
 
 import { scriptBody } from './helpers';
 
@@ -34,5 +36,15 @@ describe('ComponentEmbed', () => {
         expect(JSON.parse(scriptBody(markup))).toEqual({
             component: { type: 17, components: [{ type: 10, content }] }
         });
+    });
+
+    it('renders the same tag as toComponentEmbedScript, whatever the text holds', () => {
+        const preview = (
+            <Container>
+                <TextDisplay>{'a < b & "c" </script><b>x'}</TextDisplay>
+            </Container>
+        );
+
+        expect(renderToStaticMarkup(<ComponentEmbed>{preview}</ComponentEmbed>)).toBe(toComponentEmbedScript(preview));
     });
 });
