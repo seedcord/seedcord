@@ -30,9 +30,9 @@ export interface WebhookReport {
 /**
  * Base class for subscribers that deliver their event to a Discord webhook.
  *
- * Declare the url's environment variable with `@WebhookUrl` and implement {@link report}. Url
- * resolution, validation, sender reuse, and sending run in the base. When the variable is unset
- * the reporter is skipped at registration with a boot warning.
+ * Declare the url's environment variable with `@WebhookUrl` and implement {@link report}. The base
+ * resolves the url, validates it, reuses one sender per url, and sends. Registration skips a reporter
+ * whose variable is unset and warns at boot.
  *
  * @typeParam KeyOfSubscribers - The subscription key this reporter receives
  * @typeParam TCore - The transport's Core
@@ -58,14 +58,10 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
     }
 
     async execute(): Promise<void> {
-        const url = WebhookLog.urlOf(WebhookLog.envKeyOf(this.constructor));
-        if (url === null) {
-            // only an edge host reaches this branch, since it registers reporters lazily
-            this.logger.warn(
-                `${paint.sky.bold(this.constructor.name)} has no webhook url set, this reporter is disabled`
-            );
-            return;
-        }
+        const envKey = WebhookLog.envKeyOf(this.constructor);
+        const url = WebhookLog.urlOf(envKey);
+        // Bus.probeWebhook dropped every url-less reporter at registration. reaching this means the env changed since.
+        if (url === null) throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, [envKey]);
 
         const key = this.throttleKey();
         const throttle = ReportThrottle.for(this.core);

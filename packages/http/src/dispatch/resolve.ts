@@ -1,7 +1,5 @@
 import { InteractionKind } from '@seedcord/core';
 import { prefixOf } from '@seedcord/custom-id';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
 import { ApplicationCommandType, ComponentType, InteractionType } from 'discord-api-types/v10';
 
 import { UnhandledAutocomplete } from '#handlers/defaults/UnhandledAutocomplete';
@@ -9,25 +7,28 @@ import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 
 import { slashRouteOf } from './slashRouteOf';
 
-import type { ComponentRoute, RouteManifest, RouteModule } from '#src/manifest/RouteManifest';
+import type { HandlerConstructor } from '#handlers/constructors';
 import type { APIInteraction } from 'discord-api-types/v10';
 
-/** A manifest row matched to an incoming interaction, keyed the way the gateway dispatcher keys. */
+/** A registered handler matched to an incoming interaction, under the keys the gateway dispatcher uses. */
 export interface ResolvedRoute {
     readonly kind: InteractionKind;
-    /**
-     * The stable dispatch id, `kind:key` (`slash:ban`). Null for the unhandled default, which matches no row.
-     */
+    /** The stable dispatch id, `kind:key` (`slash:ban`). The unhandled default carries null. */
     readonly routeId: string | null;
     readonly attemptedKey?: string;
-    /** Resolves the one export the row registers. */
-    readonly load: () => Promise<unknown>;
+    readonly ctor: HandlerConstructor;
 }
 
 /** @internal */
 export type RouteMap = Map<string, ResolvedRoute>;
 
-type ComponentMapKey = ComponentRoute['kind'];
+type ComponentMapKey = Exclude<
+    InteractionKind,
+    | InteractionKind.Slash
+    | InteractionKind.Autocomplete
+    | InteractionKind.UserContextMenu
+    | InteractionKind.MessageContextMenu
+>;
 
 export type RouteMaps = Readonly<Record<InteractionKind, RouteMap>>;
 
@@ -74,36 +75,8 @@ function componentMapKey(type: ComponentType): Exclude<ComponentMapKey, Interact
     }
 }
 
-function namedExport(routeId: string, row: RouteModule): () => Promise<unknown> {
-    return async () => {
-        let moduleExports: Awaited<ReturnType<typeof row.load>>;
-        try {
-            moduleExports = await row.load();
-        } catch (caught) {
-            throw new SeedcordError(SeedcordErrorCode.RouteModuleLoadFailed, [routeId, row.from], { cause: caught });
-        }
-        if (!Object.hasOwn(moduleExports, row.exportName)) {
-            throw new SeedcordError(SeedcordErrorCode.InteractionRouteExportMissing, [
-                routeId,
-                row.exportName,
-                row.from
-            ]);
-        }
-        return moduleExports[row.exportName];
-    };
-}
-
-function describeRow(row: RouteModule): string {
-    return `${row.exportName} (${row.from})`;
-}
-
-/**
- * Builds the per-kind lookup maps.
- *
- * @throws A **SeedcordError** when two rows resolve to the same route.
- */
-export function buildRouteMaps(manifest: RouteManifest): RouteMaps {
-    const maps: RouteMaps = {
+export function emptyRouteMaps(): RouteMaps {
+    return {
         [InteractionKind.Slash]: new Map(),
         [InteractionKind.UserContextMenu]: new Map(),
         [InteractionKind.MessageContextMenu]: new Map(),
@@ -116,52 +89,22 @@ export function buildRouteMaps(manifest: RouteManifest): RouteMaps {
         [InteractionKind.MentionableMenu]: new Map(),
         [InteractionKind.Modal]: new Map()
     };
-    const owners = new Map<string, RouteModule>();
-
-    function set(kind: InteractionKind, key: string, row: RouteModule): void {
-        const routeId = `${kind}:${key}`;
-        const owner = owners.get(routeId);
-        if (owner) {
-            // a bare map.set would let a later row shadow an earlier one
-            throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
-                routeId,
-                describeRow(owner),
-                describeRow(row)
-            ]);
-        }
-        owners.set(routeId, row);
-        maps[kind].set(key, { kind, routeId, load: namedExport(routeId, row) });
-    }
-
-    for (const row of manifest.commandRoutes) {
-        const kind = commandKind(row.type);
-        if (kind) set(kind, row.name, row);
-    }
-    for (const row of manifest.autocompleteRoutes) {
-        set(InteractionKind.Autocomplete, row.name, row);
-    }
-    for (const row of manifest.componentRoutes) {
-        set(row.kind, row.prefix, row);
-    }
-    return maps;
 }
 
-// dispatched through the normal pipeline like the gateway's unhandled default
 function unhandled(kind: InteractionKind, attemptedKey: string): ResolvedRoute {
     return {
         kind,
         routeId: null,
         attemptedKey,
-        load: () => Promise.resolve(kind === InteractionKind.Autocomplete ? UnhandledAutocomplete : UnhandledRepliable)
+        ctor: kind === InteractionKind.Autocomplete ? UnhandledAutocomplete : UnhandledRepliable
     };
 }
 
 /**
- * Matches a verified non-PING interaction to its manifest row. A known kind with no row resolves to the
- * unhandled default, whose handler replies "Feature not implemented yet." (empty choices on autocomplete).
- * Null is an unrecognized payload shape, which the engine acks with a 202 without dispatching.
- * Components and modals route by the stable customId prefix, so a wire whose layout hash drifted still
- * routes to its handler, where decode refuses with `StaleCustomId`.
+ * Matches a verified non-PING interaction to a registered handler. A known kind with no handler resolves
+ * to the unhandled default. Null is an unrecognized payload shape, which the engine acks with a 202
+ * without dispatching. Components and modals route by the stable customId prefix. A wire whose layout
+ * hash drifted still reaches its handler, where decode refuses with `StaleCustomId`.
  */
 export function resolve(maps: RouteMaps, interaction: APIInteraction): ResolvedRoute | null {
     switch (interaction.type) {

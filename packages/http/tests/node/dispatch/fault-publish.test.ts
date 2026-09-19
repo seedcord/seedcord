@@ -11,7 +11,7 @@ import { createCore, dispatchInteraction } from '#src/dispatch/dispatchInteracti
 import { slashPayload } from './harness';
 import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
-import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
+import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from '#src/dispatch/resolve';
@@ -50,7 +50,7 @@ class NoticeHandler extends SlashHandler<never> {
 
 class RawThrowHandler extends SlashHandler<never> {
     execute(): Promise<void> {
-        // eslint-disable-next-line no-throw-literal, @typescript-eslint/only-throw-error -- a non-Error throw is what this pins
+        // eslint-disable-next-line no-throw-literal, @typescript-eslint/only-throw-error -- this pins a non-Error throw
         throw 'nope';
     }
 }
@@ -80,12 +80,8 @@ function watched(): { core: Core; published: Published } {
     return { core, published };
 }
 
-async function dispatchThrough(core: Core, handler: unknown): Promise<void> {
-    const match: ResolvedRoute = {
-        kind: InteractionKind.Slash,
-        routeId: 'slash:ok',
-        load: () => Promise.resolve(handler)
-    };
+async function dispatchThrough(core: Core, handler: HandlerConstructor): Promise<void> {
+    const match: ResolvedRoute = { kind: InteractionKind.Slash, routeId: 'slash:ok', ctor: handler };
     const execute = await dispatchInteraction({
         match,
         payload: slashPayload('ok') as ValidInteractionTypes,
@@ -95,7 +91,7 @@ async function dispatchThrough(core: Core, handler: unknown): Promise<void> {
     await execute?.();
 }
 
-async function faultsFor(handler: unknown): Promise<Published> {
+async function faultsFor(handler: HandlerConstructor): Promise<Published> {
     const { core, published } = watched();
     await dispatchThrough(core, handler);
     return published;

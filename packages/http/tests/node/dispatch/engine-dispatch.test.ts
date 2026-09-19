@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import { FROM, capturingCtx, emptyManifest, readyEngine, signedRequest, slashPayload } from './harness';
+import { capturingCtx, emptyManifest, manifestFor, readyEngine, signedRequest, slashPayload } from './harness';
 
 const rest = vi.hoisted(() => {
     interface FakeRestInstance {
@@ -44,13 +44,7 @@ describe('createSeedcord dispatch', () => {
                 await this.reply('done');
             }
         }
-        const manifest = {
-            ...emptyManifest(),
-            commandRoutes: [
-                { name: 'ban', type: 1, exportName: 'Ban', from: FROM, load: () => Promise.resolve({ Ban }) }
-            ]
-        };
-        const { signer, handle } = await readyEngine(manifest);
+        const { signer, handle } = await readyEngine(manifestFor(InteractionKind.Slash, 'ban', Ban));
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('ban')), ctx);
@@ -75,13 +69,7 @@ describe('createSeedcord dispatch', () => {
                 executeFinished = true;
             }
         }
-        const manifest = {
-            ...emptyManifest(),
-            commandRoutes: [
-                { name: 'slow', type: 1, exportName: 'Slow', from: FROM, load: () => Promise.resolve({ Slow }) }
-            ]
-        };
-        const { signer, handle } = await readyEngine(manifest);
+        const { signer, handle } = await readyEngine(manifestFor(InteractionKind.Slash, 'slow', Slow));
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('slow')), ctx);
@@ -102,13 +90,7 @@ describe('createSeedcord dispatch', () => {
                 await this.reply('pong');
             }
         }
-        const manifest = {
-            ...emptyManifest(),
-            commandRoutes: [
-                { name: 'ping', type: 1, exportName: 'Ping', from: FROM, load: () => Promise.resolve({ Ping }) }
-            ]
-        };
-        const { signer, handle } = await readyEngine(manifest);
+        const { signer, handle } = await readyEngine(manifestFor(InteractionKind.Slash, 'ping', Ping));
 
         const response = await handle(await signedRequest(signer, slashPayload('ping')));
 
@@ -126,13 +108,7 @@ describe('createSeedcord dispatch', () => {
                 await this.reply('ok');
             }
         }
-        const manifest = {
-            ...emptyManifest(),
-            commandRoutes: [
-                { name: 'track', type: 1, exportName: 'Track', from: FROM, load: () => Promise.resolve({ Track }) }
-            ]
-        };
-        const { signer, handle } = await readyEngine(manifest);
+        const { signer, handle } = await readyEngine(manifestFor(InteractionKind.Slash, 'track', Track));
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('track')), ctx);
@@ -148,19 +124,7 @@ describe('createSeedcord dispatch', () => {
             }
         }
         const approveId = new CustomId('approve').snowflake('userId');
-        const manifest = {
-            ...emptyManifest(),
-            componentRoutes: [
-                {
-                    kind: InteractionKind.Button as const,
-                    prefix: 'approve',
-                    exportName: 'Approve',
-                    from: FROM,
-                    load: () => Promise.resolve({ Approve })
-                }
-            ]
-        };
-        const { signer, handle } = await readyEngine(manifest);
+        const { signer, handle } = await readyEngine(manifestFor(InteractionKind.Button, 'approve', Approve));
         const ctx = capturingCtx();
 
         const payload = {
@@ -217,29 +181,5 @@ describe('createSeedcord dispatch', () => {
         ];
         expect(options.body.type).toBe(8);
         expect(options.body.data.choices).toEqual([]);
-    });
-
-    it('sends the fault card when a matched module carries no handler class, still acking 202', async () => {
-        const manifest = {
-            ...emptyManifest(),
-            commandRoutes: [
-                {
-                    name: 'ghost',
-                    type: 1,
-                    exportName: 'notAHandler',
-                    from: FROM,
-                    load: () => Promise.resolve({ notAHandler: 42 })
-                }
-            ]
-        };
-        const { signer, handle } = await readyEngine(manifest);
-        const ctx = capturingCtx();
-
-        const response = await handle(await signedRequest(signer, slashPayload('ghost')), ctx);
-
-        expect(response.status).toBe(202);
-        expect(ctx.waitUntil).not.toHaveBeenCalled();
-        const [, options] = (rest.instances[0]?.post.mock.calls[0] ?? []) as [string, { body: { type: number } }];
-        expect(options.body.type).toBe(4);
     });
 });
