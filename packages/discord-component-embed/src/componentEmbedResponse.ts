@@ -9,8 +9,8 @@ const MAX_LINKED_BYTES = 3000;
 /**
  * Builds the `Response` for a URL that a `<link rel="discord:component-embed">` tag points at.
  *
- * @throws {@link ComponentEmbedError} when the JSON is over Discord's 3000-byte limit for linked payloads, or when the
- * tree breaks a rule of the format.
+ * @throws a {@link ComponentEmbedError} when the JSON is over Discord's 3000-byte limit for linked payloads, when the tree
+ * breaks a rule of the format, or when your own code throws while the tree is read.
  *
  * @example
  * ```tsx

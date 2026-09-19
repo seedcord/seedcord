@@ -78,7 +78,7 @@ export interface ComponentEmbedPayload {
 /**
  * Converts a `<Container>` tree into the JSON document Discord reads for a component embed.
  *
- * @throws {@link ComponentEmbedError} when the tree breaks a rule of the format, or when your own code throws while
+ * @throws a {@link ComponentEmbedError} when the tree breaks a rule of the format, or when your own code throws while
  * the tree is read. Check `error.code` to see which.
  *
  * @example
@@ -111,6 +111,7 @@ export function toComponentEmbed(root: EmbedElement): ComponentEmbedPayload {
     }
 }
 
+// every props cast in this file comes after a check of element.type, here or in childrenOf
 function buildPayload(root: EmbedElement): ComponentEmbedPayload {
     const [container, ...rest] = expand(root);
     if (rest.length > 0) {
@@ -145,7 +146,6 @@ function countComponents(component: Counted): number {
     return 1 + nested + accessory;
 }
 
-// every props cast below comes after a check of element.type, here or in childrenOf
 function toContainer({ accentColor, spoiler, children }: ContainerProps): APIContainerComponent {
     if (
         accentColor !== undefined &&
