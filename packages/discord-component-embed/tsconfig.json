@@ -5,10 +5,14 @@
         "lib": ["ESNext", "DOM"],
         "types": [],
         "jsx": "react-jsx",
+        "jsxImportSource": "discord-component-embed",
         "rootDir": "./",
         "outDir": "./dist",
         "paths": {
-            "#src/*": ["./src/*"]
+            "#src/*": ["./src/*"],
+            "discord-component-embed": ["./src/index.ts"],
+            "discord-component-embed/jsx-runtime": ["./src/jsx-runtime.ts"],
+            "discord-component-embed/jsx-dev-runtime": ["./src/jsx-dev-runtime.ts"]
         }
     },
     "include": [

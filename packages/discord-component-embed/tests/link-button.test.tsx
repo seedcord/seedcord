@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { describe, expect, it } from 'vitest';
 
 import { ActionRow, Container, LinkButton, TextDisplay, toComponentEmbed } from '#src/index';

@@ -1,3 +1,4 @@
+/** @jsxImportSource react */
 import { memo } from 'react';
 import { describe, expect, it } from 'vitest';
 
