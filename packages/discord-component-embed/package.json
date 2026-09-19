@@ -2,7 +2,7 @@
     "name": "discord-component-embed",
     "type": "module",
     "version": "0.1.0",
-    "description": "Build Discord component embed link previews with React.",
+    "description": "Build Discord component embed link previews with JSX, in any framework.",
     "keywords": [
         "discord",
         "link-preview",
@@ -12,6 +12,12 @@
         "open-graph",
         "unfurl",
         "react",
+        "preact",
+        "vue",
+        "svelte",
+        "solid",
+        "solidjs",
+        "astro",
         "jsx"
     ],
     "engines": {
@@ -34,6 +40,24 @@
                 "types": "./dist/index.d.mts",
                 "default": "./dist/index.mjs"
             }
+        },
+        "./react": {
+            "import": {
+                "types": "./dist/react.index.d.mts",
+                "default": "./dist/react.index.mjs"
+            }
+        },
+        "./jsx-runtime": {
+            "import": {
+                "types": "./dist/jsx-runtime.d.mts",
+                "default": "./dist/jsx-runtime.mjs"
+            }
+        },
+        "./jsx-dev-runtime": {
+            "import": {
+                "types": "./dist/jsx-dev-runtime.d.mts",
+                "default": "./dist/jsx-dev-runtime.mjs"
+            }
         }
     },
     "files": [
@@ -55,7 +79,12 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
-        "react": "catalog:react"
+        "react": "^17.0.0 || ^18.0.0 || ^19.0.0"
+    },
+    "peerDependenciesMeta": {
+        "react": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
@@ -64,6 +93,7 @@
         "@seedcord/vitest-config": "workspace:^",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
+        "preact": "^10.29.8",
         "react": "catalog:react",
         "react-dom": "catalog:react"
     },
