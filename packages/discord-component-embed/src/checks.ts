@@ -1,6 +1,6 @@
 import { ComponentEmbedError } from './ComponentEmbedError';
 
-import type { ReactNode } from 'react';
+import type { EmbedNode } from './element';
 
 export function describeValue(value: unknown): string {
     if (typeof value === 'bigint') return `${String(value)}n`;
@@ -19,7 +19,7 @@ export function messageOf(thrown: unknown): string {
     return Error.isError(thrown) ? thrown.message : describeValue(thrown);
 }
 
-export function isIterable(value: unknown): value is Iterable<ReactNode> {
+export function isIterable(value: unknown): value is Iterable<EmbedNode> {
     return (
         typeof value === 'object' &&
         value !== null &&

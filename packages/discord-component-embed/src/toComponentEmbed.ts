@@ -1,5 +1,3 @@
-import { isValidElement } from 'react';
-
 import { checkLength, checkType, checkUrl, describeValue, isFilled, messageOf } from './checks';
 import { ComponentEmbedError } from './ComponentEmbedError';
 import {
@@ -13,7 +11,7 @@ import {
     TextDisplay,
     Thumbnail
 } from './components';
-import { childrenOf, expand, nameOf } from './tree';
+import { childrenOf, expand, isElement, nameOf, rejectVueVNode } from './tree';
 
 import type {
     ActionRowProps,
@@ -25,6 +23,7 @@ import type {
     SeparatorProps,
     TextDisplayProps
 } from './components';
+import type { EmbedElement, EmbedNode } from './element';
 import type {
     APIActionRowComponent,
     APIButtonComponentWithURL,
@@ -42,12 +41,10 @@ import type {
     ComponentType,
     SeparatorSpacingSize
 } from 'discord-api-types/v10';
-import type { ReactElement, ReactNode } from 'react';
 
 type UsedComponentType =
     'ActionRow' | 'Button' | 'Container' | 'MediaGallery' | 'Section' | 'Separator' | 'TextDisplay' | 'Thumbnail';
 
-// discord's wire values
 const TYPE: { readonly [Name in UsedComponentType]: (typeof ComponentType)[Name] } = {
     ActionRow: 1,
     Button: 2,
@@ -103,7 +100,7 @@ export interface ComponentEmbedPayload {
  * }
  * ```
  */
-export function toComponentEmbed(root: ReactElement): ComponentEmbedPayload {
+export function toComponentEmbed(root: EmbedElement): ComponentEmbedPayload {
     try {
         return buildPayload(root);
     } catch (error) {
@@ -114,7 +111,7 @@ export function toComponentEmbed(root: ReactElement): ComponentEmbedPayload {
     }
 }
 
-function buildPayload(root: ReactElement): ComponentEmbedPayload {
+function buildPayload(root: EmbedElement): ComponentEmbedPayload {
     const [container, ...rest] = expand(root);
     if (rest.length > 0) {
         throw new ComponentEmbedError(
@@ -174,7 +171,7 @@ function toContainer({ accentColor, spoiler, children }: ContainerProps): APICon
     };
 }
 
-function toContainerChild(element: ReactElement): APIComponentInContainer {
+function toContainerChild(element: EmbedElement): APIComponentInContainer {
     switch (element.type) {
         case TextDisplay: {
             return toTextDisplay(element.props as TextDisplayProps);
@@ -205,8 +202,9 @@ function toTextDisplay({ children }: TextDisplayProps): APITextDisplayComponent 
         .flat(Infinity)
         .filter((part) => part !== null && part !== undefined && typeof part !== 'boolean');
 
-    const element = parts.find((part) => isValidElement(part));
+    const element = parts.find((part) => isElement(part));
     if (element) {
+        rejectVueVNode(element);
         throw new ComponentEmbedError(
             'InvalidStructure',
             `<TextDisplay> only takes text. Write Discord markdown like **bold** in place of <${nameOf(element.type)}>.`
@@ -234,7 +232,7 @@ function toSection({ accessory, children }: SectionProps): APISectionComponent {
     };
 }
 
-function toSectionAccessory(accessory: ReactNode): APISectionComponent['accessory'] {
+function toSectionAccessory(accessory: EmbedNode): APISectionComponent['accessory'] {
     const [element, ...rest] = expand(accessory);
     if (!element || rest.length > 0) {
         throw new ComponentEmbedError(

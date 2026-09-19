@@ -1,9 +1,8 @@
-import { createElement } from 'react';
 import { expect } from 'vitest';
 
-import { ComponentEmbedError, Container, TextDisplay } from '#src/index';
+import { ComponentEmbedError, Container, TextDisplay, h } from '#src/index';
 
-import type { ReactElement, ReactNode } from 'react';
+import type { EmbedElement, EmbedNode } from '#src/index';
 
 export function scriptBody(html: string): string {
     const match = /^<script id="discord:component-embed" type="application\/json">(.*)<\/script>$/s.exec(html);
@@ -11,12 +10,12 @@ export function scriptBody(html: string): string {
     return match[1];
 }
 
-export function inContainer(child: ReactNode): ReactElement {
-    return createElement(Container, null, child);
+export function inContainer(child: EmbedNode): EmbedElement {
+    return h(Container, null, child);
 }
 
-export function withText(content: string): ReactElement {
-    return inContainer(createElement(TextDisplay, null, content));
+export function withText(content: string): EmbedElement {
+    return inContainer(h(TextDisplay, null, content));
 }
 
 export function thrownBy(run: () => unknown): ComponentEmbedError {

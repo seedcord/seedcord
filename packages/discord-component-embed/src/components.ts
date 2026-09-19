@@ -1,11 +1,11 @@
+import type { EmbedElement, EmbedNode } from './element';
 import type { APIMessageComponentEmoji } from 'discord-api-types/v10';
-import type { ReactElement, ReactNode } from 'react';
 
 export interface ContainerProps {
     /** The color of the bar on the left edge, as an RGB integer like `0x5865f2`. */
     accentColor?: number;
     spoiler?: boolean;
-    children?: ReactNode;
+    children?: EmbedNode;
 }
 
 export interface TextDisplayProps {
@@ -16,14 +16,14 @@ export interface TextDisplayProps {
     children: TextChild;
 }
 
-/** Text a `<TextDisplay>` accepts. `false`, `null`, and `undefined` render nothing, the same as in React. */
+/** Text a `<TextDisplay>` accepts. Booleans, `null`, and `undefined` render nothing. */
 export type TextChild = string | number | boolean | null | undefined | readonly TextChild[];
 
 export interface SectionProps {
     /** A `<Thumbnail>` or a `<LinkButton>`, shown to the right of the text. */
-    accessory: ReactElement;
+    accessory: EmbedElement;
     /** One to three `<TextDisplay>` elements. */
-    children: ReactNode;
+    children: EmbedNode;
 }
 
 /** Props for {@link Thumbnail} and {@link MediaGalleryItem}. */
@@ -40,7 +40,7 @@ export interface MediaProps {
 
 export interface MediaGalleryProps {
     /** One to ten `<MediaGalleryItem>` elements. */
-    children: ReactNode;
+    children: EmbedNode;
 }
 
 export interface SeparatorProps {
@@ -52,7 +52,7 @@ export interface SeparatorProps {
 
 export interface ActionRowProps {
     /** One to five `<LinkButton>` elements. */
-    children: ReactNode;
+    children: EmbedNode;
 }
 
 interface LinkButtonBase {
@@ -71,7 +71,6 @@ export type LinkButtonProps = LinkButtonBase &
  *
  * @example
  * ```tsx
- * // 0xf8f6e8 is the hex color #f8f6e8
  * <Container accentColor={0xf8f6e8}>
  *     <TextDisplay># seedcord</TextDisplay>
  * </Container>

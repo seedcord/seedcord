@@ -2,7 +2,7 @@
  * What went wrong, as a value to branch on. Messages can be reworded between releases. The codes stay.
  *
  * - `InvalidStructure`: a wrong root, a component in the wrong place, a parent with the wrong number of children, an
- *   empty `<TextDisplay>`, or text outside one.
+ *   empty `<TextDisplay>`, text outside one, or a Vue VNode.
  * - `InvalidProp`: a prop with the wrong type or value, like a `spacing` of `'medium'` or a URL with a bad scheme.
  * - `OverLimit`: a length, count, or byte limit Discord sets.
  * - `UnsupportedComponent`: a `memo`, `lazy`, `forwardRef`, context, class, or async component.

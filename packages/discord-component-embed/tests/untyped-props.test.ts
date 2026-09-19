@@ -1,4 +1,3 @@
-import { createElement } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -9,22 +8,23 @@ import {
     MediaGalleryItem,
     Separator,
     TextDisplay,
+    h,
     toComponentEmbed
 } from '#src/index';
 
 import { expectEmbedError, inContainer, thrownBy } from './helpers';
 
-import type { ReactElement } from 'react';
+import type { EmbedElement } from '#src/index';
 
 const IMAGE = 'https://example.com/image.png';
 
-// how a JS caller or a Svelte server file builds the tree. TypeScript does not check these props
-function loose(type: unknown, props: Record<string, unknown> | null, ...children: unknown[]): ReactElement {
-    return (createElement as (...args: unknown[]) => ReactElement)(type, props, ...children);
+// a JS caller of h. TypeScript does not check these props
+function loose(type: unknown, props: Record<string, unknown> | null, ...children: unknown[]): EmbedElement {
+    return (h as (...args: unknown[]) => EmbedElement)(type, props, ...children);
 }
 
 describe('toComponentEmbed with untyped props', () => {
-    it('walks iterable children the way React does', () => {
+    it('walks iterable children', () => {
         const texts = new Set([loose(TextDisplay, null, 'a'), loose(TextDisplay, null, 'b')]);
 
         expect(toComponentEmbed(loose(Container, null, texts)).component.components).toEqual([

@@ -1,7 +1,7 @@
 import { ComponentEmbedError } from './ComponentEmbedError';
 import { toComponentEmbed } from './toComponentEmbed';
 
-import type { ReactElement } from 'react';
+import type { EmbedElement } from './element';
 
 // discord measures this on the raw response bytes
 const MAX_LINKED_BYTES = 3000;
@@ -22,7 +22,7 @@ const MAX_LINKED_BYTES = 3000;
  * }
  * ```
  */
-export function componentEmbedResponse(root: ReactElement): Response {
+export function componentEmbedResponse(root: EmbedElement): Response {
     const body = new TextEncoder().encode(JSON.stringify(toComponentEmbed(root)));
 
     if (body.byteLength > MAX_LINKED_BYTES) {
