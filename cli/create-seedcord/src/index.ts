@@ -8,10 +8,11 @@ import { banner } from '#cli/banner';
 import { helpText } from '#cli/help';
 import { inviteUrl } from '#cli/invite';
 import { runningAgent } from '#cli/packageManager';
-import { parseInput, wantsHelp } from '#cli/parseInput';
+import { parseInput, wantsHelp, wantsVersion } from '#cli/parseInput';
 import { reportFailure } from '#cli/reportFailure';
 import { clackSteps, silentSteps } from '#cli/steps';
 import { dashboardToggles, nextSteps, reproducingCommand } from '#cli/summary';
+import { version } from '#cli/version';
 import { runFlow } from '#interview/runFlow';
 import { STEPS } from '#interview/steps';
 import { missingNotice, probeCloudflared } from '#scaffold/cloudflared';
@@ -39,6 +40,11 @@ async function main(): Promise<void> {
 
     if (wantsHelp(argv)) {
         process.stdout.write(`${helpText()}\n`);
+        return;
+    }
+
+    if (wantsVersion(argv)) {
+        process.stdout.write(`${version}\n`);
         return;
     }
 

@@ -21,10 +21,15 @@ const OPTIONS = {
 } as const;
 
 const HELP_FLAGS = new Set(['--help', '-h']);
+const VERSION_FLAGS = new Set(['--version', '-v']);
 
 // parseArgs throws on a bad flag before it ever reads --help
 export function wantsHelp(argv: string[]): boolean {
     return argv.some((argument) => HELP_FLAGS.has(argument));
+}
+
+export function wantsVersion(argv: string[]): boolean {
+    return argv.some((argument) => VERSION_FLAGS.has(argument));
 }
 
 function readArgv(argv: string[]): { values: Record<string, unknown>; positionals: string[] } {

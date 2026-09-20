@@ -3,13 +3,18 @@ import { STEPS } from '#interview/steps';
 const EXTRA = [
     { name: 'no-install', description: 'skip installing dependencies' },
     { name: 'no-git', description: 'skip git init and the first commit' },
-    { name: 'help', description: 'print this' }
+    { name: 'version', short: 'v', description: 'print the version' },
+    { name: 'help', short: 'h', description: 'print this' }
 ];
+
+function spelling(flag: { name: string; short?: string }): string {
+    return flag.short === undefined ? `--${flag.name}` : `-${flag.short}, --${flag.name}`;
+}
 
 export function helpText(): string {
     const flags = [...STEPS.map((step) => step.flag), ...EXTRA];
-    const width = Math.max(...flags.map((flag) => flag.name.length));
-    const lines = flags.map((flag) => `  --${flag.name.padEnd(width)}  ${flag.description}`);
+    const width = Math.max(...flags.map((flag) => spelling(flag).length));
+    const lines = flags.map((flag) => `  ${spelling(flag).padEnd(width)}  ${flag.description}`);
 
     return [
         'Usage: create-seedcord [directory] [flags]',
