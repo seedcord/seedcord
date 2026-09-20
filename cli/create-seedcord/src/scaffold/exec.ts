@@ -6,11 +6,14 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { CommandRunner } from '#scaffold/scaffold';
 
-// an install logs hundreds of lines before the one that names the failure
+// an install logs hundreds of lines before the one that says what broke
 const KEPT_LINES = 12;
 
-// npm prefixes those lines with "npm error", pnpm and yarn with "ERR!"
-const NAMES_THE_CAUSE = /error|ERR!/i;
+// npm opens with "npm error", yarn with "ERR!", pnpm with "Error:" above a bare ERR_ code
+const NAMES_THE_CAUSE = /error|ERR[_!]/i;
+
+// trimming the start of a captured line in take() would break this
+const INDENTED = /^\s/;
 
 // pnpm redraws its progress with carriage returns
 const LINE_BREAK = /[\r\n]+/;
@@ -23,10 +26,21 @@ function lineWidth(): number {
     return (process.stdout.columns > 0 ? process.stdout.columns : PIPED_COLUMNS) - GUTTER;
 }
 
-function failureLines(captured: string[]): string[] {
-    const named = captured.filter((line) => NAMES_THE_CAUSE.test(line));
+// a bare `Error: CODE` header from pnpm carries the cause on the indented lines under it
+function blockFrom(captured: string[], start: number): string[] {
+    const detail: string[] = [];
+    for (const line of captured.slice(start + 1)) {
+        if (!INDENTED.test(line)) break;
+        detail.push(line);
+    }
 
-    return named.length > 0 ? named.slice(0, KEPT_LINES) : captured.slice(-KEPT_LINES);
+    return [captured[start] ?? '', ...detail];
+}
+
+function failureLines(captured: string[]): string[] {
+    const blocks = captured.flatMap((line, index) => (NAMES_THE_CAUSE.test(line) ? blockFrom(captured, index) : []));
+
+    return blocks.length > 0 ? blocks.slice(0, KEPT_LINES) : captured.slice(-KEPT_LINES);
 }
 
 interface SpawnSpec {
@@ -58,8 +72,8 @@ export async function execRunner(...[command, args, cwd]: Parameters<CommandRunn
         const take = (chunk: Buffer): void => {
             for (const line of chunk.toString('utf8').split(LINE_BREAK)) {
                 // one uncut chunk grew past node's max string length
-                const text = line.trim().slice(0, width);
-                if (text === '') continue;
+                const text = line.trimEnd().slice(0, width);
+                if (text.trim() === '') continue;
 
                 captured.push(text);
             }

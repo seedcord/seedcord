@@ -58,7 +58,7 @@ describe('execRunner', () => {
         await expect(execRunner(process.execPath, ['-e', ''], process.cwd())).resolves.toBeUndefined();
     });
 
-    it('keeps the line naming the cause, which sits above the boilerplate npm ends on', async () => {
+    it('keeps the line that carries the cause, above the boilerplate npm ends on', async () => {
         const captured = await capturedBy(
             noise('resolving', 40),
             `console.log('npm error code ECONNREFUSED');`,
@@ -67,6 +67,23 @@ describe('execRunner', () => {
 
         expect(captured).toContain('ECONNREFUSED');
         expect(captured).not.toContain('A complete log');
+    });
+
+    // pnpm writes "Error: " and its code on separate lines once its output is piped
+    it('keeps the indented detail under a bare error header', async () => {
+        const captured = await capturedBy(
+            noise('Progress: resolved', 20),
+            `console.error('Error: ');`,
+            `console.error('ERR_PNPM_IGNORED_BUILDS');`,
+            `console.error('  × adding a new package');`,
+            `console.error('  ╰─▶ Ignored build scripts: esbuild@0.28.2');`,
+            `console.error('  help: Run "pnpm approve-builds" to pick which dependencies should be allowed');`
+        );
+
+        expect(captured).toContain('ERR_PNPM_IGNORED_BUILDS');
+        expect(captured).toContain('Ignored build scripts: esbuild@0.28.2');
+        expect(captured).toContain('pnpm approve-builds');
+        expect(captured).not.toContain('Progress: resolved');
     });
 
     it('falls back to the tail when no line names itself an error', async () => {
