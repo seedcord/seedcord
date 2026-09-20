@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { dashboardToggles, nextSteps, reproducingCommand } from '#cli/summary';
+import { version } from '#cli/version';
 import { STEPS } from '#interview/steps';
 
 import type { ScaffoldAnswers } from '#template/context';
@@ -85,6 +86,11 @@ describe('reproducingCommand', () => {
         expect(reproducingCommand(HTTP, 'pnpm')).not.toContain('a'.repeat(64));
     });
 
+    // pnpm can resolve @latest to an older release
+    it('pins the version of itself that produced the project', () => {
+        expect(reproducingCommand(GATEWAY, 'pnpm')).toContain(`create seedcord@${version}`);
+    });
+
     it('carries every answer the run used', () => {
         const command = reproducingCommand(GATEWAY, 'pnpm');
 
@@ -114,7 +120,7 @@ describe('reproducingCommand', () => {
     });
 
     it('puts the double dash in for npm, which needs it before flags', () => {
-        expect(reproducingCommand(GATEWAY, 'npm')).toContain('npm create seedcord my-bot --');
+        expect(reproducingCommand(GATEWAY, 'npm')).toContain(`npm create seedcord@${version} my-bot --`);
     });
 
     it('leaves the double dash out for every other manager', () => {
