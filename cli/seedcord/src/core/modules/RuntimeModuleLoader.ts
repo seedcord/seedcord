@@ -7,16 +7,22 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { createJiti } from 'jiti';
 
 import type { ModuleLoader } from './ModuleLoader';
+import type { Jiti } from 'jiti';
 
 const TS_EXTENSIONS = new Set(['.ts', '.tsx', '.mts', '.cts']);
+const EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs'];
 
-export class RuntimeModuleLoader implements ModuleLoader {
-    private readonly jiti = createJiti(import.meta.url, {
+// jiti reads compilerOptions.paths from the first tsconfig above the parent it is given
+function jitiFor(entryPath: string): Jiti {
+    return createJiti(pathToFileURL(entryPath).href, {
         cache: false,
         interopDefault: true,
-        extensions: ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs']
+        extensions: EXTENSIONS,
+        tsconfigPaths: true
     });
+}
 
+export class RuntimeModuleLoader implements ModuleLoader {
     public async importModule<TModule = unknown>(entryPath: string): Promise<TModule> {
         const normalized = resolve(entryPath);
         if (!existsSync(normalized)) {
@@ -32,7 +38,7 @@ export class RuntimeModuleLoader implements ModuleLoader {
 
     private async importTypeScript<TModule = unknown>(entryPath: string): Promise<TModule> {
         try {
-            return await this.jiti.import<TModule>(entryPath);
+            return await jitiFor(entryPath).import<TModule>(entryPath);
         } catch (error: unknown) {
             const reason = Error.isError(error) ? error.message : 'Unknown jiti error';
             throw new SeedcordError(SeedcordErrorCode.CliTsImportFailed, [entryPath, reason]);
@@ -46,7 +52,7 @@ export class RuntimeModuleLoader implements ModuleLoader {
             return (await import(specifier)) as TModule;
         } catch (nativeError: unknown) {
             try {
-                return await this.jiti.import(entryPath);
+                return await jitiFor(entryPath).import(entryPath);
             } catch (fallbackError: unknown) {
                 const nativeReason = Error.isError(nativeError) ? nativeError.message : 'Unknown ESM import error';
                 const fallbackReason = Error.isError(fallbackError) ? fallbackError.message : 'Unknown jiti error';
