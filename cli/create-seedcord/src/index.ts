@@ -69,7 +69,7 @@ async function main(): Promise<void> {
         execRunner
     );
 
-    if (result.gitNotice !== null) log.warn(result.gitNotice);
+    for (const notice of result.notices) log.warn(notice);
 
     await reportOutcome(answers, agent, result.installed, interactive);
 }

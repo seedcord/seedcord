@@ -205,8 +205,42 @@ describe('scaffold', () => {
 
         const result = await scaffold(baseInput(target), runner);
 
-        expect(result.gitNotice).toContain('commit blew up');
+        expect(result.notices.join('\n')).toContain('commit blew up');
         await expect(readdir(target)).resolves.toContain('package.json');
+    });
+
+    it('keeps going to git and the summary when the install fails', async () => {
+        const target = await scratchTarget();
+        const { runner, calls } = recorder('-D');
+
+        const result = await scaffold(baseInput(target), runner);
+
+        expect(result.installed).toBe(false);
+        expect(result.notices.join('\n')).toContain('-D blew up');
+        expect(calls.map((call) => call.command)).toContain('git');
+    });
+
+    it('still formats and generates types when the install reports a failure', async () => {
+        const target = await scratchTarget();
+        const { runner, calls } = recorder('-D');
+
+        await scaffold(baseInput(target), runner);
+
+        const spoken = calls.map((call) => call.args.join(' '));
+        expect(spoken.some((args) => args.includes('prettier'))).toBe(true);
+        expect(spoken.some((args) => args.includes('codegen'))).toBe(true);
+    });
+
+    it('keeps going past a failed format', async () => {
+        const target = await scratchTarget();
+        // the dev install lists prettier too
+        const { runner, calls } = recorder('prettier --write');
+
+        const result = await scaffold(baseInput(target), runner);
+
+        expect(result.installed).toBe(true);
+        expect(result.notices.join('\n')).toContain('prettier --write blew up');
+        expect(calls.map((call) => call.args.join(' ')).some((args) => args.includes('codegen'))).toBe(true);
     });
 
     it('marks the three install steps skipped rather than dropping them', async () => {
@@ -264,7 +298,9 @@ describe('scaffold cleanup', () => {
         const target = await scratchTarget();
         const { runner } = recorder('add');
 
-        await expect(scaffold(baseInput(target), runner)).rejects.toThrow();
+        const result = await scaffold(baseInput(target), runner);
+
+        expect(result.installed).toBe(false);
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
@@ -273,7 +309,9 @@ describe('scaffold cleanup', () => {
         await mkdir(target, { recursive: true });
         const { runner } = recorder('add');
 
-        await expect(scaffold(baseInput(target), runner)).rejects.toThrow();
+        const result = await scaffold(baseInput(target), runner);
+
+        expect(result.installed).toBe(false);
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
