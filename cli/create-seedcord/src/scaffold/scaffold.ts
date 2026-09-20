@@ -33,6 +33,8 @@ const DEV_PACKAGES = [
     '@seedcord/tsconfig',
     // @seedcord/tsconfig sets types: ['node']
     '@types/node',
+    // @seedcord/eslint-config takes this as a required peer
+    'eslint',
     // eslint reads eslint.config.ts through jiti
     'jiti',
     'prettier',

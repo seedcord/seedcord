@@ -12,6 +12,15 @@ import type { ScaffoldAnswers } from '#template/context';
 
 const TEMPLATES = resolve(import.meta.dirname, '../../templates');
 
+const BUILT_IN = new Set(['node']);
+// the binary a script calls, against the package that ships it
+const PACKAGE_OF: Record<string, string> = {
+    eslint: 'eslint',
+    prettier: 'prettier',
+    seedcord: 'seedcord',
+    tsc: 'typescript'
+};
+
 const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',
     language: 'typescript',
@@ -118,6 +127,27 @@ describe('scaffold', () => {
         expect(deps?.args).toContain('discord.js');
         expect(dev?.args).toContain('-D');
         expect(dev?.args).toContain('@types/node');
+    });
+
+    it('installs every tool the generated scripts call', async () => {
+        const target = await scratchTarget();
+        const { runner, calls } = recorder();
+
+        await scaffold(baseInput(target), runner);
+
+        const manifest = JSON.parse(await readFile(join(target, 'package.json'), 'utf8')) as {
+            scripts: Record<string, string>;
+        };
+        const installed = [...(calls[0]?.args ?? []), ...(calls[1]?.args ?? [])];
+
+        for (const command of Object.values(manifest.scripts)) {
+            const binary = command.split(' ')[0] ?? '';
+            if (BUILT_IN.has(binary)) continue;
+
+            const pkg = PACKAGE_OF[binary];
+            expect(pkg, `${binary} maps to no package`).toBeDefined();
+            expect(installed.some((arg) => arg === pkg || arg.startsWith(`${pkg}@`))).toBe(true);
+        }
     });
 
     it('pins typescript to the last major typescript-eslint supports', async () => {
