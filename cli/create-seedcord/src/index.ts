@@ -72,6 +72,9 @@ async function main(): Promise<void> {
     for (const notice of result.notices) log.warn(notice);
 
     await reportOutcome(answers, agent, result.installed, interactive);
+
+    // a wrapper chaining `&& cd my-bot && pnpm dev` has to stop here
+    if (result.failed) process.exitCode = 1;
 }
 
 // a gutter on the wrapped rows would end up in whatever gets pasted

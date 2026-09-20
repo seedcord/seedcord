@@ -9,12 +9,11 @@ export interface Failure {
 // nothing reaches disk until the interview ends
 const CANCELLED: Failure = { code: 0, message: null, closing: 'Nothing was written.' };
 
+// a failed step comes back through ScaffoldResult
 export function reportFailure(error: unknown): Failure {
     if (isSeedcordError(error, undefined, SeedcordErrorCode.CreateCancelled)) return CANCELLED;
 
-    // scaffold keeps the tree it wrote when a post-write step fails
-    const kept = isSeedcordError(error, undefined, SeedcordErrorCode.CreateStepFailed);
     const message = isSeedcordError(error) || Error.isError(error) ? error.message : String(error);
 
-    return { code: 1, message, closing: kept ? 'Project kept. Run the command manually.' : 'Nothing was created.' };
+    return { code: 1, message, closing: 'Nothing was created.' };
 }

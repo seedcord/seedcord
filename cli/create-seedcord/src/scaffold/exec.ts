@@ -12,6 +12,9 @@ const KEPT_LINES = 12;
 // npm opens with "npm error", yarn with "ERR!", pnpm with "Error:" above a bare ERR_ code
 const NAMES_THE_CAUSE = /error|ERR[_!]/i;
 
+// pnpm exits non-zero over a skipped build script with every package installed
+const BLOCKED_BUILD = /ERR_PNPM_IGNORED_BUILDS/;
+
 // trimming the start of a captured line in take() would break this
 const INDENTED = /^\s/;
 
@@ -27,20 +30,31 @@ function lineWidth(): number {
 }
 
 // a bare `Error: CODE` header from pnpm carries the cause on the indented lines under it
-function blockFrom(captured: string[], start: number): string[] {
+function blockFrom(header: string, rest: string[]): string[] {
     const detail: string[] = [];
-    for (const line of captured.slice(start + 1)) {
+    for (const line of rest) {
         if (!INDENTED.test(line)) break;
         detail.push(line);
     }
 
-    return [captured[start] ?? '', ...detail];
+    return [header, ...detail];
 }
 
 function failureLines(captured: string[]): string[] {
-    const blocks = captured.flatMap((line, index) => (NAMES_THE_CAUSE.test(line) ? blockFrom(captured, index) : []));
+    const blocks: string[] = [];
+    let consumedThrough = -1;
 
-    return blocks.length > 0 ? blocks.slice(0, KEPT_LINES) : captured.slice(-KEPT_LINES);
+    for (const [index, line] of captured.entries()) {
+        // a block above may already include this line
+        if (index <= consumedThrough || !NAMES_THE_CAUSE.test(line)) continue;
+
+        const block = blockFrom(line, captured.slice(index + 1));
+        blocks.push(...block);
+        consumedThrough = index + block.length - 1;
+    }
+
+    // every package manager prints the cause last
+    return (blocks.length > 0 ? blocks : captured).slice(-KEPT_LINES);
 }
 
 interface SpawnSpec {
@@ -60,12 +74,12 @@ export function spawnSpec(command: string, args: string[], platform: NodeJS.Plat
     return { command: [command, ...args].join(' '), args: [], shell };
 }
 
-export async function execRunner(...[command, args, cwd]: Parameters<CommandRunner>): Promise<void> {
+export async function execRunner(...[command, args, cwd]: Parameters<CommandRunner>): Promise<string | null> {
     const spoken = [command, ...args].join(' ');
     const width = lineWidth();
     const spec = spawnSpec(command, args, process.platform);
 
-    return new Promise((resolve, reject) => {
+    return new Promise<string | null>((resolve, reject) => {
         const child = spawn(spec.command, spec.args, { cwd, shell: spec.shell });
         const captured: string[] = [];
 
@@ -88,11 +102,16 @@ export async function execRunner(...[command, args, cwd]: Parameters<CommandRunn
 
         child.on('close', (code) => {
             if (code === 0) {
-                resolve();
+                resolve(null);
                 return;
             }
 
             const shown = failureLines(captured).join('\n');
+            if (captured.some((line) => BLOCKED_BUILD.test(line))) {
+                resolve(shown);
+                return;
+            }
+
             reject(new SeedcordError(SeedcordErrorCode.CreateStepFailed, [spoken, shown || `exited with ${code}`]));
         });
     });

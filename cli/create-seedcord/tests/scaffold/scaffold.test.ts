@@ -44,15 +44,21 @@ interface Recorded {
     args: string[];
 }
 
-function recorder(failOn?: string): { runner: CommandRunner; calls: Recorded[] } {
+function recorder(failOn?: string, warnOn?: string): { runner: CommandRunner; calls: Recorded[] } {
     const calls: Recorded[] = [];
     const runner: CommandRunner = (command, args) => {
         calls.push({ command, args });
-        if (failOn !== undefined && args.join(' ').includes(failOn)) {
+        const spoken = args.join(' ');
+
+        if (failOn !== undefined && spoken.includes(failOn)) {
             return Promise.reject(new Error(`${failOn} blew up`));
         }
 
-        return Promise.resolve();
+        if (warnOn !== undefined && spoken.includes(warnOn)) {
+            return Promise.resolve(`${warnOn} skipped a build script`);
+        }
+
+        return Promise.resolve(null);
     };
 
     return { runner, calls };
@@ -216,18 +222,34 @@ describe('scaffold', () => {
         const result = await scaffold(baseInput(target), runner);
 
         expect(result.installed).toBe(false);
+        expect(result.failed).toBe(true);
         expect(result.notices.join('\n')).toContain('-D blew up');
         expect(calls.map((call) => call.command)).toContain('git');
     });
 
-    it('still formats and generates types when the install reports a failure', async () => {
+    it('leaves format and codegen alone when the install fails', async () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder('-D');
 
         await scaffold(baseInput(target), runner);
 
         const spoken = calls.map((call) => call.args.join(' '));
-        expect(spoken.some((args) => args.includes('prettier'))).toBe(true);
+        expect(spoken.some((args) => args.includes('prettier --write'))).toBe(false);
+        expect(spoken.some((args) => args.includes('codegen'))).toBe(false);
+    });
+
+    it('carries on through format and codegen when the install only reports a skipped build', async () => {
+        const target = await scratchTarget();
+        const { runner, calls } = recorder(undefined, '-D');
+
+        const result = await scaffold(baseInput(target), runner);
+
+        expect(result.installed).toBe(true);
+        expect(result.failed).toBe(false);
+        expect(result.notices.join('\n')).toContain('skipped a build script');
+
+        const spoken = calls.map((call) => call.args.join(' '));
+        expect(spoken.some((args) => args.includes('prettier --write'))).toBe(true);
         expect(spoken.some((args) => args.includes('codegen'))).toBe(true);
     });
 

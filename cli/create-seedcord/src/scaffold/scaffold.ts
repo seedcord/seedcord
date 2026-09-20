@@ -12,7 +12,8 @@ import type { GitPlan } from '#scaffold/git';
 import type { ScaffoldAnswers, TemplateContext } from '#template/context';
 import type { AgentName } from 'package-manager-detector';
 
-export type CommandRunner = (command: string, args: string[], cwd: string) => Promise<void>;
+// the resolved string is a warning worth printing
+export type CommandRunner = (command: string, args: string[], cwd: string) => Promise<string | null>;
 
 export interface ScaffoldInput {
     target: string;
@@ -27,6 +28,7 @@ export interface ScaffoldInput {
 export interface ScaffoldResult {
     installed: boolean;
     notices: string[];
+    failed: boolean;
 }
 
 const INSTALL_STEPS = {
@@ -65,7 +67,7 @@ async function writeTree(target: string, files: { path: string; contents: string
 }
 
 // a throw here would cut the summary in index.ts short
-async function runStep(steps: StepUi, labels: StepLabels, work: () => Promise<void>): Promise<string | null> {
+async function runStep(steps: StepUi, labels: StepLabels, work: () => Promise<unknown>): Promise<string | null> {
     try {
         await steps.run(labels, work);
         return null;
@@ -94,12 +96,13 @@ async function gitNoticeFor(input: ScaffoldInput, run: CommandRunner, plan: GitP
 interface InstallOutcome {
     installed: boolean;
     notices: string[];
+    failed: boolean;
 }
 
 function skipInstallSteps(steps: StepUi): InstallOutcome {
     for (const labels of Object.values(INSTALL_STEPS)) steps.skip(labels.done);
 
-    return { installed: false, notices: [] };
+    return { installed: false, notices: [], failed: false };
 }
 
 async function runInstallSteps(input: ScaffoldInput, run: CommandRunner, isGateway: boolean): Promise<InstallOutcome> {
@@ -110,19 +113,29 @@ async function runInstallSteps(input: ScaffoldInput, run: CommandRunner, isGatew
     const format = execCommand(agent, ['prettier', '--write', '.']);
     const codegen = execCommand(agent, ['seedcord', 'codegen']);
 
-    const installed = await runStep(steps, INSTALL_STEPS.install, async () => {
-        await run(deps.command, deps.args, target);
-        await run(dev.command, dev.args, target);
+    const warnings: string[] = [];
+    const collect = (warning: string | null): void => {
+        if (warning !== null) warnings.push(warning);
+    };
+
+    const install = await runStep(steps, INSTALL_STEPS.install, async () => {
+        collect(await run(deps.command, deps.args, target));
+        collect(await run(dev.command, dev.args, target));
     });
 
-    // pnpm exits non-zero over an ignored build script with every package already on disk
+    // npm resolves a missing binary from the registry
+    if (install !== null) {
+        steps.skip(INSTALL_STEPS.format.done);
+        steps.skip(INSTALL_STEPS.codegen.done);
+
+        return { installed: false, notices: [install, ...warnings], failed: true };
+    }
+
     const formatted = await runStep(steps, INSTALL_STEPS.format, () => run(format.command, format.args, target));
     const generated = await runStep(steps, INSTALL_STEPS.codegen, () => run(codegen.command, codegen.args, target));
+    const failures = [formatted, generated].filter((reason) => reason !== null);
 
-    return {
-        installed: installed === null,
-        notices: [installed, formatted, generated].filter((reason) => reason !== null)
-    };
+    return { installed: true, notices: [...warnings, ...failures], failed: failures.length > 0 };
 }
 
 // scaffold deletes this directory when writing fails; every step after it keeps the tree
@@ -166,6 +179,7 @@ export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promis
 
     return {
         installed: outcome.installed,
-        notices: gitNotice === null ? outcome.notices : [...outcome.notices, gitNotice]
+        notices: gitNotice === null ? outcome.notices : [...outcome.notices, gitNotice],
+        failed: outcome.failed
     };
 }

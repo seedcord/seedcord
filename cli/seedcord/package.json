@@ -95,6 +95,7 @@
         "envapt": "catalog:peer",
         "eslint-plugin-react-hooks": "^7.1.1",
         "ink-testing-library": "^4.0.0",
+        "tsx": "catalog:deps",
         "typescript": "catalog:peer"
     },
     "publishConfig": {
