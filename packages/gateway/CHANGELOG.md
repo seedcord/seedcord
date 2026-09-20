@@ -1,5 +1,11 @@
 # @seedcord/gateway
 
+## 0.6.2
+
+### 🩹 Patch
+
+- Fixed the three narrowing rules in `SlashHandler.options`'s TSDoc showing as one paragraph on the reference site. ([`d18b3f2`](https://github.com/seedcord/seedcord/commit/d18b3f2b26776e576295c9ebcf3a7c8d6b3ba716))
+
 ## 0.6.1
 
 ### 🩹 Patch
