@@ -355,7 +355,7 @@ describe('scaffold cleanup', () => {
         await expect(
             scaffold({ ...baseInput(target), templatesRoot: join(target, 'missing-templates') }, runner)
         ).rejects.toThrow();
-        // claimTarget rejects a non-empty target, so existed means empty and restoring it is leaving it alone
+        // claimTarget only accepts an empty target
         await expect(readdir(target)).resolves.toEqual([]);
     });
 

@@ -29,7 +29,7 @@ function lineWidth(): number {
     return (process.stdout.columns > 0 ? process.stdout.columns : PIPED_COLUMNS) - GUTTER;
 }
 
-// a bare `Error: CODE` header from pnpm carries the cause on the indented lines under it
+// pnpm indents the cause under a bare `Error: CODE` header
 function blockFrom(header: string, rest: string[]): string[] {
     const detail: string[] = [];
     for (const line of rest) {
@@ -63,7 +63,7 @@ interface SpawnSpec {
     shell: boolean;
 }
 
-// windows ships these as .cmd shims, and node will not spawn one without a shell
+// node will not spawn a windows .cmd shim without a shell
 const SHIMS = new Set(['npm', 'npx', 'pnpm', 'yarn', 'bun', 'deno']);
 
 export function spawnSpec(command: string, args: string[], platform: NodeJS.Platform): SpawnSpec {

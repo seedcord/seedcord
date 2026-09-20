@@ -123,7 +123,7 @@ async function runInstallSteps(input: ScaffoldInput, run: CommandRunner, isGatew
         collect(await run(dev.command, dev.args, target));
     });
 
-    // npm resolves a missing binary from the registry
+    // npx and bun x fetch a missing binary from the registry
     if (install !== null) {
         steps.skip(INSTALL_STEPS.format.done);
         steps.skip(INSTALL_STEPS.codegen.done);
@@ -154,7 +154,7 @@ async function writeProject(input: ScaffoldInput, plan: GitPlan, existed: boolea
         return context;
     } catch (error) {
         await rm(input.target, { recursive: true, force: true });
-        // claimTarget refuses a target with anything in it
+        // claimTarget refuses a non-empty target
         if (existed) await mkdir(input.target, { recursive: true });
 
         throw error;

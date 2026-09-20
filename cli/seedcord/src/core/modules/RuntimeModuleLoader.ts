@@ -13,7 +13,7 @@ import type { Jiti } from 'jiti';
 const TS_EXTENSIONS = new Set(['.ts', '.mts', '.cts']);
 const EXTENSIONS = [...TS_EXTENSIONS, '.js', '.mjs', '.cjs'];
 
-// jiti reads compilerOptions.paths from the first tsconfig above the parent it is given
+// compilerOptions.paths comes from the first tsconfig above jiti's parent path
 function jitiFor(entryPath: string): Jiti {
     return createJiti(pathToFileURL(entryPath).href, {
         cache: false,

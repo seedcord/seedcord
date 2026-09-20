@@ -66,7 +66,6 @@ describe('execRunner', () => {
         await expect(execRunner(process.execPath, ['-e', ''], process.cwd())).resolves.toBeNull();
     });
 
-    // pnpm installs every package, then exits non-zero to report the scripts it skipped
     it('treats a blocked build script as success and hands back the reason', async () => {
         const warning = await warningOf(
             `console.error('Error: ERR_PNPM_IGNORED_BUILDS');`,
