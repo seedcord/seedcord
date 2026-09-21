@@ -38,6 +38,7 @@ function optionId(id: string): string {
 
 function Results({
     results,
+    query,
     activeIndex,
     isFirst,
     isLast,
@@ -46,6 +47,7 @@ function Results({
     emptyMessage
 }: {
     results: SortedResult[];
+    query: string;
     activeIndex: number;
     isFirst: boolean;
     isLast: boolean;
@@ -70,6 +72,7 @@ function Results({
                         <SearchResultRow
                             key={result.id}
                             result={result}
+                            query={query}
                             isActive={index === activeIndex}
                             optionId={optionId(result.id)}
                             index={index}
@@ -108,9 +111,10 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     useSearchHotkey(() => setOpen(!open));
 
     const found = query.data === 'empty' || query.data === undefined ? NO_RESULTS : query.data;
+    const terms = useMemo(() => stripStopwords(typed), [typed]);
     // the cap drops whatever the ranking put last
     // useRovingList keys an effect on this array's identity
-    const results = useMemo(() => firstPages(rankByCoverage(found, stripStopwords(typed)), MAX_PAGES), [found, typed]);
+    const results = useMemo(() => firstPages(rankByCoverage(found, terms), MAX_PAGES), [found, terms]);
 
     const select = useCallback(
         (result: SortedResult) => {
@@ -160,6 +164,7 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
             >
                 <Results
                     results={results}
+                    query={terms}
                     activeIndex={activeIndex}
                     isFirst={isFirst}
                     isLast={isLast}

@@ -225,8 +225,8 @@ export enum SeedcordErrorCode {
     CliConfigNotFound = 3103,
     /** CLI entry file does not exist. */
     CliEntryNotFound = 3104,
-    /** tsx failed to import the provided entry file. */
-    CliTsxImportFailed = 3105,
+    /** Failed to import a TypeScript entry file. */
+    CliTsImportFailed = 3105,
     /** Native import and jiti fallback both failed. */
     CliImportFailed = 3106,
     /** Seedcord instance export is missing a start() method. */

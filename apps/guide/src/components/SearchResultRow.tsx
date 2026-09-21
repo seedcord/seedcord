@@ -32,6 +32,7 @@ function keyed(segments: readonly HighlightSegment[]): { key: string; segment: H
 
 export interface SearchResultRowProps {
     result: SortedResult;
+    query: string;
     isActive: boolean;
     optionId: string;
     index: number;
@@ -41,6 +42,7 @@ export interface SearchResultRowProps {
 
 export function SearchResultRow({
     result,
+    query,
     isActive,
     optionId,
     index,
@@ -48,7 +50,7 @@ export function SearchResultRow({
     onActivate
 }: SearchResultRowProps): ReactElement {
     const isPage = result.type === 'page';
-    const segments = matchWindow(highlightSegments(result.content), LEAD, WIDTH);
+    const segments = matchWindow(highlightSegments(result.content, query), LEAD, WIDTH);
 
     return (
         <div

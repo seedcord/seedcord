@@ -4,7 +4,7 @@ export interface HighlightSegment {
     code: boolean;
 }
 
-// fumadocs wraps every query match in <mark> at query time, over content it stored as markdown
+// fumadocs stores its content as markdown and wraps its own matches in <mark>
 const OPEN = '<mark>';
 const CLOSE = '</mark>';
 const TICK = '`';
@@ -22,33 +22,44 @@ function decodeEntities(content: string): string {
     });
 }
 
-interface Marked {
-    plain: string;
-    match: boolean[];
-}
-
-// fumadocs can mark a backtick, straddling the code span around it
-function stripMarks(content: string): Marked {
+// fumadocs skips inline code when it marks matches. matchFlags below redoes them
+function stripMarks(content: string): string {
     let plain = '';
-    const match: boolean[] = [];
-    let inside = false;
 
     for (let read = 0; read < content.length; read++) {
         if (content.startsWith(OPEN, read)) {
-            inside = true;
             read += OPEN.length - 1;
             continue;
         }
         if (content.startsWith(CLOSE, read)) {
-            inside = false;
             read += CLOSE.length - 1;
             continue;
         }
         plain += content[read];
-        match.push(inside);
     }
 
-    return { plain, match };
+    return plain;
+}
+
+const SPECIAL = /[.*+?^${}()|[\]\\]/g;
+
+function queryRegex(query: string): RegExp | null {
+    const terms = query.trim().split(/\s+/).filter(Boolean);
+    if (terms.length === 0) return null;
+
+    return new RegExp(`(${terms.map((term) => term.replace(SPECIAL, String.raw`\$&`)).join('|')})`, 'gi');
+}
+
+function matchFlags(plain: string, query: string): boolean[] {
+    const flags = Array.from({ length: plain.length }, () => false);
+    const regex = queryRegex(query);
+    if (regex === null) return flags;
+
+    for (const hit of plain.matchAll(regex)) {
+        for (let at = hit.index; at < hit.index + hit[0].length; at++) flags[at] = true;
+    }
+
+    return flags;
 }
 
 function runWidth(plain: string, start: number, char: string): number {
@@ -132,8 +143,9 @@ function markEmphasis(plain: string, code: readonly boolean[], delimiter: boolea
     }
 }
 
-export function highlightSegments(content: string): HighlightSegment[] {
-    const { plain, match } = stripMarks(decodeEntities(content));
+export function highlightSegments(content: string, query: string): HighlightSegment[] {
+    const plain = stripMarks(decodeEntities(content));
+    const match = matchFlags(plain, query);
     const { code, delimiter } = codeFlags(plain);
     markEmphasis(plain, code, delimiter);
     const segments: HighlightSegment[] = [];

@@ -221,8 +221,8 @@ const messages = {
     [SeedcordErrorCode.CliConfigEntryOutsideRoot]: (entryPath: string, root: string) =>
         `Entry file ${entryPath} must reside inside configured root ${root}.`,
     [SeedcordErrorCode.CliEntryNotFound]: (entryPath: string) => `Cannot find entry file at ${entryPath}.`,
-    [SeedcordErrorCode.CliTsxImportFailed]: (entryPath: string, reason: string) =>
-        `Failed to import ${entryPath} via tsx: ${reason}`,
+    [SeedcordErrorCode.CliTsImportFailed]: (entryPath: string, reason: string) =>
+        `Failed to import TypeScript file ${entryPath}: ${reason}`,
     [SeedcordErrorCode.CliImportFailed]: (entryPath: string, nativeReason: string, fallbackReason: string) =>
         `Failed to import ${entryPath}: ${nativeReason} (the jiti fallback also failed: ${fallbackReason})`,
     [SeedcordErrorCode.CliInstanceInvalid]: () =>

@@ -1,7 +1,7 @@
 import { S_STEP_SUBMIT, log, spinner } from '@clack/prompts';
 import { paint } from '@seedcord/errors';
 
-interface StepLabels {
+export interface StepLabels {
     running: string;
     done: string;
 }

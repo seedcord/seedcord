@@ -12,6 +12,15 @@ import type { ScaffoldAnswers } from '#template/context';
 
 const TEMPLATES = resolve(import.meta.dirname, '../../templates');
 
+const BUILT_IN = new Set(['node']);
+// the binary a script calls, against the package that ships it
+const PACKAGE_OF: Record<string, string> = {
+    eslint: 'eslint',
+    prettier: 'prettier',
+    seedcord: 'seedcord',
+    tsc: 'typescript'
+};
+
 const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',
     language: 'typescript',
@@ -35,15 +44,21 @@ interface Recorded {
     args: string[];
 }
 
-function recorder(failOn?: string): { runner: CommandRunner; calls: Recorded[] } {
+function recorder(failOn?: string, warnOn?: string): { runner: CommandRunner; calls: Recorded[] } {
     const calls: Recorded[] = [];
     const runner: CommandRunner = (command, args) => {
         calls.push({ command, args });
-        if (failOn !== undefined && args.join(' ').includes(failOn)) {
+        const spoken = args.join(' ');
+
+        if (failOn !== undefined && spoken.includes(failOn)) {
             return Promise.reject(new Error(`${failOn} blew up`));
         }
 
-        return Promise.resolve();
+        if (warnOn !== undefined && spoken.includes(warnOn)) {
+            return Promise.resolve(`${warnOn} skipped a build script`);
+        }
+
+        return Promise.resolve(null);
     };
 
     return { runner, calls };
@@ -120,6 +135,27 @@ describe('scaffold', () => {
         expect(dev?.args).toContain('@types/node');
     });
 
+    it('installs every tool the generated scripts call', async () => {
+        const target = await scratchTarget();
+        const { runner, calls } = recorder();
+
+        await scaffold(baseInput(target), runner);
+
+        const manifest = JSON.parse(await readFile(join(target, 'package.json'), 'utf8')) as {
+            scripts: Record<string, string>;
+        };
+        const installed = [...(calls[0]?.args ?? []), ...(calls[1]?.args ?? [])];
+
+        for (const command of Object.values(manifest.scripts)) {
+            const binary = command.split(' ')[0] ?? '';
+            if (BUILT_IN.has(binary)) continue;
+
+            const pkg = PACKAGE_OF[binary];
+            expect(pkg, `${binary} maps to no package`).toBeDefined();
+            expect(installed.some((arg) => arg === pkg || arg.startsWith(`${pkg}@`))).toBe(true);
+        }
+    });
+
     it('pins typescript to the last major typescript-eslint supports', async () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder();
@@ -175,8 +211,58 @@ describe('scaffold', () => {
 
         const result = await scaffold(baseInput(target), runner);
 
-        expect(result.gitNotice).toContain('commit blew up');
+        expect(result.notices.join('\n')).toContain('commit blew up');
         await expect(readdir(target)).resolves.toContain('package.json');
+    });
+
+    it('keeps going to git and the summary when the install fails', async () => {
+        const target = await scratchTarget();
+        const { runner, calls } = recorder('-D');
+
+        const result = await scaffold(baseInput(target), runner);
+
+        expect(result.installed).toBe(false);
+        expect(result.failed).toBe(true);
+        expect(result.notices.join('\n')).toContain('-D blew up');
+        expect(calls.map((call) => call.command)).toContain('git');
+    });
+
+    it('leaves format and codegen alone when the install fails', async () => {
+        const target = await scratchTarget();
+        const { runner, calls } = recorder('-D');
+
+        await scaffold(baseInput(target), runner);
+
+        const spoken = calls.map((call) => call.args.join(' '));
+        expect(spoken.some((args) => args.includes('prettier --write'))).toBe(false);
+        expect(spoken.some((args) => args.includes('codegen'))).toBe(false);
+    });
+
+    it('carries on through format and codegen when the install only reports a skipped build', async () => {
+        const target = await scratchTarget();
+        const { runner, calls } = recorder(undefined, '-D');
+
+        const result = await scaffold(baseInput(target), runner);
+
+        expect(result.installed).toBe(true);
+        expect(result.failed).toBe(false);
+        expect(result.notices.join('\n')).toContain('skipped a build script');
+
+        const spoken = calls.map((call) => call.args.join(' '));
+        expect(spoken.some((args) => args.includes('prettier --write'))).toBe(true);
+        expect(spoken.some((args) => args.includes('codegen'))).toBe(true);
+    });
+
+    it('keeps going past a failed format', async () => {
+        const target = await scratchTarget();
+        // the dev install lists prettier too
+        const { runner, calls } = recorder('prettier --write');
+
+        const result = await scaffold(baseInput(target), runner);
+
+        expect(result.installed).toBe(true);
+        expect(result.notices.join('\n')).toContain('prettier --write blew up');
+        expect(calls.map((call) => call.args.join(' ')).some((args) => args.includes('codegen'))).toBe(true);
     });
 
     it('marks the three install steps skipped rather than dropping them', async () => {
@@ -234,7 +320,9 @@ describe('scaffold cleanup', () => {
         const target = await scratchTarget();
         const { runner } = recorder('add');
 
-        await expect(scaffold(baseInput(target), runner)).rejects.toThrow();
+        const result = await scaffold(baseInput(target), runner);
+
+        expect(result.installed).toBe(false);
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
@@ -243,7 +331,9 @@ describe('scaffold cleanup', () => {
         await mkdir(target, { recursive: true });
         const { runner } = recorder('add');
 
-        await expect(scaffold(baseInput(target), runner)).rejects.toThrow();
+        const result = await scaffold(baseInput(target), runner);
+
+        expect(result.installed).toBe(false);
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
@@ -265,7 +355,7 @@ describe('scaffold cleanup', () => {
         await expect(
             scaffold({ ...baseInput(target), templatesRoot: join(target, 'missing-templates') }, runner)
         ).rejects.toThrow();
-        // claimTarget rejects a non-empty target, so existed means empty and restoring it is leaving it alone
+        // claimTarget only accepts an empty target
         await expect(readdir(target)).resolves.toEqual([]);
     });
 
