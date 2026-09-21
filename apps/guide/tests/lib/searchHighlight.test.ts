@@ -4,7 +4,7 @@ import { firstPages, highlightSegments, matchWindow } from '#lib/searchHighlight
 
 describe('the parts of a search result the query matched', () => {
     it('marks the run the query matched', () => {
-        expect(highlightSegments('An <mark>autocomplete</mark> interaction')).toEqual([
+        expect(highlightSegments('An autocomplete interaction', 'autocomplete')).toEqual([
             { text: 'An ', match: false, code: false },
             { text: 'autocomplete', match: true, code: false },
             { text: ' interaction', match: false, code: false }
@@ -12,53 +12,73 @@ describe('the parts of a search result the query matched', () => {
     });
 
     it('marks a whole result that is one match', () => {
-        expect(highlightSegments('<mark>Autocomplete</mark>')).toEqual([
+        expect(highlightSegments('Autocomplete', 'autocomplete')).toEqual([
             { text: 'Autocomplete', match: true, code: false }
         ]);
     });
 
     it('marks every run in a result that matched twice', () => {
-        const segments = highlightSegments('<mark>a</mark> and <mark>b</mark>');
+        const segments = highlightSegments('alpha then beta', 'alpha beta');
 
-        expect(segments.filter((segment) => segment.match).map((segment) => segment.text)).toEqual(['a', 'b']);
+        expect(segments.filter((segment) => segment.match).map((segment) => segment.text)).toEqual(['alpha', 'beta']);
     });
 
     it('hands back a result the query never matched as one part', () => {
-        expect(highlightSegments('Nothing matched')).toEqual([{ text: 'Nothing matched', match: false, code: false }]);
+        expect(highlightSegments('Nothing matched', 'needle')).toEqual([
+            { text: 'Nothing matched', match: false, code: false }
+        ]);
+    });
+
+    it('takes a regex character in the query as text', () => {
+        expect(highlightSegments('reads ctx.core here', 'ctx.core')).toEqual([
+            { text: 'reads ', match: false, code: false },
+            { text: 'ctx.core', match: true, code: false },
+            { text: ' here', match: false, code: false }
+        ]);
     });
 });
 
 describe('the code in a search result', () => {
     it('takes the backticks off so a row shows no markdown', () => {
-        expect(highlightSegments('reads it as `ctx.core`.')).toEqual([
+        expect(highlightSegments('reads it as `ctx.core`.', '')).toEqual([
             { text: 'reads it as ', match: false, code: false },
             { text: 'ctx.core', match: false, code: true },
             { text: '.', match: false, code: false }
         ]);
     });
 
+    // fumadocs marks text nodes alone. a term in backticks reaches us unmarked
     it('marks a match that landed inside the code', () => {
-        expect(highlightSegments('`no-choices-and-<mark>autocomplete</mark>`')).toEqual([
+        expect(highlightSegments('`no-choices-and-autocomplete`', 'autocomplete')).toEqual([
             { text: 'no-choices-and-', match: false, code: true },
             { text: 'autocomplete', match: true, code: true }
         ]);
     });
 
+    it('marks the same term in the prose and in the code', () => {
+        const segments = highlightSegments(
+            'call `registerCriticalFiles` after registerCriticalFiles',
+            'registerCriticalFiles'
+        );
+
+        expect(segments.filter((segment) => segment.match).map((segment) => segment.code)).toEqual([true, false]);
+    });
+
     it('drops the asterisks a bold lead-in wraps', () => {
-        expect(highlightSegments('**Components.** Buttons and modals')).toEqual([
+        expect(highlightSegments('**Components.** Buttons and modals', '')).toEqual([
             { text: 'Components. Buttons and modals', match: false, code: false }
         ]);
     });
 
     it('drops the asterisks around an italic word', () => {
-        expect(highlightSegments('we saw *how* and *what*')).toEqual([
+        expect(highlightSegments('we saw *how* and *what*', '')).toEqual([
             { text: 'we saw how and what', match: false, code: false }
         ]);
     });
 
     // remark stores an asterisk that follows a backtick as &#x2A;
     it('decodes an escaped asterisk back into its bold run', () => {
-        expect(highlightSegments('**`bot.ts`*&#x2A; builds it')).toEqual([
+        expect(highlightSegments('**`bot.ts`*&#x2A; builds it', '')).toEqual([
             { text: 'bot.ts', match: false, code: true },
             { text: ' builds it', match: false, code: false }
         ]);
@@ -68,21 +88,20 @@ describe('the code in a search result', () => {
     it('leaves a glob alone when a row holds two of them', () => {
         const code = "eslint 'src/**/*.ts' and 'tests/**/*.ts'";
 
-        expect(highlightSegments(code)).toEqual([{ text: code, match: false, code: false }]);
+        expect(highlightSegments(code, '')).toEqual([{ text: code, match: false, code: false }]);
     });
 
     // markdown closes a span on a backtick run of the same width
     it('keeps the backtick a double backtick span wraps', () => {
-        expect(highlightSegments('``a ` b``')).toEqual([{ text: 'a ` b', match: false, code: true }]);
+        expect(highlightSegments('``a ` b``', '')).toEqual([{ text: 'a ` b', match: false, code: true }]);
     });
 
     it('leaves a lone backtick alone', () => {
-        expect(highlightSegments('a ` b')).toEqual([{ text: 'a ` b', match: false, code: false }]);
+        expect(highlightSegments('a ` b', '')).toEqual([{ text: 'a ` b', match: false, code: false }]);
     });
 
-    // a query carrying a backtick makes fumadocs mark one
     it('shows no markup when a match starts on the opening backtick', () => {
-        expect(highlightSegments('reads it as <mark>`ctx</mark>.core`.')).toEqual([
+        expect(highlightSegments('reads it as `ctx.core`.', '`ctx')).toEqual([
             { text: 'reads it as ', match: false, code: false },
             { text: 'ctx', match: true, code: true },
             { text: '.core', match: false, code: true },
@@ -91,7 +110,7 @@ describe('the code in a search result', () => {
     });
 
     it('shows no markup when a match ends on the closing backtick', () => {
-        expect(highlightSegments('as `ctx<mark>.core`</mark> here')).toEqual([
+        expect(highlightSegments('as `ctx.core` here', '.core`')).toEqual([
             { text: 'as ', match: false, code: false },
             { text: 'ctx', match: false, code: true },
             { text: '.core', match: true, code: true },
@@ -101,10 +120,10 @@ describe('the code in a search result', () => {
 });
 
 describe('the window a row shows around the match', () => {
-    const long = `${'a'.repeat(400)} <mark>needle</mark> ${'b'.repeat(400)}`;
+    const long = `${'x'.repeat(400)} needle ${'y'.repeat(400)}`;
 
     it('keeps the match visible on a long paragraph', () => {
-        const shown = matchWindow(highlightSegments(long), 24, 150)
+        const shown = matchWindow(highlightSegments(long, 'needle'), 24, 150)
             .map((segment) => segment.text)
             .join('');
 
@@ -113,17 +132,17 @@ describe('the window a row shows around the match', () => {
     });
 
     it('marks the cut with an ellipsis', () => {
-        expect(matchWindow(highlightSegments(long), 24, 150)[0]?.text.startsWith('…')).toBe(true);
+        expect(matchWindow(highlightSegments(long, 'needle'), 24, 150)[0]?.text.startsWith('…')).toBe(true);
     });
 
     it('leaves a short result whole', () => {
-        const short = highlightSegments('a <mark>needle</mark> here');
+        const short = highlightSegments('a needle here', 'needle');
 
         expect(matchWindow(short, 24, 150)).toEqual(short);
     });
 
     it('leaves a result with no match alone', () => {
-        const none = highlightSegments('nothing matched here');
+        const none = highlightSegments('nothing matched here', 'needle');
 
         expect(matchWindow(none, 24, 150)).toEqual(none);
     });
