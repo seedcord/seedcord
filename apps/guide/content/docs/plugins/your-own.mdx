@@ -179,7 +179,7 @@ Calling `rejectOptions` throws `PluginOptionsRejected`. Your class name comes fi
 
 ## Reacting to a dev reload
 
-`seedcord dev` swaps a changed file into the running bot. If your plugin loads files itself, the way the mongoose plugin loads its service classes, it keeps the old copies. Override [`onHmr`](ref:core/Plugin.onHmr) to reload them. Reloading only helps with files your plugin reads again, though. A schema that a connection read at startup stays as it was, since swapping the file doesn't repeat that read. Pass glob patterns for files like that to [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles). When one of them changes, the dev terminal shows a **Restart required** card telling you to press `r`, which restarts the whole bot.
+`seedcord dev` swaps a changed file into the running bot. If your plugin loads files itself, the way the mongoose plugin loads its service classes, it keeps the old copies. Override [`onHmr`](ref:core/Plugin.onHmr) to reload them. Reloading only helps with files your plugin reads again, though. A schema that a connection read at startup stays as it was, since swapping the file doesn't repeat that read. Pass glob patterns for files like that to [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles). When one of them changes, the dev terminal shows a **Restart required** card telling you to press `r`, which restarts the whole bot. Register only the files your plugin reads. seedcord already requests a restart on its own startup files, listed in [Hot reload](/tooling/hot-reload#saves-that-need-a-restart).
 
 ```ts twoslash hovers
 import { Plugin } from '@seedcord/gateway';
