@@ -1,6 +1,7 @@
 import { paint } from '@seedcord/errors';
 
 import { runPrefix } from '#cli/packageManager';
+import { version } from '#cli/version';
 import { privilegedFor } from '#interview/capabilities';
 
 import type { ScaffoldAnswers } from '#template/context';
@@ -48,5 +49,5 @@ export function reproducingCommand(answers: ScaffoldAnswers, agent: AgentName): 
     // npm alone forwards flags to the package through a double dash
     const separator = agent === 'npm' ? '-- ' : '';
 
-    return `${agent} create seedcord ${answers.directory} ${separator}${flags.join(' ')}`;
+    return `${agent} create seedcord@${version} ${answers.directory} ${separator}${flags.join(' ')}`;
 }

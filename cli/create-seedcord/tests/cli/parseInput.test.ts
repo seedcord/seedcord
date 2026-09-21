@@ -1,7 +1,7 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { parseInput, wantsHelp } from '#cli/parseInput';
+import { parseInput, wantsHelp, wantsVersion } from '#cli/parseInput';
 
 const TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;
 
@@ -101,5 +101,24 @@ describe('wantsHelp', () => {
 
     it('is false for a run that asked for none', () => {
         expect(wantsHelp(['my-bot', '--no-git'])).toBe(false);
+    });
+});
+
+describe('wantsVersion', () => {
+    it('reads the flag under both spellings', () => {
+        expect(wantsVersion(['--version'])).toBe(true);
+        expect(wantsVersion(['-v'])).toBe(true);
+    });
+
+    it('answers without parsing, so a bad flag still reaches the version', () => {
+        expect(wantsVersion(['--transpor', 'http', '--version'])).toBe(true);
+    });
+
+    it('is false for a run that asked for none', () => {
+        expect(wantsVersion(['my-bot', '--no-git'])).toBe(false);
+    });
+
+    it('leaves a directory called version alone', () => {
+        expect(wantsVersion(['version'])).toBe(false);
     });
 });

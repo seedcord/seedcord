@@ -7,11 +7,13 @@ import { claimTarget } from '#scaffold/target';
 import { buildContext } from '#template/context';
 import { renderTemplates } from '#template/render';
 
-import type { StepUi } from '#cli/steps';
-import type { ScaffoldAnswers } from '#template/context';
+import type { StepLabels, StepUi } from '#cli/steps';
+import type { GitPlan } from '#scaffold/git';
+import type { ScaffoldAnswers, TemplateContext } from '#template/context';
 import type { AgentName } from 'package-manager-detector';
 
-export type CommandRunner = (command: string, args: string[], cwd: string) => Promise<void>;
+// the resolved string is a warning worth printing
+export type CommandRunner = (command: string, args: string[], cwd: string) => Promise<string | null>;
 
 export interface ScaffoldInput {
     target: string;
@@ -25,14 +27,23 @@ export interface ScaffoldInput {
 
 export interface ScaffoldResult {
     installed: boolean;
-    gitNotice: string | null;
+    notices: string[];
+    failed: boolean;
 }
+
+const INSTALL_STEPS = {
+    install: { running: 'Installing dependencies', done: 'Dependencies installed' },
+    format: { running: 'Formatting', done: 'Code formatted' },
+    codegen: { running: 'Generating types', done: 'Types generated' }
+} satisfies Record<string, StepLabels>;
 
 const DEV_PACKAGES = [
     '@seedcord/eslint-config',
     '@seedcord/tsconfig',
     // @seedcord/tsconfig sets types: ['node']
     '@types/node',
+    // @seedcord/eslint-config takes this as a required peer
+    'eslint',
     // eslint reads eslint.config.ts through jiti
     'jiti',
     'prettier',
@@ -55,23 +66,46 @@ async function writeTree(target: string, files: { path: string; contents: string
     }
 }
 
-async function runGitSteps(input: ScaffoldInput, run: CommandRunner): Promise<string | null> {
+// a throw here would cut the summary in index.ts short
+async function runStep(steps: StepUi, labels: StepLabels, work: () => Promise<unknown>): Promise<string | null> {
     try {
-        await input.steps.run({ running: 'Setting up git', done: 'Committed' }, async () => {
-            await run('git', ['init'], input.target);
-            await run('git', ['add', '.'], input.target);
-            await run('git', ['commit', '-m', 'chore: create seedcord bot'], input.target);
-        });
-
+        await steps.run(labels, work);
         return null;
     } catch (error: unknown) {
-        const reason = Error.isError(error) ? error.message : String(error);
-        // make sure a git failure is non fatal and can't delete the project
-        return `${reason} The project is complete and uncommitted.`;
+        return Error.isError(error) ? error.message : String(error);
     }
 }
 
-async function runInstallSteps(input: ScaffoldInput, run: CommandRunner, isGateway: boolean): Promise<void> {
+async function gitNoticeFor(input: ScaffoldInput, run: CommandRunner, plan: GitPlan): Promise<string | null> {
+    if (!plan.init) {
+        input.steps.skip('Committed');
+        return plan.notice;
+    }
+
+    const reason = await runStep(input.steps, { running: 'Setting up git', done: 'Committed' }, async () => {
+        await run('git', ['init'], input.target);
+        await run('git', ['add', '.'], input.target);
+        await run('git', ['commit', '-m', 'chore: create seedcord bot'], input.target);
+    });
+
+    if (reason === null) return plan.notice;
+
+    return `${reason} The project is complete and uncommitted.`;
+}
+
+interface InstallOutcome {
+    installed: boolean;
+    notices: string[];
+    failed: boolean;
+}
+
+function skipInstallSteps(steps: StepUi): InstallOutcome {
+    for (const labels of Object.values(INSTALL_STEPS)) steps.skip(labels.done);
+
+    return { installed: false, notices: [], failed: false };
+}
+
+async function runInstallSteps(input: ScaffoldInput, run: CommandRunner, isGateway: boolean): Promise<InstallOutcome> {
     const { agent, steps, target } = input;
 
     const deps = addCommand(agent, runtimePackages(isGateway), false);
@@ -79,17 +113,52 @@ async function runInstallSteps(input: ScaffoldInput, run: CommandRunner, isGatew
     const format = execCommand(agent, ['prettier', '--write', '.']);
     const codegen = execCommand(agent, ['seedcord', 'codegen']);
 
-    await steps.run({ running: 'Installing dependencies', done: 'Dependencies installed' }, async () => {
-        await run(deps.command, deps.args, target);
-        await run(dev.command, dev.args, target);
+    const warnings: string[] = [];
+    const collect = (warning: string | null): void => {
+        if (warning !== null) warnings.push(warning);
+    };
+
+    const install = await runStep(steps, INSTALL_STEPS.install, async () => {
+        collect(await run(deps.command, deps.args, target));
+        collect(await run(dev.command, dev.args, target));
     });
 
-    // prettier is only on disk after the install above
-    await steps.run({ running: 'Formatting', done: 'Code formatted' }, () => run(format.command, format.args, target));
+    // npx and bun x fetch a missing binary from the registry
+    if (install !== null) {
+        steps.skip(INSTALL_STEPS.format.done);
+        steps.skip(INSTALL_STEPS.codegen.done);
 
-    await steps.run({ running: 'Generating types', done: 'Types generated' }, () =>
-        run(codegen.command, codegen.args, target)
-    );
+        return { installed: false, notices: [install, ...warnings], failed: true };
+    }
+
+    const formatted = await runStep(steps, INSTALL_STEPS.format, () => run(format.command, format.args, target));
+    const generated = await runStep(steps, INSTALL_STEPS.codegen, () => run(codegen.command, codegen.args, target));
+    const failures = [formatted, generated].filter((reason) => reason !== null);
+
+    return { installed: true, notices: [...warnings, ...failures], failed: failures.length > 0 };
+}
+
+// scaffold deletes this directory when writing fails; every step after it keeps the tree
+async function writeProject(input: ScaffoldInput, plan: GitPlan, existed: boolean): Promise<TemplateContext> {
+    const context = buildContext(input.answers, {
+        developerUsername: plan.developerUsername,
+        runCommand: runPrefix(input.agent)
+    });
+
+    try {
+        await input.steps.run({ running: 'Writing files', done: 'Files written' }, async () => {
+            await mkdir(input.target, { recursive: true });
+            await writeTree(input.target, await renderTemplates(input.templatesRoot, context));
+        });
+
+        return context;
+    } catch (error) {
+        await rm(input.target, { recursive: true, force: true });
+        // claimTarget refuses a non-empty target
+        if (existed) await mkdir(input.target, { recursive: true });
+
+        throw error;
+    }
 }
 
 export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promise<ScaffoldResult> {
@@ -98,48 +167,19 @@ export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promis
     // execFile rejects when cwd does not exist
     const parent = dirname(input.target);
     await mkdir(parent, { recursive: true });
+
     const plan = gitPlanFrom(await probeGit(parent), input.git);
+    const context = await writeProject(input, plan, existed);
 
-    // once the tree exists the user can retry a failed install inside it, so only
-    // clean up when writing never finished
-    let written = false;
-    try {
-        const context = buildContext(input.answers, {
-            developerUsername: plan.developerUsername,
-            runCommand: runPrefix(input.agent)
-        });
+    const outcome = input.install
+        ? await runInstallSteps(input, run, context.isGateway)
+        : skipInstallSteps(input.steps);
 
-        const { steps } = input;
+    const gitNotice = await gitNoticeFor(input, run, plan);
 
-        await steps.run({ running: 'Writing files', done: 'Files written' }, async () => {
-            await mkdir(input.target, { recursive: true });
-            await writeTree(input.target, await renderTemplates(input.templatesRoot, context));
-        });
-        written = true;
-
-        if (input.install) {
-            await runInstallSteps(input, run, context.isGateway);
-        } else {
-            steps.skip('Dependencies installed');
-            steps.skip('Code formatted');
-            steps.skip('Types generated');
-        }
-
-        let gitNotice = plan.notice;
-
-        if (plan.init) {
-            gitNotice = (await runGitSteps(input, run)) ?? gitNotice;
-        } else {
-            steps.skip('Committed');
-        }
-
-        return { installed: input.install, gitNotice };
-    } catch (error) {
-        if (!written) {
-            await rm(input.target, { recursive: true, force: true });
-            if (existed) await mkdir(input.target, { recursive: true });
-        }
-
-        throw error;
-    }
+    return {
+        installed: outcome.installed,
+        notices: gitNotice === null ? outcome.notices : [...outcome.notices, gitNotice],
+        failed: outcome.failed
+    };
 }

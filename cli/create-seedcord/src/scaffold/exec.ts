@@ -6,11 +6,17 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { CommandRunner } from '#scaffold/scaffold';
 
-// an install logs hundreds of lines before the one that names the failure
+// an install logs hundreds of lines before the one that says what broke
 const KEPT_LINES = 12;
 
-// npm prefixes those lines with "npm error", pnpm and yarn with "ERR!"
-const NAMES_THE_CAUSE = /error|ERR!/i;
+// npm opens with "npm error", yarn with "ERR!", pnpm with "Error:" above a bare ERR_ code
+const NAMES_THE_CAUSE = /error|ERR[_!]/i;
+
+// pnpm exits non-zero over a skipped build script with every package installed
+const BLOCKED_BUILD = /ERR_PNPM_IGNORED_BUILDS/;
+
+// trimming the start of a captured line in take() would break this
+const INDENTED = /^\s/;
 
 // pnpm redraws its progress with carriage returns
 const LINE_BREAK = /[\r\n]+/;
@@ -23,10 +29,32 @@ function lineWidth(): number {
     return (process.stdout.columns > 0 ? process.stdout.columns : PIPED_COLUMNS) - GUTTER;
 }
 
-function failureLines(captured: string[]): string[] {
-    const named = captured.filter((line) => NAMES_THE_CAUSE.test(line));
+// pnpm indents the cause under a bare `Error: CODE` header
+function blockFrom(header: string, rest: string[]): string[] {
+    const detail: string[] = [];
+    for (const line of rest) {
+        if (!INDENTED.test(line)) break;
+        detail.push(line);
+    }
 
-    return named.length > 0 ? named.slice(0, KEPT_LINES) : captured.slice(-KEPT_LINES);
+    return [header, ...detail];
+}
+
+function failureLines(captured: string[]): string[] {
+    const blocks: string[] = [];
+    let consumedThrough = -1;
+
+    for (const [index, line] of captured.entries()) {
+        // a block above may already include this line
+        if (index <= consumedThrough || !NAMES_THE_CAUSE.test(line)) continue;
+
+        const block = blockFrom(line, captured.slice(index + 1));
+        blocks.push(...block);
+        consumedThrough = index + block.length - 1;
+    }
+
+    // every package manager prints the cause last
+    return (blocks.length > 0 ? blocks : captured).slice(-KEPT_LINES);
 }
 
 interface SpawnSpec {
@@ -35,7 +63,7 @@ interface SpawnSpec {
     shell: boolean;
 }
 
-// windows ships these as .cmd shims, and node will not spawn one without a shell
+// node will not spawn a windows .cmd shim without a shell
 const SHIMS = new Set(['npm', 'npx', 'pnpm', 'yarn', 'bun', 'deno']);
 
 export function spawnSpec(command: string, args: string[], platform: NodeJS.Platform): SpawnSpec {
@@ -46,20 +74,20 @@ export function spawnSpec(command: string, args: string[], platform: NodeJS.Plat
     return { command: [command, ...args].join(' '), args: [], shell };
 }
 
-export async function execRunner(...[command, args, cwd]: Parameters<CommandRunner>): Promise<void> {
+export async function execRunner(...[command, args, cwd]: Parameters<CommandRunner>): Promise<string | null> {
     const spoken = [command, ...args].join(' ');
     const width = lineWidth();
     const spec = spawnSpec(command, args, process.platform);
 
-    return new Promise((resolve, reject) => {
+    return new Promise<string | null>((resolve, reject) => {
         const child = spawn(spec.command, spec.args, { cwd, shell: spec.shell });
         const captured: string[] = [];
 
         const take = (chunk: Buffer): void => {
             for (const line of chunk.toString('utf8').split(LINE_BREAK)) {
                 // one uncut chunk grew past node's max string length
-                const text = line.trim().slice(0, width);
-                if (text === '') continue;
+                const text = line.trimEnd().slice(0, width);
+                if (text.trim() === '') continue;
 
                 captured.push(text);
             }
@@ -74,11 +102,16 @@ export async function execRunner(...[command, args, cwd]: Parameters<CommandRunn
 
         child.on('close', (code) => {
             if (code === 0) {
-                resolve();
+                resolve(null);
                 return;
             }
 
             const shown = failureLines(captured).join('\n');
+            if (captured.some((line) => BLOCKED_BUILD.test(line))) {
+                resolve(shown);
+                return;
+            }
+
             reject(new SeedcordError(SeedcordErrorCode.CreateStepFailed, [spoken, shown || `exited with ${code}`]));
         });
     });

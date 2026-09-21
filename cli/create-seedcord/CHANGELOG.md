@@ -1,5 +1,12 @@
 # create-seedcord
 
+## 0.3.1
+
+### 🩹 Patch
+
+- The .vscode/settings.json file will mark the typegen file as read-only in VS Code and exclude it from search and their file watcher. ([#325](https://github.com/seedcord/seedcord/pull/325), thanks [@KTrain5169](https://github.com/KTrain5169))
+- Keep the scaffolded project when install fails. Most notably, this allows sidestepping pnpm's postinstall scripts restrictions failing builds and wiping the scaffold. ([#324](https://github.com/seedcord/seedcord/pull/324), thanks [@KTrain5169](https://github.com/KTrain5169))
+
 ## 0.3.0
 
 ### ✨ Minor

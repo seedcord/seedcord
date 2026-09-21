@@ -1,5 +1,11 @@
 # discord-component-embed
 
+## 0.2.2
+
+### 🩹 Patch
+
+- Improved the TSDoc across the package to say what each symbol is and what you do with it. ([`0c7e467`](https://github.com/seedcord/seedcord/commit/0c7e4674cd7dfd8a6b6e55f7c3b412147b2fd291))
+
 ## 0.2.1
 
 ### 🩹 Patch

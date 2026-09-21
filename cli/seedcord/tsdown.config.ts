@@ -5,6 +5,6 @@ export default createTsdownConfig({
     format: ['esm'],
     deps: {
         skipNodeModulesBundle: true,
-        neverBundle: ['commander', '@commander-js/extra-typings', 'chalk', 'jiti', 'tsx/esm/api', 'typescript']
+        neverBundle: ['commander', '@commander-js/extra-typings', 'chalk', 'jiti', 'typescript']
     }
 });

@@ -8,10 +8,11 @@ import { banner } from '#cli/banner';
 import { helpText } from '#cli/help';
 import { inviteUrl } from '#cli/invite';
 import { runningAgent } from '#cli/packageManager';
-import { parseInput, wantsHelp } from '#cli/parseInput';
+import { parseInput, wantsHelp, wantsVersion } from '#cli/parseInput';
 import { reportFailure } from '#cli/reportFailure';
 import { clackSteps, silentSteps } from '#cli/steps';
 import { dashboardToggles, nextSteps, reproducingCommand } from '#cli/summary';
+import { version } from '#cli/version';
 import { runFlow } from '#interview/runFlow';
 import { STEPS } from '#interview/steps';
 import { missingNotice, probeCloudflared } from '#scaffold/cloudflared';
@@ -42,6 +43,11 @@ async function main(): Promise<void> {
         return;
     }
 
+    if (wantsVersion(argv)) {
+        process.stdout.write(`${version}\n`);
+        return;
+    }
+
     const interactive = isInteractive();
     if (interactive) intro(banner());
 
@@ -63,9 +69,12 @@ async function main(): Promise<void> {
         execRunner
     );
 
-    if (result.gitNotice !== null) log.warn(result.gitNotice);
+    for (const notice of result.notices) log.warn(notice);
 
     await reportOutcome(answers, agent, result.installed, interactive);
+
+    // a wrapper chaining `&& cd my-bot && pnpm dev` has to stop here
+    if (result.failed) process.exitCode = 1;
 }
 
 // a gutter on the wrapped rows would end up in whatever gets pasted
