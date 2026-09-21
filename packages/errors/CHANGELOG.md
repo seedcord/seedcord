@@ -1,5 +1,11 @@
 # @seedcord/errors
 
+## 0.10.0
+
+### 💥 Breaking
+
+- Renamed `SeedcordErrorCode.CliTsxImportFailed` to `CliTsImportFailed`. Its numeric value stays 3105. ([#327](https://github.com/seedcord/seedcord/pull/327))
+
 ## 0.9.0
 
 ### ✨ Minor

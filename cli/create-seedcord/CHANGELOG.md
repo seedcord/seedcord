@@ -1,5 +1,15 @@
 # create-seedcord
 
+## 0.3.2
+
+### 🩹 Patch
+
+- Fixed the reproduce command printed at the end of a scaffold. Because it left the version off, running it later could install a different create-seedcord. ([#327](https://github.com/seedcord/seedcord/pull/327))
+- Added `--version` and `-v`. Both used to throw a usage error. ([#327](https://github.com/seedcord/seedcord/pull/327))
+- Fixed the scaffold reading a skipped build script as an install failure. pnpm exits non-zero there with every package already installed. ([#327](https://github.com/seedcord/seedcord/pull/327))
+- Fixed `pnpm lint` failing in a new project. The scaffold installs `eslint` now. ([#327](https://github.com/seedcord/seedcord/pull/327))
+- Fixed a failed dependency install cutting the run short. You now get the cause, the usual summary, and a non-zero exit code. ([#327](https://github.com/seedcord/seedcord/pull/327))
+
 ## 0.3.1
 
 ### 🩹 Patch

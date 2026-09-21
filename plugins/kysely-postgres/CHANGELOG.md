@@ -1,5 +1,19 @@
 # @seedcord/plugin-kysely-postgres
 
+## 0.5.0
+
+### 💥 Breaking
+
+- seedcord now needs envapt 8.2.2 or newer. Older versions throw `Cannot redefine property` when the CLI loads a class that reads its config through an `@Envapt` property. ([#327](https://github.com/seedcord/seedcord/pull/327))
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/logger` 0.3.3 → 0.4.0
+- `@seedcord/errors` 0.9.0 → 0.10.0
+- `@seedcord/utils` 0.8.12 → 0.8.13
+
 ## 0.4.3
 
 ### 🩹 Patch

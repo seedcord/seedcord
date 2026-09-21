@@ -1,5 +1,23 @@
 # seedcord
 
+## 0.21.0
+
+### 💥 Breaking
+
+- seedcord now needs envapt 8.2.2 or newer. Older versions throw `Cannot redefine property` when the CLI loads a class that reads its config through an `@Envapt` property. ([#327](https://github.com/seedcord/seedcord/pull/327))
+
+### 🩹 Patch
+
+- The CLI no longer depends on tsx. It loads your TypeScript through jiti, the loader it already used for JavaScript. ([#327](https://github.com/seedcord/seedcord/pull/327))
+- Fixed `seedcord codegen` throwing on an import that goes through a `compilerOptions.paths` alias. It now reads those aliases from your nearest tsconfig, the way `dev` and `build` already did. ([#327](https://github.com/seedcord/seedcord/pull/327))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.8.0 → 0.9.0
+- `@seedcord/logger` 0.3.3 → 0.4.0
+- `@seedcord/errors` 0.9.0 → 0.10.0
+- `@seedcord/utils` 0.8.12 → 0.8.13
+
 ## 0.20.0
 
 ### ✨ Minor
