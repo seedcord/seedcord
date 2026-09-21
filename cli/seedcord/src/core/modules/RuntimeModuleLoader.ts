@@ -9,8 +9,7 @@ import { createJiti } from 'jiti';
 import type { ModuleLoader } from './ModuleLoader';
 import type { Jiti } from 'jiti';
 
-// jiti's babel transform rejects a .tsx file
-const TS_EXTENSIONS = new Set(['.ts', '.mts', '.cts']);
+const TS_EXTENSIONS = new Set(['.ts', '.tsx', '.mts', '.cts']);
 const EXTENSIONS = [...TS_EXTENSIONS, '.js', '.mjs', '.cjs'];
 
 // compilerOptions.paths comes from the first tsconfig above jiti's parent path
@@ -19,7 +18,9 @@ function jitiFor(entryPath: string): Jiti {
         cache: false,
         interopDefault: true,
         extensions: EXTENSIONS,
-        tsconfigPaths: true
+        tsconfigPaths: true,
+        // jiti's babel transform rejects JSX without this
+        jsx: true
     });
 }
 

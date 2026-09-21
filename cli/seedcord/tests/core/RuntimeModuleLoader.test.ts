@@ -34,6 +34,21 @@ describe('RuntimeModuleLoader', () => {
         expect(module.value).toBe('hi');
     });
 
+    // codegen pulls in whatever a command file imports
+    it('follows an extensionless import into a file holding JSX', async () => {
+        const root = await project();
+        await writeFile(
+            join(root, 'src', 'lib', 'card.tsx'),
+            `const React = { createElement: (tag) => tag };\nexport const greeting = <b />;\n`,
+            'utf8'
+        );
+        const entry = await writeEntry(root, './lib/card');
+
+        const module = await new RuntimeModuleLoader().importModule<{ value: string }>(entry);
+
+        expect(module.value).toBe('b');
+    });
+
     it('resolves a relative import with no paths declared', async () => {
         const root = await project();
         const entry = await writeEntry(root, './lib/greeting');
