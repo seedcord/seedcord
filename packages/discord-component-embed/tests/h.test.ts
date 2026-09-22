@@ -40,7 +40,7 @@ describe('h', () => {
 
         expectEmbedError(
             () => toComponentEmbed(inContainer(emptyRow)),
-            '<ActionRow> takes 1 to 5 <LinkButton> children, got 0.'
+            '<ActionRow> needs 1 to 5 <LinkButton> children, got 0.'
         );
         expectEmbedError(() => toComponentEmbed(inContainer(nestedText)), '<TextDisplay> only takes text.');
     });

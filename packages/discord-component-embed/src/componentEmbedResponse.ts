@@ -1,17 +1,13 @@
-import { ComponentEmbedError } from './ComponentEmbedError';
-import { toComponentEmbed } from './toComponentEmbed';
+import { toComponentEmbedJson } from './toComponentEmbedJson';
 
 import type { EmbedElement } from './element';
-
-// discord measures this on the raw response bytes
-const MAX_LINKED_BYTES = 3000;
 
 /**
  * Builds the `Response` for a URL that a `<link rel="discord:component-embed">` tag points at. Return it from that
  * route.
  *
- * @throws a {@link ComponentEmbedError} when the JSON is over Discord's 3000-byte limit for a linked payload, when
- * the tree breaks a rule of the format, or when your own code throws while the package reads it.
+ * @throws a {@link ComponentEmbedError} when the tree breaks a rule of the format, or when your own code throws while
+ * the package reads it.
  *
  * @example
  * ```tsx
@@ -24,14 +20,5 @@ const MAX_LINKED_BYTES = 3000;
  * ```
  */
 export function componentEmbedResponse(root: EmbedElement): Response {
-    const body = new TextEncoder().encode(JSON.stringify(toComponentEmbed(root)));
-
-    if (body.byteLength > MAX_LINKED_BYTES) {
-        throw new ComponentEmbedError(
-            'OverLimit',
-            `Linked component embed JSON is limited to ${String(MAX_LINKED_BYTES)} bytes, this one is ${String(body.byteLength)}.`
-        );
-    }
-
-    return new Response(body, { headers: { 'content-type': 'application/json' } });
+    return new Response(toComponentEmbedJson(root), { headers: { 'content-type': 'application/json' } });
 }

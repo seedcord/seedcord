@@ -52,7 +52,7 @@ describe('preact/compat components', () => {
         expect(error.code).toBe('UnsupportedComponent');
         // preact ships minified. the component lazy returns is named i
         expect(error.message).toMatch(
-            /^<\w+> suspends while it loads\. Load its data first and pass it in as props\.$/
+            /^<\w+> suspends while it loads\. Load its data first and pass it in as props\.\nFound at Container > \w+$/
         );
     });
 });

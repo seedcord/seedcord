@@ -36,9 +36,20 @@ export class ComponentEmbedError extends Error {
     override readonly name = 'ComponentEmbedError';
     /** Which rule the tree broke. */
     readonly code: ComponentEmbedErrorCode;
+    /**
+     * Where the broken component sits, from the root down, like `['Container', 'PostCard', 'Section 2']`. Your own
+     * components appear by name. A number marks a component that has siblings of the same kind. The path is empty
+     * when the problem is the whole embed, like its size.
+     */
+    readonly path: readonly string[];
 
-    constructor(code: ComponentEmbedErrorCode, message: string, options?: ErrorOptions) {
-        super(message, options);
+    constructor(
+        code: ComponentEmbedErrorCode,
+        message: string,
+        { path = [], ...options }: ErrorOptions & { path?: readonly string[] } = {}
+    ) {
+        super(path.length > 0 ? `${message}\nFound at ${path.join(' > ')}` : message, options);
         this.code = code;
+        this.path = path;
     }
 }

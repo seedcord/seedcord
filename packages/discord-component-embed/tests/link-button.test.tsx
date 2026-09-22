@@ -37,12 +37,12 @@ describe('LinkButton', () => {
         [
             'a label over 80 characters',
             <LinkButton key="c" url="https://example.com" label={'L'.repeat(81)} />,
-            'The <LinkButton> label is longer than 80 characters (81).'
+            "The <LinkButton> label is 81 characters, 1 over Discord's limit of 80."
         ],
         [
             'a url over 512 characters',
             <LinkButton key="d" url={`https://example.com/${'a'.repeat(512)}`} label="go" />,
-            'The <LinkButton> url is longer than 512 characters (532).'
+            "The <LinkButton> url is 532 characters, 20 over Discord's limit of 512."
         ],
         [
             'a javascript url',

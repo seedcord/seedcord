@@ -21,6 +21,15 @@ describe('componentEmbedResponse', () => {
         expect(() => componentEmbedResponse(withText('a'.repeat(3000 - OVERHEAD)))).not.toThrow();
     });
 
+    it('sends custom emoji as written and adds one byte for the </', async () => {
+        const content = `${'<:seedcord:1538077321318236281> '.repeat(80)}</script>`;
+
+        const body = await componentEmbedResponse(withText(content)).text();
+
+        expect(body).toHaveLength(OVERHEAD + content.length + 1);
+        expect(JSON.parse(body)).toEqual({ component: { type: 17, components: [{ type: 10, content }] } });
+    });
+
     it('counts bytes, so multi-byte text reaches the limit sooner', () => {
         // € is 3 bytes in UTF-8
         const content = '€'.repeat(1000);
@@ -28,7 +37,7 @@ describe('componentEmbedResponse', () => {
         expect(OVERHEAD + content.length).toBeLessThan(3000);
         expectEmbedError(
             () => componentEmbedResponse(withText(content)),
-            `Linked component embed JSON is limited to 3000 bytes, this one is ${String(OVERHEAD + 3000)}.`
+            `This component embed's JSON is ${String(OVERHEAD + 3000)} bytes, over Discord's limit of 3000.`
         );
     });
 });

@@ -30,38 +30,90 @@ const NAMES = new Map<unknown, string>([
 
 export function nameOf(type: unknown): string {
     if (typeof type === 'string') return type;
-    return NAMES.get(type) ?? (typeof type === 'function' ? type.name : 'unknown');
+    const known = NAMES.get(type);
+    if (known !== undefined) return known;
+    if (typeof type === 'function') return type.name || 'Anonymous';
+    if (typeof type === 'object' && type !== null) {
+        if ('displayName' in type && typeof type.displayName === 'string') return type.displayName;
+        // react's memo keeps the wrapped function on type, forwardRef keeps it on render
+        if ('type' in type) return nameOf(type.type);
+        if ('render' in type) return nameOf(type.render);
+    }
+    return 'Anonymous';
 }
 
 export function isElement(value: unknown): value is EmbedElement {
     return typeof value === 'object' && value !== null && 'type' in value && 'props' in value;
 }
 
-export function rejectVueVNode(element: EmbedElement): void {
+export type Path = readonly string[];
+
+// the path ends with the element's own step
+export interface Placed {
+    element: EmbedElement;
+    path: Path;
+}
+
+export function rejectVueVNode(element: EmbedElement, path: Path): void {
     // vue's own isVNode reads this flag
     if ('__v_isVNode' in element && element.__v_isVNode === true) {
         throw new ComponentEmbedError(
             'InvalidStructure',
-            "Got a Vue VNode. Build the tree with h() from discord-component-embed instead of Vue's h()."
+            "Got a Vue VNode. Build the tree with h() from discord-component-embed instead of Vue's h().",
+            { path }
         );
     }
 }
 
-export function expand(node: EmbedNode): EmbedElement[] {
+// your own components are rendered on the way, each one adding its step to the path
+export function place(node: EmbedNode, path: Path): Placed[] {
+    return withSteps(siblingsIn(node, path)).flatMap(({ element, step }) => {
+        const stepPath = [...path, step];
+        if (typeof element.type === 'string' || NAMES.has(element.type)) return [{ element, path: stepPath }];
+        return place(renderUserComponent(element, stepPath), stepPath);
+    });
+}
+
+// a step gets a number only when the same children hold more than one of that kind
+function withSteps(siblings: readonly EmbedElement[]): { element: EmbedElement; step: string }[] {
+    const totals = new Map<unknown, number>();
+    for (const { type } of siblings) totals.set(type, (totals.get(type) ?? 0) + 1);
+
+    const seen = new Map<unknown, number>();
+    return siblings.map((element) => {
+        const position = (seen.get(element.type) ?? 0) + 1;
+        seen.set(element.type, position);
+        const name = nameOf(element.type);
+        return { element, step: (totals.get(element.type) ?? 0) > 1 ? `${name} ${String(position)}` : name };
+    });
+}
+
+function siblingsIn(node: EmbedNode, path: Path): EmbedElement[] {
     if (node === null || node === undefined || typeof node === 'boolean') return [];
-    if (Array.isArray(node)) return node.flatMap(expand);
-    if (isIterable(node)) return [...node].flatMap(expand);
+    if (Array.isArray(node)) return node.flatMap((child: EmbedNode) => siblingsIn(child, path));
+    if (isIterable(node)) return iterate(node, path).flatMap((child) => siblingsIn(child, path));
     if (!isElement(node)) {
         throw new ComponentEmbedError(
             'InvalidStructure',
-            `Text has to go inside a <TextDisplay>, got ${describeValue(node)}.`
+            `Got ${describeValue(node)} where only components can go. Text goes in a <TextDisplay>, inside a <Container> or a <Section>.`,
+            { path }
         );
     }
-    rejectVueVNode(node);
+    rejectVueVNode(node, path);
 
-    if (node.type === Fragment) return expand((node.props as { children?: EmbedNode }).children);
-    if (typeof node.type === 'string' || NAMES.has(node.type)) return [node];
-    return expand(renderUserComponent(node));
+    if (node.type === Fragment) return siblingsIn((node.props as { children?: EmbedNode }).children, path);
+    return [node];
+}
+
+function iterate(children: Iterable<EmbedNode>, path: Path): EmbedNode[] {
+    try {
+        return [...children];
+    } catch (error) {
+        throw new ComponentEmbedError('ReadFailed', `Reading an iterable in the children threw: ${messageOf(error)}.`, {
+            cause: error,
+            path
+        });
+    }
 }
 
 function needsRenderer(type: object): boolean {
@@ -77,12 +129,13 @@ function needsRenderer(type: object): boolean {
     );
 }
 
-function renderUserComponent({ type, props }: EmbedElement): EmbedNode {
+function renderUserComponent({ type, props }: EmbedElement, path: Path): EmbedNode {
     // react's memo, lazy, forwardRef, and context types are objects
     if (typeof type !== 'function' || needsRenderer(type)) {
         throw new ComponentEmbedError(
             'UnsupportedComponent',
-            'Only plain function components work inside a component embed.'
+            'Only plain function components work inside a component embed.',
+            { path }
         );
     }
 
@@ -96,20 +149,21 @@ function renderUserComponent({ type, props }: EmbedElement): EmbedNode {
             throw new ComponentEmbedError(
                 'UnsupportedComponent',
                 `<${nameOf(component)}> suspends while it loads. Load its data first and pass it in as props.`,
-                { cause: error }
+                { cause: error, path }
             );
         }
         throw new ComponentEmbedError(
             'ReadFailed',
             `<${nameOf(component)}> threw while the package read it: ${messageOf(error)}. Components here run outside React's renderer, so hooks don't work in them.`,
-            { cause: error }
+            { cause: error, path }
         );
     }
 
     if (isThenable(output)) {
         throw new ComponentEmbedError(
             'UnsupportedComponent',
-            `<${nameOf(component)}> is async. Load its data first and pass it in as props.`
+            `<${nameOf(component)}> is async. Load its data first and pass it in as props.`,
+            { path }
         );
     }
 
@@ -121,23 +175,25 @@ function isThenable(value: unknown): value is PromiseLike<unknown> {
     return typeof value === 'object' && value !== null && 'then' in value && typeof value.then === 'function';
 }
 
-export function childrenOf(parent: unknown, children: EmbedNode, kind: unknown, max: number): EmbedElement[] {
-    const elements = expand(children);
+export function childrenOf(parent: unknown, path: Path, children: EmbedNode, kind: unknown, max: number): Placed[] {
+    const placed = place(children, path);
 
-    const stray = elements.find((element) => element.type !== kind);
+    const stray = placed.find(({ element }) => element.type !== kind);
     if (stray) {
         throw new ComponentEmbedError(
             'InvalidStructure',
-            `<${nameOf(parent)}> only takes <${nameOf(kind)}> children, got <${nameOf(stray.type)}>.`
+            `<${nameOf(parent)}> only takes <${nameOf(kind)}> children, got <${nameOf(stray.element.type)}>.`,
+            { path: stray.path }
         );
     }
 
-    if (elements.length === 0 || elements.length > max) {
+    if (placed.length === 0 || placed.length > max) {
         throw new ComponentEmbedError(
             'InvalidStructure',
-            `<${nameOf(parent)}> takes 1 to ${String(max)} <${nameOf(kind)}> children, got ${String(elements.length)}.`
+            `<${nameOf(parent)}> needs 1 to ${String(max)} <${nameOf(kind)}> children, got ${String(placed.length)}.`,
+            { path }
         );
     }
 
-    return elements;
+    return placed;
 }

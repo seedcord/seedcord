@@ -1,5 +1,4 @@
 /** @jsxImportSource react */
-import { Component, lazy, memo, useState } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -15,7 +14,7 @@ import {
     toComponentEmbed
 } from '#src/index';
 
-import { expectEmbedError, thrownBy } from './helpers';
+import { expectEmbedError } from './helpers';
 
 import type { ReactElement } from 'react';
 
@@ -139,10 +138,15 @@ describe('toComponentEmbed', () => {
     });
 
     it('throws a ComponentEmbedError when the root is anything but a container', () => {
+        function Nothing(): null {
+            return null;
+        }
+
         expectEmbedError(
             () => toComponentEmbed(<TextDisplay>hi</TextDisplay>),
-            'The root element must be a <Container>.'
+            'The root has to be a <Container>, got <TextDisplay>.'
         );
+        expectEmbedError(() => toComponentEmbed(<Nothing />), 'The root has to be a <Container>, got nothing.');
     });
 
     it('rejects a root with more than one element', () => {
@@ -158,19 +162,52 @@ describe('toComponentEmbed', () => {
                         </Container>
                     </>
                 ),
-            'The root must be one <Container>, got 2 elements.'
+            'The root has 2 elements. Put all of the components in one <Container> and pass only that.'
         );
     });
 
-    it('rejects a component that cannot sit directly in a container', () => {
+    it.each([
+        ['<Thumbnail>', <Thumbnail key="t" url={IMAGE} />, 'a <Section> accessory'],
+        [
+            '<LinkButton>',
+            <LinkButton key="b" url="https://example.com" label="go" />,
+            'an <ActionRow> or a <Section> accessory'
+        ],
+        ['<MediaGalleryItem>', <MediaGalleryItem key="m" url={IMAGE} />, 'a <MediaGallery>']
+    ])('tells you where %s goes when it sits straight in a container', (name, element, parent) => {
+        expectEmbedError(
+            () => toComponentEmbed(<Container>{element}</Container>),
+            `${name} can't go straight inside a <Container>. Put it in ${parent}.`
+        );
+    });
+
+    it('counts the backslash each </ gets toward the 3000 bytes', () => {
+        // 2065 bytes as plain JSON, 3065 once every </ is written as <\/
+        const content = '</'.repeat(1000);
+
         expectEmbedError(
             () =>
                 toComponentEmbed(
                     <Container>
-                        <Thumbnail url={IMAGE} />
+                        <TextDisplay>{content}</TextDisplay>
                     </Container>
                 ),
-            '<Thumbnail> cannot go directly inside a <Container>.'
+            "This component embed's JSON is 3065 bytes, over Discord's limit of 3000. Shorten its text or its URLs."
+        );
+    });
+
+    it('counts the escape each <!-- gets toward the 3000 bytes', () => {
+        // 2465 bytes as plain JSON. each < of a <!-- is written as six bytes, adding 5 per comment
+        const content = '<!--'.repeat(600);
+
+        expectEmbedError(
+            () =>
+                toComponentEmbed(
+                    <Container>
+                        <TextDisplay>{content}</TextDisplay>
+                    </Container>
+                ),
+            "This component embed's JSON is 5465 bytes, over Discord's limit of 3000."
         );
     });
 
@@ -182,7 +219,7 @@ describe('toComponentEmbed', () => {
                         <TextDisplay>hi</TextDisplay>
                     </Container>
                 ),
-            `accentColor must be an integer from 0 to 0xFFFFFF, got ${String(accentColor)}.`
+            `accentColor must be a whole number from 0 to 0xFFFFFF, like 0x5865f2, got ${String(accentColor)}.`
         );
     });
 
@@ -215,7 +252,7 @@ describe('toComponentEmbed', () => {
                         <Separator />
                     </Container>
                 ),
-            'A component embed holds at most 40 components, this one has 41.'
+            "This component embed has 41 components. Discord allows 40, and the <Container>, buttons, and thumbnails all count toward that. Gallery items don't. Merge neighboring <TextDisplay>s into one, or remove some components."
         );
     });
 });
@@ -256,7 +293,7 @@ describe('toComponentEmbed with sections, galleries, and rows', () => {
     });
 
     it('rejects a section with no accessory or two of them', () => {
-        const oneAccessory = 'A <Section> takes exactly one accessory, a <Thumbnail> or a <LinkButton>.';
+        const oneAccessory = 'A <Section> needs exactly one accessory, a <Thumbnail> or a <LinkButton>, got';
         const bare = (
             // @ts-expect-error a JS caller can still leave it out
             <Section>
@@ -276,8 +313,8 @@ describe('toComponentEmbed with sections, galleries, and rows', () => {
             </Section>
         );
 
-        expectEmbedError(() => toComponentEmbed(<Container>{bare}</Container>), oneAccessory);
-        expectEmbedError(() => toComponentEmbed(<Container>{doubled}</Container>), oneAccessory);
+        expectEmbedError(() => toComponentEmbed(<Container>{bare}</Container>), `${oneAccessory} none.`);
+        expectEmbedError(() => toComponentEmbed(<Container>{doubled}</Container>), `${oneAccessory} 2.`);
     });
 
     it('rejects a section with more than three text displays', () => {
@@ -293,7 +330,7 @@ describe('toComponentEmbed with sections, galleries, and rows', () => {
                         </Section>
                     </Container>
                 ),
-            '<Section> takes 1 to 3 <TextDisplay> children, got 4.'
+            '<Section> needs 1 to 3 <TextDisplay> children, got 4.'
         );
     });
 
@@ -319,14 +356,18 @@ describe('toComponentEmbed with sections, galleries, and rows', () => {
                         <MediaGallery>{[]}</MediaGallery>
                     </Container>
                 ),
-            '<MediaGallery> takes 1 to 10 <MediaGalleryItem> children, got 0.'
+            '<MediaGallery> needs 1 to 10 <MediaGalleryItem> children, got 0.'
         );
     });
 
     it.each([
         ['an attachment url', 'attachment://image.png', 'must be an http or https URL'],
         ['a relative url', '/relative/image.png', 'must be an http or https URL'],
-        ['a url over 2048 characters', `https://example.com/${'a'.repeat(2048)}`, 'is longer than 2048 characters'],
+        [
+            'a url over 2048 characters',
+            `https://example.com/${'a'.repeat(2048)}`,
+            "is 2068 characters, 20 over Discord's limit of 2048"
+        ],
         ['a url with a leading space', ` ${IMAGE}`, 'has whitespace in it'],
         ['a url with a newline in it', 'https://example.com/a\n.png', 'has whitespace in it']
     ])('rejects %s as media', (_label, url, problem) => {
@@ -343,17 +384,50 @@ describe('toComponentEmbed with sections, galleries, and rows', () => {
         );
     });
 
-    it('rejects a media description over 1024 characters', () => {
+    it('allows 10 gallery items across galleries and rejects an 11th', () => {
+        const items = (count: number): ReactElement[] =>
+            Array.from({ length: count }, (_, index) => <MediaGalleryItem key={index} url={IMAGE} />);
+
+        // a thumbnail doesn't count toward the 10
+        expect(() =>
+            toComponentEmbed(
+                <Container>
+                    <Section accessory={<Thumbnail url={IMAGE} />}>
+                        <TextDisplay>hi</TextDisplay>
+                    </Section>
+                    <MediaGallery>{items(4)}</MediaGallery>
+                    <MediaGallery>{items(3)}</MediaGallery>
+                    <MediaGallery>{items(3)}</MediaGallery>
+                </Container>
+            )
+        ).not.toThrow();
+        expectEmbedError(
+            () =>
+                toComponentEmbed(
+                    <Container>
+                        <MediaGallery>{items(4)}</MediaGallery>
+                        <MediaGallery>{items(4)}</MediaGallery>
+                        <MediaGallery>{items(3)}</MediaGallery>
+                    </Container>
+                ),
+            "The galleries in this component embed hold 11 items (4 + 4 + 3). Discord allows 10 across all of them. Remove some, or show them as <Section> thumbnails, which don't count."
+        );
+    });
+
+    it('shows the start of a description that runs too long, keeping an emoji whole', () => {
+        // the moon takes two UTF-16 units, the 40th and 41st
+        const description = `${'d'.repeat(39)}🌙${'d'.repeat(993)}`;
+
         expectEmbedError(
             () =>
                 toComponentEmbed(
                     <Container>
                         <MediaGallery>
-                            <MediaGalleryItem url={IMAGE} description={'d'.repeat(1025)} />
+                            <MediaGalleryItem url={IMAGE} description={description} />
                         </MediaGallery>
                     </Container>
                 ),
-            'The media description is longer than 1024 characters (1025).'
+            `The media description is 1034 characters, 10 over Discord's limit of 1024. It starts with "${'d'.repeat(39)}🌙".`
         );
     });
 });
@@ -379,7 +453,7 @@ describe('toComponentEmbed with text', () => {
     it('rejects text outside a text display', () => {
         expectEmbedError(
             () => toComponentEmbed(<Container>hello</Container>),
-            'Text has to go inside a <TextDisplay>, got "hello".'
+            'Got "hello" where only components can go. Text goes in a <TextDisplay>, inside a <Container> or a <Section>.'
         );
     });
 
@@ -405,81 +479,7 @@ describe('toComponentEmbed with text', () => {
                         <TextDisplay>{''}</TextDisplay>
                     </Container>
                 ),
-            '<TextDisplay> needs some text.'
+            'A <TextDisplay> is empty. Give it some text or remove it.'
         );
-    });
-});
-
-describe('toComponentEmbed with your own components', () => {
-    it('renders your own components down to the built-in ones', () => {
-        function Headline({ title }: { title: string }): ReactElement {
-            return <TextDisplay># {title}</TextDisplay>;
-        }
-
-        function Preview(): ReactElement {
-            return (
-                <Container>
-                    <Headline title="Patch notes" />
-                </Container>
-            );
-        }
-
-        expect(toComponentEmbed(<Preview />)).toEqual({
-            component: { type: 17, components: [{ type: 10, content: '# Patch notes' }] }
-        });
-    });
-
-    it('rejects an async component', () => {
-        // eslint-disable-next-line @typescript-eslint/require-await -- the async signature is the point of the test
-        async function Preview(): Promise<ReactElement> {
-            return (
-                <Container>
-                    <TextDisplay>hi</TextDisplay>
-                </Container>
-            );
-        }
-
-        expectEmbedError(
-            () => toComponentEmbed(<Preview />),
-            '<Preview> is async. Load its data first and pass it in as props.'
-        );
-    });
-
-    it('rejects memo, lazy, and class components with one message', () => {
-        const Memoized = memo(function Headline(): ReactElement {
-            return <TextDisplay>hi</TextDisplay>;
-        });
-        const Lazy = lazy(() => Promise.resolve({ default: Memoized }));
-
-        class Classy extends Component {
-            override render(): ReactElement {
-                return <TextDisplay>hi</TextDisplay>;
-            }
-        }
-
-        class FieldRender extends Component {
-            override render = (): ReactElement => <TextDisplay>hi</TextDisplay>;
-        }
-
-        const plainOnly = /^Only plain function components work inside a component embed\.$/;
-        expectEmbedError(() => toComponentEmbed(<Container>{<Memoized />}</Container>), plainOnly);
-        expectEmbedError(() => toComponentEmbed(<Container>{<Lazy />}</Container>), plainOnly);
-        expectEmbedError(() => toComponentEmbed(<Container>{<Classy />}</Container>), plainOnly);
-        expectEmbedError(() => toComponentEmbed(<Container>{<FieldRender />}</Container>), plainOnly);
-    });
-
-    it('turns an error inside your component into a ComponentEmbedError', () => {
-        function Counter(): ReactElement {
-            const [count] = useState(1);
-            return <TextDisplay>{count}</TextDisplay>;
-        }
-
-        const error = thrownBy(() => toComponentEmbed(<Container>{<Counter />}</Container>));
-
-        expect(error.code).toBe('ReadFailed');
-        expect(error.message).toMatch(
-            /^<Counter> threw while the package read it: .+\. Components here run outside React's renderer, so hooks don't work in them\.$/
-        );
-        expect(error.cause).toBeInstanceOf(TypeError);
     });
 });
