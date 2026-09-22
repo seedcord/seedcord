@@ -1087,10 +1087,6 @@ importers:
         version: 5.8.0
 
   packages/discord-component-embed:
-    dependencies:
-      discord-api-types:
-        specifier: ^0.38.52
-        version: 0.38.52
     devDependencies:
       '@seedcord/eslint-config':
         specifier: workspace:^
@@ -1110,6 +1106,9 @@ importers:
       '@types/react-dom':
         specifier: catalog:react
         version: 19.2.4(@types/react@19.2.18)
+      discord-api-types:
+        specifier: ^0.38.52
+        version: 0.38.52
       preact:
         specifier: ^10.29.8
         version: 10.29.8

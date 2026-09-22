@@ -95,6 +95,7 @@
         "@seedcord/vitest-config": "workspace:^",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
+        "discord-api-types": "catalog:deps",
         "preact": "^10.29.8",
         "react": "catalog:react",
         "react-dom": "catalog:react"
@@ -102,8 +103,5 @@
     "publishConfig": {
         "access": "public",
         "provenance": true
-    },
-    "dependencies": {
-        "discord-api-types": "catalog:deps"
     }
 }
