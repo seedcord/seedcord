@@ -1,5 +1,23 @@
 # discord-component-embed
 
+## 0.3.0
+
+### 💥 Breaking
+
+- Fixed an inline script over 3000 bytes passing every check while Discord fell back to the Open Graph card. `toComponentEmbed` and everything built on it now throw `OverLimit` when the JSON is over 3000 bytes, the same way `componentEmbedResponse` already did. ([#331](https://github.com/seedcord/seedcord/pull/331))
+- Fixed a card with galleries holding 11 or more media items between them, like 10 + 1, passing every check while Discord fell back to the Open Graph card. `toComponentEmbed` and everything built on it now throw `OverLimit` past 10 items across all galleries. ([#331](https://github.com/seedcord/seedcord/pull/331))
+- `TextChild` is no longer exported. Write `TextDisplayProps['children']` where you typed text with it. ([#331](https://github.com/seedcord/seedcord/pull/331))
+
+### ✨ Minor
+
+- `ComponentEmbedError` has a new `path` field with the steps from the root to the component that broke a rule, like `['Container', 'PostCard', 'Section 2']`. The message ends with the same steps after `Found at`. ([#331](https://github.com/seedcord/seedcord/pull/331))
+
+### 🩹 Patch
+
+- Error messages now show what broke a rule and how to fix it, like the start of a label that runs too long or where a `<Thumbnail>` placed straight in a `<Container>` should go. ([#331](https://github.com/seedcord/seedcord/pull/331))
+- Fixed `toComponentEmbedJson`, `toComponentEmbedScript`, and `<ComponentEmbed>` spending six of Discord's 3000 bytes on every `<`, like the ones in custom emoji and mentions, by escaping only `</` and `<!--`. ([#331](https://github.com/seedcord/seedcord/pull/331))
+- Installing the package no longer pulls in `discord-api-types`, because the Discord types it uses now ship inside its own type declarations. ([#331](https://github.com/seedcord/seedcord/pull/331))
+
 ## 0.2.2
 
 ### 🩹 Patch

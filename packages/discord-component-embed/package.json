@@ -1,7 +1,7 @@
 {
     "name": "discord-component-embed",
     "type": "module",
-    "version": "0.2.2",
+    "version": "0.3.0",
     "description": "Build Discord component embed link previews with JSX, in any framework.",
     "keywords": [
         "discord",
