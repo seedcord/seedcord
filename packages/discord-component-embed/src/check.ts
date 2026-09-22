@@ -193,7 +193,9 @@ function parseAttributes(source: string): ReadonlyMap<string, string> {
     for (const [, name = '', doubled, single, bare] of source.matchAll(
         /([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g
     )) {
-        attributes.set(name.toLowerCase(), decodeReferences(doubled ?? single ?? bare ?? ''));
+        const key = name.toLowerCase();
+        // HTML keeps the first of two attributes with the same name
+        if (!attributes.has(key)) attributes.set(key, decodeReferences(doubled ?? single ?? bare ?? ''));
     }
     return attributes;
 }

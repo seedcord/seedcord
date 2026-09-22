@@ -363,6 +363,19 @@ describe("checkTarget reading a page's HTML", () => {
         expect(result).not.toHaveProperty('hint');
     });
 
+    it('reads the first of two attributes with the same name, like a browser', async () => {
+        const html = page(
+            `<script id="discord:component-embed" type="text/plain" type="application/json">${good}</script>`
+        );
+
+        expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toEqual({
+            status: 'fail',
+            problems: [
+                'The <script id="discord:component-embed"> has to have type="application/json", got "text/plain".'
+            ]
+        });
+    });
+
     it('skips a <link> written inside another script', async () => {
         const html = page(
             `<script>var tpl = '<link rel="discord:component-embed" type="application/json" href="https://example.com/post.json">';</script>`
