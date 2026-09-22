@@ -211,7 +211,7 @@ describe('toComponentEmbed', () => {
         );
     });
 
-    it.each([0x1_00_00_00, -1, 1.5])('rejects %s as an accent color', (accentColor) => {
+    it.each([0x1_00_00_00, -1, 1.5, Number.NaN])('rejects %s as an accent color', (accentColor) => {
         expectEmbedError(
             () =>
                 toComponentEmbed(

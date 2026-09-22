@@ -1,10 +1,12 @@
 {
     "name": "discord-component-embed",
     "type": "module",
+    "sideEffects": false,
     "version": "0.3.0",
-    "description": "Build Discord component embed link previews with JSX, in any framework.",
+    "description": "Build and check Discord component embed link previews, with JSX or plain functions, in any framework.",
     "keywords": [
         "discord",
+        "discord-embed",
         "link-preview",
         "link-previews",
         "discord-link-preview",
@@ -13,6 +15,8 @@
         "cv2",
         "open-graph",
         "unfurl",
+        "validator",
+        "cli",
         "react",
         "preact",
         "vue",
@@ -36,6 +40,9 @@
     "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
     "funding": "https://github.com/sponsors/materwelonDhruv",
     "types": "./dist/index.d.mts",
+    "bin": {
+        "discord-component-embed": "./dist/cli.mjs"
+    },
     "exports": {
         ".": {
             "import": {

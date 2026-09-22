@@ -28,6 +28,8 @@
 - [Put it in your page](#put-it-in-your-page)
 - [JSX setup](#jsx-setup)
 - [Linked JSON](#linked-json)
+- [JSON you already have](#json-you-already-have)
+- [Check from the command line](#check-from-the-command-line)
 - [Your own components](#your-own-components)
 - [Custom emoji](#custom-emoji)
 - [Testing your card](#testing-your-card)
@@ -50,7 +52,7 @@ Discord marks link previews as subject to change. Until v1.0.0, a minor version 
 pnpm add discord-component-embed
 ```
 
-You don't need React. Only `discord-component-embed/react` uses it, and it works with React 17, 18, and 19. Nothing in the package imports from Node, so it runs on Node, Bun, Deno, and edge runtimes.
+You don't need React. Only `discord-component-embed/react` uses it, and it works with React 17, 18, and 19. The library doesn't import anything from Node, so it runs on Node, Bun, Deno, and edge runtimes. Only the [`check` command](#check-from-the-command-line) uses Node's APIs, which Bun and Deno also provide.
 
 <div align="right"><a href="#contents">back to top</a></div>
 
@@ -344,13 +346,80 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
 }
 ```
 
-The route builds `PostCard` for whichever post `slug` points at. `componentEmbedResponse` returns the JSON as a Web `Response` with an `application/json` content type. Any framework whose routes return a Web `Response` works the same way, like a SvelteKit `+server.ts`.
+`componentEmbedResponse` returns the JSON as a Web `Response` with an `application/json` content type. Any framework whose routes return a Web `Response` works the same way, like a SvelteKit `+server.ts`.
 
 Point the page at that URL with a `<link>` tag. The `href` has to be an absolute `https` URL on the page's host, a subdomain of it, or its parent domain.
 
 ```html
 <link rel="discord:component-embed" type="application/json" href="https://example.com/embeds/blog/hello-world" />
 ```
+
+<div align="right"><a href="#contents">back to top</a></div>
+
+## JSON you already have
+
+If you already have the JSON, like a file you wrote by hand, [`fromPayload`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/from-payload) turns it back into a tree. `toComponentEmbed` then runs the same checks on that tree as on a card built with JSX.
+
+```ts
+import { readFile } from 'node:fs/promises';
+import { fromPayload, toComponentEmbed } from 'discord-component-embed';
+
+const payload = JSON.parse(await readFile('embed.json', 'utf8'));
+toComponentEmbed(fromPayload(payload));
+```
+
+TypeScript accepts the `any` that `JSON.parse` returns, so the checks run when your code runs. If you write the payload in code, annotate it with `ComponentEmbedPayload`. Your editor then suggests the fields and flags a missing one before anything runs.
+
+```ts
+import { fromPayload, toComponentEmbedScript, type ComponentEmbedPayload } from 'discord-component-embed';
+
+const card: ComponentEmbedPayload = {
+    component: { type: 17, components: [{ type: 10, content: '# Hello' }] }
+};
+
+const script = toComponentEmbedScript(fromPayload(card));
+```
+
+Every error for a tree from `fromPayload` has JSON keys in its `path`, like `['component', 'components', '1']`, and its message prints them as `component > components > 1`. That holds for the errors `toComponentEmbed` throws for the tree later too. The numbers are array indexes, counted from 0.
+
+Discord shows no preview at all for a bad `id`, so `fromPayload` checks those too. Each `id` has to be a whole number from 0 to 2147483647, and no two components can share one. `fromPayload` then leaves them out of the tree, because nothing in a link preview reads them.
+
+If a component has a key it doesn't take, like a mistyped `descripton`, `fromPayload` throws with the keys it does take and suggests the closest one. Discord drops such a key and shows the card without that field. On a button, Discord shows the Open Graph card instead. Extra fields inside `media`, like the `proxy_url` and `width` that Discord's API adds, are fine.
+
+The 3000-byte check measures the JSON the package writes from the tree, without those extras. If you serve a hand-written file as it is, run it through the [`check` command](#check-from-the-command-line), which measures the file as written.
+
+<div align="right"><a href="#contents">back to top</a></div>
+
+## Check from the command line
+
+The `discord-component-embed check` command runs the same checks on a JSON file, an HTML file, or a live page. Pass as many as you like.
+
+```sh
+npx discord-component-embed check embed.json https://materwelon.dev
+```
+
+```txt
+✘ embed.json  1 problem
+  1. A gallery item doesn't take "descripton". Did you mean "description"? It takes media, description, and spoiler.
+     Found at component > components > 3 > items > 0
+
+✔ https://materwelon.dev
+  1004 of 3000 bytes · 7 of 40 components · 0 of 10 gallery items
+
+1 passed, 1 failed
+```
+
+For a URL, the command fetches the page with Discord's crawler user agent. It checks the `<script>` JSON as the page serves it, or follows the `<link>` to its JSON. Both tags need `type="application/json"`, since Discord skips either one without it. The 3000-byte limit counts that text as sent, whitespace and escapes included. A URL that answers with `application/json` gets checked as the payload itself, which is how you check a linked JSON on its own.
+
+Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview. The command stops at the same 10 seconds. A page that runs out of time counts as unreadable, and a linked JSON that runs out fails the check. If the page and its JSON take over 9 seconds together, the target passes with a warning.
+
+Pass a `.html` file to check a static build before you deploy it. For a `<link>`, the command still fetches its URL, and it can't check the host because a file has none.
+
+```sh
+npx discord-component-embed check dist/blog/*.html
+```
+
+The command exits 0 when every target passes, 1 when one fails a check, and 2 when one can't be read or the command itself is wrong. `pnpm dlx`, `yarn dlx`, and `bunx` run it too, and so does `deno run -A npm:discord-component-embed`.
 
 <div align="right"><a href="#contents">back to top</a></div>
 
@@ -400,7 +469,9 @@ It prints a `trycloudflare.com` URL to paste into Discord. A Vite dev server rej
 
 Discord caches a preview for about 30 minutes, so an edit won't show on a link you've already shared. Add a new query string, like `?v=2`, to see it right away. Changing only the `#fragment` doesn't help, since Discord leaves the fragment out of its cache key. Discord's [Embed Debugger](https://discord.com/developers/embeds) shows which tags it read from any URL.
 
-To check a card without Discord, [`toComponentEmbed`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/to-component-embed) returns the payload as an object. A test can build every page's card with it before you deploy. To write the JSON into a page yourself, use `toComponentEmbedJson`. It escapes the JSON for HTML.
+To check a card without Discord, [`toComponentEmbed`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/to-component-embed) returns the payload as an object. A test can build every page's card with it before you deploy.
+
+Discord also has to fetch every image within about 10 seconds, without a login or a bot challenge. The `check` command doesn't fetch your images. If your site uses bot protection, allow user agents containing `Discordbot`.
 
 <div align="right"><a href="#contents">back to top</a></div>
 
@@ -445,11 +516,17 @@ Discord doesn't report an invalid payload anywhere. It drops the payload and sho
 - the galleries hold more than 10 media gallery items between them
 - the JSON is larger than 3000 bytes
 
+`fromPayload` throws a `ComponentEmbedError` too, for JSON that can't become a tree:
+
+- a component, a list, or `media` isn't the shape Discord's JSON uses, like a string where a list goes
+- a component has a type a component embed doesn't take, or a button isn't a link button
+- a component has a key it doesn't take
+- an `id` is outside `0` to `2147483647`, or two components share one
+- a separator `spacing` is anything but `1` or `2`
+
 When one component breaks a rule, the error's `path` lists the steps from the root to it, like `['Container', 'PostCard', 'Section 2']`. The message ends with the same steps after `Found at`, and your own components appear by name.
 
 Every `ComponentEmbedError` carries a `code`: `InvalidStructure`, `InvalidProp`, `OverLimit`, `UnsupportedComponent`, or `ReadFailed`. Branch on the code, since the message wording can change in any release. If a component or an iterator of yours throws while the tree is read, you get a `ReadFailed` with the original error on `cause`.
-
-Discord also has to fetch the page and every image within 10 seconds, without a login or a bot challenge. This package can't check that for you. If your site uses bot protection, allow user agents containing `Discordbot`.
 
 <div align="right"><a href="#contents">back to top</a></div>
 

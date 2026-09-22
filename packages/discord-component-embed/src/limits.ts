@@ -1,5 +1,6 @@
 import { ComponentEmbedError } from './ComponentEmbedError';
 
+import type { Collector } from './collector';
 import type {
     APIComponentInContainer,
     APIComponentInMessageActionRow,
@@ -7,16 +8,16 @@ import type {
 } from 'discord-api-types/v10';
 
 // from the component embed docs
-const MAX_COMPONENTS = 40;
+export const MAX_COMPONENTS = 40;
 // the docs leave this out. on discord's crawler 10 items render and 11 show the Open Graph card, however the galleries split them
-const MAX_ITEMS_ACROSS_GALLERIES = 10;
+export const MAX_ITEMS_ACROSS_GALLERIES = 10;
 // discord counts the bytes it receives, escapes included
-const MAX_JSON_BYTES = 3000;
+export const MAX_JSON_BYTES = 3000;
 
-export function checkEmbedLimits(component: APIContainerComponent, json: string): void {
-    checkComponentCount(component);
-    checkGalleryItemCount(component);
-    checkJsonSize(json);
+export function checkComponentLimits(component: APIContainerComponent, collector: Collector): void {
+    collector.map([checkComponentCount, checkGalleryItemCount], (check) => {
+        check(component);
+    });
 }
 
 function checkComponentCount(component: APIContainerComponent): void {
@@ -29,9 +30,21 @@ function checkComponentCount(component: APIContainerComponent): void {
     }
 }
 
-function checkGalleryItemCount({ components }: APIContainerComponent): void {
-    const perGallery = components.flatMap((child) => ('items' in child ? [child.items.length] : []));
-    const total = perGallery.reduce((sum, count) => sum + count, 0);
+export function embedStats(component: APIContainerComponent): { components: number; galleryItems: number } {
+    return { components: countComponents(component), galleryItems: sum(itemsPerGallery(component)) };
+}
+
+function itemsPerGallery({ components }: APIContainerComponent): number[] {
+    return components.flatMap((child) => ('items' in child ? [child.items.length] : []));
+}
+
+function sum(counts: readonly number[]): number {
+    return counts.reduce((total, count) => total + count, 0);
+}
+
+function checkGalleryItemCount(component: APIContainerComponent): void {
+    const perGallery = itemsPerGallery(component);
+    const total = sum(perGallery);
     if (total > MAX_ITEMS_ACROSS_GALLERIES) {
         throw new ComponentEmbedError(
             'OverLimit',
@@ -40,7 +53,7 @@ function checkGalleryItemCount({ components }: APIContainerComponent): void {
     }
 }
 
-function checkJsonSize(json: string): void {
+export function checkJsonSize(json: string): void {
     const bytes = new TextEncoder().encode(json).byteLength;
     if (bytes > MAX_JSON_BYTES) {
         throw new ComponentEmbedError(

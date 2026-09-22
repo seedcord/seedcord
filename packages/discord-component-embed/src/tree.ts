@@ -64,9 +64,12 @@ export function rejectVueVNode(element: EmbedElement, path: Path): void {
     }
 }
 
+// fromPayload records the JSON path of each element it builds
+export const jsonPaths = new WeakMap<EmbedElement, Path>();
+
 export function place(node: EmbedNode, path: Path): Placed[] {
     return withSteps(siblingsIn(node, path)).flatMap(({ element, step }) => {
-        const stepPath = [...path, step];
+        const stepPath = jsonPaths.get(element) ?? [...path, step];
         if (typeof element.type === 'string' || NAMES.has(element.type)) return [{ element, path: stepPath }];
         return place(renderUserComponent(element, stepPath), stepPath);
     });

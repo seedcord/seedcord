@@ -48,7 +48,7 @@ describe('LinkButton', () => {
             'a javascript url',
             // eslint-disable-next-line no-script-url -- the test checks that this url is rejected
             <LinkButton key="e" url="javascript:alert(1)" label="go" />,
-            'The <LinkButton> url must be an http, https, or discord URL, got javascript:alert(1).'
+            'The <LinkButton> url must be an http, https, or discord URL, got "javascript:alert(1)".'
         ],
         [
             'a url with a space in it',
