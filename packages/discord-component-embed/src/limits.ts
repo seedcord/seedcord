@@ -1,5 +1,6 @@
 import { ComponentEmbedError } from './ComponentEmbedError';
 
+import type { Collector } from './collector';
 import type {
     APIComponentInContainer,
     APIComponentInMessageActionRow,
@@ -13,10 +14,13 @@ const MAX_ITEMS_ACROSS_GALLERIES = 10;
 // discord counts the bytes it receives, escapes included
 const MAX_JSON_BYTES = 3000;
 
-export function checkEmbedLimits(component: APIContainerComponent, json: string): void {
-    checkComponentCount(component);
-    checkGalleryItemCount(component);
-    checkJsonSize(json);
+export function checkEmbedLimits(component: APIContainerComponent, json: string, collector: Collector): void {
+    const checks = [
+        () => checkComponentCount(component),
+        () => checkGalleryItemCount(component),
+        () => checkJsonSize(json)
+    ];
+    collector.map(checks, (check) => check());
 }
 
 function checkComponentCount(component: APIContainerComponent): void {

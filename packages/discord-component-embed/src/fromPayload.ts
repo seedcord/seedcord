@@ -1,4 +1,5 @@
 import { describeValue, joinList } from './checks';
+import { collectInto, throwFirst } from './collector';
 import { ComponentEmbedError } from './ComponentEmbedError';
 import {
     ActionRow,
@@ -12,14 +13,21 @@ import {
     Thumbnail
 } from './components';
 import { createElement } from './element';
+import { collectErrors } from './toComponentEmbed';
 import { LINK_STYLE, SPACING, TYPE } from './wire';
 
+import type { Collector } from './collector';
 import type { EmbedElement } from './element';
 import type { ComponentEmbedPayload } from './toComponentEmbed';
 import type { Path } from './tree';
 
 type JsonObject = Readonly<Record<string, unknown>>;
-type Convert = (node: unknown, path: Path, ids: Set<number>) => EmbedElement;
+type Convert = (node: unknown, path: Path, walk: Walk) => EmbedElement;
+
+interface Walk {
+    ids: Set<number>;
+    collector: Collector;
+}
 
 // discord keeps component ids in 32 bits. its crawler shows nothing for -1 or 2147483648
 const MAX_ID = 2_147_483_647;
@@ -49,23 +57,39 @@ const MAX_ID = 2_147_483_647;
  * ```
  */
 export function fromPayload(payload: ComponentEmbedPayload): EmbedElement {
-    // JSON.parse and JS callers skip the type check
-    const value: unknown = payload;
-    if (!isObject(value) || !isObject(value.component)) {
+    return readPayload(payload, throwFirst);
+}
+
+// every error in the JSON, one per broken component. the tree checks run once the JSON itself passes
+export function collectPayloadErrors(payload: unknown): ComponentEmbedError[] {
+    const errors: ComponentEmbedError[] = [];
+    try {
+        const tree = readPayload(payload, collectInto(errors));
+        if (errors.length === 0) errors.push(...collectErrors(tree));
+    } catch (error) {
+        if (!(error instanceof ComponentEmbedError)) throw error;
+        errors.push(error);
+    }
+    return errors;
+}
+
+// JSON.parse and JS callers skip the type check
+function readPayload(payload: unknown, collector: Collector): EmbedElement {
+    if (!isObject(payload) || !isObject(payload.component)) {
         throw new ComponentEmbedError(
             'InvalidStructure',
-            `A component embed payload is an object like { "component": { "type": 17, ... } }, got ${describeValue(value)}.`
+            `A component embed payload is an object like { "component": { "type": 17, ... } }, got ${describeValue(payload)}.`
         );
     }
-    checkKeys(value, 'A component embed payload', ['component'], []);
-    return toElement(value.component, ['component'], new Set());
+    checkKeys(payload, 'A component embed payload', ['component'], []);
+    return toElement(payload.component, ['component'], { ids: new Set(), collector });
 }
 
 function isObject(value: unknown): value is JsonObject {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function toElement(node: unknown, path: Path, ids: Set<number>): EmbedElement {
+function toElement(node: unknown, path: Path, walk: Walk): EmbedElement {
     if (!isObject(node)) {
         throw new ComponentEmbedError(
             'InvalidStructure',
@@ -73,7 +97,7 @@ function toElement(node: unknown, path: Path, ids: Set<number>): EmbedElement {
             { path }
         );
     }
-    if (node.type !== TYPE.Button) checkId(node.id, path, ids);
+    if (node.type !== TYPE.Button) checkId(node.id, path, walk.ids);
 
     switch (node.type) {
         case TYPE.Container: {
@@ -81,7 +105,7 @@ function toElement(node: unknown, path: Path, ids: Set<number>): EmbedElement {
             return createElement(Container, {
                 accentColor: node.accent_color,
                 spoiler: node.spoiler,
-                children: list(node, 'components', path, ids, toElement)
+                children: list(node, 'components', path, walk, toElement)
             });
         }
         case TYPE.TextDisplay: {
@@ -92,8 +116,8 @@ function toElement(node: unknown, path: Path, ids: Set<number>): EmbedElement {
             checkKeys(node, 'A section', ['type', 'id', 'components', 'accessory'], path);
             return createElement(Section, {
                 accessory:
-                    node.accessory === undefined ? undefined : toElement(node.accessory, [...path, 'accessory'], ids),
-                children: list(node, 'components', path, ids, toElement)
+                    node.accessory === undefined ? undefined : toElement(node.accessory, [...path, 'accessory'], walk),
+                children: list(node, 'components', path, walk, toElement)
             });
         }
         case TYPE.Thumbnail: {
@@ -102,7 +126,7 @@ function toElement(node: unknown, path: Path, ids: Set<number>): EmbedElement {
         }
         case TYPE.MediaGallery: {
             checkKeys(node, 'A media gallery', ['type', 'id', 'items'], path);
-            return createElement(MediaGallery, { children: list(node, 'items', path, ids, toGalleryItem) });
+            return createElement(MediaGallery, { children: list(node, 'items', path, walk, toGalleryItem) });
         }
         case TYPE.Separator: {
             checkKeys(node, 'A separator', ['type', 'id', 'divider', 'spacing'], path);
@@ -110,7 +134,7 @@ function toElement(node: unknown, path: Path, ids: Set<number>): EmbedElement {
         }
         case TYPE.ActionRow: {
             checkKeys(node, 'An action row', ['type', 'id', 'components'], path);
-            return createElement(ActionRow, { children: list(node, 'components', path, ids, toElement) });
+            return createElement(ActionRow, { children: list(node, 'components', path, walk, toElement) });
         }
         case TYPE.Button: {
             return toLinkButton(node, path);
@@ -180,11 +204,12 @@ function toGalleryItem(node: unknown, path: Path): EmbedElement {
 }
 
 // a missing or wrong-typed list becomes empty. the tree checks then say how many children the parent needs
-function list(node: JsonObject, key: string, path: Path, ids: Set<number>, convert: Convert): EmbedElement[] {
+function list(node: JsonObject, key: string, path: Path, walk: Walk, convert: Convert): EmbedElement[] {
     const children = node[key];
-    return Array.isArray(children)
-        ? children.map((child, index) => convert(child, [...path, key, String(index)], ids))
-        : [];
+    if (!Array.isArray(children)) return [];
+    return walk.collector.map([...children.entries()], ([index, child]) =>
+        convert(child, [...path, key, String(index)], walk)
+    );
 }
 
 // the tree drops the id after this. a link preview has no interactions to read it back

@@ -1,4 +1,5 @@
 import { checkLength, checkType, checkUrl, describeValue, isFilled, messageOf } from './checks';
+import { collectInto, throwFirst } from './collector';
 import { ComponentEmbedError } from './ComponentEmbedError';
 import {
     ActionRow,
@@ -16,6 +17,7 @@ import { scriptSafeJson } from './scriptSafeJson';
 import { childrenOf, isElement, nameOf, place, rejectVueVNode } from './tree';
 import { LINK_STYLE, SPACING, TYPE } from './wire';
 
+import type { Collector } from './collector';
 import type {
     ActionRowProps,
     ContainerProps,
@@ -99,17 +101,37 @@ type ToJson = (payload: ComponentEmbedPayload) => string;
 // the size check measures the json that toJson returns
 export function buildEmbed(root: EmbedElement, toJson: ToJson): { payload: ComponentEmbedPayload; json: string } {
     try {
-        return build(root, toJson);
+        const payload = buildPayload(root, throwFirst);
+        const json = toJson(payload);
+        checkEmbedLimits(payload.component, json, throwFirst);
+        return { payload, json };
     } catch (error) {
-        if (error instanceof ComponentEmbedError) throw error;
-        throw new ComponentEmbedError('ReadFailed', `Reading the component tree threw: ${messageOf(error)}.`, {
-            cause: error
-        });
+        throw asEmbedError(error);
     }
 }
 
+// every error in the tree, one per broken component. the limits on the whole embed run once the rest pass
+export function collectErrors(root: EmbedElement): ComponentEmbedError[] {
+    const errors: ComponentEmbedError[] = [];
+    const collector = collectInto(errors);
+    try {
+        const payload = buildPayload(root, collector);
+        if (errors.length === 0) checkEmbedLimits(payload.component, scriptSafeJson(payload), collector);
+    } catch (error) {
+        errors.push(asEmbedError(error));
+    }
+    return errors;
+}
+
+function asEmbedError(error: unknown): ComponentEmbedError {
+    if (error instanceof ComponentEmbedError) return error;
+    return new ComponentEmbedError('ReadFailed', `Reading the component tree threw: ${messageOf(error)}.`, {
+        cause: error
+    });
+}
+
 // every props cast in this file comes after a check of element.type, here or in childrenOf
-function build(root: EmbedElement, toJson: ToJson): { payload: ComponentEmbedPayload; json: string } {
+function buildPayload(root: EmbedElement, collector: Collector): ComponentEmbedPayload {
     const [container, ...rest] = place(root, []);
     if (rest.length > 0) {
         throw new ComponentEmbedError(
@@ -124,13 +146,14 @@ function build(root: EmbedElement, toJson: ToJson): { payload: ComponentEmbedPay
         });
     }
 
-    const payload = { component: toContainer(container.element.props as ContainerProps, container.path) };
-    const json = toJson(payload);
-    checkEmbedLimits(payload.component, json);
-    return { payload, json };
+    return { component: toContainer(container.element.props as ContainerProps, container.path, collector) };
 }
 
-function toContainer({ accentColor, spoiler, children }: ContainerProps, path: Path): APIContainerComponent {
+function toContainer(
+    { accentColor, spoiler, children }: ContainerProps,
+    path: Path,
+    collector: Collector
+): APIContainerComponent {
     if (
         accentColor !== undefined &&
         !(Number.isSafeInteger(accentColor) && accentColor >= 0 && accentColor <= MAX_ACCENT_COLOR)
@@ -152,26 +175,26 @@ function toContainer({ accentColor, spoiler, children }: ContainerProps, path: P
         type: TYPE.Container,
         ...(accentColor !== undefined && { accent_color: accentColor }),
         ...(spoiler !== undefined && { spoiler }),
-        components: placed.map(toContainerChild)
+        components: collector.map(placed, (child) => toContainerChild(child, collector))
     };
 }
 
-function toContainerChild({ element, path }: Placed): APIComponentInContainer {
+function toContainerChild({ element, path }: Placed, collector: Collector): APIComponentInContainer {
     switch (element.type) {
         case TextDisplay: {
             return toTextDisplay(element.props as TextDisplayProps, path);
         }
         case Section: {
-            return toSection(element.props as SectionProps, path);
+            return toSection(element.props as SectionProps, path, collector);
         }
         case MediaGallery: {
-            return toMediaGallery(element.props as MediaGalleryProps, path);
+            return toMediaGallery(element.props as MediaGalleryProps, path, collector);
         }
         case Separator: {
             return toSeparator(element.props as SeparatorProps, path);
         }
         case ActionRow: {
-            return toActionRow(element.props as ActionRowProps, path);
+            return toActionRow(element.props as ActionRowProps, path, collector);
         }
         default: {
             const name = nameOf(element.type);
@@ -221,10 +244,10 @@ function toTextDisplay({ children }: TextDisplayProps, path: Path): APITextDispl
     return { type: TYPE.TextDisplay, content };
 }
 
-function toSection({ accessory, children }: SectionProps, path: Path): APISectionComponent {
+function toSection({ accessory, children }: SectionProps, path: Path, collector: Collector): APISectionComponent {
     return {
         type: TYPE.Section,
-        components: childrenOf(Section, path, children, TextDisplay, MAX_SECTION_TEXTS).map((text) =>
+        components: collector.map(childrenOf(Section, path, children, TextDisplay, MAX_SECTION_TEXTS), (text) =>
             toTextDisplay(text.element.props as TextDisplayProps, text.path)
         ),
         accessory: toSectionAccessory(accessory, path)
@@ -270,11 +293,12 @@ function toThumbnail(props: MediaProps, path: Path): APIThumbnailComponent {
     return { type: TYPE.Thumbnail, ...toMedia(props, path) };
 }
 
-function toMediaGallery({ children }: MediaGalleryProps, path: Path): APIMediaGalleryComponent {
+function toMediaGallery({ children }: MediaGalleryProps, path: Path, collector: Collector): APIMediaGalleryComponent {
     return {
         type: TYPE.MediaGallery,
-        items: childrenOf(MediaGallery, path, children, MediaGalleryItem, MAX_ITEMS_PER_GALLERY).map((item) =>
-            toMedia(item.element.props as MediaProps, item.path)
+        items: collector.map(
+            childrenOf(MediaGallery, path, children, MediaGalleryItem, MAX_ITEMS_PER_GALLERY),
+            (item) => toMedia(item.element.props as MediaProps, item.path)
         )
     };
 }
@@ -296,10 +320,14 @@ function toSeparator({ divider, spacing }: SeparatorProps, path: Path): APISepar
     };
 }
 
-function toActionRow({ children }: ActionRowProps, path: Path): APIActionRowComponent<APIButtonComponentWithURL> {
+function toActionRow(
+    { children }: ActionRowProps,
+    path: Path,
+    collector: Collector
+): APIActionRowComponent<APIButtonComponentWithURL> {
     return {
         type: TYPE.ActionRow,
-        components: childrenOf(ActionRow, path, children, LinkButton, MAX_ROW_BUTTONS).map((button) =>
+        components: collector.map(childrenOf(ActionRow, path, children, LinkButton, MAX_ROW_BUTTONS), (button) =>
             toLinkButton(button.element.props as LinkButtonProps, button.path)
         )
     };
