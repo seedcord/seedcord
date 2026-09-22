@@ -80,10 +80,30 @@ describe('checkTarget on a file', () => {
         });
     });
 
+    it("leaves out the minified size when minifying wouldn't get the file under the limit", async () => {
+        const payload = { component: { type: 17, components: [{ type: 10, content: 'x'.repeat(3500) }] } };
+
+        const result = await checkTarget('embed.json', withFiles({ 'embed.json': JSON.stringify(payload, null, 1) }));
+
+        expect(result).toMatchObject({ status: 'fail' });
+        expect(result).not.toHaveProperty('hint');
+    });
+
+    it('measures text full of </ as sent, before any script escaping', async () => {
+        const text = card({ type: 10, content: '</'.repeat(1400) });
+
+        expect(await checkTarget('embed.json', withFiles({ 'embed.json': text }))).toEqual({
+            status: 'pass',
+            bytes: text.length,
+            components: 2,
+            galleryItems: 0
+        });
+    });
+
     it("keeps a parse error that quotes the file's last line on one line", async () => {
         const result = await checkTarget('embed.json', withFiles({ 'embed.json': '{ "component": ] }\n' }));
 
-        expect(result.status === 'fail' && result.problems[0]).not.toContain('\n');
+        expect(result).toMatchObject({ status: 'fail', problems: [expect.not.stringContaining('\n')] });
     });
 
     it("fails a file that isn't JSON", async () => {
@@ -120,20 +140,63 @@ describe('checkTarget on a url', () => {
         expect(userAgents).toEqual([expect.stringContaining('Discordbot')]);
     });
 
-    it('follows a <link> to its JSON', async () => {
+    it('follows a <link> to its JSON, which discord fetches with a shorter user agent', async () => {
+        const userAgents: string[] = [];
         const html = page(
             `<link type="application/json" rel="discord:component-embed" href="https://embeds.example.com/post.json">`
         );
+        const pages = { [PAGE]: html, 'https://embeds.example.com/post.json': card({ type: 10, content: '' }) };
 
-        const result = await checkTarget(
-            PAGE,
-            withPages({ [PAGE]: html, 'https://embeds.example.com/post.json': card({ type: 10, content: '' }) })
-        );
+        const result = await checkTarget(PAGE, withPages(pages, userAgents));
 
         expect(result).toEqual({
             status: 'fail',
             problems: ['A <TextDisplay> is empty. Give it some text or remove it.\nFound at Container > TextDisplay']
         });
+        expect(userAgents).toEqual([expect.stringContaining('Mozilla/5.0'), 'Discordbot/2.0']);
+    });
+
+    it.each([
+        ['no type', '', 'nothing'],
+        ['another type', ' type="text/json"', '"text/json"']
+    ])('fails an inline script with %s the way discord does', async (_label, typeAttribute, got) => {
+        const html = page(`<script id="discord:component-embed"${typeAttribute}>${good}</script>`);
+
+        expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toEqual({
+            status: 'fail',
+            problems: [`The <script id="discord:component-embed"> has to have type="application/json", got ${got}.`]
+        });
+    });
+
+    it('checks a URL that serves JSON as that JSON', async () => {
+        const input: CheckInput = {
+            readFile: () => Promise.reject(new Error('no files in this test')),
+            fetch: () =>
+                Promise.resolve(new Response(good, { headers: { 'content-type': 'application/json; charset=utf-8' } }))
+        };
+
+        expect(await checkTarget('https://example.com/post.json', input)).toMatchObject({
+            status: 'pass',
+            bytes: good.length
+        });
+    });
+
+    it("says a target that isn't a valid URL can't be read", async () => {
+        expect(await checkTarget('http://', withPages({}))).toEqual({
+            status: 'unreadable',
+            reason: "http:// isn't a valid URL."
+        });
+    });
+
+    it('reads a character reference past the last code point as the replacement character, like a browser', async () => {
+        const html = page(`<link rel="discord:component-embed" href="https://example.com/post.json?x=&#99999999;">`);
+
+        const result = await checkTarget(
+            PAGE,
+            withPages({ [PAGE]: html, 'https://example.com/post.json?x=%EF%BF%BD': good })
+        );
+
+        expect(result.status).toBe('pass');
     });
 
     it('reads an href the way a browser does, with its character references decoded', async () => {

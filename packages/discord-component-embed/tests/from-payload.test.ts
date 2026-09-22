@@ -4,17 +4,9 @@ import { fromPayload, toComponentEmbed } from '#src/index';
 
 import { expectEmbedError, thrownBy } from './helpers';
 
-import type { ComponentEmbedPayload, EmbedElement } from '#src/index';
+import type { EmbedElement } from '#src/index';
 
 describe('fromPayload', () => {
-    it('type-checks an object you write in code', () => {
-        const card: ComponentEmbedPayload = { component: { type: 17, components: [{ type: 10, content: 'hi' }] } };
-
-        expect(toComponentEmbed(fromPayload(card))).toEqual(card);
-        // @ts-expect-error a text display needs its content
-        expect(() => toComponentEmbed(fromPayload({ component: { type: 17, components: [{ type: 10 }] } }))).toThrow();
-    });
-
     it('turns a payload back into a tree that builds the same payload', () => {
         const payload = {
             component: { type: 17, accent_color: 0x58_65_f2, components: [{ type: 10, content: '# Hello' }] }
@@ -258,6 +250,52 @@ describe('fromPayload errors', () => {
         );
     });
 
+    // JSX accepts these shapes. discord's JSON does not
+    it.each([
+        [
+            'a number as content',
+            inPayload({ type: 10, content: 5 }),
+            ['component', 'components', '0'],
+            "A text display's content has to be a string, got 5."
+        ],
+        [
+            'an array as content',
+            inPayload({ type: 10, content: ['a', 'b'] }),
+            ['component', 'components', '0'],
+            'A text display\'s content has to be a string, got ["a","b"].'
+        ],
+        [
+            'a text display with no content',
+            inPayload({ type: 10 }),
+            ['component', 'components', '0'],
+            "A text display's content has to be a string, got nothing."
+        ],
+        [
+            'a string as a button emoji',
+            inPayload({ type: 1, components: [{ type: 2, style: 5, url: IMAGE, label: 'go', emoji: '😀' }] }),
+            ['component', 'components', '0', 'components', '0'],
+            'A button\'s emoji has to be an object like { "name": "😀" }, got "😀".'
+        ],
+        [
+            'a string as a thumbnail media',
+            inPayload({ type: 9, components: [text], accessory: { type: 11, media: IMAGE } }),
+            ['component', 'components', '0', 'accessory'],
+            `A thumbnail's media has to be an object like { "url": "https://..." }, got "${IMAGE}".`
+        ],
+        [
+            'a gallery item with no media',
+            inPayload({ type: 12, items: [{ description: 'alt' }] }),
+            ['component', 'components', '0', 'items', '0'],
+            'A gallery item\'s media has to be an object like { "url": "https://..." }, got nothing.'
+        ]
+    ])('rejects %s', (_label, payload, path, message) => {
+        const error = thrownBy(() => fromJson(payload));
+
+        expect(error.code).toBe('InvalidProp');
+        expect(error.path).toEqual(path);
+        expect(error.message.split('\nFound at')[0]).toBe(message);
+    });
+
     it('lets the tree report a section with no accessory', () => {
         const error = thrownBy(() => toComponentEmbed(fromJson(inPayload({ type: 9, components: [text] }))));
 
@@ -267,7 +305,7 @@ describe('fromPayload errors', () => {
         );
     });
 
-    it("throws for lachee's two full galleries", () => {
+    it('throws for two galleries of 10 items each', () => {
         const gallery = (): unknown => ({
             type: 12,
             items: Array.from({ length: 10 }, (_, index) => ({

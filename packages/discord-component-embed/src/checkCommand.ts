@@ -128,7 +128,6 @@ function painter(colorDepth: number): Paint {
     return (_tone, text) => text;
 }
 
-// '#9ece6a' becomes '158;206;106'
 function rgb(hex: string): string {
     return (hex.match(/[\da-f]{2}/g) ?? []).map((pair) => String(Number.parseInt(pair, 16))).join(';');
 }

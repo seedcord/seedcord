@@ -60,7 +60,7 @@ export function fromPayload(payload: ComponentEmbedPayload): EmbedElement {
     return readPayload(payload, throwFirst);
 }
 
-// every error in the JSON, one per broken component. the tree checks run once the JSON itself passes
+// every error in the JSON, one per broken component
 export function collectPayloadErrors(payload: unknown, sentJson?: string): ComponentEmbedError[] {
     const errors: ComponentEmbedError[] = [];
     try {
@@ -110,6 +110,13 @@ function toElement(node: unknown, path: Path, walk: Walk): EmbedElement {
         }
         case TYPE.TextDisplay: {
             checkKeys(node, 'A text display', ['type', 'id', 'content'], path);
+            if (typeof node.content !== 'string') {
+                throw new ComponentEmbedError(
+                    'InvalidProp',
+                    `A text display's content has to be a string, got ${describeValue(node.content)}.`,
+                    { path }
+                );
+            }
             return createElement(TextDisplay, { children: node.content });
         }
         case TYPE.Section: {
@@ -122,7 +129,7 @@ function toElement(node: unknown, path: Path, walk: Walk): EmbedElement {
         }
         case TYPE.Thumbnail: {
             checkKeys(node, 'A thumbnail', ['type', 'id', 'media', 'description', 'spoiler'], path);
-            return createElement(Thumbnail, toMediaProps(node));
+            return createElement(Thumbnail, toMediaProps(node, 'A thumbnail', path));
         }
         case TYPE.MediaGallery: {
             checkKeys(node, 'A media gallery', ['type', 'id', 'items'], path);
@@ -160,6 +167,13 @@ function toLinkButton(node: JsonObject, path: Path): EmbedElement {
     }
     // discord's docs list these six. any other key, id included, makes discord fall back to the Open Graph card
     checkKeys(node, 'A button', ['type', 'style', 'url', 'label', 'emoji', 'disabled'], path);
+    if (node.emoji !== undefined && !isObject(node.emoji)) {
+        throw new ComponentEmbedError(
+            'InvalidProp',
+            `A button's emoji has to be an object like { "name": "😀" }, got ${describeValue(node.emoji)}.`,
+            { path }
+        );
+    }
     return createElement(LinkButton, { url: node.url, label: node.label, emoji: node.emoji, disabled: node.disabled });
 }
 
@@ -182,14 +196,13 @@ const LETTERS_PER_EDIT = 3;
 function closestKey(key: string, allowed: readonly string[]): string | undefined {
     const limit = Math.max(1, Math.floor(key.length / LETTERS_PER_EDIT));
     const [best] = allowed
-        .map((candidate) => ({ candidate, edits: editDistance(key, candidate) }))
+        .map((candidate) => ({ candidate, edits: levenshtein(key, candidate) }))
         .filter(({ edits }) => edits <= limit)
         .toSorted((a, b) => a.edits - b.edits);
     return best?.candidate;
 }
 
-// levenshtein distance
-function editDistance(from: string, to: string): number {
+function levenshtein(from: string, to: string): number {
     let previous = Array.from({ length: to.length + 1 }, (_, index) => index);
     for (const [row, fromLetter] of [...from].entries()) {
         const current = [row + 1];
@@ -230,7 +243,7 @@ function toGalleryItem(node: unknown, path: Path): EmbedElement {
         );
     }
     checkKeys(node, 'A gallery item', ['media', 'description', 'spoiler'], path);
-    return createElement(MediaGalleryItem, toMediaProps(node));
+    return createElement(MediaGalleryItem, toMediaProps(node, 'A gallery item', path));
 }
 
 // a missing or wrong-typed list becomes empty. the tree checks then say how many children the parent needs
@@ -262,10 +275,13 @@ function checkId(id: unknown, path: Path, ids: Set<number>): void {
     ids.add(id);
 }
 
-function toMediaProps(node: JsonObject): Record<string, unknown> {
-    return {
-        url: isObject(node.media) ? node.media.url : undefined,
-        description: node.description,
-        spoiler: node.spoiler
-    };
+function toMediaProps(node: JsonObject, what: string, path: Path): Record<string, unknown> {
+    if (!isObject(node.media)) {
+        throw new ComponentEmbedError(
+            'InvalidProp',
+            `${what}'s media has to be an object like { "url": "https://..." }, got ${describeValue(node.media)}.`,
+            { path }
+        );
+    }
+    return { url: node.media.url, description: node.description, spoiler: node.spoiler };
 }

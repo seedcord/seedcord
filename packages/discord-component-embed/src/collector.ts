@@ -1,12 +1,12 @@
 import { ComponentEmbedError } from './ComponentEmbedError';
 
-// converts a list of children. collectInto records a child's error and moves on to its siblings
 export interface Collector {
     map<Item, Result>(items: readonly Item[], convert: (item: Item) => Result): Result[];
 }
 
 export const throwFirst: Collector = { map: (items, convert) => items.map(convert) };
 
+// records a child's error and moves on to its siblings
 export function collectInto(errors: ComponentEmbedError[]): Collector {
     return {
         map: (items, convert) =>

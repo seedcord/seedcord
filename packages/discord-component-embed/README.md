@@ -358,7 +358,7 @@ Point the page at that URL with a `<link>` tag. The `href` has to be an absolute
 
 ## JSON you already have
 
-If you already have the JSON, like a file you wrote by hand, [`fromPayload`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/from-payload) turns it back into a tree. Pass that tree to `toComponentEmbed` and it goes through the same checks as a card built with JSX.
+If you already have the JSON, like a file you wrote by hand, [`fromPayload`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/from-payload) turns it back into a tree. `toComponentEmbed` then runs the same checks on that tree as on a card built with JSX.
 
 ```ts
 import { readFile } from 'node:fs/promises';
@@ -384,7 +384,7 @@ An error from `fromPayload` has JSON keys in its `path`, like `component > compo
 
 Discord shows no preview at all for a bad `id`, so `fromPayload` checks those too. Each `id` has to be a whole number from 0 to 2147483647, and no two components can share one. The tree leaves them out after that, because nothing in a link preview reads them.
 
-A key a component doesn't take, like a mistyped `descripton`, throws with the keys it does take and suggests the closest one. Discord drops such a key and shows the card without that field. On a button, Discord falls back to the Open Graph card instead. The fields Discord adds inside `media` when it sends a card back, like `proxy_url` and `width`, are fine.
+If a component has a key it doesn't take, like a mistyped `descripton`, `fromPayload` throws with the keys it does take and suggests the closest one. Discord drops such a key and shows the card without that field. On a button, Discord falls back to the Open Graph card instead. The fields Discord adds inside `media` when it sends a card back, like `proxy_url` and `width`, are fine.
 
 <div align="right"><a href="#contents">back to top</a></div>
 
