@@ -383,7 +383,7 @@ An error from `fromPayload` has JSON keys in its `path`, like `component > compo
 
 Discord shows no preview at all for a bad `id`, so `fromPayload` checks those too. Each `id` has to be a whole number from 0 to 2147483647, and no two components can share one. The tree leaves them out after that, because nothing in a link preview reads them.
 
-Discord ignores keys it doesn't know, and so does `fromPayload`. A typo in an optional field, like `descripton`, leaves that field out of the card without an error.
+A key a component doesn't take, like a mistyped `descripton`, throws with the keys it does take. Discord drops such a key and shows the card without that field. On a button, Discord falls back to the Open Graph card instead. The fields Discord adds inside `media` when it sends a card back, like `proxy_url` and `width`, are fine.
 
 <div align="right"><a href="#contents">back to top</a></div>
 

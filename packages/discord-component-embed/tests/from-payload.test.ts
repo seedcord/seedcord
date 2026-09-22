@@ -92,25 +92,59 @@ describe('fromPayload', () => {
     ])('round-trips %s', (_label, payload) => {
         expect(toComponentEmbed(fromPayload(payload))).toEqual(payload);
     });
-
-    it('ignores keys discord ignores', () => {
-        // discord's crawler renders all three of these unknown keys
-        const payload = {
-            component: { type: 17, foo: 'bar', components: [{ type: 10, content: 'hi', foo: 'bar' }] },
-            foo: 'bar'
-        };
-
-        expect(toComponentEmbed(fromPayload(payload))).toEqual({
-            component: { type: 17, components: [{ type: 10, content: 'hi' }] }
-        });
-    });
 });
 
 // JSON.parse output or a JS caller. TypeScript does not check these
 const fromJson = fromPayload as (payload: unknown) => EmbedElement;
 
+const IMAGE = 'https://example.com/image.png';
 const text = { type: 10, content: 'hi' };
 const inPayload = (...components: unknown[]): unknown => ({ component: { type: 17, components } });
+
+describe('fromPayload keys', () => {
+    // discord renders a component with an unknown key and drops the key. these throw to catch a typo
+    it.each([
+        [
+            'a mistyped key on a component',
+            inPayload({ type: 9, components: [text], accessory: { type: 11, media: { url: IMAGE }, descripton: 'x' } }),
+            ['component', 'components', '0', 'accessory'],
+            'A thumbnail doesn\'t take "descripton". It takes type, id, media, description, and spoiler.'
+        ],
+        [
+            'a mistyped key on a gallery item',
+            inPayload({ type: 12, items: [{ media: { url: IMAGE }, spolier: true }] }),
+            ['component', 'components', '0', 'items', '0'],
+            'A gallery item doesn\'t take "spolier". It takes media, description, and spoiler.'
+        ],
+        [
+            // discord falls back to the Open Graph card for any key past the six its docs list
+            'an id on a button',
+            inPayload({ type: 1, components: [{ type: 2, style: 5, url: 'https://example.com', label: 'go', id: 3 }] }),
+            ['component', 'components', '0', 'components', '0'],
+            'A button doesn\'t take "id". It takes type, style, url, label, emoji, and disabled.'
+        ],
+        [
+            'an unknown key next to component',
+            { component: { type: 17, components: [text] }, extra: true },
+            [],
+            'A component embed payload doesn\'t take "extra". It takes component.'
+        ]
+    ])('rejects %s', (_label, payload, path, message) => {
+        const error = thrownBy(() => fromJson(payload));
+
+        expect(error.code).toBe('InvalidProp');
+        expect(error.path).toEqual(path);
+        expect(error.message.split('\nFound at')[0]).toBe(message);
+    });
+
+    it("leaves the fields discord's API adds to media alone", () => {
+        const media = { url: IMAGE, proxy_url: 'https://media.discordapp.net/x.png', width: 256, height: 256 };
+
+        expect(() =>
+            toComponentEmbed(fromJson(inPayload({ type: 9, components: [text], accessory: { type: 11, media } })))
+        ).not.toThrow();
+    });
+});
 
 describe('fromPayload ids', () => {
     const withIds = (containerId: unknown, textId: unknown): unknown => ({

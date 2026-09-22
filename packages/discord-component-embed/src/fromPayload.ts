@@ -57,6 +57,7 @@ export function fromPayload(payload: ComponentEmbedPayload): EmbedElement {
             `A component embed payload is an object like { "component": { "type": 17, ... } }, got ${describeValue(value)}.`
         );
     }
+    checkKeys(value, 'A component embed payload', ['component'], []);
     return toElement(value.component, ['component'], new Set());
 }
 
@@ -76,6 +77,7 @@ function toElement(node: unknown, path: Path, ids: Set<number>): EmbedElement {
 
     switch (node.type) {
         case TYPE.Container: {
+            checkKeys(node, 'A container', ['type', 'id', 'accent_color', 'spoiler', 'components'], path);
             return createElement(Container, {
                 accentColor: node.accent_color,
                 spoiler: node.spoiler,
@@ -83,9 +85,11 @@ function toElement(node: unknown, path: Path, ids: Set<number>): EmbedElement {
             });
         }
         case TYPE.TextDisplay: {
+            checkKeys(node, 'A text display', ['type', 'id', 'content'], path);
             return createElement(TextDisplay, { children: node.content });
         }
         case TYPE.Section: {
+            checkKeys(node, 'A section', ['type', 'id', 'components', 'accessory'], path);
             return createElement(Section, {
                 accessory:
                     node.accessory === undefined ? undefined : toElement(node.accessory, [...path, 'accessory'], ids),
@@ -93,15 +97,19 @@ function toElement(node: unknown, path: Path, ids: Set<number>): EmbedElement {
             });
         }
         case TYPE.Thumbnail: {
+            checkKeys(node, 'A thumbnail', ['type', 'id', 'media', 'description', 'spoiler'], path);
             return createElement(Thumbnail, toMediaProps(node));
         }
         case TYPE.MediaGallery: {
+            checkKeys(node, 'A media gallery', ['type', 'id', 'items'], path);
             return createElement(MediaGallery, { children: list(node, 'items', path, ids, toGalleryItem) });
         }
         case TYPE.Separator: {
+            checkKeys(node, 'A separator', ['type', 'id', 'divider', 'spacing'], path);
             return createElement(Separator, { divider: node.divider, spacing: spacingName(node.spacing, path) });
         }
         case TYPE.ActionRow: {
+            checkKeys(node, 'An action row', ['type', 'id', 'components'], path);
             return createElement(ActionRow, { children: list(node, 'components', path, ids, toElement) });
         }
         case TYPE.Button: {
@@ -126,7 +134,20 @@ function toLinkButton(node: JsonObject, path: Path): EmbedElement {
             { path }
         );
     }
+    // discord's docs list these six. any other key, id included, makes discord fall back to the Open Graph card
+    checkKeys(node, 'A button', ['type', 'style', 'url', 'label', 'emoji', 'disabled'], path);
     return createElement(LinkButton, { url: node.url, label: node.label, emoji: node.emoji, disabled: node.disabled });
+}
+
+// discord ignores most unknown keys. throwing on them catches a typo that would drop a field without a word
+function checkKeys(node: JsonObject, what: string, allowed: readonly string[], path: Path): void {
+    const unknown = Object.keys(node).find((key) => !allowed.includes(key));
+    if (unknown === undefined) return;
+    throw new ComponentEmbedError(
+        'InvalidProp',
+        `${what} doesn't take ${describeValue(unknown)}. It takes ${joinList(allowed, 'and')}.`,
+        { path }
+    );
 }
 
 function spacingName(size: unknown, path: Path): string | undefined {
@@ -154,6 +175,7 @@ function toGalleryItem(node: unknown, path: Path): EmbedElement {
             { path }
         );
     }
+    checkKeys(node, 'A gallery item', ['media', 'description', 'spoiler'], path);
     return createElement(MediaGalleryItem, toMediaProps(node));
 }
 
