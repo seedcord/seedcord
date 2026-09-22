@@ -1,5 +1,12 @@
 # discord-component-embed
 
+## 0.4.0
+
+### ✨ Minor
+
+- Added a `discord-component-embed check` command that runs the checks on a JSON file, an HTML file from your build, or a live page. For a page, it fetches the HTML with Discord's crawler user agent and measures the JSON as the page sends it. ([#332](https://github.com/seedcord/seedcord/pull/332))
+- Added `fromPayload` to check component embed JSON you already have, like a file you wrote by hand. It turns the JSON into a tree, and `toComponentEmbed` checks that tree against every rule a JSX card goes through. ([#332](https://github.com/seedcord/seedcord/pull/332))
+
 ## 0.3.0
 
 ### 💥 Breaking
