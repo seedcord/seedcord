@@ -11,7 +11,9 @@ import {
     TextDisplay,
     Thumbnail
 } from './components';
-import { childrenOf, expand, isElement, nameOf, rejectVueVNode } from './tree';
+import { checkEmbedLimits } from './limits';
+import { scriptSafeJson } from './scriptSafeJson';
+import { childrenOf, isElement, nameOf, place, rejectVueVNode } from './tree';
 
 import type {
     ActionRowProps,
@@ -24,11 +26,11 @@ import type {
     TextDisplayProps
 } from './components';
 import type { EmbedElement, EmbedNode } from './element';
+import type { Path, Placed } from './tree';
 import type {
     APIActionRowComponent,
     APIButtonComponentWithURL,
     APIComponentInContainer,
-    APIComponentInMessageActionRow,
     APIContainerComponent,
     APIMediaGalleryComponent,
     APIMediaGalleryItem,
@@ -57,18 +59,22 @@ const TYPE: { readonly [Name in UsedComponentType]: (typeof ComponentType)[Name]
 };
 const LINK_STYLE: ButtonStyle.Link = 5;
 const SPACING: Readonly<Record<'small' | 'large', SeparatorSpacingSize>> = { small: 1, large: 2 };
+const PLACEMENT_HINT = new Map<unknown, string>([
+    [Thumbnail, 'Use it as a <Section> accessory'],
+    [LinkButton, 'Put it in an <ActionRow> or use it as a <Section> accessory'],
+    [MediaGalleryItem, 'Put it in a <MediaGallery>']
+]);
 
 // assumption: component embeds share discord's limits for message components
 const MAX_SECTION_TEXTS = 3;
 const MAX_ROW_BUTTONS = 5;
-const MAX_GALLERY_ITEMS = 10;
+const MAX_ITEMS_PER_GALLERY = 10;
 const MAX_LABEL_LENGTH = 80;
 const MAX_BUTTON_URL_LENGTH = 512;
 const MAX_DESCRIPTION_LENGTH = 1024;
 const MAX_ACCENT_COLOR = 0xff_ff_ff;
-// these two come from the component embed docs
+// from the component embed docs
 const MAX_MEDIA_URL_LENGTH = 2048;
-const MAX_COMPONENTS = 40;
 
 /** The JSON document Discord reads from a page to build a component embed. */
 export interface ComponentEmbedPayload {
@@ -77,7 +83,7 @@ export interface ComponentEmbedPayload {
 
 /**
  * Converts a {@link Container} tree into the JSON document Discord reads for a component embed. To write the JSON
- * into a page, use {@link toComponentEmbedJson} or {@link toComponentEmbedScript}. Both escape it for HTML.
+ * into a page, use {@link toComponentEmbedJson} or {@link toComponentEmbedScript}. Both escape it for a `<script>` tag.
  *
  * @throws a {@link ComponentEmbedError} when the tree breaks a rule of the format, or when your own code throws while
  * the package reads it. Check `error.code` to see which.
@@ -102,8 +108,15 @@ export interface ComponentEmbedPayload {
  * ```
  */
 export function toComponentEmbed(root: EmbedElement): ComponentEmbedPayload {
+    return buildEmbed(root, scriptSafeJson).payload;
+}
+
+type ToJson = (payload: ComponentEmbedPayload) => string;
+
+// the size check measures the json that toJson returns
+export function buildEmbed(root: EmbedElement, toJson: ToJson): { payload: ComponentEmbedPayload; json: string } {
     try {
-        return buildPayload(root);
+        return build(root, toJson);
     } catch (error) {
         if (error instanceof ComponentEmbedError) throw error;
         throw new ComponentEmbedError('ReadFailed', `Reading the component tree threw: ${messageOf(error)}.`, {
@@ -113,149 +126,155 @@ export function toComponentEmbed(root: EmbedElement): ComponentEmbedPayload {
 }
 
 // every props cast in this file comes after a check of element.type, here or in childrenOf
-function buildPayload(root: EmbedElement): ComponentEmbedPayload {
-    const [container, ...rest] = expand(root);
+function build(root: EmbedElement, toJson: ToJson): { payload: ComponentEmbedPayload; json: string } {
+    const [container, ...rest] = place(root, []);
     if (rest.length > 0) {
         throw new ComponentEmbedError(
             'InvalidStructure',
-            `The root must be one <Container>, got ${String(rest.length + 1)} elements.`
+            `The root has ${String(rest.length + 1)} elements. Put all of the components in one <Container> and pass only that.`
         );
     }
-    if (container?.type !== Container) {
-        throw new ComponentEmbedError('InvalidStructure', 'The root element must be a <Container>.');
+    if (container?.element.type !== Container) {
+        const found = container ? `<${nameOf(container.element.type)}>` : 'nothing';
+        throw new ComponentEmbedError('InvalidStructure', `The root has to be a <Container>, got ${found}.`, {
+            path: container?.path ?? []
+        });
     }
 
-    const component = toContainer(container.props as ContainerProps);
-
-    const count = countComponents(component);
-    if (count > MAX_COMPONENTS) {
-        throw new ComponentEmbedError(
-            'OverLimit',
-            `A component embed holds at most ${String(MAX_COMPONENTS)} components, this one has ${String(count)}.`
-        );
-    }
-
-    return { component };
+    const payload = { component: toContainer(container.element.props as ContainerProps, container.path) };
+    const json = toJson(payload);
+    checkEmbedLimits(payload.component, json);
+    return { payload, json };
 }
 
-type Counted = APIContainerComponent | APIComponentInContainer | APIComponentInMessageActionRow;
-
-function countComponents(component: Counted): number {
-    const nested =
-        'components' in component ? component.components.reduce((sum, child) => sum + countComponents(child), 0) : 0;
-    const accessory = 'accessory' in component ? 1 : 0;
-    return 1 + nested + accessory;
-}
-
-function toContainer({ accentColor, spoiler, children }: ContainerProps): APIContainerComponent {
+function toContainer({ accentColor, spoiler, children }: ContainerProps, path: Path): APIContainerComponent {
     if (
         accentColor !== undefined &&
         !(Number.isSafeInteger(accentColor) && accentColor >= 0 && accentColor <= MAX_ACCENT_COLOR)
     ) {
         throw new ComponentEmbedError(
             'InvalidProp',
-            `accentColor must be an integer from 0 to 0xFFFFFF, got ${describeValue(accentColor)}.`
+            `accentColor must be a whole number from 0 to 0xFFFFFF (like 0x5865f2), got ${describeValue(accentColor)}.`,
+            { path }
         );
     }
-    checkType('The <Container> spoiler', spoiler, 'boolean');
+    checkType('The <Container> spoiler', spoiler, 'boolean', path);
 
-    const elements = expand(children);
-    if (elements.length === 0) {
-        throw new ComponentEmbedError('InvalidStructure', '<Container> needs at least one component.');
+    const placed = place(children, path);
+    if (placed.length === 0) {
+        throw new ComponentEmbedError('InvalidStructure', '<Container> needs at least one component.', { path });
     }
 
     return {
         type: TYPE.Container,
         ...(accentColor !== undefined && { accent_color: accentColor }),
         ...(spoiler !== undefined && { spoiler }),
-        components: elements.map(toContainerChild)
+        components: placed.map(toContainerChild)
     };
 }
 
-function toContainerChild(element: EmbedElement): APIComponentInContainer {
+function toContainerChild({ element, path }: Placed): APIComponentInContainer {
     switch (element.type) {
         case TextDisplay: {
-            return toTextDisplay(element.props as TextDisplayProps);
+            return toTextDisplay(element.props as TextDisplayProps, path);
         }
         case Section: {
-            return toSection(element.props as SectionProps);
+            return toSection(element.props as SectionProps, path);
         }
         case MediaGallery: {
-            return toMediaGallery(element.props as MediaGalleryProps);
+            return toMediaGallery(element.props as MediaGalleryProps, path);
         }
         case Separator: {
-            return toSeparator(element.props as SeparatorProps);
+            return toSeparator(element.props as SeparatorProps, path);
         }
         case ActionRow: {
-            return toActionRow(element.props as ActionRowProps);
+            return toActionRow(element.props as ActionRowProps, path);
         }
         default: {
+            const name = nameOf(element.type);
+            const hint = PLACEMENT_HINT.get(element.type);
             throw new ComponentEmbedError(
                 'InvalidStructure',
-                `<${nameOf(element.type)}> cannot go directly inside a <Container>.`
+                hint
+                    ? `<${name}> can't go straight inside a <Container>. ${hint}.`
+                    : `<${name}> can't go inside a <Container>. Use a <TextDisplay>, <Section>, <MediaGallery>, <Separator>, or <ActionRow>.`,
+                { path }
             );
         }
     }
 }
 
-function toTextDisplay({ children }: TextDisplayProps): APITextDisplayComponent {
+function toTextDisplay({ children }: TextDisplayProps, path: Path): APITextDisplayComponent {
     const parts = ([children] as unknown[])
         .flat(Infinity)
         .filter((part) => part !== null && part !== undefined && typeof part !== 'boolean');
 
     const element = parts.find((part) => isElement(part));
     if (element) {
-        rejectVueVNode(element);
+        rejectVueVNode(element, path);
         throw new ComponentEmbedError(
             'InvalidStructure',
-            `<TextDisplay> only takes text. Write Discord markdown like **bold** in place of <${nameOf(element.type)}>.`
+            `<TextDisplay> only takes text. Write Discord markdown like **bold** in place of <${nameOf(element.type)}>.`,
+            { path }
         );
     }
 
     const stray = parts.find((part) => typeof part !== 'string' && typeof part !== 'number');
     if (stray !== undefined) {
-        throw new ComponentEmbedError('InvalidProp', `<TextDisplay> only takes text, got ${describeValue(stray)}.`);
+        throw new ComponentEmbedError(
+            'InvalidProp',
+            `<TextDisplay> only takes strings and numbers, got ${describeValue(stray)}.`,
+            { path }
+        );
     }
 
     const content = parts.join('');
-    if (content === '') throw new ComponentEmbedError('InvalidStructure', '<TextDisplay> needs some text.');
+    if (content === '') {
+        throw new ComponentEmbedError('InvalidStructure', 'A <TextDisplay> is empty. Give it some text or remove it.', {
+            path
+        });
+    }
 
     return { type: TYPE.TextDisplay, content };
 }
 
-function toSection({ accessory, children }: SectionProps): APISectionComponent {
+function toSection({ accessory, children }: SectionProps, path: Path): APISectionComponent {
     return {
         type: TYPE.Section,
-        components: childrenOf(Section, children, TextDisplay, MAX_SECTION_TEXTS).map((element) =>
-            toTextDisplay(element.props as TextDisplayProps)
+        components: childrenOf(Section, path, children, TextDisplay, MAX_SECTION_TEXTS).map((text) =>
+            toTextDisplay(text.element.props as TextDisplayProps, text.path)
         ),
-        accessory: toSectionAccessory(accessory)
+        accessory: toSectionAccessory(accessory, path)
     };
 }
 
-function toSectionAccessory(accessory: EmbedNode): APISectionComponent['accessory'] {
-    const [element, ...rest] = expand(accessory);
-    if (!element || rest.length > 0) {
+function toSectionAccessory(accessory: EmbedNode, sectionPath: Path): APISectionComponent['accessory'] {
+    const [placed, ...rest] = place(accessory, sectionPath);
+    if (!placed || rest.length > 0) {
+        const found = placed ? String(rest.length + 1) : 'none';
         throw new ComponentEmbedError(
             'InvalidStructure',
-            'A <Section> takes exactly one accessory, a <Thumbnail> or a <LinkButton>.'
+            `A <Section> needs exactly one accessory, a <Thumbnail> or a <LinkButton>, got ${found}.`,
+            { path: sectionPath }
         );
     }
 
-    if (element.type === Thumbnail) return toThumbnail(element.props as MediaProps);
-    if (element.type === LinkButton) return toLinkButton(element.props as LinkButtonProps);
+    const { element, path } = placed;
+    if (element.type === Thumbnail) return toThumbnail(element.props as MediaProps, path);
+    if (element.type === LinkButton) return toLinkButton(element.props as LinkButtonProps, path);
 
     throw new ComponentEmbedError(
         'InvalidStructure',
-        `A <Section> accessory must be a <Thumbnail> or a <LinkButton>, got <${nameOf(element.type)}>.`
+        `A <Section> accessory must be a <Thumbnail> or a <LinkButton>, got <${nameOf(element.type)}>.`,
+        { path }
     );
 }
 
-function toMedia({ url, description, spoiler }: MediaProps): APIMediaGalleryItem {
-    checkUrl('The media url', url, ['http:', 'https:'], MAX_MEDIA_URL_LENGTH);
-    checkType('The media description', description, 'string');
-    checkType('The media spoiler', spoiler, 'boolean');
-    if (description !== undefined) checkLength('The media description', description, MAX_DESCRIPTION_LENGTH);
+function toMedia({ url, description, spoiler }: MediaProps, path: Path): APIMediaGalleryItem {
+    checkUrl('The media url', url, ['http:', 'https:'], MAX_MEDIA_URL_LENGTH, path);
+    checkType('The media description', description, 'string', path);
+    checkType('The media spoiler', spoiler, 'boolean', path);
+    if (description !== undefined) checkLength('The media description', description, MAX_DESCRIPTION_LENGTH, path);
 
     return {
         media: { url },
@@ -264,25 +283,26 @@ function toMedia({ url, description, spoiler }: MediaProps): APIMediaGalleryItem
     };
 }
 
-function toThumbnail(props: MediaProps): APIThumbnailComponent {
-    return { type: TYPE.Thumbnail, ...toMedia(props) };
+function toThumbnail(props: MediaProps, path: Path): APIThumbnailComponent {
+    return { type: TYPE.Thumbnail, ...toMedia(props, path) };
 }
 
-function toMediaGallery({ children }: MediaGalleryProps): APIMediaGalleryComponent {
+function toMediaGallery({ children }: MediaGalleryProps, path: Path): APIMediaGalleryComponent {
     return {
         type: TYPE.MediaGallery,
-        items: childrenOf(MediaGallery, children, MediaGalleryItem, MAX_GALLERY_ITEMS).map((element) =>
-            toMedia(element.props as MediaProps)
+        items: childrenOf(MediaGallery, path, children, MediaGalleryItem, MAX_ITEMS_PER_GALLERY).map((item) =>
+            toMedia(item.element.props as MediaProps, item.path)
         )
     };
 }
 
-function toSeparator({ divider, spacing }: SeparatorProps): APISeparatorComponent {
-    checkType('The <Separator> divider', divider, 'boolean');
+function toSeparator({ divider, spacing }: SeparatorProps, path: Path): APISeparatorComponent {
+    checkType('The <Separator> divider', divider, 'boolean', path);
     if (spacing !== undefined && !Object.hasOwn(SPACING, spacing)) {
         throw new ComponentEmbedError(
             'InvalidProp',
-            `The <Separator> spacing must be 'small' or 'large', got ${describeValue(spacing)}.`
+            `The <Separator> spacing must be 'small' or 'large', got ${describeValue(spacing)}.`,
+            { path }
         );
     }
 
@@ -293,30 +313,31 @@ function toSeparator({ divider, spacing }: SeparatorProps): APISeparatorComponen
     };
 }
 
-function toActionRow({ children }: ActionRowProps): APIActionRowComponent<APIButtonComponentWithURL> {
+function toActionRow({ children }: ActionRowProps, path: Path): APIActionRowComponent<APIButtonComponentWithURL> {
     return {
         type: TYPE.ActionRow,
-        components: childrenOf(ActionRow, children, LinkButton, MAX_ROW_BUTTONS).map((element) =>
-            toLinkButton(element.props as LinkButtonProps)
+        components: childrenOf(ActionRow, path, children, LinkButton, MAX_ROW_BUTTONS).map((button) =>
+            toLinkButton(button.element.props as LinkButtonProps, button.path)
         )
     };
 }
 
-function toLinkButton({ url, label, emoji, disabled }: LinkButtonProps): APIButtonComponentWithURL {
+function toLinkButton({ url, label, emoji, disabled }: LinkButtonProps, path: Path): APIButtonComponentWithURL {
     // message buttons accept these three schemes. we assume embeds do too
-    checkUrl('The <LinkButton> url', url, ['http:', 'https:', 'discord:'], MAX_BUTTON_URL_LENGTH);
-    checkType('The <LinkButton> label', label, 'string');
-    checkType('The <LinkButton> disabled', disabled, 'boolean');
+    checkUrl('The <LinkButton> url', url, ['http:', 'https:', 'discord:'], MAX_BUTTON_URL_LENGTH, path);
+    checkType('The <LinkButton> label', label, 'string', path);
+    checkType('The <LinkButton> disabled', disabled, 'boolean', path);
 
-    const shownEmoji = emojiToShow(emoji);
+    const shownEmoji = emojiToShow(emoji, path);
     if (!isFilled(label) && !shownEmoji) {
         throw new ComponentEmbedError(
             'InvalidProp',
-            `<LinkButton> needs a label, an emoji, or both. Its url is ${url}.`
+            `<LinkButton> needs a label, an emoji, or both. Its url is ${url}.`,
+            { path }
         );
     }
 
-    if (isFilled(label)) checkLength('The <LinkButton> label', label, MAX_LABEL_LENGTH);
+    if (isFilled(label)) checkLength('The <LinkButton> label', label, MAX_LABEL_LENGTH, path);
 
     return {
         type: TYPE.Button,
@@ -328,10 +349,10 @@ function toLinkButton({ url, label, emoji, disabled }: LinkButtonProps): APIButt
     };
 }
 
-function emojiToShow(emoji: LinkButtonProps['emoji']): APIMessageComponentEmoji | undefined {
-    checkType('The <LinkButton> emoji id', emoji?.id, 'string');
-    checkType('The <LinkButton> emoji name', emoji?.name, 'string');
-    checkType('The <LinkButton> emoji animated', emoji?.animated, 'boolean');
+function emojiToShow(emoji: LinkButtonProps['emoji'], path: Path): APIMessageComponentEmoji | undefined {
+    checkType('The <LinkButton> emoji id', emoji?.id, 'string', path);
+    checkType('The <LinkButton> emoji name', emoji?.name, 'string', path);
+    checkType('The <LinkButton> emoji animated', emoji?.animated, 'boolean', path);
     return isFilled(emoji?.id) || isFilled(emoji?.name) ? emoji : undefined;
 }
 

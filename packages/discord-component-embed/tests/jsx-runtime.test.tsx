@@ -127,6 +127,6 @@ describe('jsx-runtime', () => {
                     <div />
                 </Container>
             )
-        ).toThrow('<div> cannot go directly inside a <Container>.');
+        ).toThrow("<div> can't go inside a <Container>.");
     });
 });

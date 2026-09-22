@@ -105,7 +105,7 @@ describe('toComponentEmbed with untyped props', () => {
         [
             'a symbol in a text display',
             loose(TextDisplay, null, 'a', Symbol('x')),
-            '<TextDisplay> only takes text, got Symbol(x).'
+            '<TextDisplay> only takes strings and numbers, got Symbol(x).'
         ]
     ])('rejects %s', (_label, child, message) => {
         expectEmbedError(() => toComponentEmbed(inContainer(child)), message);
@@ -121,7 +121,9 @@ describe('toComponentEmbed with untyped props', () => {
         const error = thrownBy(() => toComponentEmbed(inContainer(loose(Preview, null))));
 
         expect(error.code).toBe('UnsupportedComponent');
-        expect(error.message).toBe('<Preview> is async. Load its data first and pass it in as props.');
+        expect(error.message).toBe(
+            '<Preview> is async. Load its data first and pass it in as props.\nFound at Container > Preview'
+        );
     });
 
     it('rejects a container spoiler that is a string', () => {
@@ -134,7 +136,7 @@ describe('toComponentEmbed with untyped props', () => {
     it('rejects an object whose Symbol.iterator is not a function', () => {
         expectEmbedError(
             () => toComponentEmbed(loose(Container, null, { [Symbol.iterator]: 1 })),
-            'Text has to go inside a <TextDisplay>, got {}.'
+            'Got {} where only components can go.'
         );
     });
 

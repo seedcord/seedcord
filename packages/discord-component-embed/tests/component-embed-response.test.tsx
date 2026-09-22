@@ -21,6 +21,21 @@ describe('componentEmbedResponse', () => {
         expect(() => componentEmbedResponse(withText('a'.repeat(3000 - OVERHEAD)))).not.toThrow();
     });
 
+    it('sends the JSON as it is, with no escaping for a script tag', async () => {
+        const content = '<:seedcord:1538077321318236281> </script> <!-- a comment -->';
+
+        const body = await componentEmbedResponse(withText(content)).text();
+
+        expect(body).toBe(JSON.stringify({ component: { type: 17, components: [{ type: 10, content }] } }));
+    });
+
+    it('measures the 3000 bytes on the JSON it sends', () => {
+        // 2065 bytes. escaped for a script tag it would be 3065
+        const content = '</'.repeat(1000);
+
+        expect(() => componentEmbedResponse(withText(content))).not.toThrow();
+    });
+
     it('counts bytes, so multi-byte text reaches the limit sooner', () => {
         // € is 3 bytes in UTF-8
         const content = '€'.repeat(1000);
@@ -28,7 +43,7 @@ describe('componentEmbedResponse', () => {
         expect(OVERHEAD + content.length).toBeLessThan(3000);
         expectEmbedError(
             () => componentEmbedResponse(withText(content)),
-            `Linked component embed JSON is limited to 3000 bytes, this one is ${String(OVERHEAD + 3000)}.`
+            `This component embed's JSON is ${String(OVERHEAD + 3000)} bytes, over Discord's limit of 3000.`
         );
     });
 });

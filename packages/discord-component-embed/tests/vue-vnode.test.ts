@@ -10,16 +10,21 @@ const fragment = { __v_isVNode: true, type: Symbol.for('v-fgt'), props: null, ch
 
 describe('a vue vnode', () => {
     it.each([
-        ['as the root', vnode],
-        ['as a child', inContainer(vnode)],
-        ['as a fragment', inContainer(fragment)],
-        ['inside a text display', inContainer({ type: TextDisplay, props: { children: ['hi ', vnode] } })]
-    ])('points at h() %s', (_label, tree) => {
+        ['as the root', vnode, []],
+        ['as a child', inContainer(vnode), ['Container']],
+        ['as a fragment', inContainer(fragment), ['Container']],
+        [
+            'inside a text display',
+            inContainer({ type: TextDisplay, props: { children: ['hi ', vnode] } }),
+            ['Container', 'TextDisplay']
+        ]
+    ])('points at h() %s', (_label, tree, path) => {
         const error = thrownBy(() => toComponentEmbed(tree));
 
         expect(error.code).toBe('InvalidStructure');
-        expect(error.message).toBe(
-            "Got a Vue VNode. Build the tree with h() from discord-component-embed instead of Vue's h()."
+        expect(error.path).toEqual(path);
+        expect(error.message).toMatch(
+            /^Got a Vue VNode\. Build the tree with h\(\) from discord-component-embed instead of Vue's h\(\)\./
         );
     });
 });

@@ -9,11 +9,19 @@ describe('toComponentEmbedJson', () => {
         expect(JSON.parse(toComponentEmbedJson(card))).toEqual(toComponentEmbed(card));
     });
 
-    it('escapes every < so text in the card cannot close a script tag', () => {
+    it('escapes </ and <!-- so text in the card cannot close a script tag', () => {
         const content = '</script><!-- <script>alert(1)</script>';
         const json = toComponentEmbedJson(h(Container, null, h(TextDisplay, null, content)));
 
-        expect(json).not.toContain('<');
+        expect(json).not.toContain('</');
+        expect(json).not.toContain('<!--');
         expect(JSON.parse(json)).toEqual({ component: { type: 17, components: [{ type: 10, content }] } });
+    });
+
+    it('leaves every other < as it is', () => {
+        const content = 'Built with <:seedcord:1538077321318236281> by <@123>';
+        const json = toComponentEmbedJson(h(Container, null, h(TextDisplay, null, content)));
+
+        expect(json).toContain(content);
     });
 });

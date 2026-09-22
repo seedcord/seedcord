@@ -1,6 +1,7 @@
 import { ComponentEmbedError } from './ComponentEmbedError';
 
 import type { EmbedNode } from './element';
+import type { Path } from './tree';
 
 export function describeValue(value: unknown): string {
     if (typeof value === 'bigint') return `${String(value)}n`;
@@ -27,17 +28,22 @@ export function isIterable(value: unknown): value is Iterable<EmbedNode> {
     );
 }
 
-export function checkType(what: string, value: unknown, type: 'boolean' | 'string'): void {
+export function checkType(what: string, value: unknown, type: 'boolean' | 'string', path: Path): void {
     if (value !== undefined && typeof value !== type) {
-        throw new ComponentEmbedError('InvalidProp', `${what} must be a ${type}, got ${describeValue(value)}.`);
+        throw new ComponentEmbedError('InvalidProp', `${what} must be a ${type}, got ${describeValue(value)}.`, {
+            path
+        });
     }
 }
 
-export function checkLength(what: string, value: string, max: number): void {
+const PREVIEW_LENGTH = 40;
+
+export function checkLength(what: string, value: string, max: number, path: Path): void {
     if (value.length > max) {
         throw new ComponentEmbedError(
             'OverLimit',
-            `${what} is longer than ${String(max)} characters (${String(value.length)}).`
+            `${what} is ${String(value.length)} characters, ${String(value.length - max)} over Discord's limit of ${String(max)}. It starts with ${describeValue([...value].slice(0, PREVIEW_LENGTH).join(''))}.`,
+            { path }
         );
     }
 }
@@ -51,18 +57,20 @@ function orList(words: readonly string[]): string {
     return words.length > 2 ? `${words.slice(0, -1).join(', ')}, or ${last}` : words.join(' or ');
 }
 
-export function checkUrl(what: string, url: string, schemes: readonly string[], max: number): void {
-    checkType(what, url, 'string');
+export function checkUrl(what: string, url: string, schemes: readonly string[], max: number, path: Path): void {
+    checkType(what, url, 'string', path);
     // URL.parse accepts whitespace by stripping or encoding it
     if (/\s/.test(url)) {
-        throw new ComponentEmbedError('InvalidProp', `${what} has whitespace in it, got ${describeValue(url)}.`);
+        throw new ComponentEmbedError('InvalidProp', `${what} has whitespace in it, got ${describeValue(url)}.`, {
+            path
+        });
     }
 
     const protocol = URL.parse(url)?.protocol;
     if (protocol === undefined || !schemes.includes(protocol)) {
         const names = orList(schemes.map((scheme) => scheme.replace(':', '')));
-        throw new ComponentEmbedError('InvalidProp', `${what} must be an ${names} URL, got ${url}.`);
+        throw new ComponentEmbedError('InvalidProp', `${what} must be an ${names} URL, got ${url}.`, { path });
     }
 
-    checkLength(what, url, max);
+    checkLength(what, url, max, path);
 }

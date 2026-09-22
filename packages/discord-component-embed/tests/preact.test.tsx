@@ -52,7 +52,9 @@ describe('preact elements', () => {
         );
 
         expect(error.code).toBe('UnsupportedComponent');
-        expect(error.message).toBe('Only plain function components work inside a component embed.');
+        expect(error.message).toBe(
+            'Only plain function components work inside a component embed.\nFound at Container > Headline'
+        );
     });
 
     it('rejects a context provider and consumer as unsupported', () => {

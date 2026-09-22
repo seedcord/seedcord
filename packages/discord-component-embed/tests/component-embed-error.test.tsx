@@ -82,6 +82,6 @@ describe('ComponentEmbedError', () => {
 
         expect(error.code).toBe('ReadFailed');
         expect(error.cause).toBe(boom);
-        expect(error.message).toBe('Reading the component tree threw: iterator broke.');
+        expect(error.message).toBe('Reading an iterable in the children threw: iterator broke.\nFound at Container');
     });
 });

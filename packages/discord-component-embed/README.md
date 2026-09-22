@@ -16,7 +16,7 @@
 
 <div align="center">
 
-[![npm](https://img.shields.io/npm/v/discord-component-embed?style=flat-square&logo=npm&logoColor=c8341f&label=&labelColor=1f1f1f&color=c8341f)](https://www.npmjs.com/package/discord-component-embed) [![node](https://img.shields.io/node/v/discord-component-embed?style=flat-square&label=node&labelColor=1f1f1f&color=4d7d33)](https://nodejs.org) [![license](https://img.shields.io/npm/l/discord-component-embed?style=flat-square&label=license&labelColor=1f1f1f&color=f8f6e8)](LICENSE)
+[![size](https://img.shields.io/bundlejs/size/discord-component-embed?style=flat-square&label=gzip&labelColor=1f1f1f&color=f8f6e8)](https://bundlejs.com/?q=discord-component-embed) [![npm](https://img.shields.io/npm/v/discord-component-embed?style=flat-square&logo=npm&logoColor=c8341f&label=&labelColor=1f1f1f&color=c8341f)](https://www.npmjs.com/package/discord-component-embed) [![node](https://img.shields.io/node/v/discord-component-embed?style=flat-square&label=node&labelColor=1f1f1f&color=4d7d33)](https://nodejs.org) [![license](https://img.shields.io/npm/l/discord-component-embed?style=flat-square&label=license&labelColor=1f1f1f&color=f8f6e8)](LICENSE)
 
 </div>
 
@@ -207,7 +207,7 @@ useHead({
 </script>
 ```
 
-Discord reads only a script with the id `discord:component-embed`. `toComponentEmbedJson` escapes every `<` in the JSON, so text in the card can't close the tag early.
+Discord reads only a script with the id `discord:component-embed`. Text in the card can't close the tag early, because `toComponentEmbedJson` escapes any `</` and `<!--` in the JSON.
 
 </details>
 
@@ -239,7 +239,7 @@ export const load = async ({ params }) => {
 </svelte:head>
 ```
 
-`toComponentEmbedScript` escapes every `<` in the JSON, so `{@html}` can write it as it is.
+`{@html}` can write the tag as it is, because `toComponentEmbedScript` escapes any `</` and `<!--` in the JSON.
 
 </details>
 
@@ -279,7 +279,7 @@ import { buildPostCard } from '~/cards/buildPostCard';
 <script id="discord:component-embed" type="application/json" innerHTML={toComponentEmbedJson(buildPostCard(post))} />;
 ```
 
-Solid writes `innerHTML` into the page as it is. `toComponentEmbedJson` escapes every `<` in the JSON, so text in the card can't close the tag early.
+Solid writes `innerHTML` into the page as it is. That's safe here, because `toComponentEmbedJson` escapes any `</` and `<!--` in the JSON.
 
 </details>
 
@@ -344,7 +344,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
 }
 ```
 
-The route builds `PostCard` for whichever post `slug` points at. `componentEmbedResponse` checks the JSON against Discord's 3,000-byte limit for linked payloads, then returns a Web `Response` with an `application/json` content type. Any framework whose routes return a Web `Response` works the same way, like a SvelteKit `+server.ts`.
+The route builds `PostCard` for whichever post `slug` points at. `componentEmbedResponse` returns the JSON as a Web `Response` with an `application/json` content type. Any framework whose routes return a Web `Response` works the same way, like a SvelteKit `+server.ts`.
 
 Point the page at that URL with a `<link>` tag. The `href` has to be an absolute `https` URL on the page's host, a subdomain of it, or its parent domain.
 
@@ -442,7 +442,10 @@ Discord doesn't report an invalid payload anywhere. It drops the payload and sho
 - a media `url` is over 2048 characters or not `http` or `https`, or its `description` is over 1024 characters
 - any `url` has whitespace in it
 - the embed has more than 40 components, counting the container
-- linked JSON is larger than 3000 bytes
+- the galleries hold more than 10 media gallery items between them
+- the JSON is larger than 3000 bytes
+
+When one component breaks a rule, the error's `path` lists the steps from the root to it, like `['Container', 'PostCard', 'Section 2']`. The message ends with the same steps after `Found at`, and your own components appear by name.
 
 Every `ComponentEmbedError` carries a `code`: `InvalidStructure`, `InvalidProp`, `OverLimit`, `UnsupportedComponent`, or `ReadFailed`. Branch on the code, since the message wording can change in any release. If a component or an iterator of yours throws while the tree is read, you get a `ReadFailed` with the original error on `cause`.
 
