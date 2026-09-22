@@ -108,13 +108,19 @@ describe('fromPayload keys', () => {
             'a mistyped key on a component',
             inPayload({ type: 9, components: [text], accessory: { type: 11, media: { url: IMAGE }, descripton: 'x' } }),
             ['component', 'components', '0', 'accessory'],
-            'A thumbnail doesn\'t take "descripton". It takes type, id, media, description, and spoiler.'
+            'A thumbnail doesn\'t take "descripton". Did you mean "description"? It takes type, id, media, description, and spoiler.'
         ],
         [
             'a mistyped key on a gallery item',
             inPayload({ type: 12, items: [{ media: { url: IMAGE }, spolier: true }] }),
             ['component', 'components', '0', 'items', '0'],
-            'A gallery item doesn\'t take "spolier". It takes media, description, and spoiler.'
+            'A gallery item doesn\'t take "spolier". Did you mean "spoiler"? It takes media, description, and spoiler.'
+        ],
+        [
+            'a one-letter key that is two edits from id',
+            inPayload({ ...text, x: 1 }),
+            ['component', 'components', '0'],
+            'A text display doesn\'t take "x". It takes type, id, and content.'
         ],
         [
             // discord falls back to the Open Graph card for any key past the six its docs list

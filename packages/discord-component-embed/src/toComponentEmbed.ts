@@ -110,13 +110,14 @@ export function buildEmbed(root: EmbedElement, toJson: ToJson): { payload: Compo
     }
 }
 
-// every error in the tree, one per broken component. the limits on the whole embed run once the rest pass
-export function collectErrors(root: EmbedElement): ComponentEmbedError[] {
+// every error in the tree, one per broken component. the limits on the whole embed run once the rest pass.
+// sentJson is the text discord will read, when it isn't the package's own output
+export function collectErrors(root: EmbedElement, sentJson?: string): ComponentEmbedError[] {
     const errors: ComponentEmbedError[] = [];
     const collector = collectInto(errors);
     try {
         const payload = buildPayload(root, collector);
-        if (errors.length === 0) checkEmbedLimits(payload.component, scriptSafeJson(payload), collector);
+        if (errors.length === 0) checkEmbedLimits(payload.component, sentJson ?? scriptSafeJson(payload), collector);
     } catch (error) {
         errors.push(asEmbedError(error));
     }

@@ -1,0 +1,126 @@
+import { describe, expect, it } from 'vitest';
+
+import { runCheckCommand } from '#src/checkCommand';
+
+import type { CommandInput } from '#src/checkCommand';
+
+function withFiles(files: Record<string, string>, colorDepth = 1): CommandInput {
+    return {
+        readFile: (path) => {
+            const text = files[path];
+            if (text === undefined) return Promise.reject(new Error(`ENOENT: no such file, open '${path}'`));
+            return Promise.resolve(text);
+        },
+        fetch: () => Promise.reject(new Error('no network in this test')),
+        colorDepth
+    };
+}
+
+const card = (...components: unknown[]): string => JSON.stringify({ component: { type: 17, components } });
+
+describe('discord-component-embed check', () => {
+    it("shows a passing card's size against discord's limits and exits 0", async () => {
+        const text = card(
+            { type: 10, content: 'hi' },
+            { type: 12, items: [{ media: { url: 'https://example.com/a.png' } }] }
+        );
+
+        expect(await runCheckCommand(['check', 'embed.json'], withFiles({ 'embed.json': text }))).toEqual({
+            output: `✔ embed.json\n  ${String(text.length)} of 3000 bytes · 3 of 40 components · 1 of 10 gallery items\n`,
+            exitCode: 0
+        });
+    });
+
+    it('numbers every problem under a card that fails and exits 1', async () => {
+        const text = card({ type: 14, spacing: 3 }, { type: 3 });
+
+        const { output, exitCode } = await runCheckCommand(['check', 'embed.json'], withFiles({ 'embed.json': text }));
+
+        expect(output).toBe(
+            [
+                '✘ embed.json  2 problems',
+                '  1. A separator spacing has to be 1 (small) or 2 (large), got 3.',
+                '     Found at component > components > 0',
+                "  2. Type 3 can't go in a component embed. It takes types 1, 2, 9, 10, 11, 12, 14, and 17.",
+                '     Found at component > components > 1',
+                ''
+            ].join('\n')
+        );
+        expect(exitCode).toBe(1);
+    });
+
+    it('prints the minified size under a file that is only too big because of its whitespace', async () => {
+        const payload = { component: { type: 17, components: [{ type: 10, content: 'x'.repeat(2900) }] } };
+        const text = JSON.stringify(payload, null, 10);
+
+        const { output } = await runCheckCommand(['check', 'embed.json'], withFiles({ 'embed.json': text }));
+
+        expect(output.split('\n').at(-2)).toBe(
+            `  Minified, the JSON is ${String(JSON.stringify(payload).length)} bytes.`
+        );
+    });
+
+    it("says which file it couldn't read and exits 2", async () => {
+        expect(await runCheckCommand(['check', 'missing.json'], withFiles({}))).toEqual({
+            output: "✘ missing.json  unreadable\n  Couldn't read missing.json: ENOENT: no such file, open 'missing.json'\n",
+            exitCode: 2
+        });
+    });
+
+    it('checks every target in the order given, then counts them, and exits with the worst result', async () => {
+        const files = withFiles({ 'good.json': card({ type: 10, content: 'hi' }), 'bad.json': card({ type: 3 }) });
+
+        const { output, exitCode } = await runCheckCommand(['check', 'bad.json', 'missing.json', 'good.json'], files);
+
+        expect(output.split('\n').filter((line) => line !== '' && !line.startsWith(' '))).toEqual([
+            '✘ bad.json  1 problem',
+            '✘ missing.json  unreadable',
+            '✔ good.json',
+            '1 passed, 1 failed, 1 unreadable'
+        ]);
+        expect(output).toContain('\n\n✘ missing.json');
+        expect(exitCode).toBe(2);
+    });
+
+    it('colors the marks in truecolor on a terminal that supports it', async () => {
+        const files = withFiles({ 'good.json': card({ type: 10, content: 'hi' }), 'bad.json': card({ type: 3 }) }, 24);
+
+        const { output } = await runCheckCommand(['check', 'good.json', 'bad.json'], files);
+
+        expect(output).toContain('\u001B[38;2;158;206;106m✔');
+        expect(output).toContain('\u001B[38;2;247;118;142m✘');
+    });
+
+    it('falls back to the basic colors on a terminal without truecolor', async () => {
+        const files = withFiles({ 'good.json': card({ type: 10, content: 'hi' }) }, 8);
+
+        const { output } = await runCheckCommand(['check', 'good.json'], files);
+
+        expect(output).toContain('\u001B[32m✔');
+    });
+
+    it.each([
+        ['nothing', []],
+        ['a command without a target', ['check']],
+        ['an unknown command', ['lint', 'embed.json']]
+    ])('prints the usage and exits 2 for %s', async (_label, args) => {
+        const { output, exitCode } = await runCheckCommand(args, withFiles({}));
+
+        expect(output).toMatch(/^Usage: discord-component-embed check <file or url>\.\.\./);
+        expect(exitCode).toBe(2);
+    });
+
+    it('says which flag it does not take above the usage', async () => {
+        const { output, exitCode } = await runCheckCommand(['check', '--strict', 'embed.json'], withFiles({}));
+
+        expect(output).toMatch(/^discord-component-embed doesn't take --strict\.\n\nUsage: /);
+        expect(exitCode).toBe(2);
+    });
+
+    it('prints the usage and exits 0 for --help', async () => {
+        const { output, exitCode } = await runCheckCommand(['--help'], withFiles({}));
+
+        expect(output).toMatch(/^Usage: /);
+        expect(exitCode).toBe(0);
+    });
+});

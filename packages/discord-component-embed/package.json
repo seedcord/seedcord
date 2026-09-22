@@ -37,6 +37,9 @@
     "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
     "funding": "https://github.com/sponsors/materwelonDhruv",
     "types": "./dist/index.d.mts",
+    "bin": {
+        "discord-component-embed": "./dist/cli.mjs"
+    },
     "exports": {
         ".": {
             "import": {

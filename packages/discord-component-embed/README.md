@@ -29,6 +29,7 @@
 - [JSX setup](#jsx-setup)
 - [Linked JSON](#linked-json)
 - [JSON you already have](#json-you-already-have)
+- [Check from the command line](#check-from-the-command-line)
 - [Your own components](#your-own-components)
 - [Custom emoji](#custom-emoji)
 - [Testing your card](#testing-your-card)
@@ -51,7 +52,7 @@ Discord marks link previews as subject to change. Until v1.0.0, a minor version 
 pnpm add discord-component-embed
 ```
 
-You don't need React. Only `discord-component-embed/react` uses it, and it works with React 17, 18, and 19. Nothing in the package imports from Node, so it runs on Node, Bun, Deno, and edge runtimes.
+You don't need React. Only `discord-component-embed/react` uses it, and it works with React 17, 18, and 19. The library doesn't import anything from Node, so it runs on Node, Bun, Deno, and edge runtimes. Only the [`check` command](#check-from-the-command-line) uses Node's APIs, which Bun and Deno also provide.
 
 <div align="right"><a href="#contents">back to top</a></div>
 
@@ -383,7 +384,38 @@ An error from `fromPayload` has JSON keys in its `path`, like `component > compo
 
 Discord shows no preview at all for a bad `id`, so `fromPayload` checks those too. Each `id` has to be a whole number from 0 to 2147483647, and no two components can share one. The tree leaves them out after that, because nothing in a link preview reads them.
 
-A key a component doesn't take, like a mistyped `descripton`, throws with the keys it does take. Discord drops such a key and shows the card without that field. On a button, Discord falls back to the Open Graph card instead. The fields Discord adds inside `media` when it sends a card back, like `proxy_url` and `width`, are fine.
+A key a component doesn't take, like a mistyped `descripton`, throws with the keys it does take and suggests the closest one. Discord drops such a key and shows the card without that field. On a button, Discord falls back to the Open Graph card instead. The fields Discord adds inside `media` when it sends a card back, like `proxy_url` and `width`, are fine.
+
+<div align="right"><a href="#contents">back to top</a></div>
+
+## Check from the command line
+
+The `discord-component-embed check` command runs the same checks on a JSON file, an HTML file, or a live page. Pass as many as you like.
+
+```sh
+npx discord-component-embed check embed.json https://example.com/blog/hello-world
+```
+
+```txt
+✔ embed.json
+  572 of 3000 bytes · 7 of 40 components · 1 of 10 gallery items
+
+✘ https://example.com/blog/hello-world  1 problem
+  1. A gallery item doesn't take "descripton". Did you mean "description"? It takes media, description, and spoiler.
+     Found at component > components > 3 > items > 0
+
+1 passed, 1 failed
+```
+
+For a URL, the command fetches the page with Discord's crawler user agent. It checks the `<script>` JSON as the page serves it, or follows the `<link>` to its JSON. The 3000-byte limit counts that text as sent, whitespace and escapes included. When whitespace alone pushes a file over, the output adds the minified size.
+
+A `.html` file gets the same treatment, which checks a static build before you deploy it. The command still fetches a `<link>` from its URL, so only an inline `<script>` gets checked offline.
+
+```sh
+npx discord-component-embed check dist/blog/*.html
+```
+
+The command exits 0 when every target passes, 1 when one fails a check, and 2 when one can't be read. `pnpm dlx`, `yarn dlx`, and `bunx` run it too, and so does `deno run -A npm:discord-component-embed`.
 
 <div align="right"><a href="#contents">back to top</a></div>
 

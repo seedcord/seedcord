@@ -61,11 +61,11 @@ export function fromPayload(payload: ComponentEmbedPayload): EmbedElement {
 }
 
 // every error in the JSON, one per broken component. the tree checks run once the JSON itself passes
-export function collectPayloadErrors(payload: unknown): ComponentEmbedError[] {
+export function collectPayloadErrors(payload: unknown, sentJson?: string): ComponentEmbedError[] {
     const errors: ComponentEmbedError[] = [];
     try {
         const tree = readPayload(payload, collectInto(errors));
-        if (errors.length === 0) errors.push(...collectErrors(tree));
+        if (errors.length === 0) errors.push(...collectErrors(tree, sentJson));
     } catch (error) {
         if (!(error instanceof ComponentEmbedError)) throw error;
         errors.push(error);
@@ -167,11 +167,41 @@ function toLinkButton(node: JsonObject, path: Path): EmbedElement {
 function checkKeys(node: JsonObject, what: string, allowed: readonly string[], path: Path): void {
     const unknown = Object.keys(node).find((key) => !allowed.includes(key));
     if (unknown === undefined) return;
+    const match = closestKey(unknown, allowed);
+    const guess = match === undefined ? '' : ` Did you mean ${describeValue(match)}?`;
     throw new ComponentEmbedError(
         'InvalidProp',
-        `${what} doesn't take ${describeValue(unknown)}. It takes ${joinList(allowed, 'and')}.`,
+        `${what} doesn't take ${describeValue(unknown)}.${guess} It takes ${joinList(allowed, 'and')}.`,
         { path }
     );
+}
+
+// one edit per 3 letters covers "descripton" (1 edit) and "spolier" (2). at one per 4, "spolier" gets no guess
+const LETTERS_PER_EDIT = 3;
+
+function closestKey(key: string, allowed: readonly string[]): string | undefined {
+    const limit = Math.max(1, Math.floor(key.length / LETTERS_PER_EDIT));
+    const [best] = allowed
+        .map((candidate) => ({ candidate, edits: editDistance(key, candidate) }))
+        .filter(({ edits }) => edits <= limit)
+        .toSorted((a, b) => a.edits - b.edits);
+    return best?.candidate;
+}
+
+// levenshtein distance
+function editDistance(from: string, to: string): number {
+    let previous = Array.from({ length: to.length + 1 }, (_, index) => index);
+    for (const [row, fromLetter] of [...from].entries()) {
+        const current = [row + 1];
+        for (const [column, toLetter] of [...to].entries()) {
+            const replace = (previous[column] ?? 0) + (fromLetter === toLetter ? 0 : 1);
+            const insert = (current[column] ?? 0) + 1;
+            const remove = (previous[column + 1] ?? 0) + 1;
+            current.push(Math.min(replace, insert, remove));
+        }
+        previous = current;
+    }
+    return previous.at(-1) ?? 0;
 }
 
 function spacingName(size: unknown, path: Path): string | undefined {
