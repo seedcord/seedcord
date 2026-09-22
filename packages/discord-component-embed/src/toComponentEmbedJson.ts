@@ -1,3 +1,4 @@
+import { scriptSafeJson } from './scriptSafeJson';
 import { buildEmbed } from './toComponentEmbed';
 
 import type { EmbedElement } from './element';
@@ -16,5 +17,5 @@ import type { EmbedElement } from './element';
  * ```
  */
 export function toComponentEmbedJson(root: EmbedElement): string {
-    return buildEmbed(root).json;
+    return buildEmbed(root, scriptSafeJson).json;
 }

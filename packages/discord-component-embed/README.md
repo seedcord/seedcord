@@ -207,7 +207,7 @@ useHead({
 </script>
 ```
 
-Discord reads only a script with the id `discord:component-embed`. `toComponentEmbedJson` escapes any `</` and `<!--` in the JSON. Text in the card can't close the tag early.
+Discord reads only a script with the id `discord:component-embed`. Text in the card can't close the tag early, because `toComponentEmbedJson` escapes any `</` and `<!--` in the JSON.
 
 </details>
 
@@ -445,7 +445,7 @@ Discord doesn't report an invalid payload anywhere. It drops the payload and sho
 - the galleries hold more than 10 media gallery items between them
 - the JSON is larger than 3000 bytes
 
-When one component breaks a rule, the error's `path` lists the steps from the root to it, like `['Container', 'PostCard', 'Section 2']`, and the message ends with the same steps after `Found at`. Your own components appear in it by name.
+When one component breaks a rule, the error's `path` lists the steps from the root to it, like `['Container', 'PostCard', 'Section 2']`. The message ends with the same steps after `Found at`, and your own components appear by name.
 
 Every `ComponentEmbedError` carries a `code`: `InvalidStructure`, `InvalidProp`, `OverLimit`, `UnsupportedComponent`, or `ReadFailed`. Branch on the code, since the message wording can change in any release. If a component or an iterator of yours throws while the tree is read, you get a `ReadFailed` with the original error on `cause`.
 

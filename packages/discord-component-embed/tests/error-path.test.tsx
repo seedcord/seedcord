@@ -60,6 +60,30 @@ describe('ComponentEmbedError path', () => {
         expect(error.path).toEqual(['Container', 'Card 2', 'Section', 'TextDisplay']);
     });
 
+    it('numbers two different components that share a name', () => {
+        function makeCard(text: string): () => ReactElement {
+            const Card = (): ReactElement => (
+                <Section accessory={<Thumbnail url={IMAGE} />}>
+                    <TextDisplay>{text}</TextDisplay>
+                </Section>
+            );
+            return Card;
+        }
+        const FirstCard = makeCard('first');
+        const SecondCard = makeCard('');
+
+        const error = thrownBy(() =>
+            toComponentEmbed(
+                <Container>
+                    <FirstCard />
+                    <SecondCard />
+                </Container>
+            )
+        );
+
+        expect(error.path).toEqual(['Container', 'Card 2', 'Section', 'TextDisplay']);
+    });
+
     it('numbers a component among the siblings written next to it', () => {
         function OneSection(): ReactElement {
             return (
@@ -81,6 +105,29 @@ describe('ComponentEmbedError path', () => {
         );
 
         expect(error.path).toEqual(['Container', 'OneSection', 'Section', 'TextDisplay']);
+    });
+
+    it("uses a component's displayName over its function name", () => {
+        function Internal(): ReactElement {
+            return <TextDisplay>{''}</TextDisplay>;
+        }
+        Internal.displayName = 'Shown';
+
+        expect(thrownBy(() => toComponentEmbed(<Container>{<Internal />}</Container>)).path).toEqual([
+            'Container',
+            'Shown',
+            'TextDisplay'
+        ]);
+    });
+
+    it('calls a component with no name Anonymous', () => {
+        const [Unnamed] = [(): ReactElement => <TextDisplay>{''}</TextDisplay>] as const;
+
+        expect(thrownBy(() => toComponentEmbed(<Container>{<Unnamed />}</Container>)).path).toEqual([
+            'Container',
+            'Anonymous',
+            'TextDisplay'
+        ]);
     });
 
     it('points through your own component at a wrong root', () => {

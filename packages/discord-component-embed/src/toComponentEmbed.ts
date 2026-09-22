@@ -12,7 +12,7 @@ import {
     Thumbnail
 } from './components';
 import { checkEmbedLimits } from './limits';
-import { serialize } from './serialize';
+import { scriptSafeJson } from './scriptSafeJson';
 import { childrenOf, isElement, nameOf, place, rejectVueVNode } from './tree';
 
 import type {
@@ -59,10 +59,10 @@ const TYPE: { readonly [Name in UsedComponentType]: (typeof ComponentType)[Name]
 };
 const LINK_STYLE: ButtonStyle.Link = 5;
 const SPACING: Readonly<Record<'small' | 'large', SeparatorSpacingSize>> = { small: 1, large: 2 };
-const CORRECT_PARENT = new Map<unknown, string>([
-    [Thumbnail, 'a <Section> accessory'],
-    [LinkButton, 'an <ActionRow> or a <Section> accessory'],
-    [MediaGalleryItem, 'a <MediaGallery>']
+const PLACEMENT_HINT = new Map<unknown, string>([
+    [Thumbnail, 'Use it as a <Section> accessory'],
+    [LinkButton, 'Put it in an <ActionRow> or use it as a <Section> accessory'],
+    [MediaGalleryItem, 'Put it in a <MediaGallery>']
 ]);
 
 // assumption: component embeds share discord's limits for message components
@@ -83,7 +83,7 @@ export interface ComponentEmbedPayload {
 
 /**
  * Converts a {@link Container} tree into the JSON document Discord reads for a component embed. To write the JSON
- * into a page, use {@link toComponentEmbedJson} or {@link toComponentEmbedScript}. Both escape it for HTML.
+ * into a page, use {@link toComponentEmbedJson} or {@link toComponentEmbedScript}. Both escape it for a `<script>` tag.
  *
  * @throws a {@link ComponentEmbedError} when the tree breaks a rule of the format, or when your own code throws while
  * the package reads it. Check `error.code` to see which.
@@ -108,13 +108,15 @@ export interface ComponentEmbedPayload {
  * ```
  */
 export function toComponentEmbed(root: EmbedElement): ComponentEmbedPayload {
-    return buildEmbed(root).payload;
+    return buildEmbed(root, scriptSafeJson).payload;
 }
 
-// json is the escaped string the size check measured, ready to write into a page
-export function buildEmbed(root: EmbedElement): { payload: ComponentEmbedPayload; json: string } {
+type ToJson = (payload: ComponentEmbedPayload) => string;
+
+// the size check measures the json that toJson returns
+export function buildEmbed(root: EmbedElement, toJson: ToJson): { payload: ComponentEmbedPayload; json: string } {
     try {
-        return build(root);
+        return build(root, toJson);
     } catch (error) {
         if (error instanceof ComponentEmbedError) throw error;
         throw new ComponentEmbedError('ReadFailed', `Reading the component tree threw: ${messageOf(error)}.`, {
@@ -124,7 +126,7 @@ export function buildEmbed(root: EmbedElement): { payload: ComponentEmbedPayload
 }
 
 // every props cast in this file comes after a check of element.type, here or in childrenOf
-function build(root: EmbedElement): { payload: ComponentEmbedPayload; json: string } {
+function build(root: EmbedElement, toJson: ToJson): { payload: ComponentEmbedPayload; json: string } {
     const [container, ...rest] = place(root, []);
     if (rest.length > 0) {
         throw new ComponentEmbedError(
@@ -140,7 +142,7 @@ function build(root: EmbedElement): { payload: ComponentEmbedPayload; json: stri
     }
 
     const payload = { component: toContainer(container.element.props as ContainerProps, container.path) };
-    const json = serialize(payload);
+    const json = toJson(payload);
     checkEmbedLimits(payload.component, json);
     return { payload, json };
 }
@@ -152,7 +154,7 @@ function toContainer({ accentColor, spoiler, children }: ContainerProps, path: P
     ) {
         throw new ComponentEmbedError(
             'InvalidProp',
-            `accentColor must be a whole number from 0 to 0xFFFFFF, like 0x5865f2, got ${describeValue(accentColor)}.`,
+            `accentColor must be a whole number from 0 to 0xFFFFFF (like 0x5865f2), got ${describeValue(accentColor)}.`,
             { path }
         );
     }
@@ -190,11 +192,11 @@ function toContainerChild({ element, path }: Placed): APIComponentInContainer {
         }
         default: {
             const name = nameOf(element.type);
-            const parent = CORRECT_PARENT.get(element.type);
+            const hint = PLACEMENT_HINT.get(element.type);
             throw new ComponentEmbedError(
                 'InvalidStructure',
-                parent
-                    ? `<${name}> can't go straight inside a <Container>. Put it in ${parent}.`
+                hint
+                    ? `<${name}> can't go straight inside a <Container>. ${hint}.`
                     : `<${name}> can't go inside a <Container>. Use a <TextDisplay>, <Section>, <MediaGallery>, <Separator>, or <ActionRow>.`,
                 { path }
             );

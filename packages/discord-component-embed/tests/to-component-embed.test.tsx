@@ -167,22 +167,22 @@ describe('toComponentEmbed', () => {
     });
 
     it.each([
-        ['<Thumbnail>', <Thumbnail key="t" url={IMAGE} />, 'a <Section> accessory'],
+        ['<Thumbnail>', <Thumbnail key="t" url={IMAGE} />, 'Use it as a <Section> accessory'],
         [
             '<LinkButton>',
             <LinkButton key="b" url="https://example.com" label="go" />,
-            'an <ActionRow> or a <Section> accessory'
+            'Put it in an <ActionRow> or use it as a <Section> accessory'
         ],
-        ['<MediaGalleryItem>', <MediaGalleryItem key="m" url={IMAGE} />, 'a <MediaGallery>']
-    ])('tells you where %s goes when it sits straight in a container', (name, element, parent) => {
+        ['<MediaGalleryItem>', <MediaGalleryItem key="m" url={IMAGE} />, 'Put it in a <MediaGallery>']
+    ])('tells you where %s goes when it sits straight in a container', (name, element, hint) => {
         expectEmbedError(
             () => toComponentEmbed(<Container>{element}</Container>),
-            `${name} can't go straight inside a <Container>. Put it in ${parent}.`
+            `${name} can't go straight inside a <Container>. ${hint}.`
         );
     });
 
     it('counts the backslash each </ gets toward the 3000 bytes', () => {
-        // 2065 bytes as plain JSON, 3065 once every </ is written as <\/
+        // 2065 bytes before escaping, plus a backslash for each of the 1000 </
         const content = '</'.repeat(1000);
 
         expectEmbedError(
@@ -197,7 +197,7 @@ describe('toComponentEmbed', () => {
     });
 
     it('counts the escape each <!-- gets toward the 3000 bytes', () => {
-        // 2465 bytes as plain JSON. each < of a <!-- is written as six bytes, adding 5 per comment
+        // 2465 bytes before escaping. each of the 600 < becomes a six-byte escape
         const content = '<!--'.repeat(600);
 
         expectEmbedError(
@@ -219,7 +219,7 @@ describe('toComponentEmbed', () => {
                         <TextDisplay>hi</TextDisplay>
                     </Container>
                 ),
-            `accentColor must be a whole number from 0 to 0xFFFFFF, like 0x5865f2, got ${String(accentColor)}.`
+            `accentColor must be a whole number from 0 to 0xFFFFFF (like 0x5865f2), got ${String(accentColor)}.`
         );
     });
 
@@ -410,7 +410,7 @@ describe('toComponentEmbed with sections, galleries, and rows', () => {
                         <MediaGallery>{items(3)}</MediaGallery>
                     </Container>
                 ),
-            "The galleries in this component embed hold 11 items (4 + 4 + 3). Discord allows 10 across all of them. Remove some, or show them as <Section> thumbnails, which don't count."
+            "The galleries in this component embed hold 11 items (4 + 4 + 3). Discord allows 10 across all of them. Remove some, or show them as <Section> thumbnails, which don't count toward the 10."
         );
     });
 
@@ -453,7 +453,7 @@ describe('toComponentEmbed with text', () => {
     it('rejects text outside a text display', () => {
         expectEmbedError(
             () => toComponentEmbed(<Container>hello</Container>),
-            'Got "hello" where only components can go. Text goes in a <TextDisplay>, inside a <Container> or a <Section>.'
+            'Got "hello" where only components can go. Wrap text in a <TextDisplay> and put that in a <Container> or a <Section>.'
         );
     });
 

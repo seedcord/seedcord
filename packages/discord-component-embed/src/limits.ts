@@ -8,7 +8,7 @@ import type {
 
 // from the component embed docs
 const MAX_COMPONENTS = 40;
-// the docs leave this out. against discord's crawler 10 items render and 11 fall back, whatever the split
+// the docs leave this out. on discord's crawler 10 items render and 11 show the Open Graph card, however the galleries split them
 const MAX_ITEMS_ACROSS_GALLERIES = 10;
 // discord counts the bytes it receives, escapes included
 const MAX_JSON_BYTES = 3000;
@@ -35,7 +35,7 @@ function checkGalleryItemCount({ components }: APIContainerComponent): void {
     if (total > MAX_ITEMS_ACROSS_GALLERIES) {
         throw new ComponentEmbedError(
             'OverLimit',
-            `The galleries in this component embed hold ${String(total)} items (${perGallery.join(' + ')}). Discord allows ${String(MAX_ITEMS_ACROSS_GALLERIES)} across all of them. Remove some, or show them as <Section> thumbnails, which don't count.`
+            `The galleries in this component embed hold ${String(total)} items (${perGallery.join(' + ')}). Discord allows ${String(MAX_ITEMS_ACROSS_GALLERIES)} across all of them. Remove some, or show them as <Section> thumbnails, which don't count toward the ${String(MAX_ITEMS_ACROSS_GALLERIES)}.`
         );
     }
 }

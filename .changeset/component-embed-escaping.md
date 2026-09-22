@@ -2,4 +2,4 @@
 'discord-component-embed': patch
 ---
 
-Fixed every `<` in a card's text, like the ones in custom emoji and mentions, costing six bytes of Discord's 3000-byte limit, because now only `</` and `<!--` get escaped.
+Fixed `toComponentEmbedJson`, `toComponentEmbedScript`, and `<ComponentEmbed>` spending six of Discord's 3000 bytes on every `<`, like the ones in custom emoji and mentions, by escaping only `</` and `<!--`.

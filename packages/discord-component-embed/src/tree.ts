@@ -32,13 +32,12 @@ export function nameOf(type: unknown): string {
     if (typeof type === 'string') return type;
     const known = NAMES.get(type);
     if (known !== undefined) return known;
+    if (typeof type !== 'function' && (typeof type !== 'object' || type === null)) return 'Anonymous';
+    if ('displayName' in type && typeof type.displayName === 'string') return type.displayName;
     if (typeof type === 'function') return type.name || 'Anonymous';
-    if (typeof type === 'object' && type !== null) {
-        if ('displayName' in type && typeof type.displayName === 'string') return type.displayName;
-        // react's memo keeps the wrapped function on type, forwardRef keeps it on render
-        if ('type' in type) return nameOf(type.type);
-        if ('render' in type) return nameOf(type.render);
-    }
+    // react's memo keeps the wrapped function on type and forwardRef keeps it on render
+    if ('type' in type) return nameOf(type.type);
+    if ('render' in type) return nameOf(type.render);
     return 'Anonymous';
 }
 
@@ -46,7 +45,7 @@ export function isElement(value: unknown): value is EmbedElement {
     return typeof value === 'object' && value !== null && 'type' in value && 'props' in value;
 }
 
-export type Path = readonly string[];
+export type Path = ComponentEmbedError['path'];
 
 // the path ends with the element's own step
 export interface Placed {
@@ -65,7 +64,6 @@ export function rejectVueVNode(element: EmbedElement, path: Path): void {
     }
 }
 
-// your own components are rendered on the way, each one adding its step to the path
 export function place(node: EmbedNode, path: Path): Placed[] {
     return withSteps(siblingsIn(node, path)).flatMap(({ element, step }) => {
         const stepPath = [...path, step];
@@ -74,17 +72,16 @@ export function place(node: EmbedNode, path: Path): Placed[] {
     });
 }
 
-// a step gets a number only when the same children hold more than one of that kind
 function withSteps(siblings: readonly EmbedElement[]): { element: EmbedElement; step: string }[] {
-    const totals = new Map<unknown, number>();
-    for (const { type } of siblings) totals.set(type, (totals.get(type) ?? 0) + 1);
+    const named = siblings.map((element) => ({ element, name: nameOf(element.type) }));
+    const totals = new Map<string, number>();
+    for (const { name } of named) totals.set(name, (totals.get(name) ?? 0) + 1);
 
-    const seen = new Map<unknown, number>();
-    return siblings.map((element) => {
-        const position = (seen.get(element.type) ?? 0) + 1;
-        seen.set(element.type, position);
-        const name = nameOf(element.type);
-        return { element, step: (totals.get(element.type) ?? 0) > 1 ? `${name} ${String(position)}` : name };
+    const seen = new Map<string, number>();
+    return named.map(({ element, name }) => {
+        const position = (seen.get(name) ?? 0) + 1;
+        seen.set(name, position);
+        return { element, step: (totals.get(name) ?? 0) > 1 ? `${name} ${String(position)}` : name };
     });
 }
 
@@ -95,7 +92,7 @@ function siblingsIn(node: EmbedNode, path: Path): EmbedElement[] {
     if (!isElement(node)) {
         throw new ComponentEmbedError(
             'InvalidStructure',
-            `Got ${describeValue(node)} where only components can go. Text goes in a <TextDisplay>, inside a <Container> or a <Section>.`,
+            `Got ${describeValue(node)} where only components can go. Wrap text in a <TextDisplay> and put that in a <Container> or a <Section>.`,
             { path }
         );
     }

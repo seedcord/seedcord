@@ -4,7 +4,7 @@ import type { ComponentEmbedPayload } from './toComponentEmbed';
 const ESCAPED_LT = '\\u003c';
 
 // in a <script>, </ can close the tag early and <!-- can hide the real closing tag
-export function serialize(payload: ComponentEmbedPayload): string {
+export function scriptSafeJson(payload: ComponentEmbedPayload): string {
     return JSON.stringify(payload)
         .replaceAll('</', String.raw`<\/`)
         .replaceAll('<!--', `${ESCAPED_LT}!--`);

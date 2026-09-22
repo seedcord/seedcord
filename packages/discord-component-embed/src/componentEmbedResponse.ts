@@ -1,4 +1,4 @@
-import { toComponentEmbedJson } from './toComponentEmbedJson';
+import { buildEmbed } from './toComponentEmbed';
 
 import type { EmbedElement } from './element';
 
@@ -20,5 +20,7 @@ import type { EmbedElement } from './element';
  * ```
  */
 export function componentEmbedResponse(root: EmbedElement): Response {
-    return new Response(toComponentEmbedJson(root), { headers: { 'content-type': 'application/json' } });
+    // discord fetches this body directly, outside any <script>
+    const { json } = buildEmbed(root, (payload) => JSON.stringify(payload));
+    return new Response(json, { headers: { 'content-type': 'application/json' } });
 }

@@ -43,40 +43,37 @@ describe('toComponentEmbed with your own components', () => {
         );
     });
 
-    it('rejects memo, lazy, forwardRef, and class components with one message', () => {
-        const Memoized = memo(function Headline(): ReactElement {
+    const Memoized = memo(function Headline(): ReactElement {
+        return <TextDisplay>hi</TextDisplay>;
+    });
+    const Lazy = lazy(() => Promise.resolve({ default: Memoized }));
+    const Forwarded = forwardRef(function Caption(): ReactElement {
+        return <TextDisplay>hi</TextDisplay>;
+    });
+
+    class Classy extends Component {
+        override render(): ReactElement {
             return <TextDisplay>hi</TextDisplay>;
-        });
-        const Lazy = lazy(() => Promise.resolve({ default: Memoized }));
-        const Forwarded = forwardRef(function Caption(): ReactElement {
-            return <TextDisplay>hi</TextDisplay>;
-        });
-
-        class Classy extends Component {
-            override render(): ReactElement {
-                return <TextDisplay>hi</TextDisplay>;
-            }
         }
+    }
 
-        class FieldRender extends Component {
-            override render = (): ReactElement => <TextDisplay>hi</TextDisplay>;
-        }
+    class FieldRender extends Component {
+        override render = (): ReactElement => <TextDisplay>hi</TextDisplay>;
+    }
 
-        const cases: [ReactElement, string][] = [
-            [<Memoized key="m" />, 'Headline'],
-            [<Lazy key="l" />, 'Anonymous'],
-            [<Forwarded key="r" />, 'Caption'],
-            [<Classy key="c" />, 'Classy'],
-            [<FieldRender key="f" />, 'FieldRender']
-        ];
-        for (const [element, name] of cases) {
-            const error = thrownBy(() => toComponentEmbed(<Container>{element}</Container>));
+    it.each([
+        ['memo', <Memoized key="m" />, 'Headline'],
+        ['lazy', <Lazy key="l" />, 'Anonymous'],
+        ['forwardRef', <Forwarded key="r" />, 'Caption'],
+        ['class', <Classy key="c" />, 'Classy'],
+        ['class with a render field', <FieldRender key="f" />, 'FieldRender']
+    ])('rejects a %s component with one message', (_kind, element, name) => {
+        const error = thrownBy(() => toComponentEmbed(<Container>{element}</Container>));
 
-            expect(error.path).toEqual(['Container', name]);
-            expect(error.message).toBe(
-                `Only plain function components work inside a component embed.\nFound at Container > ${name}`
-            );
-        }
+        expect(error.path).toEqual(['Container', name]);
+        expect(error.message).toBe(
+            `Only plain function components work inside a component embed.\nFound at Container > ${name}`
+        );
     });
 
     it('turns an error inside your component into a ComponentEmbedError', () => {
