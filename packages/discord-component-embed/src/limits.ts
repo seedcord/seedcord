@@ -15,12 +15,14 @@ export const MAX_ITEMS_ACROSS_GALLERIES = 10;
 export const MAX_JSON_BYTES = 3000;
 
 export function checkEmbedLimits(component: APIContainerComponent, json: string, collector: Collector): void {
-    const checks = [
-        () => checkComponentCount(component),
-        () => checkGalleryItemCount(component),
-        () => checkJsonSize(json)
-    ];
-    collector.map(checks, (check) => check());
+    checkComponentLimits(component, collector);
+    collector.map([json], checkJsonSize);
+}
+
+export function checkComponentLimits(component: APIContainerComponent, collector: Collector): void {
+    collector.map([checkComponentCount, checkGalleryItemCount], (check) => {
+        check(component);
+    });
 }
 
 function checkComponentCount(component: APIContainerComponent): void {
@@ -56,7 +58,7 @@ function checkGalleryItemCount(component: APIContainerComponent): void {
     }
 }
 
-function checkJsonSize(json: string): void {
+export function checkJsonSize(json: string): void {
     const bytes = new TextEncoder().encode(json).byteLength;
     if (bytes > MAX_JSON_BYTES) {
         throw new ComponentEmbedError(

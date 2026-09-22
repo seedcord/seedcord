@@ -8,54 +8,69 @@ import type { ComponentEmbedPayload } from './toComponentEmbed';
 export interface CheckInput {
     readFile(path: string): Promise<string>;
     fetch(url: string, init: RequestInit): Promise<Response>;
+    // milliseconds, like performance.now()
+    now(): number;
 }
 
 export type CheckResult =
-    | { status: 'pass'; bytes: number; components: number; galleryItems: number }
-    | { status: 'fail'; problems: string[]; hint?: string }
+    | { status: 'pass'; bytes: number; components: number; galleryItems: number; warnings?: string[] }
+    | { status: 'fail'; problems: string[]; hint?: string; warnings?: string[] }
     | { status: 'unreadable'; reason: string };
 
-// the user agents from the component embed docs. a site can serve bots different HTML
+type Checked = Extract<CheckResult, { status: 'pass' | 'fail' }>;
+
+// the user agents from the component embed docs
 const PAGE_USER_AGENT = 'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)';
 const JSON_USER_AGENT = 'Discordbot/2.0';
 
-type Loaded = { text: string } | CheckResult;
-type Fetched = { text: string; contentType: string } | CheckResult;
+// discord's crawler closed a slow page's connection 9.8 to 9.9 s after the request arrived
+const DISCORD_TIMEOUT_MS = 10_000;
+// the last second before that
+const SLOW_WARNING_MS = DISCORD_TIMEOUT_MS - 1000;
+
+type Loaded = { text: string; warnings: readonly string[] } | CheckResult;
+type Fetched = { text: string; contentType: string; warnings: readonly string[] } | CheckResult;
+
+// a local html file has no host to hold a <link> to
+type LinkRule = { pageHost: string } | 'file';
 
 export async function checkTarget(target: string, input: CheckInput): Promise<CheckResult> {
     const loaded = await load(target, input);
-    return 'text' in loaded ? checkJsonText(loaded.text) : loaded;
+    if (!('text' in loaded)) return loaded;
+    const result = checkJsonText(loaded.text);
+    return loaded.warnings.length > 0 ? { ...result, warnings: [...loaded.warnings] } : result;
 }
 
 async function load(target: string, input: CheckInput): Promise<Loaded> {
-    if (/^https?:\/\//.test(target)) {
+    if (/^https?:\/\//i.test(target)) {
         const url = URL.parse(target);
         if (!url) return { status: 'unreadable', reason: `${target} isn't a valid URL.` };
-        const response = await fetchText(url, PAGE_USER_AGENT, input);
-        if (!('text' in response) || isJson(response.contentType)) return response;
-        return embedIn(response.text, url.hostname, input);
+        const page = await fetchText(url, PAGE_USER_AGENT, input);
+        if (!('text' in page) || isJson(page.contentType)) return page;
+        // discord's crawler held the <link> to the pasted URL's host, even after a redirect to another host
+        const embed = await embedIn(page.text, { pageHost: url.hostname }, input);
+        return 'text' in embed ? { ...embed, warnings: [...page.warnings, ...embed.warnings] } : embed;
     }
 
     const file = await loadFile(target, input);
     if (!('text' in file) || !/\.html?$/i.test(target)) return file;
-    return embedIn(file.text, undefined, input);
+    return embedIn(file.text, 'file', input);
 }
 
 async function loadFile(path: string, input: CheckInput): Promise<Loaded> {
     try {
-        return { text: await input.readFile(path) };
+        return { text: await input.readFile(path), warnings: [] };
     } catch (error) {
         return { status: 'unreadable', reason: `Couldn't read ${path}: ${oneLine(messageOf(error))}` };
     }
 }
 
-// an undefined pageHost means a local html file
-async function embedIn(html: string, pageHost: string | undefined, input: CheckInput): Promise<Loaded> {
+async function embedIn(html: string, rule: LinkRule, input: CheckInput): Promise<Loaded> {
     const script = findTags(html, 'script').find((tag) => tag.attributes.get('id') === SCRIPT_ID);
     if (script) {
         // the docs require this exact type
         const type = script.attributes.get('type');
-        if (type === 'application/json') return { text: script.body };
+        if (type === 'application/json') return { text: script.body, warnings: [] };
         return {
             status: 'fail',
             problems: [
@@ -74,12 +89,15 @@ async function embedIn(html: string, pageHost: string | undefined, input: CheckI
         };
     }
 
-    const href = link.attributes.get('href') ?? '';
-    const jsonUrl = URL.parse(href);
-    const offSite = pageHost !== undefined && jsonUrl !== null && !sameSite(jsonUrl.hostname, pageHost);
+    const href = link.attributes.get('href');
+    const jsonUrl = URL.parse(href ?? '');
+    const offSite = rule !== 'file' && jsonUrl !== null && !sameSite(jsonUrl.hostname, rule.pageHost);
     if (jsonUrl?.protocol !== 'https:' || offSite) {
-        const where = pageHost === undefined ? '' : " on the page's host, a subdomain of it, or its parent domain";
-        return { status: 'fail', problems: [`The <link> href has to be an absolute https URL${where}, got ${href}.`] };
+        const where = rule === 'file' ? '' : " on the page's host, a subdomain of it, or its parent domain";
+        return {
+            status: 'fail',
+            problems: [`The <link> href has to be an absolute https URL${where}, got ${href ?? 'nothing'}.`]
+        };
     }
 
     return fetchText(jsonUrl, JSON_USER_AGENT, input);
@@ -90,21 +108,39 @@ function isJson(contentType: string): boolean {
 }
 
 async function fetchText(url: URL, userAgent: string, input: CheckInput): Promise<Fetched> {
+    const start = input.now();
     try {
-        const response = await input.fetch(url.href, { headers: { 'user-agent': userAgent } });
+        const response = await input.fetch(url.href, {
+            headers: { 'user-agent': userAgent },
+            signal: AbortSignal.timeout(DISCORD_TIMEOUT_MS)
+        });
         if (!response.ok) {
             return {
                 status: 'unreadable',
                 reason: `Couldn't fetch ${url.href}: the server answered ${String(response.status)}.`
             };
         }
-        return { text: await response.text(), contentType: response.headers.get('content-type') ?? '' };
+        const text = await response.text();
+        const contentType = response.headers.get('content-type') ?? '';
+        return { text, contentType, warnings: slowWarning(url, input.now() - start) };
     } catch (error) {
-        return {
-            status: 'unreadable',
-            reason: `Couldn't fetch ${url.href}: ${oneLine(messageOf(networkError(error)))}`
-        };
+        return { status: 'unreadable', reason: `Couldn't fetch ${url.href}: ${fetchFailure(error)}` };
     }
+}
+
+function slowWarning(url: URL, ms: number): string[] {
+    if (ms < SLOW_WARNING_MS) return [];
+    const seconds = (ms / 1000).toFixed(1);
+    return [
+        `${url.href} took ${seconds} seconds to answer. Discord gives up after about 10 seconds and shows no preview.`
+    ];
+}
+
+function fetchFailure(thrown: unknown): string {
+    if (thrown instanceof DOMException && thrown.name === 'TimeoutError') {
+        return 'no answer within 10 seconds. Discord shows no preview for a page that slow.';
+    }
+    return oneLine(messageOf(networkError(thrown)));
 }
 
 // V8's parse errors and openssl's messages can hold newlines
@@ -127,10 +163,15 @@ interface Tag {
     body: string;
 }
 
+// quoted values can hold a >
+const ATTRIBUTES = '((?:"[^"]*"|\'[^\']*\'|[^\'">])*?)';
+const SCRIPT_TAG = new RegExp(String.raw`<script\b${ATTRIBUTES}>([\s\S]*?)<\/script\s*>`, 'gi');
+const LINK_TAG = new RegExp(String.raw`<link\b${ATTRIBUTES}\/?>`, 'gi');
+
 // HTML doesn't decode character references inside a script
 function findTags(html: string, name: 'script' | 'link'): Tag[] {
-    const pattern = name === 'script' ? /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi : /<link\b([^>]*?)\/?>/gi;
-    return [...html.matchAll(pattern)].map(([, attributes = '', body = '']) => ({
+    const visible = html.replaceAll(/<!--[\s\S]*?-->/g, '');
+    return [...visible.matchAll(name === 'script' ? SCRIPT_TAG : LINK_TAG)].map(([, attributes = '', body = '']) => ({
         attributes: parseAttributes(attributes),
         body
     }));
@@ -165,7 +206,7 @@ function character(codePoint: number): string {
 }
 
 // text is the JSON exactly as discord would read it
-function checkJsonText(text: string): CheckResult {
+function checkJsonText(text: string): Checked {
     let payload: unknown;
     try {
         payload = JSON.parse(text);

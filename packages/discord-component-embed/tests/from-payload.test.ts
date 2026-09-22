@@ -283,6 +283,18 @@ describe('fromPayload errors', () => {
             `A thumbnail's media has to be an object like { "url": "https://..." }, got "${IMAGE}".`
         ],
         [
+            'a string as a container list',
+            { component: { type: 17, components: 'abc' } },
+            ['component'],
+            'A container\'s "components" has to be an array, got "abc".'
+        ],
+        [
+            'an object as a gallery list',
+            inPayload({ type: 12, items: {} }),
+            ['component', 'components', '0'],
+            'A media gallery\'s "items" has to be an array, got {}.'
+        ],
+        [
             'a gallery item with no media',
             inPayload({ type: 12, items: [{ description: 'alt' }] }),
             ['component', 'components', '0', 'items', '0'],
@@ -294,6 +306,21 @@ describe('fromPayload errors', () => {
         expect(error.code).toBe('InvalidProp');
         expect(error.path).toEqual(path);
         expect(error.message.split('\nFound at')[0]).toBe(message);
+    });
+
+    // discord-api-types allows null here
+    it('accepts a null accent_color and leaves it out', () => {
+        expect(toComponentEmbed(fromJson({ component: { type: 17, accent_color: null, components: [text] } }))).toEqual(
+            {
+                component: { type: 17, components: [text] }
+            }
+        );
+    });
+
+    it('reports a type a component embed does not allow before a bad id on it', () => {
+        const error = thrownBy(() => fromJson(inPayload({ type: 3, id: -1 })));
+
+        expect(error.message).toMatch(/^Type 3 can't go in a component embed\./);
     });
 
     it('lets the tree report a section with no accessory', () => {

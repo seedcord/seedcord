@@ -12,7 +12,7 @@ import {
     TextDisplay,
     Thumbnail
 } from './components';
-import { checkEmbedLimits } from './limits';
+import { checkComponentLimits, checkEmbedLimits } from './limits';
 import { scriptSafeJson } from './scriptSafeJson';
 import { childrenOf, isElement, nameOf, place, rejectVueVNode } from './tree';
 import { LINK_STYLE, SPACING, TYPE } from './wire';
@@ -110,13 +110,13 @@ export function buildEmbed(root: EmbedElement, toJson: ToJson): { payload: Compo
     }
 }
 
-// sentJson is the text discord will read, when it isn't the package's own output
-export function collectErrors(root: EmbedElement, sentJson?: string): ComponentEmbedError[] {
+// a component that failed to build would drop out of the counts
+export function collectErrors(root: EmbedElement): ComponentEmbedError[] {
     const errors: ComponentEmbedError[] = [];
     const collector = collectInto(errors);
     try {
         const payload = buildPayload(root, collector);
-        if (errors.length === 0) checkEmbedLimits(payload.component, sentJson ?? scriptSafeJson(payload), collector);
+        if (errors.length === 0) checkComponentLimits(payload.component, collector);
     } catch (error) {
         errors.push(asEmbedError(error));
     }

@@ -5,7 +5,7 @@ import { MAX_COMPONENTS, MAX_ITEMS_ACROSS_GALLERIES, MAX_JSON_BYTES } from './li
 
 import type { CheckInput, CheckResult } from './check';
 
-export interface CommandInput extends CheckInput {
+interface CommandInput extends CheckInput {
     // what process.stdout.getColorDepth() returns. 1 turns color off
     colorDepth: number;
 }
@@ -25,7 +25,7 @@ type Row = readonly [string, string];
 const TARGETS: readonly Row[] = [
     ['embed.json', 'a JSON payload, measured as written'],
     ['dist/post.html', 'a page from your build, checked through its <script> or <link>'],
-    ['https://materwelon.dev', "a live page, fetched the way Discord's crawler fetches it"]
+    ['https://materwelon.dev', "a live page, fetched with Discord's crawler user agent"]
 ];
 
 const EXIT_CODES: readonly Row[] = [
@@ -63,11 +63,16 @@ export async function runCheckCommand(args: readonly string[], input: CommandInp
 
     const paint = painter(input.colorDepth);
     const flags = tokens.flatMap((token) => (token.kind === 'option' ? [token] : []));
-    if (flags.some((flag) => flag.name === 'help')) return { output: help(paint), exitCode: 0 };
+    if (flags.some((flag) => flag.name === 'help' && flag.value === undefined)) {
+        return { output: help(paint), exitCode: 0 };
+    }
 
     const [command, ...targets] = tokens.flatMap((token) => (token.kind === 'positional' ? [token.value] : []));
     const unknown = flags[0];
-    if (unknown) return misuse(`${BIN} doesn't take ${unknown.rawName}.`, paint);
+    if (unknown) {
+        const written = unknown.value === undefined ? unknown.rawName : `${unknown.rawName}=${unknown.value}`;
+        return misuse(`${BIN} doesn't take ${written}.`, paint);
+    }
     if (command === undefined) return misuse(`${BIN} needs a command.`, paint);
     if (command !== 'check') return misuse(`${BIN} doesn't have a ${command} command.`, paint);
     if (targets.length === 0) return misuse('check needs a file or a URL.', paint);
@@ -139,7 +144,7 @@ function report(target: string, result: CheckResult, paint: Paint): string {
             `${String(result.components)} of ${String(MAX_COMPONENTS)} components`,
             `${String(result.galleryItems)} of ${String(MAX_ITEMS_ACROSS_GALLERIES)} gallery items`
         ].join(' · ');
-        return lines(`${paint('good', '✔')} ${target}`, `  ${paint('muted', usage)}`);
+        return lines(`${paint('good', '✔')} ${target}`, `  ${paint('muted', usage)}`, ...warnings(result, paint));
     }
 
     if (result.status === 'unreadable') {
@@ -151,8 +156,13 @@ function report(target: string, result: CheckResult, paint: Paint): string {
     return lines(
         `${paint('bad', '✘')} ${target}  ${paint('bad', count)}`,
         ...result.problems.map((problem, index) => numbered(index + 1, problem, paint)),
-        ...hint
+        ...hint,
+        ...warnings(result, paint)
     );
+}
+
+function warnings({ warnings: each = [] }: { warnings?: string[] }, paint: Paint): string[] {
+    return each.map((warning) => `  ${paint('warn', '!')} ${warning}`);
 }
 
 // ComponentEmbedError puts the path on the lines after the message

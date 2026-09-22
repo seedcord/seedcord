@@ -13,6 +13,7 @@ import {
     Thumbnail
 } from './components';
 import { createElement } from './element';
+import { checkJsonSize } from './limits';
 import { collectErrors } from './toComponentEmbed';
 import { LINK_STYLE, SPACING, TYPE } from './wire';
 
@@ -60,12 +61,15 @@ export function fromPayload(payload: ComponentEmbedPayload): EmbedElement {
     return readPayload(payload, throwFirst);
 }
 
-// every error in the JSON, one per broken component
-export function collectPayloadErrors(payload: unknown, sentJson?: string): ComponentEmbedError[] {
+// the first error in each broken component. sentJson is the text discord reads
+export function collectPayloadErrors(payload: unknown, sentJson: string): ComponentEmbedError[] {
     const errors: ComponentEmbedError[] = [];
+    const collector = collectInto(errors);
+    collector.map([sentJson], checkJsonSize);
+    const sizeErrors = errors.length;
     try {
-        const tree = readPayload(payload, collectInto(errors));
-        if (errors.length === 0) errors.push(...collectErrors(tree, sentJson));
+        const tree = readPayload(payload, collector);
+        if (errors.length === sizeErrors) errors.push(...collectErrors(tree));
     } catch (error) {
         if (!(error instanceof ComponentEmbedError)) throw error;
         errors.push(error);
@@ -97,15 +101,17 @@ function toElement(node: unknown, path: Path, walk: Walk): EmbedElement {
             { path }
         );
     }
+    if (!isAllowedType(node.type)) throw typeNotAllowed(node.type, path);
     if (node.type !== TYPE.Button) checkId(node.id, path, walk.ids);
 
     switch (node.type) {
         case TYPE.Container: {
             checkKeys(node, 'A container', ['type', 'id', 'accent_color', 'spoiler', 'components'], path);
             return createElement(Container, {
-                accentColor: node.accent_color,
+                // discord-api-types allows null
+                accentColor: node.accent_color ?? undefined,
                 spoiler: node.spoiler,
-                children: list(node, 'components', path, walk, toElement)
+                children: list({ node, name: 'A container', path }, 'components', walk, toElement)
             });
         }
         case TYPE.TextDisplay: {
@@ -124,7 +130,7 @@ function toElement(node: unknown, path: Path, walk: Walk): EmbedElement {
             return createElement(Section, {
                 accessory:
                     node.accessory === undefined ? undefined : toElement(node.accessory, [...path, 'accessory'], walk),
-                children: list(node, 'components', path, walk, toElement)
+                children: list({ node, name: 'A section', path }, 'components', walk, toElement)
             });
         }
         case TYPE.Thumbnail: {
@@ -133,7 +139,9 @@ function toElement(node: unknown, path: Path, walk: Walk): EmbedElement {
         }
         case TYPE.MediaGallery: {
             checkKeys(node, 'A media gallery', ['type', 'id', 'items'], path);
-            return createElement(MediaGallery, { children: list(node, 'items', path, walk, toGalleryItem) });
+            return createElement(MediaGallery, {
+                children: list({ node, name: 'A media gallery', path }, 'items', walk, toGalleryItem)
+            });
         }
         case TYPE.Separator: {
             checkKeys(node, 'A separator', ['type', 'id', 'divider', 'spacing'], path);
@@ -141,20 +149,31 @@ function toElement(node: unknown, path: Path, walk: Walk): EmbedElement {
         }
         case TYPE.ActionRow: {
             checkKeys(node, 'An action row', ['type', 'id', 'components'], path);
-            return createElement(ActionRow, { children: list(node, 'components', path, walk, toElement) });
+            return createElement(ActionRow, {
+                children: list({ node, name: 'An action row', path }, 'components', walk, toElement)
+            });
         }
         case TYPE.Button: {
             return toLinkButton(node, path);
         }
         default: {
-            const allowed = Object.values(TYPE).toSorted((a, b) => a - b);
-            throw new ComponentEmbedError(
-                'InvalidStructure',
-                `Type ${describeValue(node.type)} can't go in a component embed. It takes types ${joinList(allowed.map(String), 'and')}.`,
-                { path }
-            );
+            throw typeNotAllowed(node.type, path);
         }
     }
+}
+
+function isAllowedType(type: unknown): boolean {
+    const allowed: readonly unknown[] = Object.values(TYPE);
+    return allowed.includes(type);
+}
+
+function typeNotAllowed(type: unknown, path: Path): ComponentEmbedError {
+    const allowed = Object.values(TYPE).toSorted((a, b) => a - b);
+    return new ComponentEmbedError(
+        'InvalidStructure',
+        `Type ${describeValue(type)} can't go in a component embed. It takes types ${joinList(allowed.map(String), 'and')}.`,
+        { path }
+    );
 }
 
 function toLinkButton(node: JsonObject, path: Path): EmbedElement {
@@ -177,7 +196,7 @@ function toLinkButton(node: JsonObject, path: Path): EmbedElement {
     return createElement(LinkButton, { url: node.url, label: node.label, emoji: node.emoji, disabled: node.disabled });
 }
 
-// discord ignores most unknown keys. throwing on them catches a typo that would drop a field without a word
+// discord drops most unknown keys without a word
 function checkKeys(node: JsonObject, what: string, allowed: readonly string[], path: Path): void {
     const unknown = Object.keys(node).find((key) => !allowed.includes(key));
     if (unknown === undefined) return;
@@ -246,10 +265,23 @@ function toGalleryItem(node: unknown, path: Path): EmbedElement {
     return createElement(MediaGalleryItem, toMediaProps(node, 'A gallery item', path));
 }
 
-// a missing or wrong-typed list becomes empty. the tree checks then say how many children the parent needs
-function list(node: JsonObject, key: string, path: Path, walk: Walk, convert: Convert): EmbedElement[] {
+interface Parent {
+    node: JsonObject;
+    name: string;
+    path: Path;
+}
+
+// a missing list becomes empty. the tree checks then say how many children the parent needs
+function list({ node, name, path }: Parent, key: string, walk: Walk, convert: Convert): EmbedElement[] {
     const children = node[key];
-    if (!Array.isArray(children)) return [];
+    if (children === undefined) return [];
+    if (!Array.isArray(children)) {
+        throw new ComponentEmbedError(
+            'InvalidProp',
+            `${name}'s "${key}" has to be an array, got ${describeValue(children)}.`,
+            { path }
+        );
+    }
     return walk.collector.map([...children.entries()], ([index, child]) =>
         convert(child, [...path, key, String(index)], walk)
     );

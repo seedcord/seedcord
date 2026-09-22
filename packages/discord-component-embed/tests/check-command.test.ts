@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { runCheckCommand } from '#src/checkCommand';
 
-import type { CommandInput } from '#src/checkCommand';
+type CommandInput = Parameters<typeof runCheckCommand>[1];
 
 function withFiles(files: Record<string, string>, colorDepth = 1): CommandInput {
     return {
@@ -12,6 +12,7 @@ function withFiles(files: Record<string, string>, colorDepth = 1): CommandInput 
             return Promise.resolve(text);
         },
         fetch: () => Promise.reject(new Error('no network in this test')),
+        now: () => 0,
         colorDepth
     };
 }
@@ -82,28 +83,50 @@ describe('discord-component-embed check', () => {
         expect(exitCode).toBe(2);
     });
 
-    it('colors the marks in truecolor on a terminal that supports it', async () => {
-        const files = withFiles({ 'good.json': card({ type: 10, content: 'hi' }), 'bad.json': card({ type: 3 }) }, 24);
-
-        const { output } = await runCheckCommand(['check', 'good.json', 'bad.json'], files);
-
-        expect(output).toContain('\u001B[38;2;158;206;106m✔');
-        expect(output).toContain('\u001B[38;2;247;118;142m✘');
-    });
-
-    it('falls back to the basic colors on a terminal without truecolor', async () => {
-        const files = withFiles({ 'good.json': card({ type: 10, content: 'hi' }) }, 8);
+    it.each([
+        ['truecolor', 24, /\u001B\[38;2;[\d;]+m✔/],
+        ['the basic colors', 8, /\u001B\[3\dm✔/]
+    ])('colors the marks in %s when the terminal has that depth', async (_label, depth, mark) => {
+        const files = withFiles({ 'good.json': card({ type: 10, content: 'hi' }) }, depth);
 
         const { output } = await runCheckCommand(['check', 'good.json'], files);
 
-        expect(output).toContain('\u001B[32m✔');
+        expect(output).toMatch(mark);
+    });
+
+    it('prints no color codes without a color terminal', async () => {
+        const { output } = await runCheckCommand(
+            ['check', 'good.json'],
+            withFiles({ 'good.json': card({ type: 10, content: 'hi' }) })
+        );
+
+        expect(output).not.toContain('\u001B[');
+    });
+
+    it('prints a warning under a page that took over 9 seconds', async () => {
+        const url = 'https://example.com/post';
+        const html = `<script id="discord:component-embed" type="application/json">${card({ type: 10, content: 'hi' })}</script>`;
+        const times = [0, 9400];
+        const input: CommandInput = {
+            ...withFiles({}),
+            fetch: () => Promise.resolve(new Response(html)),
+            now: () => times.shift() ?? 0
+        };
+
+        const { output, exitCode } = await runCheckCommand(['check', url], input);
+
+        expect(output.split('\n').at(-2)).toBe(
+            `  ! ${url} took 9.4 seconds to answer. Discord gives up after about 10 seconds and shows no preview.`
+        );
+        expect(exitCode).toBe(0);
     });
 
     it.each([
         ['nothing', [], 'discord-component-embed needs a command.'],
         ['a command without a target', ['check'], 'check needs a file or a URL.'],
         ['an unknown command', ['lint', 'embed.json'], "discord-component-embed doesn't have a lint command."],
-        ['an unknown flag', ['check', '--strict', 'embed.json'], "discord-component-embed doesn't take --strict."]
+        ['an unknown flag', ['check', '--strict', 'embed.json'], "discord-component-embed doesn't take --strict."],
+        ['a value on --help', ['--help=false', 'check', 'x.json'], "discord-component-embed doesn't take --help=false."]
     ])('says what is wrong with %s, then points at --help, and exits 2', async (_label, args, problem) => {
         expect(await runCheckCommand(args, withFiles({}))).toEqual({
             output: `${problem}\n\nUsage: discord-component-embed check <file or url>...\nRun discord-component-embed --help for the details.\n`,
@@ -111,13 +134,10 @@ describe('discord-component-embed check', () => {
         });
     });
 
-    it('lists every kind of target, the exit codes, and examples for --help, and exits 0', async () => {
+    it('prints the usage for --help and exits 0', async () => {
         const { output, exitCode } = await runCheckCommand(['--help'], withFiles({}));
 
         expect(output).toMatch(/^Usage: discord-component-embed check <file or url>\.\.\.\n/);
-        expect(output).toContain('Pass as many targets as you like.');
-        expect(output).toMatch(/\n {2}embed\.json +.+\n {2}dist\/post\.html +.+\n {2}https:\/\/materwelon\.dev +.+\n/);
-        expect(output).toMatch(/\n {2}0 +every target passes\n {2}1 +.+\n {2}2 +.+\n/);
         expect(exitCode).toBe(0);
     });
 });

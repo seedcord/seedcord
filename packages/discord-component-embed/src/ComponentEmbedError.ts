@@ -5,7 +5,8 @@
  * - `InvalidStructure`: a wrong root, a component in the wrong place, a parent with the wrong number of children, an
  *   empty {@link TextDisplay}, text outside one, or a Vue VNode.
  *
- * - `InvalidProp`: a prop with the wrong type or value, like a `spacing` of `'medium'` or a URL with a bad scheme.
+ * - `InvalidProp`: a prop with the wrong type or value, like a `spacing` of `'medium'` or a URL with a bad scheme. From
+ *   {@link fromPayload}, also a key a component doesn't take or a bad `id`.
  *
  * - `OverLimit`: a length, count, or byte limit Discord sets.
  *
@@ -39,7 +40,8 @@ export class ComponentEmbedError extends Error {
     /**
      * The steps from the root to the component that broke a rule, like `['Container', 'PostCard', 'Section 2']`. Your
      * own components appear by name. A number marks a component written next to others with the same name. The path
-     * is empty when the problem is the whole embed, like its size.
+     * is empty when the problem is the whole embed, like its size. For an error from {@link fromPayload}, the steps
+     * are JSON keys, like `['component', 'components', '1']`.
      */
     readonly path: readonly string[];
 
