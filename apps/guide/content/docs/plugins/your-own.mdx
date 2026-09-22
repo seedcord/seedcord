@@ -35,8 +35,53 @@ class Uptime extends Plugin {
 }
 
 // ---cut---
-seedcord.attach('uptime', Uptime);
+export default seedcord.attach('uptime', Uptime);
 ```
+
+## Calling it from a handler
+
+A handler calls your plugin's methods on `this.core.uptime`, since `uptime` is the key you attached it under. Nothing gets exported from `bot.ts` or imported into the handler.
+
+```ts twoslash hovers title="src/handlers/UptimeCommand.ts"
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
+// ---cut-start---
+import { Plugin } from '@seedcord/gateway';
+
+class Uptime extends Plugin {
+    private startedAt = 0;
+
+    public async init(): Promise<void> {
+        this.startedAt = Date.now();
+    }
+
+    public elapsed(): number {
+        return Date.now() - this.startedAt;
+    }
+}
+
+declare module '@seedcord/gateway' {
+    interface Core {
+        uptime: Uptime;
+    }
+}
+// ---cut-end---
+
+@SlashRoute('uptime')
+export class UptimeCommand extends SlashHandler<'uptime'> {
+    public async execute(): Promise<void> {
+        const ms = this.core.uptime.elapsed();
+        await this.reply(
+            `Up for ${Math.floor(ms / 1000)} seconds.`
+        );
+    }
+}
+```
+
+`this.core.uptime` has the type `Uptime`, so your editor offers `elapsed()` and types its result as a `number`.
+
+A handler can call every public member of your class. `startedAt` is private, so a handler reads the time through `elapsed()` and can't overwrite it. Keep connections and state private, and make public only the methods you want handlers to call.
+
+With the default phases, handlers start receiving interactions after every `init()` has finished. `ready()` may still be running at that point, so if a method reads something that `ready()` sets, check that it's set first. [The lifecycle](/plugins/lifecycle) has the full order.
 
 ## Which base to import
 
@@ -175,7 +220,7 @@ Calling `rejectOptions` throws `PluginOptionsRejected`. Your class name comes fi
 
 ## Logging
 
-`this.logger` exists from the constructor onward. It prints under your class name, on the [channel your attach key sets](/plugins#the-key-also-names-a-log-channel), so if someone attaches your plugin as `metrics`, they can filter its lines by that name.
+`this.logger` exists from the constructor onward. It prints under your class name, on the [channel your attach key sets](/plugins#the-key-is-also-a-log-channel), so if someone attaches your plugin as `metrics`, they can filter its lines by that name.
 
 ## Reacting to a dev reload
 

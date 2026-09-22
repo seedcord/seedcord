@@ -161,7 +161,7 @@ class Tickets extends Plugin {
 }
 
 // ---cut---
-seedcord
+export default seedcord
     .attach('services.users', Users)
     .attach('services.tickets', Tickets);
 ```
@@ -192,7 +192,28 @@ seedcord
     .attach('services', Tickets);
 ```
 
-## The key also names a log channel
+## No plugin types in your handler?
+
+`this.core.db` has the type `Mongoose` in `History` because the first sample exports what `attach` returns. If you call `attach` as a statement and then export `seedcord` itself, the plugin still starts. TypeScript loses its type, since nothing keeps the type that call returns.
+
+```ts twoslash hovers
+// @errors: 2339
+import { Seedcord } from '@seedcord/gateway';
+import { Mongoose } from '@seedcord/plugin-mongoose';
+
+declare const config: ConstructorParameters<typeof Seedcord>[0];
+declare const options: ConstructorParameters<typeof Mongoose>[1];
+
+// ---cut---
+const seedcord = new Seedcord(config);
+seedcord.attach('db', Mongoose, options);
+
+type Db = (typeof seedcord)['db'];
+```
+
+The last line is the lookup codegen writes into `src/seedcord-gen.d.ts`. You won't see this error there, because the scaffold's tsconfig turns on `skipLibCheck`, which skips type errors in `.d.ts` files. `this.core.db` compiles as `any` instead. Your editor stops offering `services`, and a typo like `this.core.db.servics` still compiles.
+
+## The key is also a log channel
 
 Every mongoose log line prints on the `db` channel, since a plugin logs on the channel named after its attach key. You can then filter or silence one plugin's logs by the key you gave it. A grouped plugin keeps its whole key, dot included, as its channel. seedcord already logs on reserved channels of its own, so those names can't be keys.
 

@@ -48,6 +48,7 @@ const REGISTRIES = `
         whoami: { options: {}; cache: 'cached' };
         history: { options: {}; cache: 'cached' };
         feed: { options: {}; cache: 'cached' };
+        uptime: { options: {}; cache: 'cached' };
         leaderboard: { options: {}; cache: 'cached' };
         search: {
             options: {

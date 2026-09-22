@@ -43,7 +43,7 @@ declare module '@seedcord/gateway' {
 export {};
 ```
 
-`Bot` is the default export of the file your `instance` config key points at. Each row reads its type straight from that bot, so `db` gets exactly the type `attach` produced, `Mongoose` here. If you export the bot only as a named const, codegen stops with the code `CliInstanceInvalid` before it writes anything.
+`Bot` is the default export of the file your `instance` config key points at. Each row reads its type straight from that bot, so `db` gets exactly the type `attach` produced, `Mongoose` here. That only works when the default export is the value `attach` returns. If you [export the bot without it](/plugins#no-plugin-types-in-your-handler), `this.core.db` compiles as `any`. If you export the bot only as a named const, codegen stops with the code `CliInstanceInvalid` before it writes anything.
 
 The [`Core`](ref:gateway/Core) block only appears once you've attached something.
 

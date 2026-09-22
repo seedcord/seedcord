@@ -139,7 +139,7 @@ const seedcord = new Seedcord({
 });
 // ---cut-end---
 
-seedcord.attach('db', KyselyPostgres, {
+export default seedcord.attach('db', KyselyPostgres, {
     dir: resolve(import.meta.dirname, './services'),
     connectionString: 'postgres://localhost:5432/seedcord',
     migrations: {
