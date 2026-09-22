@@ -6,7 +6,6 @@ export interface Collector {
 
 export const throwFirst: Collector = { map: (items, convert) => items.map(convert) };
 
-// records a child's error and moves on to its siblings
 export function collectInto(errors: ComponentEmbedError[]): Collector {
     return {
         map: (items, convert) =>

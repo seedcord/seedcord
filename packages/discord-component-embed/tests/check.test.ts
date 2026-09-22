@@ -14,7 +14,7 @@ function withFiles(files: Record<string, string>): CheckInput {
             return Promise.resolve(text);
         },
         fetch: () => Promise.reject(new Error('no network in this test')),
-        now: () => 0
+        nowMs: () => 0
     };
 }
 
@@ -29,7 +29,7 @@ function withPages(pages: Record<string, string>, userAgents: string[] = []): Ch
             const body = pages[url];
             return Promise.resolve(body === undefined ? new Response('', { status: 404 }) : new Response(body));
         },
-        now: () => 0
+        nowMs: () => 0
     };
 }
 
@@ -55,7 +55,7 @@ describe('checkTarget on a file', () => {
         });
     });
 
-    it('lists every problem in the file', async () => {
+    it("reports the JSON's shape problems and leaves the tree checks until those are fixed", async () => {
         const text = card({ type: 10, content: '' }, { type: 14, spacing: 3 }, { type: 3 });
 
         const result = await checkTarget('embed.json', withFiles({ 'embed.json': text }));
@@ -144,10 +144,10 @@ describe('checkTarget on a file', () => {
         const result = await checkTarget('embed.json', withFiles({ 'embed.json': text }));
 
         expect(result.status === 'fail' && result.problems.map((problem) => problem.split('\nFound at ')[1])).toEqual([
-            'Container > TextDisplay',
-            'Container > Section > Thumbnail',
-            'Container > MediaGallery > MediaGalleryItem 2',
-            'Container > ActionRow > LinkButton 2'
+            'component > components > 0',
+            'component > components > 1 > accessory',
+            'component > components > 2 > items > 1',
+            'component > components > 3 > components > 1'
         ]);
     });
 
@@ -214,7 +214,7 @@ describe('checkTarget on a url', () => {
 
         expect(result).toEqual({
             status: 'fail',
-            problems: ['A <TextDisplay> is empty. Give it some text or remove it.\nFound at Container > TextDisplay']
+            problems: ['A <TextDisplay> is empty. Give it some text or remove it.\nFound at component > components > 0']
         });
         expect(userAgents).toEqual([expect.stringContaining('Mozilla/5.0'), 'Discordbot/2.0']);
     });
@@ -252,7 +252,9 @@ describe('checkTarget on a url', () => {
     });
 
     it('reads a character reference past the last code point as the replacement character, like a browser', async () => {
-        const html = page(`<link rel="discord:component-embed" href="https://example.com/post.json?x=&#99999999;">`);
+        const html = page(
+            `<link rel="discord:component-embed" type="application/json" href="https://example.com/post.json?x=&#99999999;">`
+        );
 
         const result = await checkTarget(
             PAGE,
@@ -264,7 +266,7 @@ describe('checkTarget on a url', () => {
 
     it('reads an href the way a browser does, with its character references decoded', async () => {
         const html = page(
-            `<link rel="discord:component-embed" href="https://embeds.example.com/post.json?a=1&amp;b=&#50;">`
+            `<link rel="discord:component-embed" type="application/json" href="https://embeds.example.com/post.json?a=1&amp;b=&#50;">`
         );
 
         const result = await checkTarget(
@@ -280,7 +282,7 @@ describe('checkTarget on a url', () => {
         ['a relative href', '/post.json'],
         ['an href on another site', 'https://elsewhere.com/post.json']
     ])('fails %s the way discord does', async (_label, href) => {
-        const html = page(`<link rel="discord:component-embed" href="${href}">`);
+        const html = page(`<link rel="discord:component-embed" type="application/json" href="${href}">`);
 
         expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toEqual({
             status: 'fail',
@@ -323,6 +325,53 @@ describe('checkTarget on a url', () => {
             reason: `Couldn't fetch ${PAGE}: ssl routines:wrong version number:`
         });
     });
+});
+
+describe("checkTarget reading a page's HTML", () => {
+    const PAGE = 'https://example.com/post';
+    const good = card({ type: 10, content: 'hi' });
+
+    it('keeps the embed when other scripts on the page hold <!-- and -->', async () => {
+        const html = page(
+            `<script>var a = "<!--"</script><script id="discord:component-embed" type="application/json">${good}</script><script>var b = "-->"</script>`
+        );
+
+        expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toMatchObject({ status: 'pass' });
+    });
+
+    it('measures a script body that holds <!-- and --> as sent', async () => {
+        const body = card({ type: 10, content: 'a <!-- b --> c' });
+        const html = page(`<script id="discord:component-embed" type="application/json">${body}</script>`);
+
+        expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toMatchObject({
+            status: 'pass',
+            bytes: body.length
+        });
+    });
+
+    // on discord's crawler a <link> with no type never had its JSON fetched
+    it('fails a <link> with no type="application/json"', async () => {
+        const html = page(`<link rel="discord:component-embed" href="https://embeds.example.com/post.json">`);
+
+        expect(
+            await checkTarget(PAGE, withPages({ [PAGE]: html, 'https://embeds.example.com/post.json': good }))
+        ).toEqual({
+            status: 'fail',
+            problems: ['The <link rel="discord:component-embed"> has to have type="application/json", got nothing.']
+        });
+    });
+
+    // discord shows the Open Graph card when the linked JSON answers 404
+    it('fails a page whose linked JSON does not load', async () => {
+        const html = page(
+            `<link rel="discord:component-embed" type="application/json" href="https://embeds.example.com/post.json">`
+        );
+
+        expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toEqual({
+            status: 'fail',
+            problems: ["Couldn't fetch https://embeds.example.com/post.json: the server answered 404."]
+        });
+    });
 
     it('skips an embed inside an HTML comment', async () => {
         const commented = `<!-- <script id="discord:component-embed" type="application/json">${card({ type: 3 })}</script> -->`;
@@ -341,7 +390,9 @@ describe('checkTarget on a url', () => {
 
     // on discord's crawler, a page that redirected to another host still had its <link> held to the pasted host
     it('holds a <link> to the host you passed in, even when the page came back from another host', async () => {
-        const html = page(`<link rel="discord:component-embed" href="https://embeds.example.com/post.json">`);
+        const html = page(
+            `<link rel="discord:component-embed" type="application/json" href="https://embeds.example.com/post.json">`
+        );
         const input: CheckInput = {
             ...withPages({ 'https://embeds.example.com/post.json': good }),
             fetch: (url, init) => {
@@ -364,7 +415,7 @@ describe('checkTarget on a url', () => {
     });
 
     it('says a <link> has no href', async () => {
-        const html = page(`<link rel="discord:component-embed">`);
+        const html = page(`<link rel="discord:component-embed" type="application/json">`);
 
         expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toEqual({
             status: 'fail',
@@ -374,7 +425,7 @@ describe('checkTarget on a url', () => {
         });
     });
 
-    it('gives up on a page after 10 seconds, the way discord does', async () => {
+    it('reports a fetch that timed out as no answer within 10 seconds', async () => {
         const signals: unknown[] = [];
         const input: CheckInput = {
             ...withPages({}),
@@ -394,7 +445,7 @@ describe('checkTarget on a url', () => {
     it('warns about a page that took over 9 seconds', async () => {
         const html = page(`<script id="discord:component-embed" type="application/json">${good}</script>`);
 
-        expect(await checkTarget(PAGE, { ...withPages({ [PAGE]: html }), now: clock(0, 9400) })).toMatchObject({
+        expect(await checkTarget(PAGE, { ...withPages({ [PAGE]: html }), nowMs: clock(0, 9400) })).toMatchObject({
             status: 'pass',
             warnings: [
                 `${PAGE} took 9.4 seconds to answer. Discord gives up after about 10 seconds and shows no preview.`
@@ -405,7 +456,7 @@ describe('checkTarget on a url', () => {
     it('stays quiet about a page that took under 9 seconds', async () => {
         const html = page(`<script id="discord:component-embed" type="application/json">${good}</script>`);
 
-        const result = await checkTarget(PAGE, { ...withPages({ [PAGE]: html }), now: clock(0, 8900) });
+        const result = await checkTarget(PAGE, { ...withPages({ [PAGE]: html }), nowMs: clock(0, 8900) });
 
         expect(result).not.toHaveProperty('warnings');
     });
@@ -437,7 +488,9 @@ describe('checkTarget on an html file', () => {
     });
 
     it('follows a <link> to its JSON', async () => {
-        const html = page(`<link rel="discord:component-embed" href="https://example.com/post.json">`);
+        const html = page(
+            `<link rel="discord:component-embed" type="application/json" href="https://example.com/post.json">`
+        );
         const input = withFilesAndPages(
             { 'dist/post.html': html },
             { 'https://example.com/post.json': card({ type: 10, content: '' }) }
@@ -445,12 +498,12 @@ describe('checkTarget on an html file', () => {
 
         expect(await checkTarget('dist/post.html', input)).toEqual({
             status: 'fail',
-            problems: ['A <TextDisplay> is empty. Give it some text or remove it.\nFound at Container > TextDisplay']
+            problems: ['A <TextDisplay> is empty. Give it some text or remove it.\nFound at component > components > 0']
         });
     });
 
     it('fails a relative <link> href, since the file has no host to resolve it against', async () => {
-        const html = page(`<link rel="discord:component-embed" href="/post.json">`);
+        const html = page(`<link rel="discord:component-embed" type="application/json" href="/post.json">`);
 
         expect(await checkTarget('dist/post.html', withFilesAndPages({ 'dist/post.html': html }))).toEqual({
             status: 'fail',

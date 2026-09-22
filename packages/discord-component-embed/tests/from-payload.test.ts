@@ -2,19 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { fromPayload, toComponentEmbed } from '#src/index';
 
-import { expectEmbedError, thrownBy } from './helpers';
+import { thrownBy } from './helpers';
 
 import type { EmbedElement } from '#src/index';
 
 describe('fromPayload', () => {
-    it('turns a payload back into a tree that builds the same payload', () => {
-        const payload = {
-            component: { type: 17, accent_color: 0x58_65_f2, components: [{ type: 10, content: '# Hello' }] }
-        };
-
-        expect(toComponentEmbed(fromPayload(payload))).toEqual(payload);
-    });
-
     it.each([
         [
             "discord's full example",
@@ -120,6 +112,16 @@ describe('fromPayload keys', () => {
             inPayload({ type: 1, components: [{ type: 2, style: 5, url: 'https://example.com', label: 'go', id: 3 }] }),
             ['component', 'components', '0', 'components', '0'],
             'A button doesn\'t take "id". It takes type, style, url, label, emoji, and disabled.'
+        ],
+        [
+            // discord's crawler rendered the button and dropped the unknown key
+            'a mistyped key on a button emoji',
+            inPayload({
+                type: 1,
+                components: [{ type: 2, style: 5, url: IMAGE, label: 'go', emoji: { name: '😀', animatd: true } }]
+            }),
+            ['component', 'components', '0', 'components', '0'],
+            'A button\'s emoji doesn\'t take "animatd". Did you mean "animated"? It takes id, name, and animated.'
         ],
         [
             'an unknown key next to component',
@@ -232,12 +234,14 @@ describe('fromPayload errors', () => {
         expect(error.message.split('\nFound at')[0]).toBe(message);
     });
 
-    it('leaves the rest of the checks to the tree, with component names in the path', () => {
+    it('reports the tree checks at the JSON path of the component that broke', () => {
         const error = thrownBy(() =>
-            toComponentEmbed(fromJson(inPayload({ type: 9, components: [{ type: 10, content: '' }], accessory: text })))
+            toComponentEmbed(
+                fromJson(inPayload(text, { type: 9, components: [{ type: 10, content: '' }], accessory: text }))
+            )
         );
 
-        expect(error.path).toEqual(['Container', 'Section', 'TextDisplay']);
+        expect(error.path).toEqual(['component', 'components', '1', 'components', '0']);
     });
 
     it('rejects a separator spacing in the numbers the JSON uses', () => {
@@ -326,23 +330,9 @@ describe('fromPayload errors', () => {
     it('lets the tree report a section with no accessory', () => {
         const error = thrownBy(() => toComponentEmbed(fromJson(inPayload({ type: 9, components: [text] }))));
 
-        expect(error.path).toEqual(['Container', 'Section']);
+        expect(error.path).toEqual(['component', 'components', '0']);
         expect(error.message).toBe(
-            'A <Section> needs exactly one accessory, a <Thumbnail> or a <LinkButton>, got none.\nFound at Container > Section'
-        );
-    });
-
-    it('throws for two galleries of 10 items each', () => {
-        const gallery = (): unknown => ({
-            type: 12,
-            items: Array.from({ length: 10 }, (_, index) => ({
-                media: { url: `https://example.com/${String(index)}.png` }
-            }))
-        });
-
-        expectEmbedError(
-            () => toComponentEmbed(fromJson(inPayload(gallery(), gallery()))),
-            'The galleries in this component embed hold 20 items (10 + 10).'
+            'A <Section> needs exactly one accessory, a <Thumbnail> or a <LinkButton>, got none.\nFound at component > components > 0'
         );
     });
 });

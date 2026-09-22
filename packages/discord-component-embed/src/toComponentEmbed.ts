@@ -12,7 +12,7 @@ import {
     TextDisplay,
     Thumbnail
 } from './components';
-import { checkComponentLimits, checkEmbedLimits } from './limits';
+import { checkComponentLimits, checkJsonSize } from './limits';
 import { scriptSafeJson } from './scriptSafeJson';
 import { childrenOf, isElement, nameOf, place, rejectVueVNode } from './tree';
 import { LINK_STYLE, SPACING, TYPE } from './wire';
@@ -103,7 +103,8 @@ export function buildEmbed(root: EmbedElement, toJson: ToJson): { payload: Compo
     try {
         const payload = buildPayload(root, throwFirst);
         const json = toJson(payload);
-        checkEmbedLimits(payload.component, json, throwFirst);
+        checkComponentLimits(payload.component, throwFirst);
+        checkJsonSize(json);
         return { payload, json };
     } catch (error) {
         throw asEmbedError(error);

@@ -6,7 +6,6 @@ import { MAX_COMPONENTS, MAX_ITEMS_ACROSS_GALLERIES, MAX_JSON_BYTES } from './li
 import type { CheckInput, CheckResult } from './check';
 
 interface CommandInput extends CheckInput {
-    // what process.stdout.getColorDepth() returns. 1 turns color off
     colorDepth: number;
 }
 
@@ -45,7 +44,7 @@ const PALETTE = {
     muted: { hex: '#9aa0b3', ansi: 90 }
 } as const;
 
-// getColorDepth returns 1, 4, 8, or 24
+// node's getColorDepth returns 1, 4, 8, or 24. 1 means no color
 const TRUECOLOR_DEPTH = 24;
 const BASIC_COLOR_DEPTH = 4;
 
@@ -134,7 +133,7 @@ function painter(colorDepth: number): Paint {
 }
 
 function rgb(hex: string): string {
-    return (hex.match(/[\da-f]{2}/g) ?? []).map((pair) => String(Number.parseInt(pair, 16))).join(';');
+    return [...hex.matchAll(/[\da-f]{2}/g)].map(([pair]) => String(Number.parseInt(pair, 16))).join(';');
 }
 
 function report(target: string, result: CheckResult, paint: Paint): string {

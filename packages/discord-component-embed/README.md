@@ -346,7 +346,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
 }
 ```
 
-The route builds `PostCard` for whichever post `slug` points at. `componentEmbedResponse` returns the JSON as a Web `Response` with an `application/json` content type. Any framework whose routes return a Web `Response` works the same way, like a SvelteKit `+server.ts`.
+`componentEmbedResponse` returns the JSON as a Web `Response` with an `application/json` content type. Any framework whose routes return a Web `Response` works the same way, like a SvelteKit `+server.ts`.
 
 Point the page at that URL with a `<link>` tag. The `href` has to be an absolute `https` URL on the page's host, a subdomain of it, or its parent domain.
 
@@ -380,11 +380,11 @@ const card: ComponentEmbedPayload = {
 const script = toComponentEmbedScript(fromPayload(card));
 ```
 
-An error from `fromPayload` has JSON keys in its `path`, like `component > components > 1`. An error from the checks after it has component names, like `Container > Section`.
+Every error for a tree from `fromPayload` has JSON keys in its `path`, like `component > components > 1`, including the errors `toComponentEmbed` throws for it later. The numbers are array indexes, counted from 0.
 
 Discord shows no preview at all for a bad `id`, so `fromPayload` checks those too. Each `id` has to be a whole number from 0 to 2147483647, and no two components can share one. The tree leaves them out after that, because nothing in a link preview reads them.
 
-If a component has a key it doesn't take, like a mistyped `descripton`, `fromPayload` throws with the keys it does take and suggests the closest one. Discord drops such a key and shows the card without that field. On a button, Discord falls back to the Open Graph card instead. Extra fields inside `media`, like the `proxy_url` and `width` that Discord's API adds, are fine.
+If a component has a key it doesn't take, like a mistyped `descripton`, `fromPayload` throws with the keys it does take and suggests the closest one. Discord drops such a key and shows the card without that field. Extra fields inside `media`, like the `proxy_url` and `width` that Discord's API adds, are fine.
 
 <div align="right"><a href="#contents">back to top</a></div>
 
@@ -407,11 +407,11 @@ npx discord-component-embed check embed.json https://materwelon.dev
 1 passed, 1 failed
 ```
 
-For a URL, the command fetches the page with Discord's crawler user agent. It checks the `<script>` JSON as the page serves it, or follows the `<link>` to its JSON. The 3000-byte limit counts that text as sent, whitespace and escapes included. When whitespace alone pushes a file over, the output adds the minified size.
+For a URL, the command fetches the page with Discord's crawler user agent. It checks the `<script>` JSON as the page serves it, or follows the `<link>` to its JSON. Both tags need `type="application/json"`, since Discord skips either one without it. The 3000-byte limit counts that text as sent, whitespace and escapes included.
 
 Discord shows no preview for a page that takes longer than about 10 seconds to answer. The command gives up at 10 seconds and counts the page as unreadable. A page that answers after 9 seconds passes with a warning.
 
-A `.html` file gets the same treatment, which checks a static build before you deploy it. The command still fetches a `<link>` from its URL, so only an inline `<script>` gets checked offline.
+A `.html` file gets the same treatment, which checks a static build before you deploy it. For a `<link>`, the command still fetches its URL, and it can't check the host because a file has none.
 
 ```sh
 npx discord-component-embed check dist/blog/*.html
@@ -467,7 +467,9 @@ It prints a `trycloudflare.com` URL to paste into Discord. A Vite dev server rej
 
 Discord caches a preview for about 30 minutes, so an edit won't show on a link you've already shared. Add a new query string, like `?v=2`, to see it right away. Changing only the `#fragment` doesn't help, since Discord leaves the fragment out of its cache key. Discord's [Embed Debugger](https://discord.com/developers/embeds) shows which tags it read from any URL.
 
-To check a card without Discord, [`toComponentEmbed`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/to-component-embed) returns the payload as an object. A test can build every page's card with it before you deploy. To write the JSON into a page yourself, use `toComponentEmbedJson`. It escapes the JSON for HTML.
+To check a card without Discord, [`toComponentEmbed`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/to-component-embed) returns the payload as an object. A test can build every page's card with it before you deploy.
+
+Discord also has to fetch every image within about 10 seconds, without a login or a bot challenge. The `check` command doesn't fetch your images. If your site uses bot protection, allow user agents containing `Discordbot`.
 
 <div align="right"><a href="#contents">back to top</a></div>
 
@@ -520,11 +522,9 @@ Discord doesn't report an invalid payload anywhere. It drops the payload and sho
 - an `id` is outside `0` to `2147483647`, or two components share one
 - a separator `spacing` is anything but `1` or `2`
 
-When one component breaks a rule, the error's `path` lists the steps from the root to it, like `['Container', 'PostCard', 'Section 2']`. The message ends with the same steps after `Found at`, and your own components appear by name. For an error from `fromPayload`, the steps are JSON keys, like `['component', 'components', '1']`.
+When one component breaks a rule, the error's `path` lists the steps from the root to it, like `['Container', 'PostCard', 'Section 2']`. The message ends with the same steps after `Found at`, and your own components appear by name.
 
 Every `ComponentEmbedError` carries a `code`: `InvalidStructure`, `InvalidProp`, `OverLimit`, `UnsupportedComponent`, or `ReadFailed`. Branch on the code, since the message wording can change in any release. If a component or an iterator of yours throws while the tree is read, you get a `ReadFailed` with the original error on `cause`.
-
-Discord also has to fetch the page and every image within about 10 seconds, without a login or a bot challenge. The `check` command times the page, but it doesn't fetch your images or see what your bot protection does. If your site uses bot protection, allow user agents containing `Discordbot`.
 
 <div align="right"><a href="#contents">back to top</a></div>
 

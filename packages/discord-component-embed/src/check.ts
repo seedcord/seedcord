@@ -8,8 +8,7 @@ import type { ComponentEmbedPayload } from './toComponentEmbed';
 export interface CheckInput {
     readFile(path: string): Promise<string>;
     fetch(url: string, init: RequestInit): Promise<Response>;
-    // milliseconds, like performance.now()
-    now(): number;
+    nowMs(): number;
 }
 
 export type CheckResult =
@@ -23,9 +22,8 @@ type Checked = Extract<CheckResult, { status: 'pass' | 'fail' }>;
 const PAGE_USER_AGENT = 'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)';
 const JSON_USER_AGENT = 'Discordbot/2.0';
 
-// discord's crawler closed a slow page's connection 9.8 to 9.9 s after the request arrived
+// discord's crawler gave up about 10 s after it sent the request. through a tunnel, the server saw 9.8 to 9.9 s of it
 const DISCORD_TIMEOUT_MS = 10_000;
-// the last second before that
 const SLOW_WARNING_MS = DISCORD_TIMEOUT_MS - 1000;
 
 type Loaded = { text: string; warnings: readonly string[] } | CheckResult;
@@ -68,15 +66,8 @@ async function loadFile(path: string, input: CheckInput): Promise<Loaded> {
 async function embedIn(html: string, rule: LinkRule, input: CheckInput): Promise<Loaded> {
     const script = findTags(html, 'script').find((tag) => tag.attributes.get('id') === SCRIPT_ID);
     if (script) {
-        // the docs require this exact type
-        const type = script.attributes.get('type');
-        if (type === 'application/json') return { text: script.body, warnings: [] };
-        return {
-            status: 'fail',
-            problems: [
-                `The <script id="${SCRIPT_ID}"> has to have type="application/json", got ${describeValue(type)}.`
-            ]
-        };
+        const wrongType = typeProblem(script, `<script id="${SCRIPT_ID}">`);
+        return wrongType ?? { text: script.body, warnings: [] };
     }
 
     const link = findTags(html, 'link').find((tag) => tag.attributes.get('rel')?.split(/\s+/).includes(SCRIPT_ID));
@@ -88,6 +79,8 @@ async function embedIn(html: string, rule: LinkRule, input: CheckInput): Promise
             ]
         };
     }
+    const wrongType = typeProblem(link, `<link rel="${SCRIPT_ID}">`);
+    if (wrongType) return wrongType;
 
     const href = link.attributes.get('href');
     const jsonUrl = URL.parse(href ?? '');
@@ -100,7 +93,20 @@ async function embedIn(html: string, rule: LinkRule, input: CheckInput): Promise
         };
     }
 
-    return fetchText(jsonUrl, JSON_USER_AGENT, input);
+    // discord shows the Open Graph card when the linked JSON doesn't load
+    const json = await fetchText(jsonUrl, JSON_USER_AGENT, input);
+    if ('text' in json || json.status !== 'unreadable') return json;
+    return { status: 'fail', problems: [json.reason] };
+}
+
+// the docs require this exact type. discord's crawler ignored a <link> without it
+function typeProblem(tag: Tag, label: string): CheckResult | undefined {
+    const type = tag.attributes.get('type');
+    if (type === 'application/json') return undefined;
+    return {
+        status: 'fail',
+        problems: [`The ${label} has to have type="application/json", got ${describeValue(type)}.`]
+    };
 }
 
 function isJson(contentType: string): boolean {
@@ -108,7 +114,7 @@ function isJson(contentType: string): boolean {
 }
 
 async function fetchText(url: URL, userAgent: string, input: CheckInput): Promise<Fetched> {
-    const start = input.now();
+    const start = input.nowMs();
     try {
         const response = await input.fetch(url.href, {
             headers: { 'user-agent': userAgent },
@@ -122,7 +128,7 @@ async function fetchText(url: URL, userAgent: string, input: CheckInput): Promis
         }
         const text = await response.text();
         const contentType = response.headers.get('content-type') ?? '';
-        return { text, contentType, warnings: slowWarning(url, input.now() - start) };
+        return { text, contentType, warnings: slowWarning(url, input.nowMs() - start) };
     } catch (error) {
         return { status: 'unreadable', reason: `Couldn't fetch ${url.href}: ${fetchFailure(error)}` };
     }
@@ -167,10 +173,12 @@ interface Tag {
 const ATTRIBUTES = '((?:"[^"]*"|\'[^\']*\'|[^\'">])*?)';
 const SCRIPT_TAG = new RegExp(String.raw`<script\b${ATTRIBUTES}>([\s\S]*?)<\/script\s*>`, 'gi');
 const LINK_TAG = new RegExp(String.raw`<link\b${ATTRIBUTES}\/?>`, 'gi');
+// a script's text can hold <!-- and --> without being a comment
+const COMMENT_OR_SCRIPT = new RegExp(String.raw`<!--[\s\S]*?-->|${SCRIPT_TAG.source}`, 'gi');
 
 // HTML doesn't decode character references inside a script
 function findTags(html: string, name: 'script' | 'link'): Tag[] {
-    const visible = html.replaceAll(/<!--[\s\S]*?-->/g, '');
+    const visible = html.replaceAll(COMMENT_OR_SCRIPT, (match) => (match.startsWith('<!--') ? '' : match));
     return [...visible.matchAll(name === 'script' ? SCRIPT_TAG : LINK_TAG)].map(([, attributes = '', body = '']) => ({
         attributes: parseAttributes(attributes),
         body
@@ -205,17 +213,16 @@ function character(codePoint: number): string {
     return String.fromCodePoint(codePoint > LAST_CODE_POINT ? REPLACEMENT_CHARACTER : codePoint);
 }
 
-// text is the JSON exactly as discord would read it
-function checkJsonText(text: string): Checked {
+function checkJsonText(sentJson: string): Checked {
     let payload: unknown;
     try {
-        payload = JSON.parse(text);
+        payload = JSON.parse(sentJson);
     } catch (error) {
         return { status: 'fail', problems: [`The JSON doesn't parse: ${oneLine(messageOf(error))}.`] };
     }
 
-    const errors = collectPayloadErrors(payload, text);
-    const bytes = byteLength(text);
+    const errors = collectPayloadErrors(payload, sentJson);
+    const bytes = byteLength(sentJson);
     if (errors.length > 0) {
         const minified = byteLength(JSON.stringify(payload));
         return {

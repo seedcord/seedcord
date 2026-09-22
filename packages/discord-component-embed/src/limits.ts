@@ -14,11 +14,6 @@ export const MAX_ITEMS_ACROSS_GALLERIES = 10;
 // discord counts the bytes it receives, escapes included
 export const MAX_JSON_BYTES = 3000;
 
-export function checkEmbedLimits(component: APIContainerComponent, json: string, collector: Collector): void {
-    checkComponentLimits(component, collector);
-    collector.map([json], checkJsonSize);
-}
-
 export function checkComponentLimits(component: APIContainerComponent, collector: Collector): void {
     collector.map([checkComponentCount, checkGalleryItemCount], (check) => {
         check(component);

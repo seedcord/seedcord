@@ -12,7 +12,7 @@ function withFiles(files: Record<string, string>, colorDepth = 1): CommandInput 
             return Promise.resolve(text);
         },
         fetch: () => Promise.reject(new Error('no network in this test')),
-        now: () => 0,
+        nowMs: () => 0,
         colorDepth
     };
 }
@@ -110,7 +110,7 @@ describe('discord-component-embed check', () => {
         const input: CommandInput = {
             ...withFiles({}),
             fetch: () => Promise.resolve(new Response(html)),
-            now: () => times.shift() ?? 0
+            nowMs: () => times.shift() ?? 0
         };
 
         const { output, exitCode } = await runCheckCommand(['check', url], input);

@@ -15,6 +15,7 @@ import {
 import { createElement } from './element';
 import { checkJsonSize } from './limits';
 import { collectErrors } from './toComponentEmbed';
+import { jsonPaths } from './tree';
 import { LINK_STYLE, SPACING, TYPE } from './wire';
 
 import type { Collector } from './collector';
@@ -61,7 +62,7 @@ export function fromPayload(payload: ComponentEmbedPayload): EmbedElement {
     return readPayload(payload, throwFirst);
 }
 
-// the first error in each broken component. sentJson is the text discord reads
+// the first error in each broken component
 export function collectPayloadErrors(payload: unknown, sentJson: string): ComponentEmbedError[] {
     const errors: ComponentEmbedError[] = [];
     const collector = collectInto(errors);
@@ -94,6 +95,15 @@ function isObject(value: unknown): value is JsonObject {
 }
 
 function toElement(node: unknown, path: Path, walk: Walk): EmbedElement {
+    return atJsonPath(buildElement(node, path, walk), path);
+}
+
+function atJsonPath(element: EmbedElement, path: Path): EmbedElement {
+    jsonPaths.set(element, path);
+    return element;
+}
+
+function buildElement(node: unknown, path: Path, walk: Walk): EmbedElement {
     if (!isObject(node)) {
         throw new ComponentEmbedError(
             'InvalidStructure',
@@ -186,17 +196,20 @@ function toLinkButton(node: JsonObject, path: Path): EmbedElement {
     }
     // discord's docs list these six. any other key, id included, makes discord fall back to the Open Graph card
     checkKeys(node, 'A button', ['type', 'style', 'url', 'label', 'emoji', 'disabled'], path);
-    if (node.emoji !== undefined && !isObject(node.emoji)) {
-        throw new ComponentEmbedError(
-            'InvalidProp',
-            `A button's emoji has to be an object like { "name": "😀" }, got ${describeValue(node.emoji)}.`,
-            { path }
-        );
+    if (node.emoji !== undefined) {
+        if (!isObject(node.emoji)) {
+            throw new ComponentEmbedError(
+                'InvalidProp',
+                `A button's emoji has to be an object like { "name": "😀" }, got ${describeValue(node.emoji)}.`,
+                { path }
+            );
+        }
+        checkKeys(node.emoji, "A button's emoji", ['id', 'name', 'animated'], path);
     }
     return createElement(LinkButton, { url: node.url, label: node.label, emoji: node.emoji, disabled: node.disabled });
 }
 
-// discord drops most unknown keys without a word
+// discord silently drops most unknown keys
 function checkKeys(node: JsonObject, what: string, allowed: readonly string[], path: Path): void {
     const unknown = Object.keys(node).find((key) => !allowed.includes(key));
     if (unknown === undefined) return;
@@ -262,7 +275,7 @@ function toGalleryItem(node: unknown, path: Path): EmbedElement {
         );
     }
     checkKeys(node, 'A gallery item', ['media', 'description', 'spoiler'], path);
-    return createElement(MediaGalleryItem, toMediaProps(node, 'A gallery item', path));
+    return atJsonPath(createElement(MediaGalleryItem, toMediaProps(node, 'A gallery item', path)), path);
 }
 
 interface Parent {
@@ -271,7 +284,7 @@ interface Parent {
     path: Path;
 }
 
-// a missing list becomes empty. the tree checks then say how many children the parent needs
+// the tree checks say how many children a missing list needs
 function list({ node, name, path }: Parent, key: string, walk: Walk, convert: Convert): EmbedElement[] {
     const children = node[key];
     if (children === undefined) return [];

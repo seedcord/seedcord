@@ -10,7 +10,7 @@ const colorDepth =
 const { output, exitCode } = await runCheckCommand(process.argv.slice(2), {
     readFile: (path) => readFile(path, 'utf8'),
     fetch: (url, init) => fetch(url, init),
-    now: () => performance.now(),
+    nowMs: () => performance.now(),
     colorDepth
 });
 
