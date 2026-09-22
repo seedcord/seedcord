@@ -37,9 +37,9 @@ export class ComponentEmbedError extends Error {
     /** Which rule the tree broke. */
     readonly code: ComponentEmbedErrorCode;
     /**
-     * The steps from the root to the component that broke a rule, like `['Container', 'PostCard', 'Section 2']`. Your own
-     * components appear by name. A number marks a component that has siblings of the same kind. The path is empty
-     * when the problem is the whole embed, like its size.
+     * The steps from the root to the component that broke a rule, like `['Container', 'PostCard', 'Section 2']`. Your
+     * own components appear by name. A number marks a component written next to others with the same name. The path
+     * is empty when the problem is the whole embed, like its size.
      */
     readonly path: readonly string[];
 

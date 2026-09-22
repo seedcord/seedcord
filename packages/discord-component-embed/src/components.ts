@@ -12,13 +12,12 @@ export interface ContainerProps {
 export interface TextDisplayProps {
     /**
      * Discord markdown. JSX turns a line break in your source into a space. Write `{'\n'}` where the markdown needs
-     * a new line.
+     * a new line. A boolean, `null`, or `undefined` is skipped, like the `false` from `{isNew && ' (new)'}`.
      */
     children: TextChild;
 }
 
-/** Text a {@link TextDisplay} accepts. It drops a boolean, `null`, and `undefined`. */
-export type TextChild = string | number | boolean | null | undefined | readonly TextChild[];
+type TextChild = string | number | boolean | null | undefined | readonly TextChild[];
 
 export interface SectionProps {
     /** A {@link Thumbnail} or a {@link LinkButton}, shown to the right of the text. */
