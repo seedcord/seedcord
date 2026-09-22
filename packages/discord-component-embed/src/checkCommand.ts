@@ -28,7 +28,8 @@ type Row = readonly [string, string];
 const TARGETS: readonly Row[] = [
     ['embed.json', 'a JSON payload, measured as written'],
     ['dist/post.html', 'a page from your build, checked through its <script> or <link>'],
-    ['https://materwelon.dev', "a live page, fetched with Discord's crawler user agent"]
+    ['https://materwelon.dev', "a live page, fetched with Discord's crawler user agent"],
+    ['https://materwelon.dev/embed.json', 'a URL that answers with application/json, checked as the payload']
 ];
 
 const EXIT_CODES: readonly Row[] = Object.values(EXIT).map(({ code, meaning }) => [String(code), meaning]);

@@ -386,6 +386,8 @@ Discord shows no preview at all for a bad `id`, so `fromPayload` checks those to
 
 If a component has a key it doesn't take, like a mistyped `descripton`, `fromPayload` throws with the keys it does take and suggests the closest one. Discord drops such a key and shows the card without that field. On a button, Discord shows the Open Graph card instead. Extra fields inside `media`, like the `proxy_url` and `width` that Discord's API adds, are fine.
 
+The 3000-byte check measures the JSON the package writes from the tree, without those extras. If you serve a hand-written file as it is, run it through the [`check` command](#check-from-the-command-line), which measures the file as written.
+
 <div align="right"><a href="#contents">back to top</a></div>
 
 ## Check from the command line
@@ -407,9 +409,9 @@ npx discord-component-embed check embed.json https://materwelon.dev
 1 passed, 1 failed
 ```
 
-For a URL, the command fetches the page with Discord's crawler user agent. It checks the `<script>` JSON as the page serves it, or follows the `<link>` to its JSON. Both tags need `type="application/json"`, since Discord skips either one without it. The 3000-byte limit counts that text as sent, whitespace and escapes included.
+For a URL, the command fetches the page with Discord's crawler user agent. It checks the `<script>` JSON as the page serves it, or follows the `<link>` to its JSON. Both tags need `type="application/json"`, since Discord skips either one without it. The 3000-byte limit counts that text as sent, whitespace and escapes included. A URL that answers with `application/json` gets checked as the payload itself, which is how you check a linked JSON on its own.
 
-Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview. The command stops at the same 10 seconds and reports what it was fetching as unreadable. If the page and its JSON take over 9 seconds together, the target passes with a warning.
+Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview. The command stops at the same 10 seconds. A page that runs out of time counts as unreadable, and a linked JSON that runs out fails the check. If the page and its JSON take over 9 seconds together, the target passes with a warning.
 
 Pass a `.html` file to check a static build before you deploy it. For a `<link>`, the command still fetches its URL, and it can't check the host because a file has none.
 

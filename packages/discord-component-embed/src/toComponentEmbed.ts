@@ -111,12 +111,12 @@ export function buildEmbed(root: EmbedElement, toJson: ToJson): { payload: Compo
     }
 }
 
-// a component that failed to build would drop out of the counts
 export function collectErrors(root: EmbedElement): ComponentEmbedError[] {
     const errors: ComponentEmbedError[] = [];
     const collector = collectInto(errors);
     try {
         const payload = buildPayload(root, collector);
+        // a component that failed to build would drop out of the counts
         if (errors.length === 0) checkComponentLimits(payload.component, collector);
     } catch (error) {
         errors.push(asEmbedError(error));

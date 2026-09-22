@@ -126,7 +126,8 @@ async function fetchText(url: URL, userAgent: string, deadline: number, input: C
     try {
         const response = await input.fetch(url.href, {
             headers: { 'user-agent': userAgent },
-            signal: AbortSignal.timeout(remainingMs)
+            // node rejects a timeout that isn't a whole number of ms
+            signal: AbortSignal.timeout(Math.ceil(remainingMs))
         });
         if (!response.ok) return couldNotFetch(url, `the server answered ${String(response.status)}.`);
         const text = await response.text();
@@ -177,7 +178,9 @@ const LINK_TAG = new RegExp(String.raw`<link\b${ATTRIBUTES}\/?>`, 'gi');
 const COMMENT_OR_SCRIPT = new RegExp(String.raw`<!--[\s\S]*?-->|${SCRIPT_TAG.source}`, 'gi');
 
 function findTags(html: string, name: 'script' | 'link'): Tag[] {
-    const visible = html.replaceAll(COMMENT_OR_SCRIPT, (match) => (match.startsWith('<!--') ? '' : match));
+    // a <link> written inside a script is text in that script
+    const keep = (match: string): boolean => name === 'script' && !match.startsWith('<!--');
+    const visible = html.replaceAll(COMMENT_OR_SCRIPT, (match) => (keep(match) ? match : ''));
     return [...visible.matchAll(name === 'script' ? SCRIPT_TAG : LINK_TAG)].map(([, attributes = '', body = '']) => ({
         attributes: parseAttributes(attributes),
         // HTML doesn't decode character references inside a script

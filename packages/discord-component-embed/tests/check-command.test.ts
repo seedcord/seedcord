@@ -146,6 +146,7 @@ describe('discord-component-embed check', () => {
         const { output, exitCode } = await runCheckCommand(['--help'], withFiles({}));
 
         expect(output).toMatch(/^Usage: discord-component-embed check <file or url>\.\.\.\n/);
+        expect(output.split('\n')).toEqual(expect.arrayContaining(['Targets', 'Exit codes', 'Examples']));
         expect(exitCode).toBe(0);
     });
 });

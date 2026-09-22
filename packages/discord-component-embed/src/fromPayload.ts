@@ -104,14 +104,8 @@ function atJsonPath(element: EmbedElement, path: Path): EmbedElement {
 }
 
 function buildElement(node: unknown, path: Path, walk: Walk): EmbedElement {
-    if (!isObject(node)) {
-        throw new ComponentEmbedError(
-            'InvalidStructure',
-            `A component has to be an object with a type, got ${describeValue(node)}.`,
-            { path }
-        );
-    }
-    if (!isAllowedType(node.type)) throw typeNotAllowed(node.type, path);
+    if (!isObject(node)) throw notAComponent(node, path);
+    if (!isAllowedType(node.type)) throw typeNotAllowed(node, path);
     if (node.type !== TYPE.Button) checkId(node.id, path, walk.ids);
 
     switch (node.type) {
@@ -167,7 +161,7 @@ function buildElement(node: unknown, path: Path, walk: Walk): EmbedElement {
             return toLinkButton(node, path);
         }
         default: {
-            throw typeNotAllowed(node.type, path);
+            throw typeNotAllowed(node, path);
         }
     }
 }
@@ -177,11 +171,20 @@ function isAllowedType(type: unknown): boolean {
     return allowed.includes(type);
 }
 
-function typeNotAllowed(type: unknown, path: Path): ComponentEmbedError {
+function notAComponent(node: unknown, path: Path): ComponentEmbedError {
+    return new ComponentEmbedError(
+        'InvalidStructure',
+        `A component has to be an object with a type, got ${describeValue(node)}.`,
+        { path }
+    );
+}
+
+function typeNotAllowed(node: JsonObject, path: Path): ComponentEmbedError {
+    if (node.type === undefined) return notAComponent(node, path);
     const allowed = Object.values(TYPE).toSorted((a, b) => a - b);
     return new ComponentEmbedError(
         'InvalidStructure',
-        `Type ${describeValue(type)} can't go in a component embed. It takes types ${joinList(allowed.map(String), 'and')}.`,
+        `Type ${describeValue(node.type)} can't go in a component embed. It takes types ${joinList(allowed.map(String), 'and')}.`,
         { path }
     );
 }
@@ -300,7 +303,6 @@ function list({ node, name, path }: Parent, key: string, walk: Walk, convert: Co
     );
 }
 
-// the tree drops the id after this
 function checkId(id: unknown, path: Path, ids: Set<number>): void {
     if (id === undefined) return;
     if (typeof id !== 'number' || !Number.isSafeInteger(id) || id < 0 || id > MAX_ID) {

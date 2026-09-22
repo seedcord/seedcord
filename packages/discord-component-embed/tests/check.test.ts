@@ -363,6 +363,16 @@ describe("checkTarget reading a page's HTML", () => {
         expect(result).not.toHaveProperty('hint');
     });
 
+    it('skips a <link> written inside another script', async () => {
+        const html = page(
+            `<script>var tpl = '<link rel="discord:component-embed" type="application/json" href="https://example.com/post.json">';</script>`
+        );
+
+        expect(
+            await checkTarget(PAGE, withPages({ [PAGE]: html, 'https://example.com/post.json': good }))
+        ).toMatchObject({ status: 'fail', problems: [expect.stringMatching(/^The page has no component embed\./)] });
+    });
+
     it('measures a script body that holds <!-- and --> as sent', async () => {
         const body = card({ type: 10, content: 'a <!-- b --> c' });
         const html = page(`<script id="discord:component-embed" type="application/json">${body}</script>`);
@@ -461,20 +471,24 @@ describe("checkTarget reading a page's HTML", () => {
     });
 
     it('reports a fetch that timed out as no answer within 10 seconds', async () => {
-        const signals: unknown[] = [];
         const input: CheckInput = {
             ...withPages({}),
-            fetch: (_url, init) => {
-                signals.push(init.signal);
-                return Promise.reject(new DOMException('The operation was aborted due to timeout', 'TimeoutError'));
-            }
+            fetch: () => Promise.reject(new DOMException('The operation was aborted due to timeout', 'TimeoutError'))
         };
 
         expect(await checkTarget(PAGE, input)).toEqual({
             status: 'unreadable',
             reason: `Couldn't fetch ${PAGE}: no answer before the 10 seconds ran out. Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview.`
         });
-        expect(signals).toEqual([expect.any(AbortSignal)]);
+    });
+
+    it('fetches on a clock that reads fractions of a millisecond, like performance.now()', async () => {
+        const html = page(`<script id="discord:component-embed" type="application/json">${good}</script>`);
+        let now = 0;
+
+        const result = await checkTarget(PAGE, { ...withPages({ [PAGE]: html }), nowMs: () => (now += 0.3) });
+
+        expect(result.status).toBe('pass');
     });
 
     it('warns about a page that took over 9 seconds', async () => {

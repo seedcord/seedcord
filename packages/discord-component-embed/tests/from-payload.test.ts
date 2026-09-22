@@ -161,13 +161,18 @@ describe('fromPayload ids', () => {
     });
 
     // discord's crawler showed no preview at all for each of these
-    it.each([-1, 2_147_483_648, 1.5, 'abc'])('rejects %s as an id', (id) => {
+    it.each([
+        [-1, '-1'],
+        [2_147_483_648, '2147483648'],
+        [1.5, '1.5'],
+        ['abc', '"abc"']
+    ])('rejects %s as an id', (id, got) => {
         const error = thrownBy(() => fromJson(withIds(1, id)));
 
         expect(error.code).toBe('InvalidProp');
         expect(error.path).toEqual(['component', 'components', '0']);
         expect(error.message.split('\nFound at')[0]).toBe(
-            `An id has to be a whole number from 0 to 2147483647, got ${typeof id === 'string' ? `"${id}"` : String(id)}.`
+            `An id has to be a whole number from 0 to 2147483647, got ${got}.`
         );
     });
 
@@ -207,6 +212,12 @@ describe('fromPayload errors', () => {
             inPayload(text, 'hi'),
             ['component', 'components', '1'],
             'A component has to be an object with a type, got "hi".'
+        ],
+        [
+            'a component with no type',
+            inPayload({ content: 'hi' }),
+            ['component', 'components', '0'],
+            'A component has to be an object with a type, got {"content":"hi"}.'
         ],
         [
             'a type a component embed does not allow',
