@@ -393,16 +393,16 @@ A key a component doesn't take, like a mistyped `descripton`, throws with the ke
 The `discord-component-embed check` command runs the same checks on a JSON file, an HTML file, or a live page. Pass as many as you like.
 
 ```sh
-npx discord-component-embed check embed.json https://example.com/blog/hello-world
+npx discord-component-embed check embed.json https://materwelon.dev
 ```
 
 ```txt
-✔ embed.json
-  572 of 3000 bytes · 7 of 40 components · 1 of 10 gallery items
-
-✘ https://example.com/blog/hello-world  1 problem
+✘ embed.json  1 problem
   1. A gallery item doesn't take "descripton". Did you mean "description"? It takes media, description, and spoiler.
      Found at component > components > 3 > items > 0
+
+✔ https://materwelon.dev
+  1004 of 3000 bytes · 7 of 40 components · 0 of 10 gallery items
 
 1 passed, 1 failed
 ```
@@ -415,7 +415,7 @@ A `.html` file gets the same treatment, which checks a static build before you d
 npx discord-component-embed check dist/blog/*.html
 ```
 
-The command exits 0 when every target passes, 1 when one fails a check, and 2 when one can't be read. `pnpm dlx`, `yarn dlx`, and `bunx` run it too, and so does `deno run -A npm:discord-component-embed`.
+The command exits 0 when every target passes, 1 when one fails a check, and 2 when one can't be read or the command itself is wrong. `pnpm dlx`, `yarn dlx`, and `bunx` run it too, and so does `deno run -A npm:discord-component-embed`.
 
 <div align="right"><a href="#contents">back to top</a></div>
 

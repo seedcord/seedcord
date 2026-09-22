@@ -100,27 +100,24 @@ describe('discord-component-embed check', () => {
     });
 
     it.each([
-        ['nothing', []],
-        ['a command without a target', ['check']],
-        ['an unknown command', ['lint', 'embed.json']]
-    ])('prints the usage and exits 2 for %s', async (_label, args) => {
-        const { output, exitCode } = await runCheckCommand(args, withFiles({}));
-
-        expect(output).toMatch(/^Usage: discord-component-embed check <file or url>\.\.\./);
-        expect(exitCode).toBe(2);
+        ['nothing', [], 'discord-component-embed needs a command.'],
+        ['a command without a target', ['check'], 'check needs a file or a URL.'],
+        ['an unknown command', ['lint', 'embed.json'], "discord-component-embed doesn't have a lint command."],
+        ['an unknown flag', ['check', '--strict', 'embed.json'], "discord-component-embed doesn't take --strict."]
+    ])('says what is wrong with %s, then points at --help, and exits 2', async (_label, args, problem) => {
+        expect(await runCheckCommand(args, withFiles({}))).toEqual({
+            output: `${problem}\n\nUsage: discord-component-embed check <file or url>...\nRun discord-component-embed --help for the details.\n`,
+            exitCode: 2
+        });
     });
 
-    it('says which flag it does not take above the usage', async () => {
-        const { output, exitCode } = await runCheckCommand(['check', '--strict', 'embed.json'], withFiles({}));
-
-        expect(output).toMatch(/^discord-component-embed doesn't take --strict\.\n\nUsage: /);
-        expect(exitCode).toBe(2);
-    });
-
-    it('prints the usage and exits 0 for --help', async () => {
+    it('lists every kind of target, the exit codes, and examples for --help, and exits 0', async () => {
         const { output, exitCode } = await runCheckCommand(['--help'], withFiles({}));
 
-        expect(output).toMatch(/^Usage: /);
+        expect(output).toMatch(/^Usage: discord-component-embed check <file or url>\.\.\.\n/);
+        expect(output).toContain('Pass as many targets as you like.');
+        expect(output).toMatch(/\n {2}embed\.json +.+\n {2}dist\/post\.html +.+\n {2}https:\/\/materwelon\.dev +.+\n/);
+        expect(output).toMatch(/\n {2}0 +every target passes\n {2}1 +.+\n {2}2 +.+\n/);
         expect(exitCode).toBe(0);
     });
 });

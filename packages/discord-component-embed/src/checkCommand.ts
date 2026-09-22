@@ -17,18 +17,28 @@ interface CommandResult {
 
 const EXIT_CODE: Readonly<Record<CheckResult['status'], number>> = { pass: 0, fail: 1, unreadable: 2 };
 
-const USAGE = `Usage: discord-component-embed check <file or url>...
+const BIN = 'discord-component-embed';
+const USAGE = `${BIN} check <file or url>...`;
 
-Checks component embed JSON against Discord's rules. A .html file, like a
-page in your build output, gets its embed checked as written. Give it a URL
-to fetch the page the way Discord's crawler does.
+type Row = readonly [string, string];
 
-Exits 0 when every target passes, 1 when one fails a check, and 2 when one
-can't be read.
-`;
+const TARGETS: readonly Row[] = [
+    ['embed.json', 'a JSON payload, measured as written'],
+    ['dist/post.html', 'a page from your build, checked through its <script> or <link>'],
+    ['https://materwelon.dev', "a live page, fetched the way Discord's crawler fetches it"]
+];
+
+const EXIT_CODES: readonly Row[] = [
+    ['0', 'every target passes'],
+    ['1', 'a target fails a check'],
+    ['2', "a target can't be read, or the command is wrong"]
+];
+
+const EXAMPLES = [`${BIN} check embed.json`, `${BIN} check dist/blog/*.html`, `${BIN} check https://materwelon.dev`];
 
 // hex copied from cli/seedcord/src/ui/palette.ts
 const PALETTE = {
+    accent: { hex: '#7dcfff', ansi: 36 },
     good: { hex: '#9ece6a', ansi: 32 },
     bad: { hex: '#f7768e', ansi: 31 },
     warn: { hex: '#e0af68', ansi: 33 },
@@ -51,19 +61,20 @@ export async function runCheckCommand(args: readonly string[], input: CommandInp
         options: { help: { type: 'boolean', short: 'h' } }
     });
 
+    const paint = painter(input.colorDepth);
     const flags = tokens.flatMap((token) => (token.kind === 'option' ? [token] : []));
-    if (flags.some((flag) => flag.name === 'help')) return { output: USAGE, exitCode: 0 };
-
-    const unknown = flags[0];
-    if (unknown) return { output: `discord-component-embed doesn't take ${unknown.rawName}.\n\n${USAGE}`, exitCode: 2 };
+    if (flags.some((flag) => flag.name === 'help')) return { output: help(paint), exitCode: 0 };
 
     const [command, ...targets] = tokens.flatMap((token) => (token.kind === 'positional' ? [token.value] : []));
-    if (command !== 'check' || targets.length === 0) return { output: USAGE, exitCode: 2 };
+    const unknown = flags[0];
+    if (unknown) return misuse(`${BIN} doesn't take ${unknown.rawName}.`, paint);
+    if (command === undefined) return misuse(`${BIN} needs a command.`, paint);
+    if (command !== 'check') return misuse(`${BIN} doesn't have a ${command} command.`, paint);
+    if (targets.length === 0) return misuse('check needs a file or a URL.', paint);
 
     const checked = await Promise.all(
         targets.map(async (target) => ({ target, result: await checkTarget(target, input) }))
     );
-    const paint = painter(input.colorDepth);
     const statuses = checked.map(({ result }) => result.status);
     const blocks = checked.map(({ target, result }) => report(target, result, paint));
     const footer = checked.length > 1 ? [tally(statuses, paint)] : [];
@@ -72,6 +83,39 @@ export async function runCheckCommand(args: readonly string[], input: CommandInp
         output: [...blocks, ...footer].join('\n'),
         exitCode: Math.max(...statuses.map((status) => EXIT_CODE[status]))
     };
+}
+
+function misuse(problem: string, paint: Paint): CommandResult {
+    const output = lines(
+        paint('bad', problem),
+        '',
+        `${paint('accent', 'Usage:')} ${USAGE}`,
+        `Run ${BIN} --help for the details.`
+    );
+    return { output, exitCode: 2 };
+}
+
+function help(paint: Paint): string {
+    const heading = (title: string): string => paint('accent', title);
+    return lines(
+        `${heading('Usage:')} ${USAGE}`,
+        '',
+        "Checks Discord component embeds against Discord's rules. Pass as many targets as you like.",
+        '',
+        heading('Targets'),
+        ...table(TARGETS, paint),
+        '',
+        heading('Exit codes'),
+        ...table(EXIT_CODES, paint),
+        '',
+        heading('Examples'),
+        ...EXAMPLES.map((example) => `  ${example}`)
+    );
+}
+
+function table(rows: readonly Row[], paint: Paint): string[] {
+    const width = Math.max(...rows.map(([left]) => left.length));
+    return rows.map(([left, right]) => `  ${left.padEnd(width)}  ${paint('muted', right)}`);
 }
 
 function painter(colorDepth: number): Paint {
