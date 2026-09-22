@@ -112,6 +112,42 @@ const fromJson = fromPayload as (payload: unknown) => EmbedElement;
 const text = { type: 10, content: 'hi' };
 const inPayload = (...components: unknown[]): unknown => ({ component: { type: 17, components } });
 
+describe('fromPayload ids', () => {
+    const withIds = (containerId: unknown, textId: unknown): unknown => ({
+        component: { type: 17, id: containerId, components: [{ type: 10, id: textId, content: 'hi' }] }
+    });
+
+    it.each([
+        [0, 2_147_483_647],
+        [1, 2]
+    ])('accepts ids %s and %s and leaves them out of the payload', (containerId, textId) => {
+        expect(toComponentEmbed(fromJson(withIds(containerId, textId)))).toEqual({
+            component: { type: 17, components: [{ type: 10, content: 'hi' }] }
+        });
+    });
+
+    // discord's crawler showed no preview at all for each of these
+    it.each([-1, 2_147_483_648, 1.5, 'abc'])('rejects %s as an id', (id) => {
+        const error = thrownBy(() => fromJson(withIds(1, id)));
+
+        expect(error.code).toBe('InvalidProp');
+        expect(error.path).toEqual(['component', 'components', '0']);
+        expect(error.message.split('\nFound at')[0]).toBe(
+            `An id has to be a whole number from 0 to 2147483647, got ${typeof id === 'string' ? `"${id}"` : String(id)}.`
+        );
+    });
+
+    it('rejects an id another component already uses', () => {
+        const error = thrownBy(() => fromJson(withIds(7, 7)));
+
+        expect(error.code).toBe('InvalidProp');
+        expect(error.path).toEqual(['component', 'components', '0']);
+        expect(error.message.split('\nFound at')[0]).toBe(
+            'Another component already has the id 7. No two components in an embed can share one.'
+        );
+    });
+});
+
 describe('fromPayload errors', () => {
     it.each([
         [

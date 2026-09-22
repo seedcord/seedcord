@@ -19,6 +19,10 @@ import type { ComponentEmbedPayload } from './toComponentEmbed';
 import type { Path } from './tree';
 
 type JsonObject = Readonly<Record<string, unknown>>;
+type Convert = (node: unknown, path: Path, ids: Set<number>) => EmbedElement;
+
+// discord keeps component ids in 32 bits. its crawler shows nothing for -1 or 2147483648
+const MAX_ID = 2_147_483_647;
 
 /**
  * Turns a component embed's JSON back into a tree. Use it to check JSON you wrote by hand or got from somewhere else.
@@ -53,14 +57,14 @@ export function fromPayload(payload: ComponentEmbedPayload): EmbedElement {
             `A component embed payload is an object like { "component": { "type": 17, ... } }, got ${describeValue(value)}.`
         );
     }
-    return toElement(value.component, ['component']);
+    return toElement(value.component, ['component'], new Set());
 }
 
 function isObject(value: unknown): value is JsonObject {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function toElement(node: unknown, path: Path): EmbedElement {
+function toElement(node: unknown, path: Path, ids: Set<number>): EmbedElement {
     if (!isObject(node)) {
         throw new ComponentEmbedError(
             'InvalidStructure',
@@ -68,13 +72,14 @@ function toElement(node: unknown, path: Path): EmbedElement {
             { path }
         );
     }
+    if (node.type !== TYPE.Button) checkId(node.id, path, ids);
 
     switch (node.type) {
         case TYPE.Container: {
             return createElement(Container, {
                 accentColor: node.accent_color,
                 spoiler: node.spoiler,
-                children: list(node, 'components', path, toElement)
+                children: list(node, 'components', path, ids, toElement)
             });
         }
         case TYPE.TextDisplay: {
@@ -82,21 +87,22 @@ function toElement(node: unknown, path: Path): EmbedElement {
         }
         case TYPE.Section: {
             return createElement(Section, {
-                accessory: node.accessory === undefined ? undefined : toElement(node.accessory, [...path, 'accessory']),
-                children: list(node, 'components', path, toElement)
+                accessory:
+                    node.accessory === undefined ? undefined : toElement(node.accessory, [...path, 'accessory'], ids),
+                children: list(node, 'components', path, ids, toElement)
             });
         }
         case TYPE.Thumbnail: {
             return createElement(Thumbnail, toMediaProps(node));
         }
         case TYPE.MediaGallery: {
-            return createElement(MediaGallery, { children: list(node, 'items', path, toGalleryItem) });
+            return createElement(MediaGallery, { children: list(node, 'items', path, ids, toGalleryItem) });
         }
         case TYPE.Separator: {
             return createElement(Separator, { divider: node.divider, spacing: spacingName(node.spacing, path) });
         }
         case TYPE.ActionRow: {
-            return createElement(ActionRow, { children: list(node, 'components', path, toElement) });
+            return createElement(ActionRow, { children: list(node, 'components', path, ids, toElement) });
         }
         case TYPE.Button: {
             return toLinkButton(node, path);
@@ -152,14 +158,31 @@ function toGalleryItem(node: unknown, path: Path): EmbedElement {
 }
 
 // a missing or wrong-typed list becomes empty. the tree checks then say how many children the parent needs
-function list(
-    node: JsonObject,
-    key: string,
-    path: Path,
-    convert: (child: unknown, childPath: Path) => EmbedElement
-): EmbedElement[] {
+function list(node: JsonObject, key: string, path: Path, ids: Set<number>, convert: Convert): EmbedElement[] {
     const children = node[key];
-    return Array.isArray(children) ? children.map((child, index) => convert(child, [...path, key, String(index)])) : [];
+    return Array.isArray(children)
+        ? children.map((child, index) => convert(child, [...path, key, String(index)], ids))
+        : [];
+}
+
+// the tree drops the id after this. a link preview has no interactions to read it back
+function checkId(id: unknown, path: Path, ids: Set<number>): void {
+    if (id === undefined) return;
+    if (typeof id !== 'number' || !Number.isSafeInteger(id) || id < 0 || id > MAX_ID) {
+        throw new ComponentEmbedError(
+            'InvalidProp',
+            `An id has to be a whole number from 0 to ${String(MAX_ID)}, got ${describeValue(id)}.`,
+            { path }
+        );
+    }
+    if (ids.has(id)) {
+        throw new ComponentEmbedError(
+            'InvalidProp',
+            `Another component already has the id ${String(id)}. No two components in an embed can share one.`,
+            { path }
+        );
+    }
+    ids.add(id);
 }
 
 function toMediaProps(node: JsonObject): Record<string, unknown> {

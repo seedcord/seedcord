@@ -5,6 +5,8 @@ import type { Path } from './tree';
 
 export function describeValue(value: unknown): string {
     if (value === undefined) return 'nothing';
+    // JSON.stringify writes NaN and Infinity as null
+    if (typeof value === 'number') return String(value);
     if (typeof value === 'bigint') return `${String(value)}n`;
     if (typeof value === 'symbol') return value.toString();
     try {
