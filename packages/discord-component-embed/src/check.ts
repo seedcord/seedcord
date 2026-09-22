@@ -2,6 +2,7 @@ import { describeValue, messageOf } from './checks';
 import { collectPayloadErrors } from './fromPayload';
 import { embedStats, MAX_JSON_BYTES } from './limits';
 import { SCRIPT_ID } from './scriptId';
+import { scriptSafeJson } from './scriptSafeJson';
 
 import type { ComponentEmbedPayload } from './toComponentEmbed';
 
@@ -22,52 +23,58 @@ type Checked = Extract<CheckResult, { status: 'pass' | 'fail' }>;
 const PAGE_USER_AGENT = 'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)';
 const JSON_USER_AGENT = 'Discordbot/2.0';
 
-// discord's crawler gave up about 10 s after it sent the request. through a tunnel, the server saw 9.8 to 9.9 s of it
+// discord's crawler gave up about 10 s after it asked for the page, linked JSON included. behind a tunnel, the
+// server saw 9.8 to 9.9 s of that
 const DISCORD_TIMEOUT_MS = 10_000;
 const SLOW_WARNING_MS = DISCORD_TIMEOUT_MS - 1000;
+const DISCORD_WAITS =
+    'Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview.';
 
-type Loaded = { text: string; warnings: readonly string[] } | CheckResult;
-type Fetched = { text: string; contentType: string; warnings: readonly string[] } | CheckResult;
+type Loaded = { text: string; inScript: boolean } | CheckResult;
+type Unreadable = Extract<CheckResult, { status: 'unreadable' }>;
+type Fetched = { text: string; contentType: string } | Unreadable;
 
 // a local html file has no host to hold a <link> to
 type LinkRule = { pageHost: string } | 'file';
 
 export async function checkTarget(target: string, input: CheckInput): Promise<CheckResult> {
-    const loaded = await load(target, input);
+    const start = input.nowMs();
+    const loaded = await load(target, start + DISCORD_TIMEOUT_MS, input);
     if (!('text' in loaded)) return loaded;
-    const result = checkJsonText(loaded.text);
-    return loaded.warnings.length > 0 ? { ...result, warnings: [...loaded.warnings] } : result;
+    const result = checkJsonText(loaded.text, loaded.inScript ? scriptSafeJson : JSON.stringify);
+    const tookMs = input.nowMs() - start;
+    return tookMs >= SLOW_WARNING_MS ? { ...result, warnings: [slowWarning(tookMs)] } : result;
 }
 
-async function load(target: string, input: CheckInput): Promise<Loaded> {
+async function load(target: string, deadline: number, input: CheckInput): Promise<Loaded> {
     if (/^https?:\/\//i.test(target)) {
         const url = URL.parse(target);
         if (!url) return { status: 'unreadable', reason: `${target} isn't a valid URL.` };
-        const page = await fetchText(url, PAGE_USER_AGENT, input);
-        if (!('text' in page) || isJson(page.contentType)) return page;
+        const page = await fetchText(url, PAGE_USER_AGENT, deadline, input);
+        if (!('text' in page)) return page;
+        if (isJson(page.contentType)) return { text: page.text, inScript: false };
         // discord's crawler held the <link> to the pasted URL's host, even after a redirect to another host
-        const embed = await embedIn(page.text, { pageHost: url.hostname }, input);
-        return 'text' in embed ? { ...embed, warnings: [...page.warnings, ...embed.warnings] } : embed;
+        return embedIn(page.text, { pageHost: url.hostname }, deadline, input);
     }
 
     const file = await loadFile(target, input);
     if (!('text' in file) || !/\.html?$/i.test(target)) return file;
-    return embedIn(file.text, 'file', input);
+    return embedIn(file.text, 'file', deadline, input);
 }
 
 async function loadFile(path: string, input: CheckInput): Promise<Loaded> {
     try {
-        return { text: await input.readFile(path), warnings: [] };
+        return { text: await input.readFile(path), inScript: false };
     } catch (error) {
         return { status: 'unreadable', reason: `Couldn't read ${path}: ${oneLine(messageOf(error))}` };
     }
 }
 
-async function embedIn(html: string, rule: LinkRule, input: CheckInput): Promise<Loaded> {
+async function embedIn(html: string, rule: LinkRule, deadline: number, input: CheckInput): Promise<Loaded> {
     const script = findTags(html, 'script').find((tag) => tag.attributes.get('id') === SCRIPT_ID);
     if (script) {
         const wrongType = typeProblem(script, `<script id="${SCRIPT_ID}">`);
-        return wrongType ?? { text: script.body, warnings: [] };
+        return wrongType ?? { text: script.body, inScript: true };
     }
 
     const link = findTags(html, 'link').find((tag) => tag.attributes.get('rel')?.split(/\s+/).includes(SCRIPT_ID));
@@ -86,16 +93,16 @@ async function embedIn(html: string, rule: LinkRule, input: CheckInput): Promise
     const jsonUrl = URL.parse(href ?? '');
     const offSite = rule !== 'file' && jsonUrl !== null && !sameSite(jsonUrl.hostname, rule.pageHost);
     if (jsonUrl?.protocol !== 'https:' || offSite) {
-        const where = rule === 'file' ? '' : " on the page's host, a subdomain of it, or its parent domain";
+        const where = rule === 'file' ? '' : " on the page's host, a subdomain of it, or a domain above it";
         return {
             status: 'fail',
             problems: [`The <link> href has to be an absolute https URL${where}, got ${href ?? 'nothing'}.`]
         };
     }
 
-    // discord shows the Open Graph card when the linked JSON doesn't load
-    const json = await fetchText(jsonUrl, JSON_USER_AGENT, input);
-    if ('text' in json || json.status !== 'unreadable') return json;
+    // discord shows the Open Graph card for a linked JSON that answers 404
+    const json = await fetchText(jsonUrl, JSON_USER_AGENT, deadline, input);
+    if ('text' in json) return { text: json.text, inScript: false };
     return { status: 'fail', problems: [json.reason] };
 }
 
@@ -113,40 +120,33 @@ function isJson(contentType: string): boolean {
     return contentType.split(';')[0]?.trim().toLowerCase() === 'application/json';
 }
 
-async function fetchText(url: URL, userAgent: string, input: CheckInput): Promise<Fetched> {
-    const start = input.nowMs();
+async function fetchText(url: URL, userAgent: string, deadline: number, input: CheckInput): Promise<Fetched> {
+    const remainingMs = deadline - input.nowMs();
+    if (remainingMs <= 0) return couldNotFetch(url, timedOut());
     try {
         const response = await input.fetch(url.href, {
             headers: { 'user-agent': userAgent },
-            signal: AbortSignal.timeout(DISCORD_TIMEOUT_MS)
+            signal: AbortSignal.timeout(remainingMs)
         });
-        if (!response.ok) {
-            return {
-                status: 'unreadable',
-                reason: `Couldn't fetch ${url.href}: the server answered ${String(response.status)}.`
-            };
-        }
+        if (!response.ok) return couldNotFetch(url, `the server answered ${String(response.status)}.`);
         const text = await response.text();
-        const contentType = response.headers.get('content-type') ?? '';
-        return { text, contentType, warnings: slowWarning(url, input.nowMs() - start) };
+        return { text, contentType: response.headers.get('content-type') ?? '' };
     } catch (error) {
-        return { status: 'unreadable', reason: `Couldn't fetch ${url.href}: ${fetchFailure(error)}` };
+        const isTimeout = error instanceof DOMException && error.name === 'TimeoutError';
+        return couldNotFetch(url, isTimeout ? timedOut() : oneLine(messageOf(networkError(error))));
     }
 }
 
-function slowWarning(url: URL, ms: number): string[] {
-    if (ms < SLOW_WARNING_MS) return [];
-    const seconds = (ms / 1000).toFixed(1);
-    return [
-        `${url.href} took ${seconds} seconds to answer. Discord gives up after about 10 seconds and shows no preview.`
-    ];
+function couldNotFetch(url: URL, why: string): Unreadable {
+    return { status: 'unreadable', reason: `Couldn't fetch ${url.href}: ${why}` };
 }
 
-function fetchFailure(thrown: unknown): string {
-    if (thrown instanceof DOMException && thrown.name === 'TimeoutError') {
-        return 'no answer within 10 seconds. Discord shows no preview for a page that slow.';
-    }
-    return oneLine(messageOf(networkError(thrown)));
+function timedOut(): string {
+    return `no answer before the 10 seconds ran out. ${DISCORD_WAITS}`;
+}
+
+function slowWarning(ms: number): string {
+    return `Fetching this embed took ${(ms / 1000).toFixed(1)} seconds. ${DISCORD_WAITS}`;
 }
 
 // V8's parse errors and openssl's messages can hold newlines
@@ -176,11 +176,11 @@ const LINK_TAG = new RegExp(String.raw`<link\b${ATTRIBUTES}\/?>`, 'gi');
 // a script's text can hold <!-- and --> without being a comment
 const COMMENT_OR_SCRIPT = new RegExp(String.raw`<!--[\s\S]*?-->|${SCRIPT_TAG.source}`, 'gi');
 
-// HTML doesn't decode character references inside a script
 function findTags(html: string, name: 'script' | 'link'): Tag[] {
     const visible = html.replaceAll(COMMENT_OR_SCRIPT, (match) => (match.startsWith('<!--') ? '' : match));
     return [...visible.matchAll(name === 'script' ? SCRIPT_TAG : LINK_TAG)].map(([, attributes = '', body = '']) => ({
         attributes: parseAttributes(attributes),
+        // HTML doesn't decode character references inside a script
         body
     }));
 }
@@ -213,7 +213,7 @@ function character(codePoint: number): string {
     return String.fromCodePoint(codePoint > LAST_CODE_POINT ? REPLACEMENT_CHARACTER : codePoint);
 }
 
-function checkJsonText(sentJson: string): Checked {
+function checkJsonText(sentJson: string, minify: (payload: unknown) => string): Checked {
     let payload: unknown;
     try {
         payload = JSON.parse(sentJson);
@@ -224,7 +224,7 @@ function checkJsonText(sentJson: string): Checked {
     const errors = collectPayloadErrors(payload, sentJson);
     const bytes = byteLength(sentJson);
     if (errors.length > 0) {
-        const minified = byteLength(JSON.stringify(payload));
+        const minified = byteLength(minify(payload));
         return {
             status: 'fail',
             problems: errors.map((error) => error.message),

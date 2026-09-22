@@ -14,7 +14,11 @@ interface CommandResult {
     exitCode: number;
 }
 
-const EXIT_CODE: Readonly<Record<CheckResult['status'], number>> = { pass: 0, fail: 1, unreadable: 2 };
+const EXIT: Readonly<Record<CheckResult['status'], { code: number; meaning: string }>> = {
+    pass: { code: 0, meaning: 'every target passes' },
+    fail: { code: 1, meaning: 'a target fails a check' },
+    unreadable: { code: 2, meaning: "a target can't be read, or the command is wrong" }
+};
 
 const BIN = 'discord-component-embed';
 const USAGE = `${BIN} check <file or url>...`;
@@ -27,11 +31,7 @@ const TARGETS: readonly Row[] = [
     ['https://materwelon.dev', "a live page, fetched with Discord's crawler user agent"]
 ];
 
-const EXIT_CODES: readonly Row[] = [
-    ['0', 'every target passes'],
-    ['1', 'a target fails a check'],
-    ['2', "a target can't be read, or the command is wrong"]
-];
+const EXIT_CODES: readonly Row[] = Object.values(EXIT).map(({ code, meaning }) => [String(code), meaning]);
 
 const EXAMPLES = [`${BIN} check embed.json`, `${BIN} check dist/blog/*.html`, `${BIN} check https://materwelon.dev`];
 
@@ -62,16 +62,15 @@ export async function runCheckCommand(args: readonly string[], input: CommandInp
 
     const paint = painter(input.colorDepth);
     const flags = tokens.flatMap((token) => (token.kind === 'option' ? [token] : []));
-    if (flags.some((flag) => flag.name === 'help' && flag.value === undefined)) {
-        return { output: help(paint), exitCode: 0 };
-    }
-
-    const [command, ...targets] = tokens.flatMap((token) => (token.kind === 'positional' ? [token.value] : []));
-    const unknown = flags[0];
+    const isHelp = (flag: (typeof flags)[number]): boolean => flag.name === 'help' && flag.value === undefined;
+    const unknown = flags.find((flag) => !isHelp(flag));
     if (unknown) {
         const written = unknown.value === undefined ? unknown.rawName : `${unknown.rawName}=${unknown.value}`;
         return misuse(`${BIN} doesn't take ${written}.`, paint);
     }
+    if (flags.some(isHelp)) return { output: help(paint), exitCode: 0 };
+
+    const [command, ...targets] = tokens.flatMap((token) => (token.kind === 'positional' ? [token.value] : []));
     if (command === undefined) return misuse(`${BIN} needs a command.`, paint);
     if (command !== 'check') return misuse(`${BIN} doesn't have a ${command} command.`, paint);
     if (targets.length === 0) return misuse('check needs a file or a URL.', paint);
@@ -85,7 +84,7 @@ export async function runCheckCommand(args: readonly string[], input: CommandInp
 
     return {
         output: [...blocks, ...footer].join('\n'),
-        exitCode: Math.max(...statuses.map((status) => EXIT_CODE[status]))
+        exitCode: Math.max(...statuses.map((status) => EXIT[status].code))
     };
 }
 
@@ -96,7 +95,7 @@ function misuse(problem: string, paint: Paint): CommandResult {
         `${paint('accent', 'Usage:')} ${USAGE}`,
         `Run ${BIN} --help for the details.`
     );
-    return { output, exitCode: 2 };
+    return { output, exitCode: EXIT.unreadable.code };
 }
 
 function help(paint: Paint): string {

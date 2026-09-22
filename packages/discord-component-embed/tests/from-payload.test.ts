@@ -86,7 +86,7 @@ const text = { type: 10, content: 'hi' };
 const inPayload = (...components: unknown[]): unknown => ({ component: { type: 17, components } });
 
 describe('fromPayload keys', () => {
-    // discord renders a component with an unknown key and drops the key. these throw to catch a typo
+    // discord renders a component with an unknown key and drops the key
     it.each([
         [
             'a mistyped key on a component',
@@ -325,6 +325,16 @@ describe('fromPayload errors', () => {
         const error = thrownBy(() => fromJson(inPayload({ type: 3, id: -1 })));
 
         expect(error.message).toMatch(/^Type 3 can't go in a component embed\./);
+    });
+
+    it('says a button with no url got nothing', () => {
+        const button = { type: 2, style: 5, label: 'go' };
+
+        const error = thrownBy(() => toComponentEmbed(fromJson(inPayload({ type: 1, components: [button] }))));
+
+        expect(error.message.split('\nFound at')[0]).toBe(
+            'The <LinkButton> url must be an http, https, or discord URL, got nothing.'
+        );
     });
 
     it('lets the tree report a section with no accessory', () => {

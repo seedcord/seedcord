@@ -20,7 +20,6 @@ function withFiles(files: Record<string, string>): CheckInput {
 
 const card = (...components: unknown[]): string => JSON.stringify({ component: { type: 17, components } });
 
-// discord's crawler is the boundary here. the fake answers each url with a fixed body
 function withPages(pages: Record<string, string>, userAgents: string[] = []): CheckInput {
     return {
         readFile: () => Promise.reject(new Error('no files in this test')),
@@ -33,9 +32,22 @@ function withPages(pages: Record<string, string>, userAgents: string[] = []): Ch
     };
 }
 
-// each call returns the next time, in ms
-function clock(...times: number[]): () => number {
-    return () => times.shift() ?? 0;
+// each url takes its delay in ms to answer, on a clock that only the fetches move
+function withSlowPages(
+    pages: Record<string, string>,
+    delays: Record<string, number>,
+    fetched: string[] = []
+): CheckInput {
+    let now = 0;
+    return {
+        ...withPages(pages),
+        fetch: (url, init) => {
+            fetched.push(url);
+            now += delays[url] ?? 0;
+            return withPages(pages).fetch(url, init);
+        },
+        nowMs: () => now
+    };
 }
 
 const page = (head: string): string => `<!doctype html><html><head>${head}</head><body>hi</body></html>`;
@@ -287,7 +299,7 @@ describe('checkTarget on a url', () => {
         expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toEqual({
             status: 'fail',
             problems: [
-                `The <link> href has to be an absolute https URL on the page's host, a subdomain of it, or its parent domain, got ${href}.`
+                `The <link> href has to be an absolute https URL on the page's host, a subdomain of it, or a domain above it, got ${href}.`
             ]
         });
     });
@@ -337,6 +349,18 @@ describe("checkTarget reading a page's HTML", () => {
         );
 
         expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toMatchObject({ status: 'pass' });
+    });
+
+    it('adds the escapes toComponentEmbedScript writes when it works out the minified size of a script', async () => {
+        const payload = { component: { type: 17, components: [{ type: 10, content: 'a</'.repeat(900) }] } };
+        const sent = JSON.stringify(payload).replace('{', `{${' '.repeat(400)}`);
+        expect(JSON.stringify(payload).length).toBeLessThan(3000);
+        const html = page(`<script id="discord:component-embed" type="application/json">${sent}</script>`);
+
+        const result = await checkTarget(PAGE, withPages({ [PAGE]: html }));
+
+        expect(result).toMatchObject({ status: 'fail' });
+        expect(result).not.toHaveProperty('hint');
     });
 
     it('measures a script body that holds <!-- and --> as sent', async () => {
@@ -406,6 +430,17 @@ describe("checkTarget reading a page's HTML", () => {
         expect(await checkTarget(PAGE, input)).toMatchObject({ status: 'pass' });
     });
 
+    it('takes a <link> to any domain above the page host', async () => {
+        const blog = 'https://blog.www.example.com/post';
+        const html = page(
+            `<link rel="discord:component-embed" type="application/json" href="https://example.com/post.json">`
+        );
+
+        const result = await checkTarget(blog, withPages({ [blog]: html, 'https://example.com/post.json': good }));
+
+        expect(result.status).toBe('pass');
+    });
+
     it('reads a URL with an uppercase scheme as a URL', async () => {
         const html = page(`<script id="discord:component-embed" type="application/json">${good}</script>`);
 
@@ -420,7 +455,7 @@ describe("checkTarget reading a page's HTML", () => {
         expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toEqual({
             status: 'fail',
             problems: [
-                "The <link> href has to be an absolute https URL on the page's host, a subdomain of it, or its parent domain, got nothing."
+                "The <link> href has to be an absolute https URL on the page's host, a subdomain of it, or a domain above it, got nothing."
             ]
         });
     });
@@ -437,7 +472,7 @@ describe("checkTarget reading a page's HTML", () => {
 
         expect(await checkTarget(PAGE, input)).toEqual({
             status: 'unreadable',
-            reason: `Couldn't fetch ${PAGE}: no answer within 10 seconds. Discord shows no preview for a page that slow.`
+            reason: `Couldn't fetch ${PAGE}: no answer before the 10 seconds ran out. Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview.`
         });
         expect(signals).toEqual([expect.any(AbortSignal)]);
     });
@@ -445,10 +480,10 @@ describe("checkTarget reading a page's HTML", () => {
     it('warns about a page that took over 9 seconds', async () => {
         const html = page(`<script id="discord:component-embed" type="application/json">${good}</script>`);
 
-        expect(await checkTarget(PAGE, { ...withPages({ [PAGE]: html }), nowMs: clock(0, 9400) })).toMatchObject({
+        expect(await checkTarget(PAGE, withSlowPages({ [PAGE]: html }, { [PAGE]: 9400 }))).toMatchObject({
             status: 'pass',
             warnings: [
-                `${PAGE} took 9.4 seconds to answer. Discord gives up after about 10 seconds and shows no preview.`
+                'Fetching this embed took 9.4 seconds. Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview.'
             ]
         });
     });
@@ -456,9 +491,39 @@ describe("checkTarget reading a page's HTML", () => {
     it('stays quiet about a page that took under 9 seconds', async () => {
         const html = page(`<script id="discord:component-embed" type="application/json">${good}</script>`);
 
-        const result = await checkTarget(PAGE, { ...withPages({ [PAGE]: html }), nowMs: clock(0, 8900) });
+        const result = await checkTarget(PAGE, withSlowPages({ [PAGE]: html }, { [PAGE]: 8900 }));
 
         expect(result).not.toHaveProperty('warnings');
+    });
+
+    // on discord's crawler, a 6 s page left its linked JSON 3.8 s before discord closed the request
+    describe('with a linked JSON, counting both fetches against one 10 seconds', () => {
+        const JSON_URL = 'https://example.com/post.json';
+        const html = page(`<link rel="discord:component-embed" type="application/json" href="${JSON_URL}">`);
+        const pages = { [PAGE]: html, [JSON_URL]: good };
+
+        it('warns when the two together take over 9 seconds', async () => {
+            const result = await checkTarget(PAGE, withSlowPages(pages, { [PAGE]: 6000, [JSON_URL]: 3500 }));
+
+            expect(result).toMatchObject({
+                status: 'pass',
+                warnings: [expect.stringMatching(/^Fetching this embed took 9\.5 seconds\./)]
+            });
+        });
+
+        it('fails without fetching the JSON once the page used up the 10 seconds', async () => {
+            const fetched: string[] = [];
+
+            const result = await checkTarget(PAGE, withSlowPages(pages, { [PAGE]: 10_000 }, fetched));
+
+            expect(result).toEqual({
+                status: 'fail',
+                problems: [
+                    `Couldn't fetch ${JSON_URL}: no answer before the 10 seconds ran out. Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview.`
+                ]
+            });
+            expect(fetched).toEqual([PAGE]);
+        });
     });
 
     it("says when it can't fetch the page", async () => {

@@ -300,7 +300,7 @@ function list({ node, name, path }: Parent, key: string, walk: Walk, convert: Co
     );
 }
 
-// the tree drops the id after this. a link preview has no interactions to read it back
+// the tree drops the id after this
 function checkId(id: unknown, path: Path, ids: Set<number>): void {
     if (id === undefined) return;
     if (typeof id !== 'number' || !Number.isSafeInteger(id) || id < 0 || id > MAX_ID) {

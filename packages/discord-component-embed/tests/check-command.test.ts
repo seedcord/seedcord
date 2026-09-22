@@ -106,17 +106,20 @@ describe('discord-component-embed check', () => {
     it('prints a warning under a page that took over 9 seconds', async () => {
         const url = 'https://example.com/post';
         const html = `<script id="discord:component-embed" type="application/json">${card({ type: 10, content: 'hi' })}</script>`;
-        const times = [0, 9400];
+        let now = 0;
         const input: CommandInput = {
             ...withFiles({}),
-            fetch: () => Promise.resolve(new Response(html)),
-            nowMs: () => times.shift() ?? 0
+            fetch: () => {
+                now += 9400;
+                return Promise.resolve(new Response(html));
+            },
+            nowMs: () => now
         };
 
         const { output, exitCode } = await runCheckCommand(['check', url], input);
 
         expect(output.split('\n').at(-2)).toBe(
-            `  ! ${url} took 9.4 seconds to answer. Discord gives up after about 10 seconds and shows no preview.`
+            '  ! Fetching this embed took 9.4 seconds. Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview.'
         );
         expect(exitCode).toBe(0);
     });
@@ -126,7 +129,12 @@ describe('discord-component-embed check', () => {
         ['a command without a target', ['check'], 'check needs a file or a URL.'],
         ['an unknown command', ['lint', 'embed.json'], "discord-component-embed doesn't have a lint command."],
         ['an unknown flag', ['check', '--strict', 'embed.json'], "discord-component-embed doesn't take --strict."],
-        ['a value on --help', ['--help=false', 'check', 'x.json'], "discord-component-embed doesn't take --help=false."]
+        [
+            'a value on --help',
+            ['--help=false', 'check', 'x.json'],
+            "discord-component-embed doesn't take --help=false."
+        ],
+        ['an unknown flag next to --help', ['--help', '--strict'], "discord-component-embed doesn't take --strict."]
     ])('says what is wrong with %s, then points at --help, and exits 2', async (_label, args, problem) => {
         expect(await runCheckCommand(args, withFiles({}))).toEqual({
             output: `${problem}\n\nUsage: discord-component-embed check <file or url>...\nRun discord-component-embed --help for the details.\n`,

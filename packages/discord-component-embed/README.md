@@ -368,7 +368,7 @@ const payload = JSON.parse(await readFile('embed.json', 'utf8'));
 toComponentEmbed(fromPayload(payload));
 ```
 
-`JSON.parse` returns `any`, so the file goes straight in and the checks run when your code runs. If you write the payload in code, annotate it with `ComponentEmbedPayload`. Your editor then suggests the fields and flags a missing one before anything runs.
+TypeScript accepts the `any` that `JSON.parse` returns, so the checks run when your code runs. If you write the payload in code, annotate it with `ComponentEmbedPayload`. Your editor then suggests the fields and flags a missing one before anything runs.
 
 ```ts
 import { fromPayload, toComponentEmbedScript, type ComponentEmbedPayload } from 'discord-component-embed';
@@ -380,11 +380,11 @@ const card: ComponentEmbedPayload = {
 const script = toComponentEmbedScript(fromPayload(card));
 ```
 
-Every error for a tree from `fromPayload` has JSON keys in its `path`, like `component > components > 1`, including the errors `toComponentEmbed` throws for it later. The numbers are array indexes, counted from 0.
+Every error for a tree from `fromPayload` has JSON keys in its `path`, like `['component', 'components', '1']`, and its message prints them as `component > components > 1`. That holds for the errors `toComponentEmbed` throws for the tree later too. The numbers are array indexes, counted from 0.
 
-Discord shows no preview at all for a bad `id`, so `fromPayload` checks those too. Each `id` has to be a whole number from 0 to 2147483647, and no two components can share one. The tree leaves them out after that, because nothing in a link preview reads them.
+Discord shows no preview at all for a bad `id`, so `fromPayload` checks those too. Each `id` has to be a whole number from 0 to 2147483647, and no two components can share one. `fromPayload` then leaves them out of the tree, because nothing in a link preview reads them.
 
-If a component has a key it doesn't take, like a mistyped `descripton`, `fromPayload` throws with the keys it does take and suggests the closest one. Discord drops such a key and shows the card without that field. Extra fields inside `media`, like the `proxy_url` and `width` that Discord's API adds, are fine.
+If a component has a key it doesn't take, like a mistyped `descripton`, `fromPayload` throws with the keys it does take and suggests the closest one. Discord drops such a key and shows the card without that field. On a button, Discord shows the Open Graph card instead. Extra fields inside `media`, like the `proxy_url` and `width` that Discord's API adds, are fine.
 
 <div align="right"><a href="#contents">back to top</a></div>
 
@@ -409,9 +409,9 @@ npx discord-component-embed check embed.json https://materwelon.dev
 
 For a URL, the command fetches the page with Discord's crawler user agent. It checks the `<script>` JSON as the page serves it, or follows the `<link>` to its JSON. Both tags need `type="application/json"`, since Discord skips either one without it. The 3000-byte limit counts that text as sent, whitespace and escapes included.
 
-Discord shows no preview for a page that takes longer than about 10 seconds to answer. The command gives up at 10 seconds and counts the page as unreadable. A page that answers after 9 seconds passes with a warning.
+Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview. The command stops at the same 10 seconds and reports what it was fetching as unreadable. If the page and its JSON take over 9 seconds together, the target passes with a warning.
 
-A `.html` file gets the same treatment, which checks a static build before you deploy it. For a `<link>`, the command still fetches its URL, and it can't check the host because a file has none.
+Pass a `.html` file to check a static build before you deploy it. For a `<link>`, the command still fetches its URL, and it can't check the host because a file has none.
 
 ```sh
 npx discord-component-embed check dist/blog/*.html

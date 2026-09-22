@@ -77,7 +77,9 @@ export function checkUrl(what: string, url: string, schemes: readonly string[], 
             schemes.map((scheme) => scheme.replace(':', '')),
             'or'
         );
-        throw new ComponentEmbedError('InvalidProp', `${what} must be an ${names} URL, got ${url}.`, { path });
+        throw new ComponentEmbedError('InvalidProp', `${what} must be an ${names} URL, got ${describeValue(url)}.`, {
+            path
+        });
     }
 
     checkLength(what, url, max, path);
