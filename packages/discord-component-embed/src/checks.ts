@@ -4,6 +4,7 @@ import type { EmbedNode } from './element';
 import type { Path } from './tree';
 
 export function describeValue(value: unknown): string {
+    if (value === undefined) return 'nothing';
     if (typeof value === 'bigint') return `${String(value)}n`;
     if (typeof value === 'symbol') return value.toString();
     try {
@@ -52,9 +53,11 @@ export function isFilled(value: string | undefined): value is string {
     return value !== undefined && value !== '';
 }
 
-function orList(words: readonly string[]): string {
+export function joinList(words: readonly string[], conjunction: 'and' | 'or'): string {
     const last = words.at(-1) ?? '';
-    return words.length > 2 ? `${words.slice(0, -1).join(', ')}, or ${last}` : words.join(' or ');
+    return words.length > 2
+        ? `${words.slice(0, -1).join(', ')}, ${conjunction} ${last}`
+        : words.join(` ${conjunction} `);
 }
 
 export function checkUrl(what: string, url: string, schemes: readonly string[], max: number, path: Path): void {
@@ -68,7 +71,10 @@ export function checkUrl(what: string, url: string, schemes: readonly string[], 
 
     const protocol = URL.parse(url)?.protocol;
     if (protocol === undefined || !schemes.includes(protocol)) {
-        const names = orList(schemes.map((scheme) => scheme.replace(':', '')));
+        const names = joinList(
+            schemes.map((scheme) => scheme.replace(':', '')),
+            'or'
+        );
         throw new ComponentEmbedError('InvalidProp', `${what} must be an ${names} URL, got ${url}.`, { path });
     }
 

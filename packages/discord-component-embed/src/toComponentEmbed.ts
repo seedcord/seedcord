@@ -14,6 +14,7 @@ import {
 import { checkEmbedLimits } from './limits';
 import { scriptSafeJson } from './scriptSafeJson';
 import { childrenOf, isElement, nameOf, place, rejectVueVNode } from './tree';
+import { LINK_STYLE, SPACING, TYPE } from './wire';
 
 import type {
     ActionRowProps,
@@ -38,27 +39,9 @@ import type {
     APISectionComponent,
     APISeparatorComponent,
     APITextDisplayComponent,
-    APIThumbnailComponent,
-    ButtonStyle,
-    ComponentType,
-    SeparatorSpacingSize
+    APIThumbnailComponent
 } from 'discord-api-types/v10';
 
-type UsedComponentType =
-    'ActionRow' | 'Button' | 'Container' | 'MediaGallery' | 'Section' | 'Separator' | 'TextDisplay' | 'Thumbnail';
-
-const TYPE: { readonly [Name in UsedComponentType]: (typeof ComponentType)[Name] } = {
-    ActionRow: 1,
-    Button: 2,
-    Section: 9,
-    TextDisplay: 10,
-    Thumbnail: 11,
-    MediaGallery: 12,
-    Separator: 14,
-    Container: 17
-};
-const LINK_STYLE: ButtonStyle.Link = 5;
-const SPACING: Readonly<Record<'small' | 'large', SeparatorSpacingSize>> = { small: 1, large: 2 };
 const PLACEMENT_HINT = new Map<unknown, string>([
     [Thumbnail, 'Use it as a <Section> accessory'],
     [LinkButton, 'Put it in an <ActionRow> or use it as a <Section> accessory'],

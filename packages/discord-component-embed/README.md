@@ -28,6 +28,7 @@
 - [Put it in your page](#put-it-in-your-page)
 - [JSX setup](#jsx-setup)
 - [Linked JSON](#linked-json)
+- [JSON you already have](#json-you-already-have)
 - [Your own components](#your-own-components)
 - [Custom emoji](#custom-emoji)
 - [Testing your card](#testing-your-card)
@@ -351,6 +352,34 @@ Point the page at that URL with a `<link>` tag. The `href` has to be an absolute
 ```html
 <link rel="discord:component-embed" type="application/json" href="https://example.com/embeds/blog/hello-world" />
 ```
+
+<div align="right"><a href="#contents">back to top</a></div>
+
+## JSON you already have
+
+If you already have the JSON, like a file you wrote by hand, [`fromPayload`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/from-payload) turns it back into a tree. Pass that tree to `toComponentEmbed` and it goes through the same checks as a card built with JSX.
+
+```ts
+import { readFile } from 'node:fs/promises';
+import { fromPayload, toComponentEmbed } from 'discord-component-embed';
+
+const payload = JSON.parse(await readFile('embed.json', 'utf8'));
+toComponentEmbed(fromPayload(payload));
+```
+
+`JSON.parse` returns `any`, so the file goes straight in and the checks run when your code runs. If you write the payload in code, annotate it with `ComponentEmbedPayload`. Your editor then suggests the fields and flags a missing one before anything runs.
+
+```ts
+import { fromPayload, toComponentEmbedScript, type ComponentEmbedPayload } from 'discord-component-embed';
+
+const card: ComponentEmbedPayload = {
+    component: { type: 17, components: [{ type: 10, content: '# Hello' }] }
+};
+
+const script = toComponentEmbedScript(fromPayload(card));
+```
+
+When `fromPayload` itself rejects the JSON, like a `type` a component embed can't hold, the error's `path` lists JSON keys, like `component > components > 1`. Errors from the checks after it list component names, like `Container > Section`. Discord ignores keys it doesn't know, and so does `fromPayload`. A typo in an optional field, like `descripton`, leaves that field out of the card without an error.
 
 <div align="right"><a href="#contents">back to top</a></div>
 
