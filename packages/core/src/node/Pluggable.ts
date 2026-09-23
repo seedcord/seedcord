@@ -14,15 +14,8 @@ import type { CoreBase } from '#interfaces/CoreBase';
 import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import type { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
 import type { ShutdownPhase } from '#src/lifecycle/phases';
-import type { Runtime, RuntimeAssert, Transport, TransportAssert } from '#src/plugin/options';
-import type {
-    Attached,
-    AttachKeyAssert,
-    CoreParamAssert,
-    PluginArgs,
-    PluginCtor,
-    PluginLike
-} from '#src/plugin/Plugin';
+import type { Runtime, Transport } from '#src/plugin/options';
+import type { AttachableCtor, Attached, AttachKeyAssert, PluginArgs, PluginCtor, PluginLike } from '#src/plugin/Plugin';
 import type { Bus } from '#subscribers/Bus';
 import type { REST } from '@discordjs/rest';
 import type { Config, IRateLimiter } from '@seedcord/types';
@@ -176,10 +169,13 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     public attach<Key extends string, Ctor extends PluginCtor>(
         this: this,
         key: AttachKeyAssert<Key, this>,
-        Plugin: Ctor &
-            TransportAssert<InstanceType<Ctor>, BotT> &
-            RuntimeAssert<InstanceType<Ctor>, BotRt> &
-            CoreParamAssert<Ctor>,
+        Plugin: AttachableCtor<Ctor, BotT, BotRt>,
+        ...args: PluginArgs<Ctor>
+    ): this & Attached<Key, InstanceType<Ctor>>;
+    public attach<Key extends string, Ctor extends PluginCtor>(
+        this: this,
+        key: Key,
+        Plugin: Ctor,
         ...args: PluginArgs<Ctor>
     ): this & Attached<Key, InstanceType<Ctor>> {
         if (this.isInitialized) {

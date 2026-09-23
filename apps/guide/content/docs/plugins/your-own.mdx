@@ -1,6 +1,6 @@
 ---
 title: Writing your own
-description: Write your own plugin by extending Plugin. Covers which base to import, declaring where it runs, constructor options, rejecting bad options, logging, dev reloads, and putting it on npm.
+description: Write your own plugin by extending Plugin. Covers which base to import, declaring where it runs, constructor options, type parameters, rejecting bad options, logging, dev reloads, and putting it on npm.
 ---
 
 Let's assume your bot talks to an outside service, like a metrics API or a cache. You created its client in `bot.ts` and exported it. Nothing closes that client when the bot shuts down, and a handler can import it before it has connected. As a plugin, the client starts and stops with your bot, and handlers read it from `core` under the key you attach it with.
@@ -193,6 +193,39 @@ seedcord.attach('uptime', Uptime);
 ```
 
 `attach` rejects `Uptime` because its constructor types `host` as `Core`. `seedcord codegen` adds every plugin you attach to that same `Core` type, so a plugin whose constructor takes `Core` ends up depending on itself, which TypeScript can't resolve. Keep the parameter as `CoreBase`, then read the transport's `Core` from `this.core`, which your base class already types for you.
+
+## A plugin with a type parameter
+
+A plugin that keeps values for the bot, like a key-value cache, doesn't know their type when you write it. A type parameter leaves that to the bot that attaches it.
+
+```ts twoslash
+import { Plugin, Seedcord } from '@seedcord/gateway';
+
+declare const seedcord: Seedcord;
+
+// ---cut---
+interface Session {
+    userId: string;
+}
+
+export class KeyValue<TValue> extends Plugin {
+    private readonly entries = new Map<string, TValue>();
+
+    public async init(): Promise<void> {}
+
+    public get(key: string): TValue | undefined {
+        return this.entries.get(key);
+    }
+}
+
+const bot = seedcord.attach('sessions', KeyValue<Session>);
+const session = bot.sessions.get('abc');
+//    ^?
+```
+
+`KeyValue<Session>` in the `attach` call sets `TValue`, so `session` comes back as `Session | undefined`. A handler reading `this.core.sessions` gets the same type, because `seedcord codegen` copies the attached type onto `Core`.
+
+If you pass `KeyValue` alone, TypeScript sets `TValue` to its constraint, `unknown` here. It does that even when `TValue` has a default. A value you pass to the constructor doesn't set it either, so write the type argument in the `attach` call whenever you want a narrower type.
 
 ## Rejecting bad options
 

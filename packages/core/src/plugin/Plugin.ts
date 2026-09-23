@@ -9,7 +9,15 @@ import { resolveLifecycleSpec } from './lifecycle';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { ResolvedPluginLifecycleSpec, PluginLifecycleSpec } from './lifecycle';
-import type { TransportOf, PluginOptions, RuntimeOf } from './options';
+import type {
+    TransportOf,
+    PluginOptions,
+    RuntimeOf,
+    Runtime,
+    RuntimeAssert,
+    Transport,
+    TransportAssert
+} from './options';
 import type { Tail, FrameworkChannel, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
 export interface Initializeable {
@@ -206,7 +214,18 @@ type CoreParamTooNarrow = Record<
 >;
 
 // a narrowed first parameter fails `CoreBase extends Param`
-/** @internal */
-export type CoreParamAssert<Ctor extends PluginCtor> = CoreBase extends ConstructorParameters<Ctor>[0]
+type CoreParamAssert<Ctor extends PluginCtor> = CoreBase extends ConstructorParameters<Ctor>[0]
     ? unknown
     : CoreParamTooNarrow;
+
+type AttachAsserts<Ctor extends PluginCtor, BotT extends Transport, BotRt extends Runtime> = TransportAssert<
+    InstanceType<Ctor>,
+    BotT
+> &
+    RuntimeAssert<InstanceType<Ctor>, BotRt> &
+    CoreParamAssert<Ctor>;
+
+// typescript can't infer Ctor from a generic class through `Ctor & AttachAsserts`. every assert returns unknown to pass.
+/** @internal */
+export type AttachableCtor<Ctor extends PluginCtor, BotT extends Transport, BotRt extends Runtime> =
+    unknown extends AttachAsserts<Ctor, BotT, BotRt> ? Ctor : AttachAsserts<Ctor, BotT, BotRt>;

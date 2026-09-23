@@ -1,4 +1,5 @@
 import { Plugin } from '@seedcord/core/plugin';
+import { expectTypeOf } from 'vitest';
 
 import type { Seedcord } from '#src/Seedcord';
 
@@ -26,10 +27,19 @@ class EdgeOnly extends Plugin<{ runtime: 'edge' }> {
     }
 }
 
+class Store<TValue> extends Plugin {
+    public value?: TValue;
+
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+}
+
 // compile-only. tc is the assertion, and an unused @ts-expect-error fails it.
 function probeAccepts(bot: Seedcord): void {
     bot.attach('anywhere', Anywhere);
     bot.attach('gw', GatewayOnly);
+    expectTypeOf(bot.attach('store', Store)).toHaveProperty('store').toEqualTypeOf<Store<unknown>>();
 }
 
 function probeRejects(bot: Seedcord): void {

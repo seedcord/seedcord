@@ -57,8 +57,6 @@ type EdgePluginsUnsupported = Record<'an edge bot takes no plugins until edge su
 type BrandTransport<Plug> = Plug extends { readonly [TransportBrand]?: infer T extends string } ? T : 'any';
 type BrandRuntime<Plug> = Plug extends { readonly [RuntimeBrand]?: infer R extends string } ? R : 'any';
 
-// `unknown` vanishes from the intersection at the attach parameter, and a mismatch object leaves
-// the argument unassignable there.
 /** @internal */
 export type TransportAssert<Plug, BotT extends Transport> =
     BrandTransport<Plug> extends 'any' | BotT ? unknown : TransportMismatch<BrandTransport<Plug>, BotT>;
