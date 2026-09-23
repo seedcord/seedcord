@@ -82,7 +82,7 @@ function hardBreak(token: string, maxColumns: number): string[] {
 export function wrapText(text: string, maxColumns: number): string[] {
     const lines: string[] = [];
     let current = '';
-    for (const token of text.split(' ')) {
+    for (const token of text.split(/\s+/).filter((token) => token.length > 0)) {
         const candidate = current === '' ? token : `${current} ${token}`;
         if (displayWidth(candidate) <= maxColumns) {
             current = candidate;

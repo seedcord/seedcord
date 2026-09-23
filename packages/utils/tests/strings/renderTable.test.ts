@@ -346,6 +346,18 @@ describe('renderTable maxWidth wrap', () => {
         expect(rows[0]).toBe('│ hello │ x │');
         expect(rows[1]).toBe('│ world │   │');
     });
+
+    it('word-wraps on tabs the same way as spaces', () => {
+        const rows = bodyLines(renderTable([['hello\tworld']], { maxWidth: 5 }));
+        expect(rows[0]).toBe('│ hello │');
+        expect(rows[1]).toBe('│ world │');
+    });
+
+    it('does not leave a trailing space when consecutive spaces force a wrap', () => {
+        const rows = bodyLines(renderTable([['aa  bb']], { maxWidth: 3 }));
+        expect(rows[0]).toBe('│ aa │');
+        expect(rows[1]).toBe('│ bb │');
+    });
 });
 
 describe('renderTable pagination', () => {
