@@ -35,6 +35,18 @@ describe('seedcordDependents', () => {
         expect(seedcordDependents(root).toSorted()).toEqual(['depending', 'dev-plugin', 'peering']);
     });
 
+    it('follows a seedcord dependent down to the plugins it depends on', async () => {
+        root = await mkdtemp(join(tmpdir(), 'seedcord-dependents-'));
+        const bundle = join(root, 'node_modules', 'bundle');
+        await writeManifest(root, { dependencies: { bundle: '1.0.0' } });
+        await writeManifest(bundle, { dependencies: { '@seedcord/core': '*', 'inner-plugin': '1.0.0' } });
+        await writeManifest(join(bundle, 'node_modules', 'inner-plugin'), {
+            peerDependencies: { '@seedcord/core': '*' }
+        });
+
+        expect(seedcordDependents(root).toSorted()).toEqual(['bundle', 'inner-plugin']);
+    });
+
     it('finds a dependency hoisted to a parent node_modules', async () => {
         root = await mkdtemp(join(tmpdir(), 'seedcord-dependents-'));
         const bot = join(root, 'apps', 'bot');
