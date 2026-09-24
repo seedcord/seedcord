@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 
 import { getDevChannel } from '#hmr/devChannel';
@@ -143,6 +143,10 @@ export function resolvedLifecycleSpecOf(plugin: PluginLike): ResolvedPluginLifec
 
 /** @internal */
 export function pluginLoggerOf(plugin: PluginLike): Logger {
+    // each copy of this module creates its own loggerSlot symbol
+    if (!Object.hasOwn(plugin, loggerSlot)) {
+        throw new SeedcordTypeError(SeedcordErrorCode.CorePluginFromOtherCore, [plugin.constructor.name]);
+    }
     return plugin[loggerSlot];
 }
 

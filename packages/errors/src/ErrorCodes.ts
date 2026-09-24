@@ -74,6 +74,8 @@ export enum SeedcordErrorCode {
     CorePluginKeyHoldsGroup = 1216,
     /** A plugin key is empty, has an empty part, or carries more than one dot. */
     CorePluginKeyMalformed = 1217,
+    /** An attached plugin extends `Plugin` from a different copy of `@seedcord/core` than the bot. */
+    CorePluginFromOtherCore = 1218,
 
     /** A command decorator attempted to re-register an existing command scope. */
     DecoratorCommandAlreadyRegistered = 1301,
