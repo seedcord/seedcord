@@ -5,7 +5,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
 
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import { devConfigFor } from './devConfigFor';
 
 const SCRATCH_ROOT = join(import.meta.dirname, '.build-fixture');
 
@@ -33,15 +33,6 @@ async function writeProject(dir: string): Promise<void> {
     );
 }
 
-// the runtime reads only these three fields on the way to loadEntry
-function configFor(dir: string): ResolvedSeedcordDevConfig {
-    return {
-        configFile: join(dir, 'seedcord.config.ts'),
-        root: join(dir, 'src'),
-        instance: join(dir, 'src', 'index.ts')
-    } as unknown as ResolvedSeedcordDevConfig;
-}
-
 describe('dev runtime against a project that declares tsconfig paths', () => {
     const runtimes: ViteDevRuntime[] = [];
 
@@ -58,7 +49,7 @@ describe('dev runtime against a project that declares tsconfig paths', () => {
         const runtime = new ViteDevRuntime();
         runtimes.push(runtime);
 
-        await runtime.start({ config: configFor(dir) });
+        await runtime.start({ config: devConfigFor(dir, 'index.ts') });
         const { module } = await runtime.loadEntry();
 
         expect(module).toMatchObject({ value: 'aliased' });

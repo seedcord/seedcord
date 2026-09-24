@@ -37,8 +37,11 @@ export class ViteDevRuntime implements DevRuntime {
 
         const projectDir = dirname(this.context.config.configFile);
 
+        // vite writes resolved options back into the config object it receives
+        const base = structuredClone(viteConfig);
+
         // vite searches its own root for a config file
-        const config = mergeConfig(viteConfig, {
+        const config = mergeConfig(base, {
             root: projectRoot,
             configFile: false,
             server: { watch: { ignored: [logsIgnore(projectRoot)] } },

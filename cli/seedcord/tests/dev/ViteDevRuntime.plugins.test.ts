@@ -2,11 +2,12 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
+import viteConfig from '#commands/dev/runtime/vite.config';
 import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
 
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import { devConfigFor } from './devConfigFor';
 
 // stands in for @seedcord/core, whose Plugin stamps a module-level symbol that attach reads back
 const CORE_ENTRY = `const slot = Symbol('slot');
@@ -43,7 +44,8 @@ async function writePackage(root: string, name: string, manifest: object, entry:
     await writeFile(join(dir, 'index.mjs'), entry);
 }
 
-async function writeProject(root: string): Promise<void> {
+async function writeProject(): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'seedcord-dev-plugin-'));
     await mkdir(join(root, 'src'), { recursive: true });
     await writeFile(
         join(root, 'package.json'),
@@ -59,37 +61,36 @@ async function writeProject(root: string): Promise<void> {
         { peerDependencies: { '@seedcord/fixture-core': '*' } },
         PLUGIN_ENTRY
     );
+    return root;
 }
 
-// the runtime reads only these three fields on the way to loadEntry
-function configFor(root: string): ResolvedSeedcordDevConfig {
-    return {
-        configFile: join(root, 'seedcord.config.ts'),
-        root: join(root, 'src'),
-        instance: join(root, 'src', 'bot.ts')
-    } as unknown as ResolvedSeedcordDevConfig;
+async function withRuntime(run: (runtime: ViteDevRuntime) => Promise<void>): Promise<void> {
+    const root = await writeProject();
+    const runtime = new ViteDevRuntime();
+    try {
+        await runtime.start({ config: devConfigFor(root, 'bot.ts') });
+        await run(runtime);
+    } finally {
+        await runtime.dispose();
+        await rm(root, { recursive: true, force: true });
+    }
 }
 
 describe('dev runtime against a plugin published outside the @seedcord scope', () => {
-    const cleanups: (() => Promise<void>)[] = [];
-
-    afterAll(async () => {
-        await Promise.all(cleanups.map((cleanup) => cleanup()));
-    });
-
     it('loads the plugin against the same core the bot imports', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'seedcord-dev-plugin-'));
-        await writeProject(root);
+        await withRuntime(async (runtime) => {
+            const { module } = await runtime.loadEntry();
 
-        const runtime = new ViteDevRuntime();
-        cleanups.push(
-            () => runtime.dispose(),
-            () => rm(root, { recursive: true, force: true })
-        );
+            expect(module).toMatchObject({ sameCore: true });
+        });
+    }, 60_000);
 
-        await runtime.start({ config: configFor(root) });
-        const { module } = await runtime.loadEntry();
+    // a restart in the same process builds its config from this object again
+    it('leaves the shared vite config as it found it', async () => {
+        const before = structuredClone(viteConfig);
 
-        expect(module).toMatchObject({ sameCore: true });
+        await withRuntime(async () => {});
+
+        expect(viteConfig).toEqual(before);
     }, 60_000);
 });
