@@ -1,5 +1,4 @@
 import { REST } from '@discordjs/rest';
-import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -32,16 +31,6 @@ beforeEach(() => {
 class Database extends Plugin {
     public init(): Promise<void> {
         this.logger.info('connected');
-        return Promise.resolve();
-    }
-}
-
-class OtherCorePlugin {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-
-    public onHmr(): Promise<void> {
         return Promise.resolve();
     }
 }
@@ -89,20 +78,5 @@ describe('the plugin logger', () => {
         await host.attach('services.users', Database).services.users.init();
 
         expect(sink.records[0]?.channel).toBe('services.users');
-    });
-
-    it('rejects a plugin built on another copy of @seedcord/core', () => {
-        const host = new TestHost();
-
-        let thrown: unknown;
-        try {
-            // justified: a Plugin from another core copy leaves this copy's slot symbols unset
-            host.attach('kv', OtherCorePlugin as unknown as typeof Database);
-        } catch (error) {
-            thrown = error;
-        }
-
-        expect(isSeedcordError(thrown, 'SeedcordTypeError', SeedcordErrorCode.CorePluginFromOtherCore)).toBe(true);
-        expect(String(thrown)).toContain('OtherCorePlugin');
     });
 });

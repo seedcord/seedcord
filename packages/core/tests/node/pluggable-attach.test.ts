@@ -151,6 +151,25 @@ describe('Pluggable', () => {
             expect(core.rateLimiter).toBe(host.rateLimiter);
             expect(core.rest).toBe(host.rest);
         });
+
+        it('rejects a plugin built on another copy of @seedcord/core before constructing it', async () => {
+            vi.resetModules();
+            const { Plugin: OtherCopy } = await import('#src/plugin/Plugin');
+
+            const constructed = vi.fn(() => true);
+            class FromOtherCore extends OtherCopy {
+                public readonly built = constructed();
+
+                public init(): Promise<void> {
+                    return Promise.resolve();
+                }
+            }
+
+            expect(() => makeHost().host.attach('kv', FromOtherCore)).toThrow(
+                expect.objectContaining({ code: SeedcordErrorCode.CorePluginFromOtherCore })
+            );
+            expect(constructed).not.toHaveBeenCalled();
+        });
     });
 
     describe('dispose', () => {

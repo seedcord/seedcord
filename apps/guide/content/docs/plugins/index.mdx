@@ -253,13 +253,14 @@ seedcord.attach('commands', Mongoose, {
 
 </Callout>
 
-`attach` throws in five more cases when it runs:
+`attach` also throws in these cases when it runs:
 
 - If the bot has already started, it throws `CorePluginAfterInit`.
 - If another plugin or seedcord itself already uses the key on `core`, like `bus`, it throws `CorePluginKeyExists`.
 - Nesting under a name the bot already uses, like `db`, throws `CorePluginGroupTaken`.
 - Attaching a plugin at a name that holds a group throws `CorePluginKeyHoldsGroup`.
 - If the key has an empty part or a second dot, it throws `CorePluginKeyMalformed`.
+- If the plugin extends `Plugin` from a second copy of `@seedcord/core`, it throws `CorePluginFromOtherCore`. That happens when the plugin and your `@seedcord` packages need different versions of `@seedcord/core`.
 
 ## A plugin declares where it runs
 

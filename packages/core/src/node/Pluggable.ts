@@ -5,7 +5,7 @@ import { HostPluginKeys, HostShutdown, HostStartup } from '@seedcord/types/inter
 
 import { assertNodeVersion } from '#node/assertNodeVersion';
 import { StartupPhase } from '#src/lifecycle/phases';
-import { pluginLoggerOf, resolvedLifecycleSpecOf } from '#src/plugin/Plugin';
+import { Plugin as PluginBase, pluginLoggerOf, resolvedLifecycleSpecOf } from '#src/plugin/Plugin';
 
 import { withTimeout } from './Lifecycle/withTimeout';
 import { registerProcessErrors } from './processErrors';
@@ -198,6 +198,11 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
             throw new SeedcordTypeError(SeedcordErrorCode.CorePluginKeyMalformed, [key, 'has more than one dot.']);
         }
         this.assertFree(head, leaf, key);
+
+        // a second copy of @seedcord/core defines its own Plugin class
+        if (!(Plugin.prototype instanceof PluginBase)) {
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginFromOtherCore, [Plugin.name]);
+        }
 
         const instance = new Plugin(this, ...args);
         pluginLoggerOf(instance).setChannel(key);
