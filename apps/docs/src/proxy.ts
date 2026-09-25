@@ -32,9 +32,15 @@ async function loadBefore(ms: number): Promise<IndexJson> {
     const timer = setTimeout(() => {
         deadline.abort();
     }, ms);
+    // readFile on a file:// index ignores the signal
+    const expired = new Promise<never>((_resolve, reject) => {
+        deadline.signal.addEventListener('abort', () => {
+            reject(deadline.signal.reason);
+        });
+    });
 
     try {
-        return await createIndexLoader(deadline.signal).load();
+        return await Promise.race([createIndexLoader(deadline.signal).load(), expired]);
     } finally {
         clearTimeout(timer);
     }

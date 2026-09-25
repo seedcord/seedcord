@@ -118,6 +118,18 @@ describe('proxy', () => {
         expect(passedThrough(await pending)).toBe(true);
     });
 
+    it('passes the request through when a read that ignores its abort signal stalls', async () => {
+        vi.useFakeTimers();
+        // readFile on the local file:// index is one of these
+        fetchIndex.mockImplementation(() => new Promise<Response>(() => undefined));
+        const proxy = await freshProxy();
+
+        const pending = proxy('https://docs.seedcord.org/packages/gateway/0.6.0');
+        await vi.advanceTimersByTimeAsync(10_000);
+
+        expect(passedThrough(await pending)).toBe(true);
+    });
+
     it('cancels the index fetch once the wait runs out', async () => {
         vi.useFakeTimers();
         fetchIndex.mockImplementation(stalledFetch);
