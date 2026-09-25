@@ -1,3 +1,4 @@
+import { buildPackageBasePath, DEFAULT_VERSION } from '@seedcord/docs-engine/client';
 import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 import { BRAND } from '@seedcord/ui/palette';
 
@@ -56,6 +57,12 @@ function truncate(text: string, max: number): string {
     return `${cut.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd()}…`;
 }
 
+// seedcord and @seedcord/* titles already say seedcord
+function titleFor(text: string, packageName: string): string {
+    const branded = packageName === SITE_NAME || packageName.startsWith(`@${SITE_NAME}/`);
+    return branded ? text : `${text} · ${SITE_NAME}`;
+}
+
 interface PageFacts {
     path: string;
     title: string;
@@ -77,23 +84,22 @@ export class DocsPage {
     static root(): DocsPage {
         return new DocsPage({
             path: '/',
-            title: `${SITE_NAME} reference`,
+            title: `${SITE_NAME} API reference`,
             card: rootCard(),
             image: '/og',
             canonicalPath: '/'
         });
     }
 
-    static forPackage(entry: PackageCatalogEntry, version: PackageVersionCatalog, latestId: string): DocsPage {
-        const path = `/packages/${entry.id}/${version.id}`;
+    static forPackage(entry: PackageCatalogEntry, version: PackageVersionCatalog): DocsPage {
+        const path = buildPackageBasePath(entry.manifestName, version.id);
         return new DocsPage({
             path,
-            title: `${entry.label} ${version.label}`,
+            title: titleFor(`${entry.manifestName} ${version.label}`, entry.manifestName),
             card: packageCard(entry, version),
             image: `${path}.png`,
             markdownPath: `${path}.md`,
-            // every package has a latest overview
-            canonicalPath: `/packages/${entry.id}/${latestId}`
+            canonicalPath: buildPackageBasePath(entry.manifestName, DEFAULT_VERSION)
         });
     }
 
@@ -105,7 +111,7 @@ export class DocsPage {
     ): DocsPage {
         return new DocsPage({
             path,
-            title: entity.name,
+            title: titleFor(`${entity.name} · ${entity.manifestPackage}`, entity.manifestPackage),
             card: entityCard(entity, version),
             image: `${path}.png`,
             markdownPath: `${path}.md`,
@@ -124,7 +130,8 @@ export class DocsPage {
         const images = [{ url: imageUrl, width: OG_IMAGE_W, height: OG_IMAGE_H, alt: ogPageCardAlt(card) }];
 
         return {
-            title,
+            // the root layout's template would add the site name again
+            title: { absolute: title },
             description,
             alternates: {
                 canonical: url,
