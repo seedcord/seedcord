@@ -52,7 +52,7 @@ Every change to a published package needs one. Run `pnpm cs`.
 
 A changeset is one or two plain sentences naming the user-visible change. Skip the sub-changes that rode along, since the changelog reader has the diff. Mark a breaking change with a bold `**BREAKING:**` prefix line.
 
-A change to an `./internal` entry gets a patch changeset once another package imports from it. Without one the package doesn't publish, and the importing package ships asking for an export the registry doesn't have. Write one line saying which package reads it now, like "`@seedcord/logger` and `seedcord` now read `isPlainObject` from here." An `./internal` change that nothing else imports yet gets no changeset.
+A change to an `./internal` entry gets a patch changeset once another package imports from it. Without one the package doesn't publish, and the importing package ships asking for an export the registry doesn't have. Write one line saying which package reads it now, like "`@seedcord/logger` and `seedcord` now read `isPlainObject` from here."
 
 ---
 
