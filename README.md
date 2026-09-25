@@ -6,7 +6,7 @@
 </div>
 
 <div align="center">
-  <h3>The whole Discord bot, wired and typed</h3>
+  <h3>The whole Discord bot, typed end to end</h3>
   <a href="https://seedcord.org">Website</a> ·
   <a href="https://guide.seedcord.org">Guide</a> ·
   <a href="https://docs.seedcord.org">Reference</a> ·
@@ -21,7 +21,7 @@
 
 </div>
 
-seedcord wires a Discord bot together on top of discord.js and types every part of it. Commands, events, components, gates, lifecycle, and plugins all come with the framework. A wrong route or a wrong option name is a compile error, before the bot ever connects.
+seedcord runs a Discord bot on top of discord.js and types every part of it. Commands, events, components, gates, lifecycle, and plugins all come with the framework. A wrong route or a wrong option name is a compile error, before the bot ever connects.
 
 You pick one of two transports when you scaffold. `@seedcord/gateway` holds a websocket connection. `@seedcord/http` answers Discord's interaction requests. Everything you write on top of them is the same code.
 

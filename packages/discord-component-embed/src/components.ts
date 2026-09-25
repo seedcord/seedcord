@@ -128,7 +128,7 @@ export function Section(_props: SectionProps): null {
  * @example
  * ```tsx
  * <Section accessory={<Thumbnail url="https://seedcord.org/icon" description="The Materwelon mark" />}>
- *     <TextDisplay>## seedcord{'\n'}The whole Discord bot, wired and typed</TextDisplay>
+ *     <TextDisplay>## seedcord{'\n'}The whole Discord bot, typed end to end</TextDisplay>
  * </Section>
  * ```
  */

@@ -6,7 +6,7 @@
 </div>
 
 <div align="center">
-  <h3>The whole Discord bot, wired and typed</h3>
+  <h3>The whole Discord bot, typed end to end</h3>
   <a href="https://seedcord.org">Website</a> ·
   <a href="https://guide.seedcord.org">Guide</a> ·
   <a href="https://docs.seedcord.org">Reference</a> ·
