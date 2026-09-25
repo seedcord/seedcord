@@ -2,7 +2,7 @@ import { AUTHOR_GITHUB_URL, AUTHOR_URL, DISCORD_URL, GITHUB_ORG_URL, HOME_URL, N
 
 // matches the GitHub repository description
 const SEEDCORD_DESCRIPTION =
-    "seedcord is a strongly typed TypeScript framework for making discord.js bots. It wires and types your bot for you, on both gateway and http interactions. You write your bot's features, and nothing else.";
+    "seedcord is an end-to-end typed TypeScript framework for making discord.js bots. It works both over the gateway and with http interactions. You write your bot's features, and nothing else.";
 
 // Google merges nodes that share an @id across sites
 const ORG_ID = `${HOME_URL}/#organization`;
