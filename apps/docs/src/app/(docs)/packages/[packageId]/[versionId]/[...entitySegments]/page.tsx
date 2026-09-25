@@ -19,9 +19,7 @@ export const dynamic = 'force-static';
 
 export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
     const resolved = await resolveEntity(await params);
-    // an unresolved path renders a soft-404, so this keeps it out of the index.
-    // it would otherwise inherit the root's og image and title
-    if (!resolved) return { robots: { index: false } };
+    if (!resolved) notFound();
 
     const page = DocsPage.forEntity(
         entityPath(resolved),
