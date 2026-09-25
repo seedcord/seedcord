@@ -1,6 +1,6 @@
 ---
 title: Cooldowns
-description: Limit how often a command runs with the Cooldown() gate. Covers durations, uses per window, who shares a window, wording the refusal, and keeping windows across restarts.
+description: Limit how often someone can run a command with the Cooldown() gate, choose who shares a window, and keep windows across restarts.
 ---
 
 A command that calls a paid API or posts in a channel needs a limit, or one person can run it dozens of times a minute. By hand, that's a map of last-use times in every handler that needs one, plus a reply telling the caller when to try again.

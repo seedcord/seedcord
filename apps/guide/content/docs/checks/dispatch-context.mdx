@@ -1,6 +1,6 @@
 ---
 title: The dispatch context
-description: Pass values from a middleware to the rest of a dispatch with the dispatch context. Covers typing its keys and reading them in a handler, a gate, and a fault card.
+description: Pass values from a middleware to the handler, gates, and fault card of the same dispatch through the typed dispatch context.
 ---
 
 A middleware often computes something the rest of the [dispatch](/checks#what-a-dispatch-is) needs, like the caller's account row or their language. Without somewhere to put it, every handler and gate would load that row again. The dispatch context is where you put that value.

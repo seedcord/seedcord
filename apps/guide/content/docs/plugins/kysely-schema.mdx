@@ -1,6 +1,6 @@
 ---
 title: Your schema
-description: Type your Postgres tables for the kysely plugin by declaring a schema on KyselyDatabase. Covers the column helpers, what an undeclared schema lets through, and keeping the schema in step with your migrations.
+description: Type your Postgres tables for the kysely plugin by declaring a schema on KyselyDatabase, and keep it in step with your migrations.
 ---
 
 TypeScript can't read your tables out of Postgres while it compiles, so Kysely types every query against an interface you write by hand. To give the plugin that interface, declare `schema` on [`KyselyDatabase`](ref:plugin-kysely-postgres/KyselyDatabase). The plugin's [`connection`](ref:plugin-kysely-postgres/KyselyPostgres.connection) and every service get their table and column types from it.

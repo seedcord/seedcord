@@ -1,6 +1,6 @@
 ---
 title: Follow-ups and edits
-description: Send more messages after the first reply, then edit or delete them later. Covers the targets that have to come from this interaction, and send() picking the method for you.
+description: Send more messages after the first reply to an interaction, then edit or delete them later from the same handler.
 ---
 
 Suppose your ban handler revokes the target's sessions after it has already replied "Banned." Telling the caller how that went takes a different call from the first one, and rewriting the message you already sent takes a reference to it.

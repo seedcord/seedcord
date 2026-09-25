@@ -1,6 +1,6 @@
 ---
 title: The lifecycle
-description: Control when a plugin starts and stops with init(), ready(), and dispose(). Covers the startup and shutdown phases, moving a method to another phase, timeouts, and what happens when init() or dispose() fails.
+description: Control when a plugin starts and stops with init(), ready(), and dispose(), and what happens when one of them fails.
 ---
 
 A plugin's setup often depends on timing. A database has to connect before the first handler reads it, a status update needs a logged-in client, and a timer should stop before the process exits. Code in a constructor runs too early for all three.

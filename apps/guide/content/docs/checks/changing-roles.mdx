@@ -1,6 +1,6 @@
 ---
 title: Changing roles
-description: Check that your bot can assign a role, then build and write a member's new role list. Covers hasPermsToAssign(), rewording its refusals, mergeRoles(), and writing the list on each transport.
+description: Check that your bot can assign a role with hasPermsToAssign(), then build and write a member's new role list with mergeRoles().
 ---
 
 Your bot holds Manage Roles, yet `roles.add` still fails. Holding the permission isn't enough, because Discord also checks role position. A bot can change only the roles below its own highest role. Discord rejects a write to a role at or above it. Without a check first, you only find out from the error Discord returns.

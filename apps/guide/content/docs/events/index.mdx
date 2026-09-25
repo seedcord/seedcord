@@ -1,6 +1,6 @@
 ---
 title: Your first event handler
-description: Run code when a discord.js event fires, with an event handler class. Covers registering an event, reading its payload, where handler files go, intents, running a handler once, and several handlers for one event.
+description: Run code when discord.js emits an event, like a member joining a server, with an event handler class that reads its payload.
 ---
 
 A member joins, someone posts a message, someone edits it. Each one is a discord.js event. With plain discord.js you'd call `client.on` for each event in a startup file. That file grows with every listener you add. When an async listener throws, nothing catches the rejection unless you wrap every listener yourself.

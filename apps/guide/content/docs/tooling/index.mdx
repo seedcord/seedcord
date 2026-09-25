@@ -1,6 +1,6 @@
 ---
 title: Tooling
-description: Configure a seedcord project through its two config files, one for the CLI and one for your bot. Covers every key in seedcord.config.ts, the commands that read it, and where each key of your bot's own config gets taught.
+description: Configure a seedcord project through its two config files, one for the CLI and one for your bot, and look up every CLI key.
 ---
 
 A seedcord project has two config files, because two different programs read them. `seedcord dev` and `seedcord codegen` have to import your bot before it runs, so they need its path from somewhere other than the bot itself. `seedcord.config.ts` holds those paths for the CLI. The `new Seedcord({ ... })` call in `src/bot.ts` configures the bot while it runs.

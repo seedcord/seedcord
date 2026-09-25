@@ -1,6 +1,6 @@
 ---
 title: The rate limiter
-description: Count uses against any key you build with the rate limiter. Covers charging and reading a window, building keys, clearing a key, and writing a durable store.
+description: Count uses against any key you build with the rate limiter, and write a durable store to keep the counts.
 ---
 
 Some limits don't belong to whoever ran the command. A member can receive three awards a day, however many people hand them out. A [`Cooldown`](ref:core/Cooldown) gate can't express that, since it counts per caller, per server, or per channel.

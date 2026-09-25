@@ -1,6 +1,6 @@
 ---
 title: Kysely and Postgres
-description: Connect a gateway or http bot to Postgres through Kysely with the kysely plugin. Covers its options, where the pool comes from, creating the database, startup and shutdown, and the Kysely instance.
+description: Connect a gateway or http bot to Postgres through Kysely with the kysely plugin, which starts and stops with your bot.
 ---
 
 A bot on Postgres usually creates a `pg` pool in `bot.ts`, runs a migration script before it starts, and calls `pool.end()` on shutdown. A handler can import that pool before the tables exist. If you forget `pool.end()`, the connections stay open after the bot stops. [`@seedcord/plugin-kysely-postgres`](ref:plugin-kysely-postgres) opens the pool, runs your migrations, and loads your service classes from a directory while the bot starts, then closes the pool when it stops. Your queries are ordinary [Kysely](https://kysely.dev/docs/intro) queries, so anything in Kysely's own docs applies as written.

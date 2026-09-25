@@ -1,6 +1,6 @@
 ---
 title: The dev tunnel
-description: Give an http bot a public address while you work on it locally. Covers installing cloudflared, the quick tunnel seedcord dev opens by default, using a URL you already serve, turning the tunnel off, and what happens when it fails.
+description: Give an http bot a public address through a Cloudflare tunnel that seedcord dev opens while you work on it locally.
 ---
 
 Discord delivers interactions by posting them to a public URL. Your laptop doesn't have one, so Discord can't reach `localhost:3000` on your machine. Without a tunnel you'd deploy every change to a server, or set up port forwarding and paste a new endpoint into the developer portal each time. `seedcord dev` gives your http bot a public address and writes it into your Discord application for you.

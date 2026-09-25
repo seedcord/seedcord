@@ -1,6 +1,6 @@
 ---
 title: Throwing
-description: Refuse from a handler by throwing a Notice, so the user gets a reason rather than silence. Covers what each kind of throw produces, the fields on a Notice, and what render receives.
+description: Refuse a request from a handler by throwing a Notice, so the user sees your reason on a card and your code stops there.
 ---
 
 Say your ban handler checks for an open case in a helper. Returning a flag means `execute()` has to check it, and every caller of every helper that can refuse has to check one too. Throw from the helper and the handler stops at the line that found the problem.

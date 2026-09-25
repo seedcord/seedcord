@@ -1,6 +1,6 @@
 ---
 title: Interaction middleware
-description: Run code before your interaction handlers with middleware. Covers which interactions it runs for, the order, stopping a dispatch, replying, and cleaning up in after().
+description: Run code before and after your interaction handlers with middleware, or stop a dispatch before it reaches them.
 ---
 
 A middleware runs before your handler. Write one when several handlers all need the same thing done first, like loading the caller's record, or when you want to refuse an interaction before it reaches your code.

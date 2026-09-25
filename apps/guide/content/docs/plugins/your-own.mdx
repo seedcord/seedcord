@@ -1,6 +1,6 @@
 ---
 title: Writing your own
-description: Write your own plugin by extending Plugin. Covers which base to import, declaring where it runs, constructor options, type parameters, rejecting bad options, logging, dev reloads, and putting it on npm.
+description: Write your own plugin by extending Plugin, with typed options, logging, and dev reloads, then publish it on npm.
 ---
 
 Let's assume your bot talks to an outside service, like a metrics API or a cache. You created its client in `bot.ts` and exported it. Nothing closes that client when the bot shuts down, and a handler can import it before it has connected. As a plugin, the client starts and stops with your bot, and handlers read it from `core` under the key you attach it with.

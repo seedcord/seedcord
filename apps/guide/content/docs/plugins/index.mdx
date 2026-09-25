@@ -1,6 +1,6 @@
 ---
 title: Plugins
-description: Add your own services to a bot with plugins, which seedcord starts and stops with it. Covers attaching a plugin, reading it from a handler, grouping several under one name, and where a plugin can run.
+description: Add your own services to a bot with plugins, which seedcord starts and stops with it, and read them from any handler.
 ---
 
 Most bots need something beside Discord, like a database, a cache, or a client for another API. Wiring one up by hand means starting it before the bot logs in, handing it to every handler through a global or an import, and stopping it on shutdown before the process exits.

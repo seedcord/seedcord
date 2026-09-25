@@ -1,6 +1,6 @@
 ---
 title: Building
-description: Compile your bot for production with seedcord build. Covers the steps it runs, starting the output, its config keys, build failures, the runtime key, and the health server your host calls.
+description: Compile your bot for production with seedcord build, then start the output on your host with a health server it can check.
 ---
 
 Node can't run your `src` folder in production as it is. Your handlers use decorators, and node's built-in TypeScript support stops with a parser error on decorator syntax. Running `tsc` yourself compiles the decorators, but node then fails on any extensionless import or path alias that `tsc` copied into the output as written.

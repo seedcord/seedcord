@@ -1,6 +1,6 @@
 ---
 title: Permissions in a handler
-description: Check permissions inside a handler with assertPermissions() and the gateway helpers. Covers asserting a bitfield, refusing a permission the target holds, rewording the refusal, and checking a member, a role, or your own bot.
+description: Check permissions inside a handler with assertPermissions() and the gateway helpers, for a member, a role, or your own bot.
 ---
 
 A permission gate checks the caller and your bot before `execute()` starts. `/ban @someone` needs the target checked too. You get the target from the options inside `execute()`, after every gate has run. By hand, that check means comparing bitfields and writing a refusal message that lists what's missing.

@@ -1,6 +1,6 @@
 ---
 title: When a custom id goes stale
-description: Someone clicks a component your bot minted under an older custom id shape. Covers the edits that change the shape hash, what your user sees, a wire from a different id, and replacing both cards with your own.
+description: Handle a click on a component your bot sent before its custom id changed shape, and choose what that user sees.
 ---
 
 A message with a button or a select menu on it stays in the channel until someone deletes it. Your shape changes on the next deploy. Decoded against the new shape, an old button's values would fill the wrong fields, and your handler would use them.

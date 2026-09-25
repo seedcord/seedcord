@@ -1,6 +1,6 @@
 ---
 title: Logging
-description: Log from your handlers, subscribers, and plugins through the logger each of them carries. Covers the five levels, the label on every line, extra arguments, format specifiers, channels, and logging several lines at once.
+description: Log from your handlers, subscribers, and plugins through the logger each one carries, with five levels and named channels.
 ---
 
 A `console.log` in a handler prints a bare string. You can't tell which handler wrote it, you can't hide it in production without deleting it, and the [dev terminal](/tooling/dev) can't filter it. Every handler, subscriber, and plugin carries a `logger` that fixes all three, and you call it with one of five methods.

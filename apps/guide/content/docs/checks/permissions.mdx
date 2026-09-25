@@ -1,6 +1,6 @@
 ---
 title: Permissions
-description: Check the caller's permissions, your bot's permissions, or the caller's role before a handler runs. Covers channel and server permissions, event handlers, and rewording each refusal.
+description: Check the caller's permissions, your bot's permissions, or the caller's role before a handler runs, and reword each refusal.
 ---
 
 A kick command can fail two ways. The caller might not be allowed to kick, or your bot might not be. Checked by hand, the first is a permissions lookup at the top of every handler. For the second, Discord returns a Missing Permissions error after your handler has already replied or started work.

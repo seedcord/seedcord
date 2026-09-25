@@ -1,6 +1,6 @@
 ---
 title: Configuring the logger
-description: Set where your bot's logs go and how much of them prints, through the logger block on your bot config. Covers the level floor, a floor per channel, replacing the sinks, writing your own sink, and installing one alongside the rest.
+description: Set where your bot's logs go and how much of them prints, through the logger block on your bot config.
 ---
 
 By default a node bot prints every level in development, drops `trace` in staging, and prints `info` and above everywhere else. It writes readable columns plus a log file in development, and JSON lines in every other environment. Your bot config takes a `logger` block for when that doesn't fit, like a noisy channel you want quieter or logs you need sent to a service. Its three keys are `level`, `channels`, and `sinks`, all optional.

@@ -1,6 +1,6 @@
 ---
 title: Your own gates
-description: Write a gate of your own with defineGate() when the shipped ones don't fit your rule. Covers what a check reads, narrowing it to certain handlers, the two guild permission fields, async checks, and what to throw.
+description: Write a gate of your own with defineGate() when the shipped ones don't fit your rule, and limit it to the handlers it fits.
 ---
 
 Some checks belong to your bot alone, like keeping a command to one channel or requiring a linked account. The shipped gates cover owners, roles, permissions, and cooldowns, so a check like that would otherwise go back to the top of every handler that needs it. [`defineGate`](ref:core/defineGate) turns that check into a gate you attach with the rest.

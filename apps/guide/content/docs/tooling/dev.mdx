@@ -1,6 +1,6 @@
 ---
 title: The dev loop
-description: Run your bot locally with seedcord dev, which reloads a changed file without restarting the process. Covers what its terminal shows, the keys that drive it, filtering the log, small windows, the log files, and the health server.
+description: Run your bot locally with seedcord dev, which reloads a changed handler without restarting the process.
 ---
 
 If you run your bot under a plain file watcher, every save restarts the whole process. A gateway bot then logs in to Discord again, which takes a few seconds, and Discord caps how many new gateway sessions a bot can start in a day. The logs from before that restart are gone from your terminal too. Your bot prints every line to one stream, so reading your handler's output means scrolling past the framework's, or piping the whole thing through `grep` and losing the colors.

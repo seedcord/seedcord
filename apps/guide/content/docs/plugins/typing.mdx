@@ -1,6 +1,6 @@
 ---
 title: Typing a plugin
-description: Type the plugins you attached on this.core with seedcord codegen. Covers what the generated Core block holds and when to run codegen again.
+description: Type the plugins you attached on this.core with seedcord codegen, and see when you need to run codegen again.
 ---
 
 You attached the plugin, but `this.core.db` still fails to compile. The property is there when the bot runs, so only the types are missing. `attach` returns a bot typed with `db`, but a handler reads `this.core`. seedcord declares the type of `this.core` in its own package, which never imports your bot file.

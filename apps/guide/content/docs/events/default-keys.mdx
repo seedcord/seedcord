@@ -1,6 +1,6 @@
 ---
 title: The framework's bus keys
-description: Subscribe to the keys seedcord publishes on the bus. Covers which transport publishes each key, deploys, incoming interactions and events, unhandled errors, and faults.
+description: Subscribe to the events seedcord itself publishes on the bus, and see which transport publishes each one.
 ---
 
 seedcord publishes its own keys on `core.bus`, alongside the keys you declare yourself. Without them, logging every deploy, tracing each interaction, or posting faults to a channel means wrapping your own handlers and deploy script. You subscribe to them with [`@Subscribe`](ref:core/Subscribe) or `core.bus.on`, the same way you subscribe to [your own keys](/events/bus). You can't publish them yourself.

@@ -1,6 +1,6 @@
 ---
 title: Effect gates
-description: Write a gate that changes something, like spending a credit, with defineEffectGate(). Covers when the change runs, what happens when a later gate refuses, and effect gates inside an or().
+description: Write a gate that changes something, like spending a credit, with defineEffectGate(), and control when that change happens.
 ---
 
 Say a command costs one credit. Your gate reads the balance and deducts one. A later gate then refuses. The command never ran, and the caller lost a credit anyway.

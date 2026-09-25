@@ -1,6 +1,6 @@
 ---
 title: Options
-description: Declare options on a slash command and read them back through getters typed from what you declared. Covers the option kinds, required options dropping the null, choices, channel types, and a getter that goes missing.
+description: Declare options on a slash command and read them back through getters typed from what you declared, with required ones never null.
 ---
 
 You marked the option required when you registered it, and `getString('query')` still handed back `string | null`. Every read opened with a check whose answer you already knew, or a `!` you hoped was right. A misspelled name compiled fine, then handed null to whoever ran the command.

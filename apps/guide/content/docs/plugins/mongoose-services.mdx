@@ -1,6 +1,6 @@
 ---
 title: Mongoose services
-description: Write a service class for each MongoDB collection with the mongoose plugin. Covers its schema and key, the model name, typing the services map, and reading a service from a handler.
+description: Write a service class for each MongoDB collection with the mongoose plugin, and read those services from any handler.
 ---
 
 Without services, every handler that looks up a user imports the model and writes its own `findOne` call. You copy the same query into several handlers, so changing how you look a user up means finding every copy.

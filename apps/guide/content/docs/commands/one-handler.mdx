@@ -1,6 +1,6 @@
 ---
 title: One handler, several commands
-description: One handler class can answer several slash commands and branch on the route that ran. Covers subcommands, the options every route shares, keeping both lists on the same routes, and the arm every route needs.
+description: Answer several slash commands or subcommands from one handler class, and branch on the route that ran.
 ---
 
 Two commands that share most of their work become two handler classes, plus a helper you import into both. Instead, just handle both in a single handler class. The decorator and the generic both take the list.

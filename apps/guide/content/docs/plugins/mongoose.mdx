@@ -1,6 +1,6 @@
 ---
 title: Mongoose
-description: Connect a gateway or http bot to MongoDB with the mongoose plugin. Covers installing and attaching it, its options, how it starts and stops, and reading the mongoose instance.
+description: Connect a gateway or http bot to MongoDB with the mongoose plugin, which opens and closes the connection with your bot.
 ---
 
 A bot that stores data in MongoDB needs the connection open before the first handler reads it, and closed when the bot shuts down. [`@seedcord/plugin-mongoose`](ref:plugin-mongoose) opens that connection during startup and loads your service classes from a directory. The plugin opens and closes the connection. Everything else is plain [Mongoose](https://mongoosejs.com/docs/), so schemas and queries you've written with Mongoose before work the same here.

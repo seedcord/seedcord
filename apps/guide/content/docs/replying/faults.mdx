@@ -1,6 +1,6 @@
 ---
 title: Faults
-description: A throw your handler doesn't catch still owes the user an answer. Covers the card every fault renders, anything else you throw, stopping without a reply, and throws outside any handler.
+description: See how a user still gets an answer when your handler throws an error it doesn't catch, and change the card seedcord shows.
 ---
 
 Some calls fail in ways the user can't fix, like a database write. Catch the error and throw a [`Fault`](ref:core/Fault). The user gets a generic card with a tracking id, and the error you caught goes to your fault report along with the command and the user who ran it.

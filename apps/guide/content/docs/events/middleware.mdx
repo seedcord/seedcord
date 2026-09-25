@@ -1,6 +1,6 @@
 ---
 title: Event middleware
-description: Run code before your event handlers with event middleware. Covers stopping an event, choosing which events it runs for, the order, passing values along, cleaning up in after(), and where middleware files go.
+description: Run code before and after your event handlers with event middleware, or stop an event before it reaches them.
 ---
 
 Suppose three handlers respond to `messageCreate`, and none of them should answer a muted member. Each handler would repeat the same mute lookup. If you add a fourth handler and forget the lookup, it answers anyway.

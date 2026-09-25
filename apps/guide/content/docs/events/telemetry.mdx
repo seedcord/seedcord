@@ -1,6 +1,6 @@
 ---
 title: Reading the telemetry
-description: Measure how long your bot takes to answer with the telemetry keys on the bus. Covers what each interaction, write, and event reports, the two timing clocks, catching a failed write, joining the keys on dispatchId, and typing a payload.
+description: Measure how long your bot takes to answer with the telemetry keys on the bus, for every interaction, write, and event.
 ---
 
 When a command feels slow, you want to know whether your code or Discord caused the delay. Timing each handler yourself means a stopwatch in every `execute()`, which still misses the gates and the replies around it.

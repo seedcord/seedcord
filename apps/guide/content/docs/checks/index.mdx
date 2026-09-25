@@ -1,6 +1,6 @@
 ---
 title: Checks
-description: Decide whether a handler runs, and run code around it. Covers the order seedcord runs a dispatch in, gates, middleware, rate limits, and checks inside a handler.
+description: Decide whether a handler runs with gates, middleware, and rate limits, and see the order seedcord runs them in.
 ---
 
 Most commands need a few things settled before they run. Is the caller in a server? Do they hold the permission? Have they used this command in the last minute? This tab covers the checks that decide whether a handler runs, and the middleware that runs around them.

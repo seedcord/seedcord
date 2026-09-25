@@ -1,6 +1,6 @@
 ---
 title: Kysely services
-description: Write a service class for each Postgres table with the kysely plugin. Covers its table and key, overriding the table name, typing the services map, and reading a service from a handler.
+description: Write a service class for each Postgres table with the kysely plugin, and read those services from any handler.
 ---
 
 If every handler that looks up a user writes its own Kysely query, the same query ends up in several files. Changing how you find a user then means finding every copy.
