@@ -1,5 +1,19 @@
 # @seedcord/core
 
+## 0.9.1
+
+### 🩹 Patch
+
+- Fixed `attach()` failing to compile with `'[]' is not assignable to parameter of type 'never'` for a plugin class with a type parameter, like `class Cache<T> extends Plugin`. That plugin now attaches as `Cache<unknown>`. ([`8f8ef13`](https://github.com/seedcord/seedcord/commit/8f8ef131717c83b7b4c8d63933c96d7f6d9d371e))
+- Fixed the unclear `Cannot read properties of undefined (reading 'setChannel')` error when attaching a plugin built on a different copy of `@seedcord/core`. It now throws `CorePluginFromOtherCore` before the plugin is constructed. ([#336](https://github.com/seedcord/seedcord/pull/336))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.10.0 → 0.11.0
+- `@seedcord/utils` 0.8.13 → 0.8.14
+- `@seedcord/logger` 0.4.0 → 0.4.1
+- `@seedcord/custom-id` 0.2.3 → 0.2.4
+
 ## 0.9.0
 
 ### 💥 Breaking

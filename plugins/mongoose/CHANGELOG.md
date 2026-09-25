@@ -1,5 +1,15 @@
 # @seedcord/plugin-mongoose
 
+## 0.5.1
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.10.0 → 0.11.0
+- `@seedcord/utils` 0.8.13 → 0.8.14
+- `@seedcord/logger` 0.4.0 → 0.4.1
+
 ## 0.5.0
 
 ### 💥 Breaking

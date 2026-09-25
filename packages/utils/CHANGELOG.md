@@ -1,5 +1,15 @@
 # @seedcord/utils
 
+## 0.8.14
+
+### 🩹 Patch
+
+- `@seedcord/logger` and `seedcord` now read `isPlainObject` from `@seedcord/utils`. ([#336](https://github.com/seedcord/seedcord/pull/336))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.10.0 → 0.11.0
+
 ## 0.8.13
 
 ### 🩹 Patch

@@ -1,5 +1,18 @@
 # seedcord
 
+## 0.21.1
+
+### 🩹 Patch
+
+- Fixed `seedcord dev` failing with `Cannot read properties of undefined (reading 'setChannel')` when the bot attaches a plugin published outside the `@seedcord` scope. The dev runtime now loads that plugin through the same `@seedcord/core` as the bot. ([#336](https://github.com/seedcord/seedcord/pull/336))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.10.0 → 0.11.0
+- `@seedcord/core` 0.9.0 → 0.9.1
+- `@seedcord/utils` 0.8.13 → 0.8.14
+- `@seedcord/logger` 0.4.0 → 0.4.1
+
 ## 0.21.0
 
 ### 💥 Breaking

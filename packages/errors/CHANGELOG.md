@@ -1,5 +1,11 @@
 # @seedcord/errors
 
+## 0.11.0
+
+### ✨ Minor
+
+- Added `CorePluginFromOtherCore` (1218), thrown when an attached plugin extends `Plugin` from a different copy of `@seedcord/core` than the bot. ([#336](https://github.com/seedcord/seedcord/pull/336))
+
 ## 0.10.0
 
 ### 💥 Breaking

@@ -1,5 +1,17 @@
 # @seedcord/gateway
 
+## 0.7.1
+
+### 🩹 Patch
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.10.0 → 0.11.0
+- `@seedcord/core` 0.9.0 → 0.9.1
+- `@seedcord/utils` 0.8.13 → 0.8.14
+- `@seedcord/logger` 0.4.0 → 0.4.1
+- `@seedcord/custom-id` 0.2.3 → 0.2.4
+
 ## 0.7.0
 
 ### 💥 Breaking
