@@ -65,7 +65,7 @@ Every run rewrites the whole file from scratch.
 
 `Core` only appears once you attach a plugin. It [types `this.core.db`](/plugins/typing), for example.
 
-Codegen records only the keys you attached. TypeScript resolves each plugin's type from the bot you built, since your `attach()` call already names the plugin class. Your handler still reads `this.core.db` with every method that plugin declares.
+Codegen records only the keys you attached. TypeScript resolves each plugin's type from the bot you built, since your `attach()` call already passes the plugin class. Your handler still reads `this.core.db` with every method that plugin declares.
 
 <Callout type="transport">
 
@@ -79,7 +79,7 @@ To read your commands folder and your emoji block, codegen imports the module yo
 
 Even so, your bot never starts. Nothing calls `start()`, so no plugin connects, no task runs, and nothing you've written reaches Discord.
 
-A command constructor that throws fails the whole run, since codegen has to construct the class to read its options. `CliCodegenCommandConstructorThrew` names the class, the file, and what your constructor threw. Keep anything that can fail out of a command constructor.
+A command constructor that throws fails the whole run, since codegen has to construct the class to read its options. `CliCodegenCommandConstructorThrew` shows the class, the file, and what your constructor threw. Keep anything that can fail out of a command constructor.
 
 ## Catching a stale file in CI
 

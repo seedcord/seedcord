@@ -102,7 +102,7 @@ export class Whoami extends SlashHandler<'whoami'> {
 }
 ```
 
-If the value is `undefined`, `require` throws a `SeedcordError` with the code `DispatchStateMissing`, and its message names the key you asked for. That covers a key nothing wrote, and a key written as `undefined`. A `null` value comes back as is. Usually the middleware that writes the key never registered, or its `{ kinds }` filter skipped this interaction.
+If the value is `undefined`, `require` throws a `SeedcordError` with the code `DispatchStateMissing`, and its message includes the key you asked for. That covers a key nothing wrote, and a key written as `undefined`. A `null` value comes back as is. Usually the middleware that writes the key never registered, or its `{ kinds }` filter skipped this interaction.
 
 Everything `this.dispatch` carries:
 

@@ -67,7 +67,7 @@ Run `seedcord codegen` after you add or change an option, since the handler keep
 
 ## The kinds
 
-Each getter only accepts the names that command declared for its own kind. A typo is a compile error.
+Each getter only accepts options this command declared for its own kind. A typo is a compile error.
 
 `maintenance` declares a user, a channel, and a string. That gives it four getters, since a user option answers both `getUser` and `getMember`.
 

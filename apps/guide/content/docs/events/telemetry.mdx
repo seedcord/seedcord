@@ -185,7 +185,7 @@ export class FlakyHandlers extends Subscriber<'eventDispatched'> {
 - a raw throw publishes `unknownException`
 - a `Notice` with `report` true publishes `handledException`
 
-To tell which handler threw, read the fault's `origin`. On an event it names the event and the handler, like `event:messageCreate:AutoMod`. Match on `dispatchId` as well, since every dispatch of that event carries the same `origin`.
+To tell which handler threw, read the fault's `origin`. On an event it holds the event and the handler, like `event:messageCreate:AutoMod`. Match on `dispatchId` as well, since every dispatch of that event carries the same `origin`.
 
 <Callout type="warning">
 

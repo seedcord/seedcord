@@ -104,7 +104,7 @@ export class Users extends KyselyService<'app_users'> {}
 - **`'users'`** is a key in `KyselyServices`. The decorator's first argument only accepts keys declared there.
 - **`'app_users'`** is a table in the `schema` you declared on `KyselyDatabase`, which [Your schema](/plugins/kysely-schema) covers. `table` only accepts a table from that schema, and the decorator checks the class's type argument against it.
 
-That schema is also where your editor gets the table names it suggests for `table`. With a `bans` table added, it offers both:
+Your editor also reads that schema to suggest table names for `table`. With a `bans` table added, it offers both:
 
 ```ts twoslash
 // @noErrors

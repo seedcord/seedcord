@@ -93,7 +93,7 @@ export class Mentioned extends EventHandler<Events.MessageCreate> {
 }
 ```
 
-Every gate carries the context it reads, and `@Gated` checks that against the handler you put it on. `Nsfw()` reads an interaction's channel, so attaching it to the event handler below fails to compile. The error names the gate and the handler kind.
+Every gate carries the context it reads, and `@Gated` checks that against the handler you put it on. `Nsfw()` reads an interaction's channel, so attaching it to the event handler below fails to compile. The error shows the gate and the handler kind.
 
 ```ts twoslash
 // @errors: 1238
