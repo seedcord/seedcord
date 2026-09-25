@@ -2,8 +2,8 @@ import { dirname, isAbsolute, relative, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { isPlainObject } from '@seedcord/utils/internal';
 
-import { isPlainObject } from '#utils/isPlainObject';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import type { ModuleLoader } from '#core/modules/ModuleLoader';

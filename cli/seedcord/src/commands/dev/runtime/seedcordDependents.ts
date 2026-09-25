@@ -3,7 +3,7 @@ import { findPackageJSON } from 'node:module';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { isPlainObject } from '#utils/isPlainObject';
+import { isPlainObject } from '@seedcord/utils/internal';
 
 const PROJECT_FIELDS = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
 const PACKAGE_FIELDS = ['dependencies', 'peerDependencies'] as const;

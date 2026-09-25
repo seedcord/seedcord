@@ -142,6 +142,11 @@ export function resolvedLifecycleSpecOf(plugin: PluginLike): ResolvedPluginLifec
 }
 
 /** @internal */
+export function extendsThisCorePlugin(ctor: PluginCtor): boolean {
+    return ctor.prototype instanceof Plugin;
+}
+
+/** @internal */
 export function pluginLoggerOf(plugin: PluginLike): Logger {
     return plugin[loggerSlot];
 }

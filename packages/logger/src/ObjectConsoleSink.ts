@@ -1,4 +1,5 @@
 import { filterCirculars, stripAnsi } from '@seedcord/utils';
+import { isPlainObject } from '@seedcord/utils/internal';
 
 import type { ILogSink, LogLevel, LogRecord } from '@seedcord/types';
 
@@ -39,10 +40,6 @@ function interpolate(message: string, args: readonly unknown[]): { text: string;
         }
     });
     return { text, rest: args.slice(consumed) };
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value) && !Error.isError(value);
 }
 
 function memberShape(member: unknown): Record<string, unknown> {
