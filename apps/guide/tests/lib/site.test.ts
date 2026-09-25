@@ -61,6 +61,18 @@ describe('the metadata a guide page carries', () => {
         ]);
     });
 
+    it('gives the root a title of its own in place of its sidebar label', () => {
+        const root = pageMetadata({ ...page, title: 'Start here', path: '/' });
+        const shown = root.openGraph?.title;
+
+        expect(shown).not.toContain('Start here');
+        expect(root.title).toEqual({ absolute: shown });
+    });
+
+    it('keeps every other page on its own title', () => {
+        expect(pageMetadata(page).title).toBe('Tooling');
+    });
+
     it('falls back to the site description when a page carries none', () => {
         const bare = pageMetadata({ title: 'Tooling', path: '/tooling', pill: 'tooling' });
 
