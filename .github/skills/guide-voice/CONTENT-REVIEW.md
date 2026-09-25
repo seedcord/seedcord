@@ -181,12 +181,12 @@ Eight checks.
    adds `---cut-after---` under its last visible line. A fence carrying
    `@errors` shows the whole enclosing class and cuts only the import.
 
-   Second, a fence carrying `@errors` plus any cut after the error drops the
+   Second, a fence carrying `@errors` plus any cut after the error removes the
    error annotation while the page still returns 200. Report every `@errors`
    fence holding a `---cut-after---`, a `---cut-start---`, or a `---cut-end---`,
    then confirm against the rendered page which of them actually lost its
    annotation, counting `twoslash-error-line` at two occurrences per error. A
-   line count misses a drop.
+   line count misses a missing annotation.
 
    Read the rendered completion list too, and compare it against the sentence
    above the fence. The list holds what the type offers, which is often

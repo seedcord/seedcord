@@ -37,7 +37,7 @@ finding, and a tic is a habit rather than a single sentence.
    heading and see whether anything is lost.
 
    Two things survive that test. A line naming what a fence shows, since
-   deleting it drops the reader into code with nothing saying what it is. And a
+   deleting it leaves the reader in code with nothing saying what it is. And a
    sentence setting up a problem the section then solves, as in "Say a command
    costs one credit. Your gate reads the balance and deducts one. A later gate
    then refuses." That states no fact of its own and is doing a job. Leave it.
@@ -63,7 +63,7 @@ finding, and a tic is a habit rather than a single sentence.
    Read the headings for this as well as the prose. "The four fields" and "The
    four states" sat above tables whose row count a release changes, and a
    heading is the copy a reader lands on from the table of contents. The repair
-   drops the number, since the table under it is already the count.
+   removes the number, since the table under it is already the count.
 
    Read the opener and the first sample as a reader who stops there. Report
    them when they show one form of a surface and read as all of it, as in a
@@ -320,7 +320,7 @@ carrying the turn on its own is the tell.
 
 Then read the page top to bottom the way a person reads, and report every
 paragraph and every section that nothing connects. The failure looks like correct
-sentences with nothing holding them together. Each one drops a fact and ends,
+sentences with nothing holding them together. Each one states a fact and ends,
 the next starts somewhere new, and no pronoun points back, no cause sits ahead
 of its effect, no noun repeats, and no line under a heading places the section
 against the one before it. Three sentences you could reorder with no loss is
@@ -336,7 +336,7 @@ Then ask who each imperative is talking to. An imperative tells the reader to do
 the thing, so it belongs where they should, and the answer is often yes. Report
 the ones describing a default instead, as in "Leave render out and seedcord puts
 the items in one container", which reads as advice on a page someone opened
-because they want render. A gerund makes the condition the subject and drops a
+because they want render. A gerund makes the condition the subject and loses a
 clause on the way. Leave a real instruction alone, as in "Clamp n yourself".
 
 Then a pass numbered 22, read as someone whose first language is not English.

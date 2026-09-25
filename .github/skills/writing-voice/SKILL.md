@@ -17,7 +17,7 @@ This is the rule that matters most and the one that gets broken most.
 
 An abstract phrase is shorter than the plain sentence it replaces. Any rule that rewards brevity will pull you toward abstraction. Resist it. **Cut whole ideas. Keep common words.**
 
-A sentence improves when you drop a point the reader did not need. A sentence gets worse when you compress a point into a technical-sounding noun phrase. The second one looks like editing and is the opposite of it.
+A sentence improves when you cut a point the reader did not need. A sentence gets worse when you compress a point into a technical-sounding noun phrase. The second one looks like editing and is the opposite of it.
 
 Real failures, all written by an assistant explaining its own behavior:
 
@@ -282,6 +282,7 @@ Illustrative. When a word is missing from the table, apply section 1 and the tes
 | exercises (a test exercises X) | calls X, runs X, tests X |
 | does more than X | state what it does |
 | names / naming, as a verb | banned. write the verb for what actually happens and rephrase the sentence in simple words if needed |
+| drop / dropped / dropping, standing in for a more exact verb | work out what happens to the thing in that sentence, then write the verb for it |
 | worth noting / surprisingly / you may notice | delete, state the fact |
 | good catch / fair point / great question | delete |
 | to be honest / frankly | delete |

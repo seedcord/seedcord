@@ -66,7 +66,7 @@ BAD: "Clicking one used to put both on cooldown. Each gets its own instead."
 GOOD: "Because its route id joined both into `button:confirm,cancel`, clicking either one put both on cooldown."
 ```
 
-Why: splitting every clause to dodge connectors leaves stubs, and the reader has to rebuild the relation you dropped.
+Why: splitting every clause to dodge connectors leaves stubs, and the reader has to rebuild the relation you cut out.
 
 ---
 

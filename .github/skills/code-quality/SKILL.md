@@ -254,7 +254,7 @@ Until a dead-code scanner is wired into the repo, run this checklist on the pack
     rg "import.*<symbol>.*from.*<pkg-or-path>"
     ```
 
-    If only the defining file uses it, drop the `export`. If nothing uses it, delete the symbol.
+    If only the defining file uses it, remove the `export`. If nothing uses it, delete the symbol.
 
 3. **Unused files.** If you replaced a module, check it's still referenced before leaving the file in tree:
 
