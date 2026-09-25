@@ -51,6 +51,16 @@ describe('replacementVersion', () => {
         expect(replacementVersion(entry, '0.7.2-next.1')).toBe('0.7.2-next.3');
     });
 
+    it('keeps a prerelease when only another major has anything newer', () => {
+        const entry: PackageIndexEntry = {
+            fullName: 'seedcord',
+            stable: { latest: '1.8.0', latestByMinor: { '1.8': '1.8.0' }, latestByMajor: { '1': '1.8.0' } },
+            prerelease: { latest: '2.0.0-next.1' }
+        };
+
+        expect(replacementVersion(entry, '1.9.0-next.1')).toBeNull();
+    });
+
     it('moves a prerelease to its stable release once that ships', () => {
         expect(replacementVersion(GATEWAY, '0.7.0-next.3')).toBe('0.7.1');
     });

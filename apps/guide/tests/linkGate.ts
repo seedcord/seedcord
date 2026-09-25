@@ -12,11 +12,13 @@ import { redirectFor } from '#lib/redirects';
 
 import type { Nodes, Root } from 'mdast';
 
+type MemberAnchorsBySymbol = Record<string, readonly string[]>;
+
 interface GuideSite {
     sources: ReadonlyMap<string, string>;
     anchors: ReadonlyMap<string, ReadonlySet<string>>;
     files: ReadonlySet<string>;
-    symbolSlugsByPackage: ReadonlyMap<string, ReadonlySet<string>>;
+    symbolsByPackage: ReadonlyMap<string, ReadonlyMap<string, ReadonlySet<string>>>;
 }
 
 interface Target {
@@ -31,6 +33,7 @@ const PUBLIC_DIR = path.join(GUIDE_ROOT, 'public');
 const ARTIFACTS_DIR = path.resolve(GUIDE_ROOT, '../../generated/artifacts');
 
 const FRONTMATTER = /^---\n[\s\S]*?\n---\n/;
+const URL_SCHEME = /^[a-z][a-z\d+.-]*:/i;
 const TWIN_EXTENSION = '.md';
 
 const processor = unified().use(remarkParse).use(remarkMdx).use(remarkGfm).use(remarkHeading, { generateToc: false });
@@ -84,15 +87,18 @@ function targetsOf(tree: Root): Target[] {
 export function siteFrom(input: {
     pages: Record<string, string>;
     files: readonly string[];
-    symbols: Record<string, readonly string[]>;
+    symbols: Record<string, MemberAnchorsBySymbol>;
 }): GuideSite {
     const sources = new Map(Object.entries(input.pages));
     return {
         sources,
         anchors: new Map([...sources].map(([route, source]) => [route, anchorsOf(parse(source))] as const)),
         files: new Set(input.files),
-        symbolSlugsByPackage: new Map(
-            Object.entries(input.symbols).map(([pkg, slugs]) => [pkg, new Set(slugs)] as const)
+        symbolsByPackage: new Map(
+            Object.entries(input.symbols).map(([pkg, symbols]) => [
+                pkg,
+                new Map(Object.entries(symbols).map(([slug, members]) => [slug, new Set(members)] as const))
+            ])
         )
     };
 }
@@ -102,8 +108,8 @@ function withoutTrailingSlash(route: string): string {
 }
 
 function pageProblem(site: GuideSite, route: string, url: string): string | null {
+    const [pathPart = ''] = url.split(/[?#]/);
     const hashAt = url.indexOf('#');
-    const pathPart = hashAt === -1 ? url : url.slice(0, hashAt);
     const anchor = hashAt === -1 ? '' : url.slice(hashAt + 1);
     const target = pathPart === '' ? route : withoutTrailingSlash(pathPart);
 
@@ -122,20 +128,27 @@ function pageProblem(site: GuideSite, route: string, url: string): string | null
     return null;
 }
 
+// refHref splits the symbol the same way
 function refProblem(site: GuideSite, url: string): string | null {
     const [pkg = '', symbol = ''] = url.slice('ref:'.length).split('/');
-    const slugs = site.symbolSlugsByPackage.get(pkg);
-    if (slugs === undefined) return 'points at a package the reference site does not list';
-    if (symbol === '') return null;
+    const symbols = site.symbolsByPackage.get(pkg);
+    if (symbols === undefined) return 'points at a package the reference site does not list';
 
-    const [owner = ''] = symbol.split(/[.#]/);
-    return slugs.has(slugifySegment(owner)) ? null : `is not a symbol the reference site documents for ${pkg}`;
+    const [owner, ...members] = symbol.match(/[^.#]+/g) ?? [];
+    if (owner === undefined) return null;
+
+    const anchors = symbols.get(slugifySegment(owner));
+    if (anchors === undefined) return `is not a symbol the reference site documents for ${pkg}`;
+
+    const member = members.at(-1);
+    return member === undefined || anchors.has(slugifySegment(member)) ? null : `has no member ${member} on ${owner}`;
 }
 
 function problemWith(site: GuideSite, route: string, url: string): string | null {
     if (url.startsWith('ref:')) return refProblem(site, url);
     if (url.startsWith('#') || (url.startsWith('/') && !url.startsWith('//'))) return pageProblem(site, route, url);
-    return null;
+    if (url.startsWith('//') || URL_SCHEME.test(url)) return null;
+    return 'is relative. Write it from the site root, like /checks/cooldown';
 }
 
 export function brokenLinks(site: GuideSite, route: string, source: string): string[] {
@@ -151,8 +164,9 @@ interface ArtifactIndex {
     packages: Record<string, { stable: { latest: string } | null; prerelease: { latest: string } | null }>;
 }
 
+// a member's slug is its owner's slug, a slash, then the anchor on the owner's page
 interface ProjectFile {
-    root: { children: { slug: string }[] };
+    root: { children: { slug: string; children?: { slug: string }[] }[] };
 }
 
 async function readJson<T>(file: string): Promise<T> {
@@ -164,7 +178,7 @@ async function readJson<T>(file: string): Promise<T> {
 }
 
 // /latest on the reference site serves the stable head, or the prerelease head before a stable release
-async function readSymbols(): Promise<Record<string, string[]>> {
+async function readSymbols(): Promise<Record<string, MemberAnchorsBySymbol>> {
     const index = await readJson<ArtifactIndex>(path.join(ARTIFACTS_DIR, 'index.json'));
     const entries = await Promise.all(
         Object.entries(index.packages).map(async ([folder, { stable, prerelease }]) => {
@@ -172,7 +186,11 @@ async function readSymbols(): Promise<Record<string, string[]>> {
             const version = stable?.latest ?? prerelease?.latest ?? '';
             const relative = index.pathTemplates[channel].replace('{name}', folder).replace('{version}', version);
             const project = await readJson<ProjectFile>(path.join(ARTIFACTS_DIR, relative));
-            return [folder, project.root.children.map((child) => child.slug)] as const;
+            const symbols = project.root.children.map(({ slug, children = [] }) => [
+                slug,
+                children.map((member) => member.slug.slice(member.slug.lastIndexOf('/') + 1))
+            ]);
+            return [folder, Object.fromEntries(symbols)] as const;
         })
     );
     return Object.fromEntries(entries);

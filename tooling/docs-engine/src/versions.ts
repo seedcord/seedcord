@@ -1,4 +1,4 @@
-import { gt, parse, prerelease, rcompare } from 'semver';
+import { gt, major, parse, prerelease, rcompare } from 'semver';
 
 import type { PackageIndexEntry } from '#remote/index-json';
 
@@ -26,8 +26,8 @@ export function stableLineHeads(channel: {
 
 /**
  * The head of `version`'s minor line, or of its major line when the index lists no such minor. A prerelease
- * falls back to the prerelease head when that line head isn't newer. Returns `null` when the index still
- * serves `version`, when `version` isn't full semver, or when nothing newer exists.
+ * falls back to the prerelease head of its own major when that line head isn't newer. Returns `null` when the
+ * index still serves `version`, when `version` isn't full semver, or when nothing newer exists.
  */
 export function replacementVersion(
     entry: Pick<PackageIndexEntry, 'stable' | 'prerelease'>,
@@ -41,6 +41,7 @@ export function replacementVersion(
 
     const minorHead = stable?.latestByMinor[`${requested.major}.${requested.minor}`];
     const lineHead = minorHead ?? stable?.latestByMajor[String(requested.major)];
-    const prereleaseHead = requested.prerelease.length > 0 ? next?.latest : undefined;
+    const nextOnSameMajor = next !== null && major(next.latest) === requested.major;
+    const prereleaseHead = requested.prerelease.length > 0 && nextOnSameMajor ? next.latest : undefined;
     return [lineHead, prereleaseHead].find((candidate) => candidate !== undefined && gt(candidate, requested)) ?? null;
 }

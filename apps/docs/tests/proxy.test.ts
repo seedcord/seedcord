@@ -20,7 +20,16 @@ const INDEX: IndexJson = {
     }
 };
 
-const fetchIndex = vi.fn<() => Promise<Response>>();
+const fetchIndex = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>();
+
+// a real fetch hangs on a stalled cdn and rejects once its signal aborts
+function stalledFetch(_url: string, init?: RequestInit): Promise<Response> {
+    return new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => {
+            reject(new DOMException('aborted', 'AbortError'));
+        });
+    });
+}
 
 function passedThrough(res: Response): boolean {
     return res.headers.get('x-middleware-next') === '1';
@@ -100,7 +109,7 @@ describe('proxy', () => {
 
     it('passes the request through when the index takes too long to load', async () => {
         vi.useFakeTimers();
-        fetchIndex.mockImplementation(() => new Promise<Response>(() => undefined));
+        fetchIndex.mockImplementation(stalledFetch);
         const proxy = await freshProxy();
 
         const pending = proxy('https://docs.seedcord.org/packages/gateway/0.6.0');
@@ -109,9 +118,21 @@ describe('proxy', () => {
         expect(passedThrough(await pending)).toBe(true);
     });
 
+    it('cancels the index fetch once the wait runs out', async () => {
+        vi.useFakeTimers();
+        fetchIndex.mockImplementation(stalledFetch);
+        const proxy = await freshProxy();
+
+        const pending = proxy('https://docs.seedcord.org/packages/gateway/0.6.0');
+        await vi.advanceTimersByTimeAsync(10_000);
+        await pending;
+
+        expect(fetchIndex.mock.calls[0]?.[1]?.signal?.aborted).toBe(true);
+    });
+
     it('fetches the index again on the next request after a load that timed out', async () => {
         vi.useFakeTimers();
-        fetchIndex.mockImplementationOnce(() => new Promise<Response>(() => undefined));
+        fetchIndex.mockImplementationOnce(stalledFetch);
         const proxy = await freshProxy();
 
         const first = proxy('https://docs.seedcord.org/packages/gateway/0.6.0');

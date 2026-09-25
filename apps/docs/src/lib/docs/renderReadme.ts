@@ -1,11 +1,20 @@
 import GithubSlugger from 'github-slugger';
-import { Marked } from 'marked';
+import { Marked, TextRenderer } from 'marked';
 
 import { sanitizeHtml } from '#lib/sanitizeHtml';
 import { highlightToHtml } from '@seedcord/ui/shiki';
 
 import type { Tokens } from 'marked';
 import type { BundledLanguage } from 'shiki';
+
+// GitHub removes inline html tags from a heading before it slugs the heading
+class VisibleText extends TextRenderer {
+    override html(): string {
+        return '';
+    }
+}
+
+const visibleText = new VisibleText();
 
 // a separate marked instance keeps readme rendering independent of the shiki-configured global marked
 // in renderParagraphs.ts.
@@ -28,7 +37,7 @@ function readmeMarked(): Marked {
             // marked leaves the id off a heading
             heading({ tokens, depth }: Tokens.Heading): string {
                 const text = this.parser.parseInline(tokens);
-                const id = slugger.slug(this.parser.parseInline(tokens, this.parser.textRenderer));
+                const id = slugger.slug(this.parser.parseInline(tokens, visibleText));
                 return `<h${String(depth)} id="${id}">${text}</h${String(depth)}>\n`;
             }
         }

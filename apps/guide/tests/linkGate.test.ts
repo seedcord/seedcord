@@ -10,7 +10,7 @@ const SITE = siteFrom({
         '/checks/cooldown': COOLDOWN
     },
     files: ['/portal-token.webp'],
-    symbols: { core: ['notice', 'paginator'] }
+    symbols: { core: { notice: [], paginator: ['start'] } }
 });
 
 function problemsIn(source: string): string[] {
@@ -21,6 +21,7 @@ describe('the link gate', () => {
     it.each([
         ['a page', '[cooldowns](/checks/cooldown)'],
         ['a page written with its slash', '[cooldowns](/checks/cooldown/)'],
+        ['a page with a query', '[cooldowns](/checks/cooldown/?tab=example)'],
         ['a heading on another page', '[per user](/checks/cooldown#per-user)'],
         ['a heading holding code', '[options](/checks/cooldown/#cooldown-options)'],
         ['a heading on this page', '[why](#philosophy)'],
@@ -40,6 +41,8 @@ describe('the link gate', () => {
         ['a heading this page does not have', '[gone](#principles)'],
         ['a missing public file', '![gone](/portal-secret.webp)'],
         ['a symbol the package does not export', '[gone](ref:core/Noticed)'],
+        ['a member the symbol does not have', '[gone](ref:core/Paginator#stop)'],
+        ['a relative page', '[gone](./cooldown)'],
         ['a package the reference site does not list', '[gone](ref:cor/Notice)'],
         ['a page that moved', '[moved](/gates/cooldown)'],
         ['a page that does not exist, by reference', '[gone][g]\n\n[g]: /checks/cooldowns']

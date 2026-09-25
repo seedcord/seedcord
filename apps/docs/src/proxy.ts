@@ -26,31 +26,36 @@ function forget(entry: CachedIndex): void {
     if (cached === entry) cached = undefined;
 }
 
+// vitest's fake timers can't advance AbortSignal.timeout
+async function loadBefore(ms: number): Promise<IndexJson> {
+    const deadline = new AbortController();
+    const timer = setTimeout(() => {
+        deadline.abort();
+    }, ms);
+
+    try {
+        return await createIndexLoader(deadline.signal).load();
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
 function currentIndex(): CachedIndex {
     if (cached && cached.expiresAt > Date.now()) return cached;
 
-    const entry = { index: createIndexLoader().load(), expiresAt: Date.now() + INDEX_TTL_MS };
+    const entry = { index: loadBefore(INDEX_WAIT_MS), expiresAt: Date.now() + INDEX_TTL_MS };
     cached = entry;
-    entry.index.catch(() => forget(entry));
+    entry.index.catch(() => {
+        forget(entry);
+    });
     return entry;
 }
 
-async function indexWithin(ms: number): Promise<IndexJson | null> {
-    const entry = currentIndex();
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const late = new Promise<null>((resolve) => {
-        timer = setTimeout(() => {
-            forget(entry);
-            resolve(null);
-        }, ms);
-    });
-
+async function loadIndex(): Promise<IndexJson | null> {
     try {
-        return await Promise.race([entry.index, late]);
+        return await currentIndex().index;
     } catch {
         return null;
-    } finally {
-        clearTimeout(timer);
     }
 }
 
@@ -63,7 +68,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     const version = versionSegment.slice(0, versionSegment.length - extension.length);
     if (version === DEFAULT_VERSION) return NextResponse.next();
 
-    const entry = (await indexWithin(INDEX_WAIT_MS))?.packages[folder];
+    const entry = (await loadIndex())?.packages[folder];
     const replacement = entry ? replacementVersion(entry, version) : null;
     if (replacement === null) return NextResponse.next();
 

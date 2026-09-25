@@ -90,6 +90,14 @@ describe('renderReadme', () => {
         expect(ids).toEqual(['usage', 'usage-1', 'usage-2']);
     });
 
+    it('slugs a heading holding inline html by the text a reader sees', async () => {
+        expect(await renderReadme('## Hello <em>world</em>\n')).toContain('id="hello-world"');
+    });
+
+    it('keeps the angle-bracket text of a code span in the id, as GitHub does', async () => {
+        expect(await renderReadme('## `Array<T>`\n')).toContain('id="arrayt"');
+    });
+
     it('keeps accented letters in an id, as GitHub does', async () => {
         expect(await renderReadme('## Café au lait\n')).toContain('id="café-au-lait"');
     });
