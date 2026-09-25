@@ -51,7 +51,8 @@
         "docs:artifacts:fixtures": "pnpm tsx scripts/src/docs/build-docs-artifacts.ts --fixtures",
         "docs:local": "pnpm docs:extract && pnpm docs:artifacts",
         "docs:sync": "pnpm tsx scripts/src/docs/sync-docs-to-artifacts.ts",
-        "docs:purge": "pnpm tsx scripts/src/docs/purge-cdn-cache.ts"
+        "docs:purge": "pnpm tsx scripts/src/docs/purge-cdn-cache.ts",
+        "docs:redeploy": "pnpm tsx scripts/src/docs/redeploy-docs.ts"
     },
     "keywords": [
         "discord",
