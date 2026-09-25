@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- splitting this would split one event's path from load to dispatch across files */
 import { DispatchContext } from '@seedcord/core';
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import {
@@ -27,7 +28,11 @@ import { reportEventDispatched, reportEventDispatching } from '#bot/reportEventD
 import { EventHandler, EventMiddleware } from '#handlers/event';
 
 import type { RegisterEventMetadataEntry } from '#bDecorators/Events';
-import type { EventHandlerConstructor, EventMiddlewareConstructor } from '#handlers/constructors';
+import type {
+    ConstructableEventHandler,
+    EventHandlerConstructor,
+    EventMiddlewareConstructor
+} from '#handlers/constructors';
 import type { Core } from '#interfaces/Core';
 import type { HandlerResult } from '@seedcord/core';
 import type { Initializeable, MiddlewareRegistrationOf } from '@seedcord/core/internal';
@@ -380,7 +385,8 @@ export class EventDispatcher implements Initializeable, HmrAware {
     ): Promise<HandlerResult> {
         try {
             this.logger.debug(`Processing ${paint.sky.bold(eventName)} with ${paint.mute(Ctor.name)}`);
-            const handler = new Ctor(args, this.core, dispatch, eventName);
+            // the event map paired this name with this class
+            const handler = new (Ctor as ConstructableEventHandler)(args, this.core, dispatch, eventName);
             const eventCtx = eventGateContext(eventName, args, this.core, dispatch);
             await runHandlerGates(Ctor, eventCtx);
             await handler.execute();

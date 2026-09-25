@@ -1,13 +1,16 @@
+import { storeInteractionRoute } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
 import { vi } from 'vitest';
 
 import { createSeedcord } from '#src/createSeedcord';
 
 import { createSigner, type Signer } from '../../helpers/ed25519';
-import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
+import { manifestWith, nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
+import type { HandlerConstructor } from '#handlers/constructors';
 import type { HttpConfig } from '#interfaces/Config';
-import type { RouteManifest } from '#src/manifest/RouteManifest';
+import type { Manifest } from '#src/manifest/Manifest';
+import type { InteractionKind } from '@seedcord/core';
 
 const encoder = new TextEncoder();
 
@@ -27,7 +30,7 @@ export async function signedRequest(signer: Signer, payload: unknown): Promise<R
 }
 
 export async function readyEngine(
-    manifest: RouteManifest,
+    manifest: Manifest,
     config: HttpConfig = nullPathConfig
 ): Promise<{ signer: Signer; handle: ReturnType<typeof createSeedcord> }> {
     const signer = await createSigner();
@@ -36,7 +39,7 @@ export async function readyEngine(
 }
 
 export function slashPayload(name: string): object {
-    // app_permissions is on every real interaction, the builder reads it unconditionally like the gateway does
+    // the builder reads app_permissions unconditionally, like the gateway does
     return {
         type: 2,
         id: 'int-1',
@@ -64,6 +67,12 @@ export function capturingCtx(): CapturedCtx {
             return call[0];
         }
     };
+}
+
+// stamps the metadata a route decorator writes on a real handler
+export function manifestFor(kind: InteractionKind, key: string, handler: HandlerConstructor): Manifest {
+    storeInteractionRoute(kind, key, handler);
+    return manifestWith({ handlers: [handler] });
 }
 
 export { emptyManifest } from '../../helpers/fixtures';

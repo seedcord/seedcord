@@ -1,5 +1,5 @@
 import { DiscordAPIError } from '@discordjs/rest';
-import { Fault, Notice, Silence } from '@seedcord/core';
+import { Fault, InteractionKind, Notice, Silence } from '@seedcord/core';
 import { Logger } from '@seedcord/logger';
 import { MessageFlags } from 'discord-api-types/v10';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -7,10 +7,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import { FROM, capturingCtx, emptyManifest, readyEngine, signedRequest, slashPayload } from './harness';
+import { capturingCtx, manifestFor, readyEngine, signedRequest, slashPayload } from './harness';
 
+import type { HandlerConstructor } from '#handlers/constructors';
 import type { HttpConfig } from '#interfaces/Config';
-import type { RouteManifest } from '#src/manifest/RouteManifest';
+import type { Core } from '#interfaces/Core';
+import type { Manifest } from '#src/manifest/Manifest';
+import type { DispatchContext } from '@seedcord/core';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 import type { UUID } from 'node:crypto';
 
@@ -46,11 +49,8 @@ function apiError(code: number): DiscordAPIError {
     return new DiscordAPIError({ code, message: 'boom' }, code, 404, 'POST', 'url', {});
 }
 
-function manifestOf(name: string, handler: unknown): RouteManifest {
-    return {
-        ...emptyManifest(),
-        commandRoutes: [{ name, type: 1, exportName: 'handler', from: FROM, load: () => Promise.resolve({ handler }) }]
-    };
+function manifestOf(name: string, handler: HandlerConstructor): Manifest {
+    return manifestFor(InteractionKind.Slash, name, handler);
 }
 
 interface SentBody {
@@ -265,20 +265,18 @@ describe('fault boundary', () => {
         expect(postedBodies()).toHaveLength(1);
     });
 
-    it('still acks 202 when a manifest row load rejects', async () => {
-        const manifest: RouteManifest = {
-            ...emptyManifest(),
-            commandRoutes: [
-                {
-                    name: 'ghost',
-                    type: 1,
-                    exportName: 'Ghost',
-                    from: FROM,
-                    load: () => Promise.reject(new Error('chunk missing'))
-                }
-            ]
-        };
-        const { signer, handle } = await readyEngine(manifest);
+    it('still acks 202 when the handler constructor throws', async () => {
+        class Ghost extends SlashHandler<never> {
+            constructor(event: never, core: Core, dispatch: DispatchContext) {
+                super(event, core, dispatch);
+                throw new Error('constructor blew up');
+            }
+
+            async execute(): Promise<void> {
+                await Promise.resolve();
+            }
+        }
+        const { signer, handle } = await readyEngine(manifestOf('ghost', Ghost));
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('ghost')), ctx);
@@ -294,7 +292,7 @@ describe('fault boundary', () => {
         class Throws extends SlashHandler<never> {
             async execute(): Promise<void> {
                 await Promise.resolve();
-                // eslint-disable-next-line no-throw-literal, @typescript-eslint/only-throw-error -- a bare throw is what this pins
+                // eslint-disable-next-line no-throw-literal, @typescript-eslint/only-throw-error -- this pins the bare throw
                 throw 'a bare string';
             }
         }
@@ -340,12 +338,7 @@ describe('fault boundary', () => {
                 throw new Error('lookup failed');
             }
         }
-        const manifest: RouteManifest = {
-            ...emptyManifest(),
-            autocompleteRoutes: [
-                { name: 'search', exportName: 'Search', from: FROM, load: () => Promise.resolve({ Search }) }
-            ]
-        };
+        const manifest = manifestFor(InteractionKind.Autocomplete, 'search', Search);
         const { signer, handle } = await readyEngine(manifest);
         const payload = {
             type: 4,

@@ -15,6 +15,8 @@ import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
+import type { Core } from '#interfaces/Core';
+import type { DispatchContext } from '@seedcord/core';
 import type { RenderableNotice, RenderContext, ReplyResponse } from '@seedcord/types';
 
 vi.mock('@discordjs/rest', async (importOriginal) => {
@@ -90,11 +92,7 @@ async function dispatchThrough(
     for (const ctor of ctors) middlewares.register(ctor);
 
     const execute = await dispatchInteraction({
-        match: {
-            kind: InteractionKind.Slash,
-            routeId: 'slash:guarded',
-            load: () => Promise.resolve(Handler)
-        },
+        match: { kind: InteractionKind.Slash, routeId: 'slash:guarded', ctor: Handler },
         payload: slashPayload('guarded') as ValidInteractionTypes,
         core: createCore(nullPathConfig, VALID_TOKEN),
         middlewares
@@ -128,7 +126,7 @@ describe('the dispatch context on a rendered notice', () => {
         expect(rendered).toEqual(['from-middleware']);
     });
 
-    it('reaches the default card when the route fails to load its handler', async () => {
+    it('reaches the default card when the handler constructor throws', async () => {
         const routes: string[] = [];
 
         class RecordingCard implements RenderableNotice {
@@ -140,13 +138,20 @@ describe('the dispatch context on a rendered notice', () => {
             }
         }
 
+        class Exploding extends SlashHandler<never> {
+            constructor(event: never, core: Core, dispatch: DispatchContext) {
+                super(event, core, dispatch);
+                throw new Error('constructor blew up');
+            }
+
+            async execute(): Promise<void> {
+                await Promise.resolve();
+            }
+        }
+
         Envapter.useSource(new PortableSource({}));
         await dispatchInteraction({
-            match: {
-                kind: InteractionKind.Slash,
-                routeId: 'slash:guarded',
-                load: () => Promise.reject(new Error('module blew up'))
-            },
+            match: { kind: InteractionKind.Slash, routeId: 'slash:guarded', ctor: Exploding },
             payload: slashPayload('guarded') as ValidInteractionTypes,
             core: createCore({ ...nullPathConfig, errors: { defaultError: RecordingCard } }, VALID_TOKEN),
             middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)

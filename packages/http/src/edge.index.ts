@@ -4,7 +4,7 @@ import './subscriptions';
 export { createSeedcord } from './createSeedcord';
 export type { EngineContext } from './createSeedcord';
 
-export type { RouteManifest } from './manifest/RouteManifest';
+export type { Manifest } from './manifest/Manifest';
 
 export type { Core } from '#interfaces/Core';
 export type { HttpConfig, HttpEdgeConfig, HttpServerConfig } from '#interfaces/Config';

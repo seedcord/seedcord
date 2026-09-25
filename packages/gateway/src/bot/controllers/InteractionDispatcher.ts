@@ -37,7 +37,11 @@ import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { RepliableHandler } from '#handlers/RepliableHandler';
 
 import type { ReplySender } from '#bot/ReplySender';
-import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
+import type {
+    ConstructableHandler,
+    HandlerConstructor,
+    InteractionMiddlewareConstructor
+} from '#handlers/constructors';
 import type { InteractionOf } from '#handlers/interaction/middlewareKinds';
 import type { Core } from '#interfaces/Core';
 import type { Repliables, ValidInteractionTypes } from '#src/handlers/interactionTypes';
@@ -468,7 +472,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         }
         this.logger.debug(`Processing ${paint.sky.bold(key)} with ${paint.mute(HandlerCtor.name)}`);
         // in a union of both handler bases, the event parameter is never. the maps pair each kind with its class.
-        return new HandlerCtor(interaction as never, this.core, dispatch);
+        return new (HandlerCtor as ConstructableHandler)(interaction as never, this.core, dispatch);
     }
 
     // answering a refusal can throw into the catch and report twice
