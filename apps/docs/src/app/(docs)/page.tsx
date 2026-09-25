@@ -1,7 +1,8 @@
+import { buildPackageBasePath, DEFAULT_VERSION } from '@seedcord/docs-engine/client';
 import { cn, tw } from '@seedcord/ui';
 import Link from 'next/link';
 
-import { loadDocsCatalog } from '#lib/docs/catalog';
+import { findCatalogVersion, loadDocsCatalog } from '#lib/docs/catalog';
 import { DocsPage } from '#lib/docs/DocsPage';
 import { getToneConfig, getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
 
@@ -28,8 +29,8 @@ interface PackageCard {
 }
 
 function toCard(entry: PackageCatalogEntry): PackageCard {
-    const latest = entry.versions.find((version) => version.isLatest) ?? entry.versions[0];
-    return { entry, href: latest?.basePath ?? '/', version: latest?.label ?? '' };
+    const latest = findCatalogVersion(entry, DEFAULT_VERSION);
+    return { entry, href: buildPackageBasePath(entry.manifestName, DEFAULT_VERSION), version: latest?.label ?? '' };
 }
 
 function tonesOf(card: PackageCard): EntityTone[] {

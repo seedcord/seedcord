@@ -121,6 +121,8 @@ The import path is a separate question. Every test imports through its own packa
 
 A test pins behavior. `tsc`, ESLint, and the build already reject a missing export, a renamed symbol, a wrong type, and a malformed manifest, so a test asserting any of those gives you a second place to edit when the rule changes.
 
+No tautological tests. If a test can only fail when someone edits the value it checks, it checks nothing the code does. That covers a constant compared to its own literal, a mock checked for returning what the test stubbed, and a rule about authored content, like a page description's length.
+
 Nothing gets a test for staying absent. A deleted export leaves no caller that compiles, and that is the proof.
 
 A fixture cast is fine with a short comment naming what makes it safe. `any` stays banned in tests.

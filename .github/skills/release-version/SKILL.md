@@ -53,7 +53,7 @@ Run on `main` so the clean version reaches `latest`. Exiting pre mode and versio
 git switch main && git pull
 git merge next                       # resolve any changelog or pre.json conflicts
 pnpm changeset pre exit              # set pre.json to exit mode, then review the changesets in .changeset/pre/
-pnpm release:version                 # write the clean X.Y.Z and drop the superseded prerelease sections
+pnpm release:version                 # write the clean X.Y.Z and delete the superseded prerelease sections
 pnpm install                         # update the lockfile
 git add .changeset
 git commit -am "chore(release): version packages"

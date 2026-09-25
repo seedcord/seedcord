@@ -8,6 +8,7 @@ import type { EntityModel, PackageCatalogEntry, PackageVersionCatalog } from '#l
 const VERSION = { id: '0.13.0', label: '0.13.0' } as unknown as PackageVersionCatalog;
 const ENTRY = {
     id: 'types',
+    manifestName: '@seedcord/types',
     label: '@seedcord/types',
     description: 'Shared types.'
 } as unknown as PackageCatalogEntry;
@@ -16,6 +17,7 @@ function entity(name: string, summary: string): EntityModel {
     return {
         name,
         kind: 'class',
+        manifestPackage: '@seedcord/core',
         displayPackage: '@seedcord/core',
         summary: summary ? [{ plain: summary, html: summary }] : []
     } as unknown as EntityModel;
@@ -25,8 +27,37 @@ const ENTITY_PATH = '/packages/core/0.13.0/classes/logger';
 
 describe('DocsPage.metadata', () => {
     it('advertises the Markdown mirror as a text/markdown alternate', () => {
-        const meta = DocsPage.forPackage(ENTRY, VERSION, '0.13.0').metadata();
+        const meta = DocsPage.forPackage(ENTRY, VERSION).metadata();
         expect(meta.alternates?.types?.['text/markdown']).toContain('/packages/types/0.13.0.md');
+    });
+
+    it('points a package overview at its latest url, whichever version rendered it', () => {
+        const meta = DocsPage.forPackage(ENTRY, VERSION).metadata();
+        expect(meta.alternates?.canonical).toBe('https://docs.seedcord.org/packages/types/latest');
+    });
+
+    it('puts the package name in an entity title', () => {
+        const meta = DocsPage.forEntity(ENTITY_PATH, entity('Logger', 'x'), VERSION, ENTITY_PATH).metadata();
+        expect(meta.title).toEqual({ absolute: 'Logger · @seedcord/core' });
+        expect(meta.openGraph?.title).toBe('Logger · @seedcord/core');
+    });
+
+    it('titles a package overview with its full package name', () => {
+        expect(DocsPage.forPackage(ENTRY, VERSION).metadata().title).toEqual({ absolute: '@seedcord/types 0.13.0' });
+    });
+
+    it('adds the site name to a title that does not carry it', () => {
+        const entry = { ...ENTRY, id: 'discord-component-embed', manifestName: 'discord-component-embed' };
+        expect(DocsPage.forPackage(entry, VERSION).metadata().title).toEqual({
+            absolute: 'discord-component-embed 0.13.0 · seedcord'
+        });
+    });
+
+    it('decides the site name from the package, whatever the symbol is called', () => {
+        const embed = { ...entity('seedcordPreview', 'x'), manifestPackage: 'discord-component-embed' };
+        const meta = DocsPage.forEntity(ENTITY_PATH, embed, VERSION, ENTITY_PATH).metadata();
+
+        expect(meta.title).toEqual({ absolute: 'seedcordPreview · discord-component-embed · seedcord' });
     });
 
     it('collapses TSDoc newlines so the meta description is a single line', () => {
@@ -53,7 +84,7 @@ describe('DocsPage.metadata', () => {
     });
 
     it('builds the image alt from the name the card draws', () => {
-        const meta = DocsPage.forPackage(ENTRY, VERSION, '0.13.0').metadata();
+        const meta = DocsPage.forPackage(ENTRY, VERSION).metadata();
         const images = meta.openGraph?.images as { alt: string }[];
         expect(images[0]?.alt).toBe('A seedcord card reading @seedcord/types, labelled package, 0.13.0');
     });

@@ -62,8 +62,4 @@ describe('missingCloudflaredHint', () => {
         expect(hint).toContain('tunnel');
         expect(hint).toContain('https://bot.example.com');
     });
-
-    it('is a block', () => {
-        expect(missingCloudflaredHint('linux').split('\n')).toHaveLength(3);
-    });
 });

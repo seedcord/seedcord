@@ -20,10 +20,9 @@ function Headline(): ReactElement {
         >
             <div style={{ display: 'flex' }}>The whole Discord bot,</div>
             <div style={{ display: 'flex', gap: 18, marginTop: 8 }}>
-                <span style={{ color: BRAND.rindDeep }}>wired</span>
-                <span>and</span>
+                <span style={{ color: BRAND.rindDeep }}>typed</span>
                 <div style={{ display: 'flex' }}>
-                    <span style={{ color: BRAND.fleshDeep }}>typed</span>
+                    <span style={{ color: BRAND.fleshDeep }}>end to end</span>
                     <span>.</span>
                 </div>
             </div>

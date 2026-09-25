@@ -54,25 +54,6 @@ describe('the v0.1.0 index', () => {
 });
 
 describe('the seedcord skill', () => {
-    it('takes a name the agent skills spec accepts', () => {
-        const { name } = SEEDCORD_SKILL;
-
-        expect(name).toMatch(/^[a-z0-9-]+$/);
-        expect(name.length).toBeGreaterThan(0);
-        expect(name.length).toBeLessThanOrEqual(64);
-        expect(name.startsWith('-')).toBe(false);
-        expect(name.endsWith('-')).toBe(false);
-        expect(name).not.toContain('--');
-    });
-
-    it('stays inside the description cap the spec sets', () => {
-        expect(SEEDCORD_SKILL.description.length).toBeLessThanOrEqual(1024);
-    });
-
-    it('opens on frontmatter naming the same skill', () => {
-        expect(SEEDCORD_SKILL.body.startsWith('---\nname: seedcord\n')).toBe(true);
-    });
-
     it('serves as markdown', () => {
         expect(skillResponse(SEEDCORD_SKILL).headers.get('content-type')).toBe('text/markdown; charset=utf-8');
     });

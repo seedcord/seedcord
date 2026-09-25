@@ -19,8 +19,9 @@ export function GetStarted(): ReactNode {
                         to <span className={cn('text-(--flesh)')}>hot reload</span>.
                     </h2>
                     <p className={cn('mt-6 max-w-md text-lg font-medium text-(--pith)/80')}>
-                        Scaffold a typed bot, open it, and run it. Routing, registration and the option types are wired
-                        for you, and hot reload keeps the gateway alive.
+                        Scaffold a typed bot, open it, and run it. seedcord sends each interaction to its handler,
+                        registers your commands, and types every option. Hot reload keeps the gateway connected while
+                        you edit.
                     </p>
                     <div className={cn('mt-8 flex flex-wrap gap-3')}>
                         <PosterButton

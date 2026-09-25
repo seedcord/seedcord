@@ -53,7 +53,6 @@ describe('defineGate', () => {
         const bare = (_ctx: GateContextBase): void => {};
         // @ts-expect-error a bare check function lacks the Gate brand
         const notAGate: Gate = bare;
-
-        expect(notAGate).toBe(bare);
+        void notAGate;
     });
 });

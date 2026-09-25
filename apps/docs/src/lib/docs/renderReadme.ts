@@ -1,4 +1,5 @@
-import { Marked } from 'marked';
+import GithubSlugger from 'github-slugger';
+import { Marked, TextRenderer } from 'marked';
 
 import { sanitizeHtml } from '#lib/sanitizeHtml';
 import { highlightToHtml } from '@seedcord/ui/shiki';
@@ -6,19 +7,20 @@ import { highlightToHtml } from '@seedcord/ui/shiki';
 import type { Tokens } from 'marked';
 import type { BundledLanguage } from 'shiki';
 
-// a readme links to its own headings with github's anchors
-function githubSlug(heading: string): string {
-    return heading
-        .toLowerCase()
-        .replaceAll(/[^\w\- ]+/g, '')
-        .replaceAll(' ', '-');
+// GitHub removes inline html tags from a heading before it slugs the heading
+class VisibleText extends TextRenderer {
+    override html(): string {
+        return '';
+    }
 }
+
+const visibleText = new VisibleText();
 
 // a separate marked instance keeps readme rendering independent of the shiki-configured global marked
 // in renderParagraphs.ts.
 function readmeMarked(): Marked {
-    // hoisting this out of the function would carry slugs from one readme into the next
-    const used = new Map<string, number>();
+    // one per readme, since it numbers repeated headings
+    const slugger = new GithubSlugger();
 
     return new Marked({
         async: true,
@@ -35,10 +37,7 @@ function readmeMarked(): Marked {
             // marked leaves the id off a heading
             heading({ tokens, depth }: Tokens.Heading): string {
                 const text = this.parser.parseInline(tokens);
-                const base = githubSlug(this.parser.parseInline(tokens, this.parser.textRenderer));
-                const seen = used.get(base) ?? 0;
-                used.set(base, seen + 1);
-                const id = seen === 0 ? base : `${base}-${String(seen)}`;
+                const id = slugger.slug(this.parser.parseInline(tokens, visibleText));
                 return `<h${String(depth)} id="${id}">${text}</h${String(depth)}>\n`;
             }
         }

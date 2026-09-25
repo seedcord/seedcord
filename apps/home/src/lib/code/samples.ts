@@ -11,15 +11,14 @@ export class SearchCommand extends
         this.instance
             .setName('search')
             .setDescription('Search the catalog')
-            .addStringOption((o) =>
-                o
-                    .setName('category')
-                    .setDescription('What to look through')
-                    .setRequired(true)
-                    .addChoices(
-                        { name: 'Books', value: 'books' },
-                        { name: 'Films', value: 'films' }
-                    )
+            .addStringOption((o) => o
+                .setName('category')
+                .setDescription('What to look through')
+                .setRequired(true)
+                .addChoices(
+                    { name: 'Books', value: 'books' },
+                    { name: 'Films', value: 'films' }
+                )
             );
     }
 }`;
@@ -29,13 +28,10 @@ export const typedDxHandler = `import {
 } from '@seedcord/gateway';
 
 @SlashRoute('search')
-export class SearchHandler extends
-    SlashHandler<'search'> {
+export class SearchHandler extends SlashHandler<'search'> {
     public async execute(): Promise<void> {
-        // generated accessor, no cast,
-        // no null check
-        const category =
-            this.options.getString('category');
+        // generated accessor, no cast, no null check
+        const category = this.options.getString('category');
         //    ^?  'books' | 'films'
 
         await this.reply(\`Searching \${category}\`);
@@ -63,14 +59,15 @@ client.on(Events.InteractionCreate, async (i) => {
 
     const raw = i.options.getString('query');
     if (raw === null) throw new Error('required');
-    const query = raw as 'fiction' | 'nonfiction'; // cast
+    // cast
+    const query = raw as 'fiction' | 'nonfiction';
 
     // ...manual guard and cooldown checks...
     await i.reply(\`Searching for \${query}\`);
 });
 
-// plus a REST register script, plus a
-// switch per subcommand,
+// plus a REST register script,
+// plus a switch per subcommand,
 // plus a full process restart on every edit`;
 
 export const afterSeedcord = `import {
@@ -116,15 +113,13 @@ export class RolePicker extends
 }`;
 
 export const codecHandler = `import {
-    RoleMenuHandler,
-    RoleMenuRoute
+    RoleMenuHandler, RoleMenuRoute
 } from '@seedcord/gateway';
 import { Roles } from '#components/role-picker';
 
 @RoleMenuRoute(Roles)
-export class RolePickerHandler extends RoleMenuHandler<
-    [typeof Roles]
-> {
+export class RolePickerHandler extends
+    RoleMenuHandler<[typeof Roles]> {
     public async execute(): Promise<void> {
         const { memberId, mode } = this.params;
         // memberId: string, mode: 'add' | 'remove'
@@ -151,9 +146,12 @@ declare module '@seedcord/gateway' {
     }
 }`;
 
-export const startTerminal = `$ pnpm create seedcord my-bot # scaffold a typed bot
+export const startTerminal = `# scaffold a typed bot
+$ pnpm create seedcord my-bot
 $ cd my-bot
-$ seedcord dev # tui | hot reload, gateway alive
+
+# tui with hot reload, the gateway stays up
+$ seedcord dev
 
 # bot online, every slash option fully typed`;
 
@@ -170,7 +168,7 @@ export const gatesSample = `import {
 @SlashRoute('ban')
 export class BanHandler extends SlashHandler<'ban'> {
     public async execute() {
-        // an owner, or a mod inside a guild, gets through
+        // an owner, or a mod in a guild, gets through
     }
 }`;
 

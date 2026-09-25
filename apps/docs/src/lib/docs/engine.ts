@@ -6,9 +6,9 @@ import { IndexLoader, VersionedDocsEngine } from '@seedcord/docs-engine';
 import { cache } from 'react';
 
 // avoids a self-referential http fetch during SSR
-async function protocolFetcher(url: string): Promise<Response> {
+async function protocolFetcher(url: string, signal: AbortSignal | null = null): Promise<Response> {
     if (!url.startsWith('file://')) {
-        return fetch(url);
+        return fetch(url, { signal });
     }
 
     try {
@@ -22,10 +22,14 @@ async function protocolFetcher(url: string): Promise<Response> {
 const LOCAL_INDEX_URL = pathToFileURL(path.resolve(process.cwd(), '../../generated/artifacts/index.json')).href;
 const INDEX_URL = process.env.SEEDCORD_DOCS_INDEX_URL ?? LOCAL_INDEX_URL;
 
+export function createIndexLoader(signal: AbortSignal | null = null): IndexLoader {
+    return new IndexLoader(INDEX_URL, (url) => protocolFetcher(url, signal));
+}
+
 // react's cache() memoizes this per request, since the engine holds mutable per-package version
 // state that can't leak across requests.
 export const getDocsEngine = cache((): Promise<VersionedDocsEngine> =>
-    Promise.resolve(new VersionedDocsEngine(new IndexLoader(INDEX_URL, protocolFetcher), protocolFetcher))
+    Promise.resolve(new VersionedDocsEngine(createIndexLoader(), protocolFetcher))
 );
 
 export type { VersionedDocsEngine };

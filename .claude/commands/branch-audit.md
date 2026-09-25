@@ -42,6 +42,7 @@ Treat those files as the rules. Do not substitute your own taste where they alre
     - bogus tests that would pass even if the behavior broke
     - tests that don't check behavior
     - tests that exist only to add to the count
+    - tests that are purely tautological
     - tests that assert on constants or static hardcoded strings rather than behavior
 5. Overengineering.
 6. YAGNI.

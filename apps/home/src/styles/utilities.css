@@ -6,7 +6,7 @@
         font-family: var(--font-mono), ui-monospace, monospace;
     }
 
-    /* seamless infinite marquee, two identical tracks slid -50% so the loop has no seam */
+    /* two identical tracks slid -50% make the loop restart without a visible jump */
     .marquee-anim {
         animation: marquee-x 240s linear infinite;
     }
@@ -101,7 +101,7 @@
     overflow-x: auto;
     padding: 1.25rem;
     font-size: 0.8125rem;
-    line-height: 1.7;
+    line-height: 1.55;
     scrollbar-width: thin;
     scrollbar-color: var(--husk) transparent;
 }

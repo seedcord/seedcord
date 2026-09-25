@@ -1,5 +1,5 @@
 import { CustomId, ButtonRoute, RoleMenuRoute, UserMenuRoute } from '@seedcord/core';
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expectTypeOf, it } from 'vitest';
 
 import { ButtonHandler, UserMenuHandler } from '#handlers/interaction/components';
 
@@ -93,6 +93,6 @@ describe('customId handler type safety', () => {
             MismatchedSelect,
             GoodSelect
         ];
-        expect(classes).toHaveLength(8);
+        void classes;
     });
 });

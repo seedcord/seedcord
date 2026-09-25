@@ -1,4 +1,3 @@
-import { DEFAULT_VERSION } from '@seedcord/docs-engine';
 import { cn } from '@seedcord/ui';
 import { Suspense } from 'react';
 
@@ -6,7 +5,7 @@ import { MovedEntityNotice } from '#components/docs/MovedEntityNotice';
 import { PackageOverviewTabs } from '#components/docs/PackageOverviewTabs';
 import { PackageVersionOverview } from '#components/docs/PackageVersionOverview';
 import { ReadmeBlock } from '#components/docs/ReadmeBlock';
-import { findCatalogVersion, loadActiveVersion, loadChangelogUrl, loadReadme, loadReexports } from '#lib/docs/catalog';
+import { loadActiveVersion, loadChangelogUrl, loadReadme, loadReexports } from '#lib/docs/catalog';
 import { DocsPage } from '#lib/docs/DocsPage';
 import { getCatalogContext } from '#lib/docs/pageContext';
 import { renderReadme } from '#lib/docs/renderReadme';
@@ -19,9 +18,7 @@ export const dynamic = 'force-static';
 
 export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
     const { entry, version } = await getCatalogContext(await params);
-    const latest = findCatalogVersion(entry, DEFAULT_VERSION);
-
-    return DocsPage.forPackage(entry, version, latest?.id ?? version.id).metadata();
+    return DocsPage.forPackage(entry, version).metadata();
 }
 
 async function PackageOverviewPage({ params }: { params: Promise<PageParams> }): Promise<ReactElement> {

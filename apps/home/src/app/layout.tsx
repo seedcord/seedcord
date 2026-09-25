@@ -13,7 +13,7 @@ import type { ReactNode } from 'react';
 const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
 const monoCode = JetBrains_Mono({ variable: '--font-mono', subsets: ['latin'], display: 'swap' });
 
-const TITLE = 'seedcord, a typed framework for Discord bots';
+const TITLE = 'seedcord, a TypeScript framework for Discord bots';
 
 export const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),

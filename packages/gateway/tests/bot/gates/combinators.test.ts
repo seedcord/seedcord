@@ -1,5 +1,5 @@
 import { and, defineGate, or } from '@seedcord/core';
-import { describe, it, expect, expectTypeOf } from 'vitest';
+import { describe, it, expectTypeOf } from 'vitest';
 
 import type { EventGateContext, GateContext, InteractionGateContext } from '#bot/gates';
 import type { EffectGate, Gate, GateContextBase, RequiredOf } from '@seedcord/core';
@@ -100,6 +100,6 @@ describe('combinator result types on the gateway arms', () => {
     it('disjoint interaction-kind gates are not mutually assignable', () => {
         // @ts-expect-error a button gate is not a slash gate
         const gSlash: Gate<InteractionGateContext<ChatInputCommandInteraction>> = ButtonGate;
-        expect(gSlash).toBe(ButtonGate);
+        void gSlash;
     });
 });

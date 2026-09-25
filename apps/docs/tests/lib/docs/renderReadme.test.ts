@@ -82,4 +82,23 @@ describe('renderReadme', () => {
         expect(html).toContain('id="usage"');
         expect(html).toContain('id="usage-1"');
     });
+
+    it('keeps every id distinct when a heading already reads like a suffixed repeat', async () => {
+        const html = await renderReadme('## Usage\n\n## Usage 1\n\n## Usage\n');
+        const ids = [...html.matchAll(/id="([^"]+)"/g)].map(([, id]) => id);
+
+        expect(ids).toEqual(['usage', 'usage-1', 'usage-2']);
+    });
+
+    it('slugs a heading holding inline html by the text a reader sees', async () => {
+        expect(await renderReadme('## Hello <em>world</em>\n')).toContain('id="hello-world"');
+    });
+
+    it('keeps the angle-bracket text of a code span in the id, as GitHub does', async () => {
+        expect(await renderReadme('## `Array<T>`\n')).toContain('id="arrayt"');
+    });
+
+    it('keeps accented letters in an id, as GitHub does', async () => {
+        expect(await renderReadme('## Café au lait\n')).toContain('id="café-au-lait"');
+    });
 });
