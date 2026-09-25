@@ -2,6 +2,7 @@ import { isDocumentedPackage } from '#packages/identity';
 import { IndexFetchError } from '#remote/errors';
 import { validateIndex } from '#remote/index-json';
 import { projectBaseFromIndexUrl, resolveIndexUrl } from '#src/constants';
+import { stableLineHeads } from '#src/versions';
 
 import type { IndexJson, PackageIndexEntry } from '#remote/index-json';
 
@@ -93,7 +94,7 @@ export class IndexLoader {
             return { version: byMinor, channel: 'stable' };
         }
 
-        return isPublishedHead(stable, selector) ? { version: selector, channel: 'stable' } : null;
+        return stableLineHeads(stable).includes(selector) ? { version: selector, channel: 'stable' } : null;
     }
 
     buildProjectUrl(index: IndexJson, folder: string, version: string, channel: 'stable' | 'prerelease'): string {
@@ -101,13 +102,3 @@ export class IndexLoader {
         return `${projectBaseFromIndexUrl(this.indexUrl)}/${relative}`;
     }
 }
-
-function isPublishedHead(stable: StableChannelLike, version: string): boolean {
-    return (
-        stable.latest === version ||
-        Object.values(stable.latestByMinor).includes(version) ||
-        Object.values(stable.latestByMajor).includes(version)
-    );
-}
-
-type StableChannelLike = NonNullable<PackageIndexEntry['stable']>;
