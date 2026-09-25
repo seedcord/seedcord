@@ -32,20 +32,29 @@ function isSeedcordPackage(name: string): boolean {
     return name.startsWith('@seedcord/');
 }
 
+// vite hands every import inside an external package to node
 export function seedcordDependents(projectDir: string): string[] {
     const found = new Set<string>();
+    const reachesSeedcord = new Map<string, boolean>();
 
-    const visit = (manifestPath: string, fields: readonly string[]): void => {
+    const visit = (manifestPath: string, fields: readonly string[]): boolean => {
+        const known = reachesSeedcord.get(manifestPath);
+        if (known !== undefined) return known;
+        reachesSeedcord.set(manifestPath, false);
+
+        let reaches = false;
         for (const name of dependencyNames(manifestPath, fields)) {
-            if (isSeedcordPackage(name) || found.has(name)) continue;
+            if (isSeedcordPackage(name)) reaches = true;
 
             const depManifest = installedManifest(name, manifestPath);
-            if (depManifest === undefined) continue;
-            if (!dependencyNames(depManifest, PACKAGE_FIELDS).some(isSeedcordPackage)) continue;
+            if (depManifest === undefined || !visit(depManifest, PACKAGE_FIELDS)) continue;
 
-            found.add(name);
-            visit(depManifest, PACKAGE_FIELDS);
+            reaches = true;
+            if (!isSeedcordPackage(name)) found.add(name);
         }
+
+        reachesSeedcord.set(manifestPath, reaches);
+        return reaches;
     };
 
     visit(join(projectDir, 'package.json'), PROJECT_FIELDS);

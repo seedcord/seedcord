@@ -43,7 +43,7 @@ Never wire a cross-package source path. Never point `paths` or `include` at anot
 
 A re-export from another package goes in `src/index.ts`. One file then says which of a package's names come from elsewhere.
 
-`./internal` entries are framework wiring. A symbol reachable only through one gets no TSDoc and no changeset line.
+`./internal` entries are framework wiring. A symbol reachable only through one gets no TSDoc. [`packages/AGENTS.md`](packages/AGENTS.md#changesets) says when a change to one still needs a changeset.
 
 ---
 

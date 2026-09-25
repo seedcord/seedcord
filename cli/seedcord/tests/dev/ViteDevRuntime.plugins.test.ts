@@ -28,11 +28,16 @@ const PLUGIN_ENTRY = `import { Base } from '@seedcord/fixture-core';
 export class ThirdParty extends Base {}
 `;
 
-const BOT_ENTRY = `import { isBase } from '@seedcord/fixture-core';
-import { ThirdParty } from 'third-party-plugin';
+const REEXPORT_ENTRY = `export { ThirdParty } from 'third-party-plugin';
+`;
+
+function botEntry(from: string): string {
+    return `import { isBase } from '@seedcord/fixture-core';
+import { ThirdParty } from '${from}';
 
 export const sameCore = isBase(new ThirdParty());
 `;
+}
 
 async function writePackage(root: string, name: string, manifest: object, entry: string): Promise<void> {
     const dir = join(root, 'node_modules', name);
@@ -44,15 +49,16 @@ async function writePackage(root: string, name: string, manifest: object, entry:
     await writeFile(join(dir, 'index.mjs'), entry);
 }
 
-async function writeProject(): Promise<string> {
+// the bot depends on `from` alone and imports the plugin class through it
+async function writeProject(from: string): Promise<string> {
     const root = await mkdtemp(join(tmpdir(), 'seedcord-dev-plugin-'));
     await mkdir(join(root, 'src'), { recursive: true });
     await writeFile(
         join(root, 'package.json'),
-        JSON.stringify({ name: 'bot', type: 'module', dependencies: { 'third-party-plugin': '1.0.0' } })
+        JSON.stringify({ name: 'bot', type: 'module', dependencies: { [from]: '1.0.0' } })
     );
     await writeFile(join(root, 'seedcord.config.ts'), 'export default {};\n');
-    await writeFile(join(root, 'src', 'bot.ts'), BOT_ENTRY);
+    await writeFile(join(root, 'src', 'bot.ts'), botEntry(from));
 
     await writePackage(root, '@seedcord/fixture-core', {}, CORE_ENTRY);
     await writePackage(
@@ -61,11 +67,21 @@ async function writeProject(): Promise<string> {
         { peerDependencies: { '@seedcord/fixture-core': '*' } },
         PLUGIN_ENTRY
     );
+    await writePackage(root, 'plugin-wrapper', { dependencies: { 'third-party-plugin': '1.0.0' } }, REEXPORT_ENTRY);
+    await writePackage(
+        root,
+        '@seedcord/fixture-pack',
+        { dependencies: { 'third-party-plugin': '1.0.0' } },
+        REEXPORT_ENTRY
+    );
     return root;
 }
 
-async function withRuntime(run: (runtime: ViteDevRuntime) => Promise<void>): Promise<void> {
-    const root = await writeProject();
+async function withRuntime(
+    run: (runtime: ViteDevRuntime) => Promise<void>,
+    from = 'third-party-plugin'
+): Promise<void> {
+    const root = await writeProject(from);
     const runtime = new ViteDevRuntime();
     try {
         await runtime.start({ config: devConfigFor(root, 'bot.ts') });
@@ -77,13 +93,17 @@ async function withRuntime(run: (runtime: ViteDevRuntime) => Promise<void>): Pro
 }
 
 describe('dev runtime against a plugin published outside the @seedcord scope', () => {
-    it('loads the plugin against the same core the bot imports', async () => {
-        await withRuntime(async (runtime) => {
-            const { module } = await runtime.loadEntry();
+    it.for(['third-party-plugin', 'plugin-wrapper', '@seedcord/fixture-pack'])(
+        'loads the plugin against the same core the bot imports, reached through %s',
+        { timeout: 60_000 },
+        async (from) => {
+            await withRuntime(async (runtime) => {
+                const { module } = await runtime.loadEntry();
 
-            expect(module).toMatchObject({ sameCore: true });
-        });
-    }, 60_000);
+                expect(module).toMatchObject({ sameCore: true });
+            }, from);
+        }
+    );
 
     // a restart in the same process builds its config from this object again
     it('leaves the shared vite config as it found it', async () => {
