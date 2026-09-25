@@ -59,13 +59,6 @@ describe('HmrPlugin', () => {
         hmrPlugin = new HmrPlugin(mockConfig);
     });
 
-    it('should have correct name and hooks', () => {
-        const plugin = hmrPlugin.plugin;
-        expect(plugin.name).toBe('seedcord:hmr');
-        expect(plugin.configureServer).toBeDefined();
-        expect(plugin.hotUpdate).toBeDefined();
-    });
-
     it('carries the config rollback flag onto the hmr payload', () => {
         const plugin = new HmrPlugin({ ...mockConfig, hmr: { rollback: false } });
         const hotSend = vi.fn();

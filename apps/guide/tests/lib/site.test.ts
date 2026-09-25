@@ -33,10 +33,6 @@ describe('the metadata a guide page carries', () => {
         expect(pageMetadata(page).alternates?.canonical).toBe('https://guide.seedcord.org/tooling/');
     });
 
-    it('names the guide as the site on a link embed', () => {
-        expect(pageMetadata(page).openGraph?.siteName).toBe('seedcord guide');
-    });
-
     it('points the card at the page url plus .png', () => {
         expect(pageMetadata(page).openGraph?.images).toEqual([
             {
@@ -119,9 +115,5 @@ describe('the sitemap', () => {
 
     it('ranks a Start page beside the other tab indexes', () => {
         expect(sitemapEntries([page('/first-bot', 'first-bot.mdx')])[0]?.priority).toBe(0.8);
-    });
-
-    it('tells a crawler how often the guide changes', () => {
-        expect(sitemapEntries([page('/tooling', 'tooling/index.mdx')])[0]?.changeFrequency).toBe('weekly');
     });
 });

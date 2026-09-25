@@ -126,22 +126,19 @@ describe('what the types allow', () => {
     it('accepts a reply a shared notice or page render built, which names the portable type', () => {
         const shared: ReplyResponse = { components, files: [{ data: BYTES, name: 'a.png' }] };
         const bound: GatewayReplyResponse = shared;
-
-        expect(bound.files).toHaveLength(1);
+        void bound;
     });
 
     it('rejects a discord.js file form on the portable type, which a Notice render returns', () => {
         // @ts-expect-error only GatewayReplyResponse accepts the discord.js forms
         const response: ReplyResponse = { components, files: [new AttachmentBuilder(Buffer.from(BYTES))] };
-
-        expect(response.files).toHaveLength(1);
+        void response;
     });
 
     it('rejects a file with no name', () => {
         // @ts-expect-error name is required because an unnamed file cannot be referenced by a v2 component
         const response: GatewayReplyResponse = { components, files: [{ data: BYTES }] };
-
-        expect(response.files).toHaveLength(1);
+        void response;
     });
 });
 

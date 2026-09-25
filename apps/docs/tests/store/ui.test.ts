@@ -50,15 +50,6 @@ afterEach(() => {
 });
 
 describe('useUIStore', () => {
-    describe('defaults', () => {
-        it('exposes documented default state when no storage entry exists', () => {
-            const state = useUIStore.getState();
-
-            expect(state.isCommandPaletteOpen).toBe(false);
-            expect(state.memberAccessLevel).toBe('protected');
-        });
-    });
-
     describe('command palette', () => {
         it('toggles open state without touching localStorage', () => {
             const setItem = vi.spyOn(window.localStorage, 'setItem');

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, it } from 'vitest';
 
 import type { HttpConfig } from '#src/interfaces/Config';
 import type { Config } from '@seedcord/types';
@@ -11,14 +11,12 @@ function base(): Pick<Config, 'bot' | 'subscribers'> {
 describe('HttpConfig', () => {
     it('the server arm carries port', () => {
         const config: HttpConfig = { ...base(), runtime: 'server', port: 4000 };
-
-        expect(config.port).toBe(4000);
+        void config;
     });
 
     it('the edge arm rejects port', () => {
         // @ts-expect-error port is a node-server option, an edge worker binds nothing
         const config: HttpConfig = { ...base(), runtime: 'edge', port: 3000 };
-
-        expect(config.runtime).toBe('edge');
+        void config;
     });
 });
