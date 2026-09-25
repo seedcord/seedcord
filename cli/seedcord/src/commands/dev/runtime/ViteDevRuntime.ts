@@ -8,6 +8,7 @@ import { EvaluatedModules } from 'vite/module-runner';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { HmrPlugin } from './HmrPlugin';
+import { seedcordDependents } from './seedcordDependents';
 import viteConfig, { logsIgnore } from './vite.config';
 
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
@@ -34,12 +35,19 @@ export class ViteDevRuntime implements DevRuntime {
         const hmrPlugin = new HmrPlugin(this.context.config);
         this.hmrPlugin = hmrPlugin;
 
+        const projectDir = dirname(this.context.config.configFile);
+
+        // vite writes resolved options back into the config object it receives
+        const base = structuredClone(viteConfig);
+
         // vite searches its own root for a config file
-        const config = mergeConfig(viteConfig, {
+        const config = mergeConfig(base, {
             root: projectRoot,
             configFile: false,
             server: { watch: { ignored: [logsIgnore(projectRoot)] } },
-            plugins: [tsconfigPaths({ root: dirname(this.context.config.configFile) }), hmrPlugin.plugin]
+            // an external plugin would load node's copy of @seedcord/core beside vite's
+            ssr: { noExternal: seedcordDependents(projectDir) },
+            plugins: [tsconfigPaths({ root: projectDir }), hmrPlugin.plugin]
         });
 
         this.viteServer = await createServer(config);

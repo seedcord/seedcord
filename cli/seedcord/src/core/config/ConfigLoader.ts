@@ -2,6 +2,7 @@ import { dirname, isAbsolute, relative, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { isPlainObject } from '@seedcord/utils/internal';
 
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
@@ -16,10 +17,6 @@ import type {
     SeedcordHmrConfig
 } from './schema';
 import type { ILogger } from '@seedcord/types';
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 function isOptionalString(value: unknown): boolean {
     return value === undefined || typeof value === 'string';

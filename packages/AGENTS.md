@@ -10,7 +10,7 @@ Most of these publish.
 
 A package's `exports` block in its `package.json` decides what consumers can import. Adding a file to `src/` publishes nothing until the map names it.
 
-`./internal` entries carry framework wiring between packages. A symbol reachable only through one has no outside consumer. It gets no TSDoc block, and a changeset never mentions it.
+`./internal` entries carry framework wiring between packages. A symbol reachable only through one has no outside consumer. It gets no TSDoc block. [Changesets](#changesets) says when a change to one still needs a changeset.
 
 Export a symbol when a caller has to write its name: in a variable annotation, a parameter or return type, or an `extends` clause. A helper type that only appears as the shape of another exported type's field stays internal. The parent's declaration still resolves it in the emitted `.d.ts`.
 
@@ -52,7 +52,7 @@ Every change to a published package needs one. Run `pnpm cs`.
 
 A changeset is one or two plain sentences naming the user-visible change. Skip the sub-changes that rode along, since the changelog reader has the diff. Mark a breaking change with a bold `**BREAKING:**` prefix line.
 
-Say nothing about a change that only touches an `./internal` entry.
+A change to an `./internal` entry gets a patch changeset once another package imports from it. Without one the package doesn't publish, and the importing package ships asking for an export the registry doesn't have. Write one line saying which package reads it now, like "`@seedcord/logger` and `seedcord` now read `isPlainObject` from here."
 
 ---
 

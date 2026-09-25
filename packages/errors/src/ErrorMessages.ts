@@ -49,6 +49,8 @@ const messages = {
         `${paint.sky(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>
         `${paint.sky(key)} ${reason} Write a group and a plugin name around one dot, like 'services.users'.`,
+    [SeedcordErrorCode.CorePluginFromOtherCore]: (plugin: string) =>
+        `${paint.sky(plugin)} doesn't extend the ${paint.bold('Plugin')} class your bot uses. That usually means two copies of ${paint.bold('@seedcord/core')} are installed. Update the plugin and your ${paint.bold('@seedcord')} packages to versions that need the same ${paint.bold('@seedcord/core')}. Your package manager can list each installed copy and the package that pulled it in.`,
     [SeedcordErrorCode.CorePluginKeyHoldsGroup]: (key: string) =>
         `${paint.sky(key)} already holds a group of plugins. Attach this one under a name of its own.`,
     [SeedcordErrorCode.CorePluginReservedChannel]: (key: string) =>
