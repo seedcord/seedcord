@@ -4,6 +4,7 @@ import { cleanFence } from './src/lib/fence';
 import { rehypeFenceMeta } from './src/lib/rehypeFenceMeta';
 import { remarkHeadingRange } from './src/lib/remarkHeadingRange';
 import { remarkNoMappedJsx } from './src/lib/remarkNoMappedJsx';
+import { remarkPageLinks } from './src/lib/remarkPageLinks';
 import { remarkRefLinks } from './src/lib/remarkRefLinks';
 
 const STRUCTURE_TYPES = ['heading', 'paragraph', 'blockquote', 'tableCell', 'mdxJsxFlowElement', 'code'];
@@ -22,7 +23,7 @@ export default defineConfig({
                 stringify: (node) => (node.type === 'code' ? cleanFence(node.value) : undefined)
             }
         },
-        remarkPlugins: [remarkHeadingRange, remarkNoMappedJsx, remarkRefLinks],
+        remarkPlugins: [remarkHeadingRange, remarkNoMappedJsx, remarkRefLinks, remarkPageLinks],
         rehypePlugins: [rehypeFenceMeta]
     }
 });
