@@ -103,6 +103,10 @@
             "dependsOn": ["^build", "@seedcord/http#build"],
             "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "src/**", "tests/**"]
         },
+        "@seedcord/guide#test": {
+            "dependsOn": ["^build", "//#docs:artifacts"],
+            "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "src/**", "tests/**"]
+        },
         "@seedcord/docs-engine#test": {
             "dependsOn": ["^build", "@seedcord/docs-generator#test"],
             "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"]
