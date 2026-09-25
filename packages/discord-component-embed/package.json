@@ -2,7 +2,7 @@
     "name": "discord-component-embed",
     "type": "module",
     "sideEffects": false,
-    "version": "0.4.0",
+    "version": "0.4.1",
     "description": "Build and check Discord component embed link previews, with JSX or plain functions, in any framework.",
     "keywords": [
         "discord",

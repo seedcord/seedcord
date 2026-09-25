@@ -1,5 +1,11 @@
 # create-seedcord
 
+## 0.3.3
+
+### 🩹 Patch
+
+- The README tagline now reads "The whole Discord bot, typed end to end". ([`56f9eb8`](https://github.com/seedcord/seedcord/commit/56f9eb8d40c0c654530f950480820ae863441935))
+
 ## 0.3.2
 
 ### 🩹 Patch

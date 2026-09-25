@@ -1,5 +1,15 @@
 # @seedcord/rate-limiter
 
+## 0.1.10
+
+### 🩹 Patch
+
+- The README tagline now reads "The whole Discord bot, typed end to end". ([`56f9eb8`](https://github.com/seedcord/seedcord/commit/56f9eb8d40c0c654530f950480820ae863441935))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.14.0 → 0.14.1
+
 ## 0.1.9
 
 ### 🩹 Patch
