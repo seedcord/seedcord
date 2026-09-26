@@ -1,5 +1,6 @@
 name: Bug report
 description: Something in seedcord behaves in a way you did not expect
+type: Bug
 labels:
   - '🔍 triage'
 
@@ -20,12 +21,12 @@ body:
     validations:
       required: true
 
-  - type: input
-    id: version
+  - type: textarea
+    id: versions
     attributes:
-      label: seedcord version
-      description: From your package.json, or `pnpm list seedcord`
-      placeholder: '0.17.4'
+      label: seedcord versions
+      description: Every `seedcord` and `@seedcord/*` line from your package.json, or the output of `pnpm list "@seedcord/*" seedcord`.
+      render: text
 
   - type: dropdown
     id: transport
@@ -34,11 +35,18 @@ body:
       options:
         - gateway
         - http
+        - http (edge)
         - not sure
+
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime and OS
+      placeholder: Node on Windows, Cloudflare Workers
 
   - type: textarea
     id: details
     attributes:
       label: Code, errors, or logs
-      description: A snippet, a stack trace, a line from the dev terminal, etc.
+      description: Paste the text. A screenshot of an error can't be searched or copied.
       render: text

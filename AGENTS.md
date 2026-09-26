@@ -70,7 +70,7 @@ Keep Node-only code out of anything the edge build reaches. Answer a question fo
 - **Only implement what was asked.** Surface additions as a question first. Wait for the third use before extracting an abstraction.
 - **No dead code.** Before adding `export`, confirm something outside the file names the symbol. A symbol that exists only for a test belongs in the test folder.
 - **Grep every consuming surface before deleting anything.** That includes markdown and generated output. Show no callers or name the replacement.
-- **Commit subjects are one lowercase line with no scope and no body.** Write `feat:`, never `feat(http):`. A breaking change marks the bare type, `feat!:`. A PR title takes one scope, the package it touches. If multiple packages are affected, use the folder the packages are in as the scope.
+- **Commit subjects are one lowercase line with no scope and no body.** Write `feat:`, never `feat(http):`. A breaking change marks the bare type, `feat!:`. A PR title follows the same rule, because a squash merge turns it into the commit.
 - **Move files with `git mv`.** Add dependencies with `pnpm add` so the lockfile updates.
 
 ---

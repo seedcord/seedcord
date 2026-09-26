@@ -1,0 +1,20 @@
+name: Docs or guide
+description: A page that is wrong, unclear, or missing something
+type: Documentation
+labels:
+  - '🔍 triage'
+
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page URL
+      description: The page on the guide or the API docs. Leave it empty if the page does not exist yet.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's wrong or missing
+      description: What you were looking for, and what the page said instead.
+    validations:
+      required: true

@@ -2,133 +2,105 @@
 
 Any help is appreciated, whether that's a bug fix, a feature, or better docs.
 
-seedcord is pre-1.0 and I break things between minors. Open an issue before starting anything large and wait for my reply. Large unsolicited pull requests may be closed without a detailed review, because I cannot keep up with them otherwise.
+seedcord is pre-1.0 and I break things between minors. Open an issue before starting anything large and wait for my reply. Large unsolicited pull requests may be closed without a detailed review, because I cannot keep up with them otherwise. Check whether an issue or PR already covers your idea first.
 
-## Getting Started
+Everyone here follows the [code of conduct](CODE_OF_CONDUCT.md). Report a security problem the way [SECURITY.md](SECURITY.md) describes.
 
-1. Fork the repository on GitHub
-2. Clone your fork
-3. Install dependencies: `pnpm install`
-4. Build once: `pnpm build`
-5. Make your changes
-6. Run the gate: `pnpm prePush`
-7. Submit a pull request
+## Setup
 
-## What I'm Looking For
+You need the Node version in `engines.node` and the pnpm version in `packageManager`, both in the root `package.json`.
 
-- **Bug fixes** - Found something broken? Please fix it
-- **Tests** - Especially regression tests and edge cases
-- **Documentation** - If there is something we could make more clear, or you found a gap
-- **New features** - Open an issue first so we agree on the shape
-- **Large features or architectural changes** - Always an issue first. Do not start until there is agreement on the approach
-
-## Before You Start
-
-- Check whether an issue or PR already covers it
-- Work out which package you are editing. There are many
-- Follow the existing style. The lint config is strict, so run `lint:fix` periodically
-- Write tests
-
-## Development Setup
+The scripts assume a POSIX shell. On Windows, work inside WSL.
 
 ```bash
 git clone https://github.com/<username>/seedcord.git
 cd seedcord
-
 pnpm install
 pnpm build
-
-# per package, in this order
-pnpm -C packages/<name> lint:fix
-pnpm -C packages/<name> tc
-pnpm -C packages/<name> test
-
-# the whole gate, which husky also runs on pre-push
-pnpm prePush
 ```
 
-`mocks/` contains two runnable bots, and running one is the fastest way to see a change work. `mocks/gateway` uses the websocket transport. `mocks/http` uses the interactions endpoint. Both need at least a bot token in a `.env`.
+Branch off `next` and open your PR against `next`.
+
+## Working on a package
+
+Run these from the repo root, in this order:
+
+```bash
+pnpm -C <package> lint:fix
+pnpm -C <package> tc
+pnpm -C <package> test
+```
+
+Packages import each other's built `dist`. After you edit one, rebuild it before you check anything that depends on it:
+
+```bash
+pnpm -C packages/core build
+pnpm -C packages/gateway tc
+```
+
+A new package starts from `turbo gen package`. Then follow the checklist in [`turbo/generators/README.md`](../turbo/generators/README.md).
+
+## Trying a change in a real bot
+
+`mocks/gateway` and `mocks/http` are working bots, one per transport. Copy a mock's `.env.example` to `.env` and fill it in. The example file lists every variable that mock reads. The [guide](https://guide.seedcord.org/discord-application) shows how to create an application and get its token.
 
 ```bash
 pnpm -C mocks/gateway dev
 ```
 
-## Pull Request Guidelines
+Check a mock's `src/bot.ts` for what else it connects to. The gateway mock attaches a database plugin, so it needs that database running. The http mock needs a public URL for Discord to post to, and `seedcord dev` opens one through [cloudflared](https://guide.seedcord.org/tooling/tunnel).
 
-1. **One thing at a time** - Keep a PR to a single change, or changes in the same scope
+When you add or change a handler in a mock, run `pnpm -C mocks/<name> codegen`. The gate fails on a stale generated file.
 
-2. **Write good commit messages** - Conventional commits, lowercase, one line, no scope. `commitlint.config.ts` lists the accepted types
+## Hooks
+
+`pnpm install` sets up three husky hooks:
+
+- **pre-commit** runs `lint-staged` with zero warnings allowed, then checks formatting. One lint warning blocks the commit, even though plain `pnpm lint` lets it through.
+- **commit-msg** runs commitlint on your message.
+- **pre-push** runs `pnpm prePush:affected`, which checks the packages your branch changed and the ones that depend on them.
+
+Run `pnpm prePush` before you open the PR. It checks every package. The root `package.json` has both chains.
+
+## Pull request guidelines
+
+1. **One change per PR.** Changes in the same scope can go together.
+
+2. **Commits and PR titles are one lowercase line, conventional commits, no scope.** A breaking change marks the bare type with `!`. `commitlint.config.ts` lists the accepted types. A squash merge turns the PR title into the commit on `next`, so the title follows the same rule.
 
     ```
     feat: typed select menu values
     fix: gate order on the http dispatcher
+    feat!: move errors out of core
     ```
 
-3. **Put the package in the PR title** - Write it like a commit subject, plus the package name in the scope. Drop the `@seedcord/` prefix. If the PR touches several packages from one folder, use the folder name. If they come from different folders, leave the scope off
+3. **Add a changeset** with `pnpm cs` for any change to a published package. Read [`skills/changeset-guidelines`](skills/changeset-guidelines/SKILL.md) before you write it. A breaking change is a minor bump while seedcord is pre-1.0. `pnpm lint:changesets` checks the format, and CI runs it.
 
-    ```
-    feat(http): typed modal values
-    feat(plugins): drop the old init contract
-    feat: move errors out of core
-    ```
+4. **Write the failing test first.** Watch it fail, then fix the code. A regression test that passes before your change proves nothing. Tests live in `<package>/tests/`, mirroring `src/`, and `pnpm -C <package> test:watch` reruns them as you work.
 
-4. **Add a changeset** - Any change to a published package needs one
+5. **Say which transport you tested on.** Gateway and http share most of their surface and differ in places. If a change touches both, say so.
 
-    ```bash
-    pnpm cs
-    ```
+## Code style
 
-    - **Patch**: bug fixes, internal changes
-    - **Minor**: new features, backwards-compatible additions
-    - **Major**: breaking changes, removals, behavior changes
-    - Write one or two plain sentences about what changed for someone using the package. Look at any `CHANGELOG.md` for the shape
+The lint config is strict. `lint:fix` fixes what it can and reports the rest.
 
-5. **Test first** - Write the failing test, watch it fail, then fix it. A regression test that passes before your change proves nothing
+- **No `any`.** Use `unknown` and narrow it with a type guard. `as unknown as T` is out too. If you cannot get the types to work, open an issue and we'll talk through the design.
+- **Throw through `@seedcord/errors`** with a registered code. A raw `throw new Error(...)` that reaches a consumer is a bug.
+- **Comment only where the reason sits outside the file.** A comment restating the line below it gets cut in review.
 
-6. **Say which transport you tested on** - Gateway and http share most of their surface and diverge in places. If a change touches both, say so
-
-7. **Keep it simple** - Write three similar lines before you write a wrong abstraction
-
-## Code Style
-
-I use a very strict ESLint config. `pnpm lint:fix` over plain `pnpm lint`, always.
-
-- TypeScript only. New runtime code lives under the existing `src` tree of whichever package it belongs to
-- **No `any` in production code.** Use `unknown` and narrow it with a type guard. `value as any` and `as unknown as T` are both out. If you cannot get the types to work, open an issue and let's talk through the design. Use TypeScript as it's meant to be used
-- Throw through `@seedcord/errors`, with a registered code. A raw `throw new Error(...)` reaching a consumer is a bug
-- Comment only where the reason sits outside the file. A comment restating the line below it gets cut in review
-
-`AGENTS.md` at the repo root contains the long version.
+[`AGENTS.md`](../AGENTS.md) at the repo root has the full rules. `packages/` and `apps/` each add their own `AGENTS.md` on top of it.
 
 ## AI-generated code
 
-AI tools are fine, I use them too. The bar is the same as any other code. You have to understand what you are submitting and review it properly before it goes up. Do not send a PR with code you could not explain or debug yourself, and if I ask why something is the way it is, "the AI wrote it" is not an answer.
+AI tools are fine. I use them too. The bar is the same as any other code. You have to understand what you are submitting and review it properly before it goes up. Do not send a PR with code you could not explain or debug yourself, and if I ask why something is the way it is, "the AI wrote it" is not an answer.
 
 Same for anything you write in the repo. Issues, PR descriptions, and review replies should come from you, the person who read the change. I want to talk it through with the human doing the work.
 
-AI code often looks correct and misses edge cases, so the testing rules matter more here. Your agents should always have these four skills in `.github/skills` loaded: `tdd`, `code-quality`, `code-commenting-guidelines`, and `writing-voice`.
+AI code often looks correct and misses edge cases, so the testing rules matter more here. Point your agent at `AGENTS.md` and have it load the skills in [`.github/skills`](skills).
 
-Point your agent at `AGENTS.md` in the repo root. `apps/` and `packages/` each add their own file on top of it.
+## CI
 
-## CI and checks
-
-Every pull request needs:
-
-- `pnpm prePush` green, which covers build, codegen, type checks, lint, format, and tests
-- Passing commitlint
-- A changeset, for any change to a published package
-
-A PR that does not pass CI will not get a detailed review.
-
-## Testing
-
-Tests live in `<package>/tests/` mirroring `src/`. Vitest is the runner.
-
-- `pnpm -C <package> test` runs once
-- `pnpm -C <package> test:watch` watches
-- `pnpm -C <package> coverage` reports
-
-`mocks/gateway` is the reference bot and it exercises most of the framework, so a change that breaks something usually fails there first.
+[`checks.yml`](workflows/checks.yml) runs on every PR that is not a draft, and [`commitlint.yml`](workflows/commitlint.yml) checks every commit in it. CI runs a subset of `pnpm prePush`. A PR that fails CI will not get a detailed review.
 
 ## Questions
 

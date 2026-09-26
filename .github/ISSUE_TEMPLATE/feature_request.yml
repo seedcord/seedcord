@@ -1,0 +1,32 @@
+name: Feature request
+description: Something you want seedcord to do
+type: Feature
+labels:
+  - '🔍 triage'
+
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to build?
+      description: The bot feature or workflow, in your own words.
+    validations:
+      required: true
+
+  - type: textarea
+    id: today
+    attributes:
+      label: What do you do today instead?
+      description: Your workaround, or the code you have to write without it.
+      render: ts
+
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options:
+        - gateway
+        - http
+        - http (edge)
+        - both
+        - not sure

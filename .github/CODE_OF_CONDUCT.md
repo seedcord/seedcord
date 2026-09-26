@@ -1,25 +1,28 @@
 # Code of conduct
 
-These rules apply in the issue tracker, in pull requests, and in the Discord server.
+This applies anywhere seedcord is discussed on GitHub, and in the seedcord Discord server.
 
-## What is expected
+## Expected
 
-- Be respectful in discussion and in review
+- Be respectful, in discussion and in review
 - Stay on topic
-- Help someone who is new to this
-- Give feedback that improves the work
-- Take feedback on your own work
+- Help people who are new to this
+- Give feedback that makes the work better, and take it on your own work
 
-## What is not okay
+## Not okay
 
 - Personal attacks and insults
 - Harassment of any kind
-- Spam and off-topic posting
+- Spam
 - Publishing someone's private information
-- Trolling and deliberate disruption
+- Trolling or deliberately derailing a thread
 
 ## Reporting
 
-Message `@materwelon` on Discord or email <materwelonDhruv@gmail.com>. I handle it quickly and I keep it confidential.
+On GitHub, use **Report content** on the comment or issue. For anything else, contact me through the channels in [SECURITY.md](SECURITY.md#reporting-a-vulnerability).
 
-Breaking these gets you a warning, your comments removed, or a block from the project, depending on what happened.
+I read every report and keep who sent it private.
+
+## What happens
+
+Depending on what happened, I warn the person, remove their comments, or block them from the project for a while or for good.
