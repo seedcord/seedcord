@@ -81,7 +81,7 @@
         "husky": "^9.1.7",
         "knip": "^6.31.0",
         "lint-staged": "^17.3.0",
-        "markdownlint-cli2": "^0.23.2",
+        "markdownlint-cli2": "^0.23.3",
         "prettier": "catalog:deps",
         "prettier-plugin-tailwindcss": "catalog:deps",
         "react-doctor": "^0.9.3",
