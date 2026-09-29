@@ -2,55 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { checkTarget } from '#src/check';
 
+import { card, HTML, page, serving, withFiles, withPages, withSlowPages } from './helpers';
+
 import type { CheckInput } from '#src/check';
 
 const IMAGE = 'https://example.com/a.png';
-
-function withFiles(files: Record<string, string>): CheckInput {
-    return {
-        readFile: (path) => {
-            const text = files[path];
-            if (text === undefined) return Promise.reject(new Error(`ENOENT: no such file, open '${path}'`));
-            return Promise.resolve(text);
-        },
-        fetch: () => Promise.reject(new Error('no network in this test')),
-        nowMs: () => 0
-    };
-}
-
-const card = (...components: unknown[]): string => JSON.stringify({ component: { type: 17, components } });
-
-function withPages(pages: Record<string, string>, userAgents: string[] = []): CheckInput {
-    return {
-        readFile: () => Promise.reject(new Error('no files in this test')),
-        fetch: (url, init) => {
-            userAgents.push(new Headers(init.headers).get('user-agent') ?? '');
-            const body = pages[url];
-            return Promise.resolve(body === undefined ? new Response('', { status: 404 }) : new Response(body));
-        },
-        nowMs: () => 0
-    };
-}
-
-// each url takes its delay in ms to answer, on a clock that only the fetches move
-function withSlowPages(
-    pages: Record<string, string>,
-    delays: Record<string, number>,
-    fetched: string[] = []
-): CheckInput {
-    let now = 0;
-    return {
-        ...withPages(pages),
-        fetch: (url, init) => {
-            fetched.push(url);
-            now += delays[url] ?? 0;
-            return withPages(pages).fetch(url, init);
-        },
-        nowMs: () => now
-    };
-}
-
-const page = (head: string): string => `<!doctype html><html><head>${head}</head><body>hi</body></html>`;
 
 describe('checkTarget on a file', () => {
     it('passes a valid card and reports its size', async () => {
@@ -289,8 +245,48 @@ describe('checkTarget on a url', () => {
         expect(result.status).toBe('pass');
     });
 
+    it('fetches an http href, which discord renders', async () => {
+        const html = page(
+            `<link rel="discord:component-embed" type="application/json" href="http://example.com/post.json">`
+        );
+
+        const result = await checkTarget(PAGE, withPages({ [PAGE]: html, 'http://example.com/post.json': good }));
+
+        expect(result.status).toBe('pass');
+    });
+
     it.each([
-        ['an http href', 'http://example.com/post.json'],
+        ['text/html', 'text/html'],
+        ['xhtml', 'application/xhtml+xml'],
+        ['an uppercase type with a charset', 'Text/HTML; charset=utf-8']
+    ])('checks a page served as %s', async (_label, contentType) => {
+        const html = page(`<script id="discord:component-embed" type="application/json">${good}</script>`);
+
+        const result = await checkTarget(PAGE, serving(html, { 'content-type': contentType }));
+
+        expect(result.status).toBe('pass');
+    });
+
+    it.each([
+        ['text/plain', { 'content-type': 'text/plain' }, 'served as text/plain'],
+        ['no content type', {}, 'served without a content type'],
+        [
+            'an attachment',
+            { 'content-type': 'text/html', 'content-disposition': 'attachment; filename="post.html"' },
+            'served as a download, with Content-Disposition: attachment'
+        ]
+    ])('fails a page served with %s, which discord shows no preview for', async (_label, headers, how) => {
+        const html = page(`<script id="discord:component-embed" type="application/json">${good}</script>`);
+
+        expect(await checkTarget(PAGE, serving(html, headers))).toEqual({
+            status: 'fail',
+            problems: [
+                `The page is ${how}. Discord shows no preview for it, not even the Open Graph card. Serve it as text/html or application/xhtml+xml.`
+            ]
+        });
+    });
+
+    it.each([
         ['a relative href', '/post.json'],
         ['an href on another site', 'https://elsewhere.com/post.json']
     ])('fails %s the way discord does', async (_label, href) => {
@@ -299,7 +295,7 @@ describe('checkTarget on a url', () => {
         expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toEqual({
             status: 'fail',
             problems: [
-                `The <link> href has to be an absolute https URL on the page's host, a subdomain of it, or a domain above it, got ${href}.`
+                `The <link> href has to be an absolute http or https URL on the page's host, a subdomain of it, or a domain above it, got ${href}.`
             ]
         });
     });
@@ -444,7 +440,7 @@ describe("checkTarget reading a page's HTML", () => {
             ...withPages({ 'https://embeds.example.com/post.json': good }),
             fetch: (url, init) => {
                 if (url !== PAGE) return withPages({ 'https://embeds.example.com/post.json': good }).fetch(url, init);
-                const redirected = new Response(html);
+                const redirected = new Response(html, { headers: HTML });
                 Object.defineProperty(redirected, 'url', { value: 'https://elsewhere.net/post' });
                 return Promise.resolve(redirected);
             }
@@ -478,7 +474,7 @@ describe("checkTarget reading a page's HTML", () => {
         expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toEqual({
             status: 'fail',
             problems: [
-                "The <link> href has to be an absolute https URL on the page's host, a subdomain of it, or a domain above it, got nothing."
+                "The <link> href has to be an absolute http or https URL on the page's host, a subdomain of it, or a domain above it, got nothing."
             ]
         });
     });
@@ -599,7 +595,7 @@ describe('checkTarget on an html file', () => {
 
         expect(await checkTarget('dist/post.html', withFilesAndPages({ 'dist/post.html': html }))).toEqual({
             status: 'fail',
-            problems: ['The <link> href has to be an absolute https URL, got /post.json.']
+            problems: ['The <link> href has to be an absolute http or https URL, got /post.json.']
         });
     });
 

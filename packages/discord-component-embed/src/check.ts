@@ -1,4 +1,4 @@
-import { describeValue, messageOf } from './checks';
+import { describeValue, joinList, messageOf } from './checks';
 import { collectPayloadErrors } from './fromPayload';
 import { embedStats, MAX_JSON_BYTES } from './limits';
 import { SCRIPT_ID } from './scriptId';
@@ -32,7 +32,12 @@ const DISCORD_WAITS =
 
 type Loaded = { text: string; inScript: boolean } | CheckResult;
 type Unreadable = Extract<CheckResult, { status: 'unreadable' }>;
-type Fetched = { text: string; contentType: string } | Unreadable;
+interface Page {
+    text: string;
+    contentType: string;
+    disposition: string;
+}
+type Fetched = Page | Unreadable;
 
 // a local html file has no host to hold a <link> to
 type LinkRule = { pageHost: string } | 'file';
@@ -52,7 +57,9 @@ async function load(target: string, deadline: number, input: CheckInput): Promis
         if (!url) return { status: 'unreadable', reason: `${target} isn't a valid URL.` };
         const page = await fetchText(url, PAGE_USER_AGENT, deadline, input);
         if (!('text' in page)) return page;
-        if (isJson(page.contentType)) return { text: page.text, inScript: false };
+        if (mediaType(page.contentType) === 'application/json') return { text: page.text, inScript: false };
+        const notAPage = servedProblem(page);
+        if (notAPage) return notAPage;
         // discord's crawler held the <link> to the pasted URL's host, even after a redirect to another host
         return embedIn(page.text, { pageHost: url.hostname }, deadline, input);
     }
@@ -92,11 +99,11 @@ async function embedIn(html: string, rule: LinkRule, deadline: number, input: Ch
     const href = link.attributes.get('href');
     const jsonUrl = URL.parse(href ?? '');
     const offSite = rule !== 'file' && jsonUrl !== null && !sameSite(jsonUrl.hostname, rule.pageHost);
-    if (jsonUrl?.protocol !== 'https:' || offSite) {
+    if (!isWebUrl(jsonUrl) || offSite) {
         const where = rule === 'file' ? '' : " on the page's host, a subdomain of it, or a domain above it";
         return {
             status: 'fail',
-            problems: [`The <link> href has to be an absolute https URL${where}, got ${href ?? 'nothing'}.`]
+            problems: [`The <link> href has to be an absolute http or https URL${where}, got ${href ?? 'nothing'}.`]
         };
     }
 
@@ -116,8 +123,29 @@ function typeProblem(tag: Tag, label: string): CheckResult | undefined {
     };
 }
 
-function isJson(contentType: string): boolean {
-    return contentType.split(';')[0]?.trim().toLowerCase() === 'application/json';
+function mediaType(contentType: string): string {
+    return contentType.split(';')[0]?.trim().toLowerCase() ?? '';
+}
+
+// discord's crawler reads a page only as one of these. a linked JSON can have any content type
+const PAGE_TYPES = ['text/html', 'application/xhtml+xml'];
+
+function servedProblem(page: Page): CheckResult | undefined {
+    const how = unreadableServing(page);
+    if (how === undefined) return undefined;
+    return {
+        status: 'fail',
+        problems: [
+            `The page is ${how}. Discord shows no preview for it, not even the Open Graph card. Serve it as ${joinList(PAGE_TYPES, 'or')}.`
+        ]
+    };
+}
+
+function unreadableServing({ contentType, disposition }: Page): string | undefined {
+    if (/^\s*attachment\b/i.test(disposition)) return 'served as a download, with Content-Disposition: attachment';
+    if (contentType === '') return 'served without a content type';
+    if (!PAGE_TYPES.includes(mediaType(contentType))) return `served as ${contentType}`;
+    return undefined;
 }
 
 async function fetchText(url: URL, userAgent: string, deadline: number, input: CheckInput): Promise<Fetched> {
@@ -131,7 +159,11 @@ async function fetchText(url: URL, userAgent: string, deadline: number, input: C
         });
         if (!response.ok) return couldNotFetch(url, `the server answered ${String(response.status)}.`);
         const text = await response.text();
-        return { text, contentType: response.headers.get('content-type') ?? '' };
+        return {
+            text,
+            contentType: response.headers.get('content-type') ?? '',
+            disposition: response.headers.get('content-disposition') ?? ''
+        };
     } catch (error) {
         const isTimeout = error instanceof DOMException && error.name === 'TimeoutError';
         return couldNotFetch(url, isTimeout ? timedOut() : oneLine(messageOf(networkError(error))));
@@ -158,6 +190,10 @@ function oneLine(message: string): string {
 // node's fetch throws "fetch failed" and keeps the network error on cause
 function networkError(thrown: unknown): unknown {
     return Error.isError(thrown) && Error.isError(thrown.cause) ? thrown.cause : thrown;
+}
+
+function isWebUrl(url: URL | null): url is URL {
+    return url?.protocol === 'http:' || url?.protocol === 'https:';
 }
 
 // the component embed docs allow the page's host, a subdomain of it, or its parent domain

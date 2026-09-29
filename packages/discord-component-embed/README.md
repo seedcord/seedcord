@@ -348,7 +348,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
 
 `componentEmbedResponse` returns the JSON as a Web `Response` with an `application/json` content type. Any framework whose routes return a Web `Response` works the same way, like a SvelteKit `+server.ts`.
 
-Point the page at that URL with a `<link>` tag. The `href` has to be an absolute `https` URL on the page's host, a subdomain of it, or its parent domain.
+Point the page at that URL with a `<link>` tag. The `href` has to be an absolute `http` or `https` URL on the page's host, a subdomain of it, or its parent domain.
 
 ```html
 <link rel="discord:component-embed" type="application/json" href="https://example.com/embeds/blog/hello-world" />
@@ -410,6 +410,8 @@ npx discord-component-embed check embed.json https://materwelon.dev
 ```
 
 For a URL, the command fetches the page with Discord's crawler user agent. It checks the `<script>` JSON as the page serves it, or follows the `<link>` to its JSON. Both tags need `type="application/json"`, since Discord skips either one without it. The 3000-byte limit counts that text as sent, whitespace and escapes included. A URL that answers with `application/json` gets checked as the payload itself, which is how you check a linked JSON on its own.
+
+Discord shows a preview only for a page served as `text/html` or `application/xhtml+xml`.
 
 Discord waits about 10 seconds in total for the page and its linked JSON, then shows no preview. The command stops at the same 10 seconds. A page that runs out of time counts as unreadable, and a linked JSON that runs out fails the check. If the page and its JSON take over 9 seconds together, the target passes with a warning.
 

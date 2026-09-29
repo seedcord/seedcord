@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { runCheckCommand } from '#src/checkCommand';
 
+import { HTML } from './helpers';
+
 type CommandInput = Parameters<typeof runCheckCommand>[1];
 
 function withFiles(files: Record<string, string>, colorDepth = 1): CommandInput {
@@ -111,7 +113,7 @@ describe('discord-component-embed check', () => {
             ...withFiles({}),
             fetch: () => {
                 now += 9400;
-                return Promise.resolve(new Response(html));
+                return Promise.resolve(new Response(html, { headers: HTML }));
             },
             nowMs: () => now
         };
