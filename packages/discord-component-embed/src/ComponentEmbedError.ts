@@ -22,8 +22,8 @@ export type ComponentEmbedErrorCode =
 
 /**
  * Thrown when a component tree breaks a rule of Discord's component embed format, or when your own code throws while
- * the package reads the tree. Read {@link ComponentEmbedError.code} to tell which. Discord drops an invalid payload
- * and falls back to the Open Graph card. The card you see is your only signal.
+ * the package reads the tree. Read {@link ComponentEmbedError.code} to tell which. Discord doesn't report an invalid
+ * payload. It shows the Open Graph card, or no preview at all for more than 40 components or a bad `id`.
  *
  * @example
  * ```tsx

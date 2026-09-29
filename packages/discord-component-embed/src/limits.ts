@@ -9,7 +9,6 @@ import type {
 
 // from the component embed docs
 export const MAX_COMPONENTS = 40;
-// the docs leave this out. on discord's crawler 10 items render and 11 show the Open Graph card, however the galleries split them
 export const MAX_ITEMS_ACROSS_GALLERIES = 10;
 // discord counts the bytes it receives, escapes included
 export const MAX_JSON_BYTES = 3000;

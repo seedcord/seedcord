@@ -134,7 +134,7 @@ Discord doesn't run JavaScript when it fetches your page. The card has to be in 
 
 <!-- prettier-ignore-end -->
 
-Keep your Open Graph tags. Other sites and apps build their previews from them, and Discord falls back to them whenever it can't use the component embed.
+Keep your Open Graph tags. Other sites and apps build their previews from them, and Discord falls back to them for most component embeds it can't use.
 
 Discord reads the tag from each page separately. If you add it to a layout that every page shares, every page shows the card, so add it only to the pages that should show one.
 
@@ -499,7 +499,7 @@ The [reference](https://docs.seedcord.org/packages/discord-component-embed/lates
 
 ## Errors
 
-Discord doesn't report an invalid payload anywhere. It drops the payload and shows the Open Graph card. So `toComponentEmbed`, `toComponentEmbedJson`, `toComponentEmbedScript`, `<ComponentEmbed>`, and `componentEmbedResponse` throw a [`ComponentEmbedError`](https://docs.seedcord.org/packages/discord-component-embed/latest/classes/component-embed-error) when:
+Discord doesn't report an invalid payload anywhere. It shows the Open Graph card, or no preview at all when the embed has more than 40 components or a bad `id`. So `toComponentEmbed`, `toComponentEmbedJson`, `toComponentEmbedScript`, `<ComponentEmbed>`, and `componentEmbedResponse` throw a [`ComponentEmbedError`](https://docs.seedcord.org/packages/discord-component-embed/latest/classes/component-embed-error) when:
 
 - the root is anything other than one `Container`
 - a component is somewhere it isn't allowed, or text is outside a `TextDisplay`
