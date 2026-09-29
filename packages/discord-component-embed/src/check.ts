@@ -131,21 +131,25 @@ function mediaType(contentType: string): string {
 const PAGE_TYPES = ['text/html', 'application/xhtml+xml'];
 
 function servedProblem(page: Page): CheckResult | undefined {
-    const how = unreadableServing(page);
-    if (how === undefined) return undefined;
-    return {
-        status: 'fail',
-        problems: [
-            `The page is ${how}. Discord shows no preview for it, not even the Open Graph card. Serve it as ${joinList(PAGE_TYPES, 'or')}.`
-        ]
-    };
+    const problem = servingProblem(page);
+    return problem === undefined ? undefined : { status: 'fail', problems: [problem] };
 }
 
-function unreadableServing({ contentType, disposition }: Page): string | undefined {
-    if (/^\s*attachment\b/i.test(disposition)) return 'served as a download, with Content-Disposition: attachment';
-    if (contentType === '') return 'served without a content type';
-    if (!PAGE_TYPES.includes(mediaType(contentType))) return `served as ${contentType}`;
+function servingProblem({ contentType, disposition }: Page): string | undefined {
+    if (/^\s*attachment\b/i.test(disposition)) {
+        return noPreview(
+            'served as a download, with Content-Disposition: attachment',
+            'Remove the Content-Disposition header.'
+        );
+    }
+    const serveAsPage = `Serve it as ${joinList(PAGE_TYPES, 'or')}.`;
+    if (contentType === '') return noPreview('served without a content type', serveAsPage);
+    if (!PAGE_TYPES.includes(mediaType(contentType))) return noPreview(`served as ${contentType}`, serveAsPage);
     return undefined;
+}
+
+function noPreview(how: string, fix: string): string {
+    return `The page is ${how}. Discord shows no preview for it, not even the Open Graph card. ${fix}`;
 }
 
 async function fetchText(url: URL, userAgent: string, deadline: number, input: CheckInput): Promise<Fetched> {

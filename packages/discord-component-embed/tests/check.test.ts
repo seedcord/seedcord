@@ -267,23 +267,28 @@ describe('checkTarget on a url', () => {
         expect(result.status).toBe('pass');
     });
 
+    const NO_PREVIEW = 'Discord shows no preview for it, not even the Open Graph card.';
+
     it.each([
-        ['text/plain', { 'content-type': 'text/plain' }, 'served as text/plain'],
-        ['no content type', {}, 'served without a content type'],
+        [
+            'text/plain',
+            { 'content-type': 'text/plain' },
+            `The page is served as text/plain. ${NO_PREVIEW} Serve it as text/html or application/xhtml+xml.`
+        ],
+        [
+            'no content type',
+            {},
+            `The page is served without a content type. ${NO_PREVIEW} Serve it as text/html or application/xhtml+xml.`
+        ],
         [
             'an attachment',
             { 'content-type': 'text/html', 'content-disposition': 'attachment; filename="post.html"' },
-            'served as a download, with Content-Disposition: attachment'
+            `The page is served as a download, with Content-Disposition: attachment. ${NO_PREVIEW} Remove the Content-Disposition header.`
         ]
-    ])('fails a page served with %s, which discord shows no preview for', async (_label, headers, how) => {
+    ])('fails a page served with %s, which discord shows no preview for', async (_label, headers, problem) => {
         const html = page(`<script id="discord:component-embed" type="application/json">${good}</script>`);
 
-        expect(await checkTarget(PAGE, serving(html, headers))).toEqual({
-            status: 'fail',
-            problems: [
-                `The page is ${how}. Discord shows no preview for it, not even the Open Graph card. Serve it as text/html or application/xhtml+xml.`
-            ]
-        });
+        expect(await checkTarget(PAGE, serving(html, headers))).toEqual({ status: 'fail', problems: [problem] });
     });
 
     it.each([
