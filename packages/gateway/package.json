@@ -54,7 +54,7 @@
     "peerDependencies": {
         "discord.js": "catalog:peer",
         "envapt": "catalog:peer",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:consumerTypes"
     },
     "dependencies": {
         "@discordjs/builders": "catalog:deps",

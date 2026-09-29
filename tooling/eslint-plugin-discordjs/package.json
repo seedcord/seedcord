@@ -18,7 +18,7 @@
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "tooling/eslint-plugin-discordjs"
     },
-    "homepage": "https://seedcord.org",
+    "homepage": "https://github.com/seedcord/seedcord/tree/next/tooling/eslint-plugin-discordjs#readme",
     "bugs": "https://github.com/seedcord/seedcord/issues",
     "license": "Apache-2.0",
     "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
@@ -56,7 +56,7 @@
     },
     "peerDependencies": {
         "eslint": "^9.0.0 || ^10.0.0",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:consumerLint"
     },
     "dependencies": {
         "@typescript-eslint/utils": "catalog:eslint"

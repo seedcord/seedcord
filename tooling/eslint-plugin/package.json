@@ -52,7 +52,7 @@
     },
     "peerDependencies": {
         "eslint": "^9.0.0 || ^10.0.0",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:consumerLint"
     },
     "dependencies": {
         "@typescript-eslint/utils": "catalog:eslint",

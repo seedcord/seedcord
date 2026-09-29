@@ -108,6 +108,9 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      # check pnpm-workspace.yaml's consumer catalogs
+      TS_FLOOR: 5.0.4
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -123,6 +126,20 @@ jobs:
           SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
       - run: pnpm codegen:check
       - run: pnpm turbo docs:extract
+      - name: Mocks on the lowest supported TypeScript
+        run: |
+          for mock in gateway http; do
+            echo '{"extends":"@seedcord/tsconfig/base","compilerOptions":{"rootDir":"./"},"include":["src/**/*.ts"]}' > "mocks/$mock/tsconfig.floor.json"
+            pnpm dlx --package="typescript@$TS_FLOOR" tsc -p "mocks/$mock/tsconfig.floor.json"
+          done
+      - name: ESLint plugins on the lowest supported TypeScript
+        run: |
+          for pkg in eslint-utils eslint-plugin-discordjs eslint-plugin; do
+            pnpm -C "tooling/$pkg" add -D "typescript@$TS_FLOOR"
+          done
+          pnpm -C tooling/eslint-utils build
+          pnpm -C tooling/eslint-plugin-discordjs test
+          pnpm -C tooling/eslint-plugin test
 
   audit:
     if: github.event_name == 'push'

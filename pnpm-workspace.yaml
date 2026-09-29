@@ -80,6 +80,11 @@ catalogs:
     mongoose: ^9.9.1
     pg: ^8.22.0
     typescript: ^6.0.3
+  consumerTypes:
+    typescript: ^5.0.0 || ^6.0.0 || ^7.0.0
+  # typescript-eslint supports typescript below 6.1
+  consumerLint:
+    typescript: '>=5.0.0 <6.1.0'
   test:
     dedent: ^1.7.2
     '@testing-library/dom': ^10.4.1
