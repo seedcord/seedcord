@@ -42,7 +42,6 @@ import { version as packageVersion } from '../version';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpConfig } from '#interfaces/Config';
-import type { Core } from '#interfaces/Core';
 import type { IRateLimiter } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Server } from 'node:http';
@@ -60,9 +59,10 @@ type RuntimeOfConfig<Cfg extends HttpConfig> = Cfg extends { runtime: 'edge' } ?
  * `start()`, and runs coordinated shutdown with an in-flight drain. The edge deploy path calls
  * `createSeedcord` from a generated entry.
  */
+// tests/node/seedcord-core.types-test.ts checks this class against Core in place of an implements clause
 export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     extends Pluggable<'http', RuntimeOfConfig<Cfg>>
-    implements Core, SeedcordInstance
+    implements SeedcordInstance
 {
     // the CLI reads these to detect and augment the instance
     /** @internal */

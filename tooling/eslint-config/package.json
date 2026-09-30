@@ -59,8 +59,8 @@
     "peerDependencies": {
         "eslint": "^9.22.0 || ^10.4.0",
         "eslint-plugin-better-tailwindcss": "catalog:eslint",
-        "eslint-plugin-mdx": "catalog:eslint",
         "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
+        "eslint-plugin-mdx": "catalog:eslint",
         "prettier-plugin-tailwindcss": "catalog:deps",
         "tailwindcss": "catalog:deps",
         "typescript": "catalog:consumerLint"

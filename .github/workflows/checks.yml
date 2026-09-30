@@ -129,9 +129,6 @@ jobs:
     name: TypeScript floor
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      # check pnpm-workspace.yaml's consumer catalogs
-      TS_FLOOR: 5.9.3
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -143,21 +140,7 @@ jobs:
           enable_fallback_cache: 'true'
       - uses: ./.github/actions/setup
       - run: pnpm turbo build --filter='@seedcord/mock-gateway^...' --filter='@seedcord/mock-http^...' --filter='@seedcord/eslint-config...' --filter='@seedcord/eslint-plugin...'
-      - name: Mocks on the lowest supported TypeScript
-        run: |
-          for mock in gateway http; do
-            echo '{"extends":"@seedcord/tsconfig/base","compilerOptions":{"rootDir":"./"},"include":["src/**/*.ts"]}' > "mocks/$mock/tsconfig.floor.json"
-            pnpm dlx --package="typescript@$TS_FLOOR" tsc -p "mocks/$mock/tsconfig.floor.json"
-          done
-      - name: ESLint packages on the lowest supported TypeScript
-        run: |
-          for pkg in eslint-utils eslint-plugin-discordjs eslint-plugin eslint-config; do
-            pnpm -C "tooling/$pkg" add -D "typescript@$TS_FLOOR"
-          done
-          pnpm -C tooling/eslint-utils build
-          pnpm -C tooling/eslint-plugin-discordjs test
-          pnpm -C tooling/eslint-plugin test
-          pnpm -C tooling/eslint-config test
+      - run: pnpm check:typescript-floor
 
   audit:
     if: github.event_name == 'push'

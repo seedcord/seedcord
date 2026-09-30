@@ -20,6 +20,7 @@
         "lint:md": "markdownlint-cli2",
         "lint:fix:md": "markdownlint-cli2 --fix",
         "check:catalog": "tsx scripts/src/check-workspace-catalog.ts",
+        "check:typescript-floor": "tsx scripts/src/check-typescript-floor.ts",
         "lint:changesets": "tsx scripts/src/release/lint-changesets.ts",
         "codegen:check": "pnpm -C mocks/gateway exec seedcord codegen --check && pnpm -C mocks/http exec seedcord codegen --check",
         "prePush": "pnpm clean:scratch && pnpm build && pnpm codegen:check && turbo check:catalog tc:root lint:md lint:changesets && pnpm tc && pnpm lint && pnpm fmt:check && pnpm test",

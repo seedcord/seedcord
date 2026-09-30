@@ -12,7 +12,6 @@ import { botLoggerOf, Bot, initBot } from './bot/Bot';
 import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
-import type { Core } from './interfaces/Core';
 import type { REST } from '@discordjs/rest';
 import type { IRateLimiter } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
@@ -21,7 +20,8 @@ import type { SeedcordInstance } from '@seedcord/types/internal';
  * The gateway bot host. Opens a discord.js gateway session, discovers handlers, and runs
  * coordinated startup and shutdown. Attach plugins with `attach()`.
  */
-export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, SeedcordInstance {
+// an `implements Core` clause breaks a bot's full lib check once codegen adds its plugins to Core
+export class Seedcord extends Pluggable<'gateway', 'server'> implements SeedcordInstance {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
