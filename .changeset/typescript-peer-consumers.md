@@ -14,4 +14,4 @@
 '@seedcord/plugin-mongoose': patch
 ---
 
-Fixed the peer conflict a bot on TypeScript 5 hit at install. The `typescript` peer now accepts 5, 6, and 7.
+Fixed the peer conflict a bot on TypeScript 5.9 hit at install. The `typescript` peer now accepts 5.9, 6, and 7.
