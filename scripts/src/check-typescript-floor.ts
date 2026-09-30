@@ -18,6 +18,9 @@ function pnpm(...args: string[]): void {
     execFileSync('pnpm', args, { cwd: root, stdio: 'inherit' });
 }
 
+// current @types/node no longer exports the InspectOptionsStylized that discord.js's @sapphire/shapeshift imports
+const SHAPESHIFT_ERROR = /@sapphire\/shapeshift\/.*error TS2305/;
+
 const typesFloor = lowestTypescript(workspaceYaml, 'consumerTypes');
 for (const mock of ['gateway', 'http']) {
     const tsc = ['tsc', '--noEmit', '--skipLibCheck', 'false', '-p', `mocks/${mock}/tsconfig.json`];
@@ -28,10 +31,9 @@ for (const mock of ['gateway', 'http']) {
     const errors = stdout.split('\n').filter((line) => line.includes('error TS'));
     if (status !== 0 && errors.length === 0) throw new Error(`tsc did not run for mocks/${mock}:\n${stderr}`);
 
-    // @sapphire/shapeshift, a discord.js dependency, fails a full lib check in its own types
-    const ours = errors.filter((line) => !line.includes('node_modules'));
-    if (ours.length > 0) {
-        throw new Error(`mocks/${mock} fails on TypeScript ${typesFloor}:\n${ours.join('\n')}`);
+    const unexpected = errors.filter((line) => !SHAPESHIFT_ERROR.test(line));
+    if (unexpected.length > 0) {
+        throw new Error(`mocks/${mock} fails on TypeScript ${typesFloor}:\n${unexpected.join('\n')}`);
     }
 }
 
