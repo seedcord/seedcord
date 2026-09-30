@@ -165,11 +165,11 @@ settings:
 catalogs:
   consumerLint:
     typescript:
-      specifier: '>=5.0.0 <6.1.0'
+      specifier: '>=5.0.2 <6.1.0'
       version: 6.0.3
   consumerTypes:
     typescript:
-      specifier: ^5.0.0 || ^6.0.0 || ^7.0.0
+      specifier: ^5.0.2 || ^6.0.0 || ^7.0.0
       version: 6.0.3
   deps:
     '@clack/prompts':
