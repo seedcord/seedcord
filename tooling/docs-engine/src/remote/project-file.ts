@@ -1,20 +1,18 @@
 import { buildPackageFromModel } from '#builders/package-builder';
 import { ProjectFetchError } from '#remote/errors';
+import { pageFields } from '#src/manifest-fields';
 
+import type { PageFields } from '#src/manifest-fields';
 import type { DocManifestPackage, DocNode, DocPackageModel } from '#src/types';
 
 /**
  * The published, pre-adapted form of one package version: the adapted `DocNode` tree plus minimal
  * identity. Indexes, search, and the directory are derived on load, so they are not stored here.
  */
-export interface DocProjectFile {
+export interface DocProjectFile extends PageFields {
     schemaVersion: 1;
     package: { name: string; version: string };
     root: DocNode;
-    // absent on project files published before this schema captured the readme
-    readme?: string;
-    // same, but for the changelog url
-    changelogUrl?: string;
 }
 
 export function serializeProject(model: DocPackageModel): DocProjectFile {
@@ -22,13 +20,12 @@ export function serializeProject(model: DocPackageModel): DocProjectFile {
         schemaVersion: 1,
         package: { name: model.manifest.name, version: model.manifest.version },
         root: model.root,
-        ...(model.manifest.readme && { readme: model.manifest.readme }),
-        ...(model.manifest.changelogUrl && { changelogUrl: model.manifest.changelogUrl })
+        ...pageFields(model.manifest)
     };
 }
 
 export function deserializeProject(file: DocProjectFile): DocPackageModel {
-    return buildPackageFromModel(manifestShell(file.package, file.readme, file.changelogUrl), file.root);
+    return buildPackageFromModel(manifestShell(file.package, pageFields(file)), file.root);
 }
 
 export function validateProjectFile(value: unknown): DocProjectFile {
@@ -55,14 +52,13 @@ export function validateProjectFile(value: unknown): DocProjectFile {
         schemaVersion: 1,
         package: { name: pkg.name, version: pkg.version },
         root: root.root as DocNode,
-        ...(typeof root.readme === 'string' && { readme: root.readme }),
-        ...(typeof root.changelogUrl === 'string' && { changelogUrl: root.changelogUrl })
+        ...pageFields(root)
     };
 }
 
 // project.json carries only name and version. The rest of DocManifestPackage describes the extraction
 // run (entry points, warnings, errors), which the render path never reads.
-function manifestShell(pkg: DocProjectFile['package'], readme?: string, changelogUrl?: string): DocManifestPackage {
+function manifestShell(pkg: DocProjectFile['package'], fields: PageFields): DocManifestPackage {
     return {
         name: pkg.name,
         version: pkg.version,
@@ -74,7 +70,6 @@ function manifestShell(pkg: DocProjectFile['package'], readme?: string, changelo
         warningCount: 0,
         errorCount: 0,
         succeeded: true,
-        ...(readme && { readme }),
-        ...(changelogUrl && { changelogUrl })
+        ...fields
     };
 }

@@ -23,7 +23,7 @@ async function PackageOverviewPage({ params }: { params: Promise<PageParams> }):
 
     const active = await loadActiveVersion(entry.id, version.id);
     const readmeMarkdown = active?.readme;
-    const readmeHtml = readmeMarkdown ? await renderReadme(readmeMarkdown) : null;
+    const readmeHtml = readmeMarkdown ? await renderReadme(readmeMarkdown, active?.folderUrl) : null;
 
     return (
         <PackageOverviewTabs

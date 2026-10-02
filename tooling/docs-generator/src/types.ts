@@ -95,5 +95,6 @@ export interface PackageDocResult {
     reexports?: ReexportEntry[];
     readme?: string;
     changelogUrl?: string;
+    folderUrl?: string;
     description?: string;
 }

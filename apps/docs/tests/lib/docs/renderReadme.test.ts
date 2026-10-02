@@ -11,6 +11,40 @@ const WORDMARK_PICTURE = [
     '</p>'
 ].join('\n');
 
+describe('a README link written for github', () => {
+    const FOLDER = 'https://github.com/seedcord/seedcord/blob/next/packages/gateway';
+
+    it('resolves a relative link against the package folder', async () => {
+        const html = await renderReadme('[license](LICENSE) and [guide](./docs/start.md)', FOLDER);
+
+        expect(html).toContain(`href="${FOLDER}/LICENSE"`);
+        expect(html).toContain(`href="${FOLDER}/docs/start.md"`);
+    });
+
+    it('resolves a link that climbs out of the package folder', async () => {
+        const html = await renderReadme('[license](../../LICENSE)', FOLDER);
+
+        expect(html).toContain('href="https://github.com/seedcord/seedcord/blob/next/LICENSE"');
+    });
+
+    it('resolves a relative image to the raw file', async () => {
+        const html = await renderReadme('![diagram](./assets/flow.png)', FOLDER);
+
+        expect(html).toContain(`src="${FOLDER}/assets/flow.png?raw=true"`);
+    });
+
+    it('resolves a link wrapped around a badge image', async () => {
+        const html = await renderReadme('[![license](https://img.shields.io/badge/x)](LICENSE)', FOLDER);
+
+        expect(html).toContain(`href="${FOLDER}/LICENSE"`);
+        expect(html).toContain('src="https://img.shields.io/badge/x"');
+    });
+
+    it.each(['https://seedcord.org/guide', '#install', 'mailto:hi@seedcord.org'])('leaves %s alone', async (href) => {
+        expect(await renderReadme(`[x](${href})`, FOLDER)).toContain(`href="${href}"`);
+    });
+});
+
 describe('renderReadme', () => {
     it('rewrites a prefers-color-scheme wordmark <picture> into data-theme-gated <img>s', async () => {
         const html = await renderReadme(WORDMARK_PICTURE);

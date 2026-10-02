@@ -68,6 +68,8 @@ export interface DocManifestPackage {
     reexports?: DocReexport[];
     readme?: string;
     changelogUrl?: string;
+    // a README's relative links resolve against this github folder
+    folderUrl?: string;
     description?: string;
 }
 

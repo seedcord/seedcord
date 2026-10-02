@@ -1614,6 +1614,9 @@ importers:
       '@microsoft/tsdoc':
         specifier: ^0.16.0
         version: 0.16.0
+      '@seedcord/docs-generator':
+        specifier: workspace:^
+        version: link:../docs-generator
       prettier:
         specifier: catalog:deps
         version: 3.9.6
@@ -1621,9 +1624,6 @@ importers:
         specifier: ^7.8.5
         version: 7.8.5
     devDependencies:
-      '@seedcord/docs-generator':
-        specifier: workspace:^
-        version: link:../docs-generator
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config

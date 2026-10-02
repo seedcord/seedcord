@@ -73,6 +73,10 @@ export class ActiveVersion {
         return this.package?.manifest.changelogUrl ?? null;
     }
 
+    get folderUrl(): string | undefined {
+        return this.package?.manifest.folderUrl;
+    }
+
     // each re-export links to the page of the package that declares it
     get reexports(): ReexportLink[] {
         const resolver = this.engine.resolver();
