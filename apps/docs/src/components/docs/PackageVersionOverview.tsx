@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { HoverPrefetchLink } from '#components/HoverPrefetchLink';
 import { getToneConfig, getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
 
-import type { ReexportLink } from '#lib/docs/catalog';
+import type { ReexportLink } from '#lib/docs/ActiveVersion';
 import type { NavigationCategory } from '#lib/docs/types';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { ReactElement } from 'react';

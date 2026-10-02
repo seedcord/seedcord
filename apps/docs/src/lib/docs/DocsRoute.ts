@@ -1,6 +1,7 @@
 import { DEFAULT_VERSION } from '@seedcord/docs-engine/client';
 
-import { collectCategories, loadDocsCatalog } from '#lib/docs/catalog';
+import { ActiveVersion } from '#lib/docs/ActiveVersion';
+import { loadDocsCatalog } from '#lib/docs/catalog';
 import { getDocsEngine } from '#lib/docs/engine';
 
 const ROOT = 'packages';
@@ -53,7 +54,8 @@ export async function docsRoutes(): Promise<DocsRoute[]> {
         for (const version of entry.versions) {
             routes.push(new DocsRoute(entry.id, version.id));
 
-            for (const category of await collectCategories(engine, entry.id, version.id)) {
+            const active = await ActiveVersion.open(engine, entry.id, version.id);
+            for (const category of active?.categories ?? []) {
                 for (const item of category.items) {
                     // a re-export is listed under the package that declares it
                     if (!item.href.startsWith(`${version.basePath}/`)) continue;

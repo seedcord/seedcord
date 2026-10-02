@@ -125,12 +125,6 @@ export interface PackageCatalogEntry {
 
 export type DocsCatalog = readonly PackageCatalogEntry[];
 
-export interface CategoryConfig {
-    readonly entity: DirectoryEntity;
-    readonly title: string;
-    readonly tone: EntityTone;
-}
-
 export type EntityKind = EntityTone;
 
 export interface BaseEntityModel

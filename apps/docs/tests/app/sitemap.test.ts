@@ -37,8 +37,10 @@ const CATEGORIES: NavigationCategory[] = [
 vi.mock('#lib/docs/engine', () => ({ getDocsEngine: () => Promise.resolve({}) }));
 vi.mock('#lib/docs/catalog', async (importOriginal) => ({
     ...(await importOriginal<typeof import('#lib/docs/catalog')>()),
-    loadDocsCatalog: () => Promise.resolve([GATEWAY]),
-    collectCategories: () => Promise.resolve(CATEGORIES)
+    loadDocsCatalog: () => Promise.resolve([GATEWAY])
+}));
+vi.mock('#lib/docs/ActiveVersion', () => ({
+    ActiveVersion: { open: () => Promise.resolve({ categories: CATEGORIES }) }
 }));
 
 const { default: sitemap } = await import('#src/app/sitemap');

@@ -1,7 +1,7 @@
 import { PackageOverviewTabs } from '#components/docs/PackageOverviewTabs';
 import { PackageVersionOverview } from '#components/docs/PackageVersionOverview';
 import { ReadmeBlock } from '#components/docs/ReadmeBlock';
-import { loadActiveVersion, loadChangelogUrl, loadReadme, loadReexports } from '#lib/docs/catalog';
+import { loadActiveVersion } from '#lib/docs/ActiveVersion';
 import { DocsPage } from '#lib/docs/DocsPage';
 import { getCatalogContext } from '#lib/docs/pageContext';
 import { renderReadme } from '#lib/docs/renderReadme';
@@ -21,21 +21,19 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
 async function PackageOverviewPage({ params }: { params: Promise<PageParams> }): Promise<ReactElement> {
     const { entry, version } = await getCatalogContext(await params);
 
-    const [categories, reexports, readmeMarkdown, changelogHref] = await Promise.all([
-        loadActiveVersion(entry.id, version.id),
-        loadReexports(entry.id, version.id),
-        loadReadme(entry.id, version.id),
-        loadChangelogUrl(entry.id, version.id)
-    ]);
+    const active = await loadActiveVersion(entry.id, version.id);
+    const readmeMarkdown = active?.readme;
     const readmeHtml = readmeMarkdown ? await renderReadme(readmeMarkdown) : null;
 
     return (
         <PackageOverviewTabs
             title={entry.label}
             version={version.label}
-            changelogHref={changelogHref}
+            changelogHref={active?.changelogUrl ?? null}
             readme={readmeHtml ? <ReadmeBlock html={readmeHtml} /> : null}
-            reference={<PackageVersionOverview categories={categories} reexports={reexports} />}
+            reference={
+                <PackageVersionOverview categories={active?.categories ?? []} reexports={active?.reexports ?? []} />
+            }
         />
     );
 }
