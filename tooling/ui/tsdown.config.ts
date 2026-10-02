@@ -4,6 +4,7 @@ export default createTsdownConfig({
     entry: [
         'src/index.ts',
         'src/agents.ts',
+        'src/sites.ts',
         'src/og.ts',
         'src/palette.ts',
         'src/skills.ts',

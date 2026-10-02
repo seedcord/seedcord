@@ -9,8 +9,8 @@
     "scripts": {
         "dev": "cross-env TWOSLASH=0 next dev",
         "dev:twoslash": "cross-env NODE_OPTIONS=--max-old-space-size=8192 next dev",
-        "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 next build",
-        "start": "pnpm dlx serve out",
+        "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 next build && node -e \"require('node:fs').copyFileSync('_headers', 'dist/_headers')\"",
+        "start": "pnpm dlx serve dist",
         "preview": "wrangler dev",
         "deploy": "wrangler deploy",
         "postinstall": "fumadocs-mdx",

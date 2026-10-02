@@ -11,11 +11,12 @@ const page = {
 const MARKDOWN_URL = 'https://seedcord.org/guide/commands/options.md';
 
 describe('pageActionsFor', () => {
-    it('copies from the exported file and links the url a reader sees', () => {
+    // a fetch and a plain <a> get no basePath from next
+    it('copies from the exported file and links the url a reader sees, both under the base path', () => {
         const actions = pageActionsFor(page);
 
-        expect(actions.copySource).toBe('/llms/commands/options.md');
-        expect(actions.viewHref).toBe('/commands/options.md');
+        expect(actions.copySource).toBe('/guide/llms/commands/options.md');
+        expect(actions.viewHref).toBe('/guide/commands/options.md');
     });
 
     it('hands each assistant the markdown url to read', () => {

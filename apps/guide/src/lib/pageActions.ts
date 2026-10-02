@@ -1,3 +1,5 @@
+import { GUIDE } from '@seedcord/ui/sites';
+
 import { assetPath, publicPath, TWIN } from '#lib/pageAssets';
 import { canonicalUrl, REPO_URL, SITE_NAME } from '#lib/site';
 
@@ -37,8 +39,8 @@ export interface PageActionProps {
 // the fetch goes straight at the file. the menu link goes through worker.ts
 export function pageActionsFor(page: GuidePage): PageActionProps {
     return {
-        copySource: assetPath(page.url, TWIN),
-        viewHref: publicPath(page.url, TWIN),
+        copySource: GUIDE.path + assetPath(page.url, TWIN),
+        viewHref: GUIDE.path + publicPath(page.url, TWIN),
         links: pageActionLinks({
             title: page.data.title,
             markdownUrl: canonicalUrl(publicPath(page.url, TWIN)),

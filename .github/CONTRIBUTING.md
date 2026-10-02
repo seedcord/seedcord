@@ -49,26 +49,28 @@ A new package starts from `turbo gen package`. Then follow the checklist in [`tu
 
 ## Working on a site
 
-The three sites are Next.js apps in `apps/home`, `apps/guide` and `apps/docs`. `pnpm build` and `pnpm prePush` skip them, and `pnpm build:all` builds them too. Run the dev server of the site you change:
+The three sites are Next.js apps in `apps/home`, `apps/guide` and `apps/docs`. `pnpm build` and `pnpm prePush` skip them. `pnpm build:all` builds them too.
+
+Run the dev server of the site you change. The guide runs at `localhost:3000/guide`.
 
 ```bash
 pnpm -C apps/<site> dev
 ```
 
-The guide's `dev` skips type-checking its code samples, which keeps edits fast. When you change a sample, run `dev:twoslash`, which checks every sample and renders the type hovers. In dev, the guide links API names to the docs on port 3001, so run the docs there next to it:
+The guide's `dev` skips type-checking its code samples. Run `dev:twoslash` when you change a sample. It checks every sample and shows the type hovers. Guide links to the reference point at port 3001, so make sure to run the docs there:
 
 ```bash
 pnpm -C apps/guide dev:twoslash
 pnpm -C apps/docs dev -p 3001
 ```
 
-Build a site only when you need its production output:
+To build one site:
 
 ```bash
 pnpm turbo build --filter=@seedcord/<site>...
 ```
 
-A guide build peaks around 6 GB of memory on a 12-core machine, and fewer cores use less. With 8 GB or less, build one site at a time.
+A guide build uses about 6 GB of memory on a 12-core machine. Fewer cores use less. With 8 GB or less, build one site at a time.
 
 ## Trying a change in a real bot
 

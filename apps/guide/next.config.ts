@@ -1,5 +1,7 @@
 import path from 'node:path';
 
+// next loads this file under the require condition. ./sites exports a bare default which also matches it
+import { GUIDE } from '@seedcord/ui/sites';
 import { createMDX } from 'fumadocs-mdx/next';
 import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
 
@@ -13,8 +15,10 @@ const devOnly = (phase: string): string[] => (phase === PHASE_DEVELOPMENT_SERVER
 function guideConfig(phase: string): NextConfig {
     return {
         pageExtensions: [...PAGE_EXTENSIONS, ...devOnly(phase)],
+        basePath: GUIDE.path,
         // wrangler.jsonc and worker.ts serve these files as cloudflare static assets
         output: 'export',
+        distDir: 'dist/guide',
         trailingSlash: true,
         images: { unoptimized: true },
         // workspace:* deps resolve into the build only from the monorepo root

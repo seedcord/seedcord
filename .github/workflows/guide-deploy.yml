@@ -23,5 +23,5 @@ jobs:
     uses: ./.github/workflows/site-deploy.yml
     with:
       app: guide
-      site_url: https://guide.seedcord.org
+      site_url: https://seedcord.org/guide
     secrets: inherit

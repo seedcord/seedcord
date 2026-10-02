@@ -106,6 +106,22 @@ describe('a link', () => {
 });
 
 describe('the image component', () => {
+    // a plain <img> gets no basePath from next
+    it('loads a file from public/ under the guide path', () => {
+        render(<Image src="/portal-token.webp" alt="token" />);
+
+        expect(screen.getByRole('img', { name: 'token' })).toHaveAttribute('src', '/guide/portal-token.webp');
+    });
+
+    it('leaves an image on another host alone', () => {
+        render(<Image src="https://cdn.seedcord.org/banner.png" alt="banner" />);
+
+        expect(screen.getByRole('img', { name: 'banner' })).toHaveAttribute(
+            'src',
+            'https://cdn.seedcord.org/banner.png'
+        );
+    });
+
     it('draws no border by default', () => {
         render(<Image src="/logo.svg" alt="bare" />);
 

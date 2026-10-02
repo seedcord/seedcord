@@ -24,6 +24,10 @@
             "types": "./dist/agents.d.mts",
             "default": "./dist/agents.mjs"
         },
+        "./sites": {
+            "types": "./dist/sites.d.mts",
+            "default": "./dist/sites.mjs"
+        },
         "./palette": {
             "import": {
                 "types": "./dist/palette.d.mts",

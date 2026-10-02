@@ -1,6 +1,7 @@
 'use client';
 
 import {
+    GUIDE,
     SearchDialog,
     SearchField,
     SearchTrigger,
@@ -97,7 +98,8 @@ export function GuideSearch({ open, onOpenChange: setOpen }: GuideSearchProps): 
     const router = useRouter();
 
     // tolerance is the edit distance zbsearch allows. 1 covers a single typo
-    const client = useMemo(() => staticClient({ search: { tolerance: 1 } }), []);
+    // fumadocs builds the default index path from vite's BASE_URL. next leaves it unset
+    const client = useMemo(() => staticClient({ from: `${GUIDE.path}/api/search`, search: { tolerance: 1 } }), []);
     const { setSearch, query } = useDocsSearch({ client });
 
     const onValueChange = useCallback(
