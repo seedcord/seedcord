@@ -10,7 +10,6 @@
         "dev": "next dev",
         "dev:published": "cross-env SEEDCORD_DOCS_INDEX_URL=https://cdn.seedcord.org/index.json next dev",
         "build": "next build",
-        "preview": "wrangler dev --env local",
         "deploy": "wrangler deploy",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",

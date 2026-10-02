@@ -53,6 +53,6 @@ export default createConfig({
             rules: { 'import/no-default-export': 'off' }
         },
 
-        { ignores: ['.next/**', '.wrangler/**', 'out/**', 'build/**', 'next-env.d.ts'] }
+        { ignores: ['.next/**', '.wrangler/**', '.preview/**', 'out/**', 'build/**', 'next-env.d.ts'] }
     ]
 });

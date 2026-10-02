@@ -39,13 +39,14 @@ function bucket(...keys: string[]): Env {
     };
 }
 
-// the export folder as wrangler's local assets binding serves it
+// the preview folder as wrangler's assets binding serves it
 function exportFolder(...keys: string[]): Env {
     return {
+        BUILD_ID,
         ASSETS: {
             fetch: (request: Request) => {
                 const key = decodeURIComponent(new URL(request.url).pathname.slice(1));
-                const found = keys.includes(key);
+                const found = keys.some((stored) => `builds/${BUILD_ID}/${stored}` === key);
                 return Promise.resolve(new Response(found ? key : null, { status: found ? 200 : 404 }));
             }
         }
@@ -146,7 +147,7 @@ describe('the docs worker', () => {
         await expect(response.text()).resolves.toBe('404.html');
     });
 
-    it('reads the export folder through an assets binding when no bucket is bound', async () => {
+    it('reads the build folder through an assets binding when no bucket is bound', async () => {
         const env = exportFolder(
             'packages/core/latest.html',
             'packages/core/latest/__next.$d$packageId.txt',

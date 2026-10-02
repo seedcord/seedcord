@@ -12,6 +12,14 @@ export class SiteBuild {
         }
     }
 
+    static at(time: Date, sha: string): SiteBuild {
+        const stamp = time
+            .toISOString()
+            .replaceAll(/[-:]/g, '')
+            .replace(/\.\d{3}/, '');
+        return new SiteBuild(`${stamp}-${sha}`);
+    }
+
     static fromFolder(folder: string): SiteBuild | undefined {
         const id = folder.startsWith(ROOT) ? folder.slice(ROOT.length).replace(/\/$/, '') : '';
         return ID.test(id) ? new SiteBuild(id) : undefined;

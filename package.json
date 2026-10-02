@@ -45,7 +45,8 @@
         "docs:local": "pnpm docs:extract && pnpm docs:artifacts",
         "docs:sync": "pnpm tsx scripts/src/docs/sync-docs-to-artifacts.ts",
         "docs:purge": "pnpm tsx scripts/src/docs/purge-cdn-cache.ts",
-        "docs:upload": "pnpm tsx scripts/src/docs/upload-docs-site.ts"
+        "docs:upload": "pnpm tsx scripts/src/docs/upload-docs-site.ts",
+        "docs:preview": "pnpm tsx scripts/src/docs/preview-docs.ts"
     },
     "keywords": [
         "discord",

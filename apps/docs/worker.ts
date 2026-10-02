@@ -7,11 +7,12 @@ import { DocsWorker } from '#lib/worker/DocsWorker';
 import type { AssetsBinding } from '#lib/worker/AssetsBucket';
 import type { DocsBucket } from '#lib/worker/DocsWorker';
 
-// production binds the bucket and a BUILD_ID var. wrangler dev --env local binds ASSETS
-type Env = { DOCS: DocsBucket; BUILD_ID: string } | { ASSETS: AssetsBinding };
+// production binds the R2 bucket. wrangler dev --env preview binds the .preview folder as ASSETS
+type Env = ({ DOCS: DocsBucket } | { ASSETS: AssetsBinding }) & { BUILD_ID: string };
 
 function bucketFor(env: Env): DocsBucket {
-    return 'DOCS' in env ? new BuildBucket(env.DOCS, new SiteBuild(env.BUILD_ID)) : new AssetsBucket(env.ASSETS);
+    const storage = 'DOCS' in env ? env.DOCS : new AssetsBucket(env.ASSETS);
+    return new BuildBucket(storage, new SiteBuild(env.BUILD_ID));
 }
 
 const handler = {

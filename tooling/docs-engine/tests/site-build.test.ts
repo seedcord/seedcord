@@ -12,6 +12,10 @@ describe('SiteBuild', () => {
         );
     });
 
+    it('builds the id from a time and a commit sha', () => {
+        expect(SiteBuild.at(new Date('2026-10-02T05:12:34.567Z'), 'ba35d6b').id).toBe('20261002T051234Z-ba35d6b');
+    });
+
     it('reads the id back from a folder', () => {
         expect(SiteBuild.fromFolder('builds/20261002T051234Z-ba35d6b/')?.id).toBe('20261002T051234Z-ba35d6b');
         expect(SiteBuild.fromFolder('packages/')).toBeUndefined();
