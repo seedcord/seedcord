@@ -19,13 +19,17 @@ const INDEX = {
     }
 };
 
-// a bucket holding only the keys given, plus a copy of index.json
+const BUILD_ID = '20261002T051234Z-ba35d6b';
+
+// one build folder holding only the keys given, plus a copy of index.json
 function bucket(...keys: string[]): Env {
+    const folder = `builds/${BUILD_ID}/`;
     const files = new Map<string, string>([
-        ...keys.map((key): [string, string] => [key, key]),
-        ['index.json', JSON.stringify(INDEX)]
+        ...keys.map((key): [string, string] => [`${folder}${key}`, key]),
+        [`${folder}index.json`, JSON.stringify(INDEX)]
     ]);
     return {
+        BUILD_ID,
         DOCS: {
             get: (key: string) => {
                 const body = files.get(key);

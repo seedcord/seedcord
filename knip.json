@@ -14,7 +14,7 @@
         "scripts": {
             "entry": [
                 "src/*.ts",
-                "src/docs/{build-docs-artifacts,extract-docs,published-payload,purge-cdn-cache,sync-docs-to-artifacts}.ts",
+                "src/docs/{build-docs-artifacts,extract-docs,published-payload,purge-cdn-cache,sync-docs-to-artifacts,upload-docs-site}.ts",
                 "src/release/{changelog,lint-changesets,release-notes,tidy-changelogs}.ts",
                 "tests/**/*.test.ts"
             ],

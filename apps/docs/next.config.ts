@@ -11,6 +11,14 @@ const PAGE_EXTENSIONS = ['tsx', 'ts', 'jsx', 'js'];
 // a build-time notFound() still writes the route's file into a static export
 const devOnly = (phase: string): string[] => (phase === PHASE_DEVELOPMENT_SERVER ? ['dev.tsx', 'dev.ts'] : []);
 
+// same 7s build at 2 workers, with peak memory down from 3.7 GB to 2.2 GB
+const LAPTOP_CPUS = 2;
+
+function buildCpus(): number {
+    const requested = Number.parseInt(process.env.DOCS_BUILD_CPUS ?? '', 10);
+    return Number.isInteger(requested) && requested > 0 ? requested : LAPTOP_CPUS;
+}
+
 const config = (phase: string): NextConfig => ({
     pageExtensions: [...PAGE_EXTENSIONS, ...devOnly(phase)],
     basePath: DOCS.path,
@@ -27,8 +35,7 @@ const config = (phase: string): NextConfig => ({
         '@microsoft/tsdoc',
         '@microsoft/tsdoc-config'
     ],
-    // same 7s build at 2 workers, with peak memory down from 3.7 GB to 2.2 GB
-    experimental: { cpus: 2 },
+    experimental: { cpus: buildCpus() },
     turbopack: {}
 });
 

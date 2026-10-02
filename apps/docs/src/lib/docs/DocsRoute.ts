@@ -5,7 +5,7 @@ import { getDocsEngine } from '#lib/docs/engine';
 
 const ROOT = 'packages';
 
-// an interface would not fit PageParams' index signature
+// only a type alias fits PageParams' index signature
 type VersionParams = { packageId: string; versionId: string };
 type EntityParams = VersionParams & { entitySegments: string[] };
 

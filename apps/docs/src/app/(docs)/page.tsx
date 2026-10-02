@@ -1,7 +1,6 @@
 import { buildPackageBasePath, DEFAULT_VERSION } from '@seedcord/docs-engine/client';
 import { cn, tw } from '@seedcord/ui';
-import Link from 'next/link';
-
+import { HoverPrefetchLink } from '#components/HoverPrefetchLink';
 import { findCatalogVersion, loadDocsCatalog } from '#lib/docs/catalog';
 import { DocsPage } from '#lib/docs/DocsPage';
 import { getToneConfig, getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
@@ -81,7 +80,7 @@ function ToneBar({ card }: { card: PackageCard }): ReactElement | null {
 
 function PackageCardLink({ card, bar = false }: { card: PackageCard; bar?: boolean }): ReactElement {
     return (
-        <Link href={card.href} className={cn(cardClassName, 'hover:border-(--border-accent-b-subtle)')}>
+        <HoverPrefetchLink href={card.href} className={cn(cardClassName, 'hover:border-(--border-accent-b-subtle)')}>
             <div className={cn('space-y-1')}>
                 <div className={cn('flex items-baseline justify-between gap-3')}>
                     <span className={cn('font-mono text-sm font-medium wrap-break-word text-(--text)')}>
@@ -93,7 +92,7 @@ function PackageCardLink({ card, bar = false }: { card: PackageCard; bar?: boole
             </div>
             <ToneCounts card={card} />
             {bar ? <ToneBar card={card} /> : null}
-        </Link>
+        </HoverPrefetchLink>
     );
 }
 

@@ -8,5 +8,6 @@ export { formatVersionLabel } from '#src/version-label';
 export { DocSearch, type ScoredEntry } from '#services/Search';
 export { DocKind } from '#model/kinds';
 export { validateIndex, type IndexJson } from '#remote/index-json';
+export { SiteBuild } from '#src/SiteBuild';
 export * from '#src/versions';
 export type * from '#src/types';

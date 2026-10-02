@@ -1,8 +1,8 @@
 'use client';
 
 import { cn } from '@seedcord/ui';
-import Link from 'next/link';
 
+import { HoverPrefetchLink } from '#components/HoverPrefetchLink';
 import { log } from '#lib/logger';
 import { getToneConfig } from '#lib/tonePresentation';
 
@@ -16,7 +16,7 @@ export function SidebarItem({ item, tone, isActive, onSelect }: SidebarItemProps
     const { label, href } = item;
 
     return (
-        <Link
+        <HoverPrefetchLink
             href={href}
             className={cn(
                 'flex w-full items-center gap-2 rounded-md border border-transparent bg-transparent px-3 py-2 text-left text-sm font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2',
@@ -33,6 +33,6 @@ export function SidebarItem({ item, tone, isActive, onSelect }: SidebarItemProps
             </span>
 
             <span className={cn('min-w-0 truncate')}>{label}</span>
-        </Link>
+        </HoverPrefetchLink>
     );
 }

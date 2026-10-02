@@ -1,0 +1,73 @@
+name: docs-deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/docs/**'
+      - 'tooling/docs-engine/**'
+      - 'tooling/ui/**'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/docs-deploy.yml'
+  workflow_call:
+  workflow_dispatch:
+
+concurrency:
+  group: docs-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Turbo cache
+        uses: ./.github/actions/turbo-cache
+        with:
+          turbo_token: ${{ secrets.TURBO_TOKEN }}
+          turbo_team: ${{ vars.TURBO_TEAM }}
+          enable_fallback_cache: 'true'
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup
+
+      - name: Build packages
+        run: pnpm turbo build --filter="@seedcord/docs^..."
+
+      - name: Render every page
+        run: pnpm -C apps/docs build
+        env:
+          SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
+          NEXT_PUBLIC_SITE_URL: https://seedcord.org/docs
+          DOCS_BUILD_CPUS: 4
+
+      - name: Pick the build id
+        id: build
+        run: echo "id=$(date -u +%Y%m%dT%H%M%SZ)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to R2
+        run: pnpm docs:upload
+        env:
+          BUILD_ID: ${{ steps.build.outputs.id }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_DOCS_BUCKET: ${{ vars.R2_DOCS_BUCKET }}
+
+      - name: Point the worker at the build
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/docs
+          packageManager: pnpm
+          command: deploy --var BUILD_ID:${{ steps.build.outputs.id }}

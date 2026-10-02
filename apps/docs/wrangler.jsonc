@@ -7,6 +7,8 @@
     "routes": [{ "pattern": "seedcord.org/docs*", "zone_name": "seedcord.org" }],
     "workers_dev": false,
     "r2_buckets": [{ "binding": "DOCS", "bucket_name": "seedcord-docs" }],
+    // cloudflare keys this cache by worker version. each deploy sets a new BUILD_ID and starts empty
+    "cache": { "enabled": true },
     "env": {
         // wrangler dev --env local reads the export folder straight from disk
         "local": {
