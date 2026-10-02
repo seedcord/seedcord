@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { canonicalUrl, pageMetadata, sitemapEntries } from '#lib/site';
 
@@ -115,5 +115,21 @@ describe('the sitemap', () => {
 
     it('ranks a Start page beside the other tab indexes', () => {
         expect(sitemapEntries([page('/first-bot', 'first-bot.mdx')])[0]?.priority).toBe(0.8);
+    });
+});
+
+describe('the reference links in development', () => {
+    afterEach(() => {
+        vi.unstubAllEnvs();
+        vi.resetModules();
+    });
+
+    it('points at the docs dev server under its base path', async () => {
+        vi.stubEnv('NODE_ENV', 'development');
+        vi.resetModules();
+
+        const { DOCS_URL } = await import('#lib/site');
+
+        expect(DOCS_URL).toBe('http://localhost:3001/docs');
     });
 });

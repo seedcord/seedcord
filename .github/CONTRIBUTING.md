@@ -51,18 +51,44 @@ A new package starts from `turbo gen package`. Then follow the checklist in [`tu
 
 The three sites are Next.js apps in `apps/home`, `apps/guide` and `apps/docs`. `pnpm build` and `pnpm prePush` skip them. `pnpm build:all` builds them too.
 
-Run the dev server of the site you change. The guide runs at `localhost:3000/guide`.
+Run the dev server of the site you change.
 
 ```bash
 pnpm -C apps/<site> dev
 ```
 
-The guide's `dev` skips type-checking its code samples. Run `dev:twoslash` when you change a sample. It checks every sample and shows the type hovers. Guide links to the reference point at port 3001, so make sure to run the docs there:
+Each site serves under its own path, the same as on seedcord.org. The guide runs at `localhost:3000/guide` and the reference at `localhost:3000/docs`. To run two at once, give the second one another port with `-p`.
+
+The guide's `dev` skips type-checking its code samples. Run `dev:twoslash` when you change a sample. It checks every sample and shows the type hovers. Guide links to the reference point at `localhost:3001/docs`, so run the docs there:
 
 ```bash
 pnpm -C apps/guide dev:twoslash
 pnpm -C apps/docs dev -p 3001
 ```
+
+### The reference
+
+The reference reads its pages from artifacts in `generated/`. Build them before your first `dev`, and again after you change a package's public API:
+
+```bash
+pnpm docs:local
+```
+
+`pnpm -C apps/docs dev:published` reads the published artifacts from cdn.seedcord.org.
+
+A docs build renders every page of every version into `apps/docs/dist/docs`, which takes a few minutes. `DOCS_PACKAGES` renders only the packages you list:
+
+```bash
+DOCS_PACKAGES=core,http pnpm -C apps/docs build
+```
+
+To check a build the way production serves it, run:
+
+```bash
+pnpm docs:preview
+```
+
+It runs the upload step from CI into `apps/docs/.preview`, a folder with the same layout as the R2 bucket, then starts the docs Worker at `localhost:8787/docs`. Run it again after every build. Wrangler stalls at startup on a full build, so keep `DOCS_PACKAGES` short for this.
 
 To build one site:
 
