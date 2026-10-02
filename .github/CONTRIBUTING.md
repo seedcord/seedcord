@@ -47,6 +47,29 @@ pnpm -C packages/gateway tc
 
 A new package starts from `turbo gen package`. Then follow the checklist in [`turbo/generators/README.md`](../turbo/generators/README.md).
 
+## Working on a site
+
+The three sites are Next.js apps in `apps/home`, `apps/guide` and `apps/docs`. `pnpm build` and `pnpm prePush` skip them, and `pnpm build:all` builds them too. Run the dev server of the site you change:
+
+```bash
+pnpm -C apps/<site> dev
+```
+
+The guide's `dev` skips type-checking its code samples, which keeps edits fast. When you change a sample, run `dev:twoslash`, which checks every sample and renders the type hovers. In dev, the guide links API names to the docs on port 3001, so run the docs there next to it:
+
+```bash
+pnpm -C apps/guide dev:twoslash
+pnpm -C apps/docs dev -p 3001
+```
+
+Build a site only when you need its production output:
+
+```bash
+pnpm turbo build --filter=@seedcord/<site>...
+```
+
+A guide build peaks around 6 GB of memory on a 12-core machine, and fewer cores use less. With 8 GB or less, build one site at a time.
+
 ## Trying a change in a real bot
 
 `mocks/gateway` and `mocks/http` are working bots, one per transport. Copy a mock's `.env.example` to `.env` and fill it in. The example file lists every variable that mock reads. The [guide](https://guide.seedcord.org/discord-application) shows how to create an application and get its token.
@@ -66,7 +89,7 @@ When you add or change a handler in a mock, run `pnpm -C mocks/<name> codegen`. 
 - **pre-commit** runs `lint-staged`, which formats the files you staged and lints them with zero warnings allowed. One lint warning blocks the commit, even though plain `pnpm lint` lets it through.
 - **commit-msg** runs commitlint on your message.
 
-Run `pnpm prePush` before you open the PR. It checks every package. `pnpm prePush:affected` checks only the packages your branch changed and the ones that depend on them. The root `package.json` has both chains.
+Run `pnpm prePush` before you open the PR. It checks the packages your branch changed since `next` and the ones that depend on them. `pnpm prePush:all` checks every package. The root `package.json` has both chains.
 
 ## Pull request guidelines
 
@@ -106,7 +129,7 @@ AI code often looks correct and misses edge cases, so the testing rules matter m
 
 ## CI
 
-[`checks.yml`](workflows/checks.yml) runs on every PR that is not a draft, and [`commitlint.yml`](workflows/commitlint.yml) checks every commit in it. CI runs a subset of `pnpm prePush`. A PR that fails CI will not get a detailed review.
+[`checks.yml`](workflows/checks.yml) runs on every PR that is not a draft, and [`commitlint.yml`](workflows/commitlint.yml) checks every commit in it. CI runs the checks from `pnpm prePush:all` on every package. A PR that fails CI will not get a detailed review.
 
 ## Questions
 

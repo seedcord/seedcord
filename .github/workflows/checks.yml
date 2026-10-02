@@ -118,7 +118,7 @@ jobs:
           turbo_team: ${{ vars.TURBO_TEAM }}
           enable_fallback_cache: 'true'
       - uses: ./.github/actions/setup
-      - run: pnpm build
+      - run: pnpm build:all
         env:
           SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
       - run: pnpm codegen:check

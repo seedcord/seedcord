@@ -22,6 +22,8 @@ function guideConfig(phase: string): NextConfig {
         // a bundler cannot see the require('fs') @typescript/vfs assembles with String.fromCharCode
         // prettier loads its typescript parser by path at call time
         serverExternalPackages: ['typescript', '@typescript/vfs', 'twoslash', '@shikijs/twoslash', 'prettier'],
+        // 2 workers slowed this build from 19s to 29s. 4 adds about 3s
+        experimental: { cpus: 4 },
         turbopack: {}
     };
 }

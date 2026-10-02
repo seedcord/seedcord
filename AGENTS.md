@@ -94,10 +94,10 @@ pnpm -C packages/<dependent> tc
 
 Two whole-workspace gates exist and they differ:
 
-- `pnpm prePush` runs every check across every package.
-- `pnpm prePush:affected` runs the same checks through `turbo --affected`. A green `prePush:affected` covers less than a green `prePush`.
+- `pnpm prePush` runs the checks through `turbo --affected`, against `next`.
+- `pnpm prePush:all` runs every check across every package. A green `prePush` covers less than a green `prePush:all`, so run `prePush:all` before a release and at the end of a long branch.
 
-Both start with `build` and `codegen:check`, then `check:catalog`, the script and markdown lint, `tc`, `lint`, `fmt:check`, and `test`. The root `package.json` has the exact chain.
+Both start with `build`, which builds everything except the three sites in `apps/`, and `codegen:check`, then `check:catalog`, the script and markdown lint, `tc`, `lint`, `fmt:check`, and `test`. The root `package.json` has the exact chain.
 
 `pnpm knip` (dead code) and `pnpm react-doctor` (React patterns) are real gates. **No hook and no CI job runs them.** Run them by hand when the change warrants it.
 

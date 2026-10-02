@@ -31,7 +31,7 @@ runs:
         # changesets/action counts .changeset/pre/ outside pre mode
         if [ "$mode" != "pre" ]; then pending=$((pending + $(count .changeset/pre))); fi
         if [ "$pending" -gt 0 ]; then
-          echo "$pending changeset(s) pending. Run pnpm release:version and push the result. Skipping publish."
+          echo "$pending changeset(s) pending. Run pnpm cs:version and push the result. Skipping publish."
           echo "publish=false" >> "$GITHUB_OUTPUT"
         elif [ "$BRANCH" = "next" ] && [ "$mode" != "pre" ]; then
           echo "On 'next' without pre-release mode. Skipping publish."

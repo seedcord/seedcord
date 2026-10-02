@@ -66,71 +66,46 @@
         "//#lint:md": {
             "inputs": ["**/*.md", ".markdownlint-cli2.jsonc", ".markdownlint.json"]
         },
-        "dev": {
-            "cache": false,
-            "persistent": true
-        },
         "lint": {
-            "dependsOn": ["^build", "@seedcord/eslint-config#build"],
-            "inputs": ["$TURBO_DEFAULT$", ".eslintrc*", "eslint.config.*"]
+            "dependsOn": ["^build", "@seedcord/eslint-config#build"]
         },
         "lint:fix": {
             "dependsOn": ["@seedcord/eslint-config#build"],
-            "inputs": ["$TURBO_DEFAULT$", ".eslintrc*", "eslint.config.*"],
             "cache": false
         },
         "tc": {
-            "dependsOn": ["^build"],
-            "inputs": ["$TURBO_DEFAULT$", "tsconfig*.json"]
+            "dependsOn": ["^build"]
         },
         "test": {
-            "dependsOn": ["^build"],
-            "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"]
+            "dependsOn": ["^build"]
         },
         "@seedcord/core#lint": {
-            "dependsOn": ["^build", "@seedcord/core#build"],
-            "inputs": ["$TURBO_DEFAULT$", ".eslintrc*", "eslint.config.*"]
+            "dependsOn": ["^build", "@seedcord/core#build"]
         },
         "@seedcord/core#tc": {
-            "dependsOn": ["^build", "@seedcord/core#build"],
-            "inputs": ["$TURBO_DEFAULT$", "tsconfig*.json"]
+            "dependsOn": ["^build", "@seedcord/core#build"]
         },
         "@seedcord/core#test": {
-            "dependsOn": ["^build", "@seedcord/core#build"],
-            "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "src/**", "tests/**"]
+            "dependsOn": ["^build", "@seedcord/core#build"]
         },
         "@seedcord/http#test": {
-            "dependsOn": ["^build", "@seedcord/http#build"],
-            "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "src/**", "tests/**"]
+            "dependsOn": ["^build", "@seedcord/http#build"]
         },
         "@seedcord/guide#test": {
-            "dependsOn": ["^build", "//#docs:artifacts"],
-            "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "src/**", "tests/**"]
+            "dependsOn": ["^build", "//#docs:artifacts"]
         },
         "@seedcord/docs-engine#test": {
-            "dependsOn": ["^build", "@seedcord/docs-generator#test"],
-            "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"]
+            "dependsOn": ["^build", "@seedcord/docs-generator#test"]
         },
         "seedcord#test": {
-            "dependsOn": ["^build", "seedcord#build"],
-            "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "bin/**", "src/**", "tests/**"]
-        },
-        "test:watch": {
-            "cache": false,
-            "persistent": true
-        },
-        "coverage": {
-            "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"],
-            "outputs": ["coverage/**"]
+            "dependsOn": ["^build", "seedcord#build"]
         },
         "fmt": {
             "dependsOn": ["@seedcord/eslint-config#build"],
-            "inputs": ["$TURBO_DEFAULT$", ".prettierrc*", "prettier.config.*"],
             "cache": false
         },
         "fmt:check": {
-            "dependsOn": ["@seedcord/eslint-config#build"],
-            "inputs": ["$TURBO_DEFAULT$", ".prettierrc*", "prettier.config.*"]
+            "dependsOn": ["@seedcord/eslint-config#build"]
         },
         "clean": {
             "cache": false
