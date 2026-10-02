@@ -1,8 +1,9 @@
 import { text } from '@clack/prompts';
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
+import { SKIP_HINT, skippable } from './skippable';
 
 import type { Step } from '#interview/types';
 
@@ -25,22 +26,21 @@ function parsePublicKey(raw: string): string {
 
 export const publicKeyStep: Step<'publicKey'> = {
     key: 'publicKey',
-    flag: { name: 'public-key', description: 'your app public key, http only', parse: parsePublicKey },
+    flag: {
+        name: 'public-key',
+        description: 'your app public key, http only',
+        parse: parsePublicKey,
+        later: 'leave the public key empty in .env to fill in later, http only'
+    },
     skip: (answers) => answers.transport === 'gateway',
-    ask: async () =>
-        parsePublicKey(
-            requireAnswer(
-                await text({
-                    message: 'Paste your app public key',
-                    validate: (value) => {
-                        try {
-                            parsePublicKey(value ?? '');
-                            return undefined;
-                        } catch (error) {
-                            return Error.isError(error) ? error.message : 'Invalid public key.';
-                        }
-                    }
-                })
-            )
-        )
+    ask: async () => {
+        const pasted = requireAnswer(
+            await text({
+                message: `Paste your app public key ${paint.mute(SKIP_HINT)}`,
+                validate: skippable(parsePublicKey, 'Invalid public key.')
+            })
+        );
+
+        return pasted.trim() === '' ? null : parsePublicKey(pasted);
+    }
 };

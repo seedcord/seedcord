@@ -65,6 +65,27 @@ describe('parseInput', () => {
         expect(parseInput(['--no-git']).git).toBe(false);
     });
 
+    it('reads --no-token and --no-public-key as answers left for .env', () => {
+        const { supplied } = parseInput(['--no-token', '--no-public-key']);
+
+        expect(supplied.token).toBeNull();
+        expect(supplied.publicKey).toBeNull();
+    });
+
+    it('rejects a token passed alongside --no-token', () => {
+        const thrown = thrownBy(() => parseInput(['--token', TOKEN, '--no-token']));
+
+        expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateBadUsage)).toBe(true);
+        expect((thrown as Error).message).toContain('--token or --no-token');
+    });
+
+    it('rejects a public key passed alongside --no-public-key', () => {
+        const thrown = thrownBy(() => parseInput(['--public-key', 'a'.repeat(64), '--no-public-key']));
+
+        expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateBadUsage)).toBe(true);
+        expect((thrown as Error).message).toContain('--public-key or --no-public-key');
+    });
+
     it('names an unknown flag and points at the help', () => {
         const thrown = thrownBy(() => parseInput(['--transpor', 'http']));
 

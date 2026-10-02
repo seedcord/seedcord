@@ -35,7 +35,7 @@ npm create seedcord my-bot
 yarn create seedcord my-bot
 ```
 
-It asks where the project goes, how Discord reaches your bot, what the bot should react to, your bot token, and an accent color. Then it writes the project, installs, formats, generates your command types, and makes the first commit. A step that fails after the write becomes a warning. The summary still prints.
+It asks where the project goes, how Discord reaches your bot, what the bot should react to, your bot token, your app public key on http, and an accent color. Either secret can wait. Press Enter on the empty prompt twice and its key stays empty in `.env` for you to fill in before the first run. Then it writes the project, installs, formats, generates your command types, and makes the first commit. A step that fails after the write becomes a warning. The summary still prints.
 
 On Windows, run it from Windows Terminal. The prompts fall back to ASCII in `cmd.exe` making the boxes draw as `T`, `|`, and `o`.
 
@@ -50,7 +50,7 @@ npm create seedcord my-bot -- --transport gateway --capabilities reactions
 pnpm create seedcord my-bot --transport gateway --capabilities reactions
 ```
 
-`--no-install` and `--no-git` turn off those two steps. `-v` prints the version and `-h` prints the flag list.
+`--no-install` and `--no-git` turn off those two steps. `--no-token` and `--no-public-key` leave those keys empty without asking. `-v` prints the version and `-h` prints the flag list.
 
 With no terminal to ask on, it reads the flags alone. It prints the flag that would supply any answer you left out.
 

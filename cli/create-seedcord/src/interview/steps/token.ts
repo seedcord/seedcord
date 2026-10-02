@@ -1,8 +1,9 @@
 import { password } from '@clack/prompts';
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
+import { SKIP_HINT, skippable } from './skippable';
 
 import type { Step } from '#interview/types';
 
@@ -19,21 +20,20 @@ function parseToken(raw: string): string {
 
 export const tokenStep: Step<'token'> = {
     key: 'token',
-    flag: { name: 'token', description: 'your bot token', parse: parseToken },
-    ask: async () =>
-        parseToken(
-            requireAnswer(
-                await password({
-                    message: 'Paste your bot token',
-                    validate: (value) => {
-                        try {
-                            parseToken(value ?? '');
-                            return undefined;
-                        } catch (error) {
-                            return Error.isError(error) ? error.message : 'Invalid token.';
-                        }
-                    }
-                })
-            )
-        )
+    flag: {
+        name: 'token',
+        description: 'your bot token',
+        parse: parseToken,
+        later: 'leave the bot token empty in .env to fill in later'
+    },
+    ask: async () => {
+        const pasted = requireAnswer(
+            await password({
+                message: `Paste your bot token ${paint.mute(SKIP_HINT)}`,
+                validate: skippable(parseToken, 'Invalid token.')
+            })
+        );
+
+        return pasted.trim() === '' ? null : parseToken(pasted);
+    }
 };

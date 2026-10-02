@@ -73,6 +73,15 @@ describe('buildContext on http', () => {
     });
 });
 
+describe('buildContext on secrets left for .env', () => {
+    const context = buildContext({ ...HTTP, token: null, publicKey: null }, EXTRAS);
+
+    it('leaves both empty for the user to fill in', () => {
+        expect(context.token).toBe('');
+        expect(context.publicKey).toBe('');
+    });
+});
+
 describe('buildContext on a gateway bot that picked nothing', () => {
     const context = buildContext({ ...GATEWAY, capabilities: [] }, EXTRAS);
 

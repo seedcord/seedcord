@@ -29,6 +29,23 @@ describe('runFlow with no terminal', () => {
         expect((thrown as Error).message).toContain('--transport');
     });
 
+    it('takes a null from a later flag as an answer', async () => {
+        const answers = await runFlow([neverAsks('token', 'token')], { token: null }, { interactive: false });
+
+        expect(answers.token).toBeNull();
+    });
+
+    it('offers the later flag when a step that can wait has no answer', async () => {
+        const token: Step<'token'> = {
+            ...neverAsks('token', 'token'),
+            flag: { ...neverAsks('token', 'token').flag, later: 'a stub' }
+        };
+
+        const thrown = await runFlow([token], {}, { interactive: false }).catch((error: unknown) => error);
+
+        expect((thrown as Error).message).toContain('--no-token');
+    });
+
     it('leaves a skipped step alone', async () => {
         const publicKey: Step<'publicKey'> = {
             ...neverAsks('publicKey', 'public-key'),

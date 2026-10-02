@@ -2,6 +2,7 @@ import { paint } from '@seedcord/errors';
 
 import { runPrefix } from '#cli/packageManager';
 import { version } from '#cli/version';
+import { laterFlagName } from '#interview/applyFlags';
 import { privilegedFor } from '#interview/capabilities';
 
 import type { ScaffoldAnswers } from '#template/context';
@@ -16,11 +17,25 @@ const TOGGLE_LABELS: Record<string, string> = {
     MessageContent: 'Message Content Intent'
 };
 
+// the env.hbs keys a null answer leaves empty
+function keysLeftEmpty(answers: ScaffoldAnswers): string[] {
+    return [
+        ...(answers.token === null ? ['DISCORD_BOT_TOKEN'] : []),
+        ...(answers.publicKey === null ? ['DISCORD_PUBLIC_KEY'] : [])
+    ];
+}
+
 export function nextSteps(answers: ScaffoldAnswers, run: { agent: AgentName; installed: boolean }): string[] {
     const prefix = runPrefix(run.agent);
     const install = run.installed ? [] : [`${run.agent} install`];
+    const empty = keysLeftEmpty(answers);
+    const fill = empty.length === 0 ? [] : [`fill in ${empty.join(' and ')} in .env`];
 
-    return [`cd ${answers.directory}`, ...install, `${prefix} dev`];
+    return [`cd ${answers.directory}`, ...install, ...fill, `${prefix} dev`];
+}
+
+function secretFlag(value: string | null, flag: string, placeholder: string): string {
+    return value === null ? `--${laterFlagName(flag)}` : `--${flag} ${placeholder}`;
 }
 
 export function dashboardToggles(capabilities: string[]): string[] {
@@ -41,8 +56,8 @@ export function reproducingCommand(answers: ScaffoldAnswers, agent: AgentName): 
         `--language ${answers.language}`,
         `--transport ${answers.transport}`,
         ...(answers.capabilities === undefined ? [] : [`--capabilities ${answers.capabilities.join(',')}`]),
-        '--token YOUR_TOKEN',
-        ...(answers.publicKey === undefined ? [] : ['--public-key YOUR_PUBLIC_KEY']),
+        secretFlag(answers.token, 'token', 'YOUR_TOKEN'),
+        ...(answers.publicKey === undefined ? [] : [secretFlag(answers.publicKey, 'public-key', 'YOUR_PUBLIC_KEY')]),
         `--color ${answers.botColor}`
     ];
 

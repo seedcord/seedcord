@@ -29,6 +29,10 @@ describe('inviteUrl', () => {
         expect(inviteUrl(tokenFor('1234'))).toBeNull();
     });
 
+    it('says nothing for a token left for .env', () => {
+        expect(inviteUrl(null)).toBeNull();
+    });
+
     it('says nothing for a value with no parts to read', () => {
         expect(inviteUrl('')).toBeNull();
     });

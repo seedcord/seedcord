@@ -178,6 +178,13 @@ describe('the rendered http config', () => {
         expect(env).toContain(`DISCORD_PUBLIC_KEY=${'a'.repeat(64)}`);
     });
 
+    it('writes both keys empty when they were left for later', async () => {
+        const env = await renderOne({ ...HTTP, token: null, publicKey: null }, '.env');
+
+        expect(env).toMatch(/^DISCORD_BOT_TOKEN=$/m);
+        expect(env).toMatch(/^DISCORD_PUBLIC_KEY=$/m);
+    });
+
     it('leaves the public key out on gateway', async () => {
         const env = await renderOne(GATEWAY, '.env');
 

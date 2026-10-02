@@ -3,7 +3,7 @@ import { parseArgs } from 'node:util';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { applyFlags } from '#interview/applyFlags';
+import { applyFlags, laterFlagName } from '#interview/applyFlags';
 import { STEPS } from '#interview/steps';
 
 import type { Answers } from '#interview/types';
@@ -16,6 +16,11 @@ export interface CliInput {
 
 const OPTIONS = {
     ...Object.fromEntries(STEPS.map((step) => [step.flag.name, { type: 'string' }] as const)),
+    ...Object.fromEntries(
+        STEPS.filter((step) => step.flag.later !== undefined).map(
+            (step) => [laterFlagName(step.flag.name), { type: 'boolean' }] as const
+        )
+    ),
     'no-install': { type: 'boolean' },
     'no-git': { type: 'boolean' }
 } as const;
@@ -63,8 +68,9 @@ export function parseInput(argv: string[]): CliInput {
     const directory = directoryFrom(positionals, values.dir);
 
     const raw = Object.fromEntries(
-        Object.entries({ ...values, dir: directory }).filter(
-            (entry): entry is [string, string] => typeof entry[1] === 'string'
+        Object.entries<unknown>({ ...values, dir: directory }).filter(
+            (entry): entry is [string, string | boolean] =>
+                typeof entry[1] === 'string' || typeof entry[1] === 'boolean'
         )
     );
 

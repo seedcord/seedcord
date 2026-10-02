@@ -1,7 +1,16 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import { laterFlagName } from './applyFlags';
+
 import type { AnyStep, Answers } from './types';
+
+function unansweredReason(step: AnyStep): string {
+    const reason = 'Required when there is no terminal to ask on.';
+    if (step.flag.later === undefined) return reason;
+
+    return `${reason} Pass --${laterFlagName(step.flag.name)} to fill it in .env later.`;
+}
 
 export async function runFlow(
     steps: AnyStep[],
@@ -13,17 +22,15 @@ export async function runFlow(
     for (const step of steps) {
         if (step.skip?.(answers)) {
             if (step.key in supplied) {
-                throw new SeedcordError(SeedcordErrorCode.CreateFlagNotApplicable, [step.flag.name]);
+                const flag = supplied[step.key] === null ? laterFlagName(step.flag.name) : step.flag.name;
+                throw new SeedcordError(SeedcordErrorCode.CreateFlagNotApplicable, [flag]);
             }
             continue;
         }
         if (answers[step.key] !== undefined) continue;
 
         if (!options.interactive) {
-            throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
-                step.flag.name,
-                'Required when there is no terminal to ask on.'
-            ]);
+            throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [step.flag.name, unansweredReason(step)]);
         }
 
         // justified: Step<Key> ties each key to its own answer type

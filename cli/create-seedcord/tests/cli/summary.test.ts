@@ -44,6 +44,28 @@ describe('nextSteps', () => {
     it('leaves the install out when it already ran', () => {
         expect(nextSteps(GATEWAY, { agent: 'pnpm', installed: true })).not.toContain('pnpm install');
     });
+
+    it('asks for nothing in .env when every secret was pasted', () => {
+        expect(nextSteps(HTTP, { agent: 'pnpm', installed: true }).join('\n')).not.toContain('.env');
+    });
+
+    it('names each key left for .env before the dev script, which cannot start without them', () => {
+        const steps = nextSteps({ ...HTTP, token: null, publicKey: null }, { agent: 'pnpm', installed: true });
+        const env = steps.findIndex((step) => step.includes('.env'));
+
+        expect(steps[env]).toContain('DISCORD_BOT_TOKEN');
+        expect(steps[env]).toContain('DISCORD_PUBLIC_KEY');
+        expect(env).toBeLessThan(steps.indexOf('pnpm run dev'));
+    });
+
+    it('names only the key that was left', () => {
+        const step = nextSteps({ ...HTTP, publicKey: null }, { agent: 'pnpm', installed: true }).find((line) =>
+            line.includes('.env')
+        );
+
+        expect(step).toContain('DISCORD_PUBLIC_KEY');
+        expect(step).not.toContain('DISCORD_BOT_TOKEN');
+    });
 });
 
 describe('dashboardToggles', () => {
@@ -109,6 +131,15 @@ describe('reproducingCommand', () => {
         for (const step of flagged) {
             expect(command).toContain(`--${step.flag.name} `);
         }
+    });
+
+    it('passes the later flags for secrets left for .env', () => {
+        const command = reproducingCommand({ ...HTTP, token: null, publicKey: null }, 'pnpm');
+
+        expect(command).toContain('--no-token');
+        expect(command).toContain('--no-public-key');
+        expect(command).not.toContain('YOUR_TOKEN');
+        expect(command).not.toContain('YOUR_PUBLIC_KEY');
     });
 
     it('leaves capabilities out on http', () => {

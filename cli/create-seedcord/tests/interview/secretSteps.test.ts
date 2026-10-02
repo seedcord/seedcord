@@ -1,10 +1,102 @@
-import { describe, expect, it } from 'vitest';
+import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { publicKeyStep } from '#interview/steps/publicKey';
 import { tokenStep } from '#interview/steps/token';
 
+// the steps pass a function, never the schema form clack also takes
+interface PromptOptions {
+    message: string;
+    validate?: (value: string | undefined) => string | undefined;
+}
+
 const KEY = 'a'.repeat(64);
 const TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;
+
+// clack never exports its cancel symbol
+const prompts = vi.hoisted(() => ({
+    CANCEL: Symbol('cancel'),
+    password: vi.fn<(options: PromptOptions) => Promise<unknown>>(),
+    text: vi.fn<(options: PromptOptions) => Promise<unknown>>()
+}));
+
+vi.mock('@clack/prompts', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@clack/prompts')>()),
+    isCancel: (value: unknown) => value === prompts.CANCEL,
+    password: prompts.password,
+    text: prompts.text
+}));
+
+beforeEach(() => {
+    vi.resetAllMocks();
+});
+
+const secretSteps = [
+    { step: tokenStep, input: prompts.password, pasted: TOKEN },
+    { step: publicKeyStep, input: prompts.text, pasted: KEY }
+];
+
+describe.each(secretSteps)('$step.key asked on a terminal', ({ step, input, pasted }) => {
+    async function validateOfPrompt(): Promise<NonNullable<PromptOptions['validate']>> {
+        input.mockResolvedValue(pasted);
+        await step.ask({});
+
+        const validate = input.mock.calls[0]?.[0].validate;
+        // the step always passes one, so a missing one fails here rather than below
+        if (validate === undefined) throw new TypeError('the prompt got no validate');
+
+        return validate;
+    }
+
+    it('answers the pasted value', async () => {
+        input.mockResolvedValue(pasted);
+
+        await expect(step.ask({})).resolves.toBe(pasted);
+    });
+
+    it('answers null when Enter went through on an empty paste', async () => {
+        input.mockResolvedValue('');
+
+        await expect(step.ask({})).resolves.toBeNull();
+    });
+
+    it('warns on the first empty Enter and lets the second through', async () => {
+        const validate = await validateOfPrompt();
+
+        expect(validate(undefined)).toContain('Press Enter again');
+        expect(validate(undefined)).toBeUndefined();
+    });
+
+    it('counts whitespace as an empty paste', async () => {
+        const validate = await validateOfPrompt();
+
+        expect(validate('   ')).toContain('Press Enter again');
+    });
+
+    it('warns again after the user typed something in between', async () => {
+        const validate = await validateOfPrompt();
+
+        validate(undefined);
+        validate('not it');
+
+        expect(validate(undefined)).toContain('Press Enter again');
+    });
+
+    it('still rejects a paste that is not the right shape', async () => {
+        const validate = await validateOfPrompt();
+
+        expect(validate('not it')).toBeTypeOf('string');
+        expect(validate(pasted)).toBeUndefined();
+    });
+
+    it('cancels from the paste', async () => {
+        input.mockResolvedValue(prompts.CANCEL);
+
+        const thrown = await step.ask({}).catch((error: unknown) => error);
+
+        expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateCancelled)).toBe(true);
+    });
+});
 
 describe('tokenStep', () => {
     it('takes a token shaped like the three parts Discord issues', () => {

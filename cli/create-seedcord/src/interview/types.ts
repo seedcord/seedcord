@@ -7,8 +7,9 @@ export interface Answers {
     transport: 'gateway' | 'http';
     // capability ids the intent map resolves into intents and partials
     capabilities: string[];
-    token: string;
-    publicKey: string;
+    // null leaves the key empty in .env for the user to fill in
+    token: string | null;
+    publicKey: string | null;
     botColor: ColorName | `#${string}`;
 }
 
@@ -18,6 +19,8 @@ interface FlagSpec<Key extends keyof Answers> {
     // one line, printed by --help
     description: string;
     parse: (raw: string) => Answers[Key];
+    // what --help prints beside the --no-<name> flag that answers null
+    later?: null extends Answers[Key] ? string : never;
 }
 
 export interface Step<Key extends keyof Answers> {

@@ -12,6 +12,13 @@ describe('helpText', () => {
         }
     });
 
+    it('lists the later flag beside the token and the public key', () => {
+        const text = helpText();
+
+        expect(text).toContain('--no-token');
+        expect(text).toContain('--no-public-key');
+    });
+
     it('shows the shorthand beside the flag it stands for', () => {
         const text = helpText();
 

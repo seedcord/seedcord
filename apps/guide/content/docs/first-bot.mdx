@@ -3,7 +3,7 @@ title: Your first bot
 description: Create a seedcord project with pnpm create seedcord, run it, and get its first slash command answering in Discord.
 ---
 
-You need the token from the last page.
+You need the token from the last page. If you don't have it yet, the scaffolder can leave it for later.
 
 <Shell create="seedcord" />
 
@@ -13,8 +13,8 @@ You need the token from the last page.
 - **TypeScript or JavaScript.**
 - **How Discord reaches your bot.** Gateway or http, the choice from two pages ago.
 - **What your bot should react to.** Gateway only. A checklist covering messages in servers, reactions, member joins, polls, and more. Each one says which intents and partials it needs, and the privileged ones are marked. The scaffolder writes the set into your `bot.ts`.
-- **Your bot token.**
-- **Your app public key.** Http only.
+- **Your bot token.** Paste it now, or press Enter twice on the empty prompt and the scaffolder leaves `DISCORD_BOT_TOKEN` empty in `.env`. Your bot won't start until you fill it in.
+- **Your app public key.** Http only. The same choice, for `DISCORD_PUBLIC_KEY`.
 - **Your bot color.** Every embed and container you build takes it, unless you set a color on that one yourself.
 
 Then the scaffolder installs your dependencies, formats the project, runs `seedcord codegen`, and makes a git commit.
