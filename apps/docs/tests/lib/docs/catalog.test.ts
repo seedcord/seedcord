@@ -120,6 +120,21 @@ describe('loadDocsCatalog version badges', () => {
         expect(stableHead).toMatchObject({ channel: 'stable', isLatest: true, badge: 'latest' });
         expect(preHead).toMatchObject({ channel: 'prerelease', isLatest: false, badge: 'next' });
     });
+
+    it('leaves out a prerelease that a newer stable release passed', async () => {
+        const passed: PackageIndexEntry = {
+            fullName: '@seedcord/core',
+            stable: { latest: '0.9.2', latestByMinor: { '0.9': '0.9.2' }, latestByMajor: { '0': '0.9.2' } },
+            prerelease: { latest: '0.2.1-next.0' }
+        };
+        engineStub.ready.mockResolvedValue(undefined);
+        engineStub.listPackages.mockResolvedValue([{ folder: 'core', fullName: '@seedcord/core' }]);
+        engineStub.getEntry.mockResolvedValue(passed);
+
+        const [core] = await loadDocsCatalog();
+
+        expect(core?.versions.map((version) => version.id)).toEqual(['0.9.2']);
+    });
 });
 
 describe('loadDocsCatalog descriptions', () => {

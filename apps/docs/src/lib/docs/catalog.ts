@@ -4,6 +4,7 @@ import {
     buildPackageBasePath,
     formatDisplayPackageName,
     formatVersionLabel,
+    servedPrerelease,
     stableLineHeads
 } from '@seedcord/docs-engine';
 import { cache } from 'react';
@@ -31,7 +32,8 @@ function buildVersions(fullName: string, entry: PackageIndexEntry): PackageVersi
         categories: []
     });
 
-    const { stable, prerelease } = entry;
+    const { stable } = entry;
+    const prerelease = servedPrerelease(entry);
     const stableVersions = stable
         ? stableLineHeads(stable).map((id) => {
               const isLatest = id === stable.latest;
@@ -40,7 +42,7 @@ function buildVersions(fullName: string, entry: PackageIndexEntry): PackageVersi
         : [];
 
     // a package with only pre-releases serves its newest one at /latest/
-    const prereleaseVersions = prerelease ? [version(prerelease.latest, 'prerelease', !stable, 'next')] : [];
+    const prereleaseVersions = prerelease ? [version(prerelease, 'prerelease', !stable, 'next')] : [];
 
     return [...stableVersions, ...prereleaseVersions];
 }

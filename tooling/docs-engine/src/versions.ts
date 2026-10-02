@@ -24,6 +24,14 @@ export function stableLineHeads(channel: {
     ]);
 }
 
+export function servedPrerelease({
+    stable,
+    prerelease
+}: Pick<PackageIndexEntry, 'stable' | 'prerelease'>): string | null {
+    if (!prerelease) return null;
+    return stable && !gt(prerelease.latest, stable.latest) ? null : prerelease.latest;
+}
+
 /**
  * The head of `version`'s minor line, or of its major line when the index lists no such minor. A prerelease
  * falls back to the prerelease head of its own major when that line head isn't newer. Returns `null` when the
@@ -36,12 +44,13 @@ export function replacementVersion(
     const requested = parse(version);
     if (requested?.version !== version) return null;
 
-    const { stable, prerelease: next } = entry;
-    if (next?.latest === version || (stable && stableLineHeads(stable).includes(version))) return null;
+    const { stable } = entry;
+    const next = servedPrerelease(entry);
+    if (next === version || (stable && stableLineHeads(stable).includes(version))) return null;
 
     const minorHead = stable?.latestByMinor[`${requested.major}.${requested.minor}`];
     const lineHead = minorHead ?? stable?.latestByMajor[String(requested.major)];
-    const nextOnSameMajor = next !== null && major(next.latest) === requested.major;
-    const prereleaseHead = requested.prerelease.length > 0 && nextOnSameMajor ? next.latest : undefined;
+    const prereleaseHead =
+        requested.prerelease.length > 0 && next !== null && major(next) === requested.major ? next : undefined;
     return [lineHead, prereleaseHead].find((candidate) => candidate !== undefined && gt(candidate, requested)) ?? null;
 }
