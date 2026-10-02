@@ -32,7 +32,8 @@
         "prettier.config.ts",
         "next.config.ts",
         "vitest.config.ts",
-        ".next/types/**/*.ts"
+        ".next/types/**/*.ts",
+        "worker.ts"
     ],
     "exclude": ["node_modules", "dist"]
 }

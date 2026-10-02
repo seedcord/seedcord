@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { NavigationCategory, PackageCatalogEntry, PackageVersionCatalog } from '#lib/docs/types';
 import type { PackageIndexEntry } from '@seedcord/docs-engine';
@@ -11,8 +11,7 @@ const { engineStub } = vi.hoisted(() => ({
     }
 }));
 
-// stub transitive imports to isolate the test and work around vitest's inability to resolve '#lib/*' alias without vite-tsconfig-paths.
-vi.mock('../../../src/lib/docs/engine', () => ({
+vi.mock('#lib/docs/engine', () => ({
     getDocsEngine: () => Promise.resolve(engineStub)
 }));
 vi.mock('@seedcord/docs-engine', async (importOriginal) => ({
@@ -149,6 +148,28 @@ describe('loadDocsCatalog descriptions', () => {
         expect(catalog.find((entry) => entry.manifestName === '@seedcord/gateway')?.description).toBe(
             'Reference documentation for gateway.'
         );
+    });
+});
+
+describe('loadDocsCatalog package filter', () => {
+    afterEach(() => {
+        vi.unstubAllEnvs();
+    });
+
+    it('keeps only the packages DOCS_PACKAGES lists', async () => {
+        const stable = { latest: '1.0.0', latestByMinor: { '1.0': '1.0.0' }, latestByMajor: { '1': '1.0.0' } };
+        const packages = ['@seedcord/utils', '@seedcord/gateway', '@seedcord/http'];
+        engineStub.ready.mockResolvedValue(undefined);
+        engineStub.listPackages.mockResolvedValue(
+            packages.map((fullName) => ({ folder: fullName.slice('@seedcord/'.length), fullName }))
+        );
+        engineStub.getEntry.mockImplementation((folder) =>
+            Promise.resolve({ fullName: `@seedcord/${folder}`, stable, prerelease: null })
+        );
+
+        vi.stubEnv('DOCS_PACKAGES', 'utils, http');
+
+        expect((await loadDocsCatalog()).map((entry) => entry.id)).toEqual(['http', 'utils']);
     });
 });
 

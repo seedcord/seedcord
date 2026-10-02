@@ -1,12 +1,7 @@
-import {
-    buildEntityHref,
-    buildPackageBasePath,
-    formatDisplayPackageName,
-    kindName,
-    memberFragment
-} from '@seedcord/docs-engine';
+import { buildEntityHref, buildPackageBasePath, kindName, memberFragment } from '@seedcord/docs-engine';
 import { DocKind } from '@seedcord/docs-engine/client';
 
+import { loadDocsCatalog } from '#lib/docs/catalog';
 import { getDocsEngine } from '#lib/docs/engine';
 
 import type { SearchIndexEntry, SearchPackage } from './types';
@@ -121,20 +116,13 @@ function toIndexEntry(links: SearchLinks, entry: DocSearchEntry): SearchIndexEnt
 }
 
 export async function searchPackages(): Promise<SearchPackage[]> {
-    const engine = await getDocsEngine();
-    const packages = await engine.listPackages();
-    return Promise.all(
-        packages.map(async ({ folder, fullName }) => {
-            const entry = await engine.getEntry(folder);
-            return {
-                id: folder,
-                label: formatDisplayPackageName(fullName),
-                fullName,
-                stable: entry?.stable?.latest ?? null,
-                prerelease: entry?.prerelease?.latest ?? null
-            };
-        })
-    );
+    return (await loadDocsCatalog()).map(({ id, label, manifestName, versions }) => ({
+        id,
+        label,
+        fullName: manifestName,
+        stable: versions.find((version) => version.channel === 'stable' && version.badge === 'latest')?.id ?? null,
+        prerelease: versions.find((version) => version.channel === 'prerelease')?.id ?? null
+    }));
 }
 
 export async function searchIndexFor(packageId: string, versionId: string): Promise<SearchIndexEntry[] | null> {

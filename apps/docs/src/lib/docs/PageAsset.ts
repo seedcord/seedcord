@@ -2,7 +2,10 @@ const ROOT = 'index';
 
 // next's export fails with EISDIR on a route that is both a file and a folder
 class PageAsset {
-    constructor(public readonly extension: string) {}
+    constructor(
+        public readonly extension: string,
+        public readonly directory: string
+    ) {}
 
     assetSegments(pageSegments: readonly string[]): string[] {
         const last = pageSegments.at(-1) ?? ROOT;
@@ -23,5 +26,6 @@ class PageAsset {
     }
 }
 
-export const TWIN = new PageAsset('.md');
-export const CARD = new PageAsset('.png');
+// the directories match the app/llms and app/og route folders
+export const TWIN = new PageAsset('.md', 'llms');
+export const CARD = new PageAsset('.png', 'og');

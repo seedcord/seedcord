@@ -3,13 +3,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { searchIndexFor, searchPackages } from '#lib/search/buildIndex';
 
-import type { DocNode, DocSearchEntry } from '@seedcord/docs-engine';
+import type { DocNode, DocSearchEntry, PackageIndexEntry } from '@seedcord/docs-engine';
 
-type StubChannel = { latest: string } | null;
+function stableAt(latest: string): PackageIndexEntry['stable'] {
+    const [major = '0', minor = '0'] = latest.split('.');
+    return { latest, latestByMinor: { [`${major}.${minor}`]: latest }, latestByMajor: { [major]: latest } };
+}
 
 const engineStub = {
+    ready: vi.fn<() => Promise<void>>(),
     listPackages: vi.fn<() => Promise<{ folder: string; fullName: string }[]>>(),
-    getEntry: vi.fn<(folder: string) => Promise<{ stable: StubChannel; prerelease: StubChannel } | null>>(),
+    getEntry: vi.fn<(folder: string) => Promise<PackageIndexEntry | null>>(),
     setVersion: vi.fn<(folder: string, selector: string) => Promise<void>>(),
     getPackage: vi.fn<(fullName: string) => { indexes: { search: DocSearchEntry[] } } | null>(),
     getNodeByGlobalSlug: vi.fn<(packageName: string, slug: string) => DocNode | null>(),
@@ -40,8 +44,9 @@ function indexes(...entries: DocSearchEntry[]): void {
 
 beforeEach(() => {
     vi.resetAllMocks();
+    engineStub.ready.mockResolvedValue(undefined);
     engineStub.listPackages.mockResolvedValue([{ folder: 'seedcord', fullName: 'seedcord' }]);
-    engineStub.getEntry.mockResolvedValue({ stable: { latest: '1.0.0' }, prerelease: null });
+    engineStub.getEntry.mockResolvedValue({ fullName: 'seedcord', stable: stableAt('1.0.0'), prerelease: null });
     engineStub.setVersion.mockResolvedValue(undefined);
     engineStub.getNodeByGlobalSlug.mockReturnValue(null);
     engineStub.getNodeBySlug.mockReturnValue(null);
@@ -51,7 +56,11 @@ beforeEach(() => {
 describe('searchPackages', () => {
     it('lists each package with its stable and pre-release heads', async () => {
         engineStub.listPackages.mockResolvedValue([{ folder: 'logger', fullName: '@seedcord/logger' }]);
-        engineStub.getEntry.mockResolvedValue({ stable: { latest: '2.1.0' }, prerelease: { latest: '3.0.0-next.1' } });
+        engineStub.getEntry.mockResolvedValue({
+            fullName: '@seedcord/logger',
+            stable: stableAt('2.1.0'),
+            prerelease: { latest: '3.0.0-next.1' }
+        });
 
         await expect(searchPackages()).resolves.toEqual([
             { id: 'logger', label: 'logger', fullName: '@seedcord/logger', stable: '2.1.0', prerelease: '3.0.0-next.1' }

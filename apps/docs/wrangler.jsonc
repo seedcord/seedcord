@@ -1,0 +1,23 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "seedcord-docs",
+    "compatibility_date": "2026-06-23",
+    "main": "./worker.ts",
+    // one pattern also covers /docs.txt, which next requests for the root page
+    "routes": [{ "pattern": "seedcord.org/docs*", "zone_name": "seedcord.org" }],
+    "workers_dev": false,
+    "r2_buckets": [{ "binding": "DOCS", "bucket_name": "seedcord-docs" }],
+    "env": {
+        // wrangler dev --env local reads the export folder straight from disk
+        "local": {
+            "r2_buckets": [],
+            "assets": {
+                "directory": "./dist/docs",
+                "binding": "ASSETS",
+                "html_handling": "none",
+                "not_found_handling": "none",
+                "run_worker_first": true
+            }
+        }
+    }
+}

@@ -9,7 +9,7 @@ import {
 } from '@seedcord/docs-engine';
 import { cache } from 'react';
 
-import { getToneTitle, TONE_ORDER } from '../tonePresentation';
+import { getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
 
 import { getDocsEngine } from './engine';
 
@@ -152,11 +152,19 @@ const sortCatalogEntries = (entries: PackageCatalogEntry[]): PackageCatalogEntry
         return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
     });
 
+// DOCS_PACKAGES=core,http shrinks a local export to those packages
+function isRendered(packageId: string): boolean {
+    const only = process.env.DOCS_PACKAGES?.split(',').map((id) => id.trim());
+    return only === undefined || only.includes(packageId);
+}
+
 // reads only index.json
 export const loadDocsCatalog = cache(async (): Promise<DocsCatalog> => {
     const engine = await getDocsEngine();
     await engine.ready();
-    const packages = await engine.listPackages();
+    const packages = (await engine.listPackages()).filter(({ fullName }) =>
+        isRendered(formatDisplayPackageName(fullName))
+    );
 
     const entries = await Promise.all(
         packages.map(async ({ folder, fullName }): Promise<PackageCatalogEntry | null> => {
