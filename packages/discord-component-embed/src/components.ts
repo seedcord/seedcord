@@ -112,7 +112,7 @@ export function TextDisplay(_props: TextDisplayProps): null {
  *
  * @example
  * ```tsx
- * <Section accessory={<LinkButton url="https://guide.seedcord.org" label="Read" />}>
+ * <Section accessory={<LinkButton url="https://seedcord.org/guide" label="Read" />}>
  *     <TextDisplay>## The seedcord guide</TextDisplay>
  *     <TextDisplay>Build a typed Discord bot from the first command up.</TextDisplay>
  * </Section>
@@ -183,8 +183,8 @@ export function Separator(_props: SeparatorProps): null {
  * @example
  * ```tsx
  * <ActionRow>
- *     <LinkButton url="https://guide.seedcord.org" label="Guide" />
- *     <LinkButton url="https://docs.seedcord.org" label="Reference" />
+ *     <LinkButton url="https://seedcord.org/guide" label="Guide" />
+ *     <LinkButton url="https://seedcord.org/docs" label="Reference" />
  *     <LinkButton url="https://github.com/seedcord/seedcord" label="GitHub" />
  * </ActionRow>
  * ```
@@ -198,7 +198,7 @@ export function ActionRow(_props: ActionRowProps): null {
  *
  * @example
  * ```tsx
- * <LinkButton url="https://guide.seedcord.org" label="Guide" emoji={{ name: '📖' }} />
+ * <LinkButton url="https://seedcord.org/guide" label="Guide" emoji={{ name: '📖' }} />
  * ```
  *
  * @example

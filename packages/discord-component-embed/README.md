@@ -2,7 +2,7 @@
   <h1>discord-component-embed</h1>
   <p>Show your own card when someone shares your link on Discord.</p>
   <a href="https://github.com/seedcord/seedcord/blob/next/packages/discord-component-embed/CHANGELOG.md">Changelog</a> ·
-  <a href="https://docs.seedcord.org/packages/discord-component-embed/latest">Reference</a> ·
+  <a href="https://seedcord.org/docs/packages/discord-component-embed/latest">Reference</a> ·
   <a href="https://discord.gg/DzFxY58WXf">Discord</a>
 </div>
 
@@ -332,7 +332,7 @@ Vue's and Solid's Vite plugins compile every `.tsx` file with their own JSX and 
 
 ## Linked JSON
 
-You can also keep the JSON out of the page. Discord then fetches it from its own URL on your site, and [`componentEmbedResponse`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/component-embed-response) builds the response for that URL.
+You can also keep the JSON out of the page. Discord then fetches it from its own URL on your site, and [`componentEmbedResponse`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/component-embed-response) builds the response for that URL.
 
 ```tsx
 // app/embeds/blog/[slug]/route.tsx in Next.js
@@ -358,7 +358,7 @@ Point the page at that URL with a `<link>` tag. The `href` has to be an absolute
 
 ## JSON you already have
 
-If you already have the JSON, like a file you wrote by hand, [`fromPayload`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/from-payload) turns it back into a tree. `toComponentEmbed` then runs the same checks on that tree as on a card built with JSX.
+If you already have the JSON, like a file you wrote by hand, [`fromPayload`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/from-payload) turns it back into a tree. `toComponentEmbed` then runs the same checks on that tree as on a card built with JSX.
 
 ```ts
 import { readFile } from 'node:fs/promises';
@@ -469,7 +469,7 @@ It prints a `trycloudflare.com` URL to paste into Discord. A Vite dev server rej
 
 Discord caches a preview for about 30 minutes, so an edit won't show on a link you've already shared. Add a new query string, like `?v=2`, to see it right away. Changing only the `#fragment` doesn't help, since Discord leaves the fragment out of its cache key. Discord's [Embed Debugger](https://discord.com/developers/embeds) shows which tags it read from any URL.
 
-To check a card without Discord, [`toComponentEmbed`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/to-component-embed) returns the payload as an object. A test can build every page's card with it before you deploy.
+To check a card without Discord, [`toComponentEmbed`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/to-component-embed) returns the payload as an object. A test can build every page's card with it before you deploy.
 
 Discord also has to fetch every image within about 10 seconds, without a login or a bot challenge. The `check` command doesn't fetch your images. If your site uses bot protection, allow user agents containing `Discordbot`.
 
@@ -481,25 +481,25 @@ Discord also has to fetch every image within about 10 seconds, without a login o
 
 | Component | Goes in | Takes |
 | --- | --- | --- |
-| [`Container`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/container) | the root | `accentColor`, `spoiler`, and the components below |
-| [`TextDisplay`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/text-display) | `Container`, `Section` | Discord markdown as text children |
-| [`Section`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/section) | `Container` | 1 to 3 `TextDisplay` children and an `accessory` |
-| [`Thumbnail`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/thumbnail) | a `Section` accessory | `url`, `description`, `spoiler` |
-| [`LinkButton`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/link-button) | `ActionRow`, a `Section` accessory | `url`, `label`, `emoji`, `disabled` |
-| [`MediaGallery`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/media-gallery) | `Container` | 1 to 10 `MediaGalleryItem` children |
-| [`MediaGalleryItem`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/media-gallery-item) | `MediaGallery` | `url`, `description`, `spoiler` |
-| [`Separator`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/separator) | `Container` | `divider`, `spacing` (`'small'` or `'large'`) |
-| [`ActionRow`](https://docs.seedcord.org/packages/discord-component-embed/latest/functions/action-row) | `Container` | 1 to 5 `LinkButton` children |
+| [`Container`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/container) | the root | `accentColor`, `spoiler`, and the components below |
+| [`TextDisplay`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/text-display) | `Container`, `Section` | Discord markdown as text children |
+| [`Section`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/section) | `Container` | 1 to 3 `TextDisplay` children and an `accessory` |
+| [`Thumbnail`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/thumbnail) | a `Section` accessory | `url`, `description`, `spoiler` |
+| [`LinkButton`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/link-button) | `ActionRow`, a `Section` accessory | `url`, `label`, `emoji`, `disabled` |
+| [`MediaGallery`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/media-gallery) | `Container` | 1 to 10 `MediaGalleryItem` children |
+| [`MediaGalleryItem`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/media-gallery-item) | `MediaGallery` | `url`, `description`, `spoiler` |
+| [`Separator`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/separator) | `Container` | `divider`, `spacing` (`'small'` or `'large'`) |
+| [`ActionRow`](https://seedcord.org/docs/packages/discord-component-embed/latest/functions/action-row) | `Container` | 1 to 5 `LinkButton` children |
 
 <!-- prettier-ignore-end -->
 
-The [reference](https://docs.seedcord.org/packages/discord-component-embed/latest) lists every export, with an example on each.
+The [reference](https://seedcord.org/docs/packages/discord-component-embed/latest) lists every export, with an example on each.
 
 <div align="right"><a href="#contents">back to top</a></div>
 
 ## Errors
 
-Discord doesn't report an invalid payload anywhere. It drops the payload and shows the Open Graph card. So `toComponentEmbed`, `toComponentEmbedJson`, `toComponentEmbedScript`, `<ComponentEmbed>`, and `componentEmbedResponse` throw a [`ComponentEmbedError`](https://docs.seedcord.org/packages/discord-component-embed/latest/classes/component-embed-error) when:
+Discord doesn't report an invalid payload anywhere. It drops the payload and shows the Open Graph card. So `toComponentEmbed`, `toComponentEmbedJson`, `toComponentEmbedScript`, `<ComponentEmbed>`, and `componentEmbedResponse` throw a [`ComponentEmbedError`](https://seedcord.org/docs/packages/discord-component-embed/latest/classes/component-embed-error) when:
 
 - the root is anything other than one `Container`
 - a component is somewhere it isn't allowed, or text is outside a `TextDisplay`

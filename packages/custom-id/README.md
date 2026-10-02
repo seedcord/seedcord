@@ -8,8 +8,8 @@
 <div align="center">
   <h3>The whole Discord bot, typed end to end</h3>
   <a href="https://seedcord.org">Website</a> ·
-  <a href="https://guide.seedcord.org">Guide</a> ·
-  <a href="https://docs.seedcord.org">Reference</a> ·
+  <a href="https://seedcord.org/guide">Guide</a> ·
+  <a href="https://seedcord.org/docs">Reference</a> ·
   <a href="https://discord.gg/DzFxY58WXf">Discord</a>
 </div>
 
@@ -62,7 +62,7 @@ Fields come from `snowflake`, `uuid`, `int`, `bool`, `oneOf`, `someOf`, and `str
 
 `prefixOf` recovers the route prefix from a raw wire. The prefix survives a shape change, which makes it what you route on. `decodeFor` takes several definitions at once and returns the matched prefix with its own params.
 
-Refer to the [guide](https://guide.seedcord.org/components/custom-ids) for more examples, and the [reference](https://docs.seedcord.org/packages/custom-id/latest) for the full API.
+Refer to the [guide](https://seedcord.org/guide/components/custom-ids) for more examples, and the [reference](https://seedcord.org/docs/packages/custom-id/latest) for the full API.
 
 ## Errors
 

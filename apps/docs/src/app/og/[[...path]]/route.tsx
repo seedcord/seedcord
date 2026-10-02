@@ -1,3 +1,4 @@
+import { DOCS } from '@seedcord/ui';
 import { OgPageCard } from '@seedcord/ui/OgCard';
 import { OG_SIZE } from '@seedcord/ui/og';
 import { ImageResponse } from 'next/og';
@@ -11,7 +12,7 @@ import type { DocsCard } from '#lib/docs/DocsPage';
 
 export const dynamic = 'force-static';
 
-const DOMAIN = 'docs.seedcord.org';
+const DOMAIN = DOCS.label;
 
 function render(card: DocsCard): ImageResponse {
     return new ImageResponse(<OgPageCard {...card} domain={DOMAIN} />, { ...OG_SIZE, fonts: OG_FONTS });

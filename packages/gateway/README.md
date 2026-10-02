@@ -8,8 +8,8 @@
 <div align="center">
   <h3>The whole Discord bot, typed end to end</h3>
   <a href="https://seedcord.org">Website</a> ·
-  <a href="https://guide.seedcord.org">Guide</a> ·
-  <a href="https://docs.seedcord.org">Reference</a> ·
+  <a href="https://seedcord.org/guide">Guide</a> ·
+  <a href="https://seedcord.org/docs">Reference</a> ·
   <a href="https://discord.gg/DzFxY58WXf">Discord</a>
 </div>
 

@@ -57,9 +57,9 @@ describe('a ref: link', () => {
     );
 
     it('leaves an ordinary link alone', async () => {
-        const code = await compileGuideMdx('Read [the reference site](https://docs.seedcord.org).');
+        const code = await compileGuideMdx('Read [the reference site](https://seedcord.org/docs).');
 
-        expect(code).toContain('href="https://docs.seedcord.org"');
+        expect(code).toContain('href="https://seedcord.org/docs"');
         expect(code).not.toContain('<Ref');
     });
 

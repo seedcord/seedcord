@@ -48,9 +48,9 @@ describe('sitemap', () => {
         const urls = (await sitemap()).map((entry) => entry.url);
 
         expect(urls).toEqual([
-            'https://docs.seedcord.org/',
-            'https://docs.seedcord.org/packages/gateway/latest',
-            'https://docs.seedcord.org/packages/gateway/latest/functions/gated'
+            'https://seedcord.org/docs',
+            'https://seedcord.org/docs/packages/gateway/latest',
+            'https://seedcord.org/docs/packages/gateway/latest/functions/gated'
         ]);
     });
 });

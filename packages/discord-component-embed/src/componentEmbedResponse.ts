@@ -12,7 +12,7 @@ import type { EmbedElement } from './element';
  * @example
  * ```tsx
  * // app/embeds/[...slug]/route.tsx in Next.js, linked from
- * // <link rel="discord:component-embed" type="application/json" href="https://guide.seedcord.org/embeds/components/custom-ids" />
+ * // <link rel="discord:component-embed" type="application/json" href="https://seedcord.org/guide/embeds/components/custom-ids" />
  * export async function GET(_request: Request, { params }: RouteContext<'/embeds/[...slug]'>) {
  *     const page = await getGuidePage((await params).slug);
  *     return componentEmbedResponse(<GuidePreview page={page} />);

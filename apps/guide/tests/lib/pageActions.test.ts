@@ -8,7 +8,7 @@ const page = {
     data: { title: 'Options' }
 };
 
-const MARKDOWN_URL = 'https://guide.seedcord.org/commands/options.md';
+const MARKDOWN_URL = 'https://seedcord.org/guide/commands/options.md';
 
 describe('pageActionsFor', () => {
     it('copies from the exported file and links the url a reader sees', () => {

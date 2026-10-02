@@ -52,7 +52,7 @@ describe('the guide worker', () => {
     it('points an agent at the index describing the whole guide', async () => {
         const response = await get('https://guide.seedcord.org/tooling/', serving(html()));
 
-        expect(response.headers.get('Link')).toContain('</llms.txt>; rel="describedby"');
+        expect(response.headers.get('Link')).toContain('</guide/llms.txt>; rel="describedby"');
     });
 
     it('leaves the Link header off an asset that is not a page', async () => {

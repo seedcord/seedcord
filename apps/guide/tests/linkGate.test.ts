@@ -30,7 +30,7 @@ describe('the link gate', () => {
         ['a symbol', '[Notice](ref:core/Notice)'],
         ['a member of a symbol', '[start](ref:core/Paginator#start)'],
         ['a package', '[core](ref:core)'],
-        ['another site', '[docs](https://docs.seedcord.org/nothing-checks-this)']
+        ['another site', '[docs](https://seedcord.org/docs/nothing-checks-this)']
     ])('passes a link to %s', (_what, link) => {
         expect(problemsIn(link)).toEqual([]);
     });

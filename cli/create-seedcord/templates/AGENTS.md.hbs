@@ -6,9 +6,9 @@ Rules for an AI coding agent working in this repo.
 
 ## Reading the docs
 
-<https://guide.seedcord.org/llms.txt> lists every page in the guide with a line on what it covers. Each page answers at its own url plus `.md`, so <https://guide.seedcord.org/commands/options.md> is the Options page as Markdown.
+<https://seedcord.org/guide/llms.txt> lists every page in the guide with a line on what it covers. Each page answers at its own url plus `.md`, so <https://seedcord.org/guide/commands/options.md> is the Options page as Markdown.
 
-The API reference is at <https://docs.seedcord.org>, one page per symbol.
+The API reference is at <https://seedcord.org/docs>, one page per symbol.
 
 This project runs on the {{#if isGateway}}gateway{{else}}http{{/if}} transport and imports everything from `{{ transportPackage }}`. A page marks anything that differs between the two.
 
@@ -35,7 +35,7 @@ Run `{{ pm.run }} codegen` after you add a command or change its options. It wri
 
 ## Connections and state
 
-Anything that holds a connection, keeps state between interactions, or runs in the background belongs in a plugin, either an existing one or your own. Read <https://guide.seedcord.org/plugins.md> and <https://guide.seedcord.org/plugins/your-own.md> before you add one.
+Anything that holds a connection, keeps state between interactions, or runs in the background belongs in a plugin, either an existing one or your own. Read <https://seedcord.org/guide/plugins.md> and <https://seedcord.org/guide/plugins/your-own.md> before you add one.
 
 ## Before you call it done
 

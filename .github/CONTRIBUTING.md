@@ -72,13 +72,13 @@ A guide build peaks around 6 GB of memory on a 12-core machine, and fewer cores 
 
 ## Trying a change in a real bot
 
-`mocks/gateway` and `mocks/http` are working bots, one per transport. Copy a mock's `.env.example` to `.env` and fill it in. The example file lists every variable that mock reads. The [guide](https://guide.seedcord.org/discord-application) shows how to create an application and get its token.
+`mocks/gateway` and `mocks/http` are working bots, one per transport. Copy a mock's `.env.example` to `.env` and fill it in. The example file lists every variable that mock reads. The [guide](https://seedcord.org/guide/discord-application) shows how to create an application and get its token.
 
 ```bash
 pnpm -C mocks/gateway dev
 ```
 
-Check a mock's `src/bot.ts` for what else it connects to. The gateway mock attaches a database plugin, so it needs that database running. The http mock needs a public URL for Discord to post to, and `seedcord dev` opens one through [cloudflared](https://guide.seedcord.org/tooling/tunnel).
+Check a mock's `src/bot.ts` for what else it connects to. The gateway mock attaches a database plugin, so it needs that database running. The http mock needs a public URL for Discord to post to, and `seedcord dev` opens one through [cloudflared](https://seedcord.org/guide/tooling/tunnel).
 
 When you add or change a handler in a mock, run `pnpm -C mocks/<name> codegen`. The gate fails on a stale generated file.
 

@@ -5,13 +5,13 @@ import { llmsIndex, twinLinks } from '#lib/agents';
 describe('the links an agent follows out of llms.txt', () => {
     it('points a page link at the markdown an agent can read', () => {
         expect(twinLinks('- [Options](/commands/options): Reading input.')).toBe(
-            '- [Options](https://guide.seedcord.org/commands/options.md): Reading input.'
+            '- [Options](https://seedcord.org/guide/commands/options.md): Reading input.'
         );
     });
 
     it('names the root page index', () => {
         expect(twinLinks('- [Introduction](/): What it does.')).toBe(
-            '- [Introduction](https://guide.seedcord.org/index.md): What it does.'
+            '- [Introduction](https://seedcord.org/guide/index.md): What it does.'
         );
     });
 
@@ -30,7 +30,7 @@ describe('llms.txt', () => {
     });
 
     it('puts the instructions above the links', () => {
-        const file = llmsIndex('- [Options](https://guide.seedcord.org/commands/options.md)');
+        const file = llmsIndex('- [Options](https://seedcord.org/guide/commands/options.md)');
 
         expect(file.indexOf('training data')).toBeLessThan(file.indexOf('- [Options]'));
     });

@@ -8,6 +8,6 @@ async function body(): Promise<string> {
 
 describe('the robots file', () => {
     it('points at the sitemap', async () => {
-        expect(await body()).toContain('Sitemap: https://guide.seedcord.org/sitemap.xml');
+        expect(await body()).toContain('Sitemap: https://seedcord.org/guide/sitemap.xml');
     });
 });

@@ -1,11 +1,13 @@
-import { DOCS_URL as DOCS_PRODUCTION, GUIDE_URL } from '@seedcord/ui';
+import { DOCS_URL as DOCS_PRODUCTION, GUIDE_URL, SiteAddress } from '@seedcord/ui';
 import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 
 import { CARD, publicPath, TWIN } from '#lib/pageAssets';
 
 import type { Metadata, MetadataRoute } from 'next';
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? GUIDE_URL;
+const SITE = new SiteAddress(process.env.NEXT_PUBLIC_SITE_URL ?? GUIDE_URL);
+
+export const SITE_URL = SITE.url;
 export const SITE_NAME = 'seedcord guide';
 export const SITE_DESCRIPTION = 'The guide to building Discord bots with seedcord.';
 export { HOME_URL, REPO_URL } from '@seedcord/ui';
@@ -22,7 +24,7 @@ const OG_IMAGE_H = 630;
 export function canonicalUrl(path: string): string {
     const hasExtension = /\.[a-z0-9]+$/i.test(path);
     const slashed = path.endsWith('/') || hasExtension ? path : `${path}/`;
-    return new URL(slashed, SITE_URL).toString();
+    return SITE.at(slashed);
 }
 
 function ogImageUrl(path: string): string {

@@ -4,20 +4,20 @@ import { canonicalUrl, pageMetadata, sitemapEntries } from '#lib/site';
 
 describe('the canonical url for a path', () => {
     it('keeps the trailing slash the export actually serves', () => {
-        expect(canonicalUrl('/tooling')).toBe('https://guide.seedcord.org/tooling/');
+        expect(canonicalUrl('/tooling')).toBe('https://seedcord.org/guide/tooling/');
     });
 
     it('leaves a path that already ends in a slash alone', () => {
-        expect(canonicalUrl('/tooling/')).toBe('https://guide.seedcord.org/tooling/');
+        expect(canonicalUrl('/tooling/')).toBe('https://seedcord.org/guide/tooling/');
     });
 
     it('names the root with one slash', () => {
-        expect(canonicalUrl('/')).toBe('https://guide.seedcord.org/');
+        expect(canonicalUrl('/')).toBe('https://seedcord.org/guide/');
     });
 
     // a trailing slash 404s sitemap.xml
     it('leaves a path with a file extension alone', () => {
-        expect(canonicalUrl('/sitemap.xml')).toBe('https://guide.seedcord.org/sitemap.xml');
+        expect(canonicalUrl('/sitemap.xml')).toBe('https://seedcord.org/guide/sitemap.xml');
     });
 });
 
@@ -30,13 +30,13 @@ describe('the metadata a guide page carries', () => {
     };
 
     it('points the canonical link at the page itself', () => {
-        expect(pageMetadata(page).alternates?.canonical).toBe('https://guide.seedcord.org/tooling/');
+        expect(pageMetadata(page).alternates?.canonical).toBe('https://seedcord.org/guide/tooling/');
     });
 
     it('points the card at the page url plus .png', () => {
         expect(pageMetadata(page).openGraph?.images).toEqual([
             {
-                url: 'https://guide.seedcord.org/tooling.png',
+                url: 'https://seedcord.org/guide/tooling.png',
                 width: 1200,
                 height: 630,
                 alt: 'A seedcord card reading Tooling, labelled tooling'
@@ -49,7 +49,7 @@ describe('the metadata a guide page carries', () => {
 
         expect(root.openGraph?.images).toEqual([
             {
-                url: 'https://guide.seedcord.org/index.png',
+                url: 'https://seedcord.org/guide/index.png',
                 width: 1200,
                 height: 630,
                 alt: 'A seedcord card reading Tooling, labelled tooling'
@@ -84,8 +84,8 @@ describe('the sitemap', () => {
         const pages = [page('/', 'index.mdx'), page('/commands/options', 'commands/options.mdx')];
 
         expect(sitemapEntries(pages).map((entry) => entry.url)).toEqual([
-            'https://guide.seedcord.org/',
-            'https://guide.seedcord.org/commands/options/'
+            'https://seedcord.org/guide/',
+            'https://seedcord.org/guide/commands/options/'
         ]);
     });
 

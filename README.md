@@ -8,8 +8,8 @@
 <div align="center">
   <h3>The whole Discord bot, typed end to end</h3>
   <a href="https://seedcord.org">Website</a> ·
-  <a href="https://guide.seedcord.org">Guide</a> ·
-  <a href="https://docs.seedcord.org">Reference</a> ·
+  <a href="https://seedcord.org/guide">Guide</a> ·
+  <a href="https://seedcord.org/docs">Reference</a> ·
   <a href="https://discord.gg/DzFxY58WXf">Discord</a>
 </div>
 
@@ -48,7 +48,7 @@ You pick one of two transports when you scaffold. `@seedcord/gateway` holds a we
 pnpm create seedcord
 ```
 
-**[Read the guide →](https://guide.seedcord.org)**
+**[Read the guide →](https://seedcord.org/guide)**
 
 _**seedcord is pre-1.0, so minor versions can break.** I've already completed nearly all of the massive changes I planned though, so it's relatively stable. Read the changelog before you bump. Also, the `http` transport's edge build for Cloudflare Workers is a work in progress, and currently cannot be used._
 

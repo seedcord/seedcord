@@ -5,8 +5,8 @@ contact_links:
     url: https://discord.gg/DzFxY58WXf
     about: Questions, setup help, and anything about seedcord.
   - name: Read the docs
-    url: https://docs.seedcord.org
+    url: https://seedcord.org/docs
     about: The API reference for every package.
   - name: Read the guide
-    url: https://guide.seedcord.org
+    url: https://seedcord.org/guide
     about: Guides and tutorials for using seedcord.

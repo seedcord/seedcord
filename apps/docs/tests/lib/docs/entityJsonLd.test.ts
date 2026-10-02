@@ -27,16 +27,16 @@ describe('entityJsonLd', () => {
     it('describes a page at its latest url when it has one', () => {
         const [api, breadcrumb] = graphOf(resolvedAt('0.7.1'), '/packages/gateway/latest/functions/gated')['@graph'];
 
-        expect(api.url).toBe('https://docs.seedcord.org/packages/gateway/latest/functions/gated');
+        expect(api.url).toBe('https://seedcord.org/docs/packages/gateway/latest/functions/gated');
         expect(api.assemblyVersion).toBe('0.7.1');
-        expect(breadcrumb.itemListElement[1]?.item).toBe('https://docs.seedcord.org/packages/gateway/latest');
+        expect(breadcrumb.itemListElement[1]?.item).toBe('https://seedcord.org/docs/packages/gateway/latest');
     });
 
     it('describes any other page at its own versioned url', () => {
         const [api, breadcrumb] = graphOf(resolvedAt('0.5.1'))['@graph'];
 
-        expect(api.url).toBe('https://docs.seedcord.org/packages/gateway/0.5.1/functions/gated');
+        expect(api.url).toBe('https://seedcord.org/docs/packages/gateway/0.5.1/functions/gated');
         expect(api.assemblyVersion).toBe('0.5.1');
-        expect(breadcrumb.itemListElement[1]?.item).toBe('https://docs.seedcord.org/packages/gateway/0.5.1');
+        expect(breadcrumb.itemListElement[1]?.item).toBe('https://seedcord.org/docs/packages/gateway/0.5.1');
     });
 });

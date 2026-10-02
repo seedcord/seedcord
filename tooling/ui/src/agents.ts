@@ -1,6 +1,8 @@
-import { DOCS_URL, GUIDE_URL, HOME_URL } from './sites';
+import { DOCS, DOCS_URL, GUIDE, GUIDE_URL, HOME, HOME_URL } from './sites';
 import { AGENT_SKILLS_BASE, skillUrl } from './skills';
 import { SEEDCORD_SKILL } from './skills/seedcord';
+
+import type { SiteAddress } from './sites';
 
 // all three are in the IANA link relation registry
 const RELATIONS = ['service-doc', 'index', 'related'] as const;
@@ -16,8 +18,10 @@ const SEEDCORD_SITES = {
 
 export type SeedcordSite = keyof typeof SEEDCORD_SITES;
 
+const ADDRESSES: Record<SeedcordSite, SiteAddress> = { home: HOME, guide: GUIDE, docs: DOCS };
+
 // llms.txt v2 asks for describedby
-const LLMS_TXT = '/llms.txt';
+const LLMS_TXT = 'llms.txt';
 const SKILLS_INDEX = `${AGENT_SKILLS_BASE}/index.json`;
 
 export interface AgentLink {
@@ -30,7 +34,7 @@ export interface AgentLink {
 export function siteLinks(site: SeedcordSite): AgentLink[] {
     const own: SiteRelations = SEEDCORD_SITES[site];
     const links: AgentLink[] = [
-        { rel: 'describedby', href: LLMS_TXT },
+        { rel: 'describedby', href: `${ADDRESSES[site].path}/${LLMS_TXT}` },
         { rel: 'service-meta', href: SKILLS_INDEX }
     ];
 
@@ -58,9 +62,9 @@ export function agentLinkHeader(site: SeedcordSite, twin?: string): string {
     return [...twinLink, ...siteLinks(site)].map(serialize).join(', ');
 }
 
-const SKILL_URL = `${GUIDE_URL}${skillUrl(SEEDCORD_SKILL)}`;
+const SKILL_URL = HOME.at(skillUrl(SEEDCORD_SKILL));
 
-/** All three sites serve the same `SKILL.md`. This sends docs and home to the guide's copy. */
+/** All three sites serve the same `SKILL.md`. This sends a reader to the copy at the origin root. */
 export function canonicalSkillHeader(): string {
     return `<${SKILL_URL}>; rel="canonical"`;
 }
