@@ -43,11 +43,16 @@ function stripMarks(content: string): string {
 
 const SPECIAL = /[.*+?^${}()|[\]\\]/g;
 
+function escapeRegExp(term: string): string {
+    return term.replace(SPECIAL, String.raw`\$&`);
+}
+
 function queryRegex(query: string): RegExp | null {
     const terms = query.trim().split(/\s+/).filter(Boolean);
     if (terms.length === 0) return null;
 
-    return new RegExp(`(${terms.map((term) => term.replace(SPECIAL, String.raw`\$&`)).join('|')})`, 'gi');
+    const pattern = terms.map(escapeRegExp).join('|');
+    return new RegExp(`(${pattern})`, 'gi');
 }
 
 function matchFlags(plain: string, query: string): boolean[] {

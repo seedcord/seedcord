@@ -116,6 +116,11 @@ export default defineConfig({
                 rules: ['react-doctor/effect-needs-cleanup', 'react-doctor/no-layout-property-animation']
             },
             {
+                // the animated height belongs to an svg rect inside a clipPath
+                files: ['**/TableOfContents.tsx'],
+                rules: ['react-doctor/no-layout-property-animation']
+            },
+            {
                 // react 19 calls the cleanup a ref callback returns
                 files: ['**/useSidebarPersistence.tsx'],
                 rules: ['react-doctor/effect-needs-cleanup']
