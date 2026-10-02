@@ -12,7 +12,16 @@ on:
       - 'pnpm-workspace.yaml'
       - '.github/workflows/docs-deploy.yml'
   workflow_call:
+    inputs:
+      deploy:
+        type: boolean
+        default: true
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: Upload and deploy after the link check. Off checks this branch only
+        type: boolean
+        default: true
 
 concurrency:
   group: docs-deploy
@@ -52,11 +61,16 @@ jobs:
           NEXT_PUBLIC_SITE_URL: https://seedcord.org/docs
           DOCS_BUILD_CPUS: 4
 
+      - name: Check every docs link
+        run: pnpm -C apps/docs check:links
+
       - name: Pick the build id
+        if: inputs.deploy != false
         id: build
         run: echo "id=$(date -u +%Y%m%dT%H%M%SZ)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - name: Upload to R2
+        if: inputs.deploy != false
         run: pnpm docs:upload
         env:
           BUILD_ID: ${{ steps.build.outputs.id }}
@@ -66,6 +80,7 @@ jobs:
           R2_DOCS_BUCKET: ${{ vars.R2_DOCS_BUCKET }}
 
       - name: Point the worker at the build
+        if: inputs.deploy != false
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

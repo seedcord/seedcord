@@ -11,6 +11,7 @@
         "dev:published": "cross-env SEEDCORD_DOCS_INDEX_URL=https://cdn.seedcord.org/index.json next dev",
         "build": "next build",
         "deploy": "wrangler deploy",
+        "check:links": "tsx check-links.ts",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
         "fmt": "prettier --write '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
@@ -59,6 +60,7 @@
         "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
         "jsdom": "catalog:test",
         "prettier-plugin-tailwindcss": "catalog:deps",
+        "tsx": "catalog:deps",
         "typescript": "catalog:peer",
         "vitest": "catalog:test",
         "wrangler": "catalog:deps"

@@ -30,7 +30,8 @@ describe('the link gate', () => {
         ['a symbol', '[Notice](ref:core/Notice)'],
         ['a member of a symbol', '[start](ref:core/Paginator#start)'],
         ['a package', '[core](ref:core)'],
-        ['another site', '[docs](https://seedcord.org/docs/nothing-checks-this)']
+        ['the reference site', '[docs](https://seedcord.org/docs)'],
+        ['another site', '[repo](https://github.com/seedcord/seedcord/tree/next/packages)']
     ])('passes a link to %s', (_what, link) => {
         expect(problemsIn(link)).toEqual([]);
     });
@@ -45,6 +46,7 @@ describe('the link gate', () => {
         ['a relative page', '[gone](./cooldown)'],
         ['a package the reference site does not list', '[gone](ref:cor/Notice)'],
         ['a page that moved', '[moved](/gates/cooldown)'],
+        ['a reference page by its url', '[Notice](https://seedcord.org/docs/packages/core/latest/classes/notice)'],
         ['a page that does not exist, by reference', '[gone][g]\n\n[g]: /checks/cooldowns']
     ])('reports a link to %s', (_what, link) => {
         expect(problemsIn(link)).toHaveLength(1);

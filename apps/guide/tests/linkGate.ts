@@ -2,6 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { slugifySegment } from '@seedcord/docs-engine/client';
+import { DOCS } from '@seedcord/ui';
 import { remarkGfm } from 'fumadocs-core/mdx-plugins/remark-gfm';
 import { remarkHeading } from 'fumadocs-core/mdx-plugins/remark-heading';
 import remarkMdx from 'remark-mdx';
@@ -146,6 +147,7 @@ function refProblem(site: GuideSite, url: string): string | null {
 
 function problemWith(site: GuideSite, route: string, url: string): string | null {
     if (url.startsWith('ref:')) return refProblem(site, url);
+    if (url.startsWith(`${DOCS.url}/`)) return 'is a reference page by its url. Write it as ref:<package>/<Symbol>';
     if (url.startsWith('#') || (url.startsWith('/') && !url.startsWith('//'))) return pageProblem(site, route, url);
     if (url.startsWith('//') || URL_SCHEME.test(url)) return null;
     return 'is relative. Write it from the site root, like /checks/cooldown';
