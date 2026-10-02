@@ -259,12 +259,14 @@ describe('the twoslash transformer', () => {
     });
 
     describe('a hovered symbol a seedcord package declares', () => {
-        it('carries the package and the symbol', async () => {
+        const SLASH_HANDLER = 'https://seedcord.org/docs/packages/gateway/latest/classes/slash-handler';
+
+        it('links the page the reference site renders for the symbol', async () => {
             const html = await render(
                 sample("import { SlashHandler } from '@seedcord/gateway';", 'declare const h: SlashHandler<never>;')
             );
 
-            expect(html).toContain('data-ref-pkg="gateway"');
+            expect(html).toContain(`data-ref-href="${SLASH_HANDLER}"`);
             expect(html).toContain('data-ref-symbol="SlashHandler"');
         });
 
@@ -281,7 +283,7 @@ describe('the twoslash transformer', () => {
                 )
             );
 
-            expect(html).toContain('data-ref-symbol="SlashHandler.options"');
+            expect(html).toContain(`data-ref-href="${SLASH_HANDLER}#options"`);
         });
 
         it('resolves through a cut that removed the import', async () => {
@@ -293,7 +295,7 @@ describe('the twoslash transformer', () => {
                 )
             );
 
-            expect(html).toContain('data-ref-pkg="gateway"');
+            expect(html).toContain(`data-ref-href="${SLASH_HANDLER}"`);
         });
 
         // a bare <T> reads as a type assertion under ts and as jsx under tsx
@@ -307,14 +309,14 @@ describe('the twoslash transformer', () => {
                 'tsx'
             );
 
-            expect(html).toContain('data-ref-pkg="gateway"');
+            expect(html).toContain(`data-ref-href="${SLASH_HANDLER}"`);
         });
 
         it('leaves the sample and the stdlib unlinked', async () => {
             const html = await render(sample('const count = 12;', 'const doubled = count * 2;'));
 
             expect(html).toContain('twoslash-hover');
-            expect(html).not.toContain('data-ref-pkg');
+            expect(html).not.toContain('data-ref-href');
         });
     });
 

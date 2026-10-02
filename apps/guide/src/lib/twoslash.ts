@@ -7,6 +7,7 @@ import { createTwoslasher } from 'twoslash';
 import { removeCodeRanges, resolveNodePositions, splitLines } from 'twoslash-protocol';
 
 import { commonIndent } from '#lib/dedent';
+import { DocsLinks } from '#lib/DocsLinks';
 import { cleanFence } from '#lib/fence';
 import { formatHoverType } from '#lib/formatHoverType';
 import { SAMPLE_AUGMENTATION } from '#lib/sampleTypes';
@@ -80,9 +81,10 @@ const renderer: TwoslashRenderer = {
     nodeStaticInfo(info, node) {
         const element = rich.nodeStaticInfo?.call(this, info, node) ?? node;
         const { ref } = info as HoverWithRef;
-        if (!ref || element.type !== 'element') return element;
+        const href = ref ? DocsLinks.current().href(ref.pkg, ref.symbol) : null;
+        if (!ref || !href || element.type !== 'element') return element;
 
-        element.properties = { ...element.properties, 'data-ref-pkg': ref.pkg, 'data-ref-symbol': ref.symbol };
+        element.properties = { ...element.properties, 'data-ref-href': href, 'data-ref-symbol': ref.symbol };
 
         return element;
     },
@@ -241,6 +243,7 @@ export async function twoslashBlock(code: string, lang: BundledLanguage, mode: F
     if (process.env.TWOSLASH === '0') return { text, html: await highlightToHtml(text, lang) };
 
     const extension = LANG_ALIAS[lang] ?? lang;
+    await DocsLinks.load();
     try {
         // prettier has to finish before the sync renderer reads a hover
         const compiled = dedenting(code, extension, TWOSLASH_OPTIONS[mode]);

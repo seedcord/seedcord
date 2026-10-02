@@ -4,13 +4,16 @@ import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import { VFile } from 'vfile';
 
+import { remarkRefLinks } from '#lib/remarkRefLinks';
 import { TWIN_OPTIONS } from '#lib/twin';
 
-// _data is the plugin's own hook for reading the markdown without compiling a module
+// _data is the plugin's own hook for reading the markdown without compiling a module.
+// source.config.ts runs remarkRefLinks ahead of the twin
 export async function twinOf(source: string): Promise<string> {
     const processor = unified()
         .use(remarkParse)
         .use(remarkMdx)
+        .use(remarkRefLinks)
         .use(remarkLLMs, { ...TWIN_OPTIONS, _data: true });
 
     const file = new VFile(source);

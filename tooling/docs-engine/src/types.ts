@@ -286,7 +286,10 @@ export interface DocPackageModel {
     packageDocumentation: DocComment | null;
     nodes: Map<number, DocNode>;
     indexes: DocIndexes;
+    // what the sidebar and search list
     directory: PackageDirectory;
+    // every symbol with its own page, a superset of directory
+    pages: PackageDirectory;
 }
 
 export interface DocCollection {

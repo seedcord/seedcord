@@ -16,17 +16,17 @@ describe('isExternalHref', () => {
 
 describe('opensInNewTab', () => {
     it('returns false for a same-package internal link', () => {
-        expect(opensInNewTab('/packages/seedcord/latest/classes/Seedcord', 'seedcord')).toBe(false);
+        expect(opensInNewTab('/docs/packages/seedcord/latest/classes/Seedcord', 'seedcord')).toBe(false);
     });
 
     it('returns true for a different-package internal link', () => {
         // @seedcord/utils renders under the `utils` display segment.
-        expect(opensInNewTab('/packages/utils/latest/functions/clamp', 'seedcord')).toBe(true);
+        expect(opensInNewTab('/docs/packages/utils/latest/functions/clamp', 'seedcord')).toBe(true);
     });
 
     it('compares against the display segment, not the manifest name', () => {
-        expect(opensInNewTab('/packages/utils/latest/functions/clamp', '@seedcord/utils')).toBe(false);
-        expect(opensInNewTab('/packages/seedcord/latest/classes/Seedcord', '@seedcord/utils')).toBe(true);
+        expect(opensInNewTab('/docs/packages/utils/latest/functions/clamp', '@seedcord/utils')).toBe(false);
+        expect(opensInNewTab('/docs/packages/seedcord/latest/classes/Seedcord', '@seedcord/utils')).toBe(true);
     });
 
     it('returns true for external https links regardless of current package', () => {

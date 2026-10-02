@@ -25,6 +25,12 @@
                 "types": "./dist/client.d.mts",
                 "default": "./dist/client.mjs"
             }
+        },
+        "./workspace": {
+            "import": {
+                "types": "./dist/workspace.d.mts",
+                "default": "./dist/workspace.mjs"
+            }
         }
     },
     "scripts": {

@@ -1,113 +1,60 @@
 import { DocKind } from '#model/kinds';
 
 import type { EntityTone } from '#src/tones';
-import type { DocIndexes, DocNode } from '#src/types';
+import type { DocNode } from '#src/types';
 
-export type DirectoryEntity = 'classes' | 'interfaces' | 'enums' | 'types' | 'functions' | 'variables';
+export type DirectorySnapshot = Record<EntityTone, string[]>;
 
-export type DirectorySnapshot = Record<DirectoryEntity, string[]>;
+const TONE_KINDS = {
+    class: DocKind.Class,
+    interface: DocKind.Interface,
+    type: DocKind.TypeAlias,
+    function: DocKind.Function,
+    enum: DocKind.Enum,
+    variable: DocKind.Variable
+} as const satisfies Record<EntityTone, number>;
 
-const ENTITY_KIND_MAP: Record<DirectoryEntity, number[]> = {
-    classes: [DocKind.Class],
-    interfaces: [DocKind.Interface],
-    enums: [DocKind.Enum],
-    types: [DocKind.TypeAlias],
-    functions: [DocKind.Function],
-    variables: [DocKind.Variable]
-};
+function perTone<Value>(build: (tone: EntityTone) => Value): Record<EntityTone, Value> {
+    return {
+        class: build('class'),
+        interface: build('interface'),
+        type: build('type'),
+        function: build('function'),
+        enum: build('enum'),
+        variable: build('variable')
+    };
+}
 
-const ENTITY_TONE_MAP: Record<DirectoryEntity, EntityTone> = {
-    classes: 'class',
-    interfaces: 'interface',
-    enums: 'enum',
-    types: 'type',
-    functions: 'function',
-    variables: 'variable'
-};
+const TONE_OF_KIND = new Map(Object.values(perTone<[number, EntityTone]>((tone) => [TONE_KINDS[tone], tone])));
 
+// the top-level symbols of one package, grouped by tone
 export class PackageDirectory {
-    private readonly maps: Record<DirectoryEntity, Map<string, DocNode>>;
+    private constructor(private readonly byTone: Record<EntityTone, Map<string, DocNode>>) {}
 
-    private constructor(maps: Record<DirectoryEntity, Map<string, DocNode>>) {
-        this.maps = maps;
+    static fromNodes(nodes: Iterable<DocNode>): PackageDirectory {
+        const byTone = perTone(() => new Map<string, DocNode>());
+        for (const node of nodes) {
+            const tone = TONE_OF_KIND.get(node.kind);
+            if (tone) byTone[tone].set(node.slug, node);
+        }
+        return new PackageDirectory(byTone);
     }
 
-    static fromIndexes(indexes: DocIndexes): PackageDirectory {
-        const maps = Object.entries(ENTITY_KIND_MAP).reduce(
-            (acc, [entity, kinds]) => {
-                acc[entity as DirectoryEntity] = PackageDirectory.collect(indexes, kinds);
-                return acc;
-            },
-            {} as Record<DirectoryEntity, Map<string, DocNode>>
-        );
-
-        return new PackageDirectory(maps);
+    entries(tone: EntityTone): [string, DocNode][] {
+        return [...this.byTone[tone].entries()];
     }
 
-    get(entity: DirectoryEntity, slug: string): DocNode | undefined {
-        return this.maps[entity].get(slug);
-    }
-
-    getMap(entity: DirectoryEntity): Map<string, DocNode> {
-        return new Map(this.maps[entity]);
-    }
-
-    list(entity: DirectoryEntity): DocNode[] {
-        return [...this.maps[entity].values()];
-    }
-
-    listNames(entity: DirectoryEntity): string[] {
-        return [...this.maps[entity].keys()].sort((a, b) => a.localeCompare(b));
-    }
-
-    entries(entity: DirectoryEntity): [string, DocNode][] {
-        return [...this.maps[entity].entries()];
+    listNames(tone: EntityTone): string[] {
+        return [...this.byTone[tone].keys()].sort((a, b) => a.localeCompare(b));
     }
 
     snapshot(): DirectorySnapshot {
-        return {
-            classes: this.listNames('classes'),
-            interfaces: this.listNames('interfaces'),
-            enums: this.listNames('enums'),
-            types: this.listNames('types'),
-            functions: this.listNames('functions'),
-            variables: this.listNames('variables')
-        };
+        return perTone((tone) => this.listNames(tone));
     }
 
-    // Flat slug -> tone map of every top-level exported entity, the shape stored in the published
-    // index.json so the lazy engine builds cross-package URLs without loading the package.
+    // the published index.json stores this so a lazy engine builds cross-package urls without loading the package
     toneMap(): Record<string, EntityTone> {
-        const map: Record<string, EntityTone> = {};
-        for (const [entity, tone] of Object.entries(ENTITY_TONE_MAP)) {
-            for (const slug of this.maps[entity as DirectoryEntity].keys()) {
-                map[slug] = tone;
-            }
-        }
-        return map;
-    }
-
-    toRecord(): Record<DirectoryEntity, Map<string, DocNode>> {
-        return {
-            classes: this.getMap('classes'),
-            interfaces: this.getMap('interfaces'),
-            enums: this.getMap('enums'),
-            types: this.getMap('types'),
-            functions: this.getMap('functions'),
-            variables: this.getMap('variables')
-        };
-    }
-
-    private static collect(indexes: DocIndexes, kinds: number[]): Map<string, DocNode> {
-        const map = new Map<string, DocNode>();
-
-        for (const kind of kinds) {
-            const bucket = indexes.byKind.get(kind) ?? [];
-            for (const node of bucket) {
-                map.set(node.slug, node);
-            }
-        }
-
-        return map;
+        const slugs = perTone((tone) => [...this.byTone[tone].keys()].map((slug) => [slug, tone] as const));
+        return Object.fromEntries(Object.values(slugs).flat());
     }
 }

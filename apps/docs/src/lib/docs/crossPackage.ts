@@ -1,6 +1,8 @@
 import { formatDisplayPackageName } from '@seedcord/docs-engine/client';
+import { DOCS } from '@seedcord/ui/sites';
 
-const PACKAGES_PREFIX = '/packages/';
+// a PageHref, the form rendered html carries
+const PACKAGES_PREFIX = `${DOCS.path}/packages/`;
 const EXTERNAL_HREF = /^https?:\/\//i;
 
 export function isExternalHref(href: string): boolean {

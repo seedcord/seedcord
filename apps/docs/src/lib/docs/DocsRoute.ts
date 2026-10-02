@@ -36,7 +36,7 @@ export class DocsRoute {
     }
 
     get path(): string {
-        return `/${this.segments.join('/')}`;
+        return `/${this.segments.map((segment) => encodeURIComponent(segment)).join('/')}`;
     }
 
     get params(): EntityParams {
@@ -55,15 +55,16 @@ export async function docsRoutes(): Promise<DocsRoute[]> {
             routes.push(new DocsRoute(entry.id, version.id));
 
             const active = await ActiveVersion.open(engine, entry.id, version.id);
-            for (const category of active?.categories ?? []) {
-                for (const item of category.items) {
-                    // a re-export is listed under the package that declares it
-                    if (!item.href.startsWith(`${version.basePath}/`)) continue;
+            for (const page of active?.pages ?? []) {
+                // a re-export is listed under the package that declares it
+                if (!page.href.startsWith(`${version.basePath}/`)) continue;
 
-                    const entitySegments = item.href.slice(version.basePath.length + 1).split('/');
-                    routes.push(new DocsRoute(entry.id, version.id, entitySegments));
-                    if (version.isLatest) routes.push(new DocsRoute(entry.id, DEFAULT_VERSION, entitySegments));
-                }
+                const entitySegments = page.href
+                    .slice(version.basePath.length + 1)
+                    .split('/')
+                    .map((segment) => decodeURIComponent(segment));
+                routes.push(new DocsRoute(entry.id, version.id, entitySegments));
+                if (version.isLatest) routes.push(new DocsRoute(entry.id, DEFAULT_VERSION, entitySegments));
             }
         }
     }

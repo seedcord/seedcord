@@ -85,7 +85,7 @@ describe('VersionedDocsEngine', () => {
 
         expect(engine.activeVersion(MOCK_PACKAGE_FULL_NAME)).toBe('0.0.0');
         expect(engine.getNodeBySlug(MOCK_PACKAGE_FULL_NAME, 'mock-class')?.name).toBe('MockClass');
-        expect(engine.listPackageEntities(MOCK_PACKAGE_FULL_NAME)?.classes).toContain('mock-class');
+        expect(engine.listPackageEntities(MOCK_PACKAGE_FULL_NAME)?.class).toContain('mock-class');
         expect(engine.search('MockClass', MOCK_PACKAGE_FULL_NAME).length).toBeGreaterThan(0);
     });
 
@@ -186,8 +186,7 @@ describe('VersionedDocsEngine', () => {
     });
 
     it('returns an unresolved target for an external package absent from the index', async () => {
-        // discord.js has no docs page; href() must fall through to the external-URL table instead of
-        // building a 404 internal /packages/discord.js/... link.
+        // discord.js has no page on the reference site. href() reads the external-url table for it
         const engine = makeEngine(fixtureFetcher());
         await engine.setVersion(MOCK_FOLDER, 'latest');
 

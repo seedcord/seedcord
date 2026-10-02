@@ -16,7 +16,7 @@ describe('PackageDirectory', () => {
     it('produces a snapshot of top-level entities', () => {
         const snapshot = directory.snapshot();
         expect(snapshot).toEqual({
-            classes: [
+            class: [
                 'base-class',
                 'inline-constraint-base',
                 'inline-constraint-callable',
@@ -24,7 +24,7 @@ describe('PackageDirectory', () => {
                 'inline-constraint-shadow',
                 'mock-class'
             ],
-            interfaces: [
+            interface: [
                 'extended-interface',
                 'indexable-interface',
                 'mock-interface',
@@ -32,8 +32,8 @@ describe('PackageDirectory', () => {
                 'mock-recursive',
                 'promoted-shape'
             ],
-            enums: ['mock-enum'],
-            types: [
+            enum: ['mock-enum'],
+            type: [
                 'mock-conditional',
                 'mock-constrained',
                 'mock-function-type',
@@ -48,7 +48,7 @@ describe('PackageDirectory', () => {
                 'mock-tuple',
                 'mock-union'
             ],
-            functions: [
+            function: [
                 'extra-function',
                 'log-decorator',
                 'mock-function',
@@ -56,7 +56,7 @@ describe('PackageDirectory', () => {
                 'shared-only-function',
                 'uses-promoted'
             ],
-            variables: ['mock-variable']
+            variable: ['mock-variable']
         });
     });
 
@@ -81,14 +81,8 @@ describe('PackageDirectory', () => {
         expect(Object.keys(toneMap)).toHaveLength(totalEntities);
     });
 
-    it('retrieves nodes by slug within an entity', () => {
-        const node = directory.get('classes', 'mock-class');
-        expect(node?.slug).toBe('mock-class');
-        expect(node?.children.length).toBeGreaterThan(0);
-    });
-
     it('returns sorted listings for each entity', () => {
-        const functionNames = directory.listNames('functions');
+        const functionNames = directory.listNames('function');
         expect(functionNames).toEqual([
             'extra-function',
             'log-decorator',
@@ -101,8 +95,8 @@ describe('PackageDirectory', () => {
 
     it('hides @internal entities from the directory but keeps them resolvable by slug', async () => {
         const snapshot = directory.snapshot();
-        expect(snapshot.functions).not.toContain('async-mock-function');
-        expect(snapshot.interfaces).not.toContain('recursive-interface');
+        expect(snapshot.function).not.toContain('async-mock-function');
+        expect(snapshot.interface).not.toContain('recursive-interface');
 
         const asyncMockNode = await getNodeBySlug('async-mock-function');
         expect(asyncMockNode.slug).toBe('async-mock-function');
@@ -110,8 +104,25 @@ describe('PackageDirectory', () => {
         expect(recursiveInterfaceNode.slug).toBe('recursive-interface');
     });
 
+    it('gives every top-level entity a page, @internal ones included', async () => {
+        const { pages } = await getMockPackage();
+
+        expect(pages.snapshot().function).toContain('async-mock-function');
+        expect(pages.snapshot().interface).toContain('recursive-interface');
+        expect(pages.toneMap()['async-mock-function']).toBe('function');
+    });
+
+    it('lists every sidebar entity among the pages', async () => {
+        const { pages } = await getMockPackage();
+        const listed = directory.snapshot();
+
+        for (const [entity, slugs] of Object.entries(pages.snapshot())) {
+            expect(slugs).toEqual(expect.arrayContaining(listed[entity as keyof typeof listed]));
+        }
+    });
+
     it('exposes iterable entries', async () => {
-        const entries = directory.entries('classes');
+        const entries = directory.entries('class');
         expect(entries.some(([slug]) => slug === 'mock-class')).toBe(true);
         const [, node] = entries.find(([slug]) => slug === 'mock-class') ?? [];
         if (!node) {

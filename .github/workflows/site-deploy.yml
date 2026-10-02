@@ -41,6 +41,7 @@ jobs:
         env:
           APP: ${{ inputs.app }}
           NEXT_PUBLIC_SITE_URL: ${{ inputs.site_url }}
+          SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
 
       - name: Deploy
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0

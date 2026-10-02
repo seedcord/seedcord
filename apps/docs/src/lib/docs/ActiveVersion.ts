@@ -1,4 +1,4 @@
-import { buildEntityHref } from '@seedcord/docs-engine';
+import { buildEntityHref, toneToDirectory } from '@seedcord/docs-engine/client';
 import { cache } from 'react';
 
 import { getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
@@ -6,17 +6,8 @@ import { getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
 import { getDocsEngine } from './engine';
 
 import type { NavigationCategory, NavigationEntityItem } from './types';
-import type { DirectoryEntity, VersionedDocsEngine } from '@seedcord/docs-engine';
+import type { PackageDirectory, VersionedDocsEngine } from '@seedcord/docs-engine';
 import type { EntityTone } from '@seedcord/docs-engine/client';
-
-const TONE_ENTITIES = {
-    class: 'classes',
-    interface: 'interfaces',
-    function: 'functions',
-    enum: 'enums',
-    type: 'types',
-    variable: 'variables'
-} as const satisfies Record<EntityTone, DirectoryEntity>;
 
 export interface ReexportLink {
     name: string;
@@ -49,25 +40,29 @@ export class ActiveVersion {
         return new ActiveVersion(engine, entry.fullName);
     }
 
+    // what the sidebar lists
     get categories(): NavigationCategory[] {
-        const directory = this.engine.getPackageDirectory(this.fullName);
+        const directory = this.package?.directory;
         if (!directory) return [];
 
         return TONE_ORDER.flatMap((tone) => {
-            const entity = TONE_ENTITIES[tone];
-            const items = Array.from(directory.entries(entity), ([slug, node]) => ({
-                id: slug,
-                label: node.name,
-                href: buildEntityHref({
-                    name: node.sourcePackage.name,
-                    version: node.sourcePackage.version,
-                    slug,
-                    tone
-                })
-            })).sort(byLabel);
-
-            return items.length > 0 ? [{ id: entity, title: getToneTitle(tone), tone, items }] : [];
+            const items = ActiveVersion.items(directory, tone).sort(byLabel);
+            return items.length > 0 ? [{ id: toneToDirectory(tone), title: getToneTitle(tone), tone, items }] : [];
         });
+    }
+
+    // every symbol that gets its own page
+    get pages(): NavigationEntityItem[] {
+        const pages = this.package?.pages;
+        return pages ? TONE_ORDER.flatMap((tone) => ActiveVersion.items(pages, tone)) : [];
+    }
+
+    private static items(directory: PackageDirectory, tone: EntityTone): NavigationEntityItem[] {
+        return Array.from(directory.entries(tone), ([slug, node]) => ({
+            id: slug,
+            label: node.name,
+            href: buildEntityHref({ name: node.sourcePackage.name, version: node.sourcePackage.version, slug, tone })
+        }));
     }
 
     get readme(): string | null {

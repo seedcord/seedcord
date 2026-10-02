@@ -1,3 +1,5 @@
+import { DocsLinks } from './DocsLinks';
+
 const PROTOCOL = 'ref:';
 const FORM = 'Write [text](ref:<package>/<Symbol>) for a symbol, or [text](ref:<package>) for a package.';
 
@@ -30,32 +32,32 @@ function isRefJsx(node: Node): boolean {
     return JSX_NODES.has(node.type) && node.name === 'Ref';
 }
 
-function refElement(link: Node, file: Reporter): Node {
+function refHref(link: Node, links: DocsLinks, file: Reporter): string {
     const url = link.url ?? '';
-    const target = url.slice(PROTOCOL.length);
-    const slash = target.indexOf('/');
-    const named = slash !== -1;
-    const pkg = named ? target.slice(0, slash) : target;
-    const symbol = named ? target.slice(slash + 1) : '';
+    const [pkg = '', symbol = '', ...extra] = url.slice(PROTOCOL.length).split('/');
 
-    if (pkg === '' || (named && (symbol === '' || symbol.includes('/')))) {
+    if (pkg === '' || url.endsWith('/') || extra.length > 0) {
         file.fail(`${url} is missing the package or the symbol. ${FORM}`, link);
     }
-    if ((link.children ?? []).length === 0) file.fail(`${url} has no link text. ${FORM}`, link);
+    if (!links.hasPackage(pkg)) file.fail(`${url} points at a package the reference site does not list`, link);
+
+    return links.href(pkg, symbol) ?? file.fail(`${url} is not a symbol the reference site documents`, link);
+}
+
+function refElement(link: Node, links: DocsLinks, file: Reporter): Node {
+    const href = refHref(link, links, file);
+    if ((link.children ?? []).length === 0) file.fail(`${link.url ?? ''} has no link text. ${FORM}`, link);
 
     return {
         type: 'mdxJsxTextElement',
         name: 'Ref',
-        attributes: [
-            { type: 'mdxJsxAttribute', name: 'pkg', value: pkg },
-            { type: 'mdxJsxAttribute', name: 'symbol', value: symbol }
-        ],
+        attributes: [{ type: 'mdxJsxAttribute', name: 'href', value: href }],
         children: link.children ?? [],
         position: link.position
     };
 }
 
-function walk(tree: Node, file: Reporter, inHeading: boolean): void {
+function walk(tree: Node, links: DocsLinks, file: Reporter, inHeading: boolean): void {
     if (!tree.children) return;
 
     const heading = inHeading || tree.type === 'heading';
@@ -69,19 +71,19 @@ function walk(tree: Node, file: Reporter, inHeading: boolean): void {
             file.fail(`a link definition stays a plain url. ${FORM}`, child);
         }
 
-        walk(child, file, heading);
+        walk(child, links, file, heading);
 
         if (child.type !== 'link' || !hasRefTarget(child)) return child;
         if (heading) {
             file.fail('a heading takes no symbol link. Its text also renders in the table of contents.', child);
         }
 
-        return refElement(child, file);
+        return refElement(child, links, file);
     });
 }
 
 export function remarkRefLinks() {
-    return (tree: Node, file: Reporter): void => {
-        walk(tree, file, false);
+    return async (tree: Node, file: Reporter): Promise<void> => {
+        walk(tree, await DocsLinks.load(), file, false);
     };
 }

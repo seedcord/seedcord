@@ -21,12 +21,17 @@ import {
 } from '@seedcord/ui/shiki';
 
 import { opensInNewTab } from './crossPackage';
+import { toPageHref } from './pageHref';
 
 import type { FormatContext } from './types';
 import type { CodeRepresentation } from '@seedcord/ui';
 
+// every ref href here ends up in a highlighted code block's html
 function buildResolveHref(context: FormatContext): ResolveHref {
-    return (reference) => context.engine.resolver().href(context.manifestPackage, reference);
+    return (reference) => {
+        const href = context.engine.resolver().href(context.manifestPackage, reference);
+        return href === null ? null : toPageHref(href);
+    };
 }
 
 function refsToLinks(refs: readonly RefRange[], currentPackage: string): CodeLink[] {

@@ -25,7 +25,7 @@ const ARROW_STEP: Record<string, number | undefined> = { ArrowRight: 1, ArrowDow
 
 interface Shown {
     html: string;
-    reference: { pkg: string; symbol: string } | null;
+    reference: { href: string; symbol: string } | null;
     left: number;
     top: number;
     width: number;
@@ -40,11 +40,11 @@ function readToken(token: Element): Shown | null {
     const copy = type.cloneNode(true) as Element;
     for (const stop of copy.querySelectorAll('[tabindex]')) stop.removeAttribute('tabindex');
 
-    const pkg = token.getAttribute('data-ref-pkg');
+    const href = token.getAttribute('data-ref-href');
     const symbol = token.getAttribute('data-ref-symbol');
     const { left, top, width, height } = token.getBoundingClientRect();
 
-    return { html: copy.innerHTML, reference: pkg && symbol ? { pkg, symbol } : null, left, top, width, height };
+    return { html: copy.innerHTML, reference: href && symbol ? { href, symbol } : null, left, top, width, height };
 }
 
 const CONTENT = cn(
@@ -103,7 +103,7 @@ function TypeBody({ shown }: { shown: Shown }): ReactElement {
                         'px-2.5 py-1 font-sans text-[0.6875rem]'
                     )}
                 >
-                    <Ref pkg={shown.reference.pkg} symbol={shown.reference.symbol}>
+                    <Ref href={shown.reference.href}>
                         <span className={cn('inline-flex items-center gap-1')}>
                             Read {shown.reference.symbol} on the reference site
                             <ArrowUpRight size={12} aria-hidden className={cn('text-(--text-faint)')} />

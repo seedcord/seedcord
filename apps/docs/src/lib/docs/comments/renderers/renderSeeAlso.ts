@@ -1,6 +1,8 @@
 import { resolveInlineHref } from '#lib/docs/comments/resolvers';
 import { opensInNewTab } from '#lib/docs/crossPackage';
+import { toPageHref } from '#lib/docs/pageHref';
 
+import type { PageHref } from '#lib/docs/pageHref';
 import type { FormatContext, InlineTagPart, SeeAlsoEntry, SeeAlsoEntryWithoutTarget } from '#lib/docs/types';
 import type { DocComment, DocCommentBlockTag } from '@seedcord/docs-engine';
 
@@ -83,13 +85,13 @@ export function renderSeeAlso(comment: DocComment, context: FormatContext): SeeA
 
 interface PartAccumulator {
     name: string | undefined;
-    href: string | undefined;
+    href: PageHref | undefined;
     target: unknown;
 }
 
 function applyInlineTagPart(part: InlineTagPart, acc: PartAccumulator): void {
     if (!acc.name && part.text.trim().length) acc.name = part.text.trim();
-    if (part.url?.trim().length) acc.href = part.url.trim();
+    if (part.url?.trim().length) acc.href = toPageHref(part.url.trim());
     if (part.target) acc.target = part.target;
 }
 

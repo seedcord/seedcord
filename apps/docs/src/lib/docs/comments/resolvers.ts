@@ -1,3 +1,6 @@
+import { toPageHref } from '#lib/docs/pageHref';
+
+import type { PageHref } from '#lib/docs/pageHref';
 import type { InlineTagPart, FormatContext } from '#lib/docs/types';
 import type { VersionedDocsEngine, DocNode, DocReference } from '@seedcord/docs-engine';
 
@@ -27,19 +30,16 @@ function resolveNodeById(engine: VersionedDocsEngine, id: number, currentPackage
     return null;
 }
 
-export function resolveInlineHref(part: InlineTagPart, context: FormatContext): string | null {
+export function resolveInlineHref(part: InlineTagPart, context: FormatContext): PageHref | null {
+    const nodeHref = (node: DocNode): string | null =>
+        context.engine
+            .resolver()
+            .href(context.manifestPackage, { targetKey: node.key, name: node.name, packageName: node.packageName });
+
     const tryResolveNumberTarget = (): string | null => {
         if (typeof part.target !== 'number') return null;
         const node = resolveNodeById(context.engine, part.target, context.manifestPackage);
-        if (!node) return null;
-
-        const reference: DocReference = {
-            targetKey: node.key,
-            name: node.name,
-            packageName: node.packageName
-        };
-
-        return context.engine.resolver().href(context.manifestPackage, reference);
+        return node ? nodeHref(node) : null;
     };
 
     const tryResolveStringTarget = (): string | null => {
@@ -85,23 +85,14 @@ export function resolveInlineHref(part: InlineTagPart, context: FormatContext): 
         const node =
             context.engine.getNodeByGlobalSlug(candidate.packageName, candidate.slug) ??
             context.engine.getNodeBySlug(candidate.packageName, candidate.slug);
-        if (!node) return null;
-
-        const reference: DocReference = {
-            targetKey: node.key,
-            name: node.name,
-            packageName: node.packageName
-        };
-
-        return context.engine.resolver().href(context.manifestPackage, reference);
+        return node ? nodeHref(node) : null;
     };
 
-    return (
+    const href =
         tryResolveNumberTarget() ??
         tryResolveStringTarget() ??
         tryResolveUrlProp() ??
         tryResolveObjectTarget() ??
-        tryResolveBySearch() ??
-        null
-    );
+        tryResolveBySearch();
+    return href === null ? null : toPageHref(href);
 }

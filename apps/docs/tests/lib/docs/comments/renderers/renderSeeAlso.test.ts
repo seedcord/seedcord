@@ -110,16 +110,16 @@ describe('renderSeeAlso', () => {
     });
 
     it('flags an external href as external (new tab) and leaves a same-package href un-flagged', () => {
-        resolveInlineHrefMock.mockReturnValueOnce('/packages/utils/latest/functions/clamp');
+        resolveInlineHrefMock.mockReturnValueOnce('/docs/packages/utils/latest/functions/clamp');
         const crossPkg = makeComment([makeSeeTag('clamp')]);
         expect(renderSeeAlso(crossPkg, makeContext())).toEqual([
-            { name: 'clamp', href: '/packages/utils/latest/functions/clamp', external: true }
+            { name: 'clamp', href: '/docs/packages/utils/latest/functions/clamp', external: true }
         ]);
 
-        resolveInlineHrefMock.mockReturnValueOnce('/packages/seedcord/latest/classes/Seedcord');
+        resolveInlineHrefMock.mockReturnValueOnce('/docs/packages/seedcord/latest/classes/Seedcord');
         const samePkg = makeComment([makeSeeTag('Seedcord')]);
         expect(renderSeeAlso(samePkg, makeContext())).toEqual([
-            { name: 'Seedcord', href: '/packages/seedcord/latest/classes/Seedcord' }
+            { name: 'Seedcord', href: '/docs/packages/seedcord/latest/classes/Seedcord' }
         ]);
     });
 
@@ -137,8 +137,7 @@ describe('renderSeeAlso', () => {
     });
 
     it('resolves a @see by name (search fallback) when it has neither href nor target', () => {
-        // API Extractor leaves many in-repo `@see {@link X}` destinations unresolved, so the renderer
-        // must still attempt resolution by the entry name rather than only when a target is present.
+        // api extractor leaves many in-repo `@see {@link X}` destinations unresolved
         resolveInlineHrefMock.mockReturnValueOnce('/packages/seedcord/0.10.6/types/command-route-string');
         const comment = makeComment([makeSeeTag('CommandRouteString')]);
         expect(renderSeeAlso(comment, makeContext())).toEqual([

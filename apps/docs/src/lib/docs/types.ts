@@ -1,3 +1,4 @@
+import type { PageHref } from '#lib/docs/pageHref';
 import type { MemberAccessLevel } from '#lib/memberAccess';
 import type {
     DirectoryEntity,
@@ -39,7 +40,7 @@ export interface CommentExample {
 
 export interface SeeAlsoEntry {
     name: string;
-    href?: string;
+    href?: PageHref;
     // true for a link outside the current package, whether a different package's page or an external url
     external?: boolean;
     target?: unknown;
@@ -235,7 +236,7 @@ export interface EntityMemberSummary
     sharedDocumentation: CommentParagraph[];
     sharedExamples: CommentExample[];
     signatures: MemberSignatureDetail[];
-    inheritedFrom?: string | { name: string; href?: string; external?: boolean };
+    inheritedFrom?: string | { name: string; href?: PageHref; external?: boolean };
     tags?: readonly string[];
     access?: MemberAccessLevel;
     accessorType?: MemberAccessorType;

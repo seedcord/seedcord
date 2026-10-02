@@ -3,7 +3,6 @@ import { parseCodeBlockAttributes } from 'fumadocs-core/mdx-plugins/codeblock-ut
 import { CALLOUT_LABELS, TRANSPORT_LABELS } from '#lib/callout';
 import { cleanFence } from '#lib/fence';
 import { getServerManager, VERBS } from '#lib/packageManager';
-import { refHref } from '#lib/refHref';
 import { FENCE_MODES } from '#lib/rehypeFenceMeta';
 
 import type { CalloutType, Transport } from '#lib/callout';
@@ -76,11 +75,8 @@ export const TWIN_OPTIONS: LLMsOptions = {
         if (!isJsx(node)) return undefined;
 
         switch (node.name) {
-            case 'Ref': {
-                const pkg = attribute(node, 'pkg') ?? '';
-                const symbol = attribute(node, 'symbol') ?? '';
-                return `[${state.containerPhrasing(node, info)}](${refHref(pkg, symbol)})`;
-            }
+            case 'Ref':
+                return `[${state.containerPhrasing(node, info)}](${attribute(node, 'href') ?? ''})`;
             case 'Callout': {
                 const body =
                     node.type === 'mdxJsxFlowElement'

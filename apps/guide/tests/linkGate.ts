@@ -128,7 +128,7 @@ function pageProblem(site: GuideSite, route: string, url: string): string | null
     return null;
 }
 
-// refHref splits the symbol the same way
+// remarkRefLinks splits the symbol the same way
 function refProblem(site: GuideSite, url: string): string | null {
     const [pkg = '', symbol = ''] = url.slice('ref:'.length).split('/');
     const symbols = site.symbolsByPackage.get(pkg);

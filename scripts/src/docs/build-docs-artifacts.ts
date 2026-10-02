@@ -89,7 +89,7 @@ async function main(): Promise<void> {
             folder,
             fullName,
             versions: [version],
-            entities: pkg.directory.toneMap(),
+            entities: pkg.pages.toneMap(),
             ...(pkg.manifest.description && { description: pkg.manifest.description }),
             ...(workspace && { workspace })
         });

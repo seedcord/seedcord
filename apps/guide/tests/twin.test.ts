@@ -8,19 +8,19 @@ describe('what an agent reads instead of the page', () => {
     });
 
     it('turns a symbol link into a link to the reference site', async () => {
-        const twin = await twinOf('Read <Ref pkg="core" symbol="Commands">`Commands`</Ref> first.\n');
+        const twin = await twinOf('Read [`Notice`](ref:core/Notice) first.\n');
 
-        expect(twin).toContain('[`Commands`](https://seedcord.org/docs/packages/core/latest/commands)');
+        expect(twin).toContain('[`Notice`](https://seedcord.org/docs/packages/core/latest/classes/notice)');
     });
 
     it('anchors a member on its owner page', async () => {
-        const twin = await twinOf('<Ref pkg="core" symbol="Paginator.start">`start`</Ref>\n');
+        const twin = await twinOf('call [`start`](ref:core/PaginatorBase.start) first\n');
 
-        expect(twin).toContain('/packages/core/latest/paginator#start)');
+        expect(twin).toContain('/packages/core/latest/classes/paginator-base#start)');
     });
 
-    it('names the package alone when a ref carries no symbol', async () => {
-        const twin = await twinOf('<Ref pkg="core" symbol="">core</Ref>\n');
+    it('links the package overview when a ref carries no symbol', async () => {
+        const twin = await twinOf('install [core](ref:core) first\n');
 
         expect(twin).toContain('[core](https://seedcord.org/docs/packages/core/latest)');
     });

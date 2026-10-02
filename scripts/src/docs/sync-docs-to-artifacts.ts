@@ -95,7 +95,7 @@ async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promis
         fullName: pkg.name,
         version: pkg.version,
         channel: isPrerelease(pkg.version) ? 'prerelease' : 'stable',
-        entities: found.directory.toneMap(),
+        entities: found.pages.toneMap(),
         description: found.manifest.description,
         workspace: workspaceOf(found.manifest.sources)
     };
