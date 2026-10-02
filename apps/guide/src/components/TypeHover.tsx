@@ -49,7 +49,7 @@ function readToken(token: Element): Shown | null {
 
 const CONTENT = cn(
     tw`type-hover-scroll max-h-[min(20rem,50vh)] max-w-[min(36rem,calc(100vw-2rem))] overflow-auto overscroll-none p-0 shadow-none`,
-    tw`font-mono text-xs/relaxed whitespace-pre`
+    tw`font-mono text-xs/relaxed whitespace-pre-wrap`
 );
 
 // radix cannot anchor to a token that wasn't rendered
@@ -95,11 +95,11 @@ function TypePopup({ shown, keyboard, hold, release }: TypePopupProps): ReactEle
 function TypeBody({ shown }: { shown: Shown }): ReactElement {
     return (
         <>
-            <div className={cn('w-max min-w-full px-2.5 py-1.5')} dangerouslySetInnerHTML={{ __html: shown.html }} />
+            <div className={cn('px-2.5 py-1.5')} dangerouslySetInnerHTML={{ __html: shown.html }} />
             {shown.reference ? (
                 <div
                     className={cn(
-                        'sticky bottom-0 left-0 border-t border-(--border) bg-(--bg-popover)',
+                        'sticky bottom-0 border-t border-(--border) bg-(--bg-popover)',
                         'px-2.5 py-1 font-sans text-[0.6875rem]'
                     )}
                 >

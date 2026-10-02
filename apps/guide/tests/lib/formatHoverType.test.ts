@@ -39,6 +39,18 @@ describe('formatting a hover type', () => {
         expect(formatted).not.toContain('type T =');
     });
 
+    it('breaks a method across its parameters and keeps the receiver in front', async () => {
+        const method =
+            'ContainerBuilder.addTextDisplayComponents(...components: RestOrArray<APITextDisplayComponent | TextDisplayBuilder | ((builder: TextDisplayBuilder) => TextDisplayBuilder)>): this';
+
+        const formatted = await formatHoverType(method);
+
+        expect(formatted.startsWith('ContainerBuilder.addTextDisplayComponents(')).toBe(true);
+        expect(formatted.split('\n').length).toBeGreaterThan(1);
+        expect(formatted.endsWith('): this')).toBe(true);
+        expect(formatted).not.toContain('declare ');
+    });
+
     it.each([
         'const detailed: boolean | null',
         'class Ping',
