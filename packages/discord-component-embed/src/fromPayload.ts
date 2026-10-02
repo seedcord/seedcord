@@ -106,7 +106,7 @@ function atJsonPath(element: EmbedElement, path: Path): EmbedElement {
 function buildElement(node: unknown, path: Path, walk: Walk): EmbedElement {
     if (!isObject(node)) throw notAComponent(node, path);
     if (!isAllowedType(node.type)) throw typeNotAllowed(node, path);
-    if (node.type !== TYPE.Button) checkId(node.id, path, walk.ids);
+    checkId(node.id, path, walk.ids);
 
     switch (node.type) {
         case TYPE.Container: {
@@ -197,8 +197,8 @@ function toLinkButton(node: JsonObject, path: Path): EmbedElement {
             { path }
         );
     }
-    // discord's docs list these six. any other key, id included, makes discord fall back to the Open Graph card
-    checkKeys(node, 'A button', ['type', 'style', 'url', 'label', 'emoji', 'disabled'], path);
+    // any other key makes discord fall back to the Open Graph card
+    checkKeys(node, 'A button', ['type', 'id', 'style', 'url', 'label', 'emoji', 'disabled'], path);
     if (node.emoji !== undefined) {
         if (!isObject(node.emoji)) {
             throw new ComponentEmbedError(

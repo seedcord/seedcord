@@ -107,13 +107,6 @@ describe('fromPayload keys', () => {
             'A text display doesn\'t take "x". It takes type, id, and content.'
         ],
         [
-            // discord falls back to the Open Graph card for any key past the six its docs list
-            'an id on a button',
-            inPayload({ type: 1, components: [{ type: 2, style: 5, url: 'https://example.com', label: 'go', id: 3 }] }),
-            ['component', 'components', '0', 'components', '0'],
-            'A button doesn\'t take "id". It takes type, style, url, label, emoji, and disabled.'
-        ],
-        [
             // discord's crawler rendered the button and dropped the unknown key
             'a mistyped key on a button emoji',
             inPayload({
@@ -183,6 +176,42 @@ describe('fromPayload ids', () => {
         expect(error.path).toEqual(['component', 'components', '0']);
         expect(error.message.split('\nFound at')[0]).toBe(
             'Another component already has the id 7. No two components in an embed can share one.'
+        );
+    });
+
+    const withButtonId = (containerId: unknown, buttonId: unknown): unknown => ({
+        component: {
+            type: 17,
+            id: containerId,
+            components: [{ type: 1, components: [{ type: 2, style: 5, url: IMAGE, label: 'go', id: buttonId }] }]
+        }
+    });
+    const BUTTON_PATH = ['component', 'components', '0', 'components', '0'];
+
+    it('accepts an id on a button and leaves it out of the payload', () => {
+        expect(toComponentEmbed(fromJson(withButtonId(1, 2)))).toEqual({
+            component: {
+                type: 17,
+                components: [{ type: 1, components: [{ type: 2, style: 5, url: IMAGE, label: 'go' }] }]
+            }
+        });
+    });
+
+    it('rejects a button id outside the range', () => {
+        const error = thrownBy(() => fromJson(withButtonId(1, -1)));
+
+        expect(error.path).toEqual(BUTTON_PATH);
+        expect(error.message.split('\nFound at')[0]).toBe(
+            'An id has to be a whole number from 0 to 2147483647, got -1.'
+        );
+    });
+
+    it('rejects a button id another component already uses', () => {
+        const error = thrownBy(() => fromJson(withButtonId(5, 5)));
+
+        expect(error.path).toEqual(BUTTON_PATH);
+        expect(error.message.split('\nFound at')[0]).toBe(
+            'Another component already has the id 5. No two components in an embed can share one.'
         );
     });
 });

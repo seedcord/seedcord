@@ -64,7 +64,10 @@ export function withSlowPages(
 }
 
 export function scriptBody(html: string): string {
-    const match = /^<script id="discord:component-embed" type="application\/json">(.*)<\/script>$/s.exec(html);
+    const match =
+        /^<script id="discord:component-embed" type="application\/vnd\.discord\.component-embed\+json">(.*)<\/script>$/s.exec(
+            html
+        );
     if (!match?.[1]) throw new Error(`not a component embed script: ${html}`);
     return match[1];
 }

@@ -1,6 +1,6 @@
 import { createElement } from 'react';
 
-import { SCRIPT_ID } from './scriptId';
+import { EMBED_TYPE, SCRIPT_ID } from './scriptId';
 import { toComponentEmbedJson } from './toComponentEmbedJson';
 
 import type { ReactElement } from 'react';
@@ -36,7 +36,7 @@ export function ComponentEmbed({ children }: ComponentEmbedProps): ReactElement 
     // no JSX in this file. react 17 has no exports map for react/jsx-runtime
     return createElement('script', {
         id: SCRIPT_ID,
-        type: 'application/json',
+        type: EMBED_TYPE,
         // react 18 and older HTML-escape a script's text children
         dangerouslySetInnerHTML: { __html: toComponentEmbedJson(children) }
     });

@@ -7,6 +7,8 @@ import { card, HTML, page, serving, withFiles, withPages, withSlowPages } from '
 import type { CheckInput } from '#src/check';
 
 const IMAGE = 'https://example.com/a.png';
+const VND = 'application/vnd.discord.component-embed+json';
+const TYPES = `type="${VND}" or type="application/json"`;
 
 describe('checkTarget on a file', () => {
     it('passes a valid card and reports its size', async () => {
@@ -195,15 +197,23 @@ describe('checkTarget on a url', () => {
 
         expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toEqual({
             status: 'fail',
-            problems: [`The <script id="discord:component-embed"> has to have type="application/json", got ${got}.`]
+            problems: [`The <script id="discord:component-embed"> has to have ${TYPES}, got ${got}.`]
         });
     });
 
-    it('checks a URL that serves JSON as that JSON', async () => {
+    it.each([
+        ['an inline script', `<script id="discord:component-embed" type="${VND}">${good}</script>`],
+        ['a <link>', `<link rel="discord:component-embed" type="${VND}" href="https://example.com/post.json">`]
+    ])('checks %s typed as the discord component embed type', async (_label, head) => {
+        const pages = { [PAGE]: page(head), 'https://example.com/post.json': good };
+
+        expect(await checkTarget(PAGE, withPages(pages))).toMatchObject({ status: 'pass' });
+    });
+
+    it.each(['application/json; charset=utf-8', VND])('checks a URL serving %s as the payload', async (type) => {
         const input: CheckInput = {
             ...withPages({}),
-            fetch: () =>
-                Promise.resolve(new Response(good, { headers: { 'content-type': 'application/json; charset=utf-8' } }))
+            fetch: () => Promise.resolve(new Response(good, { headers: { 'content-type': type } }))
         };
 
         expect(await checkTarget('https://example.com/post.json', input)).toMatchObject({
@@ -371,9 +381,7 @@ describe("checkTarget reading a page's HTML", () => {
 
         expect(await checkTarget(PAGE, withPages({ [PAGE]: html }))).toEqual({
             status: 'fail',
-            problems: [
-                'The <script id="discord:component-embed"> has to have type="application/json", got "text/plain".'
-            ]
+            problems: [`The <script id="discord:component-embed"> has to have ${TYPES}, got "text/plain".`]
         });
     });
 
@@ -398,14 +406,14 @@ describe("checkTarget reading a page's HTML", () => {
     });
 
     // on discord's crawler a <link> with no type never had its JSON fetched
-    it('fails a <link> with no type="application/json"', async () => {
+    it('fails a <link> with no type', async () => {
         const html = page(`<link rel="discord:component-embed" href="https://embeds.example.com/post.json">`);
 
         expect(
             await checkTarget(PAGE, withPages({ [PAGE]: html, 'https://embeds.example.com/post.json': good }))
         ).toEqual({
             status: 'fail',
-            problems: ['The <link rel="discord:component-embed"> has to have type="application/json", got nothing.']
+            problems: [`The <link rel="discord:component-embed"> has to have ${TYPES}, got nothing.`]
         });
     });
 

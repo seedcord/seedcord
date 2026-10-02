@@ -201,7 +201,7 @@ useHead({
     script: [
         {
             id: 'discord:component-embed',
-            type: 'application/json',
+            type: 'application/vnd.discord.component-embed+json',
             innerHTML: toComponentEmbedJson(buildPostCard(post))
         }
     ]
@@ -278,7 +278,11 @@ Build the card with `h()`, since Solid's Vite plugin compiles every `.tsx` file 
 import { toComponentEmbedJson } from 'discord-component-embed';
 import { buildPostCard } from '~/cards/buildPostCard';
 
-<script id="discord:component-embed" type="application/json" innerHTML={toComponentEmbedJson(buildPostCard(post))} />;
+<script
+    id="discord:component-embed"
+    type="application/vnd.discord.component-embed+json"
+    innerHTML={toComponentEmbedJson(buildPostCard(post))}
+/>;
 ```
 
 Solid writes `innerHTML` into the page as it is. That's safe here, because `toComponentEmbedJson` escapes any `</` and `<!--` in the JSON.
@@ -351,7 +355,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
 Point the page at that URL with a `<link>` tag. The `href` has to be an absolute `http` or `https` URL on the page's host, a subdomain of it, or its parent domain.
 
 ```html
-<link rel="discord:component-embed" type="application/json" href="https://example.com/embeds/blog/hello-world" />
+<link
+    rel="discord:component-embed"
+    type="application/vnd.discord.component-embed+json"
+    href="https://example.com/embeds/blog/hello-world"
+/>
 ```
 
 <div align="right"><a href="#contents">back to top</a></div>
@@ -409,7 +417,7 @@ npx discord-component-embed check embed.json https://materwelon.dev
 1 passed, 1 failed
 ```
 
-For a URL, the command fetches the page with Discord's crawler user agent. It checks the `<script>` JSON as the page serves it, or follows the `<link>` to its JSON. Both tags need `type="application/json"`, since Discord skips either one without it. The 3000-byte limit counts that text as sent, whitespace and escapes included. A URL that answers with `application/json` gets checked as the payload itself, which is how you check a linked JSON on its own.
+For a URL, the command fetches the page with Discord's crawler user agent. It checks the `<script>` JSON as the page serves it, or follows the `<link>` to its JSON. Discord skips either tag unless its `type` is `application/vnd.discord.component-embed+json` or `application/json`. The 3000-byte limit counts that text as sent, whitespace and escapes included. A URL that answers with either of those types gets checked as the payload itself, which is how you check a linked JSON on its own.
 
 Discord shows a preview only for a page served as `text/html` or `application/xhtml+xml`.
 

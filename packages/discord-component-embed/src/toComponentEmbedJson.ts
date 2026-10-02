@@ -13,7 +13,7 @@ import type { EmbedElement } from './element';
  * @example
  * ```tsx
  * // a SolidStart route. the script needs the id discord:component-embed
- * <script id="discord:component-embed" type="application/json" innerHTML={toComponentEmbedJson(buildPostCard(post))} />
+ * <script id="discord:component-embed" type="application/vnd.discord.component-embed+json" innerHTML={toComponentEmbedJson(buildPostCard(post))} />
  * ```
  */
 export function toComponentEmbedJson(root: EmbedElement): string {

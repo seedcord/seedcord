@@ -1,7 +1,7 @@
 import { describeValue, joinList, messageOf } from './checks';
 import { collectPayloadErrors } from './fromPayload';
 import { embedStats, MAX_JSON_BYTES } from './limits';
-import { SCRIPT_ID } from './scriptId';
+import { EMBED_TYPES, SCRIPT_ID } from './scriptId';
 import { scriptSafeJson } from './scriptSafeJson';
 
 import type { ComponentEmbedPayload } from './toComponentEmbed';
@@ -57,7 +57,7 @@ async function load(target: string, deadline: number, input: CheckInput): Promis
         if (!url) return { status: 'unreadable', reason: `${target} isn't a valid URL.` };
         const page = await fetchText(url, PAGE_USER_AGENT, deadline, input);
         if (!('text' in page)) return page;
-        if (mediaType(page.contentType) === 'application/json') return { text: page.text, inScript: false };
+        if (EMBED_TYPES.includes(mediaType(page.contentType))) return { text: page.text, inScript: false };
         const notAPage = servedProblem(page);
         if (notAPage) return notAPage;
         // discord's crawler held the <link> to the pasted URL's host, even after a redirect to another host
@@ -113,14 +113,14 @@ async function embedIn(html: string, rule: LinkRule, deadline: number, input: Ch
     return { status: 'fail', problems: [json.reason] };
 }
 
-// the docs require this exact type. discord's crawler ignored a <link> without it
 function typeProblem(tag: Tag, label: string): CheckResult | undefined {
     const type = tag.attributes.get('type');
-    if (type === 'application/json') return undefined;
-    return {
-        status: 'fail',
-        problems: [`The ${label} has to have type="application/json", got ${describeValue(type)}.`]
-    };
+    if (type !== undefined && EMBED_TYPES.includes(type)) return undefined;
+    const allowed = joinList(
+        EMBED_TYPES.map((embedType) => `type="${embedType}"`),
+        'or'
+    );
+    return { status: 'fail', problems: [`The ${label} has to have ${allowed}, got ${describeValue(type)}.`] };
 }
 
 function mediaType(contentType: string): string {
