@@ -5,7 +5,6 @@ import type { Skill } from '../skills';
 const DESCRIPTION =
     'Build a Discord bot with seedcord, a TypeScript framework for gateway and http bots, typed end to end. Covers picking a transport, declaring slash commands with generated option types, replying, gates, components, and the CLI.';
 
-// three sites serve this body
 const BODY = `---
 name: seedcord
 description: ${DESCRIPTION}

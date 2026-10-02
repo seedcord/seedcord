@@ -1,4 +1,6 @@
-import { SITE_URL } from '#lib/site';
+import { DOCS, GUIDE } from '@seedcord/ui';
+
+import { canonicalUrl } from '#lib/site';
 
 // not MetadataRoute so it can carry the non-standard Content-Signal directive
 export const dynamic = 'force-static';
@@ -12,8 +14,11 @@ const BODY = `# Content Signals Policy (https://contentsignals.org)
 User-agent: *
 Content-Signal: search=yes, ai-train=yes, ai-input=yes
 Allow: /
+Disallow: ${DOCS.path}/dev
 
-Sitemap: ${new URL('/sitemap.xml', SITE_URL).toString()}
+Sitemap: ${canonicalUrl('/sitemap.xml')}
+Sitemap: ${GUIDE.at('sitemap.xml')}
+Sitemap: ${DOCS.at('sitemap.xml')}
 `;
 
 export function GET(): Response {

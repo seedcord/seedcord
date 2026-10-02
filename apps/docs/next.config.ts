@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 // next loads this file under the require condition. ./agents exports a bare default to match
-import { agentLinkHeader, canonicalSkillHeader } from '@seedcord/ui/agents';
+import { agentLinkHeader } from '@seedcord/ui/agents';
 
 import type { NextConfig } from 'next';
 
@@ -35,12 +35,8 @@ const nextConfig: NextConfig = {
     headers() {
         return [
             {
-                source: '/((?!_next/|og/|llms/|\\.well-known/|llms.txt|sitemap.xml|robots.txt).*(?<!\\.md|\\.png))',
+                source: '/((?!_next/|og/|llms/|llms.txt|sitemap.xml).*(?<!\\.md|\\.png))',
                 headers: [{ key: 'Link', value: agentLinkHeader('docs') }]
-            },
-            {
-                source: '/.well-known/:spec(skills|agent-skills)/:name/SKILL.md',
-                headers: [{ key: 'Link', value: canonicalSkillHeader() }]
             }
         ];
     },

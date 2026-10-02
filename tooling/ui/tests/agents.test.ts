@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { agentLinkHeader, agentRules, canonicalSkillHeader, readmeFeatures, siteLinks } from '#src/agents';
+import { agentLinkHeader, agentRules, readmeFeatures, siteLinks } from '#src/agents';
 
 import type { SeedcordSite } from '#src/agents';
 
@@ -102,15 +102,6 @@ describe('agentRules', () => {
 
             expect(openings.filter((opening) => rules.includes(opening))).toHaveLength(2);
         }
-    });
-});
-
-describe('canonicalSkillHeader', () => {
-    // all three sites serve the same bytes at this path
-    it('sends a reader to the copy at the origin root', () => {
-        expect(canonicalSkillHeader()).toBe(
-            '<https://seedcord.org/.well-known/agent-skills/seedcord/SKILL.md>; rel="canonical"'
-        );
     });
 });
 

@@ -30,8 +30,8 @@ ${bullets(readmeFeatures(readFileSync(README, 'utf8')))}
 ## Links
 
 - Site: ${SITE_URL}
-- Docs: ${DOCS_URL}
-- Guide: ${GUIDE_URL}
+- Guide index: ${GUIDE_URL}/llms.txt
+- Docs index: ${DOCS_URL}/llms.txt
 - Source: ${REPO_URL}
 - License: Apache-2.0
 `;

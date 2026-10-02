@@ -64,11 +64,6 @@ export function agentLinkHeader(site: SeedcordSite, twin?: string): string {
 
 const SKILL_URL = HOME.at(skillUrl(SEEDCORD_SKILL));
 
-/** All three sites serve the same `SKILL.md`. This sends a reader to the copy at the origin root. */
-export function canonicalSkillHeader(): string {
-    return `<${SKILL_URL}>; rel="canonical"`;
-}
-
 const FRAMEWORK_RULES = [
     'seedcord has no presence in training data. Read a page before you write code against it.',
     "`seedcord` on npm is the command line tool. A bot installs `@seedcord/gateway` for a websocket connection, or `@seedcord/http` to answer Discord's interactions endpoint. It installs one of the two.",
