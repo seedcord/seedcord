@@ -2,6 +2,7 @@ import { buildPackageBasePath, DEFAULT_VERSION } from '@seedcord/docs-engine/cli
 import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 import { BRAND } from '@seedcord/ui/palette';
 
+import { CARD, TWIN } from '#lib/docs/PageAsset';
 import { plainSummary } from '#lib/docs/plainSummary';
 import { ENTITY_TONE_HEX } from '#lib/entityColors';
 import { canonicalUrl, OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, SITE_DESCRIPTION, SITE_NAME } from '#lib/site';
@@ -10,7 +11,6 @@ import type { EntityModel, PackageCatalogEntry, PackageVersionCatalog } from '#l
 import type { OgPageCardProps } from '@seedcord/ui/OgCard';
 import type { Metadata } from 'next';
 
-/** What the og route draws. The page head reads the same object for its description and alt text. */
 export type DocsCard = Omit<OgPageCardProps, 'domain'>;
 
 export function rootCard(): DocsCard {
@@ -86,20 +86,21 @@ export class DocsPage {
             path: '/',
             title: `${SITE_NAME} API reference`,
             card: rootCard(),
-            image: '/og',
+            image: CARD.assetPath('/'),
             canonicalPath: '/'
         });
     }
 
     static forPackage(entry: PackageCatalogEntry, version: PackageVersionCatalog): DocsPage {
         const path = buildPackageBasePath(entry.manifestName, version.id);
+        const latestPath = buildPackageBasePath(entry.manifestName, DEFAULT_VERSION);
         return new DocsPage({
             path,
             title: titleFor(`${entry.manifestName} ${version.label}`, entry.manifestName),
             card: packageCard(entry, version),
-            image: `${path}.png`,
-            markdownPath: `${path}.md`,
-            canonicalPath: buildPackageBasePath(entry.manifestName, DEFAULT_VERSION)
+            image: CARD.assetPath(latestPath),
+            markdownPath: TWIN.assetPath(path),
+            canonicalPath: latestPath
         });
     }
 
@@ -113,8 +114,9 @@ export class DocsPage {
             path,
             title: titleFor(`${entity.name} · ${entity.manifestPackage}`, entity.manifestPackage),
             card: entityCard(entity, version),
-            image: `${path}.png`,
-            markdownPath: `${path}.md`,
+            // only latest pages get a card
+            image: CARD.assetPath(canonicalPath ?? buildPackageBasePath(entity.manifestPackage, DEFAULT_VERSION)),
+            markdownPath: TWIN.assetPath(path),
             isArticle: true,
             canonicalPath
         });

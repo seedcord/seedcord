@@ -15,7 +15,6 @@ import { buildSummaryNodes } from './utils/buildSummaryNodes';
 import { useActiveSignatureList } from './utils/useActiveSignatureList';
 
 import type {
-    CodeRepresentation,
     CommentExample,
     CommentParagraph,
     FunctionSignatureModel,
@@ -23,6 +22,7 @@ import type {
     WithSeeAlso,
     WithThrows
 } from '#lib/docs/types';
+import type { CodeRepresentation } from '@seedcord/ui';
 import type { EntityToneStyle } from '#lib/tonePresentation';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { ReactElement } from 'react';

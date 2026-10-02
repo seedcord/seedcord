@@ -2,8 +2,8 @@ import { findEntityNode, resolveEntityTone } from '@seedcord/docs-engine';
 
 import { buildEntityModel } from './builders/buildEntityModel';
 
-import type { VersionedDocsEngine } from './engine';
 import type { EntityModel } from './types';
+import type { VersionedDocsEngine } from '@seedcord/docs-engine';
 
 interface EntityLookup {
     slug?: string;

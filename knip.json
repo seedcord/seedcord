@@ -21,7 +21,7 @@
             "project": ["**/*.ts"]
         },
         "apps/docs": {
-            "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
+            "entry": ["src/app/**/{page,layout,route,not-found,sitemap}{,.dev}.{ts,tsx}"],
             "project": ["src/**/*.{ts,tsx,css}"]
         },
         "apps/guide": {

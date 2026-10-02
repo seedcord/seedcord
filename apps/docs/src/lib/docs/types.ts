@@ -1,18 +1,16 @@
-import type { VersionedDocsEngine } from './engine';
 import type { MemberAccessLevel } from '#lib/memberAccess';
 import type {
     DirectoryEntity,
     DocComment,
     DocNode,
     DocSignatureParameter,
-    RenderedSignature
+    RenderedSignature,
+    VersionedDocsEngine
 } from '@seedcord/docs-engine';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { RenameKey } from '@seedcord/types';
 import type { CodeRepresentation } from '@seedcord/ui';
 import type { Except } from 'type-fest';
-
-export type { CodeRepresentation };
 
 export interface FormatContext {
     engine: VersionedDocsEngine;

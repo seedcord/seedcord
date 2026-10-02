@@ -7,7 +7,7 @@ import { opensInNewTab } from '#lib/docs/crossPackage';
 import { sanitizeHtml } from '#lib/sanitizeHtml';
 import { highlightSignatureToHtml, type CodeLink } from '@seedcord/ui/shiki';
 
-import type { CodeRepresentation } from '#lib/docs/types';
+import type { CodeRepresentation } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
 const CURRENT_PACKAGE = 'seedcord';

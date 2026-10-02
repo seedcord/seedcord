@@ -449,9 +449,6 @@ importers:
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config
-      '@seedcord/rate-limiter':
-        specifier: workspace:^
-        version: link:../../packages/rate-limiter
       '@seedcord/types':
         specifier: workspace:^
         version: link:../../packages/types

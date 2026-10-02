@@ -16,7 +16,6 @@ interface DevLayoutProps {
 }
 
 function DevLayout({ children }: DevLayoutProps): ReactNode {
-    // dev-only, this 404s in production builds so the route doesn't ship
     if (!Envapter.isDevelopment) notFound();
 
     return (

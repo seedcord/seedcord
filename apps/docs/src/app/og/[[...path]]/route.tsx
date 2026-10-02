@@ -3,8 +3,10 @@ import { OgPageCard } from '@seedcord/ui/OgCard';
 import { OG_SIZE } from '@seedcord/ui/og';
 import { ImageResponse } from 'next/og';
 
-import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from '#lib/docs/catalog';
+import { findPackageVersion } from '#lib/docs/catalog';
 import { entityCard, notFoundCard, packageCard, rootCard } from '#lib/docs/DocsPage';
+import { DocsRoute, docsRoutes } from '#lib/docs/DocsRoute';
+import { CARD } from '#lib/docs/PageAsset';
 import { resolveEntity } from '#lib/docs/resolveEntity';
 import { OG_FONTS } from '#lib/og/fonts';
 
@@ -26,24 +28,29 @@ function missing(): ImageResponse {
     });
 }
 
+export async function generateStaticParams(): Promise<{ path: string[] }[]> {
+    return (await docsRoutes()).reduce(
+        (params, route) => {
+            if (route.isLatest) params.push({ path: CARD.assetSegments(route.segments) });
+            return params;
+        },
+        [{ path: CARD.assetSegments([]) }]
+    );
+}
+
 export async function GET(_req: Request, { params }: { params: Promise<{ path?: string[] }> }): Promise<Response> {
     const { path = [] } = await params;
+    const segments = CARD.pageSegments(path);
+    if (segments?.length === 0) return render(rootCard());
 
-    if (path.length === 0) return render(rootCard());
+    const route = segments && DocsRoute.parse(segments);
+    if (!route) return missing();
 
-    const [root, packageId, versionId, ...entitySegments] = path;
-    if (root !== 'packages' || !packageId || !versionId) return missing();
-
-    if (entitySegments.length === 0) {
-        const catalog = await loadDocsCatalog();
-        const entry = findCatalogEntry(catalog, packageId);
-        const version = entry ? findCatalogVersion(entry, versionId) : undefined;
-        if (!entry || !version) return missing();
-        return render(packageCard(entry, version));
+    if (route.isOverview) {
+        const context = await findPackageVersion(route.packageId, route.versionId);
+        return context ? render(packageCard(context.entry, context.version)) : missing();
     }
 
-    const resolved = await resolveEntity({ packageId, versionId, entitySegments }).catch(() => null);
-    if (!resolved) return missing();
-
-    return render(entityCard(resolved.entity, resolved.version));
+    const resolved = await resolveEntity(route.params).catch(() => null);
+    return resolved ? render(entityCard(resolved.entity, resolved.version)) : missing();
 }

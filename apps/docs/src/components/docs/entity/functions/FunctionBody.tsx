@@ -11,9 +11,9 @@ import type {
     EntityMemberSummary,
     FunctionEntityModel,
     FunctionTypeParameterModel,
-    FunctionSignatureParameterModel,
-    CodeRepresentation
+    FunctionSignatureParameterModel
 } from '#lib/docs/types';
+import type { CodeRepresentation } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
 function buildTypeParamMember(tp: FunctionTypeParameterModel): EntityMemberSummary {

@@ -1,7 +1,8 @@
+import { GUIDE_URL, REPO_URL } from '@seedcord/ui';
 import { agentRules } from '@seedcord/ui/agents';
 
 import { loadDocsCatalog } from '#lib/docs/catalog';
-import { GUIDE_URL, REPO_URL, SITE_DESCRIPTION, SITE_NAME, canonicalUrl } from '#lib/site';
+import { SITE_DESCRIPTION, SITE_NAME, canonicalUrl } from '#lib/site';
 
 export const dynamic = 'force-static';
 

@@ -5,13 +5,13 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { useShallow } from 'zustand/react/shallow';
 
 import { log } from '#lib/logger';
+import { searchFiles } from '#lib/search/SearchFiles';
 import { useUIStore, type UIStore } from '#store/ui';
 
 import { FOCUS_DELAY_MS } from './constants';
 
 import type { CommandAction, DocsPackageOption } from './types';
 
-// action.href already carries the right member fragment from the search route
 function buildNavigationHref(action: CommandAction, origin: string): string {
     try {
         const targetUrl = new URL(action.href, origin);
@@ -27,16 +27,16 @@ function usePackageList(open: boolean): DocsPackageOption[] {
     useEffect(() => {
         if (!open || packages.length > 0) return undefined;
 
-        const abort = new AbortController();
-        fetch('/search?list=packages', { signal: abort.signal })
-            .then((response) => (response.ok ? (response.json() as Promise<{ packages?: DocsPackageOption[] }>) : null))
-            .then((payload) => {
-                if (payload && Array.isArray(payload.packages)) setPackages(payload.packages);
+        let cancelled = false;
+        searchFiles
+            .catalog()
+            .then((catalog) => {
+                if (!cancelled) setPackages(catalog.options);
             })
             .catch(() => undefined);
 
         return () => {
-            abort.abort();
+            cancelled = true;
         };
     }, [open, packages.length]);
 
@@ -103,7 +103,7 @@ export function useCommandPaletteController(): CommandPaletteController {
         if (!mounted) return undefined;
 
         if (open) {
-            // justified: animation-coupled, input lives behind a Radix <Dialog> mount and only receives focus after the surface paints in.
+            // the input takes focus only once the Radix dialog has painted
             const focusTimeout = window.setTimeout(() => {
                 inputRef.current?.select();
             }, FOCUS_DELAY_MS);

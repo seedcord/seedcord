@@ -12,20 +12,14 @@ import type { Fetcher } from '#remote/IndexLoader';
 import type { CrossPackageEntity, NodeLookup, PackageRegistry } from '#routing/lookup';
 import type { GlobalId } from '#src/ids';
 import type { DirectorySnapshot, PackageDirectory } from '#src/PackageDirectory';
-import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocSearchEntry } from '#src/types';
+import type { DocNode, DocPackageModel, DocSearchEntry } from '#src/types';
 
 const defaultFetcher: Fetcher = (url) => globalThis.fetch(url);
 
 // a built model is immutable
 const sharedModelCache = new Map<string, DocPackageModel>();
 
-/**
- * Version-aware engine for the remote (R2) docs. Holds one loaded model per package, keyed by
- * full name. `setVersion(folder, selector)` fetches and swaps a single package's active version.
- * Search and reference resolution are scoped to the loaded set. Resolution runs through the shared
- * {@link ReferenceResolver} via `resolver()`. Construct one per request. It carries mutable per-package
- * state and must not be shared across requests.
- */
+// setVersion mutates the active version. keep each instance to one request
 export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
     private readonly models = new Map<string, DocPackageModel>();
     private readonly active = new Map<string, string>();
@@ -108,8 +102,7 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
         return this.models.get(packageName)?.indexes.bySlug.get(slug) ?? null;
     }
 
-    // same lookup as getNodeBySlug here. the two differ on DocsEngine, which ReferenceResolver also
-    // runs against through NodeLookup.
+    // NodeLookup needs both. only DocsEngine tells them apart
     getNodeByGlobalSlug(packageName: string, slug: string): DocNode | null {
         return this.models.get(packageName)?.indexes.bySlug.get(slug) ?? null;
     }
@@ -168,22 +161,8 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
                 this.byKey.set(node.key, node);
             }
         }
-        this.docSearch = new DocSearch(this.collection());
+        this.docSearch = new DocSearch([...this.models.values()].flatMap((model) => model.indexes.search));
     }
-
-    private collection(): DocCollection {
-        const packages = [...this.models.values()];
-        return {
-            manifest: emptyManifest(packages.map((pkg) => pkg.manifest)),
-            packages,
-            byKey: this.byKey,
-            byGlobalSlug: new Map<string, DocNode>()
-        };
-    }
-}
-
-function emptyManifest(packages: DocManifest['packages']): DocManifest {
-    return { generatedAt: '', tool: '', apiExtractorVersion: '', outputDir: '', packages };
 }
 
 function entityFromEntry(entry: PackageIndexEntry, slug: string, activeVersion?: string): CrossPackageEntity | null {

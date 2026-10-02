@@ -14,8 +14,8 @@ import type { ResolvedEntity } from '#lib/docs/resolveEntity';
 import type { Metadata, Viewport } from 'next';
 import type { ReactElement } from 'react';
 
-// force-static because entity pages are shiki-heavy, and dropping it flips them to slow per-request rendering
 export const dynamic = 'force-static';
+export { entityParams as generateStaticParams } from '#lib/docs/DocsRoute';
 
 export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
     const resolved = await resolveEntity(await params);
@@ -61,7 +61,7 @@ async function PackageEntityPage({ params }: { params: Promise<PageParams> }): P
         <>
             <script
                 type="application/ld+json"
-                // escape < so the JSON can't break out of the script tag
+                // a raw < in the JSON would end the script tag
                 dangerouslySetInnerHTML={{
                     __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c')
                 }}

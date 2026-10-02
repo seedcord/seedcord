@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { CodeRepresentation, CommentParagraph, FormatContext, FormattedComment } from '#lib/docs/types';
+import type { CommentParagraph, FormatContext, FormattedComment } from '#lib/docs/types';
+import type { CodeRepresentation } from '@seedcord/ui';
 import type { DocNode, DocSignature } from '@seedcord/docs-engine';
 
 // justified: formatting.ts pulls in @lib/sanitizeHtml + @lib/shiki, which vitest can't resolve without vite-tsconfig-paths.

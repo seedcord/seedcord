@@ -1,6 +1,5 @@
 import { cn } from '@seedcord/ui';
 
-import { OverviewSkeleton } from '#components/docs/OverviewSkeleton';
 import { SidebarCategoryListSkeleton } from '#components/layout/sidebar/SidebarCategoryListSkeleton';
 
 import type { ReactElement, ReactNode } from 'react';
@@ -32,9 +31,6 @@ function SkeletonsPage(): ReactElement {
                 >
                     <SidebarCategoryListSkeleton />
                 </div>
-            </DevSection>
-            <DevSection title="Overview (while the overview page loads)">
-                <OverviewSkeleton />
             </DevSection>
         </div>
     );

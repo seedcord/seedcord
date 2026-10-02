@@ -22,7 +22,7 @@ export class DocsEngine {
     private readonly directories: Map<string, PackageDirectory>;
 
     private constructor(private readonly collection: DocCollection) {
-        this.docSearch = new DocSearch(collection);
+        this.docSearch = new DocSearch(collection.packages.flatMap((pkg) => pkg.indexes.search));
         this.directories = new Map(collection.packages.map((pkg) => [pkg.manifest.name, pkg.directory] as const));
     }
 

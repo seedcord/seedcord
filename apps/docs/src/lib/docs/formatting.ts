@@ -22,7 +22,8 @@ import {
 
 import { opensInNewTab } from './crossPackage';
 
-import type { CodeRepresentation, FormatContext } from './types';
+import type { FormatContext } from './types';
+import type { CodeRepresentation } from '@seedcord/ui';
 
 function buildResolveHref(context: FormatContext): ResolveHref {
     return (reference) => context.engine.resolver().href(context.manifestPackage, reference);

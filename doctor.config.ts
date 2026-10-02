@@ -3,7 +3,7 @@ import { defineConfig } from 'react-doctor/api';
 export default defineConfig({
     ignore: {
         // devSource only feeds the dev pages ignored on the line above
-        files: ['**/app/dev/**', '**/tests/**', '**/lib/devSource.ts'],
+        files: ['**/app/dev/**', '**/tests/**', '**/lib/devSource.ts', '**/dist/**'],
 
         overrides: [
             {
@@ -30,13 +30,8 @@ export default defineConfig({
                 rules: ['react-doctor/no-danger', 'react-doctor/dangerous-html-sink']
             },
             {
-                // one project.json fetch per package already reached next's 60s page limit
-                files: ['**/app/sitemap.ts'],
-                rules: ['react-doctor/async-await-in-loop']
-            },
-            {
-                // setVersion writes shared engine state. the packages resolve one at a time
-                files: ['**/search/route.ts'],
+                // setVersion writes shared engine state. the versions load one at a time
+                files: ['**/lib/docs/DocsRoute.ts'],
                 rules: ['react-doctor/async-await-in-loop']
             },
             {
@@ -133,7 +128,7 @@ export default defineConfig({
         'deslop/unused-dependency': 'off',
         'deslop/unused-dev-dependency': 'off',
         'react-doctor/nextjs-missing-metadata': 'off',
-        // react compiler isn't enabled in the build, so the manual memos are still load-bearing
+        // the build does not run the react compiler. the manual memos still matter
         'react-doctor/react-compiler-no-manual-memoization': 'off'
     }
 });

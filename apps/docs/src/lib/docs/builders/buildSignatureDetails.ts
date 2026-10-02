@@ -8,13 +8,13 @@ import { formatSignature, highlightCode } from '#lib/docs/formatting';
 import { stripDuplicateDescription, cloneExamples, buildDeprecationStatusFromNodeLike } from './utils';
 
 import type {
-    CodeRepresentation,
     CommentExample,
     CommentParagraph,
     FormatContext,
     FormattedComment,
     EntityMemberSummary
 } from '#lib/docs/types';
+import type { CodeRepresentation } from '@seedcord/ui';
 import type { DocSignature, DocNode, DocCommentBlockTag, DocComment } from '@seedcord/docs-engine';
 
 interface SignatureDetailsOptions {

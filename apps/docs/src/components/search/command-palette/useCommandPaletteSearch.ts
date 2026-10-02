@@ -1,12 +1,15 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+import { searchFiles } from '#lib/search/SearchFiles';
 
 import { parseActiveDocsTarget } from './activeTarget';
-import { MIN_SEARCH_QUERY_LENGTH, SEARCH_DEBOUNCE_MS } from './constants';
+import { MIN_SEARCH_QUERY_LENGTH } from './constants';
 
 import type { CommandAction } from './types';
+import type { SearchResults } from '#lib/search/SearchResults';
 
 type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -24,11 +27,7 @@ interface UseCommandPaletteSearchOptions {
     prerelease: boolean;
 }
 
-const SEARCH_ENDPOINT = '/search';
-
-interface SearchResponse {
-    results?: CommandAction[];
-}
+type Loaded = { key: string; results: SearchResults } | { key: string; error: string };
 
 const DEFAULT_STATE: SearchState = { results: [], status: 'idle' };
 
@@ -39,75 +38,41 @@ export function useCommandPaletteSearch({
     kind,
     prerelease
 }: UseCommandPaletteSearchOptions): SearchState {
-    const [state, setState] = useState<SearchState>(DEFAULT_STATE);
-    const cacheRef = useRef<Map<string, CommandAction[]> | null>(null);
-    const trimmed = query.trim();
-    const active = open && trimmed.length >= MIN_SEARCH_QUERY_LENGTH;
     const { pkg, version } = parseActiveDocsTarget(usePathname());
+    const key = `${pkg}::${version}::${scope}::${prerelease ? '1' : '0'}`;
+    const [lastLoaded, setLastLoaded] = useState<Loaded | null>(null);
+    const hasCurrentResults = lastLoaded?.key === key && 'results' in lastLoaded;
+    const trimmed = query.trim();
 
     useEffect(() => {
-        if (!active) return undefined;
+        if (!open || hasCurrentResults) return undefined;
 
-        if (cacheRef.current === null) cacheRef.current = new Map();
-        const cache = cacheRef.current;
         let cancelled = false;
-        const controller = new AbortController();
-        const cacheKey = `${pkg}::${version}::${scope}::${kind}::${prerelease ? '1' : '0'}::${trimmed}`;
-        // a cache hit waits out the debounce too, else old queries flash by as you type
-        const timeout = window.setTimeout(() => {
-            const cached = cache.get(cacheKey);
-            if (cached) {
-                setState({ results: cached, status: 'success' });
-                return;
+        searchFiles.results({ pkg, version }, scope, prerelease).then(
+            (results) => {
+                if (!cancelled) setLastLoaded({ key, results });
+            },
+            (error: unknown) => {
+                if (cancelled) return;
+                setLastLoaded({ key, error: error instanceof Error ? error.message : 'Unknown search error' });
             }
-
-            // carrying prev.results is what stops the list blanking mid-refresh
-            setState((prev) => ({ results: prev.results, status: 'loading' }));
-
-            const params = new URLSearchParams({
-                q: trimmed,
-                pkg,
-                version,
-                scope,
-                kind,
-                prerelease: prerelease ? '1' : '0'
-            });
-
-            fetch(`${SEARCH_ENDPOINT}?${params.toString()}`, { signal: controller.signal })
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error(`Search failed with status ${response.status}`);
-                    }
-                    return response.json() as Promise<SearchResponse>;
-                })
-                .then((payload) => {
-                    if (cancelled) {
-                        return;
-                    }
-                    const results = Array.isArray(payload.results) ? payload.results : [];
-                    cache.set(cacheKey, results);
-                    setState({ results, status: 'success' });
-                })
-                .catch((error: unknown) => {
-                    if (cancelled || (error instanceof DOMException && error.name === 'AbortError')) {
-                        return;
-                    }
-
-                    setState({
-                        results: [],
-                        status: 'error',
-                        error: error instanceof Error ? error.message : 'Unknown search error'
-                    });
-                });
-        }, SEARCH_DEBOUNCE_MS);
-
+        );
         return () => {
             cancelled = true;
-            controller.abort();
-            window.clearTimeout(timeout);
         };
-    }, [active, trimmed, pkg, version, scope, kind, prerelease]);
+    }, [open, hasCurrentResults, key, pkg, version, scope, prerelease]);
 
-    // results ride out the close animation
-    return state;
+    const ranked = useMemo(
+        () =>
+            lastLoaded && 'results' in lastLoaded && trimmed.length >= MIN_SEARCH_QUERY_LENGTH
+                ? lastLoaded.results.rank(trimmed, kind)
+                : [],
+        [lastLoaded, trimmed, kind]
+    );
+
+    if (trimmed.length < MIN_SEARCH_QUERY_LENGTH) return DEFAULT_STATE;
+    if (lastLoaded?.key === key && 'error' in lastLoaded) {
+        return { results: [], status: 'error', error: lastLoaded.error };
+    }
+    return { results: ranked, status: hasCurrentResults ? 'success' : 'loading' };
 }

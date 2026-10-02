@@ -13,7 +13,6 @@ import { getToneTitle, TONE_ORDER } from '../tonePresentation';
 
 import { getDocsEngine } from './engine';
 
-import type { VersionedDocsEngine } from './engine';
 import type {
     CategoryConfig,
     DocsCatalog,
@@ -22,7 +21,7 @@ import type {
     PackageCatalogEntry,
     PackageVersionCatalog
 } from './types';
-import type { DirectoryEntity, PackageIndexEntry } from '@seedcord/docs-engine';
+import type { DirectoryEntity, PackageIndexEntry, VersionedDocsEngine } from '@seedcord/docs-engine';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 
 type GetPackageDirectoryReturn = ReturnType<VersionedDocsEngine['getPackageDirectory']>;
@@ -104,8 +103,7 @@ function buildVersion(
     } satisfies PackageVersionCatalog;
 }
 
-// newest first so callers can take versions[0] as the default. categories stay empty until
-// loadActiveVersion fills the active one.
+// newest first. loadActiveVersion fills in categories for the active one
 function buildVersions(fullName: string, entry: PackageIndexEntry): PackageVersionCatalog[] {
     const versions: PackageVersionCatalog[] = [];
 
@@ -154,7 +152,7 @@ const sortCatalogEntries = (entries: PackageCatalogEntry[]): PackageCatalogEntry
         return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
     });
 
-// both axes come straight from index.json. nothing fetches project.json here.
+// reads only index.json
 export const loadDocsCatalog = cache(async (): Promise<DocsCatalog> => {
     const engine = await getDocsEngine();
     await engine.ready();
@@ -170,8 +168,7 @@ export const loadDocsCatalog = cache(async (): Promise<DocsCatalog> => {
     return sortCatalogEntries(entries.filter((entry): entry is PackageCatalogEntry => entry !== null));
 });
 
-// react's cache() only memoizes inside a request. a metadata route runs outside one, where every
-// getDocsEngine() call returns a fresh engine.
+// outside a request, every getDocsEngine() call returns a fresh engine
 export async function collectCategories(
     engine: VersionedDocsEngine,
     folder: string,
@@ -189,8 +186,7 @@ export async function collectCategories(
     return buildCategories(engine.getPackageDirectory(entry.fullName));
 }
 
-// cache() dedupes this across the layout and the page's loaders, so project.json is fetched and the
-// model rebuilt once per request
+// the layout and the page loaders share one project.json fetch per request
 const ensureActiveVersion = cache(async (folder: string, versionId: string): Promise<PackageIndexEntry | null> => {
     const engine = await getDocsEngine();
     const entry = await engine.getEntry(folder);
@@ -236,8 +232,7 @@ export interface ReexportLink {
     tone: EntityTone | null;
 }
 
-// the umbrella package re-exports symbols declared in sibling packages. each one resolves to its
-// declaring package's page, which is the canonical entity.
+// a re-export links to the page of the package that declares it
 export const loadReexports = cache(async (folder: string, versionId: string): Promise<ReexportLink[]> => {
     const entry = await ensureActiveVersion(folder, versionId);
     if (!entry) return [];
@@ -246,7 +241,7 @@ export const loadReexports = cache(async (folder: string, versionId: string): Pr
     const reexports = engine.getPackage(entry.fullName)?.root.reexports ?? [];
     const resolver = engine.resolver();
     return reexports.reduce<ReexportLink[]>((acc, ref) => {
-        // adapter.buildReexports always sets packageName. a missing one would render a blank owner.
+        // adapter.buildReexports always sets packageName
         if (!ref.packageName) return acc;
         const href = resolver.href(entry.fullName, ref);
         if (href) acc.push({ name: ref.name, owner: ref.packageName, href, tone: resolver.crossPackageTone(ref) });
@@ -263,6 +258,17 @@ export function findCatalogVersion(entry: PackageCatalogEntry, versionId: string
     }
 
     return entry.versions.find((version) => version.id === versionId);
+}
+
+export interface CatalogContext {
+    entry: PackageCatalogEntry;
+    version: PackageVersionCatalog;
+}
+
+export async function findPackageVersion(packageId: string, versionId: string): Promise<CatalogContext | undefined> {
+    const entry = findCatalogEntry(await loadDocsCatalog(), packageId);
+    const version = entry ? findCatalogVersion(entry, versionId) : undefined;
+    return entry && version ? { entry, version } : undefined;
 }
 
 export function withActiveCategories(

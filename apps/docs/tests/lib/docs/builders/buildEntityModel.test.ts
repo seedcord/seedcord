@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { CodeRepresentation } from '#lib/docs/types';
+import type { CodeRepresentation } from '@seedcord/ui';
 import type { DocNode, VersionedDocsEngine } from '@seedcord/docs-engine';
 
 // justified: the real modules pull in @lib/sanitizeHtml + @lib/shiki, which vitest can't resolve here.

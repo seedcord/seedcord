@@ -4,12 +4,12 @@ import { formatDeclarationHeader, formatSignature, highlightCode } from '#lib/do
 import type {
     CommentExample,
     FormatContext,
-    CodeRepresentation,
     CommentParagraph,
     FormattedComment,
     DeprecationStatus,
     EntityMemberSummary
 } from '#lib/docs/types';
+import type { CodeRepresentation } from '@seedcord/ui';
 import type { DocNode, DocSignature } from '@seedcord/docs-engine';
 
 export type DocNodeLike = Pick<DocNode, 'flags' | 'comment'>;

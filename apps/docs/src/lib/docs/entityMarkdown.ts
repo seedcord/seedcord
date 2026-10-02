@@ -1,6 +1,5 @@
 import type {
     ClassLikeEntityModel,
-    CodeRepresentation,
     CommentExample,
     CommentParagraph,
     EntityMemberSummary,
@@ -9,6 +8,7 @@ import type {
     FunctionEntityModel,
     TypeEntityModel
 } from './types';
+import type { CodeRepresentation } from '@seedcord/ui';
 
 // function renders its own declaration per signature, and type renders its expanded declaration, so
 // the base signature here would just duplicate it.

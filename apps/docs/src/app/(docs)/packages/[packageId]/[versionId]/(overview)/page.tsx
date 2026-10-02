@@ -15,6 +15,7 @@ import type { Metadata } from 'next';
 import type { ReactElement } from 'react';
 
 export const dynamic = 'force-static';
+export { overviewParams as generateStaticParams } from '#lib/docs/DocsRoute';
 
 export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
     const { entry, version } = await getCatalogContext(await params);

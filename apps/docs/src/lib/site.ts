@@ -7,7 +7,6 @@ export const SITE_NAME = 'seedcord';
 export const OG_SITE_NAME = 'seedcord documentation'; // reads clearer than plain 'seedcord' on docs link embeds
 export const SITE_DESCRIPTION =
     'API documentation for seedcord, a TypeScript framework for Discord bots, typed end to end.';
-export { GUIDE_URL, HOME_URL, REPO_URL } from '@seedcord/ui';
 
 // docs urls never end in a slash, the root included
 export function canonicalUrl(path: string): string {
