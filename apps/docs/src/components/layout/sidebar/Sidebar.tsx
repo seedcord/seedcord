@@ -1,7 +1,10 @@
 'use client';
 
-import { Card, cn } from '@seedcord/ui';
+import { Button, Card, cn, Icon } from '@seedcord/ui';
+import { BookOpen } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+
+import { HoverPrefetchLink } from '#components/HoverPrefetchLink';
 
 import { SidebarCategoryList } from './SidebarCategoryList';
 import { SidebarCategoryListSkeleton } from './SidebarCategoryListSkeleton';
@@ -104,7 +107,7 @@ export function Sidebar({
             )}
             style={isDesktop ? FILL : undefined}
         >
-            <div className={cn('shrink-0')}>
+            <div className={cn('shrink-0 space-y-3')}>
                 <SidebarHeader
                     packageOptions={packageOptions}
                     versionOptions={versionOptions}
@@ -113,6 +116,16 @@ export function Sidebar({
                     onPackageChange={onPackageChange}
                     onVersionChange={onVersionChange}
                 />
+                <Button asChild variant="field" className={cn('w-full justify-start')}>
+                    <HoverPrefetchLink
+                        href={activeVersion.basePath}
+                        aria-current={pathname === activeVersion.basePath ? 'page' : undefined}
+                        onClick={() => onSelect?.()}
+                    >
+                        <Icon icon={BookOpen} size={16} />
+                        Overview
+                    </HoverPrefetchLink>
+                </Button>
             </div>
             <div
                 ref={scrollRef}
