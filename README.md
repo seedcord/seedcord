@@ -91,6 +91,14 @@ From `pnpm create seedcord` to a running bot.
 
 <!-- prettier-ignore-end -->
 
+## Agents
+
+seedcord is newer than most models' training data, so your coding agent has to read the docs first. `pnpm create seedcord` writes an `AGENTS.md` into your project that points it there.
+
+- [`seedcord.org/guide/llms.txt`](https://seedcord.org/guide/llms.txt) indexes the guide, and [`seedcord.org/docs/llms.txt`](https://seedcord.org/docs/llms.txt) indexes the reference.
+- Every guide and reference page has a Markdown copy at the same URL plus `.md`.
+- There's also a skill at [`seedcord.org/.well-known/agent-skills/seedcord/SKILL.md`](https://seedcord.org/.well-known/agent-skills/seedcord/SKILL.md).
+
 ---
 
 <p align="center"><sub><a href=".github/CONTRIBUTING.md">Contributing</a> · Built by <a href="https://github.com/materwelonDhruv">@materwelonDhruv</a> · <a href="LICENSE">Apache-2.0</a></sub></p>
