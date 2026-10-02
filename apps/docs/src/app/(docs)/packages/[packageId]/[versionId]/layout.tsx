@@ -1,3 +1,4 @@
+import { DEFAULT_VERSION } from '@seedcord/docs-engine';
 import { cn } from '@seedcord/ui';
 import { notFound } from 'next/navigation';
 
@@ -7,6 +8,7 @@ import {
     findCatalogVersion,
     loadActiveVersion,
     loadDocsCatalog,
+    servedAtLatest,
     withActiveCategories
 } from '#lib/docs/catalog';
 
@@ -37,15 +39,18 @@ async function PackageLayout({
     const entry = findCatalogEntry(catalog, decodeParam(packageId));
     if (!entry) notFound();
 
-    const version = findCatalogVersion(entry, decodeParam(versionId));
+    const routeVersionId = decodeParam(versionId);
+    const version = findCatalogVersion(entry, routeVersionId);
     if (!version) notFound();
 
-    const catalogForRender = withActiveCategories(
+    const withCategories = withActiveCategories(
         catalog,
         entry.id,
         version.id,
         await loadActiveVersion(entry.id, version.id)
     );
+    const catalogForRender =
+        routeVersionId === DEFAULT_VERSION ? servedAtLatest(withCategories, entry.id, version.id) : withCategories;
 
     return (
         <Container catalog={catalogForRender} activePackageId={entry.id} activeVersionId={version.id}>

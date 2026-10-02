@@ -276,20 +276,49 @@ export async function findPackageVersion(packageId: string, versionId: string): 
     return entry && version ? { entry, version } : undefined;
 }
 
-export function withActiveCategories(
+function rebased(version: PackageVersionCatalog, basePath: string): PackageVersionCatalog {
+    const ownPrefix = `${version.basePath}/`;
+    const categories = version.categories.map((category) => ({
+        ...category,
+        items: category.items.map((item) =>
+            item.href.startsWith(ownPrefix)
+                ? { ...item, href: `${basePath}/${item.href.slice(ownPrefix.length)}` }
+                : item
+        )
+    }));
+    return { ...version, basePath, categories };
+}
+
+function updateVersion(
     catalog: DocsCatalog,
     packageId: string,
     versionId: string,
-    categories: readonly NavigationCategory[]
+    update: (version: PackageVersionCatalog, entry: PackageCatalogEntry) => PackageVersionCatalog
 ): DocsCatalog {
     return catalog.map((entry) =>
         entry.id === packageId
             ? {
                   ...entry,
                   versions: entry.versions.map((version) =>
-                      version.id === versionId ? { ...version, categories } : version
+                      version.id === versionId ? update(version, entry) : version
                   )
               }
             : entry
     );
+}
+
+// a re-exported item keeps its pinned version because the other package's latest can differ
+export function servedAtLatest(catalog: DocsCatalog, packageId: string, versionId: string): DocsCatalog {
+    return updateVersion(catalog, packageId, versionId, (version, entry) =>
+        rebased(version, buildPackageBasePath(entry.manifestName, DEFAULT_VERSION))
+    );
+}
+
+export function withActiveCategories(
+    catalog: DocsCatalog,
+    packageId: string,
+    versionId: string,
+    categories: readonly NavigationCategory[]
+): DocsCatalog {
+    return updateVersion(catalog, packageId, versionId, (version) => ({ ...version, categories }));
 }

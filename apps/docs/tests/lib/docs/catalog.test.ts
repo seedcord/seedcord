@@ -19,7 +19,7 @@ vi.mock('@seedcord/docs-engine', async (importOriginal) => ({
     formatVersionLabel: (v: string) => v
 }));
 
-const { findCatalogVersion, loadDocsCatalog, withActiveCategories } = await import('#lib/docs/catalog');
+const { findCatalogVersion, loadDocsCatalog, servedAtLatest, withActiveCategories } = await import('#lib/docs/catalog');
 
 function makeVersion(
     id: string,
@@ -187,5 +187,33 @@ describe('withActiveCategories', () => {
     it('returns entries unchanged when the package id does not match', () => {
         const catalog = [makeEntry([makeVersion('1.0.0', { isLatest: true })])];
         expect(withActiveCategories(catalog, 'other', '1.0.0', categories)).toEqual(catalog);
+    });
+});
+
+describe('servedAtLatest', () => {
+    const own = { id: 'Client', label: 'Client', href: '/packages/seedcord/1.0.0/classes/Client' };
+    const reexported = { id: 'Bus', label: 'Bus', href: '/packages/core/0.4.0/classes/Bus' };
+    const head = {
+        ...makeVersion('1.0.0', { isLatest: true }),
+        basePath: '/packages/seedcord/1.0.0',
+        categories: [{ id: 'classes', title: 'Classes', tone: 'class', items: [own, reexported] }]
+    } satisfies PackageVersionCatalog;
+    const older = { ...makeVersion('0.9.0'), basePath: '/packages/seedcord/0.9.0' };
+
+    it('moves the version and its own pages under latest', () => {
+        const [entry] = servedAtLatest([makeEntry([head, older])], 'seedcord', '1.0.0');
+        const served = entry?.versions[0];
+
+        expect(served?.basePath).toBe('/packages/seedcord/latest');
+        expect(served?.categories[0]?.items.map((item) => item.href)).toEqual([
+            '/packages/seedcord/latest/classes/Client',
+            '/packages/core/0.4.0/classes/Bus'
+        ]);
+    });
+
+    it('keeps every other version on its own path', () => {
+        const [entry] = servedAtLatest([makeEntry([head, older])], 'seedcord', '1.0.0');
+
+        expect(entry?.versions[1]).toBe(older);
     });
 });
