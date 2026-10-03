@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { rollbackBuildId } from '#src/docs/DocsSite';
+import { rollbackBuildId } from '#src/docs/docsSite';
 
 const deployment = (versionId: string): object => ({ versions: [{ version_id: versionId, percentage: 100 }] });
 

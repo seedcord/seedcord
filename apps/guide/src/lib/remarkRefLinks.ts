@@ -1,6 +1,6 @@
 import { DocsLinks } from './DocsLinks';
+import { SymbolRef } from './SymbolRef';
 
-const PROTOCOL = 'ref:';
 const FORM = 'Write [text](ref:<package>/<Symbol>) for a symbol, or [text](ref:<package>) for a package.';
 
 const JSX_NODES = new Set(['mdxJsxFlowElement', 'mdxJsxTextElement']);
@@ -25,7 +25,7 @@ interface Reporter {
 }
 
 function hasRefTarget(node: Node): boolean {
-    return (node.url ?? '').startsWith(PROTOCOL);
+    return SymbolRef.isRefUrl(node.url ?? '');
 }
 
 function isRefJsx(node: Node): boolean {
@@ -34,14 +34,10 @@ function isRefJsx(node: Node): boolean {
 
 function refHref(link: Node, links: DocsLinks, file: Reporter): string {
     const url = link.url ?? '';
-    const [pkg = '', symbol = '', ...extra] = url.slice(PROTOCOL.length).split('/');
+    const ref = SymbolRef.fromUrl(url) ?? file.fail(`${url} is missing the package or the symbol. ${FORM}`, link);
+    if (!links.hasPackage(ref.pkg)) file.fail(`${url} points at a package the reference site does not list`, link);
 
-    if (pkg === '' || url.endsWith('/') || extra.length > 0) {
-        file.fail(`${url} is missing the package or the symbol. ${FORM}`, link);
-    }
-    if (!links.hasPackage(pkg)) file.fail(`${url} points at a package the reference site does not list`, link);
-
-    return links.href(pkg, symbol) ?? file.fail(`${url} is not a symbol the reference site documents`, link);
+    return links.href(ref) ?? file.fail(`${url} is not a symbol the reference site documents`, link);
 }
 
 function refElement(link: Node, links: DocsLinks, file: Reporter): Node {

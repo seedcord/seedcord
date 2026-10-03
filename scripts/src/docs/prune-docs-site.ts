@@ -2,7 +2,7 @@
 import { SiteBuild } from '@seedcord/docs-engine';
 import { Converters, Envapter } from 'envapt';
 
-import { rollbackBuildId, workerBucket } from '#src/docs/DocsSite';
+import { rollbackBuildId, workerBucket } from '#src/docs/docsSite';
 import { DocsSiteUpload } from '#src/docs/DocsSiteUpload';
 
 // docs-deploy.yml runs this once the worker serves BUILD_ID

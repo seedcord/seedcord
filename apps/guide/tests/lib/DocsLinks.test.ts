@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { DocsLinks } from '#lib/DocsLinks';
+import { SymbolRef } from '#lib/SymbolRef';
 
 import { DOCS_INDEX_FIXTURE } from '../test-setup';
 
@@ -26,7 +27,8 @@ describe('DocsLinks', () => {
 
     it('links no page for a package name every object inherits', async () => {
         const links = await DocsLinks.load();
+        const ref = SymbolRef.fromUrl('ref:constructor');
 
-        expect(links.href('constructor', '')).toBeNull();
+        expect(ref && links.href(ref)).toBeNull();
     });
 });

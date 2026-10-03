@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 
 import { DirectoryBucket } from '#src/docs/DirectoryBucket';
-import { buildOfHead, DOCS_APP, exportedFiles } from '#src/docs/DocsSite';
+import { buildOfHead, DOCS_APP, exportedFiles } from '#src/docs/docsSite';
 import { DocsSiteUpload } from '#src/docs/DocsSiteUpload';
 
 // runs the upload step from docs-deploy.yml against apps/docs/.preview, then wrangler dev on it

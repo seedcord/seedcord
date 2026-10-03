@@ -3,18 +3,8 @@ import { workspaceIndexLoader } from '@seedcord/docs-engine/workspace';
 
 import { DOCS_URL } from './site';
 
+import type { SymbolRef } from './SymbolRef';
 import type { IndexJson } from '@seedcord/docs-engine/client';
-
-interface SymbolParts {
-    owner: string;
-    member: string | undefined;
-}
-
-// a symbol is Owner, Owner.member, Owner#member, or empty for the package overview
-export function symbolParts(symbol: string): SymbolParts {
-    const [owner = '', ...members] = symbol.split(/[.#]/);
-    return { owner, member: members.at(-1) };
-}
 
 // the reference site renders each symbol under its kind's directory, with a member as an anchor on its owner
 export class DocsLinks {
@@ -44,12 +34,11 @@ export class DocsLinks {
         return Object.hasOwn(this.index.packages, pkg);
     }
 
-    href(pkg: string, symbol: string): string | null {
+    href({ pkg, owner, member, isPackage }: SymbolRef): string | null {
         const entry = this.hasPackage(pkg) ? this.index.packages[pkg] : undefined;
         if (!entry) return null;
-        if (symbol === '') return `${DOCS_URL}${buildPackageBasePath(entry.fullName, DEFAULT_VERSION)}`;
+        if (isPackage) return `${DOCS_URL}${buildPackageBasePath(entry.fullName, DEFAULT_VERSION)}`;
 
-        const { owner, member } = symbolParts(symbol);
         const slug = slugifySegment(owner);
         const tone = entry.entities?.[slug];
         if (!tone) return null;

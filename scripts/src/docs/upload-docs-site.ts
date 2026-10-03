@@ -1,7 +1,7 @@
 /* eslint-disable no-console -- CLI script */
 import { appendFile } from 'node:fs/promises';
 
-import { buildOfHead, exportedFiles, workerBucket } from '#src/docs/DocsSite';
+import { buildOfHead, exportedFiles, workerBucket } from '#src/docs/docsSite';
 import { DocsSiteUpload } from '#src/docs/DocsSiteUpload';
 
 async function main(): Promise<void> {

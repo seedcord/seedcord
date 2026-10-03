@@ -10,8 +10,8 @@ import remarkMdx from 'remark-mdx';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 
-import { symbolParts } from '#lib/DocsLinks';
 import { redirectFor } from '#lib/redirects';
+import { SymbolRef } from '#lib/SymbolRef';
 
 import type { Nodes, Root } from 'mdast';
 
@@ -131,12 +131,14 @@ function pageProblem(site: GuideSite, route: string, url: string): string | null
 }
 
 function refProblem(site: GuideSite, url: string): string | null {
-    const [pkg = '', symbol = ''] = url.slice('ref:'.length).split('/');
+    const ref = SymbolRef.fromUrl(url);
+    if (ref === null) return 'is missing the package or the symbol';
+
+    const { pkg, owner, member } = ref;
     const symbols = site.symbolsByPackage.get(pkg);
     if (symbols === undefined) return 'points at a package the reference site does not list';
-    if (symbol === '') return null;
+    if (ref.isPackage) return null;
 
-    const { owner, member } = symbolParts(symbol);
     const anchors = symbols.get(slugifySegment(owner));
     if (anchors === undefined) return `is not a symbol the reference site documents for ${pkg}`;
 
@@ -144,7 +146,7 @@ function refProblem(site: GuideSite, url: string): string | null {
 }
 
 function problemWith(site: GuideSite, route: string, url: string): string | null {
-    if (url.startsWith('ref:')) return refProblem(site, url);
+    if (SymbolRef.isRefUrl(url)) return refProblem(site, url);
     if (url.startsWith(`${DOCS.url}/`)) return 'is a reference page by its url. Write it as ref:<package>/<Symbol>';
     if (url.startsWith('#') || (url.startsWith('/') && !url.startsWith('//'))) return pageProblem(site, route, url);
     if (url.startsWith('//') || URL_SCHEME.test(url)) return null;
