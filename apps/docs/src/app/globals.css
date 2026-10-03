@@ -57,6 +57,55 @@
     display: inline;
 }
 
+/* PageTransition sets these classes on the content area for each navigation */
+::view-transition {
+    pointer-events: none;
+}
+
+/* the content snaps to its new height while only the snapshots move */
+::view-transition-group(.page-next),
+::view-transition-group(.page-prev) {
+    animation: none;
+}
+
+::view-transition-old(.page-next) {
+    --page-shift: -8px;
+    animation: 100ms ease-in both page-shift-out;
+}
+::view-transition-new(.page-next) {
+    --page-shift: 8px;
+    animation: 120ms ease-out both page-shift-in;
+}
+::view-transition-old(.page-prev) {
+    --page-shift: 8px;
+    animation: 100ms ease-in both page-shift-out;
+}
+::view-transition-new(.page-prev) {
+    --page-shift: -8px;
+    animation: 120ms ease-out both page-shift-in;
+}
+
+@keyframes page-shift-out {
+    to {
+        opacity: 0;
+        translate: 0 var(--page-shift);
+    }
+}
+@keyframes page-shift-in {
+    from {
+        opacity: 0;
+        translate: 0 var(--page-shift);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}
+
 /* decorateProseLinks, SeeAlso, and the inheritedFrom anchors set this class on a cross-package or external link */
 a.cross-ref {
     /* keeps the glyph on the link's last line */
@@ -75,4 +124,3 @@ a.cross-ref::after {
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7M8 7h9v9'/%3E%3C/svg%3E")
         no-repeat center / contain;
 }
-

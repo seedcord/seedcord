@@ -1,6 +1,6 @@
 import { DEFAULT_VERSION } from '@seedcord/docs-engine';
-import { cn } from '@seedcord/ui';
 
+import { PageTransition } from '#components/layout/PageTransition';
 import { Container } from '#components/layout/sidebar/utils/container/Container';
 import { loadActiveVersion } from '#lib/docs/ActiveVersion';
 import { loadDocsCatalog, servedAtLatest, withVersion } from '#lib/docs/catalog';
@@ -28,9 +28,11 @@ async function PackageLayout({
             activePackageId={entry.id}
             activeVersionId={version.id}
         >
-            <main id="main-content" className={cn('min-w-0')}>
+            <PageTransition
+                order={[shown.basePath, ...shown.categories.flatMap(({ items }) => items.map(({ href }) => href))]}
+            >
                 {children}
-            </main>
+            </PageTransition>
         </Container>
     );
 }

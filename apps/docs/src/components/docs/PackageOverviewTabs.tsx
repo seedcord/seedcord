@@ -9,7 +9,7 @@ import { useState, useSyncExternalStore } from 'react';
 import type { Variants } from 'motion/react';
 import type { ReactElement, ReactNode } from 'react';
 
-const SLIDE_DURATION = 0.5;
+const SLIDE_DURATION = 0.3;
 const SLIDE_X = 40;
 const BLUR_PX = 5;
 
