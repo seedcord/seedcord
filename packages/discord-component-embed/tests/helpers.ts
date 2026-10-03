@@ -11,6 +11,9 @@ export const page = (head: string): string => `<!doctype html><html><head>${head
 
 export const HTML = { 'content-type': 'text/html; charset=utf-8' };
 
+export const VND = 'application/vnd.discord.component-embed+json';
+export const TYPES = `type="${VND}" or type="application/json"`;
+
 export function withFiles(files: Record<string, string>): CheckInput {
     return {
         readFile: (path) => {

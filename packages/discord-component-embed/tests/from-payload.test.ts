@@ -121,6 +121,18 @@ describe('fromPayload keys', () => {
             { component: { type: 17, components: [text] }, extra: true },
             [],
             'A component embed payload doesn\'t take "extra". It takes component.'
+        ],
+        [
+            'a thumbnail media key past url',
+            inPayload({ type: 9, components: [text], accessory: { type: 11, media: { url: IMAGE, width: 256 } } }),
+            ['component', 'components', '0', 'accessory'],
+            'A thumbnail\'s media doesn\'t take "width". It takes url.'
+        ],
+        [
+            'a gallery item media key past url',
+            inPayload({ type: 12, items: [{ media: { url: IMAGE, proxy_url: IMAGE } }] }),
+            ['component', 'components', '0', 'items', '0'],
+            'A gallery item\'s media doesn\'t take "proxy_url". It takes url.'
         ]
     ])('rejects %s', (_label, payload, path, message) => {
         const error = thrownBy(() => fromJson(payload));
@@ -128,14 +140,6 @@ describe('fromPayload keys', () => {
         expect(error.code).toBe('InvalidProp');
         expect(error.path).toEqual(path);
         expect(error.message.split('\nFound at')[0]).toBe(message);
-    });
-
-    it("leaves the fields discord's API adds to media alone", () => {
-        const media = { url: IMAGE, proxy_url: 'https://media.discordapp.net/x.png', width: 256, height: 256 };
-
-        expect(() =>
-            toComponentEmbed(fromJson(inPayload({ type: 9, components: [text], accessory: { type: 11, media } })))
-        ).not.toThrow();
     });
 });
 

@@ -330,5 +330,7 @@ function toMediaProps(node: JsonObject, what: string, path: Path): Record<string
             { path }
         );
     }
+    // discord shows the Open Graph card for any other media key, the ones its API adds included
+    checkKeys(node.media, `${what}'s media`, ['url'], path);
     return { url: node.media.url, description: node.description, spoiler: node.spoiler };
 }

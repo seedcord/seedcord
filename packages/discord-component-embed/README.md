@@ -392,9 +392,9 @@ Every error for a tree from `fromPayload` has JSON keys in its `path`, like `['c
 
 Discord shows no preview at all for a bad `id`, so `fromPayload` checks those too. Each `id` has to be a whole number from 0 to 2147483647, and no two components can share one. `fromPayload` then leaves them out of the tree, because nothing in a link preview reads them.
 
-If a component has a key it doesn't take, like a mistyped `descripton`, `fromPayload` throws with the keys it does take and suggests the closest one. Discord drops such a key and shows the card without that field. On a button, Discord shows the Open Graph card instead. Extra fields inside `media`, like the `proxy_url` and `width` that Discord's API adds, are fine.
+If a component has a key it doesn't take, like a mistyped `descripton`, `fromPayload` throws with the keys it does take and suggests the closest one. Discord drops such a key and shows the card without that field. On a button, Discord shows the Open Graph card instead. It does the same for any key in `media` other than `url`, including the `proxy_url` and `width` that Discord's API adds.
 
-The 3000-byte check measures the JSON the package writes from the tree, without those extras. If you serve a hand-written file as it is, run it through the [`check` command](#check-from-the-command-line), which measures the file as written.
+The 3000-byte check measures the JSON the package writes from the tree. If you serve a hand-written file as it is, run it through the [`check` command](#check-from-the-command-line), which measures the file as written.
 
 <div align="right"><a href="#contents">back to top</a></div>
 
