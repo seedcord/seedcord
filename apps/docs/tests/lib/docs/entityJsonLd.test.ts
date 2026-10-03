@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { entityJsonLd } from '#lib/docs/entityJsonLd';
+import { entityJsonLd, entityPath } from '#lib/docs/entityJsonLd';
 
 import type { ResolvedEntity } from '#lib/docs/resolveEntity';
 
-function resolvedAt(id: string): ResolvedEntity {
+function resolvedAt(id: string, segments = ['functions', 'gated']): ResolvedEntity {
     // justified: entityJsonLd reads only these fields
     return {
         entry: { id: 'gateway', manifestName: '@seedcord/gateway' },
         version: { id, label: `v${id}` },
         entity: { name: 'Gated', summary: [], displayPackage: 'gateway' },
-        segments: ['functions', 'gated']
+        segments
     } as unknown as ResolvedEntity;
 }
 
@@ -38,5 +38,14 @@ describe('entityJsonLd', () => {
         expect(api.url).toBe('https://seedcord.org/docs/packages/gateway/0.5.1/functions/gated');
         expect(api.assemblyVersion).toBe('0.5.1');
         expect(breadcrumb.itemListElement[1]?.item).toBe('https://seedcord.org/docs/packages/gateway/0.5.1');
+    });
+});
+
+describe('entityPath', () => {
+    // the export writes the page for a namespaced symbol at types/jsx%2Felement
+    it('keeps a slash inside a namespaced slug encoded', () => {
+        expect(entityPath(resolvedAt('0.5.1', ['types', 'jsx/element']))).toBe(
+            '/packages/gateway/0.5.1/types/jsx%2Felement'
+        );
     });
 });

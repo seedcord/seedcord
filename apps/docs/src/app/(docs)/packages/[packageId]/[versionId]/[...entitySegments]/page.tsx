@@ -1,10 +1,10 @@
-import { buildPackageBasePath, DEFAULT_VERSION, parseEntityPathSegments } from '@seedcord/docs-engine';
+import { DEFAULT_VERSION, parseEntityPathSegments } from '@seedcord/docs-engine';
 import { notFound } from 'next/navigation';
 
 import { EntityContent } from '#components/docs/entity/EntityContent';
 import { DocsPage } from '#lib/docs/DocsPage';
 import { getDocsEngine } from '#lib/docs/engine';
-import { entityJsonLd, entityPath } from '#lib/docs/entityJsonLd';
+import { entityJsonLd, entityPagePath, entityPath } from '#lib/docs/entityJsonLd';
 import { resolveEntity } from '#lib/docs/resolveEntity';
 import { ENTITY_TONE_HEX } from '#lib/entityColors';
 import { latestEntitySegments } from '#lib/indexing';
@@ -37,7 +37,7 @@ async function pathInLatest({ entry, segments }: ResolvedEntity): Promise<string
     const inLatest = latestEntitySegments(index?.entities, parseEntityPathSegments(segments));
     if (!inLatest) return undefined;
 
-    return `${buildPackageBasePath(entry.manifestName, DEFAULT_VERSION)}/${inLatest.join('/')}`;
+    return entityPagePath(entry.manifestName, DEFAULT_VERSION, inLatest);
 }
 
 export async function generateViewport({ params }: { params: Promise<PageParams> }): Promise<Viewport> {

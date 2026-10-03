@@ -5,8 +5,13 @@ import { SITE_NAME, canonicalUrl } from '#lib/site';
 
 import type { ResolvedEntity } from '#lib/docs/resolveEntity';
 
+// the export writes a namespaced slug like jsx/element as one encoded segment
+export function entityPagePath(manifestName: string, version: string, segments: readonly string[]): string {
+    return `${buildPackageBasePath(manifestName, version)}/${segments.map(encodeURIComponent).join('/')}`;
+}
+
 export function entityPath({ entry, version, segments }: ResolvedEntity): string {
-    return `${buildPackageBasePath(entry.manifestName, version.id)}/${segments.join('/')}`;
+    return entityPagePath(entry.manifestName, version.id, segments);
 }
 
 export function entityJsonLd(resolved: ResolvedEntity, latestPath?: string): Record<string, unknown> {
