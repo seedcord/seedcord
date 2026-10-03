@@ -63,6 +63,7 @@ export interface PageMetadataOptions {
 }
 
 const isFrontPage = (path: string): boolean => path === '/';
+const FRONT_PAGE_TITLE = `${SITE_NAME} · build typed Discord bots`;
 
 // the front page's frontmatter title is its sidebar label, "Start here"
 export function shownTitle(path: string, title: string): string {
@@ -78,10 +79,10 @@ export function pageMetadata({ title, description, path, pill }: PageMetadataOpt
     const summary = description ?? SITE_DESCRIPTION;
     const alt = ogPageCardAlt({ pill, name: title, meta: [] });
     const images = [{ url: ogImageUrl(path), width: OG_IMAGE_W, height: OG_IMAGE_H, alt }];
-    const heading = shownTitle(path, title);
+    const heading = isFrontPage(path) ? FRONT_PAGE_TITLE : title;
 
     return {
-        title: isFrontPage(path) ? { absolute: SITE_NAME } : title,
+        title: isFrontPage(path) ? { absolute: FRONT_PAGE_TITLE } : title,
         description: summary,
         alternates: { canonical: url, types: { 'text/markdown': markdownUrl(path) } },
         openGraph: { type: 'article', siteName: SITE_NAME, url, title: heading, description: summary, images },

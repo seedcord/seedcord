@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { canonicalUrl, pageMetadata, sitemapEntries } from '#lib/site';
+import { canonicalUrl, pageMetadata, shownTitle, sitemapEntries } from '#lib/site';
 
 describe('the canonical url for a path', () => {
     it('keeps the trailing slash the export actually serves', () => {
@@ -63,6 +63,14 @@ describe('the metadata a guide page carries', () => {
 
         expect(shown).not.toContain('Start here');
         expect(root.title).toEqual({ absolute: shown });
+    });
+
+    it('gives the root a longer title than the one on its preview card', () => {
+        const cardTitle = shownTitle('/', 'Start here');
+        const shown = pageMetadata({ ...page, title: 'Start here', path: '/' }).openGraph?.title;
+
+        expect(shown).toContain(cardTitle);
+        expect(shown).not.toBe(cardTitle);
     });
 
     it('keeps every other page on its own title', () => {
