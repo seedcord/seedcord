@@ -9,7 +9,7 @@ export function noFlagName(name: string): string {
 
 export function applyFlags(steps: AnyStep[], raw: Record<string, string | boolean>): Partial<Answers> {
     const answers: Partial<Answers> = {};
-    // justified: Step<Key> ties each key to its own parser return, and only a key that takes null has noFlag
+    // justified: Step<Key> ties each key to its own parser return
     const assign = answers as Record<keyof Answers, unknown>;
 
     for (const step of steps) {
