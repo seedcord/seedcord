@@ -2,54 +2,69 @@ import { describe, expect, it } from 'vitest';
 
 import { compileGuideMdx } from '../mdxPipeline';
 
+const NOTICE = 'href="https://seedcord.org/docs/packages/core/latest/classes/notice"';
+
 describe('a ref: link', () => {
-    it('becomes the Ref component', async () => {
+    it('links to the page the reference site renders for the symbol', async () => {
         const code = await compileGuideMdx('A gate refuses by throwing [Notice](ref:core/Notice).');
 
-        expect(code).toContain('<Ref pkg="core" symbol="Notice">');
+        expect(code).toContain(`<Ref ${NOTICE}>`);
+    });
+
+    it.each(['PaginatorBase#start', 'PaginatorBase.start'])('anchors %s on the page of its owner', async (symbol) => {
+        const code = await compileGuideMdx(`call [start](ref:core/${symbol}) first`);
+
+        expect(code).toContain('href="https://seedcord.org/docs/packages/core/latest/classes/paginator-base#start"');
+    });
+
+    it('kebab-cases a multi-word name the way the reference site does', async () => {
+        const code = await compileGuideMdx('extend [SlashHandler](ref:gateway/SlashHandler)');
+
+        expect(code).toContain('href="https://seedcord.org/docs/packages/gateway/latest/classes/slash-handler"');
+    });
+
+    it('links a package to its overview', async () => {
+        const code = await compileGuideMdx('install [`@seedcord/plugin-mongoose`](ref:plugin-mongoose) first');
+
+        expect(code).toContain('href="https://seedcord.org/docs/packages/plugin-mongoose/latest"');
+    });
+
+    it('refuses a symbol the reference site does not document', async () => {
+        await expect(compileGuideMdx('a [Nope](ref:core/NotASymbol) link')).rejects.toThrow('NotASymbol');
+    });
+
+    it('refuses a package the reference site does not list', async () => {
+        await expect(compileGuideMdx('a [thing](ref:nope/Thing) link')).rejects.toThrow('does not list');
     });
 
     it('takes link text that differs from the symbol', async () => {
         const code = await compileGuideMdx('Throw [the notice card](ref:core/Notice) instead.');
 
-        expect(code).toContain('symbol="Notice"');
+        expect(code).toContain(NOTICE);
         expect(code).toContain('the notice card');
     });
 
     it('reaches a link nested inside a table cell', async () => {
         const source = ['| what | throws |', '| --- | --- |', '| a gate | [Notice](ref:core/Notice) |'].join('\n');
-        const code = await compileGuideMdx(source);
 
-        expect(code).toContain('<Ref pkg="core" symbol="Notice">');
+        expect(await compileGuideMdx(source)).toContain(NOTICE);
     });
 
     // mdx reads a bare <Options> in link text as a jsx tag and fails on it
     it('takes a generic written inside backticks', async () => {
         const code = await compileGuideMdx('a [`Plugin<Options>`](ref:core/Plugin) link');
 
-        expect(code).toContain('symbol="Plugin"');
+        expect(code).toContain('href="https://seedcord.org/docs/packages/core/latest/classes/plugin"');
         expect(code).toContain('Plugin<Options>');
-    });
-
-    it('takes a package on its own, with no symbol after it', async () => {
-        const code = await compileGuideMdx('install [`@seedcord/plugin-mongoose`](ref:plugin-mongoose) first');
-
-        expect(code).toContain('<Ref pkg="plugin-mongoose" symbol="">');
-    });
-
-    it('carries a member written with a hash', async () => {
-        const code = await compileGuideMdx('call [start](ref:core/Paginator#start) first');
-
-        expect(code).toContain('<Ref pkg="core" symbol="Paginator#start">');
     });
 
     it('reaches a link inside a callout', async () => {
         const code = await compileGuideMdx('<Callout type="note">a [Notice](ref:core/Notice) link</Callout>');
 
-        expect(code).toContain('<Ref pkg="core" symbol="Notice">');
+        expect(code).toContain(NOTICE);
     });
 
-    it.each(['a <Ref pkg="core">Notice</Ref> link', '<Ref pkg="core">Notice</Ref>'])(
+    it.each(['a <Ref href="/x">Notice</Ref> link', '<Ref href="/x">Notice</Ref>'])(
         'refuses %s written as jsx',
         async (source) => {
             await expect(compileGuideMdx(source)).rejects.toThrow('prettier splits');
@@ -57,14 +72,20 @@ describe('a ref: link', () => {
     );
 
     it('leaves an ordinary link alone', async () => {
-        const code = await compileGuideMdx('Read [the reference site](https://docs.seedcord.org).');
+        const code = await compileGuideMdx('Read [the reference site](https://seedcord.org/docs).');
 
-        expect(code).toContain('href="https://docs.seedcord.org"');
+        expect(code).toContain('href="https://seedcord.org/docs"');
         expect(code).not.toContain('<Ref');
     });
 
-    it.each(['ref:core/', 'ref:/Notice', 'ref:core/a/b', 'ref:'])('refuses %s', async (target) => {
-        await expect(compileGuideMdx(`a [symbol](${target}) link`)).rejects.toThrow('is missing the package');
+    it.each([
+        ['ref:core/', 'has a slash with no symbol after it'],
+        ['ref:/Notice', 'is missing the package'],
+        ['ref:core/a/b', 'has a path after the symbol'],
+        ['ref:', 'is missing the package'],
+        ['ref:core/Notice.', 'has nothing after the member separator']
+    ])('refuses %s', async (target, problem) => {
+        await expect(compileGuideMdx(`a [symbol](${target}) link`)).rejects.toThrow(problem);
     });
 
     // fumadocs copies heading children into a module-scope toc export, where Ref has no binding

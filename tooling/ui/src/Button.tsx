@@ -23,7 +23,8 @@ const buttonVariantClasses = {
     primary: tw`shadow-soft bg-(--flesh) text-white hover:bg-(--flesh-hover)`,
     secondary: tw`shadow-soft bg-(--rind) text-black hover:bg-(--rind-hover)`,
     outline: tw`border-(--border) bg-transparent text-(--text) hover:border-(--border-accent-a-subtle) hover:bg-(--surface-subtle)`,
-    ghost: tw`bg-transparent text-(--text) hover:bg-(--flesh-transparent-subtle)`
+    ghost: tw`bg-transparent text-(--text) hover:bg-(--flesh-transparent-subtle)`,
+    field: tw`border-(--border) bg-(--surface-moderate) text-(--text) hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-subtle)`
 } as const;
 
 export type ButtonVariant = keyof typeof buttonVariantClasses;

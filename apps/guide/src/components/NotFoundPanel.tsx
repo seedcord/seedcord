@@ -1,4 +1,4 @@
-import { cn } from '@seedcord/ui';
+import { cn, DOCS, HOME } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import Link from 'next/link';
 
@@ -8,8 +8,8 @@ import type { ReactNode } from 'react';
 
 const LINKS = [
     { label: 'Start here', href: '/' },
-    { label: 'seedcord.org', href: HOME_URL },
-    { label: 'docs.seedcord.org', href: DOCS_URL }
+    { label: HOME.label, href: HOME_URL },
+    { label: DOCS.label, href: DOCS_URL }
 ] as const;
 
 export function NotFoundPanel(): ReactNode {

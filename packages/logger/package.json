@@ -58,7 +58,7 @@
     },
     "peerDependencies": {
         "envapt": "catalog:peer",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:consumerTypes"
     },
     "dependencies": {
         "@seedcord/errors": "workspace:^",

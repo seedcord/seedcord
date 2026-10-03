@@ -1,6 +1,20 @@
+import remarkParse from 'remark-parse';
+import { unified } from 'unified';
 import { describe, expect, it } from 'vitest';
 
 import { twinOf } from './twinPipeline';
+
+import type { Link, Nodes } from 'mdast';
+
+function linksIn(markdown: string): Link[] {
+    const links: Link[] = [];
+    const visit = (node: Nodes): void => {
+        if (node.type === 'link') links.push(node);
+        if ('children' in node) node.children.forEach(visit);
+    };
+    visit(unified().use(remarkParse).parse(markdown));
+    return links;
+}
 
 describe('what an agent reads instead of the page', () => {
     it('drops the heading anchor a reader never sees', async () => {
@@ -8,21 +22,46 @@ describe('what an agent reads instead of the page', () => {
     });
 
     it('turns a symbol link into a link to the reference site', async () => {
-        const twin = await twinOf('Read <Ref pkg="core" symbol="Commands">`Commands`</Ref> first.\n');
+        const twin = await twinOf('Read [`Notice`](ref:core/Notice) first.\n');
 
-        expect(twin).toContain('[`Commands`](https://docs.seedcord.org/packages/core/latest/commands)');
+        expect(twin).toContain('[`Notice`](https://seedcord.org/docs/packages/core/latest/classes/notice)');
     });
 
     it('anchors a member on its owner page', async () => {
-        const twin = await twinOf('<Ref pkg="core" symbol="Paginator.start">`start`</Ref>\n');
+        const twin = await twinOf('call [`start`](ref:core/PaginatorBase.start) first\n');
 
-        expect(twin).toContain('/packages/core/latest/paginator#start)');
+        expect(twin).toContain('/packages/core/latest/classes/paginator-base#start)');
     });
 
-    it('names the package alone when a ref carries no symbol', async () => {
-        const twin = await twinOf('<Ref pkg="core" symbol="">core</Ref>\n');
+    it('links the package overview when a ref carries no symbol', async () => {
+        const twin = await twinOf('install [core](ref:core) first\n');
 
-        expect(twin).toContain('[core](https://docs.seedcord.org/packages/core/latest)');
+        expect(twin).toContain('[core](https://seedcord.org/docs/packages/core/latest)');
+    });
+
+    it('turns a link to another guide page into its full url', async () => {
+        const twin = await twinOf('Read [the throwing page](/replying/throwing) first.\n');
+
+        expect(twin).toContain('[the throwing page](https://seedcord.org/guide/replying/throwing/)');
+    });
+
+    it('keeps the heading a guide link points at', async () => {
+        const twin = await twinOf('See [faults](/replying/faults#when-to-throw).\n');
+
+        expect(twin).toContain('(https://seedcord.org/guide/replying/faults/#when-to-throw)');
+    });
+
+    it('keeps the title on a link to another guide page', async () => {
+        const twin = await twinOf('See [faults](/replying/faults "When to throw").\n');
+
+        expect(twin).toContain('[faults](https://seedcord.org/guide/replying/faults/ "When to throw")');
+    });
+
+    it('keeps a link title that ends in a backslash readable as markdown', async () => {
+        const twin = await twinOf('See [faults](/replying/faults "C:\\\\dir\\\\").\n');
+        const [link] = linksIn(twin);
+
+        expect(link?.title).toBe('C:\\dir\\');
     });
 
     it('writes a callout as a blockquote a reader of plain text can follow', async () => {

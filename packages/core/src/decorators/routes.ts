@@ -32,7 +32,7 @@ type ComponentBrand = TypedExtract<
 >;
 
 // core cannot import the transport handler bases. every route arrives on a phantom brand.
-type AnyHandlerCtor = new (...args: any[]) => unknown;
+type AnyHandlerCtor = new (...args: never[]) => unknown;
 
 type SlashRouteOf<TCtor extends AnyHandlerCtor> =
     InstanceType<TCtor> extends {

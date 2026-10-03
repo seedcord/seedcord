@@ -2,7 +2,9 @@ import uFuzzy from '@leeoniya/ufuzzy';
 
 import { DocKind } from '#model/kinds';
 
-import type { DocCollection, DocSearchEntry } from '#src/types';
+import type { DocSearchEntry } from '#src/types';
+
+export type ScoredEntry = Omit<DocSearchEntry, 'summary' | 'value'>;
 
 const SCORE_FUZZY_MATCH = 5;
 const SCORE_NAME_EXACT = 8;
@@ -38,8 +40,7 @@ const KIND_SCORE_TABLE: Partial<Record<number, number>> = {
     [DocKind.SetSignature]: 10
 };
 
-export class DocSearch {
-    private readonly searchIndex: DocSearchEntry[];
+export class DocSearch<Entry extends ScoredEntry = DocSearchEntry> {
     private readonly uf: uFuzzy;
     private readonly namesHaystack: string[];
     private readonly qualifiedNamesHaystack: string[];
@@ -50,9 +51,6 @@ export class DocSearch {
         typeof value === 'string' && value.length > 0 && this.collator.compare(value.toLowerCase(), token) === 0;
 
     private readonly getKindWeight = (kind: number): number => KIND_SCORE_TABLE[kind] ?? KIND_SCORE_DEFAULT;
-
-    private readonly aggregateSearchIndex = (collection: DocCollection): DocSearchEntry[] =>
-        collection.packages.flatMap((pkg) => pkg.indexes.search);
 
     private readonly tokenizeQuery = (query: string): string[] => {
         const normalized = query.trim().toLowerCase();
@@ -72,29 +70,25 @@ export class DocSearch {
         return tokens;
     };
 
-    constructor(private readonly collection: DocCollection) {
-        this.searchIndex = this.aggregateSearchIndex(collection);
-
+    constructor(private readonly searchIndex: readonly Entry[]) {
         // eslint-disable-next-line new-cap -- external library
         this.uf = new uFuzzy({ intraMode: 1 });
         this.namesHaystack = this.searchIndex.map((e) => e.name.toLowerCase());
         this.qualifiedNamesHaystack = this.searchIndex.map((e) => e.qualifiedName.toLowerCase());
     }
 
-    search(query: string, pkgName?: string): DocSearchEntry[] {
+    search(query: string, pkgName?: string): Entry[] {
         const tokens = this.tokenizeQuery(query);
         if (tokens.length === 0) {
             return [];
         }
 
-        const source = pkgName
-            ? (this.collection.packages.find((pkg) => pkg.manifest.name === pkgName)?.indexes.search ?? [])
-            : this.searchIndex;
+        const source = pkgName ? this.searchIndex.filter((entry) => entry.packageName === pkgName) : this.searchIndex;
 
         const [nameIdxs] = this.uf.search(this.namesHaystack, query.toLowerCase());
         const [qNameIdxs] = this.uf.search(this.qualifiedNamesHaystack, query.toLowerCase());
 
-        const fuzzyMatches = new Set<DocSearchEntry>();
+        const fuzzyMatches = new Set<Entry>();
         if (nameIdxs) {
             for (const idx of nameIdxs) {
                 const entry = this.searchIndex[idx];
@@ -115,7 +109,7 @@ export class DocSearch {
             .map(({ entry }) => entry);
     }
 
-    private score(entry: DocSearchEntry, tokens: string[], fuzzyMatches: Set<DocSearchEntry>): number {
+    private score(entry: Entry, tokens: string[], fuzzyMatches: Set<Entry>): number {
         let value = 0;
         const slugTokens = this.tokenizeSlug(entry.slug);
 
@@ -157,7 +151,7 @@ export class DocSearch {
         return false;
     }
 
-    private scoreToken(entry: DocSearchEntry, token: string, slugTokens: Set<string>): number {
+    private scoreToken(entry: Entry, token: string, slugTokens: Set<string>): number {
         let value = 0;
 
         if (this.safeEquals(entry.name, token)) {

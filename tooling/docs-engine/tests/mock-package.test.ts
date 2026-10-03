@@ -45,7 +45,7 @@ describe('DocsEngine mock package integration', () => {
             'dist/shared.d.ts'
         ]);
         expect(manifestPackage!.version).toBe('0.0.0');
-        expect(engine.getPackageDirectory(MOCK_PACKAGE_FULL_NAME)).toBe(pkg.directory);
+        expect(engine.getPackageDirectory(MOCK_PACKAGE_FULL_NAME)).toBe(pkg.listed);
     });
 
     it('exposes package-level documentation and cached package lookups', () => {

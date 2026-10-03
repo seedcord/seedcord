@@ -56,7 +56,7 @@
         "envapt": "catalog:peer",
         "kysely": "catalog:peer",
         "pg": "catalog:peer",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:consumerTypes"
     },
     "devDependencies": {
         "@seedcord/core": "workspace:^",

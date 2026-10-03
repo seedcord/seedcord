@@ -21,7 +21,7 @@ const BODY = `# seedcord
 
 ${bullets(agentRules('home'))}
 
-seedcord is a class + decorator framework for building Discord bots on top of discord.js 14, written in TypeScript. It routes interactions and events to your handler classes and runs your gates, lifecycle hooks and plugins, all typed end to end. A wrong route or option is a compile error before the bot connects.
+seedcord is a class + decorator framework for building Discord bots in TypeScript. It routes interactions and events to your handler classes and runs your gates, lifecycle hooks and plugins, all typed end to end. A wrong route or option is a compile error before the bot connects. The gateway transport runs on the discord.js 14 client. The http transport has no discord.js dependency.
 
 ## Features
 
@@ -30,8 +30,8 @@ ${bullets(readmeFeatures(readFileSync(README, 'utf8')))}
 ## Links
 
 - Site: ${SITE_URL}
-- Docs: ${DOCS_URL}
-- Guide: ${GUIDE_URL}
+- Guide index: ${GUIDE_URL}/llms.txt
+- Docs index: ${DOCS_URL}/llms.txt
 - Source: ${REPO_URL}
 - License: Apache-2.0
 `;

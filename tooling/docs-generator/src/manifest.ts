@@ -3,6 +3,7 @@ import { writeFile } from 'node:fs/promises';
 import { Extractor } from '@microsoft/api-extractor';
 
 import { defaultPaths } from './ApiDocsPaths';
+import { pageFields } from './manifest-fields';
 
 import type { ApiDocsPaths } from './ApiDocsPaths';
 import type { ManifestRepository, PackageDocResult } from './types';
@@ -35,9 +36,7 @@ export async function writeManifest(
             succeeded: result.succeeded,
             ...(result.sources && { sources: result.sources }),
             ...(result.reexports && { reexports: result.reexports }),
-            ...(result.readme && { readme: result.readme }),
-            ...(result.changelogUrl && { changelogUrl: result.changelogUrl }),
-            ...(result.description && { description: result.description })
+            ...pageFields(result)
         }))
     };
 

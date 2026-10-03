@@ -1,0 +1,25 @@
+{
+    "schemaVersion": 1,
+    "updatedAt": "2026-10-02T00:00:00.000Z",
+    "pathTemplates": { "stable": "{name}/{version}", "prerelease": "{name}/next/{version}" },
+    "packages": {
+        "core": {
+            "fullName": "@seedcord/core",
+            "stable": { "latest": "0.9.2", "latestByMinor": { "0.9": "0.9.2" }, "latestByMajor": { "0": "0.9.2" } },
+            "prerelease": null,
+            "entities": { "notice": "class", "paginator-base": "class", "plugin": "class" }
+        },
+        "gateway": {
+            "fullName": "@seedcord/gateway",
+            "stable": { "latest": "0.7.2", "latestByMinor": { "0.7": "0.7.2" }, "latestByMajor": { "0": "0.7.2" } },
+            "prerelease": null,
+            "entities": { "slash-handler": "class", "slash-route": "function" }
+        },
+        "plugin-mongoose": {
+            "fullName": "@seedcord/plugin-mongoose",
+            "stable": { "latest": "0.3.0", "latestByMinor": { "0.3": "0.3.0" }, "latestByMajor": { "0": "0.3.0" } },
+            "prerelease": null,
+            "entities": {}
+        }
+    }
+}

@@ -1,6 +1,6 @@
 import { appendFileSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 import { createServer, mergeConfig } from 'vite';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -37,14 +37,14 @@ function project(): string {
     return root;
 }
 
-// chokidar walks the tree one directory at a time, and linux reaches a nested one well after the root
-async function untilWatching(watcher: ViteDevServer['watcher'], directory: string): Promise<void> {
+// on linux chokidar lists a directory before it watches the files inside
+async function untilWatching(watcher: ViteDevServer['watcher'], file: string): Promise<void> {
     for (let attempt = 0; attempt < READY_ATTEMPTS; attempt++) {
-        if (Object.hasOwn(watcher.getWatched(), directory)) return;
+        if (watcher.getWatched()[dirname(file)]?.includes(basename(file))) return;
         await new Promise((resolve) => setTimeout(resolve, READY_POLL_MS));
     }
 
-    throw new Error(`${directory} was never watched. chokidar has: ${Object.keys(watcher.getWatched()).join(', ')}`);
+    throw new Error(`${file} was never watched. chokidar has: ${Object.keys(watcher.getWatched()).join(', ')}`);
 }
 
 async function filesTouchedAfterWriting(paths: readonly string[], root: string): Promise<string[]> {
@@ -71,7 +71,7 @@ async function filesTouchedAfterWriting(paths: readonly string[], root: string):
     );
 
     // src/logs stays watched in both cases
-    await untilWatching(server.watcher, join(real, 'src', 'logs'));
+    await untilWatching(server.watcher, join(real, 'src', 'logs', 'format.ts'));
     for (const path of paths) appendFileSync(path, 'a line\n');
     await new Promise((resolve) => setTimeout(resolve, WATCH_MS));
 

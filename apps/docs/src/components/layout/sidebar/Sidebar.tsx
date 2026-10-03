@@ -1,12 +1,14 @@
 'use client';
 
-import { Card, cn } from '@seedcord/ui';
+import { Card, cn, tw } from '@seedcord/ui';
+import { BookOpen } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 import { SidebarCategoryList } from './SidebarCategoryList';
 import { SidebarCategoryListSkeleton } from './SidebarCategoryListSkeleton';
 import { SidebarEmptyState } from './SidebarEmptyState';
 import { SidebarHeader } from './SidebarHeader';
+import { SidebarItem } from './SidebarItem';
 import { useSidebarNavigationHandlers } from './utils/useSidebarNavigationHandlers';
 import { useSidebarPersistence } from './utils/useSidebarPersistence';
 import { useSidebarScrollGuards } from './utils/useSidebarScrollGuards';
@@ -18,6 +20,11 @@ import type { CSSProperties, ReactElement } from 'react';
 
 const FILL: CSSProperties = { height: '100%', maxHeight: '100%' };
 const LIST: CSSProperties = { ...FILL, WebkitOverflowScrolling: 'touch' };
+
+const OVERVIEW_STYLES = {
+    item: tw`hover:border-(--border) hover:bg-(--surface-subtle) focus-visible:outline-(--flesh)`,
+    badge: tw`border-(--border) bg-(--surface-moderate) text-(--text)`
+};
 
 // eslint-disable-next-line max-lines-per-function -- composes selection state, persistence, navigation handlers, store wiring, and the full sidebar tree
 export function Sidebar({
@@ -104,7 +111,7 @@ export function Sidebar({
             )}
             style={isDesktop ? FILL : undefined}
         >
-            <div className={cn('shrink-0')}>
+            <div className={cn('shrink-0 space-y-3')}>
                 <SidebarHeader
                     packageOptions={packageOptions}
                     versionOptions={versionOptions}
@@ -112,6 +119,14 @@ export function Sidebar({
                     activeVersion={activeVersion}
                     onPackageChange={onPackageChange}
                     onVersionChange={onVersionChange}
+                />
+                <SidebarItem
+                    label="Overview"
+                    href={activeVersion.basePath}
+                    icon={BookOpen}
+                    styles={OVERVIEW_STYLES}
+                    isActive={pathname === activeVersion.basePath}
+                    {...(onSelect ? { onSelect } : {})}
                 />
             </div>
             <div

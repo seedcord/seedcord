@@ -42,11 +42,15 @@ export function resolveManifestPath(rootDir?: string, manifestPath?: string): st
 // The fetch path (index.json + project.json) is intentionally node:fs-free so it runs in build, ISR,
 // and request contexts alike. Only the local create() path above touches the filesystem,
 // via SEEDCORD_DOCS_DIR.
-const DEFAULT_INDEX_URL = 'https://cdn.seedcord.org/index.json';
+const PUBLISHED_INDEX_URL = 'https://cdn.seedcord.org/index.json';
+
+export function indexUrlOverride(): string | undefined {
+    const override = process.env.SEEDCORD_DOCS_INDEX_URL?.trim();
+    return override === '' ? undefined : override;
+}
 
 export function resolveIndexUrl(): string {
-    const override = process.env.SEEDCORD_DOCS_INDEX_URL?.trim();
-    return override && override.length > 0 ? override : DEFAULT_INDEX_URL;
+    return indexUrlOverride() ?? PUBLISHED_INDEX_URL;
 }
 
 /** The base for sibling `project.json` fetches: the index URL with a trailing `/index.json` removed. */

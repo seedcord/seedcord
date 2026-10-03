@@ -15,9 +15,6 @@ concurrency:
   group: release-${{ github.event.workflow_run.head_branch || github.ref_name }}
   cancel-in-progress: false
 
-env:
-  SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
-
 jobs:
   eligibility:
     if: ${{ github.repository == 'seedcord/seedcord' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository)) }}

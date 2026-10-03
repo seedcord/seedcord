@@ -59,7 +59,7 @@
     },
     "peerDependencies": {
         "envapt": "catalog:peer",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:consumerTypes"
     },
     "dependencies": {
         "@clack/prompts": "catalog:deps",

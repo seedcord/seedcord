@@ -5,7 +5,7 @@
     "engines": {
         "node": ">=24.11"
     },
-    "description": "Gateway transport for seedcord bots, built on discord.js",
+    "description": "Gateway transport for seedcord bots, using the discord.js client",
     "keywords": [
         "discord",
         "discord-bot",
@@ -54,7 +54,7 @@
     "peerDependencies": {
         "discord.js": "catalog:peer",
         "envapt": "catalog:peer",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:consumerTypes"
     },
     "dependencies": {
         "@discordjs/builders": "catalog:deps",

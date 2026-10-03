@@ -1,0 +1,98 @@
+name: docs-deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/docs/**'
+      - 'tooling/docs-engine/**'
+      - 'tooling/docs-generator/**'
+      - 'tooling/ui/**'
+      - 'scripts/src/docs/**'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/docs-deploy.yml'
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        default: ''
+      deploy:
+        type: boolean
+        default: true
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Upload and deploy after the link check. Off checks this branch only
+        type: boolean
+        default: true
+
+concurrency:
+  group: docs-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref || github.sha }}
+          fetch-depth: 0
+
+      - name: Turbo cache
+        uses: ./.github/actions/turbo-cache
+        with:
+          turbo_token: ${{ secrets.TURBO_TOKEN }}
+          turbo_team: ${{ vars.TURBO_TEAM }}
+          enable_fallback_cache: 'true'
+
+      - name: Setup workspace
+        uses: ./.github/actions/setup
+
+      - name: Build packages
+        run: pnpm turbo build --filter="@seedcord/docs^..."
+
+      - name: Render every page
+        run: pnpm -C apps/docs build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://seedcord.org/docs
+          DOCS_BUILD_CPUS: 4
+
+      - name: Check every docs link
+        run: pnpm -C apps/docs check:links
+
+      - name: Upload to R2
+        if: github.event_name == 'push' || inputs.deploy
+        id: upload
+        run: pnpm docs:upload
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+
+      - name: Point the worker at the build
+        if: steps.upload.outcome == 'success'
+        uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/docs
+          packageManager: pnpm
+          command: deploy --var BUILD_ID:${{ steps.upload.outputs.build_id }}
+
+      - name: Delete builds a rollback no longer needs
+        if: steps.upload.outcome == 'success'
+        run: pnpm docs:prune
+        env:
+          BUILD_ID: ${{ steps.upload.outputs.build_id }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}

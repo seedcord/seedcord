@@ -32,8 +32,8 @@ describe('a link to another guide page', () => {
         ['an anchor on this page', '[below](#options)', 'href="#options"'],
         [
             'another site',
-            '[docs](https://docs.seedcord.org/packages/core)',
-            'href="https://docs.seedcord.org/packages/core"'
+            '[docs](https://seedcord.org/docs/packages/core)',
+            'href="https://seedcord.org/docs/packages/core"'
         ]
     ])('leaves a link to %s alone', async (_what, source, href) => {
         expect(await compileGuideMdx(source)).toContain(href);

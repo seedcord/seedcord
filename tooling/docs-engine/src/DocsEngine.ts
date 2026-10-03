@@ -22,8 +22,8 @@ export class DocsEngine {
     private readonly directories: Map<string, PackageDirectory>;
 
     private constructor(private readonly collection: DocCollection) {
-        this.docSearch = new DocSearch(collection);
-        this.directories = new Map(collection.packages.map((pkg) => [pkg.manifest.name, pkg.directory] as const));
+        this.docSearch = new DocSearch(collection.packages.flatMap((pkg) => pkg.indexes.search));
+        this.directories = new Map(collection.packages.map((pkg) => [pkg.manifest.name, pkg.listed] as const));
     }
 
     static async create(options: DocsEngineOptions): Promise<DocsEngine> {

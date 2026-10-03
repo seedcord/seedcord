@@ -1,4 +1,6 @@
-import { assetPath, publicPath, TWIN } from '#lib/pageAssets';
+import { GUIDE } from '@seedcord/ui';
+import { TWIN } from '@seedcord/ui/page-asset';
+
 import { canonicalUrl, REPO_URL, SITE_NAME } from '#lib/site';
 
 // pull requests merge into next
@@ -37,11 +39,11 @@ export interface PageActionProps {
 // the fetch goes straight at the file. the menu link goes through worker.ts
 export function pageActionsFor(page: GuidePage): PageActionProps {
     return {
-        copySource: assetPath(page.url, TWIN),
-        viewHref: publicPath(page.url, TWIN),
+        copySource: GUIDE.path + TWIN.exportPath(page.url),
+        viewHref: GUIDE.path + TWIN.publicPath(page.url),
         links: pageActionLinks({
             title: page.data.title,
-            markdownUrl: canonicalUrl(publicPath(page.url, TWIN)),
+            markdownUrl: canonicalUrl(TWIN.publicPath(page.url)),
             contentPath: page.path
         })
     };

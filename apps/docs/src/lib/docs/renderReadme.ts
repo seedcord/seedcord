@@ -16,9 +16,19 @@ class VisibleText extends TextRenderer {
 
 const visibleText = new VisibleText();
 
+// github resolves a README's relative links against its folder. ?raw=true serves an image as a file
+function resolveAgainst(folderUrl: string, token: Tokens.Link | Tokens.Image): void {
+    const { href } = token;
+    if (href.startsWith('#') || href.startsWith('/') || URL.canParse(href)) return;
+
+    const resolved = new URL(href, `${folderUrl}/`);
+    if (token.type === 'image') resolved.searchParams.set('raw', 'true');
+    token.href = resolved.href;
+}
+
 // a separate marked instance keeps readme rendering independent of the shiki-configured global marked
 // in renderParagraphs.ts.
-function readmeMarked(): Marked {
+function readmeMarked(folderUrl: string | undefined): Marked {
     // one per readme, since it numbers repeated headings
     const slugger = new GithubSlugger();
 
@@ -26,6 +36,10 @@ function readmeMarked(): Marked {
         async: true,
         gfm: true,
         walkTokens: async (token) => {
+            if (folderUrl && (token.type === 'link' || token.type === 'image')) {
+                resolveAgainst(folderUrl, token as Tokens.Link | Tokens.Image);
+                return;
+            }
             if (token.type !== 'code') return;
             // the cast narrows token past marked's union. shiki validates the language string at runtime regardless.
             const { text, lang } = token as Tokens.Code;
@@ -63,8 +77,8 @@ function themeWordmarkPictures(html: string): string {
     });
 }
 
-export async function renderReadme(markdown: string): Promise<string> {
-    const html = await readmeMarked().parse(markdown);
+export async function renderReadme(markdown: string, folderUrl?: string): Promise<string> {
+    const html = await readmeMarked(folderUrl).parse(markdown);
     const themed = themeWordmarkPictures(html);
     // the first README image is the hero banner and the page's LCP element, so fetch it at high priority.
     const prioritized = themed.replace(/<img\b/, '<img fetchpriority="high"');

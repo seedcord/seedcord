@@ -1,4 +1,4 @@
-import { cn, GithubIcon, Icon } from '@seedcord/ui';
+import { cn, GithubIcon } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import Link from 'next/link';
 
@@ -46,7 +46,7 @@ export function Nav(): ReactNode {
                     </nav>
                     <NpmVersion />
                     <PosterButton href={REPO_URL} variant="ink" className={cn('font-mono-code px-3 py-1.5 text-sm')}>
-                        <Icon icon={GithubIcon} size={20} className={cn('md:hidden')} />
+                        <GithubIcon variant="mark" size={20} aria-hidden className={cn('shrink-0 md:hidden')} />
                         <span className={cn('sr-only md:not-sr-only')}>GitHub</span>
                         <GithubStars />
                     </PosterButton>

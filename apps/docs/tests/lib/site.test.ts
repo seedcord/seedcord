@@ -33,7 +33,11 @@ describe('DocsPage.metadata', () => {
 
     it('points a package overview at its latest url, whichever version rendered it', () => {
         const meta = DocsPage.forPackage(ENTRY, VERSION).metadata();
-        expect(meta.alternates?.canonical).toBe('https://docs.seedcord.org/packages/types/latest');
+        expect(meta.alternates?.canonical).toBe('https://seedcord.org/docs/packages/types/latest');
+    });
+
+    it('points the reference root at the base path with no trailing slash', () => {
+        expect(DocsPage.root().metadata().alternates?.canonical).toBe('https://seedcord.org/docs');
     });
 
     it('puts the package name in an entity title', () => {

@@ -2,9 +2,10 @@ import { isBuilderComponentClass } from '#components/Component';
 import { CommandMetadataKey } from '#src/metadataKeys';
 
 import type { BuilderComponent } from '#components/Component';
+import type { Constructor } from 'type-fest';
 
 /** @internal */
-export type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;
+export type CommandCtor = Constructor<BuilderComponent<'command' | 'context_menu'>, never[]>;
 
 // the cli's codegen scan reads this too
 /** @internal */

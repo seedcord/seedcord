@@ -5,13 +5,15 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { useShallow } from 'zustand/react/shallow';
 
 import { log } from '#lib/logger';
+import { searchFiles } from '#lib/search/SearchFiles';
+import type { SearchCatalog } from '#lib/search/SearchCatalog';
 import { useUIStore, type UIStore } from '#store/ui';
 
-import { FOCUS_DELAY_MS } from './constants';
+import { ALL_PACKAGES, FOCUS_DELAY_MS, isKindFilter } from './constants';
 
+import type { KindFilter } from './constants';
 import type { CommandAction, DocsPackageOption } from './types';
 
-// action.href already carries the right member fragment from the search route
 function buildNavigationHref(action: CommandAction, origin: string): string {
     try {
         const targetUrl = new URL(action.href, origin);
@@ -21,47 +23,57 @@ function buildNavigationHref(action: CommandAction, origin: string): string {
     }
 }
 
-function usePackageList(open: boolean): DocsPackageOption[] {
-    const [packages, setPackages] = useState<DocsPackageOption[]>([]);
+function useSearchCatalog(open: boolean): SearchCatalog | null {
+    const [catalog, setCatalog] = useState<SearchCatalog | null>(null);
+    const [failed, setFailed] = useState(false);
 
     useEffect(() => {
-        if (!open || packages.length > 0) return undefined;
+        if (catalog || (failed && !open)) return undefined;
 
-        const abort = new AbortController();
-        fetch('/search?list=packages', { signal: abort.signal })
-            .then((response) => (response.ok ? (response.json() as Promise<{ packages?: DocsPackageOption[] }>) : null))
-            .then((payload) => {
-                if (payload && Array.isArray(payload.packages)) setPackages(payload.packages);
+        let cancelled = false;
+        searchFiles
+            .catalog()
+            .then((loaded) => {
+                if (!cancelled) setCatalog(loaded);
             })
-            .catch(() => undefined);
+            .catch(() => {
+                if (!cancelled) setFailed(true);
+            });
 
         return () => {
-            abort.abort();
+            cancelled = true;
         };
-    }, [open, packages.length]);
+    }, [open, catalog, failed]);
 
-    return packages;
+    return catalog;
 }
 
-interface SearchFilters {
+interface FilterValues {
     scope: string;
-    kind: string;
+    kind: KindFilter;
     prerelease: boolean;
+}
+
+interface SearchFilters extends FilterValues {
     handleScopeChange: (scope: string) => void;
     handleKindChange: (kind: string) => void;
     handlePrereleaseChange: (prerelease: boolean) => void;
     resetFilters: () => void;
 }
 
+const DEFAULT_FILTERS: FilterValues = { scope: ALL_PACKAGES, kind: 'all', prerelease: false };
+
 function useSearchFilters(): SearchFilters {
-    const [filters, setFilters] = useState({ scope: 'all', kind: 'all', prerelease: false });
+    const [filters, setFilters] = useState(DEFAULT_FILTERS);
     const handleScopeChange = useCallback((scope: string) => setFilters((prev) => ({ ...prev, scope })), []);
-    const handleKindChange = useCallback((kind: string) => setFilters((prev) => ({ ...prev, kind })), []);
+    const handleKindChange = useCallback((kind: string) => {
+        if (isKindFilter(kind)) setFilters((prev) => ({ ...prev, kind }));
+    }, []);
     const handlePrereleaseChange = useCallback(
         (prerelease: boolean) => setFilters((prev) => ({ ...prev, prerelease })),
         []
     );
-    const resetFilters = useCallback(() => setFilters({ scope: 'all', kind: 'all', prerelease: false }), []);
+    const resetFilters = useCallback(() => setFilters(DEFAULT_FILTERS), []);
     return { ...filters, handleScopeChange, handleKindChange, handlePrereleaseChange, resetFilters };
 }
 
@@ -70,8 +82,9 @@ export interface CommandPaletteController {
     mounted: boolean;
     searchValue: string;
     scope: string;
-    kind: string;
+    kind: KindFilter;
     prerelease: boolean;
+    hasPrerelease: boolean;
     packages: DocsPackageOption[];
     inputRef: RefObject<HTMLInputElement | null>;
     handleOpenChange: (open: boolean) => void;
@@ -97,13 +110,13 @@ export function useCommandPaletteController(): CommandPaletteController {
     const { scope, kind, prerelease, handleScopeChange, handleKindChange, handlePrereleaseChange, resetFilters } =
         useSearchFilters();
     const [mounted] = useState(() => typeof window !== 'undefined');
-    const packages = usePackageList(open);
+    const catalog = useSearchCatalog(open);
 
     useEffect(() => {
         if (!mounted) return undefined;
 
         if (open) {
-            // justified: animation-coupled, input lives behind a Radix <Dialog> mount and only receives focus after the surface paints in.
+            // the input takes focus only once the Radix dialog has painted
             const focusTimeout = window.setTimeout(() => {
                 inputRef.current?.select();
             }, FOCUS_DELAY_MS);
@@ -158,7 +171,8 @@ export function useCommandPaletteController(): CommandPaletteController {
         scope,
         kind,
         prerelease,
-        packages,
+        hasPrerelease: catalog?.hasPrerelease ?? false,
+        packages: catalog?.options ?? [],
         inputRef,
         handleOpenChange,
         handleValueChange: setSearchValue,

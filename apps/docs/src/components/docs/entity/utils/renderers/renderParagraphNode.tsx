@@ -1,4 +1,4 @@
-import { COMMENT_PROSE } from '../../constants';
+import { COMMENT_PROSE } from '#components/docs/entity/constants';
 
 import type { CommentParagraph } from '#lib/docs/types';
 import type { ReactElement } from 'react';

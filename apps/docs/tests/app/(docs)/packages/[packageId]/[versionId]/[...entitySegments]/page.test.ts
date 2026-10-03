@@ -62,7 +62,7 @@ describe('entity page metadata', () => {
         });
 
         expect(metadata.alternates?.canonical).toBe(
-            'https://docs.seedcord.org/packages/gateway/latest/functions/gated'
+            'https://seedcord.org/docs/packages/gateway/latest/functions/gated'
         );
     });
 });

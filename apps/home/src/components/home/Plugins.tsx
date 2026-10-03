@@ -33,9 +33,9 @@ export function Plugins(): ReactNode {
                 </div>
             </div>
             {/* a third column cuts each card to 354px and clips the longest import lines */}
-            <div className={cn('mt-10 grid items-start gap-x-10 gap-y-5 lg:grid-cols-2')}>
+            <div className={cn('mt-10 grid gap-x-10 gap-y-5 lg:grid-cols-2')}>
                 <CodeCard code={pluginSource} filename="plugins/uptime.ts" note="write it" className={cn(CARD)} />
-                <div className={cn('grid gap-5')}>
+                <div className={cn('grid grid-rows-[auto_1fr] gap-5')}>
                     <CodeCard code={pluginAttach} filename="bot.ts" note="attach it" className={cn(CARD)} />
                     <CodeCard
                         code={pluginGenerated}

@@ -41,10 +41,11 @@ pnpm -C <pkg> test
 pnpm lint:fix
 pnpm tc
 pnpm test
-pnpm prePush      # build + tc + lint + test, the full pre-push gate
+pnpm prePush      # every check, on the packages changed since next
+pnpm prePush:all  # every check, on every package
 ```
 
-Husky's hooks run `lint-staged` (configured in `lint-staged.config.ts`) on commit and the full `prePush` gate on push. Don't bypass them.
+Husky runs `lint-staged` (configured in `lint-staged.config.ts`) on commit, and commitlint on the message. No hook runs on push, so run `pnpm prePush` yourself. Don't bypass the hooks.
 
 ---
 

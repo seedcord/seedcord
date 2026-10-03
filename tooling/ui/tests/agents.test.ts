@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { agentLinkHeader, agentRules, canonicalSkillHeader, readmeFeatures, siteLinks } from '#src/agents';
+import { agentLinkHeader, agentRules, readmeFeatures, siteLinks } from '#src/agents';
 
 import type { SeedcordSite } from '#src/agents';
 
@@ -18,15 +18,17 @@ function relationsOf(header: string): Map<string, string> {
 }
 
 describe('agentLinkHeader', () => {
-    it('describes every site by its own llms.txt', () => {
-        for (const site of SITES) {
-            expect(relationsOf(agentLinkHeader(site)).get('describedby')).toBe('/llms.txt');
-        }
+    it('describes every site by the llms.txt under its own path', () => {
+        expect(relationsOf(agentLinkHeader('home')).get('describedby')).toBe('/llms.txt');
+        expect(relationsOf(agentLinkHeader('guide')).get('describedby')).toBe('/guide/llms.txt');
+        expect(relationsOf(agentLinkHeader('docs')).get('describedby')).toBe('/docs/llms.txt');
     });
 
-    it('points every site at its own agent-skills index', () => {
+    it('points every site at the agent-skills index home serves', () => {
         for (const site of SITES) {
-            expect(relationsOf(agentLinkHeader(site)).get('service-meta')).toBe('/.well-known/agent-skills/index.json');
+            expect(relationsOf(agentLinkHeader(site)).get('service-meta')).toBe(
+                'https://seedcord.org/.well-known/agent-skills/index.json'
+            );
         }
     });
 
@@ -38,12 +40,12 @@ describe('agentLinkHeader', () => {
     it('sends a reader from the guide to the reference and to home', () => {
         const relations = relationsOf(agentLinkHeader('guide'));
 
-        expect(relations.get('service-doc')).toBe('https://docs.seedcord.org');
+        expect(relations.get('service-doc')).toBe('https://seedcord.org/docs');
         expect(relations.get('index')).toBe('https://seedcord.org');
     });
 
     it('sends a reader from the reference to the guide', () => {
-        expect(relationsOf(agentLinkHeader('docs')).get('related')).toBe('https://guide.seedcord.org');
+        expect(relationsOf(agentLinkHeader('docs')).get('related')).toBe('https://seedcord.org/guide');
     });
 
     it('offers the markdown twin of the page it was built for', () => {
@@ -80,10 +82,10 @@ describe('agentRules', () => {
         }
     });
 
-    it('sends every site to the skill the guide serves', () => {
+    it('sends every site to the skill at the origin root', () => {
         for (const site of SITES) {
             expect(agentRules(site).join('\n')).toContain(
-                'https://guide.seedcord.org/.well-known/agent-skills/seedcord/SKILL.md'
+                'https://seedcord.org/.well-known/agent-skills/seedcord/SKILL.md'
             );
         }
     });
@@ -102,15 +104,6 @@ describe('agentRules', () => {
 
             expect(openings.filter((opening) => rules.includes(opening))).toHaveLength(2);
         }
-    });
-});
-
-describe('canonicalSkillHeader', () => {
-    // all three sites serve the same bytes at this path
-    it('sends a reader to the copy the guide serves', () => {
-        expect(canonicalSkillHeader()).toBe(
-            '<https://guide.seedcord.org/.well-known/agent-skills/seedcord/SKILL.md>; rel="canonical"'
-        );
     });
 });
 

@@ -1,9 +1,10 @@
 import { cn, tw } from '@seedcord/ui';
 import Link from 'next/link';
 
+import { HoverPrefetchLink } from '#components/HoverPrefetchLink';
 import { getToneConfig, getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
 
-import type { ReexportLink } from '#lib/docs/catalog';
+import type { ReexportLink } from '#lib/docs/ActiveVersion';
 import type { NavigationCategory } from '#lib/docs/types';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { ReactElement } from 'react';
@@ -28,10 +29,10 @@ function renderCategory(category: NavigationCategory): ReactElement {
             </header>
             <div className={cn('flex flex-wrap gap-2')}>
                 {category.items.map((item) => (
-                    <Link key={item.id} href={item.href} className={cn(chipClassName, toneStyles.item)}>
+                    <HoverPrefetchLink key={item.id} href={item.href} className={cn(chipClassName, toneStyles.item)}>
                         <span aria-hidden className={cn('size-1.5 shrink-0 rounded-full', toneStyles.dot)} />
                         {item.label}
-                    </Link>
+                    </HoverPrefetchLink>
                 ))}
             </div>
         </section>
@@ -57,6 +58,7 @@ function renderReexportLink(link: ReexportLink): ReactElement {
             href={link.href}
             target="_blank"
             rel="noopener noreferrer"
+            prefetch={false}
             className={cn(reexportChipClassName, toneStyles?.item)}
         >
             {toneStyles ? <span aria-hidden className={cn('size-1 shrink-0 rounded-full', toneStyles.dot)} /> : null}

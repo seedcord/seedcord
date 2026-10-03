@@ -68,6 +68,8 @@ export interface DocManifestPackage {
     reexports?: DocReexport[];
     readme?: string;
     changelogUrl?: string;
+    // a README's relative links resolve against this github folder
+    folderUrl?: string;
     description?: string;
 }
 
@@ -79,6 +81,8 @@ export interface DocManifest {
     repository?: ManifestRepository;
     packages: DocManifestPackage[];
 }
+
+export type ReexportReference = DocReference & { packageName: string };
 
 export interface DocReference {
     name: string;
@@ -252,7 +256,7 @@ export interface DocNode {
     headerText?: string;
     // Set on the package root only: symbols re-exported from a workspace dependency, each a
     // cross-package reference to its owner's page.
-    reexports?: DocReference[];
+    reexports?: ReexportReference[];
     // Set on top-level members only: the `exports` map subpaths that expose this symbol, `.` for the
     // root entry.
     entries?: string[];
@@ -286,7 +290,8 @@ export interface DocPackageModel {
     packageDocumentation: DocComment | null;
     nodes: Map<number, DocNode>;
     indexes: DocIndexes;
-    directory: PackageDirectory;
+    listed: PackageDirectory;
+    pages: PackageDirectory;
 }
 
 export interface DocCollection {

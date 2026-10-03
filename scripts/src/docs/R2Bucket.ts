@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import {
     DeleteObjectCommand,
+    DeleteObjectsCommand,
     GetObjectCommand,
     HeadObjectCommand,
     ListObjectsV2Command,
@@ -11,12 +12,16 @@ import {
 import { validateIndex } from '@seedcord/docs-engine';
 import { Converters, Envapter } from 'envapt';
 
+import type { SiteBucket } from '#src/docs/DocsSiteUpload';
+import type { ListObjectsV2CommandOutput } from '@aws-sdk/client-s3';
 import type { IndexJson } from '@seedcord/docs-engine';
 
 const IMMUTABLE_CACHE_CONTROL = 'public, max-age=31536000, immutable';
 const HTTP_NOT_FOUND = 404;
+// the S3 DeleteObjects call takes at most 1000 keys
+const DELETE_BATCH = 1000;
 
-export class R2Bucket {
+export class R2Bucket implements SiteBucket {
     static fromEnv(bucketOverride?: string, prefix = ''): R2Bucket {
         const read = (key: string): string => Envapter.getRequired(key, Converters.String);
         const accountId = read('R2_ACCOUNT_ID');
@@ -42,15 +47,16 @@ export class R2Bucket {
     ) {}
 
     async getIndex(): Promise<IndexJson | null> {
+        const text = await this.readText('index.json');
+        return text ? validateIndex(JSON.parse(text)) : null;
+    }
+
+    private async readText(relativePath: string): Promise<string | null> {
         try {
             const reply = await this.client.send(
-                new GetObjectCommand({ Bucket: this.bucket, Key: this.keyFor('index.json') })
+                new GetObjectCommand({ Bucket: this.bucket, Key: this.keyFor(relativePath) })
             );
-            const text = await reply.Body?.transformToString();
-            if (!text) return null;
-
-            const parsed: unknown = JSON.parse(text);
-            return validateIndex(parsed);
+            return (await reply.Body?.transformToString()) ?? null;
         } catch (error) {
             if (isMissing(error)) return null;
             throw error;
@@ -79,25 +85,73 @@ export class R2Bucket {
         );
     }
 
+    // the docs worker sets every response header itself
+    async putFile(relativePath: string, filePath: string): Promise<void> {
+        await this.client.send(
+            new PutObjectCommand({
+                Bucket: this.bucket,
+                Key: this.keyFor(relativePath),
+                Body: await readFile(filePath)
+            })
+        );
+    }
+
     async delete(relativePath: string): Promise<void> {
         await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: this.keyFor(relativePath) }));
     }
 
+    async deleteFolder(folder: string): Promise<void> {
+        const keys: string[] = [];
+        for await (const page of this.pages(this.keyFor(folder))) {
+            for (const object of page.Contents ?? []) if (object.Key) keys.push(object.Key);
+        }
+
+        for (let start = 0; start < keys.length; start += DELETE_BATCH) {
+            const Objects = keys.slice(start, start + DELETE_BATCH).map((Key) => ({ Key }));
+            const reply = await this.client.send(
+                new DeleteObjectsCommand({ Bucket: this.bucket, Delete: { Objects } })
+            );
+            // DeleteObjects answers 200 and lists each key it refused under Errors
+            const refused = reply.Errors?.map(({ Key, Code }) => `${Key ?? '?'} (${Code ?? 'unknown'})`) ?? [];
+            if (refused.length > 0) throw new Error(`R2 refused to delete ${refused.join(', ')}`);
+        }
+    }
+
     async list(): Promise<string[]> {
         const paths: string[] = [];
-        let token: string | undefined;
-
-        do {
-            const reply = await this.client.send(
-                new ListObjectsV2Command({ Bucket: this.bucket, Prefix: this.prefix, ContinuationToken: token })
-            );
-            for (const object of reply.Contents ?? []) {
+        for await (const page of this.pages(this.prefix)) {
+            for (const object of page.Contents ?? []) {
                 if (object.Key) paths.push(object.Key.slice(this.prefix.length));
             }
-            token = reply.IsTruncated ? reply.NextContinuationToken : undefined;
-        } while (token);
-
+        }
         return paths;
+    }
+
+    // the folders one level below `prefix`, each ending in a slash
+    async folders(prefix: string): Promise<string[]> {
+        const folders: string[] = [];
+        for await (const page of this.pages(this.keyFor(prefix), '/')) {
+            for (const common of page.CommonPrefixes ?? []) {
+                if (common.Prefix) folders.push(common.Prefix.slice(this.prefix.length));
+            }
+        }
+        return folders;
+    }
+
+    private async *pages(prefix: string, delimiter?: string): AsyncGenerator<ListObjectsV2CommandOutput> {
+        let token: string | undefined;
+        do {
+            const page = await this.client.send(
+                new ListObjectsV2Command({
+                    Bucket: this.bucket,
+                    Prefix: prefix,
+                    Delimiter: delimiter,
+                    ContinuationToken: token
+                })
+            );
+            yield page;
+            token = page.IsTruncated ? page.NextContinuationToken : undefined;
+        } while (token);
     }
 
     private keyFor(relativePath: string): string {

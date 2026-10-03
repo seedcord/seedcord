@@ -7,10 +7,11 @@ import { createTwoslasher } from 'twoslash';
 import { removeCodeRanges, resolveNodePositions, splitLines } from 'twoslash-protocol';
 
 import { commonIndent } from '#lib/dedent';
+import { DocsLinks } from '#lib/DocsLinks';
 import { cleanFence } from '#lib/fence';
 import { formatHoverType } from '#lib/formatHoverType';
 import { SAMPLE_AUGMENTATION } from '#lib/sampleTypes';
-import { referenceFor } from '#lib/symbolRef';
+import { SymbolRef } from '#lib/SymbolRef';
 
 import type {
     TwoslashRenderer,
@@ -18,12 +19,11 @@ import type {
     TwoslashShikiReturn,
     TwoslashTypesCache
 } from '@shikijs/twoslash';
-import type { SymbolReference } from '#lib/symbolRef';
 import type { CodeRepresentation } from '@seedcord/ui';
 import type { BundledLanguage } from 'shiki';
 import type { NodeHover, Range } from 'twoslash-protocol';
 
-type HoverWithRef = NodeHover & { ref?: SymbolReference };
+type HoverWithRef = NodeHover & { ref?: SymbolRef };
 
 // twoslashBlock compiles a fence itself to reach prettier, then hands the result to the transformer through here
 function oneEntryCache(): TwoslashTypesCache {
@@ -80,9 +80,10 @@ const renderer: TwoslashRenderer = {
     nodeStaticInfo(info, node) {
         const element = rich.nodeStaticInfo?.call(this, info, node) ?? node;
         const { ref } = info as HoverWithRef;
-        if (!ref || element.type !== 'element') return element;
+        const href = ref ? DocsLinks.current().href(ref) : null;
+        if (!ref || !href || element.type !== 'element') return element;
 
-        element.properties = { ...element.properties, 'data-ref-pkg': ref.pkg, 'data-ref-symbol': ref.symbol };
+        element.properties = { ...element.properties, 'data-ref-href': href, 'data-ref-symbol': ref.symbol };
 
         return element;
     },
@@ -123,13 +124,13 @@ function beforeCuts(offset: number, removals: readonly Range[]): number {
         .reduce((moved, [start, end]) => (start <= moved ? moved + (end - start) : moved), offset);
 }
 
-function refAt(checker: ts.TypeChecker, source: ts.SourceFile, offset: number): SymbolReference | null {
+function refAt(checker: ts.TypeChecker, source: ts.SourceFile, offset: number): SymbolRef | null {
     const symbol = checker.getSymbolAtLocation(leafAt(source, source, offset));
     const target = symbol && symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
     const declared = target?.declarations?.[0]?.getSourceFile().fileName;
     if (!target || !declared) return null;
 
-    return referenceFor(declared, checker.getFullyQualifiedName(target));
+    return SymbolRef.fromDeclaration(declared, checker.getFullyQualifiedName(target));
 }
 
 function attachRefs(input: string, extension: string, result: ReturnType<typeof compile>): void {
@@ -241,6 +242,7 @@ export async function twoslashBlock(code: string, lang: BundledLanguage, mode: F
     if (process.env.TWOSLASH === '0') return { text, html: await highlightToHtml(text, lang) };
 
     const extension = LANG_ALIAS[lang] ?? lang;
+    await DocsLinks.load();
     try {
         // prettier has to finish before the sync renderer reads a hover
         const compiled = dedenting(code, extension, TWOSLASH_OPTIONS[mode]);

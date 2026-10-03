@@ -21,7 +21,7 @@ export function Hero(): ReactNode {
                             'font-mono-code mb-6 inline-flex items-center gap-2 rounded-sm bg-(--seed-dark) px-2.5 py-1 text-xs font-semibold text-(--pith) sm:px-3 sm:py-1.5 sm:text-sm'
                         )}
                     >
-                        discord.js 14 · typescript
+                        typescript
                         <span className={cn('hidden sm:inline')}> · gateway/http bot framework</span>
                     </div>
                     <h1
@@ -35,10 +35,9 @@ export function Hero(): ReactNode {
                         </span>
                     </h1>
                     <p className={cn('mt-7 max-w-xl text-lg/snug font-medium text-(--seed-dark)/85 md:text-xl')}>
-                        seedcord sends every command, button, and event to the class you wrote for it, with gates,
-                        plugins, and lifecycle hooks built in. A wrong route or option name is a compile error, before
-                        the bot ever connects. It&apos;s built on the discord.js packages, so what you already know
-                        still applies.
+                        A wrong route or option name is a compile error, before the bot ever connects. Every command,
+                        button, and event goes to a class you write, with reusable checks, hot reload, and a lot more
+                        built in.
                     </p>
                     {/* ml-1 matches the poster button's 4px rest translate, aligning the chip with the button face */}
                     <CopyCommand command="pnpm create seedcord" className={cn('mt-7 ml-1')} />

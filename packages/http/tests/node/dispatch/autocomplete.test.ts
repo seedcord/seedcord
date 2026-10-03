@@ -1,14 +1,15 @@
 import 'reflect-metadata';
 
-import { defineGate, Notice } from '@seedcord/core';
+import { defineGate, InteractionKind, Notice } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 
-import { FROM, capturingCtx, emptyManifest, readyEngine, signedRequest } from './harness';
+import { capturingCtx, manifestFor, readyEngine, signedRequest } from './harness';
 
-import type { RouteManifest } from '#src/manifest/RouteManifest';
+import type { HandlerConstructor } from '#handlers/constructors';
+import type { Manifest } from '#src/manifest/Manifest';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 
 const rest = vi.hoisted(() => {
@@ -32,7 +33,7 @@ const rest = vi.hoisted(() => {
     return { instances, FakeRest };
 });
 
-// the factory must not import project modules, vitest loads factory imports in a mock-bypass
+// the factory must not import project modules, because vitest loads factory imports in a mock-bypass
 // context that would cache the engine graph unmocked
 vi.mock('@discordjs/rest', async (importOriginal) => ({
     ...(await importOriginal<object>()),
@@ -59,11 +60,8 @@ function autocompletePayload(name: string): object {
     };
 }
 
-function manifestFor(handler: unknown, name: string): RouteManifest {
-    return {
-        ...emptyManifest(),
-        autocompleteRoutes: [{ name, exportName: 'handler', from: FROM, load: () => Promise.resolve({ handler }) }]
-    };
+function completes(handler: HandlerConstructor, name: string): Manifest {
+    return manifestFor(InteractionKind.Autocomplete, name, handler);
 }
 
 interface CallbackCall {
@@ -87,7 +85,7 @@ describe('autocomplete dispatch', () => {
                 await this.respond([{ name: 'apple', value: 'apple' }]);
             }
         }
-        const { signer, handle } = await readyEngine(manifestFor(Search, 'search'));
+        const { signer, handle } = await readyEngine(completes(Search, 'search'));
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, autocompletePayload('search')), ctx);
@@ -111,9 +109,9 @@ describe('autocomplete dispatch', () => {
         const refuse = defineGate('refuse', () => {
             throw new TestNotice();
         });
-        // @Gated rejects a gate on an autocomplete handler at compile time, this backstops a metadata-set gate at runtime
+        // @Gated rejects a gate on an autocomplete handler at compile time. writing the metadata skips that check.
         Reflect.defineMetadata(GatedMetadataKey, [refuse], Search);
-        const { signer, handle } = await readyEngine(manifestFor(Search, 'search'));
+        const { signer, handle } = await readyEngine(completes(Search, 'search'));
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, autocompletePayload('search')), ctx);

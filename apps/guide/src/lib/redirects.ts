@@ -1,4 +1,4 @@
-import { assetExtensionOf } from './pageAssets';
+import { PageAsset } from '@seedcord/ui/page-asset';
 
 // Add a line here whenever a page's slug changes. Nothing detects a rename.
 export const RENAMED_PAGES: Record<string, string> = {
@@ -34,7 +34,7 @@ function withoutTrailingSlash(pathname: string): string {
  */
 export function redirectFor(pathname: string): string | undefined {
     const bare = withoutTrailingSlash(pathname);
-    const extension = assetExtensionOf(bare);
+    const extension = PageAsset.forPath(bare)?.extension;
     const route = extension === undefined ? bare : bare.slice(0, -extension.length);
 
     const target = RENAMED_PAGES[route];

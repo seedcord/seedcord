@@ -84,16 +84,18 @@ export function OgCard(): ReactElement {
                 <div
                     style={{
                         display: 'flex',
-                        textAlign: 'center',
-                        maxWidth: 840,
+                        flexDirection: 'column',
+                        alignItems: 'center',
                         fontFamily: 'Hanken Grotesk',
                         fontSize: 25,
                         lineHeight: 1.34,
                         color: BRAND.sub
                     }}
                 >
-                    Generated option types, a typed customId codec, composable gates, and hot reload, on top of
-                    discord.js.
+                    <div style={{ display: 'flex' }}>
+                        Generated slash-option types, typed customIds, reusable checks,
+                    </div>
+                    <div style={{ display: 'flex' }}>hot reload, and a lot more.</div>
                 </div>
             </div>
             <Footer />

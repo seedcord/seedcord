@@ -141,4 +141,4 @@ Most of the code you write works the same on either transport, and the import li
 
 - **Node 24.11 or newer.** Every seedcord package declares it under `engines`.
 - **TypeScript.** seedcord uses it heavily. You read and write generics from the first handler onward.
-- **discord.js.** seedcord is built on top of it and covers most of the boilerplate. A lot of the code that touches Discord is still discord.js.
+- **discord.js on gateway.** The gateway transport uses the discord.js client, so gateway handlers read discord.js objects. You write command definitions with `@discordjs/builders` on both transports.

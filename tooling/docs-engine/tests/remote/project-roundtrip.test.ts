@@ -35,7 +35,7 @@ describe('project-file serialize/deserialize roundtrip', () => {
         expect(restored.indexes.search.map((entry) => entry.slug)).toEqual(
             original.indexes.search.map((entry) => entry.slug)
         );
-        expect(restored.directory.snapshot()).toEqual(original.directory.snapshot());
+        expect(restored.listed.snapshot()).toEqual(original.listed.snapshot());
     });
 
     it('rebuilds a representative node with its children intact', () => {

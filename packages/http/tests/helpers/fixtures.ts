@@ -1,7 +1,7 @@
 import { Bus } from '@seedcord/core';
 
 import type { HttpConfig } from '#interfaces/Config';
-import type { RouteManifest } from '#src/manifest/RouteManifest';
+import type { Manifest } from '#src/manifest/Manifest';
 import type { CoreBase } from '@seedcord/core';
 
 export function stubBus(): Bus {
@@ -9,7 +9,7 @@ export function stubBus(): Bus {
     return new Bus({} as unknown as CoreBase);
 }
 
-/** The id every host decodes out of {@link VALID_TOKEN}. */
+// the id every host decodes out of VALID_TOKEN
 export const APP_ID = '1195232619718254663';
 
 // eslint-disable-next-line no-magic-numbers -- mimic valid token shape
@@ -20,12 +20,10 @@ export const nullPathConfig: HttpConfig = {
     subscribers: { path: null }
 };
 
-export function emptyManifest(): RouteManifest {
-    return {
-        commandRoutes: [],
-        componentRoutes: [],
-        autocompleteRoutes: [],
-        subscriberRoutes: [],
-        middlewareRoutes: []
-    };
+export function emptyManifest(): Manifest {
+    return { handlers: [], middleware: [], subscribers: [] };
+}
+
+export function manifestWith(parts: Partial<Manifest>): Manifest {
+    return { ...emptyManifest(), ...parts };
 }

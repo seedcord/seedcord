@@ -4,12 +4,12 @@ import { decorateProseLinks } from '#lib/docs/comments/renderers/decorateProseLi
 
 describe('decorateProseLinks', () => {
     it('leaves a same-package internal link untouched', () => {
-        const html = '<p><a href="/packages/seedcord/latest/classes/Seedcord"><code>Seedcord</code></a></p>';
+        const html = '<p><a href="/docs/packages/seedcord/latest/classes/Seedcord"><code>Seedcord</code></a></p>';
         expect(decorateProseLinks(html, 'seedcord')).toBe(html);
     });
 
     it('opens a cross-package internal link in a new tab with the cross-ref class', () => {
-        const html = '<p><a href="/packages/utils/latest/functions/clamp"><code>clamp</code></a></p>';
+        const html = '<p><a href="/docs/packages/utils/latest/functions/clamp"><code>clamp</code></a></p>';
         const out = decorateProseLinks(html, 'seedcord');
         expect(out).toContain('target="_blank"');
         expect(out).toContain('rel="noopener noreferrer"');
@@ -24,9 +24,9 @@ describe('decorateProseLinks', () => {
     });
 
     it('preserves the original href and inner markup', () => {
-        const html = '<p><a href="/packages/utils/latest/functions/clamp"><code>clamp</code></a></p>';
+        const html = '<p><a href="/docs/packages/utils/latest/functions/clamp"><code>clamp</code></a></p>';
         const out = decorateProseLinks(html, 'seedcord');
-        expect(out).toContain('href="/packages/utils/latest/functions/clamp"');
+        expect(out).toContain('href="/docs/packages/utils/latest/functions/clamp"');
         expect(out).toContain('<code>clamp</code></a>');
     });
 });

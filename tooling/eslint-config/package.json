@@ -63,7 +63,7 @@
         "eslint-plugin-mdx": "catalog:eslint",
         "prettier-plugin-tailwindcss": "catalog:deps",
         "tailwindcss": "catalog:deps",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:consumerLint"
     },
     "peerDependenciesMeta": {
         "prettier-plugin-tailwindcss": {

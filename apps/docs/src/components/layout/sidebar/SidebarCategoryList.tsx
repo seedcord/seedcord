@@ -30,11 +30,7 @@ function SidebarCategory({
     const perCategoryStorageKey = storageKey !== undefined ? `${storageKey}:${categoryKey}` : undefined;
 
     return (
-        <Disclosure
-            defaultOpen
-            className={cn('space-y-3')}
-            {...(perCategoryStorageKey !== undefined && { storageKey: perCategoryStorageKey })}
-        >
+        <Disclosure defaultOpen {...(perCategoryStorageKey !== undefined && { storageKey: perCategoryStorageKey })}>
             <DisclosureTrigger className={cn('px-1 text-xs font-semibold tracking-wide uppercase', toneStyles.heading)}>
                 <span className={cn('flex items-center gap-2')}>
                     <Icon icon={ToneIcon} size={16} />
@@ -47,8 +43,10 @@ function SidebarCategory({
                     {category.items.map((item) => (
                         <SidebarItem
                             key={`${category.title}-${item.href}`}
-                            item={item}
-                            tone={category.tone}
+                            label={item.label}
+                            href={item.href}
+                            icon={ToneIcon}
+                            styles={toneStyles}
                             isActive={item.href === activeHref}
                             {...(onSelect ? { onSelect } : {})}
                         />

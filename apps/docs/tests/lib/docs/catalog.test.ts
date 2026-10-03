@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { NavigationCategory, PackageCatalogEntry, PackageVersionCatalog } from '#lib/docs/types';
 import type { PackageIndexEntry } from '@seedcord/docs-engine';
@@ -11,8 +11,7 @@ const { engineStub } = vi.hoisted(() => ({
     }
 }));
 
-// stub transitive imports to isolate the test and work around vitest's inability to resolve '#lib/*' alias without vite-tsconfig-paths.
-vi.mock('../../../src/lib/docs/engine', () => ({
+vi.mock('#lib/docs/engine', () => ({
     getDocsEngine: () => Promise.resolve(engineStub)
 }));
 vi.mock('@seedcord/docs-engine', async (importOriginal) => ({
@@ -20,7 +19,7 @@ vi.mock('@seedcord/docs-engine', async (importOriginal) => ({
     formatVersionLabel: (v: string) => v
 }));
 
-const { findCatalogVersion, loadDocsCatalog, withActiveCategories } = await import('#lib/docs/catalog');
+const { findCatalogVersion, loadDocsCatalog, servedAtLatest, withVersion } = await import('#lib/docs/catalog');
 
 function makeVersion(
     id: string,
@@ -121,6 +120,21 @@ describe('loadDocsCatalog version badges', () => {
         expect(stableHead).toMatchObject({ channel: 'stable', isLatest: true, badge: 'latest' });
         expect(preHead).toMatchObject({ channel: 'prerelease', isLatest: false, badge: 'next' });
     });
+
+    it('leaves out a prerelease that a newer stable release passed', async () => {
+        const passed: PackageIndexEntry = {
+            fullName: '@seedcord/core',
+            stable: { latest: '0.9.2', latestByMinor: { '0.9': '0.9.2' }, latestByMajor: { '0': '0.9.2' } },
+            prerelease: { latest: '0.2.1-next.0' }
+        };
+        engineStub.ready.mockResolvedValue(undefined);
+        engineStub.listPackages.mockResolvedValue([{ folder: 'core', fullName: '@seedcord/core' }]);
+        engineStub.getEntry.mockResolvedValue(passed);
+
+        const [core] = await loadDocsCatalog();
+
+        expect(core?.versions.map((version) => version.id)).toEqual(['0.9.2']);
+    });
 });
 
 describe('loadDocsCatalog descriptions', () => {
@@ -152,19 +166,50 @@ describe('loadDocsCatalog descriptions', () => {
     });
 });
 
-describe('withActiveCategories', () => {
-    const categories: NavigationCategory[] = [{ id: 'classes', title: 'Classes', tone: 'class', items: [] }];
+describe('loadDocsCatalog package filter', () => {
+    afterEach(() => {
+        vi.unstubAllEnvs();
+    });
 
-    it('fills only the resolved (package, version) and leaves the rest empty', () => {
+    it('keeps only the packages DOCS_PACKAGES lists', async () => {
+        const stable = { latest: '1.0.0', latestByMinor: { '1.0': '1.0.0' }, latestByMajor: { '1': '1.0.0' } };
+        const packages = ['@seedcord/utils', '@seedcord/gateway', '@seedcord/http'];
+        engineStub.ready.mockResolvedValue(undefined);
+        engineStub.listPackages.mockResolvedValue(
+            packages.map((fullName) => ({ folder: fullName.slice('@seedcord/'.length), fullName }))
+        );
+        engineStub.getEntry.mockImplementation((folder) =>
+            Promise.resolve({ fullName: `@seedcord/${folder}`, stable, prerelease: null })
+        );
+
+        vi.stubEnv('DOCS_PACKAGES', 'utils, http');
+
+        expect((await loadDocsCatalog()).map((entry) => entry.id)).toEqual(['http', 'utils']);
+    });
+});
+
+describe('withVersion', () => {
+    const categories: NavigationCategory[] = [{ id: 'classes', title: 'Classes', tone: 'class', items: [] }];
+    const filled = { ...makeVersion('1.0.0', { isLatest: true }), categories };
+
+    it('swaps in only the matching (package, version) and leaves the rest empty', () => {
         const catalog = [makeEntry([makeVersion('1.0.0', { isLatest: true }), makeVersion('0.9.0')])];
 
-        const [entry] = withActiveCategories(catalog, 'seedcord', '1.0.0', categories);
+        const [entry] = withVersion(catalog, 'seedcord', filled);
         expect(entry?.versions.find((version) => version.id === '1.0.0')?.categories).toEqual(categories);
         expect(entry?.versions.find((version) => version.id === '0.9.0')?.categories).toEqual([]);
     });
 
     it('returns entries unchanged when the package id does not match', () => {
         const catalog = [makeEntry([makeVersion('1.0.0', { isLatest: true })])];
-        expect(withActiveCategories(catalog, 'other', '1.0.0', categories)).toEqual(catalog);
+        expect(withVersion(catalog, 'other', filled)).toEqual(catalog);
+    });
+});
+
+describe('servedAtLatest', () => {
+    it('moves the overview link under latest', () => {
+        const head = { ...makeVersion('1.0.0', { isLatest: true }), basePath: '/packages/seedcord/1.0.0' };
+
+        expect(servedAtLatest(head, 'seedcord').basePath).toBe('/packages/seedcord/latest');
     });
 });

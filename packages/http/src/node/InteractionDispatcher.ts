@@ -2,46 +2,40 @@ import { InteractionKind } from '@seedcord/core';
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import {
     interactionMiddleware,
-    interactionRoutesOf,
     InteractionMetadataKey,
     InteractionMiddlewareMetadataKey,
     MiddlewareRegistry
 } from '@seedcord/core/internal';
-import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
 import { Envapter } from 'envapt';
 
-import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
-import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
-import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
-import { buildRouteMaps } from '#src/dispatch/resolve';
-import { EMPTY_MANIFEST } from '#src/manifest/RouteManifest';
+import { RouteRegistry } from '#src/dispatch/RouteRegistry';
+import { isHandlerClass, isMiddlewareClass } from '#src/manifest/entries';
 
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { RouteMap, RouteMaps } from '#src/dispatch/resolve';
 import type { Initializeable, ContextMenuLeaves } from '@seedcord/core/internal';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
-// hmr swaps entries live and resolve() reads per request
+// hmr swaps entries in these maps while resolve() reads them per request
 export class InteractionDispatcher implements Initializeable, HmrAware {
-    public readonly maps: RouteMaps;
-
     /** @internal */
     public readonly middlewares = new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
 
     /** @internal */
     public readonly logger = new Logger('Interactions', { channel: 'interactions' });
 
+    private readonly routes = new RouteRegistry();
+
+    public get maps(): RouteMaps {
+        return this.routes.maps;
+    }
+
     private isInitialized = false;
     private readonly hmrHandler?: HmrModuleHandler<HandlerConstructor, InteractionMiddlewareConstructor, string[]>;
-    // keyed by routeId, read by the duplicate guard and the hmr unregister
-    private readonly rowOwners = new Map<
-        string,
-        { ctor: HandlerConstructor; kind: InteractionKind; key: string; from: string }
-    >();
 
     private loading = false;
     private readonly loadedHandlers: { name: string; from: string }[] = [];
@@ -51,9 +45,8 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         private readonly handlersDir: string,
         private readonly middlewaresDir?: string
     ) {
-        this.maps = buildRouteMaps(EMPTY_MANIFEST);
-
         if (!Envapter.isDevelopment && !Envapter.isTest) return;
+
         this.hmrHandler = new HmrModuleHandler({
             handlersDir,
             ...(middlewaresDir && { middlewaresDir }),
@@ -61,9 +54,9 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             isMiddleware: this.isMiddleware.bind(this),
             registerHandler: this.registerHandler.bind(this),
             registerMiddleware: this.registerMiddleware.bind(this),
-            unregisterHandler: this.unregisterHandler.bind(this),
+            unregisterHandler: this.routes.unregister.bind(this.routes),
             unregisterMiddleware: this.unregisterMiddleware.bind(this),
-            getArtifacts: this.getArtifacts.bind(this),
+            getArtifacts: this.routes.routesOf.bind(this.routes),
             logger: this.logger
         });
     }
@@ -115,7 +108,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
         utils.block(
             'Loaded handlers',
-            [...utils.entries(this.loadedHandlers), ...utils.counts({ routes: this.rowOwners.size })],
+            [...utils.entries(this.loadedHandlers), ...utils.counts({ routes: this.routes.size })],
             'debug'
         );
     }
@@ -144,20 +137,11 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private isHandler(value: unknown): value is HandlerConstructor {
-        if (typeof value !== 'function') return false;
-        // this package's own family bases, so a gateway handler in the same dir stays unregistered
-        return (
-            (value.prototype instanceof InteractionHandler || value.prototype instanceof AutocompleteHandler) &&
-            Reflect.hasMetadata(InteractionMetadataKey, value)
-        );
+        return isHandlerClass(value) && Reflect.hasMetadata(InteractionMetadataKey, value);
     }
 
     private isMiddleware(value: unknown): value is InteractionMiddlewareConstructor {
-        if (typeof value !== 'function') return false;
-        return (
-            value.prototype instanceof InteractionMiddleware &&
-            Reflect.hasMetadata(InteractionMiddlewareMetadataKey, value)
-        );
+        return isMiddlewareClass(value) && Reflect.hasMetadata(InteractionMiddlewareMetadataKey, value);
     }
 
     private registerMiddleware(ctor: InteractionMiddlewareConstructor, relativePath: string): void {
@@ -176,52 +160,9 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         this.middlewares.unregister(ctor);
     }
 
-    private getArtifacts(ctor: HandlerConstructor): string[] {
-        const routeIds: string[] = [];
-        for (const [routeId, owner] of this.rowOwners) {
-            if (owner.ctor === ctor) routeIds.push(routeId);
-        }
-        return routeIds;
-    }
-
     private registerHandler(ctor: HandlerConstructor, relativePath: string): void {
         const from = formatFilePath(relativePath);
-        // a partial registration would orphan routes and break hmr rollback
-        const writes: { kind: InteractionKind; key: string }[] = [];
-
-        for (const [kind, keys] of interactionRoutesOf(ctor)) {
-            for (const key of keys) {
-                const routeId = `${kind}:${key}`;
-                const existing = this.rowOwners.get(routeId);
-                // a different class on the same route would silently shadow the existing one (last write wins)
-                if (existing && existing.ctor !== ctor) {
-                    throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
-                        routeId,
-                        `${existing.ctor.name} (${existing.from})`,
-                        `${ctor.name} (${from})`
-                    ]);
-                }
-                writes.push({ kind, key });
-            }
-        }
-
-        if (writes.length === 0) return;
-        for (const { kind, key } of writes) {
-            const routeId = `${kind}:${key}`;
-            this.maps[kind].set(key, { kind, routeId, load: () => Promise.resolve(ctor) });
-            this.rowOwners.set(routeId, { ctor, kind, key, from });
-        }
-
+        if (!this.routes.register(ctor, from)) return;
         if (this.loading) this.loadedHandlers.push({ name: ctor.name, from });
-    }
-
-    private unregisterHandler(ctor: HandlerConstructor, artifacts?: string[]): void {
-        const routeIds = artifacts ?? this.getArtifacts(ctor);
-        for (const routeId of routeIds) {
-            const owner = this.rowOwners.get(routeId);
-            if (owner?.ctor !== ctor) continue;
-            this.rowOwners.delete(routeId);
-            this.maps[owner.kind].delete(owner.key);
-        }
     }
 }

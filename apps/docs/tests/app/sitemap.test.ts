@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { NavigationCategory, PackageCatalogEntry } from '#lib/docs/types';
+import type { NavigationEntityItem, PackageCatalogEntry } from '#lib/docs/types';
 
 const GATEWAY: PackageCatalogEntry = {
     id: 'gateway',
@@ -22,23 +22,20 @@ const GATEWAY: PackageCatalogEntry = {
     ]
 };
 
-const CATEGORIES: NavigationCategory[] = [
-    {
-        id: 'functions',
-        title: 'Functions',
-        tone: 'function',
-        items: [
-            { id: 'gated', label: 'Gated', href: '/packages/gateway/0.7.1/functions/gated' },
-            { id: 'notice', label: 'Notice', href: '/packages/core/0.9.1/classes/notice' }
-        ]
-    }
+// AnyHandlerCtor is a forgotten type. the sidebar leaves it out and signatures link to it
+const PAGES: NavigationEntityItem[] = [
+    { id: 'gated', label: 'Gated', href: '/packages/gateway/0.7.1/functions/gated' },
+    { id: 'any-handler-ctor', label: 'AnyHandlerCtor', href: '/packages/gateway/0.7.1/types/any-handler-ctor' },
+    { id: 'notice', label: 'Notice', href: '/packages/core/0.9.1/classes/notice' }
 ];
 
 vi.mock('#lib/docs/engine', () => ({ getDocsEngine: () => Promise.resolve({}) }));
 vi.mock('#lib/docs/catalog', async (importOriginal) => ({
     ...(await importOriginal<typeof import('#lib/docs/catalog')>()),
-    loadDocsCatalog: () => Promise.resolve([GATEWAY]),
-    collectCategories: () => Promise.resolve(CATEGORIES)
+    loadDocsCatalog: () => Promise.resolve([GATEWAY])
+}));
+vi.mock('#lib/docs/ActiveVersion', () => ({
+    ActiveVersion: { open: () => Promise.resolve({ pages: PAGES }) }
 }));
 
 const { default: sitemap } = await import('#src/app/sitemap');
@@ -48,9 +45,10 @@ describe('sitemap', () => {
         const urls = (await sitemap()).map((entry) => entry.url);
 
         expect(urls).toEqual([
-            'https://docs.seedcord.org/',
-            'https://docs.seedcord.org/packages/gateway/latest',
-            'https://docs.seedcord.org/packages/gateway/latest/functions/gated'
+            'https://seedcord.org/docs',
+            'https://seedcord.org/docs/packages/gateway/latest',
+            'https://seedcord.org/docs/packages/gateway/latest/functions/gated',
+            'https://seedcord.org/docs/packages/gateway/latest/types/any-handler-ctor'
         ]);
     });
 });

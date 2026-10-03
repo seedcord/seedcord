@@ -30,18 +30,13 @@ describe("Bus 'once' re-entrancy", () => {
         class ReentrantOnce extends Subscriber<'unknownException', CoreBase> {
             public execute(): Promise<void> {
                 runs += 1;
-                // re-publish while still executing, the old fire-then-mark order ran this twice
+                // the old fire-then-mark order ran this a second time
                 if (runs === 1) this.core.bus[PublishDefault]('unknownException', payload);
                 return Promise.resolve();
             }
         }
 
-        bus[RegisterSubscriber]({
-            keys: ['unknownException'],
-            frequency: 'once',
-            resolve: () => ReentrantOnce,
-            ctor: ReentrantOnce
-        });
+        bus[RegisterSubscriber]({ keys: ['unknownException'], frequency: 'once', ctor: ReentrantOnce });
 
         bus[PublishDefault]('unknownException', payload);
         await new Promise((resolve) => setTimeout(resolve, 20));

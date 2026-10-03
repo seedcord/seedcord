@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isPrerelease, replacementVersion, stableLineHeads } from '#src/versions';
+import { isPrerelease, replacementVersion, servedPrerelease, stableLineHeads } from '#src/versions';
 
 import type { PackageIndexEntry } from '#remote/index-json';
 
@@ -31,7 +31,31 @@ describe('versions', () => {
     });
 });
 
+const CORE: PackageIndexEntry = {
+    fullName: '@seedcord/core',
+    stable: { latest: '0.9.2', latestByMinor: { '0.9': '0.9.2' }, latestByMajor: { '0': '0.9.2' } },
+    prerelease: { latest: '0.2.1-next.0' }
+};
+
+describe('servedPrerelease', () => {
+    it('serves a prerelease newer than the stable release', () => {
+        expect(servedPrerelease(GATEWAY)).toBe('0.8.0-next.4');
+    });
+
+    it('hides a prerelease once a newer stable release ships', () => {
+        expect(servedPrerelease(CORE)).toBeNull();
+    });
+
+    it('serves the prerelease of a package with no stable release', () => {
+        expect(servedPrerelease({ ...CORE, stable: null })).toBe('0.2.1-next.0');
+    });
+});
+
 describe('replacementVersion', () => {
+    it('moves a prerelease that a stable release passed to the newest of its major', () => {
+        expect(replacementVersion(CORE, '0.2.1-next.0')).toBe('0.9.2');
+    });
+
     it('moves a patch the index no longer lists to the newest patch of its minor', () => {
         expect(replacementVersion(GATEWAY, '0.6.0')).toBe('0.6.2');
         expect(replacementVersion(GATEWAY, '0.7.0')).toBe('0.7.1');

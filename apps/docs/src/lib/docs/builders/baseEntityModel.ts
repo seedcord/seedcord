@@ -2,13 +2,13 @@ import { buildDeprecationStatusFromNodeLike, ensureSlug } from './utils';
 
 import type {
     BaseEntityModel,
-    CodeRepresentation,
     CommentExample,
     CommentParagraph,
     EntityKind,
     WithSeeAlso,
     WithThrows
 } from '#lib/docs/types';
+import type { CodeRepresentation } from '@seedcord/ui';
 import type { DocNode } from '@seedcord/docs-engine';
 
 function buildEntityTags(node: DocNode): string[] {

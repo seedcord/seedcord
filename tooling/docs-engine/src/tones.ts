@@ -11,9 +11,9 @@ const TONE_DIRECTORY_MAP = {
     variable: 'variables'
 } as const;
 
-export type DirectoryEntityFrontend = (typeof TONE_DIRECTORY_MAP)[EntityTone];
+export type DirectoryEntity = (typeof TONE_DIRECTORY_MAP)[EntityTone];
 
-export function toneToDirectory(tone: EntityTone): DirectoryEntityFrontend {
+export function toneToDirectory(tone: EntityTone): DirectoryEntity {
     return TONE_DIRECTORY_MAP[tone];
 }
 

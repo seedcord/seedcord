@@ -8,7 +8,7 @@ const TOKEN_SELECTOR = '.twoslash-hover';
 
 // shiki wraps a multi-line type in a focusable pre of its own
 const token = (symbol: string): string =>
-    `<span class="twoslash-hover" data-ref-pkg="gateway" data-ref-symbol="${symbol}">` +
+    `<span class="twoslash-hover" data-ref-href="https://seedcord.org/docs/packages/gateway/latest/classes/${symbol}" data-ref-symbol="${symbol}">` +
     `<span class="twoslash-popup-container"><code class="twoslash-popup-code">` +
     `<pre class="shiki" tabindex="0">class ${symbol}</pre></code></span>` +
     `${symbol}</span>`;

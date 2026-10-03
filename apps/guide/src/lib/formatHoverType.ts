@@ -14,6 +14,12 @@ const dropEdges = (printed: string, lead: string, tail: string): string =>
 
 // typescript prints a member hover as its receiver in front of a type
 const RECEIVER = /^.+\.\w+: /;
+// and a method hover as its receiver in front of a signature
+const METHOD_RECEIVER = /^[^(:]+?(?=\.\w+[<(])/;
+
+function receiverOf(pattern: RegExp, text: string): string {
+    return pattern.exec(text)?.[0] ?? '';
+}
 
 // prettier only parses a whole statement
 const SHAPES: readonly Shape[] = [
@@ -38,9 +44,15 @@ const SHAPES: readonly Shape[] = [
         unwrap: (printed) => dropEdges(printed, '', ';')
     },
     {
+        match: METHOD_RECEIVER,
+        wrap: (text) => `declare function ${text.slice(receiverOf(METHOD_RECEIVER, text).length + 1)};`,
+        unwrap: (printed, text) =>
+            `${receiverOf(METHOD_RECEIVER, text)}.${dropEdges(printed, 'declare function ', ';')}`
+    },
+    {
         match: RECEIVER,
         wrap: (text) => `type T = ${text.replace(RECEIVER, '')};`,
-        unwrap: (printed, text) => (RECEIVER.exec(text)?.[0] ?? '') + dropEdges(printed, 'type T = ', ';')
+        unwrap: (printed, text) => receiverOf(RECEIVER, text) + dropEdges(printed, 'type T = ', ';')
     }
 ];
 

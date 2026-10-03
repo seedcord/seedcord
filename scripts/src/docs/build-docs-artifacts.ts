@@ -21,37 +21,9 @@ import type {
     PackageVersionsInput
 } from '@seedcord/docs-engine';
 
-// `--fixtures` adds synthetic versions per package so the version dropdown is testable locally.
-
 const INIT_CWD = process.env.INIT_CWD ? path.resolve(process.env.INIT_CWD) : process.cwd();
 const GENERATED_ROOT = path.resolve(INIT_CWD, 'generated');
 const ARTIFACTS_ROOT = path.join(GENERATED_ROOT, 'artifacts');
-
-const USE_FIXTURES = process.argv.includes('--fixtures');
-
-interface SyntheticVersion {
-    version: string;
-    channel: 'stable' | 'prerelease';
-}
-
-function syntheticVersions(real: string): SyntheticVersion[] {
-    const match = /^(\d+)\.(\d+)\.(\d+)/.exec(real);
-    if (!match) {
-        return [{ version: real, channel: 'stable' }];
-    }
-
-    const [major, minor, patch] = [Number(match[1]), Number(match[2]), Number(match[3])];
-    const versions: SyntheticVersion[] = [{ version: real, channel: 'stable' }];
-
-    for (const back of [1, 2]) {
-        if (minor - back >= 0) {
-            versions.push({ version: `${major}.${minor - back}.${Math.max(patch - back, 0)}`, channel: 'stable' });
-        }
-    }
-
-    versions.push({ version: `${major}.${minor + 1}.0-next.1`, channel: 'prerelease' });
-    return versions;
-}
 
 interface ProjectArtifact {
     folder: string;
@@ -105,28 +77,23 @@ async function main(): Promise<void> {
         const pkg = engine.getPackage(fullName);
         if (!pkg) continue;
 
-        const real = pkg.manifest.version;
+        const { version } = pkg.manifest;
         const folder = formatDisplayPackageName(fullName);
         // The extractor names api.json after the unscoped package name, which diverges from the
         // display folder when a displayName override is set.
         const apiSource = path.join(GENERATED_ROOT, `${fullName.split('/').pop() ?? fullName}.api.json`);
         const file = serializeProject(pkg);
         const workspace = workspaces.get(fullName);
-        const versions = USE_FIXTURES
-            ? syntheticVersions(real)
-            : [{ version: real, channel: isPrerelease(real) ? 'prerelease' : 'stable' } satisfies SyntheticVersion];
 
         inputs.push({
             folder,
             fullName,
-            versions: versions.map((entry) => entry.version),
-            entities: pkg.directory.toneMap(),
+            versions: [version],
+            entities: pkg.pages.toneMap(),
             ...(pkg.manifest.description && { description: pkg.manifest.description }),
             ...(workspace && { workspace })
         });
-        for (const { version, channel } of versions) {
-            projects.push({ folder, version, channel, file, apiSource });
-        }
+        projects.push({ folder, version, channel: isPrerelease(version) ? 'prerelease' : 'stable', file, apiSource });
 
         ownership.push({
             name: fullName,
@@ -144,9 +111,7 @@ async function main(): Promise<void> {
     await writeArtifacts(index, projects);
 
     console.log(
-        `Wrote ${String(projects.length)} project.json + api.json + index.json to ${path.relative(INIT_CWD, ARTIFACTS_ROOT)}${
-            USE_FIXTURES ? ' (with synthetic fixture versions)' : ''
-        }`
+        `Wrote ${String(projects.length)} project.json + api.json + index.json to ${path.relative(INIT_CWD, ARTIFACTS_ROOT)}`
     );
 }
 

@@ -1,16 +1,24 @@
 import 'reflect-metadata';
 
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { defineGate, Notice, RequireBotPermissions, RequirePermissions, Silence } from '@seedcord/core';
+import {
+    defineGate,
+    InteractionKind,
+    Notice,
+    RequireBotPermissions,
+    RequirePermissions,
+    Silence
+} from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
 import { MessageFlags, PermissionFlagsBits } from 'discord-api-types/v10';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import { FROM, capturingCtx, emptyManifest, readyEngine, signedRequest, slashPayload } from './harness';
+import { capturingCtx, manifestFor, readyEngine, signedRequest, slashPayload } from './harness';
 
 import type { InteractionGateContext } from '#src/gates/Gate';
+import type { Manifest } from '#src/manifest/Manifest';
 import type { Gate, GateContextBase } from '@seedcord/core';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 
@@ -35,7 +43,7 @@ const rest = vi.hoisted(() => {
     return { instances, FakeRest };
 });
 
-// the factory must not import project modules, vitest loads factory imports in a mock-bypass
+// the factory must not import project modules, because vitest loads factory imports in a mock-bypass
 // context that would cache the engine graph unmocked
 vi.mock('@discordjs/rest', async (importOriginal) => ({
     ...(await importOriginal<object>()),
@@ -52,10 +60,7 @@ class TestNotice extends Notice {
     }
 }
 
-function gated(gates: Gate<GateContextBase>[]): {
-    manifest: ReturnType<typeof emptyManifest>;
-    executed: () => boolean;
-} {
+function gated(gates: Gate<GateContextBase>[]): { manifest: Manifest; executed: () => boolean } {
     let didExecute = false;
     class Guarded extends SlashHandler<never> {
         async execute(): Promise<void> {
@@ -65,18 +70,7 @@ function gated(gates: Gate<GateContextBase>[]): {
     }
     Reflect.defineMetadata(GatedMetadataKey, gates, Guarded);
     return {
-        manifest: {
-            ...emptyManifest(),
-            commandRoutes: [
-                {
-                    name: 'guarded',
-                    type: 1,
-                    exportName: 'Guarded',
-                    from: FROM,
-                    load: () => Promise.resolve({ Guarded })
-                }
-            ]
-        },
+        manifest: manifestFor(InteractionKind.Slash, 'guarded', Guarded),
         executed: () => didExecute
     };
 }
@@ -242,7 +236,6 @@ describe('handler gates', () => {
         const { signer, handle } = await readyEngine(manifest);
         const ctx = capturingCtx();
 
-        // a caller holding only SendMessages, missing BanMembers, so the gate refuses
         const payload = {
             ...slashPayload('guarded'),
             guild_id: 'g-1',

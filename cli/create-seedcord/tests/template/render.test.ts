@@ -91,8 +91,8 @@ describe('the agent instructions', () => {
     it('sends an agent to the index and to a page markdown url', async () => {
         const agents = await renderOne(HTTP, 'AGENTS.md');
 
-        expect(agents).toContain('https://guide.seedcord.org/llms.txt');
-        expect(agents).toContain('https://guide.seedcord.org/commands/options.md');
+        expect(agents).toContain('https://seedcord.org/guide/llms.txt');
+        expect(agents).toContain('https://seedcord.org/guide/commands/options.md');
     });
 
     it('names the transport this project picked', async () => {

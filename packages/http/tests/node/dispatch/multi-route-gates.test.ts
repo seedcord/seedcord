@@ -45,7 +45,7 @@ function freshCore(): { core: Core; published: SubscriptionData<'interactionDisp
 
 async function dispatchRoute(core: Core, routeId: string): Promise<void> {
     const execute = await dispatchInteraction({
-        match: { kind: InteractionKind.Slash, routeId, load: () => Promise.resolve(Vote) },
+        match: { kind: InteractionKind.Slash, routeId, ctor: Vote },
         payload: slashPayload('vote') as ValidInteractionTypes,
         core,
         middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)

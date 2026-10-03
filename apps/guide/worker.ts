@@ -1,6 +1,7 @@
 import { agentLinkHeader } from '@seedcord/ui/agents';
+import { PageAsset, TWIN } from '@seedcord/ui/page-asset';
+import { GUIDE } from '@seedcord/ui/sites';
 
-import { assetPath, generatedPathFor, publicPath, TWIN } from './src/lib/pageAssets';
 import { redirectFor } from './src/lib/redirects';
 
 interface Env {
@@ -49,29 +50,31 @@ function at(request: Request, pathname: string): Request {
 }
 
 // a real file in public/ wins over a page's generated card or twin
-async function fromAssets(env: Env, request: Request, pathname: string): Promise<Response> {
+async function fromAssets(env: Env, request: Request, page: string): Promise<Response> {
     // only a page has a twin. every other url falls through to the file itself
     if (wantsMarkdown(request)) {
-        const twin = await env.ASSETS.fetch(at(request, assetPath(pathname, TWIN)));
+        const twin = await env.ASSETS.fetch(at(request, GUIDE.path + TWIN.exportPath(page)));
         if (twin.status !== NOT_FOUND) return twin;
     }
 
     const direct = await env.ASSETS.fetch(request);
     if (direct.status !== NOT_FOUND) return direct;
 
-    const generated = generatedPathFor(pathname);
-    return generated === undefined ? direct : env.ASSETS.fetch(at(request, generated));
+    const generated = PageAsset.forPath(page)?.exportPath(page);
+    return generated === undefined ? direct : env.ASSETS.fetch(at(request, GUIDE.path + generated));
 }
 
 const handler = {
     async fetch(request: Request, env: Env): Promise<Response> {
         const { pathname } = new URL(request.url);
+        // the zone routes only /guide and /guide/* here
+        const page = pathname.slice(GUIDE.path.length) || '/';
 
-        const moved = redirectFor(pathname);
+        const moved = redirectFor(page);
         if (moved !== undefined)
-            return new Response(null, { status: PERMANENT_REDIRECT, headers: { location: moved } });
+            return new Response(null, { status: PERMANENT_REDIRECT, headers: { location: GUIDE.path + moved } });
 
-        const asset = await fromAssets(env, request, pathname);
+        const asset = await fromAssets(env, request, page);
 
         // collapse the slash/non-slash duplicate into one permanent redirect
         const normalized =
@@ -81,12 +84,12 @@ const handler = {
 
         const response = new Response(normalized.body, normalized);
 
-        const typed = TYPED_PATHS[pathname];
+        const typed = TYPED_PATHS[page];
         if (typed !== undefined) response.headers.set('Content-Type', typed);
 
         const contentType = normalized.headers.get('content-type') ?? '';
         if (contentType.includes('text/html')) {
-            response.headers.set('Link', agentLinkHeader('guide', publicPath(pathname, TWIN)));
+            response.headers.set('Link', agentLinkHeader('guide', GUIDE.path + TWIN.publicPath(page)));
         }
         // a cache that ignores Accept would serve an agent the html
         if (contentType.includes('text/html') || contentType.includes(MARKDOWN)) {

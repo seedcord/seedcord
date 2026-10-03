@@ -1,7 +1,6 @@
 import { buildPackageBasePath, DEFAULT_VERSION } from '@seedcord/docs-engine/client';
 import { cn, tw } from '@seedcord/ui';
-import Link from 'next/link';
-
+import { HoverPrefetchLink } from '#components/HoverPrefetchLink';
 import { findCatalogVersion, loadDocsCatalog } from '#lib/docs/catalog';
 import { DocsPage } from '#lib/docs/DocsPage';
 import { getToneConfig, getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
@@ -13,13 +12,9 @@ import type { ReactElement } from 'react';
 
 export const metadata: Metadata = DocsPage.root().metadata();
 
-// the publish pipeline rewrites index.json between builds
-export const revalidate = 300; // 5 mins
-
 const TRANSPORT_PACKAGES = new Set(['@seedcord/gateway', '@seedcord/http']);
 const CORE_PACKAGES = new Set(['seedcord', '@seedcord/core']);
 
-// matches the entity chips on a package's reference tab
 const cardClassName = tw`shadow-soft border-border flex flex-col gap-3 rounded-md border bg-(--surface-moderate) p-4 transition`;
 
 interface PackageCard {
@@ -60,7 +55,6 @@ function ToneCounts({ card }: { card: PackageCard }): ReactElement {
     );
 }
 
-// the divider between segments is the page ground colour
 function ToneBar({ card }: { card: PackageCard }): ReactElement | null {
     const tones = tonesOf(card);
     const total = tones.reduce((sum, tone) => sum + (card.entry.symbolCounts.get(tone) ?? 0), 0);
@@ -86,7 +80,7 @@ function ToneBar({ card }: { card: PackageCard }): ReactElement | null {
 
 function PackageCardLink({ card, bar = false }: { card: PackageCard; bar?: boolean }): ReactElement {
     return (
-        <Link href={card.href} className={cn(cardClassName, 'hover:border-(--border-accent-b-subtle)')}>
+        <HoverPrefetchLink href={card.href} className={cn(cardClassName, 'hover:border-(--border-accent-b-subtle)')}>
             <div className={cn('space-y-1')}>
                 <div className={cn('flex items-baseline justify-between gap-3')}>
                     <span className={cn('font-mono text-sm font-medium wrap-break-word text-(--text)')}>
@@ -98,7 +92,7 @@ function PackageCardLink({ card, bar = false }: { card: PackageCard; bar?: boole
             </div>
             <ToneCounts card={card} />
             {bar ? <ToneBar card={card} /> : null}
-        </Link>
+        </HoverPrefetchLink>
     );
 }
 

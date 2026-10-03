@@ -4,7 +4,8 @@ import type {
     NavigationEntityItem,
     PackageVersionCatalog
 } from '#lib/docs/types';
-import type { EntityTone } from '@seedcord/docs-engine/client';
+import type { EntityToneStyle } from '#lib/tonePresentation';
+import type { LucideIcon } from 'lucide-react';
 
 type SidebarVariant = 'desktop' | 'mobile';
 
@@ -24,9 +25,9 @@ export interface SidebarCategoryListProps {
     onSelect?: () => void;
 }
 
-export interface SidebarItemProps {
-    item: NavigationEntityItem;
-    tone: EntityTone;
+export interface SidebarItemProps extends Pick<NavigationEntityItem, 'label' | 'href'> {
+    icon: LucideIcon;
+    styles: Pick<EntityToneStyle, 'item' | 'badge'>;
     isActive: boolean;
     onSelect?: () => void;
 }

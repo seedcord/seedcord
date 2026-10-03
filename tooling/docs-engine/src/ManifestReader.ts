@@ -1,5 +1,7 @@
 import fs from 'node:fs/promises';
 
+import { pageFields } from '@seedcord/docs-generator/manifest-fields';
+
 import { resolveManifestPath } from '#src/constants';
 
 import type { DocManifest, DocManifestEntry, DocManifestPackage, PackageSourceIndex } from '#src/types';
@@ -109,9 +111,7 @@ function normalizeEntries(value: unknown): DocManifestEntry[] {
 function attachOptionalFields(result: DocManifestPackage, pkg: Partial<DocManifestPackage>): void {
     if (isRecordShape(pkg.sources)) result.sources = pkg.sources;
     if (Array.isArray(pkg.reexports)) result.reexports = pkg.reexports;
-    if (typeof pkg.readme === 'string') result.readme = pkg.readme;
-    if (typeof pkg.changelogUrl === 'string') result.changelogUrl = pkg.changelogUrl;
-    if (typeof pkg.description === 'string') result.description = pkg.description;
+    Object.assign(result, pageFields(pkg));
 }
 
 function isRecordShape(value: PackageSourceIndex | undefined): value is PackageSourceIndex {

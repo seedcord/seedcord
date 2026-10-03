@@ -83,6 +83,7 @@ jobs:
           enable_fallback_cache: 'true'
       - uses: ./.github/actions/setup
       - run: pnpm tc
+      - run: pnpm tc:root
 
   test:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
@@ -117,10 +118,27 @@ jobs:
           turbo_team: ${{ vars.TURBO_TEAM }}
           enable_fallback_cache: 'true'
       - uses: ./.github/actions/setup
-      - run: pnpm build
-        env:
-          SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
+      - run: pnpm build:all
+      - run: pnpm codegen:check
       - run: pnpm turbo docs:extract
+
+  typescript-floor:
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+    name: TypeScript floor
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/turbo-cache
+        with:
+          turbo_token: ${{ secrets.TURBO_TOKEN }}
+          turbo_team: ${{ vars.TURBO_TEAM }}
+          enable_fallback_cache: 'true'
+      - uses: ./.github/actions/setup
+      - run: pnpm turbo build --filter='@seedcord/mock-gateway^...' --filter='@seedcord/mock-http^...' --filter='@seedcord/eslint-config...' --filter='@seedcord/eslint-plugin...'
+      - run: pnpm check:typescript-floor
 
   audit:
     if: github.event_name == 'push'

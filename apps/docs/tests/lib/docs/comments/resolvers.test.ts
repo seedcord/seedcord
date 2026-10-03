@@ -11,7 +11,7 @@ interface SearchHit {
     packageName: string;
 }
 
-function makeContext(searchResults: SearchHit[]): FormatContext {
+function makeContext(searchResults: SearchHit[], resolved = 'https://example.com/resolved'): FormatContext {
     // justified: the fixture implements only the engine surface resolveInlineHref's search path reads.
     const engine = {
         search: vi.fn(() => searchResults),
@@ -21,7 +21,7 @@ function makeContext(searchResults: SearchHit[]): FormatContext {
             packageName: pkg
         })),
         getNodeBySlug: vi.fn(() => null),
-        resolver: () => ({ href: () => '/resolved' })
+        resolver: () => ({ href: () => resolved })
     } as unknown as VersionedDocsEngine;
     return { engine, manifestPackage: 'seedcord' };
 }
@@ -36,7 +36,14 @@ describe('resolveInlineHref search fallback', () => {
         const ctx = makeContext([
             { name: 'CommandRouteString', slug: 'types/command-route-string', packageName: 'seedcord' }
         ]);
-        expect(resolveInlineHref(linkPart('CommandRouteString'), ctx)).toBe('/resolved');
+        expect(resolveInlineHref(linkPart('CommandRouteString'), ctx)).toBe('https://example.com/resolved');
+    });
+
+    it('puts the docs base path in front of an internal link', () => {
+        const hit = { name: 'and', slug: 'functions/and', packageName: '@seedcord/core' };
+        const ctx = makeContext([hit], '/packages/core/0.9.2/functions/and');
+
+        expect(resolveInlineHref(linkPart('and'), ctx)).toBe('/docs/packages/core/0.9.2/functions/and');
     });
 
     it('does not link when the only hit is a fuzzy, non-exact match', () => {

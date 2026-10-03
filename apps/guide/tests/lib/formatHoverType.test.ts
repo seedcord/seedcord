@@ -3,6 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { formatHoverType } from '#lib/formatHoverType';
 
 describe('formatting a hover type', () => {
+    it('breaks a property whose type holds a namespaced generic', async () => {
+        const long =
+            'Props.children: React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Promise<Array<React.ReactNode>>';
+
+        const formatted = await formatHoverType(long);
+
+        expect(formatted.startsWith('Props.children:')).toBe(true);
+        expect(formatted.split('\n').length).toBeGreaterThan(1);
+    });
+
     it('breaks a long class signature across its type parameters', async () => {
         const long = 'class SlashHandler<Route extends keyof SlashOptionRegistry, Cache extends CacheType = "cached">';
 
@@ -37,6 +47,28 @@ describe('formatting a hover type', () => {
         expect(formatted.startsWith('SlashHandler<"ping">.options: Record<')).toBe(true);
         expect(formatted.split('\n').length).toBeGreaterThan(1);
         expect(formatted).not.toContain('type T =');
+    });
+
+    it('breaks a method across its parameters and keeps the receiver in front', async () => {
+        const method =
+            'ContainerBuilder.addTextDisplayComponents(...components: RestOrArray<APITextDisplayComponent | TextDisplayBuilder | ((builder: TextDisplayBuilder) => TextDisplayBuilder)>): this';
+
+        const formatted = await formatHoverType(method);
+
+        expect(formatted.startsWith('ContainerBuilder.addTextDisplayComponents(')).toBe(true);
+        expect(formatted.split('\n').length).toBeGreaterThan(1);
+        expect(formatted.endsWith('): this')).toBe(true);
+        expect(formatted).not.toContain('declare ');
+    });
+
+    it('breaks a method on a generic receiver and keeps the receiver in front', async () => {
+        const method =
+            'SlashHandler<"ping">.reply(options: string | MessagePayload | InteractionReplyOptions, fetch?: boolean): Promise<InteractionResponse<boolean>>';
+
+        const formatted = await formatHoverType(method);
+
+        expect(formatted.startsWith('SlashHandler<"ping">.reply(')).toBe(true);
+        expect(formatted.split('\n').length).toBeGreaterThan(1);
     });
 
     it.each([

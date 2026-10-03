@@ -19,6 +19,12 @@
                 "types": "./dist/index.d.mts",
                 "default": "./dist/index.mjs"
             }
+        },
+        "./manifest-fields": {
+            "import": {
+                "types": "./dist/manifest-fields.d.mts",
+                "default": "./dist/manifest-fields.mjs"
+            }
         }
     },
     "typesVersions": {

@@ -10,20 +10,19 @@ packages:
 embedReadme: true
 
 overrides:
-  # < 7.29 has GHSA-4cwx-7wf7-3272
-  'undici@7': ^7.29.0
   # forces one api-types copy so the djs-free reply types assign to djs
   discord-api-types: ^0.38.52
-
-  brace-expansion: ^5.0.9 # < 5.0.9 has GHSA-rgw5-rvv9-x895
-  minimatch: ^10.2.6 # brace-expansion 5 exports named `expand` while minimatch 9 default-imports it
-  'fast-uri@3': ^3.1.6 # < 3.1.6 has GHSA-fph4-wmhf-6fwf and GHSA-jqff-g426-hqxp
-  'nanoid@3': ^3.3.17 # < 3.3.17 has GHSA-2v37-7h3g-55p8
-  'js-yaml@3': ^3.15.1
-  'js-yaml@4': ^4.3.1
-  'linkify-it@5': ^5.0.2
-  postcss: ^8.5.25
+  # miniflare pins both below the fix
   sharp: ^0.35.4 # < 0.35.4 has GHSA-rgj7-g3m4-5g8c through libheif
+  'undici@7': ^7.29.1 # < 7.29.1 has GHSA-4cwx-7wf7-3272
+
+packageExtensions:
+  '@testing-library/jest-dom':
+    peerDependencies:
+      vitest: '*'
+    peerDependenciesMeta:
+      vitest:
+        optional: true
 
 supportedArchitectures:
   libc:
@@ -32,10 +31,8 @@ supportedArchitectures:
     - musl
 
 allowBuilds:
-  '@swc/core': true
   '@tailwindcss/oxide': true
   esbuild: true
-  msgpackr-extract: true
   sharp: true
   unrs-resolver: true
   workerd: true
@@ -53,7 +50,7 @@ catalogs:
     lodash.merge: ^4.6.2
     lucide-react: ^1.31.0
     motion: ^12.43.0
-    next: ^16.3.4
+    next: ^16.3.8
     prettier: ^3.9.6
     prettier-plugin-tailwindcss: ^0.8.1
     reflect-metadata: ^0.2.2
@@ -71,7 +68,7 @@ catalogs:
     '@types/eslint-plugin-security': ^3.0.1
     '@typescript-eslint/parser': ^8.65.0
     eslint: ^10.8.0
-    eslint-config-next: ^16.3.4
+    eslint-config-next: ^16.3.8
     eslint-config-prettier: ^10.1.8
     eslint-import-resolver-typescript: ^4.4.5
     eslint-plugin-better-tailwindcss: ^4.7.0
@@ -90,24 +87,25 @@ catalogs:
     mongoose: ^9.9.1
     pg: ^8.22.0
     typescript: ^6.0.3
+  consumerTypes:
+    typescript: ^5.9.3 || ^6.0.0 || ^7.0.0
+  # typescript-eslint supports typescript below 6.1
+  consumerLint:
+    typescript: '>=5.9.3 <6.1.0'
   test:
     dedent: ^1.7.2
     '@testing-library/dom': ^10.4.1
     '@testing-library/jest-dom': ^7.0.0
     '@testing-library/react': ^16.3.2
     '@testing-library/user-event': ^14.6.1
-    '@vitest/coverage-v8': ^4.1.10
+    '@vitest/coverage-v8': ^4.1.11
     jsdom: ^30.0.1
-    vitest: ^4.1.10
+    vitest: ^4.1.11
   react:
     '@types/react': ^19.2.18
     '@types/react-dom': ^19.2.4
     react: ^19.2.8
     react-dom: ^19.2.8
 
-minimumReleaseAgeExclude:
-  - yaml@2.9.1
-  - envapt@8.2.2
-
 patchedDependencies:
-  next@16.3.4: patches/next@16.3.4.patch
+  next@16.3.8: patches/next@16.3.8.patch

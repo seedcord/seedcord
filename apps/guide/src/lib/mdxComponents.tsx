@@ -1,6 +1,7 @@
-import { Card, CodeBlock, CopyAnchorButton, cn, tw } from '@seedcord/ui';
+import { Card, CodeBlock, CopyAnchorButton, GUIDE, cn, tw } from '@seedcord/ui';
 import { highlightInlineToHtml, isHighlightable } from '@seedcord/ui/shiki';
 import { ArrowUpRight } from 'lucide-react';
+import Link from 'next/link';
 
 import { Callout } from '#components/Callout';
 import { HoverHint } from '#components/HoverHint';
@@ -46,11 +47,16 @@ function pick<T extends Record<string, string>>(options: T, key: keyof T, prop: 
     return found;
 }
 
-function GuideImage({ alt, frame = false, align = 'left', className, ...props }: ImageProps): ReactElement {
+function underBasePath(src: ImageProps['src']): ImageProps['src'] {
+    return typeof src === 'string' && src.startsWith('/') && !src.startsWith('//') ? GUIDE.path + src : src;
+}
+
+function GuideImage({ alt, src, frame = false, align = 'left', className, ...props }: ImageProps): ReactElement {
     return (
         // eslint-disable-next-line @next/next/no-img-element -- next/image requires width and height, both optional on ImageProps
         <img
             {...props}
+            src={underBasePath(src)}
             alt={alt}
             loading="lazy"
             decoding="async"
@@ -189,12 +195,22 @@ async function Fence({ children }: FenceProps): Promise<ReactElement> {
 
 const OFF_SITE = /^[a-z]+:/i;
 
-function GuideLink({ href, children, ...props }: ComponentProps<'a'>): ReactElement {
-    if (href === undefined || !OFF_SITE.test(href)) {
+type MarkdownLinkProps = Pick<ComponentProps<'a'>, 'href' | 'title' | 'children'>;
+
+function GuideLink({ href, children, ...props }: MarkdownLinkProps): ReactElement {
+    if (href === undefined) {
         return (
-            <a {...props} href={href} className={cn(LINK)}>
+            <a {...props} className={cn(LINK)}>
                 {children}
             </a>
+        );
+    }
+
+    if (!OFF_SITE.test(href)) {
+        return (
+            <Link {...props} href={href} className={cn(LINK)}>
+                {children}
+            </Link>
         );
     }
 

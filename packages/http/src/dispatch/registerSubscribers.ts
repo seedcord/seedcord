@@ -1,48 +1,16 @@
-import { Subscriber } from '@seedcord/core';
-import { RegisterSubscriber } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { RegisterSubscriber, registrationFor, SubscribeMetadataKey } from '@seedcord/core/internal';
 
-import type { RouteManifest } from '#src/manifest/RouteManifest';
+import { isSubscriberClass, noRoutes, wrongClass } from '#src/manifest/entries';
+
+import type { Manifest } from '#src/manifest/Manifest';
 import type { Bus } from '@seedcord/core';
-import type { StoredSubscriberCtor, SubscriberRegistration } from '@seedcord/core/internal';
 
-// an idle isolate that never publishes pays nothing for this
-export function registerSubscribers(bus: Bus, manifest: RouteManifest): void {
-    for (const row of manifest.subscriberRoutes) {
-        bus[RegisterSubscriber]({
-            keys: row.keys,
-            frequency: row.frequency,
-            resolve: async () => {
-                const keys = row.keys.join(', ');
-                let module: Awaited<ReturnType<typeof row.load>>;
-                try {
-                    module = await row.load();
-                } catch (caught) {
-                    throw new SeedcordError(SeedcordErrorCode.RouteModuleLoadFailed, [keys, row.from], {
-                        cause: caught
-                    });
-                }
-                if (!Object.hasOwn(module, row.exportName)) {
-                    throw new SeedcordError(SeedcordErrorCode.InteractionRouteExportMissing, [
-                        keys,
-                        row.exportName,
-                        row.from
-                    ]);
-                }
+export function registerSubscribers(bus: Bus, subscribers: Manifest['subscribers']): void {
+    for (const ctor of subscribers) {
+        if (!isSubscriberClass(ctor)) throw wrongClass('subscribers', ctor, 'Subscriber');
+        // registrationFor dereferences the @Subscribe entry without checking it
+        if (!Reflect.hasMetadata(SubscribeMetadataKey, ctor)) throw noRoutes('subscribers', ctor.name, '@Subscribe');
 
-                // a hand-authored manifest reaches here too, so the check cannot rest on codegen
-                const exported = module[row.exportName];
-                if (typeof exported !== 'function' || !(exported.prototype instanceof Subscriber)) {
-                    throw new SeedcordTypeError(SeedcordErrorCode.SubscriberRouteNotASubscriber, [
-                        keys,
-                        row.exportName,
-                        row.from
-                    ]);
-                }
-                // justified: the two checks above prove it is a Subscriber subclass
-                return exported as StoredSubscriberCtor;
-            }
-        } satisfies SubscriberRegistration);
+        bus[RegisterSubscriber](registrationFor(ctor));
     }
 }

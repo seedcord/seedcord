@@ -21,7 +21,7 @@ pnpm build
 
 Branch off `next` and open your PR against `next`.
 
-The repo uses LF line endings, and `.gitattributes` checks every file out that way. If your clone predates it, or the pre-commit hook fails on CRLF, commit or stash your work and run:
+The repo uses LF line endings, and `.gitattributes` checks every file out that way. If your clone predates it, commit or stash your work and run:
 
 ```bash
 git rm --cached -r .
@@ -47,27 +47,77 @@ pnpm -C packages/gateway tc
 
 A new package starts from `turbo gen package`. Then follow the checklist in [`turbo/generators/README.md`](../turbo/generators/README.md).
 
+## Working on a site
+
+The three sites are Next.js apps in `apps/home`, `apps/guide` and `apps/docs`. `pnpm build` and `pnpm prePush` skip them. `pnpm build:all` builds them too.
+
+Run the dev server of the site you change.
+
+```bash
+pnpm -C apps/<site> dev
+```
+
+Each site serves under its own path, the same as on seedcord.org. The guide runs at `localhost:3000/guide` and the reference at `localhost:3000/docs`. To run two at once, give the second one another port with `-p`.
+
+The guide's `dev` skips type-checking its code samples. Run `dev:twoslash` when you change a sample. It checks every sample and shows the type hovers. In dev, the guide's links to the reference go to `localhost:3001/docs`. Run the docs there:
+
+```bash
+pnpm -C apps/guide dev:twoslash
+pnpm -C apps/docs dev -p 3001
+```
+
+### The reference
+
+The reference reads its pages from artifacts in `generated/`. Build them before your first `dev`, and again after you change a package's public API:
+
+```bash
+pnpm docs:local
+```
+
+Without them, the docs and the guide read the published artifacts from cdn.seedcord.org.
+
+A docs build renders every page of every version into `apps/docs/dist/docs`, which takes a few minutes. Set `DOCS_PACKAGES` to render only the packages you list:
+
+```bash
+DOCS_PACKAGES=core,http pnpm -C apps/docs build
+```
+
+To check a build the way production serves it, run:
+
+```bash
+pnpm docs:preview
+```
+
+It runs the upload step from CI into `apps/docs/.preview`, a folder with the same layout as the R2 bucket, then starts the docs worker at `localhost:8787/docs`. Run it again after every build. Wrangler stalls at startup on a full build, so keep `DOCS_PACKAGES` short for this.
+
+To build one site:
+
+```bash
+pnpm turbo build --filter=@seedcord/<site>...
+```
+
+A guide build uses about 6 GB of memory. With 8 GB or less, build one site at a time.
+
 ## Trying a change in a real bot
 
-`mocks/gateway` and `mocks/http` are working bots, one per transport. Copy a mock's `.env.example` to `.env` and fill it in. The example file lists every variable that mock reads. The [guide](https://guide.seedcord.org/discord-application) shows how to create an application and get its token.
+`mocks/gateway` and `mocks/http` are working bots, one per transport. Copy a mock's `.env.example` to `.env` and fill it in. The example file lists every variable that mock reads. The [guide](https://seedcord.org/guide/discord-application) shows how to create an application and get its token.
 
 ```bash
 pnpm -C mocks/gateway dev
 ```
 
-Check a mock's `src/bot.ts` for what else it connects to. The gateway mock attaches a database plugin, so it needs that database running. The http mock needs a public URL for Discord to post to, and `seedcord dev` opens one through [cloudflared](https://guide.seedcord.org/tooling/tunnel).
+Check a mock's `src/bot.ts` for what else it connects to. The gateway mock attaches a database plugin, so it needs that database running. The http mock needs a public URL for Discord to post to, and `seedcord dev` opens one through [cloudflared](https://seedcord.org/guide/tooling/tunnel).
 
 When you add or change a handler in a mock, run `pnpm -C mocks/<name> codegen`. The gate fails on a stale generated file.
 
 ## Hooks
 
-`pnpm install` sets up three husky hooks:
+`pnpm install` sets up two husky hooks:
 
-- **pre-commit** runs `lint-staged` with zero warnings allowed, then checks formatting. One lint warning blocks the commit, even though plain `pnpm lint` lets it through.
+- **pre-commit** runs `lint-staged`, which formats the files you staged and lints them with zero warnings allowed. One lint warning blocks the commit, even though plain `pnpm lint` lets it through.
 - **commit-msg** runs commitlint on your message.
-- **pre-push** runs `pnpm prePush:affected`, which checks the packages your branch changed and the ones that depend on them.
 
-Run `pnpm prePush` before you open the PR. It checks every package. The root `package.json` has both chains.
+Run `pnpm prePush` before you open the PR. It checks the packages your branch changed since `next` and the ones that depend on them. `pnpm prePush:all` checks every package. The root `package.json` has both chains.
 
 ## Pull request guidelines
 
@@ -107,7 +157,7 @@ AI code often looks correct and misses edge cases, so the testing rules matter m
 
 ## CI
 
-[`checks.yml`](workflows/checks.yml) runs on every PR that is not a draft, and [`commitlint.yml`](workflows/commitlint.yml) checks every commit in it. CI runs a subset of `pnpm prePush`. A PR that fails CI will not get a detailed review.
+[`checks.yml`](workflows/checks.yml) runs on every PR that is not a draft, and [`commitlint.yml`](workflows/commitlint.yml) checks every commit in it. CI runs the checks from `pnpm prePush:all` on every package. A PR that fails CI will not get a detailed review.
 
 ## Questions
 

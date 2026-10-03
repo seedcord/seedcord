@@ -56,7 +56,7 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
-        "typescript": "catalog:peer"
+        "typescript": "catalog:consumerTypes"
     },
     "dependencies": {
         "chalk": "catalog:deps"

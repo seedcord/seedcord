@@ -18,7 +18,7 @@ async function cardWithDescription(description: string): Promise<Buffer> {
             meta={[]}
             name="Commands"
             description={description}
-            domain="guide.seedcord.org"
+            domain="seedcord.org/guide"
         />,
         { ...OG_SIZE, fonts }
     );

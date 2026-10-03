@@ -1,18 +1,17 @@
-import type { VersionedDocsEngine } from './engine';
+import type { PageHref } from '#lib/docs/pageHref';
 import type { MemberAccessLevel } from '#lib/memberAccess';
 import type {
     DirectoryEntity,
     DocComment,
     DocNode,
     DocSignatureParameter,
-    RenderedSignature
+    RenderedSignature,
+    VersionedDocsEngine
 } from '@seedcord/docs-engine';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { RenameKey } from '@seedcord/types';
 import type { CodeRepresentation } from '@seedcord/ui';
 import type { Except } from 'type-fest';
-
-export type { CodeRepresentation };
 
 export interface FormatContext {
     engine: VersionedDocsEngine;
@@ -41,7 +40,7 @@ export interface CommentExample {
 
 export interface SeeAlsoEntry {
     name: string;
-    href?: string;
+    href?: PageHref;
     // true for a link outside the current package, whether a different package's page or an external url
     external?: boolean;
     target?: unknown;
@@ -126,12 +125,6 @@ export interface PackageCatalogEntry {
 }
 
 export type DocsCatalog = readonly PackageCatalogEntry[];
-
-export interface CategoryConfig {
-    readonly entity: DirectoryEntity;
-    readonly title: string;
-    readonly tone: EntityTone;
-}
 
 export type EntityKind = EntityTone;
 
@@ -243,7 +236,7 @@ export interface EntityMemberSummary
     sharedDocumentation: CommentParagraph[];
     sharedExamples: CommentExample[];
     signatures: MemberSignatureDetail[];
-    inheritedFrom?: string | { name: string; href?: string; external?: boolean };
+    inheritedFrom?: string | { name: string; href?: PageHref; external?: boolean };
     tags?: readonly string[];
     access?: MemberAccessLevel;
     accessorType?: MemberAccessorType;

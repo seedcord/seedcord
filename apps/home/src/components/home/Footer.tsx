@@ -86,7 +86,7 @@ export function Footer(): ReactNode {
                             </span>
                         </Link>
                         <p className={cn('max-w-xs text-sm font-medium text-(--seed-dark)/70')}>
-                            A typed framework for Discord bots, built on discord.js.
+                            An end-to-end typed framework for Discord bots.
                         </p>
                     </div>
                     <div className={cn('flex flex-col lg:flex-row lg:gap-20')}>

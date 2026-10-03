@@ -110,7 +110,7 @@ async function reportOutcome(
 
     copyable('Run this setup again', paint.mute(reproducingCommand(answers, agent)));
 
-    outro(paint.sky('https://guide.seedcord.org'));
+    outro(paint.sky('https://seedcord.org/guide'));
 }
 
 try {

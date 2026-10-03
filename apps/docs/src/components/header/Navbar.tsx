@@ -9,6 +9,9 @@ import {
     SearchIconButton,
     SearchTrigger,
     SiteSwitcher,
+    GUIDE_URL,
+    HOME_URL,
+    REPO_URL,
     ThemeToggle,
     cn
 } from '@seedcord/ui';
@@ -16,7 +19,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { hasMobileNavPanel } from '#components/layout/sidebar/utils/hasMobileNavPanel';
-import { GUIDE_URL, HOME_URL, REPO_URL, SITE_URL } from '#lib/site';
+import { SITE_URL } from '#lib/site';
 import { log } from '#lib/logger';
 import { useUIStore } from '#store/ui';
 

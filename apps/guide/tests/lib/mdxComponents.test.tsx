@@ -103,9 +103,35 @@ describe('a link', () => {
 
         expect(screen.getByRole('link')).toHaveAccessibleName('gateway or http');
     });
+
+    it('keeps the title a link in the guide carries', () => {
+        render(
+            <Link href="/gateway-or-http" title="Pick a transport">
+                gateway or http
+            </Link>
+        );
+
+        expect(screen.getByRole('link')).toHaveAttribute('title', 'Pick a transport');
+    });
 });
 
 describe('the image component', () => {
+    // a plain <img> gets no basePath from next
+    it('loads a file from public/ under the guide path', () => {
+        render(<Image src="/portal-token.webp" alt="token" />);
+
+        expect(screen.getByRole('img', { name: 'token' })).toHaveAttribute('src', '/guide/portal-token.webp');
+    });
+
+    it('leaves an image on another host alone', () => {
+        render(<Image src="https://cdn.seedcord.org/banner.png" alt="banner" />);
+
+        expect(screen.getByRole('img', { name: 'banner' })).toHaveAttribute(
+            'src',
+            'https://cdn.seedcord.org/banner.png'
+        );
+    });
+
     it('draws no border by default', () => {
         render(<Image src="/logo.svg" alt="bare" />);
 

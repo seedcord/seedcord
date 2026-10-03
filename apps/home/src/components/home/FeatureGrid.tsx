@@ -3,6 +3,7 @@ import {
     Activity,
     AtSign,
     Blocks,
+    Bot,
     Cable,
     Component,
     Database,
@@ -85,7 +86,7 @@ const GROUPS: Group[] = [
                 label: 'component handlers',
                 gloss: 'buttons, selects and modals, routed by customId'
             },
-            { icon: KeyRound, label: 'customId codec', gloss: 'pack fields into 100 characters, decode them typed' },
+            { icon: KeyRound, label: 'typed customIds', gloss: 'pack fields into 100 characters, decode them typed' },
             { icon: MousePointerClick, label: 'context menus', gloss: 'user and message commands' },
             {
                 icon: Split,
@@ -123,7 +124,7 @@ const GROUPS: Group[] = [
             { icon: Blocks, label: 'composable gates', gloss: 'stack them with and, or' },
             { icon: TimerReset, label: 'cooldowns', gloss: 'scoped per user, guild or channel' },
             { icon: Gauge, label: 'rate limiter', gloss: 'a sliding window per key' },
-            { icon: ShieldAlert, label: 'errors', gloss: 'Notice to refuse, Fault to report, Silence to drop' }
+            { icon: ShieldAlert, label: 'errors', gloss: 'Notice refuses, Fault reports, Silence stays quiet' }
         ]
     },
     {
@@ -141,6 +142,7 @@ const GROUPS: Group[] = [
         accent: 'rind',
         rows: [
             { icon: PackagePlus, label: 'create seedcord', gloss: 'answers a few questions, writes the project' },
+            { icon: Bot, label: 'ready for agents', gloss: 'AGENTS.md, a skill and llms.txt' },
             { icon: SquareTerminal, label: 'seedcord dev', gloss: 'a full-screen dev terminal' },
             {
                 icon: RefreshCw,

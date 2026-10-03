@@ -1,32 +1,26 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import type { RouteManifest } from '#src/manifest/RouteManifest';
+import type { Manifest } from '#src/manifest/Manifest';
 
-export type { RouteManifest } from '#src/manifest/RouteManifest';
+export type { Manifest } from '#src/manifest/Manifest';
 
 const notGenerated = (): never => {
     throw new SeedcordError(SeedcordErrorCode.ConfigManifestNotGenerated);
 };
 
 /**
- * The generated route table. `seedcord build` aliases this module to the emitted file. Reading a route
- * list off the un-built stub will throw.
+ * The generated class list. `seedcord build` aliases this module to the emitted file. Reading a class
+ * list off the un-built stub throws.
  */
-export const manifest: RouteManifest = {
-    get commandRoutes(): never {
+export const manifest: Manifest = {
+    get handlers(): never {
         return notGenerated();
     },
-    get componentRoutes(): never {
+    get middleware(): never {
         return notGenerated();
     },
-    get autocompleteRoutes(): never {
-        return notGenerated();
-    },
-    get subscriberRoutes(): never {
-        return notGenerated();
-    },
-    get middlewareRoutes(): never {
+    get subscribers(): never {
         return notGenerated();
     }
 };

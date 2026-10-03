@@ -9,7 +9,7 @@ const TRANSPORTS = [
     {
         icon: Radio,
         name: '@seedcord/gateway',
-        summary: 'Holds a websocket connection, built on discord.js.',
+        summary: 'Holds a websocket connection through the discord.js client.',
         detail: 'Discord streams every event down it. Messages, joins, voice state, typing, and all other events. Pick it when your bot reacts to anything past interactions.'
     },
     {
@@ -26,10 +26,11 @@ export function Transports(): ReactNode {
             <h2 className={cn(SECTION_HEADING)}>
                 Two transports.
                 <br />
-                One set of handlers.
+                One way to write handlers.
             </h2>
             <p className={cn('mt-6 max-w-xl text-lg/snug font-medium text-(--pith)')}>
-                Your handlers compile on both, and the import line will usually be the only difference.
+                Handlers, checks, and the rest of the seedcord API work the same way on both. The objects they read
+                differ: discord.js objects on the gateway, raw payloads on http.
             </p>
             <div className={cn('mt-10 grid gap-6 lg:grid-cols-2 lg:gap-10')}>
                 {TRANSPORTS.map((transport) => (

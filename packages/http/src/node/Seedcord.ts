@@ -31,10 +31,9 @@ import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/i
 import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
-import { buildRouteMaps } from '#src/dispatch/resolve';
+import { emptyRouteMaps } from '#src/dispatch/resolve';
 import { EmojiInjector } from '#src/emojis/EmojiInjector';
 import { buildEngine } from '#src/engine';
-import { EMPTY_MANIFEST } from '#src/manifest/RouteManifest';
 
 import { InteractionDispatcher } from './InteractionDispatcher';
 import { toWebRequest, writeWebResponse } from './webBridge';
@@ -42,7 +41,6 @@ import { version as packageVersion } from '../version';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpConfig } from '#interfaces/Config';
-import type { Core } from '#interfaces/Core';
 import type { IRateLimiter } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Server } from 'node:http';
@@ -60,9 +58,10 @@ type RuntimeOfConfig<Cfg extends HttpConfig> = Cfg extends { runtime: 'edge' } ?
  * `start()`, and runs coordinated shutdown with an in-flight drain. The edge deploy path calls
  * `createSeedcord` from a generated entry.
  */
+// tests/node/seedcord-core.types-test.ts checks this class against Core in place of an implements clause
 export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     extends Pluggable<'http', RuntimeOfConfig<Cfg>>
-    implements Core, SeedcordInstance
+    implements SeedcordInstance
 {
     // the CLI reads these to detect and augment the instance
     /** @internal */
@@ -216,7 +215,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     }
 
     private async listen(): Promise<void> {
-        const maps = this.interactions?.maps ?? buildRouteMaps(EMPTY_MANIFEST);
+        const maps = this.interactions?.maps ?? emptyRouteMaps();
         const middlewares =
             this.interactions?.middlewares ??
             new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
@@ -280,7 +279,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
                 this.logger.info(paint.coral.bold('Interactions server stopped'));
                 resolveClose();
             });
-            // node's close() waits out idle keep-alive sockets
+            // node's close() leaves idle keep-alive sockets open
             server.closeIdleConnections();
         });
     }

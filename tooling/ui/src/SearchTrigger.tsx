@@ -19,14 +19,10 @@ export function SearchTrigger({ label, onOpen }: SearchTriggerProps): ReactEleme
 
     return (
         <Button
-            variant="ghost"
+            variant="field"
             onClick={onOpen}
             aria-label={label}
-            className={cn(
-                'group hidden w-90 max-w-full items-center justify-between gap-4 border border-(--border)',
-                'bg-(--surface-moderate) px-3 py-2 text-sm text-(--text) lg:flex',
-                'hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-subtle)'
-            )}
+            className={cn('group hidden w-90 max-w-full justify-between gap-4 px-3 py-2 lg:flex')}
         >
             <span
                 className={cn(

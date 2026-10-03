@@ -4,7 +4,8 @@ import { manifest } from '#src/manifest.index';
 
 describe('manifest stub', () => {
     it('throws reporting the build when a route list is read off the un-built stub', () => {
-        expect(() => manifest.commandRoutes).toThrow(/seedcord build/);
-        expect(() => manifest.middlewareRoutes).toThrow(/seedcord build/);
+        expect(() => manifest.handlers).toThrow(/seedcord build/);
+        expect(() => manifest.middleware).toThrow(/seedcord build/);
+        expect(() => manifest.subscribers).toThrow(/seedcord build/);
     });
 });

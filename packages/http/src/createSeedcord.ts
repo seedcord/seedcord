@@ -5,15 +5,19 @@ import { Envapter } from 'envapt';
 
 import { createCore } from './dispatch/dispatchInteraction';
 import { registerSubscribers } from './dispatch/registerSubscribers';
-import { buildRouteMaps } from './dispatch/resolve';
+import { RouteRegistry } from './dispatch/RouteRegistry';
 import { buildEngine } from './engine';
+import { isHandlerClass, isMiddlewareClass, noRoutes, wrongClass } from './manifest/entries';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpConfig } from '#interfaces/Config';
-import type { RouteManifest } from '#src/manifest/RouteManifest';
+import type { Manifest } from '#src/manifest/Manifest';
 import type { EngineContext } from './engine';
 
 export type { EngineContext } from './engine';
+
+// the duplicate-route message prints a file path in this slot on node
+const MANIFEST_ORIGIN = 'the manifest';
 
 /**
  * Builds the HTTP-interactions engine, a `(request, ctx?) => Promise<Response>` handler.
@@ -33,18 +37,29 @@ export type { EngineContext } from './engine';
  */
 export function createSeedcord(
     config: HttpConfig,
-    manifest: RouteManifest
+    manifest: Manifest
 ): (request: Request, ctx?: EngineContext) => Promise<Response> {
     Logger.configure(config.logger ?? {});
 
     const token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
     const core = createCore(config, token);
     core.bus[RegisterDefaults]();
-    registerSubscribers(core.bus, manifest);
-    // the manifest carries no middleware rows yet
-    return buildEngine(
-        core,
-        buildRouteMaps(manifest),
-        new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)
-    ).handle;
+    registerSubscribers(core.bus, manifest.subscribers);
+
+    const routes = new RouteRegistry();
+    for (const handler of manifest.handlers) {
+        if (!isHandlerClass(handler))
+            throw wrongClass('handlers', handler, 'InteractionHandler or AutocompleteHandler');
+        if (!routes.register(handler, MANIFEST_ORIGIN)) throw noRoutes('handlers', handler.name, 'route decorator');
+    }
+
+    const middlewares = new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
+    for (const middleware of manifest.middleware) {
+        if (!isMiddlewareClass(middleware)) throw wrongClass('middleware', middleware, 'InteractionMiddleware');
+        if (!middlewares.register(middleware)) {
+            throw noRoutes('middleware', middleware.name, '@RegisterInteractionMiddleware');
+        }
+    }
+
+    return buildEngine(core, routes.maps, middlewares).handle;
 }

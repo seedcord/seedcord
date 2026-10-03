@@ -4,6 +4,9 @@ export default createTsdownConfig({
     entry: [
         'src/index.ts',
         'src/agents.ts',
+        'src/sites.ts',
+        'src/staticExport.ts',
+        'src/PageAsset.ts',
         'src/og.ts',
         'src/palette.ts',
         'src/skills.ts',
@@ -33,6 +36,7 @@ export default createTsdownConfig({
             'clsx',
             'lucide-react',
             'motion',
+            'next',
             'react',
             'react-dom',
             'tailwind-merge'

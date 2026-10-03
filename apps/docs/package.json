@@ -8,10 +8,8 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
-        "dev:published": "SEEDCORD_DOCS_INDEX_URL=https://cdn.seedcord.org/index.json next dev",
         "build": "next build",
-        "start": "next start",
-        "start:standalone": "HOSTNAME=0.0.0.0 NODE_OPTIONS=--max-old-space-size=384 node .next/standalone/apps/docs/server.js",
+        "check:links": "tsx check-links.ts",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
         "fmt": "prettier --write '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
@@ -24,7 +22,6 @@
     "dependencies": {
         "@seedcord/docs-engine": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
-        "@seedcord/rate-limiter": "workspace:^",
         "@seedcord/types": "workspace:^",
         "@seedcord/ui": "workspace:^",
         "@tailwindcss/postcss": "catalog:deps",
@@ -35,7 +32,7 @@
         "marked": "^18.0.7",
         "motion": "catalog:deps",
         "next": "catalog:deps",
-        "postcss": "^8.5.25",
+        "postcss": "^8.5.28",
         "prettier": "catalog:deps",
         "react": "catalog:react",
         "react-dom": "catalog:react",
@@ -60,7 +57,9 @@
         "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
         "jsdom": "catalog:test",
         "prettier-plugin-tailwindcss": "catalog:deps",
+        "tsx": "catalog:deps",
         "typescript": "catalog:peer",
-        "vitest": "catalog:test"
+        "vitest": "catalog:test",
+        "wrangler": "catalog:deps"
     }
 }

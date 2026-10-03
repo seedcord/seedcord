@@ -267,13 +267,15 @@ export function buildPackageFromApi(
 // buildPackageFromApi runs this after adapting, and the remote project.json loader reuses it directly with no AE adapter.
 export function buildPackageFromModel(pkg: DocManifestPackage, root: DocNode): DocPackageModel {
     const indexes = buildIndexes(root, pkg);
-    const directory = PackageDirectory.fromIndexes(indexes);
+    const listed = [...indexes.byKind.values()].flat();
     return {
         manifest: pkg,
         root,
         packageDocumentation: root.comment ?? null,
         nodes: indexes.byId,
         indexes,
-        directory
+        listed: PackageDirectory.fromNodes(listed),
+        // signatures link to forgotten and @internal symbols too
+        pages: PackageDirectory.fromNodes([...listed, ...root.children])
     };
 }

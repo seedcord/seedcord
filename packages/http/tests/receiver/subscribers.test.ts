@@ -1,18 +1,17 @@
 import { Bus, Subscriber, WebhookLog, WebhookUrl, Subscribe } from '@seedcord/core';
 import { PublishDefault } from '@seedcord/core/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { registerSubscribers } from '#src/dispatch/registerSubscribers';
 
-import { emptyManifest } from '../helpers/fixtures';
-
-import type { RouteManifest } from '#src/manifest/RouteManifest';
 import type { CoreBase, SubscriptionData } from '@seedcord/core';
 
 const ran: string[] = [];
 
+@Subscribe('unknownException')
 class EdgeReporter extends Subscriber<'unknownException', CoreBase> {
     execute(): Promise<void> {
         ran.push('edge');
@@ -28,16 +27,21 @@ class UnsetReporter extends WebhookLog<'unknownException', CoreBase> {
     }
 }
 
-// justified: the Bus only stores core, no member is read during publish
-function stubBus(): Bus {
-    return new Bus({} as unknown as CoreBase);
+@Subscribe('unknownException')
+@WebhookUrl('EDGE_BAD_WEBHOOK_URL')
+class MalformedReporter extends WebhookLog<'unknownException', CoreBase> {
+    report(): { components: [] } {
+        return { components: [] };
+    }
 }
 
-function rowFor(exportName: string, load: () => Promise<Record<string, unknown>>): RouteManifest {
-    return {
-        ...emptyManifest(),
-        subscriberRoutes: [{ keys: ['unknownException'], frequency: 'on', exportName, from: 'src/Edge.ts', load }]
-    };
+class NotASubscriber {
+    public readonly kind = 'plain';
+}
+
+// justified: the Bus only stores core and reads no member during publish
+function stubBus(): Bus {
+    return new Bus({} as unknown as CoreBase);
 }
 
 const payload = (): SubscriptionData<'unknownException'> => ({
@@ -48,18 +52,15 @@ const payload = (): SubscriptionData<'unknownException'> => ({
 });
 
 describe('manifest subscribers on workerd', () => {
-    // the logger reads the environment at construction, and workerd binds no source by default
+    // workerd binds no source by default
     beforeEach(() => {
         Envapter.useSource(new PortableSource({}));
     });
 
-    it('imports the module on the first publish and runs the subscriber', async () => {
+    it('runs a listed subscriber on publish', async () => {
         ran.length = 0;
-        const load = vi.fn().mockResolvedValue({ EdgeReporter });
         const bus = stubBus();
-        registerSubscribers(bus, rowFor('EdgeReporter', load));
-
-        expect(load).not.toHaveBeenCalled();
+        registerSubscribers(bus, [EdgeReporter]);
 
         bus[PublishDefault]('unknownException', payload());
         await vi.waitFor(() => {
@@ -67,24 +68,51 @@ describe('manifest subscribers on workerd', () => {
         });
     });
 
-    it('warns and sends nothing for a lazily registered reporter with no url set', async () => {
+    it('warns at registration and never registers a reporter with no url set', () => {
         const bus = stubBus();
-        // the reporter warns through its own logger, so spy the prototype
+        // the warn comes off the bus's own logger instance
         const warn = vi.spyOn(Logger.prototype, 'warn');
         const sent = vi.spyOn(WebhookLog, 'senderFor');
-        registerSubscribers(
-            bus,
-            rowFor('UnsetReporter', () => Promise.resolve({ UnsetReporter }))
-        );
 
+        registerSubscribers(bus, [UnsetReporter]);
+
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('UnsetReporter'));
         bus[PublishDefault]('unknownException', payload());
-
-        // the probe runs only for an eagerly registered class, so the disabled branch lands inside execute
-        await vi.waitFor(() => {
-            expect(warn).toHaveBeenCalledWith(expect.stringContaining('UnsetReporter'));
-        });
         expect(sent).not.toHaveBeenCalled();
         warn.mockRestore();
         sent.mockRestore();
+    });
+
+    // SubscriberLoader.init throws the same error on node
+    it('throws at registration for a malformed webhook url', () => {
+        Envapter.useSource(new PortableSource({ EDGE_BAD_WEBHOOK_URL: 'https://example.com/nope' }));
+
+        expect(() => registerSubscribers(stubBus(), [MalformedReporter])).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.ConfigWebhookUrlInvalid })
+        );
+    });
+
+    it('reports a subscriber class carrying no @Subscribe', () => {
+        class Unsubscribed extends Subscriber<'unknownException', CoreBase> {
+            execute(): Promise<void> {
+                return Promise.resolve();
+            }
+        }
+
+        expect(() => registerSubscribers(stubBus(), [Unsubscribed])).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.ManifestEntryNoRoutes })
+        );
+    });
+
+    it('reports a non-class entry', () => {
+        expect(() => registerSubscribers(stubBus(), [null as never])).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.ManifestEntryWrongClass })
+        );
+    });
+
+    it('throws naming the array and the class when a listed class is not a subscriber', () => {
+        expect(() => registerSubscribers(stubBus(), [NotASubscriber as never])).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.ManifestEntryWrongClass })
+        );
     });
 });

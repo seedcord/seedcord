@@ -30,7 +30,8 @@ describe('the link gate', () => {
         ['a symbol', '[Notice](ref:core/Notice)'],
         ['a member of a symbol', '[start](ref:core/Paginator#start)'],
         ['a package', '[core](ref:core)'],
-        ['another site', '[docs](https://docs.seedcord.org/nothing-checks-this)']
+        ['the reference site', '[docs](https://seedcord.org/docs)'],
+        ['another site', '[repo](https://github.com/seedcord/seedcord/tree/next/packages)']
     ])('passes a link to %s', (_what, link) => {
         expect(problemsIn(link)).toEqual([]);
     });
@@ -42,9 +43,13 @@ describe('the link gate', () => {
         ['a missing public file', '![gone](/portal-secret.webp)'],
         ['a symbol the package does not export', '[gone](ref:core/Noticed)'],
         ['a member the symbol does not have', '[gone](ref:core/Paginator#stop)'],
+        ['a symbol with nothing before its member', '[gone](ref:core/.Notice)'],
+        ['a package with a trailing slash', '[gone](ref:core/)'],
+        ['a symbol with a path after it', '[gone](ref:core/Notice/x)'],
         ['a relative page', '[gone](./cooldown)'],
         ['a package the reference site does not list', '[gone](ref:cor/Notice)'],
         ['a page that moved', '[moved](/gates/cooldown)'],
+        ['a reference page by its url', '[Notice](https://seedcord.org/docs/packages/core/latest/classes/notice)'],
         ['a page that does not exist, by reference', '[gone][g]\n\n[g]: /checks/cooldowns']
     ])('reports a link to %s', (_what, link) => {
         expect(problemsIn(link)).toHaveLength(1);

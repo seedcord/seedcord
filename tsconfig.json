@@ -2,7 +2,8 @@
     "$schema": "https://json.schemastore.org/tsconfig.json",
     "extends": "@seedcord/tsconfig/base",
     "compilerOptions": {
-        "rootDir": "./"
+        "rootDir": "./",
+        "allowImportingTsExtensions": true
     },
     "exclude": [
         "node_modules",

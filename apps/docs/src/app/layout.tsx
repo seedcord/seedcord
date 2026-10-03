@@ -1,4 +1,5 @@
-import { AgentLinks, ThemeProvider, TooltipProvider, cn, seedcordJsonLd } from '@seedcord/ui';
+import { AgentLinks, DOCS, ThemeProvider, TooltipProvider, cn, seedcordJsonLd } from '@seedcord/ui';
+import { FAVICON_SIZE } from '@seedcord/ui/MaterwelonFavicon';
 import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 import { Space_Grotesk } from 'next/font/google';
 import Script from 'next/script';
@@ -10,6 +11,7 @@ import { Navbar } from '#components/header/Navbar';
 import { HotkeyProvider } from '#components/providers/HotkeyProvider';
 import { MotionProvider } from '#components/providers/MotionProvider';
 import { CommandPalette } from '#components/search/command-palette';
+import { CARD } from '@seedcord/ui/page-asset';
 import { FOREGROUND_HEX } from '#lib/entityColors';
 import { OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
 
@@ -19,8 +21,11 @@ import type { ReactNode } from 'react';
 // code keeps tailwind's ui-monospace default. a webfont mono at 12px renders a pixel high in the chips
 const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
 
-// /og draws the same card the docs root page carries
+const ROOT_CARD = CARD.publicPath('/');
 const ROOT_CARD_ALT = ogPageCardAlt({ pill: 'docs', name: 'Reference', meta: [] });
+
+// next 16.3.8 leaves basePath off icon urls in metadata and off a file-based icon under turbopack
+const ICON = { url: `${DOCS.path}/icon`, type: 'image/png', sizes: `${FAVICON_SIZE.width}x${FAVICON_SIZE.height}` };
 
 export const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
@@ -34,17 +39,18 @@ export const metadata: Metadata = {
         locale: 'en_US',
         title: 'seedcord docs',
         description: SITE_DESCRIPTION,
-        images: [{ url: '/og', width: OG_IMAGE_W, height: OG_IMAGE_H, alt: ROOT_CARD_ALT }]
+        images: [{ url: ROOT_CARD, width: OG_IMAGE_W, height: OG_IMAGE_H, alt: ROOT_CARD_ALT }]
     },
     twitter: {
         card: 'summary_large_image',
         title: 'seedcord docs',
         description: SITE_DESCRIPTION,
-        images: ['/og']
-    }
+        images: [ROOT_CARD]
+    },
+    icons: { icon: [ICON] }
 };
 
-// default embed stripe for pages without their own tone (root, overview, 404)
+// entity pages replace this with their tone
 export const viewport: Viewport = {
     themeColor: [
         { media: '(prefers-color-scheme: light)', color: FOREGROUND_HEX.light },
@@ -96,7 +102,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                                 });
                             }
 
-                            // justified: Grammarly re-injects its attributes asynchronously after the initial strip, the deferred pass catches the second wave before hydration matches the DOM.
+                            // Grammarly adds its attributes again after the first strip
                             function runCleanup() {
                                 stripAttributes();
                                 setTimeout(stripAttributes, 0);

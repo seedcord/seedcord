@@ -2,27 +2,17 @@
 
 import { Dropdown, SearchField, Switch, cn, tw, useSearchDialogContainer, type DropdownOption } from '@seedcord/ui';
 
-import { COMMAND_LISTBOX_ID } from './constants';
+import { ALL_PACKAGES, COMMAND_LISTBOX_ID, KIND_FILTERS } from './constants';
 
+import type { KindFilter } from './constants';
 import type { DocsPackageOption } from './types';
 import type { KeyboardEvent, ReactElement, RefObject } from 'react';
-
-const KIND_OPTIONS: DropdownOption[] = [
-    { value: 'all', label: 'All kinds' },
-    { value: 'class', label: 'Classes' },
-    { value: 'interface', label: 'Interfaces' },
-    { value: 'type', label: 'Types' },
-    { value: 'enum', label: 'Enums' },
-    { value: 'function', label: 'Functions' },
-    { value: 'variable', label: 'Variables' },
-    { value: 'member', label: 'Members' }
-];
 
 const SEPARATOR = tw`text-sm text-(--text-faint)`;
 
 interface FilterControlsProps {
     scope: string;
-    kind: string;
+    kind: KindFilter;
     packages: DocsPackageOption[];
     onScopeChange: (scope: string) => void;
     onKindChange: (kind: string) => void;
@@ -31,7 +21,7 @@ interface FilterControlsProps {
 function FilterDropdowns({ scope, kind, packages, onScopeChange, onKindChange }: FilterControlsProps): ReactElement {
     const container = useSearchDialogContainer();
     const scopeOptions: DropdownOption[] = [
-        { value: 'all', label: 'All packages' },
+        { value: ALL_PACKAGES, label: 'All packages' },
         ...packages.map((pkg) => ({ value: pkg.folder, label: pkg.label }))
     ];
 
@@ -51,7 +41,7 @@ function FilterDropdowns({ scope, kind, packages, onScopeChange, onKindChange }:
                 variant="ghost"
                 placeholderLabel="All kinds"
                 value={kind}
-                options={KIND_OPTIONS}
+                options={KIND_FILTERS}
                 onChange={onKindChange}
                 container={container}
                 aria-label="Kind filter"
@@ -89,8 +79,9 @@ interface CommandHeaderProps {
     activeId: string | undefined;
     listExpanded: boolean;
     scope: string;
-    kind: string;
+    kind: KindFilter;
     prerelease: boolean;
+    hasPrerelease: boolean;
     packages: DocsPackageOption[];
     onScopeChange: (scope: string) => void;
     onKindChange: (kind: string) => void;
@@ -109,12 +100,14 @@ export function CommandHeader({
     scope,
     kind,
     prerelease,
+    hasPrerelease,
     packages,
     onScopeChange,
     onKindChange,
     onPrereleaseChange
 }: CommandHeaderProps): ReactElement {
     const filters = { scope, kind, packages, onScopeChange, onKindChange };
+    const toggle = hasPrerelease ? <PrereleaseToggle checked={prerelease} onChange={onPrereleaseChange} /> : null;
 
     return (
         <SearchField
@@ -130,15 +123,11 @@ export function CommandHeader({
             activeId={activeId}
             isSearching={isSearching}
             leading={<SearchLeading {...filters} />}
-            trailing={
-                <span className={cn('hidden sm:flex')}>
-                    <PrereleaseToggle checked={prerelease} onChange={onPrereleaseChange} />
-                </span>
-            }
+            trailing={toggle && <span className={cn('hidden sm:flex')}>{toggle}</span>}
             aboveOnMobile={
                 <div className={cn('flex items-center justify-between gap-2')}>
                     <FilterDropdowns {...filters} />
-                    <PrereleaseToggle checked={prerelease} onChange={onPrereleaseChange} />
+                    {toggle}
                 </div>
             }
         />

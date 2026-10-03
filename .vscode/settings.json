@@ -93,5 +93,6 @@
     "vitest.disableWorkspaceWarning": true,
     "chat.tools.terminal.autoApprove": {
         "pnpm": true
-    }
+    },
+    "js/ts.tsdk.path": "node_modules/@typescript/native-preview"
 }

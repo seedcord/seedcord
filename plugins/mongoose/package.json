@@ -55,7 +55,7 @@
         "@seedcord/core": "workspace:>=0.2.0 <1.0.0",
         "envapt": "catalog:peer",
         "mongoose": "catalog:peer",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:consumerTypes"
     },
     "dependencies": {
         "@seedcord/errors": "workspace:^",

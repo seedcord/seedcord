@@ -1,15 +1,8 @@
 <div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://cdn.seedcord.org/assets/wordmark-dark.webp" />
-    <img src="https://cdn.seedcord.org/assets/wordmark-light.webp" alt="seedcord" width="440" />
-  </picture>
-</div>
-
-<div align="center">
-  <h3>The whole Discord bot, typed end to end</h3>
-  <a href="https://seedcord.org">Website</a> ·
-  <a href="https://guide.seedcord.org">Guide</a> ·
-  <a href="https://docs.seedcord.org">Reference</a> ·
+  <h1>eslint-plugin-discordjs</h1>
+  <p>Catch discord.js payloads that Discord would reject, before the bot runs.</p>
+  <a href="https://github.com/seedcord/seedcord/blob/next/tooling/eslint-plugin-discordjs/CHANGELOG.md">Changelog</a> ·
+  <a href="https://seedcord.org/docs/packages/eslint-plugin-discordjs/latest">Reference</a> ·
   <a href="https://discord.gg/DzFxY58WXf">Discord</a>
 </div>
 
@@ -86,3 +79,9 @@ All rules run at `error` except the two `prefer-*` style rules, which warn.
 ## seedcord
 
 These rules are the discord.js half of the [seedcord](https://github.com/seedcord/seedcord) lint setup. seedcord bots add [`@seedcord/eslint-plugin`](https://www.npmjs.com/package/@seedcord/eslint-plugin), whose `seedcord` preset layers the framework rules over this plugin's `recommended`.
+
+---
+
+<div align="center">
+  Part of <a href="https://seedcord.org">seedcord</a> · Built by <a href="https://materwelon.dev">materwelonDhruv</a>
+</div>

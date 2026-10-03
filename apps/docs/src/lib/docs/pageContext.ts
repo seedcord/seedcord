@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 
-import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from './catalog';
+import { findPackageVersion } from './catalog';
 
-import type { PackageCatalogEntry, PackageVersionCatalog } from './types';
+import type { CatalogContext } from './catalog';
 
 export type PageParams = Record<string, string | string[] | undefined>;
 
@@ -17,19 +17,13 @@ function decodeParam(value: string | string[] | undefined): string {
     }
 }
 
-export async function getCatalogContext(
-    params: PageParams
-): Promise<{ entry: PackageCatalogEntry; version: PackageVersionCatalog }> {
-    const catalog = await loadDocsCatalog();
-    const decodedPackageId = decodeParam(params.packageId);
+interface PageContext extends CatalogContext {
+    versionSegment: string;
+}
 
-    if (!decodedPackageId) notFound();
-
-    const entry = findCatalogEntry(catalog, decodedPackageId);
-    if (!entry) notFound();
-
-    const version = findCatalogVersion(entry, decodeParam(params.versionId));
-    if (!version) notFound();
-
-    return { entry, version };
+export async function getCatalogContext(params: PageParams): Promise<PageContext> {
+    const versionSegment = decodeParam(params.versionId);
+    const context = await findPackageVersion(decodeParam(params.packageId), versionSegment);
+    if (!context) notFound();
+    return { ...context, versionSegment };
 }

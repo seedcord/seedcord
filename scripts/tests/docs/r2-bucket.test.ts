@@ -115,6 +115,51 @@ describe('R2Bucket objects', () => {
     });
 });
 
+describe('R2Bucket site files', () => {
+    it('uploads a rendered page with no artifact headers', async () => {
+        const { sent, client } = stub({});
+
+        await new R2Bucket(client, 'site').putFile('index.html', path.join(process.cwd(), 'package.json'));
+
+        expect(sent[0]?.name).toBe('PutObjectCommand');
+        expect(sent[0]?.input.Key).toBe('index.html');
+        expect(sent[0]?.input).not.toHaveProperty('ContentType');
+        expect(sent[0]?.input).not.toHaveProperty('CacheControl');
+    });
+
+    it('lists the folders one level below a prefix', async () => {
+        const { sent, client } = stub(
+            { CommonPrefixes: [{ Prefix: 'builds/a/' }], IsTruncated: true, NextContinuationToken: 'more' },
+            { CommonPrefixes: [{ Prefix: 'builds/b/' }], IsTruncated: false }
+        );
+
+        await expect(new R2Bucket(client, 'site').folders('builds/')).resolves.toEqual(['builds/a/', 'builds/b/']);
+        expect(sent[0]?.input).toMatchObject({ Prefix: 'builds/', Delimiter: '/' });
+        expect(sent[1]?.input.ContinuationToken).toBe('more');
+    });
+
+    it('deletes every key in a folder, a thousand per request', async () => {
+        const keys = Array.from({ length: 1500 }, (_, index) => ({ Key: `builds/a/page-${index}.html` }));
+        const { sent, client } = stub({ Contents: keys, IsTruncated: false }, {}, {});
+
+        await new R2Bucket(client, 'site').deleteFolder('builds/a/');
+
+        expect(sent[0]?.input.Prefix).toBe('builds/a/');
+        const deletes = sent.slice(1).map((command) => command.input.Delete as { Objects: { Key: string }[] });
+        expect(deletes.map(({ Objects }) => Objects.length)).toEqual([1000, 500]);
+        expect(deletes[0]?.Objects[0]?.Key).toBe('builds/a/page-0.html');
+    });
+
+    it('throws when the bucket refuses to delete some of the keys', async () => {
+        const { client } = stub(
+            { Contents: [{ Key: 'builds/a/index.html' }], IsTruncated: false },
+            { Errors: [{ Key: 'builds/a/index.html', Code: 'AccessDenied' }] }
+        );
+
+        await expect(new R2Bucket(client, 'site').deleteFolder('builds/a/')).rejects.toThrow(/builds\/a\/index\.html/);
+    });
+});
+
 describe('R2Bucket listing', () => {
     it('follows the continuation token and returns paths without the prefix', async () => {
         const { sent, client } = stub(

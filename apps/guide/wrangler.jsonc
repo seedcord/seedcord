@@ -3,15 +3,20 @@
     "name": "seedcord-guide",
     "compatibility_date": "2026-06-23",
     "main": "./worker.ts",
-    // custom domains write their own DNS record and cert
-    "routes": [{ "pattern": "guide.seedcord.org", "custom_domain": true }],
+    // a route takes precedence over the home worker's custom domain on the same host
+    "routes": [
+        { "pattern": "seedcord.org/guide", "zone_name": "seedcord.org" },
+        { "pattern": "seedcord.org/guide/*", "zone_name": "seedcord.org" }
+    ],
+    "workers_dev": false,
     "assets": {
-        "directory": "./out",
+        // next.config.ts writes the export into dist/guide
+        "directory": "./dist",
         "binding": "ASSETS",
         "not_found_handling": "404-page",
         "html_handling": "auto-trailing-slash",
         // worker.ts serves the .md twin when a request accepts markdown
         // cloudflare skips _headers for anything the worker returns
-        "run_worker_first": ["/*", "!/_next/static/*"]
+        "run_worker_first": ["/*", "!/guide/_next/static/*"]
     }
 }

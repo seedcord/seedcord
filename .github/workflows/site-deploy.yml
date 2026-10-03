@@ -37,8 +37,9 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Build
-        run: pnpm build
+        run: pnpm turbo build --filter="@seedcord/$APP..."
         env:
+          APP: ${{ inputs.app }}
           NEXT_PUBLIC_SITE_URL: ${{ inputs.site_url }}
 
       - name: Deploy

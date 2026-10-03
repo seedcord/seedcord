@@ -12,7 +12,7 @@ import { createCore, dispatchInteraction } from '#src/dispatch/dispatchInteracti
 import { slashPayload } from './harness';
 import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
-import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
+import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { DispatchResult } from '@seedcord/core';
 import type { ReplyResponse } from '@seedcord/types';
@@ -71,15 +71,12 @@ function registry(...ctors: InteractionMiddlewareConstructor[]): MiddlewareRegis
     return middlewares;
 }
 
-async function dispatchThrough(
-    load: () => Promise<unknown>,
-    ...ctors: InteractionMiddlewareConstructor[]
-): Promise<void> {
+async function dispatchThrough(ctor: HandlerConstructor, ...ctors: InteractionMiddlewareConstructor[]): Promise<void> {
     Envapter.useSource(new PortableSource({}));
     const core = createCore(nullPathConfig, VALID_TOKEN);
 
     const execute = await dispatchInteraction({
-        match: { kind: InteractionKind.Slash, routeId: 'slash:ok', load },
+        match: { kind: InteractionKind.Slash, routeId: 'slash:ok', ctor },
         payload: slashPayload('ok') as ValidInteractionTypes,
         core,
         middlewares: registry(...ctors)
@@ -98,13 +95,13 @@ afterEach(() => {
 
 describe('after() on the http interaction chain', () => {
     it('runs after the handler, in reverse of the chain', async () => {
-        await dispatchThrough(() => Promise.resolve(OkHandler), First, Second);
+        await dispatchThrough(OkHandler, First, Second);
 
         expect(calls).toEqual(['First.execute', 'Second.execute', 'Second.after', 'First.after']);
     });
 
     it('reports a handled dispatch', async () => {
-        await dispatchThrough(() => Promise.resolve(OkHandler), First);
+        await dispatchThrough(OkHandler, First);
 
         expect(results).toEqual([{ outcome: 'handled' }]);
     });
@@ -117,7 +114,7 @@ describe('after() on the http interaction chain', () => {
             }
         }
 
-        await dispatchThrough(() => Promise.resolve(BoomHandler), First);
+        await dispatchThrough(BoomHandler, First);
 
         expect(results).toEqual([{ outcome: 'failed', caught: boom }]);
     });
@@ -132,7 +129,7 @@ describe('after() on the http interaction chain', () => {
             }
         }
 
-        await dispatchThrough(() => Promise.resolve(OkHandler), First, Stops);
+        await dispatchThrough(OkHandler, First, Stops);
 
         expect(results).toEqual([{ outcome: 'refused', caught: stop }]);
     });
@@ -150,7 +147,7 @@ describe('after() on the http interaction chain', () => {
             }
         }
 
-        await dispatchThrough(() => Promise.resolve(OkHandler), First, StopsLoudly);
+        await dispatchThrough(OkHandler, First, StopsLoudly);
 
         expect(calls).toEqual(['First.execute', 'StopsLoudly.after', 'First.after']);
     });
@@ -178,7 +175,7 @@ describe('after() on the http interaction chain', () => {
         }
         Reflect.defineMetadata(GatedMetadataKey, [refuse], GatedHandler);
 
-        await expect(dispatchThrough(() => Promise.resolve(GatedHandler), First)).rejects.toThrow('render exploded');
+        await expect(dispatchThrough(GatedHandler, First)).rejects.toThrow('render exploded');
 
         expect(calls).toContain('First.after');
     });
@@ -195,7 +192,7 @@ describe('after() on the http interaction chain', () => {
             }
         }
 
-        await dispatchThrough(() => Promise.resolve(OkHandler), First, Angry);
+        await dispatchThrough(OkHandler, First, Angry);
 
         expect(calls).toContain('First.after');
     });

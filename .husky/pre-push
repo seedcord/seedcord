@@ -1,6 +1,0 @@
-#!/bin/sh
-
-echo "Pre-push hook triggered."
-
-BASE=$(git rev-parse --abbrev-ref --symbolic-full-name --verify --quiet '@{upstream}' 2>/dev/null) || BASE=next
-TURBO_SCM_BASE="$BASE" pnpm prePush:affected

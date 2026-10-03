@@ -3,15 +3,16 @@ import path from 'node:path';
 import { InteractionKind } from '@seedcord/core';
 import { describe, expect, it, vi } from 'vitest';
 
+import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 import { InteractionDispatcher } from '#src/node/InteractionDispatcher';
 
 import type { ResolvedRoute } from '#src/dispatch/resolve';
 
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 
-function row(kind: ResolvedRoute['kind'], key: string): ResolvedRoute {
-    // justified: the guard reads map membership only, never the loader
-    return { kind, routeId: `${kind}:${key}`, load: () => Promise.resolve(null) };
+function route(kind: ResolvedRoute['kind'], key: string): ResolvedRoute {
+    // the guard reads map membership only
+    return { kind, routeId: `${kind}:${key}`, ctor: UnhandledRepliable };
 }
 
 function dispatcherWith(seed: (d: InteractionDispatcher) => void): {
@@ -28,7 +29,7 @@ function dispatcherWith(seed: (d: InteractionDispatcher) => void): {
 describe('warnUnhandledRoutes', () => {
     it('warns for a deployed route with no registered handler', () => {
         const { dispatcher, warn } = dispatcherWith((d) =>
-            d.maps[InteractionKind.Slash].set('ping', row(InteractionKind.Slash, 'ping'))
+            d.maps[InteractionKind.Slash].set('ping', route(InteractionKind.Slash, 'ping'))
         );
 
         dispatcher.warnUnhandledRoutes(['ping', 'admin/ban']);
@@ -42,7 +43,7 @@ describe('warnUnhandledRoutes', () => {
 
     it('stays quiet when every route is registered', () => {
         const { dispatcher, warn } = dispatcherWith((d) =>
-            d.maps[InteractionKind.Slash].set('ping', row(InteractionKind.Slash, 'ping'))
+            d.maps[InteractionKind.Slash].set('ping', route(InteractionKind.Slash, 'ping'))
         );
 
         dispatcher.warnUnhandledRoutes(['ping']);
@@ -56,7 +57,7 @@ describe('warnUnhandledContextMenuRoutes', () => {
         const { dispatcher, warn } = dispatcherWith((d) => {
             d.maps[InteractionKind.UserContextMenu].set(
                 'View Profile',
-                row(InteractionKind.UserContextMenu, 'View Profile')
+                route(InteractionKind.UserContextMenu, 'View Profile')
             );
         });
 
@@ -71,7 +72,7 @@ describe('warnUnhandledContextMenuRoutes', () => {
 
     it('warns per kind for a name registered only on the other kind', () => {
         const { dispatcher, warn } = dispatcherWith((d) => {
-            d.maps[InteractionKind.UserContextMenu].set('Report', row(InteractionKind.UserContextMenu, 'Report'));
+            d.maps[InteractionKind.UserContextMenu].set('Report', route(InteractionKind.UserContextMenu, 'Report'));
         });
 
         dispatcher.warnUnhandledContextMenuRoutes({ user: new Set(['Report']), message: new Set(['Report']) });

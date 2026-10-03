@@ -2,6 +2,8 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { slugifySegment } from '@seedcord/docs-engine/client';
+import { DOCS } from '@seedcord/ui';
+import { TWIN } from '@seedcord/ui/page-asset';
 import { remarkGfm } from 'fumadocs-core/mdx-plugins/remark-gfm';
 import { remarkHeading } from 'fumadocs-core/mdx-plugins/remark-heading';
 import remarkMdx from 'remark-mdx';
@@ -9,6 +11,7 @@ import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 
 import { redirectFor } from '#lib/redirects';
+import { SymbolRef } from '#lib/SymbolRef';
 
 import type { Nodes, Root } from 'mdast';
 
@@ -34,7 +37,6 @@ const ARTIFACTS_DIR = path.resolve(GUIDE_ROOT, '../../generated/artifacts');
 
 const FRONTMATTER = /^---\n[\s\S]*?\n---\n/;
 const URL_SCHEME = /^[a-z][a-z\d+.-]*:/i;
-const TWIN_EXTENSION = '.md';
 
 const processor = unified().use(remarkParse).use(remarkMdx).use(remarkGfm).use(remarkHeading, { generateToc: false });
 
@@ -116,9 +118,9 @@ function pageProblem(site: GuideSite, route: string, url: string): string | null
     const moved = redirectFor(target);
     if (moved !== undefined) return `moved to ${moved}`;
 
-    if (target.endsWith(TWIN_EXTENSION)) {
-        const page = target.slice(0, -TWIN_EXTENSION.length);
-        return site.sources.has(page === '/index' ? '/' : page) ? null : 'is the twin of a page that does not exist';
+    const twinOf = TWIN.pageSegments(target.split('/').filter(Boolean));
+    if (twinOf !== undefined) {
+        return site.sources.has(`/${twinOf.join('/')}`) ? null : 'is the twin of a page that does not exist';
     }
     if (path.extname(target) !== '') return site.files.has(target) ? null : 'is not a file in public/';
 
@@ -128,24 +130,24 @@ function pageProblem(site: GuideSite, route: string, url: string): string | null
     return null;
 }
 
-// refHref splits the symbol the same way
 function refProblem(site: GuideSite, url: string): string | null {
-    const [pkg = '', symbol = ''] = url.slice('ref:'.length).split('/');
+    const ref = SymbolRef.fromUrl(url);
+    if (typeof ref === 'string') return ref;
+
+    const { pkg, owner, member } = ref;
     const symbols = site.symbolsByPackage.get(pkg);
     if (symbols === undefined) return 'points at a package the reference site does not list';
-
-    const [owner, ...members] = symbol.match(/[^.#]+/g) ?? [];
-    if (owner === undefined) return null;
+    if (ref.isPackage) return null;
 
     const anchors = symbols.get(slugifySegment(owner));
     if (anchors === undefined) return `is not a symbol the reference site documents for ${pkg}`;
 
-    const member = members.at(-1);
     return member === undefined || anchors.has(slugifySegment(member)) ? null : `has no member ${member} on ${owner}`;
 }
 
 function problemWith(site: GuideSite, route: string, url: string): string | null {
-    if (url.startsWith('ref:')) return refProblem(site, url);
+    if (SymbolRef.isRefUrl(url)) return refProblem(site, url);
+    if (url.startsWith(`${DOCS.url}/`)) return 'is a reference page by its url. Write it as ref:<package>/<Symbol>';
     if (url.startsWith('#') || (url.startsWith('/') && !url.startsWith('//'))) return pageProblem(site, route, url);
     if (url.startsWith('//') || URL_SCHEME.test(url)) return null;
     return 'is relative. Write it from the site root, like /checks/cooldown';
