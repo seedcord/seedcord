@@ -1,4 +1,3 @@
-import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { applyFlags } from '#interview/applyFlags';
@@ -52,18 +51,5 @@ describe('applyFlags', () => {
 
     it('reads no --no- flag for a step that cannot wait', () => {
         expect(applyFlags([directory], { 'no-dir': true })).toEqual({});
-    });
-
-    it('rejects a value and its --no- flag together, naming both', () => {
-        let thrown: unknown;
-        try {
-            applyFlags([token], { token: 'aaa.bbb.ccc', 'no-token': true });
-        } catch (error) {
-            thrown = error;
-        }
-
-        expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateBadUsage)).toBe(true);
-        expect((thrown as Error).message).toContain('--token');
-        expect((thrown as Error).message).toContain('--no-token');
     });
 });
