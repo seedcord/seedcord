@@ -8,7 +8,9 @@ import type { DocComment, DocFlags, DocNode } from '@seedcord/docs-engine';
 vi.mock('../../../../src/lib/docs/formatting', () => {
     const code = (text: string): CodeRepresentation => ({ text, html: null });
     return {
-        formatDeclarationHeader: vi.fn((header: { text: string }) => Promise.resolve(code(header.text))),
+        formatDeclarationHeader: vi.fn((header: { text: string }, _context: unknown, optional: boolean) =>
+            Promise.resolve(code(optional ? header.text.replace(':', '?:') : header.text))
+        ),
         formatSignature: vi.fn((rendered: { text: string }) => Promise.resolve(code(rendered.text))),
         highlightCode: vi.fn((text: string) => Promise.resolve(code(text)))
     };
@@ -58,16 +60,15 @@ function makeFormattedComment(paragraphs: CommentParagraph[]): FormattedComment 
 const context = {} as FormatContext;
 
 describe('resolveHeaderSignature', () => {
-    // older releases on the docs site were built with this modifier order
-    it('renders an older header as it was built', async () => {
+    it('marks an optional property from its flags', async () => {
         const node = makeNode({
-            header: { text: 'readonly static MAX: number', keyword: null } as never,
-            flags: makeFlags({ isStatic: true, isReadonly: true })
+            header: { text: 'tag: string', keyword: null } as never,
+            flags: makeFlags({ isOptional: true })
         });
 
         const result = await resolveHeaderSignature(node, context);
 
-        expect(result.text).toBe('readonly static MAX: number');
+        expect(result.text).toBe('tag?: string');
     });
 });
 

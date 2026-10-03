@@ -25,11 +25,11 @@ export const ensureSignatureAnchor = (signature: DocSignature): string =>
         : `${signature.name}-${signature.overloadIndex}`;
 
 export async function resolveHeaderSignature(node: DocNode, context: FormatContext): Promise<CodeRepresentation> {
-    if (node.header) return formatDeclarationHeader(node.header, context);
+    if (node.header) return formatDeclarationHeader(node.header, context, node.flags.isOptional);
 
     const rendered = node.signatures[0]?.render;
     if (rendered) {
-        return formatSignature(rendered, context);
+        return formatSignature(rendered, context, node.flags.isOptional);
     }
 
     return highlightCode(node.headerText ?? node.name);

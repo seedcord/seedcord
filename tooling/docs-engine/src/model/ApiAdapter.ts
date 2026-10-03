@@ -19,16 +19,15 @@ import {
     belongsInClassBody,
     buildDeclarationHeader,
     emptyInheritance,
-    baseClassOverrideKeys,
     explicitModifiers,
     enumMembersInOrder,
     groupOverloads,
     inheritedFromRef,
-    overrideKey,
     paramFlags,
     synthGroups,
     type AeShapes
 } from '#model/adapter-helpers';
+import { BaseClassMembers } from '#model/BaseClassMembers';
 import { canonicalKey } from '#model/canonical-ref';
 import { excerptToInlineType } from '#model/excerpt-renderer';
 import { buildFlags, type DerivedFlagBits } from '#model/flags';
@@ -182,7 +181,7 @@ export class ApiAdapter {
         derived.access = explicit.access ?? (ownClassMember ? 'public' : null);
         derived.isReadonly = explicit.isReadonly;
         derived.isOverwriting = overridesBase;
-        if (explicit.isAutoAccessor) derived.accessor = 'auto';
+        if (explicit.isAutoAccessor) derived.accessor = 'auto-accessor';
         return buildFlags(item, derived);
     }
 
@@ -217,13 +216,13 @@ export class ApiAdapter {
     private applyHeader(node: DocNode, item: ApiItem, kind: number, flags: DocFlags): void {
         const header = buildDeclarationHeader(item, node.name, kind, flags);
         node.header = header;
-        node.headerText = formatRenderedDeclarationHeader(header);
+        node.headerText = formatRenderedDeclarationHeader(header, flags.isOptional);
     }
 
     private visitMembers(members: readonly ApiItem[], parentPath: string[], owningContainer?: ApiItem): DocNode[] {
         const nodes: DocNode[] = [];
         const declared = owningContainer?.kind === ApiItemKind.Class ? members.filter(belongsInClassBody) : members;
-        const baseKeys = baseClassOverrideKeys(owningContainer);
+        const baseMembers = new BaseClassMembers(owningContainer);
         for (const group of groupOverloads(declared)) {
             const primary = group[0];
             if (!primary) continue;
@@ -234,7 +233,7 @@ export class ApiAdapter {
                 inheritedFrom === null &&
                 owningContainer?.kind === ApiItemKind.Class &&
                 apiKindToDocKind(primary) !== DocKind.Constructor;
-            const overridesBase = ownClassMember && baseKeys.has(overrideKey(primary));
+            const overridesBase = ownClassMember && baseMembers.isOverriddenBy(primary);
             const node = this.baseNode(primary, parentPath, memberName, false, {
                 inheritedFrom,
                 ownClassMember,
@@ -286,7 +285,7 @@ export class ApiAdapter {
         }
 
         delete node.header.type;
-        node.headerText = formatRenderedDeclarationHeader(node.header);
+        node.headerText = formatRenderedDeclarationHeader(node.header, node.flags.isOptional);
     }
 
     private signatureParameters(item: ApiItem): {
@@ -372,7 +371,7 @@ export class ApiAdapter {
             comment,
             sources: source.sources,
             render,
-            renderText: formatRenderedSignature(render),
+            renderText: formatRenderedSignature(render, owner.flags.isOptional),
             overwrites: null,
             inheritedFrom: null,
             implementationOf: null

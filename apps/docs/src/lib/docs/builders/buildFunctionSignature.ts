@@ -16,7 +16,9 @@ export async function buildFunctionSignature(
 ): Promise<FunctionSignatureModel> {
     const rendered = signature.render;
     const [code, parameters, comment, typeParameters] = await Promise.all([
-        rendered ? formatSignature(rendered, context, isAsync ? 'async' : undefined) : highlightCode(signature.name),
+        rendered
+            ? formatSignature(rendered, context, signature.flags.isOptional, isAsync ? 'async' : undefined)
+            : highlightCode(signature.name),
         buildFunctionParameters(signature, rendered, context),
         formatCommentRich(signature.comment, context),
         buildFunctionTypeParams(signature, rendered, context)

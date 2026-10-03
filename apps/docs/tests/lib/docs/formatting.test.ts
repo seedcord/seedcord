@@ -42,11 +42,10 @@ describe('formatSignature link weaving', () => {
             returnType: { parts: [ref('Promise')] }
         };
 
-        const out = await formatSignature(render, context(), 'public async');
+        const out = await formatSignature(render, context(), false, 'public async');
 
         expect(out.text.startsWith('public async ')).toBe(true);
-        // string -> MDN String, Promise -> MDN Promise: both must survive the prefix path
-        // (shiki nests the identifier in a <span>, so assert the inserted href, not `>name</a>`).
+        // shiki nests the identifier in a <span> inside the link
         expect(out.html).toContain('Reference/Global_Objects/String');
         expect(out.html).toContain('Reference/Global_Objects/Promise');
         expect(EMPTY_ANCHOR.test(out.html ?? '')).toBe(false);
@@ -58,7 +57,7 @@ describe('formatSignature link weaving', () => {
             parameters: [{ name: 'id', optional: false, type: { parts: [ref('string')] } }]
         };
 
-        const out = await formatSignature(render, context());
+        const out = await formatSignature(render, context(), false);
 
         expect(out.html).toContain('Reference/Global_Objects/String');
         expect(EMPTY_ANCHOR.test(out.html ?? '')).toBe(false);
@@ -72,7 +71,7 @@ describe('formatSignature link weaving', () => {
             parameters: [{ name: 'id', optional: false, type: { parts: [ref('string')] } }]
         };
 
-        const out = await formatSignature(render, context());
+        const out = await formatSignature(render, context(), false);
 
         expect(out.html).toContain('target="_blank"');
     });
@@ -89,7 +88,7 @@ describe('formatSignature link weaving', () => {
             returnType: { parts: [ref('boolean')] }
         };
 
-        const out = await formatSignature(render, context(), 'public');
+        const out = await formatSignature(render, context(), false, 'public');
 
         expect(EMPTY_ANCHOR.test(out.html ?? '')).toBe(false);
         expect(out.html).toContain('Reference/Global_Objects/String');

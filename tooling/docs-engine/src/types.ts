@@ -32,7 +32,6 @@ export interface RenderedDeclarationHeader {
     name: string;
     modifiers: string[];
     keyword?: string | null;
-    optional?: boolean;
     typeParams?: {
         name: string;
         constraint?: InlineType;
@@ -133,8 +132,7 @@ export interface DocComment {
 
 export interface DocFlags {
     access: 'public' | 'protected' | 'private' | null;
-    // `auto` is the `accessor x` field
-    accessor: 'getter' | 'setter' | 'getter-setter' | 'auto' | null;
+    accessor: 'getter' | 'setter' | 'getter-setter' | 'auto-accessor' | null;
     isStatic: boolean;
     isAbstract: boolean;
     isConst: boolean;

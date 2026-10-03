@@ -1,10 +1,8 @@
 import {
-    ApiClass,
     ApiDeclaredItem,
     ApiDocumentedItem,
     ApiItemKind,
     ApiParameterListMixin,
-    ApiStaticMixin,
     ApiTypeParameterListMixin,
     type ApiItem,
     type Excerpt,
@@ -65,7 +63,6 @@ export function buildDeclarationHeader(
         keyword: declarationKeyword(kind, flags),
         modifiers: memberModifiers(flags, kind)
     };
-    if (kind === DocKind.Property && flags.isOptional) header.optional = true;
 
     // method and ctor type params render on the signature
     const headerHasTypeParams = kind !== DocKind.Method && kind !== DocKind.Constructor;
@@ -172,24 +169,6 @@ function heritageInline(types: readonly HeritageType[] | undefined): InlineType[
     return rendered.length > 0 ? rendered : undefined;
 }
 
-// a static never overrides an instance member
-export function overrideKey(member: ApiItem): string {
-    const isStatic = ApiStaticMixin.isBaseClassOf(member) && member.isStatic;
-    return `${isStatic ? 'static ' : ''}${member.displayName}`;
-}
-
-// tsc strips `override` from the .d.ts
-export function baseClassOverrideKeys(container: ApiItem | undefined): ReadonlySet<string> {
-    if (!(container instanceof ApiClass) || !container.extendsType) return new Set();
-    const baseRef = container.extendsType.excerpt.spannedTokens.find(
-        (token) => token.canonicalReference
-    )?.canonicalReference;
-    if (!baseRef) return new Set();
-    const base = container.getAssociatedModel()?.resolveDeclarationReference(baseRef, container).resolvedApiItem;
-    if (!(base instanceof ApiClass)) return new Set();
-    return new Set(base.findMembersWithInheritance().items.map(overrideKey));
-}
-
 export function inheritedFromRef(item: ApiItem, owningContainer: ApiItem | undefined): DocReference | null {
     if (!owningContainer) return null;
     const parent = item.parent;
@@ -293,7 +272,7 @@ export function buildAccessorSignature(
         comment,
         sources: owner.sources,
         render,
-        renderText: formatRenderedSignature(render),
+        renderText: formatRenderedSignature(render, owner.flags.isOptional),
         overwrites: null,
         inheritedFrom: null,
         implementationOf: null

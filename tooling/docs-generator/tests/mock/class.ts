@@ -212,9 +212,14 @@ export class InlineConstraintCallable<TypeM extends { (): void; run(): void; new
  */
 export class OverrideBase {
     /**
-     * A tag the subclass replaces.
+     * A tag the subclass narrows.
      */
     public tag = 'base';
+
+    /**
+     * The most instances a caller should build.
+     */
+    public static readonly LIMIT = 3;
 
     /**
      * Builds a base instance.
@@ -242,12 +247,10 @@ export class OverrideChild extends OverrideBase {
     /**
      * The subclass tag.
      */
-    public override tag = 'child';
+    declare public tag: 'child';
 
     /**
      * A counter stored through an auto-accessor.
-     *
-     * @defaultValue `0`
      */
     public accessor counter = 0;
 

@@ -71,9 +71,10 @@ async function safeHighlight(
 
 export async function formatDeclarationHeader(
     header: RenderedDeclarationHeader,
-    context: FormatContext
+    context: FormatContext,
+    optional: boolean
 ): Promise<CodeRepresentation> {
-    const { text, refs } = await formatRenderedDeclarationHeaderPretty(header, buildResolveHref(context));
+    const { text, refs } = await formatRenderedDeclarationHeaderPretty(header, buildResolveHref(context), optional);
     const links = refsToLinks(refs, context.manifestPackage);
     // with no leading keyword the text isn't top-level TS, and shiki only reads `protected`, `readonly`
     // and type-param `extends` as keywords inside the class-body wrap
@@ -86,9 +87,10 @@ export async function formatDeclarationHeader(
 export async function formatSignature(
     signature: RenderedSignature,
     context: FormatContext,
+    optional: boolean,
     prefix?: string
 ): Promise<CodeRepresentation> {
-    const { text, refs } = await formatRenderedSignaturePretty(signature, buildResolveHref(context));
+    const { text, refs } = await formatRenderedSignaturePretty(signature, buildResolveHref(context), optional);
     if (!prefix) {
         const links = refsToLinks(refs, context.manifestPackage);
         return { text, html: await safeHighlight((c) => highlightSignatureToHtml(c, links), text) };

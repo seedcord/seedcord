@@ -67,7 +67,7 @@ export async function buildSignatureDetails({
         node.signatures.map(async (signature, index) => {
             const modifierPrefix = signaturePrefix(node, signature);
             const code = signature.render
-                ? await formatSignature(signature.render, context, modifierPrefix || undefined)
+                ? await formatSignature(signature.render, context, node.flags.isOptional, modifierPrefix || undefined)
                 : await highlightCode(signature.name);
 
             const comment = signatureComments[index];

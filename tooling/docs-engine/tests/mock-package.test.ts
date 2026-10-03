@@ -77,18 +77,19 @@ describe('DocsEngine mock package integration', () => {
             expect(child('create')?.flags.isOverwriting).toBe(false);
         });
 
-        it('writes override into an override property header', () => {
-            expect(child('tag')?.headerText).toMatch(/\boverride tag\b/);
+        it('leaves override off a declare field', () => {
+            expect(child('tag')?.headerText).not.toMatch(/\boverride\b/);
         });
 
         it('writes accessor into an auto-accessor header', () => {
             expect(child('counter')?.headerText).toMatch(/\baccessor counter\b/);
         });
+    });
 
-        it('keeps the @defaultValue on an auto-accessor', () => {
-            const tags = child('counter')?.comment?.blockTags.map((tag) => tag.tag);
-            expect(tags).toContain('@defaultValue');
-        });
+    it('writes static before readonly in a header', async () => {
+        const base = await getNodeBySlug('override-base');
+        const limit = base.children.find((entry) => entry.name === 'LIMIT');
+        expect(limit?.headerText).toMatch(/^public static readonly LIMIT\b/);
     });
 
     describe('MockClass node', () => {

@@ -31,7 +31,7 @@ describe('formatRenderedSignaturePretty', () => {
             returnType: inlineText('string')
         };
 
-        const result = await formatRenderedSignaturePretty(render, noResolver);
+        const result = await formatRenderedSignaturePretty(render, noResolver, false);
 
         expect(result.text).toBe('foo(x: number): string');
         expect(result.refs).toHaveLength(0);
@@ -54,7 +54,7 @@ describe('formatRenderedSignaturePretty', () => {
             returnType: inlineRef('Pluggable')
         };
 
-        const result = await formatRenderedSignaturePretty(render, idResolver);
+        const result = await formatRenderedSignaturePretty(render, idResolver, false);
 
         expect(result.text).toContain('\n');
         expect(result.text).not.toContain('__seedcordRef');
@@ -77,7 +77,7 @@ describe('formatRenderedSignaturePretty', () => {
             parameters: [{ name: 'x', optional: false, type: inlineRef('Bar') }]
         };
 
-        const result = await formatRenderedSignaturePretty(render, noResolver);
+        const result = await formatRenderedSignaturePretty(render, noResolver, false);
 
         expect(result.text).toContain('x: Bar');
         expect(result.refs).toHaveLength(1);
@@ -100,12 +100,24 @@ describe('formatRenderedSignaturePretty', () => {
             returnType: inlineText('void')
         };
 
-        const result = await formatRenderedSignaturePretty(render, noResolver);
+        const result = await formatRenderedSignaturePretty(render, noResolver, false);
 
         expect(result.text).toContain('opts: { x: number }');
         expect(result.text).toContain('= { x: 1 }');
         expect(result.text).not.toContain('function _');
         expect(result.text).not.toContain('class _');
+    });
+
+    it('marks an optional method with ?', async () => {
+        const render: RenderedSignature = {
+            name: [{ kind: 'text', text: 'run' }],
+            parameters: [{ name: 'x', optional: false, type: inlineText('number') }],
+            returnType: inlineText('string')
+        };
+
+        const result = await formatRenderedSignaturePretty(render, noResolver, true);
+
+        expect(result.text).toBe('run?(x: number): string');
     });
 
     it('records every occurrence of a repeated reference', async () => {
@@ -126,7 +138,7 @@ describe('formatRenderedSignaturePretty', () => {
             ]
         };
 
-        const result = await formatRenderedSignaturePretty(render, idResolver);
+        const result = await formatRenderedSignaturePretty(render, idResolver, false);
 
         const sharedRefs = result.refs.filter((r) => r.name === 'SharedType');
         expect(sharedRefs).toHaveLength(2);
@@ -145,7 +157,7 @@ describe('formatRenderedDeclarationHeaderPretty', () => {
             keyword: 'class'
         };
 
-        const result = await formatRenderedDeclarationHeaderPretty(header, noResolver);
+        const result = await formatRenderedDeclarationHeaderPretty(header, noResolver, false);
 
         expect(result.text).toBe('class Foo');
         expect(result.refs).toHaveLength(0);
@@ -159,7 +171,7 @@ describe('formatRenderedDeclarationHeaderPretty', () => {
             heritage: { extends: [inlineRef('BaseConfig'), inlineRef('Loggable')] }
         };
 
-        const result = await formatRenderedDeclarationHeaderPretty(header, idResolver);
+        const result = await formatRenderedDeclarationHeaderPretty(header, idResolver, false);
 
         expect(result.text).toContain('interface ChannelConfig');
         expect(result.text).toContain('extends BaseConfig, Loggable');
@@ -182,7 +194,7 @@ describe('formatRenderedDeclarationHeaderPretty', () => {
             value: inlineText('T extends Promise<infer U> ? U : T')
         };
 
-        const result = await formatRenderedDeclarationHeaderPretty(header, noResolver);
+        const result = await formatRenderedDeclarationHeaderPretty(header, noResolver, false);
 
         expect(result.text).toContain('type AwaitedOr<T>');
         expect(result.text).toContain('T extends Promise<infer U> ? U : T');
@@ -193,11 +205,10 @@ describe('formatRenderedDeclarationHeaderPretty', () => {
             name: 'message',
             modifiers: [],
             keyword: null,
-            optional: true,
             type: inlineText('string')
         };
 
-        const result = await formatRenderedDeclarationHeaderPretty(header, noResolver);
+        const result = await formatRenderedDeclarationHeaderPretty(header, noResolver, true);
 
         expect(result.text).toContain('message?: string');
     });
@@ -215,7 +226,7 @@ describe('formatRenderedDeclarationHeaderPretty', () => {
             ])
         };
 
-        const result = await formatRenderedDeclarationHeaderPretty(header, idResolver);
+        const result = await formatRenderedDeclarationHeaderPretty(header, idResolver, false);
 
         expect(result.text).toContain('protected readonly plugins:');
         expect(result.text).toContain('Plugin<SENoEvents>[]');

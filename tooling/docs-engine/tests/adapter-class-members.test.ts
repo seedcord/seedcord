@@ -42,4 +42,10 @@ describe('class members', () => {
             'readonlyProp'
         ]);
     });
+
+    it('marks an optional interface method with ?', async () => {
+        const mockInterface = await topLevel('MockInterface');
+        const method = mockInterface.children.find((child) => child.name === 'optionalMethod');
+        expect(method?.signatures[0]?.renderText).toMatch(/^optionalMethod\?\(/);
+    });
 });

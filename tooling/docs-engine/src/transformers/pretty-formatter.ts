@@ -153,7 +153,12 @@ function joinSignatureStripped(render: RenderedSignature, refs: InternalRef[], r
     return `${nameText}${typeParams}(${parameters})${returnType}`.trim();
 }
 
-function joinDeclarationStripped(header: RenderedDeclarationHeader, refs: InternalRef[], resolve: ResolveHref): string {
+function joinDeclarationStripped(
+    header: RenderedDeclarationHeader,
+    optional: boolean,
+    refs: InternalRef[],
+    resolve: ResolveHref
+): string {
     const segments: string[] = [];
     if (header.modifiers.length > 0) segments.push(header.modifiers.join(' '));
     if (header.keyword) segments.push(header.keyword);
@@ -170,7 +175,7 @@ function joinDeclarationStripped(header: RenderedDeclarationHeader, refs: Intern
             .join(', ');
         declarationName += `<${renderedParams}>`;
     }
-    if (header.optional) declarationName += '?';
+    if (optional) declarationName += '?';
     if (header.type) declarationName += `: ${inlineStripped(header.type, refs, resolve)}`;
     if (header.value) declarationName += ` = ${inlineStripped(header.value, refs, resolve)}`;
     segments.push(declarationName);
@@ -198,12 +203,19 @@ function joinDeclarationStripped(header: RenderedDeclarationHeader, refs: Intern
  */
 export async function formatRenderedSignaturePretty(
     render: RenderedSignature,
-    resolveHref: ResolveHref
+    resolveHref: ResolveHref,
+    optional: boolean
 ): Promise<FormattedOutput> {
     const refs: InternalRef[] = [];
     const stripped = joinSignatureStripped(render, refs, resolveHref);
-    const formatted = await tryPrettierAsMethod(stripped);
-    return substituteRefs(formatted ?? stripped, refs);
+    const formatted = (await tryPrettierAsMethod(stripped)) ?? stripped;
+    return substituteRefs(optional ? markOptional(formatted) : formatted, refs);
+}
+
+// prettier cannot parse `function run?() {}`
+function markOptional(signature: string): string {
+    const nameEnd = signature.search(/[(<]/);
+    return `${signature.slice(0, nameEnd)}?${signature.slice(nameEnd)}`;
 }
 
 /**
@@ -212,10 +224,11 @@ export async function formatRenderedSignaturePretty(
  */
 export async function formatRenderedDeclarationHeaderPretty(
     header: RenderedDeclarationHeader,
-    resolveHref: ResolveHref
+    resolveHref: ResolveHref,
+    optional: boolean
 ): Promise<FormattedOutput> {
     const refs: InternalRef[] = [];
-    const stripped = joinDeclarationStripped(header, refs, resolveHref);
+    const stripped = joinDeclarationStripped(header, optional, refs, resolveHref);
     const formatted = await tryPrettierAsDeclaration(stripped, header.keyword);
     return substituteRefs(formatted ?? stripped, refs);
 }

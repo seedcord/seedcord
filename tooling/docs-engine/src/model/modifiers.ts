@@ -11,7 +11,7 @@ export function memberModifiers(flags: DocFlags, kind: number): string[] {
     if (flags.isOverwriting) modifiers.push('override');
     // `const` already says readonly
     if (flags.isReadonly && kind !== DocKind.Variable) modifiers.push('readonly');
-    if (flags.accessor === 'auto') modifiers.push('accessor');
+    if (flags.accessor === 'auto-accessor') modifiers.push('accessor');
     if (flags.isAsync) modifiers.push('async');
     return modifiers;
 }

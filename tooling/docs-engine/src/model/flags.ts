@@ -51,8 +51,6 @@ function readMixins(item: ApiItem): MixinBooleans {
 export function buildFlags(item: ApiItem, derived: DerivedFlagBits = {}): DocFlags {
     const mixins = readMixins(item);
     return {
-        // `public` is the default and is not rendered (matches TypeDoc, which only surfaces
-        // protected/private). `??` would keep an explicit derived value (e.g. accessor access).
         access: derived.access ?? (mixins.isProtected ? 'protected' : null),
         accessor: derived.accessor ?? null,
         isStatic: mixins.isStatic,

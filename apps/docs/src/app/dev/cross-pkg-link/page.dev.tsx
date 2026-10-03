@@ -43,7 +43,7 @@ function Section({ title, children }: { title: string; children: ReactElement | 
 }
 
 async function buildSignature(): Promise<CodeRepresentation> {
-    const { text, refs } = await formatRenderedSignaturePretty(SIGNATURE, resolveClientHref);
+    const { text, refs } = await formatRenderedSignaturePretty(SIGNATURE, resolveClientHref, false);
     // mirrors formatting.ts, exercising the same ref-to-link mapping the real formatter uses
     const links: CodeLink[] = refs.flatMap((ref) =>
         ref.href
