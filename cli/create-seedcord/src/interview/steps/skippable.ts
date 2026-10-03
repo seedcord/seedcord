@@ -10,7 +10,7 @@ export function answerOf<Value>(pasted: string, parse: (raw: string) => Value): 
     return isEmptyPaste(pasted) ? null : parse(pasted);
 }
 
-// clack calls validate on every Enter, so the first empty one warns and the second goes through
+// clack calls validate on every Enter
 export function skippable(
     parse: (raw: string) => unknown,
     fallback: string
