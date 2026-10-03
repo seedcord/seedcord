@@ -43,8 +43,10 @@ function SidebarCategory({
                     {category.items.map((item) => (
                         <SidebarItem
                             key={`${category.title}-${item.href}`}
-                            item={item}
-                            tone={category.tone}
+                            label={item.label}
+                            href={item.href}
+                            icon={ToneIcon}
+                            styles={toneStyles}
                             isActive={item.href === activeHref}
                             {...(onSelect ? { onSelect } : {})}
                         />
