@@ -7,7 +7,7 @@ export interface GithubIconProps extends Omit<SVGAttributes<SVGSVGElement>, 'chi
     title?: string;
 }
 
-const DEFAULT_STROKE_WIDTH = 12;
+const DEFAULT_STROKE_WIDTH = 13.5;
 
 export function GithubIcon({ size = 18, className, title, ...props }: GithubIconProps): ReactElement {
     return (
