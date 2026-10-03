@@ -76,7 +76,7 @@ describe('runFlow', () => {
         expect(answers.token).toBeNull();
     });
 
-    it('names the --no- flag when that is what answered a skipped step', async () => {
+    it('points at --no-public-key when it was passed on gateway', async () => {
         const asked: (keyof Answers)[] = [];
         const publicKey: Step<'publicKey'> = {
             ...stubStep('publicKey', 'prompted', asked),
