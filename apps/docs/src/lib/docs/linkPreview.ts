@@ -1,12 +1,11 @@
-import { buildPackageBasePath, DEFAULT_VERSION } from '@seedcord/docs-engine/client';
 import { GUIDE_URL, HOME_URL, REPO_URL } from '@seedcord/ui';
-import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/link-preview';
-import { TWIN } from '@seedcord/ui/page-asset';
+import { accentColor, PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/link-preview';
 
-import { entityCard } from '#lib/docs/DocsPage';
+import { DocsPage } from '#lib/docs/DocsPage';
 import { entityPath } from '#lib/docs/entityJsonLd';
-import { ENTITY_EMBED_ACCENT } from '#lib/entityColors';
+import { ENTITY_TONE_HEX } from '#lib/entityColors';
 import { canonicalUrl, SITE_DESCRIPTION } from '#lib/site';
+import { getToneTitle } from '#lib/tonePresentation';
 
 import type { ResolvedEntity } from '#lib/docs/resolveEntity';
 import type {
@@ -16,19 +15,9 @@ import type {
     PackageCatalogEntry,
     PackageVersionCatalog
 } from '#lib/docs/types';
-import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { LatestVersion, PreviewCardProps, PreviewLink } from '@seedcord/ui/link-preview';
 
-const PLURAL: Record<EntityTone, string> = {
-    class: 'classes',
-    interface: 'interfaces',
-    type: 'types',
-    function: 'functions',
-    enum: 'enums',
-    variable: 'variables'
-};
-
-// six kinds wrap a phone line, three fit
+// three kinds fit on one phone line
 const KINDS_PER_ROW = 3;
 
 function counted(count: number, one: string, many = `${one}s`): string {
@@ -36,7 +25,10 @@ function counted(count: number, one: string, many = `${one}s`): string {
 }
 
 function nonZero(parts: readonly [count: number, one: string, many?: string][]): string[] {
-    return parts.filter(([count]) => count > 0).map(([count, one, many]) => counted(count, one, many));
+    return parts.reduce<string[]>((shown, [count, one, many]) => {
+        if (count > 0) shown.push(counted(count, one, many));
+        return shown;
+    }, []);
 }
 
 function entityCounts(entity: EntityModel): string[] {
@@ -63,22 +55,15 @@ function entityCounts(entity: EntityModel): string[] {
     }
 }
 
-function latestOf(entry: PackageCatalogEntry): PackageVersionCatalog | undefined {
-    return entry.versions.find((version) => version.isLatest);
-}
-
 function latestLink(
     entry: PackageCatalogEntry,
     version: PackageVersionCatalog,
     path: string
 ): LatestVersion | undefined {
-    const latest = latestOf(entry);
+    const latest = entry.versions.find((candidate) => candidate.isLatest);
     if (version.isLatest || !latest) return undefined;
     return { label: latest.label, url: canonicalUrl(path) };
 }
-
-const packageLatestPath = (entry: PackageCatalogEntry): string =>
-    buildPackageBasePath(entry.manifestName, DEFAULT_VERSION);
 
 export function docsFrontPreview(catalog: DocsCatalog): PreviewCardProps {
     const symbols = catalog.reduce(
@@ -101,9 +86,10 @@ export function docsFrontPreview(catalog: DocsCatalog): PreviewCardProps {
 }
 
 function kindRows(categories: readonly NavigationCategory[]): string {
-    const cells = categories.map(
-        ({ tone, items }) => `${PREVIEW_EMOJI[tone]} ${counted(items.length, tone, PLURAL[tone])}`
-    );
+    const cells = categories.map(({ tone, items }) => {
+        const many = getToneTitle(tone).toLowerCase();
+        return `${PREVIEW_EMOJI[tone]} ${counted(items.length, tone, many)}`;
+    });
     const rows: string[] = [];
     for (let at = 0; at < cells.length; at += KINDS_PER_ROW) rows.push(cells.slice(at, at + KINDS_PER_ROW).join('  '));
     return rows.join('\n');
@@ -119,14 +105,16 @@ interface PackagePreviewSource {
 
 export function packagePreview(source: PackagePreviewSource): PreviewCardProps {
     const { entry, version, versionCategories, folderUrl } = source;
-    const latestVersion = latestLink(entry, version, packageLatestPath(entry));
+    const page = DocsPage.forPackage(entry, version);
+    const latestVersion = page.latestPath === undefined ? undefined : latestLink(entry, version, page.latestPath);
     const npm = `https://www.npmjs.com/package/${entry.manifestName}${latestVersion ? `/v/${version.id}` : ''}`;
-    const markdownUrl = canonicalUrl(TWIN.publicPath(buildPackageBasePath(entry.manifestName, version.id)));
 
     const links: PreviewLink[] = [{ emoji: PREVIEW_EMOJI.npm, label: 'npm', url: npm }];
     if (folderUrl) links.push({ emoji: PREVIEW_EMOJI.github, label: 'Source', url: folderUrl });
     // the Latest link takes this one's space on a phone
-    if (!latestVersion) links.push({ emoji: PREVIEW_EMOJI.markdown, label: 'Markdown', url: markdownUrl });
+    if (!latestVersion && page.markdownUrl) {
+        links.push({ emoji: PREVIEW_EMOJI.markdown, label: 'Markdown', url: page.markdownUrl });
+    }
 
     return {
         accent: SITE_ACCENT.docs,
@@ -140,26 +128,25 @@ export function packagePreview(source: PackagePreviewSource): PreviewCardProps {
     };
 }
 
-// latestPath is undefined when the latest version dropped this symbol
+// latestPath is undefined when the latest version no longer has this symbol
 export function symbolPreview(resolved: ResolvedEntity, latestPath: string | undefined): PreviewCardProps {
     const { entry, version, entity } = resolved;
-    const latestVersion = latestLink(entry, version, latestPath ?? packageLatestPath(entry));
+    const page = DocsPage.forEntity(entityPath(resolved), entity, version, latestPath);
+    const packageLatestPath = DocsPage.forPackage(entry, version).latestPath;
+    const latestTarget = latestPath ?? packageLatestPath;
+    const latestVersion = latestTarget === undefined ? undefined : latestLink(entry, version, latestTarget);
 
     const links: PreviewLink[] = [];
     if (entity.sourceUrl) links.push({ emoji: PREVIEW_EMOJI.github, label: 'Source', url: entity.sourceUrl });
-    links.push({
-        emoji: PREVIEW_EMOJI.markdown,
-        label: 'Markdown',
-        url: canonicalUrl(TWIN.publicPath(entityPath(resolved)))
-    });
+    if (page.markdownUrl) links.push({ emoji: PREVIEW_EMOJI.markdown, label: 'Markdown', url: page.markdownUrl });
 
     return {
-        accent: ENTITY_EMBED_ACCENT[entity.kind],
+        accent: accentColor(ENTITY_TONE_HEX[entity.kind].dark),
         breadcrumb: ['docs', entry.manifestName, version.label],
         breadcrumbEmoji: PREVIEW_EMOJI.docs,
         title: entity.name,
         titleEmoji: PREVIEW_EMOJI[entity.kind],
-        body: entityCard(entity, version).description,
+        body: page.card.description,
         subtext: entityCounts(entity),
         links,
         ...(latestVersion ? { latestVersion } : {})

@@ -1,10 +1,12 @@
 import { GUIDE } from '@seedcord/ui';
 import { TWIN } from '@seedcord/ui/page-asset';
 
-import { canonicalUrl, REPO_URL, SITE_NAME } from '#lib/site';
+import { markdownUrl, REPO_URL, SITE_NAME } from '#lib/site';
 
 // pull requests merge into next
 const CONTENT_SOURCE = `${REPO_URL}/edit/next/apps/guide/content/docs`;
+
+export const editUrl = (contentPath: string): string => `${CONTENT_SOURCE}/${contentPath}`;
 
 interface PageActionSource {
     title: string;
@@ -43,7 +45,7 @@ export function pageActionsFor(page: GuidePage): PageActionProps {
         viewHref: GUIDE.path + TWIN.publicPath(page.url),
         links: pageActionLinks({
             title: page.data.title,
-            markdownUrl: canonicalUrl(TWIN.publicPath(page.url)),
+            markdownUrl: markdownUrl(page.url),
             contentPath: page.path
         })
     };
@@ -56,7 +58,7 @@ function pageActionLinks(page: PageActionSource): PageActionLinks {
         chatgpt: `https://chatgpt.com/?${new URLSearchParams({ prompt, hints: 'search' }).toString()}`,
         claude: `https://claude.ai/new?${new URLSearchParams({ q: prompt }).toString()}`,
         cursor: `https://cursor.com/link/prompt?${new URLSearchParams({ text: prompt }).toString()}`,
-        edit: `${CONTENT_SOURCE}/${page.contentPath}`,
+        edit: editUrl(page.contentPath),
         report: `${REPO_URL}/issues/new?${new URLSearchParams({
             title: `${SITE_NAME}: ${page.title}`,
             body: issueBody(page)

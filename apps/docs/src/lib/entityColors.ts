@@ -12,15 +12,5 @@ export const ENTITY_TONE_HEX = {
     variable: { light: '#6f8a2e', dark: '#9fc24a' }
 } as const satisfies Record<EntityTone, { light: string; dark: string }>;
 
-// Discord shows a card's accent bar on both themes, and these read on each
-export const ENTITY_EMBED_ACCENT = {
-    class: 0xed5538,
-    interface: 0xcb7016,
-    type: 0xa8841a,
-    function: 0x4f9644,
-    enum: 0xe34d6a,
-    variable: 0x748f31
-} as const satisfies Record<EntityTone, number>;
-
 // the page foreground (--color-text), used as the theme-color on non-entity pages (root, overview, 404)
 export const FOREGROUND_HEX = { light: BRAND.seedDark, dark: BRAND.pith } as const;

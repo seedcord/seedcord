@@ -62,20 +62,29 @@ export interface PageMetadataOptions {
     pill: string;
 }
 
+const isFrontPage = (path: string): boolean => path === '/';
+
+// the front page's frontmatter title is its sidebar label, "Start here"
+export function shownTitle(path: string, title: string): string {
+    return isFrontPage(path) ? SITE_NAME : title;
+}
+
+export function markdownUrl(path: string): string {
+    return canonicalUrl(TWIN.publicPath(path));
+}
+
 export function pageMetadata({ title, description, path, pill }: PageMetadataOptions): Metadata {
     const url = canonicalUrl(path);
     const summary = description ?? SITE_DESCRIPTION;
     const alt = ogPageCardAlt({ pill, name: title, meta: [] });
     const images = [{ url: ogImageUrl(path), width: OG_IMAGE_W, height: OG_IMAGE_H, alt }];
-    const isHome = path === '/';
-    // the root's frontmatter title is its sidebar label, "Start here"
-    const shownTitle = isHome ? SITE_NAME : title;
+    const heading = shownTitle(path, title);
 
     return {
-        title: isHome ? { absolute: SITE_NAME } : title,
+        title: isFrontPage(path) ? { absolute: SITE_NAME } : title,
         description: summary,
-        alternates: { canonical: url, types: { 'text/markdown': canonicalUrl(TWIN.publicPath(path)) } },
-        openGraph: { type: 'article', siteName: SITE_NAME, url, title: shownTitle, description: summary, images },
-        twitter: { card: 'summary_large_image', title: shownTitle, description: summary, images }
+        alternates: { canonical: url, types: { 'text/markdown': markdownUrl(path) } },
+        openGraph: { type: 'article', siteName: SITE_NAME, url, title: heading, description: summary, images },
+        twitter: { card: 'summary_large_image', title: heading, description: summary, images }
     };
 }

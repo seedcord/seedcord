@@ -1,14 +1,13 @@
 import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/link-preview';
-import { TWIN } from '@seedcord/ui/page-asset';
 
-import { pageActionsFor } from '#lib/pageActions';
-import { canonicalUrl, SITE_DESCRIPTION, SITE_NAME } from '#lib/site';
+import { editUrl } from '#lib/pageActions';
+import { markdownUrl, shownTitle, SITE_DESCRIPTION } from '#lib/site';
 
-import type { GuidePage as SidebarPage } from '#lib/neighbours';
+import type { OrderedPage } from '#lib/neighbours';
 import type { GuidePage } from '#lib/pageActions';
 import type { PreviewCardProps } from '@seedcord/ui/link-preview';
 
-// both rates are guesses, nothing measured them. code reads faster because people skim it
+// both rates are guesses. nothing measured them
 const PROSE_WORDS_PER_MINUTE = 200;
 const CODE_WORDS_PER_MINUTE = 400;
 
@@ -24,13 +23,12 @@ function readingMinutes(twinMarkdown: string): number {
 
 interface GuidePreviewSource {
     page: GuidePage & { data: { description?: string | undefined } };
-    order: readonly SidebarPage[];
+    order: readonly OrderedPage[];
     twinMarkdown: string;
 }
 
 export function guidePreview({ page, order, twinMarkdown }: GuidePreviewSource): PreviewCardProps {
-    const isRoot = page.url === '/';
-    const title = isRoot ? SITE_NAME : page.data.title;
+    const title = shownTitle(page.url, page.data.title);
     const here = order.find((entry) => entry.href === page.url);
     const tabPages = order.filter((entry) => entry.tab === here?.tab);
 
@@ -49,8 +47,8 @@ export function guidePreview({ page, order, twinMarkdown }: GuidePreviewSource):
         body: page.data.description ?? SITE_DESCRIPTION,
         subtext,
         links: [
-            { emoji: PREVIEW_EMOJI.markdown, label: 'Markdown', url: canonicalUrl(TWIN.publicPath(page.url)) },
-            { emoji: PREVIEW_EMOJI.github, label: 'Edit on GitHub', url: pageActionsFor(page).links.edit }
+            { emoji: PREVIEW_EMOJI.markdown, label: 'Markdown', url: markdownUrl(page.url) },
+            { emoji: PREVIEW_EMOJI.github, label: 'Edit on GitHub', url: editUrl(page.path) }
         ]
     };
 }

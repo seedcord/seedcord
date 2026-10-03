@@ -2,7 +2,7 @@ import { Button, Icon, cn, tw } from '@seedcord/ui';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
-import type { GuidePage, PageNeighbours } from '#lib/neighbours';
+import type { OrderedPage, PageNeighbours } from '#lib/neighbours';
 import type { ReactElement } from 'react';
 
 const DIRECTIONS = {
@@ -26,7 +26,7 @@ const DIRECTIONS = {
 
 type Direction = keyof typeof DIRECTIONS;
 
-function Neighbour({ rel, page }: { rel: Direction; page: GuidePage }): ReactElement {
+function Neighbour({ rel, page }: { rel: Direction; page: OrderedPage }): ReactElement {
     const { label, icon, stackClassName, iconClassName, cardClassName } = DIRECTIONS[rel];
     const chevron = <Icon icon={icon} size={16} className={cn(iconClassName)} />;
 

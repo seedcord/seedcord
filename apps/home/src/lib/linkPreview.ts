@@ -1,12 +1,12 @@
 import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/link-preview';
 
-import { CDN_URL, DOCS_URL, GUIDE_URL, REPO_URL, SITE_URL } from '#lib/site';
+import { CDN_URL, DOCS_URL, GUIDE_URL, REPO_URL, SITE_NAME, SITE_URL } from '#lib/site';
 
 import type { PreviewCardProps } from '@seedcord/ui/link-preview';
 
 export const HOME_PREVIEW: PreviewCardProps = {
     accent: SITE_ACCENT.home,
-    title: 'seedcord',
+    title: SITE_NAME,
     titleEmoji: PREVIEW_EMOJI.seedcord,
     body: 'A TypeScript framework for Discord bots, typed end to end.',
     extraText: [

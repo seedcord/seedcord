@@ -1,16 +1,16 @@
 import type { SidebarLink } from '#components/DocsSidebar';
 
-export interface GuidePage extends SidebarLink {
+export interface OrderedPage extends SidebarLink {
     tab: string;
     group?: string | undefined;
 }
 
 export interface PageNeighbours {
-    previous?: GuidePage | undefined;
-    next?: GuidePage | undefined;
+    previous?: OrderedPage | undefined;
+    next?: OrderedPage | undefined;
 }
 
-export function neighboursOf(order: readonly GuidePage[], href: string): PageNeighbours {
+export function neighboursOf(order: readonly OrderedPage[], href: string): PageNeighbours {
     const at = order.findIndex((page) => page.href === href);
     if (at === -1) return {};
 

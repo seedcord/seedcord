@@ -3,7 +3,7 @@ import { getPageTreeRoots } from 'fumadocs-core/page-tree';
 import { source } from './source';
 
 import type { SidebarLink, SidebarSection } from '#components/DocsSidebar';
-import type { GuidePage } from '#lib/neighbours';
+import type { OrderedPage } from '#lib/neighbours';
 import type { Folder, Node, Root } from 'fumadocs-core/page-tree';
 
 export interface GuideTab {
@@ -69,8 +69,8 @@ function sectionsOf(node: TabRoot): readonly SidebarSection[] {
     return drafts.filter((draft) => draft.links.length > 0);
 }
 
-export function guideOrder(): readonly GuidePage[] {
-    return TAB_ROOTS.reduce<GuidePage[]>((order, node) => {
+export function guideOrder(): readonly OrderedPage[] {
+    return TAB_ROOTS.reduce<OrderedPage[]>((order, node) => {
         const tab = text(node.name);
         if (tab === undefined) return order;
 

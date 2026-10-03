@@ -5,7 +5,8 @@ import {
     Section,
     Separator,
     TextDisplay,
-    Thumbnail
+    Thumbnail,
+    toComponentEmbedJson
 } from 'discord-component-embed';
 
 import { BRAND } from './palette';
@@ -30,12 +31,12 @@ export const PREVIEW_EMOJI = {
     dot: '<:sc_dot:1555958638395396148>'
 } as const;
 
-const toColor = (hex: string): number => Number.parseInt(hex.slice(1), 16);
+export const accentColor = (hex: string): number => Number.parseInt(hex.slice(1), 16);
 
 export const SITE_ACCENT = {
-    home: toColor(BRAND.pith),
-    guide: toColor(BRAND.rind),
-    docs: toColor(BRAND.flesh)
+    home: accentColor(BRAND.pith),
+    guide: accentColor(BRAND.rind),
+    docs: accentColor(BRAND.flesh)
 } as const;
 
 export interface PreviewLink {
@@ -49,7 +50,7 @@ export interface LatestVersion {
     url: string;
 }
 
-export interface PreviewThumbnail {
+interface PreviewThumbnail {
     url: string;
     description: string;
 }
@@ -69,20 +70,39 @@ export interface PreviewCardProps {
     bannerUrl?: string;
 }
 
+// discord-component-embed throws past 3000 bytes of card JSON, Discord's limit
+const DISCORD_JSON_LIMIT = 3000;
+const ELLIPSIS = '…';
+
 const withEmoji = (emoji: string | undefined, text: string): string => (emoji ? `${emoji} ${text}` : text);
+const jsonBytes = (text: string): number => new TextEncoder().encode(JSON.stringify(text)).length - 2;
 
 function linkRow(links: readonly PreviewLink[], latestVersion: LatestVersion | undefined): string {
     const row = links.map(({ emoji, label, url }) => `${emoji} [${label}](${url})`).join(PREVIEW_EMOJI.dot);
     return latestVersion ? `Latest [${latestVersion.label}](${latestVersion.url})  /  ${row}` : row;
 }
 
-export function PreviewCard(props: PreviewCardProps): ReactElement {
-    const { breadcrumb, breadcrumbEmoji, title, titleEmoji } = props;
-    const { body, extraText, subtext, links, latestVersion } = props;
-    const { thumbnail, bannerUrl, accent } = props;
+function cardWithBody(props: PreviewCardProps, body: string): ReactElement {
+    const {
+        accent,
+        breadcrumb,
+        breadcrumbEmoji,
+        title,
+        titleEmoji,
+        extraText,
+        subtext,
+        links,
+        latestVersion,
+        thumbnail,
+        bannerUrl
+    } = props;
 
-    const titleAndBody = <TextDisplay>{`## ${withEmoji(titleEmoji, title)}\n${body}`}</TextDisplay>;
-    const extra = extraText ? <TextDisplay>{extraText}</TextDisplay> : null;
+    const head = (
+        <>
+            <TextDisplay>{`## ${withEmoji(titleEmoji, title)}\n${body}`}</TextDisplay>
+            {extraText ? <TextDisplay>{extraText}</TextDisplay> : null}
+        </>
+    );
 
     return (
         <Container accentColor={accent}>
@@ -91,13 +111,11 @@ export function PreviewCard(props: PreviewCardProps): ReactElement {
             ) : null}
             {thumbnail ? (
                 <Section accessory={<Thumbnail url={thumbnail.url} description={thumbnail.description} />}>
-                    {titleAndBody}
-                    {extra}
+                    {head}
                 </Section>
             ) : (
-                titleAndBody
+                head
             )}
-            {thumbnail ? null : extra}
             {subtext ? <TextDisplay>{`-# ${subtext.join(PREVIEW_EMOJI.dot)}`}</TextDisplay> : null}
             {bannerUrl ? (
                 <MediaGallery>
@@ -108,4 +126,20 @@ export function PreviewCard(props: PreviewCardProps): ReactElement {
             <TextDisplay>{linkRow(links, latestVersion)}</TextDisplay>
         </Container>
     );
+}
+
+function fitBody(props: PreviewCardProps): string {
+    const room = DISCORD_JSON_LIMIT - new TextEncoder().encode(toComponentEmbedJson(cardWithBody(props, ''))).length;
+    if (jsonBytes(props.body) <= room) return props.body;
+
+    let cut = props.body.trimEnd();
+    while (cut.length > 0 && jsonBytes(`${cut}${ELLIPSIS}`) > room) {
+        const lastSpace = cut.lastIndexOf(' ');
+        cut = (lastSpace > 0 ? cut.slice(0, lastSpace) : cut.slice(0, -1)).trimEnd();
+    }
+    return `${cut}${ELLIPSIS}`;
+}
+
+export function PreviewCard(props: PreviewCardProps): ReactElement {
+    return cardWithBody(props, fitBody(props));
 }
