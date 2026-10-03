@@ -62,3 +62,13 @@ describe('SearchCatalog.targets', () => {
         expect(catalog.targets(onSeedcord, 'logger', false)).toEqual([{ id: 'logger', version: '2.1.0' }]);
     });
 });
+
+describe('SearchCatalog.hasPrerelease', () => {
+    it('is true once any package has a live pre-release', () => {
+        expect(new SearchCatalog([seedcord, logger]).hasPrerelease).toBe(true);
+    });
+
+    it('is false when every package is stable only', () => {
+        expect(new SearchCatalog([seedcord]).hasPrerelease).toBe(false);
+    });
+});

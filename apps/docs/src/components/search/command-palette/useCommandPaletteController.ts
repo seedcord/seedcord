@@ -6,6 +6,7 @@ import { useShallow } from 'zustand/react/shallow';
 
 import { log } from '#lib/logger';
 import { searchFiles } from '#lib/search/SearchFiles';
+import type { SearchCatalog } from '#lib/search/SearchCatalog';
 import { useUIStore, type UIStore } from '#store/ui';
 
 import { FOCUS_DELAY_MS } from './constants';
@@ -21,26 +22,26 @@ function buildNavigationHref(action: CommandAction, origin: string): string {
     }
 }
 
-function usePackageList(open: boolean): DocsPackageOption[] {
-    const [packages, setPackages] = useState<DocsPackageOption[]>([]);
+function useSearchCatalog(open: boolean): SearchCatalog | null {
+    const [catalog, setCatalog] = useState<SearchCatalog | null>(null);
 
     useEffect(() => {
-        if (!open || packages.length > 0) return undefined;
+        if (!open || catalog) return undefined;
 
         let cancelled = false;
         searchFiles
             .catalog()
-            .then((catalog) => {
-                if (!cancelled) setPackages(catalog.options);
+            .then((loaded) => {
+                if (!cancelled) setCatalog(loaded);
             })
             .catch(() => undefined);
 
         return () => {
             cancelled = true;
         };
-    }, [open, packages.length]);
+    }, [open, catalog]);
 
-    return packages;
+    return catalog;
 }
 
 interface SearchFilters {
@@ -72,6 +73,7 @@ export interface CommandPaletteController {
     scope: string;
     kind: string;
     prerelease: boolean;
+    hasPrerelease: boolean;
     packages: DocsPackageOption[];
     inputRef: RefObject<HTMLInputElement | null>;
     handleOpenChange: (open: boolean) => void;
@@ -97,7 +99,7 @@ export function useCommandPaletteController(): CommandPaletteController {
     const { scope, kind, prerelease, handleScopeChange, handleKindChange, handlePrereleaseChange, resetFilters } =
         useSearchFilters();
     const [mounted] = useState(() => typeof window !== 'undefined');
-    const packages = usePackageList(open);
+    const catalog = useSearchCatalog(open);
 
     useEffect(() => {
         if (!mounted) return undefined;
@@ -158,7 +160,8 @@ export function useCommandPaletteController(): CommandPaletteController {
         scope,
         kind,
         prerelease,
-        packages,
+        hasPrerelease: catalog?.hasPrerelease ?? false,
+        packages: catalog?.options ?? [],
         inputRef,
         handleOpenChange,
         handleValueChange: setSearchValue,

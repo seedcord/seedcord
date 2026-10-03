@@ -150,6 +150,7 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
                     scope={controller.scope}
                     kind={controller.kind}
                     prerelease={controller.prerelease}
+                    hasPrerelease={controller.hasPrerelease}
                     packages={controller.packages}
                     onScopeChange={controller.handleScopeChange}
                     onKindChange={controller.handleKindChange}

@@ -31,6 +31,7 @@ function makeController(overrides: Partial<CommandPaletteController> = {}): Comm
         scope: 'all',
         kind: 'all',
         prerelease: false,
+        hasPrerelease: false,
         packages: [],
         inputRef: { current: null },
         handleOpenChange: vi.fn(),
@@ -143,6 +144,16 @@ describe('CommandPaletteDialog', () => {
         renderDialog(makeController({ searchValue: 'a'.repeat(MIN_SEARCH_QUERY_LENGTH - 1) }));
         expect(screen.queryByRole('option')).toBeNull();
         expect(screen.queryByRole('listbox')).toBeNull();
+    });
+
+    it('leaves out the pre-release toggle while no package has a pre-release', () => {
+        renderDialog(makeController());
+        expect(screen.queryByRole('switch', { name: 'Pre-release' })).toBeNull();
+    });
+
+    it('shows the pre-release toggle once a package has one', () => {
+        renderDialog(makeController({ hasPrerelease: true }));
+        expect(screen.getAllByRole('switch', { name: 'Pre-release' })).not.toHaveLength(0);
     });
 
     it('re-anchors the active option to the first when the results identity changes', () => {

@@ -91,6 +91,7 @@ interface CommandHeaderProps {
     scope: string;
     kind: string;
     prerelease: boolean;
+    hasPrerelease: boolean;
     packages: DocsPackageOption[];
     onScopeChange: (scope: string) => void;
     onKindChange: (kind: string) => void;
@@ -109,12 +110,14 @@ export function CommandHeader({
     scope,
     kind,
     prerelease,
+    hasPrerelease,
     packages,
     onScopeChange,
     onKindChange,
     onPrereleaseChange
 }: CommandHeaderProps): ReactElement {
     const filters = { scope, kind, packages, onScopeChange, onKindChange };
+    const toggle = hasPrerelease ? <PrereleaseToggle checked={prerelease} onChange={onPrereleaseChange} /> : null;
 
     return (
         <SearchField
@@ -130,15 +133,11 @@ export function CommandHeader({
             activeId={activeId}
             isSearching={isSearching}
             leading={<SearchLeading {...filters} />}
-            trailing={
-                <span className={cn('hidden sm:flex')}>
-                    <PrereleaseToggle checked={prerelease} onChange={onPrereleaseChange} />
-                </span>
-            }
+            trailing={toggle && <span className={cn('hidden sm:flex')}>{toggle}</span>}
             aboveOnMobile={
                 <div className={cn('flex items-center justify-between gap-2')}>
                     <FilterDropdowns {...filters} />
-                    <PrereleaseToggle checked={prerelease} onChange={onPrereleaseChange} />
+                    {toggle}
                 </div>
             }
         />

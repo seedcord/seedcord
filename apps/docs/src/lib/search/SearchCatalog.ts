@@ -16,6 +16,10 @@ export class SearchCatalog {
         return this.packages.map(({ id, label }) => ({ folder: id, label }));
     }
 
+    get hasPrerelease(): boolean {
+        return this.packages.some(({ prerelease }) => prerelease !== null);
+    }
+
     targets(viewed: ActiveDocsTarget, scope: string, prerelease: boolean): SearchTarget[] {
         return this.packages.reduce<SearchTarget[]>((targets, pkg) => {
             if (scope !== 'all' && pkg.id !== scope) return targets;
