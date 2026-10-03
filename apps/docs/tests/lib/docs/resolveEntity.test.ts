@@ -22,14 +22,6 @@ vi.mock('../../../src/lib/docs/pageContext', () => ({
         Promise.resolve({ entry: { id: 'core', manifestName: '@seedcord/core' }, version: { id: '1.0.0' } })
 }));
 vi.mock('@seedcord/docs-engine', () => ({ parseEntityPathSegments: () => ({ slug: 'thing', tone: 'class' }) }));
-// the bug source: loadActiveVersion fetches its OWN engine and sets the version on that one.
-vi.mock('../../../src/lib/docs/catalog', () => ({
-    loadActiveVersion: vi.fn(async () => {
-        const engine = await getEngineStub();
-        await engine.setVersion();
-        return [];
-    })
-}));
 // resolves to a model only when the engine it was handed already has its version set.
 vi.mock('../../../src/lib/docs/loadEntityModel', () => ({
     loadEntityModel: (engine: { versionSet: boolean }) =>

@@ -82,6 +82,8 @@ A docs build renders every page of every version into `apps/docs/dist/docs`, whi
 DOCS_PACKAGES=core,http pnpm -C apps/docs build
 ```
 
+The build deletes `apps/docs/dist/docs`, where the docs dev server keeps its files. Stop `dev` before you build and start it again after.
+
 To check a build the way production serves it, run:
 
 ```bash
