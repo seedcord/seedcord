@@ -1587,6 +1587,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: catalog:test
         version: 4.1.11(vitest@4.1.11)
+      jsonc-parser:
+        specifier: ^3.3.1
+        version: 3.3.1
       string-argv:
         specifier: ^0.3.2
         version: 0.3.2
@@ -2006,6 +2009,9 @@ importers:
       jsdom:
         specifier: catalog:test
         version: 30.0.1
+      next:
+        specifier: catalog:deps
+        version: 16.3.8(patch_hash=45886ddbce807b2d76378a32e5dee9cf9bd2e45f733233fac593fad50a7e37fb)(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       prettier-plugin-tailwindcss:
         specifier: catalog:deps
         version: 0.8.1(prettier@3.9.6)

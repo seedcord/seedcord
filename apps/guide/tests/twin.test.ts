@@ -25,6 +25,18 @@ describe('what an agent reads instead of the page', () => {
         expect(twin).toContain('[core](https://seedcord.org/docs/packages/core/latest)');
     });
 
+    it('turns a link to another guide page into its full url', async () => {
+        const twin = await twinOf('Read [the throwing page](/replying/throwing) first.\n');
+
+        expect(twin).toContain('[the throwing page](https://seedcord.org/guide/replying/throwing/)');
+    });
+
+    it('keeps the heading a guide link points at', async () => {
+        const twin = await twinOf('See [faults](/replying/faults#when-to-throw).\n');
+
+        expect(twin).toContain('(https://seedcord.org/guide/replying/faults/#when-to-throw)');
+    });
+
     it('writes a callout as a blockquote a reader of plain text can follow', async () => {
         const twin = await twinOf('<Callout type="warning">\n\nMind the cap.\n\n</Callout>\n');
 

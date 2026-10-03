@@ -186,7 +186,7 @@ Aim for a spread in length, in how sentences open, and in what each one is doing
 |---|---|
 | redirects a patch the index no longer lists | sends an old patch to the head of its line |
 | an interface would not fit the index signature | only a type alias fits the index signature |
-| the export wrote these without an extension | rename the constant `EXTENSIONLESS_ROUTES` and delete the comment |
+| the loader does not keep a load that failed | a failed load leaves the loader empty for the next call |
 
 <!--prettier-ignore-end-->
 
@@ -259,6 +259,16 @@ When a contrast genuinely carries weight, write two plain sentences.
 **One test separates the tic from a real substitution. Was the reader already holding the alternative?**
 
 An `instead of` naming a swap the reader is actually making stays, since naming what they replace is the instruction. "Pass a `CustomId` instead of a string" is written for someone passing a string right now. The ban covers an alternative nobody raised, as in "the codec is a real format instead of string concatenation", where the reader loads concatenation and then throws it away.
+
+### Exclusivity tails
+
+The same move hides at the end of a sentence. A claim gets a tail that rules out everything it didn't mention: "and nothing else", "and that's it", "nothing more", "on its own", "and no other". The reader pictures the excluded set and then throws it away. That costs the same as a contrast.
+
+- BAD: "markdown gives a link these attributes and nothing else".
+- GOOD: "markdown puts `href`, `title`, and `id` on a link".
+- GOOD, when the reader needs the limit: "markdown puts only `href`, `title`, and `id` on a link".
+
+The test: cut the tail and read the sentence again. A named list already says what is in it. When the limit is the fact the reader needs, put `only` in front of the thing it limits.
 
 ---
 

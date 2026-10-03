@@ -103,6 +103,16 @@ describe('a link', () => {
 
         expect(screen.getByRole('link')).toHaveAccessibleName('gateway or http');
     });
+
+    it('keeps the title a link in the guide carries', () => {
+        render(
+            <Link href="/gateway-or-http" title="Pick a transport">
+                gateway or http
+            </Link>
+        );
+
+        expect(screen.getByRole('link')).toHaveAttribute('title', 'Pick a transport');
+    });
 });
 
 describe('the image component', () => {

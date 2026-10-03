@@ -4,24 +4,21 @@ import type { DocsSiteFile } from '#src/docs/DocsSiteFiles';
 
 export interface SiteBucket {
     putFile(key: string, filePath: string): Promise<void>;
+    readText(key: string): Promise<string | null>;
+    writeText(key: string, text: string): Promise<void>;
     folders(prefix: string): Promise<string[]>;
     deleteFolder(folder: string): Promise<void>;
 }
 
-export interface UploadSummary {
-    written: number;
-    deleted: string[];
-}
-
 const INDEX = 'index.json';
 const WRITES_AT_ONCE = 64;
-// a cloudflare rollback to the previous worker version reads the previous build
-const OLDER_BUILDS_KEPT = 1;
 
 export class DocsSiteUpload {
+    static readonly LIVE_KEY = `${SiteBuild.ROOT}live`;
+
     constructor(private readonly bucket: SiteBucket) {}
 
-    async run(build: SiteBuild, files: readonly DocsSiteFile[]): Promise<UploadSummary> {
+    async upload(build: SiteBuild, files: readonly DocsSiteFile[]): Promise<number> {
         if (!files.some(({ key }) => key === INDEX)) {
             throw new Error(`the docs export has no ${INDEX}. run \`pnpm -C apps/docs build\` first`);
         }
@@ -33,22 +30,23 @@ export class DocsSiteUpload {
                     .map(({ key, path }) => this.bucket.putFile(build.key(key), path))
             );
         }
-
-        const stale = await this.olderThanKept(build);
-        for (const old of stale) await this.bucket.deleteFolder(old.folder);
-
-        return { written: files.length, deleted: stale.map(({ id }) => id) };
+        return files.length;
     }
 
-    private async olderThanKept(current: SiteBuild): Promise<SiteBuild[]> {
-        const folders = await this.bucket.folders(SiteBuild.ROOT);
-        const older = folders.reduce<SiteBuild[]>((builds, folder) => {
-            const build = SiteBuild.fromFolder(folder);
-            if (build?.isOlderThan(current)) builds.push(build);
-            return builds;
-        }, []);
+    // a cloudflare rollback to the previous worker version reads the build that was live before this one
+    async promote(live: SiteBuild): Promise<string[]> {
+        const previousId = await this.bucket.readText(DocsSiteUpload.LIVE_KEY);
+        await this.bucket.writeText(DocsSiteUpload.LIVE_KEY, live.id);
+        if (previousId === null) return [];
 
-        const newestFirst = older.sort((a, b) => (b.isOlderThan(a) ? -1 : 1));
-        return newestFirst.slice(OLDER_BUILDS_KEPT);
+        const builds = await this.builds();
+        const retired = builds.filter((build) => build.isOlderThan(live) && build.id !== previousId);
+        for (const build of retired) await this.bucket.deleteFolder(build.folder);
+        return retired.map(({ id }) => id);
+    }
+
+    private async builds(): Promise<SiteBuild[]> {
+        const folders = await this.bucket.folders(SiteBuild.ROOT);
+        return folders.flatMap((folder) => SiteBuild.fromFolder(folder) ?? []);
     }
 }

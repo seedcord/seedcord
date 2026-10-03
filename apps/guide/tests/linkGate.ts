@@ -9,6 +9,7 @@ import remarkMdx from 'remark-mdx';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 
+import { symbolParts } from '#lib/DocsLinks';
 import { redirectFor } from '#lib/redirects';
 
 import type { Nodes, Root } from 'mdast';
@@ -129,19 +130,16 @@ function pageProblem(site: GuideSite, route: string, url: string): string | null
     return null;
 }
 
-// remarkRefLinks splits the symbol the same way
 function refProblem(site: GuideSite, url: string): string | null {
     const [pkg = '', symbol = ''] = url.slice('ref:'.length).split('/');
     const symbols = site.symbolsByPackage.get(pkg);
     if (symbols === undefined) return 'points at a package the reference site does not list';
+    if (symbol === '') return null;
 
-    const [owner, ...members] = symbol.match(/[^.#]+/g) ?? [];
-    if (owner === undefined) return null;
-
+    const { owner, member } = symbolParts(symbol);
     const anchors = symbols.get(slugifySegment(owner));
     if (anchors === undefined) return `is not a symbol the reference site documents for ${pkg}`;
 
-    const member = members.at(-1);
     return member === undefined || anchors.has(slugifySegment(member)) ? null : `has no member ${member} on ${owner}`;
 }
 

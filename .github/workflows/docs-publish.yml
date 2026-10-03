@@ -51,4 +51,6 @@ jobs:
   deploy:
     needs: sync
     uses: ./.github/workflows/docs-deploy.yml
+    with:
+      ref: ${{ github.event.workflow_run.head_sha || github.sha }}
     secrets: inherit

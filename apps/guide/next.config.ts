@@ -1,26 +1,17 @@
 import path from 'node:path';
 
-// next loads this file under the require condition. ./sites exports a bare default which also matches it
+// next loads this file under the require condition. ./sites and ./static-export export a bare default which also matches it
 import { GUIDE } from '@seedcord/ui/sites';
+import { staticExport } from '@seedcord/ui/static-export';
 import { createMDX } from 'fumadocs-mdx/next';
-import { PHASE_DEVELOPMENT_SERVER } from 'next/constants';
 
 import type { NextConfig } from 'next';
 
-const PAGE_EXTENSIONS = ['tsx', 'ts', 'jsx', 'js'];
-
-// a build-time notFound() still writes the route's file into a static export
-const devOnly = (phase: string): string[] => (phase === PHASE_DEVELOPMENT_SERVER ? ['dev.tsx', 'dev.ts'] : []);
-
 function guideConfig(phase: string): NextConfig {
     return {
-        pageExtensions: [...PAGE_EXTENSIONS, ...devOnly(phase)],
-        basePath: GUIDE.path,
-        // wrangler.jsonc and worker.ts serve these files as cloudflare static assets
-        output: 'export',
-        distDir: 'dist/guide',
+        // wrangler.jsonc and worker.ts serve the export as cloudflare static assets
+        ...staticExport(phase, GUIDE),
         trailingSlash: true,
-        images: { unoptimized: true },
         // workspace:* deps resolve into the build only from the monorepo root
         outputFileTracingRoot: path.join(import.meta.dirname, '../..'),
         // a bundler cannot see the require('fs') @typescript/vfs assembles with String.fromCharCode

@@ -47,19 +47,26 @@ export class R2Bucket implements SiteBucket {
     ) {}
 
     async getIndex(): Promise<IndexJson | null> {
+        const text = await this.readText('index.json');
+        return text ? validateIndex(JSON.parse(text)) : null;
+    }
+
+    async readText(relativePath: string): Promise<string | null> {
         try {
             const reply = await this.client.send(
-                new GetObjectCommand({ Bucket: this.bucket, Key: this.keyFor('index.json') })
+                new GetObjectCommand({ Bucket: this.bucket, Key: this.keyFor(relativePath) })
             );
-            const text = await reply.Body?.transformToString();
-            if (!text) return null;
-
-            const parsed: unknown = JSON.parse(text);
-            return validateIndex(parsed);
+            return (await reply.Body?.transformToString()) ?? null;
         } catch (error) {
             if (isMissing(error)) return null;
             throw error;
         }
+    }
+
+    async writeText(relativePath: string, text: string): Promise<void> {
+        await this.client.send(
+            new PutObjectCommand({ Bucket: this.bucket, Key: this.keyFor(relativePath), Body: text })
+        );
     }
 
     async exists(relativePath: string): Promise<boolean> {
@@ -107,7 +114,12 @@ export class R2Bucket implements SiteBucket {
 
         for (let start = 0; start < keys.length; start += DELETE_BATCH) {
             const Objects = keys.slice(start, start + DELETE_BATCH).map((Key) => ({ Key }));
-            await this.client.send(new DeleteObjectsCommand({ Bucket: this.bucket, Delete: { Objects } }));
+            const reply = await this.client.send(
+                new DeleteObjectsCommand({ Bucket: this.bucket, Delete: { Objects } })
+            );
+            // DeleteObjects answers 200 and lists each key it refused under Errors
+            const refused = reply.Errors?.map(({ Key, Code }) => `${Key ?? '?'} (${Code ?? 'unknown'})`) ?? [];
+            if (refused.length > 0) throw new Error(`R2 refused to delete ${refused.join(', ')}`);
         }
     }
 

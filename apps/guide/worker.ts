@@ -1,7 +1,7 @@
 import { agentLinkHeader } from '@seedcord/ui/agents';
+import { PageAsset, TWIN } from '@seedcord/ui/page-asset';
 import { GUIDE } from '@seedcord/ui/sites';
 
-import { assetPath, generatedPathFor, publicPath, TWIN } from './src/lib/pageAssets';
 import { redirectFor } from './src/lib/redirects';
 
 interface Env {
@@ -53,14 +53,14 @@ function at(request: Request, pathname: string): Request {
 async function fromAssets(env: Env, request: Request, page: string): Promise<Response> {
     // only a page has a twin. every other url falls through to the file itself
     if (wantsMarkdown(request)) {
-        const twin = await env.ASSETS.fetch(at(request, GUIDE.path + assetPath(page, TWIN)));
+        const twin = await env.ASSETS.fetch(at(request, GUIDE.path + TWIN.exportPath(page)));
         if (twin.status !== NOT_FOUND) return twin;
     }
 
     const direct = await env.ASSETS.fetch(request);
     if (direct.status !== NOT_FOUND) return direct;
 
-    const generated = generatedPathFor(page);
+    const generated = PageAsset.forPath(page)?.exportPath(page);
     return generated === undefined ? direct : env.ASSETS.fetch(at(request, GUIDE.path + generated));
 }
 
@@ -89,7 +89,7 @@ const handler = {
 
         const contentType = normalized.headers.get('content-type') ?? '';
         if (contentType.includes('text/html')) {
-            response.headers.set('Link', agentLinkHeader('guide', GUIDE.path + publicPath(page, TWIN)));
+            response.headers.set('Link', agentLinkHeader('guide', GUIDE.path + TWIN.publicPath(page)));
         }
         // a cache that ignores Accept would serve an agent the html
         if (contentType.includes('text/html') || contentType.includes(MARKDOWN)) {

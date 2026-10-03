@@ -49,6 +49,12 @@ describe('the guide worker', () => {
         expect(response.headers.get('Link')).toContain('rel="service-doc"');
     });
 
+    it('reads a request for the bare guide path as the guide root', async () => {
+        const response = await get('', serving(html()));
+
+        expect(response.headers.get('Link')).toContain('</guide/index.md>; rel="alternate"');
+    });
+
     it('points an agent at the markdown for the page it is reading', async () => {
         const response = await get('/commands/options/', serving(html()));
 

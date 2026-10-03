@@ -28,6 +28,14 @@
             "types": "./dist/sites.d.mts",
             "default": "./dist/sites.mjs"
         },
+        "./page-asset": {
+            "types": "./dist/PageAsset.d.mts",
+            "default": "./dist/PageAsset.mjs"
+        },
+        "./static-export": {
+            "types": "./dist/staticExport.d.mts",
+            "default": "./dist/staticExport.mjs"
+        },
         "./palette": {
             "import": {
                 "types": "./dist/palette.d.mts",
@@ -105,8 +113,14 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
+        "next": "catalog:deps",
         "react": "catalog:react",
         "react-dom": "catalog:react"
+    },
+    "peerDependenciesMeta": {
+        "next": {
+            "optional": true
+        }
     },
     "dependencies": {
         "@radix-ui/react-dialog": "^1.1.23",
@@ -137,6 +151,7 @@
         "eslint-plugin-better-tailwindcss": "catalog:eslint",
         "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
         "jsdom": "catalog:test",
+        "next": "catalog:deps",
         "prettier-plugin-tailwindcss": "catalog:deps",
         "tailwindcss": "catalog:deps"
     }

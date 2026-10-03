@@ -12,7 +12,6 @@ import type { ReactNode } from 'react';
 
 const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
 
-// next 16.3.8 leaves basePath off icon urls in metadata and off a file-based icon under turbopack
 const ICON = { type: 'image/png', sizes: `${FAVICON_SIZE.width}x${FAVICON_SIZE.height}` };
 const APPLE_ICON = { type: 'image/png', sizes: `${APPLE_ICON_SIZE.width}x${APPLE_ICON_SIZE.height}` };
 
@@ -21,6 +20,7 @@ export const metadata: Metadata = {
     title: { default: SITE_NAME, template: '%s · seedcord guide' },
     description: SITE_DESCRIPTION,
     applicationName: SITE_NAME,
+    // next 16.3.8 leaves basePath off icon urls in metadata and off a file-based icon under turbopack
     icons: {
         icon: [{ url: `${GUIDE.path}/icon`, ...ICON }],
         apple: [{ url: `${GUIDE.path}/apple-icon`, ...APPLE_ICON }]

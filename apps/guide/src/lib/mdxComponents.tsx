@@ -195,7 +195,10 @@ async function Fence({ children }: FenceProps): Promise<ReactElement> {
 
 const OFF_SITE = /^[a-z]+:/i;
 
-function GuideLink({ href, children, ...props }: ComponentProps<'a'>): ReactElement {
+// the attributes markdown writes on a link
+type GuideLinkProps = Pick<ComponentProps<'a'>, 'href' | 'title' | 'id' | 'children'>;
+
+function GuideLink({ href, children, ...props }: GuideLinkProps): ReactElement {
     if (href === undefined) {
         return (
             <a {...props} className={cn(LINK)}>
@@ -206,7 +209,7 @@ function GuideLink({ href, children, ...props }: ComponentProps<'a'>): ReactElem
 
     if (!OFF_SITE.test(href)) {
         return (
-            <Link href={href} className={cn(LINK)}>
+            <Link {...props} href={href} className={cn(LINK)}>
                 {children}
             </Link>
         );

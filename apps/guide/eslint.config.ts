@@ -52,6 +52,6 @@ export default createConfig({
             rules: { 'import/no-default-export': 'off' }
         },
 
-        { ignores: ['.next/**', '.source/**', '.wrangler/**', 'out/**', 'build/**', 'next-env.d.ts'] }
+        { ignores: ['.next/**', '.source/**', '.wrangler/**', 'build/**', 'next-env.d.ts'] }
     ]
 });

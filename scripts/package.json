@@ -40,6 +40,7 @@
         "@seedcord/vitest-config": "workspace:^",
         "@types/node": "catalog:deps",
         "@vitest/coverage-v8": "catalog:test",
+        "jsonc-parser": "^3.3.1",
         "string-argv": "^0.3.2",
         "typescript": "catalog:peer",
         "vite": "catalog:deps",

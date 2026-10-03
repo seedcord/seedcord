@@ -11,7 +11,6 @@ export * from './CopyButton';
 export * from './Disclosure';
 export * from './Dropdown';
 export * from './GithubIcon';
-export * from './GithubMarkIcon';
 export * from './Icon';
 export * from './IconSwap';
 export * from './Input';

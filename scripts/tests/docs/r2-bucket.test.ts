@@ -149,6 +149,30 @@ describe('R2Bucket site files', () => {
         expect(deletes.map(({ Objects }) => Objects.length)).toEqual([1000, 500]);
         expect(deletes[0]?.Objects[0]?.Key).toBe('builds/a/page-0.html');
     });
+
+    it('throws when the bucket refuses to delete some of the keys', async () => {
+        const { client } = stub(
+            { Contents: [{ Key: 'builds/a/index.html' }], IsTruncated: false },
+            { Errors: [{ Key: 'builds/a/index.html', Code: 'AccessDenied' }] }
+        );
+
+        await expect(new R2Bucket(client, 'site').deleteFolder('builds/a/')).rejects.toThrow(/builds\/a\/index\.html/);
+    });
+
+    it('writes a text object and reads it back', async () => {
+        const write = stub({});
+        await new R2Bucket(write.client, 'site', 'preview/').writeText('builds/live', 'abc');
+        expect(write.sent[0]?.input).toMatchObject({ Key: 'preview/builds/live', Body: 'abc' });
+
+        const read = stub(body('abc'));
+        await expect(new R2Bucket(read.client, 'site').readText('builds/live')).resolves.toBe('abc');
+    });
+
+    it('reads null for a text object that does not exist', async () => {
+        const { client } = stub(notFound);
+
+        await expect(new R2Bucket(client, 'site').readText('builds/live')).resolves.toBeNull();
+    });
 });
 
 describe('R2Bucket listing', () => {

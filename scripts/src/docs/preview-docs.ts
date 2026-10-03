@@ -1,25 +1,18 @@
 /* eslint-disable no-console -- CLI script */
-import { execFileSync, spawn } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import path from 'node:path';
 
-import { SiteBuild } from '@seedcord/docs-engine';
-
 import { DirectoryBucket } from '#src/docs/DirectoryBucket';
-import { DocsSiteFiles } from '#src/docs/DocsSiteFiles';
+import { buildOfHead, DOCS_APP, exportedFiles } from '#src/docs/DocsSite';
 import { DocsSiteUpload } from '#src/docs/DocsSiteUpload';
 
-const INIT_CWD = process.env.INIT_CWD ? path.resolve(process.env.INIT_CWD) : process.cwd();
-const DOCS_APP = path.resolve(INIT_CWD, 'apps/docs');
-
-// runs the upload from docs-deploy.yml against apps/docs/.preview, then wrangler dev on that folder
+// runs the upload and promote steps from docs-deploy.yml against apps/docs/.preview, then wrangler dev on it
 async function main(): Promise<void> {
-    const sha = execFileSync('git', ['rev-parse', '--short=7', 'HEAD'], { encoding: 'utf8' }).trim();
-    const build = SiteBuild.at(new Date(), sha);
-    const files = await new DocsSiteFiles(path.join(DOCS_APP, 'dist/docs')).list();
-
-    const upload = new DocsSiteUpload(new DirectoryBucket(path.join(DOCS_APP, '.preview')));
-    const { written, deleted } = await upload.run(build, files);
-    console.log(`✅ wrote ${written} files to .preview/${build.folder}`);
+    const build = buildOfHead();
+    const site = new DocsSiteUpload(new DirectoryBucket(path.join(DOCS_APP, '.preview')));
+    const written = await site.upload(build, await exportedFiles());
+    const deleted = await site.promote(build);
+    console.log(`✅ wrote ${String(written)} files to .preview/${build.folder}`);
     if (deleted.length > 0) console.log(`🗑️ deleted older builds: ${deleted.join(', ')}`);
 
     const wrangler = ['exec', 'wrangler', 'dev', '--env', 'preview', '--var', `BUILD_ID:${build.id}`];

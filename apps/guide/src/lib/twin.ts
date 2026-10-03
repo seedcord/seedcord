@@ -4,6 +4,7 @@ import { CALLOUT_LABELS, TRANSPORT_LABELS } from '#lib/callout';
 import { cleanFence } from '#lib/fence';
 import { getServerManager, VERBS } from '#lib/packageManager';
 import { FENCE_MODES } from '#lib/rehypeFenceMeta';
+import { canonicalUrl } from '#lib/site';
 
 import type { CalloutType, Transport } from '#lib/callout';
 import type { Verb } from '#lib/packageManager';
@@ -59,6 +60,10 @@ function shellCommand(node: JsxNode): string {
     return lead.trimEnd();
 }
 
+function isGuidePath(url: string): boolean {
+    return url.startsWith('/') && !url.startsWith('//');
+}
+
 function isJsx(node: Nodes): node is JsxNode {
     return node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement';
 }
@@ -70,6 +75,10 @@ export const TWIN_OPTIONS: LLMsOptions = {
             const { rest } = parseCodeBlockAttributes(node.meta ?? '', FENCE_MODES);
             const fence = [node.lang, rest.trim()].filter(Boolean).join(' ');
             return `\`\`\`${fence}\n${cleanFence(node.value)}\n\`\`\``;
+        }
+
+        if (node.type === 'link' && isGuidePath(node.url)) {
+            return `[${state.containerPhrasing(node, info)}](${canonicalUrl(node.url)})`;
         }
 
         if (!isJsx(node)) return undefined;

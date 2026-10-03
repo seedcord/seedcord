@@ -13,6 +13,9 @@ on:
       - '.github/workflows/docs-deploy.yml'
   workflow_call:
     inputs:
+      ref:
+        type: string
+        default: ''
       deploy:
         type: boolean
         default: true
@@ -39,6 +42,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          ref: ${{ inputs.ref || github.sha }}
           fetch-depth: 0
 
       - name: Turbo cache
@@ -63,27 +67,30 @@ jobs:
       - name: Check every docs link
         run: pnpm -C apps/docs check:links
 
-      - name: Pick the build id
-        if: inputs.deploy != false
-        id: build
-        run: echo "id=$(date -u +%Y%m%dT%H%M%SZ)-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-
       - name: Upload to R2
-        if: inputs.deploy != false
+        if: github.event_name == 'push' || inputs.deploy
+        id: upload
         run: pnpm docs:upload
         env:
-          BUILD_ID: ${{ steps.build.outputs.id }}
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          R2_DOCS_BUCKET: ${{ vars.R2_DOCS_BUCKET }}
 
       - name: Point the worker at the build
-        if: inputs.deploy != false
+        if: steps.upload.outcome == 'success'
         uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4.0.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/docs
           packageManager: pnpm
-          command: deploy --var BUILD_ID:${{ steps.build.outputs.id }}
+          command: deploy --var BUILD_ID:${{ steps.upload.outputs.build_id }}
+
+      - name: Delete builds a rollback no longer needs
+        if: steps.upload.outcome == 'success'
+        run: pnpm docs:promote
+        env:
+          BUILD_ID: ${{ steps.upload.outputs.build_id }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}

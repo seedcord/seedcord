@@ -43,6 +43,7 @@ describe('the link gate', () => {
         ['a missing public file', '![gone](/portal-secret.webp)'],
         ['a symbol the package does not export', '[gone](ref:core/Noticed)'],
         ['a member the symbol does not have', '[gone](ref:core/Paginator#stop)'],
+        ['a symbol with nothing before its member', '[gone](ref:core/.Notice)'],
         ['a relative page', '[gone](./cooldown)'],
         ['a package the reference site does not list', '[gone](ref:cor/Notice)'],
         ['a page that moved', '[moved](/gates/cooldown)'],
