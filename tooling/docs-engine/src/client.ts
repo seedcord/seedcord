@@ -7,6 +7,7 @@ export * from '#packages/identity';
 export { formatVersionLabel } from '#src/version-label';
 export { DocSearch, type ScoredEntry } from '#services/Search';
 export { DocKind } from '#model/kinds';
+export { memberModifiers } from '#model/modifiers';
 export { validateIndex, type IndexJson } from '#remote/index-json';
 export { SiteBuild } from '#src/SiteBuild';
 export * from '#src/versions';

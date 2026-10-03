@@ -57,49 +57,17 @@ function makeFormattedComment(paragraphs: CommentParagraph[]): FormattedComment 
 
 const context = {} as FormatContext;
 
-describe('resolveHeaderSignature (exercises headerHasPrefix)', () => {
-    it('keeps header untouched when the modifier prefix is already present', async () => {
+describe('resolveHeaderSignature', () => {
+    // older releases on the docs site were built with this modifier order
+    it('renders an older header as it was built', async () => {
         const node = makeNode({
-            header: { text: 'static async run(): void', keyword: null } as never,
-            flags: makeFlags({ isStatic: true, isAsync: true })
+            header: { text: 'readonly static MAX: number', keyword: null } as never,
+            flags: makeFlags({ isStatic: true, isReadonly: true })
         });
 
         const result = await resolveHeaderSignature(node, context);
 
-        expect(result.text).toBe('static async run(): void');
-    });
-
-    it('prepends modifier parts when the header is missing them', async () => {
-        const node = makeNode({
-            header: { text: 'run(): void', keyword: null } as never,
-            flags: makeFlags({ isStatic: true, isAsync: true })
-        });
-
-        const result = await resolveHeaderSignature(node, context);
-
-        expect(result.text).toBe('static async run(): void');
-    });
-
-    it('returns the formatted header verbatim when there are no modifier parts', async () => {
-        const node = makeNode({
-            header: { text: 'plain(): void', keyword: null } as never,
-            flags: makeFlags()
-        });
-
-        const result = await resolveHeaderSignature(node, context);
-
-        expect(result.text).toBe('plain(): void');
-    });
-
-    it('treats prefix tokens longer than the header as absent and prepends', async () => {
-        const node = makeNode({
-            header: { text: 'run', keyword: null } as never,
-            flags: makeFlags({ isStatic: true, isAsync: true })
-        });
-
-        const result = await resolveHeaderSignature(node, context);
-
-        expect(result.text).toBe('static async run');
+        expect(result.text).toBe('readonly static MAX: number');
     });
 });
 

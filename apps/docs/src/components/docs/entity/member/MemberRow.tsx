@@ -1,7 +1,6 @@
 import { cn } from '@seedcord/ui';
 
 import { DeprecatedEntity } from '#components/docs/entity/DeprecatedEntity';
-import { buildTagList } from '#components/docs/entity/utils/buildTagList';
 
 import { MemberRowBody } from './MemberRowBody';
 import { MemberRowHeader } from './MemberRowHeader';
@@ -20,13 +19,11 @@ interface MemberRowProps extends WithParentDeprecationStatus {
     isLast: boolean;
 }
 export function MemberRow({ member, prefix, isLast, parentDeprecationStatus }: MemberRowProps): ReactElement {
-    const tags = buildTagList(member);
+    const tags = member.tags?.filter((tag) => tag !== 'deprecated') ?? [];
     const anchorId = member.id;
     const hasTags = tags.length > 0;
     const isDeprecated =
-        tags.includes('deprecated') ||
-        Boolean(member.tags?.includes('deprecated')) ||
-        Boolean(member.deprecationStatus?.isDeprecated);
+        Boolean(member.tags?.includes('deprecated')) || Boolean(member.deprecationStatus?.isDeprecated);
 
     let deprecationStatus: DeprecationStatus =
         member.deprecationStatus ??

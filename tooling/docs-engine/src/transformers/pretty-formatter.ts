@@ -170,6 +170,7 @@ function joinDeclarationStripped(header: RenderedDeclarationHeader, refs: Intern
             .join(', ');
         declarationName += `<${renderedParams}>`;
     }
+    if (header.optional) declarationName += '?';
     if (header.type) declarationName += `: ${inlineStripped(header.type, refs, resolve)}`;
     if (header.value) declarationName += ` = ${inlineStripped(header.value, refs, resolve)}`;
     segments.push(declarationName);

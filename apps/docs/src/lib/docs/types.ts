@@ -158,7 +158,6 @@ export interface EnumMemberModel
     id: string;
     label: string;
     value?: DocNode['defaultValue'];
-    tags?: readonly string[];
 }
 
 export interface EnumEntityModel extends BaseEntityModel {
@@ -219,8 +218,6 @@ export type EntityModel =
     | FunctionEntityModel
     | VariableEntityModel;
 
-type MemberAccessorType = 'getter' | 'setter' | 'accessor';
-
 export interface MemberSignatureDetail
     extends WithCode, WithDocs<'documentation', 'examples'>, WithSourceUrl, WithThrows, WithDeprecationStatus {
     id: string;
@@ -239,7 +236,6 @@ export interface EntityMemberSummary
     inheritedFrom?: string | { name: string; href?: PageHref; external?: boolean };
     tags?: readonly string[];
     access?: MemberAccessLevel;
-    accessorType?: MemberAccessorType;
 }
 
 export type MemberPrefix = 'property' | 'method' | 'constructor' | 'typeParameter';

@@ -206,3 +206,66 @@ export class InlineConstraintCallable<TypeM extends { (): void; run(): void; new
      */
     public held: TypeM | null = null;
 }
+
+/**
+ * A base class whose members a subclass overrides.
+ */
+export class OverrideBase {
+    /**
+     * A tag the subclass replaces.
+     */
+    public tag = 'base';
+
+    /**
+     * Builds a base instance.
+     *
+     * @returns The instance.
+     */
+    public static create(): OverrideBase {
+        return new OverrideBase();
+    }
+
+    /**
+     * Describes the instance.
+     *
+     * @returns The description.
+     */
+    public describe(): string {
+        return this.tag;
+    }
+}
+
+/**
+ * A subclass with override members and an auto-accessor.
+ */
+export class OverrideChild extends OverrideBase {
+    /**
+     * The subclass tag.
+     */
+    public override tag = 'child';
+
+    /**
+     * A counter stored through an auto-accessor.
+     *
+     * @defaultValue `0`
+     */
+    public accessor counter = 0;
+
+    /**
+     * Describes the subclass.
+     *
+     * @returns The description.
+     */
+    public override describe(): string {
+        return `child:${this.tag}`;
+    }
+
+    /**
+     * An instance method that shares its name with a static on the base.
+     *
+     * @returns The tag.
+     */
+    public create(): string {
+        return this.tag;
+    }
+}

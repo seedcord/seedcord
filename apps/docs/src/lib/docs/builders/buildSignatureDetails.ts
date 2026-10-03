@@ -1,4 +1,4 @@
-import { memberFragment, withOverload } from '@seedcord/docs-engine';
+import { DocKind, memberFragment, memberModifiers, withOverload } from '@seedcord/docs-engine';
 
 import { cloneCommentParagraphs } from '#lib/docs/comments/creators';
 import { formatCommentRich } from '#lib/docs/comments/formatter';
@@ -26,33 +26,10 @@ interface SignatureDetailsOptions {
     headerSignature: CodeRepresentation;
 }
 
-function buildModifierPrefix(node: DocNode, signature?: { kindLabel?: string }): string {
-    const flags = node.flags;
-    const parts: string[] = [];
-
-    const access = flags.access as string | undefined;
-    if (access) parts.push(access);
-
-    if (flags.isAbstract === true) parts.push('abstract');
-    if (flags.isStatic === true) parts.push('static');
-    if (flags.isReadonly === true) parts.push('readonly');
-    if (flags.isAsync === true) parts.push('async');
-
-    let accessorToken: string | undefined;
-    if (signature && typeof signature.kindLabel === 'string') {
-        const kl = signature.kindLabel.toLowerCase();
-        if (kl.includes('get')) accessorToken = 'get';
-        if (kl.includes('set')) accessorToken = 'set';
-    }
-
-    if (!accessorToken) {
-        const accessor = flags.accessor as string | undefined;
-        if (accessor === 'getter') accessorToken = 'get';
-        if (accessor === 'setter') accessorToken = 'set';
-    }
-
-    if (accessorToken) parts.push(accessorToken);
-
+function signaturePrefix(node: DocNode, signature: DocSignature): string {
+    const parts = memberModifiers(node.flags, node.kind);
+    if (signature.kind === DocKind.GetSignature) parts.push('get');
+    if (signature.kind === DocKind.SetSignature) parts.push('set');
     return parts.join(' ');
 }
 
@@ -88,7 +65,7 @@ export async function buildSignatureDetails({
 
     return Promise.all(
         node.signatures.map(async (signature, index) => {
-            const modifierPrefix = buildModifierPrefix(node, { kindLabel: signature.kindLabel });
+            const modifierPrefix = signaturePrefix(node, signature);
             const code = signature.render
                 ? await formatSignature(signature.render, context, modifierPrefix || undefined)
                 : await highlightCode(signature.name);

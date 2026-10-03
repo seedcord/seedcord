@@ -22,7 +22,9 @@ describe('PackageDirectory', () => {
                 'inline-constraint-callable',
                 'inline-constraint-child',
                 'inline-constraint-shadow',
-                'mock-class'
+                'mock-class',
+                'override-base',
+                'override-child'
             ],
             interface: [
                 'extended-interface',

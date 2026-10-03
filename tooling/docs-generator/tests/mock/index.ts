@@ -12,7 +12,9 @@ export {
     InlineConstraintBase,
     InlineConstraintCallable,
     InlineConstraintChild,
-    InlineConstraintShadow
+    InlineConstraintShadow,
+    OverrideBase,
+    OverrideChild
 } from './class.js';
 // eslint-disable-next-line @typescript-eslint/no-deprecated -- deprecated on purpose, the fixture tests deprecation rendering
 export { MockClass } from './class.js';

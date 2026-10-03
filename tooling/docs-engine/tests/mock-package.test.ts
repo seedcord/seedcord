@@ -61,6 +61,36 @@ describe('DocsEngine mock package integration', () => {
         expect(engine.getNodeByGlobalSlug(MOCK_PACKAGE_FULL_NAME, 'mock-class')?.id).toBe(node.id);
     });
 
+    describe('OverrideChild node', () => {
+        let child: (name: string) => DocNode | undefined;
+
+        beforeAll(async () => {
+            const node = await getNodeBySlug('override-child');
+            child = (name) => node.children.find((entry) => entry.name === name);
+        });
+
+        it('flags an override method', () => {
+            expect(child('describe')?.flags.isOverwriting).toBe(true);
+        });
+
+        it('leaves an instance method alone when only a base static shares its name', () => {
+            expect(child('create')?.flags.isOverwriting).toBe(false);
+        });
+
+        it('writes override into an override property header', () => {
+            expect(child('tag')?.headerText).toMatch(/\boverride tag\b/);
+        });
+
+        it('writes accessor into an auto-accessor header', () => {
+            expect(child('counter')?.headerText).toMatch(/\baccessor counter\b/);
+        });
+
+        it('keeps the @defaultValue on an auto-accessor', () => {
+            const tags = child('counter')?.comment?.blockTags.map((tag) => tag.tag);
+            expect(tags).toContain('@defaultValue');
+        });
+    });
+
     describe('MockClass node', () => {
         let mockClass: DocNode;
 
@@ -82,6 +112,11 @@ describe('DocsEngine mock package integration', () => {
             const optionalProp = mockClass.children.find((child) => child.name === '_optionalProp');
             expect(optionalProp).toBeDefined();
             expect(optionalProp?.flags.isOptional).toBe(true);
+        });
+
+        it('marks an optional property with ? in its header', () => {
+            const optionalProp = mockClass.children.find((child) => child.name === '_optionalProp');
+            expect(optionalProp?.headerText).toMatch(/_optionalProp\?:/);
         });
 
         it('has optionalProp setter', () => {

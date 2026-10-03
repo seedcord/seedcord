@@ -47,6 +47,8 @@ export function formatRenderedDeclarationHeader(header: RenderedDeclarationHeade
         declarationName += `<${renderedParams}>`;
     }
 
+    if (header.optional) declarationName += '?';
+
     if (header.type) {
         declarationName += `: ${inlineTypeToText(header.type)}`;
     }

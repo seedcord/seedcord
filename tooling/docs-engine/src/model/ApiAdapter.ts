@@ -19,10 +19,12 @@ import {
     belongsInClassBody,
     buildDeclarationHeader,
     emptyInheritance,
+    baseClassOverrideKeys,
     explicitModifiers,
     enumMembersInOrder,
     groupOverloads,
     inheritedFromRef,
+    overrideKey,
     paramFlags,
     synthGroups,
     type AeShapes
@@ -64,8 +66,9 @@ const CALLABLE = new Set<number>([DocKind.Function, DocKind.Method, DocKind.Cons
 interface MemberContext {
     inheritedFrom: DocReference | null;
     ownClassMember: boolean;
+    overridesBase: boolean;
 }
-const TOP_LEVEL: MemberContext = { inheritedFrom: null, ownClassMember: false };
+const TOP_LEVEL: MemberContext = { inheritedFrom: null, ownClassMember: false, overridesBase: false };
 
 export class ApiAdapter {
     private readonly slugger = new Slugger();
@@ -113,7 +116,7 @@ export class ApiAdapter {
     ): DocNode {
         const path = isPackageRoot ? [] : [...parentPath, name];
         const kind = isPackageRoot ? DocKind.Project : apiKindToDocKind(item);
-        const flags = isPackageRoot ? buildFlags(item) : this.flagsFor(item, kind, member.ownClassMember);
+        const flags = isPackageRoot ? buildFlags(item) : this.flagsFor(item, kind, member);
         if (member.inheritedFrom) flags.isInherited = true;
 
         const qualifiedName = path.join('.');
@@ -161,7 +164,7 @@ export class ApiAdapter {
         return { name: this.manifest.name, version: this.manifest.version };
     }
 
-    private flagsFor(item: ApiItem, kind: number, ownClassMember: boolean): DocFlags {
+    private flagsFor(item: ApiItem, kind: number, { ownClassMember, overridesBase }: MemberContext): DocFlags {
         const derived: DerivedFlagBits = {};
         if (item instanceof ApiDocumentedItem && item.tsdocComment) {
             derived.isDeprecated = Boolean(item.tsdocComment.deprecatedBlock);
@@ -175,11 +178,11 @@ export class ApiAdapter {
         if (ApiReturnTypeMixin.isBaseClassOf(item)) {
             derived.isAsync = /^Promise\s*</.test(item.returnTypeExcerpt.text.trim());
         }
-        // typedoc shows the implicit `public` on a class's own members and leaves it off inherited,
-        // interface, and top-level declarations. whatever the source writes wins.
         const explicit = explicitModifiers(item, item.displayName);
         derived.access = explicit.access ?? (ownClassMember ? 'public' : null);
         derived.isReadonly = explicit.isReadonly;
+        derived.isOverwriting = overridesBase;
+        if (explicit.isAutoAccessor) derived.accessor = 'auto';
         return buildFlags(item, derived);
     }
 
@@ -220,23 +223,27 @@ export class ApiAdapter {
     private visitMembers(members: readonly ApiItem[], parentPath: string[], owningContainer?: ApiItem): DocNode[] {
         const nodes: DocNode[] = [];
         const declared = owningContainer?.kind === ApiItemKind.Class ? members.filter(belongsInClassBody) : members;
+        const baseKeys = baseClassOverrideKeys(owningContainer);
         for (const group of groupOverloads(declared)) {
             const primary = group[0];
             if (!primary) continue;
             // AE calls it `(constructor)`
             const memberName = apiKindToDocKind(primary) === DocKind.Constructor ? 'constructor' : primary.displayName;
             const inheritedFrom = inheritedFromRef(primary, owningContainer);
-            // typedoc prints `public` on a constructor only when written
             const ownClassMember =
                 inheritedFrom === null &&
                 owningContainer?.kind === ApiItemKind.Class &&
                 apiKindToDocKind(primary) !== DocKind.Constructor;
-            const node = this.baseNode(primary, parentPath, memberName, false, { inheritedFrom, ownClassMember });
+            const overridesBase = ownClassMember && baseKeys.has(overrideKey(primary));
+            const node = this.baseNode(primary, parentPath, memberName, false, {
+                inheritedFrom,
+                ownClassMember,
+                overridesBase
+            });
 
             if (CALLABLE.has(node.kind)) {
                 node.signatures = group.map((sig, index) => this.buildSignature(sig, node, index, group.length));
-                // the signatures carry the comment, matching typedoc. leaving it here renders the summary
-                // twice, once as the member description and once as the node's shared documentation.
+                // the signatures carry the comment. a copy on the node renders the summary twice
                 node.comment = null;
             } else if (accessorRole(primary)) {
                 this.applyAccessor(node, group);
@@ -336,7 +343,6 @@ export class ApiAdapter {
 
         const { docParams: parameters, renderParams: renderParameters } = this.signatureParameters(item);
 
-        // typedoc renders a ctor signature as `MockClass(...)`
         const signatureName =
             apiKindToDocKind(item) === DocKind.Constructor ? (item.parent?.displayName ?? owner.name) : owner.name;
 

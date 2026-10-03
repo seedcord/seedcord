@@ -188,6 +188,20 @@ describe('formatRenderedDeclarationHeaderPretty', () => {
         expect(result.text).toContain('T extends Promise<infer U> ? U : T');
     });
 
+    it('marks an optional property with ?', async () => {
+        const header: RenderedDeclarationHeader = {
+            name: 'message',
+            modifiers: [],
+            keyword: null,
+            optional: true,
+            type: inlineText('string')
+        };
+
+        const result = await formatRenderedDeclarationHeaderPretty(header, noResolver);
+
+        expect(result.text).toContain('message?: string');
+    });
+
     it('formats a property-shape header (no keyword) with modifiers + type', async () => {
         const header: RenderedDeclarationHeader = {
             name: 'plugins',

@@ -9,7 +9,6 @@ import {
     cloneExamples,
     collectMemberTags,
     deriveSharedDocumentation,
-    normalizeAccessor,
     resolveHeaderSignature,
     resolveMemberDeprecation,
     selectDescription
@@ -62,8 +61,6 @@ export async function buildMemberSummary(node: DocNode, context: FormatContext):
     if (node.flags.access === 'public' || node.flags.access === 'protected') {
         summary.access = node.flags.access;
     }
-    const accessorType = normalizeAccessor(node.flags.accessor);
-    if (accessorType) summary.accessorType = accessorType;
     if (node.sourceUrl) summary.sourceUrl = node.sourceUrl;
     if (node.inheritedFrom?.name) {
         const resolved = context.engine.resolver().href(context.manifestPackage, node.inheritedFrom);

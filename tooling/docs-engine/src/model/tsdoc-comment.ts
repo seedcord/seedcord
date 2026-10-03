@@ -50,7 +50,6 @@ function walkLinkTag(link: DocLinkTag, parts: CommentDisplayPart[], resolveLink:
         });
         return;
     }
-    // typedoc rendered `{@link Error}` as "Error"
     const text = explicitText ?? codeDestinationName(link.codeDestination);
     const target = link.codeDestination ? resolveLink(link.codeDestination, text) : undefined;
     parts.push({ kind: 'inline-tag', tag: '@link', text, ...(target && { target }) });
