@@ -29,16 +29,16 @@ describe('runFlow with no terminal', () => {
         expect((thrown as Error).message).toContain('--transport');
     });
 
-    it('takes a null from a later flag as an answer', async () => {
+    it('takes a null from a --no- flag as an answer', async () => {
         const answers = await runFlow([neverAsks('token', 'token')], { token: null }, { interactive: false });
 
         expect(answers.token).toBeNull();
     });
 
-    it('offers the later flag when a step that can wait has no answer', async () => {
+    it('offers the --no- flag when a step that can wait has no answer', async () => {
         const token: Step<'token'> = {
             ...neverAsks('token', 'token'),
-            flag: { ...neverAsks('token', 'token').flag, later: 'a stub' }
+            flag: { ...neverAsks('token', 'token').flag, noFlag: 'a stub' }
         };
 
         const thrown = await runFlow([token], {}, { interactive: false }).catch((error: unknown) => error);

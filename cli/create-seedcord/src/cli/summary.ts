@@ -2,7 +2,7 @@ import { paint } from '@seedcord/errors';
 
 import { runPrefix } from '#cli/packageManager';
 import { version } from '#cli/version';
-import { laterFlagName } from '#interview/applyFlags';
+import { noFlagName } from '#interview/applyFlags';
 import { privilegedFor } from '#interview/capabilities';
 
 import type { ScaffoldAnswers } from '#template/context';
@@ -35,7 +35,7 @@ export function nextSteps(answers: ScaffoldAnswers, run: { agent: AgentName; ins
 }
 
 function secretFlag(value: string | null, flag: string, placeholder: string): string {
-    return value === null ? `--${laterFlagName(flag)}` : `--${flag} ${placeholder}`;
+    return value === null ? `--${noFlagName(flag)}` : `--${flag} ${placeholder}`;
 }
 
 export function dashboardToggles(capabilities: string[]): string[] {

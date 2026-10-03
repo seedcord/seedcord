@@ -12,7 +12,7 @@ describe('helpText', () => {
         }
     });
 
-    it('lists the later flag beside the token and the public key', () => {
+    it('lists --no-token and --no-public-key', () => {
         const text = helpText();
 
         expect(text).toContain('--no-token');

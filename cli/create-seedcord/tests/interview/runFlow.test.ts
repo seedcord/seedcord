@@ -68,7 +68,7 @@ describe('runFlow', () => {
         ).rejects.toThrow(/public-key/);
     });
 
-    it('leaves a step unasked when its later flag answered null', async () => {
+    it('leaves a step unasked when its --no- flag answered null', async () => {
         const asked: (keyof Answers)[] = [];
         const answers = await runFlow([stubStep('token', 'prompted', asked)], { token: null }, { interactive: true });
 
@@ -76,11 +76,11 @@ describe('runFlow', () => {
         expect(answers.token).toBeNull();
     });
 
-    it('names the later flag when that is what answered a skipped step', async () => {
+    it('names the --no- flag when that is what answered a skipped step', async () => {
         const asked: (keyof Answers)[] = [];
         const publicKey: Step<'publicKey'> = {
             ...stubStep('publicKey', 'prompted', asked),
-            flag: { name: 'public-key', description: 'a stub', parse: (raw) => raw, later: 'a stub' },
+            flag: { name: 'public-key', description: 'a stub', parse: (raw) => raw, noFlag: 'a stub' },
             skip: (answers) => answers.transport === 'gateway'
         };
 

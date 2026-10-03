@@ -30,7 +30,7 @@ export const publicKeyStep: Step<'publicKey'> = {
         name: 'public-key',
         description: 'your app public key, http only',
         parse: parsePublicKey,
-        later: 'leave the public key empty in .env to fill in later, http only'
+        noFlag: 'leave the public key empty in .env to fill in later, http only'
     },
     skip: (answers) => answers.transport === 'gateway',
     ask: async () => {

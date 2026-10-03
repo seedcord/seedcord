@@ -19,8 +19,8 @@ interface FlagSpec<Key extends keyof Answers> {
     // one line, printed by --help
     description: string;
     parse: (raw: string) => Answers[Key];
-    // what --help prints beside the --no-<name> flag that answers null
-    later?: null extends Answers[Key] ? string : never;
+    // --help prints this beside --no-<name>
+    noFlag?: null extends Answers[Key] ? string : never;
 }
 
 export interface Step<Key extends keyof Answers> {

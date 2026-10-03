@@ -7,7 +7,7 @@ import type { AnyStep } from '#interview/types';
 
 const token: AnyStep = {
     key: 'token',
-    flag: { name: 'token', description: 'a stub', parse: (raw) => raw, later: 'a stub' },
+    flag: { name: 'token', description: 'a stub', parse: (raw) => raw, noFlag: 'a stub' },
     ask: () => Promise.resolve('asked')
 };
 
@@ -42,19 +42,19 @@ describe('applyFlags', () => {
         expect(applyFlags([directory], { dir: 'my-bot', nonsense: 'x' })).toEqual({ directory: 'my-bot' });
     });
 
-    it('answers null for a step whose later flag was passed', () => {
+    it('answers null for a step whose --no- flag was passed', () => {
         expect(applyFlags([token], { 'no-token': true })).toEqual({ token: null });
     });
 
-    it('leaves the key out when the later flag is false', () => {
+    it('leaves the key out when the --no- flag is false', () => {
         expect(applyFlags([token], { 'no-token': false })).toEqual({});
     });
 
-    it('reads no later flag for a step that cannot wait', () => {
+    it('reads no --no- flag for a step that cannot wait', () => {
         expect(applyFlags([directory], { 'no-dir': true })).toEqual({});
     });
 
-    it('rejects a value and its later flag together, naming both', () => {
+    it('rejects a value and its --no- flag together, naming both', () => {
         let thrown: unknown;
         try {
             applyFlags([token], { token: 'aaa.bbb.ccc', 'no-token': true });

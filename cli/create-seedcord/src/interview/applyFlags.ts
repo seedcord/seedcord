@@ -3,27 +3,27 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { AnyStep, Answers } from './types';
 
-export function laterFlagName(name: string): string {
+export function noFlagName(name: string): string {
     return `no-${name}`;
 }
 
 export function applyFlags(steps: AnyStep[], raw: Record<string, string | boolean>): Partial<Answers> {
     const answers: Partial<Answers> = {};
-    // justified: Step<Key> ties each key to its own parser return, and only a key that takes null has later
+    // justified: Step<Key> ties each key to its own parser return, and only a key that takes null has noFlag
     const assign = answers as Record<keyof Answers, unknown>;
 
     for (const step of steps) {
         const value = raw[step.flag.name];
-        const laterName = laterFlagName(step.flag.name);
-        const later = step.flag.later !== undefined && raw[laterName] === true;
+        const noName = noFlagName(step.flag.name);
+        const answeredNull = step.flag.noFlag !== undefined && raw[noName] === true;
 
-        if (later && value !== undefined) {
+        if (answeredNull && value !== undefined) {
             throw new SeedcordError(SeedcordErrorCode.CreateBadUsage, [
-                `Pass --${step.flag.name} or --${laterName}, not both.`
+                `Pass --${step.flag.name} or --${noName}, not both.`
             ]);
         }
 
-        if (later) assign[step.key] = null;
+        if (answeredNull) assign[step.key] = null;
         else if (typeof value === 'string') assign[step.key] = step.flag.parse(value);
     }
 

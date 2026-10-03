@@ -1,15 +1,15 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { laterFlagName } from './applyFlags';
+import { noFlagName } from './applyFlags';
 
 import type { AnyStep, Answers } from './types';
 
 function unansweredReason(step: AnyStep): string {
     const reason = 'Required when there is no terminal to ask on.';
-    if (step.flag.later === undefined) return reason;
+    if (step.flag.noFlag === undefined) return reason;
 
-    return `${reason} Pass --${laterFlagName(step.flag.name)} to fill it in .env later.`;
+    return `${reason} Pass --${noFlagName(step.flag.name)} to fill it in .env later.`;
 }
 
 export async function runFlow(
@@ -22,7 +22,7 @@ export async function runFlow(
     for (const step of steps) {
         if (step.skip?.(answers)) {
             if (step.key in supplied) {
-                const flag = supplied[step.key] === null ? laterFlagName(step.flag.name) : step.flag.name;
+                const flag = supplied[step.key] === null ? noFlagName(step.flag.name) : step.flag.name;
                 throw new SeedcordError(SeedcordErrorCode.CreateFlagNotApplicable, [flag]);
             }
             continue;

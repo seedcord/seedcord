@@ -24,7 +24,7 @@ export const tokenStep: Step<'token'> = {
         name: 'token',
         description: 'your bot token',
         parse: parseToken,
-        later: 'leave the bot token empty in .env to fill in later'
+        noFlag: 'leave the bot token empty in .env to fill in later'
     },
     ask: async () => {
         const pasted = requireAnswer(

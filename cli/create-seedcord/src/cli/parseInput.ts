@@ -3,7 +3,7 @@ import { parseArgs } from 'node:util';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { applyFlags, laterFlagName } from '#interview/applyFlags';
+import { applyFlags, noFlagName } from '#interview/applyFlags';
 import { STEPS } from '#interview/steps';
 
 import type { Answers } from '#interview/types';
@@ -17,8 +17,8 @@ export interface CliInput {
 const OPTIONS = {
     ...Object.fromEntries(STEPS.map((step) => [step.flag.name, { type: 'string' }] as const)),
     ...Object.fromEntries(
-        STEPS.filter((step) => step.flag.later !== undefined).map(
-            (step) => [laterFlagName(step.flag.name), { type: 'boolean' }] as const
+        STEPS.filter((step) => step.flag.noFlag !== undefined).map(
+            (step) => [noFlagName(step.flag.name), { type: 'boolean' }] as const
         )
     ),
     'no-install': { type: 'boolean' },

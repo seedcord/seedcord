@@ -133,7 +133,7 @@ describe('reproducingCommand', () => {
         }
     });
 
-    it('passes the later flags for secrets left for .env', () => {
+    it('passes the --no- flags for secrets left for .env', () => {
         const command = reproducingCommand({ ...HTTP, token: null, publicKey: null }, 'pnpm');
 
         expect(command).toContain('--no-token');

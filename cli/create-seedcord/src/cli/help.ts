@@ -1,4 +1,4 @@
-import { laterFlagName } from '#interview/applyFlags';
+import { noFlagName } from '#interview/applyFlags';
 import { STEPS } from '#interview/steps';
 
 import type { AnyStep } from '#interview/types';
@@ -11,10 +11,10 @@ const EXTRA = [
 ];
 
 function flagsOf(step: AnyStep): { name: string; description: string }[] {
-    const { later } = step.flag;
-    if (later === undefined) return [step.flag];
+    const { noFlag } = step.flag;
+    if (noFlag === undefined) return [step.flag];
 
-    return [step.flag, { name: laterFlagName(step.flag.name), description: later }];
+    return [step.flag, { name: noFlagName(step.flag.name), description: noFlag }];
 }
 
 function spelling(flag: { name: string; short?: string }): string {
