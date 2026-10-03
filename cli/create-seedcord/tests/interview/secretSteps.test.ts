@@ -42,7 +42,6 @@ describe.each(secretSteps)('$step.key asked on a terminal', ({ step, input, past
         await step.ask({});
 
         const validate = input.mock.calls[0]?.[0].validate;
-        // the step always passes one, so a missing one fails here rather than below
         if (validate === undefined) throw new TypeError('the prompt got no validate');
 
         return validate;
