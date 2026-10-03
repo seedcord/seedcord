@@ -4,8 +4,6 @@ import type { DocsSiteFile } from '#src/docs/DocsSiteFiles';
 
 export interface SiteBucket {
     putFile(key: string, filePath: string): Promise<void>;
-    readText(key: string): Promise<string | null>;
-    writeText(key: string, text: string): Promise<void>;
     folders(prefix: string): Promise<string[]>;
     deleteFolder(folder: string): Promise<void>;
 }
@@ -14,8 +12,6 @@ const INDEX = 'index.json';
 const WRITES_AT_ONCE = 64;
 
 export class DocsSiteUpload {
-    static readonly LIVE_KEY = `${SiteBuild.ROOT}live`;
-
     constructor(private readonly bucket: SiteBucket) {}
 
     async upload(build: SiteBuild, files: readonly DocsSiteFile[]): Promise<number> {
@@ -33,14 +29,9 @@ export class DocsSiteUpload {
         return files.length;
     }
 
-    // a cloudflare rollback to the previous worker version reads the build that was live before this one
-    async promote(live: SiteBuild): Promise<string[]> {
-        const previousId = await this.bucket.readText(DocsSiteUpload.LIVE_KEY);
-        await this.bucket.writeText(DocsSiteUpload.LIVE_KEY, live.id);
-        if (previousId === null) return [];
-
+    async prune(live: SiteBuild, rollbackId: string | null): Promise<string[]> {
         const builds = await this.builds();
-        const retired = builds.filter((build) => build.isOlderThan(live) && build.id !== previousId);
+        const retired = builds.filter((build) => build.isOlderThan(live) && build.id !== rollbackId);
         for (const build of retired) await this.bucket.deleteFolder(build.folder);
         return retired.map(({ id }) => id);
     }

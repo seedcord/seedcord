@@ -2,10 +2,10 @@ const ROOT = 'index';
 
 const toSegments = (path: string): string[] => path.split('/').filter(Boolean);
 
-// next's export fails with EISDIR on a route that is both a file and a folder
 export class PageAsset {
     constructor(
         public readonly extension: string,
+        // next's export fails with EISDIR on a route that is both a file and a folder
         public readonly directory: string
     ) {}
 

@@ -61,6 +61,16 @@ describe('formatting a hover type', () => {
         expect(formatted).not.toContain('declare ');
     });
 
+    it('breaks a method on a generic receiver and keeps the receiver in front', async () => {
+        const method =
+            'SlashHandler<"ping">.reply(options: string | MessagePayload | InteractionReplyOptions, fetch?: boolean): Promise<InteractionResponse<boolean>>';
+
+        const formatted = await formatHoverType(method);
+
+        expect(formatted.startsWith('SlashHandler<"ping">.reply(')).toBe(true);
+        expect(formatted.split('\n').length).toBeGreaterThan(1);
+    });
+
     it.each([
         'const detailed: boolean | null',
         'class Ping',

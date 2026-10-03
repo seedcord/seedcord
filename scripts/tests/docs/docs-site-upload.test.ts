@@ -9,31 +9,18 @@ import type { SiteBucket } from '#src/docs/DocsSiteUpload';
 class FakeBucket implements SiteBucket {
     readonly written: string[] = [];
     readonly deleted = new Set<string>();
-    private readonly texts = new Map<string, string>();
 
-    constructor(
-        private readonly existing: SiteBuild[] = [],
-        live?: SiteBuild
-    ) {
-        if (live) this.texts.set(DocsSiteUpload.LIVE_KEY, live.id);
-    }
+    constructor(private readonly existing: SiteBuild[] = []) {}
 
     putFile(key: string): Promise<void> {
         this.written.push(key);
         return Promise.resolve();
     }
 
-    readText(key: string): Promise<string | null> {
-        return Promise.resolve(this.texts.get(key) ?? null);
-    }
-
-    writeText(key: string, text: string): Promise<void> {
-        this.texts.set(key, text);
-        return Promise.resolve();
-    }
-
     folders(): Promise<string[]> {
-        return Promise.resolve(this.existing.map((build) => build.folder));
+        return Promise.resolve(
+            this.existing.filter((build) => !this.deleted.has(build.folder)).map((build) => build.folder)
+        );
     }
 
     deleteFolder(folder: string): Promise<void> {
@@ -48,7 +35,7 @@ const build = (day: number): SiteBuild => new SiteBuild(`202610${String(day).pad
 
 describe('DocsSiteUpload.upload', () => {
     it('writes every file into the folder of its build and deletes nothing', async () => {
-        const bucket = new FakeBucket([build(1), build(2)], build(2));
+        const bucket = new FakeBucket([build(1), build(2)]);
 
         await new DocsSiteUpload(bucket).upload(build(5), files('index.html', 'index.json'));
 
@@ -64,47 +51,39 @@ describe('DocsSiteUpload.upload', () => {
     });
 });
 
-describe('DocsSiteUpload.promote', () => {
-    it('keeps the build that was live before for a rollback and deletes the older ones', async () => {
-        const bucket = new FakeBucket([build(1), build(2), build(3)], build(3));
+describe('DocsSiteUpload.prune', () => {
+    it('keeps the build a rollback goes to and deletes the older ones', async () => {
+        const bucket = new FakeBucket([build(1), build(2), build(3), build(4)]);
 
-        const deleted = await new DocsSiteUpload(bucket).promote(build(4));
+        const deleted = await new DocsSiteUpload(bucket).prune(build(4), build(2).id);
 
-        expect(bucket.deleted).toEqual(new Set([build(1).folder, build(2).folder]));
-        expect(new Set(deleted)).toEqual(new Set([build(1).id, build(2).id]));
+        expect(bucket.deleted).toEqual(new Set([build(1).folder, build(3).folder]));
+        expect(new Set(deleted)).toEqual(new Set([build(1).id, build(3).id]));
     });
 
-    it('keeps the live build when the run before this one never deployed', async () => {
-        const bucket = new FakeBucket([build(1), build(2)], build(1));
-
-        await new DocsSiteUpload(bucket).promote(build(3));
-
-        expect(bucket.deleted).toEqual(new Set([build(2).folder]));
-    });
-
-    it('records the promoted build as the live one', async () => {
-        const bucket = new FakeBucket([build(1)], build(1));
+    it('keeps the rollback build when it runs twice for the same deploy', async () => {
+        const bucket = new FakeBucket([build(1), build(2), build(3)]);
         const site = new DocsSiteUpload(bucket);
 
-        await site.promote(build(2));
-        await site.promote(build(3));
+        await site.prune(build(3), build(2).id);
+        await site.prune(build(3), build(2).id);
 
         expect(bucket.deleted).toEqual(new Set([build(1).folder]));
     });
 
     it('leaves a newer build alone', async () => {
-        const bucket = new FakeBucket([build(9)], build(1));
+        const bucket = new FakeBucket([build(9)]);
 
-        await new DocsSiteUpload(bucket).promote(build(4));
+        await new DocsSiteUpload(bucket).prune(build(4), null);
 
         expect(bucket.deleted.size).toBe(0);
     });
 
-    it('deletes nothing before any build was recorded as live', async () => {
-        const bucket = new FakeBucket([build(1), build(2)]);
+    it('deletes every older build when there is nothing to roll back to', async () => {
+        const bucket = new FakeBucket([build(1), build(2), build(3)]);
 
-        await new DocsSiteUpload(bucket).promote(build(3));
+        await new DocsSiteUpload(bucket).prune(build(3), null);
 
-        expect(bucket.deleted.size).toBe(0);
+        expect(bucket.deleted).toEqual(new Set([build(1).folder, build(2).folder]));
     });
 });

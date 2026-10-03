@@ -78,7 +78,8 @@ export const TWIN_OPTIONS: LLMsOptions = {
         }
 
         if (node.type === 'link' && isGuidePath(node.url)) {
-            return `[${state.containerPhrasing(node, info)}](${canonicalUrl(node.url)})`;
+            const title = node.title ? ` "${node.title.replaceAll('"', '\\"')}"` : '';
+            return `[${state.containerPhrasing(node, info)}](${canonicalUrl(node.url)}${title})`;
         }
 
         if (!isJsx(node)) return undefined;

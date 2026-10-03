@@ -158,21 +158,6 @@ describe('R2Bucket site files', () => {
 
         await expect(new R2Bucket(client, 'site').deleteFolder('builds/a/')).rejects.toThrow(/builds\/a\/index\.html/);
     });
-
-    it('writes a text object and reads it back', async () => {
-        const write = stub({});
-        await new R2Bucket(write.client, 'site', 'preview/').writeText('builds/live', 'abc');
-        expect(write.sent[0]?.input).toMatchObject({ Key: 'preview/builds/live', Body: 'abc' });
-
-        const read = stub(body('abc'));
-        await expect(new R2Bucket(read.client, 'site').readText('builds/live')).resolves.toBe('abc');
-    });
-
-    it('reads null for a text object that does not exist', async () => {
-        const { client } = stub(notFound);
-
-        await expect(new R2Bucket(client, 'site').readText('builds/live')).resolves.toBeNull();
-    });
 });
 
 describe('R2Bucket listing', () => {

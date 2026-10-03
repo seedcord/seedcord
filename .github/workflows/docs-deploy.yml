@@ -88,9 +88,11 @@ jobs:
 
       - name: Delete builds a rollback no longer needs
         if: steps.upload.outcome == 'success'
-        run: pnpm docs:promote
+        run: pnpm docs:prune
         env:
           BUILD_ID: ${{ steps.upload.outputs.build_id }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}

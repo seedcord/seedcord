@@ -45,13 +45,4 @@ describe('DirectoryBucket', () => {
 
         await expect(bucket.folders('builds/')).rejects.toThrow(/ENOTDIR/);
     });
-
-    it('writes a text file and reads it back, and reads null before it exists', async () => {
-        const { root } = await scratch();
-        const bucket = new DirectoryBucket(root);
-
-        await expect(bucket.readText('builds/live')).resolves.toBeNull();
-        await bucket.writeText('builds/live', 'abc');
-        await expect(bucket.readText('builds/live')).resolves.toBe('abc');
-    });
 });

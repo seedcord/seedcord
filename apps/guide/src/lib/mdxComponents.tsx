@@ -195,10 +195,9 @@ async function Fence({ children }: FenceProps): Promise<ReactElement> {
 
 const OFF_SITE = /^[a-z]+:/i;
 
-// the attributes markdown writes on a link
-type GuideLinkProps = Pick<ComponentProps<'a'>, 'href' | 'title' | 'id' | 'children'>;
+type MarkdownLinkProps = Pick<ComponentProps<'a'>, 'href' | 'title' | 'children'>;
 
-function GuideLink({ href, children, ...props }: GuideLinkProps): ReactElement {
+function GuideLink({ href, children, ...props }: MarkdownLinkProps): ReactElement {
     if (href === undefined) {
         return (
             <a {...props} className={cn(LINK)}>

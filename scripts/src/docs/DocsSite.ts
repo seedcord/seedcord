@@ -14,8 +14,20 @@ interface WranglerConfig {
     r2_buckets?: { binding: string; bucket_name: string }[];
 }
 
+// wrangler prints these cloudflare api responses as they come
+interface Deployment {
+    versions: { version_id: string; percentage: number }[];
+}
+
+interface WorkerVersion {
+    resources: { bindings: { type: string; name: string; text?: string }[] };
+}
+
+type Wrangler = (args: string[]) => string;
+
 const SHORT_SHA = 7;
 const WORKER_BINDING = 'DOCS';
+const BUILD_VAR = 'BUILD_ID';
 
 const INIT_CWD = process.env.INIT_CWD ? path.resolve(process.env.INIT_CWD) : process.cwd();
 
@@ -30,9 +42,22 @@ export function buildOfHead(): SiteBuild {
     return SiteBuild.at(new Date(), sha.trim());
 }
 
-// the bucket the docs worker reads, as apps/docs/wrangler.jsonc binds it
+const runWrangler: Wrangler = (args) =>
+    execFileSync('pnpm', ['exec', 'wrangler', ...args, '--json'], { cwd: DOCS_APP, encoding: 'utf8' });
+
+// a cloudflare rollback returns to the deployment before the current one
+export function rollbackBuildId(wrangler: Wrangler = runWrangler): string | null {
+    const deployments = JSON.parse(wrangler(['deployments', 'list'])) as Deployment[];
+    const beforeCurrent = deployments.slice(0, -1).at(-1);
+    const previous = beforeCurrent?.versions.toSorted((a, b) => b.percentage - a.percentage)[0];
+    if (!previous) return null;
+
+    const version = JSON.parse(wrangler(['versions', 'view', previous.version_id])) as WorkerVersion;
+    const buildVar = version.resources.bindings.find(({ type, name }) => type === 'plain_text' && name === BUILD_VAR);
+    return buildVar?.text ?? null;
+}
+
 export function workerBucket(): R2Bucket {
-    // wrangler checks this file against its config schema on every deploy
     const config = parse(readFileSync(path.join(DOCS_APP, 'wrangler.jsonc'), 'utf8')) as WranglerConfig;
     const bucket = config.r2_buckets?.find(({ binding }) => binding === WORKER_BINDING)?.bucket_name;
     if (!bucket) throw new Error(`apps/docs/wrangler.jsonc binds no R2 bucket as ${WORKER_BINDING}`);

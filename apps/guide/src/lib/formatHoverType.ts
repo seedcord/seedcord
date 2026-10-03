@@ -15,7 +15,7 @@ const dropEdges = (printed: string, lead: string, tail: string): string =>
 // typescript prints a member hover as its receiver in front of a type
 const RECEIVER = /^.+\.\w+: /;
 // and a method hover as its receiver in front of a signature
-const METHOD_RECEIVER = /^[^(:<]+?(?=\.\w+[<(])/;
+const METHOD_RECEIVER = /^[^(:]+?(?=\.\w+[<(])/;
 
 function receiverOf(pattern: RegExp, text: string): string {
     return pattern.exec(text)?.[0] ?? '';

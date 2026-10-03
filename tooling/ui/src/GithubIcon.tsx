@@ -52,7 +52,3 @@ export function GithubIcon({
         </svg>
     );
 }
-
-export function GithubMarkIcon(props: Omit<GithubIconProps, 'variant'>): ReactElement {
-    return <GithubIcon {...props} variant="mark" />;
-}

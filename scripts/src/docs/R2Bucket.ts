@@ -51,7 +51,7 @@ export class R2Bucket implements SiteBucket {
         return text ? validateIndex(JSON.parse(text)) : null;
     }
 
-    async readText(relativePath: string): Promise<string | null> {
+    private async readText(relativePath: string): Promise<string | null> {
         try {
             const reply = await this.client.send(
                 new GetObjectCommand({ Bucket: this.bucket, Key: this.keyFor(relativePath) })
@@ -61,12 +61,6 @@ export class R2Bucket implements SiteBucket {
             if (isMissing(error)) return null;
             throw error;
         }
-    }
-
-    async writeText(relativePath: string, text: string): Promise<void> {
-        await this.client.send(
-            new PutObjectCommand({ Bucket: this.bucket, Key: this.keyFor(relativePath), Body: text })
-        );
     }
 
     async exists(relativePath: string): Promise<boolean> {

@@ -14,11 +14,12 @@
         "scripts": {
             "entry": [
                 "src/*.ts",
-                "src/docs/{build-docs-artifacts,extract-docs,published-payload,preview-docs,promote-docs-site,purge-cdn-cache,sync-docs-to-artifacts,upload-docs-site}.ts",
+                "src/docs/{build-docs-artifacts,extract-docs,published-payload,preview-docs,prune-docs-site,purge-cdn-cache,sync-docs-to-artifacts,upload-docs-site}.ts",
                 "src/release/{changelog,lint-changesets,release-notes,tidy-changelogs}.ts",
                 "tests/**/*.test.ts"
             ],
-            "project": ["**/*.ts"]
+            "project": ["**/*.ts"],
+            "ignoreBinaries": ["wrangler"]
         },
         "apps/docs": {
             "entry": ["src/app/**/{page,layout,route,not-found,sitemap}{,.dev}.{ts,tsx}"],

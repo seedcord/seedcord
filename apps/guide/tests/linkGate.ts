@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { slugifySegment } from '@seedcord/docs-engine/client';
 import { DOCS } from '@seedcord/ui';
+import { TWIN } from '@seedcord/ui/page-asset';
 import { remarkGfm } from 'fumadocs-core/mdx-plugins/remark-gfm';
 import { remarkHeading } from 'fumadocs-core/mdx-plugins/remark-heading';
 import remarkMdx from 'remark-mdx';
@@ -36,7 +37,6 @@ const ARTIFACTS_DIR = path.resolve(GUIDE_ROOT, '../../generated/artifacts');
 
 const FRONTMATTER = /^---\n[\s\S]*?\n---\n/;
 const URL_SCHEME = /^[a-z][a-z\d+.-]*:/i;
-const TWIN_EXTENSION = '.md';
 
 const processor = unified().use(remarkParse).use(remarkMdx).use(remarkGfm).use(remarkHeading, { generateToc: false });
 
@@ -118,9 +118,9 @@ function pageProblem(site: GuideSite, route: string, url: string): string | null
     const moved = redirectFor(target);
     if (moved !== undefined) return `moved to ${moved}`;
 
-    if (target.endsWith(TWIN_EXTENSION)) {
-        const page = target.slice(0, -TWIN_EXTENSION.length);
-        return site.sources.has(page === '/index' ? '/' : page) ? null : 'is the twin of a page that does not exist';
+    const twinOf = TWIN.pageSegments(target.split('/').filter(Boolean));
+    if (twinOf !== undefined) {
+        return site.sources.has(`/${twinOf.join('/')}`) ? null : 'is the twin of a page that does not exist';
     }
     if (path.extname(target) !== '') return site.files.has(target) ? null : 'is not a file in public/';
 

@@ -6,12 +6,13 @@ import { DirectoryBucket } from '#src/docs/DirectoryBucket';
 import { buildOfHead, DOCS_APP, exportedFiles } from '#src/docs/DocsSite';
 import { DocsSiteUpload } from '#src/docs/DocsSiteUpload';
 
-// runs the upload and promote steps from docs-deploy.yml against apps/docs/.preview, then wrangler dev on it
+// runs the upload step from docs-deploy.yml against apps/docs/.preview, then wrangler dev on it
 async function main(): Promise<void> {
     const build = buildOfHead();
     const site = new DocsSiteUpload(new DirectoryBucket(path.join(DOCS_APP, '.preview')));
     const written = await site.upload(build, await exportedFiles());
-    const deleted = await site.promote(build);
+    // a local preview has nothing to roll back to
+    const deleted = await site.prune(build, null);
     console.log(`✅ wrote ${String(written)} files to .preview/${build.folder}`);
     if (deleted.length > 0) console.log(`🗑️ deleted older builds: ${deleted.join(', ')}`);
 

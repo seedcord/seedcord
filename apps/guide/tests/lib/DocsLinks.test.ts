@@ -23,4 +23,10 @@ describe('DocsLinks', () => {
         expect(links.hasPackage('core')).toBe(true);
         expect(links.hasPackage('constructor')).toBe(false);
     });
+
+    it('links no page for a package name every object inherits', async () => {
+        const links = await DocsLinks.load();
+
+        expect(links.href('constructor', '')).toBeNull();
+    });
 });
