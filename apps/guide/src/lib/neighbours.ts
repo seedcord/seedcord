@@ -2,6 +2,7 @@ import type { SidebarLink } from '#components/DocsSidebar';
 
 export interface GuidePage extends SidebarLink {
     tab: string;
+    group?: string | undefined;
 }
 
 export interface PageNeighbours {

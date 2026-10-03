@@ -3,6 +3,9 @@ import { cn, tw } from '@seedcord/ui';
 import { HoverPrefetchLink } from '#components/HoverPrefetchLink';
 import { findCatalogVersion, loadDocsCatalog } from '#lib/docs/catalog';
 import { DocsPage } from '#lib/docs/DocsPage';
+import { docsFrontPreview } from '#lib/docs/linkPreview';
+import { PreviewCard } from '@seedcord/ui/link-preview';
+import { ComponentEmbed } from 'discord-component-embed/react';
 import { getToneConfig, getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
 
 import type { PackageCatalogEntry } from '#lib/docs/types';
@@ -148,7 +151,8 @@ function groupByWorkspace(cards: PackageCard[]): [string, PackageCard[]][] {
 }
 
 export default async function DocsIndexPage(): Promise<ReactElement> {
-    const cards = (await loadDocsCatalog()).map(toCard);
+    const catalog = await loadDocsCatalog();
+    const cards = catalog.map(toCard);
     const transports = cards.filter((card) => TRANSPORT_PACKAGES.has(card.entry.manifestName));
     const core = cards.filter((card) => CORE_PACKAGES.has(card.entry.manifestName));
     const rest = cards.filter(
@@ -157,6 +161,9 @@ export default async function DocsIndexPage(): Promise<ReactElement> {
 
     return (
         <main className={cn('mx-auto w-full max-w-6xl space-y-8 px-5 py-10 sm:px-6 sm:py-14')}>
+            <ComponentEmbed>
+                <PreviewCard {...docsFrontPreview(catalog)} />
+            </ComponentEmbed>
             <div className={cn('space-y-1')}>
                 <p className={cn('text-subtle text-xs font-semibold tracking-[0.35em] uppercase')}>Docs</p>
                 <h1 className={cn('font-display text-2xl font-semibold text-(--text)')}>Reference</h1>

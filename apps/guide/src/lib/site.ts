@@ -62,19 +62,17 @@ export interface PageMetadataOptions {
     pill: string;
 }
 
-// the root's frontmatter title is its sidebar label, "Start here"
-const HOME_TITLE = `${SITE_NAME} · build typed Discord bots on discord.js`;
-
 export function pageMetadata({ title, description, path, pill }: PageMetadataOptions): Metadata {
     const url = canonicalUrl(path);
     const summary = description ?? SITE_DESCRIPTION;
     const alt = ogPageCardAlt({ pill, name: title, meta: [] });
     const images = [{ url: ogImageUrl(path), width: OG_IMAGE_W, height: OG_IMAGE_H, alt }];
     const isHome = path === '/';
-    const shownTitle = isHome ? HOME_TITLE : title;
+    // the root's frontmatter title is its sidebar label, "Start here"
+    const shownTitle = isHome ? SITE_NAME : title;
 
     return {
-        title: isHome ? { absolute: HOME_TITLE } : title,
+        title: isHome ? { absolute: SITE_NAME } : title,
         description: summary,
         alternates: { canonical: url, types: { 'text/markdown': canonicalUrl(TWIN.publicPath(path)) } },
         openGraph: { type: 'article', siteName: SITE_NAME, url, title: shownTitle, description: summary, images },

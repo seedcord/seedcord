@@ -5,6 +5,9 @@ import { EntityContent } from '#components/docs/entity/EntityContent';
 import { DocsPage } from '#lib/docs/DocsPage';
 import { getDocsEngine } from '#lib/docs/engine';
 import { entityJsonLd, entityPagePath, entityPath } from '#lib/docs/entityJsonLd';
+import { symbolPreview } from '#lib/docs/linkPreview';
+import { PreviewCard } from '@seedcord/ui/link-preview';
+import { ComponentEmbed } from 'discord-component-embed/react';
 import { resolveEntity } from '#lib/docs/resolveEntity';
 import { ENTITY_TONE_HEX } from '#lib/entityColors';
 import { latestEntitySegments } from '#lib/indexing';
@@ -55,10 +58,14 @@ export async function generateViewport({ params }: { params: Promise<PageParams>
 async function PackageEntityPage({ params }: { params: Promise<PageParams> }): Promise<ReactElement> {
     const resolved = await resolveEntity(await params);
     if (!resolved) notFound();
-    const jsonLd = entityJsonLd(resolved, resolved.version.isLatest ? await pathInLatest(resolved) : undefined);
+    const latestPath = await pathInLatest(resolved);
+    const jsonLd = entityJsonLd(resolved, resolved.version.isLatest ? latestPath : undefined);
 
     return (
         <>
+            <ComponentEmbed>
+                <PreviewCard {...symbolPreview(resolved, latestPath)} />
+            </ComponentEmbed>
             <script
                 type="application/ld+json"
                 // a raw < in the JSON would end the script tag

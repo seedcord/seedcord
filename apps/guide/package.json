@@ -25,6 +25,7 @@
         "@seedcord/docs-engine": "workspace:^",
         "@seedcord/ui": "workspace:^",
         "@shikijs/twoslash": "^4.5.0",
+        "discord-component-embed": "workspace:^",
         "fumadocs-core": "16.15.18",
         "fumadocs-mdx": "15.4.6",
         "lucide-react": "catalog:deps",

@@ -4,7 +4,10 @@ import { notFound } from 'next/navigation';
 import { PageActions } from '#components/PageActions';
 import { PageNav } from '#components/PageNav';
 import { ANCHOR, ANCHOR_DROP, ANCHOR_SIZE, mdxComponents } from '#lib/mdxComponents';
+import { guidePreview } from '#lib/linkPreview';
 import { guideOrder } from '#lib/nav';
+import { PreviewCard } from '@seedcord/ui/link-preview';
+import { ComponentEmbed } from 'discord-component-embed/react';
 import { neighboursOf } from '#lib/neighbours';
 import { pillFor } from '#lib/og/card';
 import { pageActionsFor } from '#lib/pageActions';
@@ -24,10 +27,15 @@ export default async function Page(props: PageParams): Promise<ReactNode> {
     if (!page) notFound();
 
     const MDX = page.data.body;
-    const { previous, next } = neighboursOf(guideOrder(), page.url);
+    const order = guideOrder();
+    const { previous, next } = neighboursOf(order, page.url);
+    const twinMarkdown = await page.data.getText('processed');
 
     return (
         <article>
+            <ComponentEmbed>
+                <PreviewCard {...guidePreview({ page, order, twinMarkdown })} />
+            </ComponentEmbed>
             <div className={cn('flex flex-col items-start gap-1')}>
                 <div className={cn('min-w-0')}>
                     <div className={cn('group text-4xl/tight')}>

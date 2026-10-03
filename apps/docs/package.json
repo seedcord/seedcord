@@ -25,6 +25,7 @@
         "@seedcord/types": "workspace:^",
         "@seedcord/ui": "workspace:^",
         "@tailwindcss/postcss": "catalog:deps",
+        "discord-component-embed": "workspace:^",
         "envapt": "catalog:peer",
         "github-slugger": "^2.0.0",
         "isomorphic-dompurify": "^4.4.0",

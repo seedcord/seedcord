@@ -14,12 +14,18 @@ import { Transports } from '#components/home/Transports';
 import { TypedDx } from '#components/home/TypedDx';
 import { SlashCommand } from '#components/SlashCommand';
 import { FEATURES } from '#lib/features';
+import { HOME_PREVIEW } from '#lib/linkPreview';
+import { PreviewCard } from '@seedcord/ui/link-preview';
+import { ComponentEmbed } from 'discord-component-embed/react';
 
 import type { ReactNode } from 'react';
 
 function Home(): ReactNode {
     return (
         <>
+            <ComponentEmbed>
+                <PreviewCard {...HOME_PREVIEW} />
+            </ComponentEmbed>
             <Nav />
             <main id="main-content">
                 <Hero />

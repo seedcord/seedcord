@@ -90,6 +90,12 @@
                 "default": "./dist/shiki.mjs"
             }
         },
+        "./link-preview": {
+            "import": {
+                "types": "./dist/LinkPreview.d.mts",
+                "default": "./dist/LinkPreview.mjs"
+            }
+        },
         "./styles/globals.css": "./src/styles/globals.css",
         "./styles/tokens.css": "./src/styles/tokens.css"
     },
@@ -130,6 +136,7 @@
         "@radix-ui/react-tooltip": "^1.2.16",
         "@shikijs/langs": "^4.5.0",
         "clsx": "^2.1.1",
+        "discord-component-embed": "workspace:^",
         "lucide-react": "catalog:deps",
         "motion": "catalog:deps",
         "next-themes": "^0.4.6",

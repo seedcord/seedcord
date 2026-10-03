@@ -3,6 +3,9 @@ import { PackageVersionOverview } from '#components/docs/PackageVersionOverview'
 import { ReadmeBlock } from '#components/docs/ReadmeBlock';
 import { loadActiveVersion } from '#lib/docs/ActiveVersion';
 import { DocsPage } from '#lib/docs/DocsPage';
+import { packagePreview } from '#lib/docs/linkPreview';
+import { PreviewCard } from '@seedcord/ui/link-preview';
+import { ComponentEmbed } from 'discord-component-embed/react';
 import { getCatalogContext } from '#lib/docs/pageContext';
 import { renderReadme } from '#lib/docs/renderReadme';
 
@@ -25,16 +28,23 @@ async function PackageOverviewPage({ params }: { params: Promise<PageParams> }):
     const readmeMarkdown = active?.readme;
     const readmeHtml = readmeMarkdown ? await renderReadme(readmeMarkdown, active?.folderUrl) : null;
 
+    const categories = active?.categories ?? [];
+
     return (
-        <PackageOverviewTabs
-            title={entry.label}
-            version={version.label}
-            changelogHref={active?.changelogUrl ?? null}
-            readme={readmeHtml ? <ReadmeBlock html={readmeHtml} /> : null}
-            reference={
-                <PackageVersionOverview categories={active?.categories ?? []} reexports={active?.reexports ?? []} />
-            }
-        />
+        <>
+            <ComponentEmbed>
+                <PreviewCard
+                    {...packagePreview({ entry, version, versionCategories: categories, folderUrl: active?.folderUrl })}
+                />
+            </ComponentEmbed>
+            <PackageOverviewTabs
+                title={entry.label}
+                version={version.label}
+                changelogHref={active?.changelogUrl ?? null}
+                readme={readmeHtml ? <ReadmeBlock html={readmeHtml} /> : null}
+                reference={<PackageVersionOverview categories={categories} reexports={active?.reexports ?? []} />}
+            />
+        </>
     );
 }
 

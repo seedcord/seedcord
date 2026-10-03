@@ -20,6 +20,7 @@
     },
     "dependencies": {
         "@seedcord/ui": "workspace:^",
+        "discord-component-embed": "workspace:^",
         "lucide-react": "catalog:deps",
         "next": "catalog:deps",
         "react": "catalog:react",

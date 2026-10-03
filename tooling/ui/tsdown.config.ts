@@ -15,7 +15,8 @@ export default createTsdownConfig({
         'src/MaterwelonFavicon.tsx',
         'src/Materwelon.tsx',
         'src/OgCard.tsx',
-        'src/shiki.ts'
+        'src/shiki.ts',
+        'src/LinkPreview.tsx'
     ],
     format: ['esm'],
     platform: 'neutral',

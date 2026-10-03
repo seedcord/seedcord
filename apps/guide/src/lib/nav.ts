@@ -75,7 +75,7 @@ export function guideOrder(): readonly GuidePage[] {
         if (tab === undefined) return order;
 
         for (const section of sectionsOf(node)) {
-            for (const link of section.links) order.push({ ...link, tab });
+            for (const link of section.links) order.push({ ...link, tab, group: section.label });
         }
         return order;
     }, []);
