@@ -78,8 +78,14 @@ describe('a ref: link', () => {
         expect(code).not.toContain('<Ref');
     });
 
-    it.each(['ref:core/', 'ref:/Notice', 'ref:core/a/b', 'ref:'])('refuses %s', async (target) => {
-        await expect(compileGuideMdx(`a [symbol](${target}) link`)).rejects.toThrow('is missing the package');
+    it.each([
+        ['ref:core/', 'has a slash with no symbol after it'],
+        ['ref:/Notice', 'is missing the package'],
+        ['ref:core/a/b', 'has a path after the symbol'],
+        ['ref:', 'is missing the package'],
+        ['ref:core/Notice.', 'has nothing after the member separator']
+    ])('refuses %s', async (target, problem) => {
+        await expect(compileGuideMdx(`a [symbol](${target}) link`)).rejects.toThrow(problem);
     });
 
     // fumadocs copies heading children into a module-scope toc export, where Ref has no binding

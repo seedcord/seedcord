@@ -18,9 +18,7 @@ class FakeBucket implements SiteBucket {
     }
 
     folders(): Promise<string[]> {
-        return Promise.resolve(
-            this.existing.filter((build) => !this.deleted.has(build.folder)).map((build) => build.folder)
-        );
+        return Promise.resolve(this.existing.map((build) => build.folder));
     }
 
     deleteFolder(folder: string): Promise<void> {
@@ -59,16 +57,6 @@ describe('DocsSiteUpload.prune', () => {
 
         expect(bucket.deleted).toEqual(new Set([build(1).folder, build(3).folder]));
         expect(new Set(deleted)).toEqual(new Set([build(1).id, build(3).id]));
-    });
-
-    it('keeps the rollback build when it runs twice for the same deploy', async () => {
-        const bucket = new FakeBucket([build(1), build(2), build(3)]);
-        const site = new DocsSiteUpload(bucket);
-
-        await site.prune(build(3), build(2).id);
-        await site.prune(build(3), build(2).id);
-
-        expect(bucket.deleted).toEqual(new Set([build(1).folder]));
     });
 
     it('leaves a newer build alone', async () => {

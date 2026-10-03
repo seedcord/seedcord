@@ -4,6 +4,10 @@ import { rollbackBuildId } from '#src/docs/docsSite';
 
 const deployment = (versionId: string): object => ({ versions: [{ version_id: versionId, percentage: 100 }] });
 
+const gradual = (split: Record<string, number>): object => ({
+    versions: Object.entries(split).map(([id, percentage]) => ({ version_id: id, percentage }))
+});
+
 const version = (buildId?: string): object => ({
     resources: { bindings: buildId === undefined ? [] : [{ type: 'plain_text', name: 'BUILD_ID', text: buildId }] }
 });
@@ -22,6 +26,15 @@ describe('rollbackBuildId', () => {
         });
 
         expect(rollbackBuildId(run)).toBe('20261002T000000Z-abc1234');
+    });
+
+    it('skips a gradual deployment the way a cloudflare rollback does', () => {
+        const run = wrangler([deployment('v1'), gradual({ v1: 10, v2: 90 }), deployment('v3')], {
+            v1: version('20261001T000000Z-abc1234'),
+            v2: version('20261002T000000Z-abc1234')
+        });
+
+        expect(rollbackBuildId(run)).toBe('20261001T000000Z-abc1234');
     });
 
     it('finds no rollback build on the first deploy', () => {

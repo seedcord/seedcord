@@ -11,6 +11,8 @@ const QUOTED_MODULE = /^"[^"]*"\./;
 // typescript gives an anonymous declaration a __ name, like __type for an inline payload type
 const SYNTHETIC_ROOT = /^__/;
 
+type RefProblem = string;
+
 function packageOfDeclaration(file: string): string | null {
     const installed = INSTALLED.exec(file);
     if (installed?.[1]) return installed[1];
@@ -40,14 +42,19 @@ export class SymbolRef {
     }
 
     // ref:<package> or ref:<package>/<Symbol>
-    static fromUrl(url: string): SymbolRef | null {
-        if (!SymbolRef.isRefUrl(url)) return null;
+    static fromUrl(url: string): SymbolRef | RefProblem {
+        if (!SymbolRef.isRefUrl(url)) return 'is not a ref: link';
 
         const [pkg = '', symbol, ...extra] = url.slice(PROTOCOL.length).split('/');
-        if (pkg === '' || symbol === '' || extra.length > 0) return null;
+        if (pkg === '') return 'is missing the package';
+        if (symbol === '') return 'has a slash with no symbol after it';
+        if (extra.length > 0) return 'has a path after the symbol';
 
         const ref = new SymbolRef(pkg, symbol ?? '');
-        return ref.isPackage || ref.owner !== '' ? ref : null;
+        if (ref.isPackage) return ref;
+        if (ref.owner === '') return 'has nothing before the member';
+        if (ref.member === '') return 'has nothing after the member separator';
+        return ref;
     }
 
     static fromDeclaration(file: string, qualifiedName: string): SymbolRef | null {

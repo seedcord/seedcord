@@ -19,4 +19,4 @@
 '@seedcord/tsconfig': patch
 ---
 
-The README now links the guide at `seedcord.org/guide` and the reference at `seedcord.org/docs`.
+The README and the `discord-component-embed` doc comment examples now link the guide at `seedcord.org/guide` and the reference at `seedcord.org/docs`.

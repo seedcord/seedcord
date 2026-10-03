@@ -28,6 +28,7 @@ type Wrangler = (args: string[]) => string;
 const SHORT_SHA = 7;
 const WORKER_BINDING = 'DOCS';
 const BUILD_VAR = 'BUILD_ID';
+const FULL_ROLLOUT = 100;
 
 const INIT_CWD = process.env.INIT_CWD ? path.resolve(process.env.INIT_CWD) : process.cwd();
 
@@ -45,11 +46,13 @@ export function buildOfHead(): SiteBuild {
 const runWrangler: Wrangler = (args) =>
     execFileSync('pnpm', ['exec', 'wrangler', ...args, '--json'], { cwd: DOCS_APP, encoding: 'utf8' });
 
-// a cloudflare rollback returns to the deployment before the current one
+// wrangler rollback picks the newest earlier deployment that runs one version at 100%
 export function rollbackBuildId(wrangler: Wrangler = runWrangler): string | null {
     const deployments = JSON.parse(wrangler(['deployments', 'list'])) as Deployment[];
-    const beforeCurrent = deployments.slice(0, -1).at(-1);
-    const previous = beforeCurrent?.versions.toSorted((a, b) => b.percentage - a.percentage)[0];
+    const earlierNewestFirst = deployments.slice(0, -1).reverse();
+    const previous = earlierNewestFirst
+        .map(({ versions }) => versions.find(({ percentage }) => percentage === FULL_ROLLOUT))
+        .find((version) => version !== undefined);
     if (!previous) return null;
 
     const version = JSON.parse(wrangler(['versions', 'view', previous.version_id])) as WorkerVersion;

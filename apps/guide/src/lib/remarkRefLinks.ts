@@ -34,7 +34,8 @@ function isRefJsx(node: Node): boolean {
 
 function refHref(link: Node, links: DocsLinks, file: Reporter): string {
     const url = link.url ?? '';
-    const ref = SymbolRef.fromUrl(url) ?? file.fail(`${url} is missing the package or the symbol. ${FORM}`, link);
+    const ref = SymbolRef.fromUrl(url);
+    if (typeof ref === 'string') file.fail(`${url} ${ref}. ${FORM}`, link);
     if (!links.hasPackage(ref.pkg)) file.fail(`${url} points at a package the reference site does not list`, link);
 
     return links.href(ref) ?? file.fail(`${url} is not a symbol the reference site documents`, link);

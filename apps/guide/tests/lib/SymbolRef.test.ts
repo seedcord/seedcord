@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { SymbolRef } from '#lib/SymbolRef';
 
-const parts = (ref: SymbolRef | null): object | null =>
-    ref && { pkg: ref.pkg, symbol: ref.symbol, owner: ref.owner, member: ref.member };
+const parts = (ref: SymbolRef | string | null): object | string | null =>
+    ref instanceof SymbolRef ? { pkg: ref.pkg, symbol: ref.symbol, owner: ref.owner, member: ref.member } : ref;
 
 describe('a ref: link', () => {
     it.each([
@@ -16,15 +16,22 @@ describe('a ref: link', () => {
     });
 
     it('points at the package overview when it carries no symbol', () => {
-        expect(SymbolRef.fromUrl('ref:core')?.isPackage).toBe(true);
+        const ref = SymbolRef.fromUrl('ref:core');
+
+        expect(ref instanceof SymbolRef && ref.isPackage).toBe(true);
     });
 
-    it.each(['ref:', 'ref:/Notice', 'ref:core/', 'ref:core/Notice/x', 'ref:core/.Notice', 'https://seedcord.org'])(
-        'reads nothing from %s',
-        (url) => {
-            expect(SymbolRef.fromUrl(url)).toBeNull();
-        }
-    );
+    it.each([
+        ['ref:', 'is missing the package'],
+        ['ref:/Notice', 'is missing the package'],
+        ['ref:core/', 'has a slash with no symbol after it'],
+        ['ref:core/Notice/x', 'has a path after the symbol'],
+        ['ref:core/.Notice', 'has nothing before the member'],
+        ['ref:core/Notice.', 'has nothing after the member separator'],
+        ['https://seedcord.org', 'is not a ref: link']
+    ])('reports what is wrong with %s', (url, problem) => {
+        expect(SymbolRef.fromUrl(url)).toBe(problem);
+    });
 });
 
 describe('the symbol a hover points at', () => {
@@ -45,7 +52,7 @@ describe('the symbol a hover points at', () => {
         expect([ref?.owner, ref?.member]).toEqual(['SlashHandler', 'options']);
     });
 
-    it('drops the quoted module the checker prefixes onto some names', () => {
+    it('strips the quoted module the checker prefixes onto some names', () => {
         expect(
             SymbolRef.fromDeclaration('/repo/packages/core/dist/index.d.mts', '"@seedcord/core".Notice')?.symbol
         ).toBe('Notice');
@@ -64,15 +71,15 @@ describe('the symbol a hover points at', () => {
     });
 
     it.each([
-        ['/lib.es5.d.ts', 'Promise', 'a typescript lib'],
-        ['index.ts', '"index".Ping', "the sample's own class"],
+        ['a typescript lib', '/lib.es5.d.ts', 'Promise'],
+        ["the sample's own class", 'index.ts', '"index".Ping'],
         [
+            'a third party dep',
             '/repo/node_modules/.pnpm/discord.js@14.0.0/node_modules/discord.js/typings/index.d.ts',
-            'Client',
-            'a third party dep'
+            'Client'
         ],
-        ['/repo/apps/guide/src/lib/twoslash.ts', 'renderer', 'a file outside any published package']
-    ])('points nowhere for %s', (file, name) => {
+        ['a file outside any published package', '/repo/apps/guide/src/lib/twoslash.ts', 'renderer']
+    ])('points nowhere for %s', (_what, file, name) => {
         expect(SymbolRef.fromDeclaration(file, name)).toBeNull();
     });
 

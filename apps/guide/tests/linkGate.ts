@@ -132,7 +132,7 @@ function pageProblem(site: GuideSite, route: string, url: string): string | null
 
 function refProblem(site: GuideSite, url: string): string | null {
     const ref = SymbolRef.fromUrl(url);
-    if (ref === null) return 'is missing the package or the symbol';
+    if (typeof ref === 'string') return ref;
 
     const { pkg, owner, member } = ref;
     const symbols = site.symbolsByPackage.get(pkg);
