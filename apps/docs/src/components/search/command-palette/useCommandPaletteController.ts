@@ -23,12 +23,12 @@ function buildNavigationHref(action: CommandAction, origin: string): string {
     }
 }
 
-// opening the palette retries a load that failed
 function useSearchCatalog(open: boolean): SearchCatalog | null {
     const [catalog, setCatalog] = useState<SearchCatalog | null>(null);
+    const [failed, setFailed] = useState(false);
 
     useEffect(() => {
-        if (catalog) return undefined;
+        if (catalog || (failed && !open)) return undefined;
 
         let cancelled = false;
         searchFiles
@@ -36,12 +36,14 @@ function useSearchCatalog(open: boolean): SearchCatalog | null {
             .then((loaded) => {
                 if (!cancelled) setCatalog(loaded);
             })
-            .catch(() => undefined);
+            .catch(() => {
+                if (!cancelled) setFailed(true);
+            });
 
         return () => {
             cancelled = true;
         };
-    }, [open, catalog]);
+    }, [open, catalog, failed]);
 
     return catalog;
 }

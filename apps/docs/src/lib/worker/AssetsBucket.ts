@@ -13,6 +13,6 @@ export class AssetsBucket implements DocsBucket {
         const response = await this.assets.fetch(new Request(`https://assets.local/${encodeURI(key)}`));
         if (response.status === NOT_FOUND) return null;
         if (!response.ok) throw new Error(`the assets binding answered ${String(response.status)} for ${key}`);
-        return { body: response.body ?? new ReadableStream(), httpEtag: response.headers.get('etag') ?? '' };
+        return { body: response.body ?? '', httpEtag: response.headers.get('etag') ?? '' };
     }
 }

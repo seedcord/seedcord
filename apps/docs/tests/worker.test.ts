@@ -170,6 +170,15 @@ describe('the docs worker', () => {
         await expect(get('/packages/core/latest', env)).rejects.toThrow(/500/);
     });
 
+    it('serves an empty body when the assets binding answers 200 with none', async () => {
+        const env: Env = { BUILD_ID, ASSETS: { fetch: () => Promise.resolve(new Response(null, { status: 200 })) } };
+        const response = await get('/packages/core/latest', env);
+
+        await expect(
+            Promise.race([response.text(), new Promise((resolve) => setTimeout(resolve, 500, 'hung'))])
+        ).resolves.toBe('');
+    });
+
     it('answers with an error when the assets binding fails with no body', async () => {
         const env: Env = { BUILD_ID, ASSETS: { fetch: () => Promise.resolve(new Response(null, { status: 500 })) } };
 

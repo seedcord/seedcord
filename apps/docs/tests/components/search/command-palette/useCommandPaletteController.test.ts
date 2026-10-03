@@ -47,4 +47,27 @@ describe('useCommandPaletteController', () => {
 
         await waitFor(() => expect(result.current.packages).toEqual([{ folder: 'core', label: 'core' }]));
     });
+
+    it('loads the packages again when the first download fails after the palette opened', async () => {
+        const first = Promise.withResolvers<Response>();
+        vi.mocked(fetch).mockReturnValueOnce(first.promise);
+        const { useCommandPaletteController } = await freshController();
+        const { result } = renderHook(() => useCommandPaletteController());
+
+        act(() => result.current.handleOpenChange(true));
+        await act(async () => first.reject(new Error('offline')));
+
+        await waitFor(() => expect(result.current.packages).toEqual([{ folder: 'core', label: 'core' }]));
+    });
+
+    it('waits for the palette to open before it loads a failed download again', async () => {
+        vi.mocked(fetch).mockRejectedValueOnce(new Error('offline'));
+        const { useCommandPaletteController } = await freshController();
+        renderHook(() => useCommandPaletteController());
+        await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+
+        await act(() => new Promise((resolve) => setTimeout(resolve, 50)));
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+    });
 });
