@@ -35,36 +35,6 @@ export async function resolveHeaderSignature(node: DocNode, context: FormatConte
     return highlightCode(node.headerText ?? node.name);
 }
 
-export function collectMemberTags(node: DocNode): string[] {
-    const tags = new Set<string>();
-
-    const addFlags = (f: DocNode['flags'] | undefined): void => {
-        if (!f) return;
-        if (f.isDeprecated) tags.add('deprecated');
-    };
-
-    addFlags(node.flags);
-
-    if (node.comment?.modifierTags) {
-        for (const tag of node.comment.modifierTags) {
-            if (tag === '@virtual') tags.add('virtual');
-        }
-    }
-
-    if (Array.isArray(node.signatures) && node.signatures.length > 0) {
-        for (const sig of node.signatures) {
-            addFlags(sig.flags);
-            if (sig.comment?.modifierTags) {
-                for (const tag of sig.comment.modifierTags) {
-                    if (tag === '@virtual') tags.add('virtual');
-                }
-            }
-        }
-    }
-
-    return Array.from(tags);
-}
-
 interface DescriptionSelection {
     description: CommentParagraph | null;
     signatureIndex: number | null;

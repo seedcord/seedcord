@@ -234,7 +234,6 @@ export interface EntityMemberSummary
     sharedExamples: CommentExample[];
     signatures: MemberSignatureDetail[];
     inheritedFrom?: string | { name: string; href?: PageHref; external?: boolean };
-    tags?: readonly string[];
     access?: MemberAccessLevel;
 }
 

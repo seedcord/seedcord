@@ -7,7 +7,6 @@ import { toPageHref } from '#lib/docs/pageHref';
 import { buildSignatureDetails } from './buildSignatureDetails';
 import {
     cloneExamples,
-    collectMemberTags,
     deriveSharedDocumentation,
     resolveHeaderSignature,
     resolveMemberDeprecation,
@@ -56,8 +55,6 @@ export async function buildMemberSummary(node: DocNode, context: FormatContext):
 
     summary.deprecationStatus = resolveMemberDeprecation(node, signatures, nodeComment.deprecation);
 
-    const tags = collectMemberTags(node);
-    if (tags.length) summary.tags = tags;
     if (node.flags.access === 'public' || node.flags.access === 'protected') {
         summary.access = node.flags.access;
     }

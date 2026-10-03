@@ -9,7 +9,6 @@ import type { ReactElement } from 'react';
 interface MemberRowHeaderProps {
     member: EntityMemberSummary;
     anchorId: string;
-    tags: string[];
     prefix?: 'property' | 'method' | 'constructor' | 'typeParameter';
     isDeprecated?: boolean;
 }
@@ -17,31 +16,12 @@ interface MemberRowHeaderProps {
 export function MemberRowHeader({
     member,
     anchorId,
-    tags,
     prefix,
     isDeprecated = false
 }: MemberRowHeaderProps): ReactElement {
     return (
         <div className={cn('flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between')}>
             <div className={cn('min-w-0 flex-1 space-y-3')}>
-                {tags.length ? (
-                    <ul
-                        className={cn(
-                            'text-subtle flex flex-wrap items-center gap-1 text-[0.55rem] tracking-widest uppercase'
-                        )}
-                    >
-                        {tags.map((tag) => (
-                            <li
-                                key={tag}
-                                className={cn(
-                                    'border-border rounded-full border bg-(--surface-moderate) px-3 py-0.5 font-semibold'
-                                )}
-                            >
-                                {tag}
-                            </li>
-                        ))}
-                    </ul>
-                ) : null}
                 <div className={cn('flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2')}>
                     <div className={cn('group/name relative flex min-w-0 flex-1 items-center')}>
                         <CopyAnchorButton
