@@ -2,6 +2,14 @@ const SKIP_WARNING = 'Nothing pasted. Press Enter again to leave it empty in .en
 
 export const SKIP_HINT = 'or press Enter to add it to .env later';
 
+function isEmptyPaste(value: string | undefined): boolean {
+    return (value ?? '').trim() === '';
+}
+
+export function answerOf<Value>(pasted: string, parse: (raw: string) => Value): Value | null {
+    return isEmptyPaste(pasted) ? null : parse(pasted);
+}
+
 // clack calls validate on every Enter, so the first empty one warns and the second goes through
 export function skippable(
     parse: (raw: string) => unknown,
@@ -10,7 +18,7 @@ export function skippable(
     let warned = false;
 
     return (value) => {
-        if ((value ?? '').trim() === '') {
+        if (isEmptyPaste(value)) {
             if (warned) return undefined;
             warned = true;
             return SKIP_WARNING;

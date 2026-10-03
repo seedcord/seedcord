@@ -3,7 +3,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
-import { SKIP_HINT, skippable } from './skippable';
+import { SKIP_HINT, answerOf, skippable } from './skippable';
 
 import type { Step } from '#interview/types';
 
@@ -41,6 +41,6 @@ export const publicKeyStep: Step<'publicKey'> = {
             })
         );
 
-        return pasted.trim() === '' ? null : parsePublicKey(pasted);
+        return answerOf(pasted, parsePublicKey);
     }
 };

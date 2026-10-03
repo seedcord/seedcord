@@ -3,7 +3,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
-import { SKIP_HINT, skippable } from './skippable';
+import { SKIP_HINT, answerOf, skippable } from './skippable';
 
 import type { Step } from '#interview/types';
 
@@ -34,6 +34,6 @@ export const tokenStep: Step<'token'> = {
             })
         );
 
-        return pasted.trim() === '' ? null : parseToken(pasted);
+        return answerOf(pasted, parseToken);
     }
 };
