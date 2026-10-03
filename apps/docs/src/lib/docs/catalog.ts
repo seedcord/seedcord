@@ -162,12 +162,9 @@ function isRendered(packageId: string): boolean {
 export const loadDocsCatalog = cache(async (): Promise<DocsCatalog> => {
     const engine = await getDocsEngine();
     await engine.ready();
-    const packages = (await engine.listPackages()).filter(({ fullName }) =>
-        isRendered(formatDisplayPackageName(fullName))
-    );
-
     const entries = await Promise.all(
-        packages.map(async ({ folder, fullName }): Promise<PackageCatalogEntry | null> => {
+        (await engine.listPackages()).map(async ({ folder, fullName }): Promise<PackageCatalogEntry | null> => {
+            if (!isRendered(formatDisplayPackageName(fullName))) return null;
             const entry = await engine.getEntry(folder);
             return entry ? buildPackageEntry(fullName, entry) : null;
         })
