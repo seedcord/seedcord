@@ -16,9 +16,6 @@ on:
 permissions:
   contents: read
 
-env:
-  SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
-
 jobs:
   sync:
     runs-on: ubuntu-latest

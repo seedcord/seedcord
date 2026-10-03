@@ -57,7 +57,6 @@ jobs:
       - name: Render every page
         run: pnpm -C apps/docs build
         env:
-          SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
           NEXT_PUBLIC_SITE_URL: https://seedcord.org/docs
           DOCS_BUILD_CPUS: 4
 

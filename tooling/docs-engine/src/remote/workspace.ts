@@ -1,8 +1,10 @@
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { IndexLoader } from '#remote/IndexLoader';
+import { indexUrlOverride, resolveIndexUrl } from '#src/constants';
 
 export async function fetchFileOrUrl(url: string): Promise<Response> {
     if (!url.startsWith('file://')) return fetch(url);
@@ -16,10 +18,15 @@ export async function fetchFileOrUrl(url: string): Promise<Response> {
 }
 
 // each site runs from apps/<name>, two levels below what pnpm docs:local writes
-function localIndexUrl(): string {
-    return pathToFileURL(path.resolve(process.cwd(), '../../generated/artifacts/index.json')).href;
+function localIndexPath(): string {
+    return path.resolve(process.cwd(), '../../generated/artifacts/index.json');
+}
+
+function workspaceIndexUrl(): string {
+    const local = localIndexPath();
+    return indexUrlOverride() ?? (existsSync(local) ? pathToFileURL(local).href : resolveIndexUrl());
 }
 
 export function workspaceIndexLoader(): IndexLoader {
-    return new IndexLoader(process.env.SEEDCORD_DOCS_INDEX_URL ?? localIndexUrl(), fetchFileOrUrl);
+    return new IndexLoader(workspaceIndexUrl(), fetchFileOrUrl);
 }

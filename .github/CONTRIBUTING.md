@@ -74,7 +74,7 @@ The reference reads its pages from artifacts in `generated/`. Build them before 
 pnpm docs:local
 ```
 
-`pnpm -C apps/docs dev:published` reads the published artifacts from cdn.seedcord.org.
+Without them, the docs and the guide read the published artifacts from cdn.seedcord.org.
 
 A docs build renders every page of every version into `apps/docs/dist/docs`, which takes a few minutes. `DOCS_PACKAGES` renders only the packages you list:
 
