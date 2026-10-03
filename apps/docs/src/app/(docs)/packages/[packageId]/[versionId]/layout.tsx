@@ -15,12 +15,12 @@ async function PackageLayout({
     children: ReactNode;
     params: Promise<{ packageId: string; versionId: string }>;
 }): Promise<ReactNode> {
-    const [catalog, { packageId, versionId }] = await Promise.all([loadDocsCatalog(), params]);
-    const { entry, version } = await getCatalogContext({ packageId, versionId });
+    const [catalog, route] = await Promise.all([loadDocsCatalog(), params]);
+    const { entry, version, versionSegment } = await getCatalogContext(route);
 
-    const categories = (await loadActiveVersion(entry.id, version.id))?.categories ?? [];
+    const categories = (await loadActiveVersion(entry.id, versionSegment))?.categories ?? [];
     const filled = { ...version, categories };
-    const shown = versionId === DEFAULT_VERSION ? servedAtLatest(filled, entry.manifestName) : filled;
+    const shown = versionSegment === DEFAULT_VERSION ? servedAtLatest(filled, entry.manifestName) : filled;
 
     return (
         <Container

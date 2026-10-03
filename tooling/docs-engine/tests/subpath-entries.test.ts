@@ -33,11 +33,11 @@ describe('subpath entry points', () => {
         const node = engine.getNodeBySlug(MOCK_PACKAGE_FULL_NAME, 'promoted-shape');
         expect(node?.isExported).toBe(true);
         expect(node?.entries).toEqual(['./extra']);
-        expect(pkg.directory.listNames('interface')).toContain('promoted-shape');
+        expect(pkg.listed.listNames('interface')).toContain('promoted-shape');
     });
 
     it('keeps a symbol four entries export to a single node', () => {
-        const variables = pkg.directory.listNames('variable').filter((slug) => slug.startsWith('mock-variable'));
+        const variables = pkg.listed.listNames('variable').filter((slug) => slug.startsWith('mock-variable'));
         expect(variables).toEqual(['mock-variable']);
 
         const node = engine.getNodeBySlug(MOCK_PACKAGE_FULL_NAME, 'mock-variable');

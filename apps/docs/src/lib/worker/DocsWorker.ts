@@ -1,8 +1,7 @@
 import { DEFAULT_VERSION, replacementVersion, validateIndex } from '@seedcord/docs-engine/client';
 import { agentLinkHeader } from '@seedcord/ui/agents';
+import { PageAsset, TWIN } from '@seedcord/ui/page-asset';
 import { DOCS } from '@seedcord/ui/sites';
-
-import { CARD, TWIN } from '#lib/docs/PageAsset';
 
 import type { IndexJson } from '@seedcord/docs-engine/client';
 
@@ -60,7 +59,7 @@ class DocsPath {
         if (this.path === '') return 'index.html';
         if (this.path.startsWith(HASHED_BUILD_FILES) || EXTENSIONLESS_ROUTES[this.path] !== undefined) return this.path;
 
-        const asset = [TWIN, CARD].find(({ extension }) => this.path.endsWith(extension));
+        const asset = PageAsset.forPath(this.path);
         if (asset) return `${asset.directory}/${this.path}`;
         return extensionOf(this.path) === undefined ? `${this.path}.html` : this.path;
     }
@@ -80,6 +79,7 @@ export class DocsWorker {
 
     async respond(request: Request): Promise<Response> {
         const url = new URL(request.url);
+        if (!url.pathname.startsWith(DOCS.path)) return this.notFound(url);
         const below = url.pathname.slice(DOCS.path.length);
 
         // next fetches the root's navigation payload from /docs.txt
@@ -101,11 +101,11 @@ export class DocsWorker {
             'cache-control': path.key.startsWith(HASHED_BUILD_FILES) ? IMMUTABLE : SHORT_LIVED
         });
         if (path.contentType === HTML) {
-            const twin = path.isPackagePage ? `${DOCS.path}${TWIN.assetPath(path.path)}` : undefined;
+            const twin = path.isPackagePage ? `${DOCS.path}${TWIN.publicPath(path.path)}` : undefined;
             headers.set('link', agentLinkHeader('docs', twin));
         }
         if (path.key.startsWith('search/')) headers.set('x-robots-tag', 'noindex');
-        DocsWorker.markPreview(headers, url);
+        DocsWorker.noindexOffProduction(headers, url);
 
         return new Response(object.body, { headers });
     }
@@ -135,12 +135,11 @@ export class DocsWorker {
     private async notFound(url: URL): Promise<Response> {
         const page = await this.bucket.get('404.html');
         const headers = new Headers({ 'content-type': HTML });
-        DocsWorker.markPreview(headers, url);
+        DocsWorker.noindexOffProduction(headers, url);
         return new Response(page?.body ?? 'Not found', { status: NOT_FOUND, headers });
     }
 
-    // every other host serves the same pages
-    private static markPreview(headers: Headers, url: URL): void {
+    private static noindexOffProduction(headers: Headers, url: URL): void {
         if (url.hostname !== PRODUCTION_HOST) headers.set('x-robots-tag', 'noindex, nofollow');
     }
 

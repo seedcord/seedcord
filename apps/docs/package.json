@@ -9,7 +9,6 @@
     "scripts": {
         "dev": "next dev",
         "build": "next build",
-        "deploy": "wrangler deploy",
         "check:links": "tsx check-links.ts",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",

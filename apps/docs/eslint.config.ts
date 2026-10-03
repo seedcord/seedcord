@@ -46,13 +46,11 @@ export default createConfig({
         // next reads each of these files through its default export
         {
             files: [
-                'src/app/**/{page,layout,loading,error,global-error,not-found,template,default,route,sitemap,robots,manifest}.{ts,tsx,dev.ts,dev.tsx}',
-                'src/app/**/{icon,apple-icon,opengraph-image,twitter-image}.{ts,tsx}',
-                'src/{middleware,instrumentation}.{ts,tsx}'
+                'src/app/**/{page,layout,loading,error,global-error,not-found,template,default,route,sitemap,robots,manifest}.{ts,tsx,dev.ts,dev.tsx}'
             ],
             rules: { 'import/no-default-export': 'off' }
         },
 
-        { ignores: ['.next/**', '.wrangler/**', '.preview/**', 'out/**', 'build/**', 'next-env.d.ts'] }
+        { ignores: ['.next/**', '.wrangler/**', '.preview/**', 'build/**', 'next-env.d.ts'] }
     ]
 });

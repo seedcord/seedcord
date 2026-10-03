@@ -50,7 +50,7 @@
         "@seedcord/docs#build": {
             "dependsOn": ["^build", "//#docs:artifacts"],
             "inputs": ["$TURBO_DEFAULT$", ".env*"],
-            "outputs": [".next/**", "!.next/cache/**"],
+            "outputs": ["dist/**"],
             "env": ["SEEDCORD_DOCS_INDEX_URL"]
         },
         "@seedcord/guide#build": {

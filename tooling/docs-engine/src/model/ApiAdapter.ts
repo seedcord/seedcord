@@ -49,6 +49,7 @@ import type {
     DocManifestPackage,
     DocNode,
     DocReference,
+    ReexportReference,
     DocSignature,
     DocSignatureParameter,
     DocSource,
@@ -95,7 +96,7 @@ export class ApiAdapter {
         return this.visitMembers(members, []);
     }
 
-    private buildReexports(): DocReference[] {
+    private buildReexports(): ReexportReference[] {
         return (this.manifest.reexports ?? []).map((entry) => ({
             name: entry.name,
             qualifiedName: entry.name,
@@ -222,7 +223,7 @@ export class ApiAdapter {
         for (const group of groupOverloads(declared)) {
             const primary = group[0];
             if (!primary) continue;
-            // AE names it `(constructor)`
+            // AE calls it `(constructor)`
             const memberName = apiKindToDocKind(primary) === DocKind.Constructor ? 'constructor' : primary.displayName;
             const inheritedFrom = inheritedFromRef(primary, owningContainer);
             // typedoc prints `public` on a constructor only when written

@@ -25,7 +25,7 @@ export { VersionedDocsEngine } from '#remote/VersionedDocsEngine';
 export { IndexLoader, type Fetcher, type ResolvedVersion } from '#remote/IndexLoader';
 export { ProjectLoader } from '#remote/ProjectLoader';
 export { serializeProject, deserializeProject, validateProjectFile, type DocProjectFile } from '#remote/project-file';
-export { validateIndex, type IndexJson, type PackageIndexEntry, type StableChannel } from '#remote/index-json';
+export { type PackageIndexEntry, type StableChannel } from '#remote/index-json';
 export { buildIndex, newestStable, type PackageVersionsInput, type BuildIndexOptions } from '#remote/index-builder';
 export { IndexFetchError, ProjectFetchError, PackageVersionNotFoundError } from '#remote/errors';
 

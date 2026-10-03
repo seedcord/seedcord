@@ -42,7 +42,7 @@ describe('servedPrerelease', () => {
         expect(servedPrerelease(GATEWAY)).toBe('0.8.0-next.4');
     });
 
-    it('drops a prerelease once a newer stable release ships', () => {
+    it('hides a prerelease once a newer stable release ships', () => {
         expect(servedPrerelease(CORE)).toBeNull();
     });
 

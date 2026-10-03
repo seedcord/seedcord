@@ -207,21 +207,9 @@ describe('withVersion', () => {
 });
 
 describe('servedAtLatest', () => {
-    const own = { id: 'Client', label: 'Client', href: '/packages/seedcord/1.0.0/classes/Client' };
-    const reexported = { id: 'Bus', label: 'Bus', href: '/packages/core/0.4.0/classes/Bus' };
-    const head = {
-        ...makeVersion('1.0.0', { isLatest: true }),
-        basePath: '/packages/seedcord/1.0.0',
-        categories: [{ id: 'classes', title: 'Classes', tone: 'class', items: [own, reexported] }]
-    } satisfies PackageVersionCatalog;
+    it('moves the overview link under latest', () => {
+        const head = { ...makeVersion('1.0.0', { isLatest: true }), basePath: '/packages/seedcord/1.0.0' };
 
-    it('moves the version and its own pages under latest', () => {
-        const served = servedAtLatest(head, 'seedcord');
-
-        expect(served.basePath).toBe('/packages/seedcord/latest');
-        expect(served.categories[0]?.items.map((item) => item.href)).toEqual([
-            '/packages/seedcord/latest/classes/Client',
-            '/packages/core/0.4.0/classes/Bus'
-        ]);
+        expect(servedAtLatest(head, 'seedcord').basePath).toBe('/packages/seedcord/latest');
     });
 });

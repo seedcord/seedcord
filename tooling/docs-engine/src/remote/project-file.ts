@@ -1,9 +1,10 @@
+import { pageFields } from '@seedcord/docs-generator/manifest-fields';
+
 import { buildPackageFromModel } from '#builders/package-builder';
 import { ProjectFetchError } from '#remote/errors';
-import { pageFields } from '#src/manifest-fields';
 
-import type { PageFields } from '#src/manifest-fields';
 import type { DocManifestPackage, DocNode, DocPackageModel } from '#src/types';
+import type { PageFields } from '@seedcord/docs-generator/manifest-fields';
 
 /**
  * The published, pre-adapted form of one package version: the adapted `DocNode` tree plus minimal

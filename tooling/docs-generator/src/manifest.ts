@@ -3,15 +3,10 @@ import { writeFile } from 'node:fs/promises';
 import { Extractor } from '@microsoft/api-extractor';
 
 import { defaultPaths } from './ApiDocsPaths';
-import { PAGE_FIELDS } from './manifest-fields';
+import { pageFields } from './manifest-fields';
 
 import type { ApiDocsPaths } from './ApiDocsPaths';
-import type { PageField } from './manifest-fields';
 import type { ManifestRepository, PackageDocResult } from './types';
-
-function pageFields(result: PackageDocResult): Partial<Pick<PackageDocResult, PageField>> {
-    return Object.fromEntries(PAGE_FIELDS.flatMap((field) => (result[field] ? [[field, result[field]]] : [])));
-}
 
 export async function writeManifest(
     results: PackageDocResult[],

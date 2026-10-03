@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { DOCS } from '@seedcord/ui/sites';
+import { DOCS, GUIDE } from '@seedcord/ui/sites';
 
 import { DocsWorker } from '#lib/worker/DocsWorker';
 
@@ -13,9 +13,23 @@ export interface BrokenLink {
     status: number;
 }
 
-const DOCS_LINK = new RegExp(`href="(${DOCS.path}(?:/[^"#?]*)?)`, 'g');
+interface FoundLink {
+    href: string;
+    page: string;
+    target: string;
+}
+
+const HREF = /href=["']([^"'#?]*)/g;
 const ORIGIN = new URL(DOCS.url).origin;
 const MAX_REDIRECTS = 3;
+
+const isUnder = (href: string, site: string): boolean => href === site || href.startsWith(`${site}/`);
+
+function sitePath(href: string): string | null {
+    if (href.startsWith(DOCS.url)) return href.slice(ORIGIN.length);
+    if (!href.startsWith('/') || href.startsWith('//') || isUnder(href, GUIDE.path)) return null;
+    return href;
+}
 
 class FolderBucket implements DocsBucket {
     constructor(private readonly root: string) {}
@@ -29,7 +43,7 @@ class FolderBucket implements DocsBucket {
     }
 }
 
-// resolves every docs link in an export folder through the worker production runs
+// resolves every link into this site through the worker production runs
 export class LinkChecker {
     private readonly worker: DocsWorker;
 
@@ -39,28 +53,29 @@ export class LinkChecker {
 
     async broken(): Promise<BrokenLink[]> {
         const broken: BrokenLink[] = [];
-        for (const [href, page] of await this.links()) {
-            const response = await this.resolve(href);
+        for (const { href, page, target } of await this.links()) {
+            const response = await this.resolve(target);
             if (!response.ok) broken.push({ href, page, status: response.status });
         }
         return broken;
     }
 
     // each distinct link, with the first page that carries it
-    private async links(): Promise<Map<string, string>> {
+    private async links(): Promise<FoundLink[]> {
         const pages = (await readdir(this.root, { recursive: true })).filter((file) => file.endsWith('.html'));
-        const links = new Map<string, string>();
+        const links = new Map<string, FoundLink>();
         for (const page of pages.sort()) {
             const html = await readFile(path.join(this.root, page), 'utf8');
-            for (const [, href] of html.matchAll(DOCS_LINK)) {
-                if (href && !links.has(href)) links.set(href, page);
+            for (const [, href = ''] of html.matchAll(HREF)) {
+                const target = sitePath(href);
+                if (target !== null && !links.has(href)) links.set(href, { href, page, target });
             }
         }
-        return links;
+        return [...links.values()];
     }
 
-    private async resolve(href: string): Promise<Response> {
-        let url = new URL(href, ORIGIN);
+    private async resolve(target: string): Promise<Response> {
+        let url = new URL(target, ORIGIN);
         let response = await this.worker.respond(new Request(url));
         for (let hop = 0; hop < MAX_REDIRECTS; hop++) {
             const location = response.headers.get('location');

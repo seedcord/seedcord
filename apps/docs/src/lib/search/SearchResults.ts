@@ -1,6 +1,7 @@
 import { DocSearch } from '@seedcord/docs-engine/client';
 
 import type { SearchIndexEntry } from './types';
+import type { KindFilter } from '#components/search/command-palette/constants';
 import type { CommandAction, SearchResultKind } from '#components/search/command-palette/types';
 
 const MAX_RESULTS = 24;
@@ -21,7 +22,7 @@ export class SearchResults {
         this.search = new DocSearch(entries);
     }
 
-    rank(query: string, kind: string): CommandAction[] {
+    rank(query: string, kind: KindFilter): CommandAction[] {
         // overload signatures share package, slug and kind
         const seen = new Set<string>();
         const results: CommandAction[] = [];
@@ -38,7 +39,7 @@ export class SearchResults {
         return results;
     }
 
-    private static matchesKind(kind: SearchResultKind, filter: string): boolean {
+    private static matchesKind(kind: SearchResultKind, filter: KindFilter): boolean {
         if (filter === 'all') return true;
         if (filter === 'member') return MEMBER_KINDS.has(kind);
         return kind === filter;

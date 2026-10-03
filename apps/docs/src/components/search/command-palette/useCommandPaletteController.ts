@@ -9,8 +9,9 @@ import { searchFiles } from '#lib/search/SearchFiles';
 import type { SearchCatalog } from '#lib/search/SearchCatalog';
 import { useUIStore, type UIStore } from '#store/ui';
 
-import { FOCUS_DELAY_MS } from './constants';
+import { ALL_PACKAGES, FOCUS_DELAY_MS, isKindFilter } from './constants';
 
+import type { KindFilter } from './constants';
 import type { CommandAction, DocsPackageOption } from './types';
 
 function buildNavigationHref(action: CommandAction, origin: string): string {
@@ -22,12 +23,10 @@ function buildNavigationHref(action: CommandAction, origin: string): string {
     }
 }
 
-function useSearchCatalog(open: boolean): SearchCatalog | null {
+function useSearchCatalog(): SearchCatalog | null {
     const [catalog, setCatalog] = useState<SearchCatalog | null>(null);
 
     useEffect(() => {
-        if (!open || catalog) return undefined;
-
         let cancelled = false;
         searchFiles
             .catalog()
@@ -39,30 +38,37 @@ function useSearchCatalog(open: boolean): SearchCatalog | null {
         return () => {
             cancelled = true;
         };
-    }, [open, catalog]);
+    }, []);
 
     return catalog;
 }
 
-interface SearchFilters {
+interface FilterValues {
     scope: string;
-    kind: string;
+    kind: KindFilter;
     prerelease: boolean;
+}
+
+interface SearchFilters extends FilterValues {
     handleScopeChange: (scope: string) => void;
     handleKindChange: (kind: string) => void;
     handlePrereleaseChange: (prerelease: boolean) => void;
     resetFilters: () => void;
 }
 
+const DEFAULT_FILTERS: FilterValues = { scope: ALL_PACKAGES, kind: 'all', prerelease: false };
+
 function useSearchFilters(): SearchFilters {
-    const [filters, setFilters] = useState({ scope: 'all', kind: 'all', prerelease: false });
+    const [filters, setFilters] = useState(DEFAULT_FILTERS);
     const handleScopeChange = useCallback((scope: string) => setFilters((prev) => ({ ...prev, scope })), []);
-    const handleKindChange = useCallback((kind: string) => setFilters((prev) => ({ ...prev, kind })), []);
+    const handleKindChange = useCallback((kind: string) => {
+        if (isKindFilter(kind)) setFilters((prev) => ({ ...prev, kind }));
+    }, []);
     const handlePrereleaseChange = useCallback(
         (prerelease: boolean) => setFilters((prev) => ({ ...prev, prerelease })),
         []
     );
-    const resetFilters = useCallback(() => setFilters({ scope: 'all', kind: 'all', prerelease: false }), []);
+    const resetFilters = useCallback(() => setFilters(DEFAULT_FILTERS), []);
     return { ...filters, handleScopeChange, handleKindChange, handlePrereleaseChange, resetFilters };
 }
 
@@ -71,7 +77,7 @@ export interface CommandPaletteController {
     mounted: boolean;
     searchValue: string;
     scope: string;
-    kind: string;
+    kind: KindFilter;
     prerelease: boolean;
     hasPrerelease: boolean;
     packages: DocsPackageOption[];
@@ -99,7 +105,7 @@ export function useCommandPaletteController(): CommandPaletteController {
     const { scope, kind, prerelease, handleScopeChange, handleKindChange, handlePrereleaseChange, resetFilters } =
         useSearchFilters();
     const [mounted] = useState(() => typeof window !== 'undefined');
-    const catalog = useSearchCatalog(open);
+    const catalog = useSearchCatalog();
 
     useEffect(() => {
         if (!mounted) return undefined;

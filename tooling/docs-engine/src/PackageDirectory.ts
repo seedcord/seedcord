@@ -1,6 +1,6 @@
 import { DocKind } from '#model/kinds';
+import { isEntityTone, type EntityTone } from '#src/tones';
 
-import type { EntityTone } from '#src/tones';
 import type { DocNode } from '#src/types';
 
 export type DirectorySnapshot = Record<EntityTone, string[]>;
@@ -25,7 +25,8 @@ function perTone<Value>(build: (tone: EntityTone) => Value): Record<EntityTone, 
     };
 }
 
-const TONE_OF_KIND = new Map(Object.values(perTone<[number, EntityTone]>((tone) => [TONE_KINDS[tone], tone])));
+const TONES = Object.keys(TONE_KINDS).filter(isEntityTone);
+const TONE_OF_KIND = new Map<number, EntityTone>(TONES.map((tone) => [TONE_KINDS[tone], tone]));
 
 // the top-level symbols of one package, grouped by tone
 export class PackageDirectory {
@@ -52,9 +53,8 @@ export class PackageDirectory {
         return perTone((tone) => this.listNames(tone));
     }
 
-    // the published index.json stores this so a lazy engine builds cross-package urls without loading the package
+    // index.json stores this for an engine that has not loaded the package
     toneMap(): Record<string, EntityTone> {
-        const slugs = perTone((tone) => [...this.byTone[tone].keys()].map((slug) => [slug, tone] as const));
-        return Object.fromEntries(Object.values(slugs).flat());
+        return Object.fromEntries(TONES.flatMap((tone) => [...this.byTone[tone].keys()].map((slug) => [slug, tone])));
     }
 }

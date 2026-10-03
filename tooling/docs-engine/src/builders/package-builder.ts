@@ -274,7 +274,7 @@ export function buildPackageFromModel(pkg: DocManifestPackage, root: DocNode): D
         packageDocumentation: root.comment ?? null,
         nodes: indexes.byId,
         indexes,
-        directory: PackageDirectory.fromNodes(listed),
+        listed: PackageDirectory.fromNodes(listed),
         // signatures link to forgotten and @internal symbols too
         pages: PackageDirectory.fromNodes([...listed, ...root.children])
     };

@@ -19,9 +19,9 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
 }
 
 async function PackageOverviewPage({ params }: { params: Promise<PageParams> }): Promise<ReactElement> {
-    const { entry, version } = await getCatalogContext(await params);
+    const { entry, version, versionSegment } = await getCatalogContext(await params);
 
-    const active = await loadActiveVersion(entry.id, version.id);
+    const active = await loadActiveVersion(entry.id, versionSegment);
     const readmeMarkdown = active?.readme;
     const readmeHtml = readmeMarkdown ? await renderReadme(readmeMarkdown, active?.folderUrl) : null;
 

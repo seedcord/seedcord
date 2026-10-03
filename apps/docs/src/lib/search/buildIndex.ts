@@ -6,9 +6,7 @@ import { getDocsEngine } from '#lib/docs/engine';
 
 import type { SearchIndexEntry, SearchPackage } from './types';
 import type { CommandAction, SearchResultKind } from '#components/search/command-palette/types';
-import type { DocNode, DocSearchEntry } from '@seedcord/docs-engine';
-
-type Engine = Awaited<ReturnType<typeof getDocsEngine>>;
+import type { DocNode, DocSearchEntry, VersionedDocsEngine } from '@seedcord/docs-engine';
 
 const RESULT_KINDS: Partial<Record<number, SearchResultKind>> = {
     [DocKind.Class]: 'class',
@@ -52,7 +50,7 @@ function pageHref(entry: DocSearchEntry): string {
 }
 
 class SearchLinks {
-    constructor(private readonly engine: Engine) {}
+    constructor(private readonly engine: VersionedDocsEngine) {}
 
     href(entry: DocSearchEntry, kind: SearchResultKind): string {
         if (ENTITY_KINDS.has(kind)) return this.entityHref(entry, kind);

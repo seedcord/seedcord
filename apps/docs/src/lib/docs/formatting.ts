@@ -26,7 +26,6 @@ import { toPageHref } from './pageHref';
 import type { FormatContext } from './types';
 import type { CodeRepresentation } from '@seedcord/ui';
 
-// every ref href here ends up in a highlighted code block's html
 function buildResolveHref(context: FormatContext): ResolveHref {
     return (reference) => {
         const href = context.engine.resolver().href(context.manifestPackage, reference);

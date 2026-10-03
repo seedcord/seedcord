@@ -17,8 +17,13 @@ function decodeParam(value: string | string[] | undefined): string {
     }
 }
 
-export async function getCatalogContext(params: PageParams): Promise<CatalogContext> {
-    const context = await findPackageVersion(decodeParam(params.packageId), decodeParam(params.versionId));
+export interface PageContext extends CatalogContext {
+    versionSegment: string;
+}
+
+export async function getCatalogContext(params: PageParams): Promise<PageContext> {
+    const versionSegment = decodeParam(params.versionId);
+    const context = await findPackageVersion(decodeParam(params.packageId), versionSegment);
     if (!context) notFound();
-    return context;
+    return { ...context, versionSegment };
 }

@@ -1,7 +1,7 @@
 import { formatDisplayPackageName } from '@seedcord/docs-engine/client';
 import { DOCS } from '@seedcord/ui/sites';
 
-// a PageHref, the form rendered html carries
+// rendered html carries hrefs with the /docs basePath
 const PACKAGES_PREFIX = `${DOCS.path}/packages/`;
 const EXTERNAL_HREF = /^https?:\/\//i;
 

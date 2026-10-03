@@ -51,9 +51,10 @@ describe('the workspace index', () => {
     it('reads the index pnpm docs:local wrote', async () => {
         await writeLocalIndex();
 
-        await workspaceIndexLoader().load();
+        const index = await workspaceIndexLoader().load();
 
         expect(fetchSpy).not.toHaveBeenCalled();
+        expect(index.packages.core?.fullName).toBe('@seedcord/core');
     });
 
     it('fetches the published index when no local one exists', async () => {

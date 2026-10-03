@@ -82,6 +82,8 @@ export interface DocManifest {
     packages: DocManifestPackage[];
 }
 
+export type ReexportReference = DocReference & { packageName: string };
+
 export interface DocReference {
     name: string;
     targetKey?: GlobalId;
@@ -254,7 +256,7 @@ export interface DocNode {
     headerText?: string;
     // Set on the package root only: symbols re-exported from a workspace dependency, each a
     // cross-package reference to its owner's page.
-    reexports?: DocReference[];
+    reexports?: ReexportReference[];
     // Set on top-level members only: the `exports` map subpaths that expose this symbol, `.` for the
     // root entry.
     entries?: string[];
@@ -288,9 +290,7 @@ export interface DocPackageModel {
     packageDocumentation: DocComment | null;
     nodes: Map<number, DocNode>;
     indexes: DocIndexes;
-    // what the sidebar and search list
-    directory: PackageDirectory;
-    // every symbol with its own page, a superset of directory
+    listed: PackageDirectory;
     pages: PackageDirectory;
 }
 

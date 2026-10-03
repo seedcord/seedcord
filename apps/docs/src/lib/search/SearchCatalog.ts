@@ -1,5 +1,7 @@
 import { DEFAULT_VERSION } from '@seedcord/docs-engine/client';
 
+import { ALL_PACKAGES } from '#components/search/command-palette/constants';
+
 import type { SearchPackage } from './types';
 import type { ActiveDocsTarget } from '#components/search/command-palette/activeTarget';
 import type { DocsPackageOption } from '#components/search/command-palette/types';
@@ -22,7 +24,7 @@ export class SearchCatalog {
 
     targets(viewed: ActiveDocsTarget, scope: string, prerelease: boolean): SearchTarget[] {
         return this.packages.reduce<SearchTarget[]>((targets, pkg) => {
-            if (scope !== 'all' && pkg.id !== scope) return targets;
+            if (scope !== ALL_PACKAGES && pkg.id !== scope) return targets;
 
             const version = SearchCatalog.versionFor(pkg, viewed, prerelease);
             if (version !== null) targets.push({ id: pkg.id, version });

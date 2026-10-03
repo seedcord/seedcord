@@ -1,7 +1,8 @@
 import fs from 'node:fs/promises';
 
+import { pageFields } from '@seedcord/docs-generator/manifest-fields';
+
 import { resolveManifestPath } from '#src/constants';
-import { pageFields } from '#src/manifest-fields';
 
 import type { DocManifest, DocManifestEntry, DocManifestPackage, PackageSourceIndex } from '#src/types';
 

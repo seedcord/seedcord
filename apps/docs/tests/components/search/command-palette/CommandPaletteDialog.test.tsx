@@ -153,7 +153,8 @@ describe('CommandPaletteDialog', () => {
 
     it('shows the pre-release toggle once a package has one', () => {
         renderDialog(makeController({ hasPrerelease: true }));
-        expect(screen.getAllByRole('switch', { name: 'Pre-release' })).not.toHaveLength(0);
+        // one in the desktop bar and one in the mobile row
+        expect(screen.getAllByRole('switch', { name: 'Pre-release' })).toHaveLength(2);
     });
 
     it('re-anchors the active option to the first when the results identity changes', () => {

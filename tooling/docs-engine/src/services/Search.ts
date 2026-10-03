@@ -151,7 +151,7 @@ export class DocSearch<Entry extends ScoredEntry = DocSearchEntry> {
         return false;
     }
 
-    private scoreToken(entry: ScoredEntry, token: string, slugTokens: Set<string>): number {
+    private scoreToken(entry: Entry, token: string, slugTokens: Set<string>): number {
         let value = 0;
 
         if (this.safeEquals(entry.name, token)) {

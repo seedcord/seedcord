@@ -59,7 +59,7 @@ pnpm -C apps/<site> dev
 
 Each site serves under its own path, the same as on seedcord.org. The guide runs at `localhost:3000/guide` and the reference at `localhost:3000/docs`. To run two at once, give the second one another port with `-p`.
 
-The guide's `dev` skips type-checking its code samples. Run `dev:twoslash` when you change a sample. It checks every sample and shows the type hovers. Guide links to the reference point at `localhost:3001/docs`, so run the docs there:
+The guide's `dev` skips type-checking its code samples. Run `dev:twoslash` when you change a sample. It checks every sample and shows the type hovers. In dev, the guide's links to the reference go to `localhost:3001/docs`. Run the docs there:
 
 ```bash
 pnpm -C apps/guide dev:twoslash
@@ -76,13 +76,11 @@ pnpm docs:local
 
 Without them, the docs and the guide read the published artifacts from cdn.seedcord.org.
 
-A docs build renders every page of every version into `apps/docs/dist/docs`, which takes a few minutes. `DOCS_PACKAGES` renders only the packages you list:
+A docs build renders every page of every version into `apps/docs/dist/docs`, which takes a few minutes. Set `DOCS_PACKAGES` to render only the packages you list:
 
 ```bash
 DOCS_PACKAGES=core,http pnpm -C apps/docs build
 ```
-
-The build deletes `apps/docs/dist/docs`, where the docs dev server keeps its files. Stop `dev` before you build and start it again after.
 
 To check a build the way production serves it, run:
 
@@ -90,7 +88,7 @@ To check a build the way production serves it, run:
 pnpm docs:preview
 ```
 
-It runs the upload step from CI into `apps/docs/.preview`, a folder with the same layout as the R2 bucket, then starts the docs Worker at `localhost:8787/docs`. Run it again after every build. Wrangler stalls at startup on a full build, so keep `DOCS_PACKAGES` short for this.
+It runs the upload step from CI into `apps/docs/.preview`, a folder with the same layout as the R2 bucket, then starts the docs worker at `localhost:8787/docs`. Run it again after every build. Wrangler stalls at startup on a full build, so keep `DOCS_PACKAGES` short for this.
 
 To build one site:
 
@@ -98,7 +96,7 @@ To build one site:
 pnpm turbo build --filter=@seedcord/<site>...
 ```
 
-A guide build uses about 6 GB of memory on a 12-core machine. Fewer cores use less. With 8 GB or less, build one site at a time.
+A guide build uses about 6 GB of memory. With 8 GB or less, build one site at a time.
 
 ## Trying a change in a real bot
 

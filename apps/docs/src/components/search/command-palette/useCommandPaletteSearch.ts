@@ -8,6 +8,7 @@ import { searchFiles } from '#lib/search/SearchFiles';
 import { parseActiveDocsTarget } from './activeTarget';
 import { MIN_SEARCH_QUERY_LENGTH } from './constants';
 
+import type { KindFilter } from './constants';
 import type { CommandAction } from './types';
 import type { SearchResults } from '#lib/search/SearchResults';
 
@@ -23,7 +24,7 @@ interface UseCommandPaletteSearchOptions {
     open: boolean;
     query: string;
     scope: string;
-    kind: string;
+    kind: KindFilter;
     prerelease: boolean;
 }
 

@@ -2,7 +2,7 @@ import { buildPackageBasePath, DEFAULT_VERSION } from '@seedcord/docs-engine/cli
 import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 import { BRAND } from '@seedcord/ui/palette';
 
-import { CARD, TWIN } from '#lib/docs/PageAsset';
+import { CARD, TWIN } from '@seedcord/ui/page-asset';
 import { plainSummary } from '#lib/docs/plainSummary';
 import { ENTITY_TONE_HEX } from '#lib/entityColors';
 import { canonicalUrl, OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, SITE_DESCRIPTION, SITE_NAME } from '#lib/site';
@@ -86,7 +86,7 @@ export class DocsPage {
             path: '/',
             title: `${SITE_NAME} API reference`,
             card: rootCard(),
-            image: CARD.assetPath('/'),
+            image: CARD.publicPath('/'),
             canonicalPath: '/'
         });
     }
@@ -98,8 +98,8 @@ export class DocsPage {
             path,
             title: titleFor(`${entry.manifestName} ${version.label}`, entry.manifestName),
             card: packageCard(entry, version),
-            image: CARD.assetPath(latestPath),
-            markdownPath: TWIN.assetPath(path),
+            image: CARD.publicPath(latestPath),
+            markdownPath: TWIN.publicPath(path),
             canonicalPath: latestPath
         });
     }
@@ -115,8 +115,8 @@ export class DocsPage {
             title: titleFor(`${entity.name} · ${entity.manifestPackage}`, entity.manifestPackage),
             card: entityCard(entity, version),
             // only latest pages get a card
-            image: CARD.assetPath(canonicalPath ?? buildPackageBasePath(entity.manifestPackage, DEFAULT_VERSION)),
-            markdownPath: TWIN.assetPath(path),
+            image: CARD.publicPath(canonicalPath ?? buildPackageBasePath(entity.manifestPackage, DEFAULT_VERSION)),
+            markdownPath: TWIN.publicPath(path),
             isArticle: true,
             canonicalPath
         });

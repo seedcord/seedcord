@@ -2,27 +2,19 @@
 
 import { Dropdown, SearchField, Switch, cn, tw, useSearchDialogContainer, type DropdownOption } from '@seedcord/ui';
 
-import { COMMAND_LISTBOX_ID } from './constants';
+import { COMMAND_LISTBOX_ID, KIND_FILTERS } from './constants';
 
+import type { KindFilter } from './constants';
 import type { DocsPackageOption } from './types';
 import type { KeyboardEvent, ReactElement, RefObject } from 'react';
 
-const KIND_OPTIONS: DropdownOption[] = [
-    { value: 'all', label: 'All kinds' },
-    { value: 'class', label: 'Classes' },
-    { value: 'interface', label: 'Interfaces' },
-    { value: 'type', label: 'Types' },
-    { value: 'enum', label: 'Enums' },
-    { value: 'function', label: 'Functions' },
-    { value: 'variable', label: 'Variables' },
-    { value: 'member', label: 'Members' }
-];
+const KIND_OPTIONS: DropdownOption[] = [...KIND_FILTERS];
 
 const SEPARATOR = tw`text-sm text-(--text-faint)`;
 
 interface FilterControlsProps {
     scope: string;
-    kind: string;
+    kind: KindFilter;
     packages: DocsPackageOption[];
     onScopeChange: (scope: string) => void;
     onKindChange: (kind: string) => void;
@@ -89,7 +81,7 @@ interface CommandHeaderProps {
     activeId: string | undefined;
     listExpanded: boolean;
     scope: string;
-    kind: string;
+    kind: KindFilter;
     prerelease: boolean;
     hasPrerelease: boolean;
     packages: DocsPackageOption[];

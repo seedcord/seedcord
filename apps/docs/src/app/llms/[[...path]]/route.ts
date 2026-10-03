@@ -1,7 +1,7 @@
 import { findPackageVersion } from '#lib/docs/catalog';
 import { DocsRoute, docsRoutes } from '#lib/docs/DocsRoute';
 import { entityToMarkdown } from '#lib/docs/entityMarkdown';
-import { TWIN } from '#lib/docs/PageAsset';
+import { TWIN } from '@seedcord/ui/page-asset';
 import { resolveEntity } from '#lib/docs/resolveEntity';
 import { canonicalUrl } from '#lib/site';
 
@@ -14,7 +14,7 @@ function notFound(): Response {
 }
 
 export async function generateStaticParams(): Promise<{ path: string[] }[]> {
-    return (await docsRoutes()).map((route) => ({ path: TWIN.assetSegments(route.segments) }));
+    return (await docsRoutes()).map((route) => ({ path: TWIN.fileSegments(route.segments) }));
 }
 
 export async function GET(_req: Request, { params }: { params: Promise<{ path?: string[] }> }): Promise<Response> {

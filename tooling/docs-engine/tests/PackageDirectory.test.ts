@@ -10,7 +10,7 @@ let directory: PackageDirectory;
 describe('PackageDirectory', () => {
     beforeAll(async () => {
         const pkg = await getMockPackage();
-        directory = pkg.directory;
+        directory = pkg.listed;
     });
 
     it('produces a snapshot of top-level entities', () => {

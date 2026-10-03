@@ -11,7 +11,7 @@ import { Navbar } from '#components/header/Navbar';
 import { HotkeyProvider } from '#components/providers/HotkeyProvider';
 import { MotionProvider } from '#components/providers/MotionProvider';
 import { CommandPalette } from '#components/search/command-palette';
-import { CARD } from '#lib/docs/PageAsset';
+import { CARD } from '@seedcord/ui/page-asset';
 import { FOREGROUND_HEX } from '#lib/entityColors';
 import { OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
 
@@ -21,7 +21,7 @@ import type { ReactNode } from 'react';
 // code keeps tailwind's ui-monospace default. a webfont mono at 12px renders a pixel high in the chips
 const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
 
-const ROOT_CARD = CARD.assetPath('/');
+const ROOT_CARD = CARD.publicPath('/');
 const ROOT_CARD_ALT = ogPageCardAlt({ pill: 'docs', name: 'Reference', meta: [] });
 
 // next 16.3.8 leaves basePath off icon urls in metadata and off a file-based icon under turbopack

@@ -57,4 +57,28 @@ describe('the export link check', () => {
 
         expect(await new LinkChecker(root).broken()).toEqual([]);
     });
+
+    it('reports a page link that left out the docs path', async () => {
+        await page('index.html', '/packages/core/0.9.2/classes/bus');
+
+        expect(await new LinkChecker(root).broken()).toEqual([
+            { href: '/packages/core/0.9.2/classes/bus', page: 'index.html', status: 404 }
+        ]);
+    });
+
+    it('checks a link written with the full docs url', async () => {
+        await page('index.html', 'https://seedcord.org/docs/packages/core/0.9.2/classes/ghost');
+
+        expect(await new LinkChecker(root).broken()).toEqual([
+            { href: 'https://seedcord.org/docs/packages/core/0.9.2/classes/ghost', page: 'index.html', status: 404 }
+        ]);
+    });
+
+    it('reports a path that only starts with the docs path', async () => {
+        await page('index.html', '/docs-old/x');
+
+        expect(await new LinkChecker(root).broken()).toEqual([
+            { href: '/docs-old/x', page: 'index.html', status: 404 }
+        ]);
+    });
 });

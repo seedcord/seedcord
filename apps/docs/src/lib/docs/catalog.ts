@@ -117,21 +117,7 @@ export async function findPackageVersion(packageId: string, versionId: string): 
 
 // a re-exported item keeps its pinned version because the other package's latest can differ
 export function servedAtLatest(version: PackageVersionCatalog, manifestName: string): PackageVersionCatalog {
-    const basePath = buildPackageBasePath(manifestName, DEFAULT_VERSION);
-    const ownPrefix = `${version.basePath}/`;
-
-    return {
-        ...version,
-        basePath,
-        categories: version.categories.map((category) => ({
-            ...category,
-            items: category.items.map((item) =>
-                item.href.startsWith(ownPrefix)
-                    ? { ...item, href: `${basePath}/${item.href.slice(ownPrefix.length)}` }
-                    : item
-            )
-        }))
-    };
+    return { ...version, basePath: buildPackageBasePath(manifestName, DEFAULT_VERSION) };
 }
 
 export function withVersion(catalog: DocsCatalog, packageId: string, version: PackageVersionCatalog): DocsCatalog {

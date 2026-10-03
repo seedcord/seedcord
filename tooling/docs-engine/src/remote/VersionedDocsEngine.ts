@@ -91,7 +91,7 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
     }
 
     getPackageDirectory(packageName: string): PackageDirectory | null {
-        return this.models.get(packageName)?.directory ?? null;
+        return this.models.get(packageName)?.listed ?? null;
     }
 
     listPackageEntities(packageName: string): DirectorySnapshot | null {

@@ -57,11 +57,11 @@
     display: inline;
 }
 
-/* PageTransition sets these classes on the content area for each navigation */
 ::view-transition {
     pointer-events: none;
 }
 
+/* PageTransition sets page-next or page-prev on the content area */
 /* the content snaps to its new height while only the snapshots move */
 ::view-transition-group(.page-next),
 ::view-transition-group(.page-prev) {
