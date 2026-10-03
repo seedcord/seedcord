@@ -143,7 +143,10 @@ describe('renderSeeAlso', () => {
         expect(renderSeeAlso(comment, makeContext())).toEqual([
             { name: 'CommandRouteString', href: '/docs/packages/seedcord/0.10.6/types/command-route-string' }
         ]);
-        expect(resolveInlineHrefMock).toHaveBeenCalled();
+        expect(resolveInlineHrefMock).toHaveBeenCalledWith(
+            expect.objectContaining({ tag: '@link', text: 'CommandRouteString' }),
+            expect.anything()
+        );
     });
 
     it('reads a name from a plain text part when block text is empty', () => {

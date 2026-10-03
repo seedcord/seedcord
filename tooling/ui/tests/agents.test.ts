@@ -24,9 +24,11 @@ describe('agentLinkHeader', () => {
         expect(relationsOf(agentLinkHeader('docs')).get('describedby')).toBe('/docs/llms.txt');
     });
 
-    it('points every site at its own agent-skills index', () => {
+    it('points every site at the agent-skills index home serves', () => {
         for (const site of SITES) {
-            expect(relationsOf(agentLinkHeader(site)).get('service-meta')).toBe('/.well-known/agent-skills/index.json');
+            expect(relationsOf(agentLinkHeader(site)).get('service-meta')).toBe(
+                'https://seedcord.org/.well-known/agent-skills/index.json'
+            );
         }
     });
 

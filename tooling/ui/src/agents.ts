@@ -18,7 +18,7 @@ const SITE_RELATIONS: Record<SeedcordSite, Partial<Record<(typeof RELATIONS)[num
 
 // llms.txt v2 asks for describedby
 const LLMS_TXT = 'llms.txt';
-const SKILLS_INDEX = `${AGENT_SKILLS_BASE}/index.json`;
+const SKILLS_INDEX = HOME.at(`${AGENT_SKILLS_BASE}/index.json`);
 
 export interface AgentLink {
     rel: string;

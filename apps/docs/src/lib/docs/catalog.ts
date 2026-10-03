@@ -115,7 +115,6 @@ export async function findPackageVersion(packageId: string, versionId: string): 
     return entry && version ? { entry, version } : undefined;
 }
 
-// a re-exported item keeps its pinned version because the other package's latest can differ
 export function servedAtLatest(version: PackageVersionCatalog, manifestName: string): PackageVersionCatalog {
     return { ...version, basePath: buildPackageBasePath(manifestName, DEFAULT_VERSION) };
 }

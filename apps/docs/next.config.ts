@@ -6,7 +6,7 @@ import { staticExport } from '@seedcord/ui/static-export';
 
 import type { NextConfig } from 'next';
 
-// 2 workers peaked at 2.2 GB where the default peaked at 3.7 GB, measured before every version rendered
+// on a build of latest versions only, 2 workers peaked at 2.2 GB against 3.7 GB for the default
 const LAPTOP_CPUS = 2;
 
 function buildCpus(): number {

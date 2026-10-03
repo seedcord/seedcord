@@ -170,6 +170,12 @@ describe('the docs worker', () => {
         await expect(get('/packages/core/latest', env)).rejects.toThrow(/500/);
     });
 
+    it('answers with an error when the assets binding fails with no body', async () => {
+        const env: Env = { BUILD_ID, ASSETS: { fetch: () => Promise.resolve(new Response(null, { status: 500 })) } };
+
+        await expect(get('/packages/core/latest', env)).rejects.toThrow(/500/);
+    });
+
     it('reads the build folder through an assets binding when no bucket is bound', async () => {
         const env = exportFolder(
             'packages/core/latest.html',

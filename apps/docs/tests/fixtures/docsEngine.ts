@@ -1,5 +1,5 @@
 import { IndexLoader, VersionedDocsEngine } from '@seedcord/docs-engine';
-import { slugifySegment } from '@seedcord/docs-engine/client';
+import { DocKind, slugifySegment } from '@seedcord/docs-engine/client';
 
 import type { DocNode, DocPackageModel, DocProjectFile, IndexJson } from '@seedcord/docs-engine';
 
@@ -65,7 +65,8 @@ function projectFile(fullName: string, { version, readme, nodes }: FixtureVersio
     return {
         schemaVersion: 1,
         package: pkg,
-        root: docNode(pkg, fullName, { kind: 1, children: nodes(pkg) }),
+        // a real project file roots every package at the empty slug
+        root: { ...docNode(pkg, fullName, { kind: DocKind.Project, children: nodes(pkg) }), slug: '' },
         ...(readme !== undefined && { readme })
     };
 }

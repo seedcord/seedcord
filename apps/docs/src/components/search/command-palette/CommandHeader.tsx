@@ -2,13 +2,11 @@
 
 import { Dropdown, SearchField, Switch, cn, tw, useSearchDialogContainer, type DropdownOption } from '@seedcord/ui';
 
-import { COMMAND_LISTBOX_ID, KIND_FILTERS } from './constants';
+import { ALL_PACKAGES, COMMAND_LISTBOX_ID, KIND_FILTERS } from './constants';
 
 import type { KindFilter } from './constants';
 import type { DocsPackageOption } from './types';
 import type { KeyboardEvent, ReactElement, RefObject } from 'react';
-
-const KIND_OPTIONS: DropdownOption[] = [...KIND_FILTERS];
 
 const SEPARATOR = tw`text-sm text-(--text-faint)`;
 
@@ -23,7 +21,7 @@ interface FilterControlsProps {
 function FilterDropdowns({ scope, kind, packages, onScopeChange, onKindChange }: FilterControlsProps): ReactElement {
     const container = useSearchDialogContainer();
     const scopeOptions: DropdownOption[] = [
-        { value: 'all', label: 'All packages' },
+        { value: ALL_PACKAGES, label: 'All packages' },
         ...packages.map((pkg) => ({ value: pkg.folder, label: pkg.label }))
     ];
 
@@ -43,7 +41,7 @@ function FilterDropdowns({ scope, kind, packages, onScopeChange, onKindChange }:
                 variant="ghost"
                 placeholderLabel="All kinds"
                 value={kind}
-                options={KIND_OPTIONS}
+                options={KIND_FILTERS}
                 onChange={onKindChange}
                 container={container}
                 aria-label="Kind filter"

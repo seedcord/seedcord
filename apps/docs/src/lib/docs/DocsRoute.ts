@@ -1,5 +1,4 @@
 import { DEFAULT_VERSION } from '@seedcord/docs-engine/client';
-import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 
 import { ActiveVersion } from '#lib/docs/ActiveVersion';
 import { loadDocsCatalog } from '#lib/docs/catalog';
@@ -45,16 +44,7 @@ export class DocsRoute {
     }
 }
 
-let builtRoutes: Promise<DocsRoute[]> | undefined;
-
-// the og, llms, sitemap and both page routes each ask for these during one build
-export function docsRoutes(): Promise<DocsRoute[]> {
-    if (process.env.NEXT_PHASE !== PHASE_PRODUCTION_BUILD) return collectRoutes();
-    builtRoutes ??= collectRoutes();
-    return builtRoutes;
-}
-
-async function collectRoutes(): Promise<DocsRoute[]> {
+export async function docsRoutes(): Promise<DocsRoute[]> {
     const [catalog, engine] = await Promise.all([loadDocsCatalog(), getDocsEngine()]);
     const routes: DocsRoute[] = [];
 

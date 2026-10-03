@@ -17,7 +17,7 @@ function decodeParam(value: string | string[] | undefined): string {
     }
 }
 
-export interface PageContext extends CatalogContext {
+interface PageContext extends CatalogContext {
     versionSegment: string;
 }
 

@@ -23,10 +23,13 @@ function buildNavigationHref(action: CommandAction, origin: string): string {
     }
 }
 
-function useSearchCatalog(): SearchCatalog | null {
+// opening the palette retries a load that failed
+function useSearchCatalog(open: boolean): SearchCatalog | null {
     const [catalog, setCatalog] = useState<SearchCatalog | null>(null);
 
     useEffect(() => {
+        if (catalog) return undefined;
+
         let cancelled = false;
         searchFiles
             .catalog()
@@ -38,7 +41,7 @@ function useSearchCatalog(): SearchCatalog | null {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [open, catalog]);
 
     return catalog;
 }
@@ -105,7 +108,7 @@ export function useCommandPaletteController(): CommandPaletteController {
     const { scope, kind, prerelease, handleScopeChange, handleKindChange, handlePrereleaseChange, resetFilters } =
         useSearchFilters();
     const [mounted] = useState(() => typeof window !== 'undefined');
-    const catalog = useSearchCatalog();
+    const catalog = useSearchCatalog(open);
 
     useEffect(() => {
         if (!mounted) return undefined;
