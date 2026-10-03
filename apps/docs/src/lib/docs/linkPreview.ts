@@ -21,6 +21,20 @@ import type { LatestVersion, PreviewCardProps, PreviewLink } from '@seedcord/ui/
 // three kinds fit on one phone line
 const KINDS_PER_ROW = 3;
 
+const RELATIVE_LINK = /\]\((\/[^)\s]*)\)/g;
+// a lone newline is a wrap in the TSDoc source. discord turns every newline into a line break
+const SOURCE_WRAP = /(?<!\n)\n(?![ \t]*(?:[-*+] |\d+\. |\n))[ \t]*/g;
+const GAP_BETWEEN_ITEMS = /^([ \t]*(?:[-*+]|\d+\.) .*)\n{2,}(?=[ \t]*(?:[-*+]|\d+\.) )/gm;
+const EXTRA_BLANK_LINES = /\n{3,}/g;
+
+function discordMarkdown(summary: string): string {
+    return summary
+        .replace(RELATIVE_LINK, (_, path: string) => `](${new URL(path, HOME_URL).href})`)
+        .replace(SOURCE_WRAP, ' ')
+        .replace(GAP_BETWEEN_ITEMS, '$1\n')
+        .replace(EXTRA_BLANK_LINES, '\n\n');
+}
+
 function counted(count: number, one: string, many = `${one}s`): string {
     return `${count} ${count === 1 ? one : many}`;
 }
@@ -137,6 +151,7 @@ export function symbolPreview(resolved: ResolvedEntity, latestPath: string | und
     const { entry, version, entity } = resolved;
     const page = DocsPage.forEntity(entityPath(resolved), entity, version, latestPath);
     const latestVersion = latestLink(entry, version, latestPath ?? packageLatestPath(entry));
+    const summary = entity.summary[0]?.plain;
 
     const links: PreviewLink[] = [];
     if (entity.sourceUrl) links.push({ emoji: PREVIEW_EMOJI.github, label: 'Source', url: entity.sourceUrl });
@@ -148,7 +163,7 @@ export function symbolPreview(resolved: ResolvedEntity, latestPath: string | und
         breadcrumbEmoji: PREVIEW_EMOJI.docs,
         title: entity.name,
         titleEmoji: PREVIEW_EMOJI[entity.kind],
-        body: page.card.description,
+        body: summary ? discordMarkdown(summary) : page.card.description,
         subtext: entityCounts(entity),
         links,
         ...(latestVersion ? { latestVersion } : {})

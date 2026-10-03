@@ -94,6 +94,36 @@ describe('symbolPreview', () => {
         expect(symbolPreview(resolved({ kind: 'type' }), undefined).latestVersion).toBeUndefined();
     });
 
+    it('keeps the summary markdown, with absolute links and the source line wraps joined', () => {
+        const plain = [
+            'Reads a `CustomId` from',
+            '  the [`Cooldown`](/docs/packages/core/latest/functions/cooldown) gate.',
+            '',
+            '- a bullet that',
+            '  wraps',
+            '  - a nested bullet',
+            '1. a numbered line'
+        ].join('\n');
+        const card = symbolPreview(resolved({ kind: 'type', summary: [{ plain, html: '' }] }), undefined);
+
+        expect(card.body).toBe(
+            [
+                'Reads a `CustomId` from the [`Cooldown`](https://seedcord.org/docs/packages/core/latest/functions/cooldown) gate.',
+                '',
+                '- a bullet that wraps',
+                '  - a nested bullet',
+                '1. a numbered line'
+            ].join('\n')
+        );
+    });
+
+    it('closes up a list whose items the source spaced apart', () => {
+        const plain = 'Error codes.\n\n\n\n- `One`: first.\n\n\n\n- `Two`: second.';
+        const card = symbolPreview(resolved({ kind: 'type', summary: [{ plain, html: '' }] }), undefined);
+
+        expect(card.body).toBe('Error codes.\n\n- `One`: first.\n- `Two`: second.');
+    });
+
     it('leaves out the source link for a symbol with no source', () => {
         const labels = symbolPreview(resolved({ kind: 'type' }), undefined).links.map(({ label }) => label);
 
