@@ -119,8 +119,6 @@ jobs:
           enable_fallback_cache: 'true'
       - uses: ./.github/actions/setup
       - run: pnpm build:all
-        env:
-          SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
       - run: pnpm codegen:check
       - run: pnpm turbo docs:extract
 

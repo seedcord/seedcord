@@ -53,6 +53,12 @@
             "outputs": [".next/**", "!.next/cache/**"],
             "env": ["SEEDCORD_DOCS_INDEX_URL"]
         },
+        "@seedcord/guide#build": {
+            "dependsOn": ["^build", "//#docs:artifacts"],
+            "inputs": ["$TURBO_DEFAULT$", ".env*"],
+            "outputs": ["dist/**"],
+            "env": ["SEEDCORD_DOCS_INDEX_URL"]
+        },
         "//#check:catalog": {
             "inputs": ["scripts/src/**/*.ts", "pnpm-workspace.yaml", "**/package.json"]
         },
