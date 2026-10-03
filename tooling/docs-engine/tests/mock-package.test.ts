@@ -77,6 +77,14 @@ describe('DocsEngine mock package integration', () => {
             expect(child('create')?.flags.isOverwriting).toBe(false);
         });
 
+        it('leaves override off a method that implements an abstract one', () => {
+            expect(child('hook')?.flags.isOverwriting).toBe(false);
+        });
+
+        it('leaves override off an overriding field', () => {
+            expect(child('label')?.headerText).not.toMatch(/\boverride\b/);
+        });
+
         it('leaves override off a declare field', () => {
             expect(child('tag')?.headerText).not.toMatch(/\boverride\b/);
         });
@@ -86,10 +94,25 @@ describe('DocsEngine mock package integration', () => {
         });
     });
 
-    it('writes static before readonly in a header', async () => {
-        const base = await getNodeBySlug('override-base');
-        const limit = base.children.find((entry) => entry.name === 'LIMIT');
-        expect(limit?.headerText).toMatch(/^public static readonly LIMIT\b/);
+    describe('OverrideBase node', () => {
+        let member: (name: string) => DocNode | undefined;
+
+        beforeAll(async () => {
+            const node = await getNodeBySlug('override-base');
+            member = (name) => node.children.find((entry) => entry.name === name);
+        });
+
+        it('writes static before readonly in a header', () => {
+            expect(member('LIMIT')?.headerText).toMatch(/^public static readonly LIMIT\b/);
+        });
+
+        it('leaves async off an abstract method', () => {
+            expect(member('load')?.flags.isAsync).toBe(false);
+        });
+
+        it('keeps readonly on a member named `on`', () => {
+            expect(member('on')?.headerText).toMatch(/^public readonly on\b/);
+        });
     });
 
     describe('MockClass node', () => {

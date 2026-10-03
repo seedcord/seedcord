@@ -46,6 +46,13 @@ export interface MockInterface<TypeT> {
     optionalMethod?(value: string): void;
 
     /**
+     * Loads every record.
+     *
+     * @returns When loading finishes.
+     */
+    loadAll(): Promise<void>;
+
+    /**
      * A nested interface.
      */
     nested: {

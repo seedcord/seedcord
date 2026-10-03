@@ -9,6 +9,8 @@ import type {
     DeprecationStatus
 } from '#lib/docs/types';
 import type { CodeRepresentation } from '@seedcord/ui';
+import { memberModifiers } from '@seedcord/docs-engine';
+
 import type { DocNode, DocSignature } from '@seedcord/docs-engine';
 
 export type DocNodeLike = Pick<DocNode, 'flags' | 'comment'>;
@@ -25,7 +27,11 @@ export const ensureSignatureAnchor = (signature: DocSignature): string =>
         : `${signature.name}-${signature.overloadIndex}`;
 
 export async function resolveHeaderSignature(node: DocNode, context: FormatContext): Promise<CodeRepresentation> {
-    if (node.header) return formatDeclarationHeader(node.header, context, node.flags.isOptional);
+    if (node.header) {
+        // releases built before memberModifiers stored their modifiers in a different order
+        const header = { ...node.header, modifiers: memberModifiers(node.flags, node.kind) };
+        return formatDeclarationHeader(header, context, node.flags.isOptional);
+    }
 
     const rendered = node.signatures[0]?.render;
     if (rendered) {

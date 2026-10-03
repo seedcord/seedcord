@@ -210,11 +210,35 @@ export class InlineConstraintCallable<TypeM extends { (): void; run(): void; new
 /**
  * A base class whose members a subclass overrides.
  */
-export class OverrideBase {
+export abstract class OverrideBase {
     /**
      * A tag the subclass narrows.
      */
     public tag = 'base';
+
+    /**
+     * A hook every subclass implements.
+     *
+     * @returns The hook result.
+     */
+    public abstract hook(): string;
+
+    /**
+     * Loads data in a subclass.
+     *
+     * @returns When loading finishes.
+     */
+    public abstract load(): Promise<void>;
+
+    /**
+     * A label the subclass replaces.
+     */
+    public label = 'base';
+
+    /**
+     * An event name that the word `readonly` contains.
+     */
+    public readonly on = 'ready';
 
     /**
      * The most instances a caller should build.
@@ -222,12 +246,12 @@ export class OverrideBase {
     public static readonly LIMIT = 3;
 
     /**
-     * Builds a base instance.
+     * Builds a label for a new instance.
      *
-     * @returns The instance.
+     * @returns The label.
      */
-    public static create(): OverrideBase {
-        return new OverrideBase();
+    public static create(): string {
+        return 'base';
     }
 
     /**
@@ -244,6 +268,29 @@ export class OverrideBase {
  * A subclass with override members and an auto-accessor.
  */
 export class OverrideChild extends OverrideBase {
+    /**
+     * Implements the base's abstract hook.
+     *
+     * @returns The hook result.
+     */
+    public hook(): string {
+        return this.tag;
+    }
+
+    /**
+     * Loads nothing.
+     *
+     * @returns When loading finishes.
+     */
+    public async load(): Promise<void> {
+        await Promise.resolve();
+    }
+
+    /**
+     * The subclass label.
+     */
+    public override label = 'child';
+
     /**
      * The subclass tag.
      */

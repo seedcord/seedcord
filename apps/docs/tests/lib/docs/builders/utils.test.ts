@@ -2,14 +2,15 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { CommentParagraph, FormatContext, FormattedComment } from '#lib/docs/types';
 import type { CodeRepresentation } from '@seedcord/ui';
-import type { DocComment, DocFlags, DocNode } from '@seedcord/docs-engine';
+import type { DocComment, DocFlags, DocNode, RenderedDeclarationHeader } from '@seedcord/docs-engine';
 
 // justified: formatting.ts pulls in @lib/sanitizeHtml + @lib/shiki, which vitest can't resolve without vite-tsconfig-paths.
 vi.mock('../../../../src/lib/docs/formatting', () => {
     const code = (text: string): CodeRepresentation => ({ text, html: null });
     return {
-        formatDeclarationHeader: vi.fn((header: { text: string }, _context: unknown, optional: boolean) =>
-            Promise.resolve(code(optional ? header.text.replace(':', '?:') : header.text))
+        formatDeclarationHeader: vi.fn(
+            (header: { name: string; modifiers: string[] }, _context: unknown, optional: boolean) =>
+                Promise.resolve(code(`${[...header.modifiers, header.name].join(' ')}${optional ? '?' : ''}`))
         ),
         formatSignature: vi.fn((rendered: { text: string }) => Promise.resolve(code(rendered.text))),
         highlightCode: vi.fn((text: string) => Promise.resolve(code(text)))
@@ -60,15 +61,28 @@ function makeFormattedComment(paragraphs: CommentParagraph[]): FormattedComment 
 const context = {} as FormatContext;
 
 describe('resolveHeaderSignature', () => {
+    const header = (name: string, modifiers: string[]): RenderedDeclarationHeader => ({
+        name,
+        modifiers,
+        keyword: null
+    });
+
     it('marks an optional property from its flags', async () => {
+        const node = makeNode({ header: header('tag', []), flags: makeFlags({ isOptional: true }) });
+        expect((await resolveHeaderSignature(node, context)).text).toBe('tag?');
+    });
+
+    it('leaves ? off a required property', async () => {
+        const node = makeNode({ header: header('tag', []), flags: makeFlags() });
+        expect((await resolveHeaderSignature(node, context)).text).toBe('tag');
+    });
+
+    it('writes modifiers from the flags over an older stored order', async () => {
         const node = makeNode({
-            header: { text: 'tag: string', keyword: null } as never,
-            flags: makeFlags({ isOptional: true })
+            header: header('MAX', ['readonly', 'static']),
+            flags: makeFlags({ isStatic: true, isReadonly: true })
         });
-
-        const result = await resolveHeaderSignature(node, context);
-
-        expect(result.text).toBe('tag?: string');
+        expect((await resolveHeaderSignature(node, context)).text).toBe('static readonly MAX');
     });
 });
 

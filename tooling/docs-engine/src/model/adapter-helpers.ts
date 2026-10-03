@@ -1,4 +1,5 @@
 import {
+    ApiAbstractMixin,
     ApiDeclaredItem,
     ApiDocumentedItem,
     ApiItemKind,
@@ -198,12 +199,13 @@ interface ExplicitModifiers {
 }
 
 // the AE mixins also report inferred modifiers, like `readonly` on a get-only accessor
-export function explicitModifiers(item: ApiItem, name: string): ExplicitModifiers {
+export function explicitModifiers(item: ApiItem): ExplicitModifiers {
     if (!(item instanceof ApiDeclaredItem)) return { access: null, isReadonly: false, isAutoAccessor: false };
-    const text = item.excerptTokens[0]?.text ?? '';
-    const nameIndex = text.indexOf(name);
-    const prefix = nameIndex !== -1 ? text.slice(0, nameIndex) : text;
-    const words = new Set(prefix.split(/\s+/).filter((word) => MODIFIER_WORDS.has(word)));
+    const words = new Set<string>();
+    for (const word of (item.excerptTokens[0]?.text ?? '').trim().split(/\s+/)) {
+        if (!MODIFIER_WORDS.has(word)) break;
+        words.add(word);
+    }
     const access: DocFlags['access'] = words.has('private')
         ? 'private'
         : words.has('protected')
@@ -216,6 +218,12 @@ export function explicitModifiers(item: ApiItem, name: string): ExplicitModifier
         isReadonly: words.has('readonly'),
         isAutoAccessor: words.has('accessor')
     };
+}
+
+// typescript rejects `async` on an abstract method or an interface member
+export function hasBody(item: ApiItem): boolean {
+    if (item.kind === ApiItemKind.Function) return true;
+    return item.kind === ApiItemKind.Method && !(ApiAbstractMixin.isBaseClassOf(item) && item.isAbstract);
 }
 
 // AE emits an accessor as an ApiProperty whose excerpt starts with `get ` or `set `

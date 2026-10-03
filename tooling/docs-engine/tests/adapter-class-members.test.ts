@@ -34,6 +34,7 @@ describe('class members', () => {
 
     it('documents every property and method an interface declares', async () => {
         expect(memberNames(await topLevel('MockInterface'))).toEqual([
+            'loadAll',
             'method',
             'nested',
             'optionalMethod',
@@ -41,6 +42,12 @@ describe('class members', () => {
             'prop',
             'readonlyProp'
         ]);
+    });
+
+    it('leaves async off an interface method', async () => {
+        const mockInterface = await topLevel('MockInterface');
+        const method = mockInterface.children.find((child) => child.name === 'loadAll');
+        expect(method?.flags.isAsync).toBe(false);
     });
 
     it('marks an optional interface method with ?', async () => {

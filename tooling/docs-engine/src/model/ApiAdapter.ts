@@ -21,13 +21,14 @@ import {
     emptyInheritance,
     explicitModifiers,
     enumMembersInOrder,
+    hasBody,
     groupOverloads,
     inheritedFromRef,
     paramFlags,
     synthGroups,
     type AeShapes
 } from '#model/adapter-helpers';
-import { BaseClassMembers } from '#model/BaseClassMembers';
+import { overridableBaseKeys, overridesBaseMember } from '#model/base-overrides';
 import { canonicalKey } from '#model/canonical-ref';
 import { excerptToInlineType } from '#model/excerpt-renderer';
 import { buildFlags, type DerivedFlagBits } from '#model/flags';
@@ -174,10 +175,10 @@ export class ApiAdapter {
         if (kind === DocKind.Variable) {
             derived.isConst = (item as AeShapes).isReadonly ?? false;
         }
-        if (ApiReturnTypeMixin.isBaseClassOf(item)) {
+        if (ApiReturnTypeMixin.isBaseClassOf(item) && hasBody(item)) {
             derived.isAsync = /^Promise\s*</.test(item.returnTypeExcerpt.text.trim());
         }
-        const explicit = explicitModifiers(item, item.displayName);
+        const explicit = explicitModifiers(item);
         derived.access = explicit.access ?? (ownClassMember ? 'public' : null);
         derived.isReadonly = explicit.isReadonly;
         derived.isOverwriting = overridesBase;
@@ -222,7 +223,7 @@ export class ApiAdapter {
     private visitMembers(members: readonly ApiItem[], parentPath: string[], owningContainer?: ApiItem): DocNode[] {
         const nodes: DocNode[] = [];
         const declared = owningContainer?.kind === ApiItemKind.Class ? members.filter(belongsInClassBody) : members;
-        const baseMembers = new BaseClassMembers(owningContainer);
+        const baseKeys = overridableBaseKeys(owningContainer);
         for (const group of groupOverloads(declared)) {
             const primary = group[0];
             if (!primary) continue;
@@ -233,7 +234,7 @@ export class ApiAdapter {
                 inheritedFrom === null &&
                 owningContainer?.kind === ApiItemKind.Class &&
                 apiKindToDocKind(primary) !== DocKind.Constructor;
-            const overridesBase = ownClassMember && baseMembers.isOverriddenBy(primary);
+            const overridesBase = ownClassMember && overridesBaseMember(primary, baseKeys);
             const node = this.baseNode(primary, parentPath, memberName, false, {
                 inheritedFrom,
                 ownClassMember,
