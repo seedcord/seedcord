@@ -49,7 +49,7 @@ describe('nextSteps', () => {
         expect(nextSteps(HTTP, { agent: 'pnpm', installed: true }).join('\n')).not.toContain('.env');
     });
 
-    it('names each key left for .env before the dev script, which cannot start without them', () => {
+    it('lists each key left for .env before the dev script', () => {
         const steps = nextSteps({ ...HTTP, token: null, publicKey: null }, { agent: 'pnpm', installed: true });
         const env = steps.findIndex((step) => step.includes('.env'));
 
