@@ -4,11 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { publicKeyStep } from '#interview/steps/publicKey';
 import { tokenStep } from '#interview/steps/token';
 
-// the steps pass a function, never the schema form clack also takes
-interface PromptOptions {
-    message: string;
-    validate?: (value: string | undefined) => string | undefined;
-}
+import type { PasswordOptions, TextOptions } from '@clack/prompts';
+
+type ValidateFn = Extract<NonNullable<TextOptions['validate']>, (value: string | undefined) => unknown>;
 
 const KEY = 'a'.repeat(64);
 const TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;
@@ -16,8 +14,8 @@ const TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;
 // clack never exports its cancel symbol
 const prompts = vi.hoisted(() => ({
     CANCEL: Symbol('cancel'),
-    password: vi.fn<(options: PromptOptions) => Promise<unknown>>(),
-    text: vi.fn<(options: PromptOptions) => Promise<unknown>>()
+    password: vi.fn<(options: PasswordOptions) => Promise<unknown>>(),
+    text: vi.fn<(options: TextOptions) => Promise<unknown>>()
 }));
 
 vi.mock('@clack/prompts', async (importOriginal) => ({
@@ -37,12 +35,12 @@ const secretSteps = [
 ];
 
 describe.each(secretSteps)('$step.key asked on a terminal', ({ step, input, pasted }) => {
-    async function validateOfPrompt(): Promise<NonNullable<PromptOptions['validate']>> {
+    async function validateOfPrompt(): Promise<ValidateFn> {
         input.mockResolvedValue(pasted);
         await step.ask({});
 
         const validate = input.mock.calls[0]?.[0].validate;
-        if (validate === undefined) throw new TypeError('the prompt got no validate');
+        if (typeof validate !== 'function') throw new TypeError('the prompt got no validate function');
 
         return validate;
     }
