@@ -113,6 +113,13 @@ describe('the docs worker', () => {
         );
     });
 
+    it('sends the site relations on a page outside the packages', async () => {
+        const link = (await get('', bucket('index.html'))).headers.get('link') ?? '';
+
+        expect(link).toContain('</docs/llms.txt>; rel="describedby"');
+        expect(link).not.toContain('rel="alternate"');
+    });
+
     it('caches hashed build files for a year and everything else briefly', async () => {
         const env = bucket('_next/static/chunks/app.js', 'index.html');
 

@@ -100,8 +100,10 @@ export class DocsWorker {
             etag: object.httpEtag,
             'cache-control': path.key.startsWith(HASHED_BUILD_FILES) ? IMMUTABLE : SHORT_LIVED
         });
-        if (path.isPackagePage)
-            headers.set('link', agentLinkHeader('docs', `${DOCS.path}${TWIN.assetPath(path.path)}`));
+        if (path.contentType === HTML) {
+            const twin = path.isPackagePage ? `${DOCS.path}${TWIN.assetPath(path.path)}` : undefined;
+            headers.set('link', agentLinkHeader('docs', twin));
+        }
         if (path.key.startsWith('search/')) headers.set('x-robots-tag', 'noindex');
         DocsWorker.markPreview(headers, url);
 

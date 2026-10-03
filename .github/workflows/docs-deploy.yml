@@ -6,7 +6,9 @@ on:
     paths:
       - 'apps/docs/**'
       - 'tooling/docs-engine/**'
+      - 'tooling/docs-generator/**'
       - 'tooling/ui/**'
+      - 'scripts/src/docs/**'
       - 'pnpm-workspace.yaml'
       - '.github/workflows/docs-deploy.yml'
   workflow_call:
