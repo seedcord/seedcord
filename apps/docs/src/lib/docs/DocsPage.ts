@@ -85,11 +85,6 @@ export class DocsPage {
         return this.facts.markdownPath === undefined ? undefined : canonicalUrl(this.facts.markdownPath);
     }
 
-    // the same page on the latest version, undefined when the latest version doesn't have this symbol
-    get latestPath(): string | undefined {
-        return this.facts.canonicalPath;
-    }
-
     static root(): DocsPage {
         return new DocsPage({
             path: '/',

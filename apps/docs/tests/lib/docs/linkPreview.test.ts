@@ -6,6 +6,7 @@ import type { ResolvedEntity } from '#lib/docs/resolveEntity';
 import type { NavigationCategory, PackageCatalogEntry, PackageVersionCatalog } from '#lib/docs/types';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 
+// justified: the builders read id, label and isLatest off a version
 const LATEST = { id: '0.9.2', label: 'v0.9.2', isLatest: true } as PackageVersionCatalog;
 const OLD = { id: '0.8.0', label: 'v0.8.0', isLatest: false } as PackageVersionCatalog;
 

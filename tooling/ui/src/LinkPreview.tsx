@@ -5,8 +5,7 @@ import {
     Section,
     Separator,
     TextDisplay,
-    Thumbnail,
-    toComponentEmbedJson
+    Thumbnail
 } from 'discord-component-embed';
 
 import { BRAND } from './palette';
@@ -70,25 +69,21 @@ export interface PreviewCardProps {
     bannerUrl?: string;
 }
 
-// discord-component-embed throws past 3000 bytes of card JSON, Discord's limit
-const DISCORD_JSON_LIMIT = 3000;
-const ELLIPSIS = '…';
-
 const withEmoji = (emoji: string | undefined, text: string): string => (emoji ? `${emoji} ${text}` : text);
-const jsonBytes = (text: string): number => new TextEncoder().encode(JSON.stringify(text)).length - 2;
 
 function linkRow(links: readonly PreviewLink[], latestVersion: LatestVersion | undefined): string {
     const row = links.map(({ emoji, label, url }) => `${emoji} [${label}](${url})`).join(PREVIEW_EMOJI.dot);
     return latestVersion ? `Latest [${latestVersion.label}](${latestVersion.url})  /  ${row}` : row;
 }
 
-function cardWithBody(props: PreviewCardProps, body: string): ReactElement {
+export function PreviewCard(props: PreviewCardProps): ReactElement {
     const {
         accent,
         breadcrumb,
         breadcrumbEmoji,
         title,
         titleEmoji,
+        body,
         extraText,
         subtext,
         links,
@@ -126,20 +121,4 @@ function cardWithBody(props: PreviewCardProps, body: string): ReactElement {
             <TextDisplay>{linkRow(links, latestVersion)}</TextDisplay>
         </Container>
     );
-}
-
-function fitBody(props: PreviewCardProps): string {
-    const room = DISCORD_JSON_LIMIT - new TextEncoder().encode(toComponentEmbedJson(cardWithBody(props, ''))).length;
-    if (jsonBytes(props.body) <= room) return props.body;
-
-    let cut = props.body.trimEnd();
-    while (cut.length > 0 && jsonBytes(`${cut}${ELLIPSIS}`) > room) {
-        const lastSpace = cut.lastIndexOf(' ');
-        cut = (lastSpace > 0 ? cut.slice(0, lastSpace) : cut.slice(0, -1)).trimEnd();
-    }
-    return `${cut}${ELLIPSIS}`;
-}
-
-export function PreviewCard(props: PreviewCardProps): ReactElement {
-    return cardWithBody(props, fitBody(props));
 }

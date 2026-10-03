@@ -1,3 +1,4 @@
+import { buildPackageBasePath, DEFAULT_VERSION } from '@seedcord/docs-engine/client';
 import { GUIDE_URL, HOME_URL, REPO_URL } from '@seedcord/ui';
 import { accentColor, PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/link-preview';
 
@@ -55,6 +56,9 @@ function entityCounts(entity: EntityModel): string[] {
     }
 }
 
+const packageLatestPath = (entry: PackageCatalogEntry): string =>
+    buildPackageBasePath(entry.manifestName, DEFAULT_VERSION);
+
 function latestLink(
     entry: PackageCatalogEntry,
     version: PackageVersionCatalog,
@@ -106,7 +110,7 @@ interface PackagePreviewSource {
 export function packagePreview(source: PackagePreviewSource): PreviewCardProps {
     const { entry, version, versionCategories, folderUrl } = source;
     const page = DocsPage.forPackage(entry, version);
-    const latestVersion = page.latestPath === undefined ? undefined : latestLink(entry, version, page.latestPath);
+    const latestVersion = latestLink(entry, version, packageLatestPath(entry));
     const npm = `https://www.npmjs.com/package/${entry.manifestName}${latestVersion ? `/v/${version.id}` : ''}`;
 
     const links: PreviewLink[] = [{ emoji: PREVIEW_EMOJI.npm, label: 'npm', url: npm }];
@@ -128,13 +132,11 @@ export function packagePreview(source: PackagePreviewSource): PreviewCardProps {
     };
 }
 
-// latestPath is undefined when the latest version no longer has this symbol
+// latestPath is undefined when the latest version doesn't have this symbol
 export function symbolPreview(resolved: ResolvedEntity, latestPath: string | undefined): PreviewCardProps {
     const { entry, version, entity } = resolved;
     const page = DocsPage.forEntity(entityPath(resolved), entity, version, latestPath);
-    const packageLatestPath = DocsPage.forPackage(entry, version).latestPath;
-    const latestTarget = latestPath ?? packageLatestPath;
-    const latestVersion = latestTarget === undefined ? undefined : latestLink(entry, version, latestTarget);
+    const latestVersion = latestLink(entry, version, latestPath ?? packageLatestPath(entry));
 
     const links: PreviewLink[] = [];
     if (entity.sourceUrl) links.push({ emoji: PREVIEW_EMOJI.github, label: 'Source', url: entity.sourceUrl });

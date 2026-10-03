@@ -7,7 +7,7 @@ import type { OrderedPage } from '#lib/neighbours';
 import type { GuidePage } from '#lib/pageActions';
 import type { PreviewCardProps } from '@seedcord/ui/link-preview';
 
-// both rates are guesses. nothing measured them
+// both rates are guesses
 const PROSE_WORDS_PER_MINUTE = 200;
 const CODE_WORDS_PER_MINUTE = 400;
 

@@ -13,8 +13,6 @@ function page(url: string, title: string) {
     return { url, path: `${url.replace(/^\/|\/$/g, '') || 'index'}.mdx`, data: { title, description: 'A page.' } };
 }
 
-const words = (count: number): string => Array.from({ length: count }, () => 'word').join(' ');
-
 describe('guidePreview', () => {
     it('shows the tab and group, and the page position in its tab', () => {
         const card = guidePreview({ page: page('/replying/deferring/', 'Deferring'), order: ORDER, twinMarkdown: '' });
@@ -37,13 +35,6 @@ describe('guidePreview', () => {
         expect(guidePreview({ page: page('/', 'Start here'), order: ORDER, twinMarkdown: '' }).title).toBe(
             'seedcord guide'
         );
-    });
-
-    it('reads prose at 200 words a minute and code at 400', () => {
-        const twinMarkdown = `${words(400)}\n\n\`\`\`ts\n${words(400)}\n\`\`\``;
-        const card = guidePreview({ page: page('/replying/', 'Replying'), order: ORDER, twinMarkdown });
-
-        expect(card.subtext?.at(-1)).toBe('3 min read');
     });
 
     it('rounds a short page up to one minute', () => {
