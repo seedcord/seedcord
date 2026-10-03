@@ -1,7 +1,3 @@
-import { cn } from '@seedcord/ui';
-import { Suspense } from 'react';
-
-import { MovedEntityNotice } from '#components/docs/MovedEntityNotice';
 import { PackageOverviewTabs } from '#components/docs/PackageOverviewTabs';
 import { PackageVersionOverview } from '#components/docs/PackageVersionOverview';
 import { ReadmeBlock } from '#components/docs/ReadmeBlock';
@@ -34,18 +30,13 @@ async function PackageOverviewPage({ params }: { params: Promise<PageParams> }):
     const readmeHtml = readmeMarkdown ? await renderReadme(readmeMarkdown) : null;
 
     return (
-        <div className={cn('space-y-8')}>
-            <Suspense fallback={null}>
-                <MovedEntityNotice packageLabel={entry.label} />
-            </Suspense>
-            <PackageOverviewTabs
-                title={entry.label}
-                version={version.label}
-                changelogHref={changelogHref}
-                readme={readmeHtml ? <ReadmeBlock html={readmeHtml} /> : null}
-                reference={<PackageVersionOverview categories={categories} reexports={reexports} />}
-            />
-        </div>
+        <PackageOverviewTabs
+            title={entry.label}
+            version={version.label}
+            changelogHref={changelogHref}
+            readme={readmeHtml ? <ReadmeBlock html={readmeHtml} /> : null}
+            reference={<PackageVersionOverview categories={categories} reexports={reexports} />}
+        />
     );
 }
 
