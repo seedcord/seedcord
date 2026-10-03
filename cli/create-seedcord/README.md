@@ -35,7 +35,9 @@ npm create seedcord my-bot
 yarn create seedcord my-bot
 ```
 
-It asks where the project goes, how Discord reaches your bot, what the bot should react to, your bot token, your app public key on http, and an accent color. Either secret can wait. Press Enter on the empty prompt twice and its key stays empty in `.env` for you to fill in before the first run. Then it writes the project, installs, formats, generates your command types, and makes the first commit. A step that fails after the write becomes a warning. The summary still prints.
+It asks where the project goes, how Discord reaches your bot, what the bot should react to, your bot token, your app public key on http, and an accent color. Then it writes the project, installs dependencies, formats, generates your command types, and makes the first commit. If a step after the write fails, you get a warning and the summary still prints.
+
+If you don't have the token or key yet, press Enter twice on its prompt to skip it. Fill it into `.env` before you start the bot.
 
 On Windows, run it from Windows Terminal. The prompts fall back to ASCII in `cmd.exe` making the boxes draw as `T`, `|`, and `o`.
 
