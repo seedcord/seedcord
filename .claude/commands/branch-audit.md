@@ -48,7 +48,7 @@ Treat those files as the rules. Do not substitute your own taste where they alre
 5. Overengineering.
 6. YAGNI.
 7. Exports: every export added or changed, whether anything outside its file uses it, whether it belongs on the public surface, and whether the package.json exports map and README agree.
-8. Code that's staggered across functions that could be consolidated for clarity and maintainability by refactoring into an OOP based design.
+8. Code that's staggered across functions that could be consolidated for clarity and maintainability by refactoring into an OOP-based design.
 
 ## Output
 
