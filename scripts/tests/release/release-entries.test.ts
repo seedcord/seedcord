@@ -42,7 +42,7 @@ describe('ReleaseEntries', () => {
         const entries = new ReleaseEntries([{ name: '@seedcord/core', version: '0.7.0', changelog: CORE }]);
 
         expect(entries.breaking).toEqual([
-            { summary: 'Renamed `routeId` to `origin`. ([#311](url))', packages: ['core'] }
+            { summary: 'Renamed `routeId` to `origin`. ([#311](url))', packages: ['@seedcord/core'] }
         ]);
         expect(entries.minor).toHaveLength(2);
     });
@@ -55,7 +55,7 @@ describe('ReleaseEntries', () => {
 
         expect(entries.minor[0]).toEqual({
             summary: 'Added `dispatchId` to every bus key. ([#311](url))',
-            packages: ['core', 'gateway']
+            packages: ['@seedcord/core', '@seedcord/gateway']
         });
         expect(entries.minor).toHaveLength(2);
     });
@@ -78,7 +78,10 @@ describe('ReleaseEntries', () => {
         ]);
 
         expect(entries.minor).toEqual([
-            { summary: 'Added `dispatchId` to every bus key. ([#311](url))', packages: ['http', 'gateway'] }
+            {
+                summary: 'Added `dispatchId` to every bus key. ([#311](url))',
+                packages: ['@seedcord/http', '@seedcord/gateway']
+            }
         ]);
         expect(entries.patch).toEqual([]);
     });
@@ -101,7 +104,10 @@ describe('ReleaseEntries', () => {
         ]);
 
         expect(entries.minor).toEqual([
-            { summary: 'Added `dispatchId` to every bus key. ([#311](url))', packages: ['gateway', 'http'] }
+            {
+                summary: 'Added `dispatchId` to every bus key. ([#311](url))',
+                packages: ['@seedcord/gateway', '@seedcord/http']
+            }
         ]);
         expect(entries.patch).toEqual([]);
     });

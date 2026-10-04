@@ -28,7 +28,7 @@ export class ReleaseEntries {
     constructor(published: readonly PublishedPackage[]) {
         for (const pkg of published) {
             const section = new ChangelogFile(pkg.changelog).sectionFor(pkg.version);
-            const found = section === undefined ? 0 : this.collect(section, shortName(pkg.name));
+            const found = section === undefined ? 0 : this.collect(section, pkg.name);
             if (found === 0) this.dependencyOnlyNames.push(pkg.name);
         }
     }
@@ -89,8 +89,4 @@ export class ReleaseEntries {
 
         return undefined;
     }
-}
-
-function shortName(name: string): string {
-    return name.replace('@seedcord/', '');
 }

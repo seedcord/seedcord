@@ -1,6 +1,8 @@
+import { ORDER } from '#src/release/changelog-format';
 import { toBareReferences } from '#src/release/ChangelogRenderer';
 
-import type { ReleaseEntries, ReleaseEntry } from '#src/release/ReleaseEntries';
+import type { Bucket } from '#src/release/changelog-format';
+import type { ReleaseEntries } from '#src/release/ReleaseEntries';
 
 export interface ReleasePackage {
     name: string;
@@ -18,8 +20,32 @@ interface NotesConfig {
     entries: ReleaseEntries;
 }
 
+interface Change {
+    line: string;
+    packages: readonly string[];
+}
+
+const KIND: Record<Bucket, string> = { breaking: '💥', minor: '✨', patch: '🔧' };
+const FIXED = '🐛';
+
+const FOLDER_HEADING: Record<string, string> = {
+    packages: '📦 Packages',
+    plugins: '🔌 Plugins',
+    cli: '💻 CLIs',
+    tooling: '🧹 Tooling'
+};
+
 export class ReleaseNotes {
-    constructor(private readonly config: NotesConfig) {}
+    private readonly changes: Change[];
+
+    constructor(private readonly config: NotesConfig) {
+        this.changes = ORDER.flatMap((bucket) =>
+            config.entries[bucket].map((entry) => ({
+                line: `${kindOf(bucket, entry.summary)} ${toBareReferences(entry.summary)}`,
+                packages: entry.packages
+            }))
+        );
+    }
 
     body(): string {
         const quiet = new Set(this.config.entries.dependencyOnly);
@@ -28,13 +54,48 @@ export class ReleaseNotes {
         const parts = [
             this.table(changed),
             dependencyBlock(this.config.published.filter((pkg) => quiet.has(pkg.name))),
-            section('💥 Breaking changes', this.config.entries.breaking),
-            section('✨ Minor changes', this.config.entries.minor),
-            section('🩹 Patch changes', this.config.entries.patch),
+            ...this.folderSections(),
+            this.sharedSection(),
             this.footer()
         ];
 
         return `${parts.filter((part) => part !== '').join('\n\n')}\n`;
+    }
+
+    private folderSections(): string[] {
+        const folders = new Set([...Object.keys(FOLDER_HEADING), ...this.config.published.map(folderOf)]);
+
+        return [...folders].map((folder) => {
+            const blocks = this.config.published
+                .filter((pkg) => folderOf(pkg) === folder)
+                .toSorted((a, b) => shortName(a.name).localeCompare(shortName(b.name)))
+                .map((pkg) => this.packageBlock(pkg))
+                .filter((block) => block !== '');
+
+            return blocks.length === 0 ? '' : [`## ${FOLDER_HEADING[folder] ?? folder}`, ...blocks].join('\n\n');
+        });
+    }
+
+    private packageBlock(pkg: ReleasePackage): string {
+        const own = this.changes.filter((change) => change.packages.length === 1 && change.packages[0] === pkg.name);
+        if (own.length === 0) return '';
+
+        const lines = own.map((change) => `- ${change.line}`).join('\n');
+
+        return [`### \`${pkg.name}\``, `<sub>${versionsOf(pkg)}</sub>`, lines].join('\n\n');
+    }
+
+    private sharedSection(): string {
+        const shared = this.changes.filter((change) => change.packages.length > 1);
+        if (shared.length === 0) return '';
+
+        const blocks = shared.map((change) => {
+            const names = change.packages.map((name) => `\`${shortName(name)}\``).toSorted();
+
+            return `#### ${change.line}\n\n${names.join(' ')}`;
+        });
+
+        return ['## 👥 Shared changes', ...blocks].join('\n\n');
     }
 
     private footer(): string {
@@ -53,14 +114,28 @@ export class ReleaseNotes {
         const rows = packages.map((pkg) => {
             const url = `https://github.com/${this.config.repo}/blob/${this.config.tag}/${pkg.directory}/CHANGELOG.md#${headingAnchor(pkg.version)}`;
 
-            const versions =
-                pkg.oldVersion === undefined ? `${pkg.version} (new)` : `${pkg.oldVersion} → ${pkg.version}`;
-
-            return `| [${pkg.name}](${url}) | ${versions} |`;
+            return `| [${pkg.name}](${url}) | ${versionsOf(pkg)} |`;
         });
 
-        return ['## 📦 Packages', '', '| package | version |', '| --- | --- |', ...rows].join('\n');
+        return ['| package | version |', '| --- | --- |', ...rows].join('\n');
     }
+}
+
+// the changeset rules open every bug fix with "Fixed"
+function kindOf(bucket: Bucket, summary: string): string {
+    return bucket === 'patch' && summary.startsWith('Fixed') ? FIXED : KIND[bucket];
+}
+
+function folderOf(pkg: ReleasePackage): string {
+    return pkg.directory.split('/')[0] ?? pkg.directory;
+}
+
+function shortName(name: string): string {
+    return name.replace('@seedcord/', '');
+}
+
+function versionsOf(pkg: ReleasePackage): string {
+    return pkg.oldVersion === undefined ? `${pkg.version} (new)` : `${pkg.oldVersion} → ${pkg.version}`;
 }
 
 // github renders the anchor for `## 0.16.0` as `#0160`
@@ -75,12 +150,4 @@ function dependencyBlock(packages: readonly ReleasePackage[]): string {
     const count = `${String(packages.length)} more published with seedcord dependency bumps only`;
 
     return ['<details>', `<summary>${count}</summary>`, '', ...rows, '', '</details>'].join('\n');
-}
-
-function section(heading: string, entries: readonly ReleaseEntry[]): string {
-    if (entries.length === 0) return '';
-
-    const rows = entries.map((entry) => `- **${entry.packages.join(', ')}**: ${toBareReferences(entry.summary)}`);
-
-    return [`## ${heading}`, '', ...rows].join('\n');
 }

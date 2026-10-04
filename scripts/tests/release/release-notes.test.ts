@@ -112,12 +112,76 @@ describe('ReleaseNotes', () => {
         expect(body).toContain('</details>');
     });
 
-    it('prefixes an entry with every package it covers', () => {
+    it('lists a package fix under its folder and package heading', () => {
+        const fixed = {
+            name: '@seedcord/utils',
+            version: '0.8.12',
+            oldVersion: '0.8.11',
+            directory: 'packages/utils',
+            changelog: lines(
+                '# @seedcord/utils',
+                '',
+                '## 0.8.12',
+                '',
+                '### 🩹 Patch',
+                '',
+                '- Fixed `renderTable`. ([#323](url))',
+                ''
+            )
+        };
+
+        const body = new ReleaseNotes({
+            repo: 'seedcord/seedcord',
+            tag: 'release-2026.10.03',
+            published: [fixed],
+            entries: new ReleaseEntries([fixed])
+        }).body();
+
+        expect(body).toContain(
+            '## 📦 Packages\n\n### `@seedcord/utils`\n\n<sub>0.8.11 → 0.8.12</sub>\n\n- 🐛 Fixed `renderTable`. ([#323](url))'
+        );
+    });
+
+    it('marks a patch that fixes nothing as a change, under a folder the headings do not list', () => {
+        const reworded = {
+            name: '@seedcord/vitest-config',
+            version: '0.2.1',
+            oldVersion: '0.2.0',
+            directory: 'configs/vitest-config',
+            changelog: lines(
+                '# @seedcord/vitest-config',
+                '',
+                '## 0.2.1',
+                '',
+                '### 🩹 Patch',
+                '',
+                '- Reworded the README. ([#340](url))',
+                ''
+            )
+        };
+
+        const body = new ReleaseNotes({
+            repo: 'seedcord/seedcord',
+            tag: 'release-2026.10.03',
+            published: [reworded],
+            entries: new ReleaseEntries([reworded])
+        }).body();
+
+        expect(body).toContain(
+            '## configs\n\n### `@seedcord/vitest-config`\n\n<sub>0.2.0 → 0.2.1</sub>\n\n- 🔧 Reworded the README.'
+        );
+    });
+
+    it('lists a change made in more than one package once, under the packages it touched', () => {
         const body = notes();
 
-        expect(body).toContain('## 💥 Breaking changes');
-        expect(body).toContain('- **core**: Renamed `routeId` to `origin`. ([#311](url))');
-        expect(body).toContain('- **core, gateway**: Added `dispatchId` to every bus key. ([#311](url))');
+        expect(body).toContain(
+            '### `@seedcord/core`\n\n<sub>0.6.0 → 0.7.0</sub>\n\n- 💥 Renamed `routeId` to `origin`.'
+        );
+        expect(body).toContain(
+            '## 👥 Shared changes\n\n#### ✨ Added `dispatchId` to every bus key. ([#311](url))\n\n`core` `gateway`'
+        );
+        expect(body.match(/Added `dispatchId`/g)).toHaveLength(1);
     });
 
     it('thanks a contributor with a bare mention where the changelog links their profile', () => {
@@ -144,7 +208,7 @@ describe('ReleaseNotes', () => {
             entries: new ReleaseEntries([thanked])
         }).body();
 
-        expect(body).toContain('- **utils**: Fixed `renderTable`. ([#323](url), thanks @alice and @bob)');
+        expect(body).toContain('- 🐛 Fixed `renderTable`. ([#323](url), thanks @alice and @bob)');
     });
 
     it('turns a pull request or commit link into the bare reference github links itself', () => {
@@ -174,9 +238,5 @@ describe('ReleaseNotes', () => {
 
         expect(body).toContain('Fixed `renderTable`. (#323)');
         expect(body).toContain('Fixed `wrapText`. (4a3318c91e4466acac62a09eb934d8b785e7700d)');
-    });
-
-    it('leaves out a bucket that carries no entry', () => {
-        expect(notes()).not.toContain('🩹 Patch changes');
     });
 });
