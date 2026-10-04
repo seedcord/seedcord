@@ -23,8 +23,8 @@ export class Workspace {
         return this.snapshot.packages.filter((one) => one.packageJson.private !== true);
     }
 
-    directoryOf(name: string): string | undefined {
-        return this.snapshot.packages.find((one) => one.packageJson.name === name)?.dir;
+    packageOf(name: string): Package | undefined {
+        return this.snapshot.packages.find((one) => one.packageJson.name === name);
     }
 
     packageJsonPaths(): string[] {

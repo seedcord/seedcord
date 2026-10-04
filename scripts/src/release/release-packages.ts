@@ -13,16 +13,18 @@ export async function resolvePackages(
     const resolved: ReleasePackage[] = [];
 
     for (const entry of entries) {
-        const dir = workspace.directoryOf(entry.name);
-        if (dir === undefined) throw new Error(`${entry.name} is not a package in this workspace`);
+        const pkg = workspace.packageOf(entry.name);
+        if (pkg === undefined) throw new Error(`${entry.name} is not a package in this workspace`);
 
-        const changelog = await ChangelogFile.read(path.join(dir, 'CHANGELOG.md'));
+        const changelog = await ChangelogFile.read(path.join(pkg.dir, 'CHANGELOG.md'));
         const oldVersion = changelog.versionBefore(entry.version);
+        const commandOnly = 'bin' in pkg.packageJson && !('exports' in pkg.packageJson);
         resolved.push({
             name: entry.name,
             version: entry.version,
             ...(oldVersion !== undefined && { oldVersion }),
-            directory: path.relative(workspace.rootDir, dir),
+            ...(commandOnly && { commandOnly }),
+            directory: path.relative(workspace.rootDir, pkg.dir),
             changelog: changelog.contents
         });
     }

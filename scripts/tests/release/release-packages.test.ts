@@ -43,6 +43,24 @@ describe('resolvePackages', () => {
         expect(kit).not.toHaveProperty('oldVersion');
     });
 
+    it('marks a package that ships a command and nothing to import', async () => {
+        const workspace = await workspaceWith({
+            'create-seedcord': '# create-seedcord\n\n## 0.4.0\n',
+            seedcord: '# seedcord\n\n## 0.21.3\n'
+        });
+        const [create, cli] = workspace.all();
+        if (create === undefined || cli === undefined) throw new Error('the workspace lost a package');
+        Object.assign(create.packageJson, { bin: 'dist/index.js' });
+        Object.assign(cli.packageJson, { bin: 'dist/cli.js', exports: './dist/index.js' });
+
+        const resolved = await resolvePackages(workspace, [
+            { name: 'create-seedcord', version: '0.4.0' },
+            { name: 'seedcord', version: '0.21.3' }
+        ]);
+
+        expect(resolved.map((pkg) => pkg.commandOnly)).toEqual([true, undefined]);
+    });
+
     it('throws naming a package the workspace lacks', async () => {
         const workspace = await workspaceWith({});
 

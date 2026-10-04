@@ -26,11 +26,11 @@ const snapshot = {
 };
 
 describe('Workspace', () => {
-    it('finds a package directory by name', () => {
+    it('finds a package by name', () => {
         const workspace = new Workspace(snapshot);
 
-        expect(workspace.directoryOf('@seedcord/core')).toBe('/repo/packages/core');
-        expect(workspace.directoryOf('@seedcord/nope')).toBeUndefined();
+        expect(workspace.packageOf('@seedcord/core')?.dir).toBe('/repo/packages/core');
+        expect(workspace.packageOf('@seedcord/nope')).toBeUndefined();
     });
 
     it('lists every package.json path, the root one included', () => {
@@ -64,7 +64,7 @@ describe('Workspace', () => {
     it('loads this repo from disk', async () => {
         const workspace = await Workspace.load(process.cwd());
 
-        expect(workspace.directoryOf('@seedcord/scripts')).toBe(path.resolve(process.cwd()));
-        expect(workspace.directoryOf('@seedcord/core')?.endsWith(path.join('packages', 'core'))).toBe(true);
+        expect(workspace.packageOf('@seedcord/scripts')?.dir).toBe(path.resolve(process.cwd()));
+        expect(workspace.packageOf('@seedcord/core')?.dir.endsWith(path.join('packages', 'core'))).toBe(true);
     });
 });

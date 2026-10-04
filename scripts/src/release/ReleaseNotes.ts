@@ -8,6 +8,8 @@ export interface ReleasePackage {
     name: string;
     version: string;
     oldVersion?: string;
+    // a package with a bin and no exports, like create-seedcord, runs without being installed
+    commandOnly?: true;
     directory: string;
     changelog: string;
 }
@@ -37,6 +39,10 @@ const LEGEND = [
     'A blank row means only its seedcord dependencies changed.'
 ].join('\n\n');
 
+const SCOPE = '@seedcord/';
+// pnpm 12 waits a day before it installs a new release
+const PNPM_WAIT = 'pnpm can take a day to pick this release up.';
+
 const FOLDER_HEADING: Record<string, string> = {
     packages: '📦 Packages',
     plugins: '🔌 Plugins',
@@ -61,7 +67,13 @@ export class ReleaseNotes {
     }
 
     body(): string {
-        const parts = [this.table(), ...this.folderSections(), this.sharedSection(), this.footer()];
+        const parts = [
+            this.table(),
+            this.upgradeCommands(),
+            ...this.folderSections(),
+            this.sharedSection(),
+            this.footer()
+        ];
 
         return `${parts.filter((part) => part !== '').join('\n\n')}\n`;
     }
@@ -87,6 +99,26 @@ export class ReleaseNotes {
             '',
             LEGEND
         ].join('\n');
+    }
+
+    private upgradeCommands(): string {
+        const installed = this.packages.filter((pkg) => pkg.commandOnly !== true).map((pkg) => pkg.name);
+        const unscoped = installed.filter((name) => !name.startsWith(SCOPE));
+        const targets = [...(unscoped.length < installed.length ? [`${SCOPE}*`] : []), ...unscoped];
+        if (targets.length === 0) return '';
+
+        const quoted = targets.map((target) => (target.includes('*') ? `"${target}"` : target));
+        const checkUpdates = `npm-check-updates -u --filter "${targets.join(',')}"`;
+
+        return [
+            fence(`pnpm up --latest ${quoted.join(' ')}`),
+            PNPM_WAIT,
+            '<details>\n<summary>yarn, bun or npm</summary>',
+            fence(`yarn dlx ${checkUpdates} && yarn install`),
+            fence(`bunx ${checkUpdates} && bun install`),
+            fence(`npx ${checkUpdates} && npm install`),
+            '</details>'
+        ].join('\n\n');
     }
 
     private folderSections(): string[] {
@@ -145,6 +177,10 @@ export class ReleaseNotes {
 // the changeset rules open every bug fix with "Fixed"
 function kindOf(bucket: Bucket, summary: string): Kind {
     return bucket === 'patch' && summary.startsWith('Fixed') ? '🐛' : KIND_OF_BUCKET[bucket];
+}
+
+function fence(command: string): string {
+    return `\`\`\`sh\n${command}\n\`\`\``;
 }
 
 function lineOf(change: Change): string {

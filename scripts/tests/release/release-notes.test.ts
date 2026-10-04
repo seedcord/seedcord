@@ -108,6 +108,28 @@ describe('ReleaseNotes', () => {
         expect(notes()).toContain('/packages/utils/CHANGELOG.md#0811) | 0.8.10 → 0.8.11 |  |  |  |  |  |');
     });
 
+    it('upgrades the scoped packages by pattern and every other installed one by name', () => {
+        const cli = { name: 'seedcord', version: '0.21.3', directory: 'cli/seedcord', changelog: '# seedcord\n' };
+        const create = {
+            name: 'create-seedcord',
+            version: '0.4.0',
+            commandOnly: true as const,
+            directory: 'cli/create-seedcord',
+            changelog: '# create-seedcord\n'
+        };
+        const all = [...published, cli, create];
+
+        const body = new ReleaseNotes({
+            repo: 'seedcord/seedcord',
+            tag: 'release-2026.10.03',
+            published: all,
+            entries: new ReleaseEntries(all)
+        }).body();
+
+        expect(body).toContain('```sh\npnpm up --latest "@seedcord/*" seedcord\n```');
+        expect(body).toContain('npx npm-check-updates -u --filter "@seedcord/*,seedcord" && npm install');
+    });
+
     it('lists a package fix under its folder and package heading', () => {
         const fixed = {
             name: '@seedcord/utils',
