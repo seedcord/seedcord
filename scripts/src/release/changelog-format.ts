@@ -30,6 +30,10 @@ const ENTRY_START = /(?=^- )/m;
 
 export const MARKER = '**BREAKING:**';
 
+// changesets must open a fix with "Fixed". the other forms predate that rule
+export const FIX_OPENER = /^(Fixed|Fix|Fixes|Fixing|fix|fixes|fixing|fixed)\b/;
+export const REQUIRED_FIX_OPENER = 'Fixed';
+
 export function isStable(version: string): boolean {
     return STABLE.test(version);
 }
