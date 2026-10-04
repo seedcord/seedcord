@@ -188,6 +188,33 @@ describe('ReleaseNotes', () => {
         );
     });
 
+    it('files a fix written with an older opener like "Fixes" under fixed', () => {
+        const fixed = {
+            name: '@seedcord/core',
+            version: '0.2.1',
+            directory: 'packages/core',
+            changelog: lines(
+                '# @seedcord/core',
+                '',
+                '## 0.2.1',
+                '',
+                '### 🩹 Patch',
+                '',
+                '- Fixes the shutdown hang.',
+                ''
+            )
+        };
+
+        const body = new ReleaseNotes({
+            repo: 'seedcord/seedcord',
+            tag: 'release-2026.08.03',
+            published: [fixed],
+            entries: new ReleaseEntries([fixed])
+        }).body();
+
+        expect(body).toContain('**🐛 Fixed**\n\n- Fixes the shutdown hang.');
+    });
+
     it('lists a package fix under its folder and package heading', () => {
         const fixed = {
             name: '@seedcord/utils',
@@ -218,22 +245,36 @@ describe('ReleaseNotes', () => {
         );
     });
 
-    it('marks a patch that fixes nothing as a change, under a folder the headings do not list', () => {
+    it('orders packages by folder, then by name without the scope', () => {
+        const entry = (name: string): string =>
+            lines(`# ${name}`, '', '## 1.0.1', '', '### 🩹 Patch', '', `- Fixed ${name}.`, '');
+        const unordered = [
+            { name: '@seedcord/eslint-config', directory: 'tooling/eslint-config' },
+            { name: '@seedcord/utils', directory: 'packages/utils' },
+            { name: 'discord-component-embed', directory: 'packages/discord-component-embed' }
+        ].map((pkg) => ({ ...pkg, version: '1.0.1', changelog: entry(pkg.name) }));
+
+        const body = new ReleaseNotes({
+            repo: 'seedcord/seedcord',
+            tag: 'release-2026.10.03',
+            published: unordered,
+            entries: new ReleaseEntries(unordered)
+        }).body();
+
+        const rows = body.split('\n').filter((line) => line.startsWith('| [`'));
+        const headings = body.split('\n').filter((line) => line.startsWith('### '));
+        const expected = ['discord-component-embed', '@seedcord/utils', '@seedcord/eslint-config'];
+
+        expect(rows.map((row) => /`([^`]+)`/.exec(row)?.[1])).toEqual(expected);
+        expect(headings).toEqual(expected.map((name) => `### \`${name}\``));
+    });
+
+    it('files a patch that fixes nothing under changed', () => {
         const reworded = {
-            name: '@seedcord/vitest-config',
-            version: '0.2.1',
-            oldVersion: '0.2.0',
-            directory: 'configs/vitest-config',
-            changelog: lines(
-                '# @seedcord/vitest-config',
-                '',
-                '## 0.2.1',
-                '',
-                '### 🩹 Patch',
-                '',
-                '- Reworded the README. ([#340](url))',
-                ''
-            )
+            name: '@seedcord/logger',
+            version: '0.4.4',
+            directory: 'packages/logger',
+            changelog: lines('# @seedcord/logger', '', '## 0.4.4', '', '### 🩹 Patch', '', '- Reworded the README.', '')
         };
 
         const body = new ReleaseNotes({
@@ -243,9 +284,26 @@ describe('ReleaseNotes', () => {
             entries: new ReleaseEntries([reworded])
         }).body();
 
-        expect(body).toContain(
-            '## configs\n\n### `@seedcord/vitest-config`\n\n<sub>0.2.0 → 0.2.1</sub>\n\n**🔧 Changed**\n\n- Reworded the README.'
-        );
+        expect(body).toContain('**🔧 Changed**\n\n- Reworded the README.');
+    });
+
+    it('throws on a package in a folder with no section heading', () => {
+        const unknown = {
+            name: '@seedcord/vitest-config',
+            version: '0.2.1',
+            directory: 'configs/vitest-config',
+            changelog: '# @seedcord/vitest-config\n'
+        };
+
+        expect(
+            () =>
+                new ReleaseNotes({
+                    repo: 'seedcord/seedcord',
+                    tag: 'release-2026.10.03',
+                    published: [unknown],
+                    entries: new ReleaseEntries([unknown])
+                })
+        ).toThrow(/configs/);
     });
 
     it('lists a change made in more than one package once, under the packages it touched', () => {
@@ -314,6 +372,35 @@ describe('ReleaseNotes', () => {
 
         expect(body).toContain('Fixed `renderTable`. (#323)');
         expect(body).toContain('Fixed `wrapText`. (4a3318c91e4466acac62a09eb934d8b785e7700d)');
+    });
+
+    it('keeps a link to a pull request in another repo', () => {
+        const linked = {
+            name: '@seedcord/gateway',
+            version: '0.7.4',
+            directory: 'packages/gateway',
+            changelog: lines(
+                '# @seedcord/gateway',
+                '',
+                '## 0.7.4',
+                '',
+                '### 🩹 Patch',
+                '',
+                '- Fixed a crash on discord.js 14.26 ([#11234](https://github.com/discordjs/discord.js/pull/11234)). ([#400](https://github.com/seedcord/seedcord/pull/400))',
+                ''
+            )
+        };
+
+        const body = new ReleaseNotes({
+            repo: 'seedcord/seedcord',
+            tag: 'release-2026.10.05',
+            published: [linked],
+            entries: new ReleaseEntries([linked])
+        }).body();
+
+        expect(body).toContain(
+            'Fixed a crash on discord.js 14.26 ([#11234](https://github.com/discordjs/discord.js/pull/11234)). (#400)'
+        );
     });
 
     it('turns a commit link that carries a short sha into the bare sha', () => {

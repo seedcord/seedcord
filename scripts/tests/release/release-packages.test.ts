@@ -7,7 +7,10 @@ import { describe, expect, it } from 'vitest';
 import { Workspace } from '#src/lib/Workspace';
 import { resolvePackages } from '#src/release/release-packages';
 
-async function workspaceWith(changelogs: Record<string, string>): Promise<Workspace> {
+async function workspaceWith(
+    changelogs: Record<string, string>,
+    manifests: Record<string, Record<string, string>> = {}
+): Promise<Workspace> {
     const rootDir = await mkdtemp(path.join(tmpdir(), 'release-packages-'));
     const packages = [];
 
@@ -15,7 +18,8 @@ async function workspaceWith(changelogs: Record<string, string>): Promise<Worksp
         const dir = path.join(rootDir, 'packages', name.replace('@seedcord/', ''));
         await mkdir(dir, { recursive: true });
         await writeFile(path.join(dir, 'CHANGELOG.md'), changelog);
-        packages.push({ dir, relativeDir: path.relative(rootDir, dir), packageJson: { name, version: '0.0.0' } });
+        const packageJson = { name, version: '0.0.0', ...manifests[name] };
+        packages.push({ dir, relativeDir: path.relative(rootDir, dir), packageJson });
     }
 
     return new Workspace({ rootDir, packages });
@@ -44,14 +48,13 @@ describe('resolvePackages', () => {
     });
 
     it('marks a package that ships a command and nothing to import', async () => {
-        const workspace = await workspaceWith({
-            'create-seedcord': '# create-seedcord\n\n## 0.4.0\n',
-            seedcord: '# seedcord\n\n## 0.21.3\n'
-        });
-        const [create, cli] = workspace.all();
-        if (create === undefined || cli === undefined) throw new Error('the workspace lost a package');
-        Object.assign(create.packageJson, { bin: 'dist/index.js' });
-        Object.assign(cli.packageJson, { bin: 'dist/cli.js', exports: './dist/index.js' });
+        const workspace = await workspaceWith(
+            { 'create-seedcord': '# create-seedcord\n\n## 0.4.0\n', seedcord: '# seedcord\n\n## 0.21.3\n' },
+            {
+                'create-seedcord': { bin: 'dist/index.js' },
+                seedcord: { bin: 'dist/cli.js', exports: './dist/index.js' }
+            }
+        );
 
         const resolved = await resolvePackages(workspace, [
             { name: 'create-seedcord', version: '0.4.0' },

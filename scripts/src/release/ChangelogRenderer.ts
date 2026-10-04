@@ -68,12 +68,14 @@ export class ChangelogRenderer {
 const profileLink = (login: string): string => `[@${login}](https://github.com/${login})`;
 
 const PROFILE_LINK = /\[@([\w-]+)\]\(https:\/\/github\.com\/\1\)/g;
-const PULL_LINK = /\[#(\d+)\]\(https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/\1\)/g;
-const COMMIT_LINK = /\[`[\da-f]+`\]\(https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/commit\/([\da-f]{7,40})\)/g;
 
-// github links a bare @login, #number, and commit sha in a release body by itself
-export function toBareReferences(text: string): string {
-    return text.replaceAll(PROFILE_LINK, '@$1').replaceAll(PULL_LINK, '#$1').replaceAll(COMMIT_LINK, '$1');
+// github links a bare @login, and a bare #number or commit sha in the release's own repo
+export function toBareReferences(text: string, repo: string): string {
+    const base = String.raw`https://github\.com/${RegExp.escape(repo)}`;
+    const pullLink = new RegExp(String.raw`\[#(\d+)\]\(${base}/pull/\1\)`, 'g');
+    const commitLink = new RegExp(String.raw`\[\`[\da-f]+\`\]\(${base}/commit/([\da-f]{7,40})\)`, 'g');
+
+    return text.replaceAll(PROFILE_LINK, '@$1').replaceAll(pullLink, '#$1').replaceAll(commitLink, '$1');
 }
 
 function joined(links: readonly string[]): string {

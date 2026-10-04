@@ -1,6 +1,6 @@
 import { parseChangesetFile } from '@changesets/parse';
 
-import { MARKER } from '#src/release/changelog-format';
+import { FIX_OPENER, MARKER, REQUIRED_FIX_OPENER } from '#src/release/changelog-format';
 
 export interface Violation {
     file: string;
@@ -28,7 +28,6 @@ const CODE_SPAN = /`[^`]*`/g;
 const LINK_TARGET = /\]\([^)]*\)/g;
 const SENTENCE_END = /[.!?](?=\s|$)/g;
 const NOT_A_SENTENCE_END = /\b(?:e\.g|i\.e)\.|\bvs\.|\betc\.(?=\s+[a-z])/g;
-const OPENER = /^(Fix|Fixes|Fixing|fix|fixes|fixing|fixed)\b/;
 const PATCH_SENTENCES = 2;
 const SENTENCES = 3;
 
@@ -139,9 +138,11 @@ function wordViolations(file: string, summary: string): Violation[] {
 }
 
 function openerViolations(file: string, summary: string): Violation[] {
-    const opener = OPENER.exec(summary.replace(MARKER, '').trim())?.[1];
+    const opener = FIX_OPENER.exec(summary.replace(MARKER, '').trim())?.[1];
 
-    return opener === undefined ? [] : [{ file, reason: 'fix-opener', detail: opener }];
+    return opener === undefined || opener === REQUIRED_FIX_OPENER
+        ? []
+        : [{ file, reason: 'fix-opener', detail: opener }];
 }
 
 function prose(summary: string): string {
