@@ -147,6 +147,35 @@ describe('ReleaseNotes', () => {
         expect(body).toContain('- **utils**: Fixed `renderTable`. ([#323](url), thanks @alice and @bob)');
     });
 
+    it('turns a pull request or commit link into the bare reference github links itself', () => {
+        const linked = {
+            name: '@seedcord/utils',
+            version: '0.8.12',
+            directory: 'packages/utils',
+            changelog: lines(
+                '# @seedcord/utils',
+                '',
+                '## 0.8.12',
+                '',
+                '### 🩹 Patch',
+                '',
+                '- Fixed `renderTable`. ([#323](https://github.com/seedcord/seedcord/pull/323))',
+                '- Fixed `wrapText`. ([`4a3318c`](https://github.com/seedcord/seedcord/commit/4a3318c91e4466acac62a09eb934d8b785e7700d))',
+                ''
+            )
+        };
+
+        const body = new ReleaseNotes({
+            repo: 'seedcord/seedcord',
+            tag: 'release-2026.10.03',
+            published: [linked],
+            entries: new ReleaseEntries([linked])
+        }).body();
+
+        expect(body).toContain('Fixed `renderTable`. (#323)');
+        expect(body).toContain('Fixed `wrapText`. (4a3318c91e4466acac62a09eb934d8b785e7700d)');
+    });
+
     it('leaves out a bucket that carries no entry', () => {
         expect(notes()).not.toContain('🩹 Patch changes');
     });
