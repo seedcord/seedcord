@@ -20,13 +20,22 @@ interface NotesConfig {
     entries: ReleaseEntries;
 }
 
+const KINDS = ['💥', '✨', '🐛', '🔧'] as const;
+type Kind = (typeof KINDS)[number];
+
 interface Change {
-    line: string;
+    kind: Kind;
+    text: string;
     packages: readonly string[];
 }
 
-const KIND: Record<Bucket, string> = { breaking: '💥', minor: '✨', patch: '🔧' };
-const FIXED = '🐛';
+const KIND_OF_BUCKET: Record<Bucket, Kind> = { breaking: '💥', minor: '✨', patch: '🔧' };
+const SHARED = '👥';
+
+const LEGEND = [
+    '💥 breaking &nbsp;·&nbsp; ✨ minor &nbsp;·&nbsp; 🐛 fixed &nbsp;·&nbsp; 🔧 changed &nbsp;·&nbsp; 👥 shared',
+    'A blank row means only its seedcord dependencies changed.'
+].join('\n\n');
 
 const FOLDER_HEADING: Record<string, string> = {
     packages: '📦 Packages',
@@ -34,68 +43,80 @@ const FOLDER_HEADING: Record<string, string> = {
     cli: '💻 CLIs',
     tooling: '🧹 Tooling'
 };
+const FOLDERS = Object.keys(FOLDER_HEADING);
 
 export class ReleaseNotes {
     private readonly changes: Change[];
+    private readonly packages: ReleasePackage[];
 
     constructor(private readonly config: NotesConfig) {
         this.changes = ORDER.flatMap((bucket) =>
             config.entries[bucket].map((entry) => ({
-                line: `${kindOf(bucket, entry.summary)} ${toBareReferences(entry.summary)}`,
+                kind: kindOf(bucket, entry.summary),
+                text: toBareReferences(entry.summary),
                 packages: entry.packages
             }))
         );
+        this.packages = config.published.toSorted(byFolderThenName);
     }
 
     body(): string {
-        const quiet = new Set(this.config.entries.dependencyOnly);
-        const changed = this.config.published.filter((pkg) => !quiet.has(pkg.name));
-
-        const parts = [
-            this.table(changed),
-            dependencyBlock(this.config.published.filter((pkg) => quiet.has(pkg.name))),
-            ...this.folderSections(),
-            this.sharedSection(),
-            this.footer()
-        ];
+        const parts = [this.table(), ...this.folderSections(), this.sharedSection(), this.footer()];
 
         return `${parts.filter((part) => part !== '').join('\n\n')}\n`;
     }
 
-    private folderSections(): string[] {
-        const folders = new Set([...Object.keys(FOLDER_HEADING), ...this.config.published.map(folderOf)]);
+    private table(): string {
+        if (this.packages.length === 0) return '';
 
-        return [...folders].map((folder) => {
-            const blocks = this.config.published
-                .filter((pkg) => folderOf(pkg) === folder)
-                .toSorted((a, b) => shortName(a.name).localeCompare(shortName(b.name)))
-                .map((pkg) => this.packageBlock(pkg))
-                .filter((block) => block !== '');
+        const shared = this.sharedChanges();
+        const rows = this.packages.map((pkg) => {
+            const own = this.ownChanges(pkg);
+            const counts = [
+                ...KINDS.map((kind) => own.filter((change) => change.kind === kind).length),
+                shared.filter((change) => change.packages.includes(pkg.name)).length
+            ];
+
+            return `| [\`${pkg.name}\`](${this.changelogUrl(pkg)}) | ${versionsOf(pkg)} | ${counts.map(countOrBlank).join(' | ')} |`;
+        });
+
+        return [
+            `| package | version | ${KINDS.join(' | ')} | ${SHARED} |`,
+            '| --- | --- | :-: | :-: | :-: | :-: | :-: |',
+            ...rows,
+            '',
+            LEGEND
+        ].join('\n');
+    }
+
+    private folderSections(): string[] {
+        return [...Map.groupBy(this.packages, folderOf)].map(([folder, packages]) => {
+            const blocks = packages.map((pkg) => this.packageBlock(pkg)).filter((block) => block !== '');
 
             return blocks.length === 0 ? '' : [`## ${FOLDER_HEADING[folder] ?? folder}`, ...blocks].join('\n\n');
         });
     }
 
     private packageBlock(pkg: ReleasePackage): string {
-        const own = this.changes.filter((change) => change.packages.length === 1 && change.packages[0] === pkg.name);
+        const own = this.ownChanges(pkg);
         if (own.length === 0) return '';
 
-        const lines = own.map((change) => `- ${change.line}`).join('\n');
+        const lines = own.map((change) => `- ${lineOf(change)}`).join('\n');
 
         return [`### \`${pkg.name}\``, `<sub>${versionsOf(pkg)}</sub>`, lines].join('\n\n');
     }
 
     private sharedSection(): string {
-        const shared = this.changes.filter((change) => change.packages.length > 1);
+        const shared = this.sharedChanges();
         if (shared.length === 0) return '';
 
         const blocks = shared.map((change) => {
             const names = change.packages.map((name) => `\`${shortName(name)}\``).toSorted();
 
-            return `#### ${change.line}\n\n${names.join(' ')}`;
+            return `#### ${lineOf(change)}\n\n${names.join(' ')}`;
         });
 
-        return ['## 👥 Shared changes', ...blocks].join('\n\n');
+        return [`## ${SHARED} Shared changes`, ...blocks].join('\n\n');
     }
 
     private footer(): string {
@@ -108,22 +129,43 @@ export class ReleaseNotes {
         return `---\n\n<sub>[See what changed](${diff}) since the [last release](${release})</sub>`;
     }
 
-    private table(packages: readonly ReleasePackage[]): string {
-        if (packages.length === 0) return '';
+    private ownChanges(pkg: ReleasePackage): Change[] {
+        return this.changes.filter((change) => change.packages.length === 1 && change.packages[0] === pkg.name);
+    }
 
-        const rows = packages.map((pkg) => {
-            const url = `https://github.com/${this.config.repo}/blob/${this.config.tag}/${pkg.directory}/CHANGELOG.md#${headingAnchor(pkg.version)}`;
+    private sharedChanges(): Change[] {
+        return this.changes.filter((change) => change.packages.length > 1);
+    }
 
-            return `| [${pkg.name}](${url}) | ${versionsOf(pkg)} |`;
-        });
-
-        return ['| package | version |', '| --- | --- |', ...rows].join('\n');
+    private changelogUrl(pkg: ReleasePackage): string {
+        return `https://github.com/${this.config.repo}/blob/${this.config.tag}/${pkg.directory}/CHANGELOG.md#${headingAnchor(pkg.version)}`;
     }
 }
 
 // the changeset rules open every bug fix with "Fixed"
-function kindOf(bucket: Bucket, summary: string): string {
-    return bucket === 'patch' && summary.startsWith('Fixed') ? FIXED : KIND[bucket];
+function kindOf(bucket: Bucket, summary: string): Kind {
+    return bucket === 'patch' && summary.startsWith('Fixed') ? '🐛' : KIND_OF_BUCKET[bucket];
+}
+
+function lineOf(change: Change): string {
+    return `${change.kind} ${change.text}`;
+}
+
+function countOrBlank(count: number): string {
+    return count === 0 ? '' : String(count);
+}
+
+function byFolderThenName(a: ReleasePackage, b: ReleasePackage): number {
+    return (
+        folderRank(a) - folderRank(b) ||
+        folderOf(a).localeCompare(folderOf(b)) ||
+        shortName(a.name).localeCompare(shortName(b.name))
+    );
+}
+
+function folderRank(pkg: ReleasePackage): number {
+    const rank = FOLDERS.indexOf(folderOf(pkg));
+    return rank === -1 ? FOLDERS.length : rank;
 }
 
 function folderOf(pkg: ReleasePackage): string {
@@ -141,13 +183,4 @@ function versionsOf(pkg: ReleasePackage): string {
 // github renders the anchor for `## 0.16.0` as `#0160`
 function headingAnchor(version: string): string {
     return version.toLowerCase().replaceAll('.', '');
-}
-
-function dependencyBlock(packages: readonly ReleasePackage[]): string {
-    if (packages.length === 0) return '';
-
-    const rows = packages.map((pkg) => `- \`${pkg.name}\` ${pkg.version}`);
-    const count = `${String(packages.length)} more published with seedcord dependency bumps only`;
-
-    return ['<details>', `<summary>${count}</summary>`, '', ...rows, '', '</details>'].join('\n');
 }

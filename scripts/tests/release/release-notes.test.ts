@@ -74,11 +74,11 @@ describe('ReleaseNotes', () => {
         expect(notes()).not.toContain('See what changed');
     });
 
-    it('tables every package that carries its own entries', () => {
+    it('counts each package change by kind, with the shared ones in their own column', () => {
         const body = notes();
 
         expect(body).toContain(
-            '| [@seedcord/core](https://github.com/seedcord/seedcord/blob/release-2026.09.11/packages/core/CHANGELOG.md#070) | 0.6.0 → 0.7.0 |'
+            '| [`@seedcord/core`](https://github.com/seedcord/seedcord/blob/release-2026.09.11/packages/core/CHANGELOG.md#070) | 0.6.0 → 0.7.0 | 1 |  |  |  | 1 |'
         );
     });
 
@@ -104,12 +104,8 @@ describe('ReleaseNotes', () => {
         expect(body).toContain('/packages/kit/CHANGELOG.md#010) | 0.1.0 (new) |');
     });
 
-    it('collapses the dependency-only packages behind a summary', () => {
-        const body = notes();
-
-        expect(body).toContain('<summary>1 more published with seedcord dependency bumps only</summary>');
-        expect(body).toContain('- `@seedcord/utils` 0.8.11');
-        expect(body).toContain('</details>');
+    it('tables a package that only took dependency bumps with no counts', () => {
+        expect(notes()).toContain('/packages/utils/CHANGELOG.md#0811) | 0.8.10 → 0.8.11 |  |  |  |  |  |');
     });
 
     it('lists a package fix under its folder and package heading', () => {

@@ -23,13 +23,11 @@ export interface ReleaseEntry {
 
 export class ReleaseEntries {
     private readonly buckets = new Map<Bucket, ReleaseEntry[]>();
-    private readonly dependencyOnlyNames: string[] = [];
 
     constructor(published: readonly PublishedPackage[]) {
         for (const pkg of published) {
             const section = new ChangelogFile(pkg.changelog).sectionFor(pkg.version);
-            const found = section === undefined ? 0 : this.collect(section, pkg.name);
-            if (found === 0) this.dependencyOnlyNames.push(pkg.name);
+            if (section !== undefined) this.collect(section, pkg.name);
         }
     }
 
@@ -45,24 +43,13 @@ export class ReleaseEntries {
         return this.buckets.get('patch') ?? [];
     }
 
-    get dependencyOnly(): string[] {
-        return this.dependencyOnlyNames;
-    }
-
-    private collect(section: string, pkg: string): number {
-        let added = 0;
-
+    private collect(section: string, pkg: string): void {
         for (const part of section.split(SECTION_START)) {
             const bucket = bucketOf(headingOf(part));
             if (bucket === undefined) continue;
 
-            for (const entry of splitEntries(bodyWithoutNested(part))) {
-                this.add(bucket, entry.slice(2), pkg);
-                added += 1;
-            }
+            for (const entry of splitEntries(bodyWithoutNested(part))) this.add(bucket, entry.slice(2), pkg);
         }
-
-        return added;
     }
 
     // one changeset can bump core as a minor and gateway as a patch

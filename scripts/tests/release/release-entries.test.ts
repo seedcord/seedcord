@@ -124,13 +124,4 @@ describe('ReleaseEntries', () => {
         expect(entries.breaking).toEqual([]);
         expect(entries.minor).toEqual([]);
     });
-
-    it('lists the packages that only moved through their dependencies', () => {
-        const entries = new ReleaseEntries([
-            { name: '@seedcord/core', version: '0.7.0', changelog: CORE },
-            { name: '@seedcord/utils', version: '0.8.11', changelog: lines('# @seedcord/utils', '') }
-        ]);
-
-        expect(entries.dependencyOnly).toEqual(['@seedcord/utils']);
-    });
 });
