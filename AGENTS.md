@@ -8,6 +8,12 @@ seedcord is pre-1.0. Breaking changes go in minor versions. Pick the cleanest de
 
 ---
 
+## Load these skills first
+
+Before any work, load the four skills in [`.github/skills`](.github/skills): `code-quality` and `tdd` with every file in their folders, plus `code-commenting-guidelines` and `writing-voice`. Load `guide-voice`, `changeset-guidelines`, `envapt`, or `release-version` when the task touches what each covers. [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) lists when.
+
+---
+
 ## Ground every claim
 
 The expensive failure here is a confident sentence about how two modules connect that nobody checked.
