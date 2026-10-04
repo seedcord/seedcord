@@ -109,15 +109,14 @@ export class ReleaseNotes {
         const installed = this.packages.filter((pkg) => pkg.commandOnly !== true).map((pkg) => pkg.name);
         if (installed.length === 0) return '';
 
-        const unscoped = installed.filter((name) => !name.startsWith(SCOPE));
-        const anyScoped = installed.some((name) => name.startsWith(SCOPE));
-
-        const pnpmTargets = [...(anyScoped ? [`"${SCOPE}*"`] : []), ...unscoped];
-        const filter = [...(anyScoped ? [`${SCOPE}*`] : []), ...unscoped].join(',');
-        const checkUpdates = `npm-check-updates -u --filter "${filter}"`;
+        const scoped = installed.some((name) => name.startsWith(SCOPE)) ? [`${SCOPE}*`] : [];
+        const targets = [...scoped, ...installed.filter((name) => !name.startsWith(SCOPE))];
+        const checkUpdates = `npm-check-updates -u --filter "${targets.join(',')}"`;
 
         return [
-            fence(`pnpm up --latest ${pnpmTargets.join(' ')}`),
+            fence(
+                `pnpm up --latest ${targets.map((target) => (target.endsWith('*') ? `"${target}"` : target)).join(' ')}`
+            ),
             PNPM_WAIT,
             '<details>\n<summary>yarn, bun or npm</summary>',
             '**yarn 4**',

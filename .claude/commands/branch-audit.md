@@ -38,6 +38,7 @@ Treat those files as the rules. Do not substitute your own taste where they alre
 1. Adversarial: bugs, wrong behavior, edge cases that break, claims in code, comments, docs, or changesets that are false. Try to break it. Where you can, prove a behavior claim by running the package's tests or a small script (`pnpm -C <pkg> exec vitest run <file>`, node one-liners), rather than reasoning about it.
 2. Code quality per the code-quality skill.
 3. Comments per code-commenting-guidelines, and all prose (comments, README, changesets, CLI output text, error messages) per writing-voice and guide-voice. Apply them at their strictest.
+    - Any comments that could be removed by using better naming, refactoring, or code structure.
 4. Tests per the tdd skill. Specifically hunt for:
     - bogus tests that would pass even if the behavior broke
     - tests that don't check behavior
@@ -47,6 +48,7 @@ Treat those files as the rules. Do not substitute your own taste where they alre
 5. Overengineering.
 6. YAGNI.
 7. Exports: every export added or changed, whether anything outside its file uses it, whether it belongs on the public surface, and whether the package.json exports map and README agree.
+8. Code that's staggered across functions that could be consolidated for clarity and maintainability by refactoring into an OOP based design.
 
 ## Output
 
