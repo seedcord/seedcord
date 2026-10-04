@@ -145,7 +145,10 @@ export class ReleaseNotes {
         const blocks = shared.map((change) => {
             const names = change.packages.map((name) => `\`${shortName(name)}\``).toSorted();
 
-            return `#### ${lineOf(change)}\n\n${names.join(' ')}`;
+            // changesets indents a later paragraph to keep it inside its list item
+            const paragraphs = lineOf(change).replaceAll('\n    ', '\n');
+
+            return `#### ${paragraphs}\n\n${names.join(' ')}`;
         });
 
         return [`## ${SHARED} Shared changes`, ...blocks].join('\n\n');

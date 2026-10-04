@@ -130,6 +130,27 @@ describe('ReleaseNotes', () => {
         expect(body).toContain('npx npm-check-updates -u --filter "@seedcord/*,seedcord" && npm install');
     });
 
+    it('keeps the later paragraphs of a shared change out of a code block', () => {
+        const entry = '- Added `shutdownDeadline`. ([#309](url))\n\n    A zero deadline throws.';
+        const both = ['@seedcord/core', '@seedcord/errors'].map((name) => ({
+            name,
+            version: '0.7.0',
+            directory: `packages/${name.replace('@seedcord/', '')}`,
+            changelog: lines(`# ${name}`, '', '## 0.7.0', '', '### ✨ Minor', '', entry, '')
+        }));
+
+        const body = new ReleaseNotes({
+            repo: 'seedcord/seedcord',
+            tag: 'release-2026.09.09',
+            published: both,
+            entries: new ReleaseEntries(both)
+        }).body();
+
+        expect(body).toContain(
+            '#### ✨ Added `shutdownDeadline`. ([#309](url))\n\nA zero deadline throws.\n\n`core` `errors`'
+        );
+    });
+
     it('lists a package fix under its folder and package heading', () => {
         const fixed = {
             name: '@seedcord/utils',
@@ -256,5 +277,32 @@ describe('ReleaseNotes', () => {
 
         expect(body).toContain('Fixed `renderTable`. (#323)');
         expect(body).toContain('Fixed `wrapText`. (4a3318c91e4466acac62a09eb934d8b785e7700d)');
+    });
+
+    it('turns a commit link that carries a short sha into the bare sha', () => {
+        const linked = {
+            name: '@seedcord/utils',
+            version: '0.8.12',
+            directory: 'packages/utils',
+            changelog: lines(
+                '# @seedcord/utils',
+                '',
+                '## 0.8.12',
+                '',
+                '### 🩹 Patch',
+                '',
+                '- Fixed `wrapText`. ([`815fbb7`](https://github.com/seedcord/seedcord/commit/815fbb7))',
+                ''
+            )
+        };
+
+        const body = new ReleaseNotes({
+            repo: 'seedcord/seedcord',
+            tag: 'release-2026.09.09',
+            published: [linked],
+            entries: new ReleaseEntries([linked])
+        }).body();
+
+        expect(body).toContain('Fixed `wrapText`. (815fbb7)');
     });
 });
