@@ -1,4 +1,4 @@
-import { PageAsset } from '@seedcord/ui/page-asset';
+import { PageAsset } from '@seedcord/ui/PageAsset';
 
 // Add a line here whenever a page's slug changes. Nothing detects a rename.
 export const RENAMED_PAGES: Record<string, string> = {

@@ -1,5 +1,5 @@
 import { agentLinkHeader } from '@seedcord/ui/agents';
-import { PageAsset, TWIN } from '@seedcord/ui/page-asset';
+import { PageAsset, TWIN } from '@seedcord/ui/PageAsset';
 import { GUIDE } from '@seedcord/ui/sites';
 
 import { redirectFor } from './src/lib/redirects';

@@ -1,7 +1,7 @@
 import { findPackageVersion } from '#lib/docs/catalog';
 import { DocsRoute, docsRoutes } from '#lib/docs/DocsRoute';
 import { entityToMarkdown } from '#lib/docs/entityMarkdown';
-import { TWIN } from '@seedcord/ui/page-asset';
+import { TWIN } from '@seedcord/ui/PageAsset';
 import { resolveEntity } from '#lib/docs/resolveEntity';
 import { canonicalUrl } from '#lib/site';
 

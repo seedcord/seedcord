@@ -15,7 +15,7 @@ import { TypedDx } from '#components/home/TypedDx';
 import { SlashCommand } from '#components/SlashCommand';
 import { FEATURES } from '#lib/features';
 import { HOME_PREVIEW } from '#lib/linkPreview';
-import { PreviewCard } from '@seedcord/ui/link-preview';
+import { PreviewCard } from '@seedcord/ui/LinkPreview';
 import { ComponentEmbed } from 'discord-component-embed/react';
 
 import type { ReactNode } from 'react';

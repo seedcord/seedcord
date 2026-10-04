@@ -1,7 +1,7 @@
-import { PREVIEW_EMOJI, PreviewCard, SITE_ACCENT } from '@seedcord/ui/link-preview';
+import { PREVIEW_EMOJI, PreviewCard, SITE_ACCENT } from '@seedcord/ui/LinkPreview';
 import { ComponentEmbed } from 'discord-component-embed/react';
 
-import type { PreviewCardProps } from '@seedcord/ui/link-preview';
+import type { PreviewCardProps } from '@seedcord/ui/LinkPreview';
 import type { ReactElement } from 'react';
 
 const BASE: PreviewCardProps = {

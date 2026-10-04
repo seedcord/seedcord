@@ -1,7 +1,7 @@
 import { GUIDE } from '@seedcord/ui';
 import { OgPageCard } from '@seedcord/ui/OgCard';
 import { loadOgFonts, OG_SIZE } from '@seedcord/ui/og';
-import { CARD } from '@seedcord/ui/page-asset';
+import { CARD } from '@seedcord/ui/PageAsset';
 import { BRAND } from '@seedcord/ui/palette';
 import { notFound } from 'next/navigation';
 import { ImageResponse } from 'next/og';

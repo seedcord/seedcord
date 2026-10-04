@@ -4,7 +4,7 @@ import { ReadmeBlock } from '#components/docs/ReadmeBlock';
 import { loadActiveVersion } from '#lib/docs/ActiveVersion';
 import { DocsPage } from '#lib/docs/DocsPage';
 import { packagePreview } from '#lib/docs/linkPreview';
-import { PreviewCard } from '@seedcord/ui/link-preview';
+import { PreviewCard } from '@seedcord/ui/LinkPreview';
 import { ComponentEmbed } from 'discord-component-embed/react';
 import { getCatalogContext } from '#lib/docs/pageContext';
 import { renderReadme } from '#lib/docs/renderReadme';

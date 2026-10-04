@@ -1,5 +1,5 @@
 import { GUIDE } from '@seedcord/ui';
-import { TWIN } from '@seedcord/ui/page-asset';
+import { TWIN } from '@seedcord/ui/PageAsset';
 
 import { markdownUrl, REPO_URL, SITE_NAME } from '#lib/site';
 

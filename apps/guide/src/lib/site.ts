@@ -1,6 +1,6 @@
 import { DOCS, DOCS_URL as DOCS_PRODUCTION, GUIDE } from '@seedcord/ui';
 import { ogPageCardAlt } from '@seedcord/ui/OgCard';
-import { CARD, TWIN } from '@seedcord/ui/page-asset';
+import { CARD, TWIN } from '@seedcord/ui/PageAsset';
 
 import type { Metadata, MetadataRoute } from 'next';
 

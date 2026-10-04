@@ -6,7 +6,7 @@ import { PageNav } from '#components/PageNav';
 import { ANCHOR, ANCHOR_DROP, ANCHOR_SIZE, mdxComponents } from '#lib/mdxComponents';
 import { guidePreview } from '#lib/linkPreview';
 import { guideOrder } from '#lib/nav';
-import { PreviewCard } from '@seedcord/ui/link-preview';
+import { PreviewCard } from '@seedcord/ui/LinkPreview';
 import { ComponentEmbed } from 'discord-component-embed/react';
 import { neighboursOf } from '#lib/neighbours';
 import { pillFor } from '#lib/og/card';

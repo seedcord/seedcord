@@ -11,7 +11,7 @@ import { Navbar } from '#components/header/Navbar';
 import { HotkeyProvider } from '#components/providers/HotkeyProvider';
 import { MotionProvider } from '#components/providers/MotionProvider';
 import { CommandPalette } from '#components/search/command-palette';
-import { CARD } from '@seedcord/ui/page-asset';
+import { CARD } from '@seedcord/ui/PageAsset';
 import { FOREGROUND_HEX } from '#lib/entityColors';
 import { OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
 

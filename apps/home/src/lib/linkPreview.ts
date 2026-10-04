@@ -1,8 +1,8 @@
-import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/link-preview';
+import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/LinkPreview';
 
 import { CDN_URL, DOCS_URL, GUIDE_URL, REPO_URL, SITE_NAME, SITE_URL } from '#lib/site';
 
-import type { PreviewCardProps } from '@seedcord/ui/link-preview';
+import type { PreviewCardProps } from '@seedcord/ui/LinkPreview';
 
 export const HOME_PREVIEW: PreviewCardProps = {
     accent: SITE_ACCENT.home,

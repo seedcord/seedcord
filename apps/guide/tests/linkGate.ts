@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { slugifySegment } from '@seedcord/docs-engine/client';
 import { DOCS } from '@seedcord/ui';
-import { TWIN } from '@seedcord/ui/page-asset';
+import { TWIN } from '@seedcord/ui/PageAsset';
 import { remarkGfm } from 'fumadocs-core/mdx-plugins/remark-gfm';
 import { remarkHeading } from 'fumadocs-core/mdx-plugins/remark-heading';
 import remarkMdx from 'remark-mdx';

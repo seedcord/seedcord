@@ -1,6 +1,6 @@
 import { agentRules } from '@seedcord/ui/agents';
 
-import { TWIN } from '@seedcord/ui/page-asset';
+import { TWIN } from '@seedcord/ui/PageAsset';
 
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
 

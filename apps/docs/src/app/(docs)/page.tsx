@@ -4,7 +4,7 @@ import { HoverPrefetchLink } from '#components/HoverPrefetchLink';
 import { findCatalogVersion, loadDocsCatalog } from '#lib/docs/catalog';
 import { DocsPage } from '#lib/docs/DocsPage';
 import { docsFrontPreview } from '#lib/docs/linkPreview';
-import { PreviewCard } from '@seedcord/ui/link-preview';
+import { PreviewCard } from '@seedcord/ui/LinkPreview';
 import { ComponentEmbed } from 'discord-component-embed/react';
 import { getToneConfig, getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
 

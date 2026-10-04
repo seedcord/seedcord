@@ -1,4 +1,4 @@
-import { TWIN } from '@seedcord/ui/page-asset';
+import { TWIN } from '@seedcord/ui/PageAsset';
 
 import { source } from '#lib/source';
 import { twinDocument } from '#lib/twin';

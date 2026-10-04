@@ -1,6 +1,6 @@
 import { buildPackageBasePath, DEFAULT_VERSION } from '@seedcord/docs-engine/client';
 import { GUIDE_URL, HOME_URL, REPO_URL } from '@seedcord/ui';
-import { accentColor, PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/link-preview';
+import { accentColor, PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/LinkPreview';
 
 import { FENCED_BLOCK } from '#lib/docs/comments/fence';
 import { DocsPage } from '#lib/docs/DocsPage';
@@ -17,7 +17,7 @@ import type {
     PackageCatalogEntry,
     PackageVersionCatalog
 } from '#lib/docs/types';
-import type { LatestVersion, PreviewCardProps, PreviewLink } from '@seedcord/ui/link-preview';
+import type { LatestVersion, PreviewCardProps, PreviewLink } from '@seedcord/ui/LinkPreview';
 
 // three kinds fit on one phone line
 const KINDS_PER_ROW = 3;

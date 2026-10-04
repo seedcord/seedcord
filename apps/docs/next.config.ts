@@ -2,7 +2,7 @@ import path from 'node:path';
 
 // next loads this file with require. ./sites and ./static-export have a bare default export for that condition
 import { DOCS } from '@seedcord/ui/sites';
-import { staticExport } from '@seedcord/ui/static-export';
+import { staticExport } from '@seedcord/ui/staticExport';
 
 import type { NextConfig } from 'next';
 

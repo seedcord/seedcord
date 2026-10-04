@@ -1,12 +1,12 @@
 import { DOCS_URL, HOME_URL } from '@seedcord/ui';
-import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/link-preview';
+import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/LinkPreview';
 
 import { editUrl } from '#lib/pageActions';
 import { isFrontPage, markdownUrl, shownTitle, SITE_DESCRIPTION } from '#lib/site';
 
 import type { OrderedPage } from '#lib/neighbours';
 import type { GuidePage } from '#lib/pageActions';
-import type { PreviewCardProps, PreviewLink } from '@seedcord/ui/link-preview';
+import type { PreviewCardProps, PreviewLink } from '@seedcord/ui/LinkPreview';
 
 const SITE_LINKS: readonly PreviewLink[] = [
     { emoji: PREVIEW_EMOJI.home, label: 'Home', url: HOME_URL },

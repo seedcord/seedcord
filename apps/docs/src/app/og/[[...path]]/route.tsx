@@ -1,7 +1,7 @@
 import { DOCS } from '@seedcord/ui';
 import { OgPageCard } from '@seedcord/ui/OgCard';
 import { OG_SIZE } from '@seedcord/ui/og';
-import { CARD } from '@seedcord/ui/page-asset';
+import { CARD } from '@seedcord/ui/PageAsset';
 import { ImageResponse } from 'next/og';
 
 import { findPackageVersion } from '#lib/docs/catalog';

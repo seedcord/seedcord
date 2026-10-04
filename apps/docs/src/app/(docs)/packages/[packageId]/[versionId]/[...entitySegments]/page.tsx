@@ -6,7 +6,7 @@ import { DocsPage } from '#lib/docs/DocsPage';
 import { getDocsEngine } from '#lib/docs/engine';
 import { entityJsonLd, entityPagePath, entityPath } from '#lib/docs/entityJsonLd';
 import { symbolPreview } from '#lib/docs/linkPreview';
-import { PreviewCard } from '@seedcord/ui/link-preview';
+import { PreviewCard } from '@seedcord/ui/LinkPreview';
 import { ComponentEmbed } from 'discord-component-embed/react';
 import { resolveEntity } from '#lib/docs/resolveEntity';
 import { ENTITY_TONE_HEX } from '#lib/entityColors';

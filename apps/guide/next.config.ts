@@ -2,7 +2,7 @@ import path from 'node:path';
 
 // next loads this file under the require condition. ./sites and ./static-export export a bare default which also matches it
 import { GUIDE } from '@seedcord/ui/sites';
-import { staticExport } from '@seedcord/ui/static-export';
+import { staticExport } from '@seedcord/ui/staticExport';
 import { createMDX } from 'fumadocs-mdx/next';
 
 import type { NextConfig } from 'next';

@@ -2,7 +2,7 @@ import { buildPackageBasePath, DEFAULT_VERSION } from '@seedcord/docs-engine/cli
 import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 import { BRAND } from '@seedcord/ui/palette';
 
-import { CARD, TWIN } from '@seedcord/ui/page-asset';
+import { CARD, TWIN } from '@seedcord/ui/PageAsset';
 import { plainSummary } from '#lib/docs/plainSummary';
 import { ENTITY_TONE_HEX } from '#lib/entityColors';
 import { canonicalUrl, OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, SITE_DESCRIPTION, SITE_NAME } from '#lib/site';

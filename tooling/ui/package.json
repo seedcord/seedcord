@@ -20,80 +20,10 @@
                 "default": "./dist/index.mjs"
             }
         },
-        "./agents": {
-            "types": "./dist/agents.d.mts",
-            "default": "./dist/agents.mjs"
-        },
-        "./sites": {
-            "types": "./dist/sites.d.mts",
-            "default": "./dist/sites.mjs"
-        },
-        "./page-asset": {
-            "types": "./dist/PageAsset.d.mts",
-            "default": "./dist/PageAsset.mjs"
-        },
-        "./static-export": {
-            "types": "./dist/staticExport.d.mts",
-            "default": "./dist/staticExport.mjs"
-        },
-        "./palette": {
+        "./*": {
             "import": {
-                "types": "./dist/palette.d.mts",
-                "default": "./dist/palette.mjs"
-            }
-        },
-        "./og": {
-            "import": {
-                "types": "./dist/og.d.mts",
-                "default": "./dist/og.mjs"
-            }
-        },
-        "./skills": {
-            "import": {
-                "types": "./dist/skills.d.mts",
-                "default": "./dist/skills.mjs"
-            }
-        },
-        "./skills/seedcord": {
-            "import": {
-                "types": "./dist/skills/seedcord.d.mts",
-                "default": "./dist/skills/seedcord.mjs"
-            }
-        },
-        "./MaterwelonGlyph": {
-            "import": {
-                "types": "./dist/MaterwelonGlyph.d.mts",
-                "default": "./dist/MaterwelonGlyph.mjs"
-            }
-        },
-        "./MaterwelonFavicon": {
-            "import": {
-                "types": "./dist/MaterwelonFavicon.d.mts",
-                "default": "./dist/MaterwelonFavicon.mjs"
-            }
-        },
-        "./Materwelon": {
-            "import": {
-                "types": "./dist/Materwelon.d.mts",
-                "default": "./dist/Materwelon.mjs"
-            }
-        },
-        "./OgCard": {
-            "import": {
-                "types": "./dist/OgCard.d.mts",
-                "default": "./dist/OgCard.mjs"
-            }
-        },
-        "./shiki": {
-            "import": {
-                "types": "./dist/shiki.d.mts",
-                "default": "./dist/shiki.mjs"
-            }
-        },
-        "./link-preview": {
-            "import": {
-                "types": "./dist/LinkPreview.d.mts",
-                "default": "./dist/LinkPreview.mjs"
+                "types": "./dist/*.d.mts",
+                "default": "./dist/*.mjs"
             }
         },
         "./styles/globals.css": "./src/styles/globals.css",

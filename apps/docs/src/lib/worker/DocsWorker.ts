@@ -1,6 +1,6 @@
 import { DEFAULT_VERSION, replacementVersion, validateIndex } from '@seedcord/docs-engine/client';
 import { agentLinkHeader } from '@seedcord/ui/agents';
-import { PageAsset, TWIN } from '@seedcord/ui/page-asset';
+import { PageAsset, TWIN } from '@seedcord/ui/PageAsset';
 import { DOCS } from '@seedcord/ui/sites';
 
 import type { IndexJson } from '@seedcord/docs-engine/client';
