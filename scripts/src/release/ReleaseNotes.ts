@@ -32,10 +32,11 @@ interface Change {
 }
 
 const KIND_OF_BUCKET: Record<Bucket, Kind> = { breaking: '💥', minor: '✨', patch: '🔧' };
+const LABEL: Record<Kind, string> = { '💥': 'Breaking', '✨': 'Minor', '🐛': 'Fixed', '🔧': 'Changed' };
 const SHARED = '👥';
 
 const LEGEND = [
-    '💥 breaking &nbsp;·&nbsp; ✨ minor &nbsp;·&nbsp; 🐛 fixed &nbsp;·&nbsp; 🔧 changed &nbsp;·&nbsp; 👥 shared',
+    [...KINDS.map((kind) => `${kind} ${LABEL[kind].toLowerCase()}`), `${SHARED} shared`].join(' &nbsp;·&nbsp; '),
     'A blank row means only its seedcord dependencies changed.'
 ].join('\n\n');
 
@@ -133,9 +134,14 @@ export class ReleaseNotes {
         const own = this.ownChanges(pkg);
         if (own.length === 0) return '';
 
-        const lines = own.map((change) => `- ${lineOf(change)}`).join('\n');
+        const groups = KINDS.flatMap((kind) => {
+            const ofKind = own.filter((change) => change.kind === kind);
+            if (ofKind.length === 0) return [];
 
-        return [`### \`${pkg.name}\``, `<sub>${versionsOf(pkg)}</sub>`, lines].join('\n\n');
+            return [`**${kind} ${LABEL[kind]}**`, ofKind.map((change) => `- ${change.text}`).join('\n')];
+        });
+
+        return [`### \`${pkg.name}\``, `<sub>${versionsOf(pkg)}</sub>`, ...groups].join('\n\n');
     }
 
     private sharedSection(): string {
