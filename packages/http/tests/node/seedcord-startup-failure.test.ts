@@ -6,7 +6,7 @@ import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
-import { Plugin } from '#src/plugin';
+import { Plugin } from '#src/Plugin';
 import { createSigner } from '#tests/helpers/ed25519';
 import { VALID_TOKEN } from '#tests/helpers/fixtures';
 

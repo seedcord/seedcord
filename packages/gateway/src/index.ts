@@ -30,8 +30,8 @@ export type * from '#inputs/index';
 // these bind the transport Core into the two subscriber bases, shadowing core's unbound pair
 export { Subscriber, WebhookLog } from '#subscribers/index';
 
-export { Plugin } from './plugin';
-export type { GatewayPluginOptions, PluginLifecycleSpec, PluginOptions } from './plugin';
+export { Plugin } from './Plugin';
+export type { GatewayPluginOptions, PluginLifecycleSpec, PluginOptions } from './Plugin';
 
 export * from './Seedcord';
 

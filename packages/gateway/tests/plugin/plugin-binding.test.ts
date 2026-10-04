@@ -1,6 +1,6 @@
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
-import { Plugin } from '#src/plugin';
+import { Plugin } from '#src/Plugin';
 
 import type { Core } from '#interfaces/Core';
 import type { CoreBase } from '@seedcord/core';

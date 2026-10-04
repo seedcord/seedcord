@@ -79,7 +79,7 @@ export type {
     FieldOptions
 } from '@seedcord/custom-id';
 
-export { ResolvedEmoji } from '#src/miscellaneous/emoji';
+export { ResolvedEmoji } from '#src/miscellaneous/ResolvedEmoji';
 
 export type { AutocompleteOptions } from '#inputs/AutocompleteOptions';
 
