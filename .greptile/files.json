@@ -1,0 +1,81 @@
+{
+    "files": [
+        {
+            "path": "AGENTS.md",
+            "description": "Repo-wide rules for code in this monorepo"
+        },
+        {
+            "path": "packages/AGENTS.md",
+            "description": "Rules for the framework packages",
+            "scope": ["packages/**"]
+        },
+        {
+            "path": "apps/AGENTS.md",
+            "description": "Rules for the Next.js sites",
+            "scope": ["apps/**"]
+        },
+        {
+            "path": ".claude/commands/branch-audit.md",
+            "description": "The audit the maintainer runs on every branch"
+        },
+        {
+            "path": ".github/skills/code-quality/SKILL.md",
+            "description": "Code quality rules",
+            "scope": ["**/*.ts", "**/*.tsx"]
+        },
+        {
+            "path": ".github/skills/code-quality/TYPESCRIPT.md",
+            "description": "TypeScript antipatterns",
+            "scope": ["**/*.ts", "**/*.tsx"]
+        },
+        {
+            "path": ".github/skills/code-quality/REACT19.md",
+            "description": "React antipatterns",
+            "scope": ["apps/**/*.tsx", "tooling/ui/**/*.tsx"]
+        },
+        {
+            "path": ".github/skills/code-quality/TAILWIND.md",
+            "description": "Tailwind rules",
+            "scope": ["apps/**", "tooling/ui/**"]
+        },
+        {
+            "path": ".github/skills/code-commenting-guidelines/SKILL.md",
+            "description": "When a code comment should exist and how it reads",
+            "scope": ["**/*.ts", "**/*.tsx"]
+        },
+        {
+            "path": ".github/skills/writing-voice/SKILL.md",
+            "description": "Rules for all prose: comments, docs, READMEs, changesets, error messages"
+        },
+        {
+            "path": ".github/skills/tdd/SKILL.md",
+            "description": "What a good test looks like here",
+            "scope": ["**/tests/**"]
+        },
+        {
+            "path": ".github/skills/tdd/tests.md",
+            "description": "Good and bad test examples",
+            "scope": ["**/tests/**"]
+        },
+        {
+            "path": ".github/skills/tdd/mocking.md",
+            "description": "When to mock",
+            "scope": ["**/tests/**"]
+        },
+        {
+            "path": ".github/skills/changeset-guidelines/SKILL.md",
+            "description": "How a changeset reads and which bump it gets",
+            "scope": [".changeset/**"]
+        },
+        {
+            "path": ".github/skills/guide-voice/SKILL.md",
+            "description": "Voice and structure for guide pages",
+            "scope": ["apps/guide/content/**"]
+        },
+        {
+            "path": ".github/skills/guide-voice/PROSE-REVIEW.md",
+            "description": "The prose review pass for guide pages",
+            "scope": ["apps/guide/content/**"]
+        }
+    ]
+}
