@@ -35,11 +35,6 @@ const KIND_OF_BUCKET: Record<Bucket, Kind> = { breaking: '💥', minor: '✨', p
 const LABEL: Record<Kind, string> = { '💥': 'Breaking', '✨': 'Minor', '🐛': 'Fixed', '🔧': 'Changed' };
 const SHARED = '👥';
 
-const LEGEND = [
-    [...KINDS.map((kind) => `${kind} ${LABEL[kind].toLowerCase()}`), `${SHARED} shared`].join(' &nbsp;·&nbsp; '),
-    'A row with no counts means only its seedcord dependencies changed.'
-].join('\n\n');
-
 const SCOPE = '@seedcord/';
 // pnpm 12 waits a day before it installs a new release
 const PNPM_WAIT = 'pnpm installs a release once it is a day old.';
@@ -66,42 +61,40 @@ export class ReleaseNotes {
                 text: toBareReferences(entry.summary, config.repo),
                 packages: entry.packages
             }))
-        );
+        ).toSorted((a, b) => KINDS.indexOf(a.kind) - KINDS.indexOf(b.kind));
         this.packages = config.published.map((pkg) => ({ ...pkg, folder: folderOf(pkg) })).toSorted(byFolderThenName);
     }
 
     body(): string {
         const parts = [
-            this.table(),
             this.upgradeCommands(),
             ...this.folderSections(),
             this.sharedSection(),
+            this.packageList(),
             this.footer()
         ];
 
         return `${parts.filter((part) => part !== '').join('\n\n')}\n`;
     }
 
-    private table(): string {
+    private packageList(): string {
         if (this.packages.length === 0) return '';
 
-        const shared = this.sharedChanges();
-        const rows = this.packages.map((pkg) => {
-            const own = this.ownChanges(pkg);
-            const counts = [
-                ...KINDS.map((kind) => own.filter((change) => change.kind === kind).length),
-                shared.filter((change) => change.packages.includes(pkg.name)).length
-            ];
-
-            return `| [\`${pkg.name}\`](${this.changelogUrl(pkg)}) | ${versionsOf(pkg)} | ${counts.map(countOrBlank).join(' | ')} |`;
-        });
+        const rows = this.packages.map(
+            (pkg) => `| [\`${pkg.name}\`](${this.changelogUrl(pkg)}) | ${versionsOf(pkg)} |`
+        );
 
         return [
-            `| package | version | ${KINDS.join(' | ')} | ${SHARED} |`,
-            '| --- | --- | :-: | :-: | :-: | :-: | :-: |',
+            '<details>',
+            `<summary>📦 All ${String(this.packages.length)} published packages</summary>`,
+            '',
+            '<br>',
+            '',
+            '| package | version |',
+            '| --- | --- |',
             ...rows,
             '',
-            LEGEND
+            '</details>'
         ].join('\n');
     }
 
@@ -113,7 +106,7 @@ export class ReleaseNotes {
         const targets = [...scoped, ...installed.filter((name) => !name.startsWith(SCOPE))];
         const checkUpdates = `npm-check-updates -u --filter "${targets.join(',')}"`;
 
-        return [
+        const commands = [
             fence(
                 `pnpm up --latest ${targets.map((target) => (target.endsWith('*') ? `"${target}"` : target)).join(' ')}`
             ),
@@ -127,6 +120,8 @@ export class ReleaseNotes {
             fence(`npx ${checkUpdates} && npm install`),
             '</details>'
         ].join('\n\n');
+
+        return tipBox('Upgrade', commands);
     }
 
     private folderSections(): string[] {
@@ -194,16 +189,18 @@ function kindOf(bucket: Bucket, summary: string): Kind {
     return bucket === 'patch' && FIX_OPENER.test(summary) ? '🐛' : KIND_OF_BUCKET[bucket];
 }
 
+function tipBox(title: string, content: string): string {
+    const quoted = content.split('\n').map((line) => (line === '' ? '>' : `> ${line}`));
+
+    return ['> [!TIP]', `> **${title}**`, '>', ...quoted].join('\n');
+}
+
 function fence(command: string): string {
     return `\`\`\`sh\n${command}\n\`\`\``;
 }
 
 function lineOf(change: Change): string {
     return `${change.kind} ${change.text}`;
-}
-
-function countOrBlank(count: number): string {
-    return count === 0 ? '' : String(count);
 }
 
 function byFolderThenName(a: FiledPackage, b: FiledPackage): number {

@@ -74,12 +74,15 @@ describe('ReleaseNotes', () => {
         expect(notes()).not.toContain('See what changed');
     });
 
-    it('counts each package change by kind, with the shared ones in their own column', () => {
+    it('closes with every published package and its version in a collapsed table', () => {
         const body = notes();
+        const list = body.slice(body.indexOf('<details>\n<summary>📦 All 3 published packages</summary>'));
 
-        expect(body).toContain(
-            '| [`@seedcord/core`](https://github.com/seedcord/seedcord/blob/release-2026.09.11/packages/core/CHANGELOG.md#070) | 0.6.0 → 0.7.0 | 1 |  |  |  | 1 |'
+        expect(list).toContain(
+            '| [`@seedcord/core`](https://github.com/seedcord/seedcord/blob/release-2026.09.11/packages/core/CHANGELOG.md#070) | 0.6.0 → 0.7.0 |'
         );
+        expect(list).toContain('/packages/utils/CHANGELOG.md#0811) | 0.8.10 → 0.8.11 |');
+        expect(body.indexOf('📦 All 3 published packages')).toBeGreaterThan(body.indexOf('## 👥 Shared changes'));
     });
 
     it('links a changelog to the heading github renders for its version', () => {
@@ -104,10 +107,6 @@ describe('ReleaseNotes', () => {
         expect(body).toContain('/packages/kit/CHANGELOG.md#010) | 0.1.0 (new) |');
     });
 
-    it('tables a package that only took dependency bumps with no counts', () => {
-        expect(notes()).toContain('/packages/utils/CHANGELOG.md#0811) | 0.8.10 → 0.8.11 |  |  |  |  |  |');
-    });
-
     it('upgrades the scoped packages by pattern and every other installed one by name', () => {
         const cli = { name: 'seedcord', version: '0.21.3', directory: 'cli/seedcord', changelog: '# seedcord\n' };
         const create = {
@@ -126,8 +125,38 @@ describe('ReleaseNotes', () => {
             entries: new ReleaseEntries(all)
         }).body();
 
-        expect(body).toContain('```sh\npnpm up --latest "@seedcord/*" seedcord\n```');
-        expect(body).toContain('npx npm-check-updates -u --filter "@seedcord/*,seedcord" && npm install');
+        expect(
+            body.startsWith('> [!TIP]\n> **Upgrade**\n>\n> ```sh\n> pnpm up --latest "@seedcord/*" seedcord\n> ```')
+        ).toBe(true);
+        expect(body).toContain('> npx npm-check-updates -u --filter "@seedcord/*,seedcord" && npm install');
+    });
+
+    it('orders shared changes by kind', () => {
+        const both = ['@seedcord/core', '@seedcord/errors'].map((name) => ({
+            name,
+            version: '0.7.1',
+            directory: `packages/${name.replace('@seedcord/', '')}`,
+            changelog: lines(
+                `# ${name}`,
+                '',
+                '## 0.7.1',
+                '',
+                '### 🩹 Patch',
+                '',
+                '- Reworded the README.',
+                '- Fixed the TypeScript 5.9 peer conflict.',
+                ''
+            )
+        }));
+
+        const body = new ReleaseNotes({
+            repo: 'seedcord/seedcord',
+            tag: 'release-2026.10.03',
+            published: both,
+            entries: new ReleaseEntries(both)
+        }).body();
+
+        expect(body.indexOf('#### 🐛 Fixed the TypeScript')).toBeLessThan(body.indexOf('#### 🔧 Reworded'));
     });
 
     it('keeps the later paragraphs of a shared change out of a code block', () => {
