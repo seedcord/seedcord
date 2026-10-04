@@ -3,8 +3,7 @@ import { describe, it, expect, expectTypeOf } from 'vitest';
 
 import { RequireBotPermissions, RequirePermissions, RequireRole } from '#gates/catalog/permissions';
 import { MissingPermissions, MissingRole, NotInGuild } from '#notices/index';
-
-import { cardJson } from '../../utils/cardText';
+import { cardJson } from '#tests/utils/cardText';
 
 import type { Gate, GateContextBase, GuildPermissionsContext } from '#gates/Gate';
 

@@ -4,10 +4,10 @@ import type { BaseEntityModel, FormatContext } from '#lib/docs/types';
 import type { DocNode } from '@seedcord/docs-engine';
 
 // vitest cannot resolve the @lib/shiki import behind buildMemberSummary
-vi.mock('../../../../src/lib/docs/builders/buildMemberSummary', () => ({
+vi.mock('#lib/docs/builders/buildMemberSummary', () => ({
     buildMemberSummary: vi.fn((node: DocNode) => Promise.resolve({ label: node.name }))
 }));
-vi.mock('../../../../src/lib/docs/builders/buildTypeParameterSummaries', () => ({
+vi.mock('#lib/docs/builders/buildTypeParameterSummaries', () => ({
     buildTypeParameterSummaries: vi.fn(() => Promise.resolve([]))
 }));
 

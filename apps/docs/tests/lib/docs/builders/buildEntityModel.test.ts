@@ -4,13 +4,13 @@ import type { CodeRepresentation } from '@seedcord/ui';
 import type { DocNode, VersionedDocsEngine } from '@seedcord/docs-engine';
 
 // justified: the real modules pull in @lib/sanitizeHtml + @lib/shiki, which vitest can't resolve here.
-vi.mock('../../../../src/lib/docs/comments/creators', () => ({
+vi.mock('#lib/docs/comments/creators', () => ({
     createFormatContext: vi.fn(() => ({}))
 }));
-vi.mock('../../../../src/lib/docs/comments/formatter', () => ({
+vi.mock('#lib/docs/comments/formatter', () => ({
     formatCommentRich: vi.fn(() => Promise.resolve({ paragraphs: [], examples: [] }))
 }));
-vi.mock('../../../../src/lib/docs/builders/utils', async (importOriginal) => ({
+vi.mock('#lib/docs/builders/utils', async (importOriginal) => ({
     ...(await importOriginal<Record<string, unknown>>()),
     resolveHeaderSignature: vi.fn(() => Promise.resolve({ text: '', html: null } satisfies CodeRepresentation))
 }));

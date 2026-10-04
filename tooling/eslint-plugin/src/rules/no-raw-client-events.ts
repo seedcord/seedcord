@@ -1,7 +1,7 @@
 import { extendsDjsType, methodName } from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
-import { createRule } from '../createRule';
+import { createRule } from '#src/createRule';
 
 // client lifecycle and meta events, plus interactionCreate which the interaction dispatcher handles separately
 const NON_GATEWAY_EVENTS = new Set([

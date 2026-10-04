@@ -7,9 +7,8 @@ import { describe, expect, it } from 'vitest';
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
-
-import { mockInteraction, message } from '../utils/senderMock';
-import { stubBus } from '../utils/stubBus';
+import { mockInteraction, message } from '#tests/utils/senderMock';
+import { stubBus } from '#tests/utils/stubBus';
 
 import type { SentMessage } from '#bot/ReplySender';
 import type { Core } from '#interfaces/Core';

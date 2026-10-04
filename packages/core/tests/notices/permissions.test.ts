@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import { MissingPermissions, MissingRole } from '#notices/index';
-
-import { cardJson } from '../utils/cardText';
+import { cardJson } from '#tests/utils/cardText';
 
 describe('MissingPermissions', () => {
     it('addresses the caller when the subject is null', () => {

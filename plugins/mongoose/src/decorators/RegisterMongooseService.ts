@@ -1,8 +1,8 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
-import type { MongooseServiceRegistrationOptions } from '../types/MongooseServiceRegistrationOptions';
-import type { MongooseServiceKeys, MongooseServices } from '../types/MongooseServices';
+import type { MongooseServiceRegistrationOptions } from '#src/types/MongooseServiceRegistrationOptions';
+import type { MongooseServiceKeys, MongooseServices } from '#src/types/MongooseServices';
 import type mongoose from 'mongoose';
 import type { Constructor } from 'type-fest';
 

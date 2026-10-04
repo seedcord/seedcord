@@ -6,7 +6,7 @@ import {
 } from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
-import { createRule } from '../createRule';
+import { createRule } from '#src/createRule';
 
 const BASE_TO_DECORATOR = {
     InteractionMiddleware: 'RegisterInteractionMiddleware',

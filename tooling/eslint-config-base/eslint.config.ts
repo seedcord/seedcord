@@ -15,6 +15,7 @@ const config: ConfigArray = tseslint.config(
             parser: tseslint.parser,
             parserOptions: {
                 tsconfigRootDir: import.meta.dirname,
+                relativeImports: 'parent',
                 project: ['./tsconfig.json']
             }
         }

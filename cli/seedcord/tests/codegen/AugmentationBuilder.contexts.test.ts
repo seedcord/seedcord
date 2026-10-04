@@ -2,8 +2,7 @@ import { InteractionContextType, SlashCommandBuilder } from 'discord.js';
 import { describe, expect, it } from 'vitest';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
-
-import { silentLogger } from '../silentLogger';
+import { silentLogger } from '#tests/silentLogger';
 
 import type { SlashRouteEntry } from '@seedcord/core/internal';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord.js';

@@ -1,4 +1,4 @@
-import { testConfig } from '../utils/test-config';
+import { testConfig } from '#tests/utils/test-config';
 
 import type { GatewayConfig } from '#interfaces/Config';
 

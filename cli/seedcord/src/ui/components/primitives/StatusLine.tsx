@@ -1,10 +1,9 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
+import { Banner } from '#ui/components/Banner';
+import { StatusBadge } from '#ui/components/StatusBadge';
 import { ui } from '#ui/palette';
-
-import { Banner } from '../Banner';
-import { StatusBadge } from '../StatusBadge';
 
 import type { Notice } from '#ui/notices';
 import type { DevState } from '#ui/stores/DevStore';

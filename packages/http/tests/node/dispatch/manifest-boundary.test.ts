@@ -7,9 +7,9 @@ import { describe, expect, it } from 'vitest';
 
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { manifestWith } from '#tests/helpers/fixtures';
 
 import { readyEngine } from './harness';
-import { manifestWith } from '../../helpers/fixtures';
 
 class Undecorated extends SlashHandler<never> {
     async execute(): Promise<void> {

@@ -2,7 +2,7 @@ import { hasV2Components, getProperty } from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 import { SymbolFlags, TypeFlags } from 'typescript';
 
-import { createRule } from '../createRule';
+import { createRule } from '#src/createRule';
 
 import type { TSESTree } from '@typescript-eslint/utils';
 import type * as ts from 'typescript';

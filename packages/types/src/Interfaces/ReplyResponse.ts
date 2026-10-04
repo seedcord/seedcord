@@ -1,4 +1,4 @@
-import type { UUID } from '../uuid';
+import type { UUID } from '#src/uuid';
 import type { DispatchBag } from './Dispatch';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 

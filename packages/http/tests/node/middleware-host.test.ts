@@ -5,9 +5,9 @@ import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
+import { createSigner, type Signer } from '#tests/helpers/ed25519';
+import { VALID_TOKEN } from '#tests/helpers/fixtures';
 
-import { createSigner, type Signer } from '../helpers/ed25519';
-import { VALID_TOKEN } from '../helpers/fixtures';
 import { ran } from './discovery/fixtures/middlewares/recorder';
 
 import type { HttpConfig } from '#src/interfaces/Config';

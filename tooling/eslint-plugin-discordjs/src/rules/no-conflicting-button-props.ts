@@ -10,10 +10,10 @@ import {
 } from '@seedcord/eslint-utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 
-import { gatherFacts, knownStyle, LINK, PREMIUM, STYLE_NAMES } from '../buttons';
-import { createRule } from '../createRule';
+import { gatherFacts, knownStyle, LINK, PREMIUM, STYLE_NAMES } from '#src/buttons';
+import { createRule } from '#src/createRule';
 
-import type { ButtonFacts, ButtonProp } from '../buttons';
+import type { ButtonFacts, ButtonProp } from '#src/buttons';
 import type { TSESTree } from '@typescript-eslint/utils';
 
 const PREMIUM_FORBIDDEN: readonly ButtonProp[] = ['customId', 'label', 'url', 'emoji'];

@@ -1,9 +1,9 @@
+import type { BotColor } from '#src/Types/Colors';
 import type { CustomIdMatcher } from './CustomId';
 import type { EmojiConfig } from './EmojiMap';
 import type { ErrorsConfig } from './Errors';
 import type { LoggerConfig } from './LogSink';
 import type { Store } from './Store';
-import type { BotColor } from '../Types/Colors';
 
 // interactions, commands, services, bus subscribers
 

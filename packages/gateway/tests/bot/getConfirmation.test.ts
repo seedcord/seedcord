@@ -6,8 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getConfirmation } from '#bot/confirm';
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
 import { ReplySender } from '#bot/ReplySender';
-
-import { stubBus } from '../utils/stubBus';
+import { stubBus } from '#tests/utils/stubBus';
 
 import type { DefaultConfirmOptions } from '#bot/confirm';
 import type { NonModalInteraction } from '#src/handlers/interactionTypes';

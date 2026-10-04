@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compileGuideMdx } from '../mdxPipeline';
+import { compileGuideMdx } from '#tests/mdxPipeline';
 
 describe('a link to another guide page', () => {
     it('gains the trailing slash the page lives at', async () => {

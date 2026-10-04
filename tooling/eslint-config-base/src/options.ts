@@ -1,4 +1,4 @@
-import type { ImportPluginLevel } from './rules/import-rules';
+import type { ImportPluginLevel, RelativeImportsMode } from './rules/import-rules';
 import type { TypescriptConfigsLevel } from './rules/typescript-rules';
 import type { Linter } from 'eslint';
 
@@ -29,6 +29,14 @@ export interface CreateConfigOptions {
      * @defaultValue `'all'`
      */
     registerImportPlugin?: ImportPluginLevel;
+
+    /**
+     * `'parent'` reports an import path that starts with `../`. A `./` import and a path alias like
+     * `#src/...` pass.
+     *
+     * @defaultValue `'allow'`
+     */
+    relativeImports?: RelativeImportsMode;
 
     /**
      * Toggle registration of the `eslint-plugin-security` plugin

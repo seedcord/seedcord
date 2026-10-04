@@ -1,6 +1,6 @@
 import { BaseHandler as CoreBaseHandler } from '@seedcord/core';
 
-import type { Core } from '../interfaces';
+import type { Core } from '#src/interfaces';
 import type { ValidEventTypes } from './interactionTypes';
 
 /**

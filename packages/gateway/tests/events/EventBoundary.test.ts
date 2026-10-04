@@ -5,8 +5,7 @@ import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { handleEventFault as boundary } from '#bot/handleEventFault';
-
-import { TestNotice } from '../utils/TestNotice';
+import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { Core } from '#interfaces/Core';
 import type { SubscriptionData } from '@seedcord/core';

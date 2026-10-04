@@ -3,9 +3,8 @@ import { PublishDefault } from '@seedcord/core/internal';
 import { describe, expect, it, vi } from 'vitest';
 
 import { extractErrorResponse } from '#miscellaneous/extractErrorResponse';
-
-import { cardJson } from '../utils/cardText';
-import { TestNotice } from '../utils/TestNotice';
+import { cardJson } from '#tests/utils/cardText';
+import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { Core } from '#interfaces/Core';
 import type { Repliables } from '#src/handlers/interactionTypes';

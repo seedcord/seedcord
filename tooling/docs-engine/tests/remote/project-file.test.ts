@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { deserializeProject, serializeProject, validateProjectFile } from '#remote/project-file';
-
-import { getMockPackage } from '../utils/test-helpers';
+import { getMockPackage } from '#tests/utils/test-helpers';
 
 const FOLDER = 'https://github.com/seedcord/seedcord/blob/next/packages/core';
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+// eslint-disable-next-line no-restricted-imports -- the app root has no alias
 import handler from '../worker';
 
 type Env = Parameters<typeof handler.fetch>[1];

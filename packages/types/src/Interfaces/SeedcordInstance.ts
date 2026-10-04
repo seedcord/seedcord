@@ -1,4 +1,4 @@
-import type { HostAugmentTarget, HostPluginKeys, HostShutdown, HostStartup, HostVersion } from '../brand';
+import type { HostAugmentTarget, HostPluginKeys, HostShutdown, HostStartup, HostVersion } from '#src/brand';
 import type { Config } from './Config';
 
 // Core implements this. the CLI narrows a loaded module export to it after the SeedcordBrand runtime check

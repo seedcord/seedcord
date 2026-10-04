@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { agentSkillsIndex, skillDigest, skillResponse, skillsIndex, skillUrl } from '../src/skills';
-import { SEEDCORD_SKILL } from '../src/skills/seedcord';
+import { agentSkillsIndex, skillDigest, skillResponse, skillsIndex, skillUrl } from '#src/skills';
+import { SEEDCORD_SKILL } from '#src/skills/seedcord';
 
-import type { Skill } from '../src/skills';
+import type { Skill } from '#src/skills';
 
 const SHA256_HEX = /^sha256:[0-9a-f]{64}$/;
 

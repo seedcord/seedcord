@@ -34,10 +34,10 @@ import { Envapter } from 'envapt';
 import { emptyRouteMaps } from '#src/dispatch/resolve';
 import { EmojiInjector } from '#src/emojis/EmojiInjector';
 import { buildEngine } from '#src/engine';
+import { version as packageVersion } from '#src/version';
 
 import { InteractionDispatcher } from './InteractionDispatcher';
 import { toWebRequest, writeWebResponse } from './webBridge';
-import { version as packageVersion } from '../version';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpConfig } from '#interfaces/Config';

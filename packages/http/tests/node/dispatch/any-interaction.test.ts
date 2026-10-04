@@ -7,10 +7,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createCore } from '#src/dispatch/dispatchInteraction';
 import { emptyRouteMaps } from '#src/dispatch/resolve';
 import { buildEngine } from '#src/engine';
+import { createSigner } from '#tests/helpers/ed25519';
+import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import { signedRequest, slashPayload } from './harness';
-import { createSigner } from '../../helpers/ed25519';
-import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { SubscriptionData } from '@seedcord/core';

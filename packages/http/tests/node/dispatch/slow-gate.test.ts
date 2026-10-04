@@ -7,10 +7,10 @@ import { Envapter, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { createSigner } from '#tests/helpers/ed25519';
+import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import { capturingCtx, manifestFor, signedRequest, slashPayload } from './harness';
-import { createSigner } from '../../helpers/ed25519';
-import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
 import type { EngineContext } from '#src/createSeedcord';
 import type { Manifest } from '#src/manifest/Manifest';

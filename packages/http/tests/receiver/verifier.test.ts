@@ -2,8 +2,7 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { Ed25519Verifier } from '#src/receiver/Ed25519Verifier';
-
-import { createSigner } from '../helpers/ed25519';
+import { createSigner } from '#tests/helpers/ed25519';
 
 const encoder = new TextEncoder();
 

@@ -3,7 +3,7 @@ import { stripAnsi } from '@seedcord/utils';
 import chalk from 'chalk';
 import { format } from 'winston';
 
-import { LEVEL_COLOR } from '../palette';
+import { LEVEL_COLOR } from '#src/palette';
 
 import type { Logform } from 'winston';
 

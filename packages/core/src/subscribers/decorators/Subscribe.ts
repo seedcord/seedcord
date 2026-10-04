@@ -4,8 +4,8 @@ import 'reflect-metadata';
 import { SubscribeMetadataKey } from '#src/metadataKeys';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { Subscriber } from '../Subscriber';
-import type { SubscriptionKey } from '../types/Subscriptions';
+import type { Subscriber } from '#subscribers/Subscriber';
+import type { SubscriptionKey } from '#subscribers/types/Subscriptions';
 import type { EventFrequency } from '@seedcord/types';
 import type { Constructor } from 'type-fest';
 

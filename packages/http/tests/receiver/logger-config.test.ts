@@ -3,8 +3,7 @@ import { Envapter, PortableSource } from 'envapt';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { createSeedcord } from '#src/createSeedcord';
-
-import { emptyManifest, VALID_TOKEN } from '../helpers/fixtures';
+import { emptyManifest, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { HttpEdgeConfig } from '#src/interfaces/Config';
 import type { ILogSink, LogRecord, LoggerConfig } from '@seedcord/types';

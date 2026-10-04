@@ -1,4 +1,4 @@
-import type { UUID } from '../uuid';
+import type { UUID } from '#src/uuid';
 import type { RenderContext, ReplyResponse } from './ReplyResponse';
 
 /**

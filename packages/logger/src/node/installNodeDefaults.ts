@@ -1,7 +1,8 @@
 import { Envapter } from 'envapt';
 
-import { defaultLevel } from '../levels';
-import { LoggerChannelRegistry } from '../LoggerChannelRegistry';
+import { defaultLevel } from '#src/levels';
+import { LoggerChannelRegistry } from '#src/LoggerChannelRegistry';
+
 import { WinstonConsoleSink } from './WinstonConsoleSink';
 import { WinstonFileSink } from './WinstonFileSink';
 

@@ -4,9 +4,8 @@ import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createSeedcord } from '#src/createSeedcord';
-
-import { createSigner, type Signer } from '../helpers/ed25519';
-import { emptyManifest, nullPathConfig, VALID_TOKEN } from '../helpers/fixtures';
+import { createSigner, type Signer } from '#tests/helpers/ed25519';
+import { emptyManifest, nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 const encoder = new TextEncoder();
 

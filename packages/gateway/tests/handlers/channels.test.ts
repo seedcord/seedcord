@@ -7,8 +7,7 @@ import { EventMiddleware } from '#handlers/event/EventMiddleware';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
-
-import { mockInteraction } from '../utils/senderMock';
+import { mockInteraction } from '#tests/utils/senderMock';
 
 import type { ReplySender } from '#bot/ReplySender';
 import type { Core } from '#interfaces/Core';

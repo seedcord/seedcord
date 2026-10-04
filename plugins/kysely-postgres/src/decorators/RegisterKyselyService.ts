@@ -1,9 +1,9 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
-import type { KyselyTable } from '../types/KyselyDatabase';
-import type { KyselyServiceRegistrationOptions } from '../types/KyselyServiceRegistrationOptions';
-import type { KyselyServices, KyselyServiceKeys } from '../types/KyselyServices';
+import type { KyselyTable } from '#src/types/KyselyDatabase';
+import type { KyselyServiceRegistrationOptions } from '#src/types/KyselyServiceRegistrationOptions';
+import type { KyselyServices, KyselyServiceKeys } from '#src/types/KyselyServices';
 import type { Constructor } from 'type-fest';
 
 export const KyselyServiceMetadataKey = Symbol.for('seedcord:kysely-postgres:service');

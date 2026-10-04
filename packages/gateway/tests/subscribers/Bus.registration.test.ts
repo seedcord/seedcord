@@ -2,10 +2,9 @@ import { busLoggerOf, VerifyWebhooks } from '@seedcord/core/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
-
-import { seedcordPath } from '../utils/source-path';
-import { testConfig } from '../utils/test-config';
-import { TestEnvironment } from '../utils/test-env';
+import { seedcordPath } from '#tests/utils/source-path';
+import { testConfig } from '#tests/utils/test-config';
+import { TestEnvironment } from '#tests/utils/test-env';
 
 // justified: the loader is private on the host, and it runs discovery plus the webhook verify step
 function loaderOf(instance: Seedcord): { init(): Promise<void> } {

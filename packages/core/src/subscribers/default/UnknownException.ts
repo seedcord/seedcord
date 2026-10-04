@@ -2,15 +2,14 @@ import { DiscordAPIError } from '@discordjs/rest';
 import { timestampFromSnowflake } from '@seedcord/utils';
 
 import { BuilderComponent } from '#components/Component';
-
-import { errorReport, jsonAttachment, WebhookSeparator } from '../bases/webhookHelpers';
-import { WebhookLog } from '../bases/WebhookLog';
-import { Subscribe } from '../decorators/Subscribe';
-import { WebhookUrl } from '../decorators/WebhookUrl';
+import { errorReport, jsonAttachment, WebhookSeparator } from '#subscribers/bases/webhookHelpers';
+import { WebhookLog } from '#subscribers/bases/WebhookLog';
+import { Subscribe } from '#subscribers/decorators/Subscribe';
+import { WebhookUrl } from '#subscribers/decorators/WebhookUrl';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { WebhookReport } from '../bases/WebhookLog';
-import type { AllSubscriptions } from '../types/Subscriptions';
+import type { WebhookReport } from '#subscribers/bases/WebhookLog';
+import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 
 // no UNKNOWN_EXCEPTION_WEBHOOK_URL disables the reporter with a boot warning
 @Subscribe('unknownException')

@@ -2,8 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { FlagPresenter } from '#commands/commands/cleanPresenters';
-
-import { silentLogger } from '../../silentLogger';
+import { silentLogger } from '#tests/silentLogger';
 
 const originalStdin = process.stdin.isTTY;
 const originalStdout = process.stdout.isTTY;

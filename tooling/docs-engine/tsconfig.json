@@ -4,6 +4,7 @@
     "compilerOptions": {
         "rootDir": ".",
         "paths": {
+            "#tests/*": ["./tests/*"],
             "#src/*": ["./src/*"],
             "#model/*": ["./src/model/*"],
             "#builders/*": ["./src/builders/*"],

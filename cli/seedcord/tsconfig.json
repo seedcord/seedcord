@@ -5,6 +5,7 @@
         "rootDir": "./",
         "outDir": "./dist",
         "paths": {
+            "#tests/*": ["./tests/*"],
             "#ui/*": ["./src/ui/*"],
             "#core/*": ["./src/core/*"],
             "#commands/*": ["./src/commands/*"],

@@ -4,7 +4,7 @@ import type { FormatContext } from '#lib/docs/types';
 import type { DocComment, DocCommentBlockTag, VersionedDocsEngine } from '@seedcord/docs-engine';
 
 const resolveInlineHrefMock = vi.fn<(...args: unknown[]) => string | null>(() => null);
-vi.mock('../../../../../src/lib/docs/comments/resolvers', () => ({
+vi.mock('#lib/docs/comments/resolvers', () => ({
     resolveInlineHref: (...args: unknown[]) => resolveInlineHrefMock(...args)
 }));
 

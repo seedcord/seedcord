@@ -11,6 +11,7 @@ const reactCompilerConfig = reactCompiler.configs.recommended as Linter.Config;
 
 export default createConfig({
     tsconfigRootDir: import.meta.dirname,
+    relativeImports: 'parent',
     registerImportPlugin: 'off',
     registerTypescriptConfigs: false,
     // unicorn needs eslint 10.4 or newer. this app runs eslint 9.

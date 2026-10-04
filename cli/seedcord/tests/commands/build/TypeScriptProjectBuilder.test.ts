@@ -7,8 +7,7 @@ import { promisify } from 'node:util';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { TypeScriptProjectBuilder } from '#commands/build/builder/TypeScriptProjectBuilder';
-
-import { silentLogger } from '../../silentLogger';
+import { silentLogger } from '#tests/silentLogger';
 
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 

@@ -4,9 +4,8 @@ import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
-
-import { createSigner } from '../helpers/ed25519';
-import { APP_ID, VALID_TOKEN } from '../helpers/fixtures';
+import { createSigner } from '#tests/helpers/ed25519';
+import { APP_ID, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { HttpConfig } from '#src/interfaces/Config';
 

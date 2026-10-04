@@ -29,9 +29,11 @@ import {
     TYPESCRIPT_RULES,
     UNICORN_RULES,
     assertImportPluginLevel,
+    assertRelativeImportsMode,
     assertTypescriptConfigsLevel,
     createImportRules,
-    createImportSettings
+    createImportSettings,
+    createRelativeImportRules
 } from './rules';
 
 import type { CreateConfigOptions, FlatConfig, FlatConfigItem } from './options';
@@ -64,6 +66,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         generalIgnores = [],
         userConfigs = [],
         registerImportPlugin = 'all',
+        relativeImports = 'allow',
         registerSecurityPlugin = true,
         registerTsdocPlugin = true,
         registerTypescriptConfigs = true,
@@ -76,6 +79,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
 
     // types never run on a plain js config file
     assertImportPluginLevel(registerImportPlugin);
+    assertRelativeImportsMode(relativeImports);
     assertTypescriptConfigsLevel(registerTypescriptConfigs);
 
     const createTsParserOptions = (rootDir: string) => ({
@@ -177,7 +181,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
 
         {
             files: [...ALL_FILES],
-            rules: merge({}, GENERAL_RULES, SECURITY_RULES, OVERRIDE_RULES)
+            rules: merge({}, GENERAL_RULES, SECURITY_RULES, OVERRIDE_RULES, createRelativeImportRules(relativeImports))
         },
 
         {

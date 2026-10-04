@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { renderSeeAlso } from '#lib/docs/comments/renderers/renderSeeAlso';
 
-import { docNode, fixtureEngine } from '../../../../fixtures/docsEngine';
+import { docNode, fixtureEngine } from '#tests/fixtures/docsEngine';
 
 import type { DocComment } from '@seedcord/docs-engine';
 

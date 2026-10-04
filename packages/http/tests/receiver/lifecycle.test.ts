@@ -4,8 +4,7 @@ import { Envapter, PortableSource } from 'envapt';
 import { describe, expect, it } from 'vitest';
 
 import { createCore } from '#src/dispatch/dispatchInteraction';
-
-import { nullPathConfig, VALID_TOKEN } from '../helpers/fixtures';
+import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 // the logger registry reads the environment on first touch to pick its default level
 Envapter.useSource(new PortableSource({ DISCORD_PUBLIC_KEY: 'a'.repeat(64), DISCORD_BOT_TOKEN: VALID_TOKEN }));

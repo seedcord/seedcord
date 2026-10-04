@@ -1,8 +1,7 @@
 import dedent from 'dedent';
 
 import rule from '#src/rules/event-handler-missing-register-event';
-
-import { createTypedRuleTester } from '../typed-rule-tester';
+import { createTypedRuleTester } from '#tests/typed-rule-tester';
 
 const ruleTester = createTypedRuleTester();
 

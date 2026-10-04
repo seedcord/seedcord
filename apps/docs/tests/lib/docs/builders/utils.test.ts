@@ -5,7 +5,7 @@ import type { CodeRepresentation } from '@seedcord/ui';
 import type { DocComment, DocFlags, DocNode, RenderedDeclarationHeader } from '@seedcord/docs-engine';
 
 // justified: formatting.ts pulls in @lib/sanitizeHtml + @lib/shiki, which vitest can't resolve without vite-tsconfig-paths.
-vi.mock('../../../../src/lib/docs/formatting', () => {
+vi.mock('#lib/docs/formatting', () => {
     const code = (text: string): CodeRepresentation => ({ text, html: null });
     return {
         formatDeclarationHeader: vi.fn(

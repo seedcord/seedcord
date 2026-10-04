@@ -2,12 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { eventsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
+import { seedcordPath } from '#tests/utils/source-path';
+import { testConfig } from '#tests/utils/test-config';
+import { TestEnvironment } from '#tests/utils/test-env';
 
-import { seedcordPath } from '../utils/source-path';
-import { testConfig } from '../utils/test-config';
-import { TestEnvironment } from '../utils/test-env';
-
-import '../utils/mock-env';
+import '#tests/utils/mock-env';
 
 interface PrivateEventDispatcher {
     init(): Promise<void>;

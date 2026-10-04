@@ -1,7 +1,7 @@
 import { extendsDjsType, extendsSeedcordType, isFromDiscordJs } from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
-import { createRule } from '../createRule';
+import { createRule } from '#src/createRule';
 
 export default createRule({
     name: 'prefer-v2-component',

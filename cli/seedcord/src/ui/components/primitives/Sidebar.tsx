@@ -2,12 +2,12 @@ import { Box, Text } from 'ink';
 import React from 'react';
 
 import { version } from '#core/version';
+import { Banner } from '#ui/components/Banner';
+import { StatusBadge } from '#ui/components/StatusBadge';
 import { formatUptime } from '#ui/format';
 import { isStreaming } from '#ui/stores/devPhase';
 import { LogStore } from '#ui/stores/LogStore';
 
-import { Banner } from '../Banner';
-import { StatusBadge } from '../StatusBadge';
 import { BlinkDot } from './BlinkDot';
 import { FilterChips } from './FilterChips';
 import { FilterKeys, SessionKeys } from './Hotkeys';

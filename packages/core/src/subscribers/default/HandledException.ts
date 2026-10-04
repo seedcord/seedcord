@@ -1,16 +1,15 @@
 import { stripAnsi } from '@seedcord/utils';
 
 import { BuilderComponent } from '#components/Component';
-
-import { breakBackticks, jsonAttachment, WebhookSeparator } from '../bases/webhookHelpers';
-import { WebhookLog } from '../bases/WebhookLog';
-import { Subscribe } from '../decorators/Subscribe';
-import { WebhookUrl } from '../decorators/WebhookUrl';
+import { breakBackticks, jsonAttachment, WebhookSeparator } from '#subscribers/bases/webhookHelpers';
+import { WebhookLog } from '#subscribers/bases/WebhookLog';
+import { Subscribe } from '#subscribers/decorators/Subscribe';
+import { WebhookUrl } from '#subscribers/decorators/WebhookUrl';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { Notice } from '#stops/Notice';
-import type { WebhookReport } from '../bases/WebhookLog';
-import type { AllSubscriptions, FaultSource } from '../types/Subscriptions';
+import type { WebhookReport } from '#subscribers/bases/WebhookLog';
+import type { AllSubscriptions, FaultSource } from '#subscribers/types/Subscriptions';
 
 // no HANDLED_EXCEPTION_WEBHOOK_URL disables the reporter with a boot warning
 @Subscribe('handledException')

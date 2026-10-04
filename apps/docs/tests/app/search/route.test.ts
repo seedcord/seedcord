@@ -1,7 +1,7 @@
 import { DocKind } from '@seedcord/docs-engine/client';
 import { describe, expect, it, vi } from 'vitest';
 
-import { docNode, fixtureEngine } from '../../fixtures/docsEngine';
+import { docNode, fixtureEngine } from '#tests/fixtures/docsEngine';
 
 import type { SearchIndexEntry } from '#lib/search/types';
 

@@ -60,10 +60,38 @@ const IMPORT_RULES: Linter.RulesRecord = {
     'import-x/no-rename-default': 'error'
 };
 
+const RELATIVE_IMPORT_MODES = ['allow', 'parent'] as const;
+
+export type RelativeImportsMode = (typeof RELATIVE_IMPORT_MODES)[number];
+
 export function assertImportPluginLevel(value: unknown): asserts value is ImportPluginLevel {
     if (LEVELS.includes(value as ImportPluginLevel)) return;
 
     throw new Error(`registerImportPlugin takes 'all', 'fast', or 'off'. Received ${JSON.stringify(value)}.`);
+}
+
+export function assertRelativeImportsMode(value: unknown): asserts value is RelativeImportsMode {
+    if (RELATIVE_IMPORT_MODES.includes(value as RelativeImportsMode)) return;
+
+    throw new Error(`relativeImports takes 'allow' or 'parent'. Received ${JSON.stringify(value)}.`);
+}
+
+// `#src/...` passes here even when it resolves to a parent folder
+export function createRelativeImportRules(mode: RelativeImportsMode): Linter.RulesRecord {
+    if (mode === 'allow') return {};
+    return {
+        'no-restricted-imports': [
+            'error',
+            {
+                patterns: [
+                    {
+                        regex: String.raw`^\.\./`,
+                        message: 'Import a file outside this folder through a path alias, like `#src/...`.'
+                    }
+                ]
+            }
+        ]
+    };
 }
 
 export function createImportRules(level: ImportPluginLevel): Linter.RulesRecord {

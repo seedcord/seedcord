@@ -3,9 +3,8 @@ import { render } from 'ink-testing-library';
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 
+import { settled } from '#tests/ui/settled';
 import { useUptime } from '#ui/hooks/useUptime';
-
-import { settled } from '../settled';
 
 import type { DevState } from '#ui/stores/DevStore';
 import type { ReactElement } from 'react';

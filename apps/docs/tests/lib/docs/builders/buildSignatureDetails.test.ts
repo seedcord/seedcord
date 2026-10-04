@@ -6,7 +6,7 @@ import type { CodeRepresentation } from '@seedcord/ui';
 import type { DocFlags, DocNode, DocSignature } from '@seedcord/docs-engine';
 
 // justified: formatting.ts pulls in @lib/sanitizeHtml + @lib/shiki, which vitest can't resolve without vite-tsconfig-paths.
-vi.mock('../../../../src/lib/docs/formatting', () => {
+vi.mock('#lib/docs/formatting', () => {
     const code = (text: string): CodeRepresentation => ({ text, html: null });
     return {
         formatDeclarationHeader: vi.fn((header: { text: string }) => Promise.resolve(code(header.text))),
@@ -18,11 +18,11 @@ vi.mock('../../../../src/lib/docs/formatting', () => {
     };
 });
 // param/throws-free signatures never call formatCommentRich, so stub the module to keep its shiki imports out.
-vi.mock('../../../../src/lib/docs/comments/formatter', () => ({
+vi.mock('#lib/docs/comments/formatter', () => ({
     formatCommentRich: vi.fn(() => Promise.resolve({ paragraphs: [], examples: [] }))
 }));
 // renderInlineValue pulls in sanitizeHtml (unresolvable here), stub it to echo the markdown.
-vi.mock('../../../../src/lib/docs/comments/renderers/renderInlineValue', () => ({
+vi.mock('#lib/docs/comments/renderers/renderInlineValue', () => ({
     renderInlineValue: vi.fn((markdown: string) => Promise.resolve([{ plain: markdown, html: markdown }]))
 }));
 

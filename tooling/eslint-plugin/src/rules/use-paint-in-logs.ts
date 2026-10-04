@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 import { SymbolFlags } from 'typescript';
 
-import { createRule } from '../createRule';
+import { createRule } from '#src/createRule';
 
 import type { TSESTree } from '@typescript-eslint/utils';
 

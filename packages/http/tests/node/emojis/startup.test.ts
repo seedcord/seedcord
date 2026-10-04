@@ -7,9 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Emojis } from '#src/emojis/EmojiInjector';
 import { Seedcord } from '#src/node/Seedcord';
-
-import { createSigner } from '../../helpers/ed25519';
-import { APP_ID, VALID_TOKEN } from '../../helpers/fixtures';
+import { createSigner } from '#tests/helpers/ed25519';
+import { APP_ID, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { HttpConfig } from '#src/interfaces/Config';
 import type { ResolvedEmoji } from '@seedcord/core';

@@ -9,6 +9,7 @@ const typesOnlyApi = {
 
 export default createConfig({
     tsconfigRootDir: import.meta.dirname,
+    relativeImports: 'parent',
     userConfigs: [
         {
             files: ['src/**/*.{ts,tsx}'],

@@ -7,9 +7,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { Plugin } from '#src/plugin';
-
-import { createSigner } from '../helpers/ed25519';
-import { VALID_TOKEN } from '../helpers/fixtures';
+import { createSigner } from '#tests/helpers/ed25519';
+import { VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { HttpServerConfig } from '#src/interfaces/Config';
 import type { LogRecord } from '@seedcord/types';

@@ -1,8 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import { confirmCount } from '#commands/commands/confirm';
-
-import { silentLogger } from '../../silentLogger';
+import { silentLogger } from '#tests/silentLogger';
 
 const logger = silentLogger;
 

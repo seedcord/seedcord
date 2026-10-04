@@ -3,8 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createTunnelCoordinator, missingCloudflaredHint } from '#commands/dev/tunnel/createTunnelCoordinator';
 import { TunnelCoordinator } from '#commands/dev/tunnel/TunnelCoordinator';
-
-import { silentLogger } from '../silentLogger';
+import { silentLogger } from '#tests/silentLogger';
 
 const VALID_TOKEN = `${'a'.repeat(24)}.${'b'.repeat(6)}.${'c'.repeat(27)}`;
 

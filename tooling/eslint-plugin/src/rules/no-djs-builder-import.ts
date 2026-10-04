@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-import { createRule } from '../createRule';
+import { createRule } from '#src/createRule';
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 

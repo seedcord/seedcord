@@ -2,7 +2,7 @@ import { SlashRoute } from '@seedcord/core';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import '../../registry';
+import '#tests/node/discovery/fixtures/registry';
 
 @SlashRoute('config/set')
 export class ConfigSet extends SlashHandler<'config/set'> {

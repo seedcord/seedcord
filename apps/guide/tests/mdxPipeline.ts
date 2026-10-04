@@ -1,6 +1,7 @@
 import { compile } from '@mdx-js/mdx';
 import { mdxPreset } from 'fumadocs-core/content/mdx/preset-bundler';
 
+// eslint-disable-next-line no-restricted-imports -- fumadocs-mdx loads source.config.ts from the app root
 import config from '../source.config';
 
 type PresetOptions = Parameters<typeof mdxPreset>[0];

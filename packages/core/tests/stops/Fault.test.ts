@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { DispatchContext } from '#src/dispatch/DispatchContext';
 import { Fault } from '#stops/Fault';
-
-import { cardJson } from '../utils/cardText';
+import { cardJson } from '#tests/utils/cardText';
 
 import type { RenderContext } from '@seedcord/types';
 

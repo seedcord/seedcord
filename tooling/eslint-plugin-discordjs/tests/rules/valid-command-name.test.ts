@@ -1,8 +1,7 @@
 import dedent from 'dedent';
 
 import rule from '#src/rules/valid-command-name';
-
-import { createTypedRuleTester } from '../typed-rule-tester';
+import { createTypedRuleTester } from '#tests/typed-rule-tester';
 
 const ruleTester = createTypedRuleTester();
 

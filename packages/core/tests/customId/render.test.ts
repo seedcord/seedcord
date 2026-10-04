@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { InvalidCustomId, StaleCustomId } from '#customId/Errors';
-
-import { cardJson } from '../utils/cardText';
+import { cardJson } from '#tests/utils/cardText';
 
 describe('StaleCustomId', () => {
     it('renders the run-again message without reporting', () => {

@@ -3,9 +3,8 @@ import { render } from 'ink-testing-library';
 import React, { useRef } from 'react';
 import { describe, expect, it } from 'vitest';
 
+import { settled } from '#tests/ui/settled';
 import { useMeasuredBox } from '#ui/hooks/useMeasuredBox';
-
-import { settled } from '../settled';
 
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';

@@ -4,9 +4,9 @@ import { Logger } from '@seedcord/logger';
 import { asError } from '#stops/asError';
 import { PublishDefault } from '#subscribers/publishDefault';
 
+import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { Bus } from '#subscribers/Bus';
 import type { ReplyMethod } from './ackLegality';
-import type { DispatchContext } from '../dispatch/DispatchContext';
 
 let replyLogger: Logger | undefined;
 function logger(): Logger {

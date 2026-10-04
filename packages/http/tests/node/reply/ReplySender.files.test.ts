@@ -5,8 +5,7 @@ import { DispatchContext } from '@seedcord/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ReplySender } from '#reply/ReplySender';
-
-import { stubBus } from '../../helpers/fixtures';
+import { stubBus } from '#tests/helpers/fixtures';
 
 import type { InteractionRef } from '#reply/ReplySender';
 import type { RawFile, REST } from '@discordjs/rest';

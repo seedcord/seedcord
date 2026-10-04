@@ -12,6 +12,7 @@
             }
         ],
         "paths": {
+            "#tests/*": ["./tests/*"],
             "#src/*": ["./src/*"],
             "#components/*": ["./src/components/*"],
             "#lib/*": ["./src/lib/*"],

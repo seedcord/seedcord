@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 
 import { ActiveVersion } from '#lib/docs/ActiveVersion';
 
-import { docNode, fixtureEngine } from '../../fixtures/docsEngine';
+import { docNode, fixtureEngine } from '#tests/fixtures/docsEngine';
 
-import type { FixtureVersion } from '../../fixtures/docsEngine';
+import type { FixtureVersion } from '#tests/fixtures/docsEngine';
 
 const CORE: FixtureVersion[] = [
     {

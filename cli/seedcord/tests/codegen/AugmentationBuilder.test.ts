@@ -3,8 +3,7 @@ import { SlashCommandBuilder, ContextMenuCommandBuilder, ApplicationCommandType 
 import { describe, it, expect } from 'vitest';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
-
-import { silentLogger } from '../silentLogger';
+import { silentLogger } from '#tests/silentLogger';
 
 import type { RouteOptions } from '#commands/codegen/AugmentationBuilder';
 import type { ILogger } from '@seedcord/types';

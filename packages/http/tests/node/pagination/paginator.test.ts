@@ -6,8 +6,7 @@ import { ReplySender } from '#reply/ReplySender';
 import { ButtonRoute } from '#src/index';
 import { Paginator } from '#src/pagination/Paginator';
 import { ArraySource } from '#src/pagination/sources';
-
-import { stubBus } from '../../helpers/fixtures';
+import { stubBus } from '#tests/helpers/fixtures';
 
 import type { RepliableHandler } from '#handlers/RepliableHandler';
 import type { Core } from '#interfaces/Core';

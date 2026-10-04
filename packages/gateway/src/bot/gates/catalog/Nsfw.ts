@@ -3,8 +3,8 @@ import { pickNotice } from '@seedcord/core/internal';
 
 import { NotNsfw } from '#bot/notices';
 
+import type { InteractionGateContext } from '#bot/gates/Gate';
 import type { NonModalInteraction } from '#src/handlers/interactionTypes';
-import type { InteractionGateContext } from '../Gate';
 import type { Gate, GateNoticeOptions } from '@seedcord/core';
 
 // a thread carries no nsfw flag of its own

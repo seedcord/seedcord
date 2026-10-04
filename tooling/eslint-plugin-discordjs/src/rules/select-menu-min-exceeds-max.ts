@@ -13,7 +13,7 @@ import {
 } from '@seedcord/eslint-utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 
-import { createRule } from '../createRule';
+import { createRule } from '#src/createRule';
 
 import type { TSESTree } from '@typescript-eslint/utils';
 

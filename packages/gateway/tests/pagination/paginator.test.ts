@@ -12,8 +12,7 @@ import { ReplySender } from '#bot/ReplySender';
 import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 import { Paginator } from '#pagination/Paginator';
 import { ArraySource } from '#pagination/sources';
-
-import { stubBus } from '../utils/stubBus';
+import { stubBus } from '#tests/utils/stubBus';
 
 import type { RepliableHandler } from '#handlers/RepliableHandler';
 import type { Core } from '#interfaces/Core';

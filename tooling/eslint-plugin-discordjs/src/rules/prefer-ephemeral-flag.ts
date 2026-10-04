@@ -1,7 +1,7 @@
 import { extendsDjsType, methodName, resolveConstInit } from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
-import { createRule } from '../createRule';
+import { createRule } from '#src/createRule';
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import type * as ts from 'typescript';

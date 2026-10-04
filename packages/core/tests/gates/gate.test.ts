@@ -2,8 +2,7 @@ import { describe, it, expect, expectTypeOf } from 'vitest';
 
 import { defineGate } from '#gates/Gate';
 import { Notice } from '#stops/Notice';
-
-import { TestNotice } from '../utils/TestNotice';
+import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { Gate, GateContextBase } from '#gates/Gate';
 

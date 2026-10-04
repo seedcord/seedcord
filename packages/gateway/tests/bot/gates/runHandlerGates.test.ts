@@ -6,8 +6,7 @@ import { Gated } from '#bDecorators/Gated';
 import { eventGateContext, interactionGateContext } from '#bot/gates/runGates';
 import { EventHandler } from '#handlers/event';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
-
-import { TestNotice } from '../../utils/TestNotice';
+import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { Core } from '#interfaces/Core';
 import type { Repliables } from '#src/handlers/interactionTypes';

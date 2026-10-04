@@ -1,5 +1,5 @@
+import type { EpochMs } from '#src/Types/Epoch';
 import type { IRateLimiter } from './RateLimiter';
-import type { EpochMs } from '../Types/Epoch';
 
 /** A verb group a store backend implements. */
 export type Capability = 'charge' | 'claim' | 'cas' | 'timer';

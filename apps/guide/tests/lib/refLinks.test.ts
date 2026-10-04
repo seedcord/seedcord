@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compileGuideMdx } from '../mdxPipeline';
+import { compileGuideMdx } from '#tests/mdxPipeline';
 
 const NOTICE = 'href="https://seedcord.org/docs/packages/core/latest/classes/notice"';
 

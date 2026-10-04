@@ -1,9 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DevRunner } from '#commands/dev/DevRunner';
+import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
-
-import { silentLogger } from '../silentLogger';
 
 import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';

@@ -1,6 +1,6 @@
 import { defineGate, Silence } from '@seedcord/core';
 
-import type { EventGateContext } from '../Gate';
+import type { EventGateContext } from '#bot/gates/Gate';
 
 /**
  * Drops a client event whose actor is a bot, with a {@link Silence} so nothing is replied. Event-only, because a

@@ -6,8 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { UnhandledAutocomplete } from '#bot/defaults/UnhandledAutocomplete';
 import { UnhandledRepliable } from '#bot/defaults/UnhandledRepliable';
-
-import { mockInteraction } from '../utils/senderMock';
+import { mockInteraction } from '#tests/utils/senderMock';
 
 import type { Core } from '#interfaces/Core';
 import type { AutocompleteInteraction, ChatInputCommandInteraction } from 'discord.js';

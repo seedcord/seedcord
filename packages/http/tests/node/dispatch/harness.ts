@@ -3,9 +3,8 @@ import { Envapter, PortableSource } from 'envapt';
 import { vi } from 'vitest';
 
 import { createSeedcord } from '#src/createSeedcord';
-
-import { createSigner, type Signer } from '../../helpers/ed25519';
-import { manifestWith, nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
+import { createSigner, type Signer } from '#tests/helpers/ed25519';
+import { manifestWith, nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { HandlerConstructor } from '#handlers/constructors';
 import type { HttpConfig } from '#interfaces/Config';
@@ -75,4 +74,4 @@ export function manifestFor(kind: InteractionKind, key: string, handler: Handler
     return manifestWith({ handlers: [handler] });
 }
 
-export { emptyManifest } from '../../helpers/fixtures';
+export { emptyManifest } from '#tests/helpers/fixtures';

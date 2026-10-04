@@ -2,7 +2,7 @@ import { SlashRoute } from '@seedcord/core';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import '../fixtures/registry';
+import '#tests/node/discovery/fixtures/registry';
 
 @SlashRoute('ping')
 export class PingAgain extends SlashHandler<'ping'> {

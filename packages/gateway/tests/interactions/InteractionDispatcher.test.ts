@@ -9,14 +9,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { botLoggerOf, interactionsOf } from '#bot/Bot';
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
 import { Seedcord } from '#src/Seedcord';
-
-import { seedcordPath } from '../utils/source-path';
-import { testConfig } from '../utils/test-config';
-import { TestEnvironment } from '../utils/test-env';
+import { seedcordPath } from '#tests/utils/source-path';
+import { testConfig } from '#tests/utils/test-config';
+import { TestEnvironment } from '#tests/utils/test-env';
 
 import type { SubscriptionData } from '@seedcord/core';
 
-import '../utils/mock-env';
+import '#tests/utils/mock-env';
 
 interface PrivateInteractionDispatcher {
     maps: Record<InteractionKind, Map<string, unknown>>;

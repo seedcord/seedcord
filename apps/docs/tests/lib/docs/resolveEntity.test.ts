@@ -16,14 +16,14 @@ const { getEngineStub } = vi.hoisted(() => ({
     })
 }));
 
-vi.mock('../../../src/lib/docs/engine', () => ({ getDocsEngine: getEngineStub }));
-vi.mock('../../../src/lib/docs/pageContext', () => ({
+vi.mock('#lib/docs/engine', () => ({ getDocsEngine: getEngineStub }));
+vi.mock('#lib/docs/pageContext', () => ({
     getCatalogContext: () =>
         Promise.resolve({ entry: { id: 'core', manifestName: '@seedcord/core' }, version: { id: '1.0.0' } })
 }));
 vi.mock('@seedcord/docs-engine', () => ({ parseEntityPathSegments: () => ({ slug: 'thing', tone: 'class' }) }));
 // resolves to a model only when the engine it was handed already has its version set.
-vi.mock('../../../src/lib/docs/loadEntityModel', () => ({
+vi.mock('#lib/docs/loadEntityModel', () => ({
     loadEntityModel: (engine: { versionSet: boolean }) =>
         Promise.resolve(
             engine.versionSet ? { name: 'Thing', kind: 'class', displayPackage: 'core', summary: [] } : null

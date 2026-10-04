@@ -10,8 +10,7 @@ import { runGates } from '#gates/runGates';
 import { NeedsAny, NotInGuild, NotOwner } from '#notices/index';
 import { assertPermissions } from '#src/permissions/assert';
 import { Notice } from '#stops/Notice';
-
-import { cardJson } from '../../utils/cardText';
+import { cardJson } from '#tests/utils/cardText';
 
 import type { GateContextBase } from '#gates/Gate';
 import type { CoreBase } from '#interfaces/CoreBase';

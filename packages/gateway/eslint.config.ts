@@ -2,6 +2,7 @@ import createConfig from '@seedcord/eslint-config';
 
 export default createConfig({
     tsconfigRootDir: import.meta.dirname,
+    relativeImports: 'parent',
     registerDiscordjsPlugin: true,
     registerSeedcordPlugin: true,
     userConfigs: [

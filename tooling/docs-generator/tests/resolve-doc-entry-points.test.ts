@@ -4,9 +4,9 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { resolveDocEntryPoints } from '../src/workspace';
+import { resolveDocEntryPoints } from '#src/workspace';
 
-import type { PackageManifest } from '../src/types';
+import type { PackageManifest } from '#src/types';
 
 let packageDir: string;
 

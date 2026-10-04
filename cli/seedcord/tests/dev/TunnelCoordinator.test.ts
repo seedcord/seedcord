@@ -3,8 +3,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { describe, expect, it, vi } from 'vitest';
 
 import { TunnelCoordinator } from '#commands/dev/tunnel/TunnelCoordinator';
-
-import { silentLogger } from '../silentLogger';
+import { silentLogger } from '#tests/silentLogger';
 
 import type { CoordinatorDeps, CoordinatorTunnel } from '#commands/dev/tunnel/TunnelCoordinator';
 

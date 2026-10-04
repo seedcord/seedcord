@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { DocsLinks } from '#lib/DocsLinks';
 import { SymbolRef } from '#lib/SymbolRef';
 
-import { DOCS_INDEX_FIXTURE } from '../test-setup';
+import { DOCS_INDEX_FIXTURE } from '#tests/test-setup';
 
 describe('DocsLinks', () => {
     afterEach(() => {

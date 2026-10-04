@@ -10,10 +10,10 @@ import {
 } from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
-import { gatherFacts, knownStyle, LINK, PREMIUM, STYLE_NAMES } from '../buttons';
-import { createRule } from '../createRule';
+import { gatherFacts, knownStyle, LINK, PREMIUM, STYLE_NAMES } from '#src/buttons';
+import { createRule } from '#src/createRule';
 
-import type { ButtonFacts } from '../buttons';
+import type { ButtonFacts } from '#src/buttons';
 import type { ParserServicesWithTypeInformation, TSESLint, TSESTree } from '@typescript-eslint/utils';
 import type * as ts from 'typescript';
 

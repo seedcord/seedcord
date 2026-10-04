@@ -5,8 +5,7 @@ import { defineEffectGate, defineGate } from '#gates/Gate';
 import { runGates, runHandlerGates } from '#gates/runGates';
 import { GatedMetadataKey } from '#src/metadataKeys';
 import { Notice } from '#stops/Notice';
-
-import { TestNotice } from '../utils/TestNotice';
+import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { GateContextBase } from '#gates/Gate';
 

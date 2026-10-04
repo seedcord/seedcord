@@ -1,4 +1,4 @@
-import type { EpochMs } from '../Types/Epoch';
+import type { EpochMs } from '#src/Types/Epoch';
 
 /**
  * A usage window for an {@link IRateLimiter} key.

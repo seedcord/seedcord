@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
-
-import { silentLogger } from '../silentLogger';
+import { silentLogger } from '#tests/silentLogger';
 
 import type { TunnelCoordinator } from '#commands/dev/tunnel/TunnelCoordinator';
 import type { ResolvedTunnel } from '#core/config/schema';

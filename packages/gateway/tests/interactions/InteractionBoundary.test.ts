@@ -6,10 +6,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { handleInteractionFault as boundary } from '#bot/handleInteractionFault';
 import { ReplySender } from '#bot/ReplySender';
-
-import { harmlessError } from '../utils/harmlessError';
-import { stubBus } from '../utils/stubBus';
-import { TestNotice } from '../utils/TestNotice';
+import { harmlessError } from '#tests/utils/harmlessError';
+import { stubBus } from '#tests/utils/stubBus';
+import { TestNotice } from '#tests/utils/TestNotice';
 
 import type { Core } from '#interfaces/Core';
 import type { Repliables, ValidInteractionTypes } from '#src/handlers/interactionTypes';

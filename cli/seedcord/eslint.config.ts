@@ -10,6 +10,7 @@ const reactHooksPlugin = reactHooks as ESLint.Plugin;
 
 export default createConfig({
     tsconfigRootDir: import.meta.dirname,
+    relativeImports: 'parent',
     generalIgnores: ['template/**/*.ts', '**/.build-fixture/**'],
     userConfigs: [
         { ...eslintReact.configs['recommended-typescript'], files: ['**/*.{ts,tsx}'] },

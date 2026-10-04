@@ -1,8 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { deserializeProject, serializeProject } from '#remote/project-file';
-
-import { getMockPackage } from '../utils/test-helpers';
+import { getMockPackage } from '#tests/utils/test-helpers';
 
 import type { DocProjectFile } from '#remote/project-file';
 import type { DocPackageModel } from '#src/types';
