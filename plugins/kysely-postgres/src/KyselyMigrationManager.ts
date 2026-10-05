@@ -211,7 +211,8 @@ export class KyselyMigrationManager {
 
                 const { up, down } = mod;
 
-                const name = path.basename(filePath);
+                // kysely's FileMigrationProvider strips the extension the same way
+                const name = path.basename(filePath, path.extname(filePath));
 
                 const migration: Migration = {
                     async up(db) {

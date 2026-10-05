@@ -237,4 +237,23 @@ describe('KyselyPostgres Plugin Integration', () => {
         // the failed reload rolled back, so the last-good service round-trips and stays registered
         expect(plugin.services).toHaveProperty('users');
     });
+
+    it('lists a migration from a .ts file and from its built .js file under one name', async () => {
+        const migration = 'export async function up() {}\nexport async function down() {}\n';
+        const names: string[] = [];
+        await testEnv.createFile('services/.keep', '');
+
+        for (const file of ['migrations/001-create-users.ts', 'migrations/001-create-users.js']) {
+            plugin = new KyselyPostgres(mockCore, {
+                connectionString: 'postgres://localhost:5432/test',
+                migrations: { path: [await testEnv.createFile(file, migration)] },
+                dir: testEnv.resolvePath('services')
+            });
+            await plugin.init();
+            const listed = await plugin.listMigrations();
+            names.push(...listed.map((info) => info.name));
+        }
+
+        expect(names).toEqual(['001-create-users', '001-create-users']);
+    });
 });

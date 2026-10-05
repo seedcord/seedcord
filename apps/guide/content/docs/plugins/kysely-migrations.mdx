@@ -76,12 +76,10 @@ Kysely sorts every migration name by character code before it runs them, whichev
 Kysely throws this error when its table lists a migration name that doesn't match any of your current files:
 
 ```txt output
-corrupted migrations: previously executed migration 001-create-users.ts is missing
+corrupted migrations: previously executed migration 001-create-users is missing
 ```
 
-With a file or an array path, a migration's name keeps its file extension, so `001-create-users.ts` and `001-create-users.js` are two different migrations. If a database ran `001-create-users.ts` under `seedcord dev`, your built bot throws this error against that database, because its file is `001-create-users.js`. If you switch a project from a directory to an array, the same error comes up, since `001-create-users` becomes `001-create-users.ts`.
-
-With a directory path, Kysely records each migration's name without the extension, so the `.ts` and the `.js` file both match the same recorded name. Use a directory path, and keep using it once any database has run your migrations.
+Every path shape records a migration's name without its file extension, so `001-create-users.ts` under `seedcord dev` and `001-create-users.js` in your built bot match the same recorded name. The error comes up if you rename or delete a migration file after a database ran it.
 
 ## When they run
 
