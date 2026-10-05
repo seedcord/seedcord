@@ -21,10 +21,17 @@ import type {
 
 const DEBOUNCE_MS = 250;
 
+const TYPE_COLOR = {
+    create: paint.mint,
+    createDir: paint.mint,
+    update: paint.sky,
+    delete: paint.coral,
+    deleteDir: paint.coral
+} satisfies Record<HmrEventType, (text: string) => string>;
+
 export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly logger: Logger;
     private readonly lastUpdate = new Map<string, number>();
-    private readonly awaitingCreateEcho = new Set<string>();
     private server: ViteDevServer | null = null;
     private readonly dynamicRestartPatterns = new Set<string>();
 
@@ -55,12 +62,11 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     private configureServer(server: ViteDevServer): void {
         this.server = server;
-        server.watcher.on('add', (file) => this.handleFileEvent(file, 'create'));
-        server.watcher.on('unlink', (file) => this.handleFileEvent(file, 'delete'));
-        server.watcher.on('addDir', (file) => this.handleFileEvent(file, 'createDir'));
-        server.watcher.on('unlinkDir', (file) => this.handleFileEvent(file, 'deleteDir'));
+        // vite calls hotUpdate for files only
+        server.watcher.on('addDir', (dir) => this.handleDirEvent(dir, 'createDir'));
+        server.watcher.on('unlinkDir', (dir) => this.handleDirEvent(dir, 'deleteDir'));
 
-        // vite's watcher covers config.root only, which excludes the config file
+        // vite watches config.root only
         server.watcher.add(this.config.configFile);
         server.watcher.on('change', (file) => this.handleChange(file));
 
@@ -73,24 +79,19 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         });
 
         this.dev?.on('seedcord:register-critical-files', (data) => {
-            for (const pattern of data.patterns) {
-                this.dynamicRestartPatterns.add(pattern);
-            }
-
+            for (const pattern of data.patterns) this.dynamicRestartPatterns.add(pattern);
             this.logger.debug(`Registered ${String(data.patterns.length)} critical file patterns`);
         });
     }
 
-    // keyed per type, else an atomic-save rename (unlink then add) loses the add and the handler stays unloaded
+    // per type, because an atomic save sends a delete then a create for the same file
     private isDebounced(file: string, type: HmrEventType): boolean {
-        if (this.justSaw(file, type)) return true;
-        this.lastUpdate.set(`${file}::${type}`, Date.now());
-        return false;
-    }
+        const key = `${file}::${type}`;
+        const last = this.lastUpdate.get(key);
+        if (last !== undefined && Date.now() - last < DEBOUNCE_MS) return true;
 
-    private justSaw(file: string, type: HmrEventType): boolean {
-        const last = this.lastUpdate.get(`${file}::${type}`);
-        return last !== undefined && Date.now() - last < DEBOUNCE_MS;
+        this.lastUpdate.set(key, Date.now());
+        return false;
     }
 
     // hotUpdate covers a critical file inside the root
@@ -105,116 +106,62 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         this.emit('event', { type: 'restart-required' });
     }
 
-    private handleFileEvent(file: string, type: HmrEventType): void {
-        if (this.isDebounced(file, type)) return;
-        if (type === 'create') this.awaitingCreateEcho.add(file);
+    private handleDirEvent(dir: string, type: 'createDir' | 'deleteDir'): void {
+        if (this.isDebounced(dir, type)) return;
+        this.send({ file: dir, type, rollback: this.config.hmr?.rollback ?? true });
+    }
 
-        const relPath = relative(process.cwd(), file);
-        const typeColor =
-            type === 'create' || type === 'createDir'
-                ? paint.mint
-                : type === 'delete' || type === 'deleteDir'
-                  ? paint.coral
-                  : paint.sky;
-
-        this.logger.trace(`${typeColor(type.toUpperCase())} ${paint.mute(relPath)}`);
-
-        const payload: HmrUpdateEvent = { file, type, rollback: this.config.hmr?.rollback ?? true };
-
+    private send(payload: HmrUpdateEvent): void {
+        const relPath = relative(process.cwd(), payload.file);
+        this.logger.trace(`${TYPE_COLOR[payload.type](payload.type.toUpperCase())} ${paint.mute(relPath)}`);
         this.dev?.send('seedcord:hmr', payload);
     }
 
+    // vite calls this once per environment for each file event
     private hotUpdate(ctx: HotUpdateOptions): EnvironmentModuleNode[] {
-        const { file, modules, server } = ctx;
-        const type = 'update';
-
-        // vite fires one update straight after the watcher's add, and the create already reloaded the file
-        const isCreateEcho = this.awaitingCreateEcho.delete(file) && this.justSaw(file, 'create');
-        if (isCreateEcho || this.isDebounced(file, type)) return [];
-
-        const relPath = relative(process.cwd(), file);
-
-        this.logger.trace(`${paint.sky(type.toUpperCase())} ${paint.mute(relPath)}`);
+        const { type, file, modules, server } = ctx;
+        if (this.isDebounced(file, type)) return [];
 
         if (this.isCriticalFile(file)) {
             this.reportRestartRequired(file);
             return [];
         }
 
-        const moduleGraph = server.moduleGraph;
-        const fileModules = moduleGraph.getModulesByFile(file);
-        const allModules = fileModules ? [...fileModules] : [];
+        const { moduleGraph } = server;
+        const affectedModules = this.getAffectedModules([...modules, ...(moduleGraph.getModulesByFile(file) ?? [])]);
 
-        const combinedModules = new Set([...modules, ...allModules]);
-        const affectedModules = this.getAffectedModules([...combinedModules]);
-
-        const filesToInvalidate = new Set([file, ...affectedModules]);
-
-        for (const fileToInvalidate of filesToInvalidate) {
-            const mods = moduleGraph.getModulesByFile(fileToInvalidate);
-            if (mods) {
-                for (const mod of mods) {
-                    moduleGraph.invalidateModule(mod);
-                }
-            }
+        for (const target of new Set([file, ...affectedModules])) {
+            for (const mod of moduleGraph.getModulesByFile(target) ?? []) moduleGraph.invalidateModule(mod);
         }
 
-        // the runtime invalidates this module in its evaluated-modules graph on a file-change event.
         this.emit('event', { type: 'file-change', path: file });
+        this.send({ file, type, affectedModules, rollback: this.config.hmr?.rollback ?? true });
 
-        const payload: HmrUpdateEvent = { file, type, affectedModules, rollback: this.config.hmr?.rollback ?? true };
-
-        this.dev?.send('seedcord:hmr', payload);
-
-        // returning [] suppresses vite's default client HMR so invalidation runs through the runtime.
+        // [] skips vite's own hmr
         return [];
     }
 
     private isCriticalFile(file: string): boolean {
-        const root = this.config.root;
+        const { root, configFile, entry, instance } = this.config;
         const relPath = relative(root, file);
+        const patterns = [...(this.config.hmr?.restart ?? []), ...this.dynamicRestartPatterns];
 
-        if (this.config.hmr?.restart) {
-            for (const pattern of this.config.hmr.restart) {
-                if (minimatch(relPath, pattern)) {
-                    return true;
-                }
-            }
-        }
-
-        for (const pattern of this.dynamicRestartPatterns) {
-            if (minimatch(relPath, pattern)) {
-                return true;
-            }
-        }
-
-        if (
-            file === this.config.configFile ||
+        return (
+            patterns.some((pattern) => minimatch(relPath, pattern)) ||
+            file === configFile ||
             file.endsWith('package.json') ||
             file.endsWith('tsconfig.json') ||
-            file.endsWith('.env')
-        ) {
-            return true;
-        }
-
-        const entryPath = resolve(root, this.config.entry);
-        const instancePath = resolve(root, this.config.instance);
-
-        if (file === entryPath || file === instancePath) {
-            return true;
-        }
-
-        return false;
+            file.endsWith('.env') ||
+            file === resolve(root, entry) ||
+            file === resolve(root, instance)
+        );
     }
 
     private getAffectedModules(modules: (EnvironmentModuleNode | ModuleNode)[]): string[] {
         const affected = new Set<string>();
-        const seen = new Set<string>();
 
         const traverse = (mod: EnvironmentModuleNode | ModuleNode): void => {
-            if (!mod.file || seen.has(mod.file)) return;
-
-            seen.add(mod.file);
+            if (!mod.file || affected.has(mod.file)) return;
             affected.add(mod.file);
             mod.importers.forEach(traverse);
         };

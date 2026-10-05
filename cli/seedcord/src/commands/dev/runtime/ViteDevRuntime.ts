@@ -3,7 +3,6 @@ import { dirname, relative } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
-import { EvaluatedModules } from 'vite/module-runner';
 // eslint-disable-next-line import-x/no-rename-default -- the package declares its default as `_default`
 import tsconfigPaths from 'vite-tsconfig-paths';
 
@@ -21,7 +20,6 @@ export class ViteDevRuntime implements DevRuntime {
     private viteServer: ViteDevServer | null = null;
     private moduleRunner: ModuleRunner | null = null;
     private eventHandler: DevEventHandler | null = null;
-    private evaluatedModules: EvaluatedModules | null = null;
     private hmrPlugin: HmrPlugin | null = null;
 
     public async start(context: DevRuntimeContext): Promise<void> {
@@ -52,33 +50,12 @@ export class ViteDevRuntime implements DevRuntime {
 
         this.viteServer = await createServer(config);
 
-        this.evaluatedModules = new EvaluatedModules();
-        this.moduleRunner = createServerModuleRunner(this.viteServer.environments.ssr, {
-            evaluatedModules: this.evaluatedModules
-        });
+        this.moduleRunner = createServerModuleRunner(this.viteServer.environments.ssr);
 
-        hmrPlugin.on('event', this.handleHmrEvent.bind(this));
+        hmrPlugin.on('event', this.emit.bind(this));
 
         this.emit({ type: 'module-loaded', path: projectRoot });
         this.emit({ type: 'ready' });
-    }
-
-    private handleHmrEvent(event: DevEvent): void {
-        if (event.type === 'file-change') {
-            this.invalidateModule(event.path);
-        }
-        this.emit(event);
-    }
-
-    private invalidateModule(file: string): void {
-        const projectRoot = this.context?.config.root;
-        if (!projectRoot || !this.evaluatedModules) return;
-
-        const moduleId = toModuleId(projectRoot, file);
-        const moduleNode = this.evaluatedModules.getModuleById(moduleId);
-        if (moduleNode) {
-            this.evaluatedModules.invalidateModule(moduleNode);
-        }
     }
 
     public refreshCommands(shouldRefresh: boolean): void {
@@ -123,7 +100,6 @@ export class ViteDevRuntime implements DevRuntime {
         }
 
         this.moduleRunner = null;
-        this.evaluatedModules = null;
         this.hmrPlugin = null;
         this.context = null;
         this.eventHandler = null;
