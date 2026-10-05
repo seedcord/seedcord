@@ -3,7 +3,8 @@
     "type": "module",
     "version": "0.1.11",
     "engines": {
-        "node": ">=24.11"
+        "node": ">=24.11",
+        "bun": ">=1.4.2"
     },
     "description": "Rate limiting and key building for seedcord bots",
     "keywords": [

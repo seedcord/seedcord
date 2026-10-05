@@ -3,7 +3,8 @@
     "type": "module",
     "version": "0.4.3",
     "engines": {
-        "node": ">=24.11"
+        "node": ">=24.11",
+        "bun": ">=1.4.2"
     },
     "description": "Channelled logging for seedcord bots",
     "keywords": [

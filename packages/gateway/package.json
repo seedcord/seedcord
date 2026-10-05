@@ -3,7 +3,8 @@
     "type": "module",
     "version": "0.7.4",
     "engines": {
-        "node": ">=24.11"
+        "node": ">=24.11",
+        "bun": ">=1.4.2"
     },
     "description": "Gateway transport for seedcord bots, using the discord.js client",
     "keywords": [

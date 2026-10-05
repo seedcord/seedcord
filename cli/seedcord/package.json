@@ -3,7 +3,8 @@
     "type": "module",
     "version": "0.21.4",
     "engines": {
-        "node": ">=24.11"
+        "node": ">=24.11",
+        "bun": ">=1.4.2"
     },
     "description": "The seedcord CLI. Dev server, build, and codegen for a typed Discord bot.",
     "keywords": [
@@ -81,7 +82,6 @@
         "reflect-metadata": "catalog:deps",
         "tsc-alias": "^1.9.1",
         "vite": "catalog:deps",
-        "vite-tsconfig-paths": "^6.1.1",
         "wrap-ansi": "^10.0.0"
     },
     "devDependencies": {
