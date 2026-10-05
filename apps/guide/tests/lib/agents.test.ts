@@ -1,6 +1,30 @@
+import { loader } from 'fumadocs-core/source';
 import { describe, expect, it } from 'vitest';
 
-import { llmsIndex, twinLinks } from '#lib/agents';
+import { llmsIndex, pageLinks, twinLinks } from '#lib/agents';
+
+describe('the page list in llms.txt', () => {
+    it('lists every page as a link', async () => {
+        const source = loader({
+            baseUrl: '/',
+            source: {
+                files: [
+                    { type: 'page', path: 'index.mdx', data: { title: 'Introduction', description: 'What it does.' } },
+                    {
+                        type: 'page',
+                        path: 'commands/options.mdx',
+                        data: { title: 'Options', description: 'Reading input.' }
+                    }
+                ]
+            }
+        });
+
+        const links = await pageLinks(source);
+
+        expect(links).toContain('[Introduction](https://seedcord.org/guide/index.md): What it does.');
+        expect(links).toContain('[Options](https://seedcord.org/guide/commands/options.md): Reading input.');
+    });
+});
 
 describe('the links an agent follows out of llms.txt', () => {
     it('points a page link at the markdown an agent can read', () => {
