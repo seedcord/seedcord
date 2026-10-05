@@ -71,7 +71,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     /** @internal */
     public readonly [HostVersion]: string = packageVersion;
 
-    /** Workerd-compatible Discord REST client. `start()` sets the token. */
+    /** Discord REST client built from `bot.restOptions`. `start()` sets the token. */
     public readonly rest: REST;
 
     /** @see {@link IRateLimiter} */

@@ -178,6 +178,7 @@ If a migration throws an `Error`, you get that error unchanged, so a failing `CR
 | --- | --- |
 | a listed file that doesn't export `up` and `down` | `PluginKyselyInvalidMigrationModule`, with the file path |
 | an empty array of paths | `PluginKyselyNoMigrationFiles` |
+| two listed files with the same name once the extension is gone, like `users/001-init.ts` and `guilds/001-init.ts` | `PluginKyselyDuplicateMigrationName`, with both file paths |
 | a migration that throws something other than an `Error` | `PluginKyselyNonErrorFailure` |
 | a `path` that doesn't exist | Node's `ERR_MODULE_NOT_FOUND`, since the plugin imports it as a file |
 

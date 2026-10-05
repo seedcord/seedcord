@@ -23,6 +23,11 @@ import type {
 } from 'kysely/migration';
 import type { Stats } from 'node:fs';
 
+// kysely's FileMigrationProvider strips the extension the same way
+function migrationName(filePath: string): string {
+    return path.basename(filePath, path.extname(filePath));
+}
+
 /**
  * @sealed
  */
@@ -196,6 +201,7 @@ export class KyselyMigrationManager {
         if (files.length === 0) {
             throw new SeedcordError(SeedcordErrorCode.PluginKyselyNoMigrationFiles);
         }
+        this.assertUniqueNames(files);
 
         const comparator =
             this.ctx.config.nameComparator ?? ((nameA: string, nameB: string) => nameA.localeCompare(nameB));
@@ -210,9 +216,7 @@ export class KyselyMigrationManager {
                 }
 
                 const { up, down } = mod;
-
-                // kysely's FileMigrationProvider strips the extension the same way
-                const name = path.basename(filePath, path.extname(filePath));
+                const name = migrationName(filePath);
 
                 const migration: Migration = {
                     async up(db) {
@@ -275,6 +279,22 @@ export class KyselyMigrationManager {
             this.ctx.logger.info(
                 `${paint.amber('•')} ${paint.sky.bold(result.migrationName)} ${paint.mute('(skipped)')}`
             );
+        }
+    }
+
+    private assertUniqueNames(files: string[]): void {
+        const firstFileFor = new Map<string, string>();
+        for (const filePath of files) {
+            const name = migrationName(filePath);
+            const first = firstFileFor.get(name);
+            if (first !== undefined) {
+                throw new SeedcordError(SeedcordErrorCode.PluginKyselyDuplicateMigrationName, [
+                    name,
+                    this.relativePath(first),
+                    this.relativePath(filePath)
+                ]);
+            }
+            firstFileFor.set(name, filePath);
         }
     }
 

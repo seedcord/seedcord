@@ -1,6 +1,7 @@
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { buildContext } from '#template/context';
 import { renderTemplates } from '#template/render';
@@ -49,15 +50,23 @@ describe('renderTemplates', () => {
         expect(files.find((file) => file.path === 'bunfig.toml')?.contents).toBe('[run]\nbun = true\n');
     });
 
-    it('declares the Bun floor for a Bun project and the Node floor for the rest', async () => {
+    it("declares this package's Bun floor for a Bun project and its Node floor for the rest", async () => {
+        const own = createRequire(import.meta.url)('../../package.json') as {
+            engines: { node: string; bun: string };
+        };
+        // tsdown-config bakes these in from the same engines at build time
+        vi.stubEnv('PACKAGE_NODE_RANGE', own.engines.node);
+        vi.stubEnv('PACKAGE_BUN_RANGE', own.engines.bun);
+
         const engines = async (agent: 'bun' | 'pnpm'): Promise<unknown> => {
             const files = await renderTemplates(TEMPLATES, buildContext(GATEWAY, { ...EXTRAS, agent }));
             const manifest = files.find((file) => file.path === 'package.json')?.contents ?? '{}';
             return (JSON.parse(manifest) as { engines?: unknown }).engines;
         };
 
-        expect(await engines('bun')).toEqual({ bun: '>=1.4.2' });
-        expect(await engines('pnpm')).toEqual({ node: '>=24.11' });
+        expect(await engines('bun')).toEqual({ bun: own.engines.bun });
+        expect(await engines('pnpm')).toEqual({ node: own.engines.node });
+        vi.unstubAllEnvs();
     });
 
     it('writes no bunfig.toml for another package manager', async () => {

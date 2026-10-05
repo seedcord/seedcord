@@ -216,6 +216,8 @@ export enum SeedcordErrorCode {
     PluginKyselyConnectionFailed = 2211,
     /** Bootstrapper failed to ensure the target Postgres database exists. */
     PluginKyselyBootstrapFailed = 2212,
+    /** Two listed migration files share a name once their extensions are stripped. */
+    PluginKyselyDuplicateMigrationName = 2213,
 
     /** Config file default export was not an object. */
     CliConfigInvalidExport = 3101,

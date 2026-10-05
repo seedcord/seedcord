@@ -4,6 +4,9 @@ import type { BotConfig, Config } from '@seedcord/types';
 interface HttpBotConfig extends BotConfig {
     /**
      * Passed to the `REST` client from `@discordjs/rest`.
+     *
+     * On edge, `hashSweepInterval` and `handlerSweepInterval` default to `0`. Keep them there,
+     * otherwise workerd throws when a timer starts at a worker's global scope.
      */
     restOptions?: Partial<RESTOptions>;
 }

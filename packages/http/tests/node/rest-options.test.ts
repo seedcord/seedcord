@@ -6,7 +6,6 @@ import { VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { HttpConfig } from '#src/interfaces/Config';
 
-// the wide HttpConfig would carry port into the edge arm
 function config(restOptions?: { timeout: number }): Pick<HttpConfig, 'bot' | 'subscribers'> {
     return {
         bot: { interactions: { path: null }, commands: { path: null }, ...(restOptions && { restOptions }) },

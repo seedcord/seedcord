@@ -5,16 +5,6 @@ import { SeedcordError } from '@seedcord/errors/internal';
 const MINIMUM = '>=';
 const SPACES = /\s/g;
 
-interface EngineRanges {
-    node: string;
-    bun: string;
-}
-
-interface RuntimeVersions {
-    node: string;
-    bun?: string | undefined;
-}
-
 function versionParts(text: string): number[] | undefined {
     const [release = ''] = text.replace(/^v/, '').split(/[-+]/);
     const parts = release.split('.').map(Number);
@@ -29,13 +19,13 @@ function meetsMinimum(required: number[], running: number[]): boolean {
     return true;
 }
 
-/** @internal */
-export function assertRuntimeVersion(ranges: EngineRanges, versions: RuntimeVersions): void {
-    // bun also sets process.versions.node, to the node version it reports compatibility with
+export function assertDeclaredRuntime(): void {
+    const { bun, node } = process.versions;
+    // tsdown-config bakes both ranges in from this package's engines
     const runtime =
-        versions.bun === undefined
-            ? { name: 'Node', range: ranges.node, running: versions.node }
-            : { name: 'Bun', range: ranges.bun, running: versions.bun };
+        bun === undefined
+            ? { name: 'Node', range: process.env.PACKAGE_NODE_RANGE ?? '', running: node }
+            : { name: 'Bun', range: process.env.PACKAGE_BUN_RANGE ?? '', running: bun };
 
     const range = runtime.range.replaceAll(SPACES, '');
     if (!range.startsWith(MINIMUM)) return;
@@ -49,13 +39,4 @@ export function assertRuntimeVersion(ranges: EngineRanges, versions: RuntimeVers
         runtime.range,
         runtime.running
     ]);
-}
-
-// tsdown-config bakes both ranges in from this package's engines
-/** @internal */
-export function assertDeclaredRuntime(): void {
-    assertRuntimeVersion(
-        { node: process.env.PACKAGE_NODE_RANGE ?? '', bun: process.env.PACKAGE_BUN_RANGE ?? '' },
-        process.versions
-    );
 }

@@ -210,6 +210,8 @@ const messages = {
         databaseName ? `Could not connect to Postgres (${databaseName}).` : 'Could not connect to Postgres.',
     [SeedcordErrorCode.PluginKyselyBootstrapFailed]: (databaseName: string) =>
         `Failed to ensure database ${databaseName} exists.`,
+    [SeedcordErrorCode.PluginKyselyDuplicateMigrationName]: (name: string, first: string, second: string) =>
+        `${paint.sky(first)} and ${paint.sky(second)} are both the migration ${paint.sky(name)}. Kysely identifies a migration by its file name without the extension. Rename one file, or list only one of them.`,
 
     [SeedcordErrorCode.CliConfigInvalidExport]: () => 'Config file must default export an object.',
     [SeedcordErrorCode.CliConfigMissingInstance]: () =>

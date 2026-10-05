@@ -15,36 +15,35 @@ function declaredEngines() {
 }
 
 function versionParts(text) {
-    const [release = ''] = text.split(/[-+]/);
+    const [release = ''] = text.replace(/^v/, '').split(/[-+]/);
     const parts = release.split('.').map(Number);
-    return parts.every(Number.isInteger) ? parts : null;
+    return parts.every(Number.isInteger) ? parts : undefined;
 }
 
-function meetsRange(range, version) {
-    const compact = range.replaceAll(/\s/g, '');
-    if (!compact.startsWith('>=')) return true;
-
-    const need = versionParts(compact.slice('>='.length));
-    const have = versionParts(version.replace(/^v/, ''));
-    if (!need || !have) return true;
-
-    for (const [index, wanted] of need.entries()) {
-        const got = have[index] ?? 0;
+function meetsMinimum(required, running) {
+    for (const [index, wanted] of required.entries()) {
+        const got = running[index] ?? 0;
         if (got !== wanted) return got > wanted;
     }
     return true;
 }
 
-// importing core's own check here would load the code this guards
+// importing core's assertDeclaredRuntime here would load the code this guards
 function unsupportedRuntime() {
     const engines = declaredEngines();
-    const bun = process.versions.bun;
+    const { bun, node } = process.versions;
     const runtime =
         bun === undefined
-            ? { name: 'Node', range: engines.node ?? '', version: process.version }
-            : { name: 'Bun', range: engines.bun ?? '', version: bun };
+            ? { name: 'Node', range: engines.node ?? '', running: node }
+            : { name: 'Bun', range: engines.bun ?? '', running: bun };
 
-    return meetsRange(runtime.range, runtime.version) ? null : runtime;
+    const range = runtime.range.replaceAll(/\s/g, '');
+    if (!range.startsWith('>=')) return undefined;
+
+    const required = versionParts(range.slice('>='.length));
+    const running = versionParts(runtime.running);
+    if (!required || !running || meetsMinimum(required, running)) return undefined;
+    return runtime;
 }
 
 async function run() {
@@ -63,7 +62,7 @@ const unsupported = unsupportedRuntime();
 if (unsupported) {
     // eslint-disable-next-line no-console -- the bin has no logger
     console.error(
-        `seedcord requires ${unsupported.name} ${unsupported.range} but this process runs ${unsupported.version}.`
+        `seedcord requires ${unsupported.name} ${unsupported.range} but this process runs ${unsupported.running}.`
     );
     process.exit(1);
 }

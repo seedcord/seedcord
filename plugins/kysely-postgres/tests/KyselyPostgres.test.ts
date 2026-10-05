@@ -1,3 +1,4 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { KyselyPostgres } from '#src/KyselyPostgres';
@@ -255,5 +256,25 @@ describe('KyselyPostgres Plugin Integration', () => {
         }
 
         expect(names).toEqual(['001-create-users', '001-create-users']);
+    });
+
+    it('throws when two listed migration files end up with the same name', async () => {
+        const migration = 'export async function up() {}\nexport async function down() {}\n';
+        await testEnv.createFile('services/.keep', '');
+
+        plugin = new KyselyPostgres(mockCore, {
+            connectionString: 'postgres://localhost:5432/test',
+            migrations: {
+                path: [
+                    await testEnv.createFile('users/001-init.ts', migration),
+                    await testEnv.createFile('guilds/001-init.ts', migration)
+                ]
+            },
+            dir: testEnv.resolvePath('services')
+        });
+
+        await expect(plugin.init()).rejects.toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.PluginKyselyDuplicateMigrationName })
+        );
     });
 });

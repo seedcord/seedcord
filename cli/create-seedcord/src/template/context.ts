@@ -28,6 +28,7 @@ export interface TemplateContext {
     botColor: string;
     developerUsername: string;
     pm: { run: string; isBun: boolean };
+    engines: { node: string; bun: string };
 }
 
 const REQUIRED = ['directory', 'language', 'transport', 'token', 'botColor'] as const;
@@ -61,6 +62,8 @@ export function buildContext(
         publicKey: answers.publicKey ?? '',
         botColor: answers.botColor,
         developerUsername: extras.developerUsername,
-        pm: { run: runPrefix(extras.agent), isBun: extras.agent === 'bun' }
+        pm: { run: runPrefix(extras.agent), isBun: extras.agent === 'bun' },
+        // tsdown-config bakes in this package's own engines
+        engines: { node: process.env.PACKAGE_NODE_RANGE ?? '', bun: process.env.PACKAGE_BUN_RANGE ?? '' }
     };
 }
