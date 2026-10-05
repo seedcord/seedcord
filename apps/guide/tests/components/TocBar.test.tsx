@@ -27,14 +27,14 @@ function trigger(): HTMLElement {
     return screen.getByRole('button', { name: TRIGGER });
 }
 
-async function click(element: HTMLElement): Promise<void> {
-    await act(async () => {
+function click(element: HTMLElement): void {
+    act(() => {
         fireEvent.click(element);
     });
 }
 
-async function pressEscape(): Promise<void> {
-    await act(async () => {
+function pressEscape(): void {
+    act(() => {
         fireEvent.keyDown(window, { key: 'Escape' });
     });
 }
@@ -55,10 +55,10 @@ describe('TocBar', () => {
     it('opens the panel and closes it again', async () => {
         renderBar();
 
-        await click(trigger());
+        click(trigger());
         expect(screen.getByRole('link', { name: 'How it works' })).toBeInTheDocument();
 
-        await click(trigger());
+        click(trigger());
         await waitFor(() => {
             expect(screen.queryByRole('link', { name: 'How it works' })).toBeNull();
         });
@@ -67,41 +67,41 @@ describe('TocBar', () => {
     it('closes when a row is picked', async () => {
         renderBar();
 
-        await click(trigger());
-        await click(screen.getByRole('link', { name: 'Related' }));
+        click(trigger());
+        click(screen.getByRole('link', { name: 'Related' }));
 
         await waitFor(() => {
             expect(screen.queryByRole('link', { name: 'Related' })).toBeNull();
         });
     });
 
-    it('points aria-controls at the panel it opens', async () => {
+    it('points aria-controls at the panel it opens', () => {
         renderBar();
 
-        await click(trigger());
+        click(trigger());
         const controls = trigger().getAttribute('aria-controls');
 
         expect(controls).toBeTruthy();
         expect(document.getElementById(controls ?? '')).toBeInTheDocument();
     });
 
-    it('returns focus to the trigger when escape closes it', async () => {
+    it('returns focus to the trigger when escape closes it', () => {
         renderBar();
 
-        await click(trigger());
+        click(trigger());
         screen.getByRole('link', { name: 'How it works' }).focus();
-        await pressEscape();
+        pressEscape();
 
         expect(trigger()).toHaveFocus();
     });
 
-    it('leaves focus alone when escape arrives from outside the bar', async () => {
+    it('leaves focus alone when escape arrives from outside the bar', () => {
         renderBar();
         const outside = screen.getByRole('link', { name: 'elsewhere' });
 
-        await click(trigger());
+        click(trigger());
         outside.focus();
-        await pressEscape();
+        pressEscape();
 
         expect(outside).toHaveFocus();
     });

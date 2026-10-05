@@ -39,7 +39,7 @@ interface ImageProps extends ComponentProps<'img'> {
 }
 
 // a typo would otherwise render as a padded box with no edge
-function pick<T extends Record<string, string>>(options: T, key: keyof T, prop: string): string {
+function pick<Options extends Record<string, string>>(options: Options, key: keyof Options, prop: string): string {
     const found = options[key];
     if (found === undefined)
         throw new Error(`${String(key)} is not a ${prop}. Write one of ${Object.keys(options).join(', ')}.`);

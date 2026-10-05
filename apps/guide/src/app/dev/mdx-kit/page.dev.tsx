@@ -6,7 +6,7 @@ import { mdxComponents } from '#lib/mdxComponents';
 
 import type { ReactNode } from 'react';
 
-async function MdxKit(): Promise<ReactNode> {
+function MdxKit(): ReactNode {
     const page = devSource.getPage(['mdx-kit']);
     if (!page) notFound();
 

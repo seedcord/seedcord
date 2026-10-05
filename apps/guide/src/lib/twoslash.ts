@@ -78,7 +78,7 @@ const renderer: TwoslashRenderer = {
         return nodes;
     },
     nodeStaticInfo(info, node) {
-        const element = rich.nodeStaticInfo?.call(this, info, node) ?? node;
+        const element = rich.nodeStaticInfo.call(this, info, node);
         const { ref } = info as HoverWithRef;
         const href = ref ? DocsLinks.current().href(ref) : null;
         if (!ref || !href || element.type !== 'element') return element;

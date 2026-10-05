@@ -18,8 +18,8 @@ marked.use({
         if (token.type === 'code') {
             // the cast narrows token past marked's union, and shiki validates the language string itself at runtime
             const { text, lang } = token as Tokens.Code;
-            // an untagged fence leaves lang empty, and `||` falls through to the helper's ts default
-            const html = await highlightToHtml(text, (lang || undefined) as BundledLanguage | undefined);
+            // marked leaves lang empty on an untagged fence
+            const html = await highlightToHtml(text, lang === '' ? undefined : (lang as BundledLanguage | undefined));
             if (html) {
                 Object.assign(token, { type: 'html', text: html });
             }

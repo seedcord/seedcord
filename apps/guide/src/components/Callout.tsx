@@ -24,6 +24,7 @@ export interface CalloutProps {
 
 export function Callout({ type, only, children }: CalloutProps): ReactElement {
     const icon = ICONS[type];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- MDX passes the authored string unchecked
     if (icon === undefined) {
         throw new Error(`${type} is not a callout. Write one of ${Object.keys(CALLOUT_LABELS).join(', ')}.`);
     }
@@ -33,6 +34,7 @@ export function Callout({ type, only, children }: CalloutProps): ReactElement {
     }
 
     const label = only === undefined ? CALLOUT_LABELS[type] : TRANSPORT_LABELS[only];
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- same for only
     if (label === undefined) {
         throw new Error(`${only} is not a transport. Write one of ${Object.keys(TRANSPORT_LABELS).join(', ')}.`);
     }

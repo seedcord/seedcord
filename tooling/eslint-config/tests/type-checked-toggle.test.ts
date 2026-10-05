@@ -1,4 +1,5 @@
 import { ESLint } from 'eslint';
+import tseslint from 'typescript-eslint';
 import { describe, expect, it } from 'vitest';
 
 import createConfig, { type SeedcordConfigOptions } from '#src/index';
@@ -49,12 +50,28 @@ describe('registerTypescriptConfigs', () => {
 
     it('leaves no typescript-eslint rule switched on for false', async () => {
         const { rules = {} } = await resolveConfig({ registerTypescriptConfigs: false }, 'src/example.ts');
-        // eslint-config-prettier still names a few, all of them off
+        // eslint-config-prettier still sets a few of them to off
         const enabled = Object.keys(rules).filter(
             (name) => name.startsWith('@typescript-eslint/') && severity(rules, name) !== 0
         );
 
         expect(enabled).toEqual([]);
+    });
+
+    it('applies the seedcord rules on rules-only while another config loads the plugin', async () => {
+        // eslint-config-next loads its own copy of the plugin
+        const otherCopy: Linter.Config = {
+            files: ['**/*.ts'],
+            plugins: { '@typescript-eslint': { ...tseslint.plugin } }
+        };
+
+        const { rules = {} } = await resolveConfig(
+            { registerTypescriptConfigs: 'rules-only', userConfigs: [otherCopy] },
+            'src/example.ts'
+        );
+
+        expect(severity(rules, TYPE_AWARE)).toBe(2);
+        expect(severity(rules, '@typescript-eslint/no-base-to-string')).toBe(2);
     });
 
     it.each(['yes', 'all', 'off'])('rejects %o for registerTypescriptConfigs', (value) => {
@@ -64,6 +81,6 @@ describe('registerTypescriptConfigs', () => {
             createConfig({
                 registerTypescriptConfigs: value as NonNullable<SeedcordConfigOptions['registerTypescriptConfigs']>
             })
-        ).toThrow(/takes true, false, or 'no-type-checked'/);
+        ).toThrow(/takes true, false, 'no-type-checked', or 'rules-only'/);
     });
 });

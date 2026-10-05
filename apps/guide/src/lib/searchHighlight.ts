@@ -161,7 +161,7 @@ export function highlightSegments(content: string, query: string): HighlightSegm
 
         const last = segments.at(-1);
         const same = last !== undefined && last.match === match[at] && last.code === code[at];
-        if (same && last !== undefined) last.text += plain[at];
+        if (same) last.text += plain[at];
         else segments.push({ text: plain[at] ?? '', match: match[at] ?? false, code: code[at] ?? false });
     }
 
@@ -170,7 +170,7 @@ export function highlightSegments(content: string, query: string): HighlightSegm
 }
 
 /** Cuts the flat result list after `limit` pages, keeping each page's own rows with it. */
-export function firstPages<T extends { type: string }>(results: readonly T[], limit: number): T[] {
+export function firstPages<Row extends { type: string }>(results: readonly Row[], limit: number): Row[] {
     let pages = 0;
 
     return results.filter((result) => {

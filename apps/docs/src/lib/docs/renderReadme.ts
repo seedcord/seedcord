@@ -43,8 +43,8 @@ function readmeMarked(folderUrl: string | undefined): Marked {
             if (token.type !== 'code') return;
             // the cast narrows token past marked's union. shiki validates the language string at runtime regardless.
             const { text, lang } = token as Tokens.Code;
-            // a fence with no language tag leaves lang empty, so `||` picks the helper's ts default
-            const html = await highlightToHtml(text, (lang || undefined) as BundledLanguage | undefined);
+            // an untagged fence gets an empty lang from marked
+            const html = await highlightToHtml(text, lang === '' ? undefined : (lang as BundledLanguage | undefined));
             if (html) Object.assign(token, { type: 'html', text: html });
         },
         renderer: {

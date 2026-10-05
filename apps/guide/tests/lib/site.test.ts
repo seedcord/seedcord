@@ -86,7 +86,11 @@ describe('the metadata a guide page carries', () => {
 
 describe('the sitemap', () => {
     const edited = new Date('2026-08-30T12:00:00Z');
-    const page = (url: string, path: string) => ({ url, path, data: { lastModified: edited } });
+    const page = (url: string, path: string): { url: string; path: string; data: { lastModified: Date } } => ({
+        url,
+        path,
+        data: { lastModified: edited }
+    });
 
     it('lists every page a crawler can reach', () => {
         const pages = [page('/', 'index.mdx'), page('/commands/options', 'commands/options.mdx')];

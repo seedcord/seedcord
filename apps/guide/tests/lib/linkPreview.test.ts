@@ -9,7 +9,7 @@ const ORDER = [
     { label: 'Custom IDs', href: '/components/custom-ids/', tab: 'Components', group: 'Custom IDs' }
 ];
 
-function page(url: string, title: string) {
+function page(url: string, title: string): { url: string; path: string; data: { title: string; description: string } } {
     return { url, path: `${url.replace(/^\/|\/$/g, '') || 'index'}.mdx`, data: { title, description: 'A page.' } };
 }
 

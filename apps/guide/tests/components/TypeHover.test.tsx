@@ -92,7 +92,7 @@ describe('the type hover', () => {
         }
 
         const shownSymbol = (): string | null =>
-            document.querySelector('[data-radix-popper-content-wrapper] a')?.textContent?.match(/Read (\w+)/)?.[1] ??
+            document.querySelector('[data-radix-popper-content-wrapper] a')?.textContent.match(/Read (\w+)/)?.[1] ??
             null;
 
         it('costs one tab stop per code block', () => {

@@ -57,6 +57,10 @@ export interface CreateConfigOptions {
      * turns off the rules that read the type checker, the slowest ones in a run. The parser keeps
      * its `project` either way, since the seedcord and discordjs rules read types of their own.
      *
+     * `'rules-only'` applies seedcord's TypeScript rules without the typescript-eslint presets. Use it
+     * when another config in the array already loads the `@typescript-eslint` plugin, like
+     * `eslint-config-next`. ESLint throws when two configs load different copies of one plugin.
+     *
      * @defaultValue `true`
      */
     registerTypescriptConfigs?: TypescriptConfigsLevel;

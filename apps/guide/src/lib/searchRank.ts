@@ -3,8 +3,8 @@ interface Result {
     content: string;
 }
 
-interface Group<T> {
-    rows: T[];
+interface Group<Row> {
+    rows: Row[];
     titleCovered: number;
     titleWords: number;
     covered: number;
@@ -21,7 +21,7 @@ function wordCount(content: string): number {
     return content.replace(MARKS, '').split(/\s+/).filter(Boolean).length;
 }
 
-function better<T>(left: Group<T>, right: Group<T>): number {
+function better<Row>(left: Group<Row>, right: Group<Row>): number {
     if (left.covered !== right.covered) return right.covered - left.covered;
     if (left.titleCovered !== right.titleCovered) return right.titleCovered - left.titleCovered;
     // a title saying the same thing in fewer words is the tighter match
@@ -33,14 +33,14 @@ function better<T>(left: Group<T>, right: Group<T>): number {
  * Reorders whole pages by how much of the query they cover, breaking a tie on the title.
  * BM25 divides by length and scores a two word block above the paragraph that answers the question.
  */
-export function rankByCoverage<T extends Result>(results: readonly T[], query: string): T[] {
+export function rankByCoverage<Row extends Result>(results: readonly Row[], query: string): Row[] {
     const terms = query
         .toLowerCase()
         .split(/\s+/)
         .filter((term) => term.length > 0);
     if (terms.length < 2) return [...results];
 
-    const groups: Group<T>[] = [];
+    const groups: Group<Row>[] = [];
     for (const row of results) {
         if (row.type === 'page' || groups.length === 0) {
             groups.push({ rows: [], titleCovered: 0, titleWords: 0, covered: 0 });

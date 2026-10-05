@@ -11,8 +11,8 @@ export type ShellProps = Partial<Record<Verb, string>> & {
     before?: string;
 };
 
-function verbOf({ before, ...verbs }: ShellProps): [Verb, string] {
-    const written = Object.entries(verbs).filter(([, argument]) => argument !== undefined);
+function verbOf({ before: _before, ...verbs }: ShellProps): [Verb, string] {
+    const written = Object.entries(verbs);
     const [first] = written;
 
     if (written.length !== 1 || !first) {

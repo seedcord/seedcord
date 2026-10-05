@@ -171,9 +171,9 @@ interface ProjectFile {
     root: { children: { slug: string; children?: { slug: string }[] }[] };
 }
 
-async function readJson<T>(file: string): Promise<T> {
+async function readJson<Shape>(file: string): Promise<Shape> {
     try {
-        return JSON.parse(await readFile(file, 'utf8')) as T;
+        return JSON.parse(await readFile(file, 'utf8')) as Shape;
     } catch (error) {
         throw new Error(`the link gate reads ${file}. Run pnpm docs:local from the repo root first.`, { cause: error });
     }

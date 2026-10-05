@@ -121,8 +121,7 @@ function useDropOnViewportChange(open: boolean, setOpen: (open: false) => void):
         if (!open) return undefined;
 
         const drop = (event: Event): void => {
-            const moved = event.target as Element | null;
-            if (moved?.closest?.(POPOVER)) return;
+            if (event.target instanceof Element && event.target.closest(POPOVER)) return;
             setOpen(false);
         };
         window.addEventListener('scroll', drop, true);

@@ -51,7 +51,7 @@ class FakeIntersectionObserver {
             time: 0
         }));
         // safe: the hook only reads target and isIntersecting off each entry
-        this.callback(fullEntries as unknown as IntersectionObserverEntry[], this as unknown as IntersectionObserver);
+        this.callback(fullEntries, this as unknown as IntersectionObserver);
     }
 }
 

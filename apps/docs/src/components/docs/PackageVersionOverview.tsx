@@ -101,7 +101,7 @@ function renderReexportGroup([owner, links]: [string, ReexportLink[]]): ReactEle
                                     size={14}
                                     strokeWidth={2}
                                     aria-hidden
-                                    className={cn('shrink-0', config?.styles.iconColor)}
+                                    className={cn('shrink-0', config.styles.iconColor)}
                                 />
                             ) : null}
                             <span className={cn('text-xs font-semibold tracking-wide text-(--text-muted) uppercase')}>

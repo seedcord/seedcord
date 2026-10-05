@@ -89,7 +89,9 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
 
     const tsConfigs: FlatConfigItem[] = [];
 
-    if (registerTypescriptConfigs !== false) {
+    if (registerTypescriptConfigs === 'rules-only') {
+        tsConfigs.push({ files: [...TS_FILES], rules: merge({}, TYPESCRIPT_RULES) });
+    } else if (registerTypescriptConfigs !== false) {
         tsConfigs.push(
             ...tseslint.configs.recommended.map((c) => ({ ...c, files: [...TS_FILES] })),
             ...tseslint.configs.recommendedTypeChecked.map((c) => ({ ...c, files: [...TS_FILES] })),

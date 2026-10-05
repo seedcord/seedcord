@@ -1,14 +1,14 @@
 import { Linter } from 'eslint';
 
-export type TypescriptConfigsLevel = boolean | 'no-type-checked';
+export type TypescriptConfigsLevel = boolean | 'no-type-checked' | 'rules-only';
 
-const LEVELS: readonly TypescriptConfigsLevel[] = [true, false, 'no-type-checked'];
+const LEVELS: readonly TypescriptConfigsLevel[] = [true, false, 'no-type-checked', 'rules-only'];
 
 export function assertTypescriptConfigsLevel(value: unknown): asserts value is TypescriptConfigsLevel {
     if (LEVELS.includes(value as TypescriptConfigsLevel)) return;
 
     throw new Error(
-        `registerTypescriptConfigs takes true, false, or 'no-type-checked'. Received ${JSON.stringify(value)}.`
+        `registerTypescriptConfigs takes true, false, 'no-type-checked', or 'rules-only'. Received ${JSON.stringify(value)}.`
     );
 }
 
@@ -50,6 +50,7 @@ export const TYPESCRIPT_RULES: Linter.RulesRecord = {
     '@typescript-eslint/await-thenable': 'error',
     '@typescript-eslint/require-await': 'error',
     '@typescript-eslint/no-misused-promises': 'error',
+    '@typescript-eslint/no-base-to-string': 'error',
     '@typescript-eslint/restrict-template-expressions': [
         'error',
         {

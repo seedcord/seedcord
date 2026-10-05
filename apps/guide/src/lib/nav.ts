@@ -19,6 +19,7 @@ function text(name: Node['name'] | Root['name']): string | undefined {
 }
 
 function firstUrl(node: TabRoot): string | undefined {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- fumadocs assigns undefined when pagesIndex resolves to nothing
     if ('index' in node && node.index) return node.index.url;
     for (const child of node.children) {
         if (child.type === 'page') return child.url;

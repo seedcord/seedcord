@@ -13,7 +13,7 @@ export default createConfig({
     tsconfigRootDir: import.meta.dirname,
     relativeImports: 'parent',
     registerImportPlugin: 'off',
-    registerTypescriptConfigs: false,
+    registerTypescriptConfigs: 'rules-only',
     // unicorn needs eslint 10.4 or newer. this app runs eslint 9.
     registerUnicornPlugin: false,
     tailwindEntryPoint: path.resolve(import.meta.dirname, 'src/app/globals.css'),

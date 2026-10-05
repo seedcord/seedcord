@@ -55,7 +55,10 @@ describe('useCommandPaletteController', () => {
         const { result } = renderHook(() => useCommandPaletteController());
 
         act(() => result.current.handleOpenChange(true));
-        await act(async () => first.reject(new Error('offline')));
+        await act(() => {
+            first.reject(new Error('offline'));
+            return first.promise.catch(() => undefined);
+        });
 
         await waitFor(() => expect(result.current.packages).toEqual([{ folder: 'core', label: 'core' }]));
     });
