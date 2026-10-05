@@ -111,11 +111,11 @@ export class ReleaseNotes {
                 `pnpm up --latest ${targets.map((target) => (target.endsWith('*') ? `"${target}"` : target)).join(' ')}`
             ),
             PNPM_WAIT,
-            '<details>\n<summary>yarn, bun or npm</summary>',
-            '**yarn 4**',
-            fence(`yarn dlx ${checkUpdates} && yarn install`),
             '**bun 1**',
             fence(`bunx ${checkUpdates} && bun install`),
+            '<details>\n<summary>yarn or npm</summary>',
+            '**yarn 4**',
+            fence(`yarn dlx ${checkUpdates} && yarn install`),
             '**npm 12**',
             fence(`npx ${checkUpdates} && npm install`),
             '</details>'

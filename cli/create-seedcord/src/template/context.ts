@@ -3,9 +3,13 @@ import { basename } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import ownPackage from '#package' with { type: 'json' };
+
+import { runPrefix } from '#cli/packageManager';
 import { intentsFor, partialsFor } from '#interview/capabilities';
 
 import type { Answers } from '#interview/types';
+import type { AgentName } from 'package-manager-detector';
 
 // capabilities and publicKey each belong to one transport, and runFlow leaves the other unset
 export type ScaffoldAnswers = Partial<Answers> &
@@ -25,7 +29,8 @@ export interface TemplateContext {
     publicKey: string;
     botColor: string;
     developerUsername: string;
-    pm: { run: string };
+    pm: { run: string; isBun: boolean };
+    engines: { node: string; bun: string };
 }
 
 const REQUIRED = ['directory', 'language', 'transport', 'token', 'botColor'] as const;
@@ -43,7 +48,7 @@ export function requireScaffoldAnswers(answers: Partial<Answers>): ScaffoldAnswe
 
 export function buildContext(
     answers: ScaffoldAnswers,
-    extras: { developerUsername: string; runCommand: string }
+    extras: { developerUsername: string; agent: AgentName }
 ): TemplateContext {
     const isGateway = answers.transport === 'gateway';
     const capabilities = isGateway ? (answers.capabilities ?? []) : [];
@@ -59,6 +64,7 @@ export function buildContext(
         publicKey: answers.publicKey ?? '',
         botColor: answers.botColor,
         developerUsername: extras.developerUsername,
-        pm: { run: extras.runCommand }
+        pm: { run: runPrefix(extras.agent), isBun: extras.agent === 'bun' },
+        engines: ownPackage.engines
     };
 }

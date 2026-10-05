@@ -3,7 +3,7 @@ import { SeedcordAggregateError, SeedcordError, SeedcordTypeError } from '@seedc
 import { FRAMEWORK_CHANNELS, Logger } from '@seedcord/logger';
 import { HostPluginKeys, HostShutdown, HostStartup } from '@seedcord/types/internal';
 
-import { assertNodeVersion } from '#node/assertNodeVersion';
+import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
 import { StartupPhase } from '#src/lifecycle/phases';
 import { extendsThisCorePlugin, pluginLoggerOf, resolvedLifecycleSpecOf } from '#src/plugin/Plugin';
 
@@ -72,7 +72,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
         // a `sideEffects: false` build would drop the same call in the node entry
-        assertNodeVersion(process.env.PACKAGE_NODE_RANGE ?? '', process.version);
+        assertDeclaredRuntime();
 
         if (Pluggable.isInstantiated) {
             // signal handlers from the caller's shutdown stay on the process unless dropped here

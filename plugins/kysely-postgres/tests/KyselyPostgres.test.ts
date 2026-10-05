@@ -1,3 +1,4 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { KyselyPostgres } from '#src/KyselyPostgres';
@@ -236,5 +237,44 @@ describe('KyselyPostgres Plugin Integration', () => {
 
         // the failed reload rolled back, so the last-good service round-trips and stays registered
         expect(plugin.services).toHaveProperty('users');
+    });
+
+    it('lists a migration from a .ts file and from its built .js file under one name', async () => {
+        const migration = 'export async function up() {}\nexport async function down() {}\n';
+        const names: string[] = [];
+        await testEnv.createFile('services/.keep', '');
+
+        for (const file of ['migrations/001-create-users.ts', 'migrations/001-create-users.js']) {
+            plugin = new KyselyPostgres(mockCore, {
+                connectionString: 'postgres://localhost:5432/test',
+                migrations: { path: [await testEnv.createFile(file, migration)] },
+                dir: testEnv.resolvePath('services')
+            });
+            await plugin.init();
+            const listed = await plugin.listMigrations();
+            names.push(...listed.map((info) => info.name));
+        }
+
+        expect(names).toEqual(['001-create-users', '001-create-users']);
+    });
+
+    it('throws when two listed migration files end up with the same name', async () => {
+        const migration = 'export async function up() {}\nexport async function down() {}\n';
+        await testEnv.createFile('services/.keep', '');
+
+        plugin = new KyselyPostgres(mockCore, {
+            connectionString: 'postgres://localhost:5432/test',
+            migrations: {
+                path: [
+                    await testEnv.createFile('users/001-init.ts', migration),
+                    await testEnv.createFile('guilds/001-init.ts', migration)
+                ]
+            },
+            dir: testEnv.resolvePath('services')
+        });
+
+        await expect(plugin.init()).rejects.toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.PluginKyselyDuplicateMigrationName })
+        );
     });
 });

@@ -5,6 +5,7 @@
         "rootDir": "./",
         "outDir": "./dist",
         "paths": {
+            "#package": ["./package.json"],
             "#cli/*": ["./src/cli/*"],
             "#interview/*": ["./src/interview/*"],
             "#scaffold/*": ["./src/scaffold/*"],

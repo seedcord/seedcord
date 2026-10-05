@@ -140,6 +140,54 @@ jobs:
       - run: pnpm turbo build --filter='@seedcord/mock-gateway^...' --filter='@seedcord/mock-http^...' --filter='@seedcord/eslint-config...' --filter='@seedcord/eslint-plugin...'
       - run: pnpm check:typescript-floor
 
+  node-floor:
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+    name: Node floor
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          node-version: '24.11'
+      - run: pnpm turbo test --concurrency=2 --continue --filter='!@seedcord/scripts'
+
+  bun:
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+    name: Bun ${{ matrix.label }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: floor
+            version: '1.4.2'
+          - label: latest
+            version: latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/turbo-cache
+        with:
+          turbo_token: ${{ secrets.TURBO_TOKEN }}
+          turbo_team: ${{ vars.TURBO_TEAM }}
+          enable_fallback_cache: 'true'
+      - uses: ./.github/actions/setup
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: ${{ matrix.version }}
+      - run: pnpm turbo build --filter='@seedcord/mock-http^...'
+      - run: bun --bun bin/seedcord.mjs --version
+        working-directory: cli/seedcord
+      - run: |
+          bun run codegen --check
+          bun run build
+        working-directory: mocks/http
+
   audit:
     if: github.event_name == 'push'
     name: Audit

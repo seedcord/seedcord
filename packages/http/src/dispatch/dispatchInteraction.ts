@@ -31,9 +31,10 @@ import type {
 import type { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import type { InteractionOf } from '#handlers/interaction/middlewareKinds';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
-import type { HttpConfig } from '#interfaces/Config';
+import type { EdgeSweeperKey, HttpConfig } from '#interfaces/Config';
 import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from './resolve';
+import type { RESTOptions } from '@discordjs/rest';
 import type { DispatchOutcome, DispatchResult, MiddlewareKind } from '@seedcord/core';
 import type { MiddlewareRegistry } from '@seedcord/core/internal';
 import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/node';
@@ -55,13 +56,23 @@ function noLifecycle(accessor: string): never {
 const edgeShutdown: Pick<CoordinatedShutdown, 'addTask'> = { addTask: () => noLifecycle('shutdown') };
 const edgeStartup: Pick<CoordinatedStartup, 'addTask'> = { addTask: () => noLifecycle('startup') };
 
+// @discordjs/rest skips a sweeper set to 0
+const EDGE_SWEEPERS: Record<EdgeSweeperKey, 0> = { hashSweepInterval: 0, handlerSweepInterval: 0 };
+
+function edgeRestOptions(given: Partial<RESTOptions> = {}): Partial<RESTOptions> {
+    for (const key of Object.keys(EDGE_SWEEPERS) as EdgeSweeperKey[]) {
+        if (given[key] !== undefined) throw new SeedcordError(SeedcordErrorCode.ConfigEdgeRestSweeper, [key]);
+    }
+    return { ...given, ...EDGE_SWEEPERS };
+}
+
 export function createCore(config: HttpConfig, token: string): Core {
     const rateLimiter: IRateLimiter = config.store ?? new MemoryRateLimiter();
     // justified: bus completes the shape on the next line. the Bus reads core at dispatch, never here.
     const draft = {
         config,
         rateLimiter,
-        rest: new REST().setToken(token),
+        rest: new REST(edgeRestOptions(config.bot.restOptions)).setToken(token),
         shutdown: edgeShutdown,
         startup: edgeStartup,
         get applicationId(): string {

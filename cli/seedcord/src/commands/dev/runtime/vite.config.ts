@@ -12,6 +12,7 @@ export function logsIgnore(root: string): (path: string) => boolean {
 }
 
 export default defineConfig({
+    resolve: { tsconfigPaths: true },
     server: {
         middlewareMode: true,
         hmr: true,

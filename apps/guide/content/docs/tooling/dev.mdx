@@ -13,11 +13,14 @@ You don't pass it any flags. Every setting it reads comes from [`seedcord.config
 
 ## Running it on Bun
 
-The CLI's entry file starts with `#!/usr/bin/env node`, so `bun run dev` follows that line and starts `seedcord dev` on node. Add `--bun` to run the CLI on Bun instead, along with the bot it loads:
+The CLI's entry file starts with `#!/usr/bin/env node`. If Node is installed, Bun follows that line unless your `bunfig.toml` turns on `run.bun`. `bun create seedcord` writes that file for a Bun project:
 
-```sh
-bun --bun run dev
+```toml title="bunfig.toml"
+[run]
+bun = true
 ```
+
+With that file, `bun run dev` runs the CLI on Bun, along with the bot it loads. Without it, `bun run dev` starts `seedcord dev` on Node whenever Node is on your `PATH`. To run it on Bun once, use `bun --bun run dev`.
 
 ## What the terminal shows
 

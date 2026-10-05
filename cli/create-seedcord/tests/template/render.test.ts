@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -8,7 +9,7 @@ import { renderTemplates } from '#template/render';
 import type { ScaffoldAnswers } from '#template/context';
 
 const TEMPLATES = resolve(import.meta.dirname, '../../templates');
-const EXTRAS = { developerUsername: 'dhruv', runCommand: 'pnpm run' };
+const EXTRAS = { developerUsername: 'dhruv', agent: 'pnpm' } as const;
 
 const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',
@@ -43,6 +44,33 @@ async function renderOne(answers: ScaffoldAnswers, path: string): Promise<string
 }
 
 describe('renderTemplates', () => {
+    it('writes a bunfig.toml that runs the cli on Bun for a Bun project', async () => {
+        const files = await renderTemplates(TEMPLATES, buildContext(GATEWAY, { ...EXTRAS, agent: 'bun' }));
+
+        expect(files.find((file) => file.path === 'bunfig.toml')?.contents).toBe('[run]\nbun = true\n');
+    });
+
+    it("declares this package's Bun floor for a Bun project and its Node floor for the rest", async () => {
+        const own = createRequire(import.meta.url)('../../package.json') as {
+            engines: { node: string; bun: string };
+        };
+
+        const engines = async (agent: 'bun' | 'pnpm'): Promise<unknown> => {
+            const files = await renderTemplates(TEMPLATES, buildContext(GATEWAY, { ...EXTRAS, agent }));
+            const manifest = files.find((file) => file.path === 'package.json')?.contents ?? '{}';
+            return (JSON.parse(manifest) as { engines?: unknown }).engines;
+        };
+
+        expect(await engines('bun')).toEqual({ bun: own.engines.bun });
+        expect(await engines('pnpm')).toEqual({ node: own.engines.node });
+    });
+
+    it('writes no bunfig.toml for another package manager', async () => {
+        const files = await render(GATEWAY);
+
+        expect(files.has('bunfig.toml')).toBe(false);
+    });
+
     it('drops the .hbs extension', async () => {
         const files = await render(GATEWAY);
 

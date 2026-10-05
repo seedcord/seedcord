@@ -18,10 +18,12 @@ export enum SeedcordErrorCode {
     ConfigInvalidEnv = 1006,
     /** A command usable in a guild is registered without the `Guilds` intent that caches guilds. */
     MissingGuildsIntent = 1007,
-    /** The running Node version is below the range seedcord declares in `engines`. */
-    UnsupportedNodeVersion = 1008,
+    /** The running Node or Bun version is below the range seedcord declares for it in `engines`. */
+    UnsupportedRuntimeVersion = 1008,
     /** `DISCORD_BOT_TOKEN` passed its shape check and carries no readable application id. */
     ConfigTokenUnreadable = 1009,
+    /** An edge config sets a REST sweeper interval. */
+    ConfigEdgeRestSweeper = 1010,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,
@@ -216,6 +218,8 @@ export enum SeedcordErrorCode {
     PluginKyselyConnectionFailed = 2211,
     /** Bootstrapper failed to ensure the target Postgres database exists. */
     PluginKyselyBootstrapFailed = 2212,
+    /** Two listed migration files share a name once their extensions are stripped. */
+    PluginKyselyDuplicateMigrationName = 2213,
 
     /** Config file default export was not an object. */
     CliConfigInvalidExport = 3101,

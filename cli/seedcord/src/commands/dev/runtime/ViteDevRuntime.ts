@@ -3,8 +3,6 @@ import { dirname, relative } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
-// eslint-disable-next-line import-x/no-rename-default -- the package declares its default as `_default`
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { HmrPlugin } from './HmrPlugin';
 import { seedcordDependents } from './seedcordDependents';
@@ -45,7 +43,7 @@ export class ViteDevRuntime implements DevRuntime {
             server: { watch: { ignored: [logsIgnore(projectRoot)] } },
             // an external plugin would load node's copy of @seedcord/core beside vite's
             ssr: { noExternal: seedcordDependents(projectDir) },
-            plugins: [tsconfigPaths({ root: projectDir }), hmrPlugin.plugin]
+            plugins: [hmrPlugin.plugin]
         });
 
         this.viteServer = await createServer(config);
