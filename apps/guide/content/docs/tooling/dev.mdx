@@ -11,6 +11,14 @@ If you run your bot under a plain file watcher, every save restarts the whole pr
 
 You don't pass it any flags. Every setting it reads comes from [`seedcord.config.ts`](/tooling), or `seedcord.config.mts`.
 
+## Running it on Bun
+
+The CLI's entry file starts with `#!/usr/bin/env node`, so `bun run dev` follows that line and starts `seedcord dev` on node. Add `--bun` to run the CLI on Bun instead, along with the bot it loads:
+
+```sh
+bun --bun run dev
+```
+
 ## What the terminal shows
 
 Once it starts, your terminal turns into a console for the bot. The wide pane on the right shows every line logged through seedcord's logger. It keeps the most recent 1,000 lines, so older ones drop off as new ones arrive. A narrow sidebar on the left shows which phase the bot is in, how long it has been up, the log filters, and the keys you can press.

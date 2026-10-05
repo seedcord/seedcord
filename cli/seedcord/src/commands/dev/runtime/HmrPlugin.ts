@@ -11,9 +11,9 @@ import type { DevEvent } from './events';
 import type { HmrEventType, HmrUpdateEvent } from '@seedcord/types';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type {
+    DevEnvironment,
     EnvironmentModuleNode,
     HotUpdateOptions,
-    ModuleNode,
     NormalizedHotChannel,
     Plugin,
     ViteDevServer
@@ -49,10 +49,13 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 
     public get plugin(): Plugin {
+        const onHotUpdate = this.hotUpdate.bind(this);
         return {
             name: 'seedcord:hmr',
             configureServer: this.configureServer.bind(this),
-            hotUpdate: this.hotUpdate.bind(this)
+            hotUpdate(ctx) {
+                return onHotUpdate(this.environment, ctx);
+            }
         };
     }
 
@@ -108,34 +111,32 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     private handleDirEvent(dir: string, type: 'createDir' | 'deleteDir'): void {
         if (this.isDebounced(dir, type)) return;
-        this.send({ file: dir, type, rollback: this.config.hmr?.rollback ?? true });
+        this.send({ file: dir, type });
     }
 
-    private send(payload: HmrUpdateEvent): void {
-        const relPath = relative(process.cwd(), payload.file);
-        this.logger.trace(`${TYPE_COLOR[payload.type](payload.type.toUpperCase())} ${paint.mute(relPath)}`);
-        this.dev?.send('seedcord:hmr', payload);
+    private send(event: Omit<HmrUpdateEvent, 'rollback'>): void {
+        const relPath = relative(process.cwd(), event.file);
+        this.logger.trace(`${TYPE_COLOR[event.type](event.type.toUpperCase())} ${paint.mute(relPath)}`);
+        this.dev?.send('seedcord:hmr', { ...event, rollback: this.config.hmr?.rollback ?? true });
     }
 
-    // vite calls this once per environment for each file event
-    private hotUpdate(ctx: HotUpdateOptions): EnvironmentModuleNode[] {
-        const { type, file, modules, server } = ctx;
-        if (this.isDebounced(file, type)) return [];
+    private hotUpdate(environment: DevEnvironment, ctx: HotUpdateOptions): EnvironmentModuleNode[] {
+        const { type, file, modules } = ctx;
+        // the bot's modules exist in the ssr environment
+        if (environment.name !== 'ssr' || this.isDebounced(file, type)) return [];
 
         if (this.isCriticalFile(file)) {
             this.reportRestartRequired(file);
             return [];
         }
 
-        const { moduleGraph } = server;
-        const affectedModules = this.getAffectedModules([...modules, ...(moduleGraph.getModulesByFile(file) ?? [])]);
-
-        for (const target of new Set([file, ...affectedModules])) {
+        const { moduleGraph } = environment;
+        const affectedModules = affectedFiles(file, modules);
+        for (const target of affectedModules) {
             for (const mod of moduleGraph.getModulesByFile(target) ?? []) moduleGraph.invalidateModule(mod);
         }
 
-        this.emit('event', { type: 'file-change', path: file });
-        this.send({ file, type, affectedModules, rollback: this.config.hmr?.rollback ?? true });
+        this.send({ file, type, affectedModules });
 
         // [] skips vite's own hmr
         return [];
@@ -156,17 +157,20 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             file === resolve(root, instance)
         );
     }
+}
 
-    private getAffectedModules(modules: (EnvironmentModuleNode | ModuleNode)[]): string[] {
-        const affected = new Set<string>();
+// vite can hold several modules for one file, each with its own importers
+function affectedFiles(file: string, modules: EnvironmentModuleNode[]): string[] {
+    const files = new Set([file]);
+    const visited = new Set<EnvironmentModuleNode>();
 
-        const traverse = (mod: EnvironmentModuleNode | ModuleNode): void => {
-            if (!mod.file || affected.has(mod.file)) return;
-            affected.add(mod.file);
-            mod.importers.forEach(traverse);
-        };
+    const visit = (mod: EnvironmentModuleNode): void => {
+        if (visited.has(mod)) return;
+        visited.add(mod);
+        if (mod.file) files.add(mod.file);
+        mod.importers.forEach(visit);
+    };
 
-        modules.forEach(traverse);
-        return [...affected];
-    }
+    modules.forEach(visit);
+    return [...files];
 }

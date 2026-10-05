@@ -131,7 +131,6 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
             case 'module-loading':
             case 'module-loaded':
             case 'module-error':
-            case 'file-change':
             case 'ready': {
                 break;
             }
