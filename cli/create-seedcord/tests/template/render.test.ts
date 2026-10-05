@@ -8,7 +8,7 @@ import { renderTemplates } from '#template/render';
 import type { ScaffoldAnswers } from '#template/context';
 
 const TEMPLATES = resolve(import.meta.dirname, '../../templates');
-const EXTRAS = { developerUsername: 'dhruv', runCommand: 'pnpm run' };
+const EXTRAS = { developerUsername: 'dhruv', agent: 'pnpm' } as const;
 
 const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',
@@ -43,6 +43,18 @@ async function renderOne(answers: ScaffoldAnswers, path: string): Promise<string
 }
 
 describe('renderTemplates', () => {
+    it('writes a bunfig.toml that runs the cli on Bun for a Bun project', async () => {
+        const files = await renderTemplates(TEMPLATES, buildContext(GATEWAY, { ...EXTRAS, agent: 'bun' }));
+
+        expect(files.find((file) => file.path === 'bunfig.toml')?.contents).toBe('[run]\nbun = true\n');
+    });
+
+    it('writes no bunfig.toml for another package manager', async () => {
+        const files = await render(GATEWAY);
+
+        expect(files.has('bunfig.toml')).toBe(false);
+    });
+
     it('drops the .hbs extension', async () => {
         const files = await render(GATEWAY);
 

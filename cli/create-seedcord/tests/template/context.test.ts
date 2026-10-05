@@ -22,7 +22,7 @@ const HTTP: ScaffoldAnswers = {
     botColor: '#ff8800'
 };
 
-const EXTRAS = { developerUsername: 'dhruv', runCommand: 'pnpm run' };
+const EXTRAS = { developerUsername: 'dhruv', agent: 'pnpm' } as const;
 
 describe('buildContext on gateway', () => {
     const context = buildContext(GATEWAY, EXTRAS);

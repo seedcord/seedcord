@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import { addCommand, execCommand, runPrefix } from '#cli/packageManager';
+import { addCommand, execCommand } from '#cli/packageManager';
 import { gitPlanFrom, probeGit } from '#scaffold/git';
 import { claimTarget } from '#scaffold/target';
 import { buildContext } from '#template/context';
@@ -142,7 +142,7 @@ async function runInstallSteps(input: ScaffoldInput, run: CommandRunner, isGatew
 async function writeProject(input: ScaffoldInput, plan: GitPlan, existed: boolean): Promise<TemplateContext> {
     const context = buildContext(input.answers, {
         developerUsername: plan.developerUsername,
-        runCommand: runPrefix(input.agent)
+        agent: input.agent
     });
 
     try {
