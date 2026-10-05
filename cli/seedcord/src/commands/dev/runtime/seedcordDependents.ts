@@ -1,7 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { findPackageJSON } from 'node:module';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 import { isPlainObject } from '@seedcord/utils/internal';
 
@@ -18,14 +16,20 @@ function dependencyNames(manifestPath: string, fields: readonly string[]): strin
     });
 }
 
+// bun doesn't have findPackageJSON
 function installedManifest(name: string, fromManifest: string): string | undefined {
-    try {
-        return findPackageJSON(name, pathToFileURL(fromManifest));
-    } catch (error) {
-        // node throws this for a package that isn't installed
-        if (Error.isError(error) && 'code' in error && error.code === 'ERR_MODULE_NOT_FOUND') return undefined;
-        throw error;
-    }
+    let dir = dirname(fromManifest);
+    let checked: string;
+    do {
+        const candidate = join(dir, 'node_modules', name, 'package.json');
+        // pnpm stores a package's dependencies beside its real folder
+        if (existsSync(candidate)) return realpathSync(candidate);
+
+        checked = dir;
+        dir = dirname(dir);
+    } while (dir !== checked);
+
+    return undefined;
 }
 
 function isSeedcordPackage(name: string): boolean {
