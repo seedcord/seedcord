@@ -1,5 +1,12 @@
 # create-seedcord
 
+## 0.4.2
+
+### 🩹 Patch
+
+- `bun create seedcord` writes a `bunfig.toml` that runs `bun run dev` and the other scripts on Bun. ([#357](https://github.com/seedcord/seedcord/pull/357))
+- Every package declares Bun 1.4.2 as its minimum in `engines`. ([`edbe71a`](https://github.com/seedcord/seedcord/commit/edbe71a8c8d5c9f20a2166f8848d2a638798c196))
+
 ## 0.4.1
 
 ### 🩹 Patch

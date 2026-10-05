@@ -1,5 +1,24 @@
 # @seedcord/http
 
+## 0.10.2
+
+### 🩹 Patch
+
+- Fixed an edge bot throwing at a worker's global scope, because its REST client started sweeper timers there. ([#357](https://github.com/seedcord/seedcord/pull/357))
+- Every package declares Bun 1.4.2 as its minimum in `engines`. ([`edbe71a`](https://github.com/seedcord/seedcord/commit/edbe71a8c8d5c9f20a2166f8848d2a638798c196))
+- Added `bot.restOptions` to the http config to configure the Discord REST client. An edge config can't set `hashSweepInterval` or `handlerSweepInterval`, because workerd throws when their timers start at a worker's global scope. ([#357](https://github.com/seedcord/seedcord/pull/357))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.9.4 → 0.10.0
+- `@seedcord/custom-id` 0.2.6 → 0.2.7
+- `@seedcord/errors` 0.12.0 → 0.13.0
+- `@seedcord/event-emitter` 0.1.7 → 0.1.8
+- `@seedcord/logger` 0.4.3 → 0.4.4
+- `@seedcord/rate-limiter` 0.1.11 → 0.1.12
+- `@seedcord/types` 0.14.3 → 0.14.4
+- `@seedcord/utils` 0.8.16 → 0.8.17
+
 ## 0.10.1
 
 ### 🩹 Patch

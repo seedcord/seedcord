@@ -1,5 +1,24 @@
 # @seedcord/core
 
+## 0.10.0
+
+### 💥 Breaking
+
+- `SeedcordErrorCode.UnsupportedNodeVersion` is now `UnsupportedRuntimeVersion`, still code 1008. On Bun, seedcord checks the Bun version against the minimum in `engines` and tells you to upgrade Bun. ([#357](https://github.com/seedcord/seedcord/pull/357))
+
+### 🩹 Patch
+
+- Every package declares Bun 1.4.2 as its minimum in `engines`. ([`edbe71a`](https://github.com/seedcord/seedcord/commit/edbe71a8c8d5c9f20a2166f8848d2a638798c196))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/custom-id` 0.2.6 → 0.2.7
+- `@seedcord/errors` 0.12.0 → 0.13.0
+- `@seedcord/event-emitter` 0.1.7 → 0.1.8
+- `@seedcord/logger` 0.4.3 → 0.4.4
+- `@seedcord/types` 0.14.3 → 0.14.4
+- `@seedcord/utils` 0.8.16 → 0.8.17
+
 ## 0.9.4
 
 ### 🩹 Patch

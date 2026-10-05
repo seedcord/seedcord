@@ -1,5 +1,16 @@
 # @seedcord/errors
 
+## 0.13.0
+
+### 💥 Breaking
+
+- `SeedcordErrorCode.UnsupportedNodeVersion` is now `UnsupportedRuntimeVersion`, still code 1008. On Bun, seedcord checks the Bun version against the minimum in `engines` and tells you to upgrade Bun. ([#357](https://github.com/seedcord/seedcord/pull/357))
+
+### 🩹 Patch
+
+- Every package declares Bun 1.4.2 as its minimum in `engines`. ([`edbe71a`](https://github.com/seedcord/seedcord/commit/edbe71a8c8d5c9f20a2166f8848d2a638798c196))
+- Fixed a listed migration going missing when another listed file has the same name, like `users/001-init.ts` and `guilds/001-init.ts`. Startup now throws `PluginKyselyDuplicateMigrationName` with both file paths. ([#357](https://github.com/seedcord/seedcord/pull/357))
+
 ## 0.12.0
 
 ### ✨ Minor

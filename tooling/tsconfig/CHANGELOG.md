@@ -1,5 +1,11 @@
 # @seedcord/tsconfig
 
+## 2.0.6
+
+### 🩹 Patch
+
+- Every package declares Bun 1.4.2 as its minimum in `engines`. ([`edbe71a`](https://github.com/seedcord/seedcord/commit/edbe71a8c8d5c9f20a2166f8848d2a638798c196))
+
 ## 2.0.5
 
 ### 🩹 Patch

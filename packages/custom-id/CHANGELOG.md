@@ -1,5 +1,15 @@
 # @seedcord/custom-id
 
+## 0.2.7
+
+### 🩹 Patch
+
+- Every package declares Bun 1.4.2 as its minimum in `engines`. ([`edbe71a`](https://github.com/seedcord/seedcord/commit/edbe71a8c8d5c9f20a2166f8848d2a638798c196))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.12.0 → 0.13.0
+
 ## 0.2.6
 
 ### 🩹 Patch

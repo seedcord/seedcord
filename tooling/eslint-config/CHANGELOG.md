@@ -1,5 +1,20 @@
 # @seedcord/eslint-config
 
+## 2.5.0
+
+### ✨ Minor
+
+- Added `registerTypescriptConfigs: 'rules-only'` for a config like `eslint-config-next` that already loads the `@typescript-eslint` plugin. `@typescript-eslint/no-base-to-string` now reports an array of promises joined into a string. ([`42a8bcf`](https://github.com/seedcord/seedcord/commit/42a8bcf8fd235b8e6faf7c9a494631919bb7fcb3))
+
+### 🩹 Patch
+
+- Every package declares Bun 1.4.2 as its minimum in `engines`. ([`edbe71a`](https://github.com/seedcord/seedcord/commit/edbe71a8c8d5c9f20a2166f8848d2a638798c196))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/eslint-plugin` 0.4.2 → 0.4.3
+- `eslint-plugin-discordjs` 0.1.6 → 0.1.7
+
 ## 2.4.0
 
 ### ✨ Minor

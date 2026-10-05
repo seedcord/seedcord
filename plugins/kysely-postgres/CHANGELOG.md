@@ -1,5 +1,23 @@
 # @seedcord/plugin-kysely-postgres
 
+## 0.6.0
+
+### 💥 Breaking
+
+- Fixed your built bot throwing `corrupted migrations` against a database that `seedcord dev` migrated from a file or an array path. Because the recorded name kept its extension, `001-create-users.ts` and `001-create-users.js` counted as two migrations. If a database already holds a name like that, rename its row in `kysely_migration` to the name without the extension. ([#357](https://github.com/seedcord/seedcord/pull/357))
+
+### 🩹 Patch
+
+- Every package declares Bun 1.4.2 as its minimum in `engines`. ([`edbe71a`](https://github.com/seedcord/seedcord/commit/edbe71a8c8d5c9f20a2166f8848d2a638798c196))
+- Fixed a listed migration going missing when another listed file has the same name, like `users/001-init.ts` and `guilds/001-init.ts`. Startup now throws `PluginKyselyDuplicateMigrationName` with both file paths. ([#357](https://github.com/seedcord/seedcord/pull/357))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/errors` 0.12.0 → 0.13.0
+- `@seedcord/logger` 0.4.3 → 0.4.4
+- `@seedcord/types` 0.14.3 → 0.14.4
+- `@seedcord/utils` 0.8.16 → 0.8.17
+
 ## 0.5.3
 
 ### 🩹 Patch

@@ -1,5 +1,22 @@
 # seedcord
 
+## 0.21.5
+
+### 🩹 Patch
+
+- Fixed the CLI running on a Bun version older than the minimum in its `engines` field. ([#357](https://github.com/seedcord/seedcord/pull/357))
+- `seedcord dev` resolves tsconfig `paths` through Vite itself, and the CLI no longer installs `vite-tsconfig-paths`. ([#357](https://github.com/seedcord/seedcord/pull/357))
+- Every package declares Bun 1.4.2 as its minimum in `engines`. ([`edbe71a`](https://github.com/seedcord/seedcord/commit/edbe71a8c8d5c9f20a2166f8848d2a638798c196))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.9.4 → 0.10.0
+- `@seedcord/errors` 0.12.0 → 0.13.0
+- `@seedcord/event-emitter` 0.1.7 → 0.1.8
+- `@seedcord/logger` 0.4.3 → 0.4.4
+- `@seedcord/types` 0.14.3 → 0.14.4
+- `@seedcord/utils` 0.8.16 → 0.8.17
+
 ## 0.21.4
 
 ### 🩹 Patch
