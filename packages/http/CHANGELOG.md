@@ -1,5 +1,17 @@
 # @seedcord/http
 
+## 0.10.1
+
+### 🩹 Patch
+
+- Fixed `seedcord.config.botColor` having no effect when you assign it after `new Seedcord()`. If you load the color after startup, like from a settings file, every embed and container you send after that will use it. ([`9dc8b19`](https://github.com/seedcord/seedcord/commit/9dc8b191723a547ac29c3bcc356f22a8e35cea98))
+- Fixed a type error when you assign a config key like `botColor` or `ownerIds` to `seedcord.config` on an http bot. TypeScript rejected any optional key that your `new Seedcord()` call left out. ([`ad8197d`](https://github.com/seedcord/seedcord/commit/ad8197de8d60e20042c5f273fab2630563a7bfd5))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.9.3 → 0.9.4
+- `@seedcord/types` 0.14.2 → 0.14.3
+
 ## 0.10.0
 
 ### ✨ Minor

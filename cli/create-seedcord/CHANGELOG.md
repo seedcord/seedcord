@@ -1,5 +1,11 @@
 # create-seedcord
 
+## 0.4.1
+
+### 🩹 Patch
+
+- The scaffolded `AGENTS.md` now tells a coding agent to not use seedcord's `/internal` import paths. ([`9dc8b19`](https://github.com/seedcord/seedcord/commit/9dc8b191723a547ac29c3bcc356f22a8e35cea98))
+
 ## 0.4.0
 
 ### ✨ Minor

@@ -1,5 +1,11 @@
 # @seedcord/eslint-config
 
+## 2.4.0
+
+### ✨ Minor
+
+- Added `relativeImports: 'parent'` to report an import like `'../utils/format'`. A path alias like `#src/utils/format` and a `./` import still pass. ([`2b8a6a9`](https://github.com/seedcord/seedcord/commit/2b8a6a9a956a230913de1e5aca9993c3e8aa8268))
+
 ## 2.3.0
 
 ### ✨ Minor

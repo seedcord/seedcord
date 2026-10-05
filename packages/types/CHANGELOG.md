@@ -1,5 +1,11 @@
 # @seedcord/types
 
+## 0.14.3
+
+### 🩹 Patch
+
+- Fixed the delete event in `seedcord dev` leaving out `affectedModules`. It now lists the deleted file and every file that imported it. ([#356](https://github.com/seedcord/seedcord/pull/356))
+
 ## 0.14.2
 
 ### 🩹 Patch

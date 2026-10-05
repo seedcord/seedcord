@@ -1,5 +1,19 @@
 # seedcord
 
+## 0.21.4
+
+### 🩹 Patch
+
+- Fixed the CLI crashing on Bun before any command ran. `bun --bun seedcord build` and every other command now start. ([#356](https://github.com/seedcord/seedcord/pull/356))
+- Fixed `seedcord dev` loading a second copy of `@seedcord/core` in a pnpm project for a plugin that one of your dependencies installs. ([#356](https://github.com/seedcord/seedcord/pull/356))
+- Fixed the delete event in `seedcord dev` leaving out `affectedModules`. It now lists the deleted file and every file that imported it. ([#356](https://github.com/seedcord/seedcord/pull/356))
+- Fixed `seedcord dev` reloading a new handler twice, because it sent an extra update after every file create or delete. ([#356](https://github.com/seedcord/seedcord/pull/356))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/core` 0.9.3 → 0.9.4
+- `@seedcord/types` 0.14.2 → 0.14.3
+
 ## 0.21.3
 
 ### 🩹 Patch

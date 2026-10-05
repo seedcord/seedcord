@@ -1,5 +1,15 @@
 # @seedcord/core
 
+## 0.9.4
+
+### 🩹 Patch
+
+- Fixed `seedcord.config.botColor` having no effect when you assign it after `new Seedcord()`. If you load the color after startup, like from a settings file, every embed and container you send after that will use it. ([`9dc8b19`](https://github.com/seedcord/seedcord/commit/9dc8b191723a547ac29c3bcc356f22a8e35cea98))
+
+#### 📦 Seedcord packages
+
+- `@seedcord/types` 0.14.2 → 0.14.3
+
 ## 0.9.3
 
 ### 🩹 Patch
