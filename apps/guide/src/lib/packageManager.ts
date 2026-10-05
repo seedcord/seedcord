@@ -1,4 +1,4 @@
-export const MANAGERS = ['pnpm', 'npm', 'bun', 'yarn'] as const;
+export const MANAGERS = ['pnpm', 'bun', 'npm', 'yarn'] as const;
 
 export type Manager = (typeof MANAGERS)[number];
 

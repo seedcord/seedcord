@@ -18,8 +18,8 @@ export enum SeedcordErrorCode {
     ConfigInvalidEnv = 1006,
     /** A command usable in a guild is registered without the `Guilds` intent that caches guilds. */
     MissingGuildsIntent = 1007,
-    /** The running Node version is below the range seedcord declares in `engines`. */
-    UnsupportedNodeVersion = 1008,
+    /** The running Node or Bun version is below the range seedcord declares for it in `engines`. */
+    UnsupportedRuntimeVersion = 1008,
     /** `DISCORD_BOT_TOKEN` passed its shape check and carries no readable application id. */
     ConfigTokenUnreadable = 1009,
 

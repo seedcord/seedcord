@@ -1,7 +1,7 @@
-import { assertNodeVersion } from '#node/assertNodeVersion';
+import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
 
 // the edge bundle never reaches this entry
-assertNodeVersion(process.env.PACKAGE_NODE_RANGE ?? '', process.version);
+assertDeclaredRuntime();
 
 export * from '#node/Lifecycle';
 export * from '#node/HealthCheck';

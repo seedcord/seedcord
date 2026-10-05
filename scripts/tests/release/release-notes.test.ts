@@ -131,6 +131,22 @@ describe('ReleaseNotes', () => {
         expect(body).toContain('> npx npm-check-updates -u --filter "@seedcord/*,seedcord" && npm install');
     });
 
+    it('shows the bun command under pnpm and keeps yarn and npm in the dropdown', () => {
+        const cli = { name: 'seedcord', version: '0.21.3', directory: 'cli/seedcord', changelog: '# seedcord\n' };
+        const all = [...published, cli];
+
+        const body = new ReleaseNotes({
+            repo: 'seedcord/seedcord',
+            tag: 'release-2026.10.03',
+            published: all,
+            entries: new ReleaseEntries(all)
+        }).body();
+        const dropdown = body.indexOf('<summary>yarn or npm</summary>');
+
+        expect(dropdown).toBeGreaterThan(-1);
+        expect(body.indexOf('bunx npm-check-updates')).toBeLessThan(dropdown);
+    });
+
     it('orders shared changes by kind', () => {
         const both = ['@seedcord/core', '@seedcord/errors'].map((name) => ({
             name,

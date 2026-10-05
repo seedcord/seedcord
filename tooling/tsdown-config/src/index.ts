@@ -10,6 +10,7 @@ export type TsdownOptions = UserConfig;
 interface PackageFacts {
     version: string;
     nodeRange: string;
+    bunRange: string;
 }
 
 let cachedFacts: PackageFacts | undefined;
@@ -19,19 +20,21 @@ function readPackageFacts(): PackageFacts {
 
     let version = '0.0.0';
     let nodeRange = '';
+    let bunRange = '';
 
     try {
         const pkgPath = resolve(process.cwd(), 'package.json');
         const pkgRaw = readFileSync(pkgPath, 'utf8');
-        const pkg = JSON.parse(pkgRaw) as { version?: unknown; engines?: { node?: unknown } };
+        const pkg = JSON.parse(pkgRaw) as { version?: unknown; engines?: { node?: unknown; bun?: unknown } };
         if (typeof pkg.version === 'string' && pkg.version.length > 0) version = pkg.version;
         if (typeof pkg.engines?.node === 'string') nodeRange = pkg.engines.node;
+        if (typeof pkg.engines?.bun === 'string') bunRange = pkg.engines.bun;
     } catch (error) {
         // eslint-disable-next-line no-console -- build-config helper has no Logger
         console.warn(`[tsdown-config] could not read package.json, using defaults: ${String(error)}`);
     }
 
-    cachedFacts = { version, nodeRange };
+    cachedFacts = { version, nodeRange, bunRange };
     return cachedFacts;
 }
 
@@ -56,7 +59,7 @@ export function createTsdownConfig({
     env = {},
     ...rest
 }: TsdownOptions = {}): TsdownOptions {
-    const { version: packageVersion, nodeRange } = readPackageFacts();
+    const { version: packageVersion, nodeRange, bunRange } = readPackageFacts();
 
     return defineConfig({
         format,
@@ -80,6 +83,7 @@ export function createTsdownConfig({
         env: {
             PACKAGE_VERSION: packageVersion,
             PACKAGE_NODE_RANGE: nodeRange,
+            PACKAGE_BUN_RANGE: bunRange,
             ...env
         },
         ...rest

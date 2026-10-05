@@ -18,8 +18,8 @@ const messages = {
         "DISCORD_BOT_TOKEN carries no readable application id. Discord builds the first part of a bot token from that id, so a token failing here is truncated or mistyped. Copy it again from your application's Bot page.",
     [SeedcordErrorCode.MissingGuildsIntent]: (commands: string) =>
         `Add GatewayIntentBits.Guilds to clientOptions.intents. Without it discord.js doesn't cache any guild, so interaction.guild is null inside these commands: ${commands}.`,
-    [SeedcordErrorCode.UnsupportedNodeVersion]: (required: string, running: string) =>
-        `seedcord requires Node ${required} and this process runs ${running}. Upgrade Node before starting the bot.`,
+    [SeedcordErrorCode.UnsupportedRuntimeVersion]: (runtime: string, required: string, running: string) =>
+        `seedcord requires ${runtime} ${required} but this process runs ${running}. Upgrade ${runtime} before starting the bot.`,
 
     [SeedcordErrorCode.LifecycleAddAfterCompletion]: () =>
         'Cannot add tasks after startup sequence has already completed.',
