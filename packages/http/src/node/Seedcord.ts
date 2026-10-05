@@ -72,7 +72,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     public readonly [HostVersion]: string = packageVersion;
 
     /** Workerd-compatible Discord REST client. `start()` sets the token. */
-    public readonly rest = new REST();
+    public readonly rest: REST;
 
     /** @see {@link IRateLimiter} */
     public readonly rateLimiter: IRateLimiter;
@@ -98,6 +98,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     constructor(config: Cfg) {
         super(new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
         this.config = config;
+        this.rest = new REST(config.bot.restOptions);
 
         installNodeDefaults(config.logger);
         bindBotColor(() => this.config.botColor);

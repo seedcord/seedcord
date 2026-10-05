@@ -12,6 +12,7 @@ process.env.HANDLED_EXCEPTION_WEBHOOK_URL ??= 'https://discord.com/api/webhooks/
 vi.mock('@discordjs/rest', async (importOriginal) => ({
     ...(await importOriginal<typeof DiscordRest>()),
     REST: class {
+        constructor(public readonly options: Partial<DiscordRest.RESTOptions> = {}) {}
         get = vi.fn().mockResolvedValue({});
         post = vi.fn().mockResolvedValue(undefined);
         patch = vi.fn().mockResolvedValue(undefined);

@@ -61,7 +61,8 @@ export function createCore(config: HttpConfig, token: string): Core {
     const draft = {
         config,
         rateLimiter,
-        rest: new REST().setToken(token),
+        // workerd throws on a timer at global scope. @discordjs/rest skips a sweeper set to 0
+        rest: new REST({ hashSweepInterval: 0, handlerSweepInterval: 0, ...config.bot.restOptions }).setToken(token),
         shutdown: edgeShutdown,
         startup: edgeStartup,
         get applicationId(): string {

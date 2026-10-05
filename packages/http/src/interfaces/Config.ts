@@ -1,9 +1,18 @@
-import type { Config } from '@seedcord/types';
+import type { RESTOptions } from '@discordjs/rest';
+import type { BotConfig, Config } from '@seedcord/types';
+
+interface HttpBotConfig extends BotConfig {
+    /**
+     * Passed to the `REST` client from `@discordjs/rest`.
+     */
+    restOptions?: Partial<RESTOptions>;
+}
 
 /**
  * Config for a long-running node server. Pass to `new Seedcord(config).start()`.
  */
 export interface HttpServerConfig extends Config {
+    bot: HttpBotConfig;
     runtime?: 'server';
 
     /**
@@ -19,6 +28,7 @@ export interface HttpServerConfig extends Config {
  * `createSeedcord`.
  */
 export interface HttpEdgeConfig extends Config {
+    bot: HttpBotConfig;
     runtime: 'edge';
     port?: never;
     // an isolate does not run a coordinated shutdown
