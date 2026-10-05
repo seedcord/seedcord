@@ -21,10 +21,8 @@
             }
         },
         "./*": {
-            "import": {
-                "types": "./dist/*.d.mts",
-                "default": "./dist/*.mjs"
-            }
+            "types": "./dist/*.d.mts",
+            "default": "./dist/*.mjs"
         },
         "./styles/globals.css": "./src/styles/globals.css",
         "./styles/tokens.css": "./src/styles/tokens.css"
