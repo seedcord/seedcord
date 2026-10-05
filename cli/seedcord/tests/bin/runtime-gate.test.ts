@@ -47,8 +47,8 @@ describe('the seedcord bin', () => {
         expect(stderr).toContain('seedcord requires Bun >=1.4.2 but this process runs 1.4.1.');
     });
 
-    it('exits when an older bun carries a prerelease suffix', async () => {
-        const { code, stderr } = await runBinOn({ node: '26.3.0', bun: '1.3.9-canary.1' });
+    it('exits on a prerelease of the minimum bun', async () => {
+        const { code, stderr } = await runBinOn({ node: '26.3.0', bun: '1.4.2-canary.1' });
 
         expect(code).toBe(1);
         expect(stderr).toContain('seedcord requires Bun >=1.4.2');

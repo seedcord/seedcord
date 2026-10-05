@@ -22,6 +22,8 @@ export enum SeedcordErrorCode {
     UnsupportedRuntimeVersion = 1008,
     /** `DISCORD_BOT_TOKEN` passed its shape check and carries no readable application id. */
     ConfigTokenUnreadable = 1009,
+    /** An edge config sets a REST sweeper interval. */
+    ConfigEdgeRestSweeper = 1010,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,

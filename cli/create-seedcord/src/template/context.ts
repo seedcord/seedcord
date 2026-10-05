@@ -3,6 +3,8 @@ import { basename } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import ownPackage from '#package' with { type: 'json' };
+
 import { runPrefix } from '#cli/packageManager';
 import { intentsFor, partialsFor } from '#interview/capabilities';
 
@@ -63,7 +65,6 @@ export function buildContext(
         botColor: answers.botColor,
         developerUsername: extras.developerUsername,
         pm: { run: runPrefix(extras.agent), isBun: extras.agent === 'bun' },
-        // tsdown-config bakes in this package's own engines
-        engines: { node: process.env.PACKAGE_NODE_RANGE ?? '', bun: process.env.PACKAGE_BUN_RANGE ?? '' }
+        engines: ownPackage.engines
     };
 }

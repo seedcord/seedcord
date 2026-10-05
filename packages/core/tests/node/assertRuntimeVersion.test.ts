@@ -106,8 +106,10 @@ describe('the runtime check on bun', () => {
         );
     });
 
-    it('compares the release numbers of a prerelease build', () => {
+    it('ranks a prerelease below the release it leads up to', () => {
         expectUnsupported(onRuntime({ bun: '1.3.9-canary.1' }));
+        expectUnsupported(onRuntime({ bun: '1.4.2-canary.1' }));
+        expectUnsupported(onRuntime({ nodeRange: '>=24', node: '24.0.0-rc.1' }));
         expect(onRuntime({ bun: '1.4.3-canary.1' })).not.toThrow();
     });
 

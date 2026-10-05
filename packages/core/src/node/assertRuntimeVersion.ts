@@ -5,18 +5,27 @@ import { SeedcordError } from '@seedcord/errors/internal';
 const MINIMUM = '>=';
 const SPACES = /\s/g;
 
-function versionParts(text: string): number[] | undefined {
-    const [release = ''] = text.replace(/^v/, '').split(/[-+]/);
-    const parts = release.split('.').map(Number);
-    return parts.every(Number.isInteger) ? parts : undefined;
+interface Version {
+    parts: number[];
+    prerelease: boolean;
 }
 
-function meetsMinimum(required: number[], running: number[]): boolean {
-    for (const [index, wanted] of required.entries()) {
-        const got = running[index] ?? 0;
+function parseVersion(text: string): Version | undefined {
+    const [withoutBuild = ''] = text.replace(/^v/, '').split('+');
+    const [release = '', ...prerelease] = withoutBuild.split('-');
+    const parts = release.split('.').map(Number);
+    return parts.every(Number.isInteger) ? { parts, prerelease: prerelease.length > 0 } : undefined;
+}
+
+// semver ranks 1.4.2-canary.1 below 1.4.2
+function meetsMinimum(required: Version, running: Version): boolean {
+    const length = Math.max(required.parts.length, running.parts.length);
+    for (let index = 0; index < length; index++) {
+        const wanted = required.parts[index] ?? 0;
+        const got = running.parts[index] ?? 0;
         if (got !== wanted) return got > wanted;
     }
-    return true;
+    return !running.prerelease;
 }
 
 export function assertDeclaredRuntime(): void {
@@ -30,8 +39,8 @@ export function assertDeclaredRuntime(): void {
     const range = runtime.range.replaceAll(SPACES, '');
     if (!range.startsWith(MINIMUM)) return;
 
-    const required = versionParts(range.slice(MINIMUM.length));
-    const running = versionParts(runtime.running);
+    const required = parseVersion(range.slice(MINIMUM.length));
+    const running = parseVersion(runtime.running);
     if (!required || !running || meetsMinimum(required, running)) return;
 
     throw new SeedcordError(SeedcordErrorCode.UnsupportedRuntimeVersion, [

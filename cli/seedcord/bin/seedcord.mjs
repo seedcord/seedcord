@@ -14,18 +14,22 @@ function declaredEngines() {
     }
 }
 
-function versionParts(text) {
-    const [release = ''] = text.replace(/^v/, '').split(/[-+]/);
+function parseVersion(text) {
+    const [withoutBuild = ''] = text.replace(/^v/, '').split('+');
+    const [release = '', ...prerelease] = withoutBuild.split('-');
     const parts = release.split('.').map(Number);
-    return parts.every(Number.isInteger) ? parts : undefined;
+    return parts.every(Number.isInteger) ? { parts, prerelease: prerelease.length > 0 } : undefined;
 }
 
+// semver ranks 1.4.2-canary.1 below 1.4.2
 function meetsMinimum(required, running) {
-    for (const [index, wanted] of required.entries()) {
-        const got = running[index] ?? 0;
+    const length = Math.max(required.parts.length, running.parts.length);
+    for (let index = 0; index < length; index++) {
+        const wanted = required.parts[index] ?? 0;
+        const got = running.parts[index] ?? 0;
         if (got !== wanted) return got > wanted;
     }
-    return true;
+    return !running.prerelease;
 }
 
 // importing core's assertDeclaredRuntime here would load the code this guards
@@ -40,8 +44,8 @@ function unsupportedRuntime() {
     const range = runtime.range.replaceAll(/\s/g, '');
     if (!range.startsWith('>=')) return undefined;
 
-    const required = versionParts(range.slice('>='.length));
-    const running = versionParts(runtime.running);
+    const required = parseVersion(range.slice('>='.length));
+    const running = parseVersion(runtime.running);
     if (!required || !running || meetsMinimum(required, running)) return undefined;
     return runtime;
 }

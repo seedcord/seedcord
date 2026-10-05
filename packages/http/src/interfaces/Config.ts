@@ -1,21 +1,21 @@
 import type { RESTOptions } from '@discordjs/rest';
-import type { BotConfig, Config } from '@seedcord/types';
+import type { BotConfig, Config, TypedOmit } from '@seedcord/types';
 
-interface HttpBotConfig extends BotConfig {
+// workerd throws when a timer starts at a worker's global scope
+export type EdgeSweeperKey = 'hashSweepInterval' | 'handlerSweepInterval';
+
+interface HttpBotConfig<Options> extends BotConfig {
     /**
      * Passed to the `REST` client from `@discordjs/rest`.
-     *
-     * On edge, `hashSweepInterval` and `handlerSweepInterval` default to `0`. Keep them there,
-     * otherwise workerd throws when a timer starts at a worker's global scope.
      */
-    restOptions?: Partial<RESTOptions>;
+    restOptions?: Options;
 }
 
 /**
  * Config for a long-running node server. Pass to `new Seedcord(config).start()`.
  */
 export interface HttpServerConfig extends Config {
-    bot: HttpBotConfig;
+    bot: HttpBotConfig<Partial<RESTOptions>>;
     runtime?: 'server';
 
     /**
@@ -31,7 +31,7 @@ export interface HttpServerConfig extends Config {
  * `createSeedcord`.
  */
 export interface HttpEdgeConfig extends Config {
-    bot: HttpBotConfig;
+    bot: HttpBotConfig<Partial<TypedOmit<RESTOptions, EdgeSweeperKey>>>;
     runtime: 'edge';
     port?: never;
     // an isolate does not run a coordinated shutdown
