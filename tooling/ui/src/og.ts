@@ -1,7 +1,7 @@
 /* eslint-disable max-lines, no-magic-numbers -- generated module, the base64 font payloads cannot be shortened and the 400/600 font weights are inherent */
-// base64-embedded so Satori reads the fonts as ArrayBuffers with no filesystem read or bundler
-// path resolution. OFL 1.1 (https://openfontlicense.org), (c) Florian Karsten (Space Grotesk) and
-// the Hanken Grotesk and JetBrains Mono project authors.
+// base64 so the fonts load with no fs read or bundler path
+// OFL 1.1 (https://openfontlicense.org), (c) Florian Karsten (Space Grotesk) and the Hanken Grotesk
+// and JetBrains Mono project authors
 
 export const OG_SIZE = { width: 1200, height: 630 } as const;
 

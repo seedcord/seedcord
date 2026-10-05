@@ -25,7 +25,8 @@
         "next": "catalog:deps",
         "react": "catalog:react",
         "react-dom": "catalog:react",
-        "shiki": "catalog:deps"
+        "shiki": "catalog:deps",
+        "takumi-js": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",

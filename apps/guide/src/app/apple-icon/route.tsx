@@ -1,6 +1,6 @@
 import { APPLE_ICON_SIZE, MaterwelonFavicon } from '@seedcord/ui/MaterwelonFavicon';
 import { BRAND } from '@seedcord/ui/palette';
-import { ImageResponse } from 'next/og';
+import { ImageResponse } from 'takumi-js/response';
 
 export const dynamic = 'force-static';
 

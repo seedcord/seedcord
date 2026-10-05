@@ -1,5 +1,5 @@
-// hardcoded from styles/tokens.css because Satori and Next's viewport.themeColor can't read CSS variables.
-// tests/palette.test.ts asserts every value here still matches the token file.
+// copied from styles/tokens.css. og images and viewport.themeColor need plain hex
+// tests/palette.test.ts checks they still match
 const PITH = '#f8f6e8';
 const SEED_DARK = '#2d3328';
 const FLESH = '#f04e36';

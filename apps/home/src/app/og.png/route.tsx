@@ -1,5 +1,5 @@
 import { loadOgFonts, OG_SIZE } from '@seedcord/ui/og';
-import { ImageResponse } from 'next/og';
+import { ImageResponse } from 'takumi-js/response';
 
 import { OgCard } from '#lib/og/card';
 import { OG_SCALE } from '#lib/site';

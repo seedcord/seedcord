@@ -2,7 +2,7 @@
 import { OgPageCard } from '@seedcord/ui/OgCard';
 import { loadOgFonts, OG_SIZE } from '@seedcord/ui/og';
 import { BRAND } from '@seedcord/ui/palette';
-import { ImageResponse } from 'next/og';
+import { ImageResponse } from 'takumi-js/response';
 import { describe, expect, it } from 'vitest';
 
 // a lone no-break space takes one line of height and draws nothing

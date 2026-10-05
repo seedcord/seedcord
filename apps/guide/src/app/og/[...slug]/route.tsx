@@ -4,7 +4,7 @@ import { loadOgFonts, OG_SIZE } from '@seedcord/ui/og';
 import { CARD } from '@seedcord/ui/PageAsset';
 import { BRAND } from '@seedcord/ui/palette';
 import { notFound } from 'next/navigation';
-import { ImageResponse } from 'next/og';
+import { ImageResponse } from 'takumi-js/response';
 
 import { pillFor } from '#lib/og/card';
 import { SITE_DESCRIPTION } from '#lib/site';

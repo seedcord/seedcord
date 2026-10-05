@@ -2,7 +2,7 @@ import { BRAND } from '@seedcord/ui/palette';
 
 import type { EntityTone } from '@seedcord/docs-engine/client';
 
-// hardcoded from styles/tokens.css because viewport themeColor and Satori OG images can't read CSS variables
+// copied from styles/tokens.css for themeColor and the og cards
 export const ENTITY_TONE_HEX = {
     class: { light: '#cf4329', dark: '#f0573a' },
     interface: { light: '#cb7016', dark: '#f0913f' },

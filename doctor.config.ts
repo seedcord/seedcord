@@ -60,7 +60,7 @@ export default defineConfig({
                 rules: ['react-doctor/no-danger']
             },
             {
-                // Satori cannot use CSS classes. OG cards must inline styles
+                // og cards render with none of the site's css
                 files: ['**/lib/og/card.tsx'],
                 rules: ['react-doctor/no-inline-exhaustive-style']
             },

@@ -19,7 +19,7 @@ const panelBase: CSSProperties = {
     borderRadius: RADIUS
 };
 
-// Satori has no drop-shadow filter
+// takumi's drop-shadow offset ignores a parent scale()
 export function OgMark({ width, offset }: { width: number; offset: number }): ReactElement {
     const ink = BRAND.seedDark;
     const height = (width * GLYPH_SIZE.height) / GLYPH_SIZE.width;
@@ -32,14 +32,11 @@ export function OgMark({ width, offset }: { width: number; offset: number }): Re
                     top: 0,
                     left: 0,
                     display: 'flex',
+                    opacity: 0.85,
                     transform: `translate(${offset}px, ${offset}px)`
                 }}
             >
-                <MaterwelonGlyph
-                    width={width}
-                    fills={{ flesh: ink, seeds: ink, rind: ink, pith: ink }}
-                    style={{ opacity: 0.85 }}
-                />
+                <MaterwelonGlyph width={width} fills={{ flesh: ink, seeds: ink, rind: ink, pith: ink }} />
             </div>
             <MaterwelonGlyph
                 width={width}

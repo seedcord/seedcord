@@ -17,7 +17,7 @@ interface MaterwelonGlyphProps {
 const VIEW_W = 596.16;
 const VIEW_H = 500.4;
 
-// fills are a prop because the site renders the CSS-var palette while the OG image (Satori) needs literal hex
+// the site passes css vars here and og images pass hex
 export function MaterwelonGlyph({ fills, width, className, style }: MaterwelonGlyphProps): ReactElement {
     return (
         <svg

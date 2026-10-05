@@ -31,27 +31,15 @@ export function MaterwelonFavicon({ ring, size = FAVICON_SIZE.width }: Materwelo
                 justifyContent: 'center',
                 width: size,
                 height: size,
-                backgroundColor: ring,
+                backgroundColor: BRAND.seedDark,
+                border: `${ringWidth}px solid ${ring}`,
                 borderRadius: corner
             }}
         >
-            {/* Satori gives a bordered box the same radius inside and out */}
-            <div
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: size - ringWidth * 2,
-                    height: size - ringWidth * 2,
-                    backgroundColor: BRAND.seedDark,
-                    borderRadius: corner - ringWidth
-                }}
-            >
-                <MaterwelonGlyph
-                    width={GLYPH_WIDTH * scale}
-                    fills={{ flesh: BRAND.flesh, seeds: BRAND.seedDark, rind: BRAND.rind, pith: BRAND.pith }}
-                />
-            </div>
+            <MaterwelonGlyph
+                width={GLYPH_WIDTH * scale}
+                fills={{ flesh: BRAND.flesh, seeds: BRAND.seedDark, rind: BRAND.rind, pith: BRAND.pith }}
+            />
         </div>
     );
 }

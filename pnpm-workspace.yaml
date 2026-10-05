@@ -59,6 +59,7 @@ catalogs:
     prettier-plugin-tailwindcss: ^0.8.1
     reflect-metadata: ^0.2.2
     shiki: ^4.5.0
+    takumi-js: 2.14.0
     tailwindcss: ^4.3.3
     tsdown: ^0.23.0
     tsx: ^4.23.15
@@ -110,6 +111,3 @@ catalogs:
     '@types/react-dom': ^19.3.0
     react: ^19.2.8
     react-dom: ^19.2.8
-
-patchedDependencies:
-  next@16.3.8: patches/next@16.3.8.patch

@@ -24,7 +24,8 @@ const config = (phase: string): NextConfig => ({
         // these three read files off disk by path and break when bundled
         '@microsoft/api-extractor-model',
         '@microsoft/tsdoc',
-        '@microsoft/tsdoc-config'
+        '@microsoft/tsdoc-config',
+        '@takumi-rs/core'
     ],
     experimental: { cpus: buildCpus() },
     turbopack: {}

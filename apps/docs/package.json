@@ -39,6 +39,7 @@
         "react-dom": "catalog:react",
         "shiki": "catalog:deps",
         "tailwindcss": "catalog:deps",
+        "takumi-js": "catalog:deps",
         "type-fest": "catalog:deps",
         "zustand": "^5.0.15"
     },

@@ -16,7 +16,14 @@ function guideConfig(phase: string): NextConfig {
         outputFileTracingRoot: path.join(import.meta.dirname, '../..'),
         // a bundler cannot see the require('fs') @typescript/vfs assembles with String.fromCharCode
         // prettier loads its typescript parser by path at call time
-        serverExternalPackages: ['typescript', '@typescript/vfs', 'twoslash', '@shikijs/twoslash', 'prettier'],
+        serverExternalPackages: [
+            'typescript',
+            '@typescript/vfs',
+            'twoslash',
+            '@shikijs/twoslash',
+            'prettier',
+            '@takumi-rs/core'
+        ],
         // 2 workers slowed this build from 19s to 29s. 4 adds about 3s
         experimental: { cpus: 4 },
         turbopack: {}
