@@ -5,7 +5,7 @@ export type HmrEventType = 'create' | 'createDir' | 'update' | 'delete' | 'delet
 export interface HmrUpdateEvent {
     file: string;
     type: HmrEventType;
-    /** Files affected by this update, such as importers. Only populated for `update` events. */
+    /** The file and every file that imports it. Folder events leave it out. */
     affectedModules?: string[];
     /** Whether a failed reload of this file rolls back to the last-good unit. Defaults to true. */
     rollback?: boolean;

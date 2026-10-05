@@ -6,13 +6,55 @@ import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HmrPlugin } from '#commands/dev/runtime/HmrPlugin';
 
 import type { DevEvent } from '#commands/dev/runtime/events';
-import type { HmrUpdateEvent } from '@seedcord/types';
 import type { EnvironmentModuleNode, HotUpdateOptions, ViteDevServer } from 'vite';
 
 const HMR_EVENT_NAME = 'seedcord:hmr';
 
 function watcherMock(): EventEmitter & { add: Mock } {
     return Object.assign(new EventEmitter(), { add: vi.fn() });
+}
+
+interface FakeEnvironment {
+    name: 'client' | 'ssr';
+    moduleGraph: { getModulesByFile: Mock; invalidateModule: Mock };
+}
+
+function environment(name: FakeEnvironment['name']): FakeEnvironment {
+    return { name, moduleGraph: { getModulesByFile: vi.fn(), invalidateModule: vi.fn() } };
+}
+
+function moduleNode(file: string, importers: EnvironmentModuleNode[] = []): EnvironmentModuleNode {
+    // the plugin reads only file and importers
+    return { file, importers: new Set(importers) } as unknown as EnvironmentModuleNode;
+}
+
+function callHotUpdate(
+    plugin: HmrPlugin,
+    env: FakeEnvironment,
+    type: HotUpdateOptions['type'],
+    file: string,
+    modules: EnvironmentModuleNode[] = []
+): void {
+    const hook = plugin.plugin.hotUpdate;
+    if (typeof hook !== 'function') throw new TypeError('HmrPlugin.hotUpdate is not a function hook');
+
+    // the plugin reads only environment.name and environment.moduleGraph
+    const context = { environment: env } as unknown as ThisParameterType<typeof hook>;
+    // an empty graph stands in for the deprecated server.moduleGraph
+    const server = { moduleGraph: environment('ssr').moduleGraph } as unknown as ViteDevServer;
+    void hook.call(context, { type, file, modules, server, timestamp: Date.now(), read: vi.fn() });
+}
+
+// vite runs the client environment's hook first, then ssr, where the bot's modules live
+function viteHotUpdate(
+    plugin: HmrPlugin,
+    type: HotUpdateOptions['type'],
+    file: string,
+    ssrModules: EnvironmentModuleNode[] = [],
+    ssr = environment('ssr')
+): void {
+    callHotUpdate(plugin, environment('client'), type, file);
+    callHotUpdate(plugin, ssr, type, file, ssrModules);
 }
 
 const loggerSpies = {
@@ -66,17 +108,10 @@ describe('HmrPlugin', () => {
         const hotHost = plugin as unknown as { hot: { send: typeof hotSend; on: ReturnType<typeof vi.fn> } };
         vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({ send: hotSend, on: vi.fn() });
 
-        const watcher = watcherMock();
-        const server = {
-            watcher,
-            environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
-        } as unknown as ViteDevServer;
-        (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
-
         const file = join(process.cwd(), 'src/commands/ping.ts');
-        watcher.emit('add', file);
+        viteHotUpdate(plugin, 'create', file);
 
-        expect(hotSend).toHaveBeenCalledWith(HMR_EVENT_NAME, { file, type: 'create', rollback: false });
+        expect(hotSend).toHaveBeenCalledWith(HMR_EVENT_NAME, expect.objectContaining({ file, rollback: false }));
     });
 
     it('asks for a restart when the config file above the vite root changes', () => {
@@ -163,98 +198,6 @@ describe('HmrPlugin', () => {
             }
         });
 
-        it('should handle "add" event as "create"', () => {
-            const file = join(process.cwd(), 'src/commands/ping.ts');
-            watcher.emit('add', file);
-
-            expect(loggerSpies.trace).toHaveBeenCalledWith(expect.stringContaining('CREATE'));
-            expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
-                file,
-                type: 'create',
-                rollback: true
-            });
-        });
-
-        it('sends nothing for the update vite fires right after a create', async () => {
-            const file = join(process.cwd(), 'src/commands/ping.ts');
-            watcher.emit('add', file);
-            hotSendMock.mockClear();
-
-            const ctx: HotUpdateOptions = {
-                type: 'update',
-                file,
-                server: {
-                    ...serverMock,
-                    moduleGraph: { getModulesByFile: vi.fn(), invalidateModule: vi.fn() }
-                } as unknown as ViteDevServer,
-                modules: [],
-                timestamp: Date.now(),
-                read: vi.fn()
-            };
-            await (hmrPlugin.plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
-
-            expect(hotSendMock).not.toHaveBeenCalled();
-        });
-
-        it('sends the update when the content save follows the create past the debounce', async () => {
-            vi.useFakeTimers();
-            const file = join(process.cwd(), 'src/commands/ping.ts');
-            watcher.emit('add', file);
-            hotSendMock.mockClear();
-
-            vi.advanceTimersByTime(300);
-
-            const ctx: HotUpdateOptions = {
-                type: 'update',
-                file,
-                server: {
-                    ...serverMock,
-                    moduleGraph: { getModulesByFile: vi.fn(), invalidateModule: vi.fn() }
-                } as unknown as ViteDevServer,
-                modules: [],
-                timestamp: Date.now(),
-                read: vi.fn()
-            };
-            await (hmrPlugin.plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
-
-            expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, expect.objectContaining({ file, type: 'update' }));
-            vi.useRealTimers();
-        });
-
-        it('sends a save that lands inside the create window', async () => {
-            const file = join(process.cwd(), 'src/commands/ping.ts');
-            watcher.emit('add', file);
-            hotSendMock.mockClear();
-
-            const ctx: HotUpdateOptions = {
-                type: 'update',
-                file,
-                server: {
-                    ...serverMock,
-                    moduleGraph: { getModulesByFile: vi.fn(), invalidateModule: vi.fn() }
-                } as unknown as ViteDevServer,
-                modules: [],
-                timestamp: Date.now(),
-                read: vi.fn()
-            };
-            await (hmrPlugin.plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
-            await (hmrPlugin.plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
-
-            expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, expect.objectContaining({ file, type: 'update' }));
-        });
-
-        it('should handle "unlink" event as "delete"', () => {
-            const file = join(process.cwd(), 'src/commands/ping.ts');
-            watcher.emit('unlink', file);
-
-            expect(loggerSpies.trace).toHaveBeenCalledWith(expect.stringContaining('DELETE'));
-            expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
-                file,
-                type: 'delete',
-                rollback: true
-            });
-        });
-
         it('should handle "addDir" event as "createDir"', () => {
             const file = join(process.cwd(), 'src/commands/group');
             watcher.emit('addDir', file);
@@ -281,214 +224,102 @@ describe('HmrPlugin', () => {
     });
 
     describe('hotUpdate', () => {
-        let serverMock: ViteDevServer;
+        const file = join(process.cwd(), 'src/components/Button.ts');
+        const importerFile = join(process.cwd(), 'src/commands/Click.ts');
         let hotSendMock: Mock;
 
         beforeEach(() => {
             hotSendMock = vi.fn();
-
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- spy on the private `hot` getter
-            vi.spyOn(hmrPlugin as any, 'hot', 'get').mockReturnValue({
-                send: hotSendMock,
-                on: vi.fn()
-            });
-
-            serverMock = {
-                environments: {
-                    ssr: {
-                        hot: {
-                            send: vi.fn()
-                        }
-                    }
-                },
-                moduleGraph: {
-                    getModulesByFile: vi.fn(),
-                    invalidateModule: vi.fn()
-                }
-            } as unknown as ViteDevServer;
+            vi.spyOn(hmrPlugin as any, 'hot', 'get').mockReturnValue({ send: hotSendMock, on: vi.fn() });
         });
 
-        it('should handle update and calculate affected modules', async () => {
-            const file = join(process.cwd(), 'src/components/Button.ts');
-            const importerFile = join(process.cwd(), 'src/commands/Click.ts');
+        it('sends one update carrying the importers from the ssr graph', () => {
+            viteHotUpdate(hmrPlugin, 'update', file, [moduleNode(file, [moduleNode(importerFile)])]);
 
-            const importerNode = {
-                file: importerFile,
-                importers: new Set(),
-                environment: 'client'
-            } as unknown as EnvironmentModuleNode;
-
-            const modules = [
-                {
-                    file,
-                    importers: new Set([importerNode]),
-                    environment: 'client'
-                }
-            ] as unknown as EnvironmentModuleNode[];
-
-            const ctx: HotUpdateOptions = {
-                type: 'update',
-                file,
-                server: serverMock,
-                modules,
-                timestamp: Date.now(),
-                read: vi.fn()
-            };
-
-            const plugin = hmrPlugin.plugin;
-            if (typeof plugin.hotUpdate === 'function') {
-                await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
-            }
-
-            expect(loggerSpies.trace).toHaveBeenCalledWith(expect.stringContaining('UPDATE'));
-            expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
-                file,
-                type: 'update',
-                affectedModules: expect.arrayContaining([file, importerFile]) as HmrUpdateEvent['affectedModules'],
-                rollback: true
-            });
+            expect(hotSendMock.mock.calls).toEqual([
+                [HMR_EVENT_NAME, { file, type: 'update', affectedModules: [file, importerFile], rollback: true }]
+            ]);
         });
 
-        it('should find modules from moduleGraph if context modules are empty', async () => {
-            const file = join(process.cwd(), 'src/components/Button.ts');
-            const importerFile = join(process.cwd(), 'src/commands/Click.ts');
+        it('sends one delete carrying the importers of the deleted file', () => {
+            viteHotUpdate(hmrPlugin, 'delete', file, [moduleNode(file, [moduleNode(importerFile)])]);
 
-            const importerNode = {
-                file: importerFile,
-                importers: new Set(),
-                environment: 'client'
-            } as unknown as EnvironmentModuleNode;
-
-            const fileNode = {
-                file,
-                importers: new Set([importerNode]),
-                environment: 'client'
-            } as unknown as EnvironmentModuleNode;
-
-            const getModulesByFileMock = vi.fn().mockImplementation((f) => {
-                if (f === file) return new Set([fileNode]);
-                if (f === importerFile) return new Set([importerNode]);
-                return new Set();
-            });
-            const invalidateModuleMock = vi.fn();
-
-            serverMock.moduleGraph = {
-                getModulesByFile: getModulesByFileMock,
-                invalidateModule: invalidateModuleMock
-            } as unknown as ViteDevServer['moduleGraph'];
-
-            const ctx: HotUpdateOptions = {
-                type: 'update',
-                file,
-                server: serverMock,
-                modules: [],
-                timestamp: Date.now(),
-                read: vi.fn()
-            };
-
-            const plugin = hmrPlugin.plugin;
-            if (typeof plugin.hotUpdate === 'function') {
-                await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
-            }
-
-            expect(getModulesByFileMock).toHaveBeenCalledWith(file);
-            expect(invalidateModuleMock).toHaveBeenCalledWith(fileNode);
-            expect(invalidateModuleMock).toHaveBeenCalledWith(importerNode);
-            expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
-                file,
-                type: 'update',
-                affectedModules: expect.arrayContaining([file, importerFile]) as HmrUpdateEvent['affectedModules'],
-                rollback: true
-            });
+            expect(hotSendMock.mock.calls).toEqual([
+                [HMR_EVENT_NAME, { file, type: 'delete', affectedModules: [file, importerFile], rollback: true }]
+            ]);
         });
 
-        it('should debounce rapid updates', async () => {
-            const file = join(process.cwd(), 'src/rapid.ts');
-            const ctx: HotUpdateOptions = {
-                type: 'update',
-                file,
-                server: serverMock,
-                modules: [],
-                timestamp: Date.now(),
-                read: vi.fn()
-            };
+        it('lists the file itself when the graph has no module for it yet', () => {
+            viteHotUpdate(hmrPlugin, 'create', file);
 
-            const plugin = hmrPlugin.plugin;
-            if (typeof plugin.hotUpdate === 'function') {
-                await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
-                await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
-            }
-
-            expect(loggerSpies.trace).toHaveBeenCalledTimes(1);
-            expect(hotSendMock).toHaveBeenCalledTimes(1);
+            expect(hotSendMock.mock.calls).toEqual([
+                [HMR_EVENT_NAME, { file, type: 'create', affectedModules: [file], rollback: true }]
+            ]);
         });
 
-        it('should allow updates after debounce timeout', async () => {
-            vi.useFakeTimers();
-            const file = join(process.cwd(), 'src/slow.ts');
-            const ctx: HotUpdateOptions = {
-                type: 'update',
-                file,
-                server: serverMock,
-                modules: [],
-                timestamp: Date.now(),
-                read: vi.fn()
-            };
+        it('follows the importers of every module a file has', () => {
+            const plain = moduleNode(file);
+            const imported = moduleNode(file, [moduleNode(importerFile)]);
 
-            const plugin = hmrPlugin.plugin;
-            if (typeof plugin.hotUpdate === 'function') {
-                await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
-
-                vi.advanceTimersByTime(300); // past the 250ms debounce
-
-                await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
-            }
-
-            expect(loggerSpies.trace).toHaveBeenCalledTimes(2);
-            expect(hotSendMock).toHaveBeenCalledTimes(2);
-            vi.useRealTimers();
-        });
-
-        it('should handle circular dependencies in module graph', async () => {
-            const fileA = join(process.cwd(), 'src/A.ts');
-            const fileB = join(process.cwd(), 'src/B.ts');
-
-            const modA = {
-                file: fileA,
-                importers: new Set(),
-                environment: 'client'
-            } as unknown as EnvironmentModuleNode;
-
-            const modB = {
-                file: fileB,
-                importers: new Set(),
-                environment: 'client'
-            } as unknown as EnvironmentModuleNode;
-
-            modA.importers.add(modB);
-            modB.importers.add(modA);
-
-            const ctx: HotUpdateOptions = {
-                type: 'update',
-                file: fileA,
-                server: serverMock,
-                modules: [modA],
-                timestamp: Date.now(),
-                read: vi.fn()
-            };
-
-            const plugin = hmrPlugin.plugin;
-            if (typeof plugin.hotUpdate === 'function') {
-                await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
-            }
+            callHotUpdate(hmrPlugin, environment('ssr'), 'update', file, [plain, imported]);
 
             expect(hotSendMock).toHaveBeenCalledWith(
                 HMR_EVENT_NAME,
-                expect.objectContaining({
-                    file: fileA,
-                    type: 'update',
-                    affectedModules: expect.arrayContaining([fileA, fileB]) as HmrUpdateEvent['affectedModules']
-                })
+                expect.objectContaining({ affectedModules: [file, importerFile] })
+            );
+        });
+
+        it('invalidates the modules of every affected file in the ssr graph', () => {
+            const fileNode = moduleNode(file, [moduleNode(importerFile)]);
+            const importerNode = moduleNode(importerFile);
+            const ssr = environment('ssr');
+            ssr.moduleGraph.getModulesByFile.mockImplementation((target: string) =>
+                target === file ? new Set([fileNode]) : new Set([importerNode])
+            );
+
+            viteHotUpdate(hmrPlugin, 'update', file, [fileNode], ssr);
+
+            expect(ssr.moduleGraph.invalidateModule.mock.calls).toEqual([[fileNode], [importerNode]]);
+        });
+
+        it('sends a save that lands right after a create', () => {
+            viteHotUpdate(hmrPlugin, 'create', file);
+            viteHotUpdate(hmrPlugin, 'update', file);
+
+            expect(hotSendMock.mock.calls.map(([, payload]) => (payload as { type: string }).type)).toEqual([
+                'create',
+                'update'
+            ]);
+        });
+
+        it('sends one event for two saves inside the debounce window', () => {
+            viteHotUpdate(hmrPlugin, 'update', file);
+            viteHotUpdate(hmrPlugin, 'update', file);
+
+            expect(hotSendMock).toHaveBeenCalledTimes(1);
+        });
+
+        it('sends a save again once the debounce window has passed', () => {
+            vi.useFakeTimers();
+            viteHotUpdate(hmrPlugin, 'update', file);
+            vi.advanceTimersByTime(300);
+            viteHotUpdate(hmrPlugin, 'update', file);
+            vi.useRealTimers();
+
+            expect(hotSendMock).toHaveBeenCalledTimes(2);
+        });
+
+        it('stops at a circular import', () => {
+            const a = moduleNode(file);
+            const b = moduleNode(importerFile, [a]);
+            a.importers.add(b);
+
+            viteHotUpdate(hmrPlugin, 'update', file, [a]);
+
+            expect(hotSendMock).toHaveBeenCalledWith(
+                HMR_EVENT_NAME,
+                expect.objectContaining({ affectedModules: [file, importerFile] })
             );
         });
     });

@@ -160,17 +160,17 @@ export class CleanRunner implements CleanOps {
     private async fetchBotGuilds(rest: RestClient): Promise<GuildSummary[]> {
         const guilds: GuildSummary[] = [];
         let after: string | undefined;
+        let page: RESTGetAPICurrentUserGuildsResult;
 
-        for (;;) {
+        do {
             const query = new URLSearchParams({ limit: String(GUILD_PAGE) });
             if (after) query.set('after', after);
 
-            const page = (await rest.get(Routes.userGuilds(), { query })) as RESTGetAPICurrentUserGuildsResult;
+            page = (await rest.get(Routes.userGuilds(), { query })) as RESTGetAPICurrentUserGuildsResult;
             for (const guild of page) guilds.push({ id: guild.id, name: guild.name });
 
             after = page.at(-1)?.id;
-            if (page.length < GUILD_PAGE || !after) break;
-        }
+        } while (page.length === GUILD_PAGE && after);
 
         return guilds;
     }

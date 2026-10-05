@@ -140,7 +140,6 @@ describe('DevStore', () => {
         { type: 'module-loading', path: 'x' },
         { type: 'module-loaded', path: 'x' },
         { type: 'module-error', path: 'x', error: new Error('e') },
-        { type: 'file-change', path: 'x' },
         { type: 'ready' }
     ])('apply ignores informational event %o without a change', (event) => {
         const store = new DevStore();

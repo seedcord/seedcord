@@ -8,16 +8,14 @@ interface ConfigHit {
 
 function findNearestConfig(filePath: string, name: string): ConfigHit | null {
     let dir = path.dirname(filePath);
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- break is inside
-    while (true) {
+    let checked: string;
+    do {
         const candidate = path.join(dir, name);
         if (existsSync(candidate)) return { configPath: candidate, rootDir: dir };
 
-        const parent = path.dirname(dir);
-        if (parent === dir) break;
-        dir = parent;
-    }
+        checked = dir;
+        dir = path.dirname(dir);
+    } while (dir !== checked);
 
     return null;
 }

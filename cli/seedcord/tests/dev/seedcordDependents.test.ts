@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -65,5 +65,27 @@ describe('seedcordDependents', () => {
         await writeManifest(join(root, 'node_modules', 'hoisted'), { peerDependencies: { '@seedcord/core': '*' } });
 
         expect(seedcordDependents(bot)).toEqual(['hoisted']);
+    });
+
+    it('follows a pnpm symlink to the dependencies stored beside its target', async () => {
+        root = await mkdtemp(join(tmpdir(), 'seedcord-dependents-'));
+        const store = join(root, 'node_modules', '.pnpm', 'linked@1.0.0', 'node_modules');
+        await writeManifest(root, { dependencies: { linked: '1.0.0' } });
+        await writeManifest(join(store, 'linked'), { dependencies: { 'store-plugin': '1.0.0' } });
+        await writeManifest(join(store, 'store-plugin'), { peerDependencies: { '@seedcord/core': '*' } });
+        await symlink(join(store, 'linked'), join(root, 'node_modules', 'linked'), 'dir');
+
+        expect(seedcordDependents(root).toSorted()).toEqual(['linked', 'store-plugin']);
+    });
+
+    it('finds a package whose exports map has no root entry', async () => {
+        root = await mkdtemp(join(tmpdir(), 'seedcord-dependents-'));
+        await writeManifest(root, { dependencies: { 'subpaths-only': '1.0.0' } });
+        await writeManifest(join(root, 'node_modules', 'subpaths-only'), {
+            exports: { './plugin': './plugin.js' },
+            peerDependencies: { '@seedcord/core': '*' }
+        });
+
+        expect(seedcordDependents(root)).toEqual(['subpaths-only']);
     });
 });
