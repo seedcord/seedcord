@@ -13,7 +13,6 @@ import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocSearchEnt
 export interface DocsEngineOptions {
     generatedRoot: string;
     manifestPath?: string;
-    workspaceRoot?: string;
     manifest?: DocManifest;
 }
 
@@ -34,11 +33,11 @@ export class DocsEngine {
             const reader = new ManifestReader({ rootDir: generatedRoot, manifestPath });
             manifest = await reader.read();
         }
-        const workspaceRoot = resolveWorkspaceRoot(options.workspaceRoot, generatedRoot);
+        const workspaceRoot = findWorkspaceRoot(generatedRoot);
         const manifestDir = path.dirname(manifestPath);
 
         return DocsEngine.fromManifest(manifest, {
-            workspaceRoot,
+            ...(workspaceRoot !== undefined && { workspaceRoot }),
             manifestDir,
             manifestOutputDir: manifest.outputDir,
             generatedRoot
@@ -102,35 +101,15 @@ export class DocsEngine {
     }
 }
 
-function resolveWorkspaceRoot(explicit: string | undefined, anchor: string): string {
-    if (explicit) {
-        return path.resolve(explicit);
-    }
+function findWorkspaceRoot(startDir: string): string | undefined {
+    let dir = startDir;
+    let checked: string;
+    do {
+        if (existsSync(path.join(dir, 'pnpm-workspace.yaml'))) return dir;
 
-    return findWorkspaceRoot(anchor);
-}
+        checked = dir;
+        dir = path.dirname(dir);
+    } while (dir !== checked);
 
-function findWorkspaceRoot(startDir: string): string {
-    const origin = path.resolve(startDir);
-    let cursor = origin;
-    let lastPackageDir: string | null = null;
-
-    for (;;) {
-        const workspaceMarker = path.join(cursor, 'pnpm-workspace.yaml');
-        if (existsSync(workspaceMarker)) {
-            return cursor;
-        }
-
-        const packageJsonPath = path.join(cursor, 'package.json');
-        if (existsSync(packageJsonPath)) {
-            lastPackageDir = cursor;
-        }
-
-        const parent = path.dirname(cursor);
-        if (parent === cursor) {
-            return lastPackageDir ?? origin;
-        }
-
-        cursor = parent;
-    }
+    return undefined;
 }

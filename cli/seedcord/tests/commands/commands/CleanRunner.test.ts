@@ -104,6 +104,19 @@ describe('CleanRunner.listBotGuilds', () => {
             { id: 'g2', name: 'Beta' }
         ]);
     });
+
+    it('fetches the next page after the last guild while discord returns full pages', async () => {
+        const firstPage = Array.from({ length: 200 }, (_, i) => ({ id: `g${i}`, name: `Guild ${i}` }));
+        const get = vi.fn((_route: string, options: { query: URLSearchParams }) =>
+            Promise.resolve(options.query.get('after') === 'g199' ? [{ id: 'g200', name: 'Last' }] : firstPage)
+        );
+        const runner = new CleanRunner(fakeRest(get, vi.fn()));
+
+        const guilds = await runner.listBotGuilds('token');
+
+        expect(guilds).toHaveLength(201);
+        expect(guilds.at(-1)).toEqual({ id: 'g200', name: 'Last' });
+    });
 });
 
 describe('CleanRunner.scanGuilds', () => {
