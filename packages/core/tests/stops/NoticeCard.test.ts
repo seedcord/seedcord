@@ -2,7 +2,7 @@ import { ContainerBuilder } from '@discordjs/builders';
 import { ComponentType } from 'discord-api-types/v10';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { setBotColor } from '#components/botColorHolder';
+import { bindBotColor } from '#components/botColorHolder';
 import { NoticeCard } from '#stops/NoticeCard';
 
 function cardText(card: ContainerBuilder): string {
@@ -13,7 +13,7 @@ function cardText(card: ContainerBuilder): string {
 
 describe('NoticeCard', () => {
     afterEach(() => {
-        setBotColor(undefined);
+        bindBotColor(() => undefined);
     });
 
     it('renders the title as an h3 line with the description on the next line', () => {
@@ -27,7 +27,7 @@ describe('NoticeCard', () => {
     });
 
     it('applies the configured bot color as the container accent', () => {
-        setBotColor(0xfe_56_5a);
+        bindBotColor(() => 0xfe_56_5a);
         expect(new NoticeCard('body').component.data.accent_color).toBe(0xfe_56_5a);
     });
 });

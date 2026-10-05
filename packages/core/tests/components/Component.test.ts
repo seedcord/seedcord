@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 
-import { setBotColor } from '#components/botColorHolder';
+import { bindBotColor } from '#components/botColorHolder';
 import { Colors } from '#components/colors';
 import { BuilderComponent } from '#components/Component';
 import { resolveColor } from '#components/resolveColor';
@@ -33,21 +33,21 @@ class PresetEmbed extends BuilderComponent<'embed'> {
 
 describe('BuilderComponent bot color', () => {
     beforeEach(() => {
-        setBotColor(undefined);
+        bindBotColor(() => undefined);
     });
 
     it('resolves a numeric color into a container accent', () => {
-        setBotColor(0xfe_56_5a);
+        bindBotColor(() => 0xfe_56_5a);
         expect(new TestContainer().component.data.accent_color).toBe(0xfe_56_5a);
     });
 
     it('resolves a named color into a container accent', () => {
-        setBotColor('Red');
+        bindBotColor(() => 'Red');
         expect(new TestContainer().component.data.accent_color).toBe(Colors.Red);
     });
 
     it('applies the bot color to an embed', () => {
-        setBotColor('#123456');
+        bindBotColor(() => '#123456');
         expect(new TestEmbed().component.data.color).toBe(0x12_34_56);
     });
 
@@ -56,7 +56,7 @@ describe('BuilderComponent bot color', () => {
     });
 
     it('does not overwrite a color the subclass set in its own constructor', () => {
-        setBotColor(0xfe_56_5a);
+        bindBotColor(() => 0xfe_56_5a);
         expect(new PresetContainer().component.data.accent_color).toBe(0xef_48_60);
     });
 

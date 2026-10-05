@@ -4,12 +4,12 @@ import { createServer } from 'node:http';
 import { REST } from '@discordjs/rest';
 import { Bus } from '@seedcord/core';
 import {
+    bindBotColor,
     busLoggerOf,
     getDevChannel,
     HmrManager,
     interactionMiddleware,
-    MiddlewareRegistry,
-    setBotColor
+    MiddlewareRegistry
 } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, Pluggable } from '@seedcord/core/node';
 import {
@@ -97,7 +97,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         super(new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
 
         installNodeDefaults(config.logger);
-        setBotColor(config.botColor);
+        bindBotColor(() => this.config.botColor);
 
         this.hmrManager = new HmrManager();
         this.hmrManager.init();

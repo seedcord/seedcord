@@ -141,6 +141,8 @@ export const seedcord = new Seedcord({
 });
 ```
 
+`OwnerOnly` reads `ownerIds` again on every check. If you assign `seedcord.config.ownerIds` after the bot exists, say from a settings file, the next check uses the new list.
+
 ## Rewording a refusal
 
 Each refusal card uses seedcord's default wording. Reword it when your command has a next step to offer, like pointing someone at the server where it works.

@@ -60,8 +60,7 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
         return this.instance;
     }
 
-    // Resolving in the constructor would capture the default for a component built before setBotColor()
-    // ran. The unset check keeps a color the subclass set for itself.
+    // this is so the bot color doesn't override an color set in this instance of the component
     private applyBotColor(): void {
         if (this.colorApplied) return;
         this.colorApplied = true;

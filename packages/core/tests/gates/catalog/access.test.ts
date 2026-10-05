@@ -22,6 +22,15 @@ describe('OwnerOnly', () => {
         await expect(OwnerOnly().check(ownerCtx('o1', ['o1']))).resolves.toBeUndefined();
     });
 
+    it('reads owners assigned to the config after the gate was built', async () => {
+        const gate = OwnerOnly();
+        const ctx = ownerCtx('o1', []);
+        await expect(gate.check(ctx)).rejects.toBeInstanceOf(NotOwner);
+
+        ctx.core.config.ownerIds = ['o1'];
+        await expect(gate.check(ctx)).resolves.toBeUndefined();
+    });
+
     it('refuses a non-owner with NotOwner', async () => {
         await expect(OwnerOnly().check(ownerCtx('u2', ['o1']))).rejects.toBeInstanceOf(NotOwner);
     });

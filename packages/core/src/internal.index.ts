@@ -12,7 +12,7 @@ export { interactionMiddlewareMetaOf } from '#decorators/middleware';
 export type { InteractionMiddlewareMetadata } from '#decorators/middleware';
 export { interactionMiddleware, MiddlewareRegistry } from '#src/dispatch/MiddlewareRegistry';
 export type { MiddlewareRegistration, MiddlewareRegistrationOf } from '#src/dispatch/MiddlewareRegistry';
-export { setBotColor } from '#components/botColorHolder';
+export { bindBotColor } from '#components/botColorHolder';
 
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
 

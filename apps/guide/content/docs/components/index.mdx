@@ -57,7 +57,7 @@ export class Ban extends SlashHandler<'ban'> {
 
 Make that call in the constructor anyway. `this.instance` is protected to keep a ban card's whole description in one file. A call from your handler splits that description across two. Then, if you go to `BanCard.ts`, you no longer see the complete card.
 
-Reading `.component` also applies your [bot color](#your-bot-color). The color resolves on that read. Resolving it in the constructor would give the default color to every component built before your config loads.
+Reading `.component` also applies your [bot color](#your-bot-color). The color resolves on that first read, so the component gets whatever `botColor` holds at that moment, even if you built it earlier.
 
 <Callout type="tip">
 
@@ -188,6 +188,8 @@ export class MaintenanceEmbed extends BuilderComponent<'embed'> {
 Discord forbids an embed on a ComponentsV2 message, which is what seedcord's reply methods send. An embed reaches Discord through a channel send or a [raw ack](/replying/raw-acks).
 
 `botColor` accepts a `#hex` string, a discord.js color name like `'Blurple'`, a raw integer, or an `[r, g, b]` tuple. Leave the key out for Discord's default.
+
+Your color might only be known after the bot exists, because it comes from a settings file one of your plugins loads. Assign it to `seedcord.config.botColor` then. From then on, every `.component` you read uses the new color.
 
 ## Emojis by name
 

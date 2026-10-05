@@ -1,5 +1,5 @@
 import { Bus } from '@seedcord/core';
-import { busLoggerOf, HmrManager, setBotColor } from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, Pluggable } from '@seedcord/core/node';
 import { HealthCheck, shutdownOf, StartupPhase, SubscriberLoader } from '@seedcord/core/node/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
@@ -60,7 +60,7 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Seedcord
         super(new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
 
         installNodeDefaults(config.logger);
-        setBotColor(config.botColor);
+        bindBotColor(() => this.config.botColor);
 
         this.hmrManager = new HmrManager();
         this.hmrManager.init();
