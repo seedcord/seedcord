@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { traverseDirectory } from '#src/node/directory';
+import { readTextFiles, traverseDirectory } from '#src/node/directory';
 
 const FIXTURES = path.join(import.meta.dirname, 'fixtures');
 const SOURCE = path.join(import.meta.dirname, '..', '..', 'src', 'node', 'directory.ts');
@@ -77,6 +77,28 @@ describe('traverseDirectory', () => {
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
         expect(Error.isError(error) ? error.message : '').toMatch(/not-a-real-dir/);
+        expect(Error.isError(error) ? error.cause : undefined).toBeInstanceOf(Error);
+    });
+});
+
+describe('readTextFiles', () => {
+    it('reads every file under the directory except code files', async () => {
+        const seen: [string, string][] = [];
+
+        await readTextFiles(path.join(FIXTURES, 'text'), (fullPath, _relativePath, text) => {
+            seen.push([path.relative(FIXTURES, fullPath), text]);
+        });
+
+        expect(seen).toEqual([
+            [path.join('text', 'en.json'), '{ "hi": "hello" }\n'],
+            [path.join('text', 'nested', 'faq.md'), '# faq\n']
+        ]);
+    });
+
+    it('reports the directory it could not read, keeping the original as the cause', async () => {
+        const error = await rejection(readTextFiles(path.join(FIXTURES, 'not-a-real-dir'), () => undefined));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
         expect(Error.isError(error) ? error.cause : undefined).toBeInstanceOf(Error);
     });
 });

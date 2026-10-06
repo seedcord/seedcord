@@ -1,1 +1,1 @@
-export * from './node/directory';
+export { isTsOrJsFile, readTextFiles, traverseDirectory } from './node/directory';
