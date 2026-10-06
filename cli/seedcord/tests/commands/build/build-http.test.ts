@@ -12,7 +12,6 @@ import { silentLogger } from '#tests/silentLogger';
 import { hasBun } from './hasBun';
 import { smoke } from './smoke';
 
-// a process holds one Seedcord. vitest gives each test file its own process.
 const HTTP_BOT = join(import.meta.dirname, '../../fixtures/http-bot');
 
 describe('seedcord build on an http bot', () => {
@@ -51,13 +50,20 @@ describe('seedcord build on an http bot', () => {
         expect(output).toContain('fixture:js-handler-loaded');
     }, 120_000);
 
-    it('leaves import.meta inside strings and text files as written', async () => {
+    it('leaves import.meta inside a string as written', async () => {
         await BuildRunner.create(silentLogger).run(HTTP_BOT);
 
         const output = await smoke('http', process.execPath, [join(HTTP_BOT, 'dist/index.mjs')]);
 
         expect(output).toContain('fixture:literal import.meta.dirname stays text');
-        expect(output).toContain('fixture:text find files with import.meta.url');
+    }, 120_000);
+
+    it('bundles a source folder named logs', async () => {
+        await BuildRunner.create(silentLogger).run(HTTP_BOT);
+
+        const output = await smoke('http', process.execPath, [join(HTTP_BOT, 'dist/index.mjs')]);
+
+        expect(output).toContain('fixture:text a source folder named logs');
     }, 120_000);
 
     it.skipIf(!hasBun())(
@@ -76,6 +82,8 @@ describe('seedcord build on an http bot', () => {
                 const output = await smoke('http', binary);
 
                 expect(output).toContain('fixture:text hello from the text table');
+                expect(output).toMatch(/fixture:filename \S+\/handlers\/Echo\.js\n/);
+                expect(output).toMatch(/fixture:url file:\/\/\S+\/handlers\/Echo\.js\n/);
             } finally {
                 await rm(elsewhere, { recursive: true, force: true });
             }

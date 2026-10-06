@@ -218,26 +218,12 @@ describe('ConfigLoader', () => {
         });
     });
 
-    // seedcord build empties outDir before it writes
-    it.each([['.'], ['./src'], ['..']])('rejects build.outDir %s, which would delete root', async (outDir) => {
+    // dev and codegen never write outDir
+    it('loads a build.outDir that holds root', async () => {
         const moduleLoader: ModuleLoader = {
             importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
                 return Promise.resolve({
-                    default: { instance: './bot.ts', entry: './index.ts', root: './src', build: { outDir } }
-                } as TModule);
-            }
-        };
-
-        await expect(
-            new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
-        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigOutDirDeletesRoot });
-    });
-
-    it('accepts a build.outDir inside root', async () => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({
-                    default: { instance: './bot.ts', entry: './index.ts', build: { outDir: './dist' } }
+                    default: { instance: './bot.ts', entry: './index.ts', root: './src', build: { outDir: '.' } }
                 } as TModule);
             }
         };
@@ -246,7 +232,7 @@ describe('ConfigLoader', () => {
             join(process.cwd(), 'seedcord.config.ts')
         );
 
-        expect(resolved.build.outDir).toBe(resolve(process.cwd(), 'dist'));
+        expect(resolved.build.outDir).toBe(process.cwd());
     });
 
     it('rejects a non-boolean hmr.typecheck', async () => {

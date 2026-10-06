@@ -8,7 +8,6 @@ import { describe, expect, it } from 'vitest';
 import { BuildRunner } from '#commands/build/BuildRunner';
 import { silentLogger } from '#tests/silentLogger';
 
-// a process holds one Seedcord. vitest gives each test file its own process.
 const RELATIVE_PATH_BOT = join(import.meta.dirname, '../../fixtures/relative-path-bot');
 
 describe('seedcord build on a bot with a relative handler folder', () => {

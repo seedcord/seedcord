@@ -9,6 +9,7 @@ import { importInstance } from '#core/modules/importInstance';
 import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
 
 import { assertFoldersUnderRoot } from './builder/assertFoldersUnderRoot';
+import { assertOutDirSafe } from './builder/assertOutDirSafe';
 import { TypeChecker } from './builder/TypeChecker';
 import { ViteBuilder } from './builder/ViteBuilder';
 
@@ -40,6 +41,7 @@ export class BuildRunner {
     public async run(projectDir = process.cwd()): Promise<void> {
         const config = await this.loadConfig(projectDir);
         this.assertEntryExists(config.entry);
+        assertOutDirSafe(config.build.outDir, config.root);
         const instance = await importInstance(this.modules, config.instance);
         assertFoldersUnderRoot(instance.config, config.root);
         await this.typeChecker.check(config);

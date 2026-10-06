@@ -5,7 +5,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { BUILT_FILES_KEY, readTextFiles, traverseDirectory } from '#src/node/directory';
 
-import type { BuiltFileLoaders } from '#src/node/directory';
+interface BuiltFileLoaders {
+    root: string;
+    folders: string[];
+    modules: Record<string, () => Promise<Record<string, unknown>>>;
+    text: Record<string, () => Promise<string>>;
+}
 
 // not on disk
 const ROOT = '/bot';

@@ -1,5 +1,3 @@
-import { sep } from 'node:path';
-
 import { Visitor } from 'vite';
 
 import { BUILT_FILES_SLOT, type ProjectFiles } from './ProjectFiles';
@@ -22,9 +20,10 @@ function importMetaPaths(program: Parameters<Visitor['visit']>[0]): Rewrite[] {
     const found: Rewrite[] = [];
     new Visitor({
         MemberExpression(node) {
-            if (node.object.type !== 'MetaProperty' || node.property.type !== 'Identifier') return;
-            if (isPathKey(node.property.name)) {
-                found.push({ start: node.start, end: node.end, key: node.property.name });
+            const { object, property } = node;
+            const isImportMeta = object.type === 'MetaProperty' && object.meta.name === 'import';
+            if (isImportMeta && property.type === 'Identifier' && isPathKey(property.name)) {
+                found.push({ start: node.start, end: node.end, key: property.name });
             }
         }
     }).visit(program);
@@ -39,7 +38,7 @@ export function pinModulePaths(files: ProjectFiles): Plugin {
         name: 'seedcord:pin-module-paths',
         transform(code, id) {
             // a ?raw text module is file content
-            if (!files.holds(id) || id.includes('?') || id.includes(`${sep}node_modules${sep}`)) return undefined;
+            if (!files.holds(id) || id.includes('?')) return undefined;
             if (!code.includes('import.meta.')) return undefined;
 
             const rewrites = importMetaPaths(this.parse(code));

@@ -5,28 +5,34 @@ import { BUILT_FILES_KEY, isInside } from '@seedcord/utils/node/internal';
 
 export const BUILT_FILES_SLOT = `globalThis[Symbol.for(${JSON.stringify(BUILT_FILES_KEY)})]`;
 
+// the bot writes its log files to logs/ in the folder it starts in
+const PROJECT_FOLDERS = ['logs'];
+const PROJECT_FILES = [
+    'seedcord.config.*',
+    'tsconfig*.json',
+    'package.json',
+    'pnpm-lock.yaml',
+    'package-lock.json',
+    'yarn.lock',
+    'bun.lock',
+    'bun.lockb'
+];
+
 function isSkippedName(name: string): boolean {
     return name.startsWith('.') || name === 'node_modules';
 }
 
-// sit under root only when root is the project folder. logs/ is where the bot writes its log files
-const PROJECT_FILES = [
-    '/seedcord.config.*',
-    '/tsconfig*.json',
-    '/package.json',
-    '/pnpm-lock.yaml',
-    '/package-lock.json',
-    '/yarn.lock',
-    '/bun.lock',
-    '/bun.lockb',
-    '/logs/**'
-];
-
 export class ProjectFiles {
+    private readonly skippedFolders: string[];
+
     constructor(
-        public readonly root: string,
-        private readonly outDir: string
-    ) {}
+        private readonly root: string,
+        outDir: string,
+        private readonly configDir: string
+    ) {
+        const projectFolders = this.rootIsConfigDir() ? PROJECT_FOLDERS.map((name) => join(root, name)) : [];
+        this.skippedFolders = [outDir, ...projectFolders];
+    }
 
     public holds(path: string): boolean {
         return isInside(this.root, path);
@@ -43,8 +49,7 @@ export class ProjectFiles {
         const walk = async (dir: string): Promise<void> => {
             for (const entry of await readdir(dir, { withFileTypes: true })) {
                 const full = join(dir, entry.name);
-                if (!entry.isDirectory() || isSkippedName(entry.name) || full === this.outDir) continue;
-                if (full === join(this.root, 'logs')) continue;
+                if (!entry.isDirectory() || isSkippedName(entry.name) || this.skippedFolders.includes(full)) continue;
                 found.push(this.keyOf(full));
                 await walk(full);
             }
@@ -55,8 +60,18 @@ export class ProjectFiles {
     }
 
     public globExcludes(): string[] {
-        const patterns = ['!**/node_modules/**', '!**/.*', '!**/.*/**', ...PROJECT_FILES.map((file) => `!${file}`)];
-        if (this.holds(this.outDir)) patterns.push(`!${this.keyOf(this.outDir)}/**`);
-        return patterns;
+        const folders = this.skippedFolders.filter((folder) => this.holds(folder));
+        const files = this.rootIsConfigDir() ? PROJECT_FILES : [];
+        return [
+            '!**/node_modules/**',
+            '!**/.*',
+            '!**/.*/**',
+            ...folders.map((folder) => `!${this.keyOf(folder)}/**`),
+            ...files.map((file) => `!/${file}`)
+        ];
+    }
+
+    private rootIsConfigDir(): boolean {
+        return this.root === this.configDir;
     }
 }

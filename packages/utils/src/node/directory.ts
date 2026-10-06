@@ -105,7 +105,7 @@ class BuiltFiles implements FileSource {
     }
 }
 
-export interface BuiltFileLoaders {
+interface BuiltFileLoaders {
     root: string;
     // every folder under root, empty ones included
     folders: string[];

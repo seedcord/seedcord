@@ -1,4 +1,4 @@
-import { extname } from 'node:path';
+import { dirname, extname } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -26,7 +26,7 @@ export class ViteBuilder {
     public async build(config: ResolvedSeedcordDevConfig): Promise<void> {
         const { root, entry } = config;
         const { outDir } = config.build;
-        const files = new ProjectFiles(root, outDir);
+        const files = new ProjectFiles(root, outDir, dirname(config.configFile));
         const folders = await files.folders();
 
         this.logger.info(`Bundling ${root} into ${outDir}`);
@@ -35,6 +35,8 @@ export class ViteBuilder {
             await build({
                 root,
                 configFile: false,
+                // vite copies <root>/public into outDir otherwise
+                publicDir: false,
                 logLevel: 'warn',
                 plugins: [seedcordEntry({ files, entry, folders }), pinModulePaths(files)],
                 resolve: { tsconfigPaths: true },

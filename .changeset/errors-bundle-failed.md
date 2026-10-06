@@ -2,4 +2,4 @@
 '@seedcord/errors': minor
 ---
 
-**BREAKING:** Added the error codes the Vite-based `seedcord build` throws, and removed `CliBootstrapWriteFailed`.
+**BREAKING:** Added `CliBundleFailed`, `CliTypescriptMissing` and the other `seedcord build` codes, and removed `CliBootstrapWriteFailed`.

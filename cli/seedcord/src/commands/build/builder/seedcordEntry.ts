@@ -36,7 +36,6 @@ function entrySource({ files, entry, folders }: EntryOptions): string {
     ].join('\n');
 }
 
-// writes the file table that @seedcord/utils reads, then imports the user's entry
 export function seedcordEntry(options: EntryOptions): Plugin {
     return {
         name: ENTRY_ID,

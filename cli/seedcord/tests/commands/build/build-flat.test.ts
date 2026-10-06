@@ -8,7 +8,6 @@ import { silentLogger } from '#tests/silentLogger';
 
 import { smoke } from './smoke';
 
-// a process holds one Seedcord. vitest gives each test file its own process.
 const FLAT_BOT = join(import.meta.dirname, '../../fixtures/flat-bot');
 
 describe('seedcord build on a bot whose root holds dist', () => {

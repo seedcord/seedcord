@@ -6,7 +6,6 @@ import { describe, expect, it } from 'vitest';
 import { BuildRunner } from '#commands/build/BuildRunner';
 import { silentLogger } from '#tests/silentLogger';
 
-// a process holds one Seedcord. vitest gives each test file its own process.
 const BAD_FOLDERS_BOT = join(import.meta.dirname, '../../fixtures/bad-folders-bot');
 
 describe('seedcord build on a bot with several bad folders', () => {

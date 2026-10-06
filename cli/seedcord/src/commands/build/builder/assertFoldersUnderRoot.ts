@@ -4,12 +4,12 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 
+import type { EventsConfig } from '@seedcord/gateway';
 import type { BotConfig, CommandsConfig, Config, InteractionsConfig, SubscribersConfig } from '@seedcord/types';
 
-type FolderSection = InteractionsConfig | CommandsConfig | SubscribersConfig;
+type FolderSection = InteractionsConfig | CommandsConfig | SubscribersConfig | EventsConfig;
 
-// gateway's EventsConfig has the same path and middlewares as InteractionsConfig
-function hasEvents(bot: BotConfig): bot is BotConfig & { events: InteractionsConfig } {
+function hasEvents(bot: BotConfig): bot is BotConfig & { events: EventsConfig } {
     return 'events' in bot;
 }
 

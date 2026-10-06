@@ -6,12 +6,13 @@ import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import type { ModuleLoader } from './ModuleLoader';
 
-function isSeedcordInstance(candidate: unknown): candidate is SeedcordInstance {
-    return typeof candidate === 'object' && candidate !== null && (candidate as Brandable)[SeedcordBrand] === true;
+export function toSeedcordInstance(candidate: unknown, instancePath: string): SeedcordInstance {
+    if (typeof candidate === 'object' && candidate !== null && (candidate as Brandable)[SeedcordBrand] === true) {
+        return candidate as SeedcordInstance;
+    }
+    throw new SeedcordError(SeedcordErrorCode.CliInstanceInvalid, [instancePath]);
 }
 
 export async function importInstance(modules: ModuleLoader, instancePath: string): Promise<SeedcordInstance> {
-    const instance = resolveDefaultExport(await modules.importModule(instancePath));
-    if (!isSeedcordInstance(instance)) throw new SeedcordError(SeedcordErrorCode.CliInstanceInvalid);
-    return instance;
+    return toSeedcordInstance(resolveDefaultExport(await modules.importModule(instancePath)), instancePath);
 }

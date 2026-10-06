@@ -237,7 +237,7 @@ export enum SeedcordErrorCode {
     CliTsImportFailed = 3105,
     /** Native import and jiti fallback both failed. */
     CliImportFailed = 3106,
-    /** Seedcord instance export is missing a start() method. */
+    /** The instance file's default export is not a constructed `Seedcord`. */
     CliInstanceInvalid = 3107,
     /** Seedcord instance threw during startup. */
     CliStartFailed = 3108,
@@ -245,9 +245,9 @@ export enum SeedcordErrorCode {
     CliConfigMissingEntry = 3109,
     /** Entry file must be inside the configured root directory. */
     CliConfigEntryOutsideRoot = 3110,
-    /** Unable to locate a TypeScript config file for builds. */
+    /** `build.tsconfig` points at a file that does not exist. */
     CliBuildTsconfigNotFound = 3111,
-    /** TypeScript reported diagnostics while `seedcord build` type checked the project. */
+    /** `seedcord build` found type errors in the project. */
     CliBuildFailed = 3112,
     /** Two commands resolve to the same slash route during codegen. */
     CliCodegenDuplicateRoute = 3114,
@@ -277,18 +277,20 @@ export enum SeedcordErrorCode {
     CliConfigInvalidField = 3126,
     /** A class carrying `@RegisterCommand` threw while codegen constructed it. */
     CliCodegenCommandConstructorThrew = 3127,
-    /** Vite failed while `seedcord build` bundled the project. */
+    /** Vite threw while bundling the bot. */
     CliBundleFailed = 3128,
     /** `build.outDir` is `root` or a folder that contains it. */
     CliConfigOutDirDeletesRoot = 3129,
-    /** `seedcord build` could not find a `typescript` install to type check with. */
+    /** `typescript` is not installed in the project. */
     CliTypescriptMissing = 3130,
-    /** No `build.tsconfig` is set and no `tsconfig.json` sits beside the config file. */
+    /** `build.tsconfig` is unset. The config file's folder does not contain a `tsconfig.json`. */
     CliBuildNoTsconfig = 3131,
     /** A folder in the bot config is a relative path. */
     CliBuildRelativeFolder = 3132,
     /** Two or more folders in the bot config failed the `seedcord build` checks. */
     CliBuildFolderProblems = 3133,
+    /** `build.outDir` already contains other files. */
+    CliBuildOutDirNotEmpty = 3134,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,
