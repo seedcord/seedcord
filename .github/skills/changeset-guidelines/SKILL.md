@@ -13,7 +13,7 @@ The shape is fixed, and `pnpm lint:changesets` rejects anything else:
 
 - One paragraph on one line. No second paragraph, list, heading, quote, or code block.
 - Two sentences for a patch, three at most otherwise. Write the reader's own case in the second one.
-- `**BREAKING:**` plus a space opens the summary when the change breaks. The changeset bumps no package as a patch, and a `major` bump is only for a package already past 1.0.
+- `**BREAKING:**` plus a space opens the summary when the change breaks. The changeset bumps no package as a patch, and a `major` bump is only for a package already past 1.0. A 0.x package goes to 1.0 with a `major` bump whose summary says `1.0.0`.
 
 ---
 

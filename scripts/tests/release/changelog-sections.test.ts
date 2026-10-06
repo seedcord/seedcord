@@ -30,12 +30,28 @@ describe('ChangelogSections headings', () => {
         expect(out).not.toContain('Changes');
     });
 
-    it('files a major bump under breaking', () => {
+    it('files a marked major bump under breaking', () => {
         const out = regrouped(
-            lines('## 3.0.0', '', '### Major Changes', '', '- Dropped the `legacy` preset. ([#400](url))', '')
+            lines(
+                '## 3.0.0',
+                '',
+                '### Major Changes',
+                '',
+                '- **BREAKING:** Dropped the `legacy` preset. ([#400](url))',
+                ''
+            )
         );
 
         expect(out).toContain('### 💥 Breaking\n\n- Dropped the `legacy` preset. ([#400](url))');
+    });
+
+    it('files an unmarked major bump under stable', () => {
+        const out = regrouped(
+            lines('## 1.0.0', '', '### Major Changes', '', '- Now stable at 1.0.0. ([#401](url))', '')
+        );
+
+        expect(out).toContain('### 🎉 Stable\n\n- Now stable at 1.0.0. ([#401](url))');
+        expect(out).not.toContain('Breaking');
     });
 
     it('leaves a file with no sections alone', () => {

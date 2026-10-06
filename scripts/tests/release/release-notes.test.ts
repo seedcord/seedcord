@@ -335,6 +335,35 @@ describe('ReleaseNotes', () => {
         ).toThrow(/configs/);
     });
 
+    it('labels a 1.0.0 entry as stable', () => {
+        const embed = {
+            name: 'discord-component-embed',
+            version: '1.0.0',
+            oldVersion: '0.5.1',
+            directory: 'packages/discord-component-embed',
+            changelog: lines(
+                '# discord-component-embed',
+                '',
+                '## 1.0.0',
+                '',
+                '### 🎉 Stable',
+                '',
+                '- Now stable at 1.0.0.',
+                ''
+            )
+        };
+
+        const body = new ReleaseNotes({
+            repo: 'seedcord/seedcord',
+            tag: 'release-2026.10.07',
+            published: [embed],
+            entries: new ReleaseEntries([embed])
+        }).body();
+
+        expect(body).toContain('**🎉 Stable**\n\n- Now stable at 1.0.0.');
+        expect(body).not.toContain('Breaking');
+    });
+
     it('lists a change made in more than one package once, under the packages it touched', () => {
         const body = notes();
 

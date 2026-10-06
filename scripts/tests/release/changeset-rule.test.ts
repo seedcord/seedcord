@@ -35,6 +35,25 @@ describe('ChangesetRule bump types', () => {
         expect(found).toEqual([{ file: 'big.md', reason: 'pre-1.0-major', detail: '@seedcord/core' }]);
     });
 
+    it('accepts a major bump that takes a 0.x package to 1.0.0', () => {
+        const rule = new ChangesetRule(PACKAGES);
+
+        const summary = '`@seedcord/core` is now stable at 1.0.0.';
+
+        expect(rule.violations('stable.md', changeset("'@seedcord/core': major", summary))).toEqual([]);
+    });
+
+    it('flags a major bump past 1.0 without the breaking marker', () => {
+        const rule = new ChangesetRule(PACKAGES);
+
+        const found = rule.violations(
+            'v3.md',
+            changeset("'@seedcord/eslint-config': major", 'Dropped the `legacy` preset.')
+        );
+
+        expect(found).toEqual([{ file: 'v3.md', reason: 'unmarked-major', detail: '@seedcord/eslint-config' }]);
+    });
+
     it('accepts a major bump on a package past 1.0', () => {
         const rule = new ChangesetRule(PACKAGES);
 
