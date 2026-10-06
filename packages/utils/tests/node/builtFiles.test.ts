@@ -1,10 +1,18 @@
+import path from 'node:path';
+
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { readTextFiles, registerBuiltFiles, traverseDirectory } from '#src/node/directory';
 
+type BuiltFiles = Parameters<typeof registerBuiltFiles>[0];
+
 // not on disk
 const ROOT = '/bot';
+
+function register({ root = ROOT, folders = [], modules = {}, text = {} }: Partial<BuiltFiles>): void {
+    registerBuiltFiles({ root, folders, modules, text });
+}
 
 function stub(name: string): () => Promise<Record<string, unknown>> {
     return () => Promise.resolve({ name });
@@ -16,20 +24,24 @@ async function walk(dir: string): Promise<[string, unknown][]> {
     return seen;
 }
 
-afterEach(() => {
-    Reflect.deleteProperty(globalThis, Symbol.for('seedcord:utils:built-files'));
-});
+async function rejection(iterable: AsyncIterable<unknown>): Promise<unknown> {
+    try {
+        for await (const _ of iterable);
+        return null;
+    } catch (caught) {
+        return caught;
+    }
+}
 
 describe('traverseDirectory in a built bot', () => {
     it('visits the registered modules under the folder as built js files', async () => {
-        registerBuiltFiles({
-            root: ROOT,
+        register({
+            folders: ['/handlers', '/handlers/mod', '/commands'],
             modules: {
-                '/handlers/Roll.ts': stub('Roll'),
                 '/handlers/mod/Ban.ts': stub('Ban'),
-                '/commands/Ping.ts': stub('Ping')
-            },
-            text: {}
+                '/commands/Ping.ts': stub('Ping'),
+                '/handlers/Roll.ts': stub('Roll')
+            }
         });
 
         await expect(walk('/bot/handlers')).resolves.toEqual([
@@ -40,11 +52,7 @@ describe('traverseDirectory in a built bot', () => {
 
     it('loads nothing past the file the caller stopped at', async () => {
         const later = vi.fn(stub('Later'));
-        registerBuiltFiles({
-            root: ROOT,
-            modules: { '/handlers/A.ts': stub('A'), '/handlers/B.ts': later },
-            text: {}
-        });
+        register({ folders: ['/handlers'], modules: { '/handlers/A.ts': stub('A'), '/handlers/B.ts': later } });
 
         for await (const { imported } of traverseDirectory('/bot/handlers')) {
             if (imported.name === 'A') break;
@@ -54,28 +62,43 @@ describe('traverseDirectory in a built bot', () => {
     });
 
     it('treats a folder whose name starts with two dots as inside root', async () => {
-        registerBuiltFiles({ root: ROOT, modules: { '/..cache/Warm.ts': stub('Warm') }, text: {} });
+        register({ folders: ['/..cache'], modules: { '/..cache/Warm.ts': stub('Warm') } });
 
         await expect(walk('/bot/..cache')).resolves.toEqual([['/bot/..cache/Warm.js', 'Warm']]);
     });
 
     it('visits every module when the folder is root itself', async () => {
-        registerBuiltFiles({ root: ROOT, modules: { '/index.ts': stub('index') }, text: {} });
+        register({ modules: { '/index.ts': stub('index') } });
 
         await expect(walk('/bot')).resolves.toEqual([['/bot/index.js', 'index']]);
     });
 
-    it('yields nothing for a folder under root with no registered files', async () => {
-        registerBuiltFiles({ root: ROOT, modules: { '/handlers/Roll.ts': stub('Roll') }, text: {} });
+    it('visits every module when root is the filesystem root', async () => {
+        register({ root: '/', folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
+
+        await expect(walk('/')).resolves.toEqual([['/handlers/Roll.js', 'Roll']]);
+    });
+
+    it('yields nothing for an empty folder the build registered', async () => {
+        register({ folders: ['/handlers', '/subscribers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
 
         await expect(walk('/bot/subscribers')).resolves.toEqual([]);
     });
 
+    it('reports a folder the build never registered as unreadable', async () => {
+        register({ folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
+
+        const error = await rejection(traverseDirectory('/bot/handlerz'));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
+        expect(Error.isError(error) ? error.message : '').toMatch(/handlerz/);
+    });
+
     it('reports the file whose module failed to load, keeping the original as the cause', async () => {
         const broken = (): Promise<Record<string, unknown>> => Promise.reject(new Error('boom'));
-        registerBuiltFiles({ root: ROOT, modules: { '/handlers/Broken.ts': broken }, text: {} });
+        register({ folders: ['/handlers'], modules: { '/handlers/Broken.ts': broken } });
 
-        const error = await walk('/bot/handlers').catch((caught: unknown) => caught);
+        const error = await rejection(traverseDirectory('/bot/handlers'));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryImportFailed });
         expect(Error.isError(error) ? error.message : '').toMatch(/Broken\.js/);
@@ -83,9 +106,9 @@ describe('traverseDirectory in a built bot', () => {
     });
 
     it('throws with the folder and the root when the folder sits outside root', async () => {
-        registerBuiltFiles({ root: ROOT, modules: { '/handlers/Roll.ts': stub('Roll') }, text: {} });
+        register({ folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
 
-        const error = await walk('/elsewhere/handlers').catch((caught: unknown) => caught);
+        const error = await rejection(traverseDirectory('/elsewhere/handlers'));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryOutsideRoot });
         expect(Error.isError(error) ? error.message : '').toMatch(/\/elsewhere\/handlers[\s\S]*\/bot/);
@@ -94,13 +117,12 @@ describe('traverseDirectory in a built bot', () => {
 
 describe('readTextFiles in a built bot', () => {
     it('reads the registered text under the folder with its own extension', async () => {
-        registerBuiltFiles({
-            root: ROOT,
-            modules: {},
+        register({
+            folders: ['/locales', '/tags'],
             text: {
-                '/locales/en.json': () => Promise.resolve('{"hi":"hello"}'),
                 '/locales/fr.json': () => Promise.resolve('{"hi":"salut"}'),
-                '/tags/faq.md': () => Promise.resolve('# faq')
+                '/tags/faq.md': () => Promise.resolve('# faq'),
+                '/locales/en.json': () => Promise.resolve('{"hi":"hello"}')
             }
         });
 
@@ -111,5 +133,26 @@ describe('readTextFiles in a built bot', () => {
             ['/bot/locales/en.json', '{"hi":"hello"}'],
             ['/bot/locales/fr.json', '{"hi":"salut"}']
         ]);
+    });
+
+    it('reports the file whose text failed to load by its relative path, keeping the original as the cause', async () => {
+        const broken = (): Promise<string> => Promise.reject(new Error('boom'));
+        register({ folders: ['/locales'], text: { '/locales/en.json': broken } });
+
+        const error = await rejection(readTextFiles('/bot/locales'));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreFileUnreadable });
+        expect(Error.isError(error) ? error.message : '').toContain(
+            path.relative(process.cwd(), '/bot/locales/en.json')
+        );
+        expect(Error.isError(error) ? error.cause : undefined).toMatchObject({ message: 'boom' });
+    });
+
+    it('throws with the folder and the root when the folder sits outside root', async () => {
+        register({ folders: ['/locales'], text: { '/locales/en.json': () => Promise.resolve('{}') } });
+
+        const error = await rejection(readTextFiles('/elsewhere/locales'));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryOutsideRoot });
     });
 });

@@ -90,7 +90,7 @@ describe('traverseDirectory', () => {
 });
 
 describe('readTextFiles', () => {
-    it('reads every file under the directory except code files', async () => {
+    it('reads every file under the directory except code, type, source map, and hidden files', async () => {
         const seen: [string, string][] = [];
 
         for await (const { fullPath, text } of readTextFiles(path.join(FIXTURES, 'text'))) {
