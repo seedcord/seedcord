@@ -54,6 +54,8 @@ export class ViteBuilder {
                             format: 'esm',
                             preserveModules: true,
                             preserveModulesRoot: root,
+                            // rolldown's default sanitizer fails the build when the project path contains a #
+                            sanitizeFileName: (name) => name.replaceAll('\0', '_'),
                             entryFileNames: (chunk) => outputName(chunk.facadeModuleId)
                         }
                     }

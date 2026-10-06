@@ -21,13 +21,16 @@ function isModulePath(file: string): boolean {
     return (name.endsWith('.ts') || name.endsWith('.js')) && !name.endsWith('.d.ts') && !name.endsWith('.map');
 }
 
-function isTextPath(dir: string, file: string): boolean {
-    const name = path.basename(file);
-    const hidden = path
+function isHidden(dir: string, file: string): boolean {
+    return path
         .relative(dir, file)
         .split(path.sep)
         .some((part) => part.startsWith('.'));
-    return !hidden && !name.endsWith('.ts') && !name.endsWith('.js') && !name.endsWith('.map');
+}
+
+function isTextPath(dir: string, file: string): boolean {
+    const name = path.basename(file);
+    return !isHidden(dir, file) && !name.endsWith('.ts') && !name.endsWith('.js') && !name.endsWith('.map');
 }
 
 type ModuleLoader = () => Promise<Record<string, unknown>>;
@@ -42,7 +45,7 @@ interface FileSource {
 class DiskFiles implements FileSource {
     public async modules(dir: string): Promise<Loaders<ModuleLoader>> {
         const all = await DiskFiles.filesUnder(dir);
-        const files = all.filter(isModulePath);
+        const files = all.filter((file) => isModulePath(file) && !isHidden(dir, file));
         // node reads a raw windows path's drive letter as a url protocol
         return files.map((file) => [file, () => import(pathToFileURL(file).href) as Promise<Record<string, unknown>>]);
     }
@@ -141,7 +144,7 @@ interface TextFile {
 
 /**
  * Imports every .ts and .js file under a directory, recursively and sorted by path, yielding each module in turn.
- * A `break` stops the walk before the next import.
+ * It skips dotfiles and dot-folders. A `break` stops the walk before the next import.
  *
  * @throws A **SeedcordError** when the directory cannot be read or a file throws while importing, or in a built bot when the directory is outside `root`.
  *

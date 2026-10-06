@@ -70,6 +70,19 @@ describe('traverseDirectory', () => {
         ]);
     });
 
+    it('skips hidden files and folders, the same as a built bot', async () => {
+        const dir = path.join(scratch, 'hidden');
+        await mkdir(path.join(dir, '.drafts'), { recursive: true });
+        await writeFile(path.join(dir, 'Visible.ts'), 'export {};\n');
+        await writeFile(path.join(dir, '.Hidden.ts'), 'export {};\n');
+        await writeFile(path.join(dir, '.drafts', 'Draft.ts'), 'export {};\n');
+        const seen: string[] = [];
+
+        for await (const { fullPath } of traverseDirectory(dir)) seen.push(path.relative(dir, fullPath));
+
+        expect(seen).toEqual(['Visible.ts']);
+    });
+
     it('reports the file whose module failed to import, keeping the original as the cause', async () => {
         const error = await rejection(traverseDirectory(path.join(FIXTURES, 'broken')));
 

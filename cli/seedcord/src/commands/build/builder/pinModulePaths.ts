@@ -30,6 +30,9 @@ function importMetaPaths(program: Parameters<Visitor['visit']>[0]): Rewrite[] {
     return found;
 }
 
+const FILE_URL = '__seedcordPathToFileURL';
+const FILE_URL_IMPORT = `import { pathToFileURL as ${FILE_URL} } from 'node:url';`;
+
 // bun --compile gives every module the entry's import.meta
 export function pinModulePaths(files: ProjectFiles): Plugin {
     const builtRoot = `${BUILT_FILES_SLOT}.root`;
@@ -49,13 +52,14 @@ export function pinModulePaths(files: ProjectFiles): Plugin {
             const values: Record<PathKey, string> = {
                 dirname: `(${builtRoot} + ${JSON.stringify(file.slice(0, file.lastIndexOf('/')))})`,
                 filename,
-                url: `(new URL('file://' + ${filename}).href)`
+                url: `(${FILE_URL}(${filename}).href)`
             };
 
             let rewritten = code;
             for (const { start, end, key } of rewrites.toReversed()) {
                 rewritten = rewritten.slice(0, start) + values[key] + rewritten.slice(end);
             }
+            if (rewrites.some(({ key }) => key === 'url')) rewritten = FILE_URL_IMPORT + rewritten;
             // keeps line numbers right. columns after a rewrite shift
             return { code: rewritten, map: null };
         }

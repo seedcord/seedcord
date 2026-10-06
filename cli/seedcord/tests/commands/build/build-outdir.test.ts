@@ -48,4 +48,15 @@ describe('seedcord build checks outDir before it empties it', () => {
         });
         expect(existsSync(join(projectDir, 'src/handlers/Ping.ts'))).toBe(true);
     });
+
+    it('throws for an outDir whose index.mjs some other tool wrote', async () => {
+        await mkdir(join(projectDir, 'out'));
+        await writeFile(join(projectDir, 'out/index.mjs'), "console.log('not a seedcord build');\n");
+        await writeFile(join(projectDir, 'out/notes.txt'), 'keep me\n');
+
+        await expect(buildWithOutDir('./out')).resolves.toMatchObject({
+            code: SeedcordErrorCode.CliBuildOutDirNotEmpty
+        });
+        expect(existsSync(join(projectDir, 'out/notes.txt'))).toBe(true);
+    });
 });
