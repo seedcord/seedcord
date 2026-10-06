@@ -1,3 +1,5 @@
+import { WORDMARK } from '@seedcord/errors/internal';
+
 import { plural } from '#core/format';
 import { intro, log, outro, pickFromList, select, spinner } from '#core/prompts';
 
@@ -12,7 +14,7 @@ interface ScopePlan {
 }
 
 export async function runCleanWizard(runner: CleanRunner, token: string): Promise<void> {
-    intro('seedcord commands');
+    intro(`${WORDMARK} commands`);
 
     const plan = await buildScope(runner, token);
     if (!plan) return;

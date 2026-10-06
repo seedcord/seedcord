@@ -1,6 +1,7 @@
 import { cpus, totalmem } from 'node:os';
 import process from 'node:process';
 
+import { WORDMARK } from '@seedcord/errors/internal';
 import { Envapter } from 'envapt';
 
 const enabled = Envapter.getBoolean('SEEDCORD_DEV_PROFILE', false);
@@ -121,7 +122,7 @@ export function profileReport(): string | null {
     const idleRate = idleSeconds > 0 ? (idleFrames / idleSeconds).toFixed(1) : '0.0';
 
     return [
-        'seedcord dev profile',
+        `${WORDMARK} dev profile`,
         ...machine(),
         `  session      ${ms(session)}`,
         ...startup(),

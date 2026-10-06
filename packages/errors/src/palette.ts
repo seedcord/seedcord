@@ -24,3 +24,5 @@ export const paint = {
     italic: chalk.italic,
     underline: chalk.underline
 } as const;
+
+export const WORDMARK = `${paint.flesh.bold('seed')}${paint.rind.bold('cord')}`;

@@ -1,4 +1,5 @@
 import { isSeedcordError } from '@seedcord/errors';
+import { WORDMARK } from '@seedcord/errors/internal';
 
 import { BaseCommand } from '#core/BaseCommand';
 
@@ -23,7 +24,7 @@ export class CodegenCommand extends BaseCommand {
                 try {
                     await this.runner.run(options.check ?? false);
                 } catch (error: unknown) {
-                    this.logger.error('Seedcord codegen failed', error);
+                    this.logger.error(`${WORDMARK} codegen failed`, error);
                     if (isSeedcordError(error)) process.exitCode = 1;
                     else process.exit(1);
                 }
