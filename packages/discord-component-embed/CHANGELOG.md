@@ -1,5 +1,11 @@
 # discord-component-embed
 
+## 1.0.0
+
+### 🎉 Stable
+
+- `discord-component-embed` is now stable at 1.0.0, and its checks match the rules in Discord's published link preview docs. Nothing in the API changed since 0.5.1. ([#360](https://github.com/seedcord/seedcord/pull/360))
+
 ## 0.5.1
 
 ### 🩹 Patch
