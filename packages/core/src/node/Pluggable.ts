@@ -74,11 +74,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         // a `sideEffects: false` build would drop the same call in the node entry
         assertDeclaredRuntime();
 
-        if (Pluggable.isInstantiated) {
-            // signal handlers from the caller's shutdown stay on the process unless dropped here
-            shutdown.removeSignalHandlers();
-            throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
-        }
+        if (Pluggable.isInstantiated) throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
 
         Pluggable.isInstantiated = true;
         Pluggable.liveHost = this;
@@ -107,6 +103,8 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
 
         this.registerPluginTasks();
 
+        // codegen and the build construct the bot without starting it
+        this[HostShutdown].registerSignalHandlers();
         if (this.config.errors?.catchProcessErrors ?? true) {
             Pluggable.liveProcessErrors = registerProcessErrors(this, this[HostShutdown]);
         }

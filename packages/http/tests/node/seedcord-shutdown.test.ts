@@ -65,6 +65,20 @@ describe('http Seedcord shutdown', () => {
         vi.restoreAllMocks();
     });
 
+    it('installs no signal handlers until start', async () => {
+        const base = [process.listenerCount('SIGTERM'), process.listenerCount('SIGINT')];
+
+        // eslint-disable-next-line no-new -- construction is the behavior under test
+        new Seedcord(config());
+        expect([process.listenerCount('SIGTERM'), process.listenerCount('SIGINT')]).toEqual(base);
+        reset();
+
+        await readyHost();
+        expect([process.listenerCount('SIGTERM'), process.listenerCount('SIGINT')]).toEqual(
+            base.map((count) => count + 1)
+        );
+    });
+
     it('a request awaiting its ack survives a shutdown started mid-flight', async () => {
         const { signer, url, host } = await readyHost();
         // the slowping gate delays the 202 past the shutdown start below

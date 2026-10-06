@@ -34,9 +34,6 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         }
 
         tasks.push({ name: taskName, task, timeout: timeoutMs });
-        this.logger.debug(
-            `${paint.italic('Added')} ${this.getTaskType()} task ${paint.sky.bold(taskName)} to phase ${paint.iris.bold(this.phaseEnum[phase])}`
-        );
     }
 
     public removeTask(phase: TPhase, taskName: string): boolean {

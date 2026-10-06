@@ -126,6 +126,19 @@ Why: the ids are the greppable part. A repeated word is the cheaper thing to cha
 
 ---
 
+## 11. Say that it changed
+
+```txt
+BAD: "A bot installs its SIGINT and SIGTERM handlers in `start()`."
+GOOD: "A bot now installs its SIGINT and SIGTERM handlers in `start()`."
+```
+
+Read the other changesets in `.changeset/` first and match their tense.
+
+Why: a plain present-tense sentence reads like docs describing how things always worked. A changelog reader scans for what moved, and `now`, `no longer`, or an opener like `Fixed` or `Added` tells them.
+
+---
+
 ## The worked example
 
 One real change, a `Cooldown` keyed a route id that a two-button handler shared. First draft through final.

@@ -540,12 +540,10 @@ describe('Pluggable', () => {
         expect(withDb.db.initCalls).toBe(1);
     });
 
-    it('a second live host throws and releases its own handlers', () => {
-        const base = process.listenerCount('SIGTERM');
+    it('a second live host throws', () => {
         makeHost();
 
         expect(() => makeHost()).toThrow(SeedcordError);
-        expect(process.listenerCount('SIGTERM')).toBe(base + 1);
     });
 
     it('reset allows a fresh host', () => {
