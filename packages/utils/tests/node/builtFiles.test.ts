@@ -5,18 +5,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { BUILT_FILES_KEY, readTextFiles, traverseDirectory } from '#src/node/directory';
 
-interface BuiltFiles {
-    root: string;
-    folders: string[];
-    modules: Record<string, () => Promise<Record<string, unknown>>>;
-    text: Record<string, () => Promise<string>>;
-}
+import type { BuiltFileLoaders } from '#src/node/directory';
 
 // not on disk
 const ROOT = '/bot';
 
-// the same plain object the entry that seedcord build generates writes
-function register({ root = ROOT, folders = [], modules = {}, text = {} }: Partial<BuiltFiles>): void {
+// writes the slot the way seedcord build's generated entry does
+function register({ root = ROOT, folders = [], modules = {}, text = {} }: Partial<BuiltFileLoaders>): void {
     Reflect.set(globalThis, Symbol.for(BUILT_FILES_KEY), { root, folders, modules, text });
 }
 

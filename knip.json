@@ -102,7 +102,7 @@
             "entry": ["**/*.types-test.ts"]
         },
         "cli/seedcord": {
-            "entry": ["tests/fixtures/*/**/*.ts"]
+            "entry": ["tests/fixtures/*/**/*.{ts,js}"]
         },
         "cli/create-seedcord": {
             "entry": ["**/*.types-test.ts"]

@@ -5,6 +5,8 @@ import { pathToFileURL } from 'node:url';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import { isInside } from './paths';
+
 import type * as fs from 'node:fs';
 
 /**
@@ -93,7 +95,7 @@ class BuiltFiles implements FileSource {
 
     private under<Loader>(loaders: Map<string, Loader>, dir: string): Loaders<Loader> {
         const resolved = path.resolve(dir);
-        if (!this.holds(resolved)) {
+        if (!isInside(this.root, resolved)) {
             throw new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [resolved, this.root]);
         }
         if (!this.folders.has(resolved)) throw new SeedcordError(SeedcordErrorCode.CoreDirectoryUnreadable, [dir]);
@@ -101,14 +103,9 @@ class BuiltFiles implements FileSource {
         const prefix = path.join(resolved, path.sep);
         return [...loaders].filter(([file]) => file.startsWith(prefix)).sort(([a], [b]) => (a < b ? -1 : 1));
     }
-
-    private holds(dir: string): boolean {
-        const relative = path.relative(this.root, dir);
-        return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
-    }
 }
 
-interface BuiltFileLoaders {
+export interface BuiltFileLoaders {
     root: string;
     // every folder under root, empty ones included
     folders: string[];
@@ -116,12 +113,18 @@ interface BuiltFileLoaders {
     text: Record<string, TextLoader>;
 }
 
-// the entry seedcord build generates writes a BuiltFileLoaders object to Symbol.for(BUILT_FILES_KEY)
+// seedcord build writes a BuiltFileLoaders object here from the entry it generates
 export const BUILT_FILES_KEY = 'seedcord:utils:built-files';
+
+const builtSources = new WeakMap<BuiltFileLoaders, BuiltFiles>();
 
 function fileSource(): FileSource {
     const built = Reflect.get(globalThis, Symbol.for(BUILT_FILES_KEY)) as BuiltFileLoaders | undefined;
-    return built ? new BuiltFiles(built) : new DiskFiles();
+    if (!built) return new DiskFiles();
+
+    const source = builtSources.get(built) ?? new BuiltFiles(built);
+    builtSources.set(built, source);
+    return source;
 }
 
 interface ImportedFile {

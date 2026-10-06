@@ -9,15 +9,15 @@ import { BuildRunner } from '#commands/build/BuildRunner';
 import { silentLogger } from '#tests/silentLogger';
 
 // a process holds one Seedcord. vitest gives each test file its own process.
-const OUTSIDE_ROOT_BOT = join(import.meta.dirname, '../../fixtures/outside-root-bot');
+const RELATIVE_PATH_BOT = join(import.meta.dirname, '../../fixtures/relative-path-bot');
 
-describe('seedcord build on a bot with a folder outside root', () => {
+describe('seedcord build on a bot with a relative handler folder', () => {
     it('throws before writing anything', async () => {
-        await rm(join(OUTSIDE_ROOT_BOT, 'dist'), { recursive: true, force: true });
+        await rm(join(RELATIVE_PATH_BOT, 'dist'), { recursive: true, force: true });
 
-        await expect(BuildRunner.create(silentLogger).run(OUTSIDE_ROOT_BOT)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CoreDirectoryOutsideRoot
+        await expect(BuildRunner.create(silentLogger).run(RELATIVE_PATH_BOT)).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliBuildRelativeFolder
         });
-        expect(existsSync(join(OUTSIDE_ROOT_BOT, 'dist'))).toBe(false);
+        expect(existsSync(join(RELATIVE_PATH_BOT, 'dist'))).toBe(false);
     }, 120_000);
 });

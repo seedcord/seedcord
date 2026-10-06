@@ -89,7 +89,7 @@ export class DevSession {
 
         try {
             this.store.setPhase('starting');
-            this.store.setStatus('Starting Seedcord instance…');
+            this.store.setStatus('Starting the bot…');
             this.startupPromise = Promise.resolve(instance.start());
             await this.startupPromise;
 

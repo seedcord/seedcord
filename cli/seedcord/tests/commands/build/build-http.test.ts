@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -11,7 +12,7 @@ import { silentLogger } from '#tests/silentLogger';
 import { hasBun } from './hasBun';
 import { smoke } from './smoke';
 
-// one bot per file, since a Seedcord constructs once per process
+// a process holds one Seedcord. vitest gives each test file its own process.
 const HTTP_BOT = join(import.meta.dirname, '../../fixtures/http-bot');
 
 describe('seedcord build on an http bot', () => {
@@ -21,8 +22,42 @@ describe('seedcord build on an http bot', () => {
         const output = await smoke('http', process.execPath, [join(HTTP_BOT, 'dist/index.mjs')]);
 
         expect(output).toContain('fixture:text hello from the text table');
-        // greeting.txt and greeting.md both build to a greeting js file
         expect(output).toContain('fixture:text hello from the markdown twin');
+    }, 120_000);
+
+    it('points import.meta.filename at the built file when a text file shares its name', async () => {
+        await BuildRunner.create(silentLogger).run(HTTP_BOT);
+
+        const output = await smoke('http', process.execPath, [join(HTTP_BOT, 'dist/index.mjs')]);
+        const filename = /fixture:filename (\S+)/.exec(output)?.[1] ?? '';
+
+        expect(readFileSync(filename, 'utf8')).toContain('fixture:filename');
+    }, 120_000);
+
+    it('resolves tsconfig path aliases in bot.ts and in handlers', async () => {
+        await BuildRunner.create(silentLogger).run(HTTP_BOT);
+
+        const output = await smoke('http', process.execPath, [join(HTTP_BOT, 'dist/index.mjs')]);
+
+        expect(output).toContain('fixture:bot-alias-loaded');
+        expect(output).toContain('fixture:handlers-loaded');
+    }, 120_000);
+
+    it('loads a .js handler the way dev does', async () => {
+        await BuildRunner.create(silentLogger).run(HTTP_BOT);
+
+        const output = await smoke('http', process.execPath, [join(HTTP_BOT, 'dist/index.mjs')]);
+
+        expect(output).toContain('fixture:js-handler-loaded');
+    }, 120_000);
+
+    it('leaves import.meta inside strings and text files as written', async () => {
+        await BuildRunner.create(silentLogger).run(HTTP_BOT);
+
+        const output = await smoke('http', process.execPath, [join(HTTP_BOT, 'dist/index.mjs')]);
+
+        expect(output).toContain('fixture:literal import.meta.dirname stays text');
+        expect(output).toContain('fixture:text find files with import.meta.url');
     }, 120_000);
 
     it.skipIf(!hasBun())(

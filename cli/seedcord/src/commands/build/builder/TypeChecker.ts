@@ -1,10 +1,11 @@
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+
+import { resolveProjectTsc } from '#core/modules/resolveProjectTsc';
 
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { ILogger } from '@seedcord/types';
@@ -25,7 +26,9 @@ export class TypeChecker {
 
         this.logger.info(`Type checking with ${tsconfigPath}`);
 
-        const tsc = this.resolveProjectTsc(projectDir);
+        const tsc = resolveProjectTsc(projectDir);
+        if (!tsc) throw new SeedcordError(SeedcordErrorCode.CliTypescriptMissing, [projectDir]);
+
         const result = await this.run(
             process.execPath,
             [tsc, '-p', tsconfigPath, '--noEmit', '--pretty', 'false'],
@@ -34,20 +37,6 @@ export class TypeChecker {
         if (result.exitCode === 0) return;
 
         throw new SeedcordError(SeedcordErrorCode.CliBuildFailed, [this.truncate(result.output)]);
-    }
-
-    private resolveProjectTsc(projectDir: string): string {
-        const manifest = resolve(projectDir, 'package.json');
-        const projectRequire = createRequire(existsSync(manifest) ? manifest : import.meta.url);
-
-        try {
-            return projectRequire.resolve('typescript/bin/tsc');
-        } catch (error: unknown) {
-            const reason = Error.isError(error) ? error.message : 'Unknown resolution error';
-            throw new SeedcordError(SeedcordErrorCode.CliBuildFailed, [
-                `Unable to resolve typescript. Ensure it is installed in this project.\n${reason}`
-            ]);
-        }
     }
 
     private resolveTsconfig(config: ResolvedSeedcordDevConfig): string {
@@ -62,7 +51,7 @@ export class TypeChecker {
         const candidate = resolve(configDir, 'tsconfig.json');
         if (existsSync(candidate)) return candidate;
 
-        throw new SeedcordError(SeedcordErrorCode.CliBuildTsconfigNotFound, [configDir]);
+        throw new SeedcordError(SeedcordErrorCode.CliBuildNoTsconfig, [configDir]);
     }
 
     private run(cmd: string, args: string[], cwd: string): Promise<ProcessResult> {

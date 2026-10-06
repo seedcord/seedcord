@@ -4,7 +4,7 @@
     "compilerOptions": {
         "rootDir": "./",
         "paths": {
-            "@lib/*": ["./src/lib/*"]
+            "#lib/*": ["./src/lib/*"]
         }
     },
     "include": ["src/**/*.ts"]

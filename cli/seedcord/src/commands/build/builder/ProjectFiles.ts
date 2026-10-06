@@ -1,29 +1,51 @@
 import { readdir } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 
-// root-relative keys with a leading slash, the shape vite gives import.meta.glob keys
-function keyOf(root: string, dir: string): string {
-    return `/${relative(root, dir).split(sep).join('/')}`;
-}
+import { BUILT_FILES_KEY, isInside } from '@seedcord/utils/node/internal';
+
+export const BUILT_FILES_SLOT = `globalThis[Symbol.for(${JSON.stringify(BUILT_FILES_KEY)})]`;
 
 function isSkippedName(name: string): boolean {
     return name.startsWith('.') || name === 'node_modules';
 }
 
+// sit under root only when root is the project folder. logs/ is where the bot writes its log files
+const PROJECT_FILES = [
+    '/seedcord.config.*',
+    '/tsconfig*.json',
+    '/package.json',
+    '/pnpm-lock.yaml',
+    '/package-lock.json',
+    '/yarn.lock',
+    '/bun.lock',
+    '/bun.lockb',
+    '/logs/**'
+];
+
 export class ProjectFiles {
     constructor(
-        private readonly root: string,
+        public readonly root: string,
         private readonly outDir: string
     ) {}
 
-    // every folder under root the build bundles from, empty ones included
+    public holds(path: string): boolean {
+        return isInside(this.root, path);
+    }
+
+    // the shape vite gives import.meta.glob keys, root-relative with a leading slash
+    public keyOf(path: string): string {
+        return `/${relative(this.root, path).split(sep).join('/')}`;
+    }
+
+    // empty ones included
     public async folders(): Promise<string[]> {
         const found: string[] = [];
         const walk = async (dir: string): Promise<void> => {
             for (const entry of await readdir(dir, { withFileTypes: true })) {
                 const full = join(dir, entry.name);
                 if (!entry.isDirectory() || isSkippedName(entry.name) || full === this.outDir) continue;
-                found.push(keyOf(this.root, full));
+                if (full === join(this.root, 'logs')) continue;
+                found.push(this.keyOf(full));
                 await walk(full);
             }
         };
@@ -32,11 +54,9 @@ export class ProjectFiles {
         return found.sort();
     }
 
-    // negative glob patterns that keep the same folders out of both globs
-    public excludes(): string[] {
-        const patterns = ['!**/node_modules/**', '!**/.*', '!**/.*/**'];
-        const out = relative(this.root, this.outDir);
-        if (out !== '' && !out.startsWith('..')) patterns.push(`!${keyOf(this.root, this.outDir)}/**`);
+    public globExcludes(): string[] {
+        const patterns = ['!**/node_modules/**', '!**/.*', '!**/.*/**', ...PROJECT_FILES.map((file) => `!${file}`)];
+        if (this.holds(this.outDir)) patterns.push(`!${this.keyOf(this.outDir)}/**`);
         return patterns;
     }
 }

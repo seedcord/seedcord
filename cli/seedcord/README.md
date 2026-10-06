@@ -42,7 +42,7 @@ pnpm add -D seedcord
 | command | what it does |
 | --- | --- |
 | `seedcord dev` | runs the bot from the config file, reloading changed modules in place |
-| `seedcord build` | compiles the project from the config file |
+| `seedcord build` | type checks the bot and bundles it into `dist` with Vite |
 | `seedcord codegen` | writes the typed augmentations for your commands and config |
 | `seedcord commands` | inspects and cleans commands already deployed to Discord |
 

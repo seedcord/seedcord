@@ -64,7 +64,7 @@ export interface SeedcordDevConfig {
      */
     root?: string;
     /**
-     * Path to the module whose default export is a configured Seedcord instance.
+     * Path to the module whose default export is a configured `Seedcord` instance.
      */
     instance: string;
     /**

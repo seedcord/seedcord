@@ -6,7 +6,7 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 
 import { isCommandClass } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, WORDMARK } from '@seedcord/errors/internal';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { HostAugmentTarget, HostPluginKeys } from '@seedcord/types/internal';
 import { isTsOrJsFile } from '@seedcord/utils/node';
 import { ApplicationCommandType } from 'discord-api-types/v10';
@@ -183,7 +183,7 @@ export class CodegenRunner {
         const onDisk = existsSync(outputPath) ? await readFile(outputPath, 'utf8') : '';
         if (onDisk === rendered) return;
 
-        this.logger.error(`Augmentations are out of date. Run ${WORDMARK} codegen and commit ${outputPath}.`);
+        this.logger.error(`Augmentations are out of date. Run \`seedcord codegen\` and commit ${outputPath}.`);
         process.exitCode = 1;
     }
 }

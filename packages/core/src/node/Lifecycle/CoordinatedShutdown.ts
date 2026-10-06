@@ -83,8 +83,6 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
 
     /** @internal */
     public registerSignalHandlers(): void {
-        if (this.onSigTerm) return;
-
         this.onSigTerm = () => {
             this.logger.info(`Received ${paint.amber.bold('SIGTERM')} signal`);
             void this.run(0);

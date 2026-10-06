@@ -1,34 +1,64 @@
-import { relative, sep } from 'node:path';
+import { sep } from 'node:path';
 
-import { BUILT_FILES_KEY } from '@seedcord/utils/node/internal';
+import { Visitor } from 'vite';
+
+import { BUILT_FILES_SLOT, type ProjectFiles } from './ProjectFiles';
 
 import type { Plugin } from 'vite';
 
-const IMPORT_META_PATH = /\bimport\.meta\.(dirname|filename|url)\b/g;
-const BUILT_ROOT = `globalThis[Symbol.for(${JSON.stringify(BUILT_FILES_KEY)})].root`;
+type PathKey = 'dirname' | 'filename' | 'url';
+
+interface Rewrite {
+    start: number;
+    end: number;
+    key: PathKey;
+}
+
+function isPathKey(name: string): name is PathKey {
+    return name === 'dirname' || name === 'filename' || name === 'url';
+}
+
+function importMetaPaths(program: Parameters<Visitor['visit']>[0]): Rewrite[] {
+    const found: Rewrite[] = [];
+    new Visitor({
+        MemberExpression(node) {
+            if (node.object.type !== 'MetaProperty' || node.property.type !== 'Identifier') return;
+            if (isPathKey(node.property.name)) {
+                found.push({ start: node.start, end: node.end, key: node.property.name });
+            }
+        }
+    }).visit(program);
+    return found;
+}
 
 // bun --compile gives every module the entry's import.meta
-export function pinModulePaths(root: string): Plugin {
-    const prefix = root + sep;
+export function pinModulePaths(files: ProjectFiles): Plugin {
+    const builtRoot = `${BUILT_FILES_SLOT}.root`;
 
     return {
         name: 'seedcord:pin-module-paths',
         transform(code, id) {
-            if (!id.startsWith(prefix) || id.includes(`${sep}node_modules${sep}`) || !code.includes('import.meta.')) {
-                return undefined;
-            }
+            // a ?raw text module is file content
+            if (!files.holds(id) || id.includes('?') || id.includes(`${sep}node_modules${sep}`)) return undefined;
+            if (!code.includes('import.meta.')) return undefined;
 
-            const file = `/${relative(root, id).split(sep).join('/').replace(/\.ts$/, '.js')}`;
-            const dir = file.slice(0, file.lastIndexOf('/'));
-            const filename = `(${BUILT_ROOT} + ${JSON.stringify(file)})`;
-            const values = {
-                dirname: `(${BUILT_ROOT} + ${JSON.stringify(dir)})`,
+            const rewrites = importMetaPaths(this.parse(code));
+            if (rewrites.length === 0) return undefined;
+
+            const file = files.keyOf(id).replace(/\.ts$/, '.js');
+            const filename = `(${builtRoot} + ${JSON.stringify(file)})`;
+            const values: Record<PathKey, string> = {
+                dirname: `(${builtRoot} + ${JSON.stringify(file.slice(0, file.lastIndexOf('/')))})`,
                 filename,
                 url: `(new URL('file://' + ${filename}).href)`
             };
 
-            // map: null holds because the replacement adds no lines
-            return { code: code.replaceAll(IMPORT_META_PATH, (_, key: keyof typeof values) => values[key]), map: null };
+            let rewritten = code;
+            for (const { start, end, key } of rewrites.toReversed()) {
+                rewritten = rewritten.slice(0, start) + values[key] + rewritten.slice(end);
+            }
+            // keeps line numbers right. columns after a rewrite shift
+            return { code: rewritten, map: null };
         }
     };
 }

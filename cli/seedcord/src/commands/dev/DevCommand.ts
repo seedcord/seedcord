@@ -14,7 +14,7 @@ import type { Command } from '@commander-js/extra-typings';
 
 export class DevCommand extends BaseCommand {
     constructor() {
-        super('dev', 'Run a Seedcord instance from the config file', 'Dev');
+        super('dev', 'Run the bot from the config file', 'Dev');
     }
 
     public register(program: Command): void {

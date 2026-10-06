@@ -1,8 +1,9 @@
-import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import { dirname, isAbsolute, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { isPlainObject } from '@seedcord/utils/internal';
+import { isInside } from '@seedcord/utils/node/internal';
 
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
@@ -110,6 +111,7 @@ export class ConfigLoader {
         const entry = this.resolveWithinRoot(root, config.entry);
         this.assertEntryWithinRoot(root, entry);
         const build = this.resolveBuildOptions(configDir, config.build);
+        this.assertOutDirOutsideRoot(build.outDir, root);
         const typecheck = resolveTypecheck(config.hmr?.typecheck, root);
 
         this.logger.debug(`Loaded configuration from ${configPath}`);
@@ -139,10 +141,13 @@ export class ConfigLoader {
     }
 
     private assertEntryWithinRoot(root: string, entry: string): void {
-        const relativePath = relative(root, entry);
-        if (relativePath.startsWith('..') || isAbsolute(relativePath)) {
-            throw new SeedcordError(SeedcordErrorCode.CliConfigEntryOutsideRoot, [entry, root]);
-        }
+        if (!isInside(root, entry)) throw new SeedcordError(SeedcordErrorCode.CliConfigEntryOutsideRoot, [entry, root]);
+    }
+
+    // seedcord build empties outDir before it writes
+    private assertOutDirOutsideRoot(outDir: string, root: string): void {
+        if (isInside(outDir, root))
+            throw new SeedcordError(SeedcordErrorCode.CliConfigOutDirDeletesRoot, [outDir, root]);
     }
 
     private resolveBuildOptions(

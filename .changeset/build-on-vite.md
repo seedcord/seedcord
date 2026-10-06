@@ -2,4 +2,4 @@
 'seedcord': minor
 ---
 
-**BREAKING:** `seedcord build` now bundles the bot with Vite, and the output also runs as a `bun build --compile` binary. The `build.bootstrap` option has been removed, and a start script that used it now points at `dist/index.mjs`.
+**BREAKING:** `seedcord build` now empties `outDir` and bundles the bot into it with Vite, and the output also runs as a `bun build --compile` binary. Point a start script that used the removed `build.bootstrap` at `dist/index.mjs`, and set `build.tsconfig` if you relied on `tsconfig.build.json`, because the type check now defaults to `tsconfig.json`. Handler, command, event, and subscriber folders must now be absolute paths like `resolve(import.meta.dirname, './handlers')`, and the build loads `bot.ts` to check them.

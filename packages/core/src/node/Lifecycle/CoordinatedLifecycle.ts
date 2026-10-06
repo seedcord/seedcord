@@ -46,14 +46,7 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         const filteredTasks = tasks.filter((task) => task.name !== taskName);
         this.tasksMap.set(phase, filteredTasks);
 
-        const removed = initialLength !== filteredTasks.length;
-        if (removed) {
-            this.logger.debug(
-                `${paint.italic('Removed')} ${this.getTaskType()} task ${paint.sky.bold(taskName)} from phase ${paint.iris.bold(this.phaseEnum[phase])}`
-            );
-        }
-
-        return removed;
+        return initialLength !== filteredTasks.length;
     }
 
     protected async runPhase(phase: TPhase): Promise<void> {

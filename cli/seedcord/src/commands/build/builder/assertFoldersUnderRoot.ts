@@ -1,17 +1,15 @@
-import { isAbsolute, relative, resolve, sep } from 'node:path';
+import { isAbsolute } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
+import { isInside } from '@seedcord/utils/node/internal';
 
-import type { BotConfig, Config } from '@seedcord/types';
+import type { BotConfig, CommandsConfig, Config, InteractionsConfig, SubscribersConfig } from '@seedcord/types';
 
-interface FolderSection {
-    path: string | null;
-    middlewares?: string | undefined;
-}
+type FolderSection = InteractionsConfig | CommandsConfig | SubscribersConfig;
 
-// only the gateway config has events
-function hasEvents(bot: BotConfig): bot is BotConfig & { events: FolderSection } {
+// gateway's EventsConfig has the same path and middlewares as InteractionsConfig
+function hasEvents(bot: BotConfig): bot is BotConfig & { events: InteractionsConfig } {
     return 'events' in bot;
 }
 
@@ -19,17 +17,25 @@ function configuredFolders({ bot, subscribers }: Config): string[] {
     const sections: FolderSection[] = [bot.interactions, bot.commands, subscribers];
     if (hasEvents(bot)) sections.push(bot.events);
 
-    return sections.flatMap(({ path, middlewares }) => [path, middlewares].filter((dir) => typeof dir === 'string'));
+    return sections.flatMap((section) => {
+        const middlewares = 'middlewares' in section ? section.middlewares : undefined;
+        return [section.path, middlewares].filter((folder) => typeof folder === 'string');
+    });
 }
 
 // plugin folders get only the runtime check in @seedcord/utils
 export function assertFoldersUnderRoot(config: Config, root: string): void {
+    const problems: SeedcordError[] = [];
     for (const folder of configuredFolders(config)) {
-        // the bot resolves a relative folder against cwd
-        const dir = resolve(process.cwd(), folder);
-        const fromRoot = relative(root, dir);
-        if (fromRoot === '..' || fromRoot.startsWith(`..${sep}`) || isAbsolute(fromRoot)) {
-            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [dir, root]);
+        if (!isAbsolute(folder)) {
+            problems.push(new SeedcordError(SeedcordErrorCode.CliBuildRelativeFolder, [folder]));
+        } else if (!isInside(root, folder)) {
+            problems.push(new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [folder, root]));
         }
     }
+
+    const [first, ...rest] = problems;
+    if (!first) return;
+    if (rest.length === 0) throw first;
+    throw new SeedcordAggregateError(SeedcordErrorCode.CliBuildFolderProblems, problems, [problems.length]);
 }

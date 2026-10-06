@@ -11,7 +11,7 @@ import { silentLogger } from '#tests/silentLogger';
 import { hasBun } from './hasBun';
 import { smoke } from './smoke';
 
-// one bot per file, since a Seedcord constructs once per process
+// a process holds one Seedcord. vitest gives each test file its own process.
 const GATEWAY_BOT = join(import.meta.dirname, '../../fixtures/gateway-bot');
 
 describe('seedcord build on a gateway bot', () => {

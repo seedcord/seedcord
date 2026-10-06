@@ -2,4 +2,4 @@
 '@seedcord/core': patch
 ---
 
-A bot now installs its SIGINT and SIGTERM handlers in `start()`. Calling `new Seedcord()` without `start()`, like `seedcord codegen` does, no longer installs them or logs the startup tasks.
+A bot now installs its SIGINT and SIGTERM handlers in `start()`, and `new Seedcord()` alone leaves them off. Adding or removing a startup or shutdown task no longer writes a debug log line.

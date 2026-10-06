@@ -279,6 +279,16 @@ export enum SeedcordErrorCode {
     CliCodegenCommandConstructorThrew = 3127,
     /** Vite failed while `seedcord build` bundled the project. */
     CliBundleFailed = 3128,
+    /** `build.outDir` is `root` or a folder that contains it. */
+    CliConfigOutDirDeletesRoot = 3129,
+    /** `seedcord build` could not find a `typescript` install to type check with. */
+    CliTypescriptMissing = 3130,
+    /** No `build.tsconfig` is set and no `tsconfig.json` sits beside the config file. */
+    CliBuildNoTsconfig = 3131,
+    /** A folder in the bot config is a relative path. */
+    CliBuildRelativeFolder = 3132,
+    /** Two or more folders in the bot config failed the `seedcord build` checks. */
+    CliBuildFolderProblems = 3133,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,
