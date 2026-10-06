@@ -7,7 +7,7 @@ import { promisify } from 'node:util';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { traverseDirectory } from '#src/node/directory';
+import { readTextFiles, traverseDirectory } from '#src/node/directory';
 
 const FIXTURES = path.join(import.meta.dirname, 'fixtures');
 const SOURCE = path.join(import.meta.dirname, '..', '..', 'src', 'node', 'directory.ts');
@@ -15,11 +15,13 @@ const SOURCE = path.join(import.meta.dirname, '..', '..', 'src', 'node', 'direct
 const run = promisify(execFile);
 const scratch = await mkdtemp(path.join(os.tmpdir(), 'seedcord-traverse-'));
 
-async function rejection(walk: Promise<void>): Promise<unknown> {
-    return walk.then(
-        () => null,
-        (caught: unknown) => caught
-    );
+async function rejection(walk: AsyncIterable<unknown>): Promise<unknown> {
+    try {
+        for await (const _ of walk);
+        return null;
+    } catch (caught) {
+        return caught;
+    }
 }
 
 // vitest's evaluator decodes a percent-encoded specifier back to a raw path
@@ -30,7 +32,7 @@ async function walkInNode(dir: string): Promise<string[]> {
         'const [source, target] = process.argv.slice(1);',
         'const { traverseDirectory } = await import(pathToFileURL(source).href);',
         'const seen = [];',
-        'await traverseDirectory(target, (full) => void seen.push(path.basename(full)));',
+        'for await (const { fullPath } of traverseDirectory(target)) seen.push(path.basename(fullPath));',
         'console.log(JSON.stringify(seen));'
     ].join('\n');
 
@@ -54,16 +56,22 @@ describe('traverseDirectory', () => {
         await expect(walkInNode(dir)).resolves.toEqual(['Mod.js']);
     });
 
-    it('visits every ts file under the directory', async () => {
+    it('visits every ts file under the directory, sorted by path', async () => {
         const seen: string[] = [];
 
-        await traverseDirectory(path.join(FIXTURES, 'walk'), (fullPath) => void seen.push(path.basename(fullPath)));
+        for await (const { fullPath } of traverseDirectory(path.join(FIXTURES, 'walk'))) {
+            seen.push(path.relative(FIXTURES, fullPath));
+        }
 
-        expect(seen.sort()).toEqual(['aGood.ts', 'cGood.ts']);
+        expect(seen).toEqual([
+            path.join('walk', 'aGood.ts'),
+            path.join('walk', 'b', 'bGood.ts'),
+            path.join('walk', 'cGood.ts')
+        ]);
     });
 
     it('reports the file whose module failed to import, keeping the original as the cause', async () => {
-        const error = await rejection(traverseDirectory(path.join(FIXTURES, 'broken'), () => undefined));
+        const error = await rejection(traverseDirectory(path.join(FIXTURES, 'broken')));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryImportFailed });
         expect(Error.isError(error) ? error.message : '').toMatch(/Broken\.ts/);
@@ -73,10 +81,32 @@ describe('traverseDirectory', () => {
     it('reports the directory it could not read, keeping the original as the cause', async () => {
         const missing = path.join(FIXTURES, 'not-a-real-dir');
 
-        const error = await rejection(traverseDirectory(missing, () => undefined));
+        const error = await rejection(traverseDirectory(missing));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
         expect(Error.isError(error) ? error.message : '').toMatch(/not-a-real-dir/);
+        expect(Error.isError(error) ? error.cause : undefined).toBeInstanceOf(Error);
+    });
+});
+
+describe('readTextFiles', () => {
+    it('reads every file under the directory except code, type, source map, and hidden files or folders', async () => {
+        const seen: [string, string][] = [];
+
+        for await (const { fullPath, text } of readTextFiles(path.join(FIXTURES, 'text'))) {
+            seen.push([path.relative(FIXTURES, fullPath), text]);
+        }
+
+        expect(seen).toEqual([
+            [path.join('text', 'en.json'), '{ "hi": "hello" }\n'],
+            [path.join('text', 'nested', 'faq.md'), '# faq\n']
+        ]);
+    });
+
+    it('reports the directory it could not read, keeping the original as the cause', async () => {
+        const error = await rejection(readTextFiles(path.join(FIXTURES, 'not-a-real-dir')));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
         expect(Error.isError(error) ? error.cause : undefined).toBeInstanceOf(Error);
     });
 });

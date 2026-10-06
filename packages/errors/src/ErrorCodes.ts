@@ -78,6 +78,10 @@ export enum SeedcordErrorCode {
     CorePluginKeyMalformed = 1217,
     /** An attached plugin doesn't extend the `Plugin` class of the bot's `@seedcord/core`. */
     CorePluginFromOtherCore = 1218,
+    /** A built bot scanned a folder outside `root`. */
+    CoreDirectoryOutsideRoot = 1219,
+    /** A file in a scanned directory could not be read as text. */
+    CoreFileUnreadable = 1220,
 
     /** A command decorator attempted to re-register an existing command scope. */
     DecoratorCommandAlreadyRegistered = 1301,

@@ -47,6 +47,9 @@ const messages = {
         `${controllerName} was instantiated without a ${pathKind} path.`,
     [SeedcordErrorCode.CoreDirectoryImportFailed]: (file: string) => `${file} threw while importing.`,
     [SeedcordErrorCode.CoreDirectoryUnreadable]: (dir: string) => `${dir} could not be read.`,
+    [SeedcordErrorCode.CoreFileUnreadable]: (file: string) => `${file} could not be read as text.`,
+    [SeedcordErrorCode.CoreDirectoryOutsideRoot]: (dir: string, root: string) =>
+        `${paint.sky(dir)} is outside ${paint.sky(root)}. ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move the folder under it, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds both.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.sky(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>
