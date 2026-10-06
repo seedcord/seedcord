@@ -19,7 +19,6 @@ function publicKeyHex(): string {
     return publicKey.export({ type: 'spki', format: 'der' }).subarray(-ED25519_KEY_BYTES).toString('hex');
 }
 
-// a gateway bot loads its handlers inside login, before it would reach discord
 export async function smoke(kind: Kind, command: string, args: string[] = []): Promise<string> {
     const child = spawn(command, args, {
         env: { ...process.env, DISCORD_BOT_TOKEN: FAKE_TOKEN, DISCORD_PUBLIC_KEY: publicKeyHex() },
@@ -35,6 +34,7 @@ export async function smoke(kind: Kind, command: string, args: string[] = []): P
         const collect = (chunk: Buffer): void => {
             output += String(chunk);
             const port = /fixture:listening (\d+)/.exec(output)?.[1];
+            // a gateway bot loads its handlers inside login, before it would reach discord
             if (kind === 'http' ? port === undefined : !output.includes('fixture:handlers-loaded')) return;
 
             clearTimeout(timer);

@@ -22,7 +22,7 @@ export class BuildCommand extends BaseCommand {
             .action(async () => {
                 try {
                     await this.runner.run();
-                    this.logger.info(`${WORDMARK} build finished successfully.`);
+                    this.logger.info(`${WORDMARK} build finished`);
                 } catch (error: unknown) {
                     this.logger.error(`${WORDMARK} build failed`, error);
                     if (isSeedcordError(error)) process.exitCode = 1;

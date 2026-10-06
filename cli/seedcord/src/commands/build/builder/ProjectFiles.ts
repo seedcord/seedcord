@@ -43,8 +43,7 @@ export class ProjectFiles {
         return `/${relative(this.root, path).split(sep).join('/')}`;
     }
 
-    // empty ones included
-    public async folders(): Promise<string[]> {
+    public async foldersIncludingEmpty(): Promise<string[]> {
         const found: string[] = [];
         const walk = async (dir: string): Promise<void> => {
             for (const entry of await readdir(dir, { withFileTypes: true })) {

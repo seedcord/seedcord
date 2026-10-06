@@ -14,5 +14,6 @@ export function toSeedcordInstance(candidate: unknown, instancePath: string): Se
 }
 
 export async function importInstance(modules: ModuleLoader, instancePath: string): Promise<SeedcordInstance> {
-    return toSeedcordInstance(resolveDefaultExport(await modules.importModule(instancePath)), instancePath);
+    const module = await modules.importModule(instancePath);
+    return toSeedcordInstance(await resolveDefaultExport(module), instancePath);
 }

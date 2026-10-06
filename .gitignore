@@ -54,6 +54,7 @@ dist/
 *.log
 logs/
 Logs/
+!cli/seedcord/tests/fixtures/http-bot/src/logs/
 
 # ESLint cache
 .eslintcache

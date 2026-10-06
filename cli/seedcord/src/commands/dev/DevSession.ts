@@ -72,7 +72,7 @@ export class DevSession {
 
     public async start(onReady?: () => void): Promise<void> {
         const module = await this.loadInstanceModule();
-        const instance = toSeedcordInstance(await Promise.resolve(resolveDefaultExport(module)), this.config.instance);
+        const instance = toSeedcordInstance(await resolveDefaultExport(module), this.config.instance);
 
         this.instance = instance;
         this.store.setTransport({ name: instance[HostAugmentTarget], version: instance[HostVersion] });

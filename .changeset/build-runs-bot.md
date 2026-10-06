@@ -2,4 +2,4 @@
 'seedcord': minor
 ---
 
-**BREAKING:** `seedcord build` now runs `bot.ts`. Set the env that `bot.ts` reads at construction in CI too, because a build without it now fails.
+**BREAKING:** `seedcord build` now runs your `instance` file. Set the env that file reads at construction in CI too, because a build without it now fails.

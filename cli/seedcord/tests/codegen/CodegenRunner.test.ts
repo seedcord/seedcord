@@ -100,6 +100,27 @@ function invalidRunner(root: string, logger: ILogger): CodegenRunner {
     return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
 }
 
+// dev accepts a default export that resolves to the instance
+function asyncInstanceRunner(root: string, logger: ILogger): CodegenRunner {
+    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
+    const configLoader = {
+        load: () => Promise.resolve({ root, instance: resolve(root, 'bot.ts') })
+    } as unknown as ConfigLoader;
+    const moduleLoader = {
+        importModule: () =>
+            Promise.resolve({
+                default: Promise.resolve({
+                    [SeedcordBrand]: true,
+                    [HostAugmentTarget]: '@seedcord/gateway',
+                    [HostPluginKeys]: [],
+                    config: { bot: { commands: { path: null } } }
+                })
+            })
+    } as unknown as ModuleLoader;
+
+    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
+}
+
 function pluginRunner(root: string, instance: string, pluginKeys: readonly string[], logger: ILogger): CodegenRunner {
     const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
     const configLoader = { load: () => Promise.resolve({ root, instance }) } as unknown as ConfigLoader;
@@ -294,6 +315,14 @@ describe('CodegenRunner', () => {
         }
 
         expect(caught).toMatchObject({ code: SeedcordErrorCode.CliInstanceInvalid });
+    });
+
+    it('accepts an instance exported as a promise', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        await asyncInstanceRunner(root, silentLogger()).run(false);
+
+        const written = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(written).toContain("declare module '@seedcord/gateway'");
     });
 
     it('--check exits zero and writes nothing when the registry is current', async () => {

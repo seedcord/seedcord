@@ -66,7 +66,9 @@ export class TypeChecker {
                 output += String(chunk);
             });
 
-            child.on('error', rejectPromise);
+            child.on('error', (error) => {
+                rejectPromise(new SeedcordError(SeedcordErrorCode.CliBuildFailed, [error.message], { cause: error }));
+            });
             child.on('close', (code) => {
                 resolvePromise({ exitCode: code ?? 1, output });
             });

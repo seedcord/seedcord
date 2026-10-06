@@ -16,8 +16,9 @@ const NODE_TARGET = 'node24';
 // Echo.ts builds to Echo.js and Echo.json to Echo.json.js
 function outputName(moduleId: string | null | undefined): string {
     if (isSeedcordEntry(moduleId)) return ENTRY_FILE_NAME;
-    if (!moduleId?.endsWith('?raw')) return '[name].js';
-    return `[name]${extname(moduleId.slice(0, -'?raw'.length))}.js`;
+    const extension = extname(moduleId?.split('?')[0] ?? '');
+    if (extension === '' || extension === '.ts' || extension === '.js') return '[name].js';
+    return `[name]${extension}.js`;
 }
 
 export class ViteBuilder {
@@ -27,7 +28,7 @@ export class ViteBuilder {
         const { root, entry } = config;
         const { outDir } = config.build;
         const files = new ProjectFiles(root, outDir, dirname(config.configFile));
-        const folders = await files.folders();
+        const folders = await files.foldersIncludingEmpty();
 
         this.logger.info(`Bundling ${root} into ${outDir}`);
 
@@ -61,7 +62,7 @@ export class ViteBuilder {
             });
         } catch (error: unknown) {
             const reason = Error.isError(error) ? error.message : String(error);
-            throw new SeedcordError(SeedcordErrorCode.CliBundleFailed, [reason]);
+            throw new SeedcordError(SeedcordErrorCode.CliBundleFailed, [reason], { cause: error });
         }
     }
 }
