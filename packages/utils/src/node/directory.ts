@@ -11,22 +11,21 @@ import type * as fs from 'node:fs';
  * Determines if a directory entry is a TypeScript or JavaScript file.
  */
 export function isTsOrJsFile(entry: fs.Dirent): boolean {
-    return (
-        entry.isFile() &&
-        (entry.name.endsWith('.ts') || entry.name.endsWith('.js')) &&
-        !entry.name.endsWith('.d.ts') &&
-        !entry.name.endsWith('.map')
-    );
+    return entry.isFile() && isModulePath(entry.name);
 }
 
-function isTextFile(entry: fs.Dirent): boolean {
-    return (
-        entry.isFile() &&
-        !entry.name.startsWith('.') &&
-        !entry.name.endsWith('.ts') &&
-        !entry.name.endsWith('.js') &&
-        !entry.name.endsWith('.map')
-    );
+function isModulePath(file: string): boolean {
+    const name = path.basename(file);
+    return (name.endsWith('.ts') || name.endsWith('.js')) && !name.endsWith('.d.ts') && !name.endsWith('.map');
+}
+
+function isTextPath(dir: string, file: string): boolean {
+    const name = path.basename(file);
+    const hidden = path
+        .relative(dir, file)
+        .split(path.sep)
+        .some((part) => part.startsWith('.'));
+    return !hidden && !name.endsWith('.ts') && !name.endsWith('.js') && !name.endsWith('.map');
 }
 
 type ModuleLoader = () => Promise<Record<string, unknown>>;
@@ -40,17 +39,19 @@ interface FileSource {
 
 class DiskFiles implements FileSource {
     public async modules(dir: string): Promise<Loaders<ModuleLoader>> {
-        const files = await DiskFiles.filesUnder(dir, isTsOrJsFile);
+        const all = await DiskFiles.filesUnder(dir);
+        const files = all.filter(isModulePath);
         // node reads a raw windows path's drive letter as a url protocol
         return files.map((file) => [file, () => import(pathToFileURL(file).href) as Promise<Record<string, unknown>>]);
     }
 
     public async texts(dir: string): Promise<Loaders<TextLoader>> {
-        const files = await DiskFiles.filesUnder(dir, isTextFile);
+        const all = await DiskFiles.filesUnder(dir);
+        const files = all.filter((file) => isTextPath(dir, file));
         return files.map((file) => [file, () => readFile(file, 'utf8')]);
     }
 
-    private static async filesUnder(dir: string, include: (entry: fs.Dirent) => boolean): Promise<string[]> {
+    private static async filesUnder(dir: string): Promise<string[]> {
         let entries: fs.Dirent[];
         try {
             entries = await readdir(dir, { withFileTypes: true, recursive: true });
@@ -59,7 +60,7 @@ class DiskFiles implements FileSource {
         }
 
         return entries
-            .filter(include)
+            .filter((entry) => entry.isFile())
             .map((entry) => path.join(entry.parentPath, entry.name))
             .sort();
     }
@@ -75,7 +76,9 @@ class BuiltFiles implements FileSource {
         this.root = path.resolve(root);
         this.folders = new Set([this.root, ...folders.map((folder) => path.join(this.root, folder))]);
         this.moduleLoaders = new Map(
-            Object.entries(modules).map(([key, load]) => [path.join(this.root, key.replace(/\.ts$/, '.js')), load])
+            Object.entries(modules)
+                .filter(([key]) => isModulePath(key))
+                .map(([key, load]) => [path.join(this.root, key.replace(/\.ts$/, '.js')), load])
         );
         this.textLoaders = new Map(Object.entries(text).map(([key, load]) => [path.join(this.root, key), load]));
     }
@@ -85,7 +88,7 @@ class BuiltFiles implements FileSource {
     }
 
     public texts(dir: string): Promise<Loaders<TextLoader>> {
-        return Promise.resolve(this.under(this.textLoaders, dir));
+        return Promise.resolve(this.under(this.textLoaders, dir).filter(([file]) => isTextPath(dir, file)));
     }
 
     private under<Loader>(loaders: Map<string, Loader>, dir: string): Loaders<Loader> {
@@ -165,7 +168,7 @@ export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFi
 
 /**
  * Reads every file under a directory, recursively and sorted by path, yielding its text.
- * It skips dotfiles and every .ts, .js, or .map file.
+ * It skips every .ts, .js, or .map file. Dotfiles and dot-folders are skipped too.
  * In a built bot the files come from the build output.
  *
  * @throws A **SeedcordError** when the directory or a file in it cannot be read, or in a built bot when the directory is outside `root`.

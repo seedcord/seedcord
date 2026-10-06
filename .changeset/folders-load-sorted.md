@@ -6,4 +6,4 @@
 '@seedcord/plugin-kysely-postgres': patch
 ---
 
-Handler, command, subscriber, and service folders now load their files sorted by path.
+Handler, middleware, command, subscriber, and service folders now load their files sorted by path.

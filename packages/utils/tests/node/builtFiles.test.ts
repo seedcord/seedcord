@@ -50,6 +50,15 @@ describe('traverseDirectory in a built bot', () => {
         ]);
     });
 
+    it('skips registered type declarations, the same as the disk walk', async () => {
+        register({
+            folders: ['/handlers'],
+            modules: { '/handlers/types.d.ts': stub('types'), '/handlers/A.ts': stub('A') }
+        });
+
+        await expect(walk('/bot/handlers')).resolves.toEqual([['/bot/handlers/A.js', 'A']]);
+    });
+
     it('loads nothing past the file the caller stopped at', async () => {
         const later = vi.fn(stub('Later'));
         register({ folders: ['/handlers'], modules: { '/handlers/A.ts': stub('A'), '/handlers/B.ts': later } });
@@ -133,6 +142,25 @@ describe('readTextFiles in a built bot', () => {
             ['/bot/locales/en.json', '{"hi":"hello"}'],
             ['/bot/locales/fr.json', '{"hi":"salut"}']
         ]);
+    });
+
+    it('skips the same files the disk walk skips', async () => {
+        const text = (): Promise<string> => Promise.resolve('{}');
+        register({
+            folders: ['/locales', '/locales/.cache'],
+            text: {
+                '/locales/Skipped.ts': text,
+                '/locales/.hidden': text,
+                '/locales/en.json.map': text,
+                '/locales/.cache/cached.json': text,
+                '/locales/en.json': text
+            }
+        });
+
+        const seen: string[] = [];
+        for await (const { fullPath } of readTextFiles('/bot/locales')) seen.push(fullPath);
+
+        expect(seen).toEqual(['/bot/locales/en.json']);
     });
 
     it('reports the file whose text failed to load by its relative path, keeping the original as the cause', async () => {
