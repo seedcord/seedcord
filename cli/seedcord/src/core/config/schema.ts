@@ -9,15 +9,11 @@ export interface SeedcordBuildConfig {
      */
     outDir?: string;
     /**
-     * Optional tsconfig path to use for builds.
+     * The tsconfig that `seedcord build` type checks the project with.
      *
-     * @defaultValue the nearest `tsconfig.build.json` or `tsconfig.json`
+     * @defaultValue the `tsconfig.json` beside the config file
      */
     tsconfig?: string;
-    /**
-     * File name (or relative path) for the bootstrap file emitted inside the build output.
-     */
-    bootstrap?: string;
 }
 
 /**
@@ -68,7 +64,7 @@ export interface SeedcordDevConfig {
      */
     root?: string;
     /**
-     * Path to the module whose default export is a configured Seedcord instance.
+     * Path to the module whose default export is a configured `Seedcord` instance.
      */
     instance: string;
     /**
@@ -108,7 +104,6 @@ export type ResolvedTypecheck = { enabled: false } | { enabled: true; tsconfig?:
 
 export interface ResolvedSeedcordBuildConfig {
     outDir: string;
-    bootstrap: string;
     tsconfig?: string;
 }
 

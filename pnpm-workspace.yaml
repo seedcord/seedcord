@@ -16,10 +16,6 @@ overrides:
   sharp: ^0.35.4 # < 0.35.4 has GHSA-rgj7-g3m4-5g8c through libheif
   'undici@7': ^7.29.1 # < 7.29.1 has GHSA-4cwx-7wf7-3272
 
-auditConfig:
-  ignoreGhsas:
-    - GHSA-vfj7-8cjw-p6xm # braces has no patched release yet. it reaches the cli through tsc-alias
-
 packageExtensions:
   '@testing-library/jest-dom':
     peerDependencies:

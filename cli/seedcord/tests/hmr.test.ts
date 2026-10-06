@@ -91,8 +91,7 @@ describe('HmrPlugin', () => {
         idleAnimation: true,
         tunnel: { mode: 'quick' } as const,
         build: {
-            outDir: 'dist',
-            bootstrap: 'bootstrap.js'
+            outDir: 'dist'
         }
     };
 

@@ -1,4 +1,5 @@
 import { ShutdownPhase, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { Events } from 'discord.js';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -20,15 +21,13 @@ describe('Seedcord host', () => {
     beforeEach(reset);
     afterEach(reset);
 
-    it('reset() releases the signal handlers', () => {
-        const base = process.listenerCount('SIGTERM');
+    it('installs no signal handlers while only constructed', () => {
+        const base = [process.listenerCount('SIGTERM'), process.listenerCount('SIGINT')];
 
-        // eslint-disable-next-line no-new -- construction registers the handlers under test
+        // eslint-disable-next-line no-new -- construction is the behavior under test
         new Seedcord(testConfig());
-        expect(process.listenerCount('SIGTERM')).toBe(base + 1);
 
-        reset();
-        expect(process.listenerCount('SIGTERM')).toBe(base);
+        expect([process.listenerCount('SIGTERM'), process.listenerCount('SIGINT')]).toEqual(base);
     });
 
     it('exposes the discord.js client REST as core.rest', () => {
@@ -63,14 +62,14 @@ describe('Seedcord host', () => {
         dead.startup.addTask(StartupPhase.Configuration, 'boom', () => Promise.reject(new Error('boom')));
         await expect(dead.start()).rejects.toThrow();
 
-        const base = process.listenerCount('SIGTERM');
-        // eslint-disable-next-line no-new -- construction registers the handlers under test
+        // eslint-disable-next-line no-new -- the live host under test
         new Seedcord(testConfig());
-        expect(process.listenerCount('SIGTERM')).toBe(base + 1);
 
         await expect(dead.start()).rejects.toThrow(/new instance/);
 
-        expect(process.listenerCount('SIGTERM')).toBe(base + 1);
+        expect(() => new Seedcord(testConfig())).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CoreSingletonViolation })
+        );
     });
 
     it('a racing start failure tears the host down once', async () => {

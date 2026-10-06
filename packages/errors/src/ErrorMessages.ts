@@ -232,15 +232,26 @@ const messages = {
         `Failed to import TypeScript file ${entryPath}: ${reason}`,
     [SeedcordErrorCode.CliImportFailed]: (entryPath: string, nativeReason: string, fallbackReason: string) =>
         `Failed to import ${entryPath}: ${nativeReason} (the jiti fallback also failed: ${fallbackReason})`,
-    [SeedcordErrorCode.CliInstanceInvalid]: () =>
-        'Seedcord instance must default export an object with a start() method.',
+    [SeedcordErrorCode.CliInstanceInvalid]: (instancePath: string) =>
+        `${paint.sky(instancePath)} must default export the bot, a ${paint.bold('new Seedcord(...)')}, from ${paint.bold('@seedcord/gateway')} or ${paint.bold('@seedcord/http')}.`,
     [SeedcordErrorCode.CliStartFailed]: (instancePath: string, reason: string) =>
-        `Failed to start Seedcord from ${instancePath}: ${reason}`,
-    [SeedcordErrorCode.CliBuildTsconfigNotFound]: (hint: string) =>
-        `Unable to resolve a tsconfig for builds (${hint}). Provide build.tsconfig or add tsconfig.build.json / tsconfig.json.`,
-    [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `TypeScript build failed:\n${diagnostics}`,
-    [SeedcordErrorCode.CliBootstrapWriteFailed]: (targetPath: string, reason: string) =>
-        `Failed to write bootstrap file at ${targetPath}: ${reason}`,
+        `Failed to start the bot from ${instancePath}: ${reason}`,
+    [SeedcordErrorCode.CliBuildTsconfigNotFound]: (tsconfig: string) =>
+        `${paint.bold('build.tsconfig')} points at ${paint.sky(tsconfig)}, which does not exist.`,
+    [SeedcordErrorCode.CliBuildNoTsconfig]: (configDir: string) =>
+        `${paint.sky(configDir)} does not contain a ${paint.sky('tsconfig.json')}. Add one there, or set ${paint.bold('build.tsconfig')} in the seedcord config.`,
+    [SeedcordErrorCode.CliTypescriptMissing]: (projectDir: string) =>
+        `${paint.bold('seedcord build')} type checks with ${paint.bold('typescript')}, which is not installed in ${paint.sky(projectDir)}. Add it as a dev dependency.`,
+    [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `Type check failed:\n${diagnostics}`,
+    [SeedcordErrorCode.CliBundleFailed]: (reason: string) => `Vite could not bundle the bot:\n${reason}`,
+    [SeedcordErrorCode.CliConfigOutDirDeletesRoot]: (outDir: string, root: string) =>
+        `${paint.bold('build.outDir')} is ${paint.sky(outDir)}, which contains ${paint.bold('root')} (${paint.sky(root)}). ${paint.bold('seedcord build')} empties ${paint.bold('outDir')} before it writes. Point it at a folder of its own, like ${paint.sky('./dist')}.`,
+    [SeedcordErrorCode.CliBuildOutDirNotEmpty]: (outDir: string) =>
+        `${paint.bold('build.outDir')} is ${paint.sky(outDir)}, which already contains other files. ${paint.bold('seedcord build')} empties ${paint.bold('outDir')} before it writes. Point it at an empty folder, or delete what is in it.`,
+    [SeedcordErrorCode.CliBuildFolderProblems]: (count: number) =>
+        `${count} folders in the bot config need fixing before ${paint.bold('seedcord build')} can bundle the bot. Each one is listed below.`,
+    [SeedcordErrorCode.CliBuildRelativeFolder]: (folder: string) =>
+        `${paint.sky(folder)} in the bot config is a relative path. A built bot resolves it against the folder it starts in. Build the path from the bot file's folder, like ${paint.sky("resolve(import.meta.dirname, './handlers')")}.`,
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
         `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
     [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>

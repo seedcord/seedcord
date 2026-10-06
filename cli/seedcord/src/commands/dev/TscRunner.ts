@@ -1,9 +1,8 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { resolve } from 'node:path';
 
 import { Logger } from '@seedcord/logger';
+
+import { resolveProjectTsc } from '#core/modules/resolveProjectTsc';
 
 const TSC_GRACEFUL_EXIT_MS = 2000;
 
@@ -21,7 +20,7 @@ export class TscRunner {
     public start(): void {
         if (this.process) return;
 
-        const tscPath = this.resolveProjectTsc();
+        const tscPath = resolveProjectTsc(this.cwd ?? process.cwd());
         if (!tscPath) {
             this.logger.error('Unable to resolve "typescript". Install it in the project to enable tsc --watch.');
             return;
@@ -85,17 +84,5 @@ export class TscRunner {
             clearTimeout(killTimer);
         });
         // start()'s 'exit' listener is what nulls the handle, so it stays set until then and blocks a second tsc spawning over the dying one
-    }
-
-    private resolveProjectTsc(): string | null {
-        const projectDir = this.cwd ?? process.cwd();
-        const manifest = resolve(projectDir, 'package.json');
-        const projectRequire = existsSync(manifest) ? createRequire(manifest) : createRequire(import.meta.url);
-
-        try {
-            return projectRequire.resolve('typescript/bin/tsc');
-        } catch {
-            return null;
-        }
     }
 }

@@ -102,7 +102,7 @@
             "entry": ["**/*.types-test.ts"]
         },
         "cli/seedcord": {
-            "ignoreDependencies": ["tsc-alias"]
+            "entry": ["tests/fixtures/*/**/*.{ts,js}"]
         },
         "cli/create-seedcord": {
             "entry": ["**/*.types-test.ts"]

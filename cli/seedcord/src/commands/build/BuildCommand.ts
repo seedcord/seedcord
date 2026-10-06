@@ -1,4 +1,5 @@
 import { isSeedcordError } from '@seedcord/errors';
+import { WORDMARK } from '@seedcord/errors/internal';
 
 import { BaseCommand } from '#core/BaseCommand';
 
@@ -10,7 +11,7 @@ export class BuildCommand extends BaseCommand {
     private readonly runner: BuildRunner;
 
     constructor() {
-        super('build', 'Compile a Seedcord project from the config file', 'Build');
+        super('build', 'Type check the bot and bundle it from the config file', 'Build');
         this.runner = BuildRunner.create(this.logger);
     }
 
@@ -21,8 +22,9 @@ export class BuildCommand extends BaseCommand {
             .action(async () => {
                 try {
                     await this.runner.run();
+                    this.logger.info(`${WORDMARK} build finished`);
                 } catch (error: unknown) {
-                    this.logger.error('Seedcord build failed', error);
+                    this.logger.error(`${WORDMARK} build failed`, error);
                     if (isSeedcordError(error)) process.exitCode = 1;
                     else process.exit(1);
                 }

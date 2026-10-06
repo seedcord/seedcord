@@ -18,7 +18,7 @@ function config(): ResolvedSeedcordDevConfig {
         tunnel: { mode: 'quick' },
         typecheck: { enabled: false },
         idleAnimation: true,
-        build: { outDir: 'dist', bootstrap: 'index.mjs' }
+        build: { outDir: 'dist' }
     };
 }
 

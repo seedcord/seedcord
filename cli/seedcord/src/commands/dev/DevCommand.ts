@@ -1,3 +1,4 @@
+import { WORDMARK } from '@seedcord/errors/internal';
 import { render } from 'ink';
 import React from 'react';
 
@@ -13,7 +14,7 @@ import type { Command } from '@commander-js/extra-typings';
 
 export class DevCommand extends BaseCommand {
     constructor() {
-        super('dev', 'Run a Seedcord instance from the config file', 'Dev');
+        super('dev', 'Run the bot from the config file', 'Dev');
     }
 
     public register(program: Command): void {
@@ -35,7 +36,7 @@ export class DevCommand extends BaseCommand {
                 try {
                     await this.runDevApp(store, runner);
                 } catch (error: unknown) {
-                    this.logger.error('Seedcord dev failed', error);
+                    this.logger.error(`${WORDMARK} dev failed`, error);
                     process.exitCode = 1;
                 } finally {
                     process.off('SIGINT', onSignal);
@@ -60,7 +61,7 @@ export class DevCommand extends BaseCommand {
     }
 
     private async printLogLocation(): Promise<void> {
-        await this.write('seedcord dev stopped. logs: logs/\n');
+        await this.write(`${WORDMARK} dev stopped. logs: logs/\n`);
 
         const report = profileReport();
         if (report !== null) await this.write(`${report}\n`);

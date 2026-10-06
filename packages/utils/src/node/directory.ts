@@ -5,6 +5,8 @@ import { pathToFileURL } from 'node:url';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import { isInside } from './paths';
+
 import type * as fs from 'node:fs';
 
 /**
@@ -19,13 +21,16 @@ function isModulePath(file: string): boolean {
     return (name.endsWith('.ts') || name.endsWith('.js')) && !name.endsWith('.d.ts') && !name.endsWith('.map');
 }
 
-function isTextPath(dir: string, file: string): boolean {
-    const name = path.basename(file);
-    const hidden = path
+function isHidden(dir: string, file: string): boolean {
+    return path
         .relative(dir, file)
         .split(path.sep)
         .some((part) => part.startsWith('.'));
-    return !hidden && !name.endsWith('.ts') && !name.endsWith('.js') && !name.endsWith('.map');
+}
+
+function isTextPath(dir: string, file: string): boolean {
+    const name = path.basename(file);
+    return !isHidden(dir, file) && !name.endsWith('.ts') && !name.endsWith('.js') && !name.endsWith('.map');
 }
 
 type ModuleLoader = () => Promise<Record<string, unknown>>;
@@ -40,7 +45,7 @@ interface FileSource {
 class DiskFiles implements FileSource {
     public async modules(dir: string): Promise<Loaders<ModuleLoader>> {
         const all = await DiskFiles.filesUnder(dir);
-        const files = all.filter(isModulePath);
+        const files = all.filter((file) => isModulePath(file) && !isHidden(dir, file));
         // node reads a raw windows path's drive letter as a url protocol
         return files.map((file) => [file, () => import(pathToFileURL(file).href) as Promise<Record<string, unknown>>]);
     }
@@ -93,18 +98,13 @@ class BuiltFiles implements FileSource {
 
     private under<Loader>(loaders: Map<string, Loader>, dir: string): Loaders<Loader> {
         const resolved = path.resolve(dir);
-        if (!this.holds(resolved)) {
+        if (!isInside(this.root, resolved)) {
             throw new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [resolved, this.root]);
         }
         if (!this.folders.has(resolved)) throw new SeedcordError(SeedcordErrorCode.CoreDirectoryUnreadable, [dir]);
 
         const prefix = path.join(resolved, path.sep);
         return [...loaders].filter(([file]) => file.startsWith(prefix)).sort(([a], [b]) => (a < b ? -1 : 1));
-    }
-
-    private holds(dir: string): boolean {
-        const relative = path.relative(this.root, dir);
-        return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
     }
 }
 
@@ -116,16 +116,18 @@ interface BuiltFileLoaders {
     text: Record<string, TextLoader>;
 }
 
-// one registry for every copy of @seedcord/utils in the process
-const BUILT_FILES = Symbol.for('seedcord:utils:built-files');
+// seedcord build writes a BuiltFileLoaders object here from the entry it generates
+export const BUILT_FILES_KEY = 'seedcord:utils:built-files';
 
-// seedcord build calls this from the entry it generates
-export function registerBuiltFiles(loaders: BuiltFileLoaders): void {
-    Reflect.set(globalThis, BUILT_FILES, new BuiltFiles(loaders));
-}
+const builtSources = new WeakMap<BuiltFileLoaders, BuiltFiles>();
 
 function fileSource(): FileSource {
-    return (Reflect.get(globalThis, BUILT_FILES) as FileSource | undefined) ?? new DiskFiles();
+    const built = Reflect.get(globalThis, Symbol.for(BUILT_FILES_KEY)) as BuiltFileLoaders | undefined;
+    if (!built) return new DiskFiles();
+
+    const source = builtSources.get(built) ?? new BuiltFiles(built);
+    builtSources.set(built, source);
+    return source;
 }
 
 interface ImportedFile {
@@ -142,7 +144,7 @@ interface TextFile {
 
 /**
  * Imports every .ts and .js file under a directory, recursively and sorted by path, yielding each module in turn.
- * A `break` stops the walk before the next import.
+ * It skips dotfiles and dot-folders. A `break` stops the walk before the next import.
  *
  * @throws A **SeedcordError** when the directory cannot be read or a file throws while importing, or in a built bot when the directory is outside `root`.
  *

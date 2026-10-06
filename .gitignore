@@ -21,6 +21,7 @@ certs/
 
 # Ignore build output directories
 dist/
+*.bun-build
 
 # Ignore IDE specific files
 **/.idea
@@ -53,6 +54,7 @@ dist/
 *.log
 logs/
 Logs/
+!cli/seedcord/tests/fixtures/http-bot/src/logs/
 
 # ESLint cache
 .eslintcache

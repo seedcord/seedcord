@@ -3,15 +3,21 @@ import path from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, vi } from 'vitest';
 
-import { readTextFiles, registerBuiltFiles, traverseDirectory } from '#src/node/directory';
+import { BUILT_FILES_KEY, readTextFiles, traverseDirectory } from '#src/node/directory';
 
-type BuiltFiles = Parameters<typeof registerBuiltFiles>[0];
+interface BuiltFileLoaders {
+    root: string;
+    folders: string[];
+    modules: Record<string, () => Promise<Record<string, unknown>>>;
+    text: Record<string, () => Promise<string>>;
+}
 
 // not on disk
 const ROOT = '/bot';
 
-function register({ root = ROOT, folders = [], modules = {}, text = {} }: Partial<BuiltFiles>): void {
-    registerBuiltFiles({ root, folders, modules, text });
+// writes the slot the way seedcord build's generated entry does
+function register({ root = ROOT, folders = [], modules = {}, text = {} }: Partial<BuiltFileLoaders>): void {
+    Reflect.set(globalThis, Symbol.for(BUILT_FILES_KEY), { root, folders, modules, text });
 }
 
 function stub(name: string): () => Promise<Record<string, unknown>> {

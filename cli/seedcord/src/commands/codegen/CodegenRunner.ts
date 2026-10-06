@@ -7,20 +7,14 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { isCommandClass } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import {
-    HostAugmentTarget,
-    HostPluginKeys,
-    SeedcordBrand,
-    type Brandable,
-    type SeedcordInstance
-} from '@seedcord/types/internal';
+import { HostAugmentTarget, HostPluginKeys } from '@seedcord/types/internal';
 import { isTsOrJsFile } from '@seedcord/utils/node';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import { ConfigLoader } from '#core/config/ConfigLoader';
 import { ConfigLocator } from '#core/config/ConfigLocator';
+import { importInstance } from '#core/modules/importInstance';
 import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
-import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { AugmentationBuilder } from './AugmentationBuilder';
 import { renderAugmentation } from './renderAugmentation';
@@ -133,14 +127,8 @@ export class CodegenRunner {
     private async resolveInstance(
         config: ResolvedSeedcordDevConfig
     ): Promise<TypedOmit<ScanResult, 'commands'> & { commandsDir: string | undefined }> {
-        // reading commands.path and emojis constructs the bot, so its lifecycle and plugin setup logs
-        // appear here. codegen never starts it, nothing logs in or connects
         this.logger.debug('Loading instance to resolve the commands directory');
-        const module = await this.moduleLoader.importModule(config.instance);
-        const instance = resolveDefaultExport(module);
-        if (!this.isSeedcordInstance(instance)) {
-            throw new SeedcordError(SeedcordErrorCode.CliInstanceInvalid);
-        }
+        const instance = await importInstance(this.moduleLoader, config.instance);
 
         // the bot resolves commands.path against cwd
         const commandsPath = instance.config.bot.commands.path;
@@ -183,10 +171,6 @@ export class CodegenRunner {
             type === ApplicationCommandType.User ||
             type === ApplicationCommandType.Message
         );
-    }
-
-    private isSeedcordInstance(candidate: unknown): candidate is SeedcordInstance {
-        return typeof candidate === 'object' && candidate !== null && (candidate as Brandable)[SeedcordBrand] === true;
     }
 
     private async write(rendered: string, outputPath: string): Promise<void> {

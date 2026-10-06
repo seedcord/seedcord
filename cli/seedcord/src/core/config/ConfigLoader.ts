@@ -1,8 +1,9 @@
-import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import { dirname, isAbsolute, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { isPlainObject } from '@seedcord/utils/internal';
+import { isInside } from '@seedcord/utils/node/internal';
 
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
@@ -35,7 +36,6 @@ function validateBuild(value: unknown): void {
     if (!isPlainObject(value)) throw invalidField('build', 'an object');
     if (!isOptionalString(value.outDir)) throw invalidField('build.outDir', 'a string');
     if (!isOptionalString(value.tsconfig)) throw invalidField('build.tsconfig', 'a string');
-    if (!isOptionalString(value.bootstrap)) throw invalidField('build.bootstrap', 'a string');
 }
 
 function validateTypecheck(value: unknown): void {
@@ -120,7 +120,6 @@ export class ConfigLoader {
         this.logger.trace(`Resolved build outDir: ${build.outDir}`);
         if (build.tsconfig) this.logger.trace(`Resolved build tsconfig: ${build.tsconfig}`);
         if (typecheck.enabled) this.logger.trace(`Typecheck tsconfig: ${typecheck.tsconfig ?? 'nearest'}`);
-        this.logger.trace(`Resolved bootstrap: ${build.bootstrap}`);
 
         return {
             instance,
@@ -141,10 +140,7 @@ export class ConfigLoader {
     }
 
     private assertEntryWithinRoot(root: string, entry: string): void {
-        const relativePath = relative(root, entry);
-        if (relativePath.startsWith('..') || isAbsolute(relativePath)) {
-            throw new SeedcordError(SeedcordErrorCode.CliConfigEntryOutsideRoot, [entry, root]);
-        }
+        if (!isInside(root, entry)) throw new SeedcordError(SeedcordErrorCode.CliConfigEntryOutsideRoot, [entry, root]);
     }
 
     private resolveBuildOptions(
@@ -152,19 +148,8 @@ export class ConfigLoader {
         build: SeedcordBuildConfig | undefined
     ): ResolvedSeedcordBuildConfig {
         const outDir = resolve(configDir, build?.outDir ?? 'dist');
-        const bootstrapValue = build?.bootstrap;
-        const bootstrap = bootstrapValue ? this.resolveBootstrap(outDir, bootstrapValue) : resolve(outDir, 'index.mjs');
         const tsconfig = build?.tsconfig ? resolve(configDir, build.tsconfig) : undefined;
 
-        const resolvedBuild: ResolvedSeedcordBuildConfig = tsconfig
-            ? { outDir, bootstrap, tsconfig }
-            : { outDir, bootstrap };
-
-        return resolvedBuild;
-    }
-
-    private resolveBootstrap(outDir: string, bootstrap: string): string {
-        if (isAbsolute(bootstrap)) return bootstrap;
-        return resolve(outDir, bootstrap);
+        return tsconfig ? { outDir, tsconfig } : { outDir };
     }
 }

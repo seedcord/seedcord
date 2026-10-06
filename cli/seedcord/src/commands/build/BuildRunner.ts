@@ -5,44 +5,51 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { ConfigLoader } from '#core/config/ConfigLoader';
 import { ConfigLocator } from '#core/config/ConfigLocator';
+import { importInstance } from '#core/modules/importInstance';
 import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
 
-import { BootstrapWriter } from './builder/BootstrapWriter';
-import { TypeScriptProjectBuilder } from './builder/TypeScriptProjectBuilder';
+import { assertFoldersUnderRoot } from './builder/assertFoldersUnderRoot';
+import { assertOutDirSafe } from './builder/assertOutDirSafe';
+import { TypeChecker } from './builder/TypeChecker';
+import { ViteBuilder } from './builder/ViteBuilder';
 
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
 export class BuildRunner {
     constructor(
         private readonly locator: ConfigLocator,
         private readonly configLoader: ConfigLoader,
-        private readonly builder: TypeScriptProjectBuilder,
-        private readonly bootstrapWriter: BootstrapWriter,
-        private readonly logger: ILogger
+        private readonly modules: ModuleLoader,
+        private readonly typeChecker: TypeChecker,
+        private readonly bundler: ViteBuilder
     ) {}
 
     public static create(logger: ILogger): BuildRunner {
-        const moduleLoader = new RuntimeModuleLoader();
-        const locator = new ConfigLocator(logger);
-        const configLoader = new ConfigLoader(moduleLoader, logger);
-        const builder = new TypeScriptProjectBuilder(logger);
-        const bootstrapWriter = new BootstrapWriter(logger);
+        const modules = new RuntimeModuleLoader();
 
-        return new BuildRunner(locator, configLoader, builder, bootstrapWriter, logger);
+        return new BuildRunner(
+            new ConfigLocator(logger),
+            new ConfigLoader(modules, logger),
+            modules,
+            new TypeChecker(logger),
+            new ViteBuilder(logger)
+        );
     }
 
-    public async run(): Promise<void> {
-        const config = await this.loadConfig();
+    public async run(projectDir = process.cwd()): Promise<void> {
+        const config = await this.loadConfig(projectDir);
         this.assertEntryExists(config.entry);
-        const { emittedEntry } = await this.builder.build(config);
-        await this.bootstrapWriter.write(config, emittedEntry);
-        this.logger.info('Seedcord build finished successfully.');
+        assertOutDirSafe(config.build.outDir, config.root);
+        const instance = await importInstance(this.modules, config.instance);
+        assertFoldersUnderRoot(instance.config, config.root);
+        await this.typeChecker.check(config);
+        await this.bundler.build(config);
     }
 
-    private async loadConfig(): Promise<ResolvedSeedcordDevConfig> {
-        const configPath = this.locator.locate();
-        return this.configLoader.load(configPath);
+    private async loadConfig(projectDir: string): Promise<ResolvedSeedcordDevConfig> {
+        return this.configLoader.load(this.locator.locate(projectDir));
     }
 
     private assertEntryExists(entryPath: string): void {

@@ -1,4 +1,4 @@
-import { chmod, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -17,6 +17,18 @@ import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
 const OUTPUT = 'seedcord-gen.d.ts';
+
+const tempDirs: string[] = [];
+
+async function tempDir(prefix: string): Promise<string> {
+    const dir = await mkdtemp(join(tmpdir(), prefix));
+    tempDirs.push(dir);
+    return dir;
+}
+
+afterEach(async () => {
+    await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
+});
 
 class BanCommand extends BuilderComponent<'command'> {
     public constructor() {
@@ -100,6 +112,27 @@ function invalidRunner(root: string, logger: ILogger): CodegenRunner {
     return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
 }
 
+// dev accepts a default export that resolves to the instance
+function asyncInstanceRunner(root: string, logger: ILogger): CodegenRunner {
+    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
+    const configLoader = {
+        load: () => Promise.resolve({ root, instance: resolve(root, 'bot.ts') })
+    } as unknown as ConfigLoader;
+    const moduleLoader = {
+        importModule: () =>
+            Promise.resolve({
+                default: Promise.resolve({
+                    [SeedcordBrand]: true,
+                    [HostAugmentTarget]: '@seedcord/gateway',
+                    [HostPluginKeys]: [],
+                    config: { bot: { commands: { path: null } } }
+                })
+            })
+    } as unknown as ModuleLoader;
+
+    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
+}
+
 function pluginRunner(root: string, instance: string, pluginKeys: readonly string[], logger: ILogger): CodegenRunner {
     const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
     const configLoader = { load: () => Promise.resolve({ root, instance }) } as unknown as ConfigLoader;
@@ -120,7 +153,7 @@ function pluginRunner(root: string, instance: string, pluginKeys: readonly strin
 
 describe('CodegenRunner plugin capabilities', () => {
     it('augments Core from the attach keys and imports the bot entry', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const root = await tempDir('codegen-');
         await pluginRunner(root, resolve(root, 'bot.ts'), ['db'], silentLogger()).run(false);
 
         const output = await readFile(resolve(root, OUTPUT), 'utf8');
@@ -129,7 +162,7 @@ describe('CodegenRunner plugin capabilities', () => {
     });
 
     it('writes a nested bot entry as a relative specifier with no extension', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const root = await tempDir('codegen-');
         await pluginRunner(root, resolve(root, 'app/bot.ts'), ['db'], silentLogger()).run(false);
 
         const output = await readFile(resolve(root, OUTPUT), 'utf8');
@@ -137,7 +170,7 @@ describe('CodegenRunner plugin capabilities', () => {
     });
 
     it('writes a bot entry above the root as a parent specifier', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const root = await tempDir('codegen-');
         const instance = resolve(root, '..', `${root.split('/').pop() ?? 'x'}-bot.ts`);
         await pluginRunner(root, instance, ['db'], silentLogger()).run(false);
 
@@ -146,7 +179,7 @@ describe('CodegenRunner plugin capabilities', () => {
     });
 
     it('emits no import and no Core block when nothing is attached', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const root = await tempDir('codegen-');
         await pluginRunner(root, resolve(root, 'bot.ts'), [], silentLogger()).run(false);
 
         const output = await readFile(resolve(root, OUTPUT), 'utf8');
@@ -161,7 +194,7 @@ describe('CodegenRunner', () => {
     });
 
     it('writes the rendered registry to the project root', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const root = await tempDir('codegen-');
         await makeRunner(root, silentLogger()).run(false);
 
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
@@ -169,7 +202,7 @@ describe('CodegenRunner', () => {
     });
 
     it('--check exits non-zero and names the fix when the registry is stale', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const root = await tempDir('codegen-');
         await writeFile(resolve(root, OUTPUT), 'stale content', 'utf8');
 
         const errors: string[] = [];
@@ -180,7 +213,7 @@ describe('CodegenRunner', () => {
     });
 
     it('--check exits zero when the registry matches', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const root = await tempDir('codegen-');
         await makeRunner(root, silentLogger()).run(false);
 
         await makeRunner(root, silentLogger()).run(true);
@@ -188,7 +221,7 @@ describe('CodegenRunner', () => {
     });
 
     it('renders an empty registry when the instance declares no commands path', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const root = await tempDir('codegen-');
         await makeRunner(root, silentLogger()).run(false);
 
         const written = await readFile(resolve(root, OUTPUT), 'utf8');
@@ -197,8 +230,8 @@ describe('CodegenRunner', () => {
     });
 
     it('scans command classes and skips non-command exports', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
-        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
 
         class NotACommand {
@@ -215,8 +248,8 @@ describe('CodegenRunner', () => {
     });
 
     it('scans a command once when a barrel re-exports it, instead of throwing a duplicate route', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
-        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
         await writeFile(join(cmdDir, 'index.ts'), 'export {};', 'utf8');
 
@@ -228,7 +261,7 @@ describe('CodegenRunner', () => {
     });
 
     it('throws CliCodegenCommandsDirUnreadable when the top-level commands dir is unreadable', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const root = await tempDir('codegen-');
         const missing = join(root, 'does-not-exist');
 
         let caught: unknown;
@@ -243,8 +276,8 @@ describe('CodegenRunner', () => {
     });
 
     it('warns and skips a nested unreadable subdir instead of throwing', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
-        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
         const locked = join(cmdDir, 'locked');
         await mkdir(locked);
@@ -269,7 +302,7 @@ describe('CodegenRunner', () => {
     });
 
     it('resolves the commands path relative to cwd', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const root = await tempDir('codegen-');
         const relativePath = 'no/such/rel';
 
         let caught: unknown;
@@ -284,7 +317,7 @@ describe('CodegenRunner', () => {
     });
 
     it('throws CliInstanceInvalid when the instance is not a Seedcord instance', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const root = await tempDir('codegen-');
 
         let caught: unknown;
         try {
@@ -296,9 +329,17 @@ describe('CodegenRunner', () => {
         expect(caught).toMatchObject({ code: SeedcordErrorCode.CliInstanceInvalid });
     });
 
+    it('accepts an instance exported as a promise', async () => {
+        const root = await tempDir('codegen-');
+        await asyncInstanceRunner(root, silentLogger()).run(false);
+
+        const written = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(written).toContain("declare module '@seedcord/gateway'");
+    });
+
     it('--check exits zero and writes nothing when the registry is current', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
-        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
 
         const exports = (): Record<string, unknown> => ({ BanCommand });
@@ -310,8 +351,8 @@ describe('CodegenRunner', () => {
     });
 
     it('emits context-menu commands into the user and message registries alongside slash routes', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
-        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'commands.ts'), 'export {};', 'utf8');
 
         class ViewProfile extends BuilderComponent<'context_menu'> {
@@ -343,8 +384,8 @@ describe('CodegenRunner', () => {
     });
 
     it('throws and names the command when a registered command constructor throws', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
-        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'broken.ts'), 'export {};', 'utf8');
 
         class BrokenCommand extends BuilderComponent<'command'> {
@@ -368,8 +409,8 @@ describe('CodegenRunner', () => {
     });
 
     it('skips a BuilderComponent subclass carrying no @RegisterCommand', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
-        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'base.ts'), 'export {};', 'utf8');
 
         class Undecorated extends BuilderComponent<'command'> {
@@ -386,8 +427,8 @@ describe('CodegenRunner', () => {
     });
 
     it('skips an undecorated export whose constructor throws', async () => {
-        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
-        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'helpers.ts'), 'export {};', 'utf8');
 
         // the scan constructs with no arguments

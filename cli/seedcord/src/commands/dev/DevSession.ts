@@ -8,11 +8,10 @@ import {
     HostShutdown,
     HostStartup,
     HostVersion,
-    SeedcordBrand,
-    type Brandable,
     type SeedcordInstance
 } from '@seedcord/types/internal';
 
+import { toSeedcordInstance } from '#core/modules/importInstance';
 import { profileMark } from '#ui/profile';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
@@ -22,10 +21,6 @@ import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { DevEventHandler } from './runtime/events';
-
-function isSeedcordInstance(candidate: unknown): candidate is SeedcordInstance {
-    return typeof candidate === 'object' && candidate !== null && (candidate as Brandable)[SeedcordBrand] === true;
-}
 
 export class DevSession {
     private stopResolve?: () => void;
@@ -77,19 +72,14 @@ export class DevSession {
 
     public async start(onReady?: () => void): Promise<void> {
         const module = await this.loadInstanceModule();
-        const exported = resolveDefaultExport(module);
-        const instance = await Promise.resolve(exported);
-
-        if (!isSeedcordInstance(instance)) {
-            throw new SeedcordError(SeedcordErrorCode.CliInstanceInvalid);
-        }
+        const instance = toSeedcordInstance(await resolveDefaultExport(module), this.config.instance);
 
         this.instance = instance;
         this.store.setTransport({ name: instance[HostAugmentTarget], version: instance[HostVersion] });
 
         try {
             this.store.setPhase('starting');
-            this.store.setStatus('Starting Seedcord instance…');
+            this.store.setStatus('Starting the bot…');
             this.startupPromise = Promise.resolve(instance.start());
             await this.startupPromise;
 

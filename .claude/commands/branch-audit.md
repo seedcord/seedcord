@@ -13,7 +13,7 @@ Give the agent exactly the prompt below, word for word. Add nothing to it: no fi
 When it finishes:
 
 1. Reproduce every finding it marks CONFIRMED against the source or the built CLI before calling it real, and check its SUSPECTED ones the same way where the answer changes what gets fixed.
-2. Present the findings as a table with a verdict for each (fix, reject, or the user's call) and the evidence behind the verdict.
+2. Present the findings as a table with a verdict for each (fix, reject, or the user's call) and the evidence behind the verdict. A finding the user already ruled on earlier in this session goes in a separate table at the bottom, labeled with that ruling and its reason, for example "ruled earlier: reject, too deep". The user can still flip it.
 3. Stop and wait for the user to pick what to fix.
 
 ---

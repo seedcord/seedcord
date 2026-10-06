@@ -2,13 +2,14 @@ import { describe, it, expect } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 
-// construction only, never run(), which would exit the test process
+// run() would exit the test process
 describe('CoordinatedShutdown signal handlers', () => {
-    it('registers handlers at construction and releases them', () => {
+    it('registers handlers on request and releases them', () => {
         const sigtermBase = process.listenerCount('SIGTERM');
         const sigintBase = process.listenerCount('SIGINT');
         const shutdown = new CoordinatedShutdown();
 
+        shutdown.registerSignalHandlers();
         expect(process.listenerCount('SIGTERM')).toBe(sigtermBase + 1);
         expect(process.listenerCount('SIGINT')).toBe(sigintBase + 1);
 
@@ -21,6 +22,7 @@ describe('CoordinatedShutdown signal handlers', () => {
         const sigtermBase = process.listenerCount('SIGTERM');
         const sigintBase = process.listenerCount('SIGINT');
         const shutdown = new CoordinatedShutdown();
+        shutdown.registerSignalHandlers();
 
         shutdown.removeSignalHandlers();
         shutdown.removeSignalHandlers();
