@@ -35,6 +35,10 @@ export class ReleaseEntries {
         return this.buckets.get('breaking') ?? [];
     }
 
+    get stable(): ReleaseEntry[] {
+        return this.buckets.get('stable') ?? [];
+    }
+
     get minor(): ReleaseEntry[] {
         return this.buckets.get('minor') ?? [];
     }

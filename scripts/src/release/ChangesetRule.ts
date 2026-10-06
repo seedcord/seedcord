@@ -7,6 +7,7 @@ export interface Violation {
     reason:
         | 'unknown-package'
         | 'pre-1.0-major'
+        | 'unmarked-major'
         | 'empty-summary'
         | 'multi-line'
         | 'block-start'
@@ -23,6 +24,7 @@ export interface Violation {
 const MENTION =
     /\S*(?<![A-Za-z0-9])(?<![A-Za-z0-9][_-])BREAKING(?![A-Za-z0-9])(?![_-][A-Za-z0-9])\S*|\*\*(?!BREAKING)[Bb]reaking\S*/g;
 const LEADING_MARKER = `${MARKER} `;
+const STABLE_RELEASE = /\b1\.0\.0\b/;
 const BLOCK_START = /^(-|\*|\+|\d+\.|#+|>)(?=\s)/;
 const CODE_SPAN = /`[^`]*`/g;
 const LINK_TARGET = /\]\([^)]*\)/g;
@@ -55,7 +57,7 @@ export class ChangesetRule {
         const patches = releases.filter((release) => release.type === 'patch');
 
         return [
-            ...this.packageViolations(file, releases),
+            ...this.packageViolations(file, releases, summary),
             ...(summary.trim() === '' ? [{ file, reason: 'empty-summary' as const, detail: 'no summary' }] : []),
             ...lineViolations(file, summary),
             ...markerViolations(file, summary),
@@ -67,7 +69,11 @@ export class ChangesetRule {
         ];
     }
 
-    private packageViolations(file: string, releases: readonly { name: string; type: string }[]): Violation[] {
+    private packageViolations(
+        file: string,
+        releases: readonly { name: string; type: string }[],
+        summary: string
+    ): Violation[] {
         const found: Violation[] = [];
 
         for (const { name, type } of releases) {
@@ -76,9 +82,13 @@ export class ChangesetRule {
                 found.push({ file, reason: 'unknown-package', detail: name });
                 continue;
             }
+            if (type !== 'major') continue;
 
-            if (type === 'major' && version.startsWith('0.'))
-                found.push({ file, reason: 'pre-1.0-major', detail: name });
+            if (version.startsWith('0.')) {
+                if (!STABLE_RELEASE.test(summary)) found.push({ file, reason: 'pre-1.0-major', detail: name });
+            } else if (!summary.startsWith(LEADING_MARKER)) {
+                found.push({ file, reason: 'unmarked-major', detail: name });
+            }
         }
 
         return found;

@@ -22,7 +22,7 @@ interface NotesConfig {
     entries: ReleaseEntries;
 }
 
-const KINDS = ['💥', '✨', '🐛', '🔧'] as const;
+const KINDS = ['💥', '🎉', '✨', '🐛', '🔧'] as const;
 type Kind = (typeof KINDS)[number];
 
 interface Change {
@@ -31,8 +31,8 @@ interface Change {
     packages: readonly string[];
 }
 
-const KIND_OF_BUCKET: Record<Bucket, Kind> = { breaking: '💥', minor: '✨', patch: '🔧' };
-const LABEL: Record<Kind, string> = { '💥': 'Breaking', '✨': 'Minor', '🐛': 'Fixed', '🔧': 'Changed' };
+const KIND_OF_BUCKET: Record<Bucket, Kind> = { breaking: '💥', stable: '🎉', minor: '✨', patch: '🔧' };
+const LABEL: Record<Kind, string> = { '💥': 'Breaking', '🎉': 'Stable', '✨': 'Minor', '🐛': 'Fixed', '🔧': 'Changed' };
 const SHARED = '👥';
 
 const SCOPE = '@seedcord/';

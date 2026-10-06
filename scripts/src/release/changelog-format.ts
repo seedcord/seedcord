@@ -1,4 +1,5 @@
-export type Bucket = 'breaking' | 'minor' | 'patch';
+export const ORDER = ['breaking', 'stable', 'minor', 'patch'] as const;
+export type Bucket = (typeof ORDER)[number];
 
 const STABLE = /^\d+\.\d+\.\d+$/;
 
@@ -8,20 +9,20 @@ export const NESTED_START = /(?=^#### )/m;
 
 export const HEADING: Record<Bucket, string> = {
     breaking: '### 💥 Breaking',
+    stable: '### 🎉 Stable',
     minor: '### ✨ Minor',
     patch: '### 🩹 Patch'
 };
 
 export const DEPENDENCIES = '#### 📦 Seedcord packages';
 
-export const ORDER: readonly Bucket[] = ['breaking', 'minor', 'patch'];
-
-// changesets writes the plain names
+// changesets writes the plain names. a marked major entry moves to breaking in ChangelogSections
 const BUCKET: Record<string, Bucket> = {
-    'Major Changes': 'breaking',
+    'Major Changes': 'stable',
     'Minor Changes': 'minor',
     'Patch Changes': 'patch',
     '💥 Breaking': 'breaking',
+    '🎉 Stable': 'stable',
     '✨ Minor': 'minor',
     '🩹 Patch': 'patch'
 };
