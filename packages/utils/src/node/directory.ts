@@ -21,158 +21,154 @@ export function isTsOrJsFile(entry: fs.Dirent): boolean {
 
 type ModuleLoader = () => Promise<Record<string, unknown>>;
 type TextLoader = () => Promise<string>;
+type Loaders<Loader> = [fullPath: string, load: Loader][];
 
-interface BundledFiles {
+interface FileSource {
+    modules(dir: string): Promise<Loaders<ModuleLoader>>;
+    texts(dir: string): Promise<Loaders<TextLoader>>;
+}
+
+class DiskFiles implements FileSource {
+    public async modules(dir: string): Promise<Loaders<ModuleLoader>> {
+        const files = await DiskFiles.filesUnder(dir, isTsOrJsFile);
+        // node reads a raw windows path's drive letter as a url protocol
+        return files.map((file) => [file, () => import(pathToFileURL(file).href) as Promise<Record<string, unknown>>]);
+    }
+
+    public async texts(dir: string): Promise<Loaders<TextLoader>> {
+        const files = await DiskFiles.filesUnder(dir, (entry) => entry.isFile() && !isTsOrJsFile(entry));
+        return files.map((file) => [file, () => readFile(file, 'utf8')]);
+    }
+
+    private static async filesUnder(dir: string, include: (entry: fs.Dirent) => boolean): Promise<string[]> {
+        let entries: fs.Dirent[];
+        try {
+            entries = await readdir(dir, { withFileTypes: true, recursive: true });
+        } catch (err) {
+            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryUnreadable, [dir], { cause: err });
+        }
+
+        return entries
+            .filter(include)
+            .map((entry) => path.join(entry.parentPath, entry.name))
+            .sort();
+    }
+}
+
+class BuiltFiles implements FileSource {
+    private readonly root: string;
+    private readonly moduleLoaders: Map<string, ModuleLoader>;
+    private readonly textLoaders: Map<string, TextLoader>;
+
+    public constructor({ root, modules, text }: BuiltFileLoaders) {
+        this.root = path.resolve(root);
+        this.moduleLoaders = new Map(
+            Object.entries(modules).map(([key, load]) => [path.join(this.root, key.replace(/\.ts$/, '.js')), load])
+        );
+        this.textLoaders = new Map(Object.entries(text).map(([key, load]) => [path.join(this.root, key), load]));
+    }
+
+    public modules(dir: string): Promise<Loaders<ModuleLoader>> {
+        return Promise.resolve(this.under(this.moduleLoaders, dir));
+    }
+
+    public texts(dir: string): Promise<Loaders<TextLoader>> {
+        return Promise.resolve(this.under(this.textLoaders, dir));
+    }
+
+    private under<Loader>(loaders: Map<string, Loader>, dir: string): Loaders<Loader> {
+        const resolved = path.resolve(dir);
+        if (!this.holds(resolved)) {
+            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [resolved, this.root]);
+        }
+
+        const prefix = resolved + path.sep;
+        return [...loaders].filter(([file]) => file.startsWith(prefix)).sort(([a], [b]) => (a < b ? -1 : 1));
+    }
+
+    private holds(dir: string): boolean {
+        const relative = path.relative(this.root, dir);
+        return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+    }
+}
+
+interface BuiltFileLoaders {
     root: string;
     modules: Record<string, ModuleLoader>;
     text: Record<string, TextLoader>;
 }
 
-interface BundledTable {
-    root: string;
-    modules: Map<string, ModuleLoader>;
-    text: Map<string, TextLoader>;
-}
-
-// Symbol.for so every copy of @seedcord/utils in a process reads one table
-const BUNDLED_TABLE = Symbol.for('seedcord.bundledModules');
+// Symbol.for so every copy of @seedcord/utils in a process reads the same files
+const BUILT_FILES = Symbol.for('seedcord:utils:built-files');
 
 // seedcord build calls this from the entry it generates
-export function registerBundledModules({ root, modules, text }: BundledFiles): void {
-    const resolvedRoot = path.resolve(root);
-    const table: BundledTable = {
-        root: resolvedRoot,
-        modules: new Map(
-            Object.entries(modules).map(([key, load]) => [path.join(resolvedRoot, key.replace(/\.ts$/, '.js')), load])
-        ),
-        text: new Map(Object.entries(text).map(([key, load]) => [path.join(resolvedRoot, key), load]))
-    };
-    Reflect.set(globalThis, BUNDLED_TABLE, table);
+export function registerBuiltFiles(loaders: BuiltFileLoaders): void {
+    Reflect.set(globalThis, BUILT_FILES, new BuiltFiles(loaders));
 }
 
-function bundledTable(): BundledTable | undefined {
-    return Reflect.get(globalThis, BUNDLED_TABLE) as BundledTable | undefined;
+function fileSource(): FileSource {
+    return (Reflect.get(globalThis, BUILT_FILES) as FileSource | undefined) ?? new DiskFiles();
 }
 
-function isInside(dir: string, root: string): boolean {
-    const relative = path.relative(root, dir);
-    return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+interface ImportedFile {
+    fullPath: string;
+    relativePath: string;
+    imported: Record<string, unknown>;
 }
 
-function entriesUnder<Loader>(root: string, entries: Map<string, Loader>, dir: string): [string, Loader][] {
-    const resolved = path.resolve(dir);
-    if (!isInside(resolved, root)) {
-        throw new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [resolved, root]);
-    }
-
-    const prefix = resolved + path.sep;
-    return [...entries].filter(([fullPath]) => fullPath.startsWith(prefix)).sort(([a], [b]) => (a < b ? -1 : 1));
-}
-
-function fromCwd(fullPath: string): string {
-    return path.relative(process.cwd(), fullPath);
-}
-
-async function loadModule(relativePath: string, load: ModuleLoader): Promise<Record<string, unknown>> {
-    try {
-        return await load();
-    } catch (err) {
-        throw new SeedcordError(SeedcordErrorCode.CoreDirectoryImportFailed, [relativePath], { cause: err });
-    }
+interface TextFile {
+    fullPath: string;
+    relativePath: string;
+    text: string;
 }
 
 /**
- * Recursively traverses through a directory, importing all .ts and .js files and applying a callback to each import.
+ * Imports every .ts and .js file under a directory, recursively and sorted by path, yielding each module in turn.
+ * A `break` stops the walk before the next import.
  *
- * @throws A **SeedcordError** when a directory cannot be read or a file throws while importing.
+ * @throws A **SeedcordError** when the directory cannot be read or a file throws while importing.
  *
  * @example
  * ```ts
- * await traverseDirectory('./commands', (fullPath, relativePath, imported) => {
- *     for (const exported of Object.values(imported)) register(exported);
- * });
+ * for await (const { relativePath, imported } of traverseDirectory('./commands')) {
+ *     for (const exported of Object.values(imported)) register(exported, relativePath);
+ * }
  * ```
  */
-export async function traverseDirectory(
-    dir: string,
-    callback: (fullPath: string, relativePath: string, imported: Record<string, unknown>) => Promise<void> | void
-): Promise<void> {
-    const table = bundledTable();
-    if (table) {
-        for (const [fullPath, load] of entriesUnder(table.root, table.modules, dir)) {
-            const relativePath = fromCwd(fullPath);
-            await callback(fullPath, relativePath, await loadModule(relativePath, load));
+export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFile> {
+    for (const [fullPath, load] of await fileSource().modules(dir)) {
+        const relativePath = path.relative(process.cwd(), fullPath);
+        let imported: Record<string, unknown>;
+        try {
+            imported = await load();
+        } catch (err) {
+            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryImportFailed, [relativePath], { cause: err });
         }
-        return;
-    }
-
-    let entries: fs.Dirent[];
-
-    try {
-        entries = await readdir(dir, { withFileTypes: true });
-    } catch (err) {
-        throw new SeedcordError(SeedcordErrorCode.CoreDirectoryUnreadable, [dir], { cause: err });
-    }
-
-    for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-        const relativePath = fromCwd(fullPath);
-
-        if (entry.isDirectory()) {
-            await traverseDirectory(fullPath, callback);
-        } else if (isTsOrJsFile(entry)) {
-            // node reads a raw windows path's drive letter as a url protocol
-            const load: ModuleLoader = () => import(pathToFileURL(fullPath).href) as Promise<Record<string, unknown>>;
-            await callback(fullPath, relativePath, await loadModule(relativePath, load));
-        }
+        yield { fullPath, relativePath, imported };
     }
 }
 
 /**
- * Recursively reads every file under a directory that is not a .ts or .js file, passing its text to the callback.
- * In a built bot the files come from the table `seedcord build` registers.
+ * Reads every file under a directory that is not a .ts or .js file, recursively and sorted by path, yielding its text.
+ * A built bot reads them from the build output, where `node:fs` would not find them.
  *
  * @throws A **SeedcordError** when the directory or a file in it cannot be read.
  *
  * @example
  * ```ts
- * await readTextFiles('./locales', (fullPath, relativePath, text) => {
+ * for await (const { fullPath, text } of readTextFiles('./locales')) {
  *     locales.set(path.basename(fullPath, '.json'), JSON.parse(text));
- * });
+ * }
  * ```
  */
-export async function readTextFiles(
-    dir: string,
-    callback: (fullPath: string, relativePath: string, text: string) => Promise<void> | void
-): Promise<void> {
-    const table = bundledTable();
-    if (table) {
-        for (const [fullPath, load] of entriesUnder(table.root, table.text, dir)) {
-            await callback(fullPath, fromCwd(fullPath), await load());
-        }
-        return;
-    }
-
-    let entries: fs.Dirent[];
-
-    try {
-        entries = await readdir(dir, { withFileTypes: true, recursive: true });
-    } catch (err) {
-        throw new SeedcordError(SeedcordErrorCode.CoreDirectoryUnreadable, [dir], { cause: err });
-    }
-
-    const files = entries
-        .filter((entry) => entry.isFile() && !isTsOrJsFile(entry))
-        .map((entry) => path.join(entry.parentPath, entry.name))
-        .sort();
-
-    for (const fullPath of files) {
+export async function* readTextFiles(dir: string): AsyncGenerator<TextFile> {
+    for (const [fullPath, load] of await fileSource().texts(dir)) {
         let text: string;
         try {
-            text = await readFile(fullPath, 'utf8');
+            text = await load();
         } catch (err) {
             throw new SeedcordError(SeedcordErrorCode.CoreDirectoryUnreadable, [fullPath], { cause: err });
         }
-        await callback(fullPath, fromCwd(fullPath), text);
+        yield { fullPath, relativePath: path.relative(process.cwd(), fullPath), text };
     }
 }

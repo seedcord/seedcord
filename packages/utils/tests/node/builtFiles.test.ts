@@ -1,9 +1,9 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { readTextFiles, registerBundledModules, traverseDirectory } from '#src/node/directory';
+import { readTextFiles, registerBuiltFiles, traverseDirectory } from '#src/node/directory';
 
-// no root on disk, the walk has to come from the table
+// not on disk
 const ROOT = '/bot';
 
 function stub(name: string): () => Promise<Record<string, unknown>> {
@@ -12,17 +12,17 @@ function stub(name: string): () => Promise<Record<string, unknown>> {
 
 async function walk(dir: string): Promise<[string, unknown][]> {
     const seen: [string, unknown][] = [];
-    await traverseDirectory(dir, (fullPath, _relativePath, imported) => void seen.push([fullPath, imported.name]));
+    for await (const { fullPath, imported } of traverseDirectory(dir)) seen.push([fullPath, imported.name]);
     return seen;
 }
 
 afterEach(() => {
-    Reflect.deleteProperty(globalThis, Symbol.for('seedcord.bundledModules'));
+    Reflect.deleteProperty(globalThis, Symbol.for('seedcord:utils:built-files'));
 });
 
-describe('traverseDirectory with a registered table', () => {
-    it('visits the table entries under the folder as built js files', async () => {
-        registerBundledModules({
+describe('traverseDirectory in a built bot', () => {
+    it('visits the registered modules under the folder as built js files', async () => {
+        registerBuiltFiles({
             root: ROOT,
             modules: {
                 '/handlers/Roll.ts': stub('Roll'),
@@ -38,27 +38,42 @@ describe('traverseDirectory with a registered table', () => {
         ]);
     });
 
+    it('loads nothing past the file the caller stopped at', async () => {
+        const later = vi.fn(stub('Later'));
+        registerBuiltFiles({
+            root: ROOT,
+            modules: { '/handlers/A.ts': stub('A'), '/handlers/B.ts': later },
+            text: {}
+        });
+
+        for await (const { imported } of traverseDirectory('/bot/handlers')) {
+            if (imported.name === 'A') break;
+        }
+
+        expect(later).not.toHaveBeenCalled();
+    });
+
     it('treats a folder whose name starts with two dots as inside root', async () => {
-        registerBundledModules({ root: ROOT, modules: { '/..cache/Warm.ts': stub('Warm') }, text: {} });
+        registerBuiltFiles({ root: ROOT, modules: { '/..cache/Warm.ts': stub('Warm') }, text: {} });
 
         await expect(walk('/bot/..cache')).resolves.toEqual([['/bot/..cache/Warm.js', 'Warm']]);
     });
 
-    it('visits every entry when the folder is root itself', async () => {
-        registerBundledModules({ root: ROOT, modules: { '/index.ts': stub('index') }, text: {} });
+    it('visits every module when the folder is root itself', async () => {
+        registerBuiltFiles({ root: ROOT, modules: { '/index.ts': stub('index') }, text: {} });
 
         await expect(walk('/bot')).resolves.toEqual([['/bot/index.js', 'index']]);
     });
 
-    it('calls nothing for a folder under root with no entries', async () => {
-        registerBundledModules({ root: ROOT, modules: { '/handlers/Roll.ts': stub('Roll') }, text: {} });
+    it('yields nothing for a folder under root with no registered files', async () => {
+        registerBuiltFiles({ root: ROOT, modules: { '/handlers/Roll.ts': stub('Roll') }, text: {} });
 
         await expect(walk('/bot/subscribers')).resolves.toEqual([]);
     });
 
     it('reports the file whose module failed to load, keeping the original as the cause', async () => {
         const broken = (): Promise<Record<string, unknown>> => Promise.reject(new Error('boom'));
-        registerBundledModules({ root: ROOT, modules: { '/handlers/Broken.ts': broken }, text: {} });
+        registerBuiltFiles({ root: ROOT, modules: { '/handlers/Broken.ts': broken }, text: {} });
 
         const error = await walk('/bot/handlers').catch((caught: unknown) => caught);
 
@@ -68,7 +83,7 @@ describe('traverseDirectory with a registered table', () => {
     });
 
     it('throws with the folder and the root when the folder sits outside root', async () => {
-        registerBundledModules({ root: ROOT, modules: { '/handlers/Roll.ts': stub('Roll') }, text: {} });
+        registerBuiltFiles({ root: ROOT, modules: { '/handlers/Roll.ts': stub('Roll') }, text: {} });
 
         const error = await walk('/elsewhere/handlers').catch((caught: unknown) => caught);
 
@@ -77,9 +92,9 @@ describe('traverseDirectory with a registered table', () => {
     });
 });
 
-describe('readTextFiles with a registered table', () => {
-    it('reads the text entries under the folder with their own extension', async () => {
-        registerBundledModules({
+describe('readTextFiles in a built bot', () => {
+    it('reads the registered text under the folder with its own extension', async () => {
+        registerBuiltFiles({
             root: ROOT,
             modules: {},
             text: {
@@ -90,7 +105,7 @@ describe('readTextFiles with a registered table', () => {
         });
 
         const seen: [string, string][] = [];
-        await readTextFiles('/bot/locales', (fullPath, _relativePath, text) => void seen.push([fullPath, text]));
+        for await (const { fullPath, text } of readTextFiles('/bot/locales')) seen.push([fullPath, text]);
 
         expect(seen).toEqual([
             ['/bot/locales/en.json', '{"hi":"hello"}'],

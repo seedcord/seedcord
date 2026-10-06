@@ -71,16 +71,15 @@ export class SubscriberLoader implements Initializeable, HmrAware {
     }
 
     private async load(dir: string): Promise<void> {
-        await traverseDirectory(dir, (fullPath, relativePath, imported) => {
-            for (const exportName of Object.keys(imported)) {
-                const value = imported[exportName];
+        for await (const { fullPath, relativePath, imported } of traverseDirectory(dir)) {
+            for (const value of Object.values(imported)) {
                 if (!this.isSubscriber(value)) continue;
 
                 this.registerSubscriber(value);
                 this.hmrHandler?.trackHandler(fullPath, value);
                 busLoggerOf(this.bus).utils.registration(value.name, relativePath, undefined, 'trace');
             }
-        });
+        }
     }
 
     private registerSubscriber(ctor: StoredSubscriberCtor): void {

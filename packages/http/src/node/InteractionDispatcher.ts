@@ -80,23 +80,23 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private async loadHandlers(dir: string): Promise<void> {
-        await traverseDirectory(dir, (fullPath, relativePath, imported) => {
+        for await (const { fullPath, relativePath, imported } of traverseDirectory(dir)) {
             for (const value of Object.values(imported)) {
                 if (!this.isHandler(value)) continue;
                 this.registerHandler(value, relativePath);
                 this.hmrHandler?.trackHandler(fullPath, value);
             }
-        });
+        }
     }
 
     private async loadMiddlewares(dir: string): Promise<void> {
-        await traverseDirectory(dir, (fullPath, relativePath, imported) => {
+        for await (const { fullPath, relativePath, imported } of traverseDirectory(dir)) {
             for (const value of Object.values(imported)) {
                 if (!this.isMiddleware(value)) continue;
                 this.registerMiddleware(value, relativePath);
                 this.hmrHandler?.trackMiddleware(fullPath, value);
             }
-        });
+        }
     }
 
     private reportLoad(): void {

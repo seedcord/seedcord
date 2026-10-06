@@ -1,1 +1,1 @@
-export { registerBundledModules } from './node/directory';
+export { registerBuiltFiles } from './node/directory';
