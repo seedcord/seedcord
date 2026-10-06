@@ -1,0 +1,55 @@
+reviews:
+  in_progress_fortune: false
+  suggested_reviewers: false
+  estimate_code_review_effort: false
+  path_filters:
+    - '!**/tests/fixtures/**'
+    - '!**/CHANGELOG.md'
+    - '!**/seedcord-gen.d.ts'
+    - '!pnpm-lock.yaml'
+  pre_merge_checks:
+    docstrings:
+      mode: 'off'
+    title:
+      mode: 'warning'
+      requirements: 'One lowercase conventional-commit subject with no scope, like `feat: ...`. A breaking change puts `!` on the bare type, like `feat!: ...`.'
+  tools:
+    biome:
+      enabled: false
+
+# .greptile/files.json
+knowledge_base:
+  code_guidelines:
+    filePatterns:
+      - files: '.greptile/rules.md'
+        applyTo: '**'
+      - files: '.claude/commands/branch-audit.md'
+        applyTo: '**'
+      - files: '.github/skills/writing-voice/SKILL.md'
+        applyTo: '**'
+      - files: '.github/skills/code-quality/SKILL.md'
+        applyTo: '**/*.{ts,tsx}'
+      - files: '.github/skills/code-quality/TYPESCRIPT.md'
+        applyTo: '**/*.{ts,tsx}'
+      - files: '.github/skills/code-commenting-guidelines/SKILL.md'
+        applyTo: '**/*.{ts,tsx}'
+      - files: '.github/skills/code-quality/REACT19.md'
+        applyTo: 'apps/**/*.tsx'
+      - files: '.github/skills/code-quality/REACT19.md'
+        applyTo: 'tooling/ui/**/*.tsx'
+      - files: '.github/skills/code-quality/TAILWIND.md'
+        applyTo: 'apps/**'
+      - files: '.github/skills/code-quality/TAILWIND.md'
+        applyTo: 'tooling/ui/**'
+      - files: '.github/skills/tdd/SKILL.md'
+        applyTo: '**/tests/**'
+      - files: '.github/skills/tdd/tests.md'
+        applyTo: '**/tests/**'
+      - files: '.github/skills/tdd/mocking.md'
+        applyTo: '**/tests/**'
+      - files: '.github/skills/changeset-guidelines/SKILL.md'
+        applyTo: '.changeset/**'
+      - files: '.github/skills/guide-voice/SKILL.md'
+        applyTo: 'apps/guide/content/**'
+      - files: '.github/skills/guide-voice/PROSE-REVIEW.md'
+        applyTo: 'apps/guide/content/**'
