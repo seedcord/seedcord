@@ -1,9 +1,10 @@
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { BUILT_FILES_KEY } from '@seedcord/utils/node/internal';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { BuildRunner } from '#commands/build/BuildRunner';
@@ -45,6 +46,16 @@ describe('seedcord build checks outDir before it empties it', () => {
     it('throws for a non-empty outDir that no earlier build wrote', async () => {
         await expect(buildWithOutDir('./src/handlers')).resolves.toMatchObject({
             code: SeedcordErrorCode.CliBuildOutDirNotEmpty
+        });
+        expect(existsSync(join(projectDir, 'src/handlers/Ping.ts'))).toBe(true);
+    });
+
+    it('throws for an outDir that links to root', async () => {
+        await writeFile(join(projectDir, 'src/index.mjs'), `// ${BUILT_FILES_KEY}\n`);
+        await symlink(join(projectDir, 'src'), join(projectDir, 'out'), 'junction');
+
+        await expect(buildWithOutDir('./out')).resolves.toMatchObject({
+            code: SeedcordErrorCode.CliConfigOutDirDeletesRoot
         });
         expect(existsSync(join(projectDir, 'src/handlers/Ping.ts'))).toBe(true);
     });

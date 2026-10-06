@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -13,12 +13,22 @@ function holdsEarlierBuild(outDir: string): boolean {
     return entryIsFile && readFileSync(entry, 'utf8').includes(BUILT_FILES_KEY);
 }
 
+function realPath(path: string): string {
+    return existsSync(path) ? realpathSync(path) : path;
+}
+
+function outDirHoldsRoot(outDir: string, root: string): boolean {
+    return isInside(realPath(outDir), realPath(root));
+}
+
 function isSafeToEmpty(outDir: string): boolean {
     return !existsSync(outDir) || readdirSync(outDir).length === 0 || holdsEarlierBuild(outDir);
 }
 
 // vite empties outDir before it writes
 export function assertOutDirSafe(outDir: string, root: string): void {
-    if (isInside(outDir, root)) throw new SeedcordError(SeedcordErrorCode.CliConfigOutDirDeletesRoot, [outDir, root]);
+    if (outDirHoldsRoot(outDir, root)) {
+        throw new SeedcordError(SeedcordErrorCode.CliConfigOutDirDeletesRoot, [outDir, root]);
+    }
     if (!isSafeToEmpty(outDir)) throw new SeedcordError(SeedcordErrorCode.CliBuildOutDirNotEmpty, [outDir]);
 }
