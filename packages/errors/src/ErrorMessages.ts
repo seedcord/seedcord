@@ -237,10 +237,9 @@ const messages = {
     [SeedcordErrorCode.CliStartFailed]: (instancePath: string, reason: string) =>
         `Failed to start Seedcord from ${instancePath}: ${reason}`,
     [SeedcordErrorCode.CliBuildTsconfigNotFound]: (hint: string) =>
-        `Unable to resolve a tsconfig for builds (${hint}). Provide build.tsconfig or add tsconfig.build.json / tsconfig.json.`,
-    [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `TypeScript build failed:\n${diagnostics}`,
-    [SeedcordErrorCode.CliBootstrapWriteFailed]: (targetPath: string, reason: string) =>
-        `Failed to write bootstrap file at ${targetPath}: ${reason}`,
+        `Unable to resolve a tsconfig for builds (${hint}). Provide build.tsconfig or add a tsconfig.json beside seedcord.config.ts.`,
+    [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `Type check failed:\n${diagnostics}`,
+    [SeedcordErrorCode.CliBundleFailed]: (reason: string) => `Vite could not bundle the bot:\n${reason}`,
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
         `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
     [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>

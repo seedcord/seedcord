@@ -1,1 +1,1 @@
-export { registerBuiltFiles } from './node/directory';
+export { BUILT_FILES_KEY } from './node/directory';

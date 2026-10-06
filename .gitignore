@@ -21,6 +21,7 @@ certs/
 
 # Ignore build output directories
 dist/
+*.bun-build
 
 # Ignore IDE specific files
 **/.idea

@@ -34,7 +34,6 @@ describe('ConfigLoader', () => {
         expect(resolved.instance).toBe(resolve(process.cwd(), 'src/bot.ts'));
         expect(resolved.entry).toBe(resolve(process.cwd(), 'src/index.ts'));
         expect(resolved.build.outDir).toBe(resolve(process.cwd(), 'dist'));
-        expect(resolved.build.bootstrap).toBe(resolve(process.cwd(), 'dist/index.mjs'));
         expect(resolved.build.tsconfig).toBeUndefined();
     });
 
@@ -250,8 +249,7 @@ describe('DevRunner', () => {
                 configFile: configPath,
                 entry: instancePath,
                 build: {
-                    outDir: join(process.cwd(), 'dist'),
-                    bootstrap: join(process.cwd(), 'dist/index.mjs')
+                    outDir: join(process.cwd(), 'dist')
                 }
             }))
         };

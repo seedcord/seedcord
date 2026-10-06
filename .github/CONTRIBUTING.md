@@ -10,6 +10,8 @@ Everyone here follows the [code of conduct](CODE_OF_CONDUCT.md). Report a securi
 
 You need the Node version in `engines.node` and the pnpm version in `packageManager`, both in the root `package.json`.
 
+Bun is optional. With it installed, the `seedcord build` tests also compile each built bot into a bun binary and run it. Without it they skip that part, and CI runs it on every push.
+
 The scripts assume a POSIX shell. On Windows, work inside WSL.
 
 ```bash

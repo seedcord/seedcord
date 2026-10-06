@@ -116,16 +116,12 @@ interface BuiltFileLoaders {
     text: Record<string, TextLoader>;
 }
 
-// one registry for every copy of @seedcord/utils in the process
-const BUILT_FILES = Symbol.for('seedcord:utils:built-files');
-
-// seedcord build calls this from the entry it generates
-export function registerBuiltFiles(loaders: BuiltFileLoaders): void {
-    Reflect.set(globalThis, BUILT_FILES, new BuiltFiles(loaders));
-}
+// the entry seedcord build generates writes a BuiltFileLoaders object to Symbol.for(BUILT_FILES_KEY)
+export const BUILT_FILES_KEY = 'seedcord:utils:built-files';
 
 function fileSource(): FileSource {
-    return (Reflect.get(globalThis, BUILT_FILES) as FileSource | undefined) ?? new DiskFiles();
+    const built = Reflect.get(globalThis, Symbol.for(BUILT_FILES_KEY)) as BuiltFileLoaders | undefined;
+    return built ? new BuiltFiles(built) : new DiskFiles();
 }
 
 interface ImportedFile {

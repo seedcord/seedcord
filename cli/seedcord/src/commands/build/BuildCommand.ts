@@ -21,8 +21,9 @@ export class BuildCommand extends BaseCommand {
             .action(async () => {
                 try {
                     await this.runner.run();
+                    this.logger.info('seedcord build finished successfully.');
                 } catch (error: unknown) {
-                    this.logger.error('Seedcord build failed', error);
+                    this.logger.error('seedcord build failed', error);
                     if (isSeedcordError(error)) process.exitCode = 1;
                     else process.exit(1);
                 }

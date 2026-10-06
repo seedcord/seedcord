@@ -247,10 +247,8 @@ export enum SeedcordErrorCode {
     CliConfigEntryOutsideRoot = 3110,
     /** Unable to locate a TypeScript config file for builds. */
     CliBuildTsconfigNotFound = 3111,
-    /** TypeScript reported diagnostics during emit. */
+    /** TypeScript reported diagnostics while `seedcord build` type checked the project. */
     CliBuildFailed = 3112,
-    /** Unable to write the generated bootstrap file. */
-    CliBootstrapWriteFailed = 3113,
     /** Two commands resolve to the same slash route during codegen. */
     CliCodegenDuplicateRoute = 3114,
     /** The commands directory could not be read during codegen. */
@@ -279,6 +277,8 @@ export enum SeedcordErrorCode {
     CliConfigInvalidField = 3126,
     /** A class carrying `@RegisterCommand` threw while codegen constructed it. */
     CliCodegenCommandConstructorThrew = 3127,
+    /** Vite failed while `seedcord build` bundled the project. */
+    CliBundleFailed = 3128,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

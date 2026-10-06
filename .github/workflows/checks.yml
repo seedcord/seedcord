@@ -187,6 +187,9 @@ jobs:
           bun run codegen --check
           bun run build
         working-directory: mocks/http
+      - run: pnpm turbo build --filter='seedcord^...'
+      - run: pnpm exec vitest run tests/commands/build
+        working-directory: cli/seedcord
 
   audit:
     if: github.event_name == 'push'
