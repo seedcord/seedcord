@@ -3,10 +3,11 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
 import { HostPluginKeys } from '@seedcord/types/internal';
 
-import { extendsThisCorePlugin, pluginLoggerOf } from './Plugin';
+import { extendsThisCorePlugin, pluginLoggerOf, resolvedLifecycleSpecOf } from './Plugin';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { Bus } from '#subscribers/Bus';
+import type { ResolvedPluginLifecycleSpec } from './lifecycle';
 import type { Runtime, Transport } from './options';
 import type { AttachableCtor, Attached, AttachKeyAssert, PluginArgs, PluginCtor, PluginLike } from './Plugin';
 import type { REST } from '@discordjs/rest';
@@ -15,14 +16,15 @@ import type { Config, IRateLimiter } from '@seedcord/types';
 export interface Attachment {
     readonly key: string;
     readonly instance: PluginLike;
+    readonly spec: ResolvedPluginLifecycleSpec;
 }
 
 const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 
-/**
- * Base class for a plugin host, a transport `Seedcord` class. It attaches plugins and runs on any
- * runtime.
- */
+const attachmentsSlot = Symbol('seedcord:host:attachments');
+const sealSlot = Symbol('seedcord:host:seal');
+
+/** Base class for a plugin host. It defines `attach` and imports no Node-only module. */
 // BotRt has no default because RuntimeAssert rejects every plugin once 'edge' is in the union
 export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
     public abstract readonly config: Config;
@@ -31,17 +33,23 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     public abstract readonly rateLimiter: IRateLimiter;
     public abstract readonly bus: Bus;
 
-    protected isInitialized = false;
-    protected readonly attachments: Attachment[] = [];
-    private readonly groups = new Map<string, Record<string, PluginLike>>();
+    #sealed = false;
+    readonly #attachments: Attachment[] = [];
+    readonly #groups = new Map<string, Record<string, PluginLike>>();
 
-    protected get plugins(): PluginLike[] {
-        return this.attachments.map((attachment) => attachment.instance);
+    /** @internal */
+    public get [attachmentsSlot](): readonly Attachment[] {
+        return this.#attachments;
+    }
+
+    /** @internal */
+    public [sealSlot](): void {
+        this.#sealed = true;
     }
 
     /** @internal codegen reads this to emit the `Core` augmentation */
     public get [HostPluginKeys](): readonly string[] {
-        return this.attachments.map((attachment) => attachment.key);
+        return this.#attachments.map((attachment) => attachment.key);
     }
 
     /**
@@ -78,7 +86,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
         Plugin: Ctor,
         ...args: PluginArgs<Ctor>
     ): this & Attached<Key, InstanceType<Ctor>> {
-        if (this.isInitialized) {
+        if (this.#sealed) {
             throw new SeedcordError(SeedcordErrorCode.CorePluginAfterInit);
         }
 
@@ -97,7 +105,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
         if (leaf?.includes('.')) {
             throw new SeedcordTypeError(SeedcordErrorCode.CorePluginKeyMalformed, [key, 'has more than one dot.']);
         }
-        this.assertFree(head, leaf, key);
+        this.#assertFree(head, leaf, key);
 
         if (!extendsThisCorePlugin(Plugin)) {
             throw new SeedcordTypeError(SeedcordErrorCode.CorePluginFromOtherCore, [Plugin.name]);
@@ -105,24 +113,24 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
 
         const instance = new Plugin(this, ...args);
         pluginLoggerOf(instance).setChannel(key);
-        this.attachments.push({ key, instance });
+        this.#attachments.push({ key, instance, spec: resolvedLifecycleSpecOf(instance) });
 
         if (leaf === undefined) {
             return Object.assign(this, { [key]: instance }) as this & Attached<Key, InstanceType<Ctor>>;
         }
 
-        this.groupFor(head)[leaf] = instance;
+        this.#groupFor(head)[leaf] = instance;
         return this as this & Attached<Key, InstanceType<Ctor>>;
     }
 
-    private assertFree(head: string, leaf: string | undefined, key: string): void {
+    #assertFree(head: string, leaf: string | undefined, key: string): void {
         if (leaf === undefined) {
-            if (this.groups.has(key)) throw new SeedcordError(SeedcordErrorCode.CorePluginKeyHoldsGroup, [key]);
+            if (this.#groups.has(key)) throw new SeedcordError(SeedcordErrorCode.CorePluginKeyHoldsGroup, [key]);
             if (key in this) throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
             return;
         }
 
-        const group = this.groups.get(head);
+        const group = this.#groups.get(head);
         if (!group) {
             if (head in this) throw new SeedcordError(SeedcordErrorCode.CorePluginGroupTaken, [head, key]);
             return;
@@ -130,14 +138,25 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
         if (Object.hasOwn(group, leaf)) throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
     }
 
-    private groupFor(head: string): Record<string, PluginLike> {
-        const existing = this.groups.get(head);
+    #groupFor(head: string): Record<string, PluginLike> {
+        const existing = this.#groups.get(head);
         if (existing) return existing;
 
         // a null prototype makes a leaf called __proto__ or valueOf an ordinary key
         const group = Object.create(null) as Record<string, PluginLike>;
-        this.groups.set(head, group);
+        this.#groups.set(head, group);
         Object.assign(this, { [head]: group });
         return group;
     }
+}
+
+// attach keeps pushing onto the array this returns
+export function attachmentsOf(
+    host: Pick<PluginHost<Transport, Runtime>, typeof attachmentsSlot>
+): readonly Attachment[] {
+    return host[attachmentsSlot];
+}
+
+export function sealAttachments(host: Pick<PluginHost<Transport, Runtime>, typeof sealSlot>): void {
+    host[sealSlot]();
 }

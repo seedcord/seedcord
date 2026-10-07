@@ -35,7 +35,7 @@ function recordPromotion(promotions: ExportedByLocal, claimed: ApiJsonMember, in
 // `!~Base:class#attach:member(1)` points at a member of `!~Base:class`
 function promote(reference: string, promotions: ExportedByLocal): string {
     for (const [local, exported] of promotions) {
-        if (reference.startsWith(local)) return exported + reference.slice(local.length);
+        if (reference === local || reference.startsWith(`${local}#`)) return exported + reference.slice(local.length);
     }
     return reference;
 }

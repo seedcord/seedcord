@@ -1,5 +1,5 @@
 import { Bus } from '@seedcord/core';
-import { bindBotColor, busLoggerOf, HmrManager } from '@seedcord/core/internal';
+import { attachmentsOf, bindBotColor, busLoggerOf, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { HealthCheck, shutdownOf, StartupPhase, SubscriberLoader } from '@seedcord/core/node/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
@@ -132,8 +132,8 @@ export class Seedcord extends ServerHost<'gateway', 'server'> implements Seedcor
         this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
             this.hmrManager.register(this.bot);
             this.hmrManager.register(this.subscribers);
-            for (const plugin of this.plugins) {
-                this.hmrManager.register(plugin);
+            for (const { instance } of attachmentsOf(this)) {
+                this.hmrManager.register(instance);
             }
             await Promise.resolve();
         });

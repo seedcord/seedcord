@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { REST } from '@discordjs/rest';
 import { Bus } from '@seedcord/core';
 import {
+    attachmentsOf,
     bindBotColor,
     busLoggerOf,
     getDevChannel,
@@ -200,8 +201,8 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
             if (this.interactions) this.hmrManager.register(this.interactions);
             if (this.commandRegistry) this.hmrManager.register(this.commandRegistry);
             this.hmrManager.register(this.subscribers);
-            for (const plugin of this.plugins) {
-                this.hmrManager.register(plugin);
+            for (const { instance } of attachmentsOf(this)) {
+                this.hmrManager.register(instance);
             }
             await Promise.resolve();
         });

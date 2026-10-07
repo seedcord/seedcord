@@ -53,6 +53,12 @@ describe('PluginHost', () => {
         );
     });
 
+    it('attaches under a key that type-checks even when the host keeps a field of that name', () => {
+        const host = new TestPluginHost().attach('groups', Counter);
+
+        expect(host.groups).toBeInstanceOf(Counter);
+    });
+
     describe('core access', () => {
         it('hands the attaching host to the plugin', () => {
             const host = new TestPluginHost();

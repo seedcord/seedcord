@@ -39,4 +39,4 @@ Install it directly when you are writing a plugin against the framework:
 pnpm add @seedcord/core
 ```
 
-`@seedcord/core/plugin` holds the base a plugin extends.
+Your plugin extends `Plugin` from `@seedcord/core/plugin`.
