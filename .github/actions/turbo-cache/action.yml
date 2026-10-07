@@ -7,10 +7,6 @@ inputs:
   turbo_team:
     description: Turborepo team slug
     required: false
-  enable_fallback_cache:
-    description: Use actions/cache for .turbo as a fallback
-    required: false
-    default: 'true'
 
 runs:
   using: composite
@@ -31,11 +27,12 @@ runs:
         if [ -n "${TURBO_TOKEN:-}" ] && [ -n "${TURBO_TEAM:-}" ]; then
           echo "Remote cache configured"
         else
-          echo "No remote cache detected. Will rely on local cache if enabled."
+          echo "No remote cache detected. Will rely on the actions/cache fallback."
         fi
 
+    # a fork's pull request does not get any TURBO_TOKEN
     - name: Restore turbo cache fallback
-      if: ${{ inputs.enable_fallback_cache == 'true' }}
+      if: ${{ inputs.turbo_token == '' || inputs.turbo_team == '' }}
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: .turbo

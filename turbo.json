@@ -35,10 +35,14 @@
                 "packages/*/package.json",
                 "plugins/*/dist/**/*.d.mts",
                 "plugins/*/package.json",
-                "cli/*/dist/**/*.d.mts",
-                "cli/*/package.json",
-                "tooling/*/dist/**/*.d.mts",
-                "tooling/*/package.json"
+                "cli/seedcord/dist/**/*.d.mts",
+                "cli/seedcord/package.json",
+                "tooling/eslint-config/dist/**/*.d.mts",
+                "tooling/eslint-config/package.json",
+                "tooling/eslint-plugin/dist/**/*.d.mts",
+                "tooling/eslint-plugin/package.json",
+                "tooling/eslint-plugin-discordjs/dist/**/*.d.mts",
+                "tooling/eslint-plugin-discordjs/package.json"
             ],
             "outputs": ["generated/*.json"]
         },

@@ -10,7 +10,7 @@ seedcord is pre-1.0. Breaking changes go in minor versions. Pick the cleanest de
 
 ## Load these skills first
 
-Before any work, load the four skills in [`.github/skills`](.github/skills): `code-quality` and `tdd` with every file in their folders, plus `code-commenting-guidelines` and `writing-voice`. Load `guide-voice`, `changeset-guidelines`, `envapt`, or `release-version` when the task touches what each covers. [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) lists when.
+Before any work, load the four skills in [`.agents/skills`](.agents/skills): `code-quality` and `tdd` with every file in their folders, plus `code-commenting-guidelines` and `writing-voice`. Load `guide-voice`, `changeset-guidelines`, `envapt`, or `release-version` when the task touches what each covers. [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md) lists when.
 
 ---
 

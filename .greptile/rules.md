@@ -2,7 +2,7 @@
 
 ## Reading the agent docs
 
-`AGENTS.md`, the skills under `.github/skills/`, and `.claude/commands/branch-audit.md` are written for an AI agent doing the work. Apply what they say about the code, the tests, and the prose. Skip what they say about the agent's own process, like asking the maintainer before acting, running scripts, spawning subagents, committing, and formatting an audit report.
+`AGENTS.md`, the skills under `.agents/skills/`, and `.claude/commands/branch-audit.md` are written for an AI agent doing the work. Apply what they say about the code, the tests, and the prose. Skip what they say about the agent's own process, like asking the maintainer before acting, running scripts, spawning subagents, committing, and formatting an audit report.
 
 Apply every audit that `branch-audit.md` lists to the diff.
 

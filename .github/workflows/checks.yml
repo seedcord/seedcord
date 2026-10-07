@@ -44,7 +44,6 @@ jobs:
         with:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
-          enable_fallback_cache: 'true'
       - uses: ./.github/actions/setup
       - run: pnpm check:catalog
       - run: pnpm lint:changesets
@@ -63,7 +62,6 @@ jobs:
         with:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
-          enable_fallback_cache: 'true'
       - uses: ./.github/actions/setup
       - run: pnpm fmt:check
 
@@ -80,7 +78,6 @@ jobs:
         with:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
-          enable_fallback_cache: 'true'
       - uses: ./.github/actions/setup
       - run: pnpm tc
       - run: pnpm tc:root
@@ -98,7 +95,6 @@ jobs:
         with:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
-          enable_fallback_cache: 'true'
       - uses: ./.github/actions/setup
       # raising this concurrency starves the eslint and prettier fixture suites into timeouts
       - run: pnpm turbo test --concurrency=2
@@ -116,11 +112,9 @@ jobs:
         with:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
-          enable_fallback_cache: 'true'
       - uses: ./.github/actions/setup
       - run: pnpm build:all
       - run: pnpm codegen:check
-      - run: pnpm turbo docs:extract
 
   typescript-floor:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
@@ -135,7 +129,6 @@ jobs:
         with:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
-          enable_fallback_cache: 'true'
       - uses: ./.github/actions/setup
       - run: pnpm turbo build --filter='@seedcord/mock-gateway^...' --filter='@seedcord/mock-http^...' --filter='@seedcord/eslint-config...' --filter='@seedcord/eslint-plugin...'
       - run: pnpm check:typescript-floor
@@ -175,7 +168,6 @@ jobs:
         with:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
-          enable_fallback_cache: 'true'
       - uses: ./.github/actions/setup
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:

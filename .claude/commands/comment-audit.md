@@ -19,8 +19,8 @@ You are auditing code comments for quality. Apply the project's commenting guide
 
 Read these first, they are the standard you enforce:
 
-- `.github/skills/code-commenting-guidelines/SKILL.md` (and anything it references): decides _whether_ a comment belongs
-- `.github/skills/writing-voice/SKILL.md`: decides _how_ a comment reads: the ban-list (hype, anthropomorphism, `loudly`-style intensifiers, vague verbs) applies to comment text the same as to docs
+- `.agents/skills/code-commenting-guidelines/SKILL.md` (and anything it references): decides _whether_ a comment belongs
+- `.agents/skills/writing-voice/SKILL.md`: decides _how_ a comment reads: the ban-list (hype, anthropomorphism, `loudly`-style intensifiers, vague verbs) applies to comment text the same as to docs
 - `~/.claude/CLAUDE.md` (the "## Comments" and "## Em-dashes" sections, global rules that also apply)
 - `CLAUDE.md` (repo conventions)
 

@@ -19,61 +19,61 @@
             "description": "The audit the maintainer runs on every branch"
         },
         {
-            "path": ".github/skills/code-quality/SKILL.md",
+            "path": ".agents/skills/code-quality/SKILL.md",
             "description": "Code quality rules",
             "scope": ["**/*.ts", "**/*.tsx"]
         },
         {
-            "path": ".github/skills/code-quality/TYPESCRIPT.md",
+            "path": ".agents/skills/code-quality/TYPESCRIPT.md",
             "description": "TypeScript antipatterns",
             "scope": ["**/*.ts", "**/*.tsx"]
         },
         {
-            "path": ".github/skills/code-quality/REACT19.md",
+            "path": ".agents/skills/code-quality/REACT19.md",
             "description": "React antipatterns",
             "scope": ["apps/**/*.tsx", "tooling/ui/**/*.tsx"]
         },
         {
-            "path": ".github/skills/code-quality/TAILWIND.md",
+            "path": ".agents/skills/code-quality/TAILWIND.md",
             "description": "Tailwind rules",
             "scope": ["apps/**", "tooling/ui/**"]
         },
         {
-            "path": ".github/skills/code-commenting-guidelines/SKILL.md",
+            "path": ".agents/skills/code-commenting-guidelines/SKILL.md",
             "description": "When a code comment should exist and how it reads",
             "scope": ["**/*.ts", "**/*.tsx"]
         },
         {
-            "path": ".github/skills/writing-voice/SKILL.md",
+            "path": ".agents/skills/writing-voice/SKILL.md",
             "description": "Rules for all prose: comments, docs, READMEs, changesets, error messages"
         },
         {
-            "path": ".github/skills/tdd/SKILL.md",
+            "path": ".agents/skills/tdd/SKILL.md",
             "description": "What a good test looks like here",
             "scope": ["**/tests/**"]
         },
         {
-            "path": ".github/skills/tdd/tests.md",
+            "path": ".agents/skills/tdd/tests.md",
             "description": "Good and bad test examples",
             "scope": ["**/tests/**"]
         },
         {
-            "path": ".github/skills/tdd/mocking.md",
+            "path": ".agents/skills/tdd/mocking.md",
             "description": "When to mock",
             "scope": ["**/tests/**"]
         },
         {
-            "path": ".github/skills/changeset-guidelines/SKILL.md",
+            "path": ".agents/skills/changeset-guidelines/SKILL.md",
             "description": "How a changeset reads and which bump it gets",
             "scope": [".changeset/**"]
         },
         {
-            "path": ".github/skills/guide-voice/SKILL.md",
+            "path": ".agents/skills/guide-voice/SKILL.md",
             "description": "Voice and structure for guide pages",
             "scope": ["apps/guide/content/**"]
         },
         {
-            "path": ".github/skills/guide-voice/PROSE-REVIEW.md",
+            "path": ".agents/skills/guide-voice/PROSE-REVIEW.md",
             "description": "The prose review pass for guide pages",
             "scope": ["apps/guide/content/**"]
         }

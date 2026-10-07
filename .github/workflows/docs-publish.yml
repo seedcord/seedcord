@@ -31,7 +31,6 @@ jobs:
         with:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
-          enable_fallback_cache: 'true'
       - name: Setup workspace
         uses: ./.github/actions/setup
 

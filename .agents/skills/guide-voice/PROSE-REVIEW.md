@@ -17,8 +17,8 @@ Read: <path to the .mdx file>
 
 Read these two files before you judge anything:
 
-    .github/skills/writing-voice/SKILL.md
-    .github/skills/guide-voice/SKILL.md
+    .agents/skills/writing-voice/SKILL.md
+    .agents/skills/guide-voice/SKILL.md
 
 The reader has built a Discord bot or is about to. They know JavaScript and
 Discord. They may know nothing about the framework this guide documents. Many

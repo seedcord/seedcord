@@ -133,7 +133,7 @@ Run `pnpm prePush` before you open the PR. It checks the packages your branch ch
     feat!: move errors out of core
     ```
 
-3. **Add a changeset** with `pnpm cs` for any change to a published package. Read [`skills/changeset-guidelines`](skills/changeset-guidelines/SKILL.md) before you write it. A breaking change is a minor bump while seedcord is pre-1.0. `pnpm lint:changesets` checks the format, and CI runs it.
+3. **Add a changeset** with `pnpm cs` for any change to a published package. Read [`skills/changeset-guidelines`](../.agents/skills/changeset-guidelines/SKILL.md) before you write it. A breaking change is a minor bump while seedcord is pre-1.0. `pnpm lint:changesets` checks the format, and CI runs it.
 
 4. **Write the failing test first.** Watch it fail, then fix the code. A regression test that passes before your change proves nothing. Tests live in `<package>/tests/`, mirroring `src/`, and `pnpm -C <package> test:watch` reruns them as you work.
 
@@ -157,19 +157,19 @@ Same for anything you write in the repo. Issues, PR descriptions, and review rep
 
 AI code often looks correct and misses edge cases, so the testing rules matter more here. Point your agent at `AGENTS.md`.
 
-Have it load these four skills from [`.github/skills`](skills) before any work:
+Have it load these four skills from [`.agents/skills`](../.agents/skills) before any work:
 
-- [`code-quality`](skills/code-quality/SKILL.md), plus every file in its folder
-- [`code-commenting-guidelines`](skills/code-commenting-guidelines/SKILL.md)
-- [`writing-voice`](skills/writing-voice/SKILL.md)
-- [`tdd`](skills/tdd/SKILL.md), plus every file in its folder
+- [`code-quality`](../.agents/skills/code-quality/SKILL.md), plus every file in its folder
+- [`code-commenting-guidelines`](../.agents/skills/code-commenting-guidelines/SKILL.md)
+- [`writing-voice`](../.agents/skills/writing-voice/SKILL.md)
+- [`tdd`](../.agents/skills/tdd/SKILL.md), plus every file in its folder
 
 Have it load the others only for these tasks:
 
-- [`guide-voice`](skills/guide-voice/SKILL.md) for any page under `apps/guide/content`, with its two review prompts
-- [`changeset-guidelines`](skills/changeset-guidelines/SKILL.md) before writing a changeset
-- [`envapt`](skills/envapt/SKILL.md) when code reads config through `envapt`
-- [`release-version`](skills/release-version/SKILL.md) for prepping a release, a maintainer-only job
+- [`guide-voice`](../.agents/skills/guide-voice/SKILL.md) for any page under `apps/guide/content`, with its two review prompts
+- [`changeset-guidelines`](../.agents/skills/changeset-guidelines/SKILL.md) before writing a changeset
+- [`envapt`](../.agents/skills/envapt/SKILL.md) when code reads config through `envapt`
+- [`release-version`](../.agents/skills/release-version/SKILL.md) for prepping a release, a maintainer-only job
 
 Before you open a PR, run [`/branch-audit`](../.claude/commands/branch-audit.md) or have your agent run it. It reviews everything your branch changes against `next`. Fix what it finds before you push.
 

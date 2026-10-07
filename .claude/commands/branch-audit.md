@@ -27,7 +27,7 @@ Everything the current branch changes against its base: `git diff $(git merge-ba
 ## Ground truth, read these first, top to bottom
 
 - `~/.claude/CLAUDE.md` (global rules) and the repo's `AGENTS.md` (CLAUDE.md symlinks to it), plus `packages/AGENTS.md`.
-- The skills under `.github/skills/`: `code-quality/` (every file in it), `code-commenting-guidelines/SKILL.md`, `writing-voice/SKILL.md`, `guide-voice/SKILL.md` (and its PROSE-REVIEW.md), `tdd/` (every file in it), `changeset-guidelines/SKILL.md`.
+- The skills under `.agents/skills/`: `code-quality/` (every file in it), `code-commenting-guidelines/SKILL.md`, `writing-voice/SKILL.md`, `guide-voice/SKILL.md` (and its PROSE-REVIEW.md), `tdd/` (every file in it), `changeset-guidelines/SKILL.md`.
 - For code structure questions (who calls what, whether an export has consumers), use the codebase-memory MCP tools (load them with ToolSearch, call `list_projects`, and use the project whose root path is this checkout) and then read the source to confirm. For text in non-code files, plain reads are fine.
 - The package's own README and its `package.json` exports map define the public surface.
 

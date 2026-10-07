@@ -25,7 +25,7 @@ These sibling pages own this material, so it is out of scope here: <list them>
 
 Read this file before you judge anything:
 
-    .github/skills/guide-voice/SKILL.md
+    .agents/skills/guide-voice/SKILL.md
 
 Use the codebase-memory MCP for structure, then open every declaration yourself
 and read it whole. Never assert a claim about the code you have not opened. Give
