@@ -293,6 +293,8 @@ export enum SeedcordErrorCode {
     CliBuildOutDirNotEmpty = 3134,
     /** Two or more fields in the seedcord config are missing or invalid. */
     CliConfigProblems = 3135,
+    /** Two or more command constructors threw during codegen. */
+    CliCodegenCommandProblems = 3136,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

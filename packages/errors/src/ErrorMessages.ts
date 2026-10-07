@@ -258,6 +258,8 @@ const messages = {
         `Could not read the commands directory ${paint.path(dir)} during codegen. ${reason}`,
     [SeedcordErrorCode.CliCodegenCommandConstructorThrew]: (name: string, file: string, reason: string) =>
         `${name} threw while codegen constructed it. Fix its constructor in ${paint.path(file)}. ${reason}`,
+    [SeedcordErrorCode.CliCodegenCommandProblems]: (count: number) =>
+        `${count} commands threw while codegen constructed them. Each one is listed below.`,
     [SeedcordErrorCode.CliCodegenDuplicateContextMenu]: (
         kind: string,
         name: string,

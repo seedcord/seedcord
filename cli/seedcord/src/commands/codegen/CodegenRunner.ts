@@ -5,8 +5,8 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 
 import { isCommandClass } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
+import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { HostAugmentTarget, HostPluginKeys } from '@seedcord/types/internal';
 import { isTsOrJsFile } from '@seedcord/utils/node';
 import { ApplicationCommandType } from 'discord-api-types/v10';
@@ -22,12 +22,18 @@ import { renderAugmentation } from './renderAugmentation';
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ScannedCommand } from './AugmentationBuilder';
+import type { CommandCtor } from '@seedcord/core/internal';
 import type { EmojiConfig, ILogger, TypedOmit } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 const OUTPUT_FILENAME = 'seedcord-gen.d.ts';
 
 const ENTRY_EXTENSION = /\.[mc]?[jt]sx?$/;
+
+interface CommandClassFile {
+    sourceFile: string;
+    Command: CommandCtor;
+}
 
 interface ScanResult {
     commands: ScannedCommand[];
@@ -83,19 +89,26 @@ export class CodegenRunner {
 
     private async scan(config: ResolvedSeedcordDevConfig): Promise<ScanResult> {
         const { commandsDir, emojis, augmentTarget, pluginKeys } = await this.resolveInstance(config);
-
-        const commands: ScannedCommand[] = [];
-        if (commandsDir) {
-            for await (const command of this.walk(commandsDir, new Set(), true)) {
-                commands.push(command);
-            }
-        }
+        const commands = commandsDir ? await this.scanCommands(commandsDir) : [];
         return { commands, emojis, augmentTarget, pluginKeys };
+    }
+
+    private async scanCommands(commandsDir: string): Promise<ScannedCommand[]> {
+        const commands: ScannedCommand[] = [];
+        const problems: SeedcordError[] = [];
+        for await (const commandClass of this.walk(commandsDir, new Set(), true)) {
+            const built = this.construct(commandClass);
+            if (isSeedcordError(built)) problems.push(built);
+            else if (built) commands.push(built);
+        }
+
+        throwSingleOrAggregate(problems, SeedcordErrorCode.CliCodegenCommandProblems);
+        return commands;
     }
 
     // the bot scans under tsx/vite where import() takes a .ts path. codegen runs under plain node, hence the
     // tsx-backed module loader below.
-    private async *walk(dir: string, seen: Set<unknown>, isRoot: boolean): AsyncGenerator<ScannedCommand> {
+    private async *walk(dir: string, seen: Set<unknown>, isRoot: boolean): AsyncGenerator<CommandClassFile> {
         let entries;
         try {
             entries = await readdir(dir, { withFileTypes: true });
@@ -117,8 +130,8 @@ export class CodegenRunner {
                     // a barrel re-exports the same class object
                     if (seen.has(exported)) continue;
                     seen.add(exported);
-                    const json = this.commandJsonOf(exported, fullPath);
-                    if (json) yield { sourceFile: fullPath, json };
+                    // the commands directory holds helpers and constants too
+                    if (isCommandClass(exported)) yield { sourceFile: fullPath, Command: exported };
                 }
             }
         }
@@ -140,24 +153,20 @@ export class CodegenRunner {
         };
     }
 
-    private commandJsonOf(exported: unknown, sourceFile: string): RESTPostAPIApplicationCommandsJSONBody | undefined {
-        // the commands directory holds helpers and constants too
-        if (!isCommandClass(exported)) return undefined;
-
-        const Command = exported;
+    private construct({ sourceFile, Command }: CommandClassFile): ScannedCommand | SeedcordError | undefined {
         let json: unknown;
         try {
             json = new Command().component.toJSON();
         } catch (error: unknown) {
             const reason = Error.isError(error) ? error.message : 'Unknown error';
-            throw new SeedcordError(SeedcordErrorCode.CliCodegenCommandConstructorThrew, [
+            return new SeedcordError(SeedcordErrorCode.CliCodegenCommandConstructorThrew, [
                 Command.name,
                 sourceFile,
                 reason
             ]);
         }
 
-        return this.isApplicationCommand(json) ? json : undefined;
+        return this.isApplicationCommand(json) ? { sourceFile, json } : undefined;
     }
 
     private isApplicationCommand(json: unknown): json is RESTPostAPIApplicationCommandsJSONBody {

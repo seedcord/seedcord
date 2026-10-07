@@ -3,10 +3,10 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { HostAugmentTarget, HostPluginKeys, SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType } from 'discord.js';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, assert, describe, expect, it } from 'vitest';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
@@ -406,6 +406,40 @@ describe('CodegenRunner', () => {
         expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenCommandConstructorThrew });
         expect((caught as Error).message).toContain('BrokenCommand');
         expect((caught as Error).message).toContain('the database was not ready');
+    });
+
+    it('reports every command whose constructor throws at once', async () => {
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
+        await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
+        await writeFile(join(cmdDir, 'roll.ts'), 'export {};', 'utf8');
+
+        class BanCommand extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                throw new Error('Invalid string length');
+            }
+        }
+        class RollCommand extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                throw new Error('Expected a string for option "sides"');
+            }
+        }
+        RegisterCommand('global')(BanCommand);
+        RegisterCommand('global')(RollCommand);
+        const moduleByPath = (path: string): Record<string, unknown> =>
+            path.endsWith('ban.ts') ? { BanCommand } : { RollCommand };
+
+        const caught: unknown = await scanRunner(root, cmdDir, moduleByPath, silentLogger())
+            .run(false)
+            .catch((error: unknown) => error);
+
+        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliCodegenCommandProblems));
+        const commandNames = caught.errors.map((child: unknown) =>
+            isSeedcordError(child) ? child.message.split(' ')[0] : child
+        );
+        expect(commandNames).toEqual(['BanCommand', 'RollCommand']);
     });
 
     it('skips a BuilderComponent subclass carrying no @RegisterCommand', async () => {
