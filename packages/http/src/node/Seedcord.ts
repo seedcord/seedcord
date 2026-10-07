@@ -81,18 +81,18 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     /** @see {@link Bus} */
     public readonly bus: Bus;
 
-    private readonly subscribers: SubscriberLoader;
+    readonly #subscribers: SubscriberLoader;
 
-    private readonly interactions?: InteractionDispatcher;
-    private readonly commandRegistry?: CommandRegistry;
-    private readonly emojiInjector = new EmojiInjector(this);
-    private readonly hmrManager: HmrManager;
-    private readonly logger = new Logger('Server', { channel: 'bot' });
+    readonly #interactions?: InteractionDispatcher;
+    readonly #commandRegistry?: CommandRegistry;
+    readonly #emojiInjector = new EmojiInjector(this);
+    readonly #hmrManager: HmrManager;
+    readonly #logger = new Logger('Server', { channel: 'bot' });
 
-    private token?: string;
-    private server?: Server;
-    private boundPort?: number;
-    private fetchedUsername?: string | undefined;
+    #token?: string;
+    #server?: Server;
+    #boundPort?: number;
+    #fetchedUsername?: string | undefined;
 
     public readonly config: HttpConfig;
 
@@ -104,31 +104,31 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         installNodeDefaults(config.logger);
         bindBotColor(() => this.config.botColor);
 
-        this.hmrManager = new HmrManager();
-        this.hmrManager.init();
+        this.#hmrManager = new HmrManager();
+        this.#hmrManager.init();
 
         const interactions = this.config.bot.interactions;
         if (interactions.path) {
-            this.interactions = new InteractionDispatcher(interactions.path, interactions.middlewares);
+            this.#interactions = new InteractionDispatcher(interactions.path, interactions.middlewares);
         }
 
-        if (this.config.bot.commands.path) this.commandRegistry = new CommandRegistry(this);
+        if (this.config.bot.commands.path) this.#commandRegistry = new CommandRegistry(this);
 
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
         this.bus = new Bus(this);
-        this.subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
+        this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
 
-        this.registerStartupTasks();
+        this.#registerStartupTasks();
     }
 
     /** The bot's discord username, populated by the ready fetch. */
     public get username(): string | undefined {
-        return this.fetchedUsername;
+        return this.#fetchedUsername;
     }
 
     /** The bound server port, populated once `start()` is listening. */
     public get port(): number | undefined {
-        return this.boundPort;
+        return this.#boundPort;
     }
 
     /**
@@ -152,16 +152,16 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         return true;
     }
 
-    private registerStartupTasks(): void {
-        if (Envapter.isDevelopment || Envapter.isTest) this.registerHmrAwareModules();
+    #registerStartupTasks(): void {
+        if (Envapter.isDevelopment || Envapter.isTest) this.#registerHmrAwareModules();
 
         this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'start');
-            await this.subscribers.init();
+            await this.#subscribers.init();
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
         });
 
-        const { interactions } = this;
+        const interactions = this.#interactions;
         if (interactions) {
             this.startup.addTask(StartupPhase.Configuration, 'interactions-initialization', async () => {
                 interactions.logger.utils.initialization('Interactions', 'start');
@@ -171,14 +171,14 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         }
 
         this.startup.addTask(StartupPhase.Configuration, 'authenticate', () => {
-            this.authenticate();
+            this.#authenticate();
             return Promise.resolve();
         });
 
         // needs the token from Configuration, and must finish before Ready opens the server to interactions
-        this.startup.addTask(StartupPhase.Login, 'emoji-injection', () => this.emojiInjector.init());
+        this.startup.addTask(StartupPhase.Login, 'emoji-injection', () => this.#emojiInjector.init());
 
-        const { commandRegistry } = this;
+        const commandRegistry = this.#commandRegistry;
         if (commandRegistry) {
             // one task because tasks in a phase run concurrently and the deploy reads the id
             this.startup.addTask(StartupPhase.Login, 'command-deploy', async () => {
@@ -189,40 +189,40 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
             });
         }
 
-        this.startup.addTask(StartupPhase.Ready, 'http-server', () => this.listen());
+        this.startup.addTask(StartupPhase.Ready, 'http-server', () => this.#listen());
 
         if (!Envapter.isTest) {
-            this.startup.addTask(StartupPhase.Ready, 'identity', () => this.fetchUsername());
+            this.startup.addTask(StartupPhase.Ready, 'identity', () => this.#fetchUsername());
         }
     }
 
-    private registerHmrAwareModules(): void {
+    #registerHmrAwareModules(): void {
         this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
-            if (this.interactions) this.hmrManager.register(this.interactions);
-            if (this.commandRegistry) this.hmrManager.register(this.commandRegistry);
-            this.hmrManager.register(this.subscribers);
+            if (this.#interactions) this.#hmrManager.register(this.#interactions);
+            if (this.#commandRegistry) this.#hmrManager.register(this.#commandRegistry);
+            this.#hmrManager.register(this.#subscribers);
             for (const { instance } of attachmentsOf(this)) {
-                this.hmrManager.register(instance);
+                this.#hmrManager.register(instance);
             }
             await Promise.resolve();
         });
     }
 
-    private authenticate(): void {
-        this.token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
-        this.rest.setToken(this.token);
+    #authenticate(): void {
+        this.#token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
+        this.rest.setToken(this.#token);
     }
 
     /** The bot's Discord application id. Throws if you read it before the Configuration phase. */
     public get applicationId(): string {
-        if (!this.token) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
-        return applicationIdFromToken(this.token);
+        if (!this.#token) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
+        return applicationIdFromToken(this.#token);
     }
 
-    private async listen(): Promise<void> {
-        const maps = this.interactions?.maps ?? emptyRouteMaps();
+    async #listen(): Promise<void> {
+        const maps = this.#interactions?.maps ?? emptyRouteMaps();
         const middlewares =
-            this.interactions?.middlewares ??
+            this.#interactions?.middlewares ??
             new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
         const { handle, inFlight } = buildEngine(this, maps, middlewares);
 
@@ -235,44 +235,44 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
                 outgoing.destroy(Error.isError(error) ? error : new Error(String(error)));
             });
         });
-        this.server = server;
+        this.#server = server;
 
         server.listen(this.config.port ?? DEFAULT_PORT);
         await once(server, 'listening');
         // justified: address() is AddressInfo once a TCP server is listening
-        this.boundPort = (server.address() as AddressInfo).port;
-        this.logger.info(`Interactions server listening on port ${paint.sky.bold(String(this.boundPort))}`);
-        getDevChannel()?.send('seedcord:server-listening', { port: this.boundPort });
+        this.#boundPort = (server.address() as AddressInfo).port;
+        this.#logger.info(`Interactions server listening on port ${paint.sky.bold(String(this.#boundPort))}`);
+        getDevChannel()?.send('seedcord:server-listening', { port: this.#boundPort });
 
         this.shutdown.addTask(
             ShutdownPhase.Unbind,
             'stop-http-server',
-            () => this.stopServer(),
+            () => this.#stopServer(),
             SERVER_SHUTDOWN_TIMEOUT_MS
         );
         // Unbind already ran, so every accepted request is in the in-flight set here
         this.shutdown.addTask(
             ShutdownPhase.Drain,
             'drain-inflight',
-            () => drainInFlight(inFlight, DRAIN_WINDOW_MS, this.logger, 'Interactions'),
+            () => drainInFlight(inFlight, DRAIN_WINDOW_MS, this.#logger, 'Interactions'),
             DRAIN_TASK_TIMEOUT_MS
         );
     }
 
-    private async fetchUsername(): Promise<void> {
+    async #fetchUsername(): Promise<void> {
         try {
             // justified: the @me payload carries username per the discord api contract
             const me = (await this.rest.get(Routes.user('@me'))) as { username?: string };
-            this.fetchedUsername = me.username;
-            if (me.username) this.logger.info(`Running as ${paint.sky.bold(me.username)}`);
+            this.#fetchedUsername = me.username;
+            if (me.username) this.#logger.info(`Running as ${paint.sky.bold(me.username)}`);
         } catch (caught) {
             // a bad token errors on the first real send anyway
-            this.logger.warn('could not fetch the bot identity', caught);
+            this.#logger.warn('could not fetch the bot identity', caught);
         }
     }
 
-    private stopServer(): Promise<void> {
-        const server = this.server;
+    #stopServer(): Promise<void> {
+        const server = this.#server;
         if (!server?.listening) return Promise.resolve();
 
         return new Promise((resolveClose, rejectClose) => {
@@ -281,7 +281,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
                     rejectClose(err);
                     return;
                 }
-                this.logger.info(paint.coral.bold('Interactions server stopped'));
+                this.#logger.info(paint.coral.bold('Interactions server stopped'));
                 resolveClose();
             });
             // node's close() leaves idle keep-alive sockets open

@@ -4,6 +4,7 @@ import { LoggerChannelRegistry } from '@seedcord/logger';
 import { Events } from 'discord.js';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+import { Plugin } from '#src/Plugin';
 import { Seedcord } from '#src/Seedcord';
 
 import { testConfig } from './utils/test-config';
@@ -28,6 +29,18 @@ describe('Seedcord host', () => {
         new Seedcord(testConfig());
 
         expect([process.listenerCount('SIGTERM'), process.listenerCount('SIGINT')]).toEqual(base);
+    });
+
+    it('attaches under a key that type-checks even when the host keeps a field of that name', () => {
+        class Probe extends Plugin {
+            public init(): Promise<void> {
+                return Promise.resolve();
+            }
+        }
+
+        const seedcord = new Seedcord(testConfig()).attach('healthCheck', Probe);
+
+        expect(seedcord.healthCheck).toBeInstanceOf(Probe);
     });
 
     it('exposes the discord.js client REST as core.rest', () => {

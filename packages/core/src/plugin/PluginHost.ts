@@ -24,7 +24,7 @@ const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 const attachmentsSlot = Symbol('seedcord:host:attachments');
 const sealSlot = Symbol('seedcord:host:seal');
 
-/** Base class for a plugin host. It defines `attach` and imports no Node-only module. */
+/** Base class for a plugin host. */
 // BotRt has no default because RuntimeAssert rejects every plugin once 'edge' is in the union
 export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
     public abstract readonly config: Config;
@@ -150,7 +150,6 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     }
 }
 
-// attach keeps pushing onto the array this returns
 export function attachmentsOf(
     host: Pick<PluginHost<Transport, Runtime>, typeof attachmentsSlot>
 ): readonly Attachment[] {

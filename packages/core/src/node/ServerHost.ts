@@ -12,12 +12,7 @@ import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import type { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
 import type { Runtime, Transport } from '#src/plugin/options';
 
-/**
- * Base class for a transport `Seedcord` class that runs as a long-lived node or bun process.
- *
- * You attach plugins while configuring the bot. Within one startup phase, their `init()` calls run
- * one after another in attach order.
- */
+/** Base class for a transport `Seedcord` class that runs as a long-lived node or bun process. */
 export abstract class ServerHost<BotT extends Transport, BotRt extends Runtime> extends PluginHost<BotT, BotRt> {
     /** @internal */
     readonly [HostShutdown]: CoordinatedShutdown;
@@ -31,7 +26,6 @@ export abstract class ServerHost<BotT extends Transport, BotRt extends Runtime> 
     public readonly startup: Pick<CoordinatedStartup, 'addTask'>;
 
     readonly #lifecycle: PluginLifecycle;
-    #initialized = false;
     #startFailed = false;
     #initPromise?: Promise<this> | undefined;
 
@@ -55,12 +49,12 @@ export abstract class ServerHost<BotT extends Transport, BotRt extends Runtime> 
         // a getter returning the slot would expose run() and the signal handlers too
         this.shutdown = { addTask: shutdown.addTask.bind(shutdown) };
         this.startup = { addTask: startup.addTask.bind(startup) };
-        this.#lifecycle = new PluginLifecycle(attachmentsOf(this), this.startup, this.shutdown);
+        this.#lifecycle = new PluginLifecycle(this.startup, this.shutdown);
     }
 
     /** @internal */
     protected init(): Promise<this> {
-        // clearing the slot on a rejection means a later retry throws its own error
+        // a retry after a rejection runs #runInit again and hits its restart guard
         this.#initPromise ??= this.#runInit().catch((caught: unknown) => {
             this.#initPromise = undefined;
             throw caught;
@@ -69,11 +63,10 @@ export abstract class ServerHost<BotT extends Transport, BotRt extends Runtime> 
     }
 
     async #runInit(): Promise<this> {
-        if (this.#initialized) return this;
         // a rerun after a failed startup would re-init the rolled-back plugins
         if (this.#startFailed) throw new SeedcordError(SeedcordErrorCode.LifecycleRestartAfterFailure);
 
-        this.#lifecycle.register();
+        this.#lifecycle.register(attachmentsOf(this));
 
         // codegen and the build construct the bot without starting it
         this[HostShutdown].registerSignalHandlers();
@@ -94,7 +87,6 @@ export abstract class ServerHost<BotT extends Transport, BotRt extends Runtime> 
             startupSettled.resolve();
         }
 
-        this.#initialized = true;
         sealAttachments(this);
         return this;
     }

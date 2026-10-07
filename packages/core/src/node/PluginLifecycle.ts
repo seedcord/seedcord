@@ -22,25 +22,21 @@ export class PluginLifecycle {
     readonly #logger = new Logger('Plugins', { channel: 'plugins' });
     readonly #completedInits = new Set<Attachment>();
     readonly #disposePhases = new Set<ShutdownPhase>();
-    readonly #attachments: readonly Attachment[];
     readonly #startup: Pick<CoordinatedStartup, 'addTask'>;
     readonly #shutdown: Pick<CoordinatedShutdown, 'addTask'>;
+    #attachments: readonly Attachment[] = [];
     #registered = false;
 
-    constructor(
-        attachments: readonly Attachment[],
-        startup: Pick<CoordinatedStartup, 'addTask'>,
-        shutdown: Pick<CoordinatedShutdown, 'addTask'>
-    ) {
-        this.#attachments = attachments;
+    constructor(startup: Pick<CoordinatedStartup, 'addTask'>, shutdown: Pick<CoordinatedShutdown, 'addTask'>) {
         this.#startup = startup;
         this.#shutdown = shutdown;
     }
 
     // one combined task per phase keeps plugin inits sequential while the phase's other tasks run concurrently
-    public register(): void {
+    public register(attachments: readonly Attachment[]): void {
         if (this.#registered) return;
         this.#registered = true;
+        this.#attachments = [...attachments];
 
         const groups = Map.groupBy(this.#attachments, (attachment) => attachment.spec.init.phase);
 

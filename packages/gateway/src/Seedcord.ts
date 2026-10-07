@@ -30,13 +30,13 @@ export class Seedcord extends ServerHost<'gateway', 'server'> implements Seedcor
     /** @internal */
     public readonly [HostVersion]: string = packageVersion;
 
-    private readonly healthCheck?: HealthCheck | undefined;
-    private readonly hmrManager: HmrManager;
+    readonly #healthCheck?: HealthCheck | undefined;
+    readonly #hmrManager: HmrManager;
 
     /** @see {@link Bus} */
     public readonly bus: Bus;
 
-    private readonly subscribers: SubscriberLoader;
+    readonly #subscribers: SubscriberLoader;
 
     /** @see {@link Bot} */
     public readonly bot: Bot;
@@ -62,16 +62,16 @@ export class Seedcord extends ServerHost<'gateway', 'server'> implements Seedcor
         installNodeDefaults(config.logger);
         bindBotColor(() => this.config.botColor);
 
-        this.hmrManager = new HmrManager();
-        this.hmrManager.init();
+        this.#hmrManager = new HmrManager();
+        this.#hmrManager.init();
         this.bus = new Bus(this);
-        this.subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
+        this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         this.bot = new Bot(this);
         this.rest = this.bot.client.rest;
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
-        this.healthCheck = HealthCheck.fromOption(shutdownOf(this), config.healthCheck);
+        this.#healthCheck = HealthCheck.fromOption(shutdownOf(this), config.healthCheck);
 
-        this.registerStartupTasks();
+        this.#registerStartupTasks();
     }
 
     /** The bot's discord username, populated after login. */
@@ -86,12 +86,12 @@ export class Seedcord extends ServerHost<'gateway', 'server'> implements Seedcor
         return true;
     }
 
-    private registerStartupTasks(): void {
-        if (Envapter.isDevelopment || Envapter.isTest) this.registerHmrAwareModules();
+    #registerStartupTasks(): void {
+        if (Envapter.isDevelopment || Envapter.isTest) this.#registerHmrAwareModules();
 
         this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'start');
-            await this.subscribers.init();
+            await this.#subscribers.init();
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
         });
 
@@ -101,7 +101,7 @@ export class Seedcord extends ServerHost<'gateway', 'server'> implements Seedcor
             botLoggerOf(this.bot).utils.initialization('Bot', 'end');
         });
 
-        const { healthCheck } = this;
+        const healthCheck = this.#healthCheck;
         if (healthCheck) {
             this.startup.addTask(StartupPhase.Ready, 'health-check', async () => {
                 healthCheck.logger.utils.initialization('HealthCheck', 'start');
@@ -128,12 +128,12 @@ export class Seedcord extends ServerHost<'gateway', 'server'> implements Seedcor
         return this;
     }
 
-    private registerHmrAwareModules(): void {
+    #registerHmrAwareModules(): void {
         this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
-            this.hmrManager.register(this.bot);
-            this.hmrManager.register(this.subscribers);
+            this.#hmrManager.register(this.bot);
+            this.#hmrManager.register(this.#subscribers);
             for (const { instance } of attachmentsOf(this)) {
-                this.hmrManager.register(instance);
+                this.#hmrManager.register(instance);
             }
             await Promise.resolve();
         });

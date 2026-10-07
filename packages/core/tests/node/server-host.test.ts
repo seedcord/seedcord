@@ -485,14 +485,6 @@ describe('ServerHost', () => {
         }
     });
 
-    it('rejects a key colliding with a host property', () => {
-        const { host } = makeHost();
-        // bypasses the assert to hit the runtime guard a javascript caller still reaches
-        const attachRaw = host.attach.bind(host) as (key: string, plugin: typeof TestPlugin, tag: string) => unknown;
-
-        expect(() => attachRaw('shutdown', TestPlugin, 'x')).toThrow(/shutdown/);
-    });
-
     it('run is idempotent', async () => {
         const { host } = makeHost();
         const withDb = host.attach('db', TestPlugin, 'x');

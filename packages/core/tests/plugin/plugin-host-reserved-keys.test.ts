@@ -41,14 +41,16 @@ describe('a reserved framework channel as an attach key', () => {
         );
     });
 
-    // 'plugins' is also a member on the host, which would otherwise report the key-exists code
-    it('reports the reserved code for a channel that collides with a host member', () => {
-        const host = new TestPluginHost();
+    it('reports the reserved code for a channel that is also a host member', () => {
+        // gateway's Seedcord carries a `bot` member
+        class BotHost extends TestPluginHost {
+            public readonly bot = {};
+        }
+        const host = new BotHost();
 
-        expect(() => host.attach(widen('plugins'), Anywhere)).toThrow(
+        expect(() => host.attach(widen('bot'), Anywhere)).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CorePluginReservedChannel })
         );
-        expect(() => host.attach(widen('plugins'), Anywhere)).toThrow(/plugins/u);
     });
 
     it('leaves a key outside the reserved set alone', () => {

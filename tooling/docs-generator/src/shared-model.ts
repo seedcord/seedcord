@@ -32,14 +32,6 @@ function recordPromotion(promotions: ExportedByLocal, claimed: ApiJsonMember, in
     promotions.set(local.canonicalReference ?? '', exported.canonicalReference ?? '');
 }
 
-// `!~Base:class#attach:member(1)` points at a member of `!~Base:class`
-function promote(reference: string, promotions: ExportedByLocal): string {
-    for (const [local, exported] of promotions) {
-        if (reference === local || reference.startsWith(`${local}#`)) return exported + reference.slice(local.length);
-    }
-    return reference;
-}
-
 function retarget(node: unknown, promotions: ExportedByLocal): void {
     if (Array.isArray(node)) {
         for (const item of node) retarget(item, promotions);
@@ -50,7 +42,7 @@ function retarget(node: unknown, promotions: ExportedByLocal): void {
     // justified: a parsed JSON object, walked key by key
     const record = node as Record<string, unknown>;
     for (const [key, value] of Object.entries(record)) {
-        if (key === 'canonicalReference' && typeof value === 'string') record[key] = promote(value, promotions);
+        if (key === 'canonicalReference' && typeof value === 'string') record[key] = promotions.get(value) ?? value;
         else retarget(value, promotions);
     }
 }
