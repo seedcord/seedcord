@@ -1,7 +1,7 @@
 import { isAbsolute } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 
 import type { EventsConfig } from '@seedcord/gateway';
@@ -34,8 +34,5 @@ export function assertFoldersUnderRoot(config: Config, root: string): void {
         }
     }
 
-    const [first, ...rest] = problems;
-    if (!first) return;
-    if (rest.length === 0) throw first;
-    throw new SeedcordAggregateError(SeedcordErrorCode.CliBuildFolderProblems, problems, [problems.length]);
+    throwSingleOrAggregate(problems, SeedcordErrorCode.CliBuildFolderProblems);
 }
