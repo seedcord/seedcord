@@ -4,12 +4,12 @@ import { describe, it, expect, afterEach } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
-import { Pluggable } from '#node/Pluggable';
+import { ServerHost } from '#node/ServerHost';
 import { Bus } from '#subscribers/Bus';
 
 import type { Config, IRateLimiter } from '@seedcord/types';
 
-class TestHost extends Pluggable<'gateway', 'server'> {
+class TestHost extends ServerHost<'gateway', 'server'> {
     // justified: startup reads config.errors and nothing else on Config
     public readonly config = { errors: { catchProcessErrors: false } } as Config;
     public readonly rest = new REST();
@@ -27,7 +27,7 @@ class TestHost extends Pluggable<'gateway', 'server'> {
     }
 
     public static resetHost(): void {
-        Pluggable.reset();
+        ServerHost.reset();
     }
 }
 

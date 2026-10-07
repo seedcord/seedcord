@@ -11,7 +11,7 @@ import {
     interactionMiddleware,
     MiddlewareRegistry
 } from '@seedcord/core/internal';
-import { CoordinatedShutdown, CoordinatedStartup, Pluggable } from '@seedcord/core/node';
+import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import {
     CommandRegistry,
     DRAIN_TASK_TIMEOUT_MS,
@@ -60,7 +60,7 @@ type RuntimeOfConfig<Cfg extends HttpConfig> = Cfg extends { runtime: 'edge' } ?
  */
 // tests/node/seedcord-core.types-test.ts checks this class against Core in place of an implements clause
 export class Seedcord<Cfg extends HttpConfig = HttpConfig>
-    extends Pluggable<'http', RuntimeOfConfig<Cfg>>
+    extends ServerHost<'http', RuntimeOfConfig<Cfg>>
     implements SeedcordInstance
 {
     // the CLI reads these to detect and augment the instance

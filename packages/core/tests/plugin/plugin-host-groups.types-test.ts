@@ -1,7 +1,7 @@
 // compile-only. tc is the assertion here, since an unused @ts-expect-error fails it.
 import { Plugin } from '#src/plugin/Plugin';
 
-import type { Pluggable } from '#node/Pluggable';
+import type { PluginHost } from '#src/plugin/PluginHost';
 
 class Users extends Plugin {
     public init(): Promise<void> {
@@ -19,7 +19,7 @@ class Tickets extends Plugin {
     }
 }
 
-declare const bot: Pluggable<'gateway', 'server'>;
+declare const bot: PluginHost<'gateway', 'server'>;
 
 function readsBothLeaves(): void {
     const grouped = bot.attach('services.users', Users).attach('services.tickets', Tickets);
@@ -44,8 +44,8 @@ function rejectsBadKeys(): void {
     // @ts-expect-error events is one of those channels
     bot.attach('events', Users);
 
-    // @ts-expect-error the host already carries a shutdown member
-    bot.attach('shutdown', Users);
+    // @ts-expect-error the host already carries a bus member
+    bot.attach('bus', Users);
 
     // @ts-expect-error an empty group
     bot.attach('.users', Users);

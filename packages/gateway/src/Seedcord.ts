@@ -1,6 +1,6 @@
 import { Bus } from '@seedcord/core';
 import { bindBotColor, busLoggerOf, HmrManager } from '@seedcord/core/internal';
-import { CoordinatedShutdown, CoordinatedStartup, Pluggable } from '@seedcord/core/node';
+import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { HealthCheck, shutdownOf, StartupPhase, SubscriberLoader } from '@seedcord/core/node/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
@@ -21,7 +21,7 @@ import type { SeedcordInstance } from '@seedcord/types/internal';
  * coordinated startup and shutdown. Attach plugins with `attach()`.
  */
 // an `implements Core` clause breaks a bot's full lib check once codegen adds its plugins to Core
-export class Seedcord extends Pluggable<'gateway', 'server'> implements SeedcordInstance {
+export class Seedcord extends ServerHost<'gateway', 'server'> implements SeedcordInstance {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
