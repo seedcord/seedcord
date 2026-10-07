@@ -3,6 +3,7 @@ import { render } from 'ink';
 import React from 'react';
 
 import { BaseCommand } from '#core/BaseCommand';
+import { cliLogger } from '#core/cliLogger';
 import { DevApp } from '#ui/DevApp';
 import { profileFrame, profileReport, profileStdout } from '#ui/profile';
 import { DevStore } from '#ui/stores/DevStore';
@@ -13,8 +14,10 @@ import { DevRunner } from './DevRunner';
 import type { Command } from '@commander-js/extra-typings';
 
 export class DevCommand extends BaseCommand {
+    private readonly logger = cliLogger('Dev');
+
     constructor() {
-        super('dev', 'Run the bot from the config file', 'Dev');
+        super('dev', 'Run the bot from the config file');
     }
 
     public register(program: Command): void {
@@ -24,7 +27,7 @@ export class DevCommand extends BaseCommand {
             .action(async () => {
                 profileStdout();
                 const store = new DevStore();
-                const runner = DevRunner.create(this.logger, store);
+                const runner = DevRunner.create(store);
 
                 // ink intercepts Ctrl-C under raw mode. this fires only when stdin is not raw.
                 const onSignal = (): void => {

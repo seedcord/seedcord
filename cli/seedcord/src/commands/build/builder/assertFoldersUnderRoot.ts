@@ -23,16 +23,17 @@ function configuredFolders({ bot, subscribers }: Config): string[] {
     });
 }
 
-// plugin folders get only the runtime check in @seedcord/utils
-export function assertFoldersUnderRoot(config: Config, root: string): void {
-    const problems: SeedcordError[] = [];
+function* folderProblems(config: Config, root: string): Generator<SeedcordError> {
     for (const folder of configuredFolders(config)) {
         if (!isAbsolute(folder)) {
-            problems.push(new SeedcordError(SeedcordErrorCode.CliBuildRelativeFolder, [folder]));
+            yield new SeedcordError(SeedcordErrorCode.CliBuildRelativeFolder, [folder]);
         } else if (!isInside(root, folder)) {
-            problems.push(new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [folder, root]));
+            yield new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [folder, root]);
         }
     }
+}
 
-    throwSingleOrAggregate(problems, SeedcordErrorCode.CliBuildFolderProblems);
+// plugin folders get only the runtime check in @seedcord/utils
+export function assertFoldersUnderRoot(config: Config, root: string): void {
+    throwSingleOrAggregate([...folderProblems(config, root)], SeedcordErrorCode.CliBuildFolderProblems);
 }

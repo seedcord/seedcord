@@ -1,7 +1,7 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { BaseCommand } from '#core/BaseCommand';
+import { cliLogger } from '#core/cliLogger';
 
 import type { ILogSink, LogRecord } from '@seedcord/types';
 
@@ -22,23 +22,11 @@ beforeEach(() => {
     registry.configure({ level: 'trace', sinks: [sink] });
 });
 
-class Probe extends BaseCommand {
-    constructor() {
-        super('probe', 'a probe', 'Probe');
-    }
-    public register(): void {
-        this.logger.info('ran');
-    }
-    public summarize(): void {
-        this.logger.utils.summary('Done', { steps: 1 });
-    }
-}
-
-describe('BaseCommand logger', () => {
+describe('cliLogger', () => {
     it('logs on the cli channel under the given label', () => {
-        new Probe().register();
+        cliLogger('Dev').info('ran');
 
         expect(sink.records[0]?.channel).toBe('cli');
-        expect(sink.records[0]?.label).toBe('Probe');
+        expect(sink.records[0]?.label).toBe('Dev');
     });
 });

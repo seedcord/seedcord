@@ -1,4 +1,4 @@
-import { dirname, extname } from 'node:path';
+import { dirname, extname, join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -9,9 +9,30 @@ import { ProjectFiles } from './ProjectFiles';
 import { ENTRY_FILE_NAME, ENTRY_ID, isSeedcordEntry, seedcordEntry } from './seedcordEntry';
 
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
-import type { ILogger } from '@seedcord/types';
 
 const NODE_TARGET = 'node24';
+
+export interface BundleStats {
+    modules: number;
+    textFiles: number;
+    bytes: number;
+    entry: string;
+}
+
+function bundleStats(result: Awaited<ReturnType<typeof build>>, entry: string): BundleStats {
+    // vite returns a watcher only under build.watch
+    const outputs = [result].flat().filter((output) => 'output' in output);
+    const chunks = outputs.flatMap(({ output }) => output.filter((file) => file.type === 'chunk'));
+    const projectChunks = chunks.filter((chunk) => !isSeedcordEntry(chunk.facadeModuleId));
+    const textFiles = projectChunks.filter((chunk) => chunk.facadeModuleId?.includes('?raw') === true).length;
+
+    return {
+        modules: projectChunks.length - textFiles,
+        textFiles,
+        bytes: chunks.reduce((total, chunk) => total + Buffer.byteLength(chunk.code), 0),
+        entry
+    };
+}
 
 // Echo.ts builds to Echo.js and Echo.json to Echo.json.js
 function outputName(moduleId: string | null | undefined): string {
@@ -22,49 +43,45 @@ function outputName(moduleId: string | null | undefined): string {
 }
 
 export class ViteBuilder {
-    constructor(private readonly logger: ILogger) {}
-
-    public async build(config: ResolvedSeedcordDevConfig): Promise<void> {
+    public async build(config: ResolvedSeedcordDevConfig): Promise<BundleStats> {
         const { root, entry } = config;
         const { outDir } = config.build;
         const files = new ProjectFiles(root, outDir, dirname(config.configFile));
         const folders = await files.foldersIncludingEmpty();
 
-        this.logger.info(`Bundling ${root} into ${outDir}`);
-
-        try {
-            await build({
-                root,
-                configFile: false,
-                // vite copies <root>/public into outDir otherwise
-                publicDir: false,
-                logLevel: 'warn',
-                plugins: [seedcordEntry({ files, entry, folders }), pinModulePaths(files)],
-                resolve: { tsconfigPaths: true },
-                build: {
-                    ssr: true,
-                    outDir,
-                    emptyOutDir: true,
-                    sourcemap: true,
-                    minify: false,
-                    target: NODE_TARGET,
-                    rolldownOptions: {
-                        input: ENTRY_ID,
-                        output: {
-                            format: 'esm',
-                            preserveModules: true,
-                            preserveModulesRoot: root,
-                            // rolldown's default sanitizer fails the build when the project path contains a #
-                            sanitizeFileName: (name) => name.replaceAll('\0', '_'),
-                            entryFileNames: (chunk) => outputName(chunk.facadeModuleId)
-                        }
+        const result = await build({
+            root,
+            configFile: false,
+            // vite copies <root>/public into outDir otherwise
+            publicDir: false,
+            logLevel: 'warn',
+            plugins: [seedcordEntry({ files, entry, folders }), pinModulePaths(files)],
+            resolve: { tsconfigPaths: true },
+            build: {
+                ssr: true,
+                outDir,
+                emptyOutDir: true,
+                sourcemap: true,
+                minify: false,
+                target: NODE_TARGET,
+                rolldownOptions: {
+                    input: ENTRY_ID,
+                    output: {
+                        format: 'esm',
+                        preserveModules: true,
+                        preserveModulesRoot: root,
+                        // rolldown's default sanitizer fails the build when the project path contains a #
+                        sanitizeFileName: (name) => name.replaceAll('\0', '_'),
+                        entryFileNames: (chunk) => outputName(chunk.facadeModuleId)
                     }
-                },
-                ssr: { target: 'node', external: true }
-            });
-        } catch (error: unknown) {
+                }
+            },
+            ssr: { target: 'node', external: true }
+        }).catch((error: unknown) => {
             const reason = Error.isError(error) ? error.message : String(error);
             throw new SeedcordError(SeedcordErrorCode.CliBundleFailed, [reason], { cause: error });
-        }
+        });
+
+        return bundleStats(result, join(outDir, ENTRY_FILE_NAME));
     }
 }

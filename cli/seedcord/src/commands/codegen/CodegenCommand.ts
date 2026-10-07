@@ -2,16 +2,18 @@ import { isSeedcordError } from '@seedcord/errors';
 import { WORDMARK } from '@seedcord/errors/internal';
 
 import { BaseCommand } from '#core/BaseCommand';
+import { cliLogger } from '#core/cliLogger';
 
 import { CodegenRunner } from './CodegenRunner';
 
 import type { Command } from '@commander-js/extra-typings';
 
 export class CodegenCommand extends BaseCommand {
+    private readonly logger = cliLogger('Codegen');
     private readonly runner: CodegenRunner;
 
     constructor() {
-        super('codegen', 'Generate typed augmentations from your commands and config', 'Codegen');
+        super('codegen', 'Generate typed augmentations from your commands and config');
         this.runner = CodegenRunner.create(this.logger);
     }
 

@@ -59,11 +59,10 @@ export class CodegenRunner {
 
     public static create(logger: ILogger): CodegenRunner {
         const moduleLoader = new RuntimeModuleLoader();
-        const locator = new ConfigLocator(logger);
-        const configLoader = new ConfigLoader(moduleLoader, logger);
+        const configLoader = new ConfigLoader(moduleLoader);
         const generator = new AugmentationBuilder(logger);
 
-        return new CodegenRunner(locator, configLoader, moduleLoader, generator, logger);
+        return new CodegenRunner(new ConfigLocator(), configLoader, moduleLoader, generator, logger);
     }
 
     public async run(check: boolean): Promise<void> {

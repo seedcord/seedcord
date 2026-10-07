@@ -44,18 +44,8 @@ export class ProjectFiles {
     }
 
     public async foldersIncludingEmpty(): Promise<string[]> {
-        const found: string[] = [];
-        const walk = async (dir: string): Promise<void> => {
-            for (const entry of await readdir(dir, { withFileTypes: true })) {
-                const full = join(dir, entry.name);
-                if (!entry.isDirectory() || isSkippedName(entry.name) || this.skippedFolders.includes(full)) continue;
-                found.push(this.keyOf(full));
-                await walk(full);
-            }
-        };
-
-        await walk(this.root);
-        return found.sort();
+        const found = await Array.fromAsync(this.foldersUnder(this.root));
+        return found.toSorted();
     }
 
     public globExcludes(): string[] {
@@ -68,6 +58,15 @@ export class ProjectFiles {
             ...folders.map((folder) => `!${this.keyOf(folder)}/**`),
             ...files.map((file) => `!/${file}`)
         ];
+    }
+
+    private async *foldersUnder(dir: string): AsyncGenerator<string> {
+        for (const entry of await readdir(dir, { withFileTypes: true })) {
+            const full = join(dir, entry.name);
+            if (!entry.isDirectory() || isSkippedName(entry.name) || this.skippedFolders.includes(full)) continue;
+            yield this.keyOf(full);
+            yield* this.foldersUnder(full);
+        }
     }
 
     private rootIsConfigDir(): boolean {

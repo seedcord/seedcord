@@ -17,7 +17,6 @@ import type {
     SeedcordDevConfig,
     SeedcordHmrConfig
 } from './schema';
-import type { ILogger } from '@seedcord/types';
 
 function isOptionalString(value: unknown): boolean {
     return value === undefined || typeof value === 'string';
@@ -108,10 +107,7 @@ function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
 }
 
 export class ConfigLoader {
-    constructor(
-        private readonly modules: ModuleLoader,
-        private readonly logger: ILogger
-    ) {}
+    constructor(private readonly modules: ModuleLoader) {}
 
     public async load(configPath: string): Promise<ResolvedSeedcordDevConfig> {
         const loadedModule = await this.modules.importModule(configPath);
@@ -125,14 +121,6 @@ export class ConfigLoader {
         this.assertEntryWithinRoot(root, entry);
         const build = this.resolveBuildOptions(configDir, config.build);
         const typecheck = resolveTypecheck(config.hmr?.typecheck, root);
-
-        this.logger.debug(`Loaded configuration from ${configPath}`);
-        this.logger.trace(`Resolved root: ${root}`);
-        this.logger.trace(`Resolved instance: ${instance}`);
-        this.logger.trace(`Resolved entry: ${entry}`);
-        this.logger.trace(`Resolved build outDir: ${build.outDir}`);
-        if (build.tsconfig) this.logger.trace(`Resolved build tsconfig: ${build.tsconfig}`);
-        if (typecheck.enabled) this.logger.trace(`Typecheck tsconfig: ${typecheck.tsconfig ?? 'nearest'}`);
 
         return {
             instance,

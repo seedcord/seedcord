@@ -1,7 +1,7 @@
 import { settleWithin } from '@seedcord/core/node/internal';
-import { Logger } from '@seedcord/logger';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
+import { cliLogger } from '#core/cliLogger';
 import { ConfigLoader } from '#core/config/ConfigLoader';
 import { ConfigLocator } from '#core/config/ConfigLocator';
 import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
@@ -40,16 +40,15 @@ export class DevRunner {
 
     constructor(private readonly deps: DevRunnerDeps) {}
 
-    public static create(logger: Logger, store: DevStore): DevRunner {
-        const moduleLoader = new RuntimeModuleLoader();
-        const codegenLogger = new Logger('Codegen', { channel: 'cli' });
-        const tunnelLogger = new Logger('Tunnel', { channel: 'cli' });
+    public static create(store: DevStore): DevRunner {
+        const codegenLogger = cliLogger('Codegen');
+        const tunnelLogger = cliLogger('Tunnel');
         const makeCoordinator = (tunnel: ResolvedTunnel): TunnelCoordinator | undefined =>
             createTunnelCoordinator(tunnelLogger, (status) => store.setTunnel(status), tunnel);
 
         return new DevRunner({
-            locator: new ConfigLocator(logger),
-            configLoader: new ConfigLoader(moduleLoader, logger),
+            locator: new ConfigLocator(),
+            configLoader: new ConfigLoader(new RuntimeModuleLoader()),
             store,
             codegen: CodegenRunner.create(codegenLogger),
             codegenLogger,

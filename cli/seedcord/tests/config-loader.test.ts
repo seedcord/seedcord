@@ -11,7 +11,6 @@ import { silentLogger } from './silentLogger';
 
 import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
-import type { ConfigLocator } from '#core/config/ConfigLocator';
 import type { ResolvedTunnel, SeedcordDevConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 
@@ -25,7 +24,7 @@ describe('ConfigLoader', () => {
             }
         };
 
-        const loader = new ConfigLoader(moduleLoader, silentLogger);
+        const loader = new ConfigLoader(moduleLoader);
         const configFile = join(process.cwd(), 'seedcord.config.ts');
 
         const resolved = await loader.load(configFile);
@@ -44,9 +43,7 @@ describe('ConfigLoader', () => {
                     return Promise.resolve({ default: config } as TModule);
                 }
             };
-            const resolved = await new ConfigLoader(moduleLoader, silentLogger).load(
-                join(process.cwd(), 'seedcord.config.ts')
-            );
+            const resolved = await new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'));
             return resolved.tunnel;
         };
 
@@ -70,7 +67,7 @@ describe('ConfigLoader', () => {
             }
         };
 
-        const loader = new ConfigLoader(moduleLoader, silentLogger);
+        const loader = new ConfigLoader(moduleLoader);
 
         await expect(loader.load(join(process.cwd(), 'seedcord.config.ts'))).rejects.toThrow(
             'Config `tunnel` must be a boolean or an https URL when provided.'
@@ -84,7 +81,7 @@ describe('ConfigLoader', () => {
             }
         };
 
-        const loader = new ConfigLoader(moduleLoader, silentLogger);
+        const loader = new ConfigLoader(moduleLoader);
 
         await expect(loader.load(join(process.cwd(), 'seedcord.config.ts'))).rejects.toThrow(
             'Config must include an `instance` string'
@@ -100,7 +97,7 @@ describe('ConfigLoader', () => {
             }
         };
 
-        const error: unknown = await new ConfigLoader(moduleLoader, silentLogger)
+        const error: unknown = await new ConfigLoader(moduleLoader)
             .load(join(process.cwd(), 'seedcord.config.ts'))
             .catch((caught: unknown) => caught);
 
@@ -119,7 +116,7 @@ describe('ConfigLoader', () => {
             }
         };
 
-        const loader = new ConfigLoader(moduleLoader, silentLogger);
+        const loader = new ConfigLoader(moduleLoader);
 
         await expect(loader.load(join(process.cwd(), 'seedcord.config.ts'))).rejects.toThrow(
             'Config must include an `entry` string'
@@ -136,9 +133,7 @@ describe('ConfigLoader', () => {
             }
         };
 
-        const resolved = await new ConfigLoader(moduleLoader, silentLogger).load(
-            join(process.cwd(), 'seedcord.config.ts')
-        );
+        const resolved = await new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'));
 
         expect(resolved.hmr).toEqual(hmr);
         expect(resolved.typecheck).toEqual({ enabled: true, tsconfig: resolve(process.cwd(), 'tsconfig.dev.json') });
@@ -153,9 +148,7 @@ describe('ConfigLoader', () => {
             }
         };
 
-        const resolved = await new ConfigLoader(moduleLoader, silentLogger).load(
-            join(process.cwd(), 'seedcord.config.ts')
-        );
+        const resolved = await new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'));
 
         expect(resolved.typecheck).toEqual({ enabled: false });
     });
@@ -168,7 +161,7 @@ describe('ConfigLoader', () => {
         };
 
         await expect(
-            new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
+            new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'))
         ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidExport });
     });
 
@@ -182,7 +175,7 @@ describe('ConfigLoader', () => {
         };
 
         await expect(
-            new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
+            new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'))
         ).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
             message: 'Config `hmr.restart` must be an array of strings when provided.'
@@ -199,7 +192,7 @@ describe('ConfigLoader', () => {
         };
 
         await expect(
-            new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
+            new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'))
         ).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
             message: 'Config `hmr.rollback` must be a boolean when provided.'
@@ -215,9 +208,7 @@ describe('ConfigLoader', () => {
             }
         };
 
-        const resolved = await new ConfigLoader(moduleLoader, silentLogger).load(
-            join(process.cwd(), 'seedcord.config.ts')
-        );
+        const resolved = await new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'));
 
         expect(resolved.idleAnimation).toBe(true);
     });
@@ -232,7 +223,7 @@ describe('ConfigLoader', () => {
         };
 
         await expect(
-            new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
+            new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'))
         ).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
             message: 'Config `idleAnimation` must be a boolean when provided.'
@@ -249,9 +240,7 @@ describe('ConfigLoader', () => {
             }
         };
 
-        const resolved = await new ConfigLoader(moduleLoader, silentLogger).load(
-            join(process.cwd(), 'seedcord.config.ts')
-        );
+        const resolved = await new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'));
 
         expect(resolved.build.outDir).toBe(process.cwd());
     });
@@ -266,7 +255,7 @@ describe('ConfigLoader', () => {
         };
 
         await expect(
-            new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
+            new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'))
         ).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
             message: 'Config `hmr.typecheck` must be a boolean or an object when provided.'
@@ -294,7 +283,7 @@ describe('DevRunner', () => {
 
         // justified: only the locator and the config loader are called here, codegen runs on refresh only
         const runner = new DevRunner({
-            locator: locator as unknown as ConfigLocator,
+            locator: locator,
             configLoader: configLoader as unknown as ConfigLoader,
             store: new DevStore(),
             codegen: { run: vi.fn() } as unknown as CodegenRunner,
