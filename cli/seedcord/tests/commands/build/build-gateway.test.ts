@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { BuildRunner } from '#commands/build/BuildRunner';
-import { silentSteps } from '#tests/silentSteps';
+import { quietSteps } from '#core/output/quietSteps';
 
 import { hasBun, smokeBunBinary } from './bun';
 import { smoke } from './smoke';
@@ -12,7 +12,7 @@ const GATEWAY_BOT = join(import.meta.dirname, '../../fixtures/gateway-bot');
 
 describe('seedcord build on a gateway bot', () => {
     beforeAll(async () => {
-        await BuildRunner.create(silentSteps).run(GATEWAY_BOT);
+        await BuildRunner.create(quietSteps).run(GATEWAY_BOT);
     }, 120_000);
 
     it('loads its handlers', async () => {

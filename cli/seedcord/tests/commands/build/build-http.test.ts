@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { BuildRunner } from '#commands/build/BuildRunner';
-import { silentSteps } from '#tests/silentSteps';
+import { quietSteps } from '#core/output/quietSteps';
 
 import { hasBun, smokeBunBinary } from './bun';
 import { smoke } from './smoke';
@@ -18,7 +18,7 @@ describe('seedcord build on an http bot', () => {
     let result: BuildResult;
 
     beforeAll(async () => {
-        result = await BuildRunner.create(silentSteps).run(HTTP_BOT);
+        result = await BuildRunner.create(quietSteps).run(HTTP_BOT);
         output = await smoke('http', process.execPath, [join(HTTP_BOT, 'dist/index.mjs')]);
     }, 120_000);
 

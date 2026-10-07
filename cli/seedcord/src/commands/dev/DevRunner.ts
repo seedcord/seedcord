@@ -1,10 +1,12 @@
 import { settleWithin } from '@seedcord/core/node/internal';
+import { paint } from '@seedcord/errors';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { cliLogger } from '#core/cliLogger';
 import { ConfigLoader } from '#core/config/ConfigLoader';
 import { ConfigLocator } from '#core/config/ConfigLocator';
 import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
+import { quietSteps } from '#core/output/quietSteps';
 import { resetChannelColors } from '#ui/channelColor';
 import { profileMark } from '#ui/profile';
 
@@ -50,7 +52,7 @@ export class DevRunner {
             locator: new ConfigLocator(),
             configLoader: new ConfigLoader(new RuntimeModuleLoader()),
             store,
-            codegen: CodegenRunner.create(codegenLogger),
+            codegen: CodegenRunner.create(quietSteps, codegenLogger),
             codegenLogger,
             tunnel: new TunnelRouter(makeCoordinator, tunnelLogger)
         });
@@ -164,7 +166,8 @@ export class DevRunner {
         if (this.isRegenerating) return;
         this.isRegenerating = true;
         try {
-            await this.deps.codegen.run(false);
+            const { outputPath } = await this.deps.codegen.run(false);
+            this.deps.codegenLogger.info(`Augmentations written to ${paint.path(outputPath)}`);
         } catch (error: unknown) {
             // a codegen throw must not take the dev session down
             this.deps.codegenLogger.error('Command registry regeneration failed', error);

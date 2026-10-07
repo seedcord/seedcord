@@ -260,6 +260,8 @@ const messages = {
         `${name} threw while codegen constructed it. Fix its constructor in ${paint.path(file)}. ${reason}`,
     [SeedcordErrorCode.CliCodegenCommandProblems]: (count: number) =>
         `${count} commands threw while codegen constructed them. Each one is listed below.`,
+    [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
+        `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliCodegenDuplicateContextMenu]: (
         kind: string,
         name: string,

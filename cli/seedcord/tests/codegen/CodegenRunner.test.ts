@@ -10,9 +10,9 @@ import { afterEach, assert, describe, expect, it } from 'vitest';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
+import { quietSteps } from '#core/output/quietSteps';
 
 import type { ConfigLoader } from '#core/config/ConfigLoader';
-import type { ConfigLocator } from '#core/config/ConfigLocator';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
@@ -51,7 +51,7 @@ function silentLogger(overrides: Partial<ILogger> = {}): ILogger {
 
 // no commands path, so the scan is empty and the rendered registry is deterministic.
 function makeRunner(root: string, logger: ILogger): CodegenRunner {
-    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
+    const locator = { locate: () => resolve(root, 'seedcord.config.ts') };
     const configLoader = {
         load: () => Promise.resolve({ root, instance: resolve(root, 'bot.ts') })
     } as unknown as ConfigLoader;
@@ -67,7 +67,14 @@ function makeRunner(root: string, logger: ILogger): CodegenRunner {
             })
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
+    return new CodegenRunner({
+        steps: quietSteps,
+        locator,
+        configLoader,
+        moduleLoader,
+        generator: new AugmentationBuilder(logger),
+        logger
+    });
 }
 
 // importModule returns the branded instance for instancePath and the command module for every other path.
@@ -78,7 +85,7 @@ function scanRunner(
     logger: ILogger
 ): CodegenRunner {
     const instancePath = resolve(root, 'bot.ts');
-    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
+    const locator = { locate: () => resolve(root, 'seedcord.config.ts') };
     const configLoader = {
         load: () => Promise.resolve({ root, instance: instancePath })
     } as unknown as ConfigLoader;
@@ -96,12 +103,19 @@ function scanRunner(
                 : Promise.resolve(moduleByPath(entryPath))
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
+    return new CodegenRunner({
+        steps: quietSteps,
+        locator,
+        configLoader,
+        moduleLoader,
+        generator: new AugmentationBuilder(logger),
+        logger
+    });
 }
 
 // instance double whose default export carries no SeedcordBrand, to exercise the isSeedcordInstance guard.
 function invalidRunner(root: string, logger: ILogger): CodegenRunner {
-    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
+    const locator = { locate: () => resolve(root, 'seedcord.config.ts') };
     const configLoader = {
         load: () => Promise.resolve({ root, instance: resolve(root, 'bot.ts') })
     } as unknown as ConfigLoader;
@@ -109,12 +123,19 @@ function invalidRunner(root: string, logger: ILogger): CodegenRunner {
         importModule: () => Promise.resolve({ default: { not: 'branded' } })
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
+    return new CodegenRunner({
+        steps: quietSteps,
+        locator,
+        configLoader,
+        moduleLoader,
+        generator: new AugmentationBuilder(logger),
+        logger
+    });
 }
 
 // dev accepts a default export that resolves to the instance
 function asyncInstanceRunner(root: string, logger: ILogger): CodegenRunner {
-    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
+    const locator = { locate: () => resolve(root, 'seedcord.config.ts') };
     const configLoader = {
         load: () => Promise.resolve({ root, instance: resolve(root, 'bot.ts') })
     } as unknown as ConfigLoader;
@@ -130,11 +151,18 @@ function asyncInstanceRunner(root: string, logger: ILogger): CodegenRunner {
             })
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
+    return new CodegenRunner({
+        steps: quietSteps,
+        locator,
+        configLoader,
+        moduleLoader,
+        generator: new AugmentationBuilder(logger),
+        logger
+    });
 }
 
 function pluginRunner(root: string, instance: string, pluginKeys: readonly string[], logger: ILogger): CodegenRunner {
-    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
+    const locator = { locate: () => resolve(root, 'seedcord.config.ts') };
     const configLoader = { load: () => Promise.resolve({ root, instance }) } as unknown as ConfigLoader;
     const moduleLoader = {
         importModule: () =>
@@ -148,7 +176,14 @@ function pluginRunner(root: string, instance: string, pluginKeys: readonly strin
             })
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
+    return new CodegenRunner({
+        steps: quietSteps,
+        locator,
+        configLoader,
+        moduleLoader,
+        generator: new AugmentationBuilder(logger),
+        logger
+    });
 }
 
 describe('CodegenRunner plugin capabilities', () => {
@@ -201,15 +236,14 @@ describe('CodegenRunner', () => {
         expect(written).toContain("declare module '@seedcord/gateway'");
     });
 
-    it('--check exits non-zero and names the fix when the registry is stale', async () => {
+    it('--check throws and names the fix when the registry is stale', async () => {
         const root = await tempDir('codegen-');
         await writeFile(resolve(root, OUTPUT), 'stale content', 'utf8');
 
-        const errors: string[] = [];
-        await makeRunner(root, silentLogger({ error: (message) => errors.push(String(message)) })).run(true);
+        const check = makeRunner(root, silentLogger()).run(true);
 
-        expect(process.exitCode).toBe(1);
-        expect(errors.join('\n')).toContain('seedcord codegen');
+        await expect(check).rejects.toMatchObject({ code: SeedcordErrorCode.CliCodegenOutOfDate });
+        await expect(check).rejects.toThrow(/seedcord codegen/);
     });
 
     it('--check exits zero when the registry matches', async () => {

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { BuildRunner } from '#commands/build/BuildRunner';
-import { silentSteps } from '#tests/silentSteps';
+import { quietSteps } from '#core/output/quietSteps';
 
 import { smoke } from './smoke';
 
@@ -12,8 +12,8 @@ const FLAT_BOT = join(import.meta.dirname, '../../fixtures/flat-bot');
 
 describe('seedcord build on a bot whose root holds dist', () => {
     it('leaves the last build and the project files out of the next one', async () => {
-        await BuildRunner.create(silentSteps).run(FLAT_BOT);
-        await BuildRunner.create(silentSteps).run(FLAT_BOT);
+        await BuildRunner.create(quietSteps).run(FLAT_BOT);
+        await BuildRunner.create(quietSteps).run(FLAT_BOT);
 
         expect(existsSync(join(FLAT_BOT, 'dist/dist'))).toBe(false);
         expect(existsSync(join(FLAT_BOT, 'dist/seedcord.config.js'))).toBe(false);

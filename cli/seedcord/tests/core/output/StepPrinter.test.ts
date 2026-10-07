@@ -93,6 +93,23 @@ describe('StepPrinter', () => {
         registry.reset();
     });
 
+    it('shows logger output below info under a step only with --verbose', async () => {
+        const registry = LoggerChannelRegistry.instance;
+        registry.reset();
+        registry.configure({ level: 'trace', sinks: [new ConsoleSink()] });
+        const warmCache = (): Promise<void> => {
+            new Logger('Bot').debug('cache warmed');
+            return Promise.resolve();
+        };
+
+        await printer().step('config', warmCache);
+        expect(stdout.text()).not.toContain('cache warmed');
+
+        await printer(true).step('config', warmCache);
+        expect(stdout.text()).toContain('cache warmed');
+        registry.reset();
+    });
+
     it('prints a detail line only under --verbose', () => {
         printer().detail('root', 'src');
         expect(stdout.text()).toBe('');

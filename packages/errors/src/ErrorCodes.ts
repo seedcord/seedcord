@@ -295,6 +295,8 @@ export enum SeedcordErrorCode {
     CliConfigProblems = 3135,
     /** Two or more command constructors threw during codegen. */
     CliCodegenCommandProblems = 3136,
+    /** `seedcord codegen --check` found the committed augmentations stale. */
+    CliCodegenOutOfDate = 3137,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,
