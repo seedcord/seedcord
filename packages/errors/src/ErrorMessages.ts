@@ -283,6 +283,8 @@ const messages = {
         `${url} did not answer within ${seconds}s, so nothing was PATCHed to Discord.`,
     [SeedcordErrorCode.CliConfigInvalidField]: (field: string, expected: string) =>
         `Config \`${field}\` must be ${expected} when provided.`,
+    [SeedcordErrorCode.CliConfigProblems]: (count: number) =>
+        `${count} fields in the seedcord config need fixing. Each one is listed below.`,
     [SeedcordErrorCode.CreateCancelled]: () => 'Cancelled.',
     [SeedcordErrorCode.CreateFlagNotApplicable]: (flag: string) =>
         `The --${flag} flag does not apply to the answers you gave.`,

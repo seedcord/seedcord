@@ -1,7 +1,7 @@
 import { join, dirname, resolve } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, it, expect, vi } from 'vitest';
+import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
+import { assert, describe, it, expect, vi } from 'vitest';
 
 import { DevRunner } from '#commands/dev/DevRunner';
 import { ConfigLoader } from '#core/config/ConfigLoader';
@@ -89,6 +89,27 @@ describe('ConfigLoader', () => {
         await expect(loader.load(join(process.cwd(), 'seedcord.config.ts'))).rejects.toThrow(
             'Config must include an `instance` string'
         );
+    });
+
+    it('reports every missing and invalid field at once', async () => {
+        const moduleLoader: ModuleLoader = {
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({
+                    default: { entry: './index.ts', tunnel: 'yes', build: { outDir: 1 } }
+                } as TModule);
+            }
+        };
+
+        const error: unknown = await new ConfigLoader(moduleLoader, silentLogger)
+            .load(join(process.cwd(), 'seedcord.config.ts'))
+            .catch((caught: unknown) => caught);
+
+        assert(isSeedcordError(error, 'SeedcordAggregateError', SeedcordErrorCode.CliConfigProblems));
+        expect(error.errors.map((child: unknown) => (isSeedcordError(child) ? child.message : child))).toEqual([
+            'Config must include an `instance` string that points to your Seedcord default export.',
+            'Config `tunnel` must be a boolean or an https URL when provided.',
+            'Config `build.outDir` must be a string when provided.'
+        ]);
     });
 
     it('throws when entry is missing', async () => {
