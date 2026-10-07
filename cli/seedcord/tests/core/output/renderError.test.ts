@@ -70,6 +70,24 @@ describe('renderError', () => {
         expect(output).toContain('cause: Error: rolldown exploded');
     });
 
+    it('adds the cause of each problem in an aggregate under --verbose', () => {
+        const constructorThrew = (name: string, reason: string): SeedcordError =>
+            new SeedcordError(SeedcordErrorCode.CliCodegenCommandConstructorThrew, [name, 'src/x.ts', reason], {
+                cause: new Error(reason)
+            });
+        const error = new SeedcordAggregateError(
+            SeedcordErrorCode.CliCodegenCommandProblems,
+            [constructorThrew('Ban', 'database not ready'), constructorThrew('Roll', 'bad option')],
+            [2]
+        );
+
+        expect(rendered(error)).not.toContain('cause:');
+
+        const verbose = rendered(error, { verbose: true });
+        expect(verbose).toContain('cause: Error: database not ready');
+        expect(verbose).toContain('cause: Error: bad option');
+    });
+
     it('prints a thrown value that is not an error as text', () => {
         expect(rendered('the plugin threw a string')).toBe('  the plugin threw a string\n');
     });

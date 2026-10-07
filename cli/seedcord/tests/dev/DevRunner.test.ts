@@ -7,12 +7,10 @@ import { DevStore } from '#ui/stores/DevStore';
 import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
 import type { ConfigLoader } from '#core/config/ConfigLoader';
-import type { ConfigLocator } from '#core/config/ConfigLocator';
 
-// justified: these paths never touch the locator or the config loader
+// justified: these paths never touch the config loader
 function makeRunner(codegen: { run: ReturnType<typeof vi.fn> }, tunnel: TunnelRouter = fakeTunnel()): DevRunner {
     return new DevRunner({
-        locator: {} as unknown as ConfigLocator,
         configLoader: {} as unknown as ConfigLoader,
         store: new DevStore(),
         codegen: codegen as unknown as CodegenRunner,

@@ -12,7 +12,8 @@ function relativeToCwd(path: string): string {
     if (typeof process === 'undefined' || typeof process.cwd !== 'function') return path;
 
     const cwd = process.cwd();
-    if (path === cwd) return '.';
+    // a bare dot reads as a full stop at the end of a message
+    if (path === cwd) return './';
 
     const underCwd = path.startsWith(`${cwd}/`) || path.startsWith(`${cwd}\\`);
     return underCwd ? path.slice(cwd.length + 1) : path;

@@ -21,7 +21,7 @@ interface StepPrinterOptions<Label extends string> {
     stderr?: Terminal;
 }
 
-// fits "999ms" and "12.3s" right-aligned
+// "123.4s" is the widest time a build step reaches
 const TIME_WIDTH = 6;
 const DETAIL_KEY_WIDTH = 10;
 
@@ -58,7 +58,7 @@ export class StepPrinter<Label extends string> implements Steps<Label> {
         const startedAt = performance.now();
         const held = holdOutput(this.stdout, this.stderr, this.verbose);
         const spinner = this.stdout.isTTY
-            ? Spinner.start(held.write, (frame) => this.row(paint.sky(frame), label, startedAt))
+            ? Spinner.start(held.writeToTerminal, (frame) => this.row(paint.sky(frame), label, startedAt))
             : undefined;
 
         const finish = (mark: string, extra?: string): void => {

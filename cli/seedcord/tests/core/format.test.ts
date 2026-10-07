@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { includesIgnoreCase, plural } from '#core/format';
+import { formatBytes, formatDuration, includesIgnoreCase, plural } from '#core/format';
 
 describe('includesIgnoreCase', () => {
     it('matches a substring regardless of case on either side', () => {
@@ -16,6 +16,25 @@ describe('includesIgnoreCase', () => {
 
     it('is false when the substring is absent', () => {
         expect(includesIgnoreCase('My Guild', 'zzz')).toBe(false);
+    });
+});
+
+describe('formatDuration', () => {
+    it('shows milliseconds under a second and seconds from there', () => {
+        expect(formatDuration(12.4)).toBe('12ms');
+        expect(formatDuration(2400)).toBe('2.4s');
+    });
+
+    it('switches to seconds when the milliseconds round up to 1000', () => {
+        expect(formatDuration(999.6)).toBe('1.0s');
+    });
+});
+
+describe('formatBytes', () => {
+    it('picks the unit that keeps the number short', () => {
+        expect(formatBytes(512)).toBe('512 B');
+        expect(formatBytes(186_400)).toBe('186.4 kB');
+        expect(formatBytes(5_400_000)).toBe('5.4 MB');
     });
 });
 

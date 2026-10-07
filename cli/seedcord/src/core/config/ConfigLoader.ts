@@ -7,6 +7,8 @@ import { isInside } from '@seedcord/utils/node/internal';
 
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
+import { locateConfig } from './locateConfig';
+
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type {
     ResolvedSeedcordBuildConfig,
@@ -109,7 +111,8 @@ function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
 export class ConfigLoader {
     constructor(private readonly modules: ModuleLoader) {}
 
-    public async load(configPath: string): Promise<ResolvedSeedcordDevConfig> {
+    public async load(projectDir = process.cwd()): Promise<ResolvedSeedcordDevConfig> {
+        const configPath = locateConfig(projectDir);
         const loadedModule = await this.modules.importModule(configPath);
         const config: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
         validateConfig(config);

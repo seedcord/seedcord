@@ -4,7 +4,6 @@ import { paint } from '@seedcord/errors';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { cliLogger } from '#core/cliLogger';
 import { ConfigLoader } from '#core/config/ConfigLoader';
-import { ConfigLocator } from '#core/config/ConfigLocator';
 import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
 import { quietSteps } from '#core/output/quietSteps';
 import { resetChannelColors } from '#ui/channelColor';
@@ -15,7 +14,7 @@ import { ViteDevRuntime } from './runtime/ViteDevRuntime';
 import { createTunnelCoordinator } from './tunnel/createTunnelCoordinator';
 import { TunnelRouter } from './tunnel/TunnelRouter';
 
-import type { ResolvedSeedcordDevConfig, ResolvedTunnel } from '#core/config/schema';
+import type { ResolvedTunnel } from '#core/config/schema';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { TunnelCoordinator } from './tunnel/TunnelCoordinator';
 import type { ILogger } from '@seedcord/types';
@@ -23,7 +22,6 @@ import type { ILogger } from '@seedcord/types';
 const TUNNEL_TEARDOWN_MS = 3000;
 
 export interface DevRunnerDeps {
-    readonly locator: ConfigLocator;
     readonly configLoader: ConfigLoader;
     readonly store: DevStore;
     readonly codegen: CodegenRunner;
@@ -49,7 +47,6 @@ export class DevRunner {
             createTunnelCoordinator(tunnelLogger, (status) => store.setTunnel(status), tunnel);
 
         return new DevRunner({
-            locator: new ConfigLocator(),
             configLoader: new ConfigLoader(new RuntimeModuleLoader()),
             store,
             codegen: CodegenRunner.create(quietSteps, codegenLogger),
@@ -98,7 +95,7 @@ export class DevRunner {
         resetChannelColors();
         this.deps.store.setPhase('starting');
         this.deps.store.setBusy(true);
-        const config = await this.loadConfig();
+        const config = await this.deps.configLoader.load();
         profileMark('config');
         this.deps.store.setIdleAnimation(config.idleAnimation);
         const runtime = new ViteDevRuntime();
@@ -180,10 +177,5 @@ export class DevRunner {
         return new Promise<void>((resolve) => {
             this.signalResolve = resolve;
         });
-    }
-
-    private async loadConfig(): Promise<ResolvedSeedcordDevConfig> {
-        const configPath = this.deps.locator.locate();
-        return this.deps.configLoader.load(configPath);
     }
 }

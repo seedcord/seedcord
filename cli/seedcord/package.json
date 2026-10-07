@@ -72,6 +72,7 @@
         "@seedcord/logger": "workspace:^",
         "@seedcord/types": "workspace:^",
         "@seedcord/utils": "workspace:^",
+        "cli-spinners": "^3.4.0",
         "commander": "^15.0.0",
         "discord-api-types": "catalog:deps",
         "ink": "^7.1.1",

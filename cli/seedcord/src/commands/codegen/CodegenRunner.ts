@@ -12,10 +12,10 @@ import { isTsOrJsFile } from '@seedcord/utils/node';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import { ConfigLoader } from '#core/config/ConfigLoader';
-import { ConfigLocator } from '#core/config/ConfigLocator';
 import { plural } from '#core/format';
 import { importInstance } from '#core/modules/importInstance';
 import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
+import { printResolvedConfig } from '#core/output/printResolvedConfig';
 
 import { AugmentationBuilder } from './AugmentationBuilder';
 import { renderAugmentation } from './renderAugmentation';
@@ -45,15 +45,14 @@ interface ResolvedInstance {
 }
 
 export const CODEGEN_STEPS = ['read config', 'load bot', 'scan commands', 'write types', 'check types'] as const;
-export type CodegenStep = (typeof CODEGEN_STEPS)[number];
+type CodegenStep = (typeof CODEGEN_STEPS)[number];
 
-export interface CodegenResult {
+interface CodegenResult {
     outputPath: string;
 }
 
 interface CodegenRunnerDeps {
     readonly steps: Steps<CodegenStep>;
-    readonly locator: ConfigLocator;
     readonly configLoader: ConfigLoader;
     readonly moduleLoader: ModuleLoader;
     readonly generator: AugmentationBuilder;
@@ -69,13 +68,11 @@ function botSpecifier(root: string, instance: string): string {
 export class CodegenRunner {
     constructor(private readonly deps: CodegenRunnerDeps) {}
 
-    // scan warnings go through the logger
     public static create(steps: Steps<CodegenStep>, logger: ILogger): CodegenRunner {
         const moduleLoader = new RuntimeModuleLoader();
 
         return new CodegenRunner({
             steps,
-            locator: new ConfigLocator(),
             configLoader: new ConfigLoader(moduleLoader),
             moduleLoader,
             generator: new AugmentationBuilder(logger),
@@ -84,9 +81,10 @@ export class CodegenRunner {
     }
 
     public async run(check: boolean): Promise<CodegenResult> {
-        const { steps, configLoader, locator } = this.deps;
+        const { steps, configLoader } = this.deps;
 
-        const config = await steps.step('read config', () => configLoader.load(locator.locate()));
+        const config = await steps.step('read config', () => configLoader.load());
+        printResolvedConfig(steps, config);
         const instance = await steps.step('load bot', () => this.resolveInstance(config));
         const commands = await steps.step(
             'scan commands',
@@ -172,11 +170,11 @@ export class CodegenRunner {
             json = new Command().component.toJSON();
         } catch (error: unknown) {
             const reason = Error.isError(error) ? error.message : 'Unknown error';
-            return new SeedcordError(SeedcordErrorCode.CliCodegenCommandConstructorThrew, [
-                Command.name,
-                sourceFile,
-                reason
-            ]);
+            return new SeedcordError(
+                SeedcordErrorCode.CliCodegenCommandConstructorThrew,
+                [Command.name, sourceFile, reason],
+                { cause: error }
+            );
         }
 
         return this.isApplicationCommand(json) ? { sourceFile, json } : undefined;

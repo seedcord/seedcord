@@ -14,8 +14,8 @@ describe('paint.path', () => {
         expect(shown(join(process.cwd(), 'src', 'handlers'))).toBe(join('src', 'handlers'));
     });
 
-    it('shows the working directory itself as a dot', () => {
-        expect(shown(process.cwd())).toBe('.');
+    it('shows the working directory itself as ./', () => {
+        expect(shown(process.cwd())).toBe('./');
     });
 
     it('keeps a path outside the working directory absolute', () => {

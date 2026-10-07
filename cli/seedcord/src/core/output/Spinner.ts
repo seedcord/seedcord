@@ -1,6 +1,7 @@
-// ink-spinner's "dots" frames, the ones the dev TUI shows
-const FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-const FRAME_MS = 80;
+import cliSpinners from 'cli-spinners';
+
+// the dev TUI's ink-spinner draws the same set
+const { frames, interval } = cliSpinners.dots;
 
 const HIDE_CURSOR = '\u001B[?25l';
 const SHOW_CURSOR = '\u001B[?25h';
@@ -19,7 +20,7 @@ export class Spinner {
         const spinner = new Spinner(write, render);
         write(HIDE_CURSOR);
         spinner.draw();
-        spinner.timer = setInterval(() => spinner.draw(), FRAME_MS);
+        spinner.timer = setInterval(() => spinner.draw(), interval);
         process.once('SIGINT', spinner.restoreOnInterrupt);
         return spinner;
     }
@@ -31,7 +32,7 @@ export class Spinner {
     }
 
     private draw(): void {
-        const frame = FRAMES[this.frame++ % FRAMES.length] ?? '';
+        const frame = frames[this.frame++ % frames.length] ?? '';
         this.write(`${CLEAR_LINE}${this.render(frame)}`);
     }
 

@@ -14,6 +14,8 @@ const READY_ATTEMPTS = 60;
 // 5s. a fixed 2s wait failed in 2 of 3 full CLI runs
 const EVENT_ATTEMPTS = 100;
 const TEST_TIMEOUT_MS = 20_000;
+// i haven't measured this, just a guess
+const LOG_GRACE_MS = 500;
 
 const SOURCE_FILE = '/src/logs/format.ts';
 const LOG_FILE = '/logs/combined.log';
@@ -99,10 +101,11 @@ describe('dev server watch ignores', () => {
             const root = project();
             const touched = await watchProject(root);
 
-            // an unignored log file would report before the source file written after it
             appendFileSync(join(root, LOG_FILE), 'a line\n');
             appendFileSync(join(root, SOURCE_FILE), 'a line\n');
             await untilTouched(touched, SOURCE_FILE);
+            // the watcher does not promise events in write order
+            await sleep(LOG_GRACE_MS);
 
             expect(touched).not.toContain(LOG_FILE);
         },

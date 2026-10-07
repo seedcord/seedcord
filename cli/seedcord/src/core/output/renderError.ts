@@ -44,7 +44,10 @@ export function renderError(error: unknown, { verbose, width }: RenderOptions): 
 
     let output = wrapLines(messageOf(error), width, MESSAGE);
     if (isSeedcordError(error, 'SeedcordAggregateError')) {
-        for (const problem of error.errors) output += wrapLines(messageOf(problem), width, BULLET);
+        for (const problem of error.errors) {
+            output += wrapLines(messageOf(problem), width, BULLET);
+            if (verbose && Error.isError(problem) && problem.cause !== undefined) output += renderCause(problem.cause);
+        }
     }
     if (verbose) {
         output += `\n${paint.mute(indent(error.stack ?? ''))}\n`;

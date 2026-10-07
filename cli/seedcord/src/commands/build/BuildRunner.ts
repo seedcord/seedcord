@@ -4,9 +4,9 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { ConfigLoader } from '#core/config/ConfigLoader';
-import { ConfigLocator } from '#core/config/ConfigLocator';
 import { importInstance } from '#core/modules/importInstance';
 import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
+import { printResolvedConfig } from '#core/output/printResolvedConfig';
 
 import { assertFoldersUnderRoot } from './builder/assertFoldersUnderRoot';
 import { assertOutDirSafe } from './builder/assertOutDirSafe';
@@ -28,7 +28,6 @@ export interface BuildResult {
 
 interface BuildRunnerDeps {
     readonly steps: Steps<BuildStep>;
-    readonly locator: ConfigLocator;
     readonly configLoader: ConfigLoader;
     readonly modules: ModuleLoader;
     readonly typeChecker: TypeChecker;
@@ -43,7 +42,6 @@ export class BuildRunner {
 
         return new BuildRunner({
             steps,
-            locator: new ConfigLocator(),
             configLoader: new ConfigLoader(modules),
             modules,
             typeChecker: new TypeChecker(),
@@ -55,7 +53,7 @@ export class BuildRunner {
         const { steps, modules, typeChecker, bundler } = this.deps;
 
         const config = await steps.step('read config', () => this.loadConfig(projectDir));
-        this.printConfig(config);
+        printResolvedConfig(steps, config);
 
         await steps.step('load bot', async () => {
             const instance = await importInstance(modules, config.instance);
@@ -72,19 +70,10 @@ export class BuildRunner {
     }
 
     private async loadConfig(projectDir: string): Promise<ResolvedSeedcordDevConfig> {
-        const config = await this.deps.configLoader.load(this.deps.locator.locate(projectDir));
+        const config = await this.deps.configLoader.load(projectDir);
         this.assertEntryExists(config.entry);
         assertOutDirSafe(config.build.outDir, config.root);
         return config;
-    }
-
-    private printConfig(config: ResolvedSeedcordDevConfig): void {
-        const { steps } = this.deps;
-        steps.detail('config', paint.path(config.configFile));
-        steps.detail('root', paint.path(config.root));
-        steps.detail('instance', paint.path(config.instance));
-        steps.detail('entry', paint.path(config.entry));
-        steps.detail('outDir', paint.path(config.build.outDir));
     }
 
     private assertEntryExists(entryPath: string): void {

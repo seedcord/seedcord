@@ -1,7 +1,9 @@
-import { join, dirname, resolve } from 'node:path';
+import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { assert, describe, it, expect, vi } from 'vitest';
+import { afterEach, assert, describe, it, expect, vi } from 'vitest';
 
 import { DevRunner } from '#commands/dev/DevRunner';
 import { ConfigLoader } from '#core/config/ConfigLoader';
@@ -11,94 +13,92 @@ import { silentLogger } from './silentLogger';
 
 import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
-import type { ResolvedTunnel, SeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 
+const projectDirs: string[] = [];
+
+afterEach(() => {
+    while (projectDirs.length > 0) rmSync(projectDirs.pop() ?? '', { recursive: true, force: true });
+});
+
+function tempProject(): string {
+    // the loader resolves against the real path of a mac temp dir
+    const projectDir = realpathSync(mkdtempSync(join(tmpdir(), 'seedcord-config-')));
+    projectDirs.push(projectDir);
+    return projectDir;
+}
+
+// the stub module loader hands back `config` as the config file's default export
+function projectWith(config: unknown): { projectDir: string; load: () => Promise<ResolvedSeedcordDevConfig> } {
+    const projectDir = tempProject();
+    writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
+    const moduleLoader: ModuleLoader = {
+        importModule: <TModule = unknown>(): Promise<TModule> => Promise.resolve({ default: config } as TModule)
+    };
+
+    return { projectDir, load: () => new ConfigLoader(moduleLoader).load(projectDir) };
+}
+
+const MINIMAL = { instance: './bot.ts', entry: './index.ts' };
+
 describe('ConfigLoader', () => {
-    it('resolves paths and build defaults relative to config directory', async () => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({
-                    default: { instance: './bot.ts', root: './src', entry: './index.ts' } satisfies SeedcordDevConfig
-                } as TModule);
-            }
-        };
+    it('resolves paths and build defaults relative to the config folder', async () => {
+        const { projectDir, load } = projectWith({ ...MINIMAL, root: './src' });
 
-        const loader = new ConfigLoader(moduleLoader);
-        const configFile = join(process.cwd(), 'seedcord.config.ts');
+        const resolved = await load();
 
-        const resolved = await loader.load(configFile);
-
-        expect(resolved.root).toBe(resolve(process.cwd(), 'src'));
-        expect(resolved.instance).toBe(resolve(process.cwd(), 'src/bot.ts'));
-        expect(resolved.entry).toBe(resolve(process.cwd(), 'src/index.ts'));
-        expect(resolved.build.outDir).toBe(resolve(process.cwd(), 'dist'));
+        expect(resolved.root).toBe(resolve(projectDir, 'src'));
+        expect(resolved.instance).toBe(resolve(projectDir, 'src/bot.ts'));
+        expect(resolved.entry).toBe(resolve(projectDir, 'src/index.ts'));
+        expect(resolved.build.outDir).toBe(resolve(projectDir, 'dist'));
         expect(resolved.build.tsconfig).toBeUndefined();
     });
 
+    it('throws CliConfigNotFound for a folder with no seedcord config', async () => {
+        const moduleLoader: ModuleLoader = { importModule: () => Promise.reject(new Error('never imported')) };
+
+        await expect(new ConfigLoader(moduleLoader).load(tempProject())).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigNotFound
+        });
+    });
+
     it('resolves each tunnel shape into a mode', async () => {
-        const load = async (config: SeedcordDevConfig): Promise<ResolvedTunnel> => {
-            const moduleLoader: ModuleLoader = {
-                importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                    return Promise.resolve({ default: config } as TModule);
-                }
-            };
-            const resolved = await new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'));
+        const tunnelOf = async (tunnel: unknown): Promise<ResolvedSeedcordDevConfig['tunnel']> => {
+            const resolved = await projectWith({ ...MINIMAL, tunnel }).load();
             return resolved.tunnel;
         };
 
-        const base = { instance: './bot.ts', entry: './index.ts' };
-
-        await expect(load(base)).resolves.toEqual({ mode: 'quick' });
-        await expect(load({ ...base, tunnel: true })).resolves.toEqual({ mode: 'quick' });
-        await expect(load({ ...base, tunnel: false })).resolves.toEqual({ mode: 'off' });
-        await expect(load({ ...base, tunnel: 'https://bot.example.com' })).resolves.toEqual({
+        await expect(tunnelOf(undefined)).resolves.toEqual({ mode: 'quick' });
+        await expect(tunnelOf(true)).resolves.toEqual({ mode: 'quick' });
+        await expect(tunnelOf(false)).resolves.toEqual({ mode: 'off' });
+        await expect(tunnelOf('https://bot.example.com')).resolves.toEqual({
             mode: 'url',
             url: 'https://bot.example.com'
         });
     });
 
     it.each([['yes'], ['http://bot.example.com'], [42]])('rejects %s as a tunnel', async (tunnel) => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({
-                    default: { instance: './bot.ts', entry: './index.ts', tunnel }
-                } as TModule);
-            }
-        };
-
-        const loader = new ConfigLoader(moduleLoader);
-
-        await expect(loader.load(join(process.cwd(), 'seedcord.config.ts'))).rejects.toThrow(
+        await expect(projectWith({ ...MINIMAL, tunnel }).load()).rejects.toThrow(
             'Config `tunnel` must be a boolean or an https URL when provided.'
         );
     });
 
     it('throws when instance is missing', async () => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({ default: { entry: './index.ts' } } as TModule);
-            }
-        };
-
-        const loader = new ConfigLoader(moduleLoader);
-
-        await expect(loader.load(join(process.cwd(), 'seedcord.config.ts'))).rejects.toThrow(
+        await expect(projectWith({ entry: './index.ts' }).load()).rejects.toThrow(
             'Config must include an `instance` string'
         );
     });
 
-    it('reports every missing and invalid field at once', async () => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({
-                    default: { entry: './index.ts', tunnel: 'yes', build: { outDir: 1 } }
-                } as TModule);
-            }
-        };
+    it('throws when entry is missing', async () => {
+        await expect(projectWith({ instance: './bot.ts' }).load()).rejects.toThrow(
+            'Config must include an `entry` string'
+        );
+    });
 
-        const error: unknown = await new ConfigLoader(moduleLoader)
-            .load(join(process.cwd(), 'seedcord.config.ts'))
+    it('reports every missing and invalid field at once', async () => {
+        const error: unknown = await projectWith({ entry: './index.ts', tunnel: 'yes', build: { outDir: 1 } })
+            .load()
             .catch((caught: unknown) => caught);
 
         assert(isSeedcordError(error, 'SeedcordAggregateError', SeedcordErrorCode.CliConfigProblems));
@@ -109,122 +109,45 @@ describe('ConfigLoader', () => {
         ]);
     });
 
-    it('throws when entry is missing', async () => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({ default: { instance: './bot.ts' } } as TModule);
-            }
-        };
-
-        const loader = new ConfigLoader(moduleLoader);
-
-        await expect(loader.load(join(process.cwd(), 'seedcord.config.ts'))).rejects.toThrow(
-            'Config must include an `entry` string'
-        );
-    });
-
     it('carries hmr config through and resolves the typecheck tsconfig', async () => {
         const hmr = { restart: ['**/*.json'], typecheck: { tsconfig: './tsconfig.dev.json' } };
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({
-                    default: { instance: './bot.ts', entry: './index.ts', hmr } satisfies SeedcordDevConfig
-                } as TModule);
-            }
-        };
+        const { projectDir, load } = projectWith({ ...MINIMAL, hmr });
 
-        const resolved = await new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'));
+        const resolved = await load();
 
         expect(resolved.hmr).toEqual(hmr);
-        expect(resolved.typecheck).toEqual({ enabled: true, tsconfig: resolve(process.cwd(), 'tsconfig.dev.json') });
+        expect(resolved.typecheck).toEqual({ enabled: true, tsconfig: resolve(projectDir, 'tsconfig.dev.json') });
     });
 
     it('leaves typecheck off when the config omits it', async () => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({
-                    default: { instance: './bot.ts', entry: './index.ts' } satisfies SeedcordDevConfig
-                } as TModule);
-            }
-        };
+        const { typecheck } = await projectWith(MINIMAL).load();
 
-        const resolved = await new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'));
-
-        expect(resolved.typecheck).toEqual({ enabled: false });
+        expect(typecheck).toEqual({ enabled: false });
     });
 
     it('rejects a non-object default export', async () => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({ default: [] } as TModule);
-            }
-        };
-
-        await expect(
-            new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'))
-        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidExport });
+        await expect(projectWith([]).load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidExport });
     });
 
-    it('rejects a non-array hmr.restart', async () => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({
-                    default: { instance: './bot.ts', entry: './index.ts', hmr: { restart: 'nope' } }
-                } as TModule);
-            }
-        };
-
-        await expect(
-            new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'))
-        ).rejects.toMatchObject({
+    it.each([
+        [{ restart: 'nope' }, 'Config `hmr.restart` must be an array of strings when provided.'],
+        [{ rollback: 'nope' }, 'Config `hmr.rollback` must be a boolean when provided.'],
+        [{ typecheck: 'nope' }, 'Config `hmr.typecheck` must be a boolean or an object when provided.']
+    ])('rejects hmr %o', async (hmr, message) => {
+        await expect(projectWith({ ...MINIMAL, hmr }).load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
-            message: 'Config `hmr.restart` must be an array of strings when provided.'
-        });
-    });
-
-    it('rejects a non-boolean hmr.rollback', async () => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({
-                    default: { instance: './bot.ts', entry: './index.ts', hmr: { rollback: 'nope' } }
-                } as TModule);
-            }
-        };
-
-        await expect(
-            new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'))
-        ).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliConfigInvalidField,
-            message: 'Config `hmr.rollback` must be a boolean when provided.'
+            message
         });
     });
 
     it('leaves idleAnimation on when the config omits it', async () => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({
-                    default: { instance: './bot.ts', entry: './index.ts' } satisfies SeedcordDevConfig
-                } as TModule);
-            }
-        };
+        const { idleAnimation } = await projectWith(MINIMAL).load();
 
-        const resolved = await new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'));
-
-        expect(resolved.idleAnimation).toBe(true);
+        expect(idleAnimation).toBe(true);
     });
 
     it('rejects a non-boolean idleAnimation', async () => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({
-                    default: { instance: './bot.ts', entry: './index.ts', idleAnimation: 'nope' }
-                } as TModule);
-            }
-        };
-
-        await expect(
-            new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'))
-        ).rejects.toMatchObject({
+        await expect(projectWith({ ...MINIMAL, idleAnimation: 'nope' }).load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
             message: 'Config `idleAnimation` must be a boolean when provided.'
         });
@@ -232,58 +155,30 @@ describe('ConfigLoader', () => {
 
     // dev and codegen never write outDir
     it('loads a build.outDir that holds root', async () => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({
-                    default: { instance: './bot.ts', entry: './index.ts', root: './src', build: { outDir: '.' } }
-                } as TModule);
-            }
-        };
+        const { projectDir, load } = projectWith({ ...MINIMAL, root: './src', build: { outDir: '.' } });
 
-        const resolved = await new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'));
+        const { build } = await load();
 
-        expect(resolved.build.outDir).toBe(process.cwd());
-    });
-
-    it('rejects a non-boolean hmr.typecheck', async () => {
-        const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
-                return Promise.resolve({
-                    default: { instance: './bot.ts', entry: './index.ts', hmr: { typecheck: 'nope' } }
-                } as TModule);
-            }
-        };
-
-        await expect(
-            new ConfigLoader(moduleLoader).load(join(process.cwd(), 'seedcord.config.ts'))
-        ).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliConfigInvalidField,
-            message: 'Config `hmr.typecheck` must be a boolean or an object when provided.'
-        });
+        expect(build.outDir).toBe(projectDir);
     });
 });
 
 describe('DevRunner', () => {
     it('loads and starts the Seedcord instance', async () => {
-        const configPath = join(process.cwd(), 'seedcord.config.ts');
-        const instancePath = join(process.cwd(), 'src/bot.ts');
-
-        const locator = { locate: vi.fn(() => configPath) };
+        const projectDir = process.cwd();
+        const instancePath = join(projectDir, 'src/bot.ts');
         const configLoader = {
             load: vi.fn(() => ({
                 instance: instancePath,
-                root: dirname(instancePath),
-                configFile: configPath,
+                root: join(projectDir, 'src'),
+                configFile: join(projectDir, 'seedcord.config.ts'),
                 entry: instancePath,
-                build: {
-                    outDir: join(process.cwd(), 'dist')
-                }
+                build: { outDir: join(projectDir, 'dist') }
             }))
         };
 
-        // justified: only the locator and the config loader are called here, codegen runs on refresh only
+        // justified: only the config loader is called here, codegen runs on refresh only
         const runner = new DevRunner({
-            locator: locator,
             configLoader: configLoader as unknown as ConfigLoader,
             store: new DevStore(),
             codegen: { run: vi.fn() } as unknown as CodegenRunner,
@@ -299,8 +194,6 @@ describe('DevRunner', () => {
         });
 
         await expect(runner.run()).rejects.toThrow(/Cannot find entry file|Failed to load url/);
-
-        expect(locator.locate).toHaveBeenCalledTimes(1);
-        expect(configLoader.load).toHaveBeenCalledWith(configPath);
+        expect(configLoader.load).toHaveBeenCalledTimes(1);
     });
 });

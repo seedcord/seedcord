@@ -2,12 +2,19 @@ export function plural(count: number, singular: string, pluralForm = `${singular
     return `${count} ${count === 1 ? singular : pluralForm}`;
 }
 
+const MS_PER_SECOND = 1000;
+const BYTES_PER_KB = 1000;
+const BYTES_PER_MB = 1_000_000;
+
 export function formatDuration(ms: number): string {
-    return ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(1)}s`;
+    const rounded = Math.round(ms);
+    return rounded < MS_PER_SECOND ? `${rounded}ms` : `${(ms / MS_PER_SECOND).toFixed(1)}s`;
 }
 
 export function formatBytes(bytes: number): string {
-    return bytes < 1000 ? `${bytes} B` : `${(bytes / 1000).toFixed(1)} kB`;
+    if (bytes < BYTES_PER_KB) return `${bytes} B`;
+    if (bytes < BYTES_PER_MB) return `${(bytes / BYTES_PER_KB).toFixed(1)} kB`;
+    return `${(bytes / BYTES_PER_MB).toFixed(1)} MB`;
 }
 
 export function includesIgnoreCase(text: string, search: string): boolean {
