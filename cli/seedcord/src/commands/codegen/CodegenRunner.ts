@@ -86,18 +86,18 @@ export class CodegenRunner {
     public async run(check: boolean): Promise<CodegenResult> {
         const { steps, configLoader, locator } = this.deps;
 
-        const config = await steps.step('config', () => configLoader.load(locator.locate()));
-        const instance = await steps.step('bot', () => this.resolveInstance(config));
+        const config = await steps.step('read config', () => configLoader.load(locator.locate()));
+        const instance = await steps.step('load bot', () => this.resolveInstance(config));
         const commands = await steps.step(
-            'commands',
+            'scan commands',
             () => (instance.commandsDir ? this.scanCommands(instance.commandsDir) : Promise.resolve([])),
             (found) => paint.mute(plural(found.length, 'command'))
         );
 
         const outputPath = resolve(config.root, OUTPUT_FILENAME);
         const render = (): string => this.render(config, instance, commands);
-        if (check) await steps.step('check', () => this.check(render(), outputPath));
-        else await steps.step('write', () => this.write(render(), outputPath));
+        if (check) await steps.step('check types', () => this.check(render(), outputPath));
+        else await steps.step('write types', () => this.write(render(), outputPath));
 
         return { outputPath };
     }
