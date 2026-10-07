@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { dirname, join, relative, sep } from 'node:path';
 
 import { paint } from '@seedcord/errors';
 import { isPlainObject } from '@seedcord/utils/internal';
@@ -30,11 +30,19 @@ function runtimeName(): string {
     return 'Bun' in globalThis ? 'bun' : 'node';
 }
 
-// characters a POSIX shell reads as part of a plain word
-const SHELL_SAFE = /^[\w./@%+=:,-]+$/;
+// characters POSIX shells and cmd.exe both read as part of a plain word
+const SHELL_SAFE = /^[\w./@+=:,-]+$/;
 
 function shellArg(arg: string): string {
-    return SHELL_SAFE.test(arg) ? arg : `'${arg.replaceAll("'", String.raw`'\''`)}'`;
+    if (SHELL_SAFE.test(arg)) return arg;
+    // cmd.exe keeps single quotes as part of the argument. a windows path cannot contain a double quote
+    if (process.platform === 'win32') return `"${arg}"`;
+    return `'${arg.replaceAll("'", String.raw`'\''`)}'`;
+}
+
+// node and bun take forward slashes on windows too
+function commandPath(path: string): string {
+    return relative(process.cwd(), path).split(sep).join('/');
 }
 
 function commandLine(label: string, command: string): string {
@@ -42,7 +50,7 @@ function commandLine(label: string, command: string): string {
 }
 
 export function printBuildSummary(printer: StepPrinter<BuildStep>, { config, bundle }: BuildResult): void {
-    const entry = shellArg(relative(process.cwd(), bundle.entry));
+    const entry = shellArg(commandPath(bundle.entry));
     const counts = [plural(bundle.modules, 'module'), plural(bundle.textFiles, 'text file'), formatBytes(bundle.bytes)];
     const binary = shellArg(binaryName(dirname(config.configFile)));
 

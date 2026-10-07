@@ -61,6 +61,18 @@ describe('printBuildSummary', () => {
         expect(summary).toMatch(/--compile '[^']* output\/index\.mjs' --outfile my-bot\n/);
     });
 
+    it('quotes with double quotes on windows', async () => {
+        const platform = Object.getOwnPropertyDescriptor(process, 'platform');
+        Object.defineProperty(process, 'platform', { value: 'win32' });
+        try {
+            const summary = await summaryFor({ name: 'my-bot' }, 'build output');
+
+            expect(summary).toMatch(/run {6}node "[^"]* output\/index\.mjs"\n/);
+        } finally {
+            if (platform) Object.defineProperty(process, 'platform', platform);
+        }
+    });
+
     it('names the binary bot when package.json is missing or has no name', async () => {
         expect(await summaryFor()).toMatch(/--outfile bot\n/);
         expect(await summaryFor({ private: true })).toMatch(/--outfile bot\n/);
