@@ -484,6 +484,45 @@ describe('CodegenRunner', () => {
         ]);
     });
 
+    it('reports the constructor problems found before a file that fails to import', async () => {
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
+        for (const file of ['a-ban.ts', 'b-roll.ts', 'c-broken.ts'])
+            await writeFile(join(cmdDir, file), 'export {};', 'utf8');
+
+        class BanCommand extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                throw new Error('Invalid string length');
+            }
+        }
+        class RollCommand extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                throw new Error('Expected a string for option "sides"');
+            }
+        }
+        RegisterCommand('global')(BanCommand);
+        RegisterCommand('global')(RollCommand);
+        const importFailure = new Error('c-broken.ts has a syntax error');
+        const moduleByPath = (path: string): Record<string, unknown> => {
+            if (path.endsWith('a-ban.ts')) return { BanCommand };
+            if (path.endsWith('b-roll.ts')) return { RollCommand };
+            throw importFailure;
+        };
+
+        const caught: unknown = await scanRunner(root, cmdDir, moduleByPath, silentLogger())
+            .run(false)
+            .catch((error: unknown) => error);
+
+        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliCodegenCommandProblems));
+        expect(caught.errors).toMatchObject([
+            { code: SeedcordErrorCode.CliCodegenCommandConstructorThrew },
+            { code: SeedcordErrorCode.CliCodegenCommandConstructorThrew },
+            importFailure
+        ]);
+    });
+
     it('skips a BuilderComponent subclass carrying no @RegisterCommand', async () => {
         const root = await tempDir('codegen-');
         const cmdDir = await tempDir('cmds-');

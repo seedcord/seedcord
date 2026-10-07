@@ -2,7 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
 import { render } from 'ink-testing-library';
 import React from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { ErrorDisplay } from '#ui/components/ErrorDisplay';
 
@@ -31,5 +31,17 @@ describe('ErrorDisplay', () => {
 
         expect(frame).toContain('`instance`');
         expect(frame).toContain('`tunnel`');
+    });
+
+    it('lists two problems with the same message twice without a react key warning', () => {
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const problem = (): SeedcordError => new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
+        const error = new SeedcordAggregateError(SeedcordErrorCode.CliConfigProblems, [problem(), problem()], [2]);
+
+        const frame = render(<ErrorDisplay error={error} />).lastFrame() ?? '';
+
+        expect(frame.split('`entry`')).toHaveLength(3);
+        expect(consoleError).not.toHaveBeenCalled();
+        consoleError.mockRestore();
     });
 });

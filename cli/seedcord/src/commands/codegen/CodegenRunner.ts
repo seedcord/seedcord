@@ -109,11 +109,16 @@ export class CodegenRunner {
 
     private async scanCommands(commandsDir: string): Promise<ScannedCommand[]> {
         const commands: ScannedCommand[] = [];
-        const problems: SeedcordError[] = [];
-        for await (const commandClass of this.walk(commandsDir, new Set(), true)) {
-            const built = this.construct(commandClass);
-            if (isSeedcordError(built)) problems.push(built);
-            else if (built) commands.push(built);
+        const problems: unknown[] = [];
+        try {
+            for await (const commandClass of this.walk(commandsDir, new Set(), true)) {
+                const built = this.construct(commandClass);
+                if (isSeedcordError(built)) problems.push(built);
+                else if (built) commands.push(built);
+            }
+        } catch (error: unknown) {
+            // the walk stops at the first file that fails to import
+            problems.push(error);
         }
 
         throwSingleOrAggregate(problems, SeedcordErrorCode.CliCodegenCommandProblems);
@@ -133,7 +138,8 @@ export class CodegenRunner {
             return;
         }
 
-        for (const entry of entries) {
+        // readdir order differs between filesystems
+        for (const entry of entries.toSorted((a, b) => a.name.localeCompare(b.name))) {
             const fullPath = join(dir, entry.name);
             if (entry.isDirectory()) {
                 yield* this.walk(fullPath, seen, false);

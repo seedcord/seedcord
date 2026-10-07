@@ -22,7 +22,7 @@ afterEach(async () => {
     await rm(projectDir, { recursive: true, force: true });
 });
 
-async function summaryFor(packageJson?: Record<string, unknown>): Promise<string> {
+async function summaryFor(packageJson?: Record<string, unknown>, outDir = 'dist'): Promise<string> {
     if (packageJson) await writeFile(join(projectDir, 'package.json'), JSON.stringify(packageJson));
 
     let written = '';
@@ -38,7 +38,7 @@ async function summaryFor(packageJson?: Record<string, unknown>): Promise<string
     const result: BuildResult = {
         // justified: the summary reads only configFile from the config
         config: { configFile: join(projectDir, 'seedcord.config.ts') } as ResolvedSeedcordDevConfig,
-        bundle: { modules: 7, textFiles: 4, bytes: 186_400, entry: join(projectDir, 'dist/index.mjs') }
+        bundle: { modules: 7, textFiles: 4, bytes: 186_400, entry: join(projectDir, outDir, 'index.mjs') }
     };
 
     printBuildSummary(printer, result);
@@ -52,6 +52,13 @@ describe('printBuildSummary', () => {
 
     it('takes the binary name from package.json without its scope', async () => {
         expect(await summaryFor({ name: '@acme/my-bot' })).toMatch(/--outfile my-bot\n/);
+    });
+
+    it('quotes an entry path with a space so the printed commands paste into a shell', async () => {
+        const summary = await summaryFor({ name: 'my-bot' }, 'build output');
+
+        expect(summary).toMatch(/run {6}node '[^']* output\/index\.mjs'\n/);
+        expect(summary).toMatch(/--compile '[^']* output\/index\.mjs' --outfile my-bot\n/);
     });
 
     it('names the binary bot when package.json is missing or has no name', async () => {

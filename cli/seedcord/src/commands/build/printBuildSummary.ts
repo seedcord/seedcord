@@ -30,14 +30,21 @@ function runtimeName(): string {
     return 'Bun' in globalThis ? 'bun' : 'node';
 }
 
+// characters a POSIX shell reads as part of a plain word
+const SHELL_SAFE = /^[\w./@%+=:,-]+$/;
+
+function shellArg(arg: string): string {
+    return SHELL_SAFE.test(arg) ? arg : `'${arg.replaceAll("'", String.raw`'\''`)}'`;
+}
+
 function commandLine(label: string, command: string): string {
     return `${paint.mute(label.padEnd(COMMAND_LABEL_WIDTH))}${paint.bold(command)}`;
 }
 
 export function printBuildSummary(printer: StepPrinter<BuildStep>, { config, bundle }: BuildResult): void {
-    const entry = relative(process.cwd(), bundle.entry);
+    const entry = shellArg(relative(process.cwd(), bundle.entry));
     const counts = [plural(bundle.modules, 'module'), plural(bundle.textFiles, 'text file'), formatBytes(bundle.bytes)];
-    const binary = binaryName(dirname(config.configFile));
+    const binary = shellArg(binaryName(dirname(config.configFile)));
 
     printer.line();
     printer.line(`${counts.map((count) => paint.iris(count)).join(', ')} → ${paint.path(bundle.entry)}`);

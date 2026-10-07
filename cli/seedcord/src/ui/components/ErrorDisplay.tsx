@@ -26,9 +26,7 @@ export function ErrorDisplay({ error }: ErrorDisplayProps): ReactElement {
                 Error: {error.name}
             </Text>
             <Text>{error.message}</Text>
-            {problems.map((problem) => (
-                <Text key={problem}>• {problem}</Text>
-            ))}
+            {problems.length > 0 && <Text>{problems.map((problem) => `• ${problem}`).join('\n')}</Text>}
             {preview.length > 0 && (
                 <Box marginTop={1} flexDirection="column">
                     {preview.map((line) => (
