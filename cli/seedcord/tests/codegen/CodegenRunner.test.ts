@@ -1,18 +1,19 @@
-import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { HostAugmentTarget, HostPluginKeys, SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType } from 'discord.js';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, assert, describe, expect, it } from 'vitest';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
+import { quietSteps } from '#core/output/quietSteps';
 
 import type { ConfigLoader } from '#core/config/ConfigLoader';
-import type { ConfigLocator } from '#core/config/ConfigLocator';
+import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
@@ -49,11 +50,21 @@ function silentLogger(overrides: Partial<ILogger> = {}): ILogger {
     };
 }
 
+// justified: codegen reads only these paths off the config
+function configAt(root: string, instance: string): ResolvedSeedcordDevConfig {
+    return {
+        root,
+        instance,
+        configFile: resolve(root, 'seedcord.config.ts'),
+        entry: resolve(root, 'index.ts'),
+        build: { outDir: resolve(root, 'dist') }
+    } as ResolvedSeedcordDevConfig;
+}
+
 // no commands path, so the scan is empty and the rendered registry is deterministic.
 function makeRunner(root: string, logger: ILogger): CodegenRunner {
-    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
     const configLoader = {
-        load: () => Promise.resolve({ root, instance: resolve(root, 'bot.ts') })
+        load: () => Promise.resolve(configAt(root, resolve(root, 'bot.ts')))
     } as unknown as ConfigLoader;
     const moduleLoader = {
         importModule: () =>
@@ -67,7 +78,13 @@ function makeRunner(root: string, logger: ILogger): CodegenRunner {
             })
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
+    return new CodegenRunner({
+        steps: quietSteps,
+        configLoader,
+        moduleLoader,
+        generator: new AugmentationBuilder(logger),
+        logger
+    });
 }
 
 // importModule returns the branded instance for instancePath and the command module for every other path.
@@ -78,9 +95,8 @@ function scanRunner(
     logger: ILogger
 ): CodegenRunner {
     const instancePath = resolve(root, 'bot.ts');
-    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
     const configLoader = {
-        load: () => Promise.resolve({ root, instance: instancePath })
+        load: () => Promise.resolve(configAt(root, instancePath))
     } as unknown as ConfigLoader;
     const moduleLoader = {
         importModule: (entryPath: string) =>
@@ -96,27 +112,37 @@ function scanRunner(
                 : Promise.resolve(moduleByPath(entryPath))
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
+    return new CodegenRunner({
+        steps: quietSteps,
+        configLoader,
+        moduleLoader,
+        generator: new AugmentationBuilder(logger),
+        logger
+    });
 }
 
 // instance double whose default export carries no SeedcordBrand, to exercise the isSeedcordInstance guard.
 function invalidRunner(root: string, logger: ILogger): CodegenRunner {
-    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
     const configLoader = {
-        load: () => Promise.resolve({ root, instance: resolve(root, 'bot.ts') })
+        load: () => Promise.resolve(configAt(root, resolve(root, 'bot.ts')))
     } as unknown as ConfigLoader;
     const moduleLoader = {
         importModule: () => Promise.resolve({ default: { not: 'branded' } })
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
+    return new CodegenRunner({
+        steps: quietSteps,
+        configLoader,
+        moduleLoader,
+        generator: new AugmentationBuilder(logger),
+        logger
+    });
 }
 
 // dev accepts a default export that resolves to the instance
 function asyncInstanceRunner(root: string, logger: ILogger): CodegenRunner {
-    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
     const configLoader = {
-        load: () => Promise.resolve({ root, instance: resolve(root, 'bot.ts') })
+        load: () => Promise.resolve(configAt(root, resolve(root, 'bot.ts')))
     } as unknown as ConfigLoader;
     const moduleLoader = {
         importModule: () =>
@@ -130,12 +156,17 @@ function asyncInstanceRunner(root: string, logger: ILogger): CodegenRunner {
             })
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
+    return new CodegenRunner({
+        steps: quietSteps,
+        configLoader,
+        moduleLoader,
+        generator: new AugmentationBuilder(logger),
+        logger
+    });
 }
 
 function pluginRunner(root: string, instance: string, pluginKeys: readonly string[], logger: ILogger): CodegenRunner {
-    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
-    const configLoader = { load: () => Promise.resolve({ root, instance }) } as unknown as ConfigLoader;
+    const configLoader = { load: () => Promise.resolve(configAt(root, instance)) } as unknown as ConfigLoader;
     const moduleLoader = {
         importModule: () =>
             Promise.resolve({
@@ -148,7 +179,13 @@ function pluginRunner(root: string, instance: string, pluginKeys: readonly strin
             })
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
+    return new CodegenRunner({
+        steps: quietSteps,
+        configLoader,
+        moduleLoader,
+        generator: new AugmentationBuilder(logger),
+        logger
+    });
 }
 
 describe('CodegenRunner plugin capabilities', () => {
@@ -189,10 +226,6 @@ describe('CodegenRunner plugin capabilities', () => {
 });
 
 describe('CodegenRunner', () => {
-    afterEach(() => {
-        process.exitCode = 0;
-    });
-
     it('writes the rendered registry to the project root', async () => {
         const root = await tempDir('codegen-');
         await makeRunner(root, silentLogger()).run(false);
@@ -201,23 +234,23 @@ describe('CodegenRunner', () => {
         expect(written).toContain("declare module '@seedcord/gateway'");
     });
 
-    it('--check exits non-zero and names the fix when the registry is stale', async () => {
+    it('--check throws and names the fix when the registry is stale', async () => {
         const root = await tempDir('codegen-');
         await writeFile(resolve(root, OUTPUT), 'stale content', 'utf8');
 
-        const errors: string[] = [];
-        await makeRunner(root, silentLogger({ error: (message) => errors.push(String(message)) })).run(true);
+        const check = makeRunner(root, silentLogger()).run(true);
 
-        expect(process.exitCode).toBe(1);
-        expect(errors.join('\n')).toContain('seedcord codegen');
+        await expect(check).rejects.toMatchObject({ code: SeedcordErrorCode.CliCodegenOutOfDate });
+        await expect(check).rejects.toThrow(/seedcord codegen/);
     });
 
-    it('--check exits zero when the registry matches', async () => {
+    it('--check resolves with the registry path when the registry matches', async () => {
         const root = await tempDir('codegen-');
         await makeRunner(root, silentLogger()).run(false);
 
-        await makeRunner(root, silentLogger()).run(true);
-        expect(process.exitCode).toBe(0);
+        await expect(makeRunner(root, silentLogger()).run(true)).resolves.toEqual({
+            outputPath: resolve(root, OUTPUT)
+        });
     });
 
     it('renders an empty registry when the instance declares no commands path', async () => {
@@ -337,17 +370,19 @@ describe('CodegenRunner', () => {
         expect(written).toContain("declare module '@seedcord/gateway'");
     });
 
-    it('--check exits zero and writes nothing when the registry is current', async () => {
+    it('--check leaves a current registry untouched', async () => {
         const root = await tempDir('codegen-');
         const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
 
         const exports = (): Record<string, unknown> => ({ BanCommand });
-
         await scanRunner(root, cmdDir, exports, silentLogger()).run(false);
+        const written = await stat(resolve(root, OUTPUT));
+
         await scanRunner(root, cmdDir, exports, silentLogger()).run(true);
 
-        expect(process.exitCode).toBe(0);
+        const afterCheck = await stat(resolve(root, OUTPUT));
+        expect(afterCheck.mtimeMs).toBe(written.mtimeMs);
     });
 
     it('emits context-menu commands into the user and message registries alongside slash routes', async () => {
@@ -404,8 +439,88 @@ describe('CodegenRunner', () => {
         }
 
         expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenCommandConstructorThrew });
+        expect(caught).toHaveProperty('cause.message', 'the database was not ready');
         expect((caught as Error).message).toContain('BrokenCommand');
         expect((caught as Error).message).toContain('the database was not ready');
+    });
+
+    it('reports every command whose constructor throws at once', async () => {
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
+        await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
+        await writeFile(join(cmdDir, 'roll.ts'), 'export {};', 'utf8');
+
+        class BanCommand extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                throw new Error('Invalid string length');
+            }
+        }
+        class RollCommand extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                throw new Error('Expected a string for option "sides"');
+            }
+        }
+        RegisterCommand('global')(BanCommand);
+        RegisterCommand('global')(RollCommand);
+        const moduleByPath = (path: string): Record<string, unknown> =>
+            path.endsWith('ban.ts') ? { BanCommand } : { RollCommand };
+
+        const caught: unknown = await scanRunner(root, cmdDir, moduleByPath, silentLogger())
+            .run(false)
+            .catch((error: unknown) => error);
+
+        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliCodegenCommandProblems));
+        expect(caught.errors).toMatchObject([
+            {
+                code: SeedcordErrorCode.CliCodegenCommandConstructorThrew,
+                cause: { message: 'Invalid string length' }
+            },
+            {
+                code: SeedcordErrorCode.CliCodegenCommandConstructorThrew,
+                cause: { message: 'Expected a string for option "sides"' }
+            }
+        ]);
+    });
+
+    it('reports the constructor problems found before a file that fails to import', async () => {
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
+        for (const file of ['a-ban.ts', 'b-roll.ts', 'c-broken.ts'])
+            await writeFile(join(cmdDir, file), 'export {};', 'utf8');
+
+        class BanCommand extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                throw new Error('Invalid string length');
+            }
+        }
+        class RollCommand extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                throw new Error('Expected a string for option "sides"');
+            }
+        }
+        RegisterCommand('global')(BanCommand);
+        RegisterCommand('global')(RollCommand);
+        const importFailure = new Error('c-broken.ts has a syntax error');
+        const moduleByPath = (path: string): Record<string, unknown> => {
+            if (path.endsWith('a-ban.ts')) return { BanCommand };
+            if (path.endsWith('b-roll.ts')) return { RollCommand };
+            throw importFailure;
+        };
+
+        const caught: unknown = await scanRunner(root, cmdDir, moduleByPath, silentLogger())
+            .run(false)
+            .catch((error: unknown) => error);
+
+        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliCodegenCommandProblems));
+        expect(caught.errors).toMatchObject([
+            { code: SeedcordErrorCode.CliCodegenCommandConstructorThrew },
+            { code: SeedcordErrorCode.CliCodegenCommandConstructorThrew },
+            importFailure
+        ]);
     });
 
     it('skips a BuilderComponent subclass carrying no @RegisterCommand', async () => {

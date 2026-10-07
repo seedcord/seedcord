@@ -6,7 +6,6 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { TypeChecker } from '#commands/build/builder/TypeChecker';
-import { silentLogger } from '#tests/silentLogger';
 
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 
@@ -33,13 +32,13 @@ function configFor(tsconfig?: string): ResolvedSeedcordDevConfig {
 
 describe('TypeChecker', () => {
     it('reports a build.tsconfig that points at a missing file', async () => {
-        await expect(
-            new TypeChecker(silentLogger).check(configFor(join(projectDir, 'nope.json')))
-        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliBuildTsconfigNotFound });
+        await expect(new TypeChecker().check(configFor(join(projectDir, 'nope.json')))).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliBuildTsconfigNotFound
+        });
     });
 
     it('reports a project with no tsconfig.json and no build.tsconfig', async () => {
-        await expect(new TypeChecker(silentLogger).check(configFor())).rejects.toMatchObject({
+        await expect(new TypeChecker().check(configFor())).rejects.toMatchObject({
             code: SeedcordErrorCode.CliBuildNoTsconfig
         });
     });

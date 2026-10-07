@@ -4,20 +4,33 @@ import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { BuildRunner } from '#commands/build/BuildRunner';
-import { silentLogger } from '#tests/silentLogger';
+import { quietSteps } from '#core/output/quietSteps';
 
 import { hasBun, smokeBunBinary } from './bun';
 import { smoke } from './smoke';
+
+import type { BuildResult } from '#commands/build/BuildRunner';
 
 const HTTP_BOT = join(import.meta.dirname, '../../fixtures/http-bot');
 
 describe('seedcord build on an http bot', () => {
     let output = '';
+    let result: BuildResult;
 
     beforeAll(async () => {
-        await BuildRunner.create(silentLogger).run(HTTP_BOT);
+        result = await BuildRunner.create(quietSteps).run(HTTP_BOT);
         output = await smoke('http', process.execPath, [join(HTTP_BOT, 'dist/index.mjs')]);
     }, 120_000);
+
+    it('reports what it bundled for the summary', () => {
+        expect(result.bundle).toEqual({
+            modules: 7,
+            textFiles: 4,
+            bytes: expect.any(Number) as number,
+            entry: join(HTTP_BOT, 'dist/index.mjs')
+        });
+        expect(result.bundle.bytes).toBeGreaterThan(0);
+    });
 
     it('loads its handlers and text files and answers an unsigned request', () => {
         expect(output).toContain('fixture:text hello from the text table');

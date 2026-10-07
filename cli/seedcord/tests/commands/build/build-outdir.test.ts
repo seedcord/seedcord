@@ -8,7 +8,7 @@ import { BUILT_FILES_KEY } from '@seedcord/utils/node/internal';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { BuildRunner } from '#commands/build/BuildRunner';
-import { silentLogger } from '#tests/silentLogger';
+import { quietSteps } from '#core/output/quietSteps';
 
 let projectDir: string;
 
@@ -27,7 +27,7 @@ afterEach(async () => {
 async function buildWithOutDir(outDir: string): Promise<unknown> {
     const config = { root: './src', instance: './bot.ts', entry: './index.ts', build: { outDir } };
     await writeFile(join(projectDir, 'seedcord.config.ts'), `export default ${JSON.stringify(config)};\n`);
-    return BuildRunner.create(silentLogger)
+    return BuildRunner.create(quietSteps)
         .run(projectDir)
         .then(
             () => null,

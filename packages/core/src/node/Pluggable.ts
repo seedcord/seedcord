@@ -1,5 +1,5 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { SeedcordAggregateError, SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS, Logger } from '@seedcord/logger';
 import { HostPluginKeys, HostShutdown, HostStartup } from '@seedcord/types/internal';
 
@@ -348,10 +348,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     private async runDisposals(phase: ShutdownPhase): Promise<void> {
         const failures: unknown[] = [];
         await this.disposeCompleted(phase, (caught) => failures.push(caught));
-        if (failures.length === 1) throw failures[0];
-        if (failures.length > 1) {
-            throw new SeedcordAggregateError(SeedcordErrorCode.PluginDisposeFailures, failures, [failures.length]);
-        }
+        throwSingleOrAggregate(failures, SeedcordErrorCode.PluginDisposeFailures);
     }
 
     private async disposeCompleted(

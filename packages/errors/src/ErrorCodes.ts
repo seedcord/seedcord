@@ -291,6 +291,12 @@ export enum SeedcordErrorCode {
     CliBuildFolderProblems = 3133,
     /** `build.outDir` already contains other files. */
     CliBuildOutDirNotEmpty = 3134,
+    /** Two or more fields in the seedcord config are missing or invalid. */
+    CliConfigProblems = 3135,
+    /** Two or more command constructors threw during codegen. */
+    CliCodegenCommandProblems = 3136,
+    /** `seedcord codegen --check` found the committed augmentations stale. */
+    CliCodegenOutOfDate = 3137,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

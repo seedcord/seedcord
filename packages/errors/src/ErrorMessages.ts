@@ -45,11 +45,11 @@ const messages = {
         guildId ? `Bot role not found in guild ${guildId}.` : 'Bot role not found in guild.',
     [SeedcordErrorCode.CoreControllerPathMissing]: (controllerName: string, pathKind: string) =>
         `${controllerName} was instantiated without a ${pathKind} path.`,
-    [SeedcordErrorCode.CoreDirectoryImportFailed]: (file: string) => `${file} threw while importing.`,
-    [SeedcordErrorCode.CoreDirectoryUnreadable]: (dir: string) => `${dir} could not be read.`,
-    [SeedcordErrorCode.CoreFileUnreadable]: (file: string) => `${file} could not be read as text.`,
+    [SeedcordErrorCode.CoreDirectoryImportFailed]: (file: string) => `${paint.path(file)} threw while importing.`,
+    [SeedcordErrorCode.CoreDirectoryUnreadable]: (dir: string) => `${paint.path(dir)} could not be read.`,
+    [SeedcordErrorCode.CoreFileUnreadable]: (file: string) => `${paint.path(file)} could not be read as text.`,
     [SeedcordErrorCode.CoreDirectoryOutsideRoot]: (dir: string, root: string) =>
-        `${paint.sky(dir)} is outside ${paint.sky(root)}. ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move the folder under it, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds both.`,
+        `${paint.path(dir)} is outside ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move the folder under it, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds both.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.sky(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>
@@ -205,7 +205,7 @@ const messages = {
         `Unable to resolve migrations at path: ${label}.`,
     [SeedcordErrorCode.PluginKyselyNoMigrationFiles]: () => 'No migration files provided.',
     [SeedcordErrorCode.PluginKyselyInvalidMigrationModule]: (filePath: string) =>
-        `Migration file ${filePath} must export async functions up and down.`,
+        `Migration file ${paint.path(filePath)} must export async functions up and down.`,
     [SeedcordErrorCode.PluginKyselyNonErrorFailure]: (message: string) => `Migration failure: ${message}.`,
     [SeedcordErrorCode.PluginKyselyDisconnectFailed]: () =>
         'Failed to close the Postgres pool cleanly during shutdown.',
@@ -216,55 +216,59 @@ const messages = {
     [SeedcordErrorCode.PluginKyselyBootstrapFailed]: (databaseName: string) =>
         `Failed to ensure database ${databaseName} exists.`,
     [SeedcordErrorCode.PluginKyselyDuplicateMigrationName]: (name: string, first: string, second: string) =>
-        `${paint.sky(first)} and ${paint.sky(second)} are both the migration ${paint.sky(name)}. Kysely identifies a migration by its file name without the extension. Rename one file, or list only one of them.`,
+        `${paint.path(first)} and ${paint.path(second)} are both the migration ${paint.sky(name)}. Kysely identifies a migration by its file name without the extension. Rename one file, or list only one of them.`,
 
     [SeedcordErrorCode.CliConfigInvalidExport]: () => 'Config file must default export an object.',
     [SeedcordErrorCode.CliConfigMissingInstance]: () =>
         'Config must include an `instance` string that points to your Seedcord default export.',
     [SeedcordErrorCode.CliConfigNotFound]: (baseDir: string, candidates: readonly string[]) =>
-        `Unable to locate a Seedcord config in ${baseDir}. Searched for ${candidates.join(', ')}.`,
+        `Searched ${paint.path(baseDir)} for ${candidates.join(', ')} and found none.`,
     [SeedcordErrorCode.CliConfigMissingEntry]: () =>
         'Config must include an `entry` string that points to your startup script.',
     [SeedcordErrorCode.CliConfigEntryOutsideRoot]: (entryPath: string, root: string) =>
-        `Entry file ${entryPath} must reside inside configured root ${root}.`,
-    [SeedcordErrorCode.CliEntryNotFound]: (entryPath: string) => `Cannot find entry file at ${entryPath}.`,
+        `Entry file ${paint.path(entryPath)} is outside ${paint.bold('root')} (${paint.path(root)}). Move it under ${paint.bold('root')}, or set ${paint.bold('root')} to a folder that holds it.`,
+    [SeedcordErrorCode.CliEntryNotFound]: (entryPath: string) => `Cannot find entry file at ${paint.path(entryPath)}.`,
     [SeedcordErrorCode.CliTsImportFailed]: (entryPath: string, reason: string) =>
-        `Failed to import TypeScript file ${entryPath}: ${reason}`,
+        `Failed to import TypeScript file ${paint.path(entryPath)}: ${reason}`,
     [SeedcordErrorCode.CliImportFailed]: (entryPath: string, nativeReason: string, fallbackReason: string) =>
-        `Failed to import ${entryPath}: ${nativeReason} (the jiti fallback also failed: ${fallbackReason})`,
+        `Failed to import ${paint.path(entryPath)}: ${nativeReason} (the jiti fallback also failed: ${fallbackReason})`,
     [SeedcordErrorCode.CliInstanceInvalid]: (instancePath: string) =>
-        `${paint.sky(instancePath)} must default export the bot, a ${paint.bold('new Seedcord(...)')}, from ${paint.bold('@seedcord/gateway')} or ${paint.bold('@seedcord/http')}.`,
+        `${paint.path(instancePath)} must default export the bot, a ${paint.bold('new Seedcord(...)')}, from ${paint.bold('@seedcord/gateway')} or ${paint.bold('@seedcord/http')}.`,
     [SeedcordErrorCode.CliStartFailed]: (instancePath: string, reason: string) =>
-        `Failed to start the bot from ${instancePath}: ${reason}`,
+        `Failed to start the bot from ${paint.path(instancePath)}: ${reason}`,
     [SeedcordErrorCode.CliBuildTsconfigNotFound]: (tsconfig: string) =>
-        `${paint.bold('build.tsconfig')} points at ${paint.sky(tsconfig)}, which does not exist.`,
+        `${paint.bold('build.tsconfig')} points at ${paint.path(tsconfig)}, which does not exist.`,
     [SeedcordErrorCode.CliBuildNoTsconfig]: (configDir: string) =>
-        `${paint.sky(configDir)} does not contain a ${paint.sky('tsconfig.json')}. Add one there, or set ${paint.bold('build.tsconfig')} in the seedcord config.`,
+        `${paint.path(configDir)} does not contain a ${paint.sky('tsconfig.json')}. Add one there, or set ${paint.bold('build.tsconfig')} in the seedcord config.`,
     [SeedcordErrorCode.CliTypescriptMissing]: (projectDir: string) =>
-        `${paint.bold('seedcord build')} type checks with ${paint.bold('typescript')}, which is not installed in ${paint.sky(projectDir)}. Add it as a dev dependency.`,
+        `Add ${paint.bold('typescript')} to ${paint.path(projectDir)} as a dev dependency. ${paint.bold('seedcord build')} type checks with it.`,
     [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `Type check failed:\n${diagnostics}`,
     [SeedcordErrorCode.CliBundleFailed]: (reason: string) => `Vite could not bundle the bot:\n${reason}`,
     [SeedcordErrorCode.CliConfigOutDirDeletesRoot]: (outDir: string, root: string) =>
-        `${paint.bold('build.outDir')} is ${paint.sky(outDir)}, which contains ${paint.bold('root')} (${paint.sky(root)}). ${paint.bold('seedcord build')} empties ${paint.bold('outDir')} before it writes. Point it at a folder of its own, like ${paint.sky('./dist')}.`,
+        `${paint.bold('build.outDir')} is ${paint.path(outDir)}, which contains ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} empties ${paint.bold('outDir')} before it writes. Point it at a folder of its own, like ${paint.sky('./dist')}.`,
     [SeedcordErrorCode.CliBuildOutDirNotEmpty]: (outDir: string) =>
-        `${paint.bold('build.outDir')} is ${paint.sky(outDir)}, which already contains other files. ${paint.bold('seedcord build')} empties ${paint.bold('outDir')} before it writes. Point it at an empty folder, or delete what is in it.`,
+        `${paint.bold('build.outDir')} is ${paint.path(outDir)}, which already contains other files. ${paint.bold('seedcord build')} empties ${paint.bold('outDir')} before it writes. Point it at an empty folder, or delete what is in it.`,
     [SeedcordErrorCode.CliBuildFolderProblems]: (count: number) =>
         `${count} folders in the bot config need fixing before ${paint.bold('seedcord build')} can bundle the bot. Each one is listed below.`,
     [SeedcordErrorCode.CliBuildRelativeFolder]: (folder: string) =>
-        `${paint.sky(folder)} in the bot config is a relative path. A built bot resolves it against the folder it starts in. Build the path from the bot file's folder, like ${paint.sky("resolve(import.meta.dirname, './handlers')")}.`,
+        `${paint.path(folder)} in the bot config is a relative path. A built bot resolves it against the folder it starts in. Build the path from the bot file's folder, like ${paint.sky("resolve(import.meta.dirname, './handlers')")}.`,
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
-        `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
+        `Two commands resolve to the same slash route \`${route}\`. Defined in ${paint.path(firstFile)} and ${paint.path(secondFile)}. Rename one.`,
     [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>
-        `Could not read the commands directory ${dir} during codegen. ${reason}`,
+        `Could not read the commands directory ${paint.path(dir)} during codegen. ${reason}`,
     [SeedcordErrorCode.CliCodegenCommandConstructorThrew]: (name: string, file: string, reason: string) =>
-        `${name} threw while codegen constructed it. Fix its constructor in ${file}. ${reason}`,
+        `${name} threw while codegen constructed it. Fix its constructor in ${paint.path(file)}. ${reason}`,
+    [SeedcordErrorCode.CliCodegenCommandProblems]: (count: number) =>
+        `${count} command files need fixing before codegen can finish. Each one is listed below.`,
+    [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
+        `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliCodegenDuplicateContextMenu]: (
         kind: string,
         name: string,
         firstFile: string,
         secondFile: string
     ) =>
-        `Two ${kind} context-menu commands share the name \`${name}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
+        `Two ${kind} context-menu commands share the name \`${name}\`. Defined in ${paint.path(firstFile)} and ${paint.path(secondFile)}. Rename one.`,
     [SeedcordErrorCode.CliCleanAppFetchFailed]: (reason: string) =>
         `Could not resolve the application from the bot token. ${reason}`,
     [SeedcordErrorCode.CliCleanNoGuilds]: () =>
@@ -283,6 +287,8 @@ const messages = {
         `${url} did not answer within ${seconds}s, so nothing was PATCHed to Discord.`,
     [SeedcordErrorCode.CliConfigInvalidField]: (field: string, expected: string) =>
         `Config \`${field}\` must be ${expected} when provided.`,
+    [SeedcordErrorCode.CliConfigProblems]: (count: number) =>
+        `${count} fields in the seedcord config need fixing. Each one is listed below.`,
     [SeedcordErrorCode.CreateCancelled]: () => 'Cancelled.',
     [SeedcordErrorCode.CreateFlagNotApplicable]: (flag: string) =>
         `The --${flag} flag does not apply to the answers you gave.`,
@@ -290,7 +296,7 @@ const messages = {
     // node's parseArgs message ends on an unclosed quote
     [SeedcordErrorCode.CreateBadUsage]: (reason: string) => `${reason}\nRun with --help for the flag list.`,
     [SeedcordErrorCode.CreateTargetNotEmpty]: (target: string) =>
-        `${target} already has files in it. Pick an empty directory or a name that does not exist yet.`,
+        `${paint.path(target)} already has files in it. Pick an empty directory or a name that does not exist yet.`,
     [SeedcordErrorCode.CreateStepFailed]: (command: string, reason: string) => `\`${command}\` failed.\n${reason}`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 

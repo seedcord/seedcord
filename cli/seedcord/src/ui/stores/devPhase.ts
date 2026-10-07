@@ -1,3 +1,5 @@
+import { paint } from '@seedcord/errors';
+
 import { ui } from '#ui/palette';
 
 import type { TextProps } from 'ink';
@@ -29,6 +31,6 @@ export const PHASE_META = {
     running: { label: 'running', icon: '●', color: ui.good, kind: 'arc' },
     'restart-required': { label: 'restart required', icon: '◆', color: ui.warn, kind: 'static' },
     disconnected: { label: 'offline', icon: '○', color: ui.muted, kind: 'static' },
-    error: { label: 'error', icon: '✘', color: ui.bad, kind: 'static' },
+    error: { label: 'error', icon: paint.cross, color: ui.bad, kind: 'static' },
     quitting: { label: 'quitting', icon: '◐', color: ui.muted, kind: 'spinner' }
 } as const satisfies Record<DevPhase, PhaseMeta>;

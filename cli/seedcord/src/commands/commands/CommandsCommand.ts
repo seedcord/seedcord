@@ -3,6 +3,7 @@ import { validateDiscordToken, WORDMARK } from '@seedcord/errors/internal';
 import { Envapter } from 'envapt';
 
 import { BaseCommand } from '#core/BaseCommand';
+import { cliLogger } from '#core/cliLogger';
 import { isInteractive } from '#core/interactive';
 
 import { CleanRunner } from './CleanRunner';
@@ -25,10 +26,11 @@ export function hasCleanFlags(options: CleanInvocation): boolean {
 }
 
 export class CommandsCommand extends BaseCommand {
+    private readonly logger = cliLogger('Commands');
     private readonly cleanRunner: CleanRunner;
 
     constructor() {
-        super('commands', 'Inspect and clean deployed guild commands', 'Commands');
+        super('commands', 'Inspect and clean deployed guild commands');
         this.cleanRunner = CleanRunner.create();
     }
 

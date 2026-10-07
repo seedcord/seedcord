@@ -8,7 +8,6 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { resolveProjectTsc } from '#core/modules/resolveProjectTsc';
 
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
-import type { ILogger } from '@seedcord/types';
 
 interface ProcessResult {
     exitCode: number;
@@ -18,13 +17,9 @@ interface ProcessResult {
 const MAX_OUTPUT_CHARS = 24_000;
 
 export class TypeChecker {
-    constructor(private readonly logger: ILogger) {}
-
-    public async check(config: ResolvedSeedcordDevConfig): Promise<void> {
+    public async check(config: ResolvedSeedcordDevConfig): Promise<{ tsconfig: string }> {
         const tsconfigPath = this.resolveTsconfig(config);
         const projectDir = dirname(config.configFile);
-
-        this.logger.info(`Type checking with ${tsconfigPath}`);
 
         const tsc = resolveProjectTsc(projectDir);
         if (!tsc) throw new SeedcordError(SeedcordErrorCode.CliTypescriptMissing, [projectDir]);
@@ -34,7 +29,7 @@ export class TypeChecker {
             [tsc, '-p', tsconfigPath, '--noEmit', '--pretty', 'false'],
             projectDir
         );
-        if (result.exitCode === 0) return;
+        if (result.exitCode === 0) return { tsconfig: tsconfigPath };
 
         throw new SeedcordError(SeedcordErrorCode.CliBuildFailed, [this.truncate(result.output)]);
     }

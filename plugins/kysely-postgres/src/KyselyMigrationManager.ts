@@ -183,8 +183,7 @@ export class KyselyMigrationManager {
         }
 
         if (migrationStat?.isDirectory()) {
-            const directory = this.relativePath(resolvedTarget);
-            this.ctx.logger.debug(paint.mute(`Loading migrations directory ${paint.amber(directory)}`));
+            this.ctx.logger.debug(paint.mute(`Loading migrations directory ${paint.path(resolvedTarget)}`));
             return new FileMigrationProvider({ fs, path, migrationFolder: resolvedTarget });
         }
 
@@ -244,7 +243,7 @@ export class KyselyMigrationManager {
 
         this.ctx.logger.debug('Loading migration file(s):');
         for (const file of files) {
-            this.ctx.logger.utils.item(`${paint.amber(this.relativePath(file))}`, 'debug');
+            this.ctx.logger.utils.item(paint.path(file), 'debug');
         }
     }
 
@@ -267,12 +266,12 @@ export class KyselyMigrationManager {
 
         for (const result of results) {
             if (result.status === 'Success') {
-                this.ctx.logger.info(`${paint.mint('✔︎')} ${paint.sky.bold(result.migrationName)}`);
+                this.ctx.logger.info(`${paint.mint(paint.check)} ${paint.sky.bold(result.migrationName)}`);
                 continue;
             }
 
             if (result.status === 'Error') {
-                this.ctx.logger.error(`${paint.coral('✘')} ${paint.sky.bold(result.migrationName)}`);
+                this.ctx.logger.error(`${paint.coral(paint.cross)} ${paint.sky.bold(result.migrationName)}`);
                 continue;
             }
 
@@ -288,19 +287,10 @@ export class KyselyMigrationManager {
             const name = migrationName(filePath);
             const first = firstFileFor.get(name);
             if (first !== undefined) {
-                throw new SeedcordError(SeedcordErrorCode.PluginKyselyDuplicateMigrationName, [
-                    name,
-                    this.relativePath(first),
-                    this.relativePath(filePath)
-                ]);
+                throw new SeedcordError(SeedcordErrorCode.PluginKyselyDuplicateMigrationName, [name, first, filePath]);
             }
             firstFileFor.set(name, filePath);
         }
-    }
-
-    private relativePath(filePath: string): string {
-        const relative = path.relative(this.ctx.baseDir, filePath);
-        return relative.startsWith('..') ? filePath : relative;
     }
 
     private resolvePath(target: string): string {

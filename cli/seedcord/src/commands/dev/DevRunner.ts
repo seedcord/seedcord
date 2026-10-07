@@ -1,10 +1,11 @@
 import { settleWithin } from '@seedcord/core/node/internal';
-import { Logger } from '@seedcord/logger';
+import { paint } from '@seedcord/errors';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
+import { cliLogger } from '#core/cliLogger';
 import { ConfigLoader } from '#core/config/ConfigLoader';
-import { ConfigLocator } from '#core/config/ConfigLocator';
 import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
+import { quietSteps } from '#core/output/quietSteps';
 import { resetChannelColors } from '#ui/channelColor';
 import { profileMark } from '#ui/profile';
 
@@ -13,7 +14,7 @@ import { ViteDevRuntime } from './runtime/ViteDevRuntime';
 import { createTunnelCoordinator } from './tunnel/createTunnelCoordinator';
 import { TunnelRouter } from './tunnel/TunnelRouter';
 
-import type { ResolvedSeedcordDevConfig, ResolvedTunnel } from '#core/config/schema';
+import type { ResolvedTunnel } from '#core/config/schema';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { TunnelCoordinator } from './tunnel/TunnelCoordinator';
 import type { ILogger } from '@seedcord/types';
@@ -21,7 +22,6 @@ import type { ILogger } from '@seedcord/types';
 const TUNNEL_TEARDOWN_MS = 3000;
 
 export interface DevRunnerDeps {
-    readonly locator: ConfigLocator;
     readonly configLoader: ConfigLoader;
     readonly store: DevStore;
     readonly codegen: CodegenRunner;
@@ -40,18 +40,16 @@ export class DevRunner {
 
     constructor(private readonly deps: DevRunnerDeps) {}
 
-    public static create(logger: Logger, store: DevStore): DevRunner {
-        const moduleLoader = new RuntimeModuleLoader();
-        const codegenLogger = new Logger('Codegen', { channel: 'cli' });
-        const tunnelLogger = new Logger('Tunnel', { channel: 'cli' });
+    public static create(store: DevStore): DevRunner {
+        const codegenLogger = cliLogger('Codegen');
+        const tunnelLogger = cliLogger('Tunnel');
         const makeCoordinator = (tunnel: ResolvedTunnel): TunnelCoordinator | undefined =>
             createTunnelCoordinator(tunnelLogger, (status) => store.setTunnel(status), tunnel);
 
         return new DevRunner({
-            locator: new ConfigLocator(logger),
-            configLoader: new ConfigLoader(moduleLoader, logger),
+            configLoader: new ConfigLoader(new RuntimeModuleLoader()),
             store,
-            codegen: CodegenRunner.create(codegenLogger),
+            codegen: CodegenRunner.create(quietSteps, codegenLogger),
             codegenLogger,
             tunnel: new TunnelRouter(makeCoordinator, tunnelLogger)
         });
@@ -97,7 +95,7 @@ export class DevRunner {
         resetChannelColors();
         this.deps.store.setPhase('starting');
         this.deps.store.setBusy(true);
-        const config = await this.loadConfig();
+        const config = await this.deps.configLoader.load();
         profileMark('config');
         this.deps.store.setIdleAnimation(config.idleAnimation);
         const runtime = new ViteDevRuntime();
@@ -165,7 +163,8 @@ export class DevRunner {
         if (this.isRegenerating) return;
         this.isRegenerating = true;
         try {
-            await this.deps.codegen.run(false);
+            const { outputPath } = await this.deps.codegen.run(false);
+            this.deps.codegenLogger.info(`Augmentations written to ${paint.path(outputPath)}`);
         } catch (error: unknown) {
             // a codegen throw must not take the dev session down
             this.deps.codegenLogger.error('Command registry regeneration failed', error);
@@ -178,10 +177,5 @@ export class DevRunner {
         return new Promise<void>((resolve) => {
             this.signalResolve = resolve;
         });
-    }
-
-    private async loadConfig(): Promise<ResolvedSeedcordDevConfig> {
-        const configPath = this.deps.locator.locate();
-        return this.deps.configLoader.load(configPath);
     }
 }
