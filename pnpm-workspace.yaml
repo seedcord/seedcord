@@ -13,7 +13,7 @@ overrides:
   # forces one api-types copy so the djs-free reply types assign to djs
   discord-api-types: ^0.38.52
   # miniflare pins both below the fix
-  sharp: ^0.35.4 # < 0.35.4 has GHSA-rgj7-g3m4-5g8c through libheif
+  sharp: ^0.35.5 # < 0.35.5 has GHSA-wq5f-xc86-pv6w through librsvg
   'undici@7': ^7.29.1 # < 7.29.1 has GHSA-4cwx-7wf7-3272
 
 packageExtensions:
