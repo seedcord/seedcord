@@ -30,14 +30,14 @@ function runtimeName(): string {
     return 'Bun' in globalThis ? 'bun' : 'node';
 }
 
-// characters POSIX shells and cmd.exe both read as part of a plain word
+// characters every shell reads as part of a plain word
 const SHELL_SAFE = /^[\w./@+=:,-]+$/;
 
+// single quotes keep $ literal in POSIX shells and in PowerShell, the windows default. cmd.exe is left out
 function shellArg(arg: string): string {
     if (SHELL_SAFE.test(arg)) return arg;
-    // cmd.exe keeps single quotes as part of the argument. a windows path cannot contain a double quote
-    if (process.platform === 'win32') return `"${arg}"`;
-    return `'${arg.replaceAll("'", String.raw`'\''`)}'`;
+    const escapedQuote = process.platform === 'win32' ? "''" : String.raw`'\''`;
+    return `'${arg.replaceAll("'", escapedQuote)}'`;
 }
 
 // node and bun take forward slashes on windows too

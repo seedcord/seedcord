@@ -61,13 +61,19 @@ describe('printBuildSummary', () => {
         expect(summary).toMatch(/--compile '[^']* output\/index\.mjs' --outfile my-bot\n/);
     });
 
-    it('quotes with double quotes on windows', async () => {
+    it('keeps a $ and a quote literal in a posix shell', async () => {
+        const summary = await summaryFor({ name: 'my-bot' }, "it's $cache");
+
+        expect(summary).toMatch(/run {6}node '[^\n]*it'\\''s \$cache\/index\.mjs'\n/);
+    });
+
+    it('keeps a $ and a quote literal in powershell on windows', async () => {
         const platform = Object.getOwnPropertyDescriptor(process, 'platform');
         Object.defineProperty(process, 'platform', { value: 'win32' });
         try {
-            const summary = await summaryFor({ name: 'my-bot' }, 'build output');
+            const summary = await summaryFor({ name: 'my-bot' }, "it's $cache");
 
-            expect(summary).toMatch(/run {6}node "[^"]* output\/index\.mjs"\n/);
+            expect(summary).toMatch(/run {6}node '[^\n]*it''s \$cache\/index\.mjs'\n/);
         } finally {
             if (platform) Object.defineProperty(process, 'platform', platform);
         }
