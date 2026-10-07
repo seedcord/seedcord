@@ -19,7 +19,7 @@ function indent(text: string): string {
         .join('\n');
 }
 
-function messageOf(error: unknown): string {
+export function messageOf(error: unknown): string {
     if (isSeedcordError(error)) return `${paint.mute(`[${error.code}]`)} ${error.message}`;
     if (Error.isError(error)) return error.message;
     return String(error);
@@ -30,6 +30,15 @@ function renderStack(error: Error, width: number | undefined): string {
     const [title = '', ...frames] = (error.stack ?? `${error.name}: ${error.message}`).split('\n');
     const framesBlock = frames.length > 0 ? `${paint.mute(indent(frames.join('\n')))}\n` : '';
     return wrapLines(title, width, MESSAGE) + framesBlock;
+}
+
+// the stack repeats every line of the message before the frames
+function stackFrames(error: Error): string {
+    const stack = error.stack ?? '';
+    return stack
+        .split('\n')
+        .filter((line) => /^\s+at /.test(line))
+        .join('\n');
 }
 
 function renderCause(cause: unknown): string {
@@ -50,7 +59,7 @@ export function renderError(error: unknown, { verbose, width }: RenderOptions): 
         }
     }
     if (verbose) {
-        output += `\n${paint.mute(indent(error.stack ?? ''))}\n`;
+        output += `\n${paint.mute(indent(stackFrames(error)))}\n`;
         if (error.cause !== undefined) output += renderCause(error.cause);
     }
     return output;

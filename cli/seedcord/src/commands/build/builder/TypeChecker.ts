@@ -17,8 +17,7 @@ interface ProcessResult {
 const MAX_OUTPUT_CHARS = 24_000;
 
 export class TypeChecker {
-    // returns the tsconfig it checked with
-    public async check(config: ResolvedSeedcordDevConfig): Promise<string> {
+    public async check(config: ResolvedSeedcordDevConfig): Promise<{ tsconfig: string }> {
         const tsconfigPath = this.resolveTsconfig(config);
         const projectDir = dirname(config.configFile);
 
@@ -30,7 +29,7 @@ export class TypeChecker {
             [tsc, '-p', tsconfigPath, '--noEmit', '--pretty', 'false'],
             projectDir
         );
-        if (result.exitCode === 0) return tsconfigPath;
+        if (result.exitCode === 0) return { tsconfig: tsconfigPath };
 
         throw new SeedcordError(SeedcordErrorCode.CliBuildFailed, [this.truncate(result.output)]);
     }

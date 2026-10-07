@@ -1,7 +1,7 @@
 import { stripVTControlCharacters } from 'node:util';
 
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { StepPrinter } from '#core/output/StepPrinter';
 
@@ -43,6 +43,10 @@ function printer(verbose = false): StepPrinter<'config' | 'type check'> {
 beforeEach(() => {
     stdout = pipedTerminal();
     stderr = pipedTerminal();
+});
+
+afterEach(() => {
+    LoggerChannelRegistry.instance.reset();
 });
 
 describe('StepPrinter', () => {
@@ -90,7 +94,6 @@ describe('StepPrinter', () => {
 
         expect(consoleSink.records).toEqual([]);
         expect(stdout.text()).toMatch(/│ .*connecting to the database/);
-        registry.reset();
     });
 
     it('shows logger output below info under a step only with --verbose', async () => {
@@ -107,7 +110,6 @@ describe('StepPrinter', () => {
 
         await printer(true).step('config', warmCache);
         expect(stdout.text()).toContain('cache warmed');
-        registry.reset();
     });
 
     it('prints a detail line only under --verbose', () => {

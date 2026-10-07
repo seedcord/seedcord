@@ -62,7 +62,7 @@ export class BuildRunner {
         await steps.step(
             'type check',
             () => typeChecker.check(config),
-            (tsconfig) => paint.path(tsconfig)
+            ({ tsconfig }) => paint.path(tsconfig)
         );
         const bundle = await steps.step('bundle', () => bundler.build(config));
 

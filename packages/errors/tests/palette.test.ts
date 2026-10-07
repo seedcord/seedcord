@@ -18,6 +18,11 @@ describe('paint.path', () => {
         expect(shown(process.cwd())).toBe('./');
     });
 
+    it('shows a path with a trailing slash the same as one without', () => {
+        expect(shown(`${process.cwd()}/`)).toBe('./');
+        expect(shown(`${join(process.cwd(), 'src')}/`)).toBe('src');
+    });
+
     it('keeps a path outside the working directory absolute', () => {
         const outside = join(process.cwd(), '..', 'elsewhere');
 

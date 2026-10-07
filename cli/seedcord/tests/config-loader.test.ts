@@ -79,21 +79,22 @@ describe('ConfigLoader', () => {
     });
 
     it.each([['yes'], ['http://bot.example.com'], [42]])('rejects %s as a tunnel', async (tunnel) => {
-        await expect(projectWith({ ...MINIMAL, tunnel }).load()).rejects.toThrow(
-            'Config `tunnel` must be a boolean or an https URL when provided.'
-        );
+        await expect(projectWith({ ...MINIMAL, tunnel }).load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigInvalidField,
+            message: expect.stringContaining('`tunnel`') as string
+        });
     });
 
     it('throws when instance is missing', async () => {
-        await expect(projectWith({ entry: './index.ts' }).load()).rejects.toThrow(
-            'Config must include an `instance` string'
-        );
+        await expect(projectWith({ entry: './index.ts' }).load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigMissingInstance
+        });
     });
 
     it('throws when entry is missing', async () => {
-        await expect(projectWith({ instance: './bot.ts' }).load()).rejects.toThrow(
-            'Config must include an `entry` string'
-        );
+        await expect(projectWith({ instance: './bot.ts' }).load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigMissingEntry
+        });
     });
 
     it('reports every missing and invalid field at once', async () => {
@@ -102,10 +103,13 @@ describe('ConfigLoader', () => {
             .catch((caught: unknown) => caught);
 
         assert(isSeedcordError(error, 'SeedcordAggregateError', SeedcordErrorCode.CliConfigProblems));
-        expect(error.errors.map((child: unknown) => (isSeedcordError(child) ? child.message : child))).toEqual([
-            'Config must include an `instance` string that points to your Seedcord default export.',
-            'Config `tunnel` must be a boolean or an https URL when provided.',
-            'Config `build.outDir` must be a string when provided.'
+        expect(error.errors).toMatchObject([
+            { code: SeedcordErrorCode.CliConfigMissingInstance },
+            { code: SeedcordErrorCode.CliConfigInvalidField, message: expect.stringContaining('`tunnel`') as string },
+            {
+                code: SeedcordErrorCode.CliConfigInvalidField,
+                message: expect.stringContaining('`build.outDir`') as string
+            }
         ]);
     });
 

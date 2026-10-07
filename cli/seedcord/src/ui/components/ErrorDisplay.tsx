@@ -1,6 +1,8 @@
+import { isSeedcordError } from '@seedcord/errors';
 import { Box, Text } from 'ink';
 import React from 'react';
 
+import { messageOf } from '#core/output/renderError';
 import { ui } from '#ui/palette';
 
 import type { ReactElement } from 'react';
@@ -16,6 +18,7 @@ export function ErrorDisplay({ error }: ErrorDisplayProps): ReactElement {
     const frames = (error.stack?.split('\n') ?? []).slice(1);
     const preview = frames.slice(0, STACK_PREVIEW_LINES);
     const hidden = frames.length - preview.length;
+    const problems = isSeedcordError(error, 'SeedcordAggregateError') ? error.errors.map(messageOf) : [];
 
     return (
         <Box flexDirection="column" borderStyle="round" borderColor={ui.bad} paddingX={1}>
@@ -23,6 +26,9 @@ export function ErrorDisplay({ error }: ErrorDisplayProps): ReactElement {
                 Error: {error.name}
             </Text>
             <Text>{error.message}</Text>
+            {problems.map((problem) => (
+                <Text key={problem}>• {problem}</Text>
+            ))}
             {preview.length > 0 && (
                 <Box marginTop={1} flexDirection="column">
                     {preview.map((line) => (

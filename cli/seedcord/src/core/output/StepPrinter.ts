@@ -21,7 +21,7 @@ interface StepPrinterOptions<Label extends string> {
     stderr?: Terminal;
 }
 
-// "123.4s" is the widest time a build step reaches
+// six characters fit any time formatDuration writes under 1000s
 const TIME_WIDTH = 6;
 const DETAIL_KEY_WIDTH = 10;
 

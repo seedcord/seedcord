@@ -8,11 +8,12 @@ export const BRAND = {
 } as const;
 
 // the edge build of this package can't import node:path
-function relativeToCwd(path: string): string {
-    if (typeof process === 'undefined' || typeof process.cwd !== 'function') return path;
+function relativeToCwd(rawPath: string): string {
+    if (typeof process === 'undefined' || typeof process.cwd !== 'function') return rawPath;
 
+    const path = rawPath.length > 1 ? rawPath.replace(/[/\\]+$/, '') : rawPath;
     const cwd = process.cwd();
-    // a bare dot reads as a full stop at the end of a message
+    // a bare dot reads as a full stop
     if (path === cwd) return './';
 
     const underCwd = path.startsWith(`${cwd}/`) || path.startsWith(`${cwd}\\`);

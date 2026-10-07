@@ -44,7 +44,7 @@ interface ResolvedInstance {
     pluginKeys: readonly string[];
 }
 
-export const CODEGEN_STEPS = ['read config', 'load bot', 'scan commands', 'write types', 'check types'] as const;
+export const CODEGEN_STEPS = ['read config', 'load bot', 'scan commands', 'write types', 'compare types'] as const;
 type CodegenStep = (typeof CODEGEN_STEPS)[number];
 
 interface CodegenResult {
@@ -94,7 +94,7 @@ export class CodegenRunner {
 
         const outputPath = resolve(config.root, OUTPUT_FILENAME);
         const render = (): string => this.render(config, instance, commands);
-        if (check) await steps.step('check types', () => this.check(render(), outputPath));
+        if (check) await steps.step('compare types', () => this.check(render(), outputPath));
         else await steps.step('write types', () => this.write(render(), outputPath));
 
         return { outputPath };
@@ -120,8 +120,7 @@ export class CodegenRunner {
         return commands;
     }
 
-    // the bot scans under tsx/vite where import() takes a .ts path. codegen runs under plain node, hence the
-    // tsx-backed module loader below.
+    // plain node can't import a .ts command file. the module loader runs it through jiti
     private async *walk(dir: string, seen: Set<unknown>, isRoot: boolean): AsyncGenerator<CommandClassFile> {
         let entries;
         try {

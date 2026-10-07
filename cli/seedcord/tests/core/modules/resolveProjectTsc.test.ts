@@ -28,16 +28,13 @@ function installTypescript(manifest: Record<string, unknown>): string {
 
 describe('resolveProjectTsc', () => {
     it('finds tsc in a typescript 7 install', () => {
-        const tsc = installTypescript({
-            bin: { tsc: 'bin/tsc' },
-            exports: { '.': './lib/version.cjs', './package.json': './package.json' }
-        });
+        const tsc = installTypescript({ exports: { '.': './lib/version.cjs', './package.json': './package.json' } });
 
         expect(resolveProjectTsc(projectDir)).toBe(tsc);
     });
 
     it('finds tsc in a typescript 6 install', () => {
-        const tsc = installTypescript({ bin: { tsc: './bin/tsc' } });
+        const tsc = installTypescript({});
 
         expect(resolveProjectTsc(projectDir)).toBe(tsc);
     });

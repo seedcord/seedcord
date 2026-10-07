@@ -60,6 +60,15 @@ describe('renderError', () => {
         );
     });
 
+    it('prints a multi-line message once under --verbose', () => {
+        const error = new SeedcordError(SeedcordErrorCode.CliBuildFailed, ['src/a.ts(1,1): error TS1']);
+
+        const output = rendered(error, { verbose: true });
+
+        expect(output.split('Type check failed:')).toHaveLength(2);
+        expect(output.split('src/a.ts(1,1): error TS1')).toHaveLength(2);
+    });
+
     it('adds the stack and the cause to a seedcord error under --verbose', () => {
         const cause = new Error('rolldown exploded');
         const error = new SeedcordError(SeedcordErrorCode.CliBundleFailed, ['rolldown exploded'], { cause });

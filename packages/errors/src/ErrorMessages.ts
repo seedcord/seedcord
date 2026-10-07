@@ -49,7 +49,7 @@ const messages = {
     [SeedcordErrorCode.CoreDirectoryUnreadable]: (dir: string) => `${paint.path(dir)} could not be read.`,
     [SeedcordErrorCode.CoreFileUnreadable]: (file: string) => `${paint.path(file)} could not be read as text.`,
     [SeedcordErrorCode.CoreDirectoryOutsideRoot]: (dir: string, root: string) =>
-        `${paint.path(dir)} is outside ${paint.path(root)}. ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move the folder under it, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds both.`,
+        `${paint.path(dir)} is outside ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move the folder under it, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds both.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.sky(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>
@@ -222,11 +222,11 @@ const messages = {
     [SeedcordErrorCode.CliConfigMissingInstance]: () =>
         'Config must include an `instance` string that points to your Seedcord default export.',
     [SeedcordErrorCode.CliConfigNotFound]: (baseDir: string, candidates: readonly string[]) =>
-        `Unable to locate a Seedcord config in ${paint.path(baseDir)}. Searched for ${candidates.join(', ')}.`,
+        `Searched ${paint.path(baseDir)} for ${candidates.join(', ')} and found none.`,
     [SeedcordErrorCode.CliConfigMissingEntry]: () =>
         'Config must include an `entry` string that points to your startup script.',
     [SeedcordErrorCode.CliConfigEntryOutsideRoot]: (entryPath: string, root: string) =>
-        `Entry file ${paint.path(entryPath)} must reside inside configured root ${paint.path(root)}.`,
+        `Entry file ${paint.path(entryPath)} is outside ${paint.bold('root')} (${paint.path(root)}). Move it under ${paint.bold('root')}, or set ${paint.bold('root')} to a folder that holds it.`,
     [SeedcordErrorCode.CliEntryNotFound]: (entryPath: string) => `Cannot find entry file at ${paint.path(entryPath)}.`,
     [SeedcordErrorCode.CliTsImportFailed]: (entryPath: string, reason: string) =>
         `Failed to import TypeScript file ${paint.path(entryPath)}: ${reason}`,
@@ -241,7 +241,7 @@ const messages = {
     [SeedcordErrorCode.CliBuildNoTsconfig]: (configDir: string) =>
         `${paint.path(configDir)} does not contain a ${paint.sky('tsconfig.json')}. Add one there, or set ${paint.bold('build.tsconfig')} in the seedcord config.`,
     [SeedcordErrorCode.CliTypescriptMissing]: (projectDir: string) =>
-        `${paint.bold('seedcord build')} type checks with ${paint.bold('typescript')}, which is not installed in ${paint.path(projectDir)}. Add it as a dev dependency.`,
+        `Add ${paint.bold('typescript')} to ${paint.path(projectDir)} as a dev dependency. ${paint.bold('seedcord build')} type checks with it.`,
     [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `Type check failed:\n${diagnostics}`,
     [SeedcordErrorCode.CliBundleFailed]: (reason: string) => `Vite could not bundle the bot:\n${reason}`,
     [SeedcordErrorCode.CliConfigOutDirDeletesRoot]: (outDir: string, root: string) =>

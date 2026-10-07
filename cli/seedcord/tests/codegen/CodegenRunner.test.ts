@@ -472,10 +472,16 @@ describe('CodegenRunner', () => {
             .catch((error: unknown) => error);
 
         assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliCodegenCommandProblems));
-        const commandNames = caught.errors.map((child: unknown) =>
-            isSeedcordError(child) ? child.message.split(' ')[0] : child
-        );
-        expect(commandNames).toEqual(['BanCommand', 'RollCommand']);
+        expect(caught.errors).toMatchObject([
+            {
+                code: SeedcordErrorCode.CliCodegenCommandConstructorThrew,
+                cause: { message: 'Invalid string length' }
+            },
+            {
+                code: SeedcordErrorCode.CliCodegenCommandConstructorThrew,
+                cause: { message: 'Expected a string for option "sides"' }
+            }
+        ]);
     });
 
     it('skips a BuilderComponent subclass carrying no @RegisterCommand', async () => {

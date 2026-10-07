@@ -1,3 +1,5 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
 import { render } from 'ink-testing-library';
 import React from 'react';
 import { describe, expect, it } from 'vitest';
@@ -13,5 +15,21 @@ describe('ErrorDisplay', () => {
 
         expect(action).toBeGreaterThan(0);
         expect(lines[action + 1]).toContain(BOTTOM);
+    });
+
+    it('lists every problem in an aggregate under its message', () => {
+        const error = new SeedcordAggregateError(
+            SeedcordErrorCode.CliConfigProblems,
+            [
+                new SeedcordError(SeedcordErrorCode.CliConfigMissingInstance),
+                new SeedcordError(SeedcordErrorCode.CliConfigInvalidField, ['tunnel', 'a boolean or an https URL'])
+            ],
+            [2]
+        );
+
+        const frame = render(<ErrorDisplay error={error} />).lastFrame() ?? '';
+
+        expect(frame).toContain('`instance`');
+        expect(frame).toContain('`tunnel`');
     });
 });

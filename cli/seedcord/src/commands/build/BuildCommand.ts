@@ -1,8 +1,4 @@
-import { isSeedcordError } from '@seedcord/errors';
-
 import { BaseCommand } from '#core/BaseCommand';
-import { StepPrinter } from '#core/output/StepPrinter';
-import { isVerbose } from '#core/verbose';
 
 import { BUILD_STEPS, BuildRunner } from './BuildRunner';
 import { printBuildSummary } from './printBuildSummary';
@@ -18,20 +14,10 @@ export class BuildCommand extends BaseCommand {
         program
             .command(this.name)
             .description(this.description)
-            .action(async (_options, command) => {
-                const printer = new StepPrinter({
-                    command: this.name,
-                    labels: BUILD_STEPS,
-                    verbose: isVerbose(command)
-                });
-                printer.header();
-                try {
+            .action((_options, command) =>
+                this.runSteps(command, BUILD_STEPS, async (printer) => {
                     printBuildSummary(printer, await BuildRunner.create(printer).run());
-                } catch (error: unknown) {
-                    printer.fail(error);
-                    if (isSeedcordError(error)) process.exitCode = 1;
-                    else process.exit(1);
-                }
-            });
+                })
+            );
     }
 }
