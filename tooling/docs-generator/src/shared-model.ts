@@ -24,6 +24,37 @@ const containerKey = (member: ApiJsonMember): string =>
 // AE writes `!~Name` for a declaration the entry point pulled in without exporting it
 const isLocal = (member: ApiJsonMember): boolean => (member.canonicalReference ?? '').includes('!~');
 
+type ExportedByLocal = Map<string, string>;
+
+function recordPromotion(promotions: ExportedByLocal, claimed: ApiJsonMember, incoming: ApiJsonMember): void {
+    const [local, exported] = isLocal(claimed) ? [claimed, incoming] : [incoming, claimed];
+    if (!isLocal(local) || isLocal(exported)) return;
+    promotions.set(local.canonicalReference ?? '', exported.canonicalReference ?? '');
+}
+
+// `!~Base:class#attach:member(1)` points at a member of `!~Base:class`
+function promote(reference: string, promotions: ExportedByLocal): string {
+    for (const [local, exported] of promotions) {
+        if (reference.startsWith(local)) return exported + reference.slice(local.length);
+    }
+    return reference;
+}
+
+function retarget(node: unknown, promotions: ExportedByLocal): void {
+    if (Array.isArray(node)) {
+        for (const item of node) retarget(item, promotions);
+        return;
+    }
+    if (typeof node !== 'object' || node === null) return;
+
+    // justified: a parsed JSON object, walked key by key
+    const record = node as Record<string, unknown>;
+    for (const [key, value] of Object.entries(record)) {
+        if (key === 'canonicalReference' && typeof value === 'string') record[key] = promote(value, promotions);
+        else retarget(value, promotions);
+    }
+}
+
 /**
  * Write a copy of the package's root model that also carries every subpath symbol, for sibling packages
  * to resolve against.
@@ -46,6 +77,7 @@ export async function writeSharedModel(
     if (!rootEntryPoint) return;
 
     const positions = new Map(rootEntryPoint.members.map((member, index) => [containerKey(member), index]));
+    const promotions: ExportedByLocal = new Map();
 
     for (const subpath of subpaths) {
         if (!subpath.outputPath) continue;
@@ -60,9 +92,12 @@ export async function writeSharedModel(
             }
             // sibling packages cite the exported reference
             const claimed = rootEntryPoint.members[at];
-            if (claimed && isLocal(claimed) && !isLocal(member)) rootEntryPoint.members[at] = member;
+            if (!claimed) continue;
+            recordPromotion(promotions, claimed, member);
+            if (isLocal(claimed) && !isLocal(member)) rootEntryPoint.members[at] = member;
         }
     }
 
+    retarget(merged, promotions);
     await writeFile(outputPath, JSON.stringify(merged), 'utf8');
 }

@@ -19,7 +19,22 @@ interface Manifest {
     packages: ManifestPackage[];
 }
 
+interface ModelMember {
+    name: string;
+    canonicalReference: string;
+    excerptTokens: { canonicalReference?: string }[];
+    extendsTokenRange?: { startIndex: number; endIndex: number };
+}
+
 const MOCK_FULL_NAME = '@seedcord/mock-docs';
+
+function readSharedModelMembers(pkg: ManifestPackage): ModelMember[] {
+    // justified: this file reads only the fields ModelMember declares
+    const model = JSON.parse(readFileSync(resolve(TEMP_DIR, basename(pkg.sharedModel!)), 'utf8')) as {
+        members: { members: ModelMember[] }[];
+    };
+    return model.members[0]!.members;
+}
 
 describe('a package with more than one public entry point', () => {
     let mock: ManifestPackage;
@@ -68,6 +83,17 @@ describe('a package with more than one public entry point', () => {
         const model = readFileSync(resolve(TEMP_DIR, basename(shared.output)), 'utf8');
         expect(model).toContain('sharedOnlyFunction');
         expect(model).not.toContain('mockFunctionWithRest');
+    });
+
+    // api extractor looks up a base class by the exact string in the extends clause
+    it('points a class at a base class another subpath exports', () => {
+        const members = readSharedModelMembers(mock);
+        const host = members.find((member) => member.name === 'SharedHost')!;
+        const bases = host.excerptTokens
+            .slice(host.extendsTokenRange!.startIndex, host.extendsTokenRange!.endIndex)
+            .flatMap((token) => (token.canonicalReference ? [token.canonicalReference] : []));
+
+        expect(bases).toEqual([members.find((member) => member.name === 'MockHostBase')!.canonicalReference]);
     });
 
     it('extracts a subpath model holding that subpath surface alone', () => {

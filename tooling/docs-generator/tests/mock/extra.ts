@@ -13,6 +13,8 @@ export { mockFunction } from './function.js';
 // the root references PromotedShape through usesPromoted and never exports it. this subpath does.
 export type { PromotedShape } from './promoted.js';
 
+export { MockHostBase } from './hostBase.js';
+
 // never exported, the way @seedcord/core/hmr references HmrModuleHandlerOptions without exporting it.
 // includeForgottenExports still puts it in the model.
 interface ExtraOnly {

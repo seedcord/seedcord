@@ -45,7 +45,7 @@ describe('PluginHost', () => {
 
     it('rejects a key colliding with a host member', () => {
         const host = new TestPluginHost();
-        // bypasses the assert to hit the runtime guard a javascript caller still reaches
+        // a javascript caller skips the compile check and reaches this runtime guard
         const attachRaw = host.attach.bind(host) as (key: string, plugin: typeof Counter) => unknown;
 
         expect(() => attachRaw('bus', Counter)).toThrow(
