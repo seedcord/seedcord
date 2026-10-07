@@ -266,12 +266,12 @@ export class KyselyMigrationManager {
 
         for (const result of results) {
             if (result.status === 'Success') {
-                this.ctx.logger.info(`${paint.mint('✔︎')} ${paint.sky.bold(result.migrationName)}`);
+                this.ctx.logger.info(`${paint.mint(paint.check)} ${paint.sky.bold(result.migrationName)}`);
                 continue;
             }
 
             if (result.status === 'Error') {
-                this.ctx.logger.error(`${paint.coral('✘')} ${paint.sky.bold(result.migrationName)}`);
+                this.ctx.logger.error(`${paint.coral(paint.cross)} ${paint.sky.bold(result.migrationName)}`);
                 continue;
             }
 

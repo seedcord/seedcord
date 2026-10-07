@@ -70,7 +70,7 @@ export class HealthCheck {
                 // binds all interfaces, so log an address a browser can open
                 const address = this._host ?? 'localhost';
                 this.logger.info(
-                    `${paint.mint.bold('✔︎')} Health check server listening on ${paint.sky.bold(`http://${address}:${this._port}${this.path}`)}`
+                    `${paint.mint.bold(paint.check)} Health check server listening on ${paint.sky.bold(`http://${address}:${this._port}${this.path}`)}`
                 );
                 resolve();
             });
