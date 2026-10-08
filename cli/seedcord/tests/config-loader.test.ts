@@ -1,9 +1,9 @@
-import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempDisposableSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { afterEach, assert, describe, it, expect, vi } from 'vitest';
+import { assert, describe, it, expect, onTestFinished, vi } from 'vitest';
 
 import { DevRunner } from '#commands/dev/DevRunner';
 import { ConfigLoader } from '#core/config/ConfigLoader';
@@ -16,17 +16,11 @@ import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 
-const projectDirs: string[] = [];
-
-afterEach(() => {
-    while (projectDirs.length > 0) rmSync(projectDirs.pop() ?? '', { recursive: true, force: true });
-});
-
 function tempProject(): string {
+    const projectDir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-config-'));
+    onTestFinished(() => projectDir.remove());
     // the loader resolves against the real path of a mac temp dir
-    const projectDir = realpathSync(mkdtempSync(join(tmpdir(), 'seedcord-config-')));
-    projectDirs.push(projectDir);
-    return projectDir;
+    return realpathSync(projectDir.path);
 }
 
 // the stub module loader hands back `config` as the config file's default export

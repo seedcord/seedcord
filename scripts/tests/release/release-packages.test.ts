@@ -1,8 +1,8 @@
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { Workspace } from '#src/lib/Workspace';
 import { resolvePackages } from '#src/release/release-packages';
@@ -11,7 +11,9 @@ async function workspaceWith(
     changelogs: Record<string, string>,
     manifests: Record<string, Record<string, string>> = {}
 ): Promise<Workspace> {
-    const rootDir = await mkdtemp(path.join(tmpdir(), 'release-packages-'));
+    const tmp = await mkdtempDisposable(path.join(tmpdir(), 'release-packages-'));
+    onTestFinished(() => tmp.remove());
+    const rootDir = tmp.path;
     const packages = [];
 
     for (const [name, changelog] of Object.entries(changelogs)) {

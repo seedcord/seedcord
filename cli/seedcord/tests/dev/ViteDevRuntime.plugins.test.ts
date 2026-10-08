@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -50,8 +50,7 @@ async function writePackage(root: string, name: string, manifest: object, entry:
 }
 
 // the bot depends on `from` alone and imports the plugin class through it
-async function writeProject(from: string): Promise<string> {
-    const root = await mkdtemp(join(tmpdir(), 'seedcord-dev-plugin-'));
+async function writeProject(root: string, from: string): Promise<void> {
     await mkdir(join(root, 'src'), { recursive: true });
     await writeFile(
         join(root, 'package.json'),
@@ -74,21 +73,20 @@ async function writeProject(from: string): Promise<string> {
         { dependencies: { 'third-party-plugin': '1.0.0' } },
         REEXPORT_ENTRY
     );
-    return root;
 }
 
 async function withRuntime(
     run: (runtime: ViteDevRuntime) => Promise<void>,
     from = 'third-party-plugin'
 ): Promise<void> {
-    const root = await writeProject(from);
+    await using project = await mkdtempDisposable(join(tmpdir(), 'seedcord-dev-plugin-'));
+    await writeProject(project.path, from);
     const runtime = new ViteDevRuntime();
     try {
-        await runtime.start({ config: devConfigFor(root, 'bot.ts') });
+        await runtime.start({ config: devConfigFor(project.path, 'bot.ts') });
         await run(runtime);
     } finally {
         await runtime.dispose();
-        await rm(root, { recursive: true, force: true });
     }
 }
 

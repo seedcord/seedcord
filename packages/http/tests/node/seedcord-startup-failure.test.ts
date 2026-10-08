@@ -48,7 +48,7 @@ describe('http Seedcord startup failure', () => {
     it('keeps an installed capture sink across the reset', async () => {
         await bindSignedEnv();
         const records: LogRecord[] = [];
-        const handle = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => records.push(r) });
+        using _capture = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => records.push(r) });
 
         await using host = new Seedcord(config());
         host.attach('failing', FailsReadyOnce);
@@ -56,7 +56,6 @@ describe('http Seedcord startup failure', () => {
 
         records.length = 0;
         new Logger('X').info('after the failure');
-        handle.dispose();
 
         expect(records).toHaveLength(1);
     });

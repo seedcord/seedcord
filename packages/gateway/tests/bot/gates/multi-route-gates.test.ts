@@ -1,12 +1,12 @@
 import { CustomId, InteractionKind } from '@seedcord/core';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, vi } from 'vitest';
 
 import { interactionsOf } from '#bot/Bot';
-import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
-import { TestEnvironment } from '#tests/utils/test-env';
+import { it } from '#tests/utils/test-env';
 
+import type { Seedcord } from '#src/Seedcord';
 import type { SubscriptionData } from '@seedcord/core';
 
 import '#tests/utils/mock-env';
@@ -67,45 +67,38 @@ export class Vote extends ButtonHandler<[typeof Confirm, typeof Cancel]> {
 }
 `;
 
-describe('a handler registered on two routes', () => {
-    let testEnv: TestEnvironment;
-    let seedcord: Seedcord;
+interface VoteBot {
+    controller: PrivateInteractionDispatcher;
+    published: SubscriptionData<'interactionDispatched'>[];
+}
 
-    async function bootWithVote(): Promise<{
-        controller: PrivateInteractionDispatcher;
-        published: SubscriptionData<'interactionDispatched'>[];
-    }> {
+const withVote = it.extend<{ vote: VoteBot }>({
+    vote: async ({ testEnv, seedcordWith }, use) => {
         await testEnv.createFile('interactions/Vote.ts', HANDLER_SOURCE);
-        seedcord = new Seedcord(testConfig({ interactions: testEnv.resolvePath('interactions') }));
+        const seedcord = seedcordWith(testConfig({ interactions: testEnv.resolvePath('interactions') }));
         const controller = controllerOf(seedcord);
         await controller.init();
 
         const published: SubscriptionData<'interactionDispatched'>[] = [];
         seedcord.bus.on('interactionDispatched', (payload) => published.push(payload));
-        return { controller, published };
+        await use({ controller, published });
     }
+});
 
-    beforeEach(async () => {
-        // @ts-expect-error the reset hook is private
-        Seedcord.reset();
-        testEnv = new TestEnvironment('multi-route-gates-');
-        await testEnv.setup();
-    });
-
-    afterEach(async () => {
-        await testEnv.teardown();
+describe('a handler registered on two routes', () => {
+    afterEach(() => {
         vi.restoreAllMocks();
     });
 
-    it('registers the handler under each of its routes', async () => {
-        const { controller } = await bootWithVote();
+    withVote('registers the handler under each of its routes', ({ vote }) => {
+        const { controller } = vote;
 
         expect(controller.maps[InteractionKind.Button].has(Confirm.prefix)).toBe(true);
         expect(controller.maps[InteractionKind.Button].has(Cancel.prefix)).toBe(true);
     });
 
-    it('reports the clicked route as the dispatch id', async () => {
-        const { controller, published } = await bootWithVote();
+    withVote('reports the clicked route as the dispatch id', async ({ vote }) => {
+        const { controller, published } = vote;
 
         await controller.handleButton(fakeButton(Confirm.encode({})));
         await controller.handleButton(fakeButton(Cancel.encode({})));
@@ -113,8 +106,8 @@ describe('a handler registered on two routes', () => {
         expect(published.map((entry) => entry.routeId)).toEqual(['button:confirm', 'button:cancel']);
     });
 
-    it('cools down each route on its own', async () => {
-        const { controller, published } = await bootWithVote();
+    withVote('cools down each route on its own', async ({ vote }) => {
+        const { controller, published } = vote;
 
         await controller.handleButton(fakeButton(Confirm.encode({})));
         await controller.handleButton(fakeButton(Cancel.encode({})));
@@ -122,8 +115,8 @@ describe('a handler registered on two routes', () => {
         expect(published.map((entry) => entry.outcome)).toEqual(['handled', 'handled']);
     });
 
-    it('still refuses a second click on the route that was already used', async () => {
-        const { controller, published } = await bootWithVote();
+    withVote('still refuses a second click on the route that was already used', async ({ vote }) => {
+        const { controller, published } = vote;
 
         await controller.handleButton(fakeButton(Confirm.encode({})));
         await controller.handleButton(fakeButton(Confirm.encode({})));

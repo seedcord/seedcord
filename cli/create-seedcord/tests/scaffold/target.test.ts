@@ -1,14 +1,16 @@
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { claimTarget } from '#scaffold/target';
 
 async function scratch(): Promise<string> {
-    return mkdtemp(join(tmpdir(), 'create-seedcord-'));
+    const dir = await mkdtempDisposable(join(tmpdir(), 'create-seedcord-'));
+    onTestFinished(() => dir.remove());
+    return dir.path;
 }
 
 async function thrownBy(run: () => Promise<unknown>): Promise<unknown> {

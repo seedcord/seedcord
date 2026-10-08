@@ -1,9 +1,9 @@
-import { appendFileSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, mkdtempDisposableSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 
 import { createServer, mergeConfig } from 'vite';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished } from 'vitest';
 
 import viteConfig, { logsIgnore } from '#commands/dev/runtime/vite.config';
 
@@ -21,21 +21,19 @@ const SOURCE_FILE = '/src/logs/format.ts';
 const LOG_FILE = '/logs/combined.log';
 
 let server: ViteDevServer | undefined;
-const roots: string[] = [];
 
 afterEach(async () => {
     await server?.close();
     server = undefined;
-
-    while (roots.length > 0) rmSync(roots.pop() ?? '', { recursive: true, force: true });
 });
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 // both files exist before the server starts
 function project(): string {
-    const root = mkdtempSync(join(tmpdir(), 'seedcord-watch-'));
-    roots.push(root);
+    const scratch = mkdtempDisposableSync(join(tmpdir(), 'seedcord-watch-'));
+    onTestFinished(() => scratch.remove());
+    const root = scratch.path;
 
     mkdirSync(join(root, 'logs'), { recursive: true });
     mkdirSync(join(root, 'src', 'logs'), { recursive: true });

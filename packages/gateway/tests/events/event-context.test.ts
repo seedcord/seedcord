@@ -1,10 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, vi } from 'vitest';
 
 import { eventsOf } from '#bot/Bot';
-import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
-import { TestEnvironment } from '#tests/utils/test-env';
+import { it } from '#tests/utils/test-env';
+
+import type { Seedcord } from '#src/Seedcord';
 
 import '#tests/utils/mock-env';
 
@@ -23,39 +24,36 @@ function fireCalls(): string[] {
     return (globalThis as { fireCalls?: string[] }).fireCalls ?? [];
 }
 
-describe('the per-fire event context', () => {
-    let testEnv: TestEnvironment;
-    let seedcord: Seedcord;
+type Boot = (handlers: string, middlewares?: string) => Promise<PrivateEventDispatcher>;
 
-    beforeEach(async () => {
-        // @ts-expect-error singleton reset between tests
-        Seedcord.reset();
+const withBoot = it.extend<{ boot: Boot }>({
+    boot: async ({ testEnv, seedcordWith }, use) => {
+        await use(async (handlers, middlewares) => {
+            await testEnv.createFile('events/Handler.ts', handlers);
+            if (middlewares) await testEnv.createFile('event-mw/Mw.ts', middlewares);
+
+            const config = testConfig({
+                events: testEnv.resolvePath('events'),
+                ...(middlewares && { eventMiddlewares: testEnv.resolvePath('event-mw') })
+            });
+
+            const events = dispatcherOf(seedcordWith(config));
+            await events.init();
+            return events;
+        });
+    }
+});
+
+describe('the per-fire event context', () => {
+    beforeEach(() => {
         (globalThis as { fireCalls?: string[] }).fireCalls = [];
-        testEnv = new TestEnvironment('event-context-');
-        await testEnv.setup();
     });
 
-    afterEach(async () => {
-        await testEnv.teardown();
+    afterEach(() => {
         vi.clearAllMocks();
     });
 
-    async function boot(handlers: string, middlewares?: string): Promise<PrivateEventDispatcher> {
-        await testEnv.createFile('events/Handler.ts', handlers);
-        if (middlewares) await testEnv.createFile('event-mw/Mw.ts', middlewares);
-
-        const config = testConfig({
-            events: testEnv.resolvePath('events'),
-            ...(middlewares && { eventMiddlewares: testEnv.resolvePath('event-mw') })
-        });
-
-        seedcord = new Seedcord(config);
-        const events = dispatcherOf(seedcord);
-        await events.init();
-        return events;
-    }
-
-    it('shares one context between the chain and every handler of a fire', async () => {
+    withBoot('shares one context between the chain and every handler of a fire', async ({ boot }) => {
         const events = await boot(
             `
             import { EventHandler, RegisterEvent } from '${seedcordPath}';
@@ -86,7 +84,7 @@ describe('the per-fire event context', () => {
         expect(fireCalls()).toEqual(['handler:from-middleware', 'routeId:event:messageCreate']);
     });
 
-    it('hands a gate the same context the chain wrote to', async () => {
+    withBoot('hands a gate the same context the chain wrote to', async ({ boot }) => {
         const events = await boot(
             `
             import { defineGate, Gated, EventHandler, RegisterEvent } from '${seedcordPath}';
@@ -142,7 +140,7 @@ describe('the per-fire event context', () => {
         }
     `;
 
-    it('hands after() one entry per handler that ran, newest middleware first', async () => {
+    withBoot('hands after() one entry per handler that ran, newest middleware first', async ({ boot }) => {
         const events = await boot(
             `
             import { EventHandler, RegisterEvent } from '${seedcordPath}';
@@ -167,7 +165,7 @@ describe('the per-fire event context', () => {
         ]);
     });
 
-    it('leaves the handler list empty when the chain stops the fire', async () => {
+    withBoot('leaves the handler list empty when the chain stops the fire', async ({ boot }) => {
         const events = await boot(
             `
             import { EventHandler, RegisterEvent } from '${seedcordPath}';
@@ -205,7 +203,7 @@ describe('the per-fire event context', () => {
         expect(fireCalls()).toEqual(['refused:0']);
     });
 
-    it('names a failing handler in the list and still runs the rest', async () => {
+    withBoot('names a failing handler in the list and still runs the rest', async ({ boot }) => {
         const events = await boot(
             `
             import { EventHandler, RegisterEvent } from '${seedcordPath}';
@@ -243,7 +241,7 @@ describe('the per-fire event context', () => {
         expect(fireCalls()).toEqual(['survivor', 'Boom:failed,Survivor:handled']);
     });
 
-    it('gives the middleware that threw its own after()', async () => {
+    withBoot('gives the middleware that threw its own after()', async ({ boot }) => {
         const events = await boot(
             `
             import { EventHandler, RegisterEvent } from '${seedcordPath}';
@@ -276,7 +274,7 @@ describe('the per-fire event context', () => {
         expect(fireCalls()).toEqual(['Stops:refused']);
     });
 
-    it('stops the fire when a middleware constructor throws', async () => {
+    withBoot('stops the fire when a middleware constructor throws', async ({ boot }) => {
         const events = await boot(
             `
             import { EventHandler, RegisterEvent } from '${seedcordPath}';

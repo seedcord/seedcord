@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import process from 'node:process';
@@ -39,14 +39,10 @@ describe('probeCloudflared', () => {
     });
 
     it('gives up on a binary that never answers', async () => {
-        const directory = await mkdtemp(join(tmpdir(), 'create-seedcord-probe-'));
-        const hangs = join(directory, 'hangs');
+        await using directory = await mkdtempDisposable(join(tmpdir(), 'create-seedcord-probe-'));
+        const hangs = join(directory.path, 'hangs');
         await writeFile(hangs, '#!/bin/sh\nsleep 30\n', { mode: 0o755 });
 
-        try {
-            await expect(probeCloudflared(hangs, 200)).resolves.toBe(false);
-        } finally {
-            await rm(directory, { recursive: true, force: true });
-        }
+        await expect(probeCloudflared(hangs, 200)).resolves.toBe(false);
     });
 });

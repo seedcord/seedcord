@@ -1,5 +1,5 @@
 import { BuilderComponent } from '@seedcord/core';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
 
@@ -12,13 +12,8 @@ class Card extends BuilderComponent<'container'> {
 }
 
 describe('config.botColor', () => {
-    beforeEach(() => {
-        // @ts-expect-error reset the Seedcord singleton between tests
-        Seedcord.reset();
-    });
-
-    it('applies a color assigned after construction', () => {
-        const bot = new Seedcord({
+    it('applies a color assigned after construction', async () => {
+        await using bot = new Seedcord({
             bot: {
                 clientOptions: { intents: [] },
                 interactions: { path: null },

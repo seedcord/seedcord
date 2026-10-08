@@ -1,8 +1,8 @@
-import { mkdir, mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtempDisposable, readdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { scaffold } from '#scaffold/scaffold';
 
@@ -65,7 +65,9 @@ function recorder(failOn?: string, warnOn?: string): { runner: CommandRunner; ca
 }
 
 async function scratchTarget(): Promise<string> {
-    return join(await mkdtemp(join(tmpdir(), 'create-seedcord-scaffold-')), 'my-bot');
+    const scratch = await mkdtempDisposable(join(tmpdir(), 'create-seedcord-scaffold-'));
+    onTestFinished(() => scratch.remove());
+    return join(scratch.path, 'my-bot');
 }
 
 function stepRecorder(): { steps: StepUi; seen: string[] } {
@@ -297,7 +299,8 @@ describe('scaffold', () => {
     });
 
     it('still finds git when the target sits under directories that do not exist yet', async () => {
-        const target = join(await mkdtemp(join(tmpdir(), 'create-seedcord-nested-')), 'a', 'b', 'my-bot');
+        await using scratch = await mkdtempDisposable(join(tmpdir(), 'create-seedcord-nested-'));
+        const target = join(scratch.path, 'a', 'b', 'my-bot');
         const { runner, calls } = recorder();
 
         await scaffold(baseInput(target), runner);

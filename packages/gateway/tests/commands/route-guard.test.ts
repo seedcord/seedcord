@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, expect, afterEach, vi } from 'vitest';
 
 import { commandRegistryOf, interactionsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
-import { TestEnvironment } from '#tests/utils/test-env';
+import { it } from '#tests/utils/test-env';
 
 import '#tests/utils/mock-env';
 
@@ -26,22 +26,11 @@ function guardBotOf(instance: Seedcord): GuardBot {
 }
 
 describe('Boot-time slash route exhaustiveness guard', () => {
-    let testEnv: TestEnvironment;
-    let seedcord: Seedcord;
-
-    beforeEach(async () => {
-        // @ts-expect-error reset the Seedcord singleton between tests
-        Seedcord.reset();
-        testEnv = new TestEnvironment('route-guard-test-');
-        await testEnv.setup();
-    });
-
-    afterEach(async () => {
-        await testEnv.teardown();
+    afterEach(() => {
         vi.clearAllMocks();
     });
 
-    it('warns for a command route leaf with no handler and stays silent for the handled leaf', async () => {
+    it('warns for a command route leaf with no handler and stays silent for the handled leaf', async ({ testEnv }) => {
         await testEnv.createFile(
             'commands/Config.ts',
             `
@@ -80,7 +69,7 @@ describe('Boot-time slash route exhaustiveness guard', () => {
             interactions: testEnv.resolvePath('interactions')
         });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const bot = guardBotOf(seedcord);
         await bot.commandRegistry.init();
         await bot.interactions.init();
@@ -93,7 +82,7 @@ describe('Boot-time slash route exhaustiveness guard', () => {
         expect(warnSpy.mock.calls.every((call) => !String(call[0]).includes('config/set'))).toBe(true);
     });
 
-    it('stays silent when every command route leaf has a handler', async () => {
+    it('stays silent when every command route leaf has a handler', async ({ testEnv }) => {
         await testEnv.createFile(
             'commands/Ping.ts',
             `
@@ -128,7 +117,7 @@ describe('Boot-time slash route exhaustiveness guard', () => {
             interactions: testEnv.resolvePath('interactions')
         });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const bot = guardBotOf(seedcord);
         await bot.commandRegistry.init();
         await bot.interactions.init();

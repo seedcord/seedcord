@@ -1,8 +1,8 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { LinkChecker } from '#lib/export/LinkChecker';
 
@@ -28,14 +28,12 @@ async function page(file: string, ...hrefs: string[]): Promise<void> {
 
 describe('the export link check', () => {
     beforeEach(async () => {
-        root = await mkdtemp(path.join(tmpdir(), 'docs-export-'));
+        const tmp = await mkdtempDisposable(path.join(tmpdir(), 'docs-export-'));
+        root = tmp.path;
         await writeFile(path.join(root, 'index.json'), JSON.stringify(INDEX));
         await page('404.html');
         await page('packages/core/0.9.2/classes/bus.html');
-    });
-
-    afterEach(async () => {
-        await rm(root, { recursive: true, force: true });
+        return () => tmp.remove();
     });
 
     it('reports a link to a page the export never wrote', async () => {

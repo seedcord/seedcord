@@ -1,10 +1,10 @@
 import { HmrManager, SubscriberLoader } from '@seedcord/core/internal';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, expect, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
-import { TestEnvironment } from '#tests/utils/test-env';
+import { it } from '#tests/utils/test-env';
 
 import '#tests/utils/mock-env';
 
@@ -34,22 +34,11 @@ function registrationsOf(instance: Seedcord, key: string): Registration[] | unde
 }
 
 describe('Bus Integration', () => {
-    let testEnv: TestEnvironment;
-    let seedcord: Seedcord;
-
-    beforeEach(async () => {
-        // @ts-expect-error reset the Seedcord singleton between tests
-        Seedcord.reset();
-        testEnv = new TestEnvironment('subscribers-test-');
-        await testEnv.setup();
-    });
-
-    afterEach(async () => {
-        await testEnv.teardown();
+    afterEach(() => {
         vi.restoreAllMocks();
     });
 
-    it('should load subscribers from directory', async () => {
+    it('should load subscribers from directory', async ({ testEnv }) => {
         const subscribersDir = 'subscribers';
         await testEnv.createFile(
             `${subscribersDir}/LogSubscriber.ts`,
@@ -67,7 +56,7 @@ describe('Bus Integration', () => {
 
         const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         // subscribers load in Configuration. Login rejects later without a real token
         await seedcord.start().catch(() => undefined);
 
@@ -75,7 +64,7 @@ describe('Bus Integration', () => {
         expect(registrationsOf(seedcord, 'unknownException')).toHaveLength(2);
     });
 
-    it('should handle HMR updates for subscribers', async () => {
+    it('should handle HMR updates for subscribers', async ({ testEnv }) => {
         const subscribersDir = 'subscribers';
         const filePath = await testEnv.createFile(
             `${subscribersDir}/LogSubscriber.ts`,
@@ -93,7 +82,7 @@ describe('Bus Integration', () => {
 
         const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const loader = loaderOf(seedcord);
         await loader.init();
 
@@ -129,7 +118,7 @@ describe('Bus Integration', () => {
         expect(customHandlerAfter?.name).toBe('LogSubscriber');
     });
 
-    it('registers the Bus with the HMR manager, so an update dispatch reaches it', async () => {
+    it('registers the Bus with the HMR manager, so an update dispatch reaches it', async ({ testEnv }) => {
         const subscribersDir = 'subscribers';
         const filePath = await testEnv.createFile(
             `${subscribersDir}/LogSubscriber.ts`,
@@ -148,7 +137,7 @@ describe('Bus Integration', () => {
         const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
         const register = vi.spyOn(HmrManager.prototype, 'register');
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         // hmr registration runs in Configuration. Login rejects later without a real token
         await seedcord.start().catch(() => undefined);
 

@@ -1,11 +1,11 @@
 import { PublishDefault } from '@seedcord/core/internal';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, vi } from 'vitest';
 
 import { botLoggerOf, eventsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
-import { TestEnvironment } from '#tests/utils/test-env';
+import { it } from '#tests/utils/test-env';
 
 import type { SubscriptionData } from '@seedcord/core';
 
@@ -26,22 +26,11 @@ function dispatcherOf(instance: Seedcord): PrivateEventDispatcher {
 }
 
 describe('EventDispatcher Integration', () => {
-    let testEnv: TestEnvironment;
-    let seedcord: Seedcord;
-
-    beforeEach(async () => {
-        // @ts-expect-error: Accessing private method for testing
-        Seedcord.reset();
-        testEnv = new TestEnvironment('events-test-');
-        await testEnv.setup();
-    });
-
-    afterEach(async () => {
-        await testEnv.teardown();
+    afterEach(() => {
         vi.clearAllMocks();
     });
 
-    it('should load event handlers from directory', async () => {
+    it('should load event handlers from directory', async ({ testEnv }) => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/Ready.ts`,
@@ -60,7 +49,7 @@ describe('EventDispatcher Integration', () => {
 
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const events = dispatcherOf(seedcord);
         await events.init();
 
@@ -69,7 +58,7 @@ describe('EventDispatcher Integration', () => {
         expect(controller.eventMap.get('ready')).toHaveLength(1);
     });
 
-    it('a throwing eventDispatching observer does not abort the dispatch', async () => {
+    it('a throwing eventDispatching observer does not abort the dispatch', async ({ testEnv }) => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/Ping.ts`,
@@ -87,7 +76,7 @@ describe('EventDispatcher Integration', () => {
         );
 
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const events = dispatcherOf(seedcord);
 
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
@@ -104,7 +93,7 @@ describe('EventDispatcher Integration', () => {
         expect(() => fire?.({ reply: vi.fn() })).not.toThrow();
     });
 
-    it('publishes eventDispatching with the fired name and its args', async () => {
+    it('publishes eventDispatching with the fired name and its args', async ({ testEnv }) => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/Ping.ts`,
@@ -122,7 +111,7 @@ describe('EventDispatcher Integration', () => {
         );
 
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const events = dispatcherOf(seedcord);
 
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
@@ -141,7 +130,7 @@ describe('EventDispatcher Integration', () => {
         expect(seen[0]?.args[0]).toBe(message);
     });
 
-    it('threads the fired event name into the handler so match routes to the right arm', async () => {
+    it('threads the fired event name into the handler so match routes to the right arm', async ({ testEnv }) => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/PingMulti.ts`,
@@ -163,7 +152,7 @@ describe('EventDispatcher Integration', () => {
 
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const events = dispatcherOf(seedcord);
         await events.init();
 
@@ -176,7 +165,7 @@ describe('EventDispatcher Integration', () => {
         expect(edited.reply).toHaveBeenCalledWith('updated');
     });
 
-    it('reports a thrown error from a handler through the boundary', async () => {
+    it('reports a thrown error from a handler through the boundary', async ({ testEnv }) => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/Boom.ts`,
@@ -196,7 +185,7 @@ describe('EventDispatcher Integration', () => {
 
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const publish = vi.spyOn(seedcord.bus, PublishDefault);
         const events = dispatcherOf(seedcord);
         await events.init();
@@ -206,7 +195,7 @@ describe('EventDispatcher Integration', () => {
         expect(publish).toHaveBeenCalledWith('unknownException', expect.anything());
     });
 
-    it('marks a once handler spent even when it throws a non-Error, so it does not re-fire', async () => {
+    it('marks a once handler spent even when it throws a non-Error, so it does not re-fire', async ({ testEnv }) => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/OnceBoom.ts`,
@@ -226,7 +215,7 @@ describe('EventDispatcher Integration', () => {
 
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const events = dispatcherOf(seedcord);
         await events.init();
 
@@ -237,7 +226,7 @@ describe('EventDispatcher Integration', () => {
         expect(member.setNickname).toHaveBeenCalledTimes(1);
     });
 
-    it('runs a once handler exactly once when the same event fires concurrently', async () => {
+    it('runs a once handler exactly once when the same event fires concurrently', async ({ testEnv }) => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/OnceConcurrent.ts`,
@@ -256,7 +245,7 @@ describe('EventDispatcher Integration', () => {
 
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const events = dispatcherOf(seedcord);
         await events.init();
 
@@ -270,7 +259,7 @@ describe('EventDispatcher Integration', () => {
         expect(message.reply).toHaveBeenCalledTimes(1);
     });
 
-    it('does not consume a once handler when middleware blocks the fire', async () => {
+    it('does not consume a once handler when middleware blocks the fire', async ({ testEnv }) => {
         const eventsDir = 'events';
         const middlewaresDir = 'event-mw';
 
@@ -311,7 +300,7 @@ describe('EventDispatcher Integration', () => {
             eventMiddlewares: testEnv.resolvePath(middlewaresDir)
         });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const events = dispatcherOf(seedcord);
         await events.init();
 
@@ -323,7 +312,7 @@ describe('EventDispatcher Integration', () => {
         expect(message.reply).toHaveBeenCalledTimes(1);
     });
 
-    it('keeps a spent once handler spent after a failed reload rolls it back', async () => {
+    it('keeps a spent once handler spent after a failed reload rolls it back', async ({ testEnv }) => {
         const eventsDir = 'events';
         const filePath = await testEnv.createFile(
             `${eventsDir}/OnceRollback.ts`,
@@ -342,7 +331,7 @@ describe('EventDispatcher Integration', () => {
 
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const events = dispatcherOf(seedcord);
         await events.init();
 
@@ -358,7 +347,7 @@ describe('EventDispatcher Integration', () => {
         expect(message.reply).toHaveBeenCalledTimes(1);
     });
 
-    it('should handle HMR updates for event handlers', async () => {
+    it('should handle HMR updates for event handlers', async ({ testEnv }) => {
         const eventsDir = 'events';
         const filePath = await testEnv.createFile(
             `${eventsDir}/Message.ts`,
@@ -377,7 +366,7 @@ describe('EventDispatcher Integration', () => {
 
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const events = dispatcherOf(seedcord);
         await events.init();
 
@@ -410,7 +399,7 @@ describe('EventDispatcher Integration', () => {
         expect(controller.eventMap.has('messageUpdate')).toBe(true);
     });
 
-    it('runs a passing gate, then the handler executes', async () => {
+    it('runs a passing gate, then the handler executes', async ({ testEnv }) => {
         await testEnv.createFile(
             'events/Allowed.ts',
             `
@@ -431,7 +420,7 @@ describe('EventDispatcher Integration', () => {
 
         const config = testConfig({ events: testEnv.resolvePath('events') });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const events = dispatcherOf(seedcord);
         await events.init();
 
@@ -441,7 +430,7 @@ describe('EventDispatcher Integration', () => {
         expect(message.reply).toHaveBeenCalledWith('ran');
     });
 
-    it('a refusing gate stops the handler before execute', async () => {
+    it('a refusing gate stops the handler before execute', async ({ testEnv }) => {
         await testEnv.createFile(
             'events/Refused.ts',
             `
@@ -464,7 +453,7 @@ describe('EventDispatcher Integration', () => {
 
         const config = testConfig({ events: testEnv.resolvePath('events') });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const events = dispatcherOf(seedcord);
         await events.init();
 
@@ -475,40 +464,44 @@ describe('EventDispatcher Integration', () => {
     });
 
     describe('client-attached dispatch', () => {
-        async function clientHarness(): Promise<{
+        interface ClientHarness {
+            seedcord: Seedcord;
             controller: PrivateEventDispatcher;
             fire: ((...args: unknown[]) => void) | undefined;
-        }> {
-            await testEnv.createFile(
-                'events/Ping.ts',
-                `
-                import { EventHandler, RegisterEvent } from '${seedcordPath}';
-                import { Events } from 'discord.js';
-
-                @RegisterEvent(['messageCreate'])
-                export class PingHandler extends EventHandler<Events.MessageCreate> {
-                    public async execute() {
-                        await Promise.resolve();
-                    }
-                }
-                `
-            );
-
-            const config = testConfig({ events: testEnv.resolvePath('events') });
-            seedcord = new Seedcord(config);
-            const controller = dispatcherOf(seedcord);
-
-            const onSpy = vi.spyOn(seedcord.bot.client, 'on');
-            await controller.init();
-
-            const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
-                ((...args: unknown[]) => void) | undefined;
-            expect(fire).toBeDefined();
-            return { controller, fire };
         }
 
-        it('runs later unhandledEventError listeners after an earlier one throws', async () => {
-            const { controller, fire } = await clientHarness();
+        const withClient = it.extend<{ client: ClientHarness }>({
+            client: async ({ testEnv }, use) => {
+                await testEnv.createFile(
+                    'events/Ping.ts',
+                    `
+                    import { EventHandler, RegisterEvent } from '${seedcordPath}';
+                    import { Events } from 'discord.js';
+
+                    @RegisterEvent(['messageCreate'])
+                    export class PingHandler extends EventHandler<Events.MessageCreate> {
+                        public async execute() {
+                            await Promise.resolve();
+                        }
+                    }
+                    `
+                );
+
+                await using seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath('events') }));
+                const controller = dispatcherOf(seedcord);
+
+                const onSpy = vi.spyOn(seedcord.bot.client, 'on');
+                await controller.init();
+
+                const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
+                    ((...args: unknown[]) => void) | undefined;
+                expect(fire).toBeDefined();
+                await use({ seedcord, controller, fire });
+            }
+        });
+
+        withClient('runs later unhandledEventError listeners after an earlier one throws', async ({ client }) => {
+            const { seedcord, controller, fire } = client;
             vi.spyOn(controller, 'processEvent').mockRejectedValue(new Error('boom'));
             vi.spyOn(botLoggerOf(seedcord.bot), 'error').mockImplementation(() => undefined);
 
@@ -527,24 +520,27 @@ describe('EventDispatcher Integration', () => {
             });
         });
 
-        it('wraps a non-Error rejection at the root, so the payload still carries an Error', async () => {
-            const { controller, fire } = await clientHarness();
-            vi.spyOn(controller, 'processEvent').mockRejectedValue('a bare string');
-            vi.spyOn(botLoggerOf(seedcord.bot), 'error').mockImplementation(() => undefined);
+        withClient(
+            'wraps a non-Error rejection at the root, so the payload still carries an Error',
+            async ({ client }) => {
+                const { seedcord, controller, fire } = client;
+                vi.spyOn(controller, 'processEvent').mockRejectedValue('a bare string');
+                vi.spyOn(botLoggerOf(seedcord.bot), 'error').mockImplementation(() => undefined);
 
-            const seen: SubscriptionData<'unhandledEventError'>[] = [];
-            seedcord.bus.on('unhandledEventError', (payload) => seen.push(payload));
+                const seen: SubscriptionData<'unhandledEventError'>[] = [];
+                seedcord.bus.on('unhandledEventError', (payload) => seen.push(payload));
 
-            fire?.({ reply: vi.fn() });
+                fire?.({ reply: vi.fn() });
 
-            await vi.waitFor(() => {
-                expect(seen).toHaveLength(1);
-            });
-            expect(seen[0]?.error.message).toBe('a bare string');
-        });
+                await vi.waitFor(() => {
+                    expect(seen).toHaveLength(1);
+                });
+                expect(seen[0]?.error.message).toBe('a bare string');
+            }
+        );
 
-        it('stops dispatching new events after stopAccepting, and drain resolves', async () => {
-            const { controller, fire } = await clientHarness();
+        withClient('stops dispatching new events after stopAccepting, and drain resolves', async ({ client }) => {
+            const { controller, fire } = client;
             const processSpy = vi.spyOn(controller, 'processEvent').mockResolvedValue(undefined);
 
             fire?.({ reply: vi.fn() });
@@ -557,8 +553,8 @@ describe('EventDispatcher Integration', () => {
             await expect(controller.drain(50)).resolves.toBeUndefined();
         });
 
-        it('drain waits for an in-flight event that settles inside the budget', async () => {
-            const { controller, fire } = await clientHarness();
+        withClient('drain waits for an in-flight event that settles inside the budget', async ({ client }) => {
+            const { controller, fire } = client;
 
             let settled = false;
             vi.spyOn(controller, 'processEvent').mockImplementation(
@@ -577,8 +573,8 @@ describe('EventDispatcher Integration', () => {
             expect(settled).toBe(true);
         });
 
-        it('drain returns through the timer when an event never settles', async () => {
-            const { controller, fire } = await clientHarness();
+        withClient('drain returns through the timer when an event never settles', async ({ client }) => {
+            const { controller, fire } = client;
 
             vi.spyOn(controller, 'processEvent').mockReturnValue(new Promise<void>(() => undefined));
             fire?.({ reply: vi.fn() });
@@ -587,8 +583,8 @@ describe('EventDispatcher Integration', () => {
             await expect(controller.drain(30)).resolves.toBeUndefined();
         });
 
-        it('clears the drain timer when the in-flight set settles first', async () => {
-            const { controller, fire } = await clientHarness();
+        withClient('clears the drain timer when the in-flight set settles first', async ({ client }) => {
+            const { controller, fire } = client;
             vi.spyOn(controller, 'processEvent').mockResolvedValue(undefined);
             fire?.({ reply: vi.fn() });
             controller.stopAccepting();

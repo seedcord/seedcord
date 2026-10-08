@@ -1,12 +1,12 @@
 import { setDevChannel } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, expect, afterEach, vi } from 'vitest';
 
 import { commandRegistryOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
-import { TestEnvironment } from '#tests/utils/test-env';
+import { it } from '#tests/utils/test-env';
 
 import '#tests/utils/mock-env';
 
@@ -55,19 +55,7 @@ const PING_COMMAND = `
 `;
 
 describe('dev channel routing', () => {
-    let testEnv: TestEnvironment;
-
-    beforeEach(async () => {
-        // a beforeEach that throws skips afterEach, this guards the leak
-        setDevChannel(undefined);
-        // @ts-expect-error reset the Seedcord singleton between tests
-        Seedcord.reset();
-        testEnv = new TestEnvironment('hmr-route-');
-        await testEnv.setup();
-    });
-
-    afterEach(async () => {
-        await testEnv.teardown();
+    afterEach(() => {
         // drop the fake channel so a later test never inherits it
         setDevChannel(undefined);
         vi.clearAllMocks();
@@ -84,25 +72,25 @@ describe('dev channel routing', () => {
         expect(send).toHaveBeenCalledWith('seedcord:register-critical-files', { patterns: ['migrations/*'] });
     });
 
-    it('CommandRegistry listens for refresh-commands through the dev channel', async () => {
+    it('CommandRegistry listens for refresh-commands through the dev channel', async ({ testEnv }) => {
         const { channel, on } = fakeChannel();
         setDevChannel(channel);
 
         await testEnv.createFile('commands/Ping.ts', PING_COMMAND);
         const config = testConfig({ commands: testEnv.resolvePath('commands') });
-        const seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         await registryOf(seedcord).init();
 
         expect(on).toHaveBeenCalledWith('seedcord:refresh-commands', expect.any(Function));
     });
 
-    it('CommandRegistry.onHmr prompts a commands update through the dev channel', async () => {
+    it('CommandRegistry.onHmr prompts a commands update through the dev channel', async ({ testEnv }) => {
         const { channel, send } = fakeChannel();
         setDevChannel(channel);
 
         const commandFile = await testEnv.createFile('commands/Ping.ts', PING_COMMAND);
         const config = testConfig({ commands: testEnv.resolvePath('commands') });
-        const seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         await registryOf(seedcord).init();
 
         await registryOf(seedcord).onHmr({ file: commandFile, type: 'update' });

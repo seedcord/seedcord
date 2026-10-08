@@ -65,13 +65,12 @@ describe('dispatch timing', () => {
     it('puts the line on the interactions channel at trace', () => {
         const records: LogRecord[] = [];
         LoggerChannelRegistry.instance.configure({ level: 'trace', sinks: [] });
-        const handle = LoggerChannelRegistry.instance.installSink({
+        using _capture = LoggerChannelRegistry.instance.installSink({
             kind: 'capture',
             onLog: (record) => records.push(record)
         });
 
         publishedFor(reportFor());
-        handle.dispose();
 
         expect(records.find((record) => record.label === 'Dispatch')).toMatchObject({
             channel: 'interactions',

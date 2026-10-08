@@ -1,13 +1,15 @@
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { mkdtempDisposable, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { DirectoryBucket } from '#src/docs/DirectoryBucket';
 
 async function scratch(): Promise<{ root: string; source: string }> {
-    const root = await mkdtemp(path.join(tmpdir(), 'docs-preview-'));
+    const tmp = await mkdtempDisposable(path.join(tmpdir(), 'docs-preview-'));
+    onTestFinished(() => tmp.remove());
+    const root = tmp.path;
     const source = path.join(root, 'source.html');
     await writeFile(source, '<html>');
     return { root: path.join(root, 'bucket'), source };

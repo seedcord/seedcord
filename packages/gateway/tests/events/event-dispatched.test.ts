@@ -1,10 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, vi } from 'vitest';
 
 import { eventsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
-import { TestEnvironment } from '#tests/utils/test-env';
+import { it } from '#tests/utils/test-env';
 
 import type { SubscriptionData } from '@seedcord/core';
 
@@ -72,55 +72,53 @@ const STOPS = `
     }
 `;
 
-describe('eventDispatched', () => {
-    let testEnv: TestEnvironment;
-    let seedcord: Seedcord;
+type FireMessageCreate = (middlewares?: string) => Promise<SubscriptionData<'eventDispatched'>[]>;
 
-    async function fireMessageCreate(middlewares?: string): Promise<SubscriptionData<'eventDispatched'>[]> {
-        seedcord = new Seedcord(
-            testConfig({
-                events: testEnv.resolvePath(EVENTS_DIR),
-                ...(middlewares && { eventMiddlewares: testEnv.resolvePath(middlewares) })
-            })
-        );
-        const events = dispatcherOf(seedcord);
-        await events.init();
+const withFire = it.extend<{ fireMessageCreate: FireMessageCreate }>({
+    fireMessageCreate: async ({ testEnv, seedcordWith }, use) => {
+        await use(async (middlewares) => {
+            const seedcord = seedcordWith(
+                testConfig({
+                    events: testEnv.resolvePath(EVENTS_DIR),
+                    ...(middlewares && { eventMiddlewares: testEnv.resolvePath(middlewares) })
+                })
+            );
+            const events = dispatcherOf(seedcord);
+            await events.init();
 
-        const published: SubscriptionData<'eventDispatched'>[] = [];
-        seedcord.bus.on('eventDispatched', (payload) => published.push(payload));
+            const published: SubscriptionData<'eventDispatched'>[] = [];
+            seedcord.bus.on('eventDispatched', (payload) => published.push(payload));
 
-        await events.processEvent('messageCreate', [{ reply: vi.fn() }]);
-        return published;
+            await events.processEvent('messageCreate', [{ reply: vi.fn() }]);
+            return published;
+        });
     }
+});
 
-    beforeEach(async () => {
-        // @ts-expect-error the reset hook is private
-        Seedcord.reset();
-        testEnv = new TestEnvironment('event-dispatched-');
-        await testEnv.setup();
-    });
-
-    afterEach(async () => {
-        await testEnv.teardown();
+describe('eventDispatched', () => {
+    afterEach(() => {
         vi.restoreAllMocks();
     });
 
-    it('publishes once per fire, naming every handler that ran and how it ended', async () => {
-        await testEnv.createFile(`${EVENTS_DIR}/Ok.ts`, OK);
-        await testEnv.createFile(`${EVENTS_DIR}/Boom.ts`, BOOM);
+    withFire(
+        'publishes once per fire, naming every handler that ran and how it ended',
+        async ({ testEnv, fireMessageCreate }) => {
+            await testEnv.createFile(`${EVENTS_DIR}/Ok.ts`, OK);
+            await testEnv.createFile(`${EVENTS_DIR}/Boom.ts`, BOOM);
 
-        const published = await fireMessageCreate();
+            const published = await fireMessageCreate();
 
-        expect(published).toHaveLength(1);
-        expect(published[0]?.name).toBe('messageCreate');
-        expect(published[0]?.outcome).toBe('handled');
-        expect(published[0]?.handlers.map((entry) => `${entry.handler}:${entry.outcome}`).toSorted()).toEqual([
-            'Boom:failed',
-            'Ok:handled'
-        ]);
-    });
+            expect(published).toHaveLength(1);
+            expect(published[0]?.name).toBe('messageCreate');
+            expect(published[0]?.outcome).toBe('handled');
+            expect(published[0]?.handlers.map((entry) => `${entry.handler}:${entry.outcome}`).toSorted()).toEqual([
+                'Boom:failed',
+                'Ok:handled'
+            ]);
+        }
+    );
 
-    it('reports a refusal from the middleware chain with no handlers', async () => {
+    withFire('reports a refusal from the middleware chain with no handlers', async ({ testEnv, fireMessageCreate }) => {
         await testEnv.createFile(`${EVENTS_DIR}/Ok.ts`, OK);
         await testEnv.createFile(`${MIDDLEWARES_DIR}/Stops.ts`, STOPS);
 
@@ -131,10 +129,10 @@ describe('eventDispatched', () => {
         expect(published[0]?.handlers).toEqual([]);
     });
 
-    it('pairs with eventDispatching once a spent once-handler leaves nothing to run', async () => {
+    it('pairs with eventDispatching once a spent once-handler leaves nothing to run', async ({ testEnv }) => {
         await testEnv.createFile(`${EVENTS_DIR}/Once.ts`, ONCE);
 
-        seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath(EVENTS_DIR) }));
+        await using seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath(EVENTS_DIR) }));
         const events = dispatcherOf(seedcord);
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
         await events.init();
@@ -158,10 +156,10 @@ describe('eventDispatched', () => {
         expect(starts).toHaveLength(1);
     });
 
-    it('stamps the same dispatchId on both keys for one fire', async () => {
+    it('stamps the same dispatchId on both keys for one fire', async ({ testEnv }) => {
         await testEnv.createFile(`${EVENTS_DIR}/Ok.ts`, OK);
 
-        seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath(EVENTS_DIR) }));
+        await using seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath(EVENTS_DIR) }));
         const events = dispatcherOf(seedcord);
         await events.init();
 
@@ -176,10 +174,10 @@ describe('eventDispatched', () => {
         expect(ends[0]?.dispatchId).toBe(starts[0]?.dispatchId);
     });
 
-    it('stays quiet for an event no handler registered', async () => {
+    it('stays quiet for an event no handler registered', async ({ testEnv }) => {
         await testEnv.createFile(`${EVENTS_DIR}/Ok.ts`, OK);
 
-        seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath(EVENTS_DIR) }));
+        await using seedcord = new Seedcord(testConfig({ events: testEnv.resolvePath(EVENTS_DIR) }));
         const events = dispatcherOf(seedcord);
         await events.init();
 

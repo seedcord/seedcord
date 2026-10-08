@@ -1,21 +1,19 @@
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempDisposableSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { resolveProjectTsc } from '#core/modules/resolveProjectTsc';
 
 let projectDir: string;
 
 beforeEach(() => {
+    const tmp = mkdtempDisposableSync(join(tmpdir(), 'seedcord-tsc-'));
     // require.resolve returns the real path of a mac temp dir
-    projectDir = realpathSync(mkdtempSync(join(tmpdir(), 'seedcord-tsc-')));
+    projectDir = realpathSync(tmp.path);
     writeFileSync(join(projectDir, 'package.json'), JSON.stringify({ name: 'bot' }));
-});
-
-afterEach(() => {
-    rmSync(projectDir, { recursive: true, force: true });
+    return () => tmp.remove();
 });
 
 function installTypescript(manifest: Record<string, unknown>): string {

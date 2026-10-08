@@ -1,11 +1,11 @@
 import { existsSync } from 'node:fs';
-import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtempDisposable, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { BUILT_FILES_KEY } from '@seedcord/utils/node/internal';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { BuildRunner } from '#commands/build/BuildRunner';
 import { quietSteps } from '#core/output/quietSteps';
@@ -13,15 +13,13 @@ import { quietSteps } from '#core/output/quietSteps';
 let projectDir: string;
 
 beforeEach(async () => {
-    projectDir = await mkdtemp(join(tmpdir(), 'seedcord-outdir-'));
+    const tmp = await mkdtempDisposable(join(tmpdir(), 'seedcord-outdir-'));
+    projectDir = tmp.path;
     await mkdir(join(projectDir, 'src/handlers'), { recursive: true });
     await writeFile(join(projectDir, 'src/index.ts'), '');
     await writeFile(join(projectDir, 'src/bot.ts'), '');
     await writeFile(join(projectDir, 'src/handlers/Ping.ts'), '');
-});
-
-afterEach(async () => {
-    await rm(projectDir, { recursive: true, force: true });
+    return () => tmp.remove();
 });
 
 async function buildWithOutDir(outDir: string): Promise<unknown> {

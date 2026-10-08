@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtempDisposable } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -15,17 +15,13 @@ export function hasBun(): boolean {
 }
 
 export async function smokeBunBinary(kind: 'http' | 'gateway', botDir: string): Promise<string> {
-    const elsewhere = await mkdtemp(join(tmpdir(), 'seedcord-bun-'));
-    const binary = join(elsewhere, 'bot');
+    await using elsewhere = await mkdtempDisposable(join(tmpdir(), 'seedcord-bun-'));
+    const binary = join(elsewhere.path, 'bot');
 
-    try {
-        // bun leaves a .bun-build temp file in cwd when a compile dies
-        execFileSync('bun', ['build', '--compile', join(botDir, 'dist/index.mjs'), '--outfile', binary], {
-            cwd: elsewhere,
-            stdio: 'ignore'
-        });
-        return await smoke(kind, binary);
-    } finally {
-        await rm(elsewhere, { recursive: true, force: true });
-    }
+    // bun leaves a .bun-build temp file in cwd when a compile dies
+    execFileSync('bun', ['build', '--compile', join(botDir, 'dist/index.mjs'), '--outfile', binary], {
+        cwd: elsewhere.path,
+        stdio: 'ignore'
+    });
+    return await smoke(kind, binary);
 }

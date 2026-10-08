@@ -1,19 +1,23 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import { it as base } from 'vitest';
+
+import { Seedcord } from '#src/Seedcord';
+
+const RADIX = 36;
+
 export class TestEnvironment {
-    public readonly rootDir: string;
+    private constructor(public readonly rootDir: string) {}
 
-    constructor(prefix = 'seedcord-test-') {
-        const RADIX = 36;
-        this.rootDir = path.join(process.cwd(), 'tests', 'temp', prefix + Math.random().toString(RADIX).slice(2));
+    // inside the package so a written file resolves discord.js from its node_modules
+    public static async create(): Promise<TestEnvironment> {
+        const rootDir = path.join(process.cwd(), 'tests', 'temp', Math.random().toString(RADIX).slice(2));
+        await fs.mkdir(rootDir, { recursive: true });
+        return new TestEnvironment(rootDir);
     }
 
-    public async setup(): Promise<void> {
-        await fs.mkdir(this.rootDir, { recursive: true });
-    }
-
-    public async teardown(): Promise<void> {
+    public async [Symbol.asyncDispose](): Promise<void> {
         await fs.rm(this.rootDir, { recursive: true, force: true });
     }
 
@@ -39,3 +43,16 @@ export class TestEnvironment {
         await fs.rm(filePath, { force: true });
     }
 }
+
+type SeedcordWith = (config: ConstructorParameters<typeof Seedcord>[0]) => Seedcord;
+
+export const it = base.extend<{ testEnv: TestEnvironment; seedcordWith: SeedcordWith }>({
+    testEnv: async ({}, use) => {
+        await using testEnv = await TestEnvironment.create();
+        await use(testEnv);
+    },
+    seedcordWith: async ({}, use) => {
+        await using hosts = new AsyncDisposableStack();
+        await use((config) => hosts.use(new Seedcord(config)));
+    }
+});

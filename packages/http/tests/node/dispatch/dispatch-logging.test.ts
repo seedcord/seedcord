@@ -6,7 +6,7 @@ import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import { capturingCtx, readyEngine, routedHandler, signedRequest, slashPayload, type BotClasses } from './harness';
 
-import type { LogRecord } from '@seedcord/types';
+import type { LogRecord, LogSinkHandle } from '@seedcord/types';
 
 const rest = vi.hoisted(() => {
     class FakeRest {
@@ -38,20 +38,20 @@ function banClasses(): BotClasses {
 }
 
 let records: LogRecord[] = [];
-let dispose: () => void;
+let capture: LogSinkHandle;
 
 beforeEach(() => {
     records = [];
     // a test run defaults to the info floor and records nothing at debug
     LoggerChannelRegistry.instance.configure({ level: 'debug', sinks: [] });
-    const handle = LoggerChannelRegistry.instance.installSink({
+    capture = LoggerChannelRegistry.instance.installSink({
         kind: 'capture',
         onLog: (record) => records.push(record)
     });
-    dispose = () => handle.dispose();
 });
 
 afterEach(() => {
+    capture.dispose();
     LoggerChannelRegistry.instance.configure({});
 });
 
@@ -66,7 +66,6 @@ describe('dispatch logging', () => {
 
         await handle(await signedRequest(signer, slashPayload('ban')), ctx);
         await ctx.settled();
-        dispose();
 
         const line = dispatcherLines().find((message) => message.includes('Processing'));
         expect(line).toContain('slash:ban');
@@ -79,7 +78,6 @@ describe('dispatch logging', () => {
 
         await handle(await signedRequest(signer, slashPayload('ban')), ctx);
         await ctx.settled();
-        dispose();
 
         expect(dispatcherLines().filter((message) => message.includes('Processing'))).toHaveLength(1);
     });

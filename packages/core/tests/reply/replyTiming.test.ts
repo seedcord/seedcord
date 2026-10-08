@@ -26,7 +26,7 @@ describe('reply timing', () => {
     it('puts the line on the interactions channel at trace', () => {
         const records: LogRecord[] = [];
         LoggerChannelRegistry.instance.configure({ level: 'trace', sinks: [] });
-        const handle = LoggerChannelRegistry.instance.installSink({
+        using _capture = LoggerChannelRegistry.instance.installSink({
             kind: 'capture',
             onLog: (record) => records.push(record)
         });
@@ -35,7 +35,6 @@ describe('reply timing', () => {
             { bus: stubBus(), dispatch: new DispatchContext('slash:ban'), interactionId: 'i1' },
             { method: 'reply', startedAt: performance.now(), outcome: 'sent', messageId: 'm1' }
         );
-        handle.dispose();
 
         expect(records.find((record) => record.label === 'Reply')).toMatchObject({
             channel: 'interactions',

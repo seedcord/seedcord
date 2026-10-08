@@ -75,7 +75,7 @@ describe('CoordinatedStartup failure and guards', () => {
     it('leaves a task rejection unlogged once the run is aborted', async () => {
         const startup = new CoordinatedStartup();
         const records: LogRecord[] = [];
-        const handle = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => records.push(r) });
+        using _capture = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => records.push(r) });
 
         startup.addTask(StartupPhase.Configuration, 'aborter', () => {
             startup.abort();
@@ -83,7 +83,6 @@ describe('CoordinatedStartup failure and guards', () => {
         });
 
         await startup.run();
-        handle.dispose();
 
         expect(records.filter((record) => record.level === 'error')).toHaveLength(0);
         expect(startup.isReady).toBe(false);

@@ -1,13 +1,13 @@
 import { InteractionKind } from '@seedcord/core';
 import { pageCursor } from '@seedcord/core/internal';
 import { ComponentType } from 'discord.js';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, vi } from 'vitest';
 
 import { interactionsOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
-import { TestEnvironment } from '#tests/utils/test-env';
+import { it } from '#tests/utils/test-env';
 
 import '#tests/utils/mock-env';
 
@@ -64,22 +64,13 @@ function pageText(body: { components: unknown[] }): string {
 }
 
 describe('Paginator end-to-end through the real dispatcher', () => {
-    let testEnv: TestEnvironment;
-    let seedcord: Seedcord;
-
-    beforeEach(async () => {
-        // @ts-expect-error reset the singleton between tests
-        Seedcord.reset();
-        testEnv = new TestEnvironment('pagination-e2e-');
-        await testEnv.setup();
-    });
-
-    afterEach(async () => {
-        await testEnv.teardown();
+    afterEach(() => {
         vi.clearAllMocks();
     });
 
-    it('file-scans a paginator nav handler, routes a click, decodes the page, and edits in place', async () => {
+    it('file-scans a paginator nav handler, routes a click, decodes the page, and edits in place', async ({
+        testEnv
+    }) => {
         await testEnv.createFile(
             'interactions/Letters.ts',
             `
@@ -97,7 +88,7 @@ describe('Paginator end-to-end through the real dispatcher', () => {
         );
 
         const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = dispatcherOf(seedcord);
         await controller.init();
 

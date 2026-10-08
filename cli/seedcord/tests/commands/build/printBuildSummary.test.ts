@@ -1,9 +1,9 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { BUILD_STEPS } from '#commands/build/BuildRunner';
 import { printBuildSummary } from '#commands/build/printBuildSummary';
@@ -15,11 +15,9 @@ import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 let projectDir: string;
 
 beforeEach(async () => {
-    projectDir = await mkdtemp(join(tmpdir(), 'seedcord-summary-'));
-});
-
-afterEach(async () => {
-    await rm(projectDir, { recursive: true, force: true });
+    const tmp = await mkdtempDisposable(join(tmpdir(), 'seedcord-summary-'));
+    projectDir = tmp.path;
+    return () => tmp.remove();
 });
 
 async function summaryFor(packageJson?: Record<string, unknown>, outDir = 'dist'): Promise<string> {

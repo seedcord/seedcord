@@ -1,13 +1,15 @@
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { DocsSiteFiles } from '#src/docs/DocsSiteFiles';
 
 async function exportDir(...files: string[]): Promise<string> {
-    const root = await mkdtemp(path.join(tmpdir(), 'docs-site-'));
+    const tmp = await mkdtempDisposable(path.join(tmpdir(), 'docs-site-'));
+    onTestFinished(() => tmp.remove());
+    const root = tmp.path;
     for (const file of files) {
         await mkdir(path.dirname(path.join(root, file)), { recursive: true });
         await writeFile(path.join(root, file), file);

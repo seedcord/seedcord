@@ -1,11 +1,11 @@
 import { HostVersion } from '@seedcord/types/internal';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, expect, afterEach, vi } from 'vitest';
 
 import { commandRegistryOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
-import { TestEnvironment } from '#tests/utils/test-env';
+import { it } from '#tests/utils/test-env';
 
 import type { CommandRegistry } from '@seedcord/core/node/internal';
 
@@ -18,22 +18,11 @@ function registryOf(instance: Seedcord): CommandRegistry {
 }
 
 describe('CommandRegistry Integration', () => {
-    let testEnv: TestEnvironment;
-    let seedcord: Seedcord;
-
-    beforeEach(async () => {
-        // @ts-expect-error reset the Seedcord singleton between tests
-        Seedcord.reset();
-        testEnv = new TestEnvironment('commands-test-');
-        await testEnv.setup();
-    });
-
-    afterEach(async () => {
-        await testEnv.teardown();
+    afterEach(() => {
         vi.clearAllMocks();
     });
 
-    it('should load commands from directory', async () => {
+    it('should load commands from directory', async ({ testEnv }) => {
         const commandsDir = 'commands';
         await testEnv.createFile(
             `${commandsDir}/PingCommand.ts`,
@@ -53,7 +42,7 @@ describe('CommandRegistry Integration', () => {
 
         const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         expect(seedcord[HostVersion]).toBe('0.0.0');
         await registryOf(seedcord).init();
 
@@ -62,7 +51,7 @@ describe('CommandRegistry Integration', () => {
         expect(globalCommands[0]?.name).toBe('ping');
     });
 
-    it('resets the loading flag when the bulk load throws', async () => {
+    it('resets the loading flag when the bulk load throws', async ({ testEnv }) => {
         const commandsDir = 'commands';
         await testEnv.createFile(
             `${commandsDir}/PingCommand.ts`,
@@ -80,7 +69,7 @@ describe('CommandRegistry Integration', () => {
         );
         const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
 
         // fixture: access the private load + flag to force a mid-load throw
         const internal = registryOf(seedcord) as unknown as {
@@ -93,7 +82,7 @@ describe('CommandRegistry Integration', () => {
         expect(internal.loading).toBe(false);
     });
 
-    it('should handle HMR updates for commands', async () => {
+    it('should handle HMR updates for commands', async ({ testEnv }) => {
         const commandsDir = 'commands';
         const filePath = await testEnv.createFile(
             `${commandsDir}/PingCommand.ts`,
@@ -113,7 +102,7 @@ describe('CommandRegistry Integration', () => {
 
         const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         await registryOf(seedcord).init();
 
         expect(registryOf(seedcord).globalCommands[0]?.name).toBe('ping');

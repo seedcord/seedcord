@@ -4,14 +4,14 @@ import { CustomId, InteractionKind } from '@seedcord/core';
 import { shutdownOf } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { botLoggerOf, interactionsOf } from '#bot/Bot';
 import { CONFIRM_DEF } from '#bot/confirm/reserved';
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
-import { TestEnvironment } from '#tests/utils/test-env';
+import { it as base } from '#tests/utils/test-env';
 
 import type { SubscriptionData } from '@seedcord/core';
 
@@ -84,23 +84,72 @@ function controllerOf(instance: Seedcord): PrivateInteractionDispatcher {
     return interactionsOf(instance.bot) as unknown as PrivateInteractionDispatcher;
 }
 
+interface ClientHarness {
+    seedcord: Seedcord;
+    controller: PrivateInteractionDispatcher;
+    fire: ((i: unknown) => void) | undefined;
+}
+
+type BootWith = (
+    source: string,
+    middleware?: string
+) => Promise<{ seedcord: Seedcord; controller: PrivateInteractionDispatcher }>;
+
+type DispatchedFor = (
+    source: string,
+    commandName: string,
+    middleware?: string
+) => Promise<SubscriptionData<'interactionDispatched'>[]>;
+
+const it = base.extend<{ client: ClientHarness; bootWith: BootWith; dispatchedFor: DispatchedFor }>({
+    client: async ({ testEnv, seedcordWith }, use) => {
+        await testEnv.createDir('interactions');
+        const seedcord = seedcordWith(testConfig({ interactions: testEnv.resolvePath('interactions') }));
+        const controller = controllerOf(seedcord);
+
+        const onSpy = vi.spyOn(seedcord.bot.client, 'on');
+        await controller.init();
+
+        const fire = onSpy.mock.calls.find(([event]) => event === 'interactionCreate')?.[1] as
+            ((i: unknown) => void) | undefined;
+        expect(fire).toBeDefined();
+        await use({ seedcord, controller, fire });
+    },
+    bootWith: async ({ testEnv, seedcordWith }, use) => {
+        await use(async (source, middleware) => {
+            await testEnv.createFile('interactions/Route.ts', source);
+            if (middleware) await testEnv.createFile('middlewares/Mw.ts', middleware);
+            const seedcord = seedcordWith(
+                testConfig({
+                    interactions: testEnv.resolvePath('interactions'),
+                    ownerIds: ['nobody'],
+                    ...(middleware && { interactionMiddlewares: testEnv.resolvePath('middlewares') })
+                })
+            );
+            const controller = controllerOf(seedcord);
+            await controller.init();
+            return { seedcord, controller };
+        });
+    },
+    dispatchedFor: async ({ bootWith }, use) => {
+        await use(async (source, commandName, middleware) => {
+            const { seedcord, controller } = await bootWith(source, middleware);
+
+            const published: SubscriptionData<'interactionDispatched'>[] = [];
+            seedcord.bus.on('interactionDispatched', (payload) => published.push(payload));
+
+            await controller.handleSlashCommand(fakeSlash(commandName));
+            return published;
+        });
+    }
+});
+
 describe('InteractionDispatcher Integration', () => {
-    let testEnv: TestEnvironment;
-    let seedcord: Seedcord;
-
-    beforeEach(async () => {
-        // @ts-expect-error Accessing private method for testing
-        Seedcord.reset();
-        testEnv = new TestEnvironment('interactions-test-');
-        await testEnv.setup();
-    });
-
-    afterEach(async () => {
-        await testEnv.teardown();
+    afterEach(() => {
         vi.restoreAllMocks();
     });
 
-    it('should load interaction handlers from directory', async () => {
+    it('should load interaction handlers from directory', async ({ testEnv }) => {
         const interactionsDir = 'interactions';
         await testEnv.createFile(
             `${interactionsDir}/Ping.ts`,
@@ -118,14 +167,14 @@ describe('InteractionDispatcher Integration', () => {
 
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
 
         expect(controller.maps[InteractionKind.Slash].has('ping')).toBe(true);
     });
 
-    it('a throwing anyInteraction observer does not abort the dispatch', async () => {
+    it('a throwing anyInteraction observer does not abort the dispatch', async ({ testEnv }) => {
         const interactionsDir = 'interactions';
         await testEnv.createFile(
             `${interactionsDir}/Ping.ts`,
@@ -142,7 +191,7 @@ describe('InteractionDispatcher Integration', () => {
         );
 
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
 
         // capture the interactionCreate handler attachToClient registers on the client
@@ -160,7 +209,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(() => fire?.(fakeSlash('ping'))).not.toThrow();
     });
 
-    it('throws when two handlers register the same interaction route, naming both', async () => {
+    it('throws when two handlers register the same interaction route, naming both', async ({ testEnv }) => {
         const interactionsDir = 'interactions';
         await testEnv.createFile(
             `${interactionsDir}/PingOne.ts`,
@@ -191,7 +240,7 @@ describe('InteractionDispatcher Integration', () => {
 
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
 
         const error: unknown = await controller.init().then(
@@ -207,7 +256,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(message).toContain('PingTwo.ts');
     });
 
-    it('throws when two interaction middleware classes share a name instead of overwriting', async () => {
+    it('throws when two interaction middleware classes share a name instead of overwriting', async ({ testEnv }) => {
         const middlewaresDir = 'interaction-mw';
 
         await testEnv.createFile(
@@ -245,7 +294,7 @@ describe('InteractionDispatcher Integration', () => {
             interactionMiddlewares: testEnv.resolvePath(middlewaresDir)
         });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
 
         const error: unknown = await controller.init().then(
@@ -257,7 +306,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(message).toContain('RateLimit');
     });
 
-    it('routes a thrown error from a handler through the boundary to a reply', async () => {
+    it('routes a thrown error from a handler through the boundary to a reply', async ({ testEnv }) => {
         const interactionsDir = 'interactions';
         await testEnv.createFile(
             `${interactionsDir}/Boom.ts`,
@@ -276,7 +325,7 @@ describe('InteractionDispatcher Integration', () => {
 
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
 
@@ -288,7 +337,9 @@ describe('InteractionDispatcher Integration', () => {
         expect(boundaryError).not.toHaveBeenCalledWith('reply send failed', expect.anything());
     });
 
-    it("passes the handler's live sender to the boundary, so a defer-then-throw follows up through its ack state", async () => {
+    it("passes the handler's live sender to the boundary, so a defer-then-throw follows up through its ack state", async ({
+        testEnv
+    }) => {
         const interactionsDir = 'interactions';
         await testEnv.createFile(
             `${interactionsDir}/DeferBoom.ts`,
@@ -307,7 +358,7 @@ describe('InteractionDispatcher Integration', () => {
 
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
 
@@ -322,11 +373,13 @@ describe('InteractionDispatcher Integration', () => {
         expect(boundaryError).not.toHaveBeenCalledWith('reply send failed', expect.anything());
     });
 
-    it('dispatches UnhandledAutocomplete for an autocomplete with no registered handler, responding empty', async () => {
+    it('dispatches UnhandledAutocomplete for an autocomplete with no registered handler, responding empty', async ({
+        testEnv
+    }) => {
         await testEnv.createDir('interactions');
         const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
 
@@ -336,7 +389,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(interaction.respond).toHaveBeenCalledWith([]);
     });
 
-    it('routes a registered autocomplete through handleAutocomplete to the handler respond', async () => {
+    it('routes a registered autocomplete through handleAutocomplete to the handler respond', async ({ testEnv }) => {
         const interactionsDir = 'interactions';
         await testEnv.createFile(
             `${interactionsDir}/SearchAutocomplete.ts`,
@@ -354,7 +407,7 @@ describe('InteractionDispatcher Integration', () => {
 
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
 
@@ -365,7 +418,7 @@ describe('InteractionDispatcher Integration', () => {
     });
 
     // the choices callback bypasses the reply surface, so it reports through its own path
-    it('publishes responseAttempted for an autocomplete choices response', async () => {
+    it('publishes responseAttempted for an autocomplete choices response', async ({ testEnv }) => {
         await testEnv.createFile(
             'interactions/SearchAutocomplete.ts',
             `
@@ -381,7 +434,7 @@ describe('InteractionDispatcher Integration', () => {
         );
         const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
 
@@ -400,11 +453,11 @@ describe('InteractionDispatcher Integration', () => {
         });
     });
 
-    it('skips a component interaction whose customId is owned by an ignoreCustomIds matcher', async () => {
+    it('skips a component interaction whose customId is owned by an ignoreCustomIds matcher', async ({ testEnv }) => {
         const ClickId = new CustomId('clickme');
         const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ignoreCustomIds: [ClickId] });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         // justified: spy on the private routing entry to assert the ignore gate runs before it
         const processSpy = vi.spyOn(controller, 'processInteraction').mockResolvedValue(undefined);
@@ -416,10 +469,12 @@ describe('InteractionDispatcher Integration', () => {
         expect(processSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('ignores the reserved confirm prefix so a confirm click never reaches the global router', async () => {
+    it('ignores the reserved confirm prefix so a confirm click never reaches the global router', async ({
+        testEnv
+    }) => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         const processSpy = vi.spyOn(controller, 'processInteraction').mockResolvedValue(undefined);
 
@@ -430,7 +485,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(processSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('rolls back to the last-good handler when a reload fails', async () => {
+    it('rolls back to the last-good handler when a reload fails', async ({ testEnv }) => {
         const interactionsDir = 'interactions';
         const filePath = await testEnv.createFile(
             `${interactionsDir}/Ping.ts`,
@@ -448,7 +503,7 @@ describe('InteractionDispatcher Integration', () => {
 
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
         expect(controller.maps[InteractionKind.Slash].has('ping')).toBe(true);
@@ -460,7 +515,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.maps[InteractionKind.Slash].has('ping')).toBe(true);
     });
 
-    it('rebuilds the kind chains when a middleware reloads', async () => {
+    it('rebuilds the kind chains when a middleware reloads', async ({ testEnv }) => {
         const interactionsDir = 'interactions';
         const middlewaresDir = 'interaction-mw';
         await testEnv.createFile(
@@ -492,7 +547,7 @@ describe('InteractionDispatcher Integration', () => {
             `
         );
 
-        seedcord = new Seedcord(
+        await using seedcord = new Seedcord(
             testConfig({
                 interactions: testEnv.resolvePath(interactionsDir),
                 interactionMiddlewares: testEnv.resolvePath(middlewaresDir)
@@ -526,7 +581,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(after.deferReply).toHaveBeenCalledTimes(1);
     });
 
-    it('rolls back both handlers when a reload introduces a duplicate route in one file', async () => {
+    it('rolls back both handlers when a reload introduces a duplicate route in one file', async ({ testEnv }) => {
         const interactionsDir = 'interactions';
         const filePath = await testEnv.createFile(
             `${interactionsDir}/Pair.ts`,
@@ -551,7 +606,7 @@ describe('InteractionDispatcher Integration', () => {
 
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
         expect(controller.maps[InteractionKind.Slash].has('alpha')).toBe(true);
@@ -585,7 +640,9 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.maps[InteractionKind.Slash].has('beta')).toBe(true);
     });
 
-    it('rolls back when a multi-route handler reload collides on a later route owned by another file', async () => {
+    it('rolls back when a multi-route handler reload collides on a later route owned by another file', async ({
+        testEnv
+    }) => {
         const interactionsDir = 'interactions';
 
         await testEnv.createFile(
@@ -622,7 +679,7 @@ describe('InteractionDispatcher Integration', () => {
 
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
         expect(controller.maps[InteractionKind.Button].has('own')).toBe(true);
@@ -653,7 +710,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.maps[InteractionKind.Button].has('shared')).toBe(true);
     });
 
-    it('drops the failed unit when the event disables rollback', async () => {
+    it('drops the failed unit when the event disables rollback', async ({ testEnv }) => {
         const interactionsDir = 'interactions';
         const filePath = await testEnv.createFile(
             `${interactionsDir}/Ping.ts`,
@@ -671,7 +728,7 @@ describe('InteractionDispatcher Integration', () => {
 
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         const controller = controllerOf(seedcord);
         await controller.init();
         expect(controller.maps[InteractionKind.Slash].has('ping')).toBe(true);
@@ -683,7 +740,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.maps[InteractionKind.Slash].has('ping')).toBe(false);
     });
 
-    it('should handle HMR updates for interaction handlers', async () => {
+    it('should handle HMR updates for interaction handlers', async ({ testEnv }) => {
         const interactionsDir = 'interactions';
         const filePath = await testEnv.createFile(
             `${interactionsDir}/Button.ts`,
@@ -703,7 +760,7 @@ describe('InteractionDispatcher Integration', () => {
 
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
-        seedcord = new Seedcord(config);
+        await using seedcord = new Seedcord(config);
         let controller = controllerOf(seedcord);
         await controller.init();
 
@@ -736,7 +793,7 @@ describe('InteractionDispatcher Integration', () => {
     });
 
     describe('gates', () => {
-        it('runs a passing gate, then the handler executes', async () => {
+        it('runs a passing gate, then the handler executes', async ({ testEnv }) => {
             await testEnv.createFile(
                 'interactions/Allowed.ts',
                 `
@@ -756,7 +813,7 @@ describe('InteractionDispatcher Integration', () => {
 
             const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
-            seedcord = new Seedcord(config);
+            await using seedcord = new Seedcord(config);
             const controller = controllerOf(seedcord);
             await controller.init();
 
@@ -766,7 +823,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(interaction.reply).toHaveBeenCalledWith('executed');
         });
 
-        it('warns on a gate check that crosses the slow-gate threshold', async () => {
+        it('warns on a gate check that crosses the slow-gate threshold', async ({ testEnv }) => {
             await testEnv.createFile(
                 'interactions/Sluggish.ts',
                 `
@@ -786,7 +843,7 @@ describe('InteractionDispatcher Integration', () => {
 
             const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
-            seedcord = new Seedcord(config);
+            await using seedcord = new Seedcord(config);
             const controller = controllerOf(seedcord);
             await controller.init();
 
@@ -801,7 +858,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(warn.mock.calls.some(([message]) => String(message).includes('Sluggish'))).toBe(true);
         });
 
-        it('a refusing gate stops the handler before execute', async () => {
+        it('a refusing gate stops the handler before execute', async ({ testEnv }) => {
             await testEnv.createFile(
                 'interactions/Refused.ts',
                 `
@@ -823,7 +880,7 @@ describe('InteractionDispatcher Integration', () => {
 
             const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
-            seedcord = new Seedcord(config);
+            await using seedcord = new Seedcord(config);
             const controller = controllerOf(seedcord);
             await controller.init();
 
@@ -834,7 +891,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(interaction.reply).not.toHaveBeenCalled();
         });
 
-        it('a real OwnerOnly catalog gate refuses a non-owner through the dispatcher', async () => {
+        it('a real OwnerOnly catalog gate refuses a non-owner through the dispatcher', async ({ testEnv }) => {
             await testEnv.createFile(
                 'interactions/Owner.ts',
                 `
@@ -855,7 +912,7 @@ describe('InteractionDispatcher Integration', () => {
                 ownerIds: ['someone-else']
             });
 
-            seedcord = new Seedcord(config);
+            await using seedcord = new Seedcord(config);
             const controller = controllerOf(seedcord);
             await controller.init();
 
@@ -867,7 +924,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(interaction.reply).toHaveBeenCalledTimes(1);
         });
 
-        it('hands a gate the same dispatch context a middleware wrote to', async () => {
+        it('hands a gate the same dispatch context a middleware wrote to', async ({ testEnv }) => {
             await testEnv.createFile(
                 'interactions/GateReads.ts',
                 `
@@ -902,7 +959,7 @@ describe('InteractionDispatcher Integration', () => {
 
             (globalThis as { gateSaw?: unknown[] }).gateSaw = [];
 
-            seedcord = new Seedcord(
+            await using seedcord = new Seedcord(
                 testConfig({
                     interactions: testEnv.resolvePath('interactions'),
                     interactionMiddlewares: testEnv.resolvePath('interaction-mw')
@@ -916,7 +973,7 @@ describe('InteractionDispatcher Integration', () => {
             expect((globalThis as { gateSaw?: unknown[] }).gateSaw).toEqual(['from-middleware']);
         });
 
-        it('a real OwnerOnly catalog gate passes a configured owner through the dispatcher', async () => {
+        it('a real OwnerOnly catalog gate passes a configured owner through the dispatcher', async ({ testEnv }) => {
             await testEnv.createFile(
                 'interactions/Owner.ts',
                 `
@@ -934,7 +991,7 @@ describe('InteractionDispatcher Integration', () => {
 
             const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ownerIds: ['u1'] });
 
-            seedcord = new Seedcord(config);
+            await using seedcord = new Seedcord(config);
             const controller = controllerOf(seedcord);
             await controller.init();
 
@@ -946,26 +1003,8 @@ describe('InteractionDispatcher Integration', () => {
     });
 
     describe('client-attached dispatch', () => {
-        async function clientHarness(): Promise<{
-            controller: PrivateInteractionDispatcher;
-            fire: ((i: unknown) => void) | undefined;
-        }> {
-            await testEnv.createDir('interactions');
-            const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
-            seedcord = new Seedcord(config);
-            const controller = controllerOf(seedcord);
-
-            const onSpy = vi.spyOn(seedcord.bot.client, 'on');
-            await controller.init();
-
-            const fire = onSpy.mock.calls.find(([event]) => event === 'interactionCreate')?.[1] as
-                ((i: unknown) => void) | undefined;
-            expect(fire).toBeDefined();
-            return { controller, fire };
-        }
-
-        it('runs later unhandledInteractionError listeners after an earlier one throws', async () => {
-            const { controller, fire } = await clientHarness();
+        it('runs later unhandledInteractionError listeners after an earlier one throws', async ({ client }) => {
+            const { seedcord, controller, fire } = client;
             vi.spyOn(controller, 'handleInteraction').mockRejectedValue(new Error('boom'));
             vi.spyOn(botLoggerOf(seedcord.bot), 'error').mockImplementation(() => undefined);
 
@@ -984,8 +1023,8 @@ describe('InteractionDispatcher Integration', () => {
             });
         });
 
-        it('wraps a non-Error rejection at the root, so the payload still carries an Error', async () => {
-            const { controller, fire } = await clientHarness();
+        it('wraps a non-Error rejection at the root, so the payload still carries an Error', async ({ client }) => {
+            const { seedcord, controller, fire } = client;
             vi.spyOn(controller, 'handleInteraction').mockRejectedValue('a bare string');
             vi.spyOn(botLoggerOf(seedcord.bot), 'error').mockImplementation(() => undefined);
 
@@ -1000,8 +1039,8 @@ describe('InteractionDispatcher Integration', () => {
             expect(seen[0]?.error.message).toBe('a bare string');
         });
 
-        it('stops dispatching new interactions after stopAccepting, and drain resolves', async () => {
-            const { controller, fire } = await clientHarness();
+        it('stops dispatching new interactions after stopAccepting, and drain resolves', async ({ client }) => {
+            const { controller, fire } = client;
             const handleSpy = vi.spyOn(controller, 'handleInteraction').mockResolvedValue(undefined);
 
             fire?.(fakeSlash('ping'));
@@ -1015,8 +1054,8 @@ describe('InteractionDispatcher Integration', () => {
             await expect(controller.drain(50)).resolves.toBeUndefined();
         });
 
-        it('drain waits for an in-flight run that settles inside the budget', async () => {
-            const { controller, fire } = await clientHarness();
+        it('drain waits for an in-flight run that settles inside the budget', async ({ client }) => {
+            const { controller, fire } = client;
 
             let settled = false;
             vi.spyOn(controller, 'handleInteraction').mockImplementation(
@@ -1035,8 +1074,8 @@ describe('InteractionDispatcher Integration', () => {
             expect(settled).toBe(true);
         });
 
-        it('drain returns through the timer when an in-flight run never settles', async () => {
-            const { controller, fire } = await clientHarness();
+        it('drain returns through the timer when an in-flight run never settles', async ({ client }) => {
+            const { controller, fire } = client;
 
             vi.spyOn(controller, 'handleInteraction').mockReturnValue(new Promise<void>(() => undefined));
             fire?.(fakeSlash('ping'));
@@ -1045,8 +1084,8 @@ describe('InteractionDispatcher Integration', () => {
             await expect(controller.drain(30)).resolves.toBeUndefined();
         });
 
-        it('clears the drain timer when the in-flight set settles first', async () => {
-            const { controller, fire } = await clientHarness();
+        it('clears the drain timer when the in-flight set settles first', async ({ client }) => {
+            const { controller, fire } = client;
             vi.spyOn(controller, 'handleInteraction').mockResolvedValue(undefined);
             fire?.(fakeSlash('ping'));
             controller.stopAccepting();
@@ -1057,8 +1096,8 @@ describe('InteractionDispatcher Integration', () => {
             vi.useRealTimers();
         });
 
-        it('a full-budget drain completes the Drain phase without a task timeout', async () => {
-            const { controller, fire } = await clientHarness();
+        it('a full-budget drain completes the Drain phase without a task timeout', async ({ client }) => {
+            const { seedcord, controller, fire } = client;
 
             // a run that outlives the drain budget forces the dispatcher timer to settle the race
             vi.spyOn(controller, 'handleInteraction').mockReturnValue(new Promise<void>(() => undefined));
@@ -1081,36 +1120,7 @@ describe('InteractionDispatcher Integration', () => {
     });
 
     describe('interactionDispatched', () => {
-        async function bootWith(source: string, middleware?: string): Promise<PrivateInteractionDispatcher> {
-            await testEnv.createFile('interactions/Route.ts', source);
-            if (middleware) await testEnv.createFile('middlewares/Mw.ts', middleware);
-            const config = testConfig({
-                interactions: testEnv.resolvePath('interactions'),
-                ownerIds: ['nobody'],
-                ...(middleware && { interactionMiddlewares: testEnv.resolvePath('middlewares') })
-            });
-
-            seedcord = new Seedcord(config);
-            const controller = controllerOf(seedcord);
-            await controller.init();
-            return controller;
-        }
-
-        async function dispatchedFor(
-            source: string,
-            commandName: string,
-            middleware?: string
-        ): Promise<SubscriptionData<'interactionDispatched'>[]> {
-            const controller = await bootWith(source, middleware);
-
-            const published: SubscriptionData<'interactionDispatched'>[] = [];
-            seedcord.bus.on('interactionDispatched', (payload) => published.push(payload));
-
-            await controller.handleSlashCommand(fakeSlash(commandName));
-            return published;
-        }
-
-        it('reports a handled slash dispatch with its route and no fallback', async () => {
+        it('reports a handled slash dispatch with its route and no fallback', async ({ dispatchedFor }) => {
             const published = await dispatchedFor(
                 `
                 import { SlashHandler, SlashRoute } from '${seedcordPath}';
@@ -1137,8 +1147,8 @@ describe('InteractionDispatcher Integration', () => {
             });
         });
 
-        it('reports a null guildId for a dispatch outside a guild', async () => {
-            const controller = await bootWith(
+        it('reports a null guildId for a dispatch outside a guild', async ({ bootWith }) => {
+            const { seedcord, controller } = await bootWith(
                 `
                 import { SlashHandler, SlashRoute } from '${seedcordPath}';
 
@@ -1159,7 +1169,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(published[0]).toMatchObject({ userId: 'u1', guildId: null });
         });
 
-        it('reports refused when a gate stops the handler', async () => {
+        it('reports refused when a gate stops the handler', async ({ dispatchedFor }) => {
             const published = await dispatchedFor(
                 `
                 import { Gated, OwnerOnly, SlashHandler, SlashRoute } from '${seedcordPath}';
@@ -1179,7 +1189,9 @@ describe('InteractionDispatcher Integration', () => {
             expect(published[0]).toMatchObject({ routeId: 'slash:guarded', outcome: 'refused' });
         });
 
-        it('reports refused when the handler throws a Silence, which is a deliberate stop', async () => {
+        it('reports refused when the handler throws a Silence, which is a deliberate stop', async ({
+            dispatchedFor
+        }) => {
             const published = await dispatchedFor(
                 `
                 import { Silence, SlashHandler, SlashRoute } from '${seedcordPath}';
@@ -1198,7 +1210,9 @@ describe('InteractionDispatcher Integration', () => {
             expect(published[0]).toMatchObject({ routeId: 'slash:silent', outcome: 'refused' });
         });
 
-        it('reports failed when a gate throws a reporting Fault, since the gate itself broke', async () => {
+        it('reports failed when a gate throws a reporting Fault, since the gate itself broke', async ({
+            dispatchedFor
+        }) => {
             const published = await dispatchedFor(
                 `
                 import { defineGate, Fault, Gated, SlashHandler, SlashRoute } from '${seedcordPath}';
@@ -1222,7 +1236,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(published[0]).toMatchObject({ routeId: 'slash:brokengate', outcome: 'failed' });
         });
 
-        it('reports failed when the handler throws', async () => {
+        it('reports failed when the handler throws', async ({ dispatchedFor }) => {
             const published = await dispatchedFor(
                 `
                 import { SlashHandler, SlashRoute } from '${seedcordPath}';
@@ -1241,7 +1255,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(published[0]).toMatchObject({ routeId: 'slash:boom', outcome: 'failed' });
         });
 
-        it('flags the unhandled default as a fallback and keys the route by kind', async () => {
+        it('flags the unhandled default as a fallback and keys the route by kind', async ({ dispatchedFor }) => {
             const published = await dispatchedFor(
                 `
                 import { SlashHandler, SlashRoute } from '${seedcordPath}';
@@ -1282,15 +1296,15 @@ describe('InteractionDispatcher Integration', () => {
         `;
 
         // only a gate refusal reports refused
-        it('reports failed when a middleware throws', async () => {
+        it('reports failed when a middleware throws', async ({ dispatchedFor }) => {
             const published = await dispatchedFor(MW_BOOM_ROUTE, 'mwboom', MW_BOOM_MIDDLEWARE);
 
             expect(published).toHaveLength(1);
             expect(published[0]).toMatchObject({ routeId: 'slash:mwboom', outcome: 'failed' });
         });
 
-        it('lets the handler edit what its middleware deferred', async () => {
-            const controller = await bootWith(
+        it('lets the handler edit what its middleware deferred', async ({ bootWith }) => {
+            const { controller } = await bootWith(
                 `
                 import { SlashHandler, SlashRoute } from '${seedcordPath}';
 
@@ -1321,8 +1335,8 @@ describe('InteractionDispatcher Integration', () => {
             expect(interaction.reply).not.toHaveBeenCalled();
         });
 
-        it('skips a middleware whose kinds omit the dispatched kind', async () => {
-            const controller = await bootWith(
+        it('skips a middleware whose kinds omit the dispatched kind', async ({ bootWith }) => {
+            const { seedcord, controller } = await bootWith(
                 `
                 import { SlashHandler, SlashRoute } from '${seedcordPath}';
 
@@ -1390,8 +1404,8 @@ describe('InteractionDispatcher Integration', () => {
                 (globalThis as { afterCalls?: string[] }).afterCalls = [];
             });
 
-            it('runs after() in reverse of the chain once the handler settles', async () => {
-                const controller = await bootWith(
+            it('runs after() in reverse of the chain once the handler settles', async ({ bootWith }) => {
+                const { controller } = await bootWith(
                     `
                 import { SlashHandler, SlashRoute } from '${seedcordPath}';
 
@@ -1417,8 +1431,8 @@ describe('InteractionDispatcher Integration', () => {
                 ]);
             });
 
-            it('hands after() the refusal when a gate stops the handler', async () => {
-                const controller = await bootWith(
+            it('hands after() the refusal when a gate stops the handler', async ({ bootWith }) => {
+                const { controller } = await bootWith(
                     `
                 import { Gated, OwnerOnly, SlashHandler, SlashRoute } from '${seedcordPath}';
 
@@ -1439,8 +1453,8 @@ describe('InteractionDispatcher Integration', () => {
                 expect(afterCalls()).toEqual(['First.execute', 'Second.execute', 'Second:refused', 'First:refused']);
             });
 
-            it('gives the middleware that threw its own after()', async () => {
-                const controller = await bootWith(
+            it('gives the middleware that threw its own after()', async ({ bootWith }) => {
+                const { controller } = await bootWith(
                     `
                 import { SlashHandler, SlashRoute } from '${seedcordPath}';
 
@@ -1471,8 +1485,8 @@ describe('InteractionDispatcher Integration', () => {
                 expect(afterCalls()).toEqual(['Stops:refused']);
             });
 
-            it('keeps the refusal on after() when rendering that refusal throws', async () => {
-                const controller = await bootWith(
+            it('keeps the refusal on after() when rendering that refusal throws', async ({ bootWith }) => {
+                const { controller } = await bootWith(
                     `
                 import { defineGate, Gated, Notice, SlashHandler, SlashRoute } from '${seedcordPath}';
 
@@ -1506,8 +1520,8 @@ describe('InteractionDispatcher Integration', () => {
             });
         });
 
-        it('skips the chain when the handler constructor throws', async () => {
-            const controller = await bootWith(
+        it('skips the chain when the handler constructor throws', async ({ bootWith }) => {
+            const { seedcord, controller } = await bootWith(
                 `
                 import { SlashHandler, SlashRoute } from '${seedcordPath}';
 
@@ -1545,8 +1559,8 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         // the unhandled default carries no route decorator, so its own sender has no dispatch route id
-        it('publishes one route id across both keys for the unhandled default', async () => {
-            const controller = await bootWith(`
+        it('publishes one route id across both keys for the unhandled default', async ({ bootWith }) => {
+            const { seedcord, controller } = await bootWith(`
                 import { SlashHandler, SlashRoute } from '${seedcordPath}';
 
                 @SlashRoute('registered')
@@ -1568,8 +1582,8 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         // a consumer groups the two keys by route, so they have to agree
-        it('publishes one route id across both keys when a middleware throws', async () => {
-            const controller = await bootWith(MW_BOOM_ROUTE, MW_BOOM_MIDDLEWARE);
+        it('publishes one route id across both keys when a middleware throws', async ({ bootWith }) => {
+            const { seedcord, controller } = await bootWith(MW_BOOM_ROUTE, MW_BOOM_MIDDLEWARE);
             const dispatched: SubscriptionData<'interactionDispatched'>[] = [];
             const written: SubscriptionData<'responseAttempted'>[] = [];
             seedcord.bus.on('interactionDispatched', (payload) => dispatched.push(payload));
@@ -1582,11 +1596,11 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         // a hand-built customId carries no colon, so prefixOf returns '' and no route can match
-        it('replies to a customId that carries no route prefix through the unhandled default', async () => {
+        it('replies to a customId that carries no route prefix through the unhandled default', async ({ testEnv }) => {
             await testEnv.createDir('interactions');
             const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
-            seedcord = new Seedcord(config);
+            await using seedcord = new Seedcord(config);
             const controller = controllerOf(seedcord);
             await controller.init();
 
@@ -1602,7 +1616,7 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         // the production buildSender wiring, so dropping core.bus from RepliableHandler fails here
-        it('publishes responseAttempted from the handler own reply, carrying the route id', async () => {
+        it('publishes responseAttempted from the handler own reply, carrying the route id', async ({ testEnv }) => {
             await testEnv.createFile(
                 'interactions/Route.ts',
                 `
@@ -1618,7 +1632,7 @@ describe('InteractionDispatcher Integration', () => {
             );
             const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
-            seedcord = new Seedcord(config);
+            await using seedcord = new Seedcord(config);
             const controller = controllerOf(seedcord);
             await controller.init();
 
@@ -1636,7 +1650,7 @@ describe('InteractionDispatcher Integration', () => {
             });
         });
 
-        it('stamps one dispatchId on the dispatch and on the write it made', async () => {
+        it('stamps one dispatchId on the dispatch and on the write it made', async ({ testEnv }) => {
             await testEnv.createFile(
                 'interactions/Route.ts',
                 `
@@ -1652,7 +1666,7 @@ describe('InteractionDispatcher Integration', () => {
             );
             const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
-            seedcord = new Seedcord(config);
+            await using seedcord = new Seedcord(config);
             const controller = controllerOf(seedcord);
             await controller.init();
 
@@ -1668,7 +1682,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(sent[0]?.dispatchId).toBe(id);
         });
 
-        it('gives two runs of the same route different dispatchIds', async () => {
+        it('gives two runs of the same route different dispatchIds', async ({ testEnv }) => {
             await testEnv.createFile(
                 'interactions/Route.ts',
                 `
@@ -1684,7 +1698,7 @@ describe('InteractionDispatcher Integration', () => {
             );
             const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
-            seedcord = new Seedcord(config);
+            await using seedcord = new Seedcord(config);
             const controller = controllerOf(seedcord);
             await controller.init();
 
@@ -1699,7 +1713,7 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         // the type-based rule is the same on both transports, so a constructor Silence matches http
-        it('reports refused when the handler constructor throws a Silence', async () => {
+        it('reports refused when the handler constructor throws a Silence', async ({ dispatchedFor }) => {
             const published = await dispatchedFor(
                 `
                 import { Silence, SlashHandler, SlashRoute } from '${seedcordPath}';
@@ -1724,7 +1738,7 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         // a raw non-Error gate throw is user error, the framework reports it and lets it reach the root
-        it('reports failed once when a gate throws a value that is not an Error', async () => {
+        it('reports failed once when a gate throws a value that is not an Error', async ({ testEnv }) => {
             await testEnv.createFile(
                 'interactions/Route.ts',
                 `
@@ -1745,7 +1759,7 @@ describe('InteractionDispatcher Integration', () => {
             );
             const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
-            seedcord = new Seedcord(config);
+            await using seedcord = new Seedcord(config);
             const controller = controllerOf(seedcord);
             await controller.init();
 

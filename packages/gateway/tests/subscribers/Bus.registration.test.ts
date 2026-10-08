@@ -1,10 +1,10 @@
 import { busLoggerOf, VerifyWebhooks, SubscriberLoader } from '@seedcord/core/internal';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, expect, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
-import { TestEnvironment } from '#tests/utils/test-env';
+import { it } from '#tests/utils/test-env';
 
 // Seedcord builds the same loader from its config
 function loaderOf(instance: Seedcord): SubscriberLoader {
@@ -34,24 +34,13 @@ interface PrivateBus {
 }
 
 describe('Bus webhook reporter registration', () => {
-    let testEnv: TestEnvironment;
-    let seedcord: Seedcord;
-
-    beforeEach(async () => {
-        // @ts-expect-error: Accessing private method for testing
-        Seedcord.reset();
-        testEnv = new TestEnvironment('webhook-registration-test-');
-        await testEnv.setup();
-    });
-
-    afterEach(async () => {
-        await testEnv.teardown();
+    afterEach(() => {
         vi.clearAllMocks();
         // clearAllMocks keeps implementations, a rejecting getMock must never leak into the next test
         restMocks.getMock.mockReset().mockResolvedValue({});
     });
 
-    it('warns and skips a reporter whose env var is unset', async () => {
+    it('warns and skips a reporter whose env var is unset', async ({ testEnv }) => {
         await testEnv.createFile(
             'subscribers/QuietReporter.ts',
             `
@@ -67,7 +56,7 @@ describe('Bus webhook reporter registration', () => {
             `
         );
 
-        seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
+        await using seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
         const warnSpy = vi.spyOn(busLoggerOf(seedcord.bus), 'warn');
         await loaderOf(seedcord).init();
 
@@ -78,7 +67,7 @@ describe('Bus webhook reporter registration', () => {
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('UNSET_REPORTER_WEBHOOK_URL'));
     });
 
-    it('throws at boot when a reporter env var is set but malformed', async () => {
+    it('throws at boot when a reporter env var is set but malformed', async ({ testEnv }) => {
         await testEnv.createFile(
             'subscribers/BadUrlReporter.ts',
             `
@@ -94,12 +83,12 @@ describe('Bus webhook reporter registration', () => {
             `
         );
 
-        seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
+        await using seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
         await expect(loaderOf(seedcord).init()).rejects.toThrow('MALFORMED_REPORTER_WEBHOOK_URL');
     });
 
     it('throws at verify when a configured webhook does not exist on discord', async () => {
-        seedcord = new Seedcord(testConfig({}));
+        await using seedcord = new Seedcord(testConfig({}));
         await loaderOf(seedcord).init();
 
         const { DiscordAPIError } = await import('@discordjs/rest');
@@ -112,7 +101,7 @@ describe('Bus webhook reporter registration', () => {
         );
     });
 
-    it('names every env key behind one dead url at verify', async () => {
+    it('names every env key behind one dead url at verify', async ({ testEnv }) => {
         await testEnv.createFile(
             'subscribers/SharedUrlReporters.ts',
             `
@@ -136,7 +125,7 @@ describe('Bus webhook reporter registration', () => {
             `
         );
 
-        seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
+        await using seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
         await loaderOf(seedcord).init();
 
         const { DiscordAPIError } = await import('@discordjs/rest');
@@ -149,7 +138,7 @@ describe('Bus webhook reporter registration', () => {
     });
 
     it('warns and continues when discord is unreachable at verify', async () => {
-        seedcord = new Seedcord(testConfig({}));
+        await using seedcord = new Seedcord(testConfig({}));
         await loaderOf(seedcord).init();
 
         restMocks.getMock.mockRejectedValue(new TypeError('fetch failed'));
@@ -158,7 +147,7 @@ describe('Bus webhook reporter registration', () => {
         expect(warnSpy).toHaveBeenCalled();
     });
 
-    it('throws at boot for a WebhookLog subclass without @WebhookUrl', async () => {
+    it('throws at boot for a WebhookLog subclass without @WebhookUrl', async ({ testEnv }) => {
         await testEnv.createFile(
             'subscribers/UndeclaredReporter.ts',
             `
@@ -173,7 +162,7 @@ describe('Bus webhook reporter registration', () => {
             `
         );
 
-        seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
+        await using seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
         await expect(loaderOf(seedcord).init()).rejects.toThrow('UndeclaredReporter');
     });
 });

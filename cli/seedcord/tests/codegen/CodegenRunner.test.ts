@@ -1,4 +1,4 @@
-import { chmod, mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtempDisposable, readFile, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -6,7 +6,7 @@ import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { HostAugmentTarget, HostPluginKeys, SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType } from 'discord.js';
-import { afterEach, assert, describe, expect, it } from 'vitest';
+import { assert, describe, expect, it, onTestFinished } from 'vitest';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
@@ -19,17 +19,11 @@ import type { ILogger } from '@seedcord/types';
 
 const OUTPUT = 'seedcord-gen.d.ts';
 
-const tempDirs: string[] = [];
-
 async function tempDir(prefix: string): Promise<string> {
-    const dir = await mkdtemp(join(tmpdir(), prefix));
-    tempDirs.push(dir);
-    return dir;
+    const dir = await mkdtempDisposable(join(tmpdir(), prefix));
+    onTestFinished(() => dir.remove());
+    return dir.path;
 }
-
-afterEach(async () => {
-    await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
-});
 
 class BanCommand extends BuilderComponent<'command'> {
     public constructor() {

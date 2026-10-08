@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempDisposableSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -103,59 +103,55 @@ describe('winston sinks', () => {
     });
 
     it('the file sink writes a record to disk', async () => {
-        const dir = mkdtempSync(join(tmpdir(), 'seedcord-logger-'));
-        const filename = join(dir, 'out.log');
-        const sink = new WinstonFileSink({ filename, format: 'json' });
+        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
+        const filename = join(dir.path, 'out.log');
+        using sink = new WinstonFileSink({ filename, format: 'json' });
 
         sink.onLog(record({ message: 'to-disk', channel: 'events' }));
         const content = await readWhenWritten(filename);
 
         expect(content).toContain('to-disk');
         expect(content).toContain('events');
-        sink.dispose();
     });
 
     it('the json sink stamps the record timestamp as ISO, not the format-time now', async () => {
-        const dir = mkdtempSync(join(tmpdir(), 'seedcord-logger-'));
-        const filename = join(dir, 'ts.log');
-        const sink = new WinstonFileSink({ filename, format: 'json' });
+        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
+        const filename = join(dir.path, 'ts.log');
+        using sink = new WinstonFileSink({ filename, format: 'json' });
 
         const ts = 1_600_000_000_000;
         sink.onLog(record({ message: 'stamped', timestamp: ts }));
         const content = await readWhenWritten(filename);
         const line = content.trim().split('\n')[0] ?? '{}';
         expect((JSON.parse(line) as { timestamp?: string }).timestamp).toBe(new Date(ts).toISOString());
-        sink.dispose();
     });
 
     it('expands {timestamp} in the file name', async () => {
-        const dir = mkdtempSync(join(tmpdir(), 'seedcord-logger-'));
-        const sink = new WinstonFileSink({ filename: join(dir, 'run-{timestamp}.log'), format: 'json' });
+        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
+        using sink = new WinstonFileSink({ filename: join(dir.path, 'run-{timestamp}.log'), format: 'json' });
 
         sink.onLog(record({ message: 'stamped' }));
 
-        const written = await listWhenWritten(dir);
+        const written = await listWhenWritten(dir.path);
         expect(written).toHaveLength(1);
         expect(written[0]).toMatch(/^run-\d{4}-\d{2}-\d{2}-\d{6}-\d{3}\.log$/u);
-        sink.dispose();
     });
 
     it('expands {date} in the file name', async () => {
-        const dir = mkdtempSync(join(tmpdir(), 'seedcord-logger-'));
-        const sink = new WinstonFileSink({ filename: join(dir, 'run-{date}.log'), format: 'json' });
+        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
+        using sink = new WinstonFileSink({ filename: join(dir.path, 'run-{date}.log'), format: 'json' });
 
         sink.onLog(record({ message: 'stamped' }));
 
-        const written = await listWhenWritten(dir);
+        const written = await listWhenWritten(dir.path);
         expect(written).toHaveLength(1);
         expect(written[0]).toMatch(/^run-\d{4}-\d{2}-\d{2}\.log$/u);
-        sink.dispose();
     });
 
     it('writes the pretty file format ANSI-stripped', async () => {
-        const dir = mkdtempSync(join(tmpdir(), 'seedcord-logger-'));
-        const filename = join(dir, 'pretty.log');
-        const sink = new WinstonFileSink({ filename, format: 'pretty' });
+        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
+        const filename = join(dir.path, 'pretty.log');
+        using sink = new WinstonFileSink({ filename, format: 'pretty' });
 
         sink.onLog(record({ level: 'warn', message: 'to-file', label: 'Bot' }));
         const content = await readWhenWritten(filename);
@@ -163,12 +159,11 @@ describe('winston sinks', () => {
         expect(content).toContain('to-file');
         expect(content).toContain('warn');
         expect(content).not.toContain(String.fromCharCode(27));
-        sink.dispose();
     });
 
     it('the file sink is disposable via using', async () => {
-        const dir = mkdtempSync(join(tmpdir(), 'seedcord-logger-'));
-        const filename = join(dir, 'scoped.log');
+        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
+        const filename = join(dir.path, 'scoped.log');
         {
             using sink = new WinstonFileSink({ filename, format: 'json' });
             sink.onLog(record({ message: 'scoped-write' }));
@@ -179,7 +174,8 @@ describe('winston sinks', () => {
 
     it('marks node sinks with node: true', () => {
         expect(new WinstonConsoleSink().node).toBe(true);
-        expect(new WinstonFileSink({ filename: join(mkdtempSync(join(tmpdir(), 'sc-')), 'x.log') }).node).toBe(true);
+        using dir = mkdtempDisposableSync(join(tmpdir(), 'sc-'));
+        expect(new WinstonFileSink({ filename: join(dir.path, 'x.log') }).node).toBe(true);
     });
 });
 
@@ -229,11 +225,11 @@ describe('installNodeDefaults', () => {
     it('skips the default file sink when overrides provide sinks', () => {
         const devSpy = vi.spyOn(Envapter, 'isDevelopment', 'get').mockReturnValue(true);
         const cwd = process.cwd();
-        const dir = mkdtempSync(join(tmpdir(), 'seedcord-logger-'));
-        process.chdir(dir);
+        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
+        process.chdir(dir.path);
         try {
             installNodeDefaults({ sinks: [{ kind: 'console', onLog: () => undefined }] });
-            expect(readdirSync(dir)).not.toContain('logs');
+            expect(readdirSync(dir.path)).not.toContain('logs');
         } finally {
             process.chdir(cwd);
             devSpy.mockRestore();
@@ -243,14 +239,14 @@ describe('installNodeDefaults', () => {
     it('creates no log file until a record is logged, so repeated bootstraps leave no orphans', async () => {
         const devSpy = vi.spyOn(Envapter, 'isDevelopment', 'get').mockReturnValue(true);
         const cwd = process.cwd();
-        const dir = mkdtempSync(join(tmpdir(), 'seedcord-logger-'));
-        process.chdir(dir);
+        using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
+        process.chdir(dir.path);
         try {
             installNodeDefaults();
             installNodeDefaults();
             // the eager File transport opens its stream on the next tick, so wait past it before asserting
             await new Promise((resolve) => setTimeout(resolve, 100));
-            const logsDir = join(dir, 'logs');
+            const logsDir = join(dir.path, 'logs');
             const files = existsSync(logsDir) ? readdirSync(logsDir) : [];
             expect(files).toEqual([]);
         } finally {

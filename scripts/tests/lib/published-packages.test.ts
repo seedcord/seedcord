@@ -1,4 +1,4 @@
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -16,7 +16,8 @@ describe('readPublished', () => {
     });
 
     it('reads the json from a file, which wins over the inline flag', async () => {
-        const file = path.join(await mkdtemp(path.join(tmpdir(), 'published-')), 'published.json');
+        await using dir = await mkdtempDisposable(path.join(tmpdir(), 'published-'));
+        const file = path.join(dir.path, 'published.json');
         await writeFile(file, CORE);
 
         await expect(readPublished({ published: '[]', 'published-file': file })).resolves.toEqual([

@@ -1,13 +1,15 @@
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
 
 async function project(paths?: Record<string, string[]>): Promise<string> {
-    const root = await mkdtemp(join(tmpdir(), 'seedcord-loader-'));
+    const tmp = await mkdtempDisposable(join(tmpdir(), 'seedcord-loader-'));
+    onTestFinished(() => tmp.remove());
+    const root = tmp.path;
     const compilerOptions = { module: 'preserve', moduleResolution: 'bundler', ...(paths && { paths }) };
 
     await writeFile(join(root, 'tsconfig.json'), JSON.stringify({ compilerOptions }), 'utf8');

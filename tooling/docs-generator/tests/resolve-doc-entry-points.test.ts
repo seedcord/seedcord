@@ -1,8 +1,8 @@
-import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtempDisposable, mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { resolveDocEntryPoints } from '#src/workspace';
 
@@ -23,11 +23,9 @@ const manifestWith = (exports: PackageManifest['exports']): PackageManifest => (
 });
 
 beforeEach(async () => {
-    packageDir = await mkdtemp(join(tmpdir(), 'doc-entries-'));
-});
-
-afterEach(async () => {
-    await rm(packageDir, { recursive: true, force: true });
+    const tmp = await mkdtempDisposable(join(tmpdir(), 'doc-entries-'));
+    packageDir = tmp.path;
+    return () => tmp.remove();
 });
 
 describe('resolveDocEntryPoints', () => {
