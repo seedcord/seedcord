@@ -12,6 +12,7 @@ import { VALID_TOKEN } from '#tests/helpers/fixtures';
 import { slashPayload } from '#tests/helpers/interactions';
 import { bindSignedEnv, resetSeedcord, serverConfig, stopHost } from '#tests/helpers/nodeHost';
 
+import { slowGateEntered } from './discovery/fixtures/handlers/SlowGateCommand';
 import { drainSlow } from './fixtures/drain-handlers/DrainSlowCommand';
 
 import type { HttpServerConfig } from '#src/interfaces/Config';
@@ -99,6 +100,24 @@ describe('http Seedcord.fetch on node', () => {
         await shutdownOf(host).run(0, false);
 
         expect(drainSlow.finished).toBe(true);
+    });
+
+    it('finishes shutdown after a fetch request that was still before its 202', async () => {
+        const signer = await bindSignedEnv();
+        const host = new Seedcord({ ...config(), port: false });
+        live = host;
+        await host.start();
+        const order: string[] = [];
+
+        const answered = host
+            .fetch(await signedRequest(signer, JSON.stringify(slashPayload('slowping'))))
+            .then(() => order.push('answered'));
+        await slowGateEntered.promise;
+        await shutdownOf(host).run(0, false);
+        order.push('shut down');
+        await answered;
+
+        expect(order).toEqual(['answered', 'shut down']);
     });
 
     it('answers 503 once shutdown has run', async () => {

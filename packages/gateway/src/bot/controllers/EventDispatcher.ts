@@ -13,7 +13,7 @@ import {
     runAfter,
     runHandlerGates
 } from '@seedcord/core/internal';
-import { drainInFlight } from '@seedcord/core/node/internal';
+import { InFlight } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -68,8 +68,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private readonly executedOnceHandlers = new Set<EventHandlerConstructor>();
     private readonly attachedEvents = new Set<keyof ClientEvents>();
 
-    private readonly inFlight = new Set<Promise<void>>();
-    private draining = false;
+    private readonly inFlight = new InFlight(this.logger, 'Events');
 
     // a reload reports on the hmr channel
     private loading = false;
@@ -318,23 +317,22 @@ export class EventDispatcher implements Initializeable, HmrAware {
         );
 
         this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
-            if (this.draining) return;
+            if (this.inFlight.closed) return;
             const run = this.processEvent(eventName, args).catch((caught: unknown) => {
                 const error = asError(caught);
                 this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${error.name}`, error.stack);
                 this.core.bus[PublishDefault]('unhandledEventError', { error });
             });
-            this.inFlight.add(run);
-            void run.finally(() => this.inFlight.delete(run));
+            this.inFlight.track(run);
         });
     }
 
     public stopAccepting(): void {
-        this.draining = true;
+        this.inFlight.close();
     }
 
     public drain(timeoutMs: number): Promise<void> {
-        return drainInFlight(this.inFlight, timeoutMs, this.logger, 'Events');
+        return this.inFlight.drain(timeoutMs);
     }
 
     private async processEvent<KeyOfEvents extends keyof ClientEvents>(

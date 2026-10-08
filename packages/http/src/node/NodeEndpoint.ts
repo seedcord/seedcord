@@ -1,4 +1,4 @@
-import { DRAIN_WINDOW_MS, drainInFlight } from '@seedcord/core/node/internal';
+import { DRAIN_WINDOW_MS, InFlight } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
@@ -9,11 +9,15 @@ import type { Logger } from '@seedcord/logger';
 const SERVICE_UNAVAILABLE = 503;
 
 export class NodeEndpoint implements EngineContext {
-    private readonly inFlight = new Set<Promise<unknown>>();
+    private readonly inFlight: InFlight;
     private starting?: Promise<unknown>;
-    private closed = false;
 
-    constructor(private readonly service: InteractionsService) {}
+    constructor(
+        private readonly service: InteractionsService,
+        logger: Logger
+    ) {
+        this.inFlight = new InFlight(logger, 'Interactions');
+    }
 
     public open(starting: Promise<unknown>): void {
         this.starting = starting;
@@ -27,20 +31,21 @@ export class NodeEndpoint implements EngineContext {
 
     // the built-in server calls this directly because it binds in Ready, before start() resolves
     public answer(request: Request): Promise<Response> {
-        if (this.closed) return Promise.resolve(new Response(null, { status: SERVICE_UNAVAILABLE }));
-        return this.service.engine(request, this);
+        if (this.inFlight.closed) return Promise.resolve(new Response(null, { status: SERVICE_UNAVAILABLE }));
+        const answering = this.service.engine(request, this);
+        this.inFlight.track(answering);
+        return answering;
     }
 
     public waitUntil(work: Promise<unknown>): void {
-        this.inFlight.add(work);
-        void work.finally(() => this.inFlight.delete(work));
+        this.inFlight.track(work);
     }
 
     public close(): void {
-        this.closed = true;
+        this.inFlight.close();
     }
 
-    public drain(logger: Logger): Promise<void> {
-        return drainInFlight(this.inFlight, DRAIN_WINDOW_MS, logger, 'Interactions');
+    public drain(): Promise<void> {
+        return this.inFlight.drain(DRAIN_WINDOW_MS);
     }
 }

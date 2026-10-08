@@ -84,7 +84,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         this.rest = this.#service.rest;
         this.rateLimiter = this.#service.rateLimiter;
         this.bus = this.#service.bus;
-        this.#endpoint = new NodeEndpoint(this.#service);
+        this.#endpoint = new NodeEndpoint(this.#service, this.#logger);
 
         this.#hmrManager = new HmrManager();
         this.#hmrManager.init();
@@ -213,7 +213,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         this.shutdown.addTask(
             ShutdownPhase.Drain,
             'drain-inflight',
-            () => this.#endpoint.drain(this.#logger),
+            () => this.#endpoint.drain(),
             DRAIN_TASK_TIMEOUT_MS
         );
     }
