@@ -60,7 +60,7 @@ export enum SeedcordErrorCode {
     CoreApplicationUnavailable = 1209,
     /** A generated accessor was read before startup resolved its values. */
     CoreAccessorUnresolved = 1210,
-    /** A startup or shutdown task was added on an edge bot. */
+    /** A shutdown task was added on an edge bot. */
     CoreLifecycleUnavailable = 1211,
     /** `emit` was called on the bus. It reaches listeners and skips every subscriber. */
     CoreBusEmitUnavailable = 1212,

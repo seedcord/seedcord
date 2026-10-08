@@ -23,7 +23,7 @@ import { emptyRouteMaps } from '#src/dispatch/resolve';
 import { buildEngine } from '#src/engine';
 import { version as packageVersion } from '#src/version';
 
-import { edgeRestOptions, edgeShutdown, edgeStartup } from './runtime';
+import { edgeRestOptions, edgeShutdown } from './runtime';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpEdgeConfig } from '#interfaces/Config';
@@ -35,8 +35,8 @@ import type { IRateLimiter } from '@seedcord/types';
  * calls `fetch` for every request.
  *
  * The constructor stores the config. The first `fetch` in each isolate reads `DISCORD_BOT_TOKEN`
- * and `DISCORD_PUBLIC_KEY`, loads the handler and subscriber folders, then runs every plugin's
- * `init()` and `ready()`. Requests that arrive meanwhile wait for it.
+ * and `DISCORD_PUBLIC_KEY`, loads the handler and subscriber folders, then runs the startup tasks
+ * and every plugin's `init()` and `ready()`. Requests that arrive meanwhile wait for it.
  */
 export class Seedcord extends PluginHost<'http', 'edge'> {
     // the CLI reads these to detect and augment the instance
@@ -56,24 +56,24 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     /** @see {@link Bus} */
     public readonly bus: Bus;
 
-    /** Throws `CoreLifecycleUnavailable`. An isolate runs no coordinated shutdown. */
+    /** Throws `CoreLifecycleUnavailable`. Cloudflare gives a worker no shutdown hook. */
     public readonly shutdown = edgeShutdown;
 
-    /** Throws `CoreLifecycleUnavailable`. Do startup work inside a plugin's `init()`. */
-    public readonly startup = edgeStartup;
+    /** Add a task that runs during startup, on the first request. */
+    public readonly startup: Pick<CoordinatedStartup, 'addTask'>;
 
     public readonly config: HttpEdgeConfig;
 
     readonly #subscribers: SubscriberLoader;
     readonly #interactions?: InteractionDispatcher;
 
-    readonly #pluginStartup = new CoordinatedStartup();
+    readonly #startup = new CoordinatedStartup();
     // workerd gives a worker no shutdown hook. dispose() runs only in a rollback.
-    readonly #plugins = new PluginLifecycle(this.#pluginStartup, { addTask: () => undefined });
+    readonly #plugins = new PluginLifecycle(this.#startup, { addTask: () => undefined });
 
     #token?: string;
     #prepared?: Promise<EngineParts['handle']>;
-    #pluginsStarted?: Promise<void> | undefined;
+    #started?: Promise<void> | undefined;
 
     static #isInstantiated = false;
 
@@ -83,6 +83,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         Seedcord.#isInstantiated = true;
 
         this.config = config;
+        this.startup = { addTask: this.#startup.addTask.bind(this.#startup) };
         this.rest = new REST(edgeRestOptions(config.bot.restOptions));
         Logger.configure(config.logger ?? {});
         bindBotColor(() => this.config.botColor);
@@ -111,8 +112,8 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         this.#prepared ??= this.#prepare();
         const handle = await this.#prepared;
 
-        this.#pluginsStarted ??= this.#startPlugins();
-        await this.#pluginsStarted;
+        this.#started ??= this.#runStartup();
+        await this.#started;
 
         return handle(request, ctx);
     }
@@ -131,13 +132,13 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         return buildEngine(this, maps, middlewares).handle;
     }
 
-    async #startPlugins(): Promise<void> {
+    async #runStartup(): Promise<void> {
         this.#plugins.register(attachmentsOf(this));
         try {
-            await this.#pluginStartup.run();
+            await this.#startup.run();
         } catch (caught) {
             await this.#plugins.rollback();
-            this.#pluginsStarted = undefined;
+            this.#started = undefined;
             throw caught;
         }
         sealAttachments(this);

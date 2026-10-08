@@ -1,4 +1,4 @@
-import { InteractionKind, Subscribe, Subscriber } from '@seedcord/core';
+import { InteractionKind, StartupPhase, Subscribe, Subscriber } from '@seedcord/core';
 import { storeInteractionRoute } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -116,6 +116,30 @@ describe('the edge Seedcord', () => {
         ]);
 
         expect(calls).toEqual(['init', 'ready']);
+    });
+
+    it('runs a startup task on the first request, before plugins in a later phase', async () => {
+        const calls: string[] = [];
+        class Warm extends Plugin {
+            constructor(host: CoreBase) {
+                super(host, { init: { phase: StartupPhase.Ready } });
+            }
+            public init(): Promise<void> {
+                calls.push('plugin init');
+                return Promise.resolve();
+            }
+        }
+        const signer = await signedEnv();
+        const seedcord = new Seedcord(config()).attach('warm', Warm);
+        seedcord.startup.addTask(StartupPhase.Configuration, 'warm-cache', () => {
+            calls.push('startup task');
+            return Promise.resolve();
+        });
+
+        expect(calls).toEqual([]);
+        await seedcord.fetch(await signedRequest(signer, ping));
+
+        expect(calls).toEqual(['startup task', 'plugin init']);
     });
 
     it('rolls back a failed plugin start and retries it on the next request', async () => {

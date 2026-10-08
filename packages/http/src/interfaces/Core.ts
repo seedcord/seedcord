@@ -18,9 +18,8 @@ import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/nod
  * ```
  */
 export interface Core extends CoreBase {
-    // both throw on an edge bot
-    readonly shutdown: Pick<CoordinatedShutdown, 'addTask'>;
     readonly startup: Pick<CoordinatedStartup, 'addTask'>;
+    readonly shutdown: Pick<CoordinatedShutdown, 'addTask'>; // throws on an edge bot
 
     readonly config: HttpConfig;
 }

@@ -65,7 +65,7 @@ const messages = {
     [SeedcordErrorCode.CoreAccessorUnresolved]: (accessor: string, key: string) =>
         `${accessor}.${key} has no value yet. ${accessor} fills during startup, and a read at the top of a file runs before that.`,
     [SeedcordErrorCode.CoreLifecycleUnavailable]: (accessor: string) =>
-        `core.${accessor}.addTask() does not work on an edge bot. Cloudflare stops an isolate with no shutdown hook, and startup runs only plugins, on the first request. Put startup work in a plugin's init(). To use startup and shutdown tasks, run the bot on node with new Seedcord(config).start().`,
+        `core.${accessor}.addTask() does not work on an edge bot. Cloudflare stops an isolate with no shutdown hook. A shutdown task would never run. To use shutdown tasks, run the bot on node with new Seedcord(config).start().`,
     [SeedcordErrorCode.CoreBusEmitUnavailable]: (event: string) =>
         `core.bus.emit('${event}') would reach your on() listeners and skip every Subscriber class. Call core.bus.publish('${event}', data) to run both.`,
 
