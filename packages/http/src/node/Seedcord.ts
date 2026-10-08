@@ -58,7 +58,7 @@ const SERVER_SHUTDOWN_TIMEOUT_MS = 5000;
  * `createSeedcord` from a generated entry.
  */
 // tests/node/seedcord-core.types-test.ts checks this class against Core in place of an implements clause
-export class Seedcord extends ServerHost<'http', 'server'> implements SeedcordInstance {
+export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -92,7 +92,7 @@ export class Seedcord extends ServerHost<'http', 'server'> implements SeedcordIn
     public readonly config: HttpServerConfig;
 
     constructor(config: HttpServerConfig) {
-        super(new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
+        super('http', new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
         this.config = config;
         this.rest = new REST(config.bot.restOptions);
 

@@ -45,7 +45,7 @@ class TestPlugin extends Plugin {
     public onDispose?: () => void;
 }
 
-class TestHost extends ServerHost<'gateway', 'server'> {
+class TestHost extends ServerHost<'gateway'> {
     public readonly config: Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
@@ -53,7 +53,7 @@ class TestHost extends ServerHost<'gateway', 'server'> {
     public readonly bus: Bus;
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup, config: Config = {} as Config) {
-        super(shutdown, startup);
+        super('gateway', shutdown, startup);
         this.config = config;
         this.bus = new Bus(this);
     }

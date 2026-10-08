@@ -64,7 +64,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         host: CoreBase,
         private readonly options: KyselyOptions
     ) {
-        super(host, { dispose: keepDefined({ timeout: options.timeout }) });
+        super(host, { runtime: 'server', dispose: keepDefined({ timeout: options.timeout }) });
         this.serviceRegistry = new KyselyServiceRegistry(this, this.core, this.logger);
         this.databaseBootstrapper = new PostgresDatabaseBootstrapper(this.logger);
 

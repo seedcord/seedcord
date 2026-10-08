@@ -10,10 +10,10 @@ import { registerProcessErrors } from './processErrors';
 
 import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import type { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
-import type { Runtime, Transport } from '#src/plugin/options';
+import type { Transport } from '#src/plugin/options';
 
 /** Base class for a transport `Seedcord` class that runs as a long-lived node or bun process. */
-export abstract class ServerHost<BotT extends Transport, BotRt extends Runtime> extends PluginHost<BotT, BotRt> {
+export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT, 'server'> {
     /** @internal */
     readonly [HostShutdown]: CoordinatedShutdown;
     /** @internal */
@@ -34,10 +34,10 @@ export abstract class ServerHost<BotT extends Transport, BotRt extends Runtime> 
     static #liveShutdown?: CoordinatedShutdown | undefined;
     static #liveProcessErrors?: (() => void) | undefined;
 
-    constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
+    constructor(transport: BotT, shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
         // a `sideEffects: false` build would drop the same call in the node entry
         assertDeclaredRuntime();
-        super();
+        super(transport, 'server');
 
         if (ServerHost.#isInstantiated) throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
 
@@ -106,6 +106,6 @@ export abstract class ServerHost<BotT extends Transport, BotRt extends Runtime> 
 }
 
 // the public `shutdown` field carries addTask alone
-export function shutdownOf(host: Pick<ServerHost<Transport, Runtime>, typeof HostShutdown>): CoordinatedShutdown {
+export function shutdownOf(host: Pick<ServerHost<Transport>, typeof HostShutdown>): CoordinatedShutdown {
     return host[HostShutdown];
 }

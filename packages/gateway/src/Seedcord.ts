@@ -21,7 +21,7 @@ import type { SeedcordInstance } from '@seedcord/types/internal';
  * coordinated startup and shutdown. Attach plugins with `attach()`.
  */
 // an `implements Core` clause breaks a bot's full lib check once codegen adds its plugins to Core
-export class Seedcord extends ServerHost<'gateway', 'server'> implements SeedcordInstance {
+export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -57,7 +57,7 @@ export class Seedcord extends ServerHost<'gateway', 'server'> implements Seedcor
      * @throws A **SeedcordError** When attempting to create multiple instances (singleton)
      */
     constructor(public readonly config: GatewayConfig) {
-        super(new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
+        super('gateway', new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
 
         installNodeDefaults(config.logger);
         bindBotColor(() => this.config.botColor);

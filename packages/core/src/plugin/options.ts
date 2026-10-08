@@ -1,4 +1,5 @@
-import type { RuntimeBrand, TransportBrand } from './brands';
+import type { RuntimeBrand, ScopedSpec, TransportBrand } from './brands';
+import type { PluginLifecycleSpec } from './lifecycle';
 import type { TypedExclude } from '@seedcord/types';
 
 /**
@@ -41,6 +42,33 @@ export type Transport = TypedExclude<NonNullable<PluginOptions['transport']>, 'a
 
 /** @internal */
 export type Runtime = TypedExclude<NonNullable<PluginOptions['runtime']>, 'any'>;
+
+/** @internal */
+export interface DeclaredScope {
+    readonly transport: Transport | 'any';
+    readonly runtime: Runtime | 'any';
+}
+
+/** @internal */
+export type ScopeAxis = keyof DeclaredScope;
+
+type NarrowedTransport<Opts extends PluginOptions> =
+    TransportOf<Opts> extends 'any' ? unknown : { transport: TransportOf<Opts> };
+
+type NarrowedRuntime<Opts extends PluginOptions> =
+    RuntimeOf<Opts> extends 'any' ? unknown : { runtime: RuntimeOf<Opts> };
+
+// a transport base sets the axes it fixes on its class
+type ScopeToPass<Opts extends PluginOptions, Fixed extends ScopeAxis> = ('transport' extends Fixed
+    ? unknown
+    : NarrowedTransport<Opts>) &
+    ('runtime' extends Fixed ? unknown : NarrowedRuntime<Opts>);
+
+/** @internal */
+export type PluginSpecArgs<Opts extends PluginOptions, Fixed extends ScopeAxis> =
+    unknown extends ScopeToPass<Opts, Fixed>
+        ? [spec?: PluginLifecycleSpec]
+        : [spec: PluginLifecycleSpec & ScopeToPass<Opts, Fixed> & { readonly [ScopedSpec]?: never }];
 
 type TransportMismatch<PluginT extends string, BotT extends string> = Record<
     `this plugin declares transport '${PluginT}' but this bot runs '${BotT}'`,

@@ -1,3 +1,4 @@
+import { FixedScope } from '@seedcord/core/internal';
 import { Plugin as CorePlugin } from '@seedcord/core/plugin';
 
 import type { Core } from '#interfaces/Core';
@@ -23,6 +24,9 @@ export type GatewayPluginOptions = TypedOmit<PluginOptions, 'transport' | 'runti
  */
 export abstract class Plugin<
     Opts extends GatewayPluginOptions = { transport: 'gateway'; runtime: 'server' }
-> extends CorePlugin<Opts, Core> {}
+> extends CorePlugin<Opts, Core, 'transport' | 'runtime'> {
+    /** @internal */
+    protected static override readonly [FixedScope] = { transport: 'gateway', runtime: 'server' } as const;
+}
 
 export type { PluginLifecycleSpec, PluginOptions } from '@seedcord/core/plugin';

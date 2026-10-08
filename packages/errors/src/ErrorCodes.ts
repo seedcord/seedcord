@@ -82,6 +82,8 @@ export enum SeedcordErrorCode {
     CoreDirectoryOutsideRoot = 1219,
     /** A file in a scanned directory could not be read as text. */
     CoreFileUnreadable = 1220,
+    /** A plugin's declared transport or runtime differs from the bot it was attached to. */
+    CorePluginScopeMismatch = 1221,
 
     /** A command decorator attempted to re-register an existing command scope. */
     DecoratorCommandAlreadyRegistered = 1301,

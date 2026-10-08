@@ -2,6 +2,7 @@ import { Plugin } from '@seedcord/core/plugin';
 import { expectTypeOf } from 'vitest';
 
 import type { Seedcord } from '#src/node/Seedcord';
+import type { CoreBase } from '@seedcord/core';
 
 class Anywhere extends Plugin {
     public init(): Promise<void> {
@@ -10,12 +11,18 @@ class Anywhere extends Plugin {
 }
 
 class HttpOnly extends Plugin<{ transport: 'http' }> {
+    constructor(host: CoreBase) {
+        super(host, { transport: 'http' });
+    }
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
 class GatewayOnly extends Plugin<{ transport: 'gateway' }> {
+    constructor(host: CoreBase) {
+        super(host, { transport: 'gateway' });
+    }
     public init(): Promise<void> {
         return Promise.resolve();
     }

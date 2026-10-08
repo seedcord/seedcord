@@ -8,11 +8,15 @@ import { RuntimeBrand, TransportBrand } from './brands';
 import { resolveLifecycleSpec } from './lifecycle';
 
 import type { CoreBase } from '#interfaces/CoreBase';
+import type { ScopedSpec } from './brands';
 import type { ResolvedPluginLifecycleSpec, PluginLifecycleSpec } from './lifecycle';
 import type {
+    DeclaredScope,
     TransportOf,
     PluginOptions,
+    PluginSpecArgs,
     RuntimeOf,
+    ScopeAxis,
     Runtime,
     RuntimeAssert,
     Transport,
@@ -28,6 +32,10 @@ export interface Initializeable {
 const resolvedSpecSlot = Symbol('seedcord:plugin:spec');
 /** @internal */
 const loggerSlot = Symbol('seedcord:plugin:logger');
+/** @internal */
+const scopeSlot = Symbol('seedcord:plugin:scope');
+/** @internal */
+export const FixedScope = Symbol('seedcord:plugin:fixed-scope');
 
 /**
  * Base class for a seedcord plugin. Extend it and implement `init()`. `this.core` is the running
@@ -36,8 +44,12 @@ const loggerSlot = Symbol('seedcord:plugin:logger');
  * Your constructor takes the host first and passes it to `super()`. Add your own parameters after
  * it. `attach()` types them at the call site.
  *
- * @typeParam Opts - Where this plugin may attach, checked only at compile time.
+ * A plugin that narrows `transport` or `runtime` in `Opts` passes the same values to `super()`.
+ * `attach()` throws when either one differs from the bot's.
+ *
+ * @typeParam Opts - Where this plugin may attach.
  * @typeParam TCore - The `Core` each transport binds `this.core` to.
+ * @typeParam Fixed - The axes a transport's own `Plugin` base sets. Leave it out.
  *
  * @example
  * ```ts
@@ -46,7 +58,7 @@ const loggerSlot = Symbol('seedcord:plugin:logger');
  *         host: CoreBase,
  *         private readonly apiKey: string
  *     ) {
- *         super(host, { init: { phase: StartupPhase.Login } });
+ *         super(host, { transport: 'gateway', init: { phase: StartupPhase.Login } });
  *     }
  *
  *     public async init(): Promise<void> {
@@ -57,9 +69,17 @@ const loggerSlot = Symbol('seedcord:plugin:logger');
  * seedcord.attach('analytics', Analytics, apiKey);
  * ```
  */
-export abstract class Plugin<Opts extends PluginOptions = {}, TCore extends CoreBase = CoreBase>
+export abstract class Plugin<
+    Opts extends PluginOptions = {},
+    TCore extends CoreBase = CoreBase,
+    Fixed extends ScopeAxis = never
+>
     implements Initializeable, HmrAware
 {
+    // the gateway and http bases override this to match their Fixed argument
+    /** @internal */
+    protected static readonly [FixedScope]: Partial<DeclaredScope> = {};
+
     // phantom, never set at runtime.
     /** @internal */
     declare readonly [TransportBrand]?: TransportOf<Opts>;
@@ -70,6 +90,8 @@ export abstract class Plugin<Opts extends PluginOptions = {}, TCore extends Core
     readonly [resolvedSpecSlot]: ResolvedPluginLifecycleSpec;
     /** @internal */
     readonly [loggerSlot]: Logger;
+    /** @internal */
+    readonly [scopeSlot]: DeclaredScope;
 
     /** Logs under the plugin's class name, on the channel its attach key sets. */
     protected readonly logger: Logger;
@@ -77,11 +99,18 @@ export abstract class Plugin<Opts extends PluginOptions = {}, TCore extends Core
     // CoreBase here keeps the augmented Core out of ConstructorParameters, which attach reads
     constructor(
         private readonly host: CoreBase,
-        spec?: PluginLifecycleSpec
+        ...[spec]: PluginSpecArgs<Opts, Fixed>
     ) {
         this.logger = new Logger(this.constructor.name);
         this[loggerSlot] = this.logger;
         this[resolvedSpecSlot] = resolveLifecycleSpec(spec, this.constructor.name);
+
+        const passed: (PluginLifecycleSpec & Partial<DeclaredScope>) | undefined = spec;
+        const fixed = new.target[FixedScope];
+        this[scopeSlot] = {
+            transport: fixed.transport ?? passed?.transport ?? 'any',
+            runtime: fixed.runtime ?? passed?.runtime ?? 'any'
+        };
     }
 
     /** The host, typed to the transport whose `Plugin` base this class extends. */
@@ -151,6 +180,11 @@ export function pluginLoggerOf(plugin: PluginLike): Logger {
     return plugin[loggerSlot];
 }
 
+/** @internal */
+export function declaredScopeOf(plugin: PluginLike): DeclaredScope {
+    return plugin[scopeSlot];
+}
+
 export type { PluginLifecycleSpec } from './lifecycle';
 export type { PluginOptions } from './options';
 
@@ -159,7 +193,7 @@ export type { PluginOptions } from './options';
 /** @internal */
 export type PluginLike = Pick<
     Plugin,
-    'init' | 'ready' | 'dispose' | 'onHmr' | typeof resolvedSpecSlot | typeof loggerSlot
+    'init' | 'ready' | 'dispose' | 'onHmr' | typeof resolvedSpecSlot | typeof loggerSlot | typeof scopeSlot
 >;
 
 // a `CoreBase` first parameter rejects a narrowing ctor on its own, and it also collapses
@@ -168,7 +202,16 @@ export type PluginLike = Pick<
 export type PluginCtor<TPlugin extends PluginLike = PluginLike> = new (...args: any[]) => TPlugin;
 
 /** @internal */
-export type PluginArgs<Ctor extends PluginCtor> = Tail<ConstructorParameters<Ctor>>;
+export type PluginArgs<Ctor extends PluginCtor> =
+    InheritsScopedConstructor<Ctor> extends true ? [] : Tail<ConstructorParameters<Ctor>>;
+
+// a narrowed plugin with no constructor of its own inherits the base one, whose spec carries ScopedSpec
+type InheritsScopedConstructor<Ctor extends PluginCtor> =
+    Tail<ConstructorParameters<Ctor>> extends [infer Spec, ...unknown[]]
+        ? typeof ScopedSpec extends keyof Spec
+            ? true
+            : false
+        : false;
 
 /** @internal */
 export type Attached<Key extends string, Instance> = Key extends `${infer Group}.${infer Leaf}`
@@ -223,12 +266,21 @@ type CoreParamAssert<Ctor extends PluginCtor> = CoreBase extends ConstructorPara
     ? unknown
     : CoreParamTooNarrow;
 
+type ConstructorMissing = Record<
+    "this plugin narrows its transport or runtime. Give it a constructor that passes them to super(), like super(host, { runtime: 'server' })",
+    never
+>;
+
+type OwnConstructorAssert<Ctor extends PluginCtor> =
+    InheritsScopedConstructor<Ctor> extends true ? ConstructorMissing : unknown;
+
 type AttachAsserts<Ctor extends PluginCtor, BotT extends Transport, BotRt extends Runtime> = TransportAssert<
     InstanceType<Ctor>,
     BotT
 > &
     RuntimeAssert<InstanceType<Ctor>, BotRt> &
-    CoreParamAssert<Ctor>;
+    CoreParamAssert<Ctor> &
+    OwnConstructorAssert<Ctor>;
 
 // typescript can't infer Ctor from a generic class through `Ctor & AttachAsserts`. every assert returns unknown to pass.
 /** @internal */

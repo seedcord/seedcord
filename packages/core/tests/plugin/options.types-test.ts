@@ -21,7 +21,7 @@ class Narrowed extends Plugin<{ transport: 'gateway'; runtime: 'server' }> {
         return Promise.resolve();
     }
     constructor(host: CoreBase) {
-        super(host);
+        super(host, { transport: 'gateway', runtime: 'server' });
     }
 }
 

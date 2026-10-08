@@ -56,7 +56,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         host: CoreBase,
         private readonly options: MongooseOptions
     ) {
-        super(host, { dispose: keepDefined({ timeout: options.timeout }) });
+        super(host, { runtime: 'server', dispose: keepDefined({ timeout: options.timeout }) });
         this.uri = options.uri;
         this.serviceRegistry = new MongooseServiceRegistry(this, this.core, this.logger);
 
