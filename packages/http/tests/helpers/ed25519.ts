@@ -17,17 +17,23 @@ interface SignedRequestInit {
 
 export const nowSeconds = (): number => Math.floor(Date.now() / 1000);
 
+export async function signedHeaders(
+    signer: Signer,
+    body: Uint8Array,
+    timestamp = String(nowSeconds())
+): Promise<Record<string, string>> {
+    return {
+        'x-signature-ed25519': await signer.sign(timestamp, body),
+        'x-signature-timestamp': timestamp
+    };
+}
+
 export async function signedRequest(signer: Signer, payload: string, init: SignedRequestInit = {}): Promise<Request> {
-    const timestamp = init.timestamp ?? String(nowSeconds());
     const body = encoder.encode(payload);
-    const signature = await signer.sign(timestamp, body);
 
     return new Request(`https://bot.example${init.path ?? '/interactions'}`, {
         method: 'POST',
-        headers: {
-            'x-signature-ed25519': signature,
-            'x-signature-timestamp': timestamp
-        },
+        headers: await signedHeaders(signer, body, init.timestamp),
         body
     });
 }

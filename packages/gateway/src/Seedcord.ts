@@ -2,7 +2,6 @@ import { Bus } from '@seedcord/core';
 import { attachmentsOf, bindBotColor, busLoggerOf, HmrManager, SubscriberLoader } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { HealthCheck, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
-import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
@@ -79,14 +78,6 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
         return this.bot.client.user?.username;
     }
 
-    /** @internal */
-    protected static override reset(host?: object): boolean {
-        if (!super.reset(host)) return false;
-        // reset() would drop the dev TUI's log sink
-        LoggerChannelRegistry.instance.configure({});
-        return true;
-    }
-
     #registerStartupTasks(): void {
         if (Envapter.isDevelopment || Envapter.isTest) this.#registerHmrAwareModules();
 
@@ -117,16 +108,8 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
      *
      * @returns This Seedcord instance when initialized
      */
-    public async start(): Promise<this> {
-        try {
-            await super.init();
-        } catch (caught) {
-            // shutdown releases any resource opened before the failure, then rethrow
-            await shutdownOf(this).run(1, false);
-            Seedcord.reset(this);
-            throw caught;
-        }
-        return this;
+    public start(): Promise<this> {
+        return this.init();
     }
 
     #registerHmrAwareModules(): void {

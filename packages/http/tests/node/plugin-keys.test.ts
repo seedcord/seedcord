@@ -1,8 +1,9 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { Plugin } from '#src/Plugin';
+import { serverConfig } from '#tests/helpers/nodeHost';
 
 import type { CoreBase } from '@seedcord/core';
 
@@ -21,24 +22,16 @@ class EdgeOnly extends Plugin<{ runtime: 'edge' }> {
     }
 }
 
-function config(): ConstructorParameters<typeof Seedcord>[0] {
-    return { bot: { interactions: { path: null }, commands: { path: null } }, subscribers: { path: null } };
-}
-
 describe('attaching to the http Seedcord', () => {
-    afterEach(() => {
-        // @ts-expect-error singleton reset between tests
-        Seedcord.reset();
+    it('attaches under a key that type-checks even when the host keeps a field of that name', async () => {
+        await using seedcord = new Seedcord(serverConfig());
+        const attached = seedcord.attach('token', Probe);
+
+        expect(attached.token).toBeInstanceOf(Probe);
     });
 
-    it('attaches under a key that type-checks even when the host keeps a field of that name', () => {
-        const seedcord = new Seedcord(config()).attach('token', Probe);
-
-        expect(seedcord.token).toBeInstanceOf(Probe);
-    });
-
-    it('throws when an edge-only http plugin reaches the node Seedcord past the types', () => {
-        const seedcord = new Seedcord(config());
+    it('throws when an edge-only http plugin reaches the node Seedcord past the types', async () => {
+        await using seedcord = new Seedcord(serverConfig());
 
         // @ts-expect-error EdgeOnly declares runtime 'edge'
         expect(() => seedcord.attach('edge', EdgeOnly)).toThrow(

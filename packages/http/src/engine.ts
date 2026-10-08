@@ -37,29 +37,24 @@ function hasInteractionType(payload: unknown): payload is { type: number } {
     return typeof payload === 'object' && payload !== null && 'type' in payload && typeof payload.type === 'number';
 }
 
-/** Structural match for the Workers `ExecutionContext`. Pass it from the edge entry so post-202 work runs under `waitUntil`. */
+/** Structural match for the Workers `ExecutionContext`. Work past the 202 runs under its `waitUntil`. */
 export interface EngineContext {
     waitUntil(promise: Promise<unknown>): void;
 }
 
-export interface EngineParts {
-    readonly handle: (request: Request, ctx?: EngineContext) => Promise<Response>;
-    // node paths only, drained at shutdown
-    readonly inFlight: ReadonlySet<Promise<void>>;
-}
+export type Engine = (request: Request, ctx?: EngineContext) => Promise<Response>;
 
 export function buildEngine(
     core: Core,
     maps: RouteMaps,
     middlewares: MiddlewareRegistry<InteractionMiddlewareConstructor>
-): EngineParts {
+): Engine {
     if (!Envapter.has('DISCORD_PUBLIC_KEY'))
         throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, ['DISCORD_PUBLIC_KEY']);
     const publicKey = Envapter.getRequired('DISCORD_PUBLIC_KEY', Converters.String);
 
     const verifier = new Ed25519Verifier(publicKey);
     const replays = new ReplayGuard();
-    const inFlight = new Set<Promise<void>>();
     // eager because env binds before this factory runs
     const logger = new Logger('Engine', { channel: 'bot' });
 
@@ -73,12 +68,7 @@ export function buildEngine(
 
         // without this catch the rejection reaches the process unhandled
         const work = start().catch(rootFault);
-        if (ctx) {
-            ctx.waitUntil(work);
-        } else {
-            inFlight.add(work);
-            void work.finally(() => inFlight.delete(work));
-        }
+        ctx?.waitUntil(work);
     }
 
     function rootFault(caught: unknown): void {
@@ -138,5 +128,5 @@ export function buildEngine(
         return [new Response(null, { status: ACCEPTED }), 'dispatched'];
     };
 
-    return { handle, inFlight };
+    return handle;
 }

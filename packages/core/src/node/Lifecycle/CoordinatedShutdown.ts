@@ -21,15 +21,14 @@ const LOG_FLUSH_DELAY_MS = 3000;
 const DEFAULT_SHUTDOWN_DEADLINE_MS = 25_000;
 
 export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
-    private isShuttingDown = false;
-    private hasShutdown = false;
-    private exitCode = 0;
-    private onSigTerm: (() => void) | null = null;
-    private onSigInt: (() => void) | null = null;
-    private startupGate?: Promise<void>;
-    private deadlineMs = DEFAULT_SHUTDOWN_DEADLINE_MS;
-    private phasesExpireAt = Infinity;
-    private runningPhase: ShutdownPhase | undefined;
+    #running?: Promise<void>;
+    #exitCode = 0;
+    #onSigTerm: (() => void) | null = null;
+    #onSigInt: (() => void) | null = null;
+    #startupGate?: Promise<void>;
+    #deadlineMs = DEFAULT_SHUTDOWN_DEADLINE_MS;
+    #phasesExpireAt = Infinity;
+    #runningPhase: ShutdownPhase | undefined;
 
     public constructor(deadlineMs?: number) {
         super('Shutdown', PHASE_ORDER, ShutdownPhase);
@@ -42,22 +41,22 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         if (!Number.isFinite(deadlineMs) || deadlineMs <= 0) {
             throw new SeedcordRangeError(SeedcordErrorCode.LifecycleInvalidShutdownDeadline, [deadlineMs]);
         }
-        this.deadlineMs = deadlineMs;
+        this.#deadlineMs = deadlineMs;
     }
 
-    private async runPhases(failures: unknown[]): Promise<void> {
+    async #runPhases(failures: unknown[]): Promise<void> {
         for (const phase of PHASE_ORDER) {
             // set above the check so the reported phase is the one that never started
-            this.runningPhase = phase;
+            this.#runningPhase = phase;
             // runPhases keeps going after settleWithin stops waiting on it
-            if (performance.now() >= this.phasesExpireAt) return;
+            if (performance.now() >= this.#phasesExpireAt) return;
             try {
                 await this.runPhase(phase);
             } catch (error) {
                 failures.push(error);
             }
         }
-        this.runningPhase = undefined;
+        this.#runningPhase = undefined;
     }
 
     protected canAddTask(): boolean {
@@ -82,37 +81,37 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
 
     /** @internal */
     public registerSignalHandlers(): void {
-        this.onSigTerm = () => {
+        this.#onSigTerm = () => {
             this.logger.info(`Received ${paint.amber.bold('SIGTERM')} signal`);
             void this.run(0);
         };
 
-        this.onSigInt = () => {
+        this.#onSigInt = () => {
             this.logger.info(`Received ${paint.amber.bold('SIGINT')} signal`);
             void this.run(0);
         };
 
-        process.on('SIGTERM', this.onSigTerm);
-        process.on('SIGINT', this.onSigInt);
+        process.on('SIGTERM', this.#onSigTerm);
+        process.on('SIGINT', this.#onSigInt);
     }
 
     /** @internal */
     public removeSignalHandlers(): void {
-        if (this.onSigTerm) {
-            process.off('SIGTERM', this.onSigTerm);
-            this.onSigTerm = null;
+        if (this.#onSigTerm) {
+            process.off('SIGTERM', this.#onSigTerm);
+            this.#onSigTerm = null;
         }
-        if (!this.onSigInt) {
+        if (!this.#onSigInt) {
             return;
         }
 
-        process.off('SIGINT', this.onSigInt);
-        this.onSigInt = null;
+        process.off('SIGINT', this.#onSigInt);
+        this.#onSigInt = null;
     }
 
     /** @internal run() awaits this so boot finishes registering its dispose tasks first */
     public gateOnStartup(settled: Promise<void>): void {
-        this.startupGate = settled;
+        this.#startupGate = settled;
     }
 
     public override addTask(phase: ShutdownPhase, taskName: string, task: () => Promise<void>, timeoutMs = 5000): void {
@@ -124,36 +123,39 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         return super.removeTask(phase, taskName);
     }
 
+    // a later call waits on the first run and never repeats a task
     /** @internal */
-    public async run(exitCode = 0, exitProcess = true): Promise<void> {
+    public run(exitCode = 0, exitProcess = true): Promise<void> {
         this.removeSignalHandlers();
 
-        // a dev-mode run leaves the process alive, so a second call would re-execute every task
-        if (this.hasShutdown || this.isShuttingDown) {
+        if (this.#running) {
             // a crash mid-shutdown must still leave a failing code for whatever supervises the process
-            if (exitCode > this.exitCode) this.exitCode = exitCode;
-            this.logger.warn('Shutdown sequence already ran or is in progress');
-            return;
+            if (exitCode > this.#exitCode) this.#exitCode = exitCode;
+            return this.#running;
         }
 
-        this.isShuttingDown = true;
-        this.exitCode = exitCode;
+        this.#exitCode = exitCode;
+        this.#running = this.#shutDown(exitProcess);
+        return this.#running;
+    }
+
+    async #shutDown(exitProcess: boolean): Promise<void> {
         this.logger.info(
-            `${paint.amber.bold('Starting')} coordinated shutdown with exit code ${paint.sky.bold(exitCode)}`
+            `${paint.amber.bold('Starting')} coordinated shutdown with exit code ${paint.sky.bold(this.#exitCode)}`
         );
 
         try {
-            this.phasesExpireAt = performance.now() + this.deadlineMs;
+            this.#phasesExpireAt = performance.now() + this.#deadlineMs;
             // a startup that outlasts the deadline leaves its own dispose tasks unregistered
-            if (this.startupGate) await settleWithin(this.startupGate, this.deadlineMs);
+            if (this.#startupGate) await settleWithin(this.#startupGate, this.#deadlineMs);
 
             const failures: unknown[] = [];
-            await settleWithin(this.runPhases(failures), Math.max(this.phasesExpireAt - performance.now(), 0));
+            await settleWithin(this.#runPhases(failures), Math.max(this.#phasesExpireAt - performance.now(), 0));
 
-            const caughtPhase = this.runningPhase;
+            const caughtPhase = this.#runningPhase;
             if (caughtPhase !== undefined) {
                 this.logger.error(
-                    `Shutdown deadline of ${paint.sky.bold(this.deadlineMs)}ms elapsed at phase ${paint.iris.bold(this.phaseEnum[caughtPhase])}`
+                    `Shutdown deadline of ${paint.sky.bold(this.#deadlineMs)}ms elapsed at phase ${paint.iris.bold(this.phaseEnum[caughtPhase])}`
                 );
             }
 
@@ -163,15 +165,13 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
                 this.logger.info(`${paint.mint.bold('Coordinated shutdown completed')} successfully`);
             }
         } finally {
-            this.hasShutdown = true;
             if (exitProcess) {
-                this.logger.debug(`${paint.coral.bold('Exiting')} process with code ${paint.sky.bold(this.exitCode)}`);
+                this.logger.debug(`${paint.coral.bold('Exiting')} process with code ${paint.sky.bold(this.#exitCode)}`);
                 setTimeout(() => {
-                    process.exit(this.exitCode);
+                    process.exit(this.#exitCode);
                 }, LOG_FLUSH_DELAY_MS);
             } else {
                 this.logger.debug(`${paint.amber.bold('Skipping')} process exit (dev mode)`);
-                this.isShuttingDown = false;
             }
         }
     }

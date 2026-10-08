@@ -17,7 +17,7 @@ import { version as packageVersion } from '#src/version';
 import { edgeRestOptions, edgeShutdown } from './defaults';
 
 import type { HttpEdgeConfig } from '#interfaces/Config';
-import type { EngineContext, EngineParts } from '#src/engine';
+import type { Engine, EngineContext } from '#src/engine';
 import type { REST } from '@discordjs/rest';
 import type { Bus } from '@seedcord/core';
 import type { IRateLimiter } from '@seedcord/types';
@@ -65,7 +65,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     // workerd gives a worker no shutdown hook. dispose() runs only in a rollback.
     readonly #plugins = new PluginLifecycle(this.#startup, { addTask: () => undefined });
 
-    #prepared?: Promise<EngineParts['handle']>;
+    #prepared?: Promise<Engine>;
     #started?: Promise<void> | undefined;
 
     static #isInstantiated = false;
@@ -105,11 +105,11 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         return handle(request, ctx);
     }
 
-    async #prepare(): Promise<EngineParts['handle']> {
+    async #prepare(): Promise<Engine> {
         this.#service.authenticate();
         await this.#service.subscribers.init();
         await this.#service.interactions?.init();
-        return this.#service.buildEngine().handle;
+        return this.#service.prepareEngine();
     }
 
     async #runStartup(): Promise<void> {

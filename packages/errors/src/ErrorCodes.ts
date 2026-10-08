@@ -82,6 +82,8 @@ export enum SeedcordErrorCode {
     CoreFileUnreadable = 1220,
     /** A plugin's declared transport or runtime differs from the bot it was attached to. */
     CorePluginScopeMismatch = 1221,
+    /** A node http bot received a request through `fetch` before `start()` was called. */
+    CoreFetchBeforeStart = 1222,
 
     /** A command decorator attempted to re-register an existing command scope. */
     DecoratorCommandAlreadyRegistered = 1301,

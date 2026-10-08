@@ -7,11 +7,18 @@ import '#tests/node/discovery/fixtures/registry';
 
 const GATE_DELAY_MS = 300;
 
-export const slowGateEntered = Promise.withResolvers<undefined>();
+let entered = Promise.withResolvers<undefined>();
 
-// pre-ack work, the 202 for this route flushes only after the delay
+export async function whileGateHolds<Sent, During>(
+    sendSlowping: () => Promise<Sent>,
+    during: () => Promise<During>
+): Promise<[Sent, During]> {
+    entered = Promise.withResolvers<undefined>();
+    return await Promise.all([sendSlowping(), entered.promise.then(during)]);
+}
+
 const SlowGate = defineGate('SlowGate', async () => {
-    slowGateEntered.resolve(undefined);
+    entered.resolve(undefined);
     await new Promise((resolveDelay) => setTimeout(resolveDelay, GATE_DELAY_MS));
 });
 

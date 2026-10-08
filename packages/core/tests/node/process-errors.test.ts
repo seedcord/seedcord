@@ -137,9 +137,6 @@ describe('process error handlers', () => {
         const host = new TestHost(new CoordinatedShutdown(), new CoordinatedStartup(), {} as Config);
         host.startup.addTask(StartupPhase.Configuration, 'boom', () => Promise.reject(new Error('boot failed')));
         await expect(host.run()).rejects.toThrow();
-        expect(process.listenerCount('uncaughtException')).toBe(exceptions + 1);
-
-        TestHost.resetHost();
 
         expect(process.listenerCount('uncaughtException')).toBe(exceptions);
         expect(process.listenerCount('unhandledRejection')).toBe(rejections);

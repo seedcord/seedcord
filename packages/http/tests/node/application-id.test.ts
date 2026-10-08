@@ -1,55 +1,21 @@
-import { shutdownOf } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Envapter, merge, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
-import { createSigner } from '#tests/helpers/ed25519';
-import { APP_ID, VALID_TOKEN } from '#tests/helpers/fixtures';
-
-import type { HttpConfig } from '#src/interfaces/Config';
-
-let live: Seedcord | undefined;
-
-function noCommandsConfig(): HttpConfig {
-    return {
-        bot: { interactions: { path: null }, commands: { path: null } },
-        subscribers: { path: null },
-        port: 0
-    };
-}
-
-async function startHost(): Promise<Seedcord> {
-    const signer = await createSigner();
-    Envapter.useSource(
-        merge(
-            new PortableSource(process.env),
-            new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
-        )
-    );
-
-    const host = new Seedcord(noCommandsConfig());
-    live = host;
-    return host.start();
-}
-
-afterEach(async () => {
-    if (live) await shutdownOf(live).run(0, false);
-    live = undefined;
-    // @ts-expect-error singleton reset between tests
-    Seedcord.reset();
-});
+import { APP_ID } from '#tests/helpers/fixtures';
+import { bindSignedEnv, serverConfig } from '#tests/helpers/nodeHost';
 
 describe('core.applicationId on the http host', () => {
     it('resolves without a commands directory', async () => {
-        const host = await startHost();
+        await bindSignedEnv();
+        await using host = new Seedcord(serverConfig());
+        await host.start();
 
         expect(host.applicationId).toBe(APP_ID);
     });
 
-    it('throws before the host reads its token', () => {
-        const host = new Seedcord(noCommandsConfig());
-        live = host;
+    it('throws before the host reads its token', async () => {
+        await using host = new Seedcord(serverConfig());
 
         expect(() => host.applicationId).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CoreApplicationUnavailable })

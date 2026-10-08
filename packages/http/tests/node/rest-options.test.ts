@@ -16,13 +16,13 @@ function config(restOptions?: { timeout: number }): Pick<HttpConfig, 'bot' | 'su
 describe('bot.restOptions', () => {
     afterEach(() => {
         // @ts-expect-error singleton reset between tests
-        Seedcord.reset();
-        // @ts-expect-error singleton reset between tests
         EdgeSeedcord.reset();
     });
 
-    it('passes only the configured options to the REST client on node', () => {
-        expect(new Seedcord(config({ timeout: 1234 })).rest.options).toEqual({ timeout: 1234 });
+    it('passes only the configured options to the REST client on node', async () => {
+        await using host = new Seedcord(config({ timeout: 1234 }));
+
+        expect(host.rest.options).toEqual({ timeout: 1234 });
     });
 
     it('reaches the REST client on edge, which starts with both sweepers off', () => {

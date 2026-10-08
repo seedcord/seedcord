@@ -39,6 +39,6 @@ pnpm add @seedcord/http
 
 ## Entry points
 
-The root entry runs on Node through the `Seedcord` class.
+The root entry runs on Node through the `Seedcord` class. It binds its own server on `port`. Set `port: false` to pass each request from your own server to `seedcord.fetch()`.
 
 Under the `workerd` export condition, the same import gives Cloudflare Workers an edge build of `Seedcord`. That build is a work in progress and cannot be used yet.
