@@ -3,7 +3,7 @@ import { Bus } from '@seedcord/core';
 import { applicationIdFromToken } from '@seedcord/errors/internal';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 
-import { edgeRestOptions, edgeShutdown } from '#src/edge/runtime';
+import { edgeRestOptions, edgeShutdown } from '#src/edge/defaults';
 
 import type { HttpConfig } from '#interfaces/Config';
 import type { Core } from '#interfaces/Core';

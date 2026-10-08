@@ -176,6 +176,7 @@ describe('the interactions engine', () => {
         const error = await firstRequestError();
 
         expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigMissingEnv)).toBe(true);
+        expect(error).toHaveProperty('message', expect.stringContaining('DISCORD_PUBLIC_KEY'));
     });
 
     it('throws ConfigInvalidEnv when the public key env var is malformed', async () => {

@@ -11,10 +11,10 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 
-import { InteractionsBot } from '#src/InteractionsBot';
+import { InteractionsService } from '#src/InteractionsService';
 import { version as packageVersion } from '#src/version';
 
-import { edgeRestOptions, edgeShutdown } from './runtime';
+import { edgeRestOptions, edgeShutdown } from './defaults';
 
 import type { HttpEdgeConfig } from '#interfaces/Config';
 import type { EngineContext, EngineParts } from '#src/engine';
@@ -56,7 +56,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
     public readonly config: HttpEdgeConfig;
 
-    readonly #bot: InteractionsBot;
+    readonly #service: InteractionsService;
     readonly #startup = new CoordinatedStartup();
     // workerd gives a worker no shutdown hook. dispose() runs only in a rollback.
     readonly #plugins = new PluginLifecycle(this.#startup, { addTask: () => undefined });
@@ -76,15 +76,15 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         Logger.configure(config.logger ?? {});
         bindBotColor(() => this.config.botColor);
 
-        this.#bot = new InteractionsBot(this, config, edgeRestOptions(config.bot.restOptions));
-        this.rest = this.#bot.rest;
-        this.rateLimiter = this.#bot.rateLimiter;
-        this.bus = this.#bot.bus;
+        this.#service = new InteractionsService(this, config, edgeRestOptions(config.bot.restOptions));
+        this.rest = this.#service.rest;
+        this.rateLimiter = this.#service.rateLimiter;
+        this.bus = this.#service.bus;
     }
 
     /** The bot's Discord application id. Throws if you read it before the first request. */
     public get applicationId(): string {
-        return this.#bot.applicationId;
+        return this.#service.applicationId;
     }
 
     /**
@@ -102,10 +102,10 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     async #prepare(): Promise<EngineParts['handle']> {
-        this.#bot.authenticate();
-        await this.#bot.subscribers.init();
-        await this.#bot.interactions?.init();
-        return this.#bot.buildEngine().handle;
+        this.#service.authenticate();
+        await this.#service.subscribers.init();
+        await this.#service.interactions?.init();
+        return this.#service.buildEngine().handle;
     }
 
     async #runStartup(): Promise<void> {

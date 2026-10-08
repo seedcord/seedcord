@@ -17,8 +17,7 @@ import type { EngineParts } from '#src/engine';
 import type { RESTOptions } from '@discordjs/rest';
 import type { IRateLimiter } from '@seedcord/types';
 
-// the parts both http Seedcord classes share
-export class InteractionsBot {
+export class InteractionsService {
     public readonly rest: REST;
     public readonly rateLimiter: IRateLimiter;
     public readonly bus: Bus;

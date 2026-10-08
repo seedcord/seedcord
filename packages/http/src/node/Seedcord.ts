@@ -20,7 +20,7 @@ import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
 import { EmojiInjector } from '#src/emojis/EmojiInjector';
-import { InteractionsBot } from '#src/InteractionsBot';
+import { InteractionsService } from '#src/InteractionsService';
 import { version as packageVersion } from '#src/version';
 
 import { toWebRequest, writeWebResponse } from './webBridge';
@@ -61,7 +61,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     /** @see {@link Bus} */
     public readonly bus: Bus;
 
-    readonly #bot: InteractionsBot;
+    readonly #service: InteractionsService;
     readonly #commandRegistry?: CommandRegistry;
     readonly #emojiInjector = new EmojiInjector(this);
     readonly #hmrManager: HmrManager;
@@ -80,10 +80,10 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         installNodeDefaults(config.logger);
         bindBotColor(() => this.config.botColor);
 
-        this.#bot = new InteractionsBot(this, config, config.bot.restOptions);
-        this.rest = this.#bot.rest;
-        this.rateLimiter = this.#bot.rateLimiter;
-        this.bus = this.#bot.bus;
+        this.#service = new InteractionsService(this, config, config.bot.restOptions);
+        this.rest = this.#service.rest;
+        this.rateLimiter = this.#service.rateLimiter;
+        this.bus = this.#service.bus;
 
         this.#hmrManager = new HmrManager();
         this.#hmrManager.init();
@@ -129,11 +129,11 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
         this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'start');
-            await this.#bot.subscribers.init();
+            await this.#service.subscribers.init();
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
         });
 
-        const interactions = this.#bot.interactions;
+        const interactions = this.#service.interactions;
         if (interactions) {
             this.startup.addTask(StartupPhase.Configuration, 'interactions-initialization', async () => {
                 interactions.logger.utils.initialization('Interactions', 'start');
@@ -143,7 +143,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         }
 
         this.startup.addTask(StartupPhase.Configuration, 'authenticate', () => {
-            this.#bot.authenticate();
+            this.#service.authenticate();
             return Promise.resolve();
         });
 
@@ -170,9 +170,9 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
     #registerHmrAwareModules(): void {
         this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
-            if (this.#bot.interactions) this.#hmrManager.register(this.#bot.interactions);
+            if (this.#service.interactions) this.#hmrManager.register(this.#service.interactions);
             if (this.#commandRegistry) this.#hmrManager.register(this.#commandRegistry);
-            this.#hmrManager.register(this.#bot.subscribers);
+            this.#hmrManager.register(this.#service.subscribers);
             for (const { instance } of attachmentsOf(this)) {
                 this.#hmrManager.register(instance);
             }
@@ -182,11 +182,11 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
     /** The bot's Discord application id. Throws if you read it before the Configuration phase. */
     public get applicationId(): string {
-        return this.#bot.applicationId;
+        return this.#service.applicationId;
     }
 
     async #listen(): Promise<void> {
-        const { handle, inFlight } = this.#bot.buildEngine();
+        const { handle, inFlight } = this.#service.buildEngine();
 
         const server = createServer((incoming, outgoing) => {
             void (async () => {

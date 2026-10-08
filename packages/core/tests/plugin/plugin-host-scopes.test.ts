@@ -157,13 +157,13 @@ describe('attaching a plugin that declares options', () => {
         expectScopeMismatch(() => host.attach('server', ServerScoped));
     });
 
-    it('leaves the host without the plugin when the scope check throws', () => {
+    it('leaves the key free when the scope check throws', () => {
         const host = new TestPluginHost('http', 'edge');
 
         // @ts-expect-error ServerScoped declares runtime 'server', this host is 'edge'
-        expectScopeMismatch(() => host.attach('server', ServerScoped));
+        expectScopeMismatch(() => host.attach('db', ServerScoped));
 
-        expect('server' in host).toBe(false);
+        expect(host.attach('db', EdgeScoped).db).toBeInstanceOf(EdgeScoped);
     });
 
     it('checks the scope a transport base fixes on its class', () => {

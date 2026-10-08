@@ -3,7 +3,7 @@ import { Envapter, PortableSource } from 'envapt';
 
 import { Seedcord } from '#src/edge/Seedcord';
 import { BUILT_ROOT, registerBuiltFiles } from '#tests/helpers/builtFiles';
-import { createSigner, type Signer } from '#tests/helpers/ed25519';
+import { createSigner, signedRequest as signedBody, type Signer } from '#tests/helpers/ed25519';
 import { VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
@@ -12,8 +12,6 @@ import type { EngineContext } from '#src/engine';
 import type { InteractionKind } from '@seedcord/core';
 import type { StoredSubscriberCtor } from '@seedcord/core/internal';
 import type { TypedOmit } from '@seedcord/types';
-
-const encoder = new TextEncoder();
 
 export const FROM = 'handlers/Test.ts';
 
@@ -34,17 +32,8 @@ export function routedHandler(kind: InteractionKind, key: string, handler: Handl
     return { ...noClasses(), handlers: [handler] };
 }
 
-export async function signedRequest(signer: Signer, payload: unknown): Promise<Request> {
-    const timestamp = String(Math.floor(Date.now() / 1000));
-    const body = encoder.encode(JSON.stringify(payload));
-    return new Request('https://bot.example/interactions', {
-        method: 'POST',
-        headers: {
-            'x-signature-ed25519': await signer.sign(timestamp, body),
-            'x-signature-timestamp': timestamp
-        },
-        body
-    });
+export function signedRequest(signer: Signer, payload: unknown): Promise<Request> {
+    return signedBody(signer, JSON.stringify(payload));
 }
 
 const FOLDERS = { handlers: 'handlers', middleware: 'middlewares', subscribers: 'subscribers' } as const;
