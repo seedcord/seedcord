@@ -6,14 +6,11 @@ import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/c
 import {
     CommandRegistry,
     DRAIN_TASK_TIMEOUT_MS,
-    DRAIN_WINDOW_MS,
-    drainInFlight,
     ShutdownPhase,
     shutdownOf,
     StartupPhase
 } from '@seedcord/core/node/internal';
-import { paint, SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
@@ -24,6 +21,7 @@ import { EmojiInjector } from '#src/emojis/EmojiInjector';
 import { InteractionsService } from '#src/InteractionsService';
 import { version as packageVersion } from '#src/version';
 
+import { InteractionsEndpoint } from './InteractionsEndpoint';
 import { toWebRequest, writeWebResponse } from './webBridge';
 
 import type { HttpServerConfig } from '#interfaces/Config';
@@ -63,12 +61,12 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     public readonly bus: Bus;
 
     readonly #service: InteractionsService;
+    readonly #endpoint: InteractionsEndpoint;
     readonly #commandRegistry?: CommandRegistry;
     readonly #emojiInjector = new EmojiInjector(this);
     readonly #hmrManager: HmrManager;
     readonly #logger = new Logger('Server', { channel: 'bot' });
 
-    #starting?: Promise<this>;
     #server?: Server;
     #boundPort?: number;
     #fetchedUsername?: string | undefined;
@@ -86,6 +84,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         this.rest = this.#service.rest;
         this.rateLimiter = this.#service.rateLimiter;
         this.bus = this.#service.bus;
+        this.#endpoint = new InteractionsEndpoint(this.#service);
 
         this.#hmrManager = new HmrManager();
         this.#hmrManager.init();
@@ -93,6 +92,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         if (this.config.bot.commands.path) this.#commandRegistry = new CommandRegistry(this);
 
         this.#registerStartupTasks();
+        this.#registerShutdownTasks();
     }
 
     /** The bot's discord username, populated by the ready fetch. */
@@ -109,13 +109,15 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
      * Starts the host and runs the startup tasks.
      */
     public start(): Promise<this> {
-        this.#starting = this.#start();
-        return this.#starting;
+        const starting = this.#start();
+        this.#endpoint.open(starting);
+        return starting;
     }
 
     /**
      * Answers one request to the interactions endpoint. Mount it in your own server when the
-     * config sets `port: false`. Throws until `start()` is called.
+     * config sets `port: false`. Throws until `start()` is called. Answers 503 once shutdown
+     * begins.
      *
      * @example
      * ```ts
@@ -127,10 +129,8 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
      * app.post('/interactions', (c) => seedcord.fetch(c.req.raw));
      * ```
      */
-    public async fetch(request: Request): Promise<Response> {
-        if (!this.#starting) throw new SeedcordError(SeedcordErrorCode.CoreFetchBeforeStart);
-        await this.#starting;
-        return await this.#service.engine.handle(request);
+    public fetch(request: Request): Promise<Response> {
+        return this.#endpoint.fetch(request);
     }
 
     async #start(): Promise<this> {
@@ -175,18 +175,13 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
             return Promise.resolve();
         });
 
+        // a missing DISCORD_PUBLIC_KEY fails start() here, before the first request
         this.startup.addTask(StartupPhase.Configuration, 'interactions-engine', () => {
-            const { inFlight } = this.#service.engine;
-            this.shutdown.addTask(
-                ShutdownPhase.Drain,
-                'drain-inflight',
-                () => drainInFlight(inFlight, DRAIN_WINDOW_MS, this.#logger, 'Interactions'),
-                DRAIN_TASK_TIMEOUT_MS
-            );
+            void this.#service.engine;
             return Promise.resolve();
         });
 
-        // needs the token from Configuration, and must finish before Ready opens the server to interactions
+        // Login runs after Configuration sets the token
         this.startup.addTask(StartupPhase.Login, 'emoji-injection', () => this.#emojiInjector.init());
 
         const commandRegistry = this.#commandRegistry;
@@ -208,6 +203,19 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         }
     }
 
+    #registerShutdownTasks(): void {
+        this.shutdown.addTask(ShutdownPhase.Unbind, 'close-endpoint', () => {
+            this.#endpoint.close();
+            return Promise.resolve();
+        });
+        this.shutdown.addTask(
+            ShutdownPhase.Drain,
+            'drain-inflight',
+            () => this.#endpoint.drain(this.#logger),
+            DRAIN_TASK_TIMEOUT_MS
+        );
+    }
+
     #registerHmrAwareModules(): void {
         this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
             if (this.#service.interactions) this.#hmrManager.register(this.#service.interactions);
@@ -226,11 +234,9 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     }
 
     async #listen(port: number): Promise<void> {
-        const { handle } = this.#service.engine;
-
         const server = createServer((incoming, outgoing) => {
             void (async () => {
-                const response = await handle(await toWebRequest(incoming));
+                const response = await this.#endpoint.answer(await toWebRequest(incoming));
                 await writeWebResponse(response, outgoing);
             })().catch((error: unknown) => {
                 // a swallowed throw would hang the client with no cause

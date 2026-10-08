@@ -48,7 +48,7 @@ async function routerThrows(thrown: unknown): Promise<{
     vi.spyOn(maps[InteractionKind.Slash], 'get').mockImplementation(() => {
         throw thrown;
     });
-    const { handle } = buildEngine(
+    const handle = buildEngine(
         core,
         maps,
         new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)

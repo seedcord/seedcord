@@ -35,7 +35,7 @@ async function published(payload: object): Promise<SubscriptionData<'anyInteract
     const seen: SubscriptionData<'anyInteraction'>[] = [];
     core.bus.on('anyInteraction', (data) => seen.push(data));
 
-    const { handle } = buildEngine(
+    const handle = buildEngine(
         core,
         emptyRouteMaps(),
         new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)

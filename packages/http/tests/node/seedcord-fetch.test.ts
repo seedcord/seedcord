@@ -102,4 +102,16 @@ describe('http Seedcord.fetch on node', () => {
 
         expect(drainSlow.finished).toBe(true);
     });
+
+    it('answers 503 once shutdown has run', async () => {
+        const signer = await bindSignedEnv();
+        const host = new Seedcord({ ...config(), port: false });
+        live = host;
+        await host.start();
+
+        await shutdownOf(host).run(0, false);
+        const response = await host.fetch(await signedRequest(signer, PING));
+
+        expect(response.status).toBe(503);
+    });
 });

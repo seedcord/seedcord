@@ -13,7 +13,7 @@ import { buildEngine } from '#src/engine';
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpConfig } from '#interfaces/Config';
 import type { Core } from '#interfaces/Core';
-import type { EngineParts } from '#src/engine';
+import type { Engine } from '#src/engine';
 import type { RESTOptions } from '@discordjs/rest';
 import type { IRateLimiter } from '@seedcord/types';
 
@@ -25,7 +25,7 @@ export class InteractionsService {
     public readonly interactions: InteractionDispatcher | undefined;
 
     private token?: string;
-    private builtEngine?: EngineParts;
+    private builtEngine?: Engine;
 
     constructor(
         private readonly host: Core,
@@ -53,13 +53,13 @@ export class InteractionsService {
         this.rest.setToken(this.token);
     }
 
-    // reads DISCORD_PUBLIC_KEY on first access
-    public get engine(): EngineParts {
+    // the first read loads DISCORD_PUBLIC_KEY
+    public get engine(): Engine {
         this.builtEngine ??= this.createEngine();
         return this.builtEngine;
     }
 
-    private createEngine(): EngineParts {
+    private createEngine(): Engine {
         const maps = this.interactions?.maps ?? emptyRouteMaps();
         const middlewares =
             this.interactions?.middlewares ??
