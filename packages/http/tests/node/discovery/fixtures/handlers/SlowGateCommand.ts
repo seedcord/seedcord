@@ -9,13 +9,14 @@ const GATE_DELAY_MS = 300;
 
 let entered = Promise.withResolvers<undefined>();
 
-// call before sending the request it waits for
-export function nextSlowGateEntry(): Promise<undefined> {
+export async function whileGateHolds<Sent, During>(
+    sendSlowping: () => Promise<Sent>,
+    during: () => Promise<During>
+): Promise<[Sent, During]> {
     entered = Promise.withResolvers<undefined>();
-    return entered.promise;
+    return await Promise.all([sendSlowping(), entered.promise.then(during)]);
 }
 
-// pre-ack work, the 202 for this route flushes only after the delay
 const SlowGate = defineGate('SlowGate', async () => {
     entered.resolve(undefined);
     await new Promise((resolveDelay) => setTimeout(resolveDelay, GATE_DELAY_MS));

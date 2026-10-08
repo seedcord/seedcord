@@ -10,7 +10,7 @@ const SERVICE_UNAVAILABLE = 503;
 
 export class NodeEndpoint implements EngineContext {
     private readonly inFlight: InFlight;
-    private starting?: Promise<unknown>;
+    private started?: Promise<void>;
 
     constructor(
         private readonly service: InteractionsService,
@@ -19,20 +19,25 @@ export class NodeEndpoint implements EngineContext {
         this.inFlight = new InFlight(logger, 'Interactions');
     }
 
-    public open(starting: Promise<unknown>): void {
-        this.starting = starting;
+    public startWith(starting: Promise<unknown>): void {
+        this.started = starting.then(
+            () => undefined,
+            // the caller of start() gets the error
+            () => this.close()
+        );
     }
 
     public async fetch(request: Request): Promise<Response> {
-        if (!this.starting) throw new SeedcordError(SeedcordErrorCode.CoreFetchBeforeStart);
-        await this.starting;
+        if (!this.started) throw new SeedcordError(SeedcordErrorCode.CoreFetchBeforeStart);
+        await this.started;
         return await this.answer(request);
     }
 
     // the built-in server calls this directly because it binds in Ready, before start() resolves
     public answer(request: Request): Promise<Response> {
         if (this.inFlight.closed) return Promise.resolve(new Response(null, { status: SERVICE_UNAVAILABLE }));
-        const answering = this.service.engine(request, this);
+        const engine = this.service.prepareEngine();
+        const answering = engine(request, this);
         this.inFlight.track(answering);
         return answering;
     }

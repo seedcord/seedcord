@@ -53,11 +53,6 @@ export class InteractionsService {
         this.rest.setToken(this.token);
     }
 
-    public get engine(): Engine {
-        if (!this.builtEngine) throw new SeedcordError(SeedcordErrorCode.CoreFetchBeforeStart);
-        return this.builtEngine;
-    }
-
     public prepareEngine(): Engine {
         this.builtEngine ??= this.createEngine();
         return this.builtEngine;

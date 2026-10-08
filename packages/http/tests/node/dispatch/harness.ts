@@ -8,7 +8,7 @@ import { VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpEdgeConfig } from '#interfaces/Config';
-import type { EngineContext } from '#src/engine';
+import type { Engine } from '#src/engine';
 import type { InteractionKind } from '@seedcord/core';
 import type { StoredSubscriberCtor } from '@seedcord/core/internal';
 import type { TypedOmit } from '@seedcord/types';
@@ -53,13 +53,11 @@ interface EngineOptions {
     readonly env?: Readonly<Record<string, string>>;
 }
 
-type Handle = (request: Request, ctx?: EngineContext) => Promise<Response>;
-
 // a fresh edge Seedcord per call, loading the classes from a fresh file table
 export async function readyEngine(
     classes: BotClasses,
     options: EngineOptions = {}
-): Promise<{ signer: Signer; handle: Handle }> {
+): Promise<{ signer: Signer; handle: Engine }> {
     const signer = await createSigner();
     Envapter.useSource(
         new PortableSource({ ...options.env, DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })

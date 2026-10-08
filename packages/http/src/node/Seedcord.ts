@@ -33,7 +33,7 @@ const SERVER_SHUTDOWN_TIMEOUT_MS = 5000;
  * The HTTP-interactions bot on node. `start()` loads handlers from `config.bot.interactions.path`
  * and binds a server on `port`. With `port: false`, your own server passes requests to `fetch()`.
  *
- * Shutdown waits for interactions still running before the process exits.
+ * Shutdown waits up to 5s for interactions that are still running.
  */
 // tests/node/seedcord-core.types-test.ts checks this class against Core in place of an implements clause
 export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
@@ -104,7 +104,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
      */
     public start(): Promise<this> {
         const starting = this.init();
-        this.#endpoint.open(starting);
+        this.#endpoint.startWith(starting);
         return starting;
     }
 
@@ -114,7 +114,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
      *
      * Rejects with `CoreFetchBeforeStart` until `start()` is called. A request that arrives while
      * `start()` runs waits for all of startup, the command deploy included. Answers 503 once
-     * shutdown begins.
+     * shutdown begins or `start()` fails.
      *
      * @example
      * ```ts
@@ -172,8 +172,10 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
             });
         }
 
-        const { port = DEFAULT_PORT } = this.config;
-        if (port !== false) this.startup.addTask(StartupPhase.Ready, 'http-server', () => this.#listen(port));
+        this.startup.addTask(StartupPhase.Ready, 'http-server', () => {
+            const { port = DEFAULT_PORT } = this.config;
+            return port === false ? Promise.resolve() : this.#listen(port);
+        });
 
         if (!Envapter.isTest) {
             this.startup.addTask(StartupPhase.Ready, 'identity', () => this.#fetchUsername());
@@ -214,6 +216,8 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         const server = createServer((incoming, outgoing) => {
             void (async () => {
                 const response = await this.#endpoint.answer(await toWebRequest(incoming));
+                // node's close() leaves a busy connection open once it goes idle
+                if (!server.listening) outgoing.setHeader('connection', 'close');
                 await writeWebResponse(response, outgoing);
             })().catch((error: unknown) => {
                 // a swallowed throw would hang the client with no cause
@@ -262,8 +266,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
                 this.#logger.info(paint.coral.bold('Interactions server stopped'));
                 resolveClose();
             });
-            // node's close() leaves idle keep-alive sockets open
-            server.closeIdleConnections();
         });
     }
 }

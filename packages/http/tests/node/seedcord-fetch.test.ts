@@ -12,8 +12,8 @@ import { VALID_TOKEN } from '#tests/helpers/fixtures';
 import { slashPayload } from '#tests/helpers/interactions';
 import { bindSignedEnv, serverConfig } from '#tests/helpers/nodeHost';
 
-import { nextSlowGateEntry } from './discovery/fixtures/handlers/SlowGateCommand';
-import { drainSlow } from './fixtures/drain-handlers/DrainSlowCommand';
+import { whileGateHolds } from './discovery/fixtures/handlers/SlowGateCommand';
+import { nextDrainSlowRun } from './fixtures/drain-handlers/DrainSlowCommand';
 
 import type { HttpServerConfig } from '#src/interfaces/Config';
 
@@ -28,7 +28,7 @@ function config(handlers: string = HANDLERS_DIR): HttpServerConfig {
 }
 
 describe('http Seedcord.fetch on node', () => {
-    it('throws before start() is called', async () => {
+    it('rejects before start() is called', async () => {
         const signer = await bindSignedEnv();
         await using host = new Seedcord(config());
 
@@ -40,24 +40,38 @@ describe('http Seedcord.fetch on node', () => {
     it('waits for start() before answering', async () => {
         const signer = await bindSignedEnv();
         await using host = new Seedcord(config());
+        const request = await signedRequest(signer, PING);
+        const held = Promise.withResolvers<undefined>();
+        host.startup.addTask(StartupPhase.Ready, 'held', () => held.promise);
         const order: string[] = [];
-        host.startup.addTask(StartupPhase.Ready, 'slow', async () => {
-            await setTimeout(HELD_START_MS);
-            order.push('started');
-        });
 
         const starting = host.start();
-        const response = await host.fetch(await signedRequest(signer, PING));
-        order.push('answered');
-        await starting;
+        const answering = host.fetch(request).then((response) => {
+            order.push('answered');
+            return response;
+        });
+        await setTimeout(HELD_START_MS);
+        order.push('released');
+        held.resolve(undefined);
 
-        expect(order).toEqual(['started', 'answered']);
+        const [response] = await Promise.all([answering, starting]);
         expect(response.status).toBe(200);
+        expect(order).toEqual(['released', 'answered']);
     });
 
     it('leaves host.port undefined on port: false', async () => {
         await bindSignedEnv();
         await using host = new Seedcord({ ...config(), port: false });
+
+        await host.start();
+
+        expect(host.port).toBeUndefined();
+    });
+
+    it('reads port when start() runs', async () => {
+        await bindSignedEnv();
+        await using host = new Seedcord(config());
+        host.config.port = false;
 
         await host.start();
 
@@ -74,10 +88,22 @@ describe('http Seedcord.fetch on node', () => {
         });
     });
 
+    it('answers 503 after start() fails', async () => {
+        const signer = await bindSignedEnv();
+        await using host = new Seedcord({ ...config(), port: false });
+        host.startup.addTask(StartupPhase.Configuration, 'boom', () => Promise.reject(new Error('boot failed')));
+        await expect(host.start()).rejects.toThrow();
+
+        const response = await host.fetch(await signedRequest(signer, PING));
+
+        expect(response.status).toBe(503);
+    });
+
     it('waits at shutdown for a handler a fetch request started on port: false', async () => {
         const signer = await bindSignedEnv();
         await using host = new Seedcord({ ...config(DRAIN_HANDLERS_DIR), port: false });
         await host.start();
+        const drainSlow = nextDrainSlowRun();
 
         const response = await host.fetch(await signedRequest(signer, JSON.stringify(slashPayload('drainslow'))));
         expect(response.status).toBe(202);
@@ -94,14 +120,16 @@ describe('http Seedcord.fetch on node', () => {
         await host.start();
         const order: string[] = [];
 
-        const entered = nextSlowGateEntry();
-        const answered = host
-            .fetch(await signedRequest(signer, JSON.stringify(slashPayload('slowping'))))
-            .then(() => order.push('answered'));
-        await entered;
-        await shutdownOf(host).run(0, false);
-        order.push('shut down');
-        await answered;
+        await whileGateHolds(
+            async () => {
+                await host.fetch(await signedRequest(signer, JSON.stringify(slashPayload('slowping'))));
+                order.push('answered');
+            },
+            async () => {
+                await shutdownOf(host).run(0, false);
+                order.push('shut down');
+            }
+        );
 
         expect(order).toEqual(['answered', 'shut down']);
     });
