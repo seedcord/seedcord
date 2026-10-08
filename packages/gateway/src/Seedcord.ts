@@ -1,7 +1,7 @@
 import { Bus } from '@seedcord/core';
-import { attachmentsOf, bindBotColor, busLoggerOf, HmrManager } from '@seedcord/core/internal';
+import { attachmentsOf, bindBotColor, busLoggerOf, HmrManager, SubscriberLoader } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
-import { HealthCheck, shutdownOf, StartupPhase, SubscriberLoader } from '@seedcord/core/node/internal';
+import { HealthCheck, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';

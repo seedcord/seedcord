@@ -6,7 +6,7 @@ import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { InteractionDispatcher } from '#src/node/InteractionDispatcher';
+import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { Seedcord } from '#src/node/Seedcord';
 import { createSigner } from '#tests/helpers/ed25519';
 import { APP_ID, VALID_TOKEN } from '#tests/helpers/fixtures';

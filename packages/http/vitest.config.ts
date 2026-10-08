@@ -15,7 +15,8 @@ export default createVitestConfig(import.meta.url, {
                 // real workerd, so a node builtin fails here before it fails on a deploy
                 plugins: [
                     cloudflareTest({
-                        miniflare: { compatibilityDate: '2026-07-01' }
+                        // cloudflare turns node compat on by default from this date
+                        miniflare: { compatibilityDate: '2026-08-04' }
                     })
                 ],
                 resolve: { alias },

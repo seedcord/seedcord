@@ -10,7 +10,8 @@ import {
     getDevChannel,
     HmrManager,
     interactionMiddleware,
-    MiddlewareRegistry
+    MiddlewareRegistry,
+    SubscriberLoader
 } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import {
@@ -20,8 +21,7 @@ import {
     drainInFlight,
     ShutdownPhase,
     shutdownOf,
-    StartupPhase,
-    SubscriberLoader
+    StartupPhase
 } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { applicationIdFromToken, SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
@@ -32,12 +32,12 @@ import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/i
 import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
+import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { emptyRouteMaps } from '#src/dispatch/resolve';
 import { EmojiInjector } from '#src/emojis/EmojiInjector';
 import { buildEngine } from '#src/engine';
 import { version as packageVersion } from '#src/version';
 
-import { InteractionDispatcher } from './InteractionDispatcher';
 import { toWebRequest, writeWebResponse } from './webBridge';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
