@@ -2,12 +2,12 @@ import path from 'node:path';
 
 import { Commands } from '@seedcord/core';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { Seedcord } from '#src/node/Seedcord';
 import { APP_ID } from '#tests/helpers/fixtures';
-import { bindSignedEnv, resetSeedcord, serverConfig, stopHost } from '#tests/helpers/nodeHost';
+import { bindSignedEnv, serverConfig } from '#tests/helpers/nodeHost';
 
 import type { HttpServerConfig } from '#src/interfaces/Config';
 
@@ -21,16 +21,8 @@ function config(commandsPath: string | null, interactionsPath: string | null = n
     return serverConfig({ interactions: { path: interactionsPath }, commands: { path: commandsPath } });
 }
 
-let live: Seedcord | undefined;
-
 beforeEach(async () => {
-    resetSeedcord();
     await bindSignedEnv();
-});
-
-afterEach(async () => {
-    await stopHost(live);
-    live = undefined;
 });
 
 // REST's verb methods sit far up its prototype chain, where vi.spyOn resolves get and reports put
@@ -48,8 +40,7 @@ function stubRest(host: Seedcord): { get: ReturnType<typeof vi.fn>; put: ReturnT
 
 describe('command deploy during http startup', () => {
     it('deploys the scanned commands to the global route', async () => {
-        const host = new Seedcord(config(COMMANDS_DIR));
-        live = host;
+        await using host = new Seedcord(config(COMMANDS_DIR));
         const { put } = stubRest(host);
 
         await host.start();
@@ -60,8 +51,7 @@ describe('command deploy during http startup', () => {
     });
 
     it('injects the deployed id into the Commands accessor', async () => {
-        const host = new Seedcord(config(COMMANDS_DIR));
-        live = host;
+        await using host = new Seedcord(config(COMMANDS_DIR));
         stubRest(host);
 
         await host.start();
@@ -71,8 +61,7 @@ describe('command deploy during http startup', () => {
     });
 
     it('reads the application id out of the bot token', async () => {
-        const host = new Seedcord(config(COMMANDS_DIR));
-        live = host;
+        await using host = new Seedcord(config(COMMANDS_DIR));
         stubRest(host);
 
         await host.start();
@@ -83,8 +72,7 @@ describe('command deploy during http startup', () => {
     it('checks the deployed routes against the registered handlers', async () => {
         const slash = vi.spyOn(InteractionDispatcher.prototype, 'warnUnhandledRoutes');
         const menus = vi.spyOn(InteractionDispatcher.prototype, 'warnUnhandledContextMenuRoutes');
-        const host = new Seedcord(config(COMMANDS_DIR, HANDLERS_DIR));
-        live = host;
+        await using host = new Seedcord(config(COMMANDS_DIR, HANDLERS_DIR));
         stubRest(host);
 
         await host.start();
@@ -94,11 +82,10 @@ describe('command deploy during http startup', () => {
     });
 
     it('never asks discord for the application id', async () => {
-        const host = new Seedcord({
+        await using host = new Seedcord({
             ...config(COMMANDS_DIR),
             bot: { ...config(COMMANDS_DIR).bot, emojis: { Confirm: 'confirm' } }
         });
-        live = host;
         const { get } = stubRest(host);
 
         await host.start();
@@ -107,8 +94,7 @@ describe('command deploy during http startup', () => {
     });
 
     it('touches no command route when no commands path is configured', async () => {
-        const host = new Seedcord(config(null));
-        live = host;
+        await using host = new Seedcord(config(null));
         const { get, put } = stubRest(host);
 
         await host.start();

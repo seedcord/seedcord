@@ -4,13 +4,13 @@ import { setTimeout } from 'node:timers/promises';
 import { shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { signedRequest } from '#tests/helpers/ed25519';
 import { VALID_TOKEN } from '#tests/helpers/fixtures';
 import { slashPayload } from '#tests/helpers/interactions';
-import { bindSignedEnv, resetSeedcord, serverConfig, stopHost } from '#tests/helpers/nodeHost';
+import { bindSignedEnv, serverConfig } from '#tests/helpers/nodeHost';
 
 import { nextSlowGateEntry } from './discovery/fixtures/handlers/SlowGateCommand';
 import { drainSlow } from './fixtures/drain-handlers/DrainSlowCommand';
@@ -27,20 +27,10 @@ function config(handlers: string = HANDLERS_DIR): HttpServerConfig {
     return serverConfig({ interactions: { path: handlers } });
 }
 
-let live: Seedcord | undefined;
-
 describe('http Seedcord.fetch on node', () => {
-    beforeEach(resetSeedcord);
-
-    afterEach(async () => {
-        await stopHost(live);
-        live = undefined;
-    });
-
     it('throws before start() is called', async () => {
         const signer = await bindSignedEnv();
-        const host = new Seedcord(config());
-        live = host;
+        await using host = new Seedcord(config());
 
         await expect(host.fetch(await signedRequest(signer, PING))).rejects.toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CoreFetchBeforeStart })
@@ -49,8 +39,7 @@ describe('http Seedcord.fetch on node', () => {
 
     it('waits for start() before answering', async () => {
         const signer = await bindSignedEnv();
-        const host = new Seedcord(config());
-        live = host;
+        await using host = new Seedcord(config());
         const order: string[] = [];
         host.startup.addTask(StartupPhase.Ready, 'slow', async () => {
             await setTimeout(HELD_START_MS);
@@ -68,8 +57,7 @@ describe('http Seedcord.fetch on node', () => {
 
     it('leaves host.port undefined on port: false', async () => {
         await bindSignedEnv();
-        const host = new Seedcord({ ...config(), port: false });
-        live = host;
+        await using host = new Seedcord({ ...config(), port: false });
 
         await host.start();
 
@@ -78,8 +66,7 @@ describe('http Seedcord.fetch on node', () => {
 
     it('rejects start() on port: false when DISCORD_PUBLIC_KEY is unset', async () => {
         Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN }));
-        const host = new Seedcord({ ...config(), port: false });
-        live = host;
+        await using host = new Seedcord({ ...config(), port: false });
 
         await expect(host.start()).rejects.toMatchObject({
             code: SeedcordErrorCode.LifecyclePhaseFailures,
@@ -89,8 +76,7 @@ describe('http Seedcord.fetch on node', () => {
 
     it('waits at shutdown for a handler a fetch request started on port: false', async () => {
         const signer = await bindSignedEnv();
-        const host = new Seedcord({ ...config(DRAIN_HANDLERS_DIR), port: false });
-        live = host;
+        await using host = new Seedcord({ ...config(DRAIN_HANDLERS_DIR), port: false });
         await host.start();
 
         const response = await host.fetch(await signedRequest(signer, JSON.stringify(slashPayload('drainslow'))));
@@ -104,8 +90,7 @@ describe('http Seedcord.fetch on node', () => {
 
     it('finishes shutdown after a fetch request that was still before its 202', async () => {
         const signer = await bindSignedEnv();
-        const host = new Seedcord({ ...config(), port: false });
-        live = host;
+        await using host = new Seedcord({ ...config(), port: false });
         await host.start();
         const order: string[] = [];
 
@@ -123,8 +108,7 @@ describe('http Seedcord.fetch on node', () => {
 
     it('answers 503 once shutdown has run', async () => {
         const signer = await bindSignedEnv();
-        const host = new Seedcord({ ...config(), port: false });
-        live = host;
+        await using host = new Seedcord({ ...config(), port: false });
         await host.start();
 
         await shutdownOf(host).run(0, false);

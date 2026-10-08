@@ -1,12 +1,10 @@
-import { shutdownOf } from '@seedcord/core/node/internal';
 import { Envapter, merge, PortableSource } from 'envapt';
 
-import { Seedcord } from '#src/node/Seedcord';
-
-import { createSigner, type Signer } from './ed25519';
+import { createSigner, signedHeaders, type Signer } from './ed25519';
 import { VALID_TOKEN } from './fixtures';
 
 import type { HttpServerConfig } from '#interfaces/Config';
+import type { Seedcord } from '#src/node/Seedcord';
 
 export async function bindSignedEnv(): Promise<Signer> {
     const signer = await createSigner();
@@ -28,12 +26,11 @@ export function serverConfig(bot: Partial<HttpServerConfig['bot']> = {}): HttpSe
     };
 }
 
-export function resetSeedcord(): void {
-    // @ts-expect-error singleton reset between tests
-    Seedcord.reset();
-}
-
-export async function stopHost(host: Seedcord | undefined): Promise<void> {
-    if (host) await shutdownOf(host).run(0, false);
-    resetSeedcord();
+export async function postSigned(host: Seedcord, signer: Signer, payload: string): Promise<Response> {
+    const body = new TextEncoder().encode(payload);
+    return fetch(`http://127.0.0.1:${String(host.port)}`, {
+        method: 'POST',
+        headers: await signedHeaders(signer, body),
+        body
+    });
 }

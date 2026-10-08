@@ -1,11 +1,11 @@
 import path from 'node:path';
 
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { Plugin } from '#src/Plugin';
-import { bindSignedEnv, resetSeedcord, serverConfig, stopHost } from '#tests/helpers/nodeHost';
+import { bindSignedEnv, serverConfig } from '#tests/helpers/nodeHost';
 
 import type { HttpServerConfig } from '#src/interfaces/Config';
 import type { LogRecord } from '@seedcord/types';
@@ -31,22 +31,12 @@ class FailsReadyOnce extends Plugin {
     }
 }
 
-let live: Seedcord | undefined;
-
 describe('http Seedcord startup failure', () => {
-    beforeEach(resetSeedcord);
-
-    afterEach(async () => {
-        await stopHost(live);
-        live = undefined;
-    });
-
     it('closes the interaction server when a later startup task rejects', async () => {
         await bindSignedEnv();
 
-        const host = new Seedcord(config());
+        await using host = new Seedcord(config());
         host.attach('failing', FailsReadyOnce);
-        live = host;
 
         await expect(host.start()).rejects.toThrow();
         expect(host.port).toBeDefined();
@@ -60,9 +50,8 @@ describe('http Seedcord startup failure', () => {
         const records: LogRecord[] = [];
         const handle = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => records.push(r) });
 
-        const host = new Seedcord(config());
+        await using host = new Seedcord(config());
         host.attach('failing', FailsReadyOnce);
-        live = host;
         await expect(host.start()).rejects.toThrow();
 
         records.length = 0;
@@ -75,16 +64,14 @@ describe('http Seedcord startup failure', () => {
     it('rejects a restart of a failed host, the rollback removed its signal handlers', async () => {
         await bindSignedEnv();
 
-        const host = new Seedcord(config());
+        await using host = new Seedcord(config());
         host.attach('failing', FailsReadyOnce);
-        live = host;
         await expect(host.start()).rejects.toThrow();
 
         // ready resolves from here on, so only the restart guard can reject this
         await expect(host.start()).rejects.toThrow(/new instance/);
 
-        const fresh = new Seedcord(config());
-        live = fresh;
+        await using fresh = new Seedcord(config());
         expect(fresh).toBeInstanceOf(Seedcord);
     });
 });

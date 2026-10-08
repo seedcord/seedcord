@@ -1,9 +1,9 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { Plugin } from '#src/Plugin';
-import { resetSeedcord, serverConfig } from '#tests/helpers/nodeHost';
+import { serverConfig } from '#tests/helpers/nodeHost';
 
 import type { CoreBase } from '@seedcord/core';
 
@@ -23,16 +23,15 @@ class EdgeOnly extends Plugin<{ runtime: 'edge' }> {
 }
 
 describe('attaching to the http Seedcord', () => {
-    afterEach(resetSeedcord);
+    it('attaches under a key that type-checks even when the host keeps a field of that name', async () => {
+        await using seedcord = new Seedcord(serverConfig());
+        const attached = seedcord.attach('token', Probe);
 
-    it('attaches under a key that type-checks even when the host keeps a field of that name', () => {
-        const seedcord = new Seedcord(serverConfig()).attach('token', Probe);
-
-        expect(seedcord.token).toBeInstanceOf(Probe);
+        expect(attached.token).toBeInstanceOf(Probe);
     });
 
-    it('throws when an edge-only http plugin reaches the node Seedcord past the types', () => {
-        const seedcord = new Seedcord(serverConfig());
+    it('throws when an edge-only http plugin reaches the node Seedcord past the types', async () => {
+        await using seedcord = new Seedcord(serverConfig());
 
         // @ts-expect-error EdgeOnly declares runtime 'edge'
         expect(() => seedcord.attach('edge', EdgeOnly)).toThrow(

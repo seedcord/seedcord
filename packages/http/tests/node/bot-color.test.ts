@@ -1,8 +1,8 @@
 import { BuilderComponent } from '@seedcord/core';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
-import { resetSeedcord, serverConfig } from '#tests/helpers/nodeHost';
+import { serverConfig } from '#tests/helpers/nodeHost';
 
 class Card extends BuilderComponent<'container'> {
     constructor() {
@@ -11,10 +11,8 @@ class Card extends BuilderComponent<'container'> {
 }
 
 describe('config.botColor', () => {
-    beforeEach(resetSeedcord);
-
-    it('applies a color assigned after construction', () => {
-        const host = new Seedcord(serverConfig());
+    it('applies a color assigned after construction', async () => {
+        await using host = new Seedcord(serverConfig());
         host.config.botColor = 0xfe_56_5a;
         expect(new Card().component.data.accent_color).toBe(0xfe_56_5a);
     });
