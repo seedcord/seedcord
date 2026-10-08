@@ -26,8 +26,7 @@ export interface HttpServerConfig extends Config {
 }
 
 /**
- * Config for a bundled isolate deployment. `seedcord build` generates a worker entry that calls
- * `createSeedcord`.
+ * Config for a bot on Cloudflare Workers. Pass to `new Seedcord(config)`.
  */
 export interface HttpEdgeConfig extends Config {
     bot: HttpBotConfig<Partial<TypedOmit<RESTOptions, EdgeSweeperKey>>>;

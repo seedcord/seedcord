@@ -8,7 +8,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
-import { createCore, dispatchInteraction } from '#src/dispatch/dispatchInteraction';
+import { dispatchInteraction } from '#src/dispatch/dispatchInteraction';
+import { testCore } from '#tests/helpers/core';
 import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import { slashPayload } from './harness';
@@ -31,7 +32,7 @@ vi.mock('@discordjs/rest', async (importOriginal) => {
     return { ...(await importOriginal<object>()), REST: FakeRest };
 });
 
-// a bot names its own transport package here. both re-export the interface from @seedcord/types
+// a bot augments its own transport package here. both re-export the interface from @seedcord/types
 declare module '@seedcord/types' {
     interface DispatchState {
         actor: string;
@@ -94,7 +95,7 @@ async function dispatchThrough(
     const execute = await dispatchInteraction({
         match: { kind: InteractionKind.Slash, routeId: 'slash:guarded', ctor: Handler },
         payload: slashPayload('guarded') as ValidInteractionTypes,
-        core: createCore(nullPathConfig, VALID_TOKEN),
+        core: testCore(nullPathConfig, VALID_TOKEN),
         middlewares
     });
     await execute?.();
@@ -153,7 +154,7 @@ describe('the dispatch context on a rendered notice', () => {
         await dispatchInteraction({
             match: { kind: InteractionKind.Slash, routeId: 'slash:guarded', ctor: Exploding },
             payload: slashPayload('guarded') as ValidInteractionTypes,
-            core: createCore({ ...nullPathConfig, errors: { defaultError: RecordingCard } }, VALID_TOKEN),
+            core: testCore({ ...nullPathConfig, errors: { defaultError: RecordingCard } }, VALID_TOKEN),
             middlewares: new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware)
         });
 

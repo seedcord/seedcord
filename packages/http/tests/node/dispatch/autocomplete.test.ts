@@ -6,10 +6,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 
-import { capturingCtx, manifestFor, readyEngine, signedRequest } from './harness';
+import { capturingCtx, readyEngine, routedHandler, signedRequest, type BotClasses } from './harness';
 
 import type { HandlerConstructor } from '#handlers/constructors';
-import type { Manifest } from '#src/manifest/Manifest';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 
 const rest = vi.hoisted(() => {
@@ -60,8 +59,8 @@ function autocompletePayload(name: string): object {
     };
 }
 
-function completes(handler: HandlerConstructor, name: string): Manifest {
-    return manifestFor(InteractionKind.Autocomplete, name, handler);
+function completes(handler: HandlerConstructor, name: string): BotClasses {
+    return routedHandler(InteractionKind.Autocomplete, name, handler);
 }
 
 interface CallbackCall {

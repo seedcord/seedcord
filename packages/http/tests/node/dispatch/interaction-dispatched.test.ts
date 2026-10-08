@@ -8,7 +8,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
-import { createCore, dispatchInteraction } from '#src/dispatch/dispatchInteraction';
+import { dispatchInteraction } from '#src/dispatch/dispatchInteraction';
+import { testCore } from '#tests/helpers/core';
 import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import { slashPayload } from './harness';
@@ -147,7 +148,7 @@ function routeFor(routeId: string | null, ctor: HandlerConstructor): ResolvedRou
 
 async function dispatchedFor(route: ResolvedRoute): Promise<SubscriptionData<'interactionDispatched'>[]> {
     Envapter.useSource(new PortableSource({}));
-    const core = createCore(nullPathConfig, VALID_TOKEN);
+    const core = testCore(nullPathConfig, VALID_TOKEN);
     const published: SubscriptionData<'interactionDispatched'>[] = [];
     core.bus.on('interactionDispatched', (payload) => published.push(payload));
 
@@ -167,7 +168,7 @@ async function dispatchedThrough(middleware: InteractionMiddlewareConstructor): 
     published: SubscriptionData<'interactionDispatched'>[];
 }> {
     Envapter.useSource(new PortableSource({}));
-    const core = createCore(nullPathConfig, VALID_TOKEN);
+    const core = testCore(nullPathConfig, VALID_TOKEN);
     const published: SubscriptionData<'interactionDispatched'>[] = [];
     core.bus.on('interactionDispatched', (payload) => published.push(payload));
 
@@ -237,7 +238,7 @@ describe('interactionDispatched from the http dispatcher', () => {
 
     it('reads the actor off member.user in a guild', async () => {
         Envapter.useSource(new PortableSource({}));
-        const core = createCore(nullPathConfig, VALID_TOKEN);
+        const core = testCore(nullPathConfig, VALID_TOKEN);
         const published: SubscriptionData<'interactionDispatched'>[] = [];
         core.bus.on('interactionDispatched', (payload) => published.push(payload));
 
@@ -262,7 +263,7 @@ describe('interactionDispatched from the http dispatcher', () => {
     // an unmatched route carries no routeId, so the handler's own sender has none from the dispatch
     it('publishes one route id across both keys for an unmatched route', async () => {
         Envapter.useSource(new PortableSource({}));
-        const core = createCore(nullPathConfig, VALID_TOKEN);
+        const core = testCore(nullPathConfig, VALID_TOKEN);
         const dispatched: SubscriptionData<'interactionDispatched'>[] = [];
         const written: SubscriptionData<'responseAttempted'>[] = [];
         core.bus.on('interactionDispatched', (payload) => dispatched.push(payload));
@@ -358,7 +359,7 @@ describe('interactionDispatched from the http dispatcher', () => {
 
     it('publishes responseAttempted from the handler own reply, carrying the route id', async () => {
         Envapter.useSource(new PortableSource({}));
-        const core = createCore(nullPathConfig, VALID_TOKEN);
+        const core = testCore(nullPathConfig, VALID_TOKEN);
         const sent: SubscriptionData<'responseAttempted'>[] = [];
         core.bus.on('responseAttempted', (payload) => sent.push(payload));
 
@@ -383,7 +384,7 @@ describe('interactionDispatched from the http dispatcher', () => {
     // the choices callback bypasses the reply surface, so it reports through its own path
     it('publishes responseAttempted for an autocomplete choices response', async () => {
         Envapter.useSource(new PortableSource({}));
-        const core = createCore(nullPathConfig, VALID_TOKEN);
+        const core = testCore(nullPathConfig, VALID_TOKEN);
         const sent: SubscriptionData<'responseAttempted'>[] = [];
         core.bus.on('responseAttempted', (payload) => sent.push(payload));
 

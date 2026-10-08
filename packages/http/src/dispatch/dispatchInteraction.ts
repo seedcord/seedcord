@@ -1,5 +1,5 @@
-import { DiscordAPIError, REST } from '@discordjs/rest';
-import { Bus, DispatchContext, Fault, InteractionKind, Notice, Silence } from '@seedcord/core';
+import { DiscordAPIError } from '@discordjs/rest';
+import { DispatchContext, Fault, InteractionKind, Notice, Silence } from '@seedcord/core';
 import {
     asError,
     outcomeFor,
@@ -12,14 +12,11 @@ import {
     slowGateMonitor
 } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
-import { applicationIdFromToken } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
 
 import { RepliableHandler } from '#handlers/RepliableHandler';
 import { ReplySender } from '#reply/ReplySender';
-import { edgeRestOptions, edgeShutdown, edgeStartup } from '#src/edge/runtime';
 import { interactionGateContext } from '#src/gates/context';
 
 import { reportFault } from './reportFault';
@@ -32,37 +29,17 @@ import type {
 import type { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import type { InteractionOf } from '#handlers/interaction/middlewareKinds';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
-import type { HttpConfig } from '#interfaces/Config';
 import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from './resolve';
 import type { DispatchOutcome, DispatchResult, MiddlewareKind } from '@seedcord/core';
 import type { MiddlewareRegistry } from '@seedcord/core/internal';
-import type { IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
+import type { RenderContext } from '@seedcord/types';
 
 // lazy, env binds after this module loads
 let dispatchLogger: Logger | undefined;
 function logger(): Logger {
     dispatchLogger ??= new Logger('Dispatcher', { channel: 'interactions' });
     return dispatchLogger;
-}
-
-type CoreDraft = TypedOmit<Core, 'bus'> & { bus: Bus };
-
-export function createCore(config: HttpConfig, token: string): Core {
-    const rateLimiter: IRateLimiter = config.store ?? new MemoryRateLimiter();
-    // justified: bus completes the shape on the next line. the Bus reads core at dispatch, never here.
-    const draft = {
-        config,
-        rateLimiter,
-        rest: new REST(edgeRestOptions(config.bot.restOptions)).setToken(token),
-        shutdown: edgeShutdown,
-        startup: edgeStartup,
-        get applicationId(): string {
-            return applicationIdFromToken(token);
-        }
-    } as CoreDraft;
-    draft.bus = new Bus(draft);
-    return draft;
 }
 
 interface FaultScope {

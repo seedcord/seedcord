@@ -63,7 +63,8 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
      * Put one dot in the key to nest the plugin under a group. `'services.users'` reads back as
      * `core.services.users`. Each name holds one plugin or one group.
      *
-     * Startup runs each plugin's `init()` in attach order within its phase.
+     * Startup runs each plugin's `init()` in attach order within its phase. A node bot starts in
+     * `start()`. An edge bot starts on its first request.
      *
      * Attaching a plugin whose `transport` or `runtime` differs from this host fails to compile, and
      * throws when the types were bypassed.

@@ -13,10 +13,13 @@ function foldersOf(keys: readonly string[]): string[] {
 }
 
 // writes the object seedcord build writes onto the slot. keys look like '/handlers/Ping.ts'
-export function registerBuiltFiles(modules: Record<string, Record<string, unknown>>): void {
+export function registerBuiltFiles(
+    modules: Record<string, Record<string, unknown>>,
+    emptyFolders: readonly string[] = []
+): void {
     Reflect.set(globalThis, Symbol.for(BUILT_FILES_KEY), {
         root: BUILT_ROOT,
-        folders: foldersOf(Object.keys(modules)),
+        folders: [...new Set([...foldersOf(Object.keys(modules)), ...emptyFolders])],
         modules: Object.fromEntries(
             Object.entries(modules).map(([key, exported]) => [key, () => Promise.resolve(exported)])
         ),

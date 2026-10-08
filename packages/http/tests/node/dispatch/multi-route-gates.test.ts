@@ -6,7 +6,8 @@ import { Envapter, PortableSource } from 'envapt';
 import { describe, expect, it, vi } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
-import { createCore, dispatchInteraction } from '#src/dispatch/dispatchInteraction';
+import { dispatchInteraction } from '#src/dispatch/dispatchInteraction';
+import { testCore } from '#tests/helpers/core';
 import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import { slashPayload } from './harness';
@@ -37,7 +38,7 @@ Reflect.defineMetadata(GatedMetadataKey, [Cooldown('10s')], Vote);
 
 function freshCore(): { core: Core; published: SubscriptionData<'interactionDispatched'>[] } {
     Envapter.useSource(new PortableSource({}));
-    const core = createCore(nullPathConfig, VALID_TOKEN);
+    const core = testCore(nullPathConfig, VALID_TOKEN);
     const published: SubscriptionData<'interactionDispatched'>[] = [];
     core.bus.on('interactionDispatched', (payload) => published.push(payload));
     return { core, published };

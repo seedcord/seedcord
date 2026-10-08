@@ -1,10 +1,12 @@
 import 'reflect-metadata';
 import './subscriptions';
 
-export { createSeedcord } from './createSeedcord';
-export type { EngineContext } from './createSeedcord';
+// both entries export this module, each with its own Seedcord beside it
 
-export type { Manifest } from './manifest/Manifest';
+export type { EngineContext } from './engine';
+
+export { Plugin } from './Plugin';
+export type { HttpPluginOptions, PluginLifecycleSpec, PluginOptions } from './Plugin';
 
 export type { Core } from '#interfaces/Core';
 export type { HttpConfig, HttpEdgeConfig, HttpServerConfig } from '#interfaces/Config';

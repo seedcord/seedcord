@@ -1,13 +1,19 @@
 import { ShutdownPhase, StartupPhase } from '@seedcord/core';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { Envapter, PortableSource } from 'envapt';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import { createCore } from '#src/dispatch/dispatchInteraction';
-import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
+import { Seedcord } from '#src/edge/Seedcord';
 
 // the logger registry reads the environment on first touch to pick its default level
-Envapter.useSource(new PortableSource({ DISCORD_PUBLIC_KEY: 'a'.repeat(64), DISCORD_BOT_TOKEN: VALID_TOKEN }));
+Envapter.useSource(new PortableSource({}));
+
+function edgeSeedcord(): Seedcord {
+    return new Seedcord({
+        bot: { interactions: { path: null }, commands: { path: null } },
+        subscribers: { path: null }
+    });
+}
 
 function lifecycleError(run: () => void): unknown {
     try {
@@ -18,22 +24,27 @@ function lifecycleError(run: () => void): unknown {
     return undefined;
 }
 
-describe('lifecycle tasks on a createSeedcord core', () => {
+describe('lifecycle tasks on an edge Seedcord', () => {
+    afterEach(() => {
+        // @ts-expect-error singleton reset between tests
+        Seedcord.reset();
+    });
+
     it('shutdown.addTask throws', () => {
-        const core = createCore(nullPathConfig, VALID_TOKEN);
+        const seedcord = edgeSeedcord();
 
         const error = lifecycleError(() =>
-            core.shutdown.addTask(ShutdownPhase.Drain, 'close-pool', () => Promise.resolve())
+            seedcord.shutdown.addTask(ShutdownPhase.Drain, 'close-pool', () => Promise.resolve())
         );
 
         expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.CoreLifecycleUnavailable)).toBe(true);
     });
 
     it('startup.addTask throws', () => {
-        const core = createCore(nullPathConfig, VALID_TOKEN);
+        const seedcord = edgeSeedcord();
 
         const error = lifecycleError(() =>
-            core.startup.addTask(StartupPhase.Ready, 'warm-cache', () => Promise.resolve())
+            seedcord.startup.addTask(StartupPhase.Ready, 'warm-cache', () => Promise.resolve())
         );
 
         expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.CoreLifecycleUnavailable)).toBe(true);

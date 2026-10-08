@@ -12,8 +12,10 @@ import { formatFilePath } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
 import { Envapter } from 'envapt';
 
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
+import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import { RouteRegistry } from '#src/dispatch/RouteRegistry';
-import { isHandlerClass, isMiddlewareClass } from '#src/manifest/entries';
 
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { RouteMap, RouteMaps } from '#src/dispatch/resolve';
@@ -136,12 +138,18 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         }
     }
 
+    // a gateway class carries the same core metadata on a different base class
     private isHandler(value: unknown): value is HandlerConstructor {
-        return isHandlerClass(value) && Reflect.hasMetadata(InteractionMetadataKey, value);
+        if (typeof value !== 'function' || !Reflect.hasMetadata(InteractionMetadataKey, value)) return false;
+        return value.prototype instanceof InteractionHandler || value.prototype instanceof AutocompleteHandler;
     }
 
     private isMiddleware(value: unknown): value is InteractionMiddlewareConstructor {
-        return isMiddlewareClass(value) && Reflect.hasMetadata(InteractionMiddlewareMetadataKey, value);
+        if (typeof value !== 'function') return false;
+        return (
+            value.prototype instanceof InteractionMiddleware &&
+            Reflect.hasMetadata(InteractionMiddlewareMetadataKey, value)
+        );
     }
 
     private registerMiddleware(ctor: InteractionMiddlewareConstructor, relativePath: string): void {

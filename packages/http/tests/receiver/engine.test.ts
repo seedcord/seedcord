@@ -3,25 +3,45 @@ import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createSeedcord } from '#src/createSeedcord';
+import { Seedcord } from '#src/edge/Seedcord';
 import { createSigner, nowSeconds, signedRequest, type Signer } from '#tests/helpers/ed25519';
-import { emptyManifest, nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
+import { VALID_TOKEN } from '#tests/helpers/fixtures';
 
 function bindEnv(vars: Record<string, string>): void {
     Envapter.useSource(new PortableSource(vars));
 }
 
+function edgeSeedcord(): Seedcord {
+    // @ts-expect-error singleton reset between bots
+    Seedcord.reset();
+    return new Seedcord({
+        bot: { interactions: { path: null }, commands: { path: null } },
+        subscribers: { path: null }
+    });
+}
+
 async function readySeedcord(): Promise<{ signer: Signer; handle: (request: Request) => Promise<Response> }> {
     const signer = await createSigner();
     bindEnv({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN });
-    return { signer, handle: createSeedcord(nullPathConfig, emptyManifest()) };
+    const seedcord = edgeSeedcord();
+    return { signer, handle: (request) => seedcord.fetch(request) };
+}
+
+// the env is read on the first request
+function firstRequestError(): Promise<unknown> {
+    return edgeSeedcord()
+        .fetch(new Request('https://bot.example/interactions'))
+        .then(
+            () => expect.unreachable('the first request should throw'),
+            (caught: unknown) => caught
+        );
 }
 
 const ping = '{"type":1}';
 // a type resolve() does not recognize, the one payload class the engine acks without dispatching
 const unrecognized = '{"type":99}';
 
-describe('createSeedcord request logging', () => {
+describe('engine request logging', () => {
     afterEach(() => {
         vi.restoreAllMocks();
     });
@@ -36,7 +56,7 @@ describe('createSeedcord request logging', () => {
     });
 });
 
-describe('createSeedcord', () => {
+describe('the interactions engine', () => {
     it('answers a signed PING with an in-body PONG', async () => {
         const { signer, handle } = await readySeedcord();
 
@@ -150,36 +170,27 @@ describe('createSeedcord', () => {
         expect(response.headers.get('allow')).toBe('POST');
     });
 
-    it('throws ConfigMissingPublicKey when the env var is unset', () => {
+    it('throws ConfigMissingEnv when the public key env var is unset', async () => {
         bindEnv({ DISCORD_BOT_TOKEN: VALID_TOKEN });
 
-        try {
-            createSeedcord(nullPathConfig, emptyManifest());
-            expect.unreachable('createSeedcord should throw');
-        } catch (error) {
-            expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigMissingEnv)).toBe(true);
-        }
+        const error = await firstRequestError();
+
+        expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigMissingEnv)).toBe(true);
     });
 
-    it('throws ConfigIncorrectPublicKey when the env var is malformed', () => {
+    it('throws ConfigInvalidEnv when the public key env var is malformed', async () => {
         bindEnv({ DISCORD_PUBLIC_KEY: 'zz'.repeat(32), DISCORD_BOT_TOKEN: VALID_TOKEN });
 
-        try {
-            createSeedcord(nullPathConfig, emptyManifest());
-            expect.unreachable('createSeedcord should throw');
-        } catch (error) {
-            expect(isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.ConfigInvalidEnv)).toBe(true);
-        }
+        const error = await firstRequestError();
+
+        expect(isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.ConfigInvalidEnv)).toBe(true);
     });
 
-    it('throws ConfigMissingDiscordToken when the bot token env var is unset', () => {
+    it('throws ConfigMissingEnv when the bot token env var is unset', async () => {
         bindEnv({ DISCORD_PUBLIC_KEY: 'ab'.repeat(32) });
 
-        try {
-            createSeedcord(nullPathConfig, emptyManifest());
-            expect.unreachable('createSeedcord should throw');
-        } catch (error) {
-            expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigMissingEnv)).toBe(true);
-        }
+        const error = await firstRequestError();
+
+        expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigMissingEnv)).toBe(true);
     });
 });

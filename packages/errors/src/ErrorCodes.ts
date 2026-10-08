@@ -10,8 +10,6 @@ export enum SeedcordErrorCode {
     ConfigWebhookUrlInvalid = 1002,
     /** A configured webhook does not exist on Discord (deleted, or a wrong id or token). */
     ConfigWebhookNotFound = 1003,
-    /** The generated route manifest was imported before `seedcord build` generated it. */
-    ConfigManifestNotGenerated = 1004,
     /** A required environment variable is not present. */
     ConfigMissingEnv = 1005,
     /** An environment variable is present and fails validation. */
@@ -62,7 +60,7 @@ export enum SeedcordErrorCode {
     CoreApplicationUnavailable = 1209,
     /** A generated accessor was read before startup resolved its values. */
     CoreAccessorUnresolved = 1210,
-    /** A startup or shutdown task was added to a core built by `createSeedcord`. */
+    /** A startup or shutdown task was added on an edge bot. */
     CoreLifecycleUnavailable = 1211,
     /** `emit` was called on the bus. It reaches listeners and skips every subscriber. */
     CoreBusEmitUnavailable = 1212,
@@ -102,10 +100,6 @@ export enum SeedcordErrorCode {
     InteractionDuplicateRoute = 1401,
     /** Two different middleware classes share a class name. */
     DuplicateMiddleware = 1402,
-    /** A manifest array lists a class that does not extend the base for that array. */
-    ManifestEntryWrongClass = 1403,
-    /** A manifest array lists a class whose decorator is missing. Nothing registered. */
-    ManifestEntryNoRoutes = 1404,
 
     /** A reply method was called in an ack state where it is illegal. */
     ReplyIllegalAckState = 1501,

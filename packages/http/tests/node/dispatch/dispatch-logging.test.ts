@@ -4,9 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import { capturingCtx, manifestFor, readyEngine, signedRequest, slashPayload } from './harness';
+import { capturingCtx, readyEngine, routedHandler, signedRequest, slashPayload, type BotClasses } from './harness';
 
-import type { Manifest } from '#src/manifest/Manifest';
 import type { LogRecord } from '@seedcord/types';
 
 const rest = vi.hoisted(() => {
@@ -34,8 +33,8 @@ class Ban extends SlashHandler<never> {
     }
 }
 
-function banManifest(): Manifest {
-    return manifestFor(InteractionKind.Slash, 'ban', Ban);
+function banClasses(): BotClasses {
+    return routedHandler(InteractionKind.Slash, 'ban', Ban);
 }
 
 let records: LogRecord[] = [];
@@ -62,7 +61,7 @@ function dispatcherLines(): string[] {
 
 describe('dispatch logging', () => {
     it('names the route and the handler that ran', async () => {
-        const { signer, handle } = await readyEngine(banManifest());
+        const { signer, handle } = await readyEngine(banClasses());
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('ban')), ctx);
@@ -75,7 +74,7 @@ describe('dispatch logging', () => {
     });
 
     it('logs once per dispatched interaction', async () => {
-        const { signer, handle } = await readyEngine(banManifest());
+        const { signer, handle } = await readyEngine(banClasses());
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('ban')), ctx);

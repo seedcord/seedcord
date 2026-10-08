@@ -54,8 +54,7 @@ const SERVER_SHUTDOWN_TIMEOUT_MS = 5000;
  * The HTTP-interactions bot host, a long-running node server around the engine.
  *
  * Discovers handlers from `config.bot.interactions.path`, verifies and dispatches interactions on
- * `start()`, and runs coordinated shutdown with an in-flight drain. The edge deploy path calls
- * `createSeedcord` from a generated entry.
+ * `start()`, and runs coordinated shutdown with an in-flight drain.
  */
 // tests/node/seedcord-core.types-test.ts checks this class against Core in place of an implements clause
 export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {

@@ -6,7 +6,8 @@ import { Envapter, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
-import { createCore, dispatchInteraction } from '#src/dispatch/dispatchInteraction';
+import { dispatchInteraction } from '#src/dispatch/dispatchInteraction';
+import { testCore } from '#tests/helpers/core';
 import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import { slashPayload } from './harness';
@@ -73,7 +74,7 @@ interface Published {
 }
 
 function watched(): { core: Core; published: Published } {
-    const core = createCore(nullPathConfig, VALID_TOKEN);
+    const core = testCore(nullPathConfig, VALID_TOKEN);
     const published: Published = { handled: [], unknown: [] };
     core.bus.on('handledException', (data) => published.handled.push(data));
     core.bus.on('unknownException', (data) => published.unknown.push(data));

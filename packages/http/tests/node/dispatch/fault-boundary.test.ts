@@ -7,12 +7,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import { capturingCtx, manifestFor, readyEngine, signedRequest, slashPayload } from './harness';
+import { capturingCtx, readyEngine, routedHandler, signedRequest, slashPayload, type BotClasses } from './harness';
 
 import type { HandlerConstructor } from '#handlers/constructors';
-import type { HttpConfig } from '#interfaces/Config';
 import type { Core } from '#interfaces/Core';
-import type { Manifest } from '#src/manifest/Manifest';
 import type { DispatchContext } from '@seedcord/core';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 import type { UUID } from 'node:crypto';
@@ -49,8 +47,8 @@ function apiError(code: number): DiscordAPIError {
     return new DiscordAPIError({ code, message: 'boom' }, code, 404, 'POST', 'url', {});
 }
 
-function manifestOf(name: string, handler: HandlerConstructor): Manifest {
-    return manifestFor(InteractionKind.Slash, name, handler);
+function slashRoute(name: string, handler: HandlerConstructor): BotClasses {
+    return routedHandler(InteractionKind.Slash, name, handler);
 }
 
 interface SentBody {
@@ -76,7 +74,7 @@ describe('fault boundary', () => {
                 throw new Error('db exploded');
             }
         }
-        const { signer, handle } = await readyEngine(manifestOf('broken', Broken));
+        const { signer, handle } = await readyEngine(slashRoute('broken', Broken));
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('broken')), ctx);
@@ -98,7 +96,7 @@ describe('fault boundary', () => {
                 throw new Silence('user dismissed');
             }
         }
-        const { signer, handle } = await readyEngine(manifestOf('quiet', Quiet));
+        const { signer, handle } = await readyEngine(slashRoute('quiet', Quiet));
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('quiet')), ctx);
@@ -115,7 +113,7 @@ describe('fault boundary', () => {
             }
         }
         const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
-        const { signer, handle } = await readyEngine(manifestOf('quiet', Quiet));
+        const { signer, handle } = await readyEngine(slashRoute('quiet', Quiet));
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('quiet')), ctx);
@@ -126,11 +124,7 @@ describe('fault boundary', () => {
     });
 
     it('omits the Silence debug line when logSilences is false', async () => {
-        const config: HttpConfig = {
-            bot: { interactions: { path: null }, commands: { path: null } },
-            subscribers: { path: null },
-            errors: { logSilences: false }
-        };
+        const settings = { errors: { logSilences: false } };
         class Quiet extends SlashHandler<never> {
             async execute(): Promise<void> {
                 await Promise.resolve();
@@ -138,7 +132,7 @@ describe('fault boundary', () => {
             }
         }
         const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
-        const { signer, handle } = await readyEngine(manifestOf('quiet', Quiet), config);
+        const { signer, handle } = await readyEngine(slashRoute('quiet', Quiet), { settings });
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('quiet')), ctx);
@@ -164,7 +158,7 @@ describe('fault boundary', () => {
                 throw new Denied();
             }
         }
-        const { signer, handle } = await readyEngine(manifestOf('latedeny', LateDenied));
+        const { signer, handle } = await readyEngine(slashRoute('latedeny', LateDenied));
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('latedeny')), ctx);
@@ -182,7 +176,7 @@ describe('fault boundary', () => {
                 throw new Error('late failure');
             }
         }
-        const { signer, handle } = await readyEngine(manifestOf('late', RepliedThenBroke));
+        const { signer, handle } = await readyEngine(slashRoute('late', RepliedThenBroke));
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('late')), ctx);
@@ -204,18 +198,14 @@ describe('fault boundary', () => {
                 return { components: [{ toJSON: () => ({ type: 10, content: 'custom fault' }) }] };
             }
         }
-        const config: HttpConfig = {
-            bot: { interactions: { path: null }, commands: { path: null } },
-            subscribers: { path: null },
-            errors: { defaultError: CustomCard }
-        };
+        const settings = { errors: { defaultError: CustomCard } };
         class Broken extends SlashHandler<never> {
             async execute(): Promise<void> {
                 await Promise.resolve();
                 throw new Error('boom');
             }
         }
-        const { signer, handle } = await readyEngine(manifestOf('broken', Broken), config);
+        const { signer, handle } = await readyEngine(slashRoute('broken', Broken), { settings });
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('broken')), ctx);
@@ -225,18 +215,14 @@ describe('fault boundary', () => {
     });
 
     it('swallows an api code listed in ignoreApiCodes without a card', async () => {
-        const config: HttpConfig = {
-            bot: { interactions: { path: null }, commands: { path: null } },
-            subscribers: { path: null },
-            errors: { ignoreApiCodes: [10_008] }
-        };
+        const settings = { errors: { ignoreApiCodes: [10_008] } };
         class DeadEnd extends SlashHandler<never> {
             async execute(): Promise<void> {
                 await Promise.resolve();
                 throw apiError(10_008);
             }
         }
-        const { signer, handle } = await readyEngine(manifestOf('dead', DeadEnd), config);
+        const { signer, handle } = await readyEngine(slashRoute('dead', DeadEnd), { settings });
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('dead')), ctx);
@@ -253,7 +239,7 @@ describe('fault boundary', () => {
                 throw new Error('boom');
             }
         }
-        const { signer, handle } = await readyEngine(manifestOf('broken', Broken));
+        const { signer, handle } = await readyEngine(slashRoute('broken', Broken));
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('broken')), ctx);
@@ -276,7 +262,7 @@ describe('fault boundary', () => {
                 await Promise.resolve();
             }
         }
-        const { signer, handle } = await readyEngine(manifestOf('ghost', Ghost));
+        const { signer, handle } = await readyEngine(slashRoute('ghost', Ghost));
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('ghost')), ctx);
@@ -296,7 +282,7 @@ describe('fault boundary', () => {
                 throw 'a bare string';
             }
         }
-        const { signer, handle } = await readyEngine(manifestOf('bare', Throws));
+        const { signer, handle } = await readyEngine(slashRoute('bare', Throws));
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('bare')), ctx);
@@ -319,7 +305,7 @@ describe('fault boundary', () => {
                 await Promise.resolve();
             }
         }
-        const { signer, handle } = await readyEngine(manifestOf('unstable', ExplodesOnBuild));
+        const { signer, handle } = await readyEngine(slashRoute('unstable', ExplodesOnBuild));
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('unstable')), ctx);
@@ -338,8 +324,7 @@ describe('fault boundary', () => {
                 throw new Error('lookup failed');
             }
         }
-        const manifest = manifestFor(InteractionKind.Autocomplete, 'search', Search);
-        const { signer, handle } = await readyEngine(manifest);
+        const { signer, handle } = await readyEngine(routedHandler(InteractionKind.Autocomplete, 'search', Search));
         const payload = {
             type: 4,
             id: 'int-1',
