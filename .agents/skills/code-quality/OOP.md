@@ -193,7 +193,7 @@ export class ProductService {
 - Every other class uses `private`. That covers internal services, helpers, and classes only an `./internal` entry exports. An `export` keyword on the file does not make a class public.
 
 ```ts
-// public: @seedcord/core/node exports ServerHost, and every transport's Seedcord extends it
+// public: @seedcord/core/node exports ServerHost, and the gateway and node http Seedcord classes extend it
 export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT, 'server'> {
     readonly #lifecycle: PluginLifecycle;
     #initPromise?: Promise<this> | undefined;

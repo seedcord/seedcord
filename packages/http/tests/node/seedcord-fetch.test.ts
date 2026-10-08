@@ -65,16 +65,14 @@ describe('http Seedcord.fetch on node', () => {
         expect(response.status).toBe(200);
     });
 
-    it('answers through fetch on port: false with host.port left undefined', async () => {
-        const signer = await bindSignedEnv();
+    it('leaves host.port undefined on port: false', async () => {
+        await bindSignedEnv();
         const host = new Seedcord({ ...config(), port: false });
         live = host;
 
         await host.start();
-        const response = await host.fetch(await signedRequest(signer, PING));
 
         expect(host.port).toBeUndefined();
-        expect(response.status).toBe(200);
     });
 
     it('rejects start() on port: false when DISCORD_PUBLIC_KEY is unset', async () => {

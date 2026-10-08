@@ -21,7 +21,7 @@ import { EmojiInjector } from '#src/emojis/EmojiInjector';
 import { InteractionsService } from '#src/InteractionsService';
 import { version as packageVersion } from '#src/version';
 
-import { InteractionsEndpoint } from './InteractionsEndpoint';
+import { NodeEndpoint } from './NodeEndpoint';
 import { toWebRequest, writeWebResponse } from './webBridge';
 
 import type { HttpServerConfig } from '#interfaces/Config';
@@ -36,10 +36,10 @@ const DEFAULT_PORT = 3000;
 const SERVER_SHUTDOWN_TIMEOUT_MS = 5000;
 
 /**
- * The HTTP-interactions bot host, a long-running node server around the engine.
+ * The HTTP-interactions bot on node. `start()` loads handlers from `config.bot.interactions.path`
+ * and binds a server on `port`. With `port: false`, your own server passes requests to `fetch()`.
  *
- * Discovers handlers from `config.bot.interactions.path`, verifies and dispatches interactions on
- * `start()`, and runs coordinated shutdown with an in-flight drain.
+ * Shutdown waits for interactions still running before the process exits.
  */
 // tests/node/seedcord-core.types-test.ts checks this class against Core in place of an implements clause
 export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
@@ -61,7 +61,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     public readonly bus: Bus;
 
     readonly #service: InteractionsService;
-    readonly #endpoint: InteractionsEndpoint;
+    readonly #endpoint: NodeEndpoint;
     readonly #commandRegistry?: CommandRegistry;
     readonly #emojiInjector = new EmojiInjector(this);
     readonly #hmrManager: HmrManager;
@@ -84,7 +84,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         this.rest = this.#service.rest;
         this.rateLimiter = this.#service.rateLimiter;
         this.bus = this.#service.bus;
-        this.#endpoint = new InteractionsEndpoint(this.#service);
+        this.#endpoint = new NodeEndpoint(this.#service);
 
         this.#hmrManager = new HmrManager();
         this.#hmrManager.init();
@@ -116,8 +116,11 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
     /**
      * Answers one request to the interactions endpoint. Mount it in your own server when the
-     * config sets `port: false`. Throws until `start()` is called. Answers 503 once shutdown
-     * begins.
+     * config sets `port: false`.
+     *
+     * Rejects with `CoreFetchBeforeStart` until `start()` is called. A request that arrives while
+     * `start()` runs waits for all of startup, the command deploy included. Answers 503 once
+     * shutdown begins.
      *
      * @example
      * ```ts
@@ -175,13 +178,12 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
             return Promise.resolve();
         });
 
-        // a missing DISCORD_PUBLIC_KEY fails start() here, before the first request
         this.startup.addTask(StartupPhase.Configuration, 'interactions-engine', () => {
-            void this.#service.engine;
+            this.#service.prepareEngine();
             return Promise.resolve();
         });
 
-        // Login runs after Configuration sets the token
+        // emoji injection reads the token that Configuration sets
         this.startup.addTask(StartupPhase.Login, 'emoji-injection', () => this.#emojiInjector.init());
 
         const commandRegistry = this.#commandRegistry;

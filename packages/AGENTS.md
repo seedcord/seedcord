@@ -31,7 +31,7 @@ Scaffold with `turbo gen package`. Then follow the wiring checklist in `turbo/ge
 - **Derive, never restate.** A constructor shape is `TypedConstructor<typeof X>` (see `packages/gateway/src/handlers/constructors.ts`). A member union comes from `keyof`, `TypedExtract`, an indexed access, or a template-literal map over the owning enum. A narrowed copy uses `Pick` or `TypedOmit`.
 - **Check `@seedcord/types` first** for a project alias. Then `type-fest` for a structural transform. A cast is rarely the answer.
 - `?.` and `??` belong on genuinely optional branches. Reaching for them to quiet an error hides a broken assumption.
-- **`#` hides plumbing and state inside a class users can reach**, by importing it through the `exports` map or through a public field typed as it. Every other class uses `private`, even when its file exports it.
+- **`#` hides plumbing and state inside a class users can reach.** They reach it through the `exports` map, or through a public field typed as it. Every other class uses `private`, even when its file exports it.
 
 The shared `tsconfig` turns on `exactOptionalPropertyTypes`. An optional property declared `foo?: string` rejects an explicit `undefined`. Write `foo?: string | undefined` when a caller passes one through.
 

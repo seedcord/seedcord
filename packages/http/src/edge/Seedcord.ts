@@ -109,7 +109,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         this.#service.authenticate();
         await this.#service.subscribers.init();
         await this.#service.interactions?.init();
-        return this.#service.engine;
+        return this.#service.prepareEngine();
     }
 
     async #runStartup(): Promise<void> {

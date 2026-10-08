@@ -8,7 +8,7 @@ import type { Logger } from '@seedcord/logger';
 
 const SERVICE_UNAVAILABLE = 503;
 
-export class InteractionsEndpoint implements EngineContext {
+export class NodeEndpoint implements EngineContext {
     private readonly inFlight = new Set<Promise<unknown>>();
     private starting?: Promise<unknown>;
     private closed = false;
@@ -25,7 +25,7 @@ export class InteractionsEndpoint implements EngineContext {
         return await this.answer(request);
     }
 
-    // the built-in server binds in the Ready phase, before start() resolves
+    // the built-in server calls this directly because it binds in Ready, before start() resolves
     public answer(request: Request): Promise<Response> {
         if (this.closed) return Promise.resolve(new Response(null, { status: SERVICE_UNAVAILABLE }));
         return this.service.engine(request, this);
