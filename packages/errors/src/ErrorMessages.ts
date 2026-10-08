@@ -64,7 +64,7 @@ const messages = {
     [SeedcordErrorCode.CoreApplicationUnavailable]: () =>
         "The bot's application id resolves during startup. You read it before that. Read it inside a handler, inside a plugin's ready(), or after start() resolves. An edge bot resolves it on its first request.",
     [SeedcordErrorCode.CoreFetchBeforeStart]: () =>
-        `${paint.bold('fetch()')} ran before ${paint.bold('start()')}. Call ${paint.bold('await seedcord.start()')} before your server passes requests to ${paint.bold('fetch()')}. With ${paint.bold('port: false')}, start() loads your handlers and leaves the port to your server.`,
+        `${paint.bold('fetch()')} ran before ${paint.bold('start()')}. Call ${paint.bold('await seedcord.start()')} before your server passes requests to ${paint.bold('fetch()')}.`,
     [SeedcordErrorCode.CoreAccessorUnresolved]: (accessor: string, key: string) =>
         `${accessor}.${key} has no value yet. ${accessor} fills during startup, and a read at the top of a file runs before that.`,
     [SeedcordErrorCode.CoreLifecycleUnavailable]: () =>

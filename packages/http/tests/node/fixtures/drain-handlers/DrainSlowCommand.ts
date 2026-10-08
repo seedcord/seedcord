@@ -10,7 +10,7 @@ declare module '@seedcord/core' {
     }
 }
 
-// well past the 202, well inside the 5s drain window
+// past the 202 and inside DRAIN_WINDOW_MS
 const DRAIN_SLOW_MS = 100;
 
 export const drainSlow = { finished: false };
