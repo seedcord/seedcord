@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import { capturingCtx, emptyManifest, manifestFor, readyEngine, signedRequest, slashPayload } from './harness';
+import { capturingCtx, noClasses, readyEngine, routedHandler, signedRequest, slashPayload } from './harness';
 
 const rest = vi.hoisted(() => {
     interface FakeRestInstance {
@@ -37,14 +37,14 @@ beforeEach(() => {
     rest.instances.length = 0;
 });
 
-describe('createSeedcord dispatch', () => {
+describe('engine dispatch', () => {
     it('routes a signed slash request to its handler, whose reply hits the interaction callback', async () => {
         class Ban extends SlashHandler<never> {
             async execute(): Promise<void> {
                 await this.reply('done');
             }
         }
-        const { signer, handle } = await readyEngine(manifestFor(InteractionKind.Slash, 'ban', Ban));
+        const { signer, handle } = await readyEngine(routedHandler(InteractionKind.Slash, 'ban', Ban));
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('ban')), ctx);
@@ -69,7 +69,7 @@ describe('createSeedcord dispatch', () => {
                 executeFinished = true;
             }
         }
-        const { signer, handle } = await readyEngine(manifestFor(InteractionKind.Slash, 'slow', Slow));
+        const { signer, handle } = await readyEngine(routedHandler(InteractionKind.Slash, 'slow', Slow));
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('slow')), ctx);
@@ -90,7 +90,7 @@ describe('createSeedcord dispatch', () => {
                 await this.reply('pong');
             }
         }
-        const { signer, handle } = await readyEngine(manifestFor(InteractionKind.Slash, 'ping', Ping));
+        const { signer, handle } = await readyEngine(routedHandler(InteractionKind.Slash, 'ping', Ping));
 
         const response = await handle(await signedRequest(signer, slashPayload('ping')));
 
@@ -108,7 +108,7 @@ describe('createSeedcord dispatch', () => {
                 await this.reply('ok');
             }
         }
-        const { signer, handle } = await readyEngine(manifestFor(InteractionKind.Slash, 'track', Track));
+        const { signer, handle } = await readyEngine(routedHandler(InteractionKind.Slash, 'track', Track));
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('track')), ctx);
@@ -124,7 +124,7 @@ describe('createSeedcord dispatch', () => {
             }
         }
         const approveId = new CustomId('approve').snowflake('userId');
-        const { signer, handle } = await readyEngine(manifestFor(InteractionKind.Button, 'approve', Approve));
+        const { signer, handle } = await readyEngine(routedHandler(InteractionKind.Button, 'approve', Approve));
         const ctx = capturingCtx();
 
         const payload = {
@@ -145,7 +145,7 @@ describe('createSeedcord dispatch', () => {
     });
 
     it('dispatches an unmatched slash to the unhandled default, whose reply posts the card', async () => {
-        const { signer, handle } = await readyEngine(emptyManifest());
+        const { signer, handle } = await readyEngine(noClasses());
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('ghost')), ctx);
@@ -162,7 +162,7 @@ describe('createSeedcord dispatch', () => {
     });
 
     it('answers an unmatched autocomplete through the unhandled default with empty choices', async () => {
-        const { signer, handle } = await readyEngine(emptyManifest());
+        const { signer, handle } = await readyEngine(noClasses());
         const payload = {
             type: 4,
             id: 'int-1',

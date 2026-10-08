@@ -1,25 +1,34 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
-import { Plugin } from '#src/plugin/Plugin';
+import { FixedScope, Plugin } from '#src/plugin/Plugin';
 import { TestPluginHost } from '#tests/utils/TestPluginHost';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { RuntimeBrand, TransportBrand } from '#src/plugin/brands';
-import type { Runtime } from '#src/plugin/options';
 
 class GatewayScoped extends Plugin<{ transport: 'gateway' }> {
+    constructor(host: CoreBase) {
+        super(host, { transport: 'gateway' });
+    }
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
 class EdgeScoped extends Plugin<{ runtime: 'edge' }> {
+    constructor(host: CoreBase) {
+        super(host, { runtime: 'edge' });
+    }
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
 class ServerScoped extends Plugin<{ runtime: 'server' }> {
+    constructor(host: CoreBase) {
+        super(host, { runtime: 'server' });
+    }
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -32,12 +41,35 @@ class Unscoped extends Plugin {
 }
 
 class HttpScoped extends Plugin<{ transport: 'http'; runtime: 'server' }> {
+    constructor(host: CoreBase) {
+        super(host, { transport: 'http', runtime: 'server' });
+    }
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
 class FullyScoped extends Plugin<{ transport: 'gateway'; runtime: 'server' }> {
+    constructor(host: CoreBase) {
+        super(host, { transport: 'gateway', runtime: 'server' });
+    }
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+}
+
+const GATEWAY_SCOPE = { transport: 'gateway', runtime: 'server' } as const;
+
+// the shape the gateway Plugin base takes
+abstract class GatewayBase extends Plugin<
+    { transport: 'gateway'; runtime: 'server' },
+    CoreBase,
+    keyof typeof GATEWAY_SCOPE
+> {
+    protected static override readonly [FixedScope] = GATEWAY_SCOPE;
+}
+
+class FromGatewayBase extends GatewayBase {
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -49,7 +81,7 @@ interface TransportCore extends CoreBase {
 
 class NarrowedCtor extends Plugin<{ transport: 'gateway' }> {
     constructor(host: TransportCore) {
-        super(host);
+        super(host, { transport: 'gateway' });
     }
     public init(): Promise<void> {
         return Promise.resolve();
@@ -61,7 +93,7 @@ class WidenedCtor extends Plugin<{ transport: 'gateway' }> {
         host: CoreBase,
         public readonly options: { readonly dir: string }
     ) {
-        super(host);
+        super(host, { transport: 'gateway' });
     }
     public init(): Promise<void> {
         return Promise.resolve();
@@ -71,6 +103,10 @@ class WidenedCtor extends Plugin<{ transport: 'gateway' }> {
 expectTypeOf<FullyScoped[typeof TransportBrand]>().toEqualTypeOf<'gateway' | undefined>();
 expectTypeOf<FullyScoped[typeof RuntimeBrand]>().toEqualTypeOf<'server' | undefined>();
 expectTypeOf<GatewayScoped[typeof RuntimeBrand]>().toEqualTypeOf<'any' | undefined>();
+
+function expectScopeMismatch(attach: () => unknown): void {
+    expect(attach).toThrow(expect.objectContaining({ code: SeedcordErrorCode.CorePluginScopeMismatch }));
+}
 
 describe('attaching a plugin that declares options', () => {
     it('accepts each option axis on its own', () => {
@@ -95,29 +131,47 @@ describe('attaching a plugin that declares options', () => {
         const host = new TestPluginHost();
 
         // @ts-expect-error HttpScoped declares transport 'http', this host is 'gateway'
-        host.attach('wrong', HttpScoped);
+        expectScopeMismatch(() => host.attach('wrong', HttpScoped));
     });
 
     it('rejects a plugin scoped to the other runtime', () => {
         const host = new TestPluginHost();
 
         // @ts-expect-error EdgeScoped declares runtime 'edge', this host is 'server'
-        host.attach('wrong', EdgeScoped);
+        expectScopeMismatch(() => host.attach('wrong', EdgeScoped));
     });
 
-    it('rejects every plugin on an edge host', () => {
-        const host = new TestPluginHost<'http', 'edge'>();
+    it('accepts an unscoped or edge plugin on an edge host', () => {
+        const host = new TestPluginHost('http', 'edge');
 
-        // @ts-expect-error edge plugins arrive post-v1, an unscoped plugin is rejected too
-        host.attach('any', Unscoped);
+        const attached = host.attach('any', Unscoped).attach('edge', EdgeScoped);
+
+        expect(attached.any).toBeInstanceOf(Unscoped);
+        expect(attached.edge).toBeInstanceOf(EdgeScoped);
     });
 
-    it('rejects every plugin when the host runtime is not narrowed to one value', () => {
-        // an http host lands here when its config type is the whole union, leaving 'edge' in BotRt
-        const host = new TestPluginHost<'http', Runtime>();
+    it('rejects a server plugin on an edge host', () => {
+        const host = new TestPluginHost('http', 'edge');
 
-        // @ts-expect-error a host that might be edge takes no plugins
-        host.attach('any', Unscoped);
+        // @ts-expect-error ServerScoped declares runtime 'server', this host is 'edge'
+        expectScopeMismatch(() => host.attach('server', ServerScoped));
+    });
+
+    it('leaves the key free when the scope check throws', () => {
+        const host = new TestPluginHost('http', 'edge');
+
+        // @ts-expect-error ServerScoped declares runtime 'server', this host is 'edge'
+        expectScopeMismatch(() => host.attach('db', ServerScoped));
+
+        expect(host.attach('db', EdgeScoped).db).toBeInstanceOf(EdgeScoped);
+    });
+
+    it('checks the scope a transport base fixes on its class', () => {
+        expect(new TestPluginHost().attach('fits', FromGatewayBase).fits).toBeInstanceOf(FromGatewayBase);
+
+        const http = new TestPluginHost('http', 'server');
+        // @ts-expect-error the base fixes transport 'gateway'
+        expectScopeMismatch(() => http.attach('wrong', FromGatewayBase));
     });
 
     it('rejects a constructor narrowing its core parameter past CoreBase', () => {

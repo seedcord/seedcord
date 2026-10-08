@@ -1,7 +1,6 @@
 import { Bus } from '@seedcord/core';
 
 import type { HttpConfig } from '#interfaces/Config';
-import type { Manifest } from '#src/manifest/Manifest';
 import type { CoreBase } from '@seedcord/core';
 
 export function stubBus(): Bus {
@@ -19,11 +18,3 @@ export const nullPathConfig: HttpConfig = {
     bot: { interactions: { path: null }, commands: { path: null } },
     subscribers: { path: null }
 };
-
-export function emptyManifest(): Manifest {
-    return { handlers: [], middleware: [], subscribers: [] };
-}
-
-export function manifestWith(parts: Partial<Manifest>): Manifest {
-    return { ...emptyManifest(), ...parts };
-}

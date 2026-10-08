@@ -3,17 +3,17 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
 
 import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
+import { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
 import { attachmentsOf, PluginHost, sealAttachments } from '#src/plugin/PluginHost';
 
-import { PluginLifecycle } from './PluginLifecycle';
 import { registerProcessErrors } from './processErrors';
 
 import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import type { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
-import type { Runtime, Transport } from '#src/plugin/options';
+import type { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
+import type { Transport } from '#src/plugin/options';
 
 /** Base class for a transport `Seedcord` class that runs as a long-lived node or bun process. */
-export abstract class ServerHost<BotT extends Transport, BotRt extends Runtime> extends PluginHost<BotT, BotRt> {
+export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT, 'server'> {
     /** @internal */
     readonly [HostShutdown]: CoordinatedShutdown;
     /** @internal */
@@ -34,10 +34,10 @@ export abstract class ServerHost<BotT extends Transport, BotRt extends Runtime> 
     static #liveShutdown?: CoordinatedShutdown | undefined;
     static #liveProcessErrors?: (() => void) | undefined;
 
-    constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
+    constructor(transport: BotT, shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
         // a `sideEffects: false` build would drop the same call in the node entry
         assertDeclaredRuntime();
-        super();
+        super(transport, 'server');
 
         if (ServerHost.#isInstantiated) throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
 
@@ -66,6 +66,7 @@ export abstract class ServerHost<BotT extends Transport, BotRt extends Runtime> 
         // a rerun after a failed startup would re-init the rolled-back plugins
         if (this.#startFailed) throw new SeedcordError(SeedcordErrorCode.LifecycleRestartAfterFailure);
 
+        sealAttachments(this);
         this.#lifecycle.register(attachmentsOf(this));
 
         // codegen and the build construct the bot without starting it
@@ -87,7 +88,6 @@ export abstract class ServerHost<BotT extends Transport, BotRt extends Runtime> 
             startupSettled.resolve();
         }
 
-        sealAttachments(this);
         return this;
     }
 
@@ -106,6 +106,6 @@ export abstract class ServerHost<BotT extends Transport, BotRt extends Runtime> 
 }
 
 // the public `shutdown` field carries addTask alone
-export function shutdownOf(host: Pick<ServerHost<Transport, Runtime>, typeof HostShutdown>): CoordinatedShutdown {
+export function shutdownOf(host: Pick<ServerHost<Transport>, typeof HostShutdown>): CoordinatedShutdown {
     return host[HostShutdown];
 }

@@ -4,8 +4,8 @@ import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
 import { ServerHost } from '#node/ServerHost';
+import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { Plugin } from '#src/plugin/Plugin';
 import { Bus } from '#subscribers/Bus';
 
@@ -38,7 +38,7 @@ class SlowClaim extends Plugin {
     }
 }
 
-class TestHost extends ServerHost<'gateway', 'server'> {
+class TestHost extends ServerHost<'gateway'> {
     public readonly config = {} as Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
@@ -46,7 +46,7 @@ class TestHost extends ServerHost<'gateway', 'server'> {
     public readonly bus: Bus;
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
-        super(shutdown, startup);
+        super('gateway', shutdown, startup);
         this.bus = new Bus(this);
     }
 

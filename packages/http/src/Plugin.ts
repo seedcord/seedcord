@@ -1,3 +1,4 @@
+import { FixedScope } from '@seedcord/core/internal';
 import { Plugin as CorePlugin } from '@seedcord/core/plugin';
 
 import type { Core } from '#interfaces/Core';
@@ -7,6 +8,8 @@ import type { TypedOmit } from '@seedcord/types';
 /** The options an HTTP plugin declares, narrowed to the transports this base serves. */
 export type HttpPluginOptions = TypedOmit<PluginOptions, 'transport'> & { transport?: 'http' };
 
+const HTTP_SCOPE = { transport: 'http' } as const;
+
 /**
  * Base class for an HTTP plugin, binding `this.core` to the HTTP {@link Core}.
  *
@@ -15,6 +18,13 @@ export type HttpPluginOptions = TypedOmit<PluginOptions, 'transport'> & { transp
  *
  * @typeParam Opts - The transport and runtime the plugin declares.
  */
-export abstract class Plugin<Opts extends HttpPluginOptions = { transport: 'http' }> extends CorePlugin<Opts, Core> {}
+export abstract class Plugin<Opts extends HttpPluginOptions = { transport: 'http' }> extends CorePlugin<
+    Opts,
+    Core,
+    keyof typeof HTTP_SCOPE
+> {
+    /** @internal */
+    protected static override readonly [FixedScope] = HTTP_SCOPE;
+}
 
 export type { PluginLifecycleSpec, PluginOptions } from '@seedcord/core/plugin';

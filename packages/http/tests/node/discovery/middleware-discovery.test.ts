@@ -3,7 +3,7 @@ import path from 'node:path';
 import { InteractionKind } from '@seedcord/core';
 import { describe, expect, it } from 'vitest';
 
-import { InteractionDispatcher } from '#src/node/InteractionDispatcher';
+import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 
 const HANDLERS_DIR = path.resolve(__dirname, './fixtures/handlers');
 const MIDDLEWARES_DIR = path.resolve(__dirname, './fixtures/middlewares');

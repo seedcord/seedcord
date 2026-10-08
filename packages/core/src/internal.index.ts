@@ -1,4 +1,5 @@
 export { busLoggerOf, registrationFor } from '#subscribers/Bus';
+export { SubscriberLoader } from '#subscribers/SubscriberLoader';
 export {
     AutocompleteRouteBrand,
     ComponentDefsBrand,
@@ -14,8 +15,11 @@ export { interactionMiddleware, MiddlewareRegistry } from '#src/dispatch/Middlew
 export type { MiddlewareRegistration, MiddlewareRegistrationOf } from '#src/dispatch/MiddlewareRegistry';
 export { bindBotColor } from '#components/botColorHolder';
 
+export { FixedScope } from '#src/plugin/Plugin';
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
-export { attachmentsOf } from '#src/plugin/PluginHost';
+export { attachmentsOf, sealAttachments } from '#src/plugin/PluginHost';
+export { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
+export { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
 
 export type { CommandMeta } from '#decorators/Command';
 export {

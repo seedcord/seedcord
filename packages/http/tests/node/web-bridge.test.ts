@@ -4,10 +4,10 @@ import { createServer, type Server } from 'node:http';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { createSeedcord } from '#src/createSeedcord';
+import { Seedcord } from '#src/edge/Seedcord';
 import { toWebRequest, writeWebResponse } from '#src/node/webBridge';
 import { createSigner, type Signer } from '#tests/helpers/ed25519';
-import { emptyManifest, nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
+import { VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { AddressInfo } from 'node:net';
 
@@ -37,7 +37,14 @@ async function startServer(handle: Handle): Promise<string> {
 async function readySeedcord(): Promise<{ signer: Signer; url: string }> {
     const signer = await createSigner();
     Envapter.useSource(new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN }));
-    return { signer, url: await startServer(createSeedcord(nullPathConfig, emptyManifest())) };
+    // @ts-expect-error singleton reset between bots
+    Seedcord.reset();
+    // any engine works behind the bridge. the edge one needs no server of its own
+    const seedcord = new Seedcord({
+        bot: { interactions: { path: null }, commands: { path: null } },
+        subscribers: { path: null }
+    });
+    return { signer, url: await startServer((request) => seedcord.fetch(request)) };
 }
 
 async function post(url: string, body: Uint8Array | string, headers: Record<string, string> = {}): Promise<Response> {

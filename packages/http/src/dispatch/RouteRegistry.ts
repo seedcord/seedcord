@@ -15,7 +15,6 @@ interface Owner {
     readonly from: string;
 }
 
-// the node walk and the edge manifest both register through this
 export class RouteRegistry {
     public readonly maps: RouteMaps = emptyRouteMaps();
 

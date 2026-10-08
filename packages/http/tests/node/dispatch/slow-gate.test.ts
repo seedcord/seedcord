@@ -7,13 +7,9 @@ import { Envapter, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
-import { createSigner } from '#tests/helpers/ed25519';
-import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
-import { capturingCtx, manifestFor, signedRequest, slashPayload } from './harness';
+import { capturingCtx, readyEngine, routedHandler, signedRequest, slashPayload, type BotClasses } from './harness';
 
-import type { EngineContext } from '#src/createSeedcord';
-import type { Manifest } from '#src/manifest/Manifest';
 import type { Gate, GateContextBase } from '@seedcord/core';
 
 const rest = vi.hoisted(() => {
@@ -42,29 +38,18 @@ vi.mock('@discordjs/rest', async (importOriginal) => ({
     REST: rest.FakeRest
 }));
 
-type Engine = (request: Request, ctx?: EngineContext) => Promise<Response>;
-
-function guarded(gates: Gate<GateContextBase>[]): Manifest {
+function guarded(gates: Gate<GateContextBase>[]): BotClasses {
     class Guarded extends SlashHandler<never> {
         async execute(): Promise<void> {
             await this.reply('ran');
         }
     }
     Reflect.defineMetadata(GatedMetadataKey, gates, Guarded);
-    return manifestFor(InteractionKind.Slash, 'guarded', Guarded);
+    return routedHandler(InteractionKind.Slash, 'guarded', Guarded);
 }
 
-// createSeedcord reads the public key and token off the environment at build time. bind them per engine.
-async function engineFor(
-    manifest: Manifest,
-    production: boolean
-): Promise<{ handle: Engine; signer: Awaited<ReturnType<typeof createSigner>> }> {
-    const signer = await createSigner();
-    const source: Record<string, string> = { DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN };
-    if (production) source.ENVIRONMENT = 'production';
-    Envapter.useSource(new PortableSource(source));
-    const { createSeedcord } = await import('#src/createSeedcord');
-    return { handle: createSeedcord(nullPathConfig, manifest), signer };
+function engineFor(classes: BotClasses, production: boolean): ReturnType<typeof readyEngine> {
+    return readyEngine(classes, production ? { env: { ENVIRONMENT: 'production' } } : {});
 }
 
 // this clock moves only when a gate body advances it

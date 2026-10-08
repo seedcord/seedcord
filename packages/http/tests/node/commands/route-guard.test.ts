@@ -4,7 +4,7 @@ import { InteractionKind } from '@seedcord/core';
 import { describe, expect, it, vi } from 'vitest';
 
 import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
-import { InteractionDispatcher } from '#src/node/InteractionDispatcher';
+import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 
 import type { ResolvedRoute } from '#src/dispatch/resolve';
 

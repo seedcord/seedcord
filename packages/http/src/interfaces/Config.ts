@@ -16,7 +16,6 @@ interface HttpBotConfig<Options> extends BotConfig {
  */
 export interface HttpServerConfig extends Config {
     bot: HttpBotConfig<Partial<RESTOptions>>;
-    runtime?: 'server';
 
     /**
      * Port the interactions server uses.
@@ -27,18 +26,16 @@ export interface HttpServerConfig extends Config {
 }
 
 /**
- * Config for a bundled isolate deployment. `seedcord build` generates a worker entry that calls
- * `createSeedcord`.
+ * Config for a bot on Cloudflare Workers. Pass to `new Seedcord(config)`.
  */
 export interface HttpEdgeConfig extends Config {
     bot: HttpBotConfig<Partial<TypedOmit<RESTOptions, EdgeSweeperKey>>>;
-    runtime: 'edge';
     port?: never;
     // an isolate does not run a coordinated shutdown
     lifecycle?: never;
 }
 
 /**
- * The http transport's configuration, discriminated on `runtime`.
+ * The http transport's configuration on either runtime.
  */
 export type HttpConfig = HttpServerConfig | HttpEdgeConfig;

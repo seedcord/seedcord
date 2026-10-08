@@ -41,4 +41,4 @@ pnpm add @seedcord/http
 
 The root entry runs on Node through the `Seedcord` class.
 
-`@seedcord/http/edge` targets Web-standard runtimes through `createSeedcord`. The Node entry re-exports all of it. The edge build for Cloudflare Workers is a work in progress and cannot be used yet.
+Under the `workerd` export condition, the same import gives Cloudflare Workers an edge build of `Seedcord`. That build is a work in progress and cannot be used yet.

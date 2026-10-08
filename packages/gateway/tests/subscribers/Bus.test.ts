@@ -1,5 +1,4 @@
-import { HmrManager } from '@seedcord/core/internal';
-import { SubscriberLoader } from '@seedcord/core/node/internal';
+import { HmrManager, SubscriberLoader } from '@seedcord/core/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';

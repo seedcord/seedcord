@@ -55,37 +55,6 @@ Once `tsc` finishes, seedcord checks that the compiled entry exists at the path 
 
 Two things usually cause this. Your tsconfig may exclude the entry file, or its `rootDir` may place the output somewhere other than the path under `outDir` that matches `root`.
 
-## Where your bot runs
-
-You set `runtime` on your bot's own config in `src/bot.ts`, beside `bot` and `subscribers`. It says which kind of deployment your bot is built for. Leaving it out means `'server'`.
-
-```ts twoslash title="src/bot.ts"
-import { resolve } from 'node:path';
-
-import { Seedcord } from '@seedcord/http';
-
-export const seedcord = new Seedcord({
-    bot: {
-        interactions: {
-            path: resolve(import.meta.dirname, './handlers')
-        },
-        commands: { path: null }
-    },
-    subscribers: { path: null },
-    runtime: 'edge'
-});
-```
-
-An edge bot has to write `runtime: 'edge'` itself.
-
-<Callout type="transport">
-
-A gateway bot only accepts `'server'`, since its websocket needs a process that stays up. An http bot takes `'server'` for a long-running node process, or `'edge'` for a bundled isolate like a Cloudflare Worker.
-
-</Callout>
-
-`seedcord build` doesn't read `runtime` yet, so it compiles both kinds of bot the same way.
-
 ## The health server
 
 Most hosting platforms call an http endpoint to check that your process is still alive. A gateway bot opens a small server that answers `/health` on port 6967 once it reaches the Ready phase, and it does this under `seedcord dev` too.

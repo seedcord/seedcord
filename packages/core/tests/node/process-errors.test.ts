@@ -3,15 +3,15 @@ import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
 import { ServerHost } from '#node/ServerHost';
+import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { StartupPhase } from '#src/lifecycle/phases';
 import { Bus } from '#subscribers/Bus';
 
 import type { SubscriptionData } from '#subscribers/types/Subscriptions';
 import type { Config, IRateLimiter } from '@seedcord/types';
 
-class TestHost extends ServerHost<'gateway', 'server'> {
+class TestHost extends ServerHost<'gateway'> {
     public readonly config: Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
@@ -19,7 +19,7 @@ class TestHost extends ServerHost<'gateway', 'server'> {
     public readonly bus: Bus;
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup, config: Config) {
-        super(shutdown, startup);
+        super('gateway', shutdown, startup);
         this.config = config;
         this.bus = new Bus(this);
     }

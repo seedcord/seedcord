@@ -10,8 +10,6 @@ export enum SeedcordErrorCode {
     ConfigWebhookUrlInvalid = 1002,
     /** A configured webhook does not exist on Discord (deleted, or a wrong id or token). */
     ConfigWebhookNotFound = 1003,
-    /** The generated route manifest was imported before `seedcord build` generated it. */
-    ConfigManifestNotGenerated = 1004,
     /** A required environment variable is not present. */
     ConfigMissingEnv = 1005,
     /** An environment variable is present and fails validation. */
@@ -44,7 +42,7 @@ export enum SeedcordErrorCode {
 
     /** Multiple Seedcord instances were created simultaneously. */
     CoreSingletonViolation = 1201,
-    /** Plugins cannot be mutated after the core has finished initializing. */
+    /** A plugin was attached once the bot had started. */
     CorePluginAfterInit = 1202,
     /** A plugin tried to register with a key that already exists. */
     CorePluginKeyExists = 1203,
@@ -62,7 +60,7 @@ export enum SeedcordErrorCode {
     CoreApplicationUnavailable = 1209,
     /** A generated accessor was read before startup resolved its values. */
     CoreAccessorUnresolved = 1210,
-    /** A startup or shutdown task was added to a core built by `createSeedcord`. */
+    /** A shutdown task was added on an edge bot. */
     CoreLifecycleUnavailable = 1211,
     /** `emit` was called on the bus. It reaches listeners and skips every subscriber. */
     CoreBusEmitUnavailable = 1212,
@@ -82,6 +80,8 @@ export enum SeedcordErrorCode {
     CoreDirectoryOutsideRoot = 1219,
     /** A file in a scanned directory could not be read as text. */
     CoreFileUnreadable = 1220,
+    /** A plugin's declared transport or runtime differs from the bot it was attached to. */
+    CorePluginScopeMismatch = 1221,
 
     /** A command decorator attempted to re-register an existing command scope. */
     DecoratorCommandAlreadyRegistered = 1301,
@@ -100,10 +100,6 @@ export enum SeedcordErrorCode {
     InteractionDuplicateRoute = 1401,
     /** Two different middleware classes share a class name. */
     DuplicateMiddleware = 1402,
-    /** A manifest array lists a class that does not extend the base for that array. */
-    ManifestEntryWrongClass = 1403,
-    /** A manifest array lists a class whose decorator is missing. Nothing registered. */
-    ManifestEntryNoRoutes = 1404,
 
     /** A reply method was called in an ack state where it is illegal. */
     ReplyIllegalAckState = 1501,

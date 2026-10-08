@@ -3,12 +3,12 @@ import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS } from '@seedcord/logger';
 import { HostPluginKeys } from '@seedcord/types/internal';
 
-import { extendsThisCorePlugin, pluginLoggerOf, resolvedLifecycleSpecOf } from './Plugin';
+import { declaredScopeOf, extendsThisCorePlugin, pluginLoggerOf, resolvedLifecycleSpecOf } from './Plugin';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { Bus } from '#subscribers/Bus';
 import type { ResolvedPluginLifecycleSpec } from './lifecycle';
-import type { Runtime, Transport } from './options';
+import type { DeclaredScope, Runtime, Transport } from './options';
 import type { AttachableCtor, Attached, AttachKeyAssert, PluginArgs, PluginCtor, PluginLike } from './Plugin';
 import type { REST } from '@discordjs/rest';
 import type { Config, IRateLimiter } from '@seedcord/types';
@@ -25,7 +25,6 @@ const attachmentsSlot = Symbol('seedcord:host:attachments');
 const sealSlot = Symbol('seedcord:host:seal');
 
 /** Base class for a plugin host. */
-// BotRt has no default because RuntimeAssert rejects every plugin once 'edge' is in the union
 export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
     public abstract readonly config: Config;
     public abstract readonly rest: REST;
@@ -36,6 +35,11 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
     #sealed = false;
     readonly #attachments: Attachment[] = [];
     readonly #groups = new Map<string, Record<string, PluginLike>>();
+    readonly #scope: { readonly transport: BotT; readonly runtime: BotRt };
+
+    constructor(transport: BotT, runtime: BotRt) {
+        this.#scope = { transport, runtime };
+    }
 
     /** @internal */
     public get [attachmentsSlot](): readonly Attachment[] {
@@ -59,9 +63,11 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
      * Put one dot in the key to nest the plugin under a group. `'services.users'` reads back as
      * `core.services.users`. Each name holds one plugin or one group.
      *
-     * Startup runs each plugin's `init()` in attach order within its phase.
+     * Startup runs each plugin's `init()` in attach order within its phase. A node bot starts in
+     * `start()`. An edge bot starts on its first request.
      *
-     * Attaching a plugin whose `transport` or `runtime` differs from this host fails to compile.
+     * Attaching a plugin whose `transport` or `runtime` differs from this host fails to compile, and
+     * throws when the types were bypassed.
      * Your constructor takes `CoreBase` as its first parameter (you don't need to pass it though).
      * A narrower one fails to compile here.
      *
@@ -112,6 +118,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
         }
 
         const instance = new Plugin(this, ...args);
+        this.#assertScope(Plugin.name, declaredScopeOf(instance));
         pluginLoggerOf(instance).setChannel(key);
         this.#attachments.push({ key, instance, spec: resolvedLifecycleSpecOf(instance) });
 
@@ -136,6 +143,20 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
             return;
         }
         if (Object.hasOwn(group, leaf)) throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
+    }
+
+    // the types already reject a mismatch. plain JS and casts reach this.
+    #assertScope(pluginName: string, declared: DeclaredScope): void {
+        for (const axis of ['transport', 'runtime'] as const) {
+            const host = this.#scope[axis];
+            if (declared[axis] === 'any' || declared[axis] === host) continue;
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePluginScopeMismatch, [
+                pluginName,
+                axis,
+                declared[axis],
+                host
+            ]);
+        }
     }
 
     #groupFor(head: string): Record<string, PluginLike> {

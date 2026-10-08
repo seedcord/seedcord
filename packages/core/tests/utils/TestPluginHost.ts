@@ -17,4 +17,9 @@ export class TestPluginHost<BotT extends Transport = 'gateway', BotRt extends Ru
     public readonly applicationId = 'app-1';
     public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
     public readonly bus: Bus = new Bus(this);
+
+    constructor(transport?: BotT, runtime?: BotRt) {
+        // justified: the fallbacks are the class's default type arguments
+        super(transport ?? ('gateway' as BotT), runtime ?? ('server' as BotRt));
+    }
 }

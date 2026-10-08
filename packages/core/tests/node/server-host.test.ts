@@ -6,8 +6,8 @@ import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, expectTypeOf, afterEach, vi } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
 import { ServerHost } from '#node/ServerHost';
+import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 import { Plugin } from '#src/plugin/Plugin';
 import { Bus } from '#subscribers/Bus';
@@ -45,7 +45,7 @@ class TestPlugin extends Plugin {
     public onDispose?: () => void;
 }
 
-class TestHost extends ServerHost<'gateway', 'server'> {
+class TestHost extends ServerHost<'gateway'> {
     public readonly config: Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
@@ -53,7 +53,7 @@ class TestHost extends ServerHost<'gateway', 'server'> {
     public readonly bus: Bus;
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup, config: Config = {} as Config) {
-        super(shutdown, startup);
+        super('gateway', shutdown, startup);
         this.config = config;
         this.bus = new Bus(this);
     }
@@ -86,6 +86,23 @@ describe('ServerHost', () => {
     afterEach(() => {
         TestHost.resetHost();
         vi.restoreAllMocks();
+    });
+
+    it('refuses a plugin attached while startup runs', async () => {
+        const { host } = makeHost();
+        let caught: unknown;
+        host.startup.addTask(StartupPhase.Configuration, 'attach-late', () => {
+            try {
+                host.attach('late', TestPlugin, 'late');
+            } catch (error) {
+                caught = error;
+            }
+            return Promise.resolve();
+        });
+
+        await host.run();
+
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CorePluginAfterInit });
     });
 
     it('attaches without a phase argument and threads ctor args', async () => {

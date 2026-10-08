@@ -5,12 +5,12 @@ import { Logger } from '@seedcord/logger';
 import { StartupPhase } from '#src/lifecycle/phases';
 import { pluginLoggerOf } from '#src/plugin/Plugin';
 
-import { withTimeout } from './Lifecycle/withTimeout';
+import { withTimeout } from './withTimeout';
 
 import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import type { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
 import type { ShutdownPhase } from '#src/lifecycle/phases';
 import type { Attachment } from '#src/plugin/PluginHost';
+import type { CoordinatedStartup } from './CoordinatedStartup';
 
 interface ReadyStep {
     readonly key: string;
@@ -22,6 +22,7 @@ export class PluginLifecycle {
     readonly #logger = new Logger('Plugins', { channel: 'plugins' });
     readonly #completedInits = new Set<Attachment>();
     readonly #disposePhases = new Set<ShutdownPhase>();
+    readonly #timedOutInits = new Set<Promise<void>>();
     readonly #startup: Pick<CoordinatedStartup, 'addTask'>;
     readonly #shutdown: Pick<CoordinatedShutdown, 'addTask'>;
     #attachments: readonly Attachment[] = [];
@@ -57,6 +58,14 @@ export class PluginLifecycle {
         this.#completedInits.clear();
     }
 
+    public afterTimedOutInits(run: () => void): void {
+        if (this.#timedOutInits.size === 0) {
+            run();
+            return;
+        }
+        void Promise.allSettled(this.#timedOutInits).then(run);
+    }
+
     async #runInits(group: readonly Attachment[]): Promise<void> {
         for (const attachment of group) {
             const { key, instance, spec } = attachment;
@@ -82,7 +91,7 @@ export class PluginLifecycle {
     #disposeWhenInitResolves({ key, instance, spec }: Attachment, running: Promise<void>): void {
         const dispose = instance.dispose?.bind(instance);
 
-        void running.then(
+        const settled = running.then(
             async () => {
                 if (!dispose) return;
                 await withTimeout(`Plugin:${key}:dispose`, dispose, spec.dispose.timeout).catch((caught: unknown) =>
@@ -91,6 +100,8 @@ export class PluginLifecycle {
             },
             (caught: unknown) => this.#logger.warn(`${key} init failed after its timeout`, caught)
         );
+        this.#timedOutInits.add(settled);
+        void settled.finally(() => this.#timedOutInits.delete(settled));
     }
 
     #registerReadyTask(readyInits: readonly Attachment[]): void {

@@ -39,9 +39,6 @@ export interface GatewayBotConfig extends BotConfig {
 export interface GatewayConfig extends Config {
     bot: GatewayBotConfig;
 
-    /** The gateway websocket requires a persistent process. */
-    runtime?: 'server';
-
     /**
      * The health-check server. `false` disables it, `true` or omit for the defaults, an object
      * configures it.

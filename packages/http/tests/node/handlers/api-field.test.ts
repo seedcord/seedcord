@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
-import { createCore } from '#src/dispatch/dispatchInteraction';
+import { testCore } from '#tests/helpers/core';
 import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
@@ -42,7 +42,7 @@ class AutocompleteProbe extends AutocompleteHandler<'apiprobe'> {
 const payload = { type: 2, data: { type: 1, name: 'apiprobe' } } as unknown as ValidInteractionTypes;
 
 function core(): Core {
-    return createCore(nullPathConfig, VALID_TOKEN);
+    return testCore(nullPathConfig, VALID_TOKEN);
 }
 
 describe('handler api field', () => {

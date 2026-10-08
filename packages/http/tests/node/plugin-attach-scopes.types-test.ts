@@ -1,8 +1,27 @@
 import { Plugin } from '@seedcord/core/plugin';
 import { expectTypeOf } from 'vitest';
 
-import type { HttpEdgeConfig, HttpServerConfig } from '#interfaces/Config';
+import type { Seedcord as EdgeSeedcord } from '#src/edge/Seedcord';
 import type { Seedcord } from '#src/node/Seedcord';
+import type { CoreBase } from '@seedcord/core';
+
+class EdgeOnly extends Plugin<{ runtime: 'edge' }> {
+    constructor(host: CoreBase) {
+        super(host, { runtime: 'edge' });
+    }
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+}
+
+class ServerOnly extends Plugin<{ runtime: 'server' }> {
+    constructor(host: CoreBase) {
+        super(host, { runtime: 'server' });
+    }
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+}
 
 class Anywhere extends Plugin {
     public init(): Promise<void> {
@@ -11,12 +30,18 @@ class Anywhere extends Plugin {
 }
 
 class HttpOnly extends Plugin<{ transport: 'http' }> {
+    constructor(host: CoreBase) {
+        super(host, { transport: 'http' });
+    }
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
 class GatewayOnly extends Plugin<{ transport: 'gateway' }> {
+    constructor(host: CoreBase) {
+        super(host, { transport: 'gateway' });
+    }
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -30,24 +55,33 @@ class Store<TValue> extends Plugin {
     }
 }
 
-function probeServerAccepts(bot: Seedcord<HttpServerConfig>): void {
+function probeServerAccepts(bot: Seedcord): void {
     bot.attach('anywhere', Anywhere);
     bot.attach('http', HttpOnly);
     expectTypeOf(bot.attach('store', Store)).toHaveProperty('store').toEqualTypeOf<Store<unknown>>();
 }
 
-function probeServerRejects(bot: Seedcord<HttpServerConfig>): void {
+function probeServerRejects(bot: Seedcord): void {
     // @ts-expect-error GatewayOnly declares transport 'gateway'
     bot.attach('gw', GatewayOnly);
+    // @ts-expect-error EdgeOnly declares runtime 'edge'
+    bot.attach('edge', EdgeOnly);
 }
 
-function probeEdgeRejectsEverything(bot: Seedcord<HttpEdgeConfig>): void {
-    // @ts-expect-error edge plugins arrive post-v1
+function probeEdgeAccepts(bot: EdgeSeedcord): void {
     bot.attach('anywhere', Anywhere);
-    // @ts-expect-error edge plugins arrive post-v1
     bot.attach('http', HttpOnly);
+    bot.attach('edge', EdgeOnly);
+}
+
+function probeEdgeRejects(bot: EdgeSeedcord): void {
+    // @ts-expect-error GatewayOnly declares transport 'gateway'
+    bot.attach('gw', GatewayOnly);
+    // @ts-expect-error ServerOnly declares runtime 'server'
+    bot.attach('server', ServerOnly);
 }
 
 void probeServerAccepts;
 void probeServerRejects;
-void probeEdgeRejectsEverything;
+void probeEdgeAccepts;
+void probeEdgeRejects;

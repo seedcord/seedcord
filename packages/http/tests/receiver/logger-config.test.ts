@@ -2,8 +2,8 @@ import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createSeedcord } from '#src/createSeedcord';
-import { emptyManifest, VALID_TOKEN } from '#tests/helpers/fixtures';
+import { Seedcord } from '#src/edge/Seedcord';
+import { VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { HttpEdgeConfig } from '#src/interfaces/Config';
 import type { ILogSink, LogRecord, LoggerConfig } from '@seedcord/types';
@@ -24,11 +24,16 @@ let sink: FakeSink;
 
 function edgeConfig(logger?: LoggerConfig): HttpEdgeConfig {
     return {
-        runtime: 'edge',
         bot: { interactions: { path: null }, commands: { path: null } },
         subscribers: { path: null },
         ...(logger && { logger })
     };
+}
+
+function constructBot(config: HttpEdgeConfig): void {
+    // @ts-expect-error singleton reset between bots
+    Seedcord.reset();
+    void new Seedcord(config);
 }
 
 beforeEach(() => {
@@ -38,7 +43,7 @@ beforeEach(() => {
 
 describe('config.logger on an edge bot', () => {
     it('sends records to a sink the config names', () => {
-        createSeedcord(edgeConfig({ level: 'trace', sinks: [sink] }), emptyManifest());
+        constructBot(edgeConfig({ level: 'trace', sinks: [sink] }));
 
         new Logger('edge').info('hello');
 
@@ -46,7 +51,7 @@ describe('config.logger on an edge bot', () => {
     });
 
     it('drops a record under the level the config sets', () => {
-        createSeedcord(edgeConfig({ level: 'error', sinks: [sink] }), emptyManifest());
+        constructBot(edgeConfig({ level: 'error', sinks: [sink] }));
         const logger = new Logger('edge');
 
         logger.info('quiet');
@@ -58,8 +63,8 @@ describe('config.logger on an edge bot', () => {
     });
 
     it('goes back to the default sink when a later bot omits logger', () => {
-        createSeedcord(edgeConfig({ level: 'trace', sinks: [sink] }), emptyManifest());
-        createSeedcord(edgeConfig(), emptyManifest());
+        constructBot(edgeConfig({ level: 'trace', sinks: [sink] }));
+        constructBot(edgeConfig());
 
         new Logger('edge').info('after');
 

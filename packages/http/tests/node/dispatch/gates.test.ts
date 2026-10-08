@@ -15,10 +15,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import { capturingCtx, manifestFor, readyEngine, signedRequest, slashPayload } from './harness';
+import { capturingCtx, readyEngine, routedHandler, signedRequest, slashPayload, type BotClasses } from './harness';
 
 import type { InteractionGateContext } from '#src/gates/Gate';
-import type { Manifest } from '#src/manifest/Manifest';
 import type { Gate, GateContextBase } from '@seedcord/core';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 
@@ -60,7 +59,7 @@ class TestNotice extends Notice {
     }
 }
 
-function gated(gates: Gate<GateContextBase>[]): { manifest: Manifest; executed: () => boolean } {
+function gated(gates: Gate<GateContextBase>[]): { classes: BotClasses; executed: () => boolean } {
     let didExecute = false;
     class Guarded extends SlashHandler<never> {
         async execute(): Promise<void> {
@@ -70,7 +69,7 @@ function gated(gates: Gate<GateContextBase>[]): { manifest: Manifest; executed: 
     }
     Reflect.defineMetadata(GatedMetadataKey, gates, Guarded);
     return {
-        manifest: manifestFor(InteractionKind.Slash, 'guarded', Guarded),
+        classes: routedHandler(InteractionKind.Slash, 'guarded', Guarded),
         executed: () => didExecute
     };
 }
@@ -84,8 +83,8 @@ describe('handler gates', () => {
         const refuse = defineGate('refuse', () => {
             throw new TestNotice();
         });
-        const { manifest, executed } = gated([refuse]);
-        const { signer, handle } = await readyEngine(manifest);
+        const { classes, executed } = gated([refuse]);
+        const { signer, handle } = await readyEngine(classes);
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('guarded')), ctx);
@@ -111,8 +110,8 @@ describe('handler gates', () => {
         const drop = defineGate('drop', () => {
             throw new Silence('blacklisted');
         });
-        const { manifest, executed } = gated([drop]);
-        const { signer, handle } = await readyEngine(manifest);
+        const { classes, executed } = gated([drop]);
+        const { signer, handle } = await readyEngine(classes);
 
         const response = await handle(await signedRequest(signer, slashPayload('guarded')));
 
@@ -125,8 +124,8 @@ describe('handler gates', () => {
         const open = defineGate('open', () => {
             /* passes */
         });
-        const { manifest, executed } = gated([open]);
-        const { signer, handle } = await readyEngine(manifest);
+        const { classes, executed } = gated([open]);
+        const { signer, handle } = await readyEngine(classes);
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('guarded')), ctx);
@@ -140,8 +139,8 @@ describe('handler gates', () => {
         const capture = defineGate('capture', (gateCtx) => {
             seen = gateCtx;
         });
-        const { manifest } = gated([capture]);
-        const { signer, handle } = await readyEngine(manifest);
+        const { classes } = gated([capture]);
+        const { signer, handle } = await readyEngine(classes);
         const ctx = capturingCtx();
 
         const payload = {
@@ -172,8 +171,8 @@ describe('handler gates', () => {
         const capture = defineGate('capture', (gateCtx) => {
             seen = gateCtx;
         });
-        const { manifest } = gated([capture]);
-        const { signer, handle } = await readyEngine(manifest);
+        const { classes } = gated([capture]);
+        const { signer, handle } = await readyEngine(classes);
         const ctx = capturingCtx();
 
         const payload = { ...slashPayload('guarded'), user: { id: 'u-dm', username: 'dm' } };
@@ -193,8 +192,8 @@ describe('handler gates', () => {
         const capture = defineGate('capture', (gateCtx: InteractionGateContext) => {
             seen = gateCtx;
         });
-        const { manifest } = gated([capture]);
-        const { signer, handle } = await readyEngine(manifest);
+        const { classes } = gated([capture]);
+        const { signer, handle } = await readyEngine(classes);
         const ctx = capturingCtx();
 
         const payload = {
@@ -218,8 +217,8 @@ describe('handler gates', () => {
         const capture = defineGate('capture', (gateCtx: InteractionGateContext) => {
             seen = gateCtx;
         });
-        const { manifest } = gated([capture]);
-        const { signer, handle } = await readyEngine(manifest);
+        const { classes } = gated([capture]);
+        const { signer, handle } = await readyEngine(classes);
         const ctx = capturingCtx();
 
         const payload = { ...slashPayload('guarded'), user: { id: 'u-dm', username: 'dm' } };
@@ -232,8 +231,8 @@ describe('handler gates', () => {
     });
 
     it('renders a core catalog RequirePermissions refusal as an ephemeral type 4', async () => {
-        const { manifest, executed } = gated([RequirePermissions([PermissionFlagsBits.BanMembers])]);
-        const { signer, handle } = await readyEngine(manifest);
+        const { classes, executed } = gated([RequirePermissions([PermissionFlagsBits.BanMembers])]);
+        const { signer, handle } = await readyEngine(classes);
         const ctx = capturingCtx();
 
         const payload = {
@@ -258,8 +257,8 @@ describe('handler gates', () => {
     });
 
     it('runs execute when a core catalog RequirePermissions gate passes', async () => {
-        const { manifest, executed } = gated([RequirePermissions([PermissionFlagsBits.BanMembers])]);
-        const { signer, handle } = await readyEngine(manifest);
+        const { classes, executed } = gated([RequirePermissions([PermissionFlagsBits.BanMembers])]);
+        const { signer, handle } = await readyEngine(classes);
         const ctx = capturingCtx();
 
         const payload = {
@@ -278,8 +277,8 @@ describe('handler gates', () => {
     });
 
     it('renders a core catalog RequireBotPermissions refusal naming the bot as the subject', async () => {
-        const { manifest, executed } = gated([RequireBotPermissions([PermissionFlagsBits.BanMembers])]);
-        const { signer, handle } = await readyEngine(manifest);
+        const { classes, executed } = gated([RequireBotPermissions([PermissionFlagsBits.BanMembers])]);
+        const { signer, handle } = await readyEngine(classes);
         const ctx = capturingCtx();
 
         const payload = {
@@ -304,8 +303,8 @@ describe('handler gates', () => {
     });
 
     it('runs execute when a core catalog RequireBotPermissions gate passes', async () => {
-        const { manifest, executed } = gated([RequireBotPermissions([PermissionFlagsBits.BanMembers])]);
-        const { signer, handle } = await readyEngine(manifest);
+        const { classes, executed } = gated([RequireBotPermissions([PermissionFlagsBits.BanMembers])]);
+        const { signer, handle } = await readyEngine(classes);
         const ctx = capturingCtx();
 
         const payload = {

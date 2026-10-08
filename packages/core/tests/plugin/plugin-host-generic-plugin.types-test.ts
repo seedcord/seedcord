@@ -37,6 +37,10 @@ class Defaulted<TValue extends string = 'x'> extends Plugin {
 class HttpBox<TValue extends string> extends Plugin<{ transport: 'http' }> {
     public value?: TValue;
 
+    constructor(host: CoreBase) {
+        super(host, { transport: 'http' });
+    }
+
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -45,6 +49,10 @@ class HttpBox<TValue extends string> extends Plugin<{ transport: 'http' }> {
 class ServerBox<TValue extends string> extends Plugin<{ runtime: 'server' }> {
     public value?: TValue;
 
+    constructor(host: CoreBase) {
+        super(host, { runtime: 'server' });
+    }
+
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -52,6 +60,10 @@ class ServerBox<TValue extends string> extends Plugin<{ runtime: 'server' }> {
 
 class EdgeBox<TValue extends string> extends Plugin<{ runtime: 'edge' }> {
     public value?: TValue;
+
+    constructor(host: CoreBase) {
+        super(host, { runtime: 'edge' });
+    }
 
     public init(): Promise<void> {
         return Promise.resolve();
@@ -99,8 +111,8 @@ function rejectsMismatches(): void {
     gateway.attach('box', Box, 'big');
     // @ts-expect-error HttpBox declares transport 'http'
     gateway.attach('box', HttpBox);
-    // @ts-expect-error an edge bot takes no plugins yet
-    edge.attach('box', Box);
+    // @ts-expect-error ServerBox declares runtime 'server' but this bot runs 'edge'
+    edge.attach('box', ServerBox);
     // @ts-expect-error EdgeBox declares runtime 'edge' but this bot runs 'server'
     gateway.attach('box', EdgeBox);
     // @ts-expect-error NarrowBox narrows its first parameter

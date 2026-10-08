@@ -7,7 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
-import { createCore, dispatchInteraction } from '#src/dispatch/dispatchInteraction';
+import { dispatchInteraction } from '#src/dispatch/dispatchInteraction';
+import { testCore } from '#tests/helpers/core';
 import { nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import { slashPayload } from './harness';
@@ -73,7 +74,7 @@ function registry(...ctors: InteractionMiddlewareConstructor[]): MiddlewareRegis
 
 async function dispatchThrough(ctor: HandlerConstructor, ...ctors: InteractionMiddlewareConstructor[]): Promise<void> {
     Envapter.useSource(new PortableSource({}));
-    const core = createCore(nullPathConfig, VALID_TOKEN);
+    const core = testCore(nullPathConfig, VALID_TOKEN);
 
     const execute = await dispatchInteraction({
         match: { kind: InteractionKind.Slash, routeId: 'slash:ok', ctor },

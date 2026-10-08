@@ -22,7 +22,6 @@ import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
 type SubscriberArtifact = SubscriptionKey[];
 
-// loads subscribers off the filesystem into a Bus and stores their hot-reload wiring. node only, a bundled isolate registers from the manifest instead
 export class SubscriberLoader implements Initializeable, HmrAware {
     private isInitialized = false;
     private readonly hmrHandler?: HmrModuleHandler<StoredSubscriberCtor, void, SubscriberArtifact>;

@@ -7,13 +7,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
 import { ServerHost } from '#node/ServerHost';
+import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { Bus } from '#subscribers/Bus';
 
 import type { Config, IRateLimiter } from '@seedcord/types';
 
-class TestHost extends ServerHost<'gateway', 'server'> {
+class TestHost extends ServerHost<'gateway'> {
     public readonly config = {} as Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
@@ -21,7 +21,7 @@ class TestHost extends ServerHost<'gateway', 'server'> {
     public readonly bus: Bus;
 
     constructor() {
-        super(new CoordinatedShutdown(), new CoordinatedStartup());
+        super('gateway', new CoordinatedShutdown(), new CoordinatedStartup());
         this.bus = new Bus(this);
     }
 
