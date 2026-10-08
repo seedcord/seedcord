@@ -1,3 +1,4 @@
+import { connect } from 'node:net';
 import path from 'node:path';
 
 import { shutdownOf } from '@seedcord/core/node/internal';
@@ -6,9 +7,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { signedHeaders, type Signer } from '#tests/helpers/ed25519';
+import { slashPayload } from '#tests/helpers/interactions';
 import { bindSignedEnv, resetSeedcord, serverConfig, stopHost } from '#tests/helpers/nodeHost';
 
-import { slowGateEntered } from './discovery/fixtures/handlers/SlowGateCommand';
+import { nextSlowGateEntry } from './discovery/fixtures/handlers/SlowGateCommand';
 
 import type { HttpServerConfig } from '#src/interfaces/Config';
 
@@ -30,6 +32,15 @@ async function readyHost(handlers?: string): Promise<{ signer: Signer; url: stri
 }
 
 const encoder = new TextEncoder();
+
+// a raw socket sends both requests over one keep-alive connection
+async function rawPost(signer: Signer, payload: string): Promise<string> {
+    const body = encoder.encode(payload);
+    const signature = Object.entries(await signedHeaders(signer, body))
+        .map(([name, value]) => `${name}: ${value}\r\n`)
+        .join('');
+    return `POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: ${String(body.length)}\r\n${signature}\r\n${payload}`;
+}
 
 describe('http Seedcord shutdown', () => {
     beforeEach(resetSeedcord);
@@ -54,6 +65,30 @@ describe('http Seedcord shutdown', () => {
         );
     });
 
+    it('answers 503 on a kept-alive connection once shutdown starts', async () => {
+        const { signer, host } = await readyHost();
+        const socket = connect(Number(host.port), '127.0.0.1');
+        let received = '';
+        socket.on('data', (chunk) => {
+            received += String(chunk);
+        });
+
+        const entered = nextSlowGateEntry();
+        socket.write(await rawPost(signer, JSON.stringify(slashPayload('slowping'))));
+        await entered;
+        const closing = shutdownOf(host).run(0, false);
+        await vi.waitFor(() => {
+            expect(received).toContain('202 Accepted');
+        });
+        socket.write(await rawPost(signer, '{"type":1}'));
+
+        await vi.waitFor(() => {
+            expect(received).toContain('503 Service Unavailable');
+        });
+        socket.destroy();
+        await closing;
+    });
+
     it('a request awaiting its ack survives a shutdown started mid-flight', async () => {
         const { signer, url, host } = await readyHost();
         // the slowping gate delays the 202 past the shutdown start below
@@ -69,8 +104,9 @@ describe('http Seedcord shutdown', () => {
         );
 
         const started = Date.now();
+        const entered = nextSlowGateEntry();
         const pending = fetch(url, { method: 'POST', headers: await signedHeaders(signer, body), body });
-        await slowGateEntered.promise;
+        await entered;
         const closing = shutdownOf(host).run(0, false);
 
         const response = await pending;

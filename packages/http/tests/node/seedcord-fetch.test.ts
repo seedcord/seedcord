@@ -12,7 +12,7 @@ import { VALID_TOKEN } from '#tests/helpers/fixtures';
 import { slashPayload } from '#tests/helpers/interactions';
 import { bindSignedEnv, resetSeedcord, serverConfig, stopHost } from '#tests/helpers/nodeHost';
 
-import { slowGateEntered } from './discovery/fixtures/handlers/SlowGateCommand';
+import { nextSlowGateEntry } from './discovery/fixtures/handlers/SlowGateCommand';
 import { drainSlow } from './fixtures/drain-handlers/DrainSlowCommand';
 
 import type { HttpServerConfig } from '#src/interfaces/Config';
@@ -109,10 +109,11 @@ describe('http Seedcord.fetch on node', () => {
         await host.start();
         const order: string[] = [];
 
+        const entered = nextSlowGateEntry();
         const answered = host
             .fetch(await signedRequest(signer, JSON.stringify(slashPayload('slowping'))))
             .then(() => order.push('answered'));
-        await slowGateEntered.promise;
+        await entered;
         await shutdownOf(host).run(0, false);
         order.push('shut down');
         await answered;
