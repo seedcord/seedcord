@@ -41,7 +41,7 @@ import { InteractionDispatcher } from './InteractionDispatcher';
 import { toWebRequest, writeWebResponse } from './webBridge';
 
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
-import type { HttpConfig } from '#interfaces/Config';
+import type { HttpServerConfig } from '#interfaces/Config';
 import type { IRateLimiter } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Server } from 'node:http';
@@ -49,8 +49,6 @@ import type { AddressInfo } from 'node:net';
 
 const DEFAULT_PORT = 3000;
 const SERVER_SHUTDOWN_TIMEOUT_MS = 5000;
-
-type RuntimeOfConfig<Cfg extends HttpConfig> = Cfg extends { runtime: 'edge' } ? 'edge' : 'server';
 
 /**
  * The HTTP-interactions bot host, a long-running node server around the engine.
@@ -60,10 +58,7 @@ type RuntimeOfConfig<Cfg extends HttpConfig> = Cfg extends { runtime: 'edge' } ?
  * `createSeedcord` from a generated entry.
  */
 // tests/node/seedcord-core.types-test.ts checks this class against Core in place of an implements clause
-export class Seedcord<Cfg extends HttpConfig = HttpConfig>
-    extends ServerHost<'http', RuntimeOfConfig<Cfg>>
-    implements SeedcordInstance
-{
+export class Seedcord extends ServerHost<'http', 'server'> implements SeedcordInstance {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -94,9 +89,9 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     #boundPort?: number;
     #fetchedUsername?: string | undefined;
 
-    public readonly config: HttpConfig;
+    public readonly config: HttpServerConfig;
 
-    constructor(config: Cfg) {
+    constructor(config: HttpServerConfig) {
         super(new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
         this.config = config;
         this.rest = new REST(config.bot.restOptions);

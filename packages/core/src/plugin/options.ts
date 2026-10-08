@@ -52,8 +52,6 @@ type RuntimeMismatch<PluginRt extends string, BotRt extends string> = Record<
     never
 >;
 
-type EdgePluginsUnsupported = Record<'an edge bot takes no plugins until edge support ships after v1', never>;
-
 type BrandTransport<Plug> = Plug extends { readonly [TransportBrand]?: infer T extends string } ? T : 'any';
 type BrandRuntime<Plug> = Plug extends { readonly [RuntimeBrand]?: infer R extends string } ? R : 'any';
 
@@ -61,11 +59,6 @@ type BrandRuntime<Plug> = Plug extends { readonly [RuntimeBrand]?: infer R exten
 export type TransportAssert<Plug, BotT extends Transport> =
     BrandTransport<Plug> extends 'any' | BotT ? unknown : TransportMismatch<BrandTransport<Plug>, BotT>;
 
-// keep this order. when flipped, TypeScript checks 'server' and 'edge' separately and unions the
-// results. the 'server' half is `unknown`, and `unknown | X` is `unknown`, so the gate never fires.
 /** @internal */
-export type RuntimeAssert<Plug, BotRt extends Runtime> = 'edge' extends BotRt
-    ? EdgePluginsUnsupported
-    : BrandRuntime<Plug> extends 'any' | BotRt
-      ? unknown
-      : RuntimeMismatch<BrandRuntime<Plug>, BotRt>;
+export type RuntimeAssert<Plug, BotRt extends Runtime> =
+    BrandRuntime<Plug> extends 'any' | BotRt ? unknown : RuntimeMismatch<BrandRuntime<Plug>, BotRt>;

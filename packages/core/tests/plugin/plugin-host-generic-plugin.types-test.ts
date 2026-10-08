@@ -99,8 +99,8 @@ function rejectsMismatches(): void {
     gateway.attach('box', Box, 'big');
     // @ts-expect-error HttpBox declares transport 'http'
     gateway.attach('box', HttpBox);
-    // @ts-expect-error an edge bot takes no plugins yet
-    edge.attach('box', Box);
+    // @ts-expect-error ServerBox declares runtime 'server' but this bot runs 'edge'
+    edge.attach('box', ServerBox);
     // @ts-expect-error EdgeBox declares runtime 'edge' but this bot runs 'server'
     gateway.attach('box', EdgeBox);
     // @ts-expect-error NarrowBox narrows its first parameter

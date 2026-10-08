@@ -1,7 +1,6 @@
 import { Plugin } from '@seedcord/core/plugin';
 import { expectTypeOf } from 'vitest';
 
-import type { HttpEdgeConfig, HttpServerConfig } from '#interfaces/Config';
 import type { Seedcord } from '#src/node/Seedcord';
 
 class Anywhere extends Plugin {
@@ -30,24 +29,16 @@ class Store<TValue> extends Plugin {
     }
 }
 
-function probeServerAccepts(bot: Seedcord<HttpServerConfig>): void {
+function probeServerAccepts(bot: Seedcord): void {
     bot.attach('anywhere', Anywhere);
     bot.attach('http', HttpOnly);
     expectTypeOf(bot.attach('store', Store)).toHaveProperty('store').toEqualTypeOf<Store<unknown>>();
 }
 
-function probeServerRejects(bot: Seedcord<HttpServerConfig>): void {
+function probeServerRejects(bot: Seedcord): void {
     // @ts-expect-error GatewayOnly declares transport 'gateway'
     bot.attach('gw', GatewayOnly);
 }
 
-function probeEdgeRejectsEverything(bot: Seedcord<HttpEdgeConfig>): void {
-    // @ts-expect-error edge plugins arrive post-v1
-    bot.attach('anywhere', Anywhere);
-    // @ts-expect-error edge plugins arrive post-v1
-    bot.attach('http', HttpOnly);
-}
-
 void probeServerAccepts;
 void probeServerRejects;
-void probeEdgeRejectsEverything;

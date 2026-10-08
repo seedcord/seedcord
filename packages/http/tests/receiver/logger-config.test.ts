@@ -24,7 +24,6 @@ let sink: FakeSink;
 
 function edgeConfig(logger?: LoggerConfig): HttpEdgeConfig {
     return {
-        runtime: 'edge',
         bot: { interactions: { path: null }, commands: { path: null } },
         subscribers: { path: null },
         ...(logger && { logger })

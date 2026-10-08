@@ -5,7 +5,6 @@ import { TestPluginHost } from '#tests/utils/TestPluginHost';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { RuntimeBrand, TransportBrand } from '#src/plugin/brands';
-import type { Runtime } from '#src/plugin/options';
 
 class GatewayScoped extends Plugin<{ transport: 'gateway' }> {
     public init(): Promise<void> {
@@ -105,19 +104,20 @@ describe('attaching a plugin that declares options', () => {
         host.attach('wrong', EdgeScoped);
     });
 
-    it('rejects every plugin on an edge host', () => {
+    it('accepts an unscoped or edge plugin on an edge host', () => {
         const host = new TestPluginHost<'http', 'edge'>();
 
-        // @ts-expect-error edge plugins arrive post-v1, an unscoped plugin is rejected too
-        host.attach('any', Unscoped);
+        const attached = host.attach('any', Unscoped).attach('edge', EdgeScoped);
+
+        expect(attached.any).toBeInstanceOf(Unscoped);
+        expect(attached.edge).toBeInstanceOf(EdgeScoped);
     });
 
-    it('rejects every plugin when the host runtime is not narrowed to one value', () => {
-        // an http host lands here when its config type is the whole union, leaving 'edge' in BotRt
-        const host = new TestPluginHost<'http', Runtime>();
+    it('rejects a server plugin on an edge host', () => {
+        const host = new TestPluginHost<'http', 'edge'>();
 
-        // @ts-expect-error a host that might be edge takes no plugins
-        host.attach('any', Unscoped);
+        // @ts-expect-error ServerScoped declares runtime 'server', this host is 'edge'
+        host.attach('server', ServerScoped);
     });
 
     it('rejects a constructor narrowing its core parameter past CoreBase', () => {

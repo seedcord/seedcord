@@ -25,7 +25,7 @@ describe('bot.restOptions', () => {
     });
 
     it('reaches the REST client on edge, which starts with both sweepers off', () => {
-        const { options } = createCore({ ...config({ timeout: 1234 }), runtime: 'edge' }, VALID_TOKEN).rest;
+        const { options } = createCore(config({ timeout: 1234 }), VALID_TOKEN).rest;
 
         expect(options).toMatchObject({ timeout: 1234, hashSweepInterval: 0, handlerSweepInterval: 0 });
     });
@@ -35,7 +35,7 @@ describe('bot.restOptions', () => {
         // plain JS, or a cast, can still hand the edge path a sweeper interval
         const restOptions = { handlerSweepInterval: 60_000 } as NonNullable<HttpEdgeConfig['bot']['restOptions']>;
 
-        expect(() => createCore({ ...base, bot: { ...base.bot, restOptions }, runtime: 'edge' }, VALID_TOKEN)).toThrow(
+        expect(() => createCore({ ...base, bot: { ...base.bot, restOptions } }, VALID_TOKEN)).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.ConfigEdgeRestSweeper })
         );
     });
