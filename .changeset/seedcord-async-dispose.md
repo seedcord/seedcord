@@ -4,4 +4,4 @@
 '@seedcord/http': minor
 ---
 
-The gateway and node http `Seedcord` now work with `await using`. When the block ends, the bot runs its shutdown and the process keeps running.
+The gateway and node http `Seedcord` now work with `await using`. When the block ends, the bot runs its shutdown without calling `process.exit`.

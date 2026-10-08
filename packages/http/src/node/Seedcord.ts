@@ -3,15 +3,9 @@ import { createServer } from 'node:http';
 
 import { attachmentsOf, bindBotColor, busLoggerOf, getDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
-import {
-    CommandRegistry,
-    DRAIN_TASK_TIMEOUT_MS,
-    ShutdownPhase,
-    shutdownOf,
-    StartupPhase
-} from '@seedcord/core/node/internal';
+import { CommandRegistry, DRAIN_TASK_TIMEOUT_MS, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { paint } from '@seedcord/errors';
-import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
+import { Logger } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Routes } from 'discord-api-types/v10';
@@ -109,7 +103,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
      * Starts the host and runs the startup tasks.
      */
     public start(): Promise<this> {
-        const starting = this.#start();
+        const starting = this.init();
         this.#endpoint.open(starting);
         return starting;
     }
@@ -134,25 +128,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
      */
     public fetch(request: Request): Promise<Response> {
         return this.#endpoint.fetch(request);
-    }
-
-    async #start(): Promise<this> {
-        try {
-            await super.init();
-        } catch (caught) {
-            await shutdownOf(this).run(1, false);
-            Seedcord.reset(this);
-            throw caught;
-        }
-        return this;
-    }
-
-    /** @internal */
-    protected static override reset(host?: object): boolean {
-        if (!super.reset(host)) return false;
-        // super.reset() drops the dev TUI's log sink
-        LoggerChannelRegistry.instance.configure({});
-        return true;
     }
 
     #registerStartupTasks(): void {

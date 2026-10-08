@@ -1,8 +1,12 @@
+import { setTimeout as delay } from 'node:timers/promises';
+
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { ShutdownPhase } from '#src/lifecycle/phases';
+
+const SLOW_TASK_MS = 30;
 
 // a second spyOn on an already-spied method returns the existing mock, so an unrestored spy
 // carries the previous test's calls into this one
@@ -30,6 +34,28 @@ describe('CoordinatedShutdown.run re-entrancy', () => {
         await shutdown.run(1, false);
 
         expect(survivor).toHaveBeenCalledTimes(1);
+    });
+
+    it('resolves a second run only after the first one finishes', async () => {
+        const shutdown = new CoordinatedShutdown();
+        shutdown.removeSignalHandlers();
+        const order: string[] = [];
+        shutdown.addTask(
+            ShutdownPhase.Drain,
+            'slow',
+            async () => {
+                await delay(SLOW_TASK_MS);
+                order.push('task');
+            },
+            1000
+        );
+
+        const first = shutdown.run(0, false);
+        await shutdown.run(0, false);
+        order.push('second resolved');
+        await first;
+
+        expect(order).toEqual(['task', 'second resolved']);
     });
 });
 

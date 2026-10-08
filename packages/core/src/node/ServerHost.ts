@@ -1,5 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { LoggerChannelRegistry } from '@seedcord/logger';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
 
 import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
@@ -55,8 +56,9 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     /** @internal */
     protected init(): Promise<this> {
         // a retry after a rejection runs #runInit again and hits its restart guard
-        this.#initPromise ??= this.#runInit().catch((caught: unknown) => {
+        this.#initPromise ??= this.#runInit().catch(async (caught: unknown) => {
             this.#initPromise = undefined;
+            await this.#release(1);
             throw caught;
         });
         return this.#initPromise;
@@ -92,20 +94,26 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
     }
 
     /**
-     * Runs the coordinated shutdown and keeps the process alive. A new `Seedcord` can be constructed
-     * afterwards. `await using` calls this when its scope ends.
+     * Runs the coordinated shutdown without calling `process.exit`. A new `Seedcord` can be
+     * constructed afterwards. `await using` calls this when its scope ends.
      *
      * @example
      * ```ts
      * // the bot shuts down when this block ends
      * await using bot = await new Seedcord(config).start();
-     * await bot.rest.put(Routes.applicationCommands(bot.applicationId), { body: [] });
+     * console.log(await bot.rest.get(Routes.user('@me')));
      * ```
      */
     public async [Symbol.asyncDispose](): Promise<void> {
-        await this[HostShutdown].run(0, false);
-        // justified: reset() reaches the subclass override only through this.constructor, typed Function
-        (this.constructor as typeof ServerHost).reset(this);
+        await this.#release(0);
+    }
+
+    async #release(exitCode: number): Promise<void> {
+        try {
+            await this[HostShutdown].run(exitCode, false);
+        } finally {
+            ServerHost.reset(this);
+        }
     }
 
     /** @internal */
@@ -118,6 +126,8 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
         ServerHost.#liveProcessErrors = undefined;
         ServerHost.#liveHost = undefined;
         ServerHost.#isInstantiated = false;
+        // configure() keeps the dev TUI's capture sink
+        LoggerChannelRegistry.instance.configure({});
         return true;
     }
 }

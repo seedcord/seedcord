@@ -21,8 +21,7 @@ const LOG_FLUSH_DELAY_MS = 3000;
 const DEFAULT_SHUTDOWN_DEADLINE_MS = 25_000;
 
 export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
-    private isShuttingDown = false;
-    private hasShutdown = false;
+    private running?: Promise<void>;
     private exitCode = 0;
     private onSigTerm: (() => void) | null = null;
     private onSigInt: (() => void) | null = null;
@@ -124,22 +123,25 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         return super.removeTask(phase, taskName);
     }
 
+    // a later call waits on the first run and never repeats a task
     /** @internal */
-    public async run(exitCode = 0, exitProcess = true): Promise<void> {
+    public run(exitCode = 0, exitProcess = true): Promise<void> {
         this.removeSignalHandlers();
 
-        // a dev-mode run leaves the process alive, so a second call would re-execute every task
-        if (this.hasShutdown || this.isShuttingDown) {
+        if (this.running) {
             // a crash mid-shutdown must still leave a failing code for whatever supervises the process
             if (exitCode > this.exitCode) this.exitCode = exitCode;
-            this.logger.warn('Shutdown sequence already ran or is in progress');
-            return;
+            return this.running;
         }
 
-        this.isShuttingDown = true;
         this.exitCode = exitCode;
+        this.running = this.shutDown(exitProcess);
+        return this.running;
+    }
+
+    private async shutDown(exitProcess: boolean): Promise<void> {
         this.logger.info(
-            `${paint.amber.bold('Starting')} coordinated shutdown with exit code ${paint.sky.bold(exitCode)}`
+            `${paint.amber.bold('Starting')} coordinated shutdown with exit code ${paint.sky.bold(this.exitCode)}`
         );
 
         try {
@@ -163,7 +165,6 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
                 this.logger.info(`${paint.mint.bold('Coordinated shutdown completed')} successfully`);
             }
         } finally {
-            this.hasShutdown = true;
             if (exitProcess) {
                 this.logger.debug(`${paint.coral.bold('Exiting')} process with code ${paint.sky.bold(this.exitCode)}`);
                 setTimeout(() => {
@@ -171,7 +172,6 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
                 }, LOG_FLUSH_DELAY_MS);
             } else {
                 this.logger.debug(`${paint.amber.bold('Skipping')} process exit (dev mode)`);
-                this.isShuttingDown = false;
             }
         }
     }
