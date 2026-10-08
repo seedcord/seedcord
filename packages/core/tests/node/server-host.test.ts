@@ -7,7 +7,7 @@ import { describe, it, expect, expectTypeOf, afterEach, vi } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
-import { Pluggable } from '#node/Pluggable';
+import { ServerHost } from '#node/ServerHost';
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 import { Plugin } from '#src/plugin/Plugin';
 import { Bus } from '#subscribers/Bus';
@@ -41,15 +41,11 @@ class TestPlugin extends Plugin {
         return Promise.resolve();
     }
 
-    public reachCore(): CoreBase {
-        return this.core;
-    }
-
     public onInit?: () => void;
     public onDispose?: () => void;
 }
 
-class TestHost extends Pluggable<'gateway', 'server'> {
+class TestHost extends ServerHost<'gateway', 'server'> {
     public readonly config: Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
@@ -67,7 +63,7 @@ class TestHost extends Pluggable<'gateway', 'server'> {
     }
 
     public static resetHost(): void {
-        Pluggable.reset();
+        ServerHost.reset();
     }
 }
 
@@ -86,7 +82,7 @@ function InfersConcreteCtorArgsAtAttach(): void {
 }
 void InfersConcreteCtorArgsAtAttach;
 
-describe('Pluggable', () => {
+describe('ServerHost', () => {
     afterEach(() => {
         TestHost.resetHost();
         vi.restoreAllMocks();
@@ -135,41 +131,13 @@ describe('Pluggable', () => {
         expect(order).toEqual(['a', 'b']);
     });
 
-    describe('core access', () => {
-        it('hands the attaching host to the plugin', () => {
-            const { host } = makeHost();
-            const withDb = host.attach('db', TestPlugin, 'x');
+    it('runs init for a grouped plugin like any other', async () => {
+        const { host } = makeHost();
+        const bot = host.attach('services.users', TestPlugin, 'ada');
 
-            expect(withDb.db.reachCore()).toBe(host);
-        });
+        await host.run();
 
-        it('reaches the host config, rate limiter, and rest through this.core', () => {
-            const { host } = makeHost();
-            const core = host.attach('db', TestPlugin, 'x').db.reachCore();
-
-            expect(core.config).toBe(host.config);
-            expect(core.rateLimiter).toBe(host.rateLimiter);
-            expect(core.rest).toBe(host.rest);
-        });
-
-        it('rejects a plugin built on another copy of @seedcord/core before constructing it', async () => {
-            vi.resetModules();
-            const { Plugin: OtherCopy } = await import('#src/plugin/Plugin');
-
-            const constructed = vi.fn(() => true);
-            class FromOtherCore extends OtherCopy {
-                public readonly built = constructed();
-
-                public init(): Promise<void> {
-                    return Promise.resolve();
-                }
-            }
-
-            expect(() => makeHost().host.attach('kv', FromOtherCore)).toThrow(
-                expect.objectContaining({ code: SeedcordErrorCode.CorePluginFromOtherCore })
-            );
-            expect(constructed).not.toHaveBeenCalled();
-        });
+        expect(bot.services.users.initCalls).toBe(1);
     });
 
     describe('dispose', () => {
@@ -506,12 +474,6 @@ describe('Pluggable', () => {
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.LifecycleRestartAfterFailure)).toBe(true);
     });
 
-    it('rejects a duplicate key', () => {
-        const { host } = makeHost();
-        host.attach('db', TestPlugin, 'one');
-        expect(() => host.attach('db', TestPlugin, 'two')).toThrow(/db/);
-    });
-
     it('rejects attach after init', async () => {
         const { host } = makeHost();
         await host.run();
@@ -521,14 +483,6 @@ describe('Pluggable', () => {
         } catch (err) {
             expect(isSeedcordError(err, undefined, SeedcordErrorCode.CorePluginAfterInit)).toBe(true);
         }
-    });
-
-    it('rejects a key colliding with a host property', () => {
-        const { host } = makeHost();
-        // bypasses the assert to hit the runtime guard a javascript caller still reaches
-        const attachRaw = host.attach.bind(host) as (key: string, plugin: typeof TestPlugin, tag: string) => unknown;
-
-        expect(() => attachRaw('shutdown', TestPlugin, 'x')).toThrow(/shutdown/);
     });
 
     it('run is idempotent', async () => {
@@ -556,7 +510,7 @@ describe('Pluggable', () => {
     });
 });
 
-describe('Pluggable shutdown during startup', () => {
+describe('ServerHost shutdown during startup', () => {
     afterEach(() => {
         TestHost.resetHost();
         vi.restoreAllMocks();

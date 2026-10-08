@@ -1,6 +1,6 @@
 import { Bus } from '@seedcord/core';
-import { bindBotColor, busLoggerOf, HmrManager } from '@seedcord/core/internal';
-import { CoordinatedShutdown, CoordinatedStartup, Pluggable } from '@seedcord/core/node';
+import { attachmentsOf, bindBotColor, busLoggerOf, HmrManager } from '@seedcord/core/internal';
+import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { HealthCheck, shutdownOf, StartupPhase, SubscriberLoader } from '@seedcord/core/node/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
@@ -21,7 +21,7 @@ import type { SeedcordInstance } from '@seedcord/types/internal';
  * coordinated startup and shutdown. Attach plugins with `attach()`.
  */
 // an `implements Core` clause breaks a bot's full lib check once codegen adds its plugins to Core
-export class Seedcord extends Pluggable<'gateway', 'server'> implements SeedcordInstance {
+export class Seedcord extends ServerHost<'gateway', 'server'> implements SeedcordInstance {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -30,13 +30,13 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Seedcord
     /** @internal */
     public readonly [HostVersion]: string = packageVersion;
 
-    private readonly healthCheck?: HealthCheck | undefined;
-    private readonly hmrManager: HmrManager;
+    readonly #healthCheck?: HealthCheck | undefined;
+    readonly #hmrManager: HmrManager;
 
     /** @see {@link Bus} */
     public readonly bus: Bus;
 
-    private readonly subscribers: SubscriberLoader;
+    readonly #subscribers: SubscriberLoader;
 
     /** @see {@link Bot} */
     public readonly bot: Bot;
@@ -62,16 +62,16 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Seedcord
         installNodeDefaults(config.logger);
         bindBotColor(() => this.config.botColor);
 
-        this.hmrManager = new HmrManager();
-        this.hmrManager.init();
+        this.#hmrManager = new HmrManager();
+        this.#hmrManager.init();
         this.bus = new Bus(this);
-        this.subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
+        this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         this.bot = new Bot(this);
         this.rest = this.bot.client.rest;
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
-        this.healthCheck = HealthCheck.fromOption(shutdownOf(this), config.healthCheck);
+        this.#healthCheck = HealthCheck.fromOption(shutdownOf(this), config.healthCheck);
 
-        this.registerStartupTasks();
+        this.#registerStartupTasks();
     }
 
     /** The bot's discord username, populated after login. */
@@ -86,12 +86,12 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Seedcord
         return true;
     }
 
-    private registerStartupTasks(): void {
-        if (Envapter.isDevelopment || Envapter.isTest) this.registerHmrAwareModules();
+    #registerStartupTasks(): void {
+        if (Envapter.isDevelopment || Envapter.isTest) this.#registerHmrAwareModules();
 
         this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'start');
-            await this.subscribers.init();
+            await this.#subscribers.init();
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
         });
 
@@ -101,7 +101,7 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Seedcord
             botLoggerOf(this.bot).utils.initialization('Bot', 'end');
         });
 
-        const { healthCheck } = this;
+        const healthCheck = this.#healthCheck;
         if (healthCheck) {
             this.startup.addTask(StartupPhase.Ready, 'health-check', async () => {
                 healthCheck.logger.utils.initialization('HealthCheck', 'start');
@@ -128,12 +128,12 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Seedcord
         return this;
     }
 
-    private registerHmrAwareModules(): void {
+    #registerHmrAwareModules(): void {
         this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
-            this.hmrManager.register(this.bot);
-            this.hmrManager.register(this.subscribers);
-            for (const plugin of this.plugins) {
-                this.hmrManager.register(plugin);
+            this.#hmrManager.register(this.bot);
+            this.#hmrManager.register(this.#subscribers);
+            for (const { instance } of attachmentsOf(this)) {
+                this.#hmrManager.register(instance);
             }
             await Promise.resolve();
         });

@@ -4,6 +4,11 @@
  * @packageDocumentation
  */
 
+import { MockHostBase } from './hostBase.js';
+
+/** A host whose base class comes from the extra subpath. */
+export class SharedHost extends MockHostBase {}
+
 /** Returns the tag the shared subpath is known by. */
 export function sharedOnlyFunction(): string {
     return 'shared';

@@ -4,7 +4,7 @@ import { expectTypeOf } from 'vitest';
 import { Plugin } from '#src/plugin/Plugin';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { Pluggable } from '#node/Pluggable';
+import type { PluginHost } from '#src/plugin/PluginHost';
 
 class Box<TValue extends string> extends Plugin {
     public value?: TValue;
@@ -74,9 +74,9 @@ class NarrowBox<TValue extends string> extends Plugin {
     }
 }
 
-declare const gateway: Pluggable<'gateway', 'server'>;
-declare const http: Pluggable<'http', 'server'>;
-declare const edge: Pluggable<'http', 'edge'>;
+declare const gateway: PluginHost<'gateway', 'server'>;
+declare const http: PluginHost<'http', 'server'>;
+declare const edge: PluginHost<'http', 'edge'>;
 
 function acceptsGenerics(): void {
     expectTypeOf(gateway.attach('box', Box)).toHaveProperty('box').toEqualTypeOf<Box<string>>();

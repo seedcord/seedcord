@@ -4,14 +4,14 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
-import { Pluggable } from '#node/Pluggable';
+import { ServerHost } from '#node/ServerHost';
 import { StartupPhase } from '#src/lifecycle/phases';
 import { Bus } from '#subscribers/Bus';
 
 import type { SubscriptionData } from '#subscribers/types/Subscriptions';
 import type { Config, IRateLimiter } from '@seedcord/types';
 
-class TestHost extends Pluggable<'gateway', 'server'> {
+class TestHost extends ServerHost<'gateway', 'server'> {
     public readonly config: Config;
     public readonly rest = new REST();
     public readonly applicationId = 'app-1';
@@ -29,7 +29,7 @@ class TestHost extends Pluggable<'gateway', 'server'> {
     }
 
     public static resetHost(): void {
-        Pluggable.reset();
+        ServerHost.reset();
     }
 }
 

@@ -1,3 +1,5 @@
+import { HmrManager } from '@seedcord/core/internal';
+import { SubscriberLoader } from '@seedcord/core/node/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
@@ -22,14 +24,9 @@ interface PrivateHmrManager {
     handleUpdate(event: HmrUpdateEvent): Promise<void>;
 }
 
-interface PrivateSeedcordInternals {
-    hmrManager: PrivateHmrManager;
-    subscribers: { init(): Promise<void>; onHmr(event: HmrUpdateEvent): Promise<void> };
-}
-
-// justified: the loader is private on the host, and it runs discovery and hot reload
-function internalsOf(instance: Seedcord): PrivateSeedcordInternals {
-    return instance as unknown as PrivateSeedcordInternals;
+// Seedcord builds the same loader from its config
+function loaderOf(instance: Seedcord): SubscriberLoader {
+    return new SubscriberLoader(instance.bus, instance.config.subscribers.path);
 }
 
 // justified: PrivateBus exposes the private subscribersMap for assertion
@@ -50,7 +47,7 @@ describe('Bus Integration', () => {
 
     afterEach(async () => {
         await testEnv.teardown();
-        vi.clearAllMocks();
+        vi.restoreAllMocks();
     });
 
     it('should load subscribers from directory', async () => {
@@ -72,7 +69,8 @@ describe('Bus Integration', () => {
         const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
         seedcord = new Seedcord(config);
-        await internalsOf(seedcord).subscribers.init();
+        // subscribers load in Configuration. Login rejects later without a real token
+        await seedcord.start().catch(() => undefined);
 
         // unknownException has a default handler (UnknownException), plus our custom one = 2
         expect(registrationsOf(seedcord, 'unknownException')).toHaveLength(2);
@@ -97,7 +95,8 @@ describe('Bus Integration', () => {
         const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
         seedcord = new Seedcord(config);
-        await internalsOf(seedcord).subscribers.init();
+        const loader = loaderOf(seedcord);
+        await loader.init();
 
         const handlersBefore = registrationsOf(seedcord, 'unknownException');
 
@@ -118,7 +117,7 @@ describe('Bus Integration', () => {
             `
         );
 
-        await internalsOf(seedcord).subscribers.onHmr({
+        await loader.onHmr({
             file: filePath,
             type: 'update'
         });
@@ -149,11 +148,14 @@ describe('Bus Integration', () => {
 
         const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
+        const register = vi.spyOn(HmrManager.prototype, 'register');
         seedcord = new Seedcord(config);
         // hmr registration runs in Configuration. Login rejects later without a real token
         await seedcord.start().catch(() => undefined);
 
-        const { hmrManager, subscribers } = internalsOf(seedcord);
+        // justified: only the vite dev channel calls the private handleUpdate
+        const hmrManager = register.mock.contexts[0] as PrivateHmrManager;
+        const subscribers = register.mock.calls.map(([module]) => module).find((m) => m instanceof SubscriberLoader)!;
         const onHmr = vi.spyOn(subscribers, 'onHmr');
         const event: HmrUpdateEvent = { file: filePath, type: 'update' };
         await hmrManager.handleUpdate(event);

@@ -15,6 +15,7 @@ export type { MiddlewareRegistration, MiddlewareRegistrationOf } from '#src/disp
 export { bindBotColor } from '#components/botColorHolder';
 
 export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
+export { attachmentsOf } from '#src/plugin/PluginHost';
 
 export type { CommandMeta } from '#decorators/Command';
 export {
