@@ -4,12 +4,8 @@ import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createSeedcord } from '#src/createSeedcord';
-import { createSigner, type Signer } from '#tests/helpers/ed25519';
+import { createSigner, nowSeconds, signedRequest, type Signer } from '#tests/helpers/ed25519';
 import { emptyManifest, nullPathConfig, VALID_TOKEN } from '#tests/helpers/fixtures';
-
-const encoder = new TextEncoder();
-
-const nowSeconds = (): number => Math.floor(Date.now() / 1000);
 
 function bindEnv(vars: Record<string, string>): void {
     Envapter.useSource(new PortableSource(vars));
@@ -19,26 +15,6 @@ async function readySeedcord(): Promise<{ signer: Signer; handle: (request: Requ
     const signer = await createSigner();
     bindEnv({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN });
     return { signer, handle: createSeedcord(nullPathConfig, emptyManifest()) };
-}
-
-interface SignedRequestInit {
-    path?: string;
-    timestamp?: string;
-}
-
-async function signedRequest(signer: Signer, payload: string, init: SignedRequestInit = {}): Promise<Request> {
-    const timestamp = init.timestamp ?? String(nowSeconds());
-    const body = encoder.encode(payload);
-    const signature = await signer.sign(timestamp, body);
-
-    return new Request(`https://bot.example${init.path ?? '/interactions'}`, {
-        method: 'POST',
-        headers: {
-            'x-signature-ed25519': signature,
-            'x-signature-timestamp': timestamp
-        },
-        body
-    });
 }
 
 const ping = '{"type":1}';

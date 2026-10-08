@@ -11,14 +11,15 @@ import {
     runHandlerGates,
     slowGateMonitor
 } from '@seedcord/core/internal';
-import { paint, SeedcordErrorCode } from '@seedcord/errors';
-import { applicationIdFromToken, SeedcordError } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/errors';
+import { applicationIdFromToken } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
 
 import { RepliableHandler } from '#handlers/RepliableHandler';
 import { ReplySender } from '#reply/ReplySender';
+import { edgeRestOptions, edgeShutdown, edgeStartup } from '#src/edge/runtime';
 import { interactionGateContext } from '#src/gates/context';
 
 import { reportFault } from './reportFault';
@@ -31,13 +32,11 @@ import type {
 import type { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
 import type { InteractionOf } from '#handlers/interaction/middlewareKinds';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
-import type { EdgeSweeperKey, HttpConfig } from '#interfaces/Config';
+import type { HttpConfig } from '#interfaces/Config';
 import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from './resolve';
-import type { RESTOptions } from '@discordjs/rest';
 import type { DispatchOutcome, DispatchResult, MiddlewareKind } from '@seedcord/core';
 import type { MiddlewareRegistry } from '@seedcord/core/internal';
-import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/node';
 import type { IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
 
 // lazy, env binds after this module loads
@@ -48,23 +47,6 @@ function logger(): Logger {
 }
 
 type CoreDraft = TypedOmit<Core, 'bus'> & { bus: Bus };
-
-function noLifecycle(accessor: string): never {
-    throw new SeedcordError(SeedcordErrorCode.CoreLifecycleUnavailable, [accessor]);
-}
-
-const edgeShutdown: Pick<CoordinatedShutdown, 'addTask'> = { addTask: () => noLifecycle('shutdown') };
-const edgeStartup: Pick<CoordinatedStartup, 'addTask'> = { addTask: () => noLifecycle('startup') };
-
-// @discordjs/rest skips a sweeper set to 0
-const EDGE_SWEEPERS: Record<EdgeSweeperKey, 0> = { hashSweepInterval: 0, handlerSweepInterval: 0 };
-
-function edgeRestOptions(given: Partial<RESTOptions> = {}): Partial<RESTOptions> {
-    for (const key of Object.keys(EDGE_SWEEPERS) as EdgeSweeperKey[]) {
-        if (given[key] !== undefined) throw new SeedcordError(SeedcordErrorCode.ConfigEdgeRestSweeper, [key]);
-    }
-    return { ...given, ...EDGE_SWEEPERS };
-}
 
 export function createCore(config: HttpConfig, token: string): Core {
     const rateLimiter: IRateLimiter = config.store ?? new MemoryRateLimiter();
