@@ -10,8 +10,8 @@ import type { LifecycleTask } from './LifecycleTypes';
 const PHASE_ORDER: StartupPhase[] = [StartupPhase.Configuration, StartupPhase.Login, StartupPhase.Ready];
 
 export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
-    private isStartingUp = false;
-    private hasStarted = false;
+    #isStartingUp = false;
+    #hasStarted = false;
 
     public constructor() {
         super('Startup', PHASE_ORDER, StartupPhase);
@@ -27,11 +27,11 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
     }
 
     protected canAddTask(): boolean {
-        if (this.hasStarted) {
+        if (this.#hasStarted) {
             throw new SeedcordError(SeedcordErrorCode.LifecycleAddAfterCompletion);
         }
 
-        if (this.isStartingUp) {
+        if (this.#isStartingUp) {
             throw new SeedcordError(SeedcordErrorCode.LifecycleAddDuringRun);
         }
 
@@ -39,7 +39,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
     }
 
     protected canRemoveTask(): boolean {
-        if (this.isStartingUp) {
+        if (this.#isStartingUp) {
             throw new SeedcordError(SeedcordErrorCode.LifecycleRemoveDuringRun);
         }
 
@@ -61,58 +61,58 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
     // each phase completes fully before the next begins
     /** @internal */
     public async run(): Promise<void> {
-        if (this.hasStarted) {
+        if (this.#hasStarted) {
             this.logger.warn('Startup sequence has already completed');
             return;
         }
 
-        if (this.isStartingUp) {
+        if (this.#isStartingUp) {
             this.logger.warn('Startup sequence already in progress');
             return;
         }
 
-        this.isStartingUp = true;
+        this.#isStartingUp = true;
         this.logger.info(`${paint.mint.bold('Starting')} coordinated startup sequence`);
 
         try {
             for (const phase of PHASE_ORDER) {
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- abort() can flip isStartingUp to false mid-loop from the cli
-                if (!this.isStartingUp) {
+                if (!this.#isStartingUp) {
                     this.logger.warn('Startup sequence aborted');
                     return;
                 }
                 await this.runPhase(phase);
             }
 
-            this.hasStarted = true;
+            this.#hasStarted = true;
             this.logger.info(`${paint.mint.bold('Coordinated startup completed')} successfully`);
         } catch (error) {
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- abort() can flip isStartingUp to false before this catch runs
-            if (!this.isStartingUp) {
+            if (!this.#isStartingUp) {
                 this.logger.warn('Startup sequence aborted during error handling');
                 return;
             }
             this.logger.error(`${paint.coral.bold('Coordinated startup failed')}`);
             throw error;
         } finally {
-            this.isStartingUp = false;
+            this.#isStartingUp = false;
         }
     }
 
     protected override isAborted(): boolean {
-        return !this.isStartingUp;
+        return !this.#isStartingUp;
     }
 
     /** @internal */
     public abort(): void {
-        if (!this.isStartingUp) return;
+        if (!this.#isStartingUp) return;
 
-        this.isStartingUp = false;
+        this.#isStartingUp = false;
         this.logger.warn('Aborting coordinated startup sequence');
     }
 
     /** @internal */
     public get isReady(): boolean {
-        return this.hasStarted;
+        return this.#hasStarted;
     }
 }
