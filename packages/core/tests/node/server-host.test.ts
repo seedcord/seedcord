@@ -88,6 +88,23 @@ describe('ServerHost', () => {
         vi.restoreAllMocks();
     });
 
+    it('refuses a plugin attached while startup runs', async () => {
+        const { host } = makeHost();
+        let caught: unknown;
+        host.startup.addTask(StartupPhase.Configuration, 'attach-late', () => {
+            try {
+                host.attach('late', TestPlugin, 'late');
+            } catch (error) {
+                caught = error;
+            }
+            return Promise.resolve();
+        });
+
+        await host.run();
+
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CorePluginAfterInit });
+    });
+
     it('attaches without a phase argument and threads ctor args', async () => {
         const { host, startup } = makeHost();
 

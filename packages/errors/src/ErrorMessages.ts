@@ -37,7 +37,8 @@ const messages = {
 
     [SeedcordErrorCode.CoreSingletonViolation]: () =>
         'Seedcord can only be instantiated once. Use the existing instance instead.',
-    [SeedcordErrorCode.CorePluginAfterInit]: () => 'Cannot attach a plugin after initialization.',
+    [SeedcordErrorCode.CorePluginAfterInit]: () =>
+        'Cannot attach a plugin once the bot has started. Attach every plugin before start(), or before the first request on an edge bot.',
     [SeedcordErrorCode.CorePluginKeyExists]: (key: string) => `Plugin with key "${key}" already exists.`,
     [SeedcordErrorCode.CoreBotRoleMissing]: (guildId?: string) =>
         guildId ? `Bot role not found in guild ${guildId}.` : 'Bot role not found in guild.',

@@ -66,6 +66,7 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
         // a rerun after a failed startup would re-init the rolled-back plugins
         if (this.#startFailed) throw new SeedcordError(SeedcordErrorCode.LifecycleRestartAfterFailure);
 
+        sealAttachments(this);
         this.#lifecycle.register(attachmentsOf(this));
 
         // codegen and the build construct the bot without starting it
@@ -87,7 +88,6 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
             startupSettled.resolve();
         }
 
-        sealAttachments(this);
         return this;
     }
 

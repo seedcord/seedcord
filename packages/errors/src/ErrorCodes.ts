@@ -42,7 +42,7 @@ export enum SeedcordErrorCode {
 
     /** Multiple Seedcord instances were created simultaneously. */
     CoreSingletonViolation = 1201,
-    /** Plugins cannot be mutated after the core has finished initializing. */
+    /** A plugin was attached once the bot had started. */
     CorePluginAfterInit = 1202,
     /** A plugin tried to register with a key that already exists. */
     CorePluginKeyExists = 1203,

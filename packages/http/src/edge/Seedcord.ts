@@ -109,15 +109,17 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     async #runStartup(): Promise<void> {
+        sealAttachments(this);
         this.#plugins.register(attachmentsOf(this));
         try {
             await this.#startup.run();
         } catch (caught) {
             await this.#plugins.rollback();
-            this.#started = undefined;
+            this.#plugins.afterTimedOutInits(() => {
+                this.#started = undefined;
+            });
             throw caught;
         }
-        sealAttachments(this);
     }
 
     /** @internal */

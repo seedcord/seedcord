@@ -231,6 +231,58 @@ describe('the edge Seedcord', () => {
         );
     });
 
+    it('waits for a timed-out init to finish before it retries the startup', async () => {
+        const calls: string[] = [];
+        const hung = Promise.withResolvers<undefined>();
+        let first = true;
+        class Slow extends Plugin {
+            constructor(host: CoreBase) {
+                super(host, { init: { timeout: 20 } });
+            }
+            public init(): Promise<void> {
+                calls.push('init');
+                if (!first) return Promise.resolve();
+                first = false;
+                return hung.promise;
+            }
+            public override dispose(): Promise<void> {
+                calls.push('dispose');
+                return Promise.resolve();
+            }
+        }
+        const signer = await signedEnv();
+        const seedcord = new Seedcord(config()).attach('slow', Slow);
+
+        await expect(seedcord.fetch(await signedRequest(signer, ping))).rejects.toThrow();
+        await expect(seedcord.fetch(await signedRequest(signer, ping))).rejects.toThrow();
+        hung.resolve(undefined);
+        await vi.waitFor(() => {
+            expect(calls).toContain('dispose');
+        });
+        const retried = await seedcord.fetch(await signedRequest(signer, ping));
+
+        expect(retried.status).toBe(200);
+        expect(calls).toEqual(['init', 'dispose', 'init']);
+    });
+
+    it('refuses a plugin attached while startup runs', async () => {
+        const signer = await signedEnv();
+        const seedcord = new Seedcord(config());
+        let caught: unknown;
+        seedcord.startup.addTask(StartupPhase.Configuration, 'attach-late', () => {
+            try {
+                seedcord.attach('late', Late);
+            } catch (error) {
+                caught = error;
+            }
+            return Promise.resolve();
+        });
+
+        await seedcord.fetch(await signedRequest(signer, ping));
+
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CorePluginAfterInit });
+    });
+
     it('reads no env until the first request', async () => {
         Envapter.useSource(new PortableSource({}));
 
