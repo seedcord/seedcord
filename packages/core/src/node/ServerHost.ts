@@ -3,13 +3,13 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
 
 import { assertDeclaredRuntime } from '#node/assertRuntimeVersion';
+import { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
 import { attachmentsOf, PluginHost, sealAttachments } from '#src/plugin/PluginHost';
 
-import { PluginLifecycle } from './PluginLifecycle';
 import { registerProcessErrors } from './processErrors';
 
 import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import type { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
+import type { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import type { Transport } from '#src/plugin/options';
 
 /** Base class for a transport `Seedcord` class that runs as a long-lived node or bun process. */

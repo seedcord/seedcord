@@ -1,7 +1,7 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, it, expect } from 'vitest';
 
-import { settleWithin, withTimeout } from '#node/Lifecycle/withTimeout';
+import { settleWithin, withTimeout } from '#src/lifecycle/withTimeout';
 
 const BOUND_MS = 500;
 const SHORT_MS = 5;

@@ -1,4 +1,4 @@
-import { settleWithin } from './withTimeout';
+import { settleWithin } from '#src/lifecycle/withTimeout';
 
 import type { Logger } from '@seedcord/logger';
 

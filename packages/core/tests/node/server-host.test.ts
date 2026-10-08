@@ -6,8 +6,8 @@ import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, expectTypeOf, afterEach, vi } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
 import { ServerHost } from '#node/ServerHost';
+import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 import { Plugin } from '#src/plugin/Plugin';
 import { Bus } from '#subscribers/Bus';

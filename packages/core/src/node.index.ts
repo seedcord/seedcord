@@ -1,3 +1,3 @@
 export { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-export { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
+export { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 export { ServerHost } from '#node/ServerHost';

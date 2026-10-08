@@ -1,12 +1,11 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordRangeError } from '@seedcord/errors/internal';
 
+import { CoordinatedLifecycle } from '#src/lifecycle/CoordinatedLifecycle';
 import { ShutdownPhase } from '#src/lifecycle/phases';
+import { settleWithin } from '#src/lifecycle/withTimeout';
 
-import { CoordinatedLifecycle } from './CoordinatedLifecycle';
-import { settleWithin } from './withTimeout';
-
-import type { LifecycleTask } from './LifecycleTypes';
+import type { LifecycleTask } from '#src/lifecycle/LifecycleTypes';
 
 const PHASE_ORDER: ShutdownPhase[] = [
     ShutdownPhase.Unbind,

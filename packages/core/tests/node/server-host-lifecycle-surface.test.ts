@@ -4,8 +4,8 @@ import { HostShutdown, HostStartup } from '@seedcord/types/internal';
 import { describe, it, expect, afterEach } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
 import { ServerHost } from '#node/ServerHost';
+import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 import { Bus } from '#subscribers/Bus';
 

@@ -5,12 +5,12 @@ import { Logger } from '@seedcord/logger';
 import { StartupPhase } from '#src/lifecycle/phases';
 import { pluginLoggerOf } from '#src/plugin/Plugin';
 
-import { withTimeout } from './Lifecycle/withTimeout';
+import { withTimeout } from './withTimeout';
 
 import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import type { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
 import type { ShutdownPhase } from '#src/lifecycle/phases';
 import type { Attachment } from '#src/plugin/PluginHost';
+import type { CoordinatedStartup } from './CoordinatedStartup';
 
 interface ReadyStep {
     readonly key: string;

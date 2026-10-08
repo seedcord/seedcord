@@ -3,8 +3,8 @@ import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, afterEach } from 'vitest';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
 import { ServerHost } from '#node/ServerHost';
+import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { Bus } from '#subscribers/Bus';
 
 import type { Config, IRateLimiter } from '@seedcord/types';
