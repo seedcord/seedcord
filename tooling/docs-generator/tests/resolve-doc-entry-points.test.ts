@@ -71,6 +71,49 @@ describe('resolveDocEntryPoints', () => {
         expect(entry?.sourceEntry).toBe('src/hmr.index.ts');
     });
 
+    it('resolves a runtime condition as its own entry beside the default one', async () => {
+        await writeDeclaration('dist/index.d.mts');
+        await writeDeclaration('dist/workerd.index.d.mts');
+        await writeDeclaration('src/workerd.index.ts');
+        const manifest = manifestWith({
+            '.': {
+                workerd: { types: './dist/workerd.index.d.mts' },
+                import: { types: './dist/index.d.mts' }
+            }
+        });
+
+        const entries = await resolveDocEntryPoints(packageDir, manifest);
+
+        expect(entries.map(({ subpath, condition, sourceEntry }) => ({ subpath, condition, sourceEntry }))).toEqual([
+            { subpath: '.', condition: undefined, sourceEntry: undefined },
+            { subpath: '.', condition: 'workerd', sourceEntry: 'src/workerd.index.ts' }
+        ]);
+    });
+
+    // the build's own classes would get no source links
+    it('throws when a runtime build has no source file to scan', async () => {
+        await writeDeclaration('dist/index.d.mts');
+        await writeDeclaration('dist/workerd.index.d.mts');
+        const manifest = manifestWith({
+            '.': { workerd: { types: './dist/workerd.index.d.mts' }, import: { types: './dist/index.d.mts' } }
+        });
+
+        await expect(resolveDocEntryPoints(packageDir, manifest)).rejects.toThrow(
+            /@seedcord\/fixture exports "\." under "workerd" as \.\/dist\/workerd\.index\.d\.mts, and no src file matches it/
+        );
+    });
+
+    it('skips a condition that points at the default declaration', async () => {
+        await writeDeclaration('dist/index.d.mts');
+        const manifest = manifestWith({
+            '.': { development: { types: './dist/index.d.mts' }, import: { types: './dist/index.d.mts' } }
+        });
+
+        const entries = await resolveDocEntryPoints(packageDir, manifest);
+
+        expect(entries.map(({ condition }) => condition)).toEqual([undefined]);
+    });
+
     it('sorts the root entry ahead of every subpath', async () => {
         await writeDeclaration('dist/index.d.mts');
         await writeDeclaration('dist/edge.d.mts');

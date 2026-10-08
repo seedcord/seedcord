@@ -48,7 +48,11 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     /** @see {@link Bus} */
     public readonly bus: Bus;
 
-    /** Throws `CoreLifecycleUnavailable`. Cloudflare gives a worker no shutdown hook. */
+    /**
+     * `addTask` throws `CoreLifecycleUnavailable`.
+     *
+     * @deprecated Cloudflare Workers don't provide a shutdown hook.
+     */
     public readonly shutdown = edgeShutdown;
 
     /** Add a task that runs during startup, on the first request. */

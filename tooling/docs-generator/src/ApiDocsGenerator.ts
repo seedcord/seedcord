@@ -5,7 +5,7 @@ import path from 'node:path';
 import { extractPackageApiModel } from './ae-extractor';
 import { ApiDocsPaths } from './ApiDocsPaths';
 import { writeManifest } from './manifest';
-import { buildSourceIndex } from './source-index';
+import { SourceIndexer } from './SourceIndexer';
 import { discoverWorkspacePackages, readPackageManifest, readReadme, unscopedName } from './workspace';
 
 import type { ApiDocsPathConfig } from './ApiDocsPaths';
@@ -180,24 +180,30 @@ export class ApiDocsGenerator {
         };
     }
 
-    // one scan covers every entry point, because buildSourceIndex walks the whole `src` tree
     private attachSourceIndex(
         result: PackageDocResult,
         packageDir: string,
         packageNames: Record<string, string>,
         ref: string
     ): void {
-        const scan = buildSourceIndex({
+        const runtimeEntries = result.entries.flatMap(({ condition, sourceEntry }) =>
+            condition && sourceEntry ? [{ condition, entry: sourceEntry }] : []
+        );
+        const scan = SourceIndexer.scan({
             packageDir,
             repoRoot: this.paths.repoRoot,
             githubBase: this.githubBase ?? '',
             ref,
             packageNames,
+            runtimeEntries,
             ...(result.sourceEntry && { entry: result.sourceEntry })
         });
 
         result.sources = scan.sources;
         if (scan.reexports.length > 0) result.reexports = scan.reexports;
+        for (const entry of result.entries) {
+            if (entry.condition) entry.ownVersions = scan.ownVersions[entry.condition] ?? [];
+        }
     }
 
     private logPackageResult(result: PackageDocResult): void {

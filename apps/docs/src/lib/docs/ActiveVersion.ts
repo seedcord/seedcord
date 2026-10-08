@@ -1,4 +1,5 @@
 import { buildEntityHref, DEFAULT_VERSION, toneToDirectory } from '@seedcord/docs-engine/client';
+import { RuntimeBuild } from '@seedcord/docs-generator/runtime-build';
 import { cache } from 'react';
 
 import { getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
@@ -68,7 +69,7 @@ export class ActiveVersion {
     private items(directory: PackageDirectory, tone: EntityTone): NavigationEntityItem[] {
         return Array.from(directory.entries(tone), ([slug, node]) => ({
             id: slug,
-            label: node.name,
+            label: new RuntimeBuild(node.condition).label(node.name),
             href: buildEntityHref({ name: node.sourcePackage.name, version: this.versionOf(node), slug, tone })
         }));
     }

@@ -443,6 +443,9 @@ importers:
       '@seedcord/docs-engine':
         specifier: workspace:^
         version: link:../../tooling/docs-engine
+      '@seedcord/docs-generator':
+        specifier: workspace:^
+        version: link:../../tooling/docs-generator
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config
@@ -2405,6 +2408,7 @@ packages:
 
   '@cloudflare/vitest-pool-workers@0.22.0':
     resolution: {integrity: sha512-OJv/qikkOgxnKxJ5xrLS7zuOLZhc/6iziU+llqZm4tiQf2CJUYwlMuXN68VaWIQebORd1AUx4w6A0oy8XRbuaQ==}
+    deprecated: '@cloudflare/vitest-pool-workers has been renamed to @cloudflare/vitest-plugin. This package will not receive future updates.'
     peerDependencies:
       '@vitest/runner': ^4.1.0
       '@vitest/snapshot': ^4.1.0
@@ -11940,8 +11944,7 @@ snapshots:
   '@oxlint/binding-win32-x64-msvc@1.76.0':
     optional: true
 
-  '@pkgjs/parseargs@0.11.0':
-    optional: true
+  '@pkgjs/parseargs@0.11.0': {}
 
   '@pkgr/core@0.3.6': {}
 

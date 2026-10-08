@@ -82,22 +82,33 @@ export function unscopedName(name: string): string {
 // `./internal` and `./node/internal` are framework wiring, and CLAUDE.md keeps them off the docs
 const INTERNAL_SUBPATH = /(^|\/)internal$/;
 
+const DEFAULT_CONDITIONS = new Set(['types', 'import', 'default']);
+
 function declarationOf(condition: ExportCondition | undefined): string | undefined {
     if (typeof condition === 'string')
         return condition.endsWith('.d.ts') || condition.endsWith('.d.mts') ? condition : undefined;
     if (!condition) return undefined;
 
-    for (const key of ['types', 'import', 'default']) {
+    for (const key of DEFAULT_CONDITIONS) {
         const found = declarationOf(condition[key]);
         if (found) return found;
     }
     return undefined;
 }
 
-// tsdown names a subpath's output after its source
+function runtimeConditionsOf(condition: ExportCondition): [string, ExportCondition | undefined][] {
+    if (typeof condition === 'string') return [];
+    return Object.entries(condition).filter(([key]) => !DEFAULT_CONDITIONS.has(key));
+}
+
+// tsdown gives a build's declaration the base name of its source
+const baseNameOf = (declaration: string): string => path.basename(declaration).replace(/\.d\.[cm]?ts$/, '');
+
+const sourcePathFor = (declaration: string): string => `src/${baseNameOf(declaration)}.ts`;
+
 async function sourceForDeclaration(packageDir: string, declaration: string): Promise<string | undefined> {
-    const stem = path.basename(declaration).replace(/\.d\.[cm]?ts$/, '');
-    for (const candidate of [`src/${stem}.ts`, `${stem}.ts`, `src/${stem}.tsx`]) {
+    const baseName = baseNameOf(declaration);
+    for (const candidate of [sourcePathFor(declaration), `${baseName}.ts`, `src/${baseName}.tsx`]) {
         if (await pathExists(path.join(packageDir, candidate))) return candidate;
     }
     return undefined;
@@ -115,18 +126,44 @@ export async function resolveDocEntryPoints(packageDir: string, manifest: Packag
 
         // a package like @seedcord/tsconfig exports json presets and declares no types at all
         const declared = declarationOf(condition);
-        if (!declared) continue;
+        if (declared) entries.push(await entryPointFor(packageDir, manifest.name, { subpath, declared }));
 
-        const declaration = path.join(packageDir, normalizeRelativePath(declared));
-        if (!(await pathExists(declaration))) {
-            throw new Error(
-                `${manifest.name} exports "${subpath}" as ${declared}, which does not exist. Build the package first.`
+        for (const [runtime, branch] of runtimeConditionsOf(condition)) {
+            const runtimeDeclared = declarationOf(branch);
+            if (!runtimeDeclared || runtimeDeclared === declared) continue;
+            entries.push(
+                await entryPointFor(packageDir, manifest.name, {
+                    subpath,
+                    declared: runtimeDeclared,
+                    condition: runtime
+                })
             );
         }
-
-        const sourceEntry = await sourceForDeclaration(packageDir, declared);
-        entries.push({ subpath, declaration, ...(sourceEntry && { sourceEntry }) });
     }
 
+    // a stable sort keeps each default entry ahead of its runtime conditions
     return entries.sort((a, b) => a.subpath.localeCompare(b.subpath));
+}
+
+async function entryPointFor(
+    packageDir: string,
+    packageName: string,
+    { subpath, declared, condition }: { subpath: string; declared: string; condition?: string }
+): Promise<DocEntryPoint> {
+    const declaration = path.join(packageDir, normalizeRelativePath(declared));
+    const exported = condition ? `"${subpath}" under "${condition}"` : `"${subpath}"`;
+    if (!(await pathExists(declaration))) {
+        throw new Error(
+            `${packageName} exports ${exported} as ${declared}, which does not exist. Build the package first.`
+        );
+    }
+
+    const sourceEntry = await sourceForDeclaration(packageDir, declared);
+    if (condition && !sourceEntry) {
+        throw new Error(
+            `${packageName} exports ${exported} as ${declared}, and no src file matches it. ` +
+                `Put its entry at ${sourcePathFor(declared)} to give its classes source links.`
+        );
+    }
+    return { subpath, declaration, ...(condition && { condition }), ...(sourceEntry && { sourceEntry }) };
 }

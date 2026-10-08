@@ -20,6 +20,7 @@ describe('shutdown tasks on an edge Seedcord', () => {
             subscribers: { path: null }
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- this test checks that it throws
         expect(() => seedcord.shutdown.addTask(ShutdownPhase.Drain, 'close-pool', () => Promise.resolve())).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CoreLifecycleUnavailable })
         );

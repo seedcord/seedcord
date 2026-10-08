@@ -23,6 +23,8 @@ export interface PackageManifest {
 /** One documented import path, `.` for the package root and `./hmr` for a subpath. */
 export interface DocEntryPoint {
     subpath: string;
+    /** The `exports` key that selects this build, like `workerd`. Absent for the default build. */
+    condition?: string;
     /** Absolute path to the built declaration api-extractor reads. */
     declaration: string;
     /** Package-relative path to the `src` file the source pass walks. */
@@ -53,6 +55,8 @@ export interface ReexportEntry {
 export interface SourceScan {
     sources: PackageSourceIndex;
     reexports: ReexportEntry[];
+    // per runtime condition, the exports its build declares in place of the default build's
+    ownVersions: Record<string, string[]>;
 }
 
 /** GitHub repo the source links point at, written into the manifest. */
@@ -65,10 +69,13 @@ export interface ManifestRepository {
 /** One extracted import path and the model api-extractor wrote for it. */
 export interface EntryDocResult {
     subpath: string;
+    condition?: string;
     /** Package-relative declaration api-extractor read. */
     entryPoint: string;
     /** Package-relative `src` file the source pass walked. */
     sourceEntry?: string;
+    // set on a runtime condition's entry. the engine gives each of these exports its own node.
+    ownVersions?: string[];
     outputPath: string | null;
     warnings: string[];
     errors: string[];

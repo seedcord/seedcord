@@ -4,7 +4,8 @@
     "compilerOptions": {
         "rootDir": ".",
         "paths": {
-            "#src/*": ["./src/*"]
+            "#src/*": ["./src/*"],
+            "@seedcord/fixture-base": ["./tests/mock-base/index.ts"]
         }
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "eslint.config.ts", "tsdown.config.ts", "vitest.config.ts"],

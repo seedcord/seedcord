@@ -32,13 +32,12 @@ describe('DocsEngine mock package integration', () => {
     it('loads manifest metadata and package list', async () => {
         const manifest = await getManifest();
         const packages = engine.listPackages();
-        expect(packages).toEqual([MOCK_PACKAGE_FULL_NAME]);
+        expect(packages).toEqual([MOCK_PACKAGE_FULL_NAME, '@seedcord/fixture-base']);
 
-        expect(manifest.packages).toHaveLength(1);
-        const [manifestPackage] = manifest.packages;
-        expect(manifestPackage!.name).toBe(MOCK_PACKAGE_FULL_NAME);
+        const manifestPackage = manifest.packages.find((pkg) => pkg.name === MOCK_PACKAGE_FULL_NAME);
         expect(manifestPackage!.entryPoints).toEqual([
             'dist/index.d.ts',
+            'dist/workerd.index.d.ts',
             'dist/variable.d.ts',
             'dist/variable.d.ts',
             'dist/extra.d.ts',

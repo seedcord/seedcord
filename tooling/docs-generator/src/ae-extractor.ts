@@ -2,12 +2,13 @@ import path from 'node:path';
 
 import { Extractor, ExtractorConfig, ExtractorLogLevel, type IConfigFile } from '@microsoft/api-extractor';
 
+import { RuntimeBuild } from './RuntimeBuild';
 import { writeSharedModel } from './shared-model';
 import { pathExists } from './utils';
 import { readPackageManifest, resolveDocEntryPoints, unscopedName } from './workspace';
 
 import type { ApiDocsPaths } from './ApiDocsPaths';
-import type { EntryDocResult, PackageDocResult } from './types';
+import type { DocEntryPoint, EntryDocResult, PackageDocResult } from './types';
 
 function buildConfigObject(options: {
     packageDir: string;
@@ -53,12 +54,15 @@ function buildConfigObject(options: {
     };
 }
 
-// doubling the hyphen first keeps `./a/b` and `./a-b` on separate files
-function apiJsonNameFor(packageName: string, subpath: string): string {
+// doubling the hyphen first keeps `./a/b` and `./a-b` on separate files.
+// `@` keeps a `workerd` build off the file a `./workerd` subpath would get.
+function apiJsonNameFor(packageName: string, { subpath, condition }: DocEntryPoint): string {
     const unscoped = unscopedName(packageName);
-    if (subpath === '.') return `${unscoped}.api.json`;
-    const slug = subpath.replace(/^\.\//, '').replaceAll('-', '--').replaceAll('/', '-');
-    return `${unscoped}.${slug}.api.json`;
+    const slug = subpath
+        .replace(/^\.\/?/, '')
+        .replaceAll('-', '--')
+        .replaceAll('/', '-');
+    return `${new RuntimeBuild(condition).withCondition(slug ? `${unscoped}.${slug}` : unscoped)}.api.json`;
 }
 
 // every entry output ends in `.api.json`
@@ -110,7 +114,7 @@ export async function extractPackageApiModel(
     }
 
     const entries: EntryDocResult[] = entryPoints.map((entry) => {
-        const apiJsonPath = path.join(paths.outputDir, apiJsonNameFor(manifest.name, entry.subpath));
+        const apiJsonPath = path.join(paths.outputDir, apiJsonNameFor(manifest.name, entry));
         const run = runExtractor({
             packageDir,
             entryPoint: entry.declaration,
@@ -120,6 +124,7 @@ export async function extractPackageApiModel(
 
         return {
             subpath: entry.subpath,
+            ...(entry.condition && { condition: entry.condition }),
             entryPoint: path.relative(packageDir, entry.declaration),
             ...(entry.sourceEntry && { sourceEntry: entry.sourceEntry }),
             outputPath: run.succeeded ? apiJsonPath : null,
@@ -130,10 +135,11 @@ export async function extractPackageApiModel(
     });
 
     const [first] = entries;
-    const root = entries.find((entry) => entry.subpath === '.') ?? first;
+    const root = entries.find((entry) => entry.subpath === '.' && !entry.condition) ?? first;
     if (!root) return null;
 
-    const subpaths = entries.filter((entry) => entry !== root);
+    // sibling packages resolve against the shared model. it holds the default build alone.
+    const subpaths = entries.filter((entry) => entry !== root && !entry.condition);
     const sharedModelPath = path.join(paths.outputDir, sharedModelNameFor(manifest.name));
     if (subpaths.length > 0) await writeSharedModel(root, subpaths, sharedModelPath);
 

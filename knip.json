@@ -109,7 +109,7 @@
         },
         "tooling/docs-engine": {},
         "tooling/docs-generator": {
-            "ignore": ["tests/mock/**"]
+            "ignore": ["tests/mock/**", "tests/mock-base/**"]
         },
         "tooling/eslint-config": {
             "ignoreDependencies": [

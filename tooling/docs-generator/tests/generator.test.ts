@@ -41,15 +41,14 @@ describe('ApiDocsGenerator', () => {
         });
 
         it('lists the mock package with a succeeded result pointing at its .api.json', () => {
-            expect(manifest.packages).toHaveLength(1);
-            const [entry] = manifest.packages;
-            expect(entry!.name).toBe(MOCK_FULL_NAME);
+            const entry = manifest.packages.find((pkg) => pkg.name === MOCK_FULL_NAME);
             expect(entry!.version).toBe('0.0.0');
             expect(entry!.succeeded).toBe(true);
             expect(entry!.output).toMatch(/mock-docs\.api\.json$/);
             // the repeat is deliberate. `./deep-entry` and `./deep/entry` share one declaration.
             expect(entry!.entryPoints).toEqual([
                 'dist/index.d.ts',
+                'dist/workerd.index.d.ts',
                 'dist/variable.d.ts',
                 'dist/variable.d.ts',
                 'dist/extra.d.ts',
@@ -58,7 +57,7 @@ describe('ApiDocsGenerator', () => {
         });
 
         it('captures the package.json description', () => {
-            const [entry] = manifest.packages;
+            const entry = manifest.packages.find((pkg) => pkg.name === MOCK_FULL_NAME);
             expect(entry!.description).toBe('Mock package exercised by the docs generator tests.');
         });
     });

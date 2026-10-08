@@ -3,9 +3,9 @@ import path from 'node:path';
 
 import { buildPackageFromApi } from '#builders/package-builder';
 import { createApiModel, loadApiPackage } from '#model/load-model';
-import { exportedKeysOf } from '#model/merge-entries';
+import { exportedKeysOf } from '#model/PackageTree';
 
-import type { AdapterEntry } from '#model/merge-entries';
+import type { AdapterEntry } from '#model/PackageTree';
 import type { GlobalId } from '#src/ids';
 import type { DocCollection, DocManifest, DocManifestPackage, DocPackageModel } from '#src/types';
 import type { ApiModel } from '@microsoft/api-extractor-model';
@@ -139,15 +139,22 @@ function relativizeFromManifestOutput(output: string, manifestOutputDir: string)
 function loadEntries(
     pkg: DocManifestPackage,
     sharedModel: ApiModel,
-    resolveOutput: (output: string | null) => string | null
+    resolveOutput: (output: string | null) => string | null,
+    createRuntimeModel: () => ApiModel
 ): AdapterEntry[] {
     return pkg.entries.reduce<AdapterEntry[]>((acc, entry) => {
         const apiJsonPath = resolveOutput(entry.output);
         if (!apiJsonPath) return acc;
 
-        if (entry.subpath !== '.') {
-            const model = createApiModel();
-            acc.push({ subpath: entry.subpath, apiPackage: loadApiPackage(model, apiJsonPath), model });
+        if (entry.subpath !== '.' || entry.condition) {
+            const model = entry.condition ? createRuntimeModel() : createApiModel();
+            acc.push({
+                subpath: entry.subpath,
+                ...(entry.condition && { condition: entry.condition }),
+                ...(entry.ownVersions && { ownVersions: new Set(entry.ownVersions) }),
+                apiPackage: loadApiPackage(model, apiJsonPath),
+                model
+            });
             return acc;
         }
 
@@ -172,6 +179,21 @@ function loadEntries(
     }, []);
 }
 
+// one ApiModel holds one package per name. every other package loads in too, for base classes like core's `PluginHost`.
+function runtimeModel(
+    manifest: DocManifest,
+    own: DocManifestPackage,
+    resolveOutput: (output: string | null) => string | null
+): ApiModel {
+    const model = createApiModel();
+    for (const pkg of manifest.packages) {
+        const root = pkg.entries.find((entry) => entry.subpath === '.' && !entry.condition);
+        const modelPath = resolveOutput(pkg.sharedModel ?? null) ?? resolveOutput(root?.output ?? null);
+        if (pkg.name !== own.name && modelPath) loadApiPackage(model, modelPath);
+    }
+    return model;
+}
+
 export function buildCollection(manifest: DocManifest, options: ResolveOptions): DocCollection {
     const baseCandidates = collectBaseCandidates(options);
     const resolveOutput = (output: string | null): string | null =>
@@ -182,7 +204,7 @@ export function buildCollection(manifest: DocManifest, options: ResolveOptions):
     // references resolve against the full set.
     const loaded: { pkg: DocManifestPackage; entries: AdapterEntry[] }[] = [];
     for (const pkg of manifest.packages) {
-        const entries = loadEntries(pkg, model, resolveOutput);
+        const entries = loadEntries(pkg, model, resolveOutput, () => runtimeModel(manifest, pkg, resolveOutput));
         if (entries.length === 0) continue;
         loaded.push({ pkg, entries });
     }

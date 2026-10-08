@@ -48,6 +48,7 @@ export function EntityContent({ model }: EntityContentProps): ReactElement {
                 seeAlso={model.seeAlso}
                 throws={model.throws}
                 {...(model.version ? { version: model.version } : {})}
+                {...(model.condition ? { condition: model.condition } : {})}
                 deprecationStatus={model.deprecationStatus}
                 {...(functionSignatures ? { functionSignatures } : {})}
             />

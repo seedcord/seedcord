@@ -6,6 +6,10 @@
     "description": "Mock package exercised by the docs generator tests.",
     "exports": {
         ".": {
+            "workerd": {
+                "types": "./dist/workerd.index.d.ts",
+                "default": "./dist/workerd.index.js"
+            },
             "import": {
                 "types": "./dist/index.d.ts",
                 "default": "./dist/index.js"

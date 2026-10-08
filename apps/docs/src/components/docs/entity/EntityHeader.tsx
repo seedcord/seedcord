@@ -41,6 +41,7 @@ const EMPTY_EXAMPLES: readonly CommentExample[] = [];
 interface EntityHeaderProps extends WithThrows, WithSeeAlso, WithDeprecationStatus {
     badgeLabel: string;
     pkg: string;
+    condition?: string;
     symbolName: string;
     tone: EntityTone;
     signature: CodeRepresentation;
@@ -71,6 +72,7 @@ function HeaderTop({
     toneIcon,
     badgeLabel,
     pkg,
+    condition,
     version,
     tags,
     symbolName,
@@ -82,6 +84,7 @@ function HeaderTop({
     toneIcon: IconComponent;
     badgeLabel: string;
     pkg: string;
+    condition?: string | undefined;
     version?: string | null | undefined;
     tags: readonly string[];
     symbolName: string;
@@ -97,6 +100,7 @@ function HeaderTop({
                     {badgeLabel}
                 </Badge>
                 <Badge tone="accent">{pkg}</Badge>
+                {condition ? <Badge tone="neutral">{condition}</Badge> : null}
                 {version ? <Badge tone="muted">{formatVersionLabel(version)}</Badge> : null}
                 <TagPills tags={tags} />
             </div>
@@ -179,6 +183,7 @@ function HeaderBody({ deprecationStatus, active, signature, headerExamples }: He
 export function EntityHeader({
     badgeLabel,
     pkg,
+    condition,
     signature,
     summary,
     symbolName,
@@ -215,6 +220,7 @@ export function EntityHeader({
                         toneIcon={ToneIcon}
                         badgeLabel={badgeLabel}
                         pkg={pkg}
+                        condition={condition}
                         version={version}
                         tags={tags}
                         symbolName={symbolName}

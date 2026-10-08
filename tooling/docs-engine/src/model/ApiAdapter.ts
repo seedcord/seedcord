@@ -11,6 +11,7 @@ import {
     type ApiModel,
     type ApiPackage
 } from '@microsoft/api-extractor-model';
+import { RuntimeBuild } from '@seedcord/docs-generator/runtime-build';
 
 import {
     accessorHasSetter,
@@ -18,6 +19,8 @@ import {
     buildAccessorSignature,
     belongsInClassBody,
     buildDeclarationHeader,
+    sourcesIn,
+    baseRowName,
     emptyInheritance,
     explicitModifiers,
     enumMembersInOrder,
@@ -25,6 +28,7 @@ import {
     groupOverloads,
     inheritedFromRef,
     paramFlags,
+    reexportReferences,
     synthGroups,
     type AeShapes
 } from '#model/adapter-helpers';
@@ -34,7 +38,8 @@ import { excerptToInlineType } from '#model/excerpt-renderer';
 import { buildFlags, type DerivedFlagBits } from '#model/flags';
 import { apiKindToDocKind, DocKind, frozenKindLabel } from '#model/kinds';
 import { createLinkResolver } from '#model/link-resolver';
-import { entryMembers } from '#model/merge-entries';
+import { NodeNumbering } from '#model/NodeNumbering';
+import { entryMembers } from '#model/PackageTree';
 import {
     buildComment,
     buildParamComment,
@@ -42,7 +47,7 @@ import {
     buildTypeParamComment,
     type LinkResolver
 } from '#model/tsdoc-comment';
-import { Slugger, slugForNode } from '#src/Slugger';
+import { slugForNode } from '#src/Slugger';
 import { formatRenderedDeclarationHeader, formatRenderedSignature } from '#transformers/signature-renderer';
 
 import type {
@@ -51,7 +56,6 @@ import type {
     DocManifestPackage,
     DocNode,
     DocReference,
-    ReexportReference,
     DocSignature,
     DocSignatureParameter,
     DocSource,
@@ -71,14 +75,14 @@ interface MemberContext {
 const TOP_LEVEL: MemberContext = { inheritedFrom: null, ownClassMember: false, overridesBase: false };
 
 export class ApiAdapter {
-    private readonly slugger = new Slugger();
     private readonly reexportOwners: ReadonlyMap<string, string>;
-    private idCounter = 1;
-    private makeResolveLink: (fromItem: ApiItem) => LinkResolver;
+    private readonly makeResolveLink: (fromItem: ApiItem) => LinkResolver;
 
     constructor(
         private readonly manifest: DocManifestPackage,
-        model: ApiModel
+        model: ApiModel,
+        private readonly build = RuntimeBuild.default,
+        private readonly numbering = new NodeNumbering()
     ) {
         this.reexportOwners = new Map((manifest.reexports ?? []).map((entry) => [entry.name, entry.owner] as const));
         this.makeResolveLink = createLinkResolver(model, this.reexportOwners);
@@ -86,25 +90,20 @@ export class ApiAdapter {
 
     transform(pkg: ApiPackage): DocNode {
         const root = this.baseNode(pkg, [], pkg.displayName, true);
-        root.children = this.visitMembers(entryMembers(pkg), []);
+        root.children = this.adapt(entryMembers(pkg));
         root.groups = synthGroups(root.children);
-        const reexports = this.buildReexports();
+        const reexports = reexportReferences(this.manifest);
         if (reexports.length > 0) root.reexports = reexports;
         return root;
     }
 
-    /** Adapt members of one subpath, resolving their `{@link}`s against that subpath's own model. */
-    adaptSubpath(model: ApiModel, members: readonly ApiItem[]): DocNode[] {
-        this.makeResolveLink = createLinkResolver(model, this.reexportOwners);
-        return this.visitMembers(members, []);
+    // a subpath resolves its {@link}s against its own model
+    forEntry(model: ApiModel, build: RuntimeBuild): ApiAdapter {
+        return new ApiAdapter(this.manifest, model, build, this.numbering);
     }
 
-    private buildReexports(): ReexportReference[] {
-        return (this.manifest.reexports ?? []).map((entry) => ({
-            name: entry.name,
-            qualifiedName: entry.name,
-            packageName: entry.owner
-        }));
+    adapt(members: readonly ApiItem[]): DocNode[] {
+        return this.visitMembers(members, []);
     }
 
     private baseNode(
@@ -120,16 +119,16 @@ export class ApiAdapter {
         if (member.inheritedFrom) flags.isInherited = true;
 
         const qualifiedName = path.join('.');
-        const sources = this.sourcesFor(qualifiedName);
+        const sources = this.sourcesFor(qualifiedName, name, member.inheritedFrom);
         const node: DocNode = {
-            id: this.idCounter++,
-            key: canonicalKey(item.canonicalReference),
+            id: this.numbering.id(),
+            key: this.build.key(canonicalKey(item.canonicalReference)),
             name,
             packageName: this.manifest.name,
             sourcePackage: this.sourcePackage(),
             path,
             qualifiedName,
-            slug: slugForNode(this.slugger, path),
+            slug: slugForNode(this.numbering.slugger, this.build.slugPath(path)),
             kind,
             kindLabel: frozenKindLabel(kind),
             isExported: ApiExportedMixin.isBaseClassOf(item) ? item.isExported : true,
@@ -147,6 +146,7 @@ export class ApiAdapter {
             implementationOf: null
         };
         if (this.manifest.version) node.packageVersion = this.manifest.version;
+        this.markCondition(node);
 
         if (ApiInitializerMixin.isBaseClassOf(item)) {
             const initializer = item.initializerExcerpt?.text.trim();
@@ -158,6 +158,12 @@ export class ApiAdapter {
 
         if (!isPackageRoot) this.applyHeader(node, item, kind, flags);
         return node;
+    }
+
+    // only the top-level node gets the page badge and the sidebar label. its members stay plain.
+    private markCondition(node: DocNode): void {
+        const { condition } = this.build;
+        if (condition && node.path.length === 1) node.condition = condition;
     }
 
     private sourcePackage(): SourcePackage {
@@ -202,16 +208,10 @@ export class ApiAdapter {
         });
     }
 
-    // api extractor's fileUrlPath points into the bundled dist/index.d.mts rollup and carries no line or
-    // column, so positions come from the generator's compiler pass keyed by qualified name.
-    private sourcesFor(qualifiedName: string): DocSource[] {
-        const entries = this.manifest.sources?.[qualifiedName];
-        if (!entries) return [];
-        return entries.map((entry) => {
-            const source: DocSource = { fileName: entry.file, line: entry.line, character: entry.column };
-            if (entry.url) source.url = entry.url;
-            return source;
-        });
+    // api extractor's fileUrlPath points at the dist rollup with no line. the generator's compiler pass has them.
+    private sourcesFor(qualifiedName: string, name: string, inheritedFrom: DocReference | null): DocSource[] {
+        const baseRow = baseRowName(name, inheritedFrom, this.manifest.name);
+        return sourcesIn(this.manifest.sources ?? {}, this.build.withCondition(qualifiedName), baseRow);
     }
 
     private applyHeader(node: DocNode, item: ApiItem, kind: number, flags: DocFlags): void {
@@ -269,7 +269,7 @@ export class ApiAdapter {
         const primary = group[0];
         if (!primary) return;
         const signatures: DocSignature[] = [];
-        const deps = { nextId: (): number => this.idCounter++, resolveLink: this.makeResolveLink(primary) };
+        const deps = { nextId: (): number => this.numbering.id(), resolveLink: this.makeResolveLink(primary) };
         if (accessorRole(primary) === 'setter') {
             node.flags.accessor = 'setter';
             signatures.push(buildAccessorSignature(primary, node, 'setter', 0, deps));
@@ -359,7 +359,7 @@ export class ApiAdapter {
                 : null;
 
         const signature: DocSignature = {
-            id: this.idCounter++,
+            id: this.numbering.id(),
             name: signatureName,
             kind: owner.kind,
             fragment,

@@ -54,12 +54,19 @@ describe('DocsEngine search integration', () => {
 
     it('matches package names and versions with punctuation', () => {
         const packageMatches = engine.search('@seedcord/mock-docs');
-        expect(packageMatches.length).toBeGreaterThan(0);
-        expect(packageMatches.every((entry) => entry.packageName === MOCK_PACKAGE_FULL_NAME)).toBe(true);
+        expect(packageMatches[0]).toMatchObject({ packageName: MOCK_PACKAGE_FULL_NAME, name: MOCK_PACKAGE_FULL_NAME });
 
         const versionMatches = engine.search('0.0.0');
         expect(versionMatches.length).toBeGreaterThan(0);
         expect(versionMatches.some((entry) => entry.packageVersion === '0.0.0')).toBe(true);
+    });
+
+    it('marks a runtime build class and its members with the condition', () => {
+        const [top] = engine.search('MockRuntimeHost workerd');
+        const fetch = engine.search('fetch').find((entry) => entry.slug === 'mock-runtime-host-workerd/fetch');
+
+        expect(top).toMatchObject({ slug: 'mock-runtime-host-workerd', condition: 'workerd' });
+        expect(fetch?.condition).toBe('workerd');
     });
 
     it('scopes searches to a package when requested', () => {

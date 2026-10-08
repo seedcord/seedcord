@@ -102,7 +102,9 @@ function normalizeEntries(value: unknown): DocManifestEntry[] {
 
         acc.push({
             subpath: entry.subpath,
-            output: typeof entry.output === 'string' ? entry.output : null
+            ...(typeof entry.condition === 'string' && { condition: entry.condition }),
+            output: typeof entry.output === 'string' ? entry.output : null,
+            ...(isStringList(entry.ownVersions) && { ownVersions: entry.ownVersions })
         });
         return acc;
     }, []);
@@ -112,6 +114,10 @@ function attachOptionalFields(result: DocManifestPackage, pkg: Partial<DocManife
     if (isRecordShape(pkg.sources)) result.sources = pkg.sources;
     if (Array.isArray(pkg.reexports)) result.reexports = pkg.reexports;
     Object.assign(result, pageFields(pkg));
+}
+
+function isStringList(value: unknown): value is string[] {
+    return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
 function isRecordShape(value: PackageSourceIndex | undefined): value is PackageSourceIndex {

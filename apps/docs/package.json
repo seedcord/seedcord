@@ -21,6 +21,7 @@
     },
     "dependencies": {
         "@seedcord/docs-engine": "workspace:^",
+        "@seedcord/docs-generator": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/types": "workspace:^",
         "@seedcord/ui": "workspace:^",

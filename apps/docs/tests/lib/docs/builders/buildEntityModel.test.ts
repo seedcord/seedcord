@@ -36,17 +36,17 @@ function makeNode(entries: string[] | undefined): DocNode {
 }
 
 describe('buildEntityModel package badge', () => {
-    it('names the subpath when only a subpath exports the symbol', async () => {
+    it('shows the subpath when only a subpath exports the symbol', async () => {
         const model = await buildEntityModel(engine, makeNode(['./hmr']));
         expect(model.displayPackage).toBe('core/hmr');
     });
 
-    it('names the package alone when the root entry exports it too', async () => {
+    it('shows the package alone when the root entry exports it too', async () => {
         const model = await buildEntityModel(engine, makeNode(['.', './plugin']));
         expect(model.displayPackage).toBe('core');
     });
 
-    it('names the package alone when no entry is recorded', async () => {
+    it('shows the package alone when no entry is recorded', async () => {
         const model = await buildEntityModel(engine, makeNode(undefined));
         expect(model.displayPackage).toBe('core');
     });

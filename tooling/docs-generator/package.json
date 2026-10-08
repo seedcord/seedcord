@@ -26,6 +26,12 @@
                 "types": "./dist/manifest-fields.d.mts",
                 "default": "./dist/manifest-fields.mjs"
             }
+        },
+        "./runtime-build": {
+            "import": {
+                "types": "./dist/RuntimeBuild.d.mts",
+                "default": "./dist/RuntimeBuild.mjs"
+            }
         }
     },
     "typesVersions": {

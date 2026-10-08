@@ -142,6 +142,7 @@ export interface BaseEntityModel
     qualifiedName: string;
     manifestPackage: string;
     displayPackage: string;
+    condition?: string;
     tags?: readonly string[];
     version?: string;
 }

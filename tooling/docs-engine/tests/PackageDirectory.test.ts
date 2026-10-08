@@ -24,6 +24,8 @@ describe('PackageDirectory', () => {
                 'inline-constraint-shadow',
                 'mock-class',
                 'mock-host-base',
+                'mock-runtime-host',
+                'mock-runtime-host-workerd',
                 'override-base',
                 'override-child',
                 'shared-host'

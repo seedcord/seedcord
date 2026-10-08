@@ -117,6 +117,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         return this;
     }
 
+    /** @internal */
     protected static override reset(host?: object): boolean {
         if (!super.reset(host)) return false;
         // super.reset() drops the dev TUI's log sink

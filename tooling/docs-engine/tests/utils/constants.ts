@@ -10,6 +10,8 @@ export const MOCK_SOURCE_DIR = resolve(DOCS_GENERATOR_ROOT, 'tests/mock');
 // under the repo root so the fixture's `extends: ../../../../tsconfig.json` still resolves
 export const PACKAGES_DIR = TEST_DIR;
 export const MOCK_DIR = resolve(TEST_DIR, 'mock');
+export const MOCK_BASE_SOURCE_DIR = resolve(DOCS_GENERATOR_ROOT, 'tests/mock-base');
+export const MOCK_BASE_DIR = resolve(TEST_DIR, 'mock-base');
 export const TEMP_DIR = resolve(TEST_DIR, 'temp');
 export const MOCK_PACKAGE_NAME = 'mock-docs';
 export const MOCK_PACKAGE_FULL_NAME = '@seedcord/mock-docs';

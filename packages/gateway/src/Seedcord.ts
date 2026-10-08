@@ -79,6 +79,7 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
         return this.bot.client.user?.username;
     }
 
+    /** @internal */
     protected static override reset(host?: object): boolean {
         if (!super.reset(host)) return false;
         // reset() would drop the dev TUI's log sink

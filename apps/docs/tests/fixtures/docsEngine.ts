@@ -1,5 +1,6 @@
 import { IndexLoader, VersionedDocsEngine } from '@seedcord/docs-engine';
 import { DocKind, slugifySegment } from '@seedcord/docs-engine/client';
+import { RuntimeBuild } from '@seedcord/docs-generator/runtime-build';
 
 import type { DocNode, DocPackageModel, DocProjectFile, IndexJson } from '@seedcord/docs-engine';
 
@@ -26,6 +27,7 @@ interface NodeOptions {
     kind: number;
     children?: DocNode[];
     isExported?: boolean;
+    condition?: string;
 }
 
 export interface FixtureVersion {
@@ -46,7 +48,7 @@ export function docNode(pkg: { name: string; version: string }, name: string, op
         name,
         path: [name],
         qualifiedName: name,
-        slug: slugifySegment(name),
+        slug: slugifySegment(new RuntimeBuild(options.condition).withCondition(name)),
         kind: options.kind,
         kindLabel: '',
         isExported: options.isExported ?? true,
@@ -56,7 +58,8 @@ export function docNode(pkg: { name: string; version: string }, name: string, op
         children: options.children ?? [],
         groups: [],
         sources: [],
-        inheritance: {}
+        inheritance: {},
+        ...(options.condition && { condition: options.condition })
     };
 }
 

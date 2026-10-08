@@ -42,8 +42,9 @@ dist/
 # scratch projects a test compiles, removed in afterAll unless the run dies
 **/.build-fixture
 
-# the docs-engine suite copies the docs-generator mock here so the two never share a dist
+# the docs-engine suite copies the docs-generator mocks here so the two never share a dist
 /tooling/docs-engine/tests/mock/
+/tooling/docs-engine/tests/mock-base/
 
 # Package manager caches
 .pnpm-store/

@@ -59,6 +59,7 @@ export function buildBaseEntityModel(params: BuildBaseEntityModelParams): BaseEn
     if (entityTags.length) base.tags = entityTags;
 
     if (node.packageVersion) base.version = node.packageVersion;
+    if (node.condition) base.condition = node.condition;
     if (node.sourceUrl) base.sourceUrl = node.sourceUrl;
     if (seeAlso?.length) base.seeAlso = seeAlso;
     if (throws?.length) base.throws = throws;

@@ -3,8 +3,8 @@ import createConfig from '@seedcord/eslint-config';
 export default createConfig({
     tsconfigRootDir: import.meta.dirname,
     relativeImports: 'parent',
-    // generated declarations the test harness emits for the mock fixture
-    generalIgnores: ['tests/mock/dist/**'],
+    // output the test harness writes for the mock fixtures
+    generalIgnores: ['tests/mock/dist/**', 'tests/mock/node_modules/**', 'tests/mock-base/dist/**'],
     userConfigs: [
         {
             rules: {

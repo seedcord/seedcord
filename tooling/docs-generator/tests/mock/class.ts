@@ -163,7 +163,7 @@ export class MockClass<TypeT, TypeU extends number> extends BaseClass {
     }
 }
 
-// new fixtures go at the bottom. source-index.test.ts pins the line numbers above.
+// new fixtures go at the bottom. SourceIndexer.test.ts pins the line numbers above.
 
 /**
  * A base class whose type parameter is constrained by an inline object type.

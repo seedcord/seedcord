@@ -25,7 +25,9 @@ export async function writeManifest(
             entryPoints: result.entryPoints,
             entries: result.entries.map((entry) => ({
                 subpath: entry.subpath,
-                output: entry.outputPath ? paths.toRepoRelative(entry.outputPath) : null
+                ...(entry.condition && { condition: entry.condition }),
+                output: entry.outputPath ? paths.toRepoRelative(entry.outputPath) : null,
+                ...(entry.ownVersions && { ownVersions: entry.ownVersions })
             })),
             output: result.outputPath ? paths.toRepoRelative(result.outputPath) : null,
             ...(result.sharedModelPath && { sharedModel: paths.toRepoRelative(result.sharedModelPath) }),

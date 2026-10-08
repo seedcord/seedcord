@@ -40,3 +40,4 @@ export type {
     MockPartial
 } from './type.js';
 export { mockVariable } from './variable.js';
+export { MockRuntimeHost } from './runtimeHost.js';

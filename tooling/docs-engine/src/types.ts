@@ -48,7 +48,10 @@ export interface RenderedDeclarationHeader {
 /** One import path a package documents, paired with the api model extracted for it. */
 export interface DocManifestEntry {
     subpath: string;
+    /** The `exports` key that selects this build, like `workerd`. Absent for the default build. */
+    condition?: string;
     output: string | null;
+    ownVersions?: string[];
 }
 
 export interface DocManifestPackage {
@@ -261,6 +264,8 @@ export interface DocNode {
     // Set on top-level members only: the `exports` map subpaths that expose this symbol, `.` for the
     // root entry.
     entries?: string[];
+    // Set on a runtime build's top-level node that reuses a default-build name, like the edge `Seedcord`.
+    condition?: string;
 }
 
 export interface DocSearchEntry {
@@ -274,6 +279,8 @@ export interface DocSearchEntry {
     aliases?: string[];
     file?: string;
     value?: string;
+    /** The runtime condition of this entry's class, like `workerd`. */
+    condition?: string;
     tokens: string[];
 }
 

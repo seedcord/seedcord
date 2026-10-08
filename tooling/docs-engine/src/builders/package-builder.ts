@@ -1,8 +1,10 @@
 import path from 'node:path';
 
+import { RuntimeBuild } from '@seedcord/docs-generator/runtime-build';
+
 import { ApiAdapter } from '#model/ApiAdapter';
 import { DocKind } from '#model/kinds';
-import { mergeEntries, type AdapterEntry } from '#model/merge-entries';
+import { PackageTree, type AdapterEntry } from '#model/PackageTree';
 import { PackageDirectory } from '#src/PackageDirectory';
 import { inlineTypeToText, sigPartsToText } from '#transformers/signature-renderer';
 
@@ -27,11 +29,13 @@ function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
     const byKind = new Map<number, DocNode[]>();
     const search: DocSearchEntry[] = [];
 
-    const visit = (node: DocNode, ancestorsExported: boolean): void => {
+    // markCondition sets the condition on the class node alone
+    const visit = (node: DocNode, ancestorsExported: boolean, inheritedCondition?: string): void => {
+        const condition = node.condition ?? inheritedCondition;
         byId.set(node.id, node);
         bySlug.set(node.slug, node);
         if (node.qualifiedName.length > 0) {
-            byQName.set(node.qualifiedName, node);
+            byQName.set(new RuntimeBuild(condition).withCondition(node.qualifiedName), node);
         }
 
         // Forgotten (referenced-only) declarations and @internal-tagged nodes stay resolvable as link
@@ -44,11 +48,11 @@ function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
             bucket.push(node);
             byKind.set(node.kind, bucket);
 
-            search.push(createSearchEntry(node, manifest));
+            search.push(createSearchEntry(node, manifest, condition));
         }
 
         for (const child of node.children) {
-            visit(child, searchable);
+            visit(child, searchable, condition);
         }
     };
 
@@ -57,7 +61,7 @@ function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
     return { byId, bySlug, byQName, byKind, search };
 }
 
-function createSearchEntry(node: DocNode, manifest: DocManifestPackage): DocSearchEntry {
+function createSearchEntry(node: DocNode, manifest: DocManifestPackage, condition?: string): DocSearchEntry {
     const summary = node.comment?.summary ?? '';
     const nodeAliases = collectCommentAliases(node.comment);
     const signatureAliases = node.signatures.flatMap((signature) => {
@@ -94,6 +98,11 @@ function createSearchEntry(node: DocNode, manifest: DocManifestPackage): DocSear
 
     if (file) {
         entry.file = file;
+    }
+
+    if (condition) {
+        entry.condition = condition;
+        entry.tokens.push(condition);
     }
 
     if (node.kind === DocKind.EnumMember && node.defaultValue) {
@@ -261,7 +270,7 @@ export function buildPackageFromApi(
     entries: readonly AdapterEntry[],
     model: ApiModel
 ): DocPackageModel {
-    return buildPackageFromModel(pkg, mergeEntries(new ApiAdapter(pkg, model), entries));
+    return buildPackageFromModel(pkg, PackageTree.build(new ApiAdapter(pkg, model), entries));
 }
 
 // buildPackageFromApi runs this after adapting, and the remote project.json loader reuses it directly with no AE adapter.

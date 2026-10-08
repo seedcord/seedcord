@@ -2,21 +2,29 @@ import path from 'node:path';
 
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { buildSourceIndex } from '#src/source-index';
+import { SourceIndexer } from '#src/SourceIndexer';
 
 import { PACKAGES_DIR } from './utils/constants';
+
+import type { SourceScan } from '#src/types';
 
 const REPO_ROOT = path.resolve(PACKAGES_DIR, '../../..');
 const MOCK_DIR = path.resolve(PACKAGES_DIR, 'mock');
 const MOCK_CLASS = 'tooling/docs-generator/tests/mock/class.ts';
 
-function scan(githubBase = 'https://github.com/seedcord/seedcord'): ReturnType<typeof buildSourceIndex> {
-    return buildSourceIndex({ packageDir: MOCK_DIR, repoRoot: REPO_ROOT, githubBase, ref: 'next', entry: 'index.ts' });
+function scan(githubBase = 'https://github.com/seedcord/seedcord'): SourceScan {
+    return SourceIndexer.scan({
+        packageDir: MOCK_DIR,
+        repoRoot: REPO_ROOT,
+        githubBase,
+        ref: 'next',
+        entry: 'index.ts'
+    });
 }
 
-describe('buildSourceIndex', () => {
-    let withBase: ReturnType<typeof buildSourceIndex>;
-    let withoutBase: ReturnType<typeof buildSourceIndex>;
+describe('SourceIndexer', () => {
+    let withBase: SourceScan;
+    let withoutBase: SourceScan;
 
     beforeAll(() => {
         withBase = scan();

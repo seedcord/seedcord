@@ -49,6 +49,7 @@ Treat those files as the rules. Do not substitute your own taste where they alre
 6. YAGNI.
 7. Exports: every export added or changed, whether anything outside its file uses it, whether it belongs on the public surface, and whether the package.json exports map and README agree.
 8. Code that's staggered across functions that could be consolidated for clarity and maintainability by refactoring into an OOP-based design.
+9. Refactors: if the changes read as a set of patches, list each patch with its file:line and propose the refactor that would replace them, with its scope.
 
 ## Output
 
