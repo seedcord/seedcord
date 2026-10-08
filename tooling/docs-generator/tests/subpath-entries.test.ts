@@ -93,7 +93,10 @@ describe('a package with more than one public entry point', () => {
             .slice(host.extendsTokenRange!.startIndex, host.extendsTokenRange!.endIndex)
             .flatMap((token) => (token.canonicalReference ? [token.canonicalReference] : []));
 
-        expect(bases).toEqual([members.find((member) => member.name === 'MockHostBase')!.canonicalReference]);
+        const base = members.find((member) => member.name === 'MockHostBase')!.canonicalReference;
+        // sibling packages cite the exported reference
+        expect(base).toBe(`${MOCK_FULL_NAME}!MockHostBase:class`);
+        expect(bases).toEqual([base]);
     });
 
     it('extracts a subpath model holding that subpath surface alone', () => {

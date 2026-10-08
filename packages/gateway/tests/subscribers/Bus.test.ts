@@ -47,7 +47,7 @@ describe('Bus Integration', () => {
 
     afterEach(async () => {
         await testEnv.teardown();
-        vi.clearAllMocks();
+        vi.restoreAllMocks();
     });
 
     it('should load subscribers from directory', async () => {
@@ -69,7 +69,8 @@ describe('Bus Integration', () => {
         const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
         seedcord = new Seedcord(config);
-        await loaderOf(seedcord).init();
+        // subscribers load in Configuration. Login rejects later without a real token
+        await seedcord.start().catch(() => undefined);
 
         // unknownException has a default handler (UnknownException), plus our custom one = 2
         expect(registrationsOf(seedcord, 'unknownException')).toHaveLength(2);

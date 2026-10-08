@@ -28,7 +28,7 @@ describe('PluginHost', () => {
         expect(first.counter).not.toBe(second.counter);
     });
 
-    it('constructs on a runtime below the node floor', () => {
+    it('skips the node version check so a host outside node can construct', () => {
         vi.stubEnv('PACKAGE_NODE_RANGE', '>=999');
 
         expect(() => new TestPluginHost()).not.toThrow();
