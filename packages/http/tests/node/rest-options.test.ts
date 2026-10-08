@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { Seedcord as EdgeSeedcord } from '#src/edge/Seedcord';
 import { Seedcord } from '#src/node/Seedcord';
+import { resetSeedcord } from '#tests/helpers/nodeHost';
 
 import type { HttpConfig, HttpEdgeConfig } from '#src/interfaces/Config';
 
@@ -15,8 +16,7 @@ function config(restOptions?: { timeout: number }): Pick<HttpConfig, 'bot' | 'su
 
 describe('bot.restOptions', () => {
     afterEach(() => {
-        // @ts-expect-error singleton reset between tests
-        Seedcord.reset();
+        resetSeedcord();
         // @ts-expect-error singleton reset between tests
         EdgeSeedcord.reset();
     });

@@ -1,16 +1,14 @@
 import path from 'node:path';
 
-import { shutdownOf } from '@seedcord/core/node/internal';
 import { Routes } from 'discord-api-types/v10';
-import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Emojis } from '#src/emojis/EmojiInjector';
 import { Seedcord } from '#src/node/Seedcord';
-import { createSigner } from '#tests/helpers/ed25519';
-import { APP_ID, VALID_TOKEN } from '#tests/helpers/fixtures';
+import { APP_ID } from '#tests/helpers/fixtures';
+import { bindSignedEnv, resetSeedcord, serverConfig, stopHost } from '#tests/helpers/nodeHost';
 
-import type { HttpConfig } from '#src/interfaces/Config';
+import type { HttpServerConfig } from '#src/interfaces/Config';
 import type { ResolvedEmoji } from '@seedcord/core';
 
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
@@ -18,34 +16,19 @@ const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 // justified: EmojiMap is empty in tests, so runtime values read through a plain record
 const emojis = Emojis as Record<string, ResolvedEmoji>;
 
-function config(): HttpConfig {
-    return {
-        bot: {
-            interactions: { path: HANDLERS_DIR },
-            commands: { path: null },
-            emojis: { Confirm: 'confirm' }
-        },
-        subscribers: { path: null },
-        port: 0
-    };
+function config(): HttpServerConfig {
+    return serverConfig({ interactions: { path: HANDLERS_DIR }, emojis: { Confirm: 'confirm' } });
 }
 
 let live: Seedcord | undefined;
 
 beforeEach(async () => {
-    // @ts-expect-error singleton reset between tests
-    Seedcord.reset();
-    const signer = await createSigner();
-    Envapter.useSource(
-        merge(
-            new PortableSource(process.env),
-            new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
-        )
-    );
+    resetSeedcord();
+    await bindSignedEnv();
 });
 
 afterEach(async () => {
-    if (live) await shutdownOf(live).run(0, false);
+    await stopHost(live);
     live = undefined;
 });
 

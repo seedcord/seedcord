@@ -1,43 +1,22 @@
-import { shutdownOf } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
-import { createSigner } from '#tests/helpers/ed25519';
-import { APP_ID, VALID_TOKEN } from '#tests/helpers/fixtures';
-
-import type { HttpConfig } from '#src/interfaces/Config';
+import { APP_ID } from '#tests/helpers/fixtures';
+import { bindSignedEnv, serverConfig, stopHost } from '#tests/helpers/nodeHost';
 
 let live: Seedcord | undefined;
 
-function noCommandsConfig(): HttpConfig {
-    return {
-        bot: { interactions: { path: null }, commands: { path: null } },
-        subscribers: { path: null },
-        port: 0
-    };
-}
-
 async function startHost(): Promise<Seedcord> {
-    const signer = await createSigner();
-    Envapter.useSource(
-        merge(
-            new PortableSource(process.env),
-            new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
-        )
-    );
-
-    const host = new Seedcord(noCommandsConfig());
+    await bindSignedEnv();
+    const host = new Seedcord(serverConfig());
     live = host;
     return host.start();
 }
 
 afterEach(async () => {
-    if (live) await shutdownOf(live).run(0, false);
+    await stopHost(live);
     live = undefined;
-    // @ts-expect-error singleton reset between tests
-    Seedcord.reset();
 });
 
 describe('core.applicationId on the http host', () => {
@@ -48,7 +27,7 @@ describe('core.applicationId on the http host', () => {
     });
 
     it('throws before the host reads its token', () => {
-        const host = new Seedcord(noCommandsConfig());
+        const host = new Seedcord(serverConfig());
         live = host;
 
         expect(() => host.applicationId).toThrow(

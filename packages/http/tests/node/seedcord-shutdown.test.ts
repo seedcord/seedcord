@@ -2,66 +2,41 @@ import path from 'node:path';
 
 import { shutdownOf } from '@seedcord/core/node/internal';
 import { Logger } from '@seedcord/logger';
-import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
-import { createSigner, type Signer } from '#tests/helpers/ed25519';
-import { VALID_TOKEN } from '#tests/helpers/fixtures';
+import { signedHeaders, type Signer } from '#tests/helpers/ed25519';
+import { bindSignedEnv, resetSeedcord, serverConfig, stopHost } from '#tests/helpers/nodeHost';
 
 import { slowGateEntered } from './discovery/fixtures/handlers/SlowGateCommand';
 
-import type { HttpConfig } from '#src/interfaces/Config';
+import type { HttpServerConfig } from '#src/interfaces/Config';
 
 const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
 const DRAIN_HANDLERS_DIR = path.resolve(__dirname, './fixtures/drain-handlers');
 
-function config(handlers: string = HANDLERS_DIR): HttpConfig {
-    return {
-        bot: { interactions: { path: handlers }, commands: { path: null } },
-        subscribers: { path: null },
-        port: 0
-    };
-}
-
-function reset(): void {
-    // @ts-expect-error singleton reset between tests
-    Seedcord.reset();
+function config(handlers: string = HANDLERS_DIR): HttpServerConfig {
+    return serverConfig({ interactions: { path: handlers } });
 }
 
 let live: Seedcord | undefined;
 
 async function readyHost(handlers?: string): Promise<{ signer: Signer; url: string; host: Seedcord }> {
-    const signer = await createSigner();
-    Envapter.useSource(
-        merge(
-            new PortableSource(process.env),
-            new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
-        )
-    );
+    const signer = await bindSignedEnv();
     const host = new Seedcord(config(handlers));
     live = host;
     await host.start();
     return { signer, url: `http://127.0.0.1:${String(host.port)}`, host };
 }
 
-async function signedHeaders(signer: Signer, body: Uint8Array): Promise<Record<string, string>> {
-    const timestamp = String(Math.floor(Date.now() / 1000));
-    return {
-        'x-signature-ed25519': await signer.sign(timestamp, body),
-        'x-signature-timestamp': timestamp
-    };
-}
-
 const encoder = new TextEncoder();
 
 describe('http Seedcord shutdown', () => {
-    beforeEach(reset);
+    beforeEach(resetSeedcord);
 
     afterEach(async () => {
-        if (live) await shutdownOf(live).run(0, false);
+        await stopHost(live);
         live = undefined;
-        reset();
         vi.restoreAllMocks();
     });
 
@@ -71,7 +46,7 @@ describe('http Seedcord shutdown', () => {
         // eslint-disable-next-line no-new -- construction is the behavior under test
         new Seedcord(config());
         expect([process.listenerCount('SIGTERM'), process.listenerCount('SIGINT')]).toEqual(base);
-        reset();
+        resetSeedcord();
 
         await readyHost();
         expect([process.listenerCount('SIGTERM'), process.listenerCount('SIGINT')]).toEqual(

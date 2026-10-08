@@ -1,17 +1,15 @@
 import path from 'node:path';
 
 import { Commands } from '@seedcord/core';
-import { shutdownOf } from '@seedcord/core/node/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { Seedcord } from '#src/node/Seedcord';
-import { createSigner } from '#tests/helpers/ed25519';
-import { APP_ID, VALID_TOKEN } from '#tests/helpers/fixtures';
+import { APP_ID } from '#tests/helpers/fixtures';
+import { bindSignedEnv, resetSeedcord, serverConfig, stopHost } from '#tests/helpers/nodeHost';
 
-import type { HttpConfig } from '#src/interfaces/Config';
+import type { HttpServerConfig } from '#src/interfaces/Config';
 
 const COMMANDS_DIR = path.resolve(__dirname, './fixtures');
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
@@ -19,33 +17,19 @@ const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 // justified: the generated Commands map is empty in tests, so entries read through a plain record
 const commands = Commands as Record<string, { id: string; mention: string } | undefined>;
 
-function config(commandsPath: string | null, interactionsPath: string | null = null): HttpConfig {
-    return {
-        bot: {
-            interactions: interactionsPath === null ? { path: null } : { path: interactionsPath },
-            commands: commandsPath === null ? { path: null } : { path: commandsPath }
-        },
-        subscribers: { path: null },
-        port: 0
-    };
+function config(commandsPath: string | null, interactionsPath: string | null = null): HttpServerConfig {
+    return serverConfig({ interactions: { path: interactionsPath }, commands: { path: commandsPath } });
 }
 
 let live: Seedcord | undefined;
 
 beforeEach(async () => {
-    // @ts-expect-error singleton reset between tests
-    Seedcord.reset();
-    const signer = await createSigner();
-    Envapter.useSource(
-        merge(
-            new PortableSource(process.env),
-            new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
-        )
-    );
+    resetSeedcord();
+    await bindSignedEnv();
 });
 
 afterEach(async () => {
-    if (live) await shutdownOf(live).run(0, false);
+    await stopHost(live);
     live = undefined;
 });
 

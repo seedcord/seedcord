@@ -1,63 +1,32 @@
 import path from 'node:path';
 
 import { ShutdownPhase, shutdownOf } from '@seedcord/core/node/internal';
-import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
-import { createSigner, type Signer } from '#tests/helpers/ed25519';
-import { VALID_TOKEN } from '#tests/helpers/fixtures';
-
-import type { HttpConfig } from '#src/interfaces/Config';
+import { signedHeaders, type Signer } from '#tests/helpers/ed25519';
+import { bindSignedEnv, resetSeedcord, serverConfig, stopHost } from '#tests/helpers/nodeHost';
 
 const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
-
-function config(): HttpConfig {
-    return {
-        bot: { interactions: { path: HANDLERS_DIR }, commands: { path: null } },
-        subscribers: { path: null },
-        port: 0
-    };
-}
-
-function reset(): void {
-    // @ts-expect-error singleton reset between tests
-    Seedcord.reset();
-}
 
 let live: Seedcord | undefined;
 
 async function readyHost(): Promise<{ signer: Signer; url: string; host: Seedcord }> {
-    const signer = await createSigner();
-    Envapter.useSource(
-        merge(
-            new PortableSource(process.env),
-            new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
-        )
-    );
-    const host = new Seedcord(config());
+    const signer = await bindSignedEnv();
+    const host = new Seedcord(serverConfig({ interactions: { path: HANDLERS_DIR } }));
     live = host;
     await host.start();
     return { signer, url: `http://127.0.0.1:${String(host.port)}`, host };
 }
 
-async function signedHeaders(signer: Signer, body: Uint8Array): Promise<Record<string, string>> {
-    const timestamp = String(Math.floor(Date.now() / 1000));
-    return {
-        'x-signature-ed25519': await signer.sign(timestamp, body),
-        'x-signature-timestamp': timestamp
-    };
-}
-
 const encoder = new TextEncoder();
 
 describe('http Seedcord class', () => {
-    beforeEach(reset);
+    beforeEach(resetSeedcord);
 
     afterEach(async () => {
-        if (live) await shutdownOf(live).run(0, false);
+        await stopHost(live);
         live = undefined;
-        reset();
     });
 
     it('answers a signed PING through its own node server', async () => {

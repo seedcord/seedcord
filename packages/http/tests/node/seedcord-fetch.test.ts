@@ -3,13 +3,14 @@ import { setTimeout } from 'node:timers/promises';
 
 import { shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Envapter, merge, PortableSource } from 'envapt';
+import { Envapter, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
-import { createSigner, signedRequest, type Signer } from '#tests/helpers/ed25519';
+import { signedRequest } from '#tests/helpers/ed25519';
 import { VALID_TOKEN } from '#tests/helpers/fixtures';
 import { slashPayload } from '#tests/helpers/interactions';
+import { bindSignedEnv, resetSeedcord, serverConfig, stopHost } from '#tests/helpers/nodeHost';
 
 import { drainSlow } from './fixtures/drain-handlers/DrainSlowCommand';
 
@@ -22,42 +23,21 @@ const PING = '{"type":1}';
 const HELD_START_MS = 50;
 
 function config(handlers: string = HANDLERS_DIR): HttpServerConfig {
-    return {
-        bot: { interactions: { path: handlers }, commands: { path: null } },
-        subscribers: { path: null },
-        port: 0
-    };
-}
-
-function reset(): void {
-    // @ts-expect-error singleton reset between tests
-    Seedcord.reset();
-}
-
-async function bindEnv(): Promise<Signer> {
-    const signer = await createSigner();
-    Envapter.useSource(
-        merge(
-            new PortableSource(process.env),
-            new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
-        )
-    );
-    return signer;
+    return serverConfig({ interactions: { path: handlers } });
 }
 
 let live: Seedcord | undefined;
 
 describe('http Seedcord.fetch on node', () => {
-    beforeEach(reset);
+    beforeEach(resetSeedcord);
 
     afterEach(async () => {
-        if (live) await shutdownOf(live).run(0, false);
+        await stopHost(live);
         live = undefined;
-        reset();
     });
 
     it('throws before start() is called', async () => {
-        const signer = await bindEnv();
+        const signer = await bindSignedEnv();
         const host = new Seedcord(config());
         live = host;
 
@@ -67,7 +47,7 @@ describe('http Seedcord.fetch on node', () => {
     });
 
     it('waits for start() before answering', async () => {
-        const signer = await bindEnv();
+        const signer = await bindSignedEnv();
         const host = new Seedcord(config());
         live = host;
         const order: string[] = [];
@@ -86,7 +66,7 @@ describe('http Seedcord.fetch on node', () => {
     });
 
     it('answers through fetch on port: false with host.port left undefined', async () => {
-        const signer = await bindEnv();
+        const signer = await bindSignedEnv();
         const host = new Seedcord({ ...config(), port: false });
         live = host;
 
@@ -109,7 +89,7 @@ describe('http Seedcord.fetch on node', () => {
     });
 
     it('waits at shutdown for a handler a fetch request started on port: false', async () => {
-        const signer = await bindEnv();
+        const signer = await bindSignedEnv();
         const host = new Seedcord({ ...config(DRAIN_HANDLERS_DIR), port: false });
         live = host;
         await host.start();
