@@ -189,20 +189,21 @@ export class ProductService {
 
 **`#name` (ECMAScript private)** vs **`private` (TypeScript keyword):**
 
-- `private` is erased at runtime. It's still accessible via `(obj as any).name`
-- `#name` is a true runtime private field. Use it for genuinely sensitive state
+- `#name` hides plumbing and state inside a class that a package's `exports` map makes public. A user's editor never shows it, and their code cannot reach it at runtime.
+- Every other class uses `private`. That covers internal services, helpers, and classes only an `./internal` entry exports. An `export` keyword on the file does not make a class public.
 
 ```ts
-class AuthSession {
-    #token: string; // truly private at runtime
+// public: @seedcord/core/node exports ServerHost, and every transport's Seedcord extends it
+export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT, 'server'> {
+    readonly #lifecycle: PluginLifecycle;
+    #initPromise?: Promise<this> | undefined;
+}
 
-    constructor(token: string) {
-        this.#token = token;
-    }
+// internal: only the two http Seedcord classes import it
+export class InteractionsService {
+    private token?: string;
 
-    getAuthHeader(): string {
-        return `Bearer ${this.#token}`;
-    }
+    constructor(private readonly host: Core) {}
 }
 ```
 

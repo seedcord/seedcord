@@ -24,11 +24,14 @@ export class InteractionsService {
     public readonly subscribers: SubscriberLoader;
     public readonly interactions: InteractionDispatcher | undefined;
 
-    readonly #host: Core;
-    #token?: string;
+    private token?: string;
+    private builtEngine?: EngineParts;
 
-    constructor(host: Core, config: HttpConfig, restOptions: Partial<RESTOptions> | undefined) {
-        this.#host = host;
+    constructor(
+        private readonly host: Core,
+        config: HttpConfig,
+        restOptions: Partial<RESTOptions> | undefined
+    ) {
         this.rest = new REST(restOptions);
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
         this.bus = new Bus(host);
@@ -41,20 +44,26 @@ export class InteractionsService {
     }
 
     public get applicationId(): string {
-        if (!this.#token) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
-        return applicationIdFromToken(this.#token);
+        if (!this.token) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
+        return applicationIdFromToken(this.token);
     }
 
     public authenticate(): void {
-        this.#token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
-        this.rest.setToken(this.#token);
+        this.token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
+        this.rest.setToken(this.token);
     }
 
-    public buildEngine(): EngineParts {
+    // reads DISCORD_PUBLIC_KEY on first access
+    public get engine(): EngineParts {
+        this.builtEngine ??= this.createEngine();
+        return this.builtEngine;
+    }
+
+    private createEngine(): EngineParts {
         const maps = this.interactions?.maps ?? emptyRouteMaps();
         const middlewares =
             this.interactions?.middlewares ??
             new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
-        return buildEngine(this.#host, maps, middlewares);
+        return buildEngine(this.host, maps, middlewares);
     }
 }

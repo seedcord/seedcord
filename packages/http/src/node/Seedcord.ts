@@ -187,7 +187,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     }
 
     async #listen(): Promise<void> {
-        const { handle, inFlight } = this.#service.buildEngine();
+        const { handle, inFlight } = this.#service.engine;
 
         const server = createServer((incoming, outgoing) => {
             void (async () => {
