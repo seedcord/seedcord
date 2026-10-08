@@ -1,33 +1,25 @@
-import { REST } from '@discordjs/rest';
-import { Bus } from '@seedcord/core';
 import {
     attachmentsOf,
     bindBotColor,
     CoordinatedStartup,
-    interactionMiddleware,
-    MiddlewareRegistry,
     PluginLifecycle,
-    sealAttachments,
-    SubscriberLoader
+    sealAttachments
 } from '@seedcord/core/internal';
 import { PluginHost } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { applicationIdFromToken, SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
-import { Envapter } from 'envapt';
 
-import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
-import { emptyRouteMaps } from '#src/dispatch/resolve';
-import { buildEngine } from '#src/engine';
+import { InteractionsBot } from '#src/InteractionsBot';
 import { version as packageVersion } from '#src/version';
 
 import { edgeRestOptions, edgeShutdown } from './runtime';
 
-import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpEdgeConfig } from '#interfaces/Config';
 import type { EngineContext, EngineParts } from '#src/engine';
+import type { REST } from '@discordjs/rest';
+import type { Bus } from '@seedcord/core';
 import type { IRateLimiter } from '@seedcord/types';
 
 /**
@@ -64,14 +56,11 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
     public readonly config: HttpEdgeConfig;
 
-    readonly #subscribers: SubscriberLoader;
-    readonly #interactions?: InteractionDispatcher;
-
+    readonly #bot: InteractionsBot;
     readonly #startup = new CoordinatedStartup();
     // workerd gives a worker no shutdown hook. dispose() runs only in a rollback.
     readonly #plugins = new PluginLifecycle(this.#startup, { addTask: () => undefined });
 
-    #token?: string;
     #prepared?: Promise<EngineParts['handle']>;
     #started?: Promise<void> | undefined;
 
@@ -84,24 +73,18 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
         this.config = config;
         this.startup = { addTask: this.#startup.addTask.bind(this.#startup) };
-        this.rest = new REST(edgeRestOptions(config.bot.restOptions));
         Logger.configure(config.logger ?? {});
         bindBotColor(() => this.config.botColor);
 
-        this.rateLimiter = config.store ?? new MemoryRateLimiter();
-        this.bus = new Bus(this);
-        this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
-
-        const interactions = config.bot.interactions;
-        if (interactions.path) {
-            this.#interactions = new InteractionDispatcher(interactions.path, interactions.middlewares);
-        }
+        this.#bot = new InteractionsBot(this, config, edgeRestOptions(config.bot.restOptions));
+        this.rest = this.#bot.rest;
+        this.rateLimiter = this.#bot.rateLimiter;
+        this.bus = this.#bot.bus;
     }
 
     /** The bot's Discord application id. Throws if you read it before the first request. */
     public get applicationId(): string {
-        if (!this.#token) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
-        return applicationIdFromToken(this.#token);
+        return this.#bot.applicationId;
     }
 
     /**
@@ -119,17 +102,10 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     async #prepare(): Promise<EngineParts['handle']> {
-        this.#token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
-        this.rest.setToken(this.#token);
-
-        await this.#subscribers.init();
-        await this.#interactions?.init();
-
-        const maps = this.#interactions?.maps ?? emptyRouteMaps();
-        const middlewares =
-            this.#interactions?.middlewares ??
-            new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
-        return buildEngine(this, maps, middlewares).handle;
+        this.#bot.authenticate();
+        await this.#bot.subscribers.init();
+        await this.#bot.interactions?.init();
+        return this.#bot.buildEngine().handle;
     }
 
     async #runStartup(): Promise<void> {

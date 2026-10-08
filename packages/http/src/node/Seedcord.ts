@@ -1,18 +1,7 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
-import { REST } from '@discordjs/rest';
-import { Bus } from '@seedcord/core';
-import {
-    attachmentsOf,
-    bindBotColor,
-    busLoggerOf,
-    getDevChannel,
-    HmrManager,
-    interactionMiddleware,
-    MiddlewareRegistry,
-    SubscriberLoader
-} from '@seedcord/core/internal';
+import { attachmentsOf, bindBotColor, busLoggerOf, getDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import {
     CommandRegistry,
@@ -23,25 +12,22 @@ import {
     shutdownOf,
     StartupPhase
 } from '@seedcord/core/node/internal';
-import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { applicationIdFromToken, SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
-import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
-import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
-import { emptyRouteMaps } from '#src/dispatch/resolve';
 import { EmojiInjector } from '#src/emojis/EmojiInjector';
-import { buildEngine } from '#src/engine';
+import { InteractionsBot } from '#src/InteractionsBot';
 import { version as packageVersion } from '#src/version';
 
 import { toWebRequest, writeWebResponse } from './webBridge';
 
-import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { HttpServerConfig } from '#interfaces/Config';
+import type { REST } from '@discordjs/rest';
+import type { Bus } from '@seedcord/core';
 import type { IRateLimiter } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Server } from 'node:http';
@@ -75,15 +61,12 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     /** @see {@link Bus} */
     public readonly bus: Bus;
 
-    readonly #subscribers: SubscriberLoader;
-
-    readonly #interactions?: InteractionDispatcher;
+    readonly #bot: InteractionsBot;
     readonly #commandRegistry?: CommandRegistry;
     readonly #emojiInjector = new EmojiInjector(this);
     readonly #hmrManager: HmrManager;
     readonly #logger = new Logger('Server', { channel: 'bot' });
 
-    #token?: string;
     #server?: Server;
     #boundPort?: number;
     #fetchedUsername?: string | undefined;
@@ -93,24 +76,19 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     constructor(config: HttpServerConfig) {
         super('http', new CoordinatedShutdown(config.lifecycle?.shutdownDeadline), new CoordinatedStartup());
         this.config = config;
-        this.rest = new REST(config.bot.restOptions);
 
         installNodeDefaults(config.logger);
         bindBotColor(() => this.config.botColor);
 
+        this.#bot = new InteractionsBot(this, config, config.bot.restOptions);
+        this.rest = this.#bot.rest;
+        this.rateLimiter = this.#bot.rateLimiter;
+        this.bus = this.#bot.bus;
+
         this.#hmrManager = new HmrManager();
         this.#hmrManager.init();
 
-        const interactions = this.config.bot.interactions;
-        if (interactions.path) {
-            this.#interactions = new InteractionDispatcher(interactions.path, interactions.middlewares);
-        }
-
         if (this.config.bot.commands.path) this.#commandRegistry = new CommandRegistry(this);
-
-        this.rateLimiter = config.store ?? new MemoryRateLimiter();
-        this.bus = new Bus(this);
-        this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
 
         this.#registerStartupTasks();
     }
@@ -151,11 +129,11 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
         this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'start');
-            await this.#subscribers.init();
+            await this.#bot.subscribers.init();
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
         });
 
-        const interactions = this.#interactions;
+        const interactions = this.#bot.interactions;
         if (interactions) {
             this.startup.addTask(StartupPhase.Configuration, 'interactions-initialization', async () => {
                 interactions.logger.utils.initialization('Interactions', 'start');
@@ -165,7 +143,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         }
 
         this.startup.addTask(StartupPhase.Configuration, 'authenticate', () => {
-            this.#authenticate();
+            this.#bot.authenticate();
             return Promise.resolve();
         });
 
@@ -192,9 +170,9 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
     #registerHmrAwareModules(): void {
         this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
-            if (this.#interactions) this.#hmrManager.register(this.#interactions);
+            if (this.#bot.interactions) this.#hmrManager.register(this.#bot.interactions);
             if (this.#commandRegistry) this.#hmrManager.register(this.#commandRegistry);
-            this.#hmrManager.register(this.#subscribers);
+            this.#hmrManager.register(this.#bot.subscribers);
             for (const { instance } of attachmentsOf(this)) {
                 this.#hmrManager.register(instance);
             }
@@ -202,23 +180,13 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         });
     }
 
-    #authenticate(): void {
-        this.#token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
-        this.rest.setToken(this.#token);
-    }
-
     /** The bot's Discord application id. Throws if you read it before the Configuration phase. */
     public get applicationId(): string {
-        if (!this.#token) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
-        return applicationIdFromToken(this.#token);
+        return this.#bot.applicationId;
     }
 
     async #listen(): Promise<void> {
-        const maps = this.#interactions?.maps ?? emptyRouteMaps();
-        const middlewares =
-            this.#interactions?.middlewares ??
-            new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
-        const { handle, inFlight } = buildEngine(this, maps, middlewares);
+        const { handle, inFlight } = this.#bot.buildEngine();
 
         const server = createServer((incoming, outgoing) => {
             void (async () => {
