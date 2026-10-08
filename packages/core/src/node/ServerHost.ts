@@ -91,6 +91,23 @@ export abstract class ServerHost<BotT extends Transport> extends PluginHost<BotT
         return this;
     }
 
+    /**
+     * Runs the coordinated shutdown and keeps the process alive. A new `Seedcord` can be constructed
+     * afterwards. `await using` calls this when its scope ends.
+     *
+     * @example
+     * ```ts
+     * // the bot shuts down when this block ends
+     * await using bot = await new Seedcord(config).start();
+     * await bot.rest.put(Routes.applicationCommands(bot.applicationId), { body: [] });
+     * ```
+     */
+    public async [Symbol.asyncDispose](): Promise<void> {
+        await this[HostShutdown].run(0, false);
+        // justified: reset() reaches the subclass override only through this.constructor, typed Function
+        (this.constructor as typeof ServerHost).reset(this);
+    }
+
     /** @internal */
     protected static reset(host?: object): boolean {
         if (host !== undefined && ServerHost.#liveHost !== host) return false;

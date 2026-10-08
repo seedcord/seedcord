@@ -88,6 +88,29 @@ describe('ServerHost', () => {
         vi.restoreAllMocks();
     });
 
+    it('runs its shutdown tasks when an await using scope ends', async () => {
+        const ran: string[] = [];
+        {
+            await using host = makeHost().host;
+            host.shutdown.addTask(ShutdownPhase.Drain, 'probe', () => {
+                ran.push('drain');
+                return Promise.resolve();
+            });
+            await host.run();
+        }
+
+        expect(ran).toEqual(['drain']);
+    });
+
+    it('allows a new host once an await using scope ends', async () => {
+        {
+            await using host = makeHost().host;
+            await host.run();
+        }
+
+        expect(() => makeHost()).not.toThrow();
+    });
+
     it('refuses a plugin attached while startup runs', async () => {
         const { host } = makeHost();
         let caught: unknown;
