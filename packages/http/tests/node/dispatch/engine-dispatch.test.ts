@@ -37,7 +37,7 @@ beforeEach(() => {
     rest.instances.length = 0;
 });
 
-describe('createSeedcord dispatch', () => {
+describe('engine dispatch', () => {
     it('routes a signed slash request to its handler, whose reply hits the interaction callback', async () => {
         class Ban extends SlashHandler<never> {
             async execute(): Promise<void> {

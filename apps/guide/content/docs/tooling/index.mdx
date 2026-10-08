@@ -94,7 +94,7 @@ A project from `create-seedcord` has `dev`, `codegen`, and `build` as scripts in
 
 Each transport package declares its own `Seedcord` and its own config type, and a few keys only exist on one of them.
 
-- An http server takes `port`, which defaults to 3000. An edge bot sets `runtime: 'edge'`, so TypeScript rejects `port` and `lifecycle` on it.
+- An http server takes `port`, which defaults to 3000. TypeScript rejects `port` and `lifecycle` on an edge bot.
 - A gateway bot runs a small health server on port 6967 that answers `/health`. Its `healthCheck` key takes `false` to turn that off, or an object with `port`, `path`, and `host`.
 - `Emojis` resolves each name to a discord.js emoji on gateway, and to a plain resolved emoji object on http.
 

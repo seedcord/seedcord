@@ -4,7 +4,7 @@
  * @packageDocumentation
  */
 
-// the root entry exports both of these too, the way @seedcord/http/edge re-exports the http root.
+// the root entry exports both of these too, the way both @seedcord/http entries share one surface.
 // mockFunction is overloaded.
 export { mockVariable } from './variable.js';
 // eslint-disable-next-line @typescript-eslint/no-deprecated -- deprecated on purpose, the fixture tests deprecation rendering

@@ -12,7 +12,7 @@ export default createVitestConfig(import.meta.url, {
         },
         projects: [
             {
-                // real workerd, so a node builtin fails here before it fails on a deploy
+                // real workerd, with cloudflare's node compat on like a deployed edge bot
                 plugins: [
                     cloudflareTest({
                         // cloudflare turns node compat on by default from this date

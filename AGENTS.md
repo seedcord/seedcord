@@ -59,7 +59,7 @@ Everything ships against one of two transports.
 
 `@seedcord/gateway` runs a stateful `Seedcord` class that holds a websocket connection through the discord.js client. It carries message, member, voice, and reaction events.
 
-`@seedcord/http` answers Discord's interactions endpoint through a `Seedcord` class. Node gets the default build. Cloudflare Workers get an edge build of the same class through the `workerd` export condition. Discord posts only interactions here.
+`@seedcord/http` answers Discord's interactions endpoint through a `Seedcord` class. Node gets the default build. Cloudflare Workers get a separate edge `Seedcord` under the same name through the `workerd` export condition. Discord posts only interactions here.
 
 Both transports re-export all of `@seedcord/core`. A bot installs one seedcord package. Code they share belongs in `core`. A plugin extends `@seedcord/core/plugin`, which both transport barrels re-export.
 

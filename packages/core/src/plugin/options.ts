@@ -3,13 +3,17 @@ import type { PluginLifecycleSpec } from './lifecycle';
 import type { TypedExclude } from '@seedcord/types';
 
 /**
- * Declares where a plugin may attach. Pass it as the `Plugin<Opts>` type argument. `attach()` fails
- * to compile when the host does not match.
+ * Declares where a plugin may attach. Pass it as the `Plugin<Opts>` type argument. Every field you
+ * narrow goes to `super()` as well. `attach()` fails to compile when the host does not match.
  *
  * @example
  * ```ts
  * // attaching this to an http bot fails to compile
  * class Voice extends Plugin<{ transport: 'gateway' }> {
+ *     constructor(host: CoreBase) {
+ *         super(host, { transport: 'gateway' });
+ *     }
+ *
  *     public async init(): Promise<void> {}
  * }
  * ```
@@ -58,7 +62,6 @@ type NarrowedTransport<Opts extends PluginOptions> =
 type NarrowedRuntime<Opts extends PluginOptions> =
     RuntimeOf<Opts> extends 'any' ? unknown : { runtime: RuntimeOf<Opts> };
 
-// a transport base sets the axes it fixes on its class
 type ScopeToPass<Opts extends PluginOptions, Fixed extends ScopeAxis> = ('transport' extends Fixed
     ? unknown
     : NarrowedTransport<Opts>) &

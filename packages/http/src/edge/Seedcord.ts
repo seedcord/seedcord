@@ -68,7 +68,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     readonly #interactions?: InteractionDispatcher;
 
     readonly #pluginStartup = new CoordinatedStartup();
-    // an isolate never shuts down. dispose() runs only in a rollback.
+    // workerd gives a worker no shutdown hook. dispose() runs only in a rollback.
     readonly #plugins = new PluginLifecycle(this.#pluginStartup, { addTask: () => undefined });
 
     #token?: string;

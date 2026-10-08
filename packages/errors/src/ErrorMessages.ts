@@ -61,11 +61,11 @@ const messages = {
     [SeedcordErrorCode.CorePluginReservedChannel]: (key: string) =>
         `Plugin key "${key}" is a channel the framework logs on. Pick another key.`,
     [SeedcordErrorCode.CoreApplicationUnavailable]: () =>
-        "The bot's application id resolves during startup. You read it before that. Read it inside a handler, inside a plugin's ready(), or after start() resolves.",
+        "The bot's application id resolves during startup. You read it before that. Read it inside a handler, inside a plugin's ready(), or after start() resolves. An edge bot resolves it on its first request.",
     [SeedcordErrorCode.CoreAccessorUnresolved]: (accessor: string, key: string) =>
         `${accessor}.${key} has no value yet. ${accessor} fills during startup, and a read at the top of a file runs before that.`,
     [SeedcordErrorCode.CoreLifecycleUnavailable]: (accessor: string) =>
-        `core.${accessor}.addTask() does not work on an edge bot, since a Cloudflare isolate never runs a coordinated startup or shutdown. Put startup work in a plugin's init(). To use startup and shutdown tasks, run the bot on node with new Seedcord(config).start().`,
+        `core.${accessor}.addTask() does not work on an edge bot. Cloudflare stops an isolate with no shutdown hook, and startup runs only plugins, on the first request. Put startup work in a plugin's init(). To use startup and shutdown tasks, run the bot on node with new Seedcord(config).start().`,
     [SeedcordErrorCode.CoreBusEmitUnavailable]: (event: string) =>
         `core.bus.emit('${event}') would reach your on() listeners and skip every Subscriber class. Call core.bus.publish('${event}', data) to run both.`,
 

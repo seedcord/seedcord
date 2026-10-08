@@ -4,4 +4,4 @@
 '@seedcord/http': minor
 ---
 
-Removed the `runtime` field from the bot config, since nothing read it. If your config sets `runtime: 'server'`, delete that line.
+Removed the `runtime` field from the bot config, since nothing read it. Delete it from your config, and write `Seedcord` where you wrote `Seedcord<HttpServerConfig>`.

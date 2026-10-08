@@ -76,7 +76,6 @@ export abstract class Plugin<
 >
     implements Initializeable, HmrAware
 {
-    // the gateway and http bases override this to match their Fixed argument
     /** @internal */
     protected static readonly [FixedScope]: Partial<DeclaredScope> = {};
 

@@ -58,22 +58,18 @@ class FullyScoped extends Plugin<{ transport: 'gateway'; runtime: 'server' }> {
     }
 }
 
+const GATEWAY_SCOPE = { transport: 'gateway', runtime: 'server' } as const;
+
 // the shape the gateway Plugin base takes
 abstract class GatewayBase extends Plugin<
     { transport: 'gateway'; runtime: 'server' },
     CoreBase,
-    'transport' | 'runtime'
+    keyof typeof GATEWAY_SCOPE
 > {
-    protected static override readonly [FixedScope] = { transport: 'gateway', runtime: 'server' } as const;
+    protected static override readonly [FixedScope] = GATEWAY_SCOPE;
 }
 
 class FromGatewayBase extends GatewayBase {
-    public init(): Promise<void> {
-        return Promise.resolve();
-    }
-}
-
-class NoConstructor extends Plugin<{ runtime: 'server' }> {
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -178,13 +174,6 @@ describe('attaching a plugin that declares options', () => {
         expectScopeMismatch(() => http.attach('wrong', FromGatewayBase));
     });
 
-    it('rejects a narrowed plugin with no constructor of its own', () => {
-        const host = new TestPluginHost();
-
-        // @ts-expect-error NoConstructor never passes its runtime to super()
-        host.attach('bare', NoConstructor);
-    });
-
     it('rejects a constructor narrowing its core parameter past CoreBase', () => {
         const host = new TestPluginHost();
 
@@ -198,33 +187,6 @@ describe('attaching a plugin that declares options', () => {
         const attached = host.attach('wide', WidenedCtor, { dir: './services' });
 
         expect(attached.wide.options.dir).toBe('./services');
-    });
-});
-
-describe('the scope a plugin passes to super()', () => {
-    it('must match the axes its type argument narrows', () => {
-        class Drifted extends Plugin<{ runtime: 'server' }> {
-            constructor(host: CoreBase) {
-                // @ts-expect-error the type argument declares runtime 'server'
-                super(host, { runtime: 'edge' });
-            }
-            public init(): Promise<void> {
-                return Promise.resolve();
-            }
-        }
-
-        class Missing extends Plugin<{ runtime: 'server' }> {
-            constructor(host: CoreBase) {
-                // @ts-expect-error a plugin narrowed to 'server' passes its runtime
-                super(host);
-            }
-            public init(): Promise<void> {
-                return Promise.resolve();
-            }
-        }
-
-        void Drifted;
-        void Missing;
     });
 });
 

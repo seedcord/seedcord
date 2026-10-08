@@ -3,5 +3,5 @@
 export const TransportBrand: unique symbol = Symbol('seedcord:brand:transport');
 export const RuntimeBrand: unique symbol = Symbol('seedcord:brand:runtime');
 
-// only the base constructor's spec carries this key. attach looks for it.
+// the base constructor's spec type carries this key
 export const ScopedSpec: unique symbol = Symbol('seedcord:brand:scoped-spec');
