@@ -189,7 +189,7 @@ export class ProductService {
 
 **`#name` (ECMAScript private)** vs **`private` (TypeScript keyword):**
 
-- `#name` hides plumbing and state inside a class that a package's `exports` map makes public. A user's editor never shows it, and their code cannot reach it at runtime.
+- `#name` hides plumbing and state inside a class users can reach. They reach it by importing it through a package's `exports` map, or through a public field typed as it, like gateway's `core.bot: Bot`. A user's editor never shows a `#` member, and their code cannot read it at runtime.
 - Every other class uses `private`. That covers internal services, helpers, and classes only an `./internal` entry exports. An `export` keyword on the file does not make a class public.
 
 ```ts

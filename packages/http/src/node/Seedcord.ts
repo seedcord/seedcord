@@ -100,7 +100,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         return this.#fetchedUsername;
     }
 
-    /** The bound server port, populated once `start()` is listening. */
+    /** The bound server port, set once `start()` is listening. Stays `undefined` with `port: false`. */
     public get port(): number | undefined {
         return this.#boundPort;
     }
