@@ -18,11 +18,12 @@ export interface HttpServerConfig extends Config {
     bot: HttpBotConfig<Partial<RESTOptions>>;
 
     /**
-     * Port the interactions server uses.
+     * Port the interactions server uses. `false` turns off the built-in server. Mount
+     * `seedcord.fetch()` in your own server to answer requests.
      *
      * @defaultValue `3000`
      */
-    port?: number;
+    port?: number | false;
 }
 
 /**

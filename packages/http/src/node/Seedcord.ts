@@ -12,7 +12,8 @@ import {
     shutdownOf,
     StartupPhase
 } from '@seedcord/core/node/internal';
-import { paint } from '@seedcord/errors';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
@@ -67,6 +68,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     readonly #hmrManager: HmrManager;
     readonly #logger = new Logger('Server', { channel: 'bot' });
 
+    #starting?: Promise<this>;
     #server?: Server;
     #boundPort?: number;
     #fetchedUsername?: string | undefined;
@@ -106,7 +108,32 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     /**
      * Starts the host and runs the startup tasks.
      */
-    public async start(): Promise<this> {
+    public start(): Promise<this> {
+        this.#starting = this.#start();
+        return this.#starting;
+    }
+
+    /**
+     * Answers one request to the interactions endpoint. Mount it in your own server when the
+     * config sets `port: false`. Throws until `start()` is called.
+     *
+     * @example
+     * ```ts
+     * // Hono passes the untouched request through c.req.raw
+     * const seedcord = new Seedcord({ ...config, port: false });
+     * await seedcord.start();
+     *
+     * const app = new Hono();
+     * app.post('/interactions', (c) => seedcord.fetch(c.req.raw));
+     * ```
+     */
+    public async fetch(request: Request): Promise<Response> {
+        if (!this.#starting) throw new SeedcordError(SeedcordErrorCode.CoreFetchBeforeStart);
+        await this.#starting;
+        return await this.#service.engine.handle(request);
+    }
+
+    async #start(): Promise<this> {
         try {
             await super.init();
         } catch (caught) {
@@ -148,6 +175,17 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
             return Promise.resolve();
         });
 
+        this.startup.addTask(StartupPhase.Configuration, 'interactions-engine', () => {
+            const { inFlight } = this.#service.engine;
+            this.shutdown.addTask(
+                ShutdownPhase.Drain,
+                'drain-inflight',
+                () => drainInFlight(inFlight, DRAIN_WINDOW_MS, this.#logger, 'Interactions'),
+                DRAIN_TASK_TIMEOUT_MS
+            );
+            return Promise.resolve();
+        });
+
         // needs the token from Configuration, and must finish before Ready opens the server to interactions
         this.startup.addTask(StartupPhase.Login, 'emoji-injection', () => this.#emojiInjector.init());
 
@@ -162,7 +200,8 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
             });
         }
 
-        this.startup.addTask(StartupPhase.Ready, 'http-server', () => this.#listen());
+        const { port = DEFAULT_PORT } = this.config;
+        if (port !== false) this.startup.addTask(StartupPhase.Ready, 'http-server', () => this.#listen(port));
 
         if (!Envapter.isTest) {
             this.startup.addTask(StartupPhase.Ready, 'identity', () => this.#fetchUsername());
@@ -186,8 +225,8 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         return this.#service.applicationId;
     }
 
-    async #listen(): Promise<void> {
-        const { handle, inFlight } = this.#service.engine;
+    async #listen(port: number): Promise<void> {
+        const { handle } = this.#service.engine;
 
         const server = createServer((incoming, outgoing) => {
             void (async () => {
@@ -200,7 +239,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         });
         this.#server = server;
 
-        server.listen(this.config.port ?? DEFAULT_PORT);
+        server.listen(port);
         await once(server, 'listening');
         // justified: address() is AddressInfo once a TCP server is listening
         this.#boundPort = (server.address() as AddressInfo).port;
@@ -212,13 +251,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
             'stop-http-server',
             () => this.#stopServer(),
             SERVER_SHUTDOWN_TIMEOUT_MS
-        );
-        // Unbind already ran, so every accepted request is in the in-flight set here
-        this.shutdown.addTask(
-            ShutdownPhase.Drain,
-            'drain-inflight',
-            () => drainInFlight(inFlight, DRAIN_WINDOW_MS, this.#logger, 'Interactions'),
-            DRAIN_TASK_TIMEOUT_MS
         );
     }
 
