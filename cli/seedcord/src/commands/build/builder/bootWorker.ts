@@ -48,20 +48,23 @@ export async function bootWorker(config: InlineConfig): Promise<void> {
         preview: { port: 0 }
     });
 
-    let loaded = false;
+    let status: number | undefined;
     try {
         const url = server.resolvedUrls?.local[0];
         if (url === undefined) {
-            throw new SeedcordError(SeedcordErrorCode.CliEdgeBootFailed, ['vite preview reported no URL']);
+            throw new SeedcordError(SeedcordErrorCode.CliEdgeBootFailed, ['vite preview started without a local URL.']);
         }
         const response = await fetch(url);
-        loaded = response.status === LOADED_STATUS;
+        status = response.status;
     } finally {
         // close rethrows a failed startup
         await server.close().catch((error: unknown) => {
-            if (loaded) throw error;
+            if (status === LOADED_STATUS) throw error;
         });
     }
+    if (status === LOADED_STATUS) return;
 
-    if (!loaded) throw new SeedcordError(SeedcordErrorCode.CliEdgeBootFailed, [errors.join('\n')]);
+    const reason =
+        errors.length > 0 ? errors.join('\n') : `The worker answered a GET with ${status}, where a bot answers 405.`;
+    throw new SeedcordError(SeedcordErrorCode.CliEdgeBootFailed, [reason]);
 }

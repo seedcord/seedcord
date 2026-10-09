@@ -309,11 +309,11 @@ export enum SeedcordErrorCode {
     CliConfigEntryOnEdge = 3144,
     /** An edge bot's project does not have `@cloudflare/vite-plugin` installed. */
     CliEdgeVitePluginMissing = 3145,
-    /** An edge bot's `compatibility_date` predates 2026-08-04 and its flags leave out `nodejs_compat`. */
+    /** An edge bot's `compatibility_date` predates Cloudflare's Node compat default with no flag to turn it on. */
     CliEdgeCompatDateTooOld = 3146,
     /** An edge bot sets `no_nodejs_compat`. */
     CliEdgeNodeCompatOff = 3147,
-    /** The built edge worker failed to start in workerd. */
+    /** The build could not start the edge worker in workerd. */
     CliEdgeBootFailed = 3148,
     /** An edge bot's `root` is the folder that holds its seedcord config. */
     CliEdgeRootIsConfigFolder = 3149,

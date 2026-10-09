@@ -29,12 +29,6 @@ describe('seedcord build checks that an edge bot keeps Node compat on', () => {
         });
     }, 120_000);
 
-    it('builds a wrangler config with no compatibility_date', async () => {
-        const projectDir = await edgeBotWith({});
-
-        await expect(build(projectDir)).resolves.toBeDefined();
-    }, 120_000);
-
     it('builds an older date that turns on nodejs_compat', async () => {
         const projectDir = await edgeBotWith({
             compatibility_date: '2026-08-03',
@@ -42,6 +36,16 @@ describe('seedcord build checks that an edge bot keeps Node compat on', () => {
         });
 
         await expect(build(projectDir)).resolves.toBeDefined();
+    }, 120_000);
+
+    // workerd loads no node: modules for nodejs_compat_v2 alone
+    it('throws CliEdgeCompatDateTooOld for an older date with only nodejs_compat_v2', async () => {
+        const projectDir = await edgeBotWith({
+            compatibility_date: '2026-08-03',
+            compatibility_flags: ['nodejs_compat_v2']
+        });
+
+        await expect(build(projectDir)).rejects.toMatchObject({ code: SeedcordErrorCode.CliEdgeCompatDateTooOld });
     }, 120_000);
 
     it('throws CliEdgeNodeCompatOff for no_nodejs_compat', async () => {

@@ -26,9 +26,12 @@ type ImportCloudflare = () => Promise<typeof CloudflareVitePlugin>;
 type CloudflarePlugin = typeof CloudflareVitePlugin.cloudflare;
 
 const WORKER_ENVIRONMENT = 'worker';
+const CLOUDFLARE_PLUGIN = '@cloudflare/vite-plugin';
 
-function isModuleNotFound(error: unknown): boolean {
-    return Error.isError(error) && 'code' in error && error.code === 'ERR_MODULE_NOT_FOUND';
+// node and bun put the missing package's name in the message
+function isPluginMissing(error: unknown): boolean {
+    const notFound = Error.isError(error) && 'code' in error && error.code === 'ERR_MODULE_NOT_FOUND';
+    return notFound && error.message.includes(CLOUDFLARE_PLUGIN);
 }
 
 function captureChunks(onChunks: (chunks: Rolldown.OutputChunk[]) => void): Plugin {
@@ -143,13 +146,11 @@ export class EdgeBuild extends TargetBuild {
             const { cloudflare } = await this.importCloudflare();
             return cloudflare;
         } catch (error: unknown) {
-            if (isModuleNotFound(error)) {
+            if (isPluginMissing(error)) {
                 throw new SeedcordError(SeedcordErrorCode.CliEdgeVitePluginMissing, [this.viteRoot], { cause: error });
             }
             const reason = Error.isError(error) ? error.message : String(error);
-            throw new SeedcordError(SeedcordErrorCode.CliImportFailed, ['@cloudflare/vite-plugin', reason], {
-                cause: error
-            });
+            throw new SeedcordError(SeedcordErrorCode.CliImportFailed, [CLOUDFLARE_PLUGIN, reason], { cause: error });
         }
     }
 }
