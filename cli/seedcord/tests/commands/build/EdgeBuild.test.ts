@@ -3,13 +3,13 @@ import { join } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { assert, describe, expect, it } from 'vitest';
 
-import { EdgeBuilder } from '#commands/build/builder/EdgeBuilder';
+import { EdgeBuild } from '#commands/build/builder/EdgeBuild';
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 
 const EDGE_BOT = join(import.meta.dirname, '../../fixtures/edge-bot');
 
-describe('EdgeBuilder', () => {
+describe('EdgeBuild', () => {
     it('throws CliEdgeVitePluginMissing when the project lacks @cloudflare/vite-plugin', async () => {
         await using project = await new ProjectLoader(openModuleLoader).open(EDGE_BOT);
         const { target } = project.config;
@@ -18,9 +18,9 @@ describe('EdgeBuilder', () => {
             code: 'ERR_MODULE_NOT_FOUND'
         });
 
-        const builder = new EdgeBuilder(() => Promise.reject(notFound));
+        const build = new EdgeBuild(project, target, () => Promise.reject(notFound));
 
-        await expect(builder.build(project, target)).rejects.toMatchObject({
+        await expect(build.bundle()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliEdgeVitePluginMissing,
             message: expect.stringContaining('edge-bot') as string
         });

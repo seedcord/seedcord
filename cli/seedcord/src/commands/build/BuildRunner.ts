@@ -1,7 +1,4 @@
-import { existsSync } from 'node:fs';
-
-import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/errors';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { importInstance } from '#core/modules/importInstance';
@@ -10,29 +7,27 @@ import { printResolvedConfig } from '#core/output/printResolvedConfig';
 
 import { assertFoldersUnderRoot } from './builder/assertFoldersUnderRoot';
 import { assertOutDirSafe } from './builder/assertOutDirSafe';
-import { EdgeBuilder } from './builder/EdgeBuilder';
-import { ServerBuilder } from './builder/ServerBuilder';
+import { targetBuildFor } from './builder/targetBuildFor';
 import { TypeChecker } from './builder/TypeChecker';
 
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { Steps } from '#core/output/Steps';
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './builder/output';
+import type { NextCommand, TargetBuild } from './builder/TargetBuild';
 
 export const BUILD_STEPS = ['read config', 'load bot', 'type check', 'bundle', 'boot'] as const;
 export type BuildStep = (typeof BUILD_STEPS)[number];
 
 export interface BuildResult {
-    config: ResolvedSeedcordDevConfig;
     bundle: BundleStats;
+    nextCommands: NextCommand[];
 }
 
 interface BuildRunnerDeps {
     readonly steps: Steps<BuildStep>;
     readonly projectLoader: ProjectLoader;
     readonly typeChecker: TypeChecker;
-    readonly serverBuilder: ServerBuilder;
-    readonly edgeBuilder: EdgeBuilder;
+    readonly buildFor: (project: Project) => TargetBuild;
 }
 
 export class BuildRunner {
@@ -43,15 +38,15 @@ export class BuildRunner {
             steps,
             projectLoader: new ProjectLoader(openModuleLoader),
             typeChecker: new TypeChecker(),
-            serverBuilder: new ServerBuilder(),
-            edgeBuilder: new EdgeBuilder()
+            buildFor: targetBuildFor
         });
     }
 
     public async run(projectDir = process.cwd()): Promise<BuildResult> {
         const { steps, typeChecker } = this.deps;
 
-        await using project = await steps.step('read config', () => this.loadProject(projectDir));
+        await using build = await steps.step('read config', () => this.open(projectDir));
+        const { project } = build;
         const { config, modules } = project;
         printResolvedConfig(steps, config);
 
@@ -64,34 +59,20 @@ export class BuildRunner {
             () => typeChecker.check(project),
             ({ tsconfig }) => paint.path(tsconfig)
         );
-        const bundle = await steps.step('bundle', () => this.bundle(project));
+        const bundle = await steps.step('bundle', () => build.bundle());
+        await build.afterBundle(steps);
 
-        const { target } = config;
-        if (target.kind === 'edge') await steps.step('boot', () => this.deps.edgeBuilder.boot(project, target));
-
-        return { config, bundle };
+        return { bundle, nextCommands: build.nextCommands(bundle) };
     }
 
-    private bundle(project: Project): Promise<BundleStats> {
-        const { target } = project.config;
-        if (target.kind === 'edge') return this.deps.edgeBuilder.build(project, target);
-        return this.deps.serverBuilder.build(project, target.entry);
-    }
-
-    private async loadProject(projectDir: string): Promise<Project> {
+    private async open(projectDir: string): Promise<TargetBuild> {
         await using onFailure = new AsyncDisposableStack();
         const project = onFailure.use(await this.deps.projectLoader.open(projectDir));
-        const { target } = project.config;
-        if (target.kind === 'server') this.assertEntryExists(target.entry);
+        const build = this.deps.buildFor(project);
+        build.check();
         assertOutDirSafe(project.config.build.outDir, project.config.root);
 
         onFailure.move();
-        return project;
-    }
-
-    private assertEntryExists(entryPath: string): void {
-        if (!existsSync(entryPath)) {
-            throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [entryPath]);
-        }
+        return build;
     }
 }

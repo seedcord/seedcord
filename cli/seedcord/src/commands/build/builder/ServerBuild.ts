@@ -1,13 +1,20 @@
+import { existsSync } from 'node:fs';
 import { extname, join } from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { build } from 'vite';
+
+import { serverCommands } from '#commands/build/serverCommands';
 
 import { bundleFailed, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { ENTRY_ID, isServerEntry, serverEntry } from './serverEntry';
+import { TargetBuild } from './TargetBuild';
 
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './output';
+import type { NextCommand } from './TargetBuild';
 
 const NODE_TARGET = 'node24';
 
@@ -34,8 +41,29 @@ function outputName(moduleId: string | null | undefined): string {
     return `[name]${extension}.js`;
 }
 
-export class ServerBuilder {
-    public async build({ config, files }: Project, entry: string): Promise<BundleStats> {
+export class ServerBuild extends TargetBuild {
+    constructor(
+        project: Project,
+        private readonly entry: string
+    ) {
+        super(project);
+    }
+
+    public check(): void {
+        if (!existsSync(this.entry)) throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [this.entry]);
+    }
+
+    public afterBundle(): Promise<void> {
+        return Promise.resolve();
+    }
+
+    public nextCommands(bundle: BundleStats): NextCommand[] {
+        return serverCommands(this.project.config.configFile, bundle.entry);
+    }
+
+    public async bundle(): Promise<BundleStats> {
+        const { config, files } = this.project;
+        const { entry } = this;
         const { root } = config;
         const { outDir } = config.build;
         const folders = await files.foldersIncludingEmpty();
