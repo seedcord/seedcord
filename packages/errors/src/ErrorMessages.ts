@@ -263,6 +263,8 @@ const messages = {
         `${paint.path(wranglerConfig)} makes this an edge bot, but ${paint.path(tsconfig)} leaves out ${paint.bold('"customConditions": ["workerd"]')}. Add it to compilerOptions for an edge bot, or set ${paint.bold('build.tsconfig')} to the tsconfig that holds it. For a node bot, move ${paint.path(wranglerConfig)} out of this folder.`,
     [SeedcordErrorCode.CliWorkerdConditionWithoutWrangler]: (tsconfig: string, configDir: string) =>
         `${paint.path(tsconfig)} sets the ${paint.bold('workerd')} condition, which only an edge bot uses, but ${paint.path(configDir)} has no wrangler config. Add a ${paint.bold('wrangler.jsonc')} for an edge bot. For a node bot, remove ${paint.bold('"workerd"')} from customConditions.`,
+    [SeedcordErrorCode.CliConfigEntryOnEdge]: (configFile: string, wranglerConfig: string) =>
+        `${paint.path(wranglerConfig)} makes this an edge bot, and an edge bot has no ${paint.bold('entry')}. Cloudflare calls the default export of ${paint.bold('instance')}. Remove ${paint.bold('entry')} from ${paint.path(configFile)}.`,
     [SeedcordErrorCode.CliTypescriptNotStarted]: (tsc: string, reason: string) =>
         `Could not start TypeScript at ${paint.path(tsc)}: ${reason}`,
     [SeedcordErrorCode.CliTsconfigUnreadable]: (tsconfig: string, output: string) =>

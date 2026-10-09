@@ -42,8 +42,8 @@ function outputName(moduleId: string | null | undefined): string {
 }
 
 export class ViteBuilder {
-    public async build({ config, files }: Project): Promise<BundleStats> {
-        const { root, entry } = config;
+    public async build({ config, files }: Project, entry: string): Promise<BundleStats> {
+        const { root } = config;
         const { outDir } = config.build;
         const folders = await files.foldersIncludingEmpty();
 

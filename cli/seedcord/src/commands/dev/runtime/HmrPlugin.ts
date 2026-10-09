@@ -143,7 +143,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 
     private isCriticalFile(file: string): boolean {
-        const { root, configFile, entry, instance } = this.config;
+        const { root, configFile, instance, target } = this.config;
         const relPath = relative(root, file);
         const patterns = [...(this.config.hmr?.restart ?? []), ...this.dynamicRestartPatterns];
 
@@ -153,7 +153,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             file.endsWith('package.json') ||
             file.endsWith('tsconfig.json') ||
             file.endsWith('.env') ||
-            file === resolve(root, entry) ||
+            (target.kind === 'node' && file === resolve(root, target.entry)) ||
             file === resolve(root, instance)
         );
     }

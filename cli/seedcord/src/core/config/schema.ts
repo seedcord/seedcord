@@ -1,4 +1,5 @@
-import type { BuildTarget } from './detectTarget';
+import type { EdgeTarget, NodeTarget } from './detectTarget';
+import type { TypedOmit } from '@seedcord/types';
 
 /**
  * Build configuration used by the Seedcord CLI.
@@ -56,9 +57,10 @@ export interface SeedcordHmrConfig {
 }
 
 /**
- * Configuration used by the Seedcord CLI when running `seedcord dev` or `seedcord build`.
+ * The seedcord config every bot shares. An edge bot's config file uses this shape through the
+ * `workerd` condition in its tsconfig.
  */
-export interface SeedcordDevConfig {
+export interface SeedcordConfig {
     /**
      * Root directory used for resolving relative paths.
      *
@@ -69,10 +71,6 @@ export interface SeedcordDevConfig {
      * Path to the module whose default export is a configured `Seedcord` instance.
      */
     instance: string;
-    /**
-     * Entry file that should be executed when starting the bot (and copied into the build output).
-     */
-    entry: string;
     /**
      * How `seedcord dev` exposes an http bot's interactions server. This has no effect on a gateway bot.
      *
@@ -100,7 +98,19 @@ export interface SeedcordDevConfig {
     hmr?: SeedcordHmrConfig;
 }
 
+/**
+ * Configuration used by the Seedcord CLI when running `seedcord dev` or `seedcord build`.
+ */
+export interface SeedcordDevConfig extends SeedcordConfig {
+    /**
+     * Entry file that should be executed when starting the bot (and copied into the build output).
+     */
+    entry: string;
+}
+
 export type ResolvedTunnel = { mode: 'off' } | { mode: 'quick' } | { mode: 'url'; url: string };
+
+export type ResolvedTarget = (NodeTarget & { entry: string }) | EdgeTarget;
 
 export type ResolvedTypecheck = { enabled: false } | { enabled: true; tsconfig?: string };
 
@@ -110,10 +120,10 @@ export interface ResolvedSeedcordBuildConfig {
 }
 
 // every path in here is absolute
-export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConfig, 'build' | 'hmr' | 'tunnel'>> {
+export interface ResolvedSeedcordDevConfig extends Required<TypedOmit<SeedcordConfig, 'build' | 'hmr' | 'tunnel'>> {
     tunnel: ResolvedTunnel;
     configFile: string;
-    target: BuildTarget;
+    target: ResolvedTarget;
     build: ResolvedSeedcordBuildConfig;
     typecheck: ResolvedTypecheck;
     // restart globs pass through unresolved

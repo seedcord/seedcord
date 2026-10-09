@@ -18,9 +18,11 @@ import type { BuildTarget } from './detectTarget';
 import type {
     ResolvedSeedcordBuildConfig,
     ResolvedSeedcordDevConfig,
+    ResolvedTarget,
     ResolvedTunnel,
     ResolvedTypecheck,
     SeedcordBuildConfig,
+    SeedcordConfig,
     SeedcordDevConfig,
     SeedcordHmrConfig
 } from './schema';
@@ -83,9 +85,22 @@ function isNonEmptyString(value: unknown): boolean {
     return typeof value === 'string' && value.length > 0;
 }
 
-function* configProblems(raw: Record<string, unknown>): Generator<SeedcordError> {
+function* entryProblems(entry: unknown, target: BuildTarget, configFile: string): Generator<SeedcordError> {
+    if (target.kind === 'node' && !isNonEmptyString(entry)) {
+        yield new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
+    }
+    if (target.kind === 'edge' && entry !== undefined) {
+        yield new SeedcordError(SeedcordErrorCode.CliConfigEntryOnEdge, [configFile, target.wranglerConfig]);
+    }
+}
+
+function* configProblems(
+    raw: Record<string, unknown>,
+    target: BuildTarget,
+    configFile: string
+): Generator<SeedcordError> {
     if (!isNonEmptyString(raw.instance)) yield new SeedcordError(SeedcordErrorCode.CliConfigMissingInstance);
-    if (!isNonEmptyString(raw.entry)) yield new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
+    yield* entryProblems(raw.entry, target, configFile);
     if (!isOptionalString(raw.root)) yield invalidField('root', 'a string');
     if (raw.idleAnimation !== undefined && typeof raw.idleAnimation !== 'boolean') {
         yield invalidField('idleAnimation', 'a boolean');
@@ -108,9 +123,13 @@ function resolveTypecheck(value: SeedcordHmrConfig['typecheck'], root: string): 
     return { enabled: true, tsconfig: resolve(root, value.tsconfig) };
 }
 
-function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
+function validateConfig(
+    raw: unknown,
+    target: BuildTarget,
+    configFile: string
+): asserts raw is SeedcordConfig | SeedcordDevConfig {
     if (!isPlainObject(raw)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidExport);
-    throwSingleOrAggregate([...configProblems(raw)], SeedcordErrorCode.CliConfigProblems);
+    throwSingleOrAggregate([...configProblems(raw, target, configFile)], SeedcordErrorCode.CliConfigProblems);
 }
 
 export class ProjectLoader {
@@ -137,13 +156,11 @@ export class ProjectLoader {
     ): Promise<ResolvedSeedcordDevConfig> {
         const loadedModule = await modules.importModule(configPath);
         const config: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
-        validateConfig(config);
+        validateConfig(config, target, configPath);
 
         const configDir = dirname(configPath);
         const root = resolve(configDir, config.root ?? '.');
         const instance = this.resolveWithinRoot(root, config.instance);
-        const entry = this.resolveWithinRoot(root, config.entry);
-        this.assertEntryWithinRoot(root, entry);
         const build = this.resolveBuildOptions(configDir, config.build);
         const typecheck = resolveTypecheck(config.hmr?.typecheck, root);
 
@@ -151,8 +168,7 @@ export class ProjectLoader {
             instance,
             root,
             configFile: configPath,
-            target,
-            entry,
+            target: this.resolveTarget(root, target, config),
             build,
             typecheck,
             idleAnimation: config.idleAnimation ?? true,
@@ -166,8 +182,19 @@ export class ProjectLoader {
         return resolve(root, target);
     }
 
-    private assertEntryWithinRoot(root: string, entry: string): void {
-        if (!isInside(root, entry)) throw new SeedcordError(SeedcordErrorCode.CliConfigEntryOutsideRoot, [entry, root]);
+    private resolveTarget(
+        root: string,
+        target: BuildTarget,
+        config: SeedcordConfig | SeedcordDevConfig
+    ): ResolvedTarget {
+        if (target.kind === 'edge') return target;
+        if (!('entry' in config)) throw new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
+
+        const resolved = this.resolveWithinRoot(root, config.entry);
+        if (!isInside(root, resolved)) {
+            throw new SeedcordError(SeedcordErrorCode.CliConfigEntryOutsideRoot, [resolved, root]);
+        }
+        return { ...target, entry: resolved };
     }
 
     private resolveBuildOptions(

@@ -7,6 +7,8 @@ export function printResolvedConfig(steps: Steps<string>, config: ResolvedSeedco
     steps.detail('config', paint.path(config.configFile));
     steps.detail('root', paint.path(config.root));
     steps.detail('instance', paint.path(config.instance));
-    steps.detail('entry', paint.path(config.entry));
+    const { target } = config;
+    if (target.kind === 'node') steps.detail('entry', paint.path(target.entry));
+    else steps.detail('wrangler', paint.path(target.wranglerConfig));
     steps.detail('outDir', paint.path(config.build.outDir));
 }

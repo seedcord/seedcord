@@ -305,6 +305,8 @@ export enum SeedcordErrorCode {
     CliHashPathProblems = 3142,
     /** The CLI could not start the TypeScript compiler process. */
     CliTypescriptNotStarted = 3143,
+    /** An edge bot's seedcord config sets `entry`. */
+    CliConfigEntryOnEdge = 3144,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,
