@@ -32,7 +32,7 @@ export async function assertTargetMatchesTsconfig(project: Project): Promise<voi
     if (target.kind === 'edge' && !hasWorkerd) {
         throw new SeedcordError(SeedcordErrorCode.CliEdgeWithoutWorkerdCondition, [target.wranglerConfig, tsconfig]);
     }
-    if (target.kind === 'node' && hasWorkerd) {
+    if (target.kind === 'server' && hasWorkerd) {
         throw new SeedcordError(SeedcordErrorCode.CliWorkerdConditionWithoutWrangler, [tsconfig, project.configDir]);
     }
 }

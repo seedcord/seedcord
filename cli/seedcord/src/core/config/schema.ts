@@ -1,4 +1,4 @@
-import type { EdgeTarget, NodeTarget } from './detectTarget';
+import type { EdgeTarget, ServerTarget } from './detectTarget';
 import type { TypedOmit } from '@seedcord/types';
 
 /**
@@ -110,7 +110,7 @@ export interface SeedcordDevConfig extends SeedcordConfig {
 
 export type ResolvedTunnel = { mode: 'off' } | { mode: 'quick' } | { mode: 'url'; url: string };
 
-export type ResolvedTarget = (NodeTarget & { entry: string }) | EdgeTarget;
+export type ResolvedTarget = (ServerTarget & { entry: string }) | EdgeTarget;
 
 export type ResolvedTypecheck = { enabled: false } | { enabled: true; tsconfig?: string };
 

@@ -7,7 +7,7 @@ export function devConfigFor(root: string, instance: string): ResolvedSeedcordDe
     return {
         configFile: join(root, 'seedcord.config.ts'),
         root: join(root, 'src'),
-        target: { kind: 'node', entry: join(root, 'src', instance) },
+        target: { kind: 'server', entry: join(root, 'src', instance) },
         instance: join(root, 'src', instance)
     } as ResolvedSeedcordDevConfig;
 }

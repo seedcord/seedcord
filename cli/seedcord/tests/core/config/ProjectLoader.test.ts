@@ -63,19 +63,19 @@ describe('ProjectLoader', () => {
 
         expect(resolved.root).toBe(resolve(projectDir, 'src'));
         expect(resolved.instance).toBe(resolve(projectDir, 'src/bot.ts'));
-        expect(resolved.target).toEqual({ kind: 'node', entry: resolve(projectDir, 'src/index.ts') });
+        expect(resolved.target).toEqual({ kind: 'server', entry: resolve(projectDir, 'src/index.ts') });
         expect(resolved.build.outDir).toBe(resolve(projectDir, 'dist'));
         expect(resolved.build.tsconfig).toBeUndefined();
     });
 });
 
 describe('ProjectLoader target', () => {
-    it('targets node when the config folder has no wrangler config', async () => {
+    it('targets a server when the config folder has no wrangler config', async () => {
         const { projectDir, load } = projectWith(MINIMAL);
 
         const { target } = await load();
 
-        expect(target).toEqual({ kind: 'node', entry: join(projectDir, 'index.ts') });
+        expect(target).toEqual({ kind: 'server', entry: join(projectDir, 'index.ts') });
     });
 
     it.each(['wrangler.json', 'wrangler.jsonc', 'wrangler.toml'])(

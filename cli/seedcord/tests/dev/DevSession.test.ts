@@ -13,7 +13,7 @@ function config(): ResolvedSeedcordDevConfig {
     return {
         root: process.cwd(),
         configFile: `${process.cwd()}/seedcord.config.ts`,
-        target: { kind: 'node', entry: `${process.cwd()}/package.json` },
+        target: { kind: 'server', entry: `${process.cwd()}/package.json` },
         instance: `${process.cwd()}/package.json`,
         tunnel: { mode: 'quick' },
         typecheck: { enabled: false },

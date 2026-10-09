@@ -86,7 +86,7 @@ function isNonEmptyString(value: unknown): boolean {
 }
 
 function* entryProblems(entry: unknown, target: BuildTarget, configFile: string): Generator<SeedcordError> {
-    if (target.kind === 'node' && !isNonEmptyString(entry)) {
+    if (target.kind === 'server' && !isNonEmptyString(entry)) {
         yield new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
     }
     if (target.kind === 'edge' && entry !== undefined) {

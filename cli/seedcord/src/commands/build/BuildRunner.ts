@@ -61,7 +61,7 @@ export class BuildRunner {
             () => typeChecker.check(project),
             ({ tsconfig }) => paint.path(tsconfig)
         );
-        const entry = config.target.kind === 'node' ? config.target.entry : config.instance;
+        const entry = config.target.kind === 'server' ? config.target.entry : config.instance;
         const bundle = await steps.step('bundle', () => bundler.build(project, entry));
 
         return { config, bundle };
@@ -71,7 +71,7 @@ export class BuildRunner {
         await using onFailure = new AsyncDisposableStack();
         const project = onFailure.use(await this.deps.projectLoader.open(projectDir));
         const { target } = project.config;
-        if (target.kind === 'node') this.assertEntryExists(target.entry);
+        if (target.kind === 'server') this.assertEntryExists(target.entry);
         assertOutDirSafe(project.config.build.outDir, project.config.root);
 
         onFailure.move();

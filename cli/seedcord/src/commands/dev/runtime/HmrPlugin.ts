@@ -153,7 +153,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             file.endsWith('package.json') ||
             file.endsWith('tsconfig.json') ||
             file.endsWith('.env') ||
-            (target.kind === 'node' && file === resolve(root, target.entry)) ||
+            (target.kind === 'server' && file === resolve(root, target.entry)) ||
             file === resolve(root, instance)
         );
     }
