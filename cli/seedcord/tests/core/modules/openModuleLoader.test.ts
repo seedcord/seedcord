@@ -1,4 +1,5 @@
 import { mkdir, mkdtempDisposable, symlink, writeFile } from 'node:fs/promises';
+import { createServer as createNetServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -59,7 +60,31 @@ async function writeEntry(root: string, specifier: string): Promise<string> {
     return entry;
 }
 
+// vite's default hmr websocket port
+const VITE_HMR_PORT = 24_678;
+
+// a dev server in another test worker may already hold it
+async function holdPort(port: number): Promise<void> {
+    const holder = createNetServer();
+    await new Promise<void>((resolve) => {
+        holder.once('error', () => resolve());
+        holder.listen(port, () => resolve());
+    });
+    onTestFinished(() => new Promise<void>((resolve) => holder.close(() => resolve())));
+}
+
 describe('openModuleLoader', () => {
+    it('opens no hmr websocket while another process holds its port', async () => {
+        await holdPort(VITE_HMR_PORT);
+        const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const root = await project();
+
+        await using modules = await openModuleLoader(root, NODE);
+        await modules.importModule(await writeEntry(root, './lib/greeting'));
+
+        expect(logged).not.toHaveBeenCalled();
+    });
+
     it('resolves an import through a tsconfig paths alias', async () => {
         const root = await project({ paths: { '#lib/*': ['./src/lib/*'] } });
         const entry = await writeEntry(root, '#lib/greeting');
@@ -172,6 +197,15 @@ describe('openModuleLoader for an edge bot', () => {
         const module = await modules.importModule<{ probe: string }>(entry);
 
         expect(module.probe).toBe('from the shell');
+    });
+
+    it('throws CliImportFailed for an edge bot without envapt installed', async () => {
+        const root = await project();
+
+        await expect(openModuleLoader(root, edgeTarget(root))).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliImportFailed,
+            message: expect.stringContaining('envapt') as string
+        });
     });
 
     it("binds envapt's workerd build to process.env", async () => {

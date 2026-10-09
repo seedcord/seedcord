@@ -22,17 +22,20 @@ class ViteModuleLoader implements ModuleLoader, AsyncDisposable {
     public async importModule<TModule = unknown>(path: string): Promise<TModule> {
         if (path.includes('#')) throw new SeedcordError(SeedcordErrorCode.CliPathHasHash, [path]);
         if (!existsSync(path)) throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [path]);
-
-        try {
-            return await this.runner.import<TModule>(path);
-        } catch (error: unknown) {
-            const reason = Error.isError(error) ? error.message : String(error);
-            throw new SeedcordError(SeedcordErrorCode.CliImportFailed, [path, reason], { cause: error });
-        }
+        return this.load<TModule>(path, path);
     }
 
-    public async importStandIn(id: string): Promise<void> {
-        await this.runner.import(id);
+    public async bindEnv(): Promise<void> {
+        await this.load(BIND_ENV_ID, 'envapt');
+    }
+
+    private async load<TModule>(id: string, shownAs: string): Promise<TModule> {
+        try {
+            return await this.runner.import<TModule>(id);
+        } catch (error: unknown) {
+            const reason = Error.isError(error) ? error.message : String(error);
+            throw new SeedcordError(SeedcordErrorCode.CliImportFailed, [shownAs, reason], { cause: error });
+        }
     }
 
     public async [Symbol.asyncDispose](): Promise<void> {
@@ -51,7 +54,8 @@ export async function openModuleLoader(
         configFile: false,
         logLevel: 'error',
         clearScreen: false,
-        server: { middlewareMode: true, hmr: false, watch: null },
+        // hmr: false still opens vite's websocket on 24678
+        server: { middlewareMode: true, hmr: false, ws: false, watch: null },
         ssr: { noExternal: seedcordDependents(projectDir) },
         plugins: isEdge ? [edgeStandIns()] : []
     });
@@ -60,7 +64,7 @@ export async function openModuleLoader(
     const loader = onFailure.use(
         new ViteModuleLoader(server, createServerModuleRunner(server.environments.ssr, { hmr: false }))
     );
-    if (isEdge) await loader.importStandIn(BIND_ENV_ID);
+    if (isEdge) await loader.bindEnv();
 
     onFailure.move();
     return loader;

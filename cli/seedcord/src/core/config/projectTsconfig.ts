@@ -6,7 +6,6 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { ResolvedSeedcordDevConfig } from './schema';
 
-// undefined when build.tsconfig is unset and the config folder has no tsconfig.json
 export function projectTsconfig({ configFile, build }: ResolvedSeedcordDevConfig): string | undefined {
     if (build.tsconfig) {
         if (!existsSync(build.tsconfig)) {

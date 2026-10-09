@@ -16,14 +16,14 @@ export function userCodeConfig(resolve: ResolveConditions): UserConfig {
         resolve: { tsconfigPaths: true },
         ssr: {
             target: 'node',
-            // logger stays external so the bot shares the CLI's LoggerChannelRegistry singleton the dev TUI reads through
+            // the dev TUI and the step printer read the bot's logs from the CLI's own logger registry
             external: ['@seedcord/logger', '@seedcord/logger/node'],
-            // node's loader can't parse the decorators in a project .ts file that an external package imports.
-            // HmrManager.init reads import.meta.hot. vite injects it only into modules it transforms.
+            // node can't parse the decorators in project files these import.
+            // HmrManager.init reads import.meta.hot, set only on modules transformed by vite.
             noExternal: [/^@seedcord\//],
-            resolve: { ...resolve }
+            resolve
         },
-        environments: { ssr: { resolve: { ...resolve } } },
+        environments: { ssr: { resolve } },
         appType: 'custom'
     };
 }

@@ -5,7 +5,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { resolveProjectTsc } from './resolveProjectTsc';
 
-export interface TscResult {
+interface TscResult {
     exitCode: number;
     stdout: string;
     stderr: string;
