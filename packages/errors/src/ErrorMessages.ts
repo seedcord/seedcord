@@ -259,6 +259,12 @@ const messages = {
         `${count} command files need fixing before codegen can finish. Each one is listed below.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
+    [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (wranglerConfig: string, tsconfig: string) =>
+        `${paint.path(wranglerConfig)} makes this an edge bot, but ${paint.path(tsconfig)} leaves out ${paint.bold('"customConditions": ["workerd"]')}. Add it to compilerOptions for an edge bot. For a node bot, move ${paint.path(wranglerConfig)} out of this folder.`,
+    [SeedcordErrorCode.CliWorkerdConditionWithoutWrangler]: (tsconfig: string, configDir: string) =>
+        `${paint.path(tsconfig)} sets the ${paint.bold('workerd')} condition, which only an edge bot uses, but ${paint.path(configDir)} has no ${paint.bold('wrangler.jsonc')}. Add one for an edge bot. For a node bot, remove ${paint.bold('"workerd"')} from customConditions.`,
+    [SeedcordErrorCode.CliTsconfigUnreadable]: (tsconfig: string, output: string) =>
+        `TypeScript could not read ${paint.path(tsconfig)}.\n${output}`,
     [SeedcordErrorCode.CliPathHasHash]: (path: string) =>
         `Cannot load ${paint.path(path)} because its path contains a ${paint.bold('#')}. Vite loads your bot's code and cuts a path at its first ${paint.bold('#')}. Move the project to a folder without one.`,
     [SeedcordErrorCode.CliCodegenDuplicateContextMenu]: (

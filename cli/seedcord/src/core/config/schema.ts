@@ -1,3 +1,5 @@
+import type { BuildTarget } from './detectTarget';
+
 /**
  * Build configuration used by the Seedcord CLI.
  */
@@ -116,6 +118,10 @@ export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConf
      * Absolute path to the config file that produced this resolution.
      */
     configFile: string;
+    /**
+     * `edge` when the config file's folder holds a wrangler config, `node` otherwise.
+     */
+    target: BuildTarget;
     /**
      * Resolved build options with absolute paths.
      */

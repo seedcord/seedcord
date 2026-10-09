@@ -295,6 +295,12 @@ export enum SeedcordErrorCode {
     CliCodegenOutOfDate = 3137,
     /** The CLI cannot load a file whose path contains a `#`. */
     CliPathHasHash = 3138,
+    /** An edge bot's tsconfig lacks the `workerd` condition. */
+    CliEdgeWithoutWorkerdCondition = 3139,
+    /** A bot with no wrangler config sets the `workerd` condition in its tsconfig. */
+    CliWorkerdConditionWithoutWrangler = 3140,
+    /** TypeScript could not read the project's tsconfig. */
+    CliTsconfigUnreadable = 3141,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

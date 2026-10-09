@@ -7,9 +7,12 @@ import { isInside } from '@seedcord/utils/node/internal';
 
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
+import { assertTargetMatchesTsconfig } from './assertTargetMatchesTsconfig';
+import { detectTarget } from './detectTarget';
 import { locateConfig } from './locateConfig';
 
 import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
+import type { BuildTarget } from './detectTarget';
 import type {
     ResolvedSeedcordBuildConfig,
     ResolvedSeedcordDevConfig,
@@ -118,15 +121,22 @@ export class ConfigLoader {
 
     public async load(projectDir = process.cwd()): Promise<LoadedProject> {
         const configPath = locateConfig(projectDir);
+        const configDir = dirname(configPath);
+        const target = detectTarget(configDir);
         await using onFailure = new AsyncDisposableStack();
-        const modules = onFailure.use(await this.openModules(dirname(configPath)));
-        const config = await this.readConfig(modules, configPath);
+        const modules = onFailure.use(await this.openModules(configDir));
+        const config = await this.readConfig(modules, configPath, target);
+        await assertTargetMatchesTsconfig(config);
 
         const owned = onFailure.move();
         return { config, modules, [Symbol.asyncDispose]: () => owned.disposeAsync() };
     }
 
-    private async readConfig(modules: ModuleLoader, configPath: string): Promise<ResolvedSeedcordDevConfig> {
+    private async readConfig(
+        modules: ModuleLoader,
+        configPath: string,
+        target: BuildTarget
+    ): Promise<ResolvedSeedcordDevConfig> {
         const loadedModule = await modules.importModule(configPath);
         const config: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
         validateConfig(config);
@@ -143,6 +153,7 @@ export class ConfigLoader {
             instance,
             root,
             configFile: configPath,
+            target,
             entry,
             build,
             typecheck,
