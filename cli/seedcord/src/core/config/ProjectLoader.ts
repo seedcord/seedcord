@@ -5,11 +5,16 @@ import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal
 import { isPlainObject } from '@seedcord/utils/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 
+import { Project } from '#core/project/Project';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
+import { assertNoHashPaths } from './assertNoHashPaths';
+import { assertTargetMatchesTsconfig } from './assertTargetMatchesTsconfig';
+import { detectTarget } from './detectTarget';
 import { locateConfig } from './locateConfig';
 
-import type { ModuleLoader } from '#core/modules/ModuleLoader';
+import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
+import type { BuildTarget } from './detectTarget';
 import type {
     ResolvedSeedcordBuildConfig,
     ResolvedSeedcordDevConfig,
@@ -108,12 +113,29 @@ function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
     throwSingleOrAggregate([...configProblems(raw)], SeedcordErrorCode.CliConfigProblems);
 }
 
-export class ConfigLoader {
-    constructor(private readonly modules: ModuleLoader) {}
+export class ProjectLoader {
+    constructor(private readonly openModules: OpenModules) {}
 
-    public async load(projectDir = process.cwd()): Promise<ResolvedSeedcordDevConfig> {
+    public async open(projectDir = process.cwd()): Promise<Project> {
         const configPath = locateConfig(projectDir);
-        const loadedModule = await this.modules.importModule(configPath);
+        const configDir = dirname(configPath);
+        const target = detectTarget(configDir);
+        await using onFailure = new AsyncDisposableStack();
+        const modules = onFailure.use(await this.openModules(configDir, target));
+        const project = new Project(await this.readConfig(modules, configPath, target), modules);
+        await assertNoHashPaths(project);
+        await assertTargetMatchesTsconfig(project);
+
+        onFailure.move();
+        return project;
+    }
+
+    private async readConfig(
+        modules: ModuleLoader,
+        configPath: string,
+        target: BuildTarget
+    ): Promise<ResolvedSeedcordDevConfig> {
+        const loadedModule = await modules.importModule(configPath);
         const config: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
         validateConfig(config);
 
@@ -129,6 +151,7 @@ export class ConfigLoader {
             instance,
             root,
             configFile: configPath,
+            target,
             entry,
             build,
             typecheck,

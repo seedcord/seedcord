@@ -231,9 +231,7 @@ export enum SeedcordErrorCode {
     CliConfigNotFound = 3103,
     /** CLI entry file does not exist. */
     CliEntryNotFound = 3104,
-    /** Failed to import a TypeScript entry file. */
-    CliTsImportFailed = 3105,
-    /** Native import and jiti fallback both failed. */
+    /** The CLI could not load a config, bot, or command file. */
     CliImportFailed = 3106,
     /** The instance file's default export is not a constructed `Seedcord`. */
     CliInstanceInvalid = 3107,
@@ -295,6 +293,18 @@ export enum SeedcordErrorCode {
     CliCodegenCommandProblems = 3136,
     /** `seedcord codegen --check` found the committed augmentations stale. */
     CliCodegenOutOfDate = 3137,
+    /** A file or folder in the project has a `#` in its path. */
+    CliPathHasHash = 3138,
+    /** An edge bot's tsconfig lacks the `workerd` condition. */
+    CliEdgeWithoutWorkerdCondition = 3139,
+    /** A bot with no wrangler config sets the `workerd` condition in its tsconfig. */
+    CliWorkerdConditionWithoutWrangler = 3140,
+    /** TypeScript could not read the project's tsconfig. */
+    CliTsconfigUnreadable = 3141,
+    /** Two or more files or folders in the project have a `#` in their path. */
+    CliHashPathProblems = 3142,
+    /** The CLI could not start the TypeScript compiler process. */
+    CliTypescriptNotStarted = 3143,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

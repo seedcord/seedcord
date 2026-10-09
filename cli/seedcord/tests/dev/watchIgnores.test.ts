@@ -1,21 +1,17 @@
 import { appendFileSync, mkdirSync, mkdtempDisposableSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { createServer, mergeConfig } from 'vite';
-import { afterEach, describe, expect, it, onTestFinished } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
-import viteConfig, { logsIgnore } from '#commands/dev/runtime/vite.config';
+import { devServerConfig, logsIgnore } from '#commands/dev/runtime/devServerConfig';
 
 import type { ViteDevServer } from 'vite';
 
-const POLL_MS = 50;
-const READY_ATTEMPTS = 60;
-// 5s. a fixed 2s wait failed in 2 of 3 full CLI runs
-const EVENT_ATTEMPTS = 100;
 const TEST_TIMEOUT_MS = 20_000;
-// i haven't measured this, just a guess
-const LOG_GRACE_MS = 500;
+// this timeout should be sufficient for most file watch events imo
+const WATCH_TIMEOUT_MS = 10_000;
 
 const SOURCE_FILE = '/src/logs/format.ts';
 const LOG_FILE = '/logs/combined.log';
@@ -26,8 +22,6 @@ afterEach(async () => {
     await server?.close();
     server = undefined;
 });
-
-const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 // both files exist before the server starts
 function project(): string {
@@ -44,34 +38,20 @@ function project(): string {
     return root;
 }
 
-// on linux chokidar lists a directory before it watches the files inside
-async function untilWatching(watcher: ViteDevServer['watcher'], file: string): Promise<void> {
-    for (let attempt = 0; attempt < READY_ATTEMPTS; attempt++) {
-        if (watcher.getWatched()[dirname(file)]?.includes(basename(file))) return;
-        await sleep(POLL_MS);
-    }
-
-    throw new Error(`${file} was never watched. chokidar has: ${Object.keys(watcher.getWatched()).join(', ')}`);
-}
-
-async function untilTouched(touched: readonly string[], file: string): Promise<void> {
-    for (let attempt = 0; attempt < EVENT_ATTEMPTS; attempt++) {
-        if (touched.includes(file)) return;
-        await sleep(POLL_MS);
-    }
-
-    throw new Error(`${file} was never reported. vite reported: ${touched.join(', ') || 'nothing'}`);
-}
-
-// fills with root-relative paths as vite reports them
-async function watchProject(root: string): Promise<string[]> {
-    const touched: string[] = [];
+interface WatchedProject {
+    watcher: ViteDevServer['watcher'];
     // chokidar reports the resolved path, and a mac temp dir arrives through a symlink
+    real: string;
+    touchUntilReported: (file: string) => Promise<void>;
+}
+
+async function watchProject(root: string): Promise<WatchedProject> {
     const real = realpathSync(root);
+    const reported = new Set<string>();
 
     server = await createServer(
         // the same merge ViteDevRuntime does
-        mergeConfig(viteConfig, {
+        mergeConfig(devServerConfig, {
             root,
             logLevel: 'error',
             server: { watch: { ignored: [logsIgnore(root)] } },
@@ -79,33 +59,41 @@ async function watchProject(root: string): Promise<string[]> {
                 {
                     name: 'record',
                     hotUpdate: ({ file }: { file: string }) => {
-                        touched.push(file.replace(real, ''));
+                        reported.add(file.replace(real, ''));
                         return [];
                     }
                 }
             ]
         })
     );
+    // chokidar's ready can fire before a plugin hook can listen for it
+    const { watcher } = server;
+    await vi.waitFor(() => expect(watcher.getWatched()[join(real, 'src', 'logs')]).toContain('format.ts'), {
+        timeout: WATCH_TIMEOUT_MS
+    });
 
-    // src/logs stays watched in both cases
-    await untilWatching(server.watcher, join(real, SOURCE_FILE));
-    return touched;
+    // under load chokidar can miss a single write
+    const touchUntilReported = (file: string): Promise<void> =>
+        vi.waitFor(
+            () => {
+                appendFileSync(join(root, file), 'a line\n');
+                expect(reported).toContain(file);
+            },
+            { timeout: WATCH_TIMEOUT_MS }
+        );
+
+    return { watcher, real, touchUntilReported };
 }
 
 describe('dev server watch ignores', () => {
     it(
-        'stays quiet while the bot writes its log file',
+        "never watches the bot's log folder",
         async () => {
-            const root = project();
-            const touched = await watchProject(root);
+            const { watcher, real, touchUntilReported } = await watchProject(project());
 
-            appendFileSync(join(root, LOG_FILE), 'a line\n');
-            appendFileSync(join(root, SOURCE_FILE), 'a line\n');
-            await untilTouched(touched, SOURCE_FILE);
-            // the watcher does not promise events in write order
-            await sleep(LOG_GRACE_MS);
+            await touchUntilReported(SOURCE_FILE);
 
-            expect(touched).not.toContain(LOG_FILE);
+            expect(watcher.getWatched()[join(real, 'logs')]).toBeUndefined();
         },
         TEST_TIMEOUT_MS
     );
@@ -114,12 +102,9 @@ describe('dev server watch ignores', () => {
     it(
         'still reports a source file under src/logs',
         async () => {
-            const root = project();
-            const touched = await watchProject(root);
+            const { touchUntilReported } = await watchProject(project());
 
-            appendFileSync(join(root, SOURCE_FILE), 'a line\n');
-
-            await expect(untilTouched(touched, SOURCE_FILE)).resolves.toBeUndefined();
+            await expect(touchUntilReported(SOURCE_FILE)).resolves.toBeUndefined();
         },
         TEST_TIMEOUT_MS
     );

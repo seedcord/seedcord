@@ -85,6 +85,7 @@ describe('HmrPlugin', () => {
     const mockConfig = {
         root: '/test/root',
         configFile: 'seedcord.config.ts',
+        target: { kind: 'node' } as const,
         entry: 'src/index.ts',
         instance: 'src/Seedcord.ts',
         typecheck: { enabled: false } as const,

@@ -1,7 +1,8 @@
 import { Visitor } from 'vite';
 
-import { BUILT_FILES_SLOT, type ProjectFiles } from './ProjectFiles';
+import { BUILT_FILES_SLOT } from './seedcordEntry';
 
+import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { Plugin } from 'vite';
 
 type PathKey = 'dirname' | 'filename' | 'url';

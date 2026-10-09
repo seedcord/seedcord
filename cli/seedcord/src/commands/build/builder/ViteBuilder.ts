@@ -1,14 +1,13 @@
-import { dirname, extname, join } from 'node:path';
+import { extname, join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { build } from 'vite';
 
 import { pinModulePaths } from './pinModulePaths';
-import { ProjectFiles } from './ProjectFiles';
 import { ENTRY_FILE_NAME, ENTRY_ID, isSeedcordEntry, seedcordEntry } from './seedcordEntry';
 
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { Project } from '#core/project/Project';
 
 const NODE_TARGET = 'node24';
 
@@ -43,10 +42,9 @@ function outputName(moduleId: string | null | undefined): string {
 }
 
 export class ViteBuilder {
-    public async build(config: ResolvedSeedcordDevConfig): Promise<BundleStats> {
+    public async build({ config, files }: Project): Promise<BundleStats> {
         const { root, entry } = config;
         const { outDir } = config.build;
-        const files = new ProjectFiles(root, outDir, dirname(config.configFile));
         const folders = await files.foldersIncludingEmpty();
 
         const result = await build({
@@ -70,8 +68,6 @@ export class ViteBuilder {
                         format: 'esm',
                         preserveModules: true,
                         preserveModulesRoot: root,
-                        // rolldown's default sanitizer fails the build when the project path contains a #
-                        sanitizeFileName: (name) => name.replaceAll('\0', '_'),
                         entryFileNames: (chunk) => outputName(chunk.facadeModuleId)
                     }
                 }

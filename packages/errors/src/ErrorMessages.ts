@@ -227,10 +227,8 @@ const messages = {
     [SeedcordErrorCode.CliConfigEntryOutsideRoot]: (entryPath: string, root: string) =>
         `Entry file ${paint.path(entryPath)} is outside ${paint.bold('root')} (${paint.path(root)}). Move it under ${paint.bold('root')}, or set ${paint.bold('root')} to a folder that holds it.`,
     [SeedcordErrorCode.CliEntryNotFound]: (entryPath: string) => `Cannot find entry file at ${paint.path(entryPath)}.`,
-    [SeedcordErrorCode.CliTsImportFailed]: (entryPath: string, reason: string) =>
-        `Failed to import TypeScript file ${paint.path(entryPath)}: ${reason}`,
-    [SeedcordErrorCode.CliImportFailed]: (entryPath: string, nativeReason: string, fallbackReason: string) =>
-        `Failed to import ${paint.path(entryPath)}: ${nativeReason} (the jiti fallback also failed: ${fallbackReason})`,
+    [SeedcordErrorCode.CliImportFailed]: (entryPath: string, reason: string) =>
+        `Failed to import ${paint.path(entryPath)}: ${reason}`,
     [SeedcordErrorCode.CliInstanceInvalid]: (instancePath: string) =>
         `${paint.path(instancePath)} must default export the bot, a ${paint.bold('new Seedcord(...)')}, from ${paint.bold('@seedcord/gateway')} or ${paint.bold('@seedcord/http')}.`,
     [SeedcordErrorCode.CliStartFailed]: (instancePath: string, reason: string) =>
@@ -240,7 +238,7 @@ const messages = {
     [SeedcordErrorCode.CliBuildNoTsconfig]: (configDir: string) =>
         `${paint.path(configDir)} does not contain a ${paint.sky('tsconfig.json')}. Add one there, or set ${paint.bold('build.tsconfig')} in the seedcord config.`,
     [SeedcordErrorCode.CliTypescriptMissing]: (projectDir: string) =>
-        `Add ${paint.bold('typescript')} to ${paint.path(projectDir)} as a dev dependency. ${paint.bold('seedcord build')} type checks with it.`,
+        `Add ${paint.bold('typescript')} to ${paint.path(projectDir)} as a dev dependency. seedcord reads your tsconfig with it, and ${paint.bold('seedcord build')} type checks with it.`,
     [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `Type check failed:\n${diagnostics}`,
     [SeedcordErrorCode.CliBundleFailed]: (reason: string) => `Vite could not bundle the bot:\n${reason}`,
     [SeedcordErrorCode.CliConfigOutDirDeletesRoot]: (outDir: string, root: string) =>
@@ -261,6 +259,16 @@ const messages = {
         `${count} command files need fixing before codegen can finish. Each one is listed below.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
+    [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (wranglerConfig: string, tsconfig: string) =>
+        `${paint.path(wranglerConfig)} makes this an edge bot, but ${paint.path(tsconfig)} leaves out ${paint.bold('"customConditions": ["workerd"]')}. Add it to compilerOptions for an edge bot, or set ${paint.bold('build.tsconfig')} to the tsconfig that holds it. For a node bot, move ${paint.path(wranglerConfig)} out of this folder.`,
+    [SeedcordErrorCode.CliWorkerdConditionWithoutWrangler]: (tsconfig: string, configDir: string) =>
+        `${paint.path(tsconfig)} sets the ${paint.bold('workerd')} condition, which only an edge bot uses, but ${paint.path(configDir)} has no wrangler config. Add a ${paint.bold('wrangler.jsonc')} for an edge bot. For a node bot, remove ${paint.bold('"workerd"')} from customConditions.`,
+    [SeedcordErrorCode.CliTypescriptNotStarted]: (tsc: string, reason: string) =>
+        `Could not start TypeScript at ${paint.path(tsc)}: ${reason}`,
+    [SeedcordErrorCode.CliTsconfigUnreadable]: (tsconfig: string, output: string) =>
+        `TypeScript could not read ${paint.path(tsconfig)}.\n${output}`,
+    [SeedcordErrorCode.CliPathHasHash]: (path: string) =>
+        `${paint.path(path)} has a ${paint.bold('#')} in its path, and Vite cuts a path at its first ${paint.bold('#')}. Rename it, or move the project to a folder without one.`,
     [SeedcordErrorCode.CliCodegenDuplicateContextMenu]: (
         kind: string,
         name: string,
@@ -288,6 +296,8 @@ const messages = {
         `Config \`${field}\` must be ${expected} when provided.`,
     [SeedcordErrorCode.CliConfigProblems]: (count: number) =>
         `${count} fields in the seedcord config need fixing. Each one is listed below.`,
+    [SeedcordErrorCode.CliHashPathProblems]: (count: number) =>
+        `${count} files or folders in the project have a ${paint.bold('#')} in their path. Each one is listed below.`,
     [SeedcordErrorCode.CreateCancelled]: () => 'Cancelled.',
     [SeedcordErrorCode.CreateFlagNotApplicable]: (flag: string) =>
         `The --${flag} flag does not apply to the answers you gave.`,

@@ -2,7 +2,8 @@
     "$schema": "https://json.schemastore.org/tsconfig",
     "extends": "@seedcord/tsconfig/node",
     "compilerOptions": {
-        "rootDir": "./"
+        "rootDir": "./",
+        "customConditions": ["workerd"]
     },
-    "include": ["*.ts", "handlers/**/*.ts"]
+    "include": ["src/**/*.ts"]
 }

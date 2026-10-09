@@ -1,3 +1,5 @@
+import type { BuildTarget } from './detectTarget';
+
 /**
  * Build configuration used by the Seedcord CLI.
  */
@@ -107,26 +109,14 @@ export interface ResolvedSeedcordBuildConfig {
     tsconfig?: string;
 }
 
-/**
- * Fully resolved configuration with absolute file system paths.
- */
+// every path in here is absolute
 export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConfig, 'build' | 'hmr' | 'tunnel'>> {
     tunnel: ResolvedTunnel;
-    /**
-     * Absolute path to the config file that produced this resolution.
-     */
     configFile: string;
-    /**
-     * Resolved build options with absolute paths.
-     */
+    target: BuildTarget;
     build: ResolvedSeedcordBuildConfig;
-    /**
-     * Whether `tsc --watch` runs, with the tsconfig it runs against resolved to an absolute path.
-     */
     typecheck: ResolvedTypecheck;
-    /**
-     * HMR configuration carried through from the user config (restart globs are matched as-is).
-     */
+    // restart globs pass through unresolved
     hmr?: SeedcordHmrConfig | undefined;
 }
 

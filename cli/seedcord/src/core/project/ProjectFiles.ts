@@ -1,9 +1,9 @@
 import { readdir } from 'node:fs/promises';
-import { join, relative, sep } from 'node:path';
+import { basename, dirname, join, relative, sep } from 'node:path';
 
-import { BUILT_FILES_KEY, isInside } from '@seedcord/utils/node/internal';
-
-export const BUILT_FILES_SLOT = `globalThis[Symbol.for(${JSON.stringify(BUILT_FILES_KEY)})]`;
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { isInside } from '@seedcord/utils/node/internal';
 
 // the bot writes its log files to logs/ in the folder it starts in
 const PROJECT_FOLDERS = ['logs'];
@@ -20,6 +20,11 @@ const PROJECT_FILES = [
 
 function isSkippedName(name: string): boolean {
     return name.startsWith('.') || name === 'node_modules';
+}
+
+interface ProjectEntry {
+    path: string;
+    isFolder: boolean;
 }
 
 export class ProjectFiles {
@@ -44,8 +49,19 @@ export class ProjectFiles {
     }
 
     public async foldersIncludingEmpty(): Promise<string[]> {
-        const found = await Array.fromAsync(this.foldersUnder(this.root));
-        return found.toSorted();
+        const entries = await this.entries();
+        return entries
+            .filter(({ isFolder }) => isFolder)
+            .map(({ path }) => this.keyOf(path))
+            .toSorted();
+    }
+
+    public async pathsWithHash(): Promise<string[]> {
+        const entries = await this.entries();
+        return entries
+            .map(({ path }) => path)
+            .filter((path) => basename(path).includes('#') && !relative(this.root, dirname(path)).includes('#'))
+            .toSorted();
     }
 
     public globExcludes(): string[] {
@@ -60,12 +76,23 @@ export class ProjectFiles {
         ];
     }
 
-    private async *foldersUnder(dir: string): AsyncGenerator<string> {
-        for (const entry of await readdir(dir, { withFileTypes: true })) {
-            const full = join(dir, entry.name);
-            if (!entry.isDirectory() || isSkippedName(entry.name) || this.skippedFolders.includes(full)) continue;
-            yield this.keyOf(full);
-            yield* this.foldersUnder(full);
+    private entries(): Promise<ProjectEntry[]> {
+        return Array.fromAsync(this.entriesUnder(this.root));
+    }
+
+    private async *entriesUnder(dir: string): AsyncGenerator<ProjectEntry> {
+        const entries = await readdir(dir, { withFileTypes: true }).catch((error: unknown) => {
+            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryUnreadable, [dir], { cause: error });
+        });
+        for (const entry of entries) {
+            const path = join(dir, entry.name);
+            if (isSkippedName(entry.name) || this.skippedFolders.includes(path)) continue;
+            if (entry.isDirectory()) {
+                yield { path, isFolder: true };
+                yield* this.entriesUnder(path);
+            } else {
+                yield { path, isFolder: false };
+            }
         }
     }
 
