@@ -24,8 +24,8 @@ import type {
     ResolvedTypecheck,
     SeedcordBuildConfig,
     SeedcordConfig,
-    SeedcordDevConfig,
-    SeedcordHmrConfig
+    SeedcordHmrConfig,
+    SeedcordServerConfig
 } from './schema';
 
 function isOptionalString(value: unknown): boolean {
@@ -121,7 +121,7 @@ function resolveTypecheck(value: SeedcordHmrConfig['typecheck'], root: string): 
 }
 
 type TargetedConfig =
-    { target: ServerTarget; config: SeedcordDevConfig } | { target: EdgeTarget; config: SeedcordConfig };
+    { target: ServerTarget; config: SeedcordServerConfig } | { target: EdgeTarget; config: SeedcordConfig };
 
 function isServerConfig(targeted: TargetedConfig): targeted is Extract<TargetedConfig, { target: ServerTarget }> {
     return targeted.target.kind === 'server';
@@ -131,7 +131,7 @@ function validateConfig(
     raw: unknown,
     target: BuildTarget,
     configFile: string
-): asserts raw is SeedcordConfig | SeedcordDevConfig {
+): asserts raw is SeedcordConfig | SeedcordServerConfig {
     if (!isPlainObject(raw)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidExport);
     throwSingleOrAggregate([...configProblems(raw, target, configFile)], SeedcordErrorCode.CliConfigProblems);
 }

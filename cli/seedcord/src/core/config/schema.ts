@@ -57,8 +57,8 @@ export interface SeedcordHmrConfig {
 }
 
 /**
- * The seedcord config every bot shares. An edge bot's config file uses this shape through the
- * `workerd` condition in its tsconfig.
+ * The `seedcord.config.ts` of a bot that runs on Cloudflare Workers. A bot that runs on node or
+ * bun uses {@link SeedcordServerConfig}, the same fields plus `entry`.
  */
 export interface SeedcordConfig {
     /**
@@ -99,11 +99,11 @@ export interface SeedcordConfig {
 }
 
 /**
- * Configuration used by the Seedcord CLI when running `seedcord dev` or `seedcord build`.
+ * The `seedcord.config.ts` of a bot that runs on node or bun.
  */
-export interface SeedcordDevConfig extends SeedcordConfig {
+export interface SeedcordServerConfig extends SeedcordConfig {
     /**
-     * Entry file that should be executed when starting the bot (and copied into the build output).
+     * The file that starts the bot, the one that calls `start()`.
      */
     entry: string;
 }
@@ -138,6 +138,6 @@ export const SEEDCORD_CONFIG_FILENAMES = ['seedcord.config.ts', 'seedcord.config
 /**
  * Helper so config files receive proper type inference.
  */
-export function defineConfig(config: SeedcordDevConfig): SeedcordDevConfig {
+export function defineConfig(config: SeedcordServerConfig): SeedcordServerConfig {
     return config;
 }
