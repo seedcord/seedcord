@@ -33,6 +33,8 @@ function sources({ files, folders, instance, base }: WorkerEntryOptions): Map<st
                 `import '${BIND_ENV_ID}';`,
                 `import '${BUILT_FILES_ID}';`,
                 `export { default } from ${JSON.stringify(instance)};`,
+                // cloudflare reads durable object and workflow classes from the worker's named exports
+                `export * from ${JSON.stringify(instance)};`,
                 ''
             ].join('\n')
         ],

@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { cloudflare } from '@cloudflare/vite-plugin';
@@ -82,6 +82,20 @@ describe('seedcord build on an edge bot with files it never loads', () => {
         const projectDir = await copyEdgeBotForTest();
         await mkdir(join(projectDir, 'src/scripts'));
         await writeFile(join(projectDir, 'src/scripts/oneOff.ts'), 'setTimeout(() => undefined, 1);\n');
+
+        await expect(BuildRunner.create(quietSteps).run(projectDir)).resolves.toBeDefined();
+    }, 120_000);
+
+    it('passes a named export of the instance file through to the worker', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await appendFile(join(projectDir, 'src/bot.ts'), '\nexport class Counter {}\n');
+        const wrangler = {
+            name: 'edge-bot',
+            compatibility_date: '2026-08-04',
+            durable_objects: { bindings: [{ name: 'COUNTER', class_name: 'Counter' }] },
+            migrations: [{ tag: 'v1', new_sqlite_classes: ['Counter'] }]
+        };
+        await writeFile(join(projectDir, 'wrangler.jsonc'), JSON.stringify(wrangler));
 
         await expect(BuildRunner.create(quietSteps).run(projectDir)).resolves.toBeDefined();
     }, 120_000);
