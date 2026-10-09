@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { mkdir, mkdtempDisposable, symlink, writeFile } from 'node:fs/promises';
 import { createServer as createNetServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -83,6 +84,16 @@ describe('openModuleLoader', () => {
         await modules.importModule(await writeEntry(root, './lib/greeting'));
 
         expect(logged).not.toHaveBeenCalled();
+    });
+
+    it("writes nothing to the project's vite cache", async () => {
+        const root = await project();
+        await mkdir(join(root, 'node_modules'));
+
+        await using modules = await openModuleLoader(root, NODE);
+        await modules.importModule(await writeEntry(root, './lib/greeting'));
+
+        expect(existsSync(join(root, 'node_modules', '.vite'))).toBe(false);
     });
 
     it('resolves an import through a tsconfig paths alias', async () => {
@@ -197,6 +208,25 @@ describe('openModuleLoader for an edge bot', () => {
         const module = await modules.importModule<{ probe: string }>(entry);
 
         expect(module.probe).toBe('from the shell');
+    });
+
+    it('loads classes that extend the cloudflare:workers base classes', async () => {
+        const root = await edgeProject();
+        const entry = await writeModule(
+            root,
+            [
+                "import { DurableObject, WorkerEntrypoint, WorkflowEntrypoint } from 'cloudflare:workers';",
+                'export class Counter extends DurableObject {}',
+                'export class Api extends WorkerEntrypoint {}',
+                'export class Signup extends WorkflowEntrypoint {}',
+                ''
+            ].join('\n')
+        );
+
+        await using modules = await openModuleLoader(root, edgeTarget(root));
+        const module = await modules.importModule<Record<string, unknown>>(entry);
+
+        expect(Object.keys(module).toSorted()).toEqual(['Api', 'Counter', 'Signup']);
     });
 
     it('throws CliImportFailed for an edge bot without envapt installed', async () => {

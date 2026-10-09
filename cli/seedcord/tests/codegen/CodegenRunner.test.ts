@@ -73,17 +73,18 @@ function runnerWith(
     return new CodegenRunner({ steps: quietSteps, projectLoader, generator: new AugmentationBuilder(logger), logger });
 }
 
+function brandedInstance(commandsPath: string | null = null, pluginKeys: readonly string[] = []): object {
+    return {
+        [SeedcordBrand]: true,
+        [HostAugmentTarget]: '@seedcord/gateway',
+        [HostPluginKeys]: pluginKeys,
+        config: { bot: { commands: { path: commandsPath } } }
+    };
+}
+
 // no commands path, so the scan is empty and the rendered registry is deterministic.
 function makeRunner(root: string, logger: ILogger): CodegenRunner {
-    const importModule = (): Promise<unknown> =>
-        Promise.resolve({
-            default: {
-                [SeedcordBrand]: true,
-                [HostAugmentTarget]: '@seedcord/gateway',
-                [HostPluginKeys]: [],
-                config: { bot: { commands: { path: null } } }
-            }
-        });
+    const importModule = (): Promise<unknown> => Promise.resolve({ default: brandedInstance() });
 
     return runnerWith(configAt(root, resolve(root, 'bot.ts')), importModule, logger);
 }
@@ -98,14 +99,7 @@ function scanRunner(
     const instancePath = resolve(root, 'bot.ts');
     const importModule = (entryPath: string): Promise<unknown> =>
         entryPath === instancePath
-            ? Promise.resolve({
-                  default: {
-                      [SeedcordBrand]: true,
-                      [HostAugmentTarget]: '@seedcord/gateway',
-                      [HostPluginKeys]: [],
-                      config: { bot: { commands: { path: commandsPath } } }
-                  }
-              })
+            ? Promise.resolve({ default: brandedInstance(commandsPath) })
             : Promise.resolve(moduleByPath(entryPath));
 
     return runnerWith(configAt(root, instancePath), importModule, logger);
@@ -120,29 +114,13 @@ function invalidRunner(root: string, logger: ILogger): CodegenRunner {
 
 // dev accepts a default export that resolves to the instance
 function asyncInstanceRunner(root: string, logger: ILogger): CodegenRunner {
-    const importModule = (): Promise<unknown> =>
-        Promise.resolve({
-            default: Promise.resolve({
-                [SeedcordBrand]: true,
-                [HostAugmentTarget]: '@seedcord/gateway',
-                [HostPluginKeys]: [],
-                config: { bot: { commands: { path: null } } }
-            })
-        });
+    const importModule = (): Promise<unknown> => Promise.resolve({ default: Promise.resolve(brandedInstance()) });
 
     return runnerWith(configAt(root, resolve(root, 'bot.ts')), importModule, logger);
 }
 
 function pluginRunner(root: string, instance: string, pluginKeys: readonly string[], logger: ILogger): CodegenRunner {
-    const importModule = (): Promise<unknown> =>
-        Promise.resolve({
-            default: {
-                [SeedcordBrand]: true,
-                [HostAugmentTarget]: '@seedcord/gateway',
-                [HostPluginKeys]: pluginKeys,
-                config: { bot: { commands: { path: null } } }
-            }
-        });
+    const importModule = (): Promise<unknown> => Promise.resolve({ default: brandedInstance(null, pluginKeys) });
 
     return runnerWith(configAt(root, instance), importModule, logger);
 }

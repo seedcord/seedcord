@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DevRunner } from '#commands/dev/DevRunner';
@@ -118,5 +120,55 @@ describe('DevRunner command refresh', () => {
 
         runner.refreshCommands(true);
         expect(codegen.run).toHaveBeenCalledTimes(2);
+    });
+});
+
+function untilError(store: DevStore): Promise<Error> {
+    return new Promise((resolve) => {
+        const check = (): void => {
+            const { error } = store.getState();
+            if (!error) return;
+            store.off('change', check);
+            resolve(error);
+        };
+        store.on('change', check);
+    });
+}
+
+describe('DevRunner run', () => {
+    it('opens the project once and shows a session that fails to start as an error', async () => {
+        const projectDir = process.cwd();
+        const instancePath = join(projectDir, 'src', 'bot.ts');
+        const projectLoader = {
+            open: vi.fn(() =>
+                Promise.resolve({
+                    config: {
+                        instance: instancePath,
+                        root: join(projectDir, 'src'),
+                        configFile: join(projectDir, 'seedcord.config.ts'),
+                        entry: instancePath,
+                        build: { outDir: join(projectDir, 'dist') }
+                    },
+                    [Symbol.asyncDispose]: () => Promise.resolve()
+                })
+            )
+        };
+        const store = new DevStore();
+        // justified: the session reads only these config fields. codegen runs only on a refresh.
+        const runner = new DevRunner({
+            projectLoader: projectLoader as unknown as ProjectLoader,
+            store,
+            codegen: { run: vi.fn() } as unknown as CodegenRunner,
+            codegenLogger: silentLogger,
+            tunnel: fakeTunnel()
+        });
+
+        const running = runner.run();
+        const error = await untilError(store);
+        await runner.quit();
+        await running;
+
+        expect(error.message).toMatch(/Cannot find entry file|Failed to load url/);
+        expect(projectLoader.open).toHaveBeenCalledOnce();
     });
 });

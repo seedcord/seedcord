@@ -56,14 +56,18 @@ export async function openModuleLoader(
         clearScreen: false,
         // hmr: false still opens vite's websocket on 24678
         server: { middlewareMode: true, hmr: false, ws: false, watch: null },
+        // the ssr runner never reads the client dep cache in node_modules/.vite
+        optimizeDeps: { noDiscovery: true, include: [] },
         ssr: { noExternal: seedcordDependents(projectDir) },
         plugins: isEdge ? [edgeStandIns()] : []
     });
     await using onFailure = new AsyncDisposableStack();
     const server = await createServer(config);
-    const loader = onFailure.use(
-        new ViteModuleLoader(server, createServerModuleRunner(server.environments.ssr, { hmr: false }))
-    );
+    onFailure.defer(() => server.close());
+    const runner = createServerModuleRunner(server.environments.ssr, { hmr: false });
+    onFailure.defer(() => runner.close());
+
+    const loader = new ViteModuleLoader(server, runner);
     if (isEdge) await loader.bindEnv();
 
     onFailure.move();

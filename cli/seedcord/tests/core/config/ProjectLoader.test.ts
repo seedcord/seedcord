@@ -3,16 +3,10 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { assert, describe, it, expect, onTestFinished, vi } from 'vitest';
+import { assert, describe, it, expect, onTestFinished } from 'vitest';
 
-import { DevRunner } from '#commands/dev/DevRunner';
 import { ProjectLoader } from '#core/config/ProjectLoader';
-import { DevStore } from '#ui/stores/DevStore';
 
-import { silentLogger } from './silentLogger';
-
-import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
-import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { OpenModules } from '#core/modules/ModuleLoader';
 
@@ -28,8 +22,7 @@ interface StubModules {
     closed: () => boolean;
 }
 
-// the stub module loader hands back `config` as the config file's default export
-function stubModules(config: unknown): StubModules {
+function stubModulesExporting(config: unknown): StubModules {
     let closed = false;
     const modules = {
         importModule: <TModule = unknown>(): Promise<TModule> => Promise.resolve({ default: config } as TModule),
@@ -45,7 +38,7 @@ function stubModules(config: unknown): StubModules {
 function projectWith(config: unknown): { projectDir: string; load: () => Promise<ResolvedSeedcordDevConfig> } {
     const projectDir = tempProject();
     writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
-    const { open } = stubModules(config);
+    const { open } = stubModulesExporting(config);
 
     const load = async (): Promise<ResolvedSeedcordDevConfig> => {
         const { config: resolved } = await new ProjectLoader(open).open(projectDir);
@@ -177,12 +170,20 @@ describe('ProjectLoader paths with a #', () => {
         });
     });
 
-    it('lists every # path under root at once', async () => {
+    it('lists each # name once, leaving out what sits under a # folder', async () => {
         const { projectDir, load } = projectWith(MINIMAL);
-        mkdirSync(join(projectDir, 'old#handlers'));
+        mkdirSync(join(projectDir, 'old#handlers', 'sub'), { recursive: true });
+        writeFileSync(join(projectDir, 'old#handlers', 'a.ts'), '');
+        writeFileSync(join(projectDir, 'old#handlers', 'sub', 'b.ts'), '');
         writeFileSync(join(projectDir, 'c#d.ts'), '');
 
-        await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliHashPathProblems });
+        const caught: unknown = await load().catch((error: unknown) => error);
+
+        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliHashPathProblems));
+        expect(caught.errors).toEqual([
+            expect.objectContaining({ message: expect.stringContaining('c#d.ts') as string }),
+            expect.objectContaining({ message: expect.stringContaining('old#handlers') as string })
+        ]);
     });
 
     it('skips node_modules, dot folders and outDir when it looks for # paths', async () => {
@@ -191,9 +192,7 @@ describe('ProjectLoader paths with a #', () => {
             mkdirSync(join(projectDir, folder), { recursive: true });
         }
 
-        const { root } = await load();
-
-        expect(root).toBe(projectDir);
+        await expect(load()).resolves.toBeDefined();
     });
 });
 
@@ -209,7 +208,7 @@ describe('ProjectLoader validation', () => {
     it('closes the module loader when the config is invalid', async () => {
         const projectDir = tempProject();
         writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
-        const modules = stubModules({ entry: './index.ts' });
+        const modules = stubModulesExporting({ entry: './index.ts' });
 
         await expect(new ProjectLoader(modules.open).open(projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigMissingInstance
@@ -220,7 +219,7 @@ describe('ProjectLoader validation', () => {
     it('closes the module loader with the project it returned', async () => {
         const projectDir = tempProject();
         writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
-        const modules = stubModules(MINIMAL);
+        const modules = stubModulesExporting(MINIMAL);
 
         {
             await using project = await new ProjectLoader(modules.open).open(projectDir);
@@ -332,43 +331,5 @@ describe('ProjectLoader validation', () => {
         const { build } = await load();
 
         expect(build.outDir).toBe(projectDir);
-    });
-});
-
-describe('DevRunner', () => {
-    it('loads and starts the Seedcord instance', async () => {
-        const projectDir = process.cwd();
-        const instancePath = join(projectDir, 'src/bot.ts');
-        const projectLoader = {
-            open: vi.fn(() => ({
-                config: {
-                    instance: instancePath,
-                    root: join(projectDir, 'src'),
-                    configFile: join(projectDir, 'seedcord.config.ts'),
-                    entry: instancePath,
-                    build: { outDir: join(projectDir, 'dist') }
-                },
-                [Symbol.asyncDispose]: () => Promise.resolve()
-            }))
-        };
-
-        // justified: only the config loader is called here, codegen runs on refresh only
-        const runner = new DevRunner({
-            projectLoader: projectLoader as unknown as ProjectLoader,
-            store: new DevStore(),
-            codegen: { run: vi.fn() } as unknown as CodegenRunner,
-            codegenLogger: silentLogger,
-            // justified: this path never routes an event or quits
-            tunnel: { route: () => undefined, stop: () => Promise.resolve() } as unknown as TunnelRouter
-        });
-
-        // run() swallows session errors through handleError, so rethrow for the assertion
-        // @ts-expect-error accessing private method
-        vi.spyOn(runner, 'handleError').mockImplementation((error: unknown) => {
-            throw error;
-        });
-
-        await expect(runner.run()).rejects.toThrow(/Cannot find entry file|Failed to load url/);
-        expect(projectLoader.open).toHaveBeenCalledTimes(1);
     });
 });

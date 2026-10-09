@@ -1,5 +1,5 @@
 import { readdir } from 'node:fs/promises';
-import { join, relative, sep } from 'node:path';
+import { basename, dirname, join, relative, sep } from 'node:path';
 
 import { isInside } from '@seedcord/utils/node/internal';
 
@@ -52,7 +52,8 @@ export class ProjectFiles {
     public async pathsWithHash(): Promise<string[]> {
         const found: string[] = [];
         for await (const { path } of this.entriesUnder(this.root)) {
-            if (relative(this.root, path).includes('#')) found.push(path);
+            const parent = relative(this.root, dirname(path));
+            if (basename(path).includes('#') && !parent.includes('#')) found.push(path);
         }
         return found.toSorted();
     }

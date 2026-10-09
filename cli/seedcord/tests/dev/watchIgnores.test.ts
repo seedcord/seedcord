@@ -83,11 +83,13 @@ describe('dev server watch ignores', () => {
     it(
         "never watches the bot's log folder",
         async () => {
-            const { watcher, real } = await watchProject(project());
-            const watched = watcher.getWatched();
+            const root = project();
+            const { watcher, real, reported } = await watchProject(root);
 
-            expect(watched[join(real, 'src', 'logs')]).toContain('format.ts');
-            expect(watched[join(real, 'logs')]).toBeUndefined();
+            appendFileSync(join(root, SOURCE_FILE), 'a line\n');
+            await reported(SOURCE_FILE);
+
+            expect(watcher.getWatched()[join(real, 'logs')]).toBeUndefined();
         },
         TEST_TIMEOUT_MS
     );

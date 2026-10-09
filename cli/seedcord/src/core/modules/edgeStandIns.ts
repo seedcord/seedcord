@@ -9,8 +9,22 @@ const BIND_ENV = `import { Envapter, PortableSource } from 'envapt';
 Envapter.useSource(new PortableSource(process.env));
 `;
 
-// cloudflare:workers exists only inside workerd
-const CLOUDFLARE_WORKERS = 'export const env = process.env;\n';
+// cloudflare:workers exists only inside workerd. these are its runtime exports in @cloudflare/workers-types
+const CLOUDFLARE_WORKERS = `export const env = process.env;
+export const exports = {};
+export const cache = {};
+export const tracing = {};
+export class RpcStub {}
+export class RpcTarget {}
+export class WorkerEntrypoint {}
+export class DurableObject {}
+export class WorkflowStep {}
+export class WorkflowEntrypoint {}
+export function waitUntil() {}
+export function withEnv(_env, fn) { return fn(); }
+export function withExports(_exports, fn) { return fn(); }
+export function withEnvAndExports(_env, _exports, fn) { return fn(); }
+`;
 
 export function edgeStandIns(): Plugin {
     return {
