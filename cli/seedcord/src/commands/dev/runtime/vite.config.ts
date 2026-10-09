@@ -3,7 +3,7 @@ import { resolve, sep } from 'node:path';
 
 import { mergeConfig } from 'vite';
 
-import { userCodeConfig } from '#core/modules/userCodeConfig';
+import { NODE_CONDITIONS, userCodeConfig } from '#core/modules/userCodeConfig';
 
 // a **/logs/** glob would also swallow a source directory named logs
 export function logsIgnore(root: string): (path: string) => boolean {
@@ -13,7 +13,7 @@ export function logsIgnore(root: string): (path: string) => boolean {
     return (path) => path === logs || path.startsWith(logs + sep);
 }
 
-export const devServerConfig = mergeConfig(userCodeConfig, {
+export const devServerConfig = mergeConfig(userCodeConfig(NODE_CONDITIONS), {
     server: {
         middlewareMode: true,
         hmr: true,

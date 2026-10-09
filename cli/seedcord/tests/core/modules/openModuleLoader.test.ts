@@ -1,11 +1,43 @@
-import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtempDisposable, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { assert, describe, expect, it, onTestFinished } from 'vitest';
+import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { openModuleLoader } from '#core/modules/openModuleLoader';
+
+import type { BuildTarget } from '#core/config/detectTarget';
+
+const NODE: BuildTarget = { kind: 'node' };
+
+function edgeTarget(root: string): BuildTarget {
+    return { kind: 'edge', wranglerConfig: join(root, 'wrangler.jsonc') };
+}
+
+// a package whose default export reports which build its conditions picked
+async function writeRuntimePackage(root: string, name: string): Promise<void> {
+    const dir = join(root, 'node_modules', name);
+    await mkdir(dir, { recursive: true });
+    const exports = { '.': { workerd: './edge.js', import: './node.js' } };
+    await writeFile(join(dir, 'package.json'), JSON.stringify({ name, type: 'module', exports }), 'utf8');
+    await writeFile(join(dir, 'edge.js'), `export default 'edge';\n`, 'utf8');
+    await writeFile(join(dir, 'node.js'), `export default 'node';\n`, 'utf8');
+}
+
+// every edge bot installs envapt, a peer of @seedcord/http
+async function edgeProject(): Promise<string> {
+    const root = await project();
+    await mkdir(join(root, 'node_modules'), { recursive: true });
+    await symlink(join(import.meta.dirname, '../../../node_modules/envapt'), join(root, 'node_modules', 'envapt'));
+    return root;
+}
+
+async function writeModule(root: string, source: string): Promise<string> {
+    const entry = join(root, 'src', 'probe.ts');
+    await writeFile(entry, source, 'utf8');
+    return entry;
+}
 
 async function project(options: Record<string, unknown> = {}): Promise<string> {
     const tmp = await mkdtempDisposable(join(tmpdir(), 'seedcord-loader-'));
@@ -32,7 +64,7 @@ describe('openModuleLoader', () => {
         const root = await project({ paths: { '#lib/*': ['./src/lib/*'] } });
         const entry = await writeEntry(root, '#lib/greeting');
 
-        await using modules = await openModuleLoader(root);
+        await using modules = await openModuleLoader(root, NODE);
         const module = await modules.importModule<{ value: string }>(entry);
 
         expect(module.value).toBe('hi');
@@ -48,7 +80,7 @@ describe('openModuleLoader', () => {
         );
         const entry = await writeEntry(root, './lib/card');
 
-        await using modules = await openModuleLoader(root);
+        await using modules = await openModuleLoader(root, NODE);
         const module = await modules.importModule<{ value: string }>(entry);
 
         expect(module.value).toBe('b');
@@ -59,7 +91,7 @@ describe('openModuleLoader', () => {
         const config = join(root, 'seedcord.config.mts');
         await writeFile(config, `export default { instance: './bot.ts' } satisfies object;\n`, 'utf8');
 
-        await using modules = await openModuleLoader(root);
+        await using modules = await openModuleLoader(root, NODE);
         const module = await modules.importModule<{ default: unknown }>(config);
 
         expect(module.default).toEqual({ instance: './bot.ts' });
@@ -68,7 +100,7 @@ describe('openModuleLoader', () => {
     it('throws CliEntryNotFound for a file that does not exist', async () => {
         const root = await project();
 
-        await using modules = await openModuleLoader(root);
+        await using modules = await openModuleLoader(root, NODE);
 
         await expect(modules.importModule(join(root, 'src', 'missing.ts'))).rejects.toMatchObject({
             code: SeedcordErrorCode.CliEntryNotFound
@@ -80,7 +112,7 @@ describe('openModuleLoader', () => {
         const entry = join(root, 'src', 'broken.ts');
         await writeFile(entry, `throw new Error('top level boom');\n`, 'utf8');
 
-        await using modules = await openModuleLoader(root);
+        await using modules = await openModuleLoader(root, NODE);
         const caught: unknown = await modules.importModule(entry).catch((error: unknown) => error);
 
         assert(isSeedcordError(caught));
@@ -94,7 +126,7 @@ describe('openModuleLoader', () => {
         const entry = join(root, 'entry.ts');
         await writeFile(entry, `export const value = 'hi';\n`, 'utf8');
 
-        await using modules = await openModuleLoader(root);
+        await using modules = await openModuleLoader(root, NODE);
 
         await expect(modules.importModule(entry)).rejects.toMatchObject({ code: SeedcordErrorCode.CliPathHasHash });
     });
@@ -103,9 +135,56 @@ describe('openModuleLoader', () => {
         const root = await project();
         const entry = await writeEntry(root, './lib/greeting');
 
-        await using modules = await openModuleLoader(root);
+        await using modules = await openModuleLoader(root, NODE);
         const module = await modules.importModule<{ value: string }>(entry);
 
         expect(module.value).toBe('hi');
+    });
+});
+
+describe('openModuleLoader for an edge bot', () => {
+    it.each(['fixture-runtime', '@seedcord/fixture-runtime'])(
+        "picks %s's workerd export on edge and its import export on node",
+        async (name) => {
+            const root = await edgeProject();
+            await writeRuntimePackage(root, name);
+            const entry = await writeModule(root, `export { default } from '${name}';\n`);
+
+            await using onNode = await openModuleLoader(root, NODE);
+            await using onEdge = await openModuleLoader(root, edgeTarget(root));
+            const fromNode = await onNode.importModule<{ default: string }>(entry);
+            const fromEdge = await onEdge.importModule<{ default: string }>(entry);
+
+            expect(fromNode.default).toBe('node');
+            expect(fromEdge.default).toBe('edge');
+        }
+    );
+
+    it('loads cloudflare:workers with process.env as its env', async () => {
+        vi.stubEnv('SEEDCORD_PROBE', 'from the shell');
+        const root = await edgeProject();
+        const entry = await writeModule(
+            root,
+            `import { env } from 'cloudflare:workers';\nexport const probe = env.SEEDCORD_PROBE;\n`
+        );
+
+        await using modules = await openModuleLoader(root, edgeTarget(root));
+        const module = await modules.importModule<{ probe: string }>(entry);
+
+        expect(module.probe).toBe('from the shell');
+    });
+
+    it("binds envapt's workerd build to process.env", async () => {
+        vi.stubEnv('SEEDCORD_PROBE', 'from the shell');
+        const root = await edgeProject();
+        const entry = await writeModule(
+            root,
+            `import { Envapter } from 'envapt';\nexport const probe = Envapter.get('SEEDCORD_PROBE');\n`
+        );
+
+        await using modules = await openModuleLoader(root, edgeTarget(root));
+        const module = await modules.importModule<{ probe: string }>(entry);
+
+        expect(module.probe).toBe('from the shell');
     });
 });

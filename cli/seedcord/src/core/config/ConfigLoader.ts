@@ -124,7 +124,7 @@ export class ConfigLoader {
         const configDir = dirname(configPath);
         const target = detectTarget(configDir);
         await using onFailure = new AsyncDisposableStack();
-        const modules = onFailure.use(await this.openModules(configDir));
+        const modules = onFailure.use(await this.openModules(configDir, target));
         const config = await this.readConfig(modules, configPath, target);
         await assertTargetMatchesTsconfig(config);
 

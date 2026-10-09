@@ -4,9 +4,11 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
 
+import { BIND_ENV_ID, edgeStandIns } from './edgeStandIns';
 import { seedcordDependents } from './seedcordDependents';
-import { userCodeConfig } from './userCodeConfig';
+import { NODE_CONDITIONS, WORKERD_CONDITIONS, userCodeConfig } from './userCodeConfig';
 
+import type { BuildTarget } from '#core/config/detectTarget';
 import type { ModuleLoader } from './ModuleLoader';
 import type { ViteDevServer } from 'vite';
 import type { ModuleRunner } from 'vite/module-runner';
@@ -29,23 +31,37 @@ class ViteModuleLoader implements ModuleLoader, AsyncDisposable {
         }
     }
 
+    public async importStandIn(id: string): Promise<void> {
+        await this.runner.import(id);
+    }
+
     public async [Symbol.asyncDispose](): Promise<void> {
         await this.runner.close();
         await this.server.close();
     }
 }
 
-export async function openModuleLoader(projectDir: string): Promise<ModuleLoader & AsyncDisposable> {
-    // vite writes resolved options back into the config object it receives
-    const config = mergeConfig(structuredClone(userCodeConfig), {
+export async function openModuleLoader(
+    projectDir: string,
+    target: BuildTarget
+): Promise<ModuleLoader & AsyncDisposable> {
+    const isEdge = target.kind === 'edge';
+    const config = mergeConfig(userCodeConfig(isEdge ? WORKERD_CONDITIONS : NODE_CONDITIONS), {
         root: projectDir,
         configFile: false,
         logLevel: 'error',
         clearScreen: false,
         server: { middlewareMode: true, hmr: false, watch: null },
-        ssr: { noExternal: seedcordDependents(projectDir) }
+        ssr: { noExternal: seedcordDependents(projectDir) },
+        plugins: isEdge ? [edgeStandIns()] : []
     });
+    await using onFailure = new AsyncDisposableStack();
     const server = await createServer(config);
+    const loader = onFailure.use(
+        new ViteModuleLoader(server, createServerModuleRunner(server.environments.ssr, { hmr: false }))
+    );
+    if (isEdge) await loader.importStandIn(BIND_ENV_ID);
 
-    return new ViteModuleLoader(server, createServerModuleRunner(server.environments.ssr, { hmr: false }));
+    onFailure.move();
+    return loader;
 }
