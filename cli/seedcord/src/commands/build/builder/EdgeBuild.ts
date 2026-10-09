@@ -52,7 +52,11 @@ function workerEnvironment(outDir: string): Record<string, EnvironmentOptions> {
                 emptyOutDir: true,
                 sourcemap: true,
                 minify: false,
-                rolldownOptions: { output: { entryFileNames: ENTRY_FILE_NAME } }
+                rolldownOptions: {
+                    // a lazy import of a module bot.ts already imports still loads that same module
+                    checks: { ineffectiveDynamicImport: false },
+                    output: { entryFileNames: ENTRY_FILE_NAME }
+                }
             }
         }
     };
