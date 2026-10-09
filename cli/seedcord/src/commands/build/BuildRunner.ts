@@ -19,7 +19,7 @@ import type { Steps } from '#core/output/Steps';
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './builder/output';
 
-export const BUILD_STEPS = ['read config', 'load bot', 'type check', 'bundle'] as const;
+export const BUILD_STEPS = ['read config', 'load bot', 'type check', 'bundle', 'boot'] as const;
 export type BuildStep = (typeof BUILD_STEPS)[number];
 
 export interface BuildResult {
@@ -65,6 +65,9 @@ export class BuildRunner {
             ({ tsconfig }) => paint.path(tsconfig)
         );
         const bundle = await steps.step('bundle', () => this.bundle(project));
+
+        const { target } = config;
+        if (target.kind === 'edge') await steps.step('boot', () => this.deps.edgeBuilder.boot(project, target));
 
         return { config, bundle };
     }

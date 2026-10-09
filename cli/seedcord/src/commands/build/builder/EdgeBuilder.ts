@@ -5,6 +5,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { createBuilder } from 'vite';
 
 import { assertNodeCompat } from './assertNodeCompat';
+import { bootWorker } from './bootWorker';
 import { bundleFailed, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { WORKER_ENTRY_ID, WORKER_ROOT, workerEntry } from './workerEntry';
@@ -14,9 +15,10 @@ import type { Project } from '#core/project/Project';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { BundleStats } from './output';
 import type * as CloudflareVitePlugin from '@cloudflare/vite-plugin';
-import type { Plugin, Rolldown } from 'vite';
+import type { EnvironmentOptions, Plugin, Rolldown } from 'vite';
 
 type ImportCloudflare = () => Promise<typeof CloudflareVitePlugin>;
+type CloudflarePlugin = typeof CloudflareVitePlugin.cloudflare;
 
 const WORKER_ENVIRONMENT = 'worker';
 
@@ -51,6 +53,30 @@ function workerStats(chunks: Rolldown.OutputChunk[], files: ProjectFiles, entry:
     };
 }
 
+function workerPlugins(cloudflare: CloudflarePlugin, target: EdgeTarget): Plugin[] {
+    return cloudflare({
+        configPath: target.wranglerConfig,
+        config: { main: WORKER_ENTRY_ID },
+        viteEnvironment: { name: WORKER_ENVIRONMENT },
+        inspectorPort: false,
+        persistState: false
+    });
+}
+
+function workerEnvironment(outDir: string): Record<string, EnvironmentOptions> {
+    return {
+        [WORKER_ENVIRONMENT]: {
+            build: {
+                outDir,
+                emptyOutDir: true,
+                sourcemap: true,
+                minify: false,
+                rolldownOptions: { output: { entryFileNames: ENTRY_FILE_NAME } }
+            }
+        }
+    };
+}
+
 export class EdgeBuilder {
     // an optional peer resolves from the bot's project
     constructor(private readonly importCloudflare: ImportCloudflare = () => import('@cloudflare/vite-plugin')) {}
@@ -76,31 +102,26 @@ export class EdgeBuilder {
                 captureChunks((captured) => {
                     chunks = captured;
                 }),
-                cloudflare({
-                    configPath: target.wranglerConfig,
-                    config: { main: WORKER_ENTRY_ID },
-                    viteEnvironment: { name: WORKER_ENVIRONMENT },
-                    inspectorPort: false,
-                    persistState: false
-                })
+                workerPlugins(cloudflare, target)
             ],
             resolve: { tsconfigPaths: true },
-            environments: {
-                [WORKER_ENVIRONMENT]: {
-                    build: {
-                        outDir,
-                        emptyOutDir: true,
-                        sourcemap: true,
-                        minify: false,
-                        rolldownOptions: { output: { entryFileNames: ENTRY_FILE_NAME } }
-                    }
-                }
-            }
+            environments: workerEnvironment(outDir)
         }).catch(bundleFailed);
         await builder.buildApp().catch(bundleFailed);
         assertNodeCompat(outDir, target.wranglerConfig);
 
         return workerStats(chunks, files, join(outDir, ENTRY_FILE_NAME));
+    }
+
+    public async boot({ config }: Project, target: EdgeTarget): Promise<void> {
+        const viteRoot = dirname(target.wranglerConfig);
+        const { cloudflare } = await this.loadCloudflare(viteRoot);
+
+        await bootWorker({
+            root: viteRoot,
+            plugins: [workerPlugins(cloudflare, target)],
+            environments: workerEnvironment(config.build.outDir)
+        });
     }
 
     private async loadCloudflare(projectDir: string): Promise<typeof CloudflareVitePlugin> {

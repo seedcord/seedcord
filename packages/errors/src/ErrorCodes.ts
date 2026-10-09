@@ -313,6 +313,8 @@ export enum SeedcordErrorCode {
     CliEdgeCompatDateTooOld = 3146,
     /** An edge bot sets `no_nodejs_compat`. */
     CliEdgeNodeCompatOff = 3147,
+    /** The built edge worker failed to start in workerd. */
+    CliEdgeBootFailed = 3148,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

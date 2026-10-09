@@ -271,6 +271,8 @@ const messages = {
         `A seedcord edge bot needs Cloudflare's Node compat. ${paint.path(wranglerConfig)} sets ${paint.bold('compatibility_date')} to ${date}, but Cloudflare turns Node compat on by default only from ${firstDate}. Set the date to ${firstDate} or later, or add ${paint.bold('"nodejs_compat"')} to ${paint.bold('compatibility_flags')}.`,
     [SeedcordErrorCode.CliEdgeNodeCompatOff]: (wranglerConfig: string) =>
         `A seedcord edge bot needs Cloudflare's Node compat, but ${paint.path(wranglerConfig)} turns it off with ${paint.bold('"no_nodejs_compat"')}. Remove that flag from ${paint.bold('compatibility_flags')}.`,
+    [SeedcordErrorCode.CliEdgeBootFailed]: (reason: string) =>
+        `The built worker failed to start in workerd, the runtime Cloudflare runs it on.\n${reason}`,
     [SeedcordErrorCode.CliTypescriptNotStarted]: (tsc: string, reason: string) =>
         `Could not start TypeScript at ${paint.path(tsc)}: ${reason}`,
     [SeedcordErrorCode.CliTsconfigUnreadable]: (tsconfig: string, output: string) =>
