@@ -1,5 +1,5 @@
 import { BRAND } from '@seedcord/ui/palette';
-import { AgentLinks, cn, HOME_URL, seedcordJsonLd } from '@seedcord/ui';
+import { AgentLinks, cn, HOME_URL, MotionProvider, seedcordJsonLd } from '@seedcord/ui';
 import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 
 import './globals.css';
@@ -70,7 +70,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                     Skip to content
                 </a>
                 <ConsoleGreeting />
-                {children}
+                <MotionProvider>{children}</MotionProvider>
             </body>
         </html>
     );

@@ -46,13 +46,13 @@ export default createConfig({
 
         {
             files: [
-                'src/app/**/{page,layout,loading,error,global-error,not-found,template,default,route,sitemap,robots,manifest}.{ts,tsx}',
+                'src/app/**/{page,layout,loading,error,global-error,not-found,template,default,route,sitemap,robots,manifest}.{ts,tsx,dev.ts,dev.tsx}',
                 'src/app/**/{icon,apple-icon,opengraph-image,twitter-image}.{ts,tsx}',
                 'src/{middleware,instrumentation}.{ts,tsx}'
             ],
             rules: { 'import/no-default-export': 'off' }
         },
 
-        { ignores: ['.next/**', 'out/**', 'build/**', 'next-env.d.ts'] }
+        { ignores: ['.next/**', 'dist/**', 'build/**', 'next-env.d.ts'] }
     ]
 });

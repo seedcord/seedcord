@@ -48,11 +48,6 @@ const PRIMITIVES = [
         description: 'listbox-over-popover single-value picker, sizes, leading icon, states, scrolling long lists'
     },
     {
-        href: '/dev/segmented-control',
-        label: 'SegmentedControl',
-        description: 'joined-segment radiogroup with motion layoutId gliding pill, sizes, leading icons, multi-instance'
-    },
-    {
         href: '/dev/disclosure',
         label: 'Disclosure',
         description:

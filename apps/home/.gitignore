@@ -8,13 +8,13 @@
 
 # next.js
 /.next/
-/out/
 
 # cloudflare
 /.wrangler/
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store

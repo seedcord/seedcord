@@ -81,6 +81,8 @@
     }
     .drop-shadow-mark-lg {
         filter: drop-shadow(10px 10px 0 color-mix(in srgb, var(--seed-dark) 55%, transparent));
+        /* without its own layer, safari cuts off the bottom of the shadowed mark when a nearby repaint runs */
+        transform: translateZ(0);
     }
 
     .text-subtle {

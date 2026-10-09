@@ -21,13 +21,29 @@ const segmentedControlContainerSizeClasses = {
 } as const;
 
 const segmentedControlOptionBaseClassName = cn(
-    tw`relative inline-flex items-center justify-center gap-1.5 font-medium`,
+    tw`relative inline-flex items-center justify-center gap-1.5`,
     tw`transition-colors duration-150 ease-out`,
     tw`focus-visible:outline-offset-(-2) focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-(--focus-outline-b)`,
-    tw`text-(--text-muted) hover:text-(--text)`,
-    tw`aria-checked:text-(--text-accent-b-faint)`,
-    tw`disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:text-(--text-muted)`
+    tw`disabled:cursor-not-allowed disabled:opacity-45`
 );
+
+const segmentedControlVariants = {
+    pill: {
+        container: segmentedControlContainerClassName,
+        option: cn(
+            tw`font-medium text-(--text-muted) hover:text-(--text)`,
+            tw`disabled:hover:text-(--text-muted) aria-checked:text-(--text-accent-b-faint)`
+        ),
+        indicator: tw`absolute inset-1 rounded-sm bg-(--surface-accent-b-moderate) shadow-(--shadow-card)`
+    },
+    underline: {
+        container: tw`inline-flex items-end gap-3`,
+        option: tw`cursor-pointer pb-1 font-mono text-sm text-(--seed-dark)/55 hover:text-(--seed-dark) aria-checked:text-(--seed-dark)`,
+        indicator: tw`absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-(--seed-dark)`
+    }
+} as const;
+
+export type SegmentedControlVariant = keyof typeof segmentedControlVariants;
 
 const segmentedControlOptionSizeClasses = {
     sm: tw`px-3 text-sm`,
@@ -35,8 +51,6 @@ const segmentedControlOptionSizeClasses = {
 } as const;
 
 export type SegmentedControlSize = keyof typeof segmentedControlOptionSizeClasses;
-
-const segmentedControlActivePillClassName = tw`absolute inset-1 rounded-sm bg-(--surface-accent-b-moderate) shadow-(--shadow-card)`;
 
 export interface SegmentedControlOption<TValue extends string> {
     value: TValue;
@@ -50,6 +64,8 @@ export interface SegmentedControlProps<TValue extends string> {
     value: TValue;
     onChange: (next: TValue) => void;
     size?: SegmentedControlSize;
+    /** `underline` takes the home site's brand colors and ignores `size`. */
+    variant?: SegmentedControlVariant;
     fullWidth?: boolean;
     className?: string;
     'aria-label'?: string;
@@ -60,12 +76,15 @@ export function SegmentedControl<TValue extends string>({
     value,
     onChange,
     size = 'md',
+    variant = 'pill',
     fullWidth = false,
     className,
     'aria-label': ariaLabel
 }: SegmentedControlProps<TValue>): ReactElement {
     const instanceId = useId();
     const layoutId = `seedcord-segmented-control-${instanceId}`;
+    const isPill = variant === 'pill';
+    const styles = segmentedControlVariants[variant];
 
     return (
         <LayoutGroup id={layoutId}>
@@ -73,8 +92,8 @@ export function SegmentedControl<TValue extends string>({
                 role="radiogroup"
                 aria-label={ariaLabel}
                 className={cn(
-                    segmentedControlContainerClassName,
-                    segmentedControlContainerSizeClasses[size],
+                    styles.container,
+                    isPill && segmentedControlContainerSizeClasses[size],
                     fullWidth && tw`flex w-full`,
                     className
                 )}
@@ -91,7 +110,8 @@ export function SegmentedControl<TValue extends string>({
                             onClick={() => onChange(opt.value)}
                             className={cn(
                                 segmentedControlOptionBaseClassName,
-                                segmentedControlOptionSizeClasses[size],
+                                styles.option,
+                                isPill && segmentedControlOptionSizeClasses[size],
                                 fullWidth && tw`flex-1`
                             )}
                         >
@@ -100,7 +120,7 @@ export function SegmentedControl<TValue extends string>({
                                     layoutId={layoutId}
                                     aria-hidden
                                     transition={layoutSpring}
-                                    className={cn(segmentedControlActivePillClassName)}
+                                    className={cn(styles.indicator)}
                                 />
                             ) : null}
                             <span className={cn('relative inline-flex items-center gap-1.5')}>

@@ -9,7 +9,7 @@
     "scripts": {
         "dev": "next dev",
         "build": "next build",
-        "start": "pnpm dlx serve out",
+        "start": "pnpm dlx serve dist",
         "deploy": "wrangler deploy",
         "deploy:preview": "wrangler versions upload",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
@@ -22,6 +22,7 @@
         "@seedcord/ui": "workspace:^",
         "discord-component-embed": "workspace:^",
         "lucide-react": "catalog:deps",
+        "motion": "catalog:deps",
         "next": "catalog:deps",
         "react": "catalog:react",
         "react-dom": "catalog:react",

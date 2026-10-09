@@ -97,7 +97,7 @@ seedcord is newer than most models' training data, so your coding agent has to r
 
 - [`seedcord.org/guide/llms.txt`](https://seedcord.org/guide/llms.txt) indexes the guide, and [`seedcord.org/docs/llms.txt`](https://seedcord.org/docs/llms.txt) indexes the reference.
 - Every guide and reference page has a Markdown copy at the same URL plus `.md`.
-- The seedcord skill is at [`seedcord.org/.well-known/agent-skills/seedcord/SKILL.md`](https://seedcord.org/.well-known/agent-skills/seedcord/SKILL.md).
+- `pnpm dlx skills add https://seedcord.org` installs the seedcord skill into your agent. The file itself is at [`seedcord.org/.well-known/agent-skills/seedcord/SKILL.md`](https://seedcord.org/.well-known/agent-skills/seedcord/SKILL.md).
 
 ---
 

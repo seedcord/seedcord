@@ -1,7 +1,7 @@
 import { cn } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 
-import { CopyCommand } from '#components/ui/CopyCommand';
+import { HeroStart } from '#components/home/HeroStart';
 import { PosterButton } from '#components/ui/PosterButton';
 import { DOCS_URL, GUIDE_URL } from '#lib/site';
 
@@ -39,8 +39,7 @@ export function Hero(): ReactNode {
                         button, and event goes to a class you write, with reusable checks, hot reload, and a lot more
                         built in.
                     </p>
-                    {/* ml-1 matches the poster button's 4px rest translate, aligning the chip with the button face */}
-                    <CopyCommand command="pnpm create seedcord" className={cn('mt-7 ml-1')} />
+                    <HeroStart />
                     <div className={cn('mt-3 flex flex-wrap items-center gap-3')}>
                         <PosterButton
                             href={GUIDE_URL}

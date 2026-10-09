@@ -1,7 +1,10 @@
 'use client';
 
-import { LabelSwap, cn, useTimedToggle } from '@seedcord/ui';
-import { useRef } from 'react';
+import { Icon, LabelSwap, cn, useTimedToggle } from '@seedcord/ui';
+import { easeOutStrong, layoutSpring } from '@seedcord/ui/lib/motion';
+import { Copy, DollarSign } from 'lucide-react';
+import { AnimatePresence, m } from 'motion/react';
+import { useRef, useState } from 'react';
 
 import { pressable } from './press';
 
@@ -73,14 +76,36 @@ function burstSeeds(container: HTMLElement): void {
     }
 }
 
+// match LabelSwap's 4px, blur-[2px] and duration-200
+const SWAP_OFFSET_PX = 4;
+const SWAP_SECONDS = 0.2;
+
+export type SwapDirection = 1 | -1;
+
+const swapVariants = {
+    enter: (direction: SwapDirection) => ({ opacity: 0, x: direction * SWAP_OFFSET_PX, filter: 'blur(2px)' }),
+    shown: { opacity: 1, x: 0, filter: 'blur(0px)' },
+    leave: (direction: SwapDirection) => ({ opacity: 0, x: -direction * SWAP_OFFSET_PX, filter: 'blur(2px)' })
+};
+
 interface CopyCommandProps {
     command: string;
+    label?: string;
+    // 1 brings the next label in from the right; -1 from the left
+    direction: SwapDirection;
     className?: string;
 }
 
-export function CopyCommand({ command, className }: CopyCommandProps): ReactNode {
+export function CopyCommand({ command, label, direction, className }: CopyCommandProps): ReactNode {
     const burstRef = useRef<HTMLSpanElement>(null);
-    const [copied, markCopied] = useTimedToggle(COPIED_RESET_MS);
+    const [copiedRecently, markCopied] = useTimedToggle(COPIED_RESET_MS);
+    const [lastCopied, setLastCopied] = useState<string | null>(null);
+    const [shownCommand, setShownCommand] = useState(command);
+    if (shownCommand !== command) {
+        setShownCommand(command);
+        setLastCopied(null);
+    }
+    const copied = copiedRecently && lastCopied === command;
 
     const copy = async (): Promise<void> => {
         try {
@@ -88,6 +113,7 @@ export function CopyCommand({ command, className }: CopyCommandProps): ReactNode
         } catch {
             return;
         }
+        setLastCopied(command);
         markCopied();
         if (burstRef.current) burstSeeds(burstRef.current);
     };
@@ -98,10 +124,11 @@ export function CopyCommand({ command, className }: CopyCommandProps): ReactNode
             <span aria-live="polite" className={cn('sr-only')}>
                 {copied ? 'Copied' : ''}
             </span>
-            {/* eslint-disable-next-line react/forbid-elements -- the two-label grid swap and the seed burst have no Button variant */}
-            <button
+            <m.button
+                layout
+                transition={{ layout: layoutSpring }}
                 type="button"
-                aria-label={`Copy ${command}`}
+                aria-label={label ?? `Copy ${command}`}
                 onClick={() => {
                     void copy();
                 }}
@@ -113,19 +140,38 @@ export function CopyCommand({ command, className }: CopyCommandProps): ReactNode
                     className
                 )}
             >
-                <LabelSwap
-                    active={copied}
-                    idleLabel={
-                        <>
-                            <span className={cn('text-(--pith)/50 select-none')}>$ </span>
-                            {command}
-                        </>
-                    }
-                    activeLabel="copied!"
-                    activeClassName={cn('text-center')}
-                />
+                <AnimatePresence initial={false} mode="popLayout" custom={direction}>
+                    {/* motion scales children during a parent layout animation unless they take layout too */}
+                    <m.span
+                        key={label ?? command}
+                        layout="position"
+                        custom={direction}
+                        variants={swapVariants}
+                        initial="enter"
+                        animate="shown"
+                        exit="leave"
+                        transition={{ duration: SWAP_SECONDS, ease: easeOutStrong }}
+                        className={cn('block')}
+                    >
+                        <LabelSwap
+                            active={copied}
+                            idleLabel={
+                                <span className={cn('flex items-center gap-1.5')}>
+                                    <Icon
+                                        icon={label === undefined ? DollarSign : Copy}
+                                        size={14}
+                                        className={cn('text-(--pith)/60')}
+                                    />
+                                    {label ?? command}
+                                </span>
+                            }
+                            activeLabel="copied!"
+                            activeClassName={cn('text-center')}
+                        />
+                    </m.span>
+                </AnimatePresence>
                 <span ref={burstRef} aria-hidden className={cn('pointer-events-none absolute inset-0')} />
-            </button>
+            </m.button>
         </>
     );
 }
