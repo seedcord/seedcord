@@ -1,24 +1,17 @@
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { BuildRunner } from '#commands/build/BuildRunner';
 import { quietSteps } from '#core/output/quietSteps';
 
-import { smoke } from './smoke';
-
 const HASH_BOT = join(import.meta.dirname, '../../fixtures/hash#bot');
 
 describe('seedcord build on a bot whose path contains a #', () => {
-    it('points import.meta.url at the same file as import.meta.filename', async () => {
-        await BuildRunner.create(quietSteps).run(HASH_BOT);
-
-        const output = await smoke('http', process.execPath, [join(HASH_BOT, 'dist/index.mjs')]);
-        const filename = /fixture:filename (.+)\n/.exec(output)?.[1] ?? '';
-        const url = /fixture:url (.+)\n/.exec(output)?.[1] ?? '';
-
-        expect(filename).toContain('hash#bot');
-        expect(fileURLToPath(url)).toBe(filename);
-    }, 120_000);
+    it('throws CliPathHasHash before it loads the config', async () => {
+        await expect(BuildRunner.create(quietSteps).run(HASH_BOT)).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliPathHasHash
+        });
+    });
 });

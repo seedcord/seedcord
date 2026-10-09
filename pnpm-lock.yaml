@@ -911,9 +911,6 @@ importers:
       ink-spinner:
         specifier: ^5.0.0
         version: 5.0.0(ink@7.1.1(@types/react@19.3.0)(react@19.3.0))(react@19.3.0)
-      jiti:
-        specifier: ^2.7.0
-        version: 2.7.0
       minimatch:
         specifier: ^10.2.6
         version: 10.2.6

@@ -55,30 +55,37 @@ function configAt(root: string, instance: string): ResolvedSeedcordDevConfig {
     } as ResolvedSeedcordDevConfig;
 }
 
+function runnerWith(
+    config: ResolvedSeedcordDevConfig,
+    importModule: (entryPath: string) => Promise<unknown>,
+    logger: ILogger
+): CodegenRunner {
+    // justified: codegen reaches the loader through load() and the returned importModule
+    const configLoader = {
+        load: () =>
+            Promise.resolve({
+                config,
+                modules: { importModule } as ModuleLoader,
+                [Symbol.asyncDispose]: () => Promise.resolve()
+            })
+    } as unknown as ConfigLoader;
+
+    return new CodegenRunner({ steps: quietSteps, configLoader, generator: new AugmentationBuilder(logger), logger });
+}
+
 // no commands path, so the scan is empty and the rendered registry is deterministic.
 function makeRunner(root: string, logger: ILogger): CodegenRunner {
-    const configLoader = {
-        load: () => Promise.resolve(configAt(root, resolve(root, 'bot.ts')))
-    } as unknown as ConfigLoader;
-    const moduleLoader = {
-        importModule: () =>
-            Promise.resolve({
-                default: {
-                    [SeedcordBrand]: true,
-                    [HostAugmentTarget]: '@seedcord/gateway',
-                    [HostPluginKeys]: [],
-                    config: { bot: { commands: { path: null } } }
-                }
-            })
-    } as unknown as ModuleLoader;
+    const importModule = (): Promise<unknown> =>
+        Promise.resolve({
+            default: {
+                [SeedcordBrand]: true,
+                [HostAugmentTarget]: '@seedcord/gateway',
+                [HostPluginKeys]: [],
+                config: { bot: { commands: { path: null } } }
+            }
+        });
 
-    return new CodegenRunner({
-        steps: quietSteps,
-        configLoader,
-        moduleLoader,
-        generator: new AugmentationBuilder(logger),
-        logger
-    });
+    return runnerWith(configAt(root, resolve(root, 'bot.ts')), importModule, logger);
 }
 
 // importModule returns the branded instance for instancePath and the command module for every other path.
@@ -89,97 +96,55 @@ function scanRunner(
     logger: ILogger
 ): CodegenRunner {
     const instancePath = resolve(root, 'bot.ts');
-    const configLoader = {
-        load: () => Promise.resolve(configAt(root, instancePath))
-    } as unknown as ConfigLoader;
-    const moduleLoader = {
-        importModule: (entryPath: string) =>
-            entryPath === instancePath
-                ? Promise.resolve({
-                      default: {
-                          [SeedcordBrand]: true,
-                          [HostAugmentTarget]: '@seedcord/gateway',
-                          [HostPluginKeys]: [],
-                          config: { bot: { commands: { path: commandsPath } } }
-                      }
-                  })
-                : Promise.resolve(moduleByPath(entryPath))
-    } as unknown as ModuleLoader;
+    const importModule = (entryPath: string): Promise<unknown> =>
+        entryPath === instancePath
+            ? Promise.resolve({
+                  default: {
+                      [SeedcordBrand]: true,
+                      [HostAugmentTarget]: '@seedcord/gateway',
+                      [HostPluginKeys]: [],
+                      config: { bot: { commands: { path: commandsPath } } }
+                  }
+              })
+            : Promise.resolve(moduleByPath(entryPath));
 
-    return new CodegenRunner({
-        steps: quietSteps,
-        configLoader,
-        moduleLoader,
-        generator: new AugmentationBuilder(logger),
-        logger
-    });
+    return runnerWith(configAt(root, instancePath), importModule, logger);
 }
 
 // instance double whose default export carries no SeedcordBrand, to exercise the isSeedcordInstance guard.
 function invalidRunner(root: string, logger: ILogger): CodegenRunner {
-    const configLoader = {
-        load: () => Promise.resolve(configAt(root, resolve(root, 'bot.ts')))
-    } as unknown as ConfigLoader;
-    const moduleLoader = {
-        importModule: () => Promise.resolve({ default: { not: 'branded' } })
-    } as unknown as ModuleLoader;
+    const importModule = (): Promise<unknown> => Promise.resolve({ default: { not: 'branded' } });
 
-    return new CodegenRunner({
-        steps: quietSteps,
-        configLoader,
-        moduleLoader,
-        generator: new AugmentationBuilder(logger),
-        logger
-    });
+    return runnerWith(configAt(root, resolve(root, 'bot.ts')), importModule, logger);
 }
 
 // dev accepts a default export that resolves to the instance
 function asyncInstanceRunner(root: string, logger: ILogger): CodegenRunner {
-    const configLoader = {
-        load: () => Promise.resolve(configAt(root, resolve(root, 'bot.ts')))
-    } as unknown as ConfigLoader;
-    const moduleLoader = {
-        importModule: () =>
-            Promise.resolve({
-                default: Promise.resolve({
-                    [SeedcordBrand]: true,
-                    [HostAugmentTarget]: '@seedcord/gateway',
-                    [HostPluginKeys]: [],
-                    config: { bot: { commands: { path: null } } }
-                })
+    const importModule = (): Promise<unknown> =>
+        Promise.resolve({
+            default: Promise.resolve({
+                [SeedcordBrand]: true,
+                [HostAugmentTarget]: '@seedcord/gateway',
+                [HostPluginKeys]: [],
+                config: { bot: { commands: { path: null } } }
             })
-    } as unknown as ModuleLoader;
+        });
 
-    return new CodegenRunner({
-        steps: quietSteps,
-        configLoader,
-        moduleLoader,
-        generator: new AugmentationBuilder(logger),
-        logger
-    });
+    return runnerWith(configAt(root, resolve(root, 'bot.ts')), importModule, logger);
 }
 
 function pluginRunner(root: string, instance: string, pluginKeys: readonly string[], logger: ILogger): CodegenRunner {
-    const configLoader = { load: () => Promise.resolve(configAt(root, instance)) } as unknown as ConfigLoader;
-    const moduleLoader = {
-        importModule: () =>
-            Promise.resolve({
-                default: {
-                    [SeedcordBrand]: true,
-                    [HostAugmentTarget]: '@seedcord/gateway',
-                    [HostPluginKeys]: pluginKeys,
-                    config: { bot: { commands: { path: null } } }
-                }
-            })
-    } as unknown as ModuleLoader;
+    const importModule = (): Promise<unknown> =>
+        Promise.resolve({
+            default: {
+                [SeedcordBrand]: true,
+                [HostAugmentTarget]: '@seedcord/gateway',
+                [HostPluginKeys]: pluginKeys,
+                config: { bot: { commands: { path: null } } }
+            }
+        });
 
-    return new CodegenRunner({
-        steps: quietSteps,
-        configLoader,
-        moduleLoader,
-        generator: new AugmentationBuilder(logger),
-        logger
-    });
+    return runnerWith(configAt(root, instance), importModule, logger);
 }
 
 describe('CodegenRunner plugin capabilities', () => {

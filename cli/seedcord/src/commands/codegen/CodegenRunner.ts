@@ -14,7 +14,7 @@ import { ApplicationCommandType } from 'discord-api-types/v10';
 import { ConfigLoader } from '#core/config/ConfigLoader';
 import { plural } from '#core/format';
 import { importInstance } from '#core/modules/importInstance';
-import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
+import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { printResolvedConfig } from '#core/output/printResolvedConfig';
 
 import { AugmentationBuilder } from './AugmentationBuilder';
@@ -54,7 +54,6 @@ interface CodegenResult {
 interface CodegenRunnerDeps {
     readonly steps: Steps<CodegenStep>;
     readonly configLoader: ConfigLoader;
-    readonly moduleLoader: ModuleLoader;
     readonly generator: AugmentationBuilder;
     readonly logger: ILogger;
 }
@@ -69,12 +68,9 @@ export class CodegenRunner {
     constructor(private readonly deps: CodegenRunnerDeps) {}
 
     public static create(steps: Steps<CodegenStep>, logger: ILogger): CodegenRunner {
-        const moduleLoader = new RuntimeModuleLoader();
-
         return new CodegenRunner({
             steps,
-            configLoader: new ConfigLoader(moduleLoader),
-            moduleLoader,
+            configLoader: new ConfigLoader(openModuleLoader),
             generator: new AugmentationBuilder(logger),
             logger
         });
@@ -83,12 +79,13 @@ export class CodegenRunner {
     public async run(check: boolean): Promise<CodegenResult> {
         const { steps, configLoader } = this.deps;
 
-        const config = await steps.step('read config', () => configLoader.load());
+        await using project = await steps.step('read config', () => configLoader.load());
+        const { config, modules } = project;
         printResolvedConfig(steps, config);
-        const instance = await steps.step('load bot', () => this.resolveInstance(config));
+        const instance = await steps.step('load bot', () => this.resolveInstance(modules, config));
         const commands = await steps.step(
             'scan commands',
-            () => (instance.commandsDir ? this.scanCommands(instance.commandsDir) : Promise.resolve([])),
+            () => (instance.commandsDir ? this.scanCommands(modules, instance.commandsDir) : Promise.resolve([])),
             (found) => paint.mute(plural(found.length, 'command'))
         );
 
@@ -107,11 +104,11 @@ export class CodegenRunner {
         });
     }
 
-    private async scanCommands(commandsDir: string): Promise<ScannedCommand[]> {
+    private async scanCommands(modules: ModuleLoader, commandsDir: string): Promise<ScannedCommand[]> {
         const commands: ScannedCommand[] = [];
         const problems: unknown[] = [];
         try {
-            for await (const commandClass of this.walk(commandsDir, new Set(), true)) {
+            for await (const commandClass of this.walk(modules, commandsDir, new Set(), true)) {
                 const built = this.construct(commandClass);
                 if (isSeedcordError(built)) problems.push(built);
                 else if (built) commands.push(built);
@@ -125,8 +122,12 @@ export class CodegenRunner {
         return commands;
     }
 
-    // plain node can't import a .ts command file. the module loader runs it through jiti
-    private async *walk(dir: string, seen: Set<unknown>, isRoot: boolean): AsyncGenerator<CommandClassFile> {
+    private async *walk(
+        modules: ModuleLoader,
+        dir: string,
+        seen: Set<unknown>,
+        isRoot: boolean
+    ): AsyncGenerator<CommandClassFile> {
         let entries;
         try {
             entries = await readdir(dir, { withFileTypes: true });
@@ -142,9 +143,9 @@ export class CodegenRunner {
         for (const entry of entries.toSorted((a, b) => a.name.localeCompare(b.name))) {
             const fullPath = join(dir, entry.name);
             if (entry.isDirectory()) {
-                yield* this.walk(fullPath, seen, false);
+                yield* this.walk(modules, fullPath, seen, false);
             } else if (isTsOrJsFile(entry)) {
-                const imported = await this.deps.moduleLoader.importModule<Record<string, unknown>>(fullPath);
+                const imported = await modules.importModule<Record<string, unknown>>(fullPath);
                 for (const exported of Object.values(imported)) {
                     // a barrel re-exports the same class object
                     if (seen.has(exported)) continue;
@@ -156,8 +157,8 @@ export class CodegenRunner {
         }
     }
 
-    private async resolveInstance(config: ResolvedSeedcordDevConfig): Promise<ResolvedInstance> {
-        const instance = await importInstance(this.deps.moduleLoader, config.instance);
+    private async resolveInstance(modules: ModuleLoader, config: ResolvedSeedcordDevConfig): Promise<ResolvedInstance> {
+        const instance = await importInstance(modules, config.instance);
 
         // the bot resolves commands.path against cwd
         const commandsPath = instance.config.bot.commands.path;

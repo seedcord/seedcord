@@ -231,9 +231,7 @@ export enum SeedcordErrorCode {
     CliConfigNotFound = 3103,
     /** CLI entry file does not exist. */
     CliEntryNotFound = 3104,
-    /** Failed to import a TypeScript entry file. */
-    CliTsImportFailed = 3105,
-    /** Native import and jiti fallback both failed. */
+    /** A config, bot, or command file threw while the CLI loaded it. */
     CliImportFailed = 3106,
     /** The instance file's default export is not a constructed `Seedcord`. */
     CliInstanceInvalid = 3107,
@@ -295,6 +293,8 @@ export enum SeedcordErrorCode {
     CliCodegenCommandProblems = 3136,
     /** `seedcord codegen --check` found the committed augmentations stale. */
     CliCodegenOutOfDate = 3137,
+    /** The CLI cannot load a file whose path contains a `#`. */
+    CliPathHasHash = 3138,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

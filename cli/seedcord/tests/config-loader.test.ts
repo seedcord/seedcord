@@ -14,7 +14,7 @@ import { silentLogger } from './silentLogger';
 import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
-import type { ModuleLoader } from '#core/modules/ModuleLoader';
+import type { OpenModules } from '#core/modules/ModuleLoader';
 
 function tempProject(): string {
     const projectDir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-config-'));
@@ -23,15 +23,36 @@ function tempProject(): string {
     return realpathSync(projectDir.path);
 }
 
+interface StubModules {
+    open: OpenModules;
+    closed: () => boolean;
+}
+
 // the stub module loader hands back `config` as the config file's default export
+function stubModules(config: unknown): StubModules {
+    let closed = false;
+    const modules = {
+        importModule: <TModule = unknown>(): Promise<TModule> => Promise.resolve({ default: config } as TModule),
+        [Symbol.asyncDispose]: () => {
+            closed = true;
+            return Promise.resolve();
+        }
+    };
+
+    return { open: () => Promise.resolve(modules), closed: () => closed };
+}
+
 function projectWith(config: unknown): { projectDir: string; load: () => Promise<ResolvedSeedcordDevConfig> } {
     const projectDir = tempProject();
     writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
-    const moduleLoader: ModuleLoader = {
-        importModule: <TModule = unknown>(): Promise<TModule> => Promise.resolve({ default: config } as TModule)
+    const { open } = stubModules(config);
+
+    const load = async (): Promise<ResolvedSeedcordDevConfig> => {
+        const { config: resolved } = await new ConfigLoader(open).load(projectDir);
+        return resolved;
     };
 
-    return { projectDir, load: () => new ConfigLoader(moduleLoader).load(projectDir) };
+    return { projectDir, load };
 }
 
 const MINIMAL = { instance: './bot.ts', entry: './index.ts' };
@@ -50,11 +71,36 @@ describe('ConfigLoader', () => {
     });
 
     it('throws CliConfigNotFound for a folder with no seedcord config', async () => {
-        const moduleLoader: ModuleLoader = { importModule: () => Promise.reject(new Error('never imported')) };
+        const open: OpenModules = () => Promise.reject(new Error('never opened'));
 
-        await expect(new ConfigLoader(moduleLoader).load(tempProject())).rejects.toMatchObject({
+        await expect(new ConfigLoader(open).load(tempProject())).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigNotFound
         });
+    });
+
+    it('closes the module loader when the config is invalid', async () => {
+        const projectDir = tempProject();
+        writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
+        const modules = stubModules({ entry: './index.ts' });
+
+        await expect(new ConfigLoader(modules.open).load(projectDir)).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigMissingInstance
+        });
+        expect(modules.closed()).toBe(true);
+    });
+
+    it('closes the module loader with the project it returned', async () => {
+        const projectDir = tempProject();
+        writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
+        const modules = stubModules(MINIMAL);
+
+        {
+            await using project = await new ConfigLoader(modules.open).load(projectDir);
+            expect(modules.closed()).toBe(false);
+            expect(project.config.instance).toBe(resolve(projectDir, 'bot.ts'));
+        }
+
+        expect(modules.closed()).toBe(true);
     });
 
     it('resolves each tunnel shape into a mode', async () => {
@@ -167,11 +213,14 @@ describe('DevRunner', () => {
         const instancePath = join(projectDir, 'src/bot.ts');
         const configLoader = {
             load: vi.fn(() => ({
-                instance: instancePath,
-                root: join(projectDir, 'src'),
-                configFile: join(projectDir, 'seedcord.config.ts'),
-                entry: instancePath,
-                build: { outDir: join(projectDir, 'dist') }
+                config: {
+                    instance: instancePath,
+                    root: join(projectDir, 'src'),
+                    configFile: join(projectDir, 'seedcord.config.ts'),
+                    entry: instancePath,
+                    build: { outDir: join(projectDir, 'dist') }
+                },
+                [Symbol.asyncDispose]: () => Promise.resolve()
             }))
         };
 

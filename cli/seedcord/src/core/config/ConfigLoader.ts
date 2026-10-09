@@ -9,7 +9,7 @@ import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { locateConfig } from './locateConfig';
 
-import type { ModuleLoader } from '#core/modules/ModuleLoader';
+import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
 import type {
     ResolvedSeedcordBuildConfig,
     ResolvedSeedcordDevConfig,
@@ -108,12 +108,26 @@ function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
     throwSingleOrAggregate([...configProblems(raw)], SeedcordErrorCode.CliConfigProblems);
 }
 
-export class ConfigLoader {
-    constructor(private readonly modules: ModuleLoader) {}
+export interface LoadedProject extends AsyncDisposable {
+    readonly config: ResolvedSeedcordDevConfig;
+    readonly modules: ModuleLoader;
+}
 
-    public async load(projectDir = process.cwd()): Promise<ResolvedSeedcordDevConfig> {
+export class ConfigLoader {
+    constructor(private readonly openModules: OpenModules) {}
+
+    public async load(projectDir = process.cwd()): Promise<LoadedProject> {
         const configPath = locateConfig(projectDir);
-        const loadedModule = await this.modules.importModule(configPath);
+        await using onFailure = new AsyncDisposableStack();
+        const modules = onFailure.use(await this.openModules(dirname(configPath)));
+        const config = await this.readConfig(modules, configPath);
+
+        const owned = onFailure.move();
+        return { config, modules, [Symbol.asyncDispose]: () => owned.disposeAsync() };
+    }
+
+    private async readConfig(modules: ModuleLoader, configPath: string): Promise<ResolvedSeedcordDevConfig> {
+        const loadedModule = await modules.importModule(configPath);
         const config: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
         validateConfig(config);
 

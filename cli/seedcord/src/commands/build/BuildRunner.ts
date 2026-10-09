@@ -5,7 +5,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { ConfigLoader } from '#core/config/ConfigLoader';
 import { importInstance } from '#core/modules/importInstance';
-import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
+import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { printResolvedConfig } from '#core/output/printResolvedConfig';
 
 import { assertFoldersUnderRoot } from './builder/assertFoldersUnderRoot';
@@ -13,8 +13,8 @@ import { assertOutDirSafe } from './builder/assertOutDirSafe';
 import { TypeChecker } from './builder/TypeChecker';
 import { ViteBuilder } from './builder/ViteBuilder';
 
+import type { LoadedProject } from '#core/config/ConfigLoader';
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
-import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Steps } from '#core/output/Steps';
 import type { BundleStats } from './builder/ViteBuilder';
 
@@ -29,7 +29,6 @@ export interface BuildResult {
 interface BuildRunnerDeps {
     readonly steps: Steps<BuildStep>;
     readonly configLoader: ConfigLoader;
-    readonly modules: ModuleLoader;
     readonly typeChecker: TypeChecker;
     readonly bundler: ViteBuilder;
 }
@@ -38,21 +37,19 @@ export class BuildRunner {
     constructor(private readonly deps: BuildRunnerDeps) {}
 
     public static create(steps: Steps<BuildStep>): BuildRunner {
-        const modules = new RuntimeModuleLoader();
-
         return new BuildRunner({
             steps,
-            configLoader: new ConfigLoader(modules),
-            modules,
+            configLoader: new ConfigLoader(openModuleLoader),
             typeChecker: new TypeChecker(),
             bundler: new ViteBuilder()
         });
     }
 
     public async run(projectDir = process.cwd()): Promise<BuildResult> {
-        const { steps, modules, typeChecker, bundler } = this.deps;
+        const { steps, typeChecker, bundler } = this.deps;
 
-        const config = await steps.step('read config', () => this.loadConfig(projectDir));
+        await using project = await steps.step('read config', () => this.loadProject(projectDir));
+        const { config, modules } = project;
         printResolvedConfig(steps, config);
 
         await steps.step('load bot', async () => {
@@ -69,11 +66,14 @@ export class BuildRunner {
         return { config, bundle };
     }
 
-    private async loadConfig(projectDir: string): Promise<ResolvedSeedcordDevConfig> {
-        const config = await this.deps.configLoader.load(projectDir);
-        this.assertEntryExists(config.entry);
-        assertOutDirSafe(config.build.outDir, config.root);
-        return config;
+    private async loadProject(projectDir: string): Promise<LoadedProject> {
+        await using onFailure = new AsyncDisposableStack();
+        const project = onFailure.use(await this.deps.configLoader.load(projectDir));
+        this.assertEntryExists(project.config.entry);
+        assertOutDirSafe(project.config.build.outDir, project.config.root);
+
+        onFailure.move();
+        return project;
     }
 
     private assertEntryExists(entryPath: string): void {

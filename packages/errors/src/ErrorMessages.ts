@@ -227,10 +227,8 @@ const messages = {
     [SeedcordErrorCode.CliConfigEntryOutsideRoot]: (entryPath: string, root: string) =>
         `Entry file ${paint.path(entryPath)} is outside ${paint.bold('root')} (${paint.path(root)}). Move it under ${paint.bold('root')}, or set ${paint.bold('root')} to a folder that holds it.`,
     [SeedcordErrorCode.CliEntryNotFound]: (entryPath: string) => `Cannot find entry file at ${paint.path(entryPath)}.`,
-    [SeedcordErrorCode.CliTsImportFailed]: (entryPath: string, reason: string) =>
-        `Failed to import TypeScript file ${paint.path(entryPath)}: ${reason}`,
-    [SeedcordErrorCode.CliImportFailed]: (entryPath: string, nativeReason: string, fallbackReason: string) =>
-        `Failed to import ${paint.path(entryPath)}: ${nativeReason} (the jiti fallback also failed: ${fallbackReason})`,
+    [SeedcordErrorCode.CliImportFailed]: (entryPath: string, reason: string) =>
+        `Failed to import ${paint.path(entryPath)}: ${reason}`,
     [SeedcordErrorCode.CliInstanceInvalid]: (instancePath: string) =>
         `${paint.path(instancePath)} must default export the bot, a ${paint.bold('new Seedcord(...)')}, from ${paint.bold('@seedcord/gateway')} or ${paint.bold('@seedcord/http')}.`,
     [SeedcordErrorCode.CliStartFailed]: (instancePath: string, reason: string) =>
@@ -261,6 +259,8 @@ const messages = {
         `${count} command files need fixing before codegen can finish. Each one is listed below.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
+    [SeedcordErrorCode.CliPathHasHash]: (path: string) =>
+        `Cannot load ${paint.path(path)} because its path contains a ${paint.bold('#')}. Vite loads your bot's code and cuts a path at its first ${paint.bold('#')}. Move the project to a folder without one.`,
     [SeedcordErrorCode.CliCodegenDuplicateContextMenu]: (
         kind: string,
         name: string,
