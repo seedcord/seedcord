@@ -8,7 +8,7 @@ const BIND_ENV_ID = 'virtual:seedcord/bind-env';
 const BUILT_FILES_ID = 'virtual:seedcord/built-files';
 
 // workerd has no filesystem behind this path
-export const WORKER_ROOT = '/bot';
+const WORKER_ROOT = '/bot';
 
 // envapt's workerd build throws on a read until something binds a source
 const BIND_ENV = `import { env } from 'cloudflare:workers';
@@ -24,12 +24,12 @@ interface WorkerEntryOptions {
     base: string;
 }
 
-// vite hoists an eager glob's imports above the rest of its module
 function sources({ files, folders, instance, base }: WorkerEntryOptions): Map<string, string> {
     return new Map([
         [
             WORKER_ENTRY_ID,
             [
+                // a module's imports run before its own code, in the order written
                 `import '${BIND_ENV_ID}';`,
                 `import '${BUILT_FILES_ID}';`,
                 `export { default } from ${JSON.stringify(instance)};`,
@@ -37,7 +37,7 @@ function sources({ files, folders, instance, base }: WorkerEntryOptions): Map<st
             ].join('\n')
         ],
         [BIND_ENV_ID, BIND_ENV],
-        [BUILT_FILES_ID, builtFilesSource({ files, folders, root: JSON.stringify(WORKER_ROOT), base, eager: true })]
+        [BUILT_FILES_ID, builtFilesSource({ files, folders, rootExpression: JSON.stringify(WORKER_ROOT), base })]
     ]);
 }
 

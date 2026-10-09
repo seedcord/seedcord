@@ -7,35 +7,24 @@ export const BUILT_FILES_SLOT = `globalThis[Symbol.for(${JSON.stringify(BUILT_FI
 interface BuiltFilesOptions {
     files: ProjectFiles;
     folders: string[];
-    // a JS expression, evaluated in the generated module
-    root: string;
+    rootExpression: string;
     // the bot's root as vite sees it, like /src
     base: string;
-    // imports every file up front and wraps it as a loader
-    eager?: boolean;
-}
-
-const AS_LOADERS =
-    'const asLoaders = (imported) => Object.fromEntries(Object.entries(imported).map(([key, value]) => [key, () => Promise.resolve(value)]));';
-
-function glob(patterns: string[], options: Record<string, unknown>, eager: boolean): string {
-    if (!eager) return `import.meta.glob(${JSON.stringify(patterns)}, ${JSON.stringify(options)})`;
-    return `asLoaders(import.meta.glob(${JSON.stringify(patterns)}, ${JSON.stringify({ ...options, eager })}))`;
 }
 
 // the module and text globs follow isModulePath and isTextPath in @seedcord/utils
-export function builtFilesSource({ files, folders, root, base, eager = false }: BuiltFilesOptions): string {
+export function builtFilesSource({ files, folders, rootExpression, base }: BuiltFilesOptions): string {
     const excludes = files.globExcludes();
     const modules = ['./**/*.ts', './**/*.js', '!./**/*.d.ts', ...excludes];
     const text = ['./**/*', '!./**/*.ts', '!./**/*.js', '!./**/*.map', ...excludes];
+    const textOptions = { base, query: '?raw', import: 'default' };
 
     return [
-        ...(eager ? [AS_LOADERS] : []),
         `${BUILT_FILES_SLOT} = {`,
-        `    root: ${root},`,
+        `    root: ${rootExpression},`,
         `    folders: ${JSON.stringify(folders)},`,
-        `    modules: ${glob(modules, { base }, eager)},`,
-        `    text: ${glob(text, { base, query: '?raw', import: 'default' }, eager)}`,
+        `    modules: import.meta.glob(${JSON.stringify(modules)}, ${JSON.stringify({ base })}),`,
+        `    text: import.meta.glob(${JSON.stringify(text)}, ${JSON.stringify(textOptions)})`,
         '};',
         ''
     ].join('\n');

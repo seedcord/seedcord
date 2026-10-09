@@ -8,7 +8,7 @@ import { assertNodeCompat } from './assertNodeCompat';
 import { bootWorker } from './bootWorker';
 import { bundleFailed, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
-import { WORKER_ENTRY_ID, WORKER_ROOT, workerEntry } from './workerEntry';
+import { WORKER_ENTRY_ID, workerEntry } from './workerEntry';
 
 import type { EdgeTarget } from '#core/config/detectTarget';
 import type { Project } from '#core/project/Project';
@@ -81,11 +81,16 @@ export class EdgeBuilder {
     // an optional peer resolves from the bot's project
     constructor(private readonly importCloudflare: ImportCloudflare = () => import('@cloudflare/vite-plugin')) {}
 
-    public async build({ config, files }: Project, target: EdgeTarget): Promise<BundleStats> {
+    public async build({ config, files, configDir }: Project, target: EdgeTarget): Promise<BundleStats> {
+        const { root, instance } = config;
+        // the worker bundles every file under root, tool configs like eslint.config.ts included
+        if (root === configDir) {
+            throw new SeedcordError(SeedcordErrorCode.CliEdgeRootIsConfigFolder, [config.configFile, root]);
+        }
+
         // wrangler deploy reads the build through a file vite writes under its root
         const viteRoot = dirname(target.wranglerConfig);
         const { cloudflare } = await this.loadCloudflare(viteRoot);
-        const { root, instance } = config;
         const { outDir } = config.build;
         const folders = await files.foldersIncludingEmpty();
 
@@ -97,8 +102,7 @@ export class EdgeBuilder {
             logLevel: 'warn',
             plugins: [
                 workerEntry({ files, folders, instance: viteKey(viteRoot, instance), base: viteKey(viteRoot, root) }),
-                // eager imports evaluate before the built files slot holds a root
-                pinModulePaths(files, JSON.stringify(WORKER_ROOT)),
+                pinModulePaths(files),
                 captureChunks((captured) => {
                     chunks = captured;
                 }),

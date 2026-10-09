@@ -2,7 +2,6 @@ import { extname, join } from 'node:path';
 
 import { build } from 'vite';
 
-import { BUILT_FILES_SLOT } from './builtFiles';
 import { bundleFailed, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { ENTRY_ID, isServerEntry, serverEntry } from './serverEntry';
@@ -47,7 +46,7 @@ export class ServerBuilder {
             // vite copies <root>/public into outDir otherwise
             publicDir: false,
             logLevel: 'warn',
-            plugins: [serverEntry({ files, entry, folders }), pinModulePaths(files, `${BUILT_FILES_SLOT}.root`)],
+            plugins: [serverEntry({ files, entry, folders }), pinModulePaths(files)],
             resolve: { tsconfigPaths: true },
             build: {
                 ssr: true,

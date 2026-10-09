@@ -19,7 +19,7 @@ export function isServerEntry(moduleId: string | null | undefined): boolean {
 // vite's root is the bot's root on a server build
 function entrySource({ files, entry, folders }: EntryOptions): string {
     return [
-        builtFilesSource({ files, folders, root: 'import.meta.dirname', base: '/' }),
+        builtFilesSource({ files, folders, rootExpression: 'import.meta.dirname', base: '/' }),
         `await import(${JSON.stringify(files.keyOf(entry))});`,
         ''
     ].join('\n');
