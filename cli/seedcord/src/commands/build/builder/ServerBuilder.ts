@@ -4,8 +4,9 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { build } from 'vite';
 
+import { BUILT_FILES_SLOT } from './builtFiles';
 import { pinModulePaths } from './pinModulePaths';
-import { ENTRY_FILE_NAME, ENTRY_ID, isSeedcordEntry, seedcordEntry } from './seedcordEntry';
+import { ENTRY_FILE_NAME, ENTRY_ID, isServerEntry, serverEntry } from './serverEntry';
 
 import type { Project } from '#core/project/Project';
 
@@ -22,7 +23,7 @@ function bundleStats(result: Awaited<ReturnType<typeof build>>, entry: string): 
     // vite returns a watcher only under build.watch
     const outputs = [result].flat().filter((output) => 'output' in output);
     const chunks = outputs.flatMap(({ output }) => output.filter((file) => file.type === 'chunk'));
-    const projectChunks = chunks.filter((chunk) => !isSeedcordEntry(chunk.facadeModuleId));
+    const projectChunks = chunks.filter((chunk) => !isServerEntry(chunk.facadeModuleId));
     const textFiles = projectChunks.filter((chunk) => chunk.facadeModuleId?.includes('?raw') === true).length;
 
     return {
@@ -35,7 +36,7 @@ function bundleStats(result: Awaited<ReturnType<typeof build>>, entry: string): 
 
 // Echo.ts builds to Echo.js and Echo.json to Echo.json.js
 function outputName(moduleId: string | null | undefined): string {
-    if (isSeedcordEntry(moduleId)) return ENTRY_FILE_NAME;
+    if (isServerEntry(moduleId)) return ENTRY_FILE_NAME;
     const extension = extname(moduleId?.split('?')[0] ?? '');
     if (extension === '' || extension === '.ts' || extension === '.js') return '[name].js';
     return `[name]${extension}.js`;
@@ -53,7 +54,7 @@ export class ServerBuilder {
             // vite copies <root>/public into outDir otherwise
             publicDir: false,
             logLevel: 'warn',
-            plugins: [seedcordEntry({ files, entry, folders }), pinModulePaths(files)],
+            plugins: [serverEntry({ files, entry, folders }), pinModulePaths(files, `${BUILT_FILES_SLOT}.root`)],
             resolve: { tsconfigPaths: true },
             build: {
                 ssr: true,

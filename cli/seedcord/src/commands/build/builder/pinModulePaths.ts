@@ -1,7 +1,5 @@
 import { Visitor } from 'vite';
 
-import { BUILT_FILES_SLOT } from './seedcordEntry';
-
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { Plugin } from 'vite';
 
@@ -34,10 +32,9 @@ function importMetaPaths(program: Parameters<Visitor['visit']>[0]): Rewrite[] {
 const FILE_URL = '__seedcordPathToFileURL';
 const FILE_URL_IMPORT = `import { pathToFileURL as ${FILE_URL} } from 'node:url';`;
 
-// bun --compile gives every module the entry's import.meta
-export function pinModulePaths(files: ProjectFiles): Plugin {
-    const builtRoot = `${BUILT_FILES_SLOT}.root`;
-
+// bun --compile gives every module the entry's import.meta.
+// builtRoot is a JS expression for the built root.
+export function pinModulePaths(files: ProjectFiles, builtRoot: string): Plugin {
     return {
         name: 'seedcord:pin-module-paths',
         transform(code, id) {

@@ -64,6 +64,7 @@ export class ProjectFiles {
             .toSorted();
     }
 
+    // the built files globs use root as their base
     public globExcludes(): string[] {
         const folders = this.skippedFolders.filter((folder) => this.holds(folder));
         const files = this.rootIsConfigDir() ? PROJECT_FILES : [];
@@ -71,8 +72,8 @@ export class ProjectFiles {
             '!**/node_modules/**',
             '!**/.*',
             '!**/.*/**',
-            ...folders.map((folder) => `!${this.keyOf(folder)}/**`),
-            ...files.map((file) => `!/${file}`)
+            ...folders.map((folder) => `!.${this.keyOf(folder)}/**`),
+            ...files.map((file) => `!./${file}`)
         ];
     }
 
