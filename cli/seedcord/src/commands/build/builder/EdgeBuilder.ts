@@ -4,6 +4,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { createBuilder } from 'vite';
 
+import { assertNodeCompat } from './assertNodeCompat';
 import { bundleFailed, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { WORKER_ENTRY_ID, WORKER_ROOT, workerEntry } from './workerEntry';
@@ -97,6 +98,7 @@ export class EdgeBuilder {
             }
         }).catch(bundleFailed);
         await builder.buildApp().catch(bundleFailed);
+        assertNodeCompat(outDir, target.wranglerConfig);
 
         return workerStats(chunks, files, join(outDir, ENTRY_FILE_NAME));
     }

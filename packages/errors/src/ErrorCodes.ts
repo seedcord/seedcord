@@ -309,6 +309,10 @@ export enum SeedcordErrorCode {
     CliConfigEntryOnEdge = 3144,
     /** An edge bot's project does not have `@cloudflare/vite-plugin` installed. */
     CliEdgeVitePluginMissing = 3145,
+    /** An edge bot's `compatibility_date` predates 2026-08-04 and its flags leave out `nodejs_compat`. */
+    CliEdgeCompatDateTooOld = 3146,
+    /** An edge bot sets `no_nodejs_compat`. */
+    CliEdgeNodeCompatOff = 3147,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,
