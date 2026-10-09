@@ -81,6 +81,7 @@ describe('renderTemplates', () => {
         const files = await render(GATEWAY);
 
         expect(files.has('.env')).toBe(true);
+        expect(files.has('.gitattributes')).toBe(true);
         expect(files.has('.gitignore')).toBe(true);
         expect(files.has('.prettierignore')).toBe(true);
     });
