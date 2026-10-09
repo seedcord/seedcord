@@ -303,6 +303,8 @@ export enum SeedcordErrorCode {
     CliTsconfigUnreadable = 3141,
     /** Two or more files or folders in the project have a `#` in their path. */
     CliHashPathProblems = 3142,
+    /** The CLI could not start the TypeScript compiler process. */
+    CliTypescriptNotStarted = 3143,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

@@ -25,17 +25,21 @@ describe('ProjectFiles', () => {
         await expect(files.foldersIncludingEmpty()).resolves.toContain('/made-on-load');
     });
 
-    // root reads a folder whatever its mode
-    it.skipIf(process.getuid?.() === 0)('throws CoreDirectoryUnreadable for a folder it cannot read', async () => {
-        const root = await projectRoot();
-        const locked = join(root, 'locked');
-        await mkdir(locked);
-        await chmod(locked, 0o000);
-        onTestFinished(() => chmod(locked, 0o700));
+    // root reads a folder whatever its mode.
+    // windows ignores the posix mode bits.
+    it.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
+        'throws CoreDirectoryUnreadable for a folder it cannot read',
+        async () => {
+            const root = await projectRoot();
+            const locked = join(root, 'locked');
+            await mkdir(locked);
+            await chmod(locked, 0o000);
+            onTestFinished(() => chmod(locked, 0o700));
 
-        await expect(new ProjectFiles(root, join(root, 'dist'), root).pathsWithHash()).rejects.toMatchObject({
-            code: SeedcordErrorCode.CoreDirectoryUnreadable,
-            message: expect.stringContaining('locked') as string
-        });
-    });
+            await expect(new ProjectFiles(root, join(root, 'dist'), root).pathsWithHash()).rejects.toMatchObject({
+                code: SeedcordErrorCode.CoreDirectoryUnreadable,
+                message: expect.stringContaining('locked') as string
+            });
+        }
+    );
 });
