@@ -94,7 +94,6 @@
         "@seedcord/logger": "workspace:^",
         "@seedcord/types": "workspace:^",
         "@seedcord/utils": "workspace:^",
-        "common-tags": "^1.8.2",
         "discord-api-types": "catalog:deps",
         "reflect-metadata": "catalog:deps"
     },
@@ -104,7 +103,6 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
-        "@types/common-tags": "^1.8.4",
         "envapt": "catalog:peer",
         "type-fest": "catalog:deps",
         "vite": "catalog:deps"

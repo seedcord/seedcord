@@ -1,5 +1,4 @@
 import { toEpochSeconds } from '@seedcord/utils';
-import { stripIndents } from 'common-tags';
 
 import { Notice } from '#stops/Notice';
 import { NoticeCard } from '#stops/NoticeCard';
@@ -101,12 +100,7 @@ export class MissingPermissions extends Notice {
             this.customLead ??
             `${this.subject === null ? 'You are' : `${this.subject} is`} missing the following permission entries:`;
         return {
-            components: [
-                new NoticeCard(stripIndents`
-                ${lead}
-                ${bullets}
-            `).component
-            ]
+            components: [new NoticeCard(`${lead}\n${bullets}`).component]
         };
     }
 }
@@ -129,12 +123,7 @@ export class HasDangerousPermissions extends Notice {
         const lead =
             this.customLead ?? `${this.subject} has the following permission entries that must not be enabled:`;
         return {
-            components: [
-                new NoticeCard(stripIndents`
-                ${lead}
-                ${bullets}
-            `).component
-            ]
+            components: [new NoticeCard(`${lead}\n${bullets}`).component]
         };
     }
 }
