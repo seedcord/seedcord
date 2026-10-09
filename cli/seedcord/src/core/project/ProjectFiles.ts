@@ -20,8 +20,14 @@ function isSkippedName(name: string): boolean {
     return name.startsWith('.') || name === 'node_modules';
 }
 
+interface ProjectEntry {
+    path: string;
+    isFolder: boolean;
+}
+
 export class ProjectFiles {
     private readonly skippedFolders: string[];
+    private walked?: Promise<ProjectEntry[]>;
 
     constructor(
         private readonly root: string,
@@ -42,20 +48,19 @@ export class ProjectFiles {
     }
 
     public async foldersIncludingEmpty(): Promise<string[]> {
-        const found: string[] = [];
-        for await (const { path, isFolder } of this.entriesUnder(this.root)) {
-            if (isFolder) found.push(this.keyOf(path));
-        }
-        return found.toSorted();
+        const entries = await this.entries();
+        return entries
+            .filter(({ isFolder }) => isFolder)
+            .map(({ path }) => this.keyOf(path))
+            .toSorted();
     }
 
     public async pathsWithHash(): Promise<string[]> {
-        const found: string[] = [];
-        for await (const { path } of this.entriesUnder(this.root)) {
-            const parent = relative(this.root, dirname(path));
-            if (basename(path).includes('#') && !parent.includes('#')) found.push(path);
-        }
-        return found.toSorted();
+        const entries = await this.entries();
+        return entries
+            .map(({ path }) => path)
+            .filter((path) => basename(path).includes('#') && !relative(this.root, dirname(path)).includes('#'))
+            .toSorted();
     }
 
     public globExcludes(): string[] {
@@ -70,7 +75,13 @@ export class ProjectFiles {
         ];
     }
 
-    private async *entriesUnder(dir: string): AsyncGenerator<{ path: string; isFolder: boolean }> {
+    // the load checks and the build share one walk
+    private entries(): Promise<ProjectEntry[]> {
+        this.walked ??= Array.fromAsync(this.entriesUnder(this.root));
+        return this.walked;
+    }
+
+    private async *entriesUnder(dir: string): AsyncGenerator<ProjectEntry> {
         for (const entry of await readdir(dir, { withFileTypes: true })) {
             const path = join(dir, entry.name);
             if (isSkippedName(entry.name) || this.skippedFolders.includes(path)) continue;

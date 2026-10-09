@@ -13,9 +13,9 @@ import { assertOutDirSafe } from './builder/assertOutDirSafe';
 import { TypeChecker } from './builder/TypeChecker';
 import { ViteBuilder } from './builder/ViteBuilder';
 
-import type { LoadedProject } from '#core/config/ProjectLoader';
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { Steps } from '#core/output/Steps';
+import type { Project } from '#core/project/Project';
 import type { BundleStats } from './builder/ViteBuilder';
 
 export const BUILD_STEPS = ['read config', 'load bot', 'type check', 'bundle'] as const;
@@ -58,15 +58,15 @@ export class BuildRunner {
         });
         await steps.step(
             'type check',
-            () => typeChecker.check(config),
+            () => typeChecker.check(project),
             ({ tsconfig }) => paint.path(tsconfig)
         );
-        const bundle = await steps.step('bundle', () => bundler.build(config));
+        const bundle = await steps.step('bundle', () => bundler.build(project));
 
         return { config, bundle };
     }
 
-    private async loadProject(projectDir: string): Promise<LoadedProject> {
+    private async loadProject(projectDir: string): Promise<Project> {
         await using onFailure = new AsyncDisposableStack();
         const project = onFailure.use(await this.deps.projectLoader.open(projectDir));
         this.assertEntryExists(project.config.entry);

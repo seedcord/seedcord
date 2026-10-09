@@ -5,6 +5,7 @@ import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal
 import { isPlainObject } from '@seedcord/utils/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 
+import { Project } from '#core/project/Project';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { assertNoHashPaths } from './assertNoHashPaths';
@@ -112,26 +113,21 @@ function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
     throwSingleOrAggregate([...configProblems(raw)], SeedcordErrorCode.CliConfigProblems);
 }
 
-export interface LoadedProject extends AsyncDisposable {
-    readonly config: ResolvedSeedcordDevConfig;
-    readonly modules: ModuleLoader;
-}
-
 export class ProjectLoader {
     constructor(private readonly openModules: OpenModules) {}
 
-    public async open(projectDir = process.cwd()): Promise<LoadedProject> {
+    public async open(projectDir = process.cwd()): Promise<Project> {
         const configPath = locateConfig(projectDir);
         const configDir = dirname(configPath);
         const target = detectTarget(configDir);
         await using onFailure = new AsyncDisposableStack();
         const modules = onFailure.use(await this.openModules(configDir, target));
-        const config = await this.readConfig(modules, configPath, target);
-        await assertNoHashPaths(config);
-        await assertTargetMatchesTsconfig(config);
+        const project = new Project(await this.readConfig(modules, configPath, target), modules);
+        await assertNoHashPaths(project);
+        await assertTargetMatchesTsconfig(project);
 
-        const owned = onFailure.move();
-        return { config, modules, [Symbol.asyncDispose]: () => owned.disposeAsync() };
+        onFailure.move();
+        return project;
     }
 
     private async readConfig(

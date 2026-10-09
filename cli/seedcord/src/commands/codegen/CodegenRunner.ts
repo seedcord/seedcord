@@ -17,8 +17,8 @@ import { CommandScanner } from './CommandScanner';
 import { renderAugmentation } from './renderAugmentation';
 
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
-import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Steps } from '#core/output/Steps';
+import type { Project } from '#core/project/Project';
 import type { ScannedCommand } from './AugmentationBuilder';
 import type { EmojiConfig, ILogger } from '@seedcord/types';
 
@@ -71,7 +71,7 @@ export class CodegenRunner {
         await using project = await steps.step('read config', () => projectLoader.open());
         const { config, modules } = project;
         printResolvedConfig(steps, config);
-        const instance = await steps.step('load bot', () => this.resolveInstance(modules, config));
+        const instance = await steps.step('load bot', () => this.resolveInstance(project));
         const commands = await steps.step(
             'scan commands',
             () =>
@@ -96,7 +96,7 @@ export class CodegenRunner {
         });
     }
 
-    private async resolveInstance(modules: ModuleLoader, config: ResolvedSeedcordDevConfig): Promise<ResolvedInstance> {
+    private async resolveInstance({ modules, config }: Project): Promise<ResolvedInstance> {
         const instance = await importInstance(modules, config.instance);
 
         // the bot resolves commands.path against cwd
