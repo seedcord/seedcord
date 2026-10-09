@@ -1,6 +1,9 @@
-import { BUILT_FILES_SLOT, type ProjectFiles } from './ProjectFiles';
+import { BUILT_FILES_KEY } from '@seedcord/utils/node/internal';
 
+import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { Plugin } from 'vite';
+
+export const BUILT_FILES_SLOT = `globalThis[Symbol.for(${JSON.stringify(BUILT_FILES_KEY)})]`;
 
 export const ENTRY_ID = 'seedcord:entry';
 const RESOLVED_ENTRY_ID = `\0${ENTRY_ID}`;

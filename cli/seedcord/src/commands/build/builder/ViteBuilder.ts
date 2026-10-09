@@ -4,8 +4,9 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { build } from 'vite';
 
+import { ProjectFiles } from '#core/project/ProjectFiles';
+
 import { pinModulePaths } from './pinModulePaths';
-import { ProjectFiles } from './ProjectFiles';
 import { ENTRY_FILE_NAME, ENTRY_ID, isSeedcordEntry, seedcordEntry } from './seedcordEntry';
 
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
@@ -70,8 +71,6 @@ export class ViteBuilder {
                         format: 'esm',
                         preserveModules: true,
                         preserveModulesRoot: root,
-                        // rolldown's default sanitizer fails the build when the project path contains a #
-                        sanitizeFileName: (name) => name.replaceAll('\0', '_'),
                         entryFileNames: (chunk) => outputName(chunk.facadeModuleId)
                     }
                 }

@@ -266,7 +266,7 @@ const messages = {
     [SeedcordErrorCode.CliTsconfigUnreadable]: (tsconfig: string, output: string) =>
         `TypeScript could not read ${paint.path(tsconfig)}.\n${output}`,
     [SeedcordErrorCode.CliPathHasHash]: (path: string) =>
-        `Cannot load ${paint.path(path)} because its path contains a ${paint.bold('#')}. Vite loads your bot's code and cuts a path at its first ${paint.bold('#')}. Move the project to a folder without one.`,
+        `${paint.path(path)} has a ${paint.bold('#')} in its path, and Vite cuts a path at its first ${paint.bold('#')}. Rename it, or move the project to a folder without one.`,
     [SeedcordErrorCode.CliCodegenDuplicateContextMenu]: (
         kind: string,
         name: string,
@@ -294,6 +294,8 @@ const messages = {
         `Config \`${field}\` must be ${expected} when provided.`,
     [SeedcordErrorCode.CliConfigProblems]: (count: number) =>
         `${count} fields in the seedcord config need fixing. Each one is listed below.`,
+    [SeedcordErrorCode.CliHashPathProblems]: (count: number) =>
+        `${count} files or folders in the project have a ${paint.bold('#')} in their path. Each one is listed below.`,
     [SeedcordErrorCode.CreateCancelled]: () => 'Cancelled.',
     [SeedcordErrorCode.CreateFlagNotApplicable]: (flag: string) =>
         `The --${flag} flag does not apply to the answers you gave.`,

@@ -7,6 +7,7 @@ import { isInside } from '@seedcord/utils/node/internal';
 
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
+import { assertNoHashPaths } from './assertNoHashPaths';
 import { assertTargetMatchesTsconfig } from './assertTargetMatchesTsconfig';
 import { detectTarget } from './detectTarget';
 import { locateConfig } from './locateConfig';
@@ -126,6 +127,7 @@ export class ConfigLoader {
         await using onFailure = new AsyncDisposableStack();
         const modules = onFailure.use(await this.openModules(configDir, target));
         const config = await this.readConfig(modules, configPath, target);
+        await assertNoHashPaths(config);
         await assertTargetMatchesTsconfig(config);
 
         const owned = onFailure.move();

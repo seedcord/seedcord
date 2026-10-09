@@ -1,9 +1,7 @@
 import { readdir } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 
-import { BUILT_FILES_KEY, isInside } from '@seedcord/utils/node/internal';
-
-export const BUILT_FILES_SLOT = `globalThis[Symbol.for(${JSON.stringify(BUILT_FILES_KEY)})]`;
+import { isInside } from '@seedcord/utils/node/internal';
 
 // the bot writes its log files to logs/ in the folder it starts in
 const PROJECT_FOLDERS = ['logs'];
@@ -44,7 +42,18 @@ export class ProjectFiles {
     }
 
     public async foldersIncludingEmpty(): Promise<string[]> {
-        const found = await Array.fromAsync(this.foldersUnder(this.root));
+        const found: string[] = [];
+        for await (const { path, isFolder } of this.entriesUnder(this.root)) {
+            if (isFolder) found.push(this.keyOf(path));
+        }
+        return found.toSorted();
+    }
+
+    public async pathsWithHash(): Promise<string[]> {
+        const found: string[] = [];
+        for await (const { path } of this.entriesUnder(this.root)) {
+            if (relative(this.root, path).includes('#')) found.push(path);
+        }
         return found.toSorted();
     }
 
@@ -60,12 +69,16 @@ export class ProjectFiles {
         ];
     }
 
-    private async *foldersUnder(dir: string): AsyncGenerator<string> {
+    private async *entriesUnder(dir: string): AsyncGenerator<{ path: string; isFolder: boolean }> {
         for (const entry of await readdir(dir, { withFileTypes: true })) {
-            const full = join(dir, entry.name);
-            if (!entry.isDirectory() || isSkippedName(entry.name) || this.skippedFolders.includes(full)) continue;
-            yield this.keyOf(full);
-            yield* this.foldersUnder(full);
+            const path = join(dir, entry.name);
+            if (isSkippedName(entry.name) || this.skippedFolders.includes(path)) continue;
+            if (entry.isDirectory()) {
+                yield { path, isFolder: true };
+                yield* this.entriesUnder(path);
+            } else {
+                yield { path, isFolder: false };
+            }
         }
     }
 

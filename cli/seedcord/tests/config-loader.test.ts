@@ -1,4 +1,4 @@
-import { mkdtempDisposableSync, realpathSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempDisposableSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -73,7 +73,9 @@ describe('ConfigLoader', () => {
         expect(resolved.build.outDir).toBe(resolve(projectDir, 'dist'));
         expect(resolved.build.tsconfig).toBeUndefined();
     });
+});
 
+describe('ConfigLoader target', () => {
     it('targets node when the config folder has no wrangler config', async () => {
         const { load } = projectWith(MINIMAL);
 
@@ -151,7 +153,51 @@ describe('ConfigLoader', () => {
 
         await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliTsconfigUnreadable });
     });
+});
 
+describe('ConfigLoader paths with a #', () => {
+    it('throws CliPathHasHash for a file under root whose name contains a #', async () => {
+        const { projectDir, load } = projectWith(MINIMAL);
+        mkdirSync(join(projectDir, 'handlers'));
+        writeFileSync(join(projectDir, 'handlers', 'a#b.ts'), '');
+
+        await expect(load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliPathHasHash,
+            message: expect.stringContaining(join('handlers', 'a#b.ts')) as string
+        });
+    });
+
+    it('throws one CliPathHasHash for a root whose own path contains a #', async () => {
+        const { projectDir, load } = projectWith({ ...MINIMAL, root: './src#old' });
+        mkdirSync(join(projectDir, 'src#old', 'handlers'), { recursive: true });
+
+        await expect(load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliPathHasHash,
+            message: expect.stringContaining('src#old') as string
+        });
+    });
+
+    it('lists every # path under root at once', async () => {
+        const { projectDir, load } = projectWith(MINIMAL);
+        mkdirSync(join(projectDir, 'old#handlers'));
+        writeFileSync(join(projectDir, 'c#d.ts'), '');
+
+        await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliHashPathProblems });
+    });
+
+    it('skips node_modules, dot folders and outDir when it looks for # paths', async () => {
+        const { projectDir, load } = projectWith(MINIMAL);
+        for (const folder of ['node_modules/pkg#1', '.cache/x#y', 'dist/z#w']) {
+            mkdirSync(join(projectDir, folder), { recursive: true });
+        }
+
+        const { root } = await load();
+
+        expect(root).toBe(projectDir);
+    });
+});
+
+describe('ConfigLoader validation', () => {
     it('throws CliConfigNotFound for a folder with no seedcord config', async () => {
         const open: OpenModules = () => Promise.reject(new Error('never opened'));
 
