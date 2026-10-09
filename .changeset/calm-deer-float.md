@@ -2,4 +2,4 @@
 '@seedcord/core': patch
 ---
 
-fix unneeded spacing in the permissions notice
+Fixed unneeded spacing in the permissions notice
