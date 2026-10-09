@@ -307,6 +307,8 @@ export enum SeedcordErrorCode {
     CliTypescriptNotStarted = 3143,
     /** An edge bot's seedcord config sets `entry`. */
     CliConfigEntryOnEdge = 3144,
+    /** An edge bot's project does not have `@cloudflare/vite-plugin` installed. */
+    CliEdgeVitePluginMissing = 3145,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

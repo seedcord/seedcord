@@ -1,23 +1,16 @@
 import { extname, join } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
 import { build } from 'vite';
 
 import { BUILT_FILES_SLOT } from './builtFiles';
+import { bundleFailed, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
-import { ENTRY_FILE_NAME, ENTRY_ID, isServerEntry, serverEntry } from './serverEntry';
+import { ENTRY_ID, isServerEntry, serverEntry } from './serverEntry';
 
 import type { Project } from '#core/project/Project';
+import type { BundleStats } from './output';
 
 const NODE_TARGET = 'node24';
-
-export interface BundleStats {
-    modules: number;
-    textFiles: number;
-    bytes: number;
-    entry: string;
-}
 
 function bundleStats(result: Awaited<ReturnType<typeof build>>, entry: string): BundleStats {
     // vite returns a watcher only under build.watch
@@ -74,10 +67,7 @@ export class ServerBuilder {
                 }
             },
             ssr: { target: 'node', external: true }
-        }).catch((error: unknown) => {
-            const reason = Error.isError(error) ? error.message : String(error);
-            throw new SeedcordError(SeedcordErrorCode.CliBundleFailed, [reason], { cause: error });
-        });
+        }).catch(bundleFailed);
 
         return bundleStats(result, join(outDir, ENTRY_FILE_NAME));
     }

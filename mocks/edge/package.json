@@ -10,6 +10,8 @@
         "directory": "mocks/edge"
     },
     "scripts": {
+        "build": "seedcord build",
+        "deploy": "seedcord build && wrangler deploy",
         "codegen": "seedcord codegen",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
@@ -28,8 +30,10 @@
         "envapt": "catalog:peer"
     },
     "devDependencies": {
+        "@cloudflare/vite-plugin": "catalog:peer",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
-        "seedcord": "workspace:^"
+        "seedcord": "workspace:^",
+        "wrangler": "catalog:deps"
     }
 }

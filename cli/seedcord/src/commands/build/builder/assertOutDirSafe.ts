@@ -5,7 +5,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { BUILT_FILES_KEY, isInside } from '@seedcord/utils/node/internal';
 
-import { ENTRY_FILE_NAME } from './serverEntry';
+import { ENTRY_FILE_NAME } from './output';
 
 function holdsEarlierBuild(outDir: string): boolean {
     const entry = join(outDir, ENTRY_FILE_NAME);

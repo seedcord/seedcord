@@ -10,13 +10,14 @@ import { printResolvedConfig } from '#core/output/printResolvedConfig';
 
 import { assertFoldersUnderRoot } from './builder/assertFoldersUnderRoot';
 import { assertOutDirSafe } from './builder/assertOutDirSafe';
+import { EdgeBuilder } from './builder/EdgeBuilder';
 import { ServerBuilder } from './builder/ServerBuilder';
 import { TypeChecker } from './builder/TypeChecker';
 
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { Steps } from '#core/output/Steps';
 import type { Project } from '#core/project/Project';
-import type { BundleStats } from './builder/ServerBuilder';
+import type { BundleStats } from './builder/output';
 
 export const BUILD_STEPS = ['read config', 'load bot', 'type check', 'bundle'] as const;
 export type BuildStep = (typeof BUILD_STEPS)[number];
@@ -30,7 +31,8 @@ interface BuildRunnerDeps {
     readonly steps: Steps<BuildStep>;
     readonly projectLoader: ProjectLoader;
     readonly typeChecker: TypeChecker;
-    readonly bundler: ServerBuilder;
+    readonly serverBuilder: ServerBuilder;
+    readonly edgeBuilder: EdgeBuilder;
 }
 
 export class BuildRunner {
@@ -41,12 +43,13 @@ export class BuildRunner {
             steps,
             projectLoader: new ProjectLoader(openModuleLoader),
             typeChecker: new TypeChecker(),
-            bundler: new ServerBuilder()
+            serverBuilder: new ServerBuilder(),
+            edgeBuilder: new EdgeBuilder()
         });
     }
 
     public async run(projectDir = process.cwd()): Promise<BuildResult> {
-        const { steps, typeChecker, bundler } = this.deps;
+        const { steps, typeChecker } = this.deps;
 
         await using project = await steps.step('read config', () => this.loadProject(projectDir));
         const { config, modules } = project;
@@ -61,10 +64,15 @@ export class BuildRunner {
             () => typeChecker.check(project),
             ({ tsconfig }) => paint.path(tsconfig)
         );
-        const entry = config.target.kind === 'server' ? config.target.entry : config.instance;
-        const bundle = await steps.step('bundle', () => bundler.build(project, entry));
+        const bundle = await steps.step('bundle', () => this.bundle(project));
 
         return { config, bundle };
+    }
+
+    private bundle(project: Project): Promise<BundleStats> {
+        const { target } = project.config;
+        if (target.kind === 'edge') return this.deps.edgeBuilder.build(project, target);
+        return this.deps.serverBuilder.build(project, target.entry);
     }
 
     private async loadProject(projectDir: string): Promise<Project> {

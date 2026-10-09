@@ -10,7 +10,7 @@ import { printBuildSummary } from '#commands/build/printBuildSummary';
 import { StepPrinter } from '#core/output/StepPrinter';
 
 import type { BuildResult } from '#commands/build/BuildRunner';
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordDevConfig, ResolvedTarget } from '#core/config/schema';
 
 let projectDir: string;
 
@@ -20,7 +20,11 @@ beforeEach(async () => {
     return () => tmp.remove();
 });
 
-async function summaryFor(packageJson?: Record<string, unknown>, outDir = 'dist'): Promise<string> {
+async function summaryFor(
+    packageJson?: Record<string, unknown>,
+    outDir = 'dist',
+    target: ResolvedTarget = { kind: 'server', entry: join(projectDir, 'src/index.ts') }
+): Promise<string> {
     if (packageJson) await writeFile(join(projectDir, 'package.json'), JSON.stringify(packageJson));
 
     let written = '';
@@ -34,8 +38,8 @@ async function summaryFor(packageJson?: Record<string, unknown>, outDir = 'dist'
     };
     const printer = new StepPrinter({ command: 'build', labels: BUILD_STEPS, verbose: false, stdout, stderr: stdout });
     const result: BuildResult = {
-        // justified: the summary reads only configFile from the config
-        config: { configFile: join(projectDir, 'seedcord.config.ts') } as ResolvedSeedcordDevConfig,
+        // justified: the summary reads only configFile and target from the config
+        config: { configFile: join(projectDir, 'seedcord.config.ts'), target } as ResolvedSeedcordDevConfig,
         bundle: { modules: 7, textFiles: 4, bytes: 186_400, entry: join(projectDir, outDir, 'index.mjs') }
     };
 
@@ -75,6 +79,15 @@ describe('printBuildSummary', () => {
         } finally {
             if (platform) Object.defineProperty(process, 'platform', platform);
         }
+    });
+
+    it('ends an edge build with the command that deploys it', async () => {
+        const target: ResolvedTarget = { kind: 'edge', wranglerConfig: join(projectDir, 'wrangler.jsonc') };
+
+        const summary = await summaryFor({ name: 'my-bot' }, 'dist', target);
+
+        expect(summary).toMatch(/\n {2}deploy {3}wrangler deploy\n/);
+        expect(summary).not.toContain('--compile');
     });
 
     it('names the binary bot when package.json is missing or has no name', async () => {

@@ -63,8 +63,14 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
+        "@cloudflare/vite-plugin": "catalog:peer",
         "envapt": "catalog:peer",
         "typescript": "catalog:consumerTypes"
+    },
+    "peerDependenciesMeta": {
+        "@cloudflare/vite-plugin": {
+            "optional": true
+        }
     },
     "dependencies": {
         "@clack/prompts": "catalog:deps",
@@ -88,6 +94,7 @@
         "wrap-ansi": "^10.0.0"
     },
     "devDependencies": {
+        "@cloudflare/vite-plugin": "catalog:peer",
         "@eslint-react/eslint-plugin": "^5.18.1",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/gateway": "workspace:^",
@@ -101,7 +108,8 @@
         "eslint-plugin-react-hooks": "^7.1.1",
         "ink-testing-library": "^4.0.0",
         "tsx": "catalog:deps",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:peer",
+        "wrangler": "catalog:deps"
     },
     "publishConfig": {
         "access": "public",

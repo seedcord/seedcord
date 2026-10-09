@@ -49,15 +49,24 @@ function commandLine(label: string, command: string): string {
     return `${paint.mute(label.padEnd(COMMAND_LABEL_WIDTH))}${paint.bold(command)}`;
 }
 
-export function printBuildSummary(printer: StepPrinter<BuildStep>, { config, bundle }: BuildResult): void {
+function nextCommands({ config, bundle }: BuildResult): [label: string, command: string][] {
+    if (config.target.kind === 'edge') return [['deploy', 'wrangler deploy']];
+
     const entry = shellArg(commandPath(bundle.entry));
-    const counts = [plural(bundle.modules, 'module'), plural(bundle.textFiles, 'text file'), formatBytes(bundle.bytes)];
     const binary = shellArg(binaryName(dirname(config.configFile)));
+    return [
+        ['run', `${runtimeName()} ${entry}`],
+        ['compile', `bun build --compile ${entry} --outfile ${binary}`]
+    ];
+}
+
+export function printBuildSummary(printer: StepPrinter<BuildStep>, result: BuildResult): void {
+    const { bundle } = result;
+    const counts = [plural(bundle.modules, 'module'), plural(bundle.textFiles, 'text file'), formatBytes(bundle.bytes)];
 
     printer.line();
     printer.line(`${counts.map((count) => paint.iris(count)).join(', ')} → ${paint.path(bundle.entry)}`);
     printer.line();
-    printer.line(commandLine('run', `${runtimeName()} ${entry}`));
-    printer.line(commandLine('compile', `bun build --compile ${entry} --outfile ${binary}`));
+    for (const [label, command] of nextCommands(result)) printer.line(commandLine(label, command));
     printer.line();
 }

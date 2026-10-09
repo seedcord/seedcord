@@ -6,8 +6,6 @@ import type { Plugin } from 'vite';
 export const ENTRY_ID = 'seedcord:entry';
 const RESOLVED_ENTRY_ID = `\0${ENTRY_ID}`;
 
-export const ENTRY_FILE_NAME = 'index.mjs';
-
 interface EntryOptions {
     files: ProjectFiles;
     entry: string;
