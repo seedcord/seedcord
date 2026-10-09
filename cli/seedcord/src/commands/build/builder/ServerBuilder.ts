@@ -41,7 +41,7 @@ function outputName(moduleId: string | null | undefined): string {
     return `[name]${extension}.js`;
 }
 
-export class ViteBuilder {
+export class ServerBuilder {
     public async build({ config, files }: Project, entry: string): Promise<BundleStats> {
         const { root } = config;
         const { outDir } = config.build;

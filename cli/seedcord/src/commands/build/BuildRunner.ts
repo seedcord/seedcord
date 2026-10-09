@@ -10,13 +10,13 @@ import { printResolvedConfig } from '#core/output/printResolvedConfig';
 
 import { assertFoldersUnderRoot } from './builder/assertFoldersUnderRoot';
 import { assertOutDirSafe } from './builder/assertOutDirSafe';
+import { ServerBuilder } from './builder/ServerBuilder';
 import { TypeChecker } from './builder/TypeChecker';
-import { ViteBuilder } from './builder/ViteBuilder';
 
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { Steps } from '#core/output/Steps';
 import type { Project } from '#core/project/Project';
-import type { BundleStats } from './builder/ViteBuilder';
+import type { BundleStats } from './builder/ServerBuilder';
 
 export const BUILD_STEPS = ['read config', 'load bot', 'type check', 'bundle'] as const;
 export type BuildStep = (typeof BUILD_STEPS)[number];
@@ -30,7 +30,7 @@ interface BuildRunnerDeps {
     readonly steps: Steps<BuildStep>;
     readonly projectLoader: ProjectLoader;
     readonly typeChecker: TypeChecker;
-    readonly bundler: ViteBuilder;
+    readonly bundler: ServerBuilder;
 }
 
 export class BuildRunner {
@@ -41,7 +41,7 @@ export class BuildRunner {
             steps,
             projectLoader: new ProjectLoader(openModuleLoader),
             typeChecker: new TypeChecker(),
-            bundler: new ViteBuilder()
+            bundler: new ServerBuilder()
         });
     }
 
