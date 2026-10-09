@@ -7,7 +7,7 @@ import { build } from 'vite';
 
 import { serverCommands } from '#commands/build/serverCommands';
 
-import { bundleFailed, ENTRY_FILE_NAME } from './output';
+import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { ENTRY_ID, isServerEntry, serverEntry } from './serverEntry';
 import { TargetBuild } from './TargetBuild';
@@ -15,22 +15,14 @@ import { TargetBuild } from './TargetBuild';
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './output';
 import type { NextCommand } from './TargetBuild';
+import type { Rolldown } from 'vite';
 
 const NODE_TARGET = 'node24';
 
-function bundleStats(result: Awaited<ReturnType<typeof build>>, entry: string): BundleStats {
+function outputChunks(result: Awaited<ReturnType<typeof build>>): Rolldown.OutputChunk[] {
     // vite returns a watcher only under build.watch
     const outputs = [result].flat().filter((output) => 'output' in output);
-    const chunks = outputs.flatMap(({ output }) => output.filter((file) => file.type === 'chunk'));
-    const projectChunks = chunks.filter((chunk) => !isServerEntry(chunk.facadeModuleId));
-    const textFiles = projectChunks.filter((chunk) => chunk.facadeModuleId?.includes('?raw') === true).length;
-
-    return {
-        modules: projectChunks.length - textFiles,
-        textFiles,
-        bytes: chunks.reduce((total, chunk) => total + Buffer.byteLength(chunk.code), 0),
-        entry
-    };
+    return outputs.flatMap(({ output }) => output.filter((file) => file.type === 'chunk'));
 }
 
 // Echo.ts builds to Echo.js and Echo.json to Echo.json.js
@@ -96,6 +88,6 @@ export class ServerBuild extends TargetBuild {
             ssr: { target: 'node', external: true }
         }).catch(bundleFailed);
 
-        return bundleStats(result, join(outDir, ENTRY_FILE_NAME));
+        return bundleStats(outputChunks(result), files, join(outDir, ENTRY_FILE_NAME));
     }
 }

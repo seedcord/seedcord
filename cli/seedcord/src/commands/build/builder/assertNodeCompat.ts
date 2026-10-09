@@ -5,16 +5,14 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { isPlainObject } from '@seedcord/utils/internal';
 
+import { isStringArray } from '#utils/isStringArray';
+
 // cloudflare turns on nodejs_compat by default from this compatibility date
 const NODE_COMPAT_DEFAULT_FROM = '2026-08-04';
 
 interface CompatSettings {
     date: string | undefined;
     flags: string[];
-}
-
-function isStringArray(value: unknown): value is string[] {
-    return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
 // the plugin writes wrangler.jsonc and wrangler.toml out as this one json shape

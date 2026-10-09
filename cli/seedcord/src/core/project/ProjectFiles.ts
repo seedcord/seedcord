@@ -22,6 +22,11 @@ function isSkippedName(name: string): boolean {
     return name.startsWith('.') || name === 'node_modules';
 }
 
+// the shape vite gives import.meta.glob keys and root imports, root-relative with a leading slash
+export function viteKey(root: string, path: string): string {
+    return `/${relative(root, path).split(sep).join('/')}`;
+}
+
 interface ProjectEntry {
     path: string;
     isFolder: boolean;
@@ -43,9 +48,8 @@ export class ProjectFiles {
         return isInside(this.root, path);
     }
 
-    // the shape vite gives import.meta.glob keys, root-relative with a leading slash
     public keyOf(path: string): string {
-        return `/${relative(this.root, path).split(sep).join('/')}`;
+        return viteKey(this.root, path);
     }
 
     public async foldersIncludingEmpty(): Promise<string[]> {

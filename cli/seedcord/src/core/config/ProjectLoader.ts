@@ -6,6 +6,7 @@ import { isPlainObject } from '@seedcord/utils/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 
 import { Project } from '#core/project/Project';
+import { isStringArray } from '#utils/isStringArray';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { assertNoHashPaths } from './assertNoHashPaths';
@@ -29,10 +30,6 @@ import type {
 
 function isOptionalString(value: unknown): boolean {
     return value === undefined || typeof value === 'string';
-}
-
-function isStringArray(value: unknown): value is string[] {
-    return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
 function invalidField(field: string, expected: string): SeedcordError {
