@@ -10,7 +10,7 @@ export {
 export { version } from '#core/version';
 
 /**
- * Helper so an edge bot's config file receives proper type inference.
+ * Types the `seedcord.config.ts` of a bot that runs on Cloudflare Workers.
  */
 export function defineConfig(config: SeedcordConfig): SeedcordConfig {
     return config;

@@ -63,7 +63,7 @@ function workerEnvironment(outDir: string): Record<string, EnvironmentOptions> {
 }
 
 export class EdgeBuild extends TargetBuild {
-    // wrangler deploy reads the build through a file vite writes under its root
+    // the plugin writes .wrangler/deploy/config.json under vite's root. wrangler deploy reads it from beside the wrangler config
     private readonly viteRoot: string;
     private cloudflare?: Promise<CloudflarePlugin>;
 
@@ -101,8 +101,8 @@ export class EdgeBuild extends TargetBuild {
                 workerEntry({
                     files,
                     folders,
-                    instance: viteKey(viteRoot, config.instance),
-                    base: viteKey(viteRoot, config.root)
+                    instanceKey: viteKey(viteRoot, config.instance),
+                    baseKey: viteKey(viteRoot, config.root)
                 }),
                 pinModulePaths(files),
                 captureChunks((captured) => {

@@ -19,12 +19,11 @@ Envapter.useSource(new PortableSource(env));
 interface WorkerEntryOptions {
     files: ProjectFiles;
     folders: string[];
-    // instance and base as vite sees them, like /src/bot.ts and /src
-    instance: string;
-    base: string;
+    instanceKey: string;
+    baseKey: string;
 }
 
-function sources({ files, folders, instance, base }: WorkerEntryOptions): Map<string, string> {
+function sources({ files, folders, instanceKey, baseKey }: WorkerEntryOptions): Map<string, string> {
     return new Map([
         [
             WORKER_ENTRY_ID,
@@ -32,14 +31,17 @@ function sources({ files, folders, instance, base }: WorkerEntryOptions): Map<st
                 // a module's imports run before its own code, in the order written
                 `import '${BIND_ENV_ID}';`,
                 `import '${BUILT_FILES_ID}';`,
-                `export { default } from ${JSON.stringify(instance)};`,
+                `export { default } from ${JSON.stringify(instanceKey)};`,
                 // cloudflare reads durable object and workflow classes from the worker's named exports
-                `export * from ${JSON.stringify(instance)};`,
+                `export * from ${JSON.stringify(instanceKey)};`,
                 ''
             ].join('\n')
         ],
         [BIND_ENV_ID, BIND_ENV],
-        [BUILT_FILES_ID, builtFilesSource({ files, folders, rootExpression: JSON.stringify(WORKER_ROOT), base })]
+        [
+            BUILT_FILES_ID,
+            builtFilesSource({ files, folders, rootExpression: JSON.stringify(WORKER_ROOT), base: baseKey })
+        ]
     ]);
 }
 
