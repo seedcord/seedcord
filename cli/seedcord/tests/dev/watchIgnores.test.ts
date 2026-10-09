@@ -3,13 +3,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { createServer, mergeConfig } from 'vite';
-import { afterEach, describe, expect, it, onTestFinished } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { devServerConfig, logsIgnore } from '#commands/dev/runtime/devServerConfig';
 
 import type { ViteDevServer } from 'vite';
 
 const TEST_TIMEOUT_MS = 20_000;
+// this timeout should be sufficient for most file watch events imo
+const WATCH_TIMEOUT_MS = 10_000;
 
 const SOURCE_FILE = '/src/logs/format.ts';
 const LOG_FILE = '/logs/combined.log';
@@ -40,18 +42,12 @@ interface WatchedProject {
     watcher: ViteDevServer['watcher'];
     // chokidar reports the resolved path, and a mac temp dir arrives through a symlink
     real: string;
-    reported: (file: string) => Promise<undefined>;
+    touchUntilReported: (file: string) => Promise<void>;
 }
 
 async function watchProject(root: string): Promise<WatchedProject> {
     const real = realpathSync(root);
-    const ready = Promise.withResolvers<undefined>();
-    const reports = new Map<string, PromiseWithResolvers<undefined>>();
-    const reportOf = (file: string): PromiseWithResolvers<undefined> => {
-        const report = reports.get(file) ?? Promise.withResolvers<undefined>();
-        reports.set(file, report);
-        return report;
-    };
+    const reported = new Set<string>();
 
     server = await createServer(
         // the same merge ViteDevRuntime does
@@ -62,32 +58,40 @@ async function watchProject(root: string): Promise<WatchedProject> {
             plugins: [
                 {
                     name: 'record',
-                    // chokidar emits ready once its file watchers are attached
-                    configureServer: ({ watcher }: ViteDevServer) => {
-                        watcher.once('ready', () => ready.resolve(undefined));
-                    },
                     hotUpdate: ({ file }: { file: string }) => {
-                        reportOf(file.replace(real, '')).resolve(undefined);
+                        reported.add(file.replace(real, ''));
                         return [];
                     }
                 }
             ]
         })
     );
-    await ready.promise;
+    // chokidar's ready can fire before a plugin hook can listen for it
+    const { watcher } = server;
+    await vi.waitFor(() => expect(watcher.getWatched()[join(real, 'src', 'logs')]).toContain('format.ts'), {
+        timeout: WATCH_TIMEOUT_MS
+    });
 
-    return { watcher: server.watcher, real, reported: (file) => reportOf(file).promise };
+    // under load chokidar can miss a single write
+    const touchUntilReported = (file: string): Promise<void> =>
+        vi.waitFor(
+            () => {
+                appendFileSync(join(root, file), 'a line\n');
+                expect(reported).toContain(file);
+            },
+            { timeout: WATCH_TIMEOUT_MS }
+        );
+
+    return { watcher, real, touchUntilReported };
 }
 
 describe('dev server watch ignores', () => {
     it(
         "never watches the bot's log folder",
         async () => {
-            const root = project();
-            const { watcher, real, reported } = await watchProject(root);
+            const { watcher, real, touchUntilReported } = await watchProject(project());
 
-            appendFileSync(join(root, SOURCE_FILE), 'a line\n');
-            await reported(SOURCE_FILE);
+            await touchUntilReported(SOURCE_FILE);
 
             expect(watcher.getWatched()[join(real, 'logs')]).toBeUndefined();
         },
@@ -98,12 +102,9 @@ describe('dev server watch ignores', () => {
     it(
         'still reports a source file under src/logs',
         async () => {
-            const root = project();
-            const { reported } = await watchProject(root);
+            const { touchUntilReported } = await watchProject(project());
 
-            appendFileSync(join(root, SOURCE_FILE), 'a line\n');
-
-            await expect(reported(SOURCE_FILE)).resolves.toBeUndefined();
+            await expect(touchUntilReported(SOURCE_FILE)).resolves.toBeUndefined();
         },
         TEST_TIMEOUT_MS
     );

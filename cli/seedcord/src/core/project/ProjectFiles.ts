@@ -1,6 +1,8 @@
 import { readdir } from 'node:fs/promises';
 import { basename, dirname, join, relative, sep } from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 
 // the bot writes its log files to logs/ in the folder it starts in
@@ -27,7 +29,6 @@ interface ProjectEntry {
 
 export class ProjectFiles {
     private readonly skippedFolders: string[];
-    private walked?: Promise<ProjectEntry[]>;
 
     constructor(
         private readonly root: string,
@@ -75,14 +76,15 @@ export class ProjectFiles {
         ];
     }
 
-    // the load checks and the build share one walk
     private entries(): Promise<ProjectEntry[]> {
-        this.walked ??= Array.fromAsync(this.entriesUnder(this.root));
-        return this.walked;
+        return Array.fromAsync(this.entriesUnder(this.root));
     }
 
     private async *entriesUnder(dir: string): AsyncGenerator<ProjectEntry> {
-        for (const entry of await readdir(dir, { withFileTypes: true })) {
+        const entries = await readdir(dir, { withFileTypes: true }).catch((error: unknown) => {
+            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryUnreadable, [dir], { cause: error });
+        });
+        for (const entry of entries) {
             const path = join(dir, entry.name);
             if (isSkippedName(entry.name) || this.skippedFolders.includes(path)) continue;
             if (entry.isDirectory()) {

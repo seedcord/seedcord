@@ -5,11 +5,16 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 
 import type { BuildTarget } from '#core/config/detectTarget';
+
+afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+});
 
 const NODE: BuildTarget = { kind: 'node' };
 
