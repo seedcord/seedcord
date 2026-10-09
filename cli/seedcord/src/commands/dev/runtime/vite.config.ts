@@ -1,7 +1,9 @@
 import { realpathSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
 
-import { defineConfig } from 'vite';
+import { mergeConfig } from 'vite';
+
+import { userCodeConfig } from '#core/modules/userCodeConfig';
 
 // a **/logs/** glob would also swallow a source directory named logs
 export function logsIgnore(root: string): (path: string) => boolean {
@@ -11,8 +13,7 @@ export function logsIgnore(root: string): (path: string) => boolean {
     return (path) => path === logs || path.startsWith(logs + sep);
 }
 
-export default defineConfig({
-    resolve: { tsconfigPaths: true },
+export const devServerConfig = mergeConfig(userCodeConfig, {
     server: {
         middlewareMode: true,
         hmr: true,
@@ -33,26 +34,6 @@ export default defineConfig({
             }
         }
     },
-    ssr: {
-        target: 'node',
-        // logger stays external so the bot shares the CLI's LoggerChannelRegistry singleton the dev TUI reads through
-        external: ['@seedcord/logger', '@seedcord/logger/node'],
-        // an externalized package's import() of a project .ts file goes to node's loader, which cannot parse decorators
-        // vite injects import.meta.hot only into modules it transforms, and HmrManager.init reads it
-        noExternal: [/^@seedcord\//],
-        resolve: {
-            conditions: ['node', 'import'],
-            externalConditions: ['node']
-        }
-    },
-    environments: {
-        ssr: {
-            resolve: {
-                conditions: ['node', 'import'],
-                externalConditions: ['node']
-            }
-        }
-    },
     future: {
         removeSsrLoadModule: 'warn',
         removePluginHookHandleHotUpdate: 'warn',
@@ -65,6 +46,5 @@ export default defineConfig({
         removeServerWarmupRequest: 'warn'
     },
     clearScreen: false,
-    logLevel: 'error',
-    appType: 'custom'
+    logLevel: 'error'
 });

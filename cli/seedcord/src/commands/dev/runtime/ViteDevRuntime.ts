@@ -4,9 +4,10 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
 
+import { seedcordDependents } from '#core/modules/seedcordDependents';
+
 import { HmrPlugin } from './HmrPlugin';
-import { seedcordDependents } from './seedcordDependents';
-import viteConfig, { logsIgnore } from './vite.config';
+import { devServerConfig, logsIgnore } from './vite.config';
 
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
 import type { DevEvent, DevEventHandler } from './events';
@@ -34,7 +35,7 @@ export class ViteDevRuntime implements DevRuntime {
         const projectDir = dirname(this.context.config.configFile);
 
         // vite writes resolved options back into the config object it receives
-        const base = structuredClone(viteConfig);
+        const base = structuredClone(devServerConfig);
 
         // vite searches its own root for a config file
         const config = mergeConfig(base, {

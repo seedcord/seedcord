@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it, onTestFinished } from 'vitest';
 
-import { seedcordDependents } from '#commands/dev/runtime/seedcordDependents';
+import { seedcordDependents } from '#core/modules/seedcordDependents';
 
 async function writeManifest(dir: string, manifest: object): Promise<void> {
     await mkdir(dir, { recursive: true });

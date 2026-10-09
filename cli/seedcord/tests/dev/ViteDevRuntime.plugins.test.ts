@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import viteConfig from '#commands/dev/runtime/vite.config';
+import { devServerConfig } from '#commands/dev/runtime/vite.config';
 import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
 
 import { devConfigFor } from './devConfigFor';
@@ -105,10 +105,10 @@ describe('dev runtime against a plugin published outside the @seedcord scope', (
 
     // a restart in the same process builds its config from this object again
     it('leaves the shared vite config as it found it', async () => {
-        const before = structuredClone(viteConfig);
+        const before = structuredClone(devServerConfig);
 
         await withRuntime(async () => {});
 
-        expect(viteConfig).toEqual(before);
+        expect(devServerConfig).toEqual(before);
     }, 60_000);
 });

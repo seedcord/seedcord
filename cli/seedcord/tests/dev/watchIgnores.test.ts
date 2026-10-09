@@ -5,7 +5,7 @@ import { basename, dirname, join } from 'node:path';
 import { createServer, mergeConfig } from 'vite';
 import { afterEach, describe, expect, it, onTestFinished } from 'vitest';
 
-import viteConfig, { logsIgnore } from '#commands/dev/runtime/vite.config';
+import { devServerConfig, logsIgnore } from '#commands/dev/runtime/vite.config';
 
 import type { ViteDevServer } from 'vite';
 
@@ -71,7 +71,7 @@ async function watchProject(root: string): Promise<string[]> {
 
     server = await createServer(
         // the same merge ViteDevRuntime does
-        mergeConfig(viteConfig, {
+        mergeConfig(devServerConfig, {
             root,
             logLevel: 'error',
             server: { watch: { ignored: [logsIgnore(root)] } },
