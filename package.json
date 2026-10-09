@@ -8,6 +8,7 @@
     "scripts": {
         "build": "turbo build --filter='!./apps/*'",
         "build:all": "turbo build",
+        "commit": "cz",
         "lint": "turbo lint",
         "lint:fix": "turbo lint:fix",
         "lint:md": "markdownlint-cli2",
@@ -66,6 +67,7 @@
         "@changesets/cli": "^3.0.2",
         "@commitlint/cli": "^21.2.1",
         "@commitlint/config-conventional": "^21.2.0",
+        "@commitlint/cz-commitlint": "^21.2.3",
         "@commitlint/types": "^21.2.0",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
@@ -73,9 +75,11 @@
         "@types/node": "catalog:deps",
         "@typescript/native-preview": "7.0.0-dev.20260630.1",
         "@vitest/coverage-v8": "catalog:test",
+        "commitizen": "^4.3.2",
         "eslint": "catalog:eslint",
         "fallow": "^3.11.0",
         "husky": "^9.1.7",
+        "inquirer": "9",
         "knip": "^6.31.0",
         "lint-staged": "^17.3.0",
         "markdownlint-cli2": "^0.23.3",
@@ -91,5 +95,10 @@
     },
     "engines": {
         "node": ">=26"
+    },
+    "overrides": {
+        "discord-api-types": "^0.38.52",
+        "sharp": "^0.35.5",
+        "undici@7": "^7.29.1"
     }
 }
