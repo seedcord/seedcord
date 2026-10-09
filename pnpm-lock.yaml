@@ -1070,9 +1070,6 @@ importers:
       '@seedcord/utils':
         specifier: workspace:^
         version: link:../utils
-      common-tags:
-        specifier: ^1.8.2
-        version: 1.8.2
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.56
@@ -1098,9 +1095,6 @@ importers:
       '@seedcord/vitest-config':
         specifier: workspace:^
         version: link:../../tooling/vitest-config
-      '@types/common-tags':
-        specifier: ^1.8.4
-        version: 1.8.4
       envapt:
         specifier: catalog:peer
         version: 8.2.3
@@ -5034,9 +5028,6 @@ packages:
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
 
-  '@types/common-tags@1.8.4':
-    resolution: {integrity: sha512-S+1hLDJPjWNDhcGxsxEbepzaxWqURP/o+3cP4aa2w7yBXgdcmKGQtZzP8JbyfOd0m+33nh+8+kvxYE2UJtBDkg==}
-
   '@types/concat-stream@2.0.3':
     resolution: {integrity: sha512-3qe4oQAPNwVNwK4C9c8u+VJqv9kez+2MR4qJpoPFfXtgxxif1QbFusvXzK0/Wra2VX07smostI2VMmJNSpZjuQ==}
 
@@ -6230,10 +6221,6 @@ packages:
     resolution: {integrity: sha512-1Zs37z9JPvAcuTSSricZZwBhOPVNNxJouuY4yDEt+eD70EoxT2TU9kViG8CuB/PmVg2G4XsAGQiK4YCst97aDQ==}
     engines: {node: '>= 18'}
     hasBin: true
-
-  common-tags@1.8.2:
-    resolution: {integrity: sha512-gk/Z852D2Wtb//0I+kRFNKKE9dIIVirjoqPoA1wJU+XePVXZfGeBpk45+A1rKO4Q43prqWBNY/MiIeRLbPWUaA==}
-    engines: {node: '>=4.0.0'}
 
   compare-versions@6.1.1:
     resolution: {integrity: sha512-4hm4VPpIecmlg59CHXnRDnqGplJFrbLG4aFEl5vl6cK1u76ws3LLvX7ikFnTDl5vo39sjWD6AaDPYodJp/NNHg==}
@@ -13053,8 +13040,6 @@ snapshots:
       '@types/deep-eql': 4.0.2
       assertion-error: 2.0.1
 
-  '@types/common-tags@1.8.4': {}
-
   '@types/concat-stream@2.0.3':
     dependencies:
       '@types/node': 26.1.2
@@ -14161,8 +14146,6 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
       - typescript
-
-  common-tags@1.8.2: {}
 
   compare-versions@6.1.1: {}
 
