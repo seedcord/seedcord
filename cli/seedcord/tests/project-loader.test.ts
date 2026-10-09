@@ -6,7 +6,7 @@ import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { assert, describe, it, expect, onTestFinished, vi } from 'vitest';
 
 import { DevRunner } from '#commands/dev/DevRunner';
-import { ConfigLoader } from '#core/config/ConfigLoader';
+import { ProjectLoader } from '#core/config/ProjectLoader';
 import { DevStore } from '#ui/stores/DevStore';
 
 import { silentLogger } from './silentLogger';
@@ -48,7 +48,7 @@ function projectWith(config: unknown): { projectDir: string; load: () => Promise
     const { open } = stubModules(config);
 
     const load = async (): Promise<ResolvedSeedcordDevConfig> => {
-        const { config: resolved } = await new ConfigLoader(open).load(projectDir);
+        const { config: resolved } = await new ProjectLoader(open).open(projectDir);
         return resolved;
     };
 
@@ -61,7 +61,7 @@ function writeTsconfig(projectDir: string, compilerOptions: Record<string, unkno
     writeFileSync(join(projectDir, name), JSON.stringify({ compilerOptions, include: ['seedcord.config.ts'] }));
 }
 
-describe('ConfigLoader', () => {
+describe('ProjectLoader', () => {
     it('resolves paths and build defaults relative to the config folder', async () => {
         const { projectDir, load } = projectWith({ ...MINIMAL, root: './src' });
 
@@ -75,7 +75,7 @@ describe('ConfigLoader', () => {
     });
 });
 
-describe('ConfigLoader target', () => {
+describe('ProjectLoader target', () => {
     it('targets node when the config folder has no wrangler config', async () => {
         const { load } = projectWith(MINIMAL);
 
@@ -155,7 +155,7 @@ describe('ConfigLoader target', () => {
     });
 });
 
-describe('ConfigLoader paths with a #', () => {
+describe('ProjectLoader paths with a #', () => {
     it('throws CliPathHasHash for a file under root whose name contains a #', async () => {
         const { projectDir, load } = projectWith(MINIMAL);
         mkdirSync(join(projectDir, 'handlers'));
@@ -197,11 +197,11 @@ describe('ConfigLoader paths with a #', () => {
     });
 });
 
-describe('ConfigLoader validation', () => {
+describe('ProjectLoader validation', () => {
     it('throws CliConfigNotFound for a folder with no seedcord config', async () => {
         const open: OpenModules = () => Promise.reject(new Error('never opened'));
 
-        await expect(new ConfigLoader(open).load(tempProject())).rejects.toMatchObject({
+        await expect(new ProjectLoader(open).open(tempProject())).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigNotFound
         });
     });
@@ -211,7 +211,7 @@ describe('ConfigLoader validation', () => {
         writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
         const modules = stubModules({ entry: './index.ts' });
 
-        await expect(new ConfigLoader(modules.open).load(projectDir)).rejects.toMatchObject({
+        await expect(new ProjectLoader(modules.open).open(projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigMissingInstance
         });
         expect(modules.closed()).toBe(true);
@@ -223,7 +223,7 @@ describe('ConfigLoader validation', () => {
         const modules = stubModules(MINIMAL);
 
         {
-            await using project = await new ConfigLoader(modules.open).load(projectDir);
+            await using project = await new ProjectLoader(modules.open).open(projectDir);
             expect(modules.closed()).toBe(false);
             expect(project.config.instance).toBe(resolve(projectDir, 'bot.ts'));
         }
@@ -339,8 +339,8 @@ describe('DevRunner', () => {
     it('loads and starts the Seedcord instance', async () => {
         const projectDir = process.cwd();
         const instancePath = join(projectDir, 'src/bot.ts');
-        const configLoader = {
-            load: vi.fn(() => ({
+        const projectLoader = {
+            open: vi.fn(() => ({
                 config: {
                     instance: instancePath,
                     root: join(projectDir, 'src'),
@@ -354,7 +354,7 @@ describe('DevRunner', () => {
 
         // justified: only the config loader is called here, codegen runs on refresh only
         const runner = new DevRunner({
-            configLoader: configLoader as unknown as ConfigLoader,
+            projectLoader: projectLoader as unknown as ProjectLoader,
             store: new DevStore(),
             codegen: { run: vi.fn() } as unknown as CodegenRunner,
             codegenLogger: silentLogger,
@@ -369,6 +369,6 @@ describe('DevRunner', () => {
         });
 
         await expect(runner.run()).rejects.toThrow(/Cannot find entry file|Failed to load url/);
-        expect(configLoader.load).toHaveBeenCalledTimes(1);
+        expect(projectLoader.open).toHaveBeenCalledTimes(1);
     });
 });

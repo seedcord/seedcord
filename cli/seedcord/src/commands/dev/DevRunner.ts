@@ -3,7 +3,7 @@ import { paint } from '@seedcord/errors';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { cliLogger } from '#core/cliLogger';
-import { ConfigLoader } from '#core/config/ConfigLoader';
+import { ProjectLoader } from '#core/config/ProjectLoader';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { quietSteps } from '#core/output/quietSteps';
 import { resetChannelColors } from '#ui/channelColor';
@@ -22,7 +22,7 @@ import type { ILogger } from '@seedcord/types';
 const TUNNEL_TEARDOWN_MS = 3000;
 
 export interface DevRunnerDeps {
-    readonly configLoader: ConfigLoader;
+    readonly projectLoader: ProjectLoader;
     readonly store: DevStore;
     readonly codegen: CodegenRunner;
     readonly codegenLogger: ILogger;
@@ -47,7 +47,7 @@ export class DevRunner {
             createTunnelCoordinator(tunnelLogger, (status) => store.setTunnel(status), tunnel);
 
         return new DevRunner({
-            configLoader: new ConfigLoader(openModuleLoader),
+            projectLoader: new ProjectLoader(openModuleLoader),
             store,
             codegen: CodegenRunner.create(quietSteps, codegenLogger),
             codegenLogger,
@@ -115,7 +115,7 @@ export class DevRunner {
     }
 
     private async readConfig(): Promise<ResolvedSeedcordDevConfig> {
-        await using project = await this.deps.configLoader.load();
+        await using project = await this.deps.projectLoader.open();
         return project.config;
     }
 

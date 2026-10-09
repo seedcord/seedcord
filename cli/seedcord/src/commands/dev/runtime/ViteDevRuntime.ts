@@ -6,8 +6,8 @@ import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
 
 import { seedcordDependents } from '#core/modules/seedcordDependents';
 
+import { devServerConfig, logsIgnore } from './devServerConfig';
 import { HmrPlugin } from './HmrPlugin';
-import { devServerConfig, logsIgnore } from './vite.config';
 
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
 import type { DevEvent, DevEventHandler } from './events';

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { devServerConfig } from '#commands/dev/runtime/vite.config';
+import { devServerConfig } from '#commands/dev/runtime/devServerConfig';
 import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
 
 import { devConfigFor } from './devConfigFor';

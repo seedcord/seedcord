@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { createServer, mergeConfig } from 'vite';
 import { afterEach, describe, expect, it, onTestFinished } from 'vitest';
 
-import { devServerConfig, logsIgnore } from '#commands/dev/runtime/vite.config';
+import { devServerConfig, logsIgnore } from '#commands/dev/runtime/devServerConfig';
 
 import type { ViteDevServer } from 'vite';
 

@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { ConfigLoader } from '#core/config/ConfigLoader';
+import { ProjectLoader } from '#core/config/ProjectLoader';
 import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { printResolvedConfig } from '#core/output/printResolvedConfig';
@@ -13,7 +13,7 @@ import { assertOutDirSafe } from './builder/assertOutDirSafe';
 import { TypeChecker } from './builder/TypeChecker';
 import { ViteBuilder } from './builder/ViteBuilder';
 
-import type { LoadedProject } from '#core/config/ConfigLoader';
+import type { LoadedProject } from '#core/config/ProjectLoader';
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { Steps } from '#core/output/Steps';
 import type { BundleStats } from './builder/ViteBuilder';
@@ -28,7 +28,7 @@ export interface BuildResult {
 
 interface BuildRunnerDeps {
     readonly steps: Steps<BuildStep>;
-    readonly configLoader: ConfigLoader;
+    readonly projectLoader: ProjectLoader;
     readonly typeChecker: TypeChecker;
     readonly bundler: ViteBuilder;
 }
@@ -39,7 +39,7 @@ export class BuildRunner {
     public static create(steps: Steps<BuildStep>): BuildRunner {
         return new BuildRunner({
             steps,
-            configLoader: new ConfigLoader(openModuleLoader),
+            projectLoader: new ProjectLoader(openModuleLoader),
             typeChecker: new TypeChecker(),
             bundler: new ViteBuilder()
         });
@@ -68,7 +68,7 @@ export class BuildRunner {
 
     private async loadProject(projectDir: string): Promise<LoadedProject> {
         await using onFailure = new AsyncDisposableStack();
-        const project = onFailure.use(await this.deps.configLoader.load(projectDir));
+        const project = onFailure.use(await this.deps.projectLoader.open(projectDir));
         this.assertEntryExists(project.config.entry);
         assertOutDirSafe(project.config.build.outDir, project.config.root);
 

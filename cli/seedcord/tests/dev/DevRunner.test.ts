@@ -6,12 +6,12 @@ import { DevStore } from '#ui/stores/DevStore';
 
 import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
-import type { ConfigLoader } from '#core/config/ConfigLoader';
+import type { ProjectLoader } from '#core/config/ProjectLoader';
 
 // justified: these paths never touch the config loader
 function makeRunner(codegen: { run: ReturnType<typeof vi.fn> }, tunnel: TunnelRouter = fakeTunnel()): DevRunner {
     return new DevRunner({
-        configLoader: {} as unknown as ConfigLoader,
+        projectLoader: {} as unknown as ProjectLoader,
         store: new DevStore(),
         codegen: codegen as unknown as CodegenRunner,
         codegenLogger: silentLogger,

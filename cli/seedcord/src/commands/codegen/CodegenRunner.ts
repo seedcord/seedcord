@@ -6,7 +6,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { HostAugmentTarget, HostPluginKeys } from '@seedcord/types/internal';
 
-import { ConfigLoader } from '#core/config/ConfigLoader';
+import { ProjectLoader } from '#core/config/ProjectLoader';
 import { plural } from '#core/format';
 import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
@@ -42,7 +42,7 @@ interface CodegenResult {
 
 interface CodegenRunnerDeps {
     readonly steps: Steps<CodegenStep>;
-    readonly configLoader: ConfigLoader;
+    readonly projectLoader: ProjectLoader;
     readonly generator: AugmentationBuilder;
     readonly logger: ILogger;
 }
@@ -59,16 +59,16 @@ export class CodegenRunner {
     public static create(steps: Steps<CodegenStep>, logger: ILogger): CodegenRunner {
         return new CodegenRunner({
             steps,
-            configLoader: new ConfigLoader(openModuleLoader),
+            projectLoader: new ProjectLoader(openModuleLoader),
             generator: new AugmentationBuilder(logger),
             logger
         });
     }
 
     public async run(check: boolean): Promise<CodegenResult> {
-        const { steps, configLoader } = this.deps;
+        const { steps, projectLoader } = this.deps;
 
-        await using project = await steps.step('read config', () => configLoader.load());
+        await using project = await steps.step('read config', () => projectLoader.open());
         const { config, modules } = project;
         printResolvedConfig(steps, config);
         const instance = await steps.step('load bot', () => this.resolveInstance(modules, config));

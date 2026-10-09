@@ -117,10 +117,10 @@ export interface LoadedProject extends AsyncDisposable {
     readonly modules: ModuleLoader;
 }
 
-export class ConfigLoader {
+export class ProjectLoader {
     constructor(private readonly openModules: OpenModules) {}
 
-    public async load(projectDir = process.cwd()): Promise<LoadedProject> {
+    public async open(projectDir = process.cwd()): Promise<LoadedProject> {
         const configPath = locateConfig(projectDir);
         const configDir = dirname(configPath);
         const target = detectTarget(configDir);

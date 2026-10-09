@@ -12,7 +12,7 @@ import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { quietSteps } from '#core/output/quietSteps';
 
-import type { ConfigLoader } from '#core/config/ConfigLoader';
+import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
@@ -60,17 +60,17 @@ function runnerWith(
     importModule: (entryPath: string) => Promise<unknown>,
     logger: ILogger
 ): CodegenRunner {
-    // justified: codegen reaches the loader through load() and the returned importModule
-    const configLoader = {
-        load: () =>
+    // justified: codegen reaches the loader through open() and the returned importModule
+    const projectLoader = {
+        open: () =>
             Promise.resolve({
                 config,
                 modules: { importModule } as ModuleLoader,
                 [Symbol.asyncDispose]: () => Promise.resolve()
             })
-    } as unknown as ConfigLoader;
+    } as unknown as ProjectLoader;
 
-    return new CodegenRunner({ steps: quietSteps, configLoader, generator: new AugmentationBuilder(logger), logger });
+    return new CodegenRunner({ steps: quietSteps, projectLoader, generator: new AugmentationBuilder(logger), logger });
 }
 
 // no commands path, so the scan is empty and the rendered registry is deterministic.
