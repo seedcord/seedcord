@@ -11,7 +11,7 @@ export interface RenderedFile {
 }
 
 // npm drops a literal .gitignore from a tarball, whatever the files list says
-const DOTTED = new Set(['env', 'gitignore', 'prettierignore']);
+const DOTTED = new Set(['env', 'gitattributes', 'gitignore', 'prettierignore']);
 
 function targetPath(templateRelative: string): string {
     const parts = templateRelative.split(sep);
