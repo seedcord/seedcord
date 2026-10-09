@@ -24,8 +24,7 @@ const config: UserConfig = {
                 'nit'
             ]
         ]
-    },
-    prompt: {}
+    }
 };
 
 export default config;
