@@ -973,6 +973,34 @@ importers:
         specifier: catalog:peer
         version: 6.0.3
 
+  mocks/edge:
+    dependencies:
+      '@discordjs/builders':
+        specifier: catalog:deps
+        version: 1.14.1
+      '@seedcord/http':
+        specifier: workspace:^
+        version: link:../../packages/http
+      discord-api-types:
+        specifier: ^0.38.52
+        version: 0.38.56
+      envapt:
+        specifier: catalog:peer
+        version: 8.2.3
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:^
+        version: link:../../tooling/eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:^
+        version: link:../../tooling/tsconfig
+      seedcord:
+        specifier: workspace:^
+        version: link:../../cli/seedcord
+
   mocks/gateway:
     dependencies:
       '@discordjs/builders':

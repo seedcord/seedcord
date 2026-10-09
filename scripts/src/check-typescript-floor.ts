@@ -22,7 +22,7 @@ function pnpm(...args: string[]): void {
 const SHAPESHIFT_ERROR = /@sapphire\/shapeshift\/.*error TS2305/;
 
 const typesFloor = lowestTypescript(workspaceYaml, 'consumerTypes');
-for (const mock of ['gateway', 'http']) {
+for (const mock of ['gateway', 'http', 'edge']) {
     const tsc = ['tsc', '--noEmit', '--skipLibCheck', 'false', '-p', `mocks/${mock}/tsconfig.json`];
     const { status, stdout, stderr } = spawnSync('pnpm', ['dlx', `--package=typescript@${typesFloor}`, ...tsc], {
         cwd: root,
