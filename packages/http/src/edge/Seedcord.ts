@@ -11,6 +11,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 
+import { rejectNonPost } from '#src/engine';
 import { InteractionsService } from '#src/InteractionsService';
 import { version as packageVersion } from '#src/version';
 
@@ -26,7 +27,7 @@ import type { IRateLimiter } from '@seedcord/types';
  * The HTTP-interactions bot on Cloudflare Workers. Default-export it from `bot.ts`. Cloudflare
  * calls `fetch` for every request.
  *
- * The constructor stores the config. The first `fetch` in each isolate reads `DISCORD_BOT_TOKEN`
+ * The constructor stores the config. The first POST in each isolate reads `DISCORD_BOT_TOKEN`
  * and `DISCORD_PUBLIC_KEY`, loads the handler and subscriber folders, then runs the startup tasks
  * and every plugin's `init()` and `ready()`. Requests that arrive meanwhile wait for it.
  */
@@ -55,7 +56,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
      */
     public readonly shutdown = edgeShutdown;
 
-    /** Add a task that runs during startup, on the first request. */
+    /** Add a task that runs during startup, on the first POST. */
     public readonly startup: Pick<CoordinatedStartup, 'addTask'>;
 
     public readonly config: HttpEdgeConfig;
@@ -86,16 +87,19 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         this.bus = this.#service.bus;
     }
 
-    /** The bot's Discord application id. Throws if you read it before the first request. */
+    /** The bot's Discord application id. Throws if you read it before the first POST. */
     public get applicationId(): string {
         return this.#service.applicationId;
     }
 
     /**
      * Answers one request to the interactions endpoint. Cloudflare passes `env` and `ctx`. Work past
-     * the 202 runs under `ctx.waitUntil`.
+     * the 202 runs under `ctx.waitUntil`. Any request besides a POST gets a 405 before the bot starts.
      */
     public async fetch(request: Request, _env?: unknown, ctx?: EngineContext): Promise<Response> {
+        const notPost = rejectNonPost(request);
+        if (notPost) return notPost;
+
         this.#prepared ??= this.#prepare();
         const handle = await this.#prepared;
 

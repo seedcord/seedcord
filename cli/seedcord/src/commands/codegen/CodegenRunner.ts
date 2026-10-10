@@ -16,7 +16,7 @@ import { AugmentationBuilder } from './AugmentationBuilder';
 import { CommandScanner } from './CommandScanner';
 import { renderAugmentation } from './renderAugmentation';
 
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { Steps } from '#core/output/Steps';
 import type { Project } from '#core/project/Project';
 import type { ScannedCommand } from './AugmentationBuilder';
@@ -89,7 +89,7 @@ export class CodegenRunner {
         return { outputPath };
     }
 
-    private render(config: ResolvedSeedcordDevConfig, instance: ResolvedInstance, commands: ScannedCommand[]): string {
+    private render(config: ResolvedSeedcordConfig, instance: ResolvedInstance, commands: ScannedCommand[]): string {
         return renderAugmentation(this.deps.generator.generate(commands, instance.emojis), instance.augmentTarget, {
             specifier: botSpecifier(config.root, config.instance),
             keys: instance.pluginKeys

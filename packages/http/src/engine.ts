@@ -1,7 +1,8 @@
-import { asError, PublishDefault } from '@seedcord/core/internal';
+import { PublishDefault } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
+import { asError } from '@seedcord/utils/internal';
 import { InteractionResponseType, InteractionType } from 'discord-api-types/v10';
 import { Converters, Envapter } from 'envapt';
 
@@ -32,6 +33,12 @@ const decoder = new TextDecoder();
 
 type Outcome = 'not-post' | 'unsigned' | 'stale' | 'bad-signature' | 'bad-body' | 'ping' | 'replay' | 'dispatched';
 type Answer = readonly [Response, Outcome];
+
+// discord only POSTs to the interactions endpoint
+export function rejectNonPost(request: Request): Response | undefined {
+    if (request.method === 'POST') return undefined;
+    return new Response(null, { status: METHOD_NOT_ALLOWED, headers: { allow: 'POST' } });
+}
 
 function hasInteractionType(payload: unknown): payload is { type: number } {
     return typeof payload === 'object' && payload !== null && 'type' in payload && typeof payload.type === 'number';
@@ -84,9 +91,8 @@ export function buildEngine(
     };
 
     const respond = async (request: Request, ctx?: EngineContext): Promise<Answer> => {
-        if (request.method !== 'POST') {
-            return [new Response(null, { status: METHOD_NOT_ALLOWED, headers: { allow: 'POST' } }), 'not-post'];
-        }
+        const notPost = rejectNonPost(request);
+        if (notPost) return [notPost, 'not-post'];
 
         const signature = request.headers.get(SIGNATURE_HEADER);
         const timestamp = request.headers.get(TIMESTAMP_HEADER);

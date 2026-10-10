@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { TypeChecker } from '#commands/build/builder/TypeChecker';
 import { Project } from '#core/project/Project';
 
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
 let projectDir: string;
 
@@ -27,7 +27,7 @@ function projectFor(tsconfig?: string): Project {
             tsconfig === undefined
                 ? { outDir: join(projectDir, 'dist') }
                 : { outDir: join(projectDir, 'dist'), tsconfig }
-    } as ResolvedSeedcordDevConfig;
+    } as ResolvedSeedcordConfig;
     const loader = {
         importModule: () => Promise.reject(new Error('the type checker loads no modules')),
         [Symbol.asyncDispose]: () => Promise.resolve()

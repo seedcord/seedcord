@@ -1,3 +1,5 @@
+import { resolve } from 'node:path';
+
 import { Plugin, Seedcord } from '@seedcord/http';
 import { env } from 'cloudflare:workers';
 
@@ -16,6 +18,6 @@ class EdgeCounter extends Plugin<{ runtime: 'edge' }> {
 }
 
 export default new Seedcord({
-    bot: { interactions: { path: null }, commands: { path: null } },
+    bot: { interactions: { path: resolve(import.meta.dirname, './handlers') }, commands: { path: null } },
     subscribers: { path: null }
 }).attach('counter', EdgeCounter);

@@ -10,6 +10,7 @@ import {
     HostVersion,
     type SeedcordInstance
 } from '@seedcord/types/internal';
+import { asError } from '@seedcord/utils/internal';
 
 import { toSeedcordInstance } from '#core/modules/importInstance';
 import { profileMark } from '#ui/profile';
@@ -17,7 +18,7 @@ import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { TscRunner } from './TscRunner';
 
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { DevEventHandler } from './runtime/events';
@@ -31,7 +32,7 @@ export class DevSession {
     private stopPromise?: Promise<void>;
 
     constructor(
-        private readonly config: ResolvedSeedcordDevConfig,
+        private readonly config: ResolvedSeedcordConfig,
         private readonly runtime: DevRuntime,
         private readonly store: DevStore,
         private readonly onEvent: DevEventHandler
@@ -57,8 +58,7 @@ export class DevSession {
             profileMark('entry');
             return module;
         } catch (error: unknown) {
-            const message = Error.isError(error) ? error.message : String(error);
-            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, message]);
+            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, asError(error).message]);
         }
     }
 
@@ -99,8 +99,7 @@ export class DevSession {
                 this.stopResolve = resolve;
             });
         } catch (error: unknown) {
-            const reason = Error.isError(error) ? error.message : 'Unknown error';
-            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, reason]);
+            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, asError(error).message]);
         }
     }
 

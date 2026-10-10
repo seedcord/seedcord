@@ -13,7 +13,6 @@ const EXTRAS = { developerUsername: 'dhruv', agent: 'pnpm' } as const;
 
 const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',
-    language: 'typescript',
     transport: 'gateway',
     capabilities: ['reactions'],
     token: 'aaa.bbb.ccc',
@@ -22,7 +21,6 @@ const GATEWAY: ScaffoldAnswers = {
 
 const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
-    language: 'typescript',
     transport: 'http',
     token: 'aaa.bbb.ccc',
     publicKey: 'a'.repeat(64),

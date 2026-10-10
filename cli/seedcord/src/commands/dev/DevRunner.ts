@@ -14,7 +14,7 @@ import { ViteDevRuntime } from './runtime/ViteDevRuntime';
 import { createTunnelCoordinator } from './tunnel/createTunnelCoordinator';
 import { TunnelRouter } from './tunnel/TunnelRouter';
 
-import type { ResolvedSeedcordDevConfig, ResolvedTunnel } from '#core/config/schema';
+import type { ResolvedSeedcordConfig, ResolvedTunnel } from '#core/config/schema';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { TunnelCoordinator } from './tunnel/TunnelCoordinator';
 import type { ILogger } from '@seedcord/types';
@@ -114,7 +114,7 @@ export class DevRunner {
         }
     }
 
-    private async readConfig(): Promise<ResolvedSeedcordDevConfig> {
+    private async readConfig(): Promise<ResolvedSeedcordConfig> {
         await using project = await this.deps.projectLoader.open();
         return project.config;
     }

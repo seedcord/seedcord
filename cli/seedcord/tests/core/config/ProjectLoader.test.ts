@@ -7,7 +7,7 @@ import { assert, describe, it, expect, onTestFinished } from 'vitest';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { OpenModules } from '#core/modules/ModuleLoader';
 
 function tempProject(): string {
@@ -35,12 +35,12 @@ function stubModulesExporting(config: unknown): StubModules {
     return { open: () => Promise.resolve(modules), closed: () => closed };
 }
 
-function projectWith(config: unknown): { projectDir: string; load: () => Promise<ResolvedSeedcordDevConfig> } {
+function projectWith(config: unknown): { projectDir: string; load: () => Promise<ResolvedSeedcordConfig> } {
     const projectDir = tempProject();
     writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
     const { open } = stubModulesExporting(config);
 
-    const load = async (): Promise<ResolvedSeedcordDevConfig> => {
+    const load = async (): Promise<ResolvedSeedcordConfig> => {
         const { config: resolved } = await new ProjectLoader(open).open(projectDir);
         return resolved;
     };
@@ -49,6 +49,7 @@ function projectWith(config: unknown): { projectDir: string; load: () => Promise
 }
 
 const MINIMAL = { instance: './bot.ts', entry: './index.ts' };
+const EDGE_MINIMAL = { instance: './bot.ts' };
 
 function writeTsconfig(projectDir: string, compilerOptions: Record<string, unknown>, name = 'tsconfig.json'): void {
     writeFileSync(join(projectDir, name), JSON.stringify({ compilerOptions, include: ['seedcord.config.ts'] }));
@@ -62,25 +63,25 @@ describe('ProjectLoader', () => {
 
         expect(resolved.root).toBe(resolve(projectDir, 'src'));
         expect(resolved.instance).toBe(resolve(projectDir, 'src/bot.ts'));
-        expect(resolved.entry).toBe(resolve(projectDir, 'src/index.ts'));
+        expect(resolved.target).toEqual({ kind: 'server', entry: resolve(projectDir, 'src/index.ts') });
         expect(resolved.build.outDir).toBe(resolve(projectDir, 'dist'));
         expect(resolved.build.tsconfig).toBeUndefined();
     });
 });
 
 describe('ProjectLoader target', () => {
-    it('targets node when the config folder has no wrangler config', async () => {
-        const { load } = projectWith(MINIMAL);
+    it('targets a server when the config folder has no wrangler config', async () => {
+        const { projectDir, load } = projectWith(MINIMAL);
 
         const { target } = await load();
 
-        expect(target).toEqual({ kind: 'node' });
+        expect(target).toEqual({ kind: 'server', entry: join(projectDir, 'index.ts') });
     });
 
     it.each(['wrangler.json', 'wrangler.jsonc', 'wrangler.toml'])(
         'targets edge when a %s and a tsconfig with the workerd condition are in the config folder',
         async (wranglerFile) => {
-            const { projectDir, load } = projectWith(MINIMAL);
+            const { projectDir, load } = projectWith(EDGE_MINIMAL);
             writeFileSync(join(projectDir, wranglerFile), '');
             writeTsconfig(projectDir, { customConditions: ['workerd'] });
 
@@ -91,7 +92,7 @@ describe('ProjectLoader target', () => {
     );
 
     it('reads the workerd condition through the tsconfig extends chain', async () => {
-        const { projectDir, load } = projectWith(MINIMAL);
+        const { projectDir, load } = projectWith(EDGE_MINIMAL);
         writeFileSync(join(projectDir, 'wrangler.jsonc'), '');
         writeFileSync(
             join(projectDir, 'base.json'),
@@ -108,7 +109,7 @@ describe('ProjectLoader target', () => {
     });
 
     it('throws CliEdgeWithoutWorkerdCondition for a wrangler config whose tsconfig lacks the condition', async () => {
-        const { projectDir, load } = projectWith(MINIMAL);
+        const { projectDir, load } = projectWith(EDGE_MINIMAL);
         writeFileSync(join(projectDir, 'wrangler.jsonc'), '');
         writeTsconfig(projectDir, {});
 
@@ -116,7 +117,7 @@ describe('ProjectLoader target', () => {
     });
 
     it('throws CliBuildNoTsconfig for a wrangler config with no tsconfig', async () => {
-        const { projectDir, load } = projectWith(MINIMAL);
+        const { projectDir, load } = projectWith(EDGE_MINIMAL);
         writeFileSync(join(projectDir, 'wrangler.jsonc'), '');
 
         await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliBuildNoTsconfig });
@@ -130,7 +131,7 @@ describe('ProjectLoader target', () => {
     });
 
     it('reads the tsconfig that build.tsconfig points at', async () => {
-        const { projectDir, load } = projectWith({ ...MINIMAL, build: { tsconfig: './tsconfig.build.json' } });
+        const { projectDir, load } = projectWith({ ...EDGE_MINIMAL, build: { tsconfig: './tsconfig.build.json' } });
         writeFileSync(join(projectDir, 'wrangler.jsonc'), '');
         writeTsconfig(projectDir, {});
         writeTsconfig(projectDir, { customConditions: ['workerd'] }, 'tsconfig.build.json');
@@ -145,6 +146,32 @@ describe('ProjectLoader target', () => {
         writeFileSync(join(projectDir, 'tsconfig.json'), JSON.stringify({ extends: './missing.json' }));
 
         await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliTsconfigUnreadable });
+    });
+});
+
+describe('ProjectLoader entry on an edge bot', () => {
+    function edgeProjectWith(config: unknown): ReturnType<typeof projectWith> {
+        const project = projectWith(config);
+        writeFileSync(join(project.projectDir, 'wrangler.jsonc'), '');
+        writeTsconfig(project.projectDir, { customConditions: ['workerd'] });
+        return project;
+    }
+
+    it('loads a config without entry', async () => {
+        const { projectDir, load } = edgeProjectWith(EDGE_MINIMAL);
+
+        const { target } = await load();
+
+        expect(target).toEqual({ kind: 'edge', wranglerConfig: join(projectDir, 'wrangler.jsonc') });
+    });
+
+    it('throws CliConfigEntryOnEdge for a config that sets entry', async () => {
+        const { projectDir, load } = edgeProjectWith(MINIMAL);
+
+        await expect(load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigEntryOnEdge,
+            message: expect.stringContaining(join(projectDir, 'seedcord.config.ts')) as string
+        });
     });
 });
 
@@ -231,7 +258,7 @@ describe('ProjectLoader validation', () => {
     });
 
     it('resolves each tunnel shape into a mode', async () => {
-        const tunnelOf = async (tunnel: unknown): Promise<ResolvedSeedcordDevConfig['tunnel']> => {
+        const tunnelOf = async (tunnel: unknown): Promise<ResolvedSeedcordConfig['tunnel']> => {
             const resolved = await projectWith({ ...MINIMAL, tunnel }).load();
             return resolved.tunnel;
         };

@@ -2,7 +2,7 @@ import { dirname, isAbsolute, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { isPlainObject } from '@seedcord/utils/internal';
+import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 
 import { Project } from '#core/project/Project';
@@ -17,20 +17,18 @@ import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
 import type { BuildTarget } from './detectTarget';
 import type {
     ResolvedSeedcordBuildConfig,
-    ResolvedSeedcordDevConfig,
+    ResolvedSeedcordConfig,
+    ResolvedTarget,
     ResolvedTunnel,
     ResolvedTypecheck,
     SeedcordBuildConfig,
-    SeedcordDevConfig,
-    SeedcordHmrConfig
+    SeedcordConfig,
+    SeedcordHmrConfig,
+    SeedcordServerConfig
 } from './schema';
 
 function isOptionalString(value: unknown): boolean {
     return value === undefined || typeof value === 'string';
-}
-
-function isStringArray(value: unknown): value is string[] {
-    return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
 function invalidField(field: string, expected: string): SeedcordError {
@@ -83,9 +81,22 @@ function isNonEmptyString(value: unknown): boolean {
     return typeof value === 'string' && value.length > 0;
 }
 
-function* configProblems(raw: Record<string, unknown>): Generator<SeedcordError> {
+function* entryProblems(entry: unknown, target: BuildTarget, configFile: string): Generator<SeedcordError> {
+    if (target.kind === 'server' && !isNonEmptyString(entry)) {
+        yield new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
+    }
+    if (target.kind === 'edge' && entry !== undefined) {
+        yield new SeedcordError(SeedcordErrorCode.CliConfigEntryOnEdge, [configFile, target.wranglerConfig]);
+    }
+}
+
+function* configProblems(
+    raw: Record<string, unknown>,
+    target: BuildTarget,
+    configFile: string
+): Generator<SeedcordError> {
     if (!isNonEmptyString(raw.instance)) yield new SeedcordError(SeedcordErrorCode.CliConfigMissingInstance);
-    if (!isNonEmptyString(raw.entry)) yield new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
+    yield* entryProblems(raw.entry, target, configFile);
     if (!isOptionalString(raw.root)) yield invalidField('root', 'a string');
     if (raw.idleAnimation !== undefined && typeof raw.idleAnimation !== 'boolean') {
         yield invalidField('idleAnimation', 'a boolean');
@@ -108,9 +119,9 @@ function resolveTypecheck(value: SeedcordHmrConfig['typecheck'], root: string): 
     return { enabled: true, tsconfig: resolve(root, value.tsconfig) };
 }
 
-function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
+function validateConfig(raw: unknown, target: BuildTarget, configFile: string): asserts raw is SeedcordConfig {
     if (!isPlainObject(raw)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidExport);
-    throwSingleOrAggregate([...configProblems(raw)], SeedcordErrorCode.CliConfigProblems);
+    throwSingleOrAggregate([...configProblems(raw, target, configFile)], SeedcordErrorCode.CliConfigProblems);
 }
 
 export class ProjectLoader {
@@ -134,16 +145,14 @@ export class ProjectLoader {
         modules: ModuleLoader,
         configPath: string,
         target: BuildTarget
-    ): Promise<ResolvedSeedcordDevConfig> {
+    ): Promise<ResolvedSeedcordConfig> {
         const loadedModule = await modules.importModule(configPath);
         const config: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
-        validateConfig(config);
+        validateConfig(config, target, configPath);
 
         const configDir = dirname(configPath);
         const root = resolve(configDir, config.root ?? '.');
         const instance = this.resolveWithinRoot(root, config.instance);
-        const entry = this.resolveWithinRoot(root, config.entry);
-        this.assertEntryWithinRoot(root, entry);
         const build = this.resolveBuildOptions(configDir, config.build);
         const typecheck = resolveTypecheck(config.hmr?.typecheck, root);
 
@@ -151,14 +160,13 @@ export class ProjectLoader {
             instance,
             root,
             configFile: configPath,
-            target,
-            entry,
+            target: this.resolveTarget(root, target, config),
             build,
             typecheck,
             idleAnimation: config.idleAnimation ?? true,
             tunnel: resolveTunnel(config.tunnel),
             hmr: config.hmr
-        } satisfies ResolvedSeedcordDevConfig;
+        } satisfies ResolvedSeedcordConfig;
     }
 
     private resolveWithinRoot(root: string, target: string): string {
@@ -166,8 +174,15 @@ export class ProjectLoader {
         return resolve(root, target);
     }
 
-    private assertEntryWithinRoot(root: string, entry: string): void {
-        if (!isInside(root, entry)) throw new SeedcordError(SeedcordErrorCode.CliConfigEntryOutsideRoot, [entry, root]);
+    private resolveTarget(root: string, target: BuildTarget, config: SeedcordConfig): ResolvedTarget {
+        if (target.kind === 'edge') return target;
+
+        // justified: entryProblems already required entry on a server target
+        const entry = this.resolveWithinRoot(root, (config as SeedcordServerConfig).entry);
+        if (!isInside(root, entry)) {
+            throw new SeedcordError(SeedcordErrorCode.CliConfigEntryOutsideRoot, [entry, root]);
+        }
+        return { ...target, entry };
     }
 
     private resolveBuildOptions(

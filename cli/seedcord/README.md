@@ -42,7 +42,7 @@ pnpm add -D seedcord
 | command | what it does |
 | --- | --- |
 | `seedcord dev` | runs the bot from the config file, reloading changed modules in place |
-| `seedcord build` | type checks the bot and bundles it into `outDir` with Vite |
+| `seedcord build` | type checks the bot and bundles it into `outDir` with Vite. An edge bot builds into a Cloudflare worker |
 | `seedcord codegen` | writes the typed augmentations for your commands and config |
 | `seedcord commands` | inspects and cleans commands already deployed to Discord |
 
@@ -65,3 +65,17 @@ export default defineConfig({
     // ...
 });
 ```
+
+## Edge bots
+
+A `wrangler.jsonc`, `wrangler.json` or `wrangler.toml` beside `seedcord.config.ts` makes the bot an edge bot, for Cloudflare Workers. An edge bot needs three things:
+
+- `"customConditions": ["workerd"]` in its tsconfig
+- a `root` in `seedcord.config.ts` that points at the bot's code, like `'./src'`, and no `entry`
+- `@cloudflare/vite-plugin` and `wrangler` as dev dependencies
+
+```sh
+pnpm add -D @cloudflare/vite-plugin wrangler
+```
+
+`seedcord build` bundles the worker into `outDir`, then starts it once in workerd to check that it loads. Run `wrangler deploy` from the project folder to deploy it.

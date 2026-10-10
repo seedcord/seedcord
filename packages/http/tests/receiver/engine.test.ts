@@ -27,10 +27,10 @@ async function readySeedcord(): Promise<{ signer: Signer; handle: (request: Requ
     return { signer, handle: (request) => seedcord.fetch(request) };
 }
 
-// the env is read on the first request
+// the env is read on the first POST
 function firstRequestError(): Promise<unknown> {
     return edgeSeedcord()
-        .fetch(new Request('https://bot.example/interactions'))
+        .fetch(new Request('https://bot.example/interactions', { method: 'POST' }))
         .then(
             () => expect.unreachable('the first request should throw'),
             (caught: unknown) => caught
