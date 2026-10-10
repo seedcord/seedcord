@@ -17,7 +17,7 @@ class FakeSink implements ILogSink {
 }
 
 // the registry reads the environment on first touch to pick its default level
-Envapter.useSource(new PortableSource({ DISCORD_PUBLIC_KEY: 'a'.repeat(64), DISCORD_BOT_TOKEN: VALID_TOKEN }));
+Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN }));
 
 const registry = LoggerChannelRegistry.instance;
 let sink: FakeSink;

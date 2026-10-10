@@ -2,6 +2,7 @@ import { storeInteractionRoute } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
 
 import { Seedcord } from '#src/edge/Seedcord';
+import { registerBakedIds } from '#tests/helpers/bakedIds';
 import { BUILT_ROOT, registerBuiltFiles } from '#tests/helpers/builtFiles';
 import { createSigner, signedRequest as signedBody, type Signer } from '#tests/helpers/ed25519';
 import { VALID_TOKEN } from '#tests/helpers/fixtures';
@@ -59,9 +60,8 @@ export async function readyEngine(
     options: EngineOptions = {}
 ): Promise<{ signer: Signer; handle: Engine }> {
     const signer = await createSigner();
-    Envapter.useSource(
-        new PortableSource({ ...options.env, DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
-    );
+    Envapter.useSource(new PortableSource({ ...options.env, DISCORD_BOT_TOKEN: VALID_TOKEN }));
+    registerBakedIds({ publicKey: signer.publicKeyHex });
     registerBuiltFiles(filesOf(classes), Object.values(FOLDERS));
 
     // @ts-expect-error singleton reset between engines

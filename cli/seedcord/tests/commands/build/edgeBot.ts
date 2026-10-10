@@ -73,10 +73,7 @@ export async function writeSigningEnv(projectDir: string): Promise<SigningEnv> {
         privateKey: CryptoKey;
     };
     const publicKey = toHex(await crypto.subtle.exportKey('raw', pair.publicKey));
-    await writeFile(
-        join(projectDir, '.dev.vars'),
-        `DISCORD_PUBLIC_KEY=${publicKey}\nDISCORD_BOT_TOKEN=${FAKE_TOKEN}\n`
-    );
+    await writeFile(join(projectDir, '.dev.vars'), `DISCORD_BOT_TOKEN=${FAKE_TOKEN}\n`);
 
     return {
         publicKey,

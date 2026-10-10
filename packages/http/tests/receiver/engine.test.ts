@@ -4,6 +4,7 @@ import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Seedcord } from '#src/edge/Seedcord';
+import { clearBakedIds, registerBakedIds } from '#tests/helpers/bakedIds';
 import { createSigner, nowSeconds, signedRequest, type Signer } from '#tests/helpers/ed25519';
 import { VALID_TOKEN } from '#tests/helpers/fixtures';
 
@@ -22,12 +23,13 @@ function edgeSeedcord(): Seedcord {
 
 async function readySeedcord(): Promise<{ signer: Signer; handle: (request: Request) => Promise<Response> }> {
     const signer = await createSigner();
-    bindEnv({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN });
+    bindEnv({ DISCORD_BOT_TOKEN: VALID_TOKEN });
+    registerBakedIds({ publicKey: signer.publicKeyHex });
     const seedcord = edgeSeedcord();
     return { signer, handle: (request) => seedcord.fetch(request) };
 }
 
-// the env is read on the first POST
+// the env and the baked ids are read on the first POST
 function firstRequestError(): Promise<unknown> {
     return edgeSeedcord()
         .fetch(new Request('https://bot.example/interactions', { method: 'POST' }))
@@ -170,25 +172,18 @@ describe('the interactions engine', () => {
         expect(response.headers.get('allow')).toBe('POST');
     });
 
-    it('throws ConfigMissingEnv when the public key env var is unset', async () => {
+    it('throws CoreEdgeUnbuilt when the worker carries no ids from seedcord build', async () => {
         bindEnv({ DISCORD_BOT_TOKEN: VALID_TOKEN });
+        clearBakedIds();
 
         const error = await firstRequestError();
 
-        expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigMissingEnv)).toBe(true);
-        expect(error).toHaveProperty('message', expect.stringContaining('DISCORD_PUBLIC_KEY'));
-    });
-
-    it('throws ConfigInvalidEnv when the public key env var is malformed', async () => {
-        bindEnv({ DISCORD_PUBLIC_KEY: 'zz'.repeat(32), DISCORD_BOT_TOKEN: VALID_TOKEN });
-
-        const error = await firstRequestError();
-
-        expect(isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.ConfigInvalidEnv)).toBe(true);
+        expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.CoreEdgeUnbuilt)).toBe(true);
     });
 
     it('throws ConfigMissingEnv when the bot token env var is unset', async () => {
-        bindEnv({ DISCORD_PUBLIC_KEY: 'ab'.repeat(32) });
+        bindEnv({});
+        registerBakedIds({ publicKey: 'ab'.repeat(32) });
 
         const error = await firstRequestError();
 

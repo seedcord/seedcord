@@ -86,6 +86,8 @@ export enum SeedcordErrorCode {
     CorePluginScopeMismatch = 1221,
     /** A node http bot received a request through `fetch` before `start()` was called. */
     CoreFetchBeforeStart = 1222,
+    /** An edge worker received a POST without the ids `seedcord build` writes into it. */
+    CoreEdgeUnbuilt = 1223,
 
     /** A command decorator attempted to re-register an existing command scope. */
     DecoratorCommandAlreadyRegistered = 1301,

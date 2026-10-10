@@ -65,6 +65,8 @@ const messages = {
         `Plugin key "${key}" is a channel the framework logs on. Pick another key.`,
     [SeedcordErrorCode.CoreApplicationUnavailable]: () =>
         "The bot's application id resolves during startup. You read it before that. Read it inside a handler, inside a plugin's ready(), or after start() resolves. An edge bot resolves it on its first request.",
+    [SeedcordErrorCode.CoreEdgeUnbuilt]: () =>
+        `This worker has no public key or command ids. ${paint.bold('seedcord build')} reads them from Discord and writes them into the worker, so deploy the output it writes to ${paint.path('dist')}.`,
     [SeedcordErrorCode.CoreFetchBeforeStart]: () =>
         `${paint.bold('fetch()')} ran before ${paint.bold('start()')}. Call ${paint.bold('await seedcord.start()')} before your server passes requests to ${paint.bold('fetch()')}.`,
     [SeedcordErrorCode.CoreAccessorUnresolved]: (accessor: string, key: string) =>

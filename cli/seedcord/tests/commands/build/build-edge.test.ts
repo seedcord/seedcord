@@ -30,20 +30,16 @@ describe('seedcord build on an edge bot', () => {
     let projectDir: string;
     let remove: () => Promise<void>;
     let sign: SignRequest;
-    let publicKey: string;
     let result: BuildResult;
 
     beforeAll(async () => {
         ({ projectDir, remove } = await copyEdgeBot());
-        ({ sign, publicKey } = await writeSigningEnv(projectDir));
-        result = await edgeBuildRunner(fakeDiscord(publicKey)).run(projectDir);
+        const signing = await writeSigningEnv(projectDir);
+        sign = signing.sign;
+        result = await edgeBuildRunner(fakeDiscord(signing.publicKey)).run(projectDir);
     }, 120_000);
 
     afterAll(() => remove());
-
-    it('writes the public key discord returned into the worker', async () => {
-        await expect(readFile(join(projectDir, 'dist/index.mjs'), 'utf8')).resolves.toContain(publicKey);
-    });
 
     it('reports the worker it bundled for the summary', () => {
         expect(result.bundle).toEqual({
@@ -60,7 +56,7 @@ describe('seedcord build on an edge bot', () => {
         expect(status).toBe(0);
     }, 60_000);
 
-    it('answers a signed PING once it loads its handlers from the built files', async () => {
+    it('answers a PING signed with the key discord returned at build time', async () => {
         const server = await preview({
             root: projectDir,
             configFile: false,

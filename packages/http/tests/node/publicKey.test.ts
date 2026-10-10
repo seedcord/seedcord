@@ -50,4 +50,18 @@ describe('public key at startup', () => {
 
         expect(get).not.toHaveBeenCalledWith(Routes.currentApplication());
     });
+
+    it('rejects a malformed DISCORD_PUBLIC_KEY with ConfigInvalidEnv', async () => {
+        Envapter.useSource(
+            merge(
+                new PortableSource(process.env),
+                new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN, DISCORD_PUBLIC_KEY: 'zz'.repeat(32) })
+            )
+        );
+        await using host = new Seedcord(serverConfig());
+
+        const failure = await host.start().catch((error: unknown) => error);
+
+        expect(failure).toHaveProperty(['errors', 0, 'code'], SeedcordErrorCode.ConfigInvalidEnv);
+    });
 });

@@ -82,7 +82,7 @@ export const ContextMenus = {
     message: guardedAccessor('ContextMenus.message', messageMenuStorage)
 } as InjectedContextMenuMap;
 
-function installLinks({ commands, contextMenus }: Pick<LinkedCommands, 'commands' | 'contextMenus'>): void {
+export function installLinks({ commands, contextMenus }: Pick<LinkedCommands, 'commands' | 'contextMenus'>): void {
     const pairs = [
         [commandStorage, commands],
         [userMenuStorage, contextMenus.user],

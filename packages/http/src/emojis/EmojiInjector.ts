@@ -1,8 +1,9 @@
+import { ResolvedEmoji } from '@seedcord/core';
 import { accessorStore, clearStore, guardedAccessor, resolveEmojis } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 
 import type { Core } from '#interfaces/Core';
-import type { ResolvedEmoji } from '@seedcord/core';
+import type { BakedIds } from '@seedcord/core/internal';
 import type { EmojiMap } from '@seedcord/types';
 
 const emojiStorage = accessorStore<ResolvedEmoji>();
@@ -17,6 +18,13 @@ export type InjectedEmojiMap = {
  * Throws if you read a key the injector did not fill.
  */
 export const Emojis = guardedAccessor('Emojis', emojiStorage) as InjectedEmojiMap;
+
+export function installEmojis(emojis: BakedIds['emojis']): void {
+    clearStore(emojiStorage);
+    for (const [key, { name, id, animated }] of Object.entries(emojis)) {
+        emojiStorage[key] = new ResolvedEmoji(name, id, animated);
+    }
+}
 
 // resolves the configured emojis over REST at startup
 export class EmojiInjector {
