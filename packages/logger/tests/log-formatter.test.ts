@@ -66,6 +66,27 @@ describe('LogFormatter', () => {
             expect(output[0]).toContain('42');
         });
 
+        describe('safe object serialization', () => {
+            it('renders fields from an object with a circular reference', () => {
+                const { logger, output } = createTestLogger(formatter);
+                const circular: Record<string, unknown> = { name: 'request' };
+                circular.self = circular;
+
+                logger.info('Request received', circular);
+
+                expect(output[0]).toContain('name');
+                expect(output[0]).toContain('request');
+                expect(output[0]).toContain('[Circular]');
+            });
+
+            it('renders a BigInt in an object extra', () => {
+                const { logger, output } = createTestLogger(formatter);
+                logger.info('Counter updated', { count: 900_719_925_474_099_312_345n });
+
+                expect(output[0]).toContain('"count": "900719925474099312345"');
+            });
+        });
+
         it('handles multiple format specifiers', () => {
             const { logger, output } = createTestLogger(formatter);
             logger.warn('Full rebuild triggered by %s at line %d', 'src/hooks/useUser.ts', 123);
