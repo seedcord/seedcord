@@ -100,7 +100,7 @@ export class MissingPermissions extends Notice {
             this.customLead ??
             `${this.subject === null ? 'You are' : `${this.subject} is`} missing the following permission entries:`;
         return {
-            components: [new NoticeCard(`${lead}\n\n${bullets}`).component]
+            components: [new NoticeCard(`${lead}\n${bullets}`).component]
         };
     }
 }
@@ -122,6 +122,8 @@ export class HasDangerousPermissions extends Notice {
         const bullets = this.dangerousPerms.map((perm) => `• ${perm}`).join('\n');
         const lead =
             this.customLead ?? `${this.subject} has the following permission entries that must not be enabled:`;
-        return { components: [new NoticeCard(`${lead}\n\n${bullets}`).component] };
+        return {
+            components: [new NoticeCard(`${lead}\n${bullets}`).component]
+        };
     }
 }
