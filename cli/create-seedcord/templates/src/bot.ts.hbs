@@ -1,4 +1,5 @@
 import { resolve } from 'node:path';
+import { Uptime } from '#plugins/Uptime'
 
 {{#if isGateway}}
 import { Seedcord } from '@seedcord/gateway';
@@ -39,6 +40,6 @@ export const seedcord = new Seedcord({
     notifications: {
         developerUsername: '{{ developerUsername }}'
     }
-});
+}).attach('uptime', Uptime);
 
 export default seedcord;

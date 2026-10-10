@@ -3,7 +3,12 @@
     "extends": "@seedcord/tsconfig/node",
     "compilerOptions": {
         "rootDir": "./",
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "paths": {
+            "#src/*": ["./src/*"],
+            "#components/*": ["./src/components/*"],
+            "#plugins/*": ["./src/plugins/*"]
+        }
     },
     "include": ["src/**/*.ts", "eslint.config.ts", "prettier.config.ts", "seedcord.config.ts"],
     "exclude": ["node_modules", "dist"]

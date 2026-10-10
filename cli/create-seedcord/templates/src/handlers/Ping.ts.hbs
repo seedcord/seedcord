@@ -7,7 +7,7 @@ export class Ping extends SlashHandler<'ping'> {
         const lines = ['### Pong', `Roundtrip **${roundtrip}ms**`];
 
         if (this.options.getBoolean('detailed')) {
-            lines.push(`Uptime **${Math.round(process.uptime())}s**`);
+            lines.push(`Up since **<t:${toEpochSeconds(Date.now() - this.core.uptime.elapsed())}:R>**`);
         }
 
         await this.reply(lines.join('\n'));
