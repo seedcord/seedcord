@@ -1,8 +1,8 @@
 import { dirname, join } from 'node:path';
 
 import { REST } from '@discordjs/rest';
-import { multiGuildWarning } from '@seedcord/core/internal';
-import { SeedcordErrorCode, paint } from '@seedcord/errors';
+import { warnLinks } from '@seedcord/core/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 import { isInside } from '@seedcord/utils/node/internal';
@@ -129,10 +129,7 @@ export class EdgeBuild extends TargetBuild {
             emojis: bot.emojis
         });
 
-        for (const { name } of read.notInCode) {
-            this.logger.warn(`${paint.sky(name)} is deployed on Discord with no command for it in your code.`);
-        }
-        for (const ref of read.multiGuild) this.logger.warn(multiGuildWarning(ref));
+        warnLinks(this.logger, read);
         return read.ids;
     }
 

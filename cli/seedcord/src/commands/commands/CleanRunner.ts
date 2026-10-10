@@ -1,4 +1,5 @@
 import { REST } from '@discordjs/rest';
+import { currentApplication } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Routes } from 'discord-api-types/v10';
@@ -10,7 +11,6 @@ import type {
     RESTGetAPIApplicationCommandsResult,
     RESTGetAPIApplicationGuildCommandsResult,
     RESTGetAPICurrentUserGuildsResult,
-    RESTGetCurrentApplicationResult,
     Snowflake
 } from 'discord-api-types/v10';
 
@@ -149,8 +149,8 @@ export class CleanRunner implements CleanOps {
 
     private async resolveAppId(rest: RestClient): Promise<Snowflake> {
         try {
-            const app = (await rest.get(Routes.currentApplication())) as RESTGetCurrentApplicationResult;
-            return app.id;
+            const application = await currentApplication(rest);
+            return application.id;
         } catch (error: unknown) {
             const reason = Error.isError(error) ? error.message : 'Unknown error';
             throw new SeedcordError(SeedcordErrorCode.CliCleanAppFetchFailed, [reason]);

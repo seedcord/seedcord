@@ -1,4 +1,4 @@
-import { linkCommands, resolveDeployTarget, resolveEmojis } from '@seedcord/core/internal';
+import { currentApplication, linkCommands, resolveDeployTarget, resolveEmojis } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
@@ -111,8 +111,7 @@ function assertDeployed(commands: readonly FoundCommand[], notDeployed: readonly
 
 async function applicationOf(rest: Pick<REST, 'get'>): Promise<RESTGetCurrentApplicationResult> {
     try {
-        // justified: the discord api contract for this route
-        return (await rest.get(Routes.currentApplication())) as RESTGetCurrentApplicationResult;
+        return await currentApplication(rest);
     } catch (error: unknown) {
         throw new SeedcordError(SeedcordErrorCode.CliEdgeApplicationUnreadable, [asError(error).message], {
             cause: error

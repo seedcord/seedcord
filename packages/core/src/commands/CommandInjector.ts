@@ -13,6 +13,7 @@ import type {
 import type { SlashRegistry } from '#registries/SlashRegistry';
 import type { CommandRef, LinkedCommands } from '#src/commands/linkCommands';
 import type { CommandBuilder, DeployResult } from '#src/commands/types';
+import type { ILogger } from '@seedcord/types';
 
 const commandStorage = accessorStore<CommandInfo>();
 const userMenuStorage = accessorStore<ContextMenuInfo>();
@@ -96,12 +97,22 @@ export function installLinks({ commands, contextMenus }: Pick<LinkedCommands, 'c
     }
 }
 
-export function multiGuildWarning({ name, type }: CommandRef): string {
+function multiGuildWarning({ name, type }: CommandRef): string {
     const consequence =
         type === ApplicationCommandType.ChatInput
             ? 'falling back to plain text (not clickable)'
             : 'leaving its id unset';
     return `${paint.sky.bold(name)} is deployed to multiple guilds, ${consequence}.`;
+}
+
+export function warnLinks(
+    logger: ILogger,
+    { multiGuild, notInCode }: Pick<LinkedCommands, 'multiGuild' | 'notInCode'>
+): void {
+    for (const ref of multiGuild) logger.warn(multiGuildWarning(ref));
+    for (const { name } of notInCode) {
+        logger.warn(`${paint.sky.bold(name)} is deployed on Discord with no command for it in your code.`);
+    }
 }
 
 /** @internal */
@@ -115,7 +126,7 @@ export class CommandInjector {
         );
         installLinks(linked);
 
-        for (const ref of linked.multiGuild) this.logger.warn(multiGuildWarning(ref));
+        warnLinks(this.logger, linked);
 
         const routes = Object.values(linked.commands);
         const clickable = routes.filter((command) => command.id !== undefined).length;
