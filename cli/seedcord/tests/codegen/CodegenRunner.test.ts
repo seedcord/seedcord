@@ -230,7 +230,7 @@ describe('CodegenRunner', () => {
         expect(written).toContain("ban: { options: {}; cache: 'cached' }");
     });
 
-    it('throws CliCodegenCommandsDirUnreadable when the top-level commands dir is unreadable', async () => {
+    it('throws CliCommandsDirUnreadable when the top-level commands dir is unreadable', async () => {
         const root = await tempDir('codegen-');
         const missing = join(root, 'does-not-exist');
 
@@ -241,7 +241,7 @@ describe('CodegenRunner', () => {
             caught = error;
         }
 
-        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenCommandsDirUnreadable });
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCommandsDirUnreadable });
         expect((caught as Error).message).toContain(missing);
     });
 
@@ -282,7 +282,7 @@ describe('CodegenRunner', () => {
             caught = error;
         }
 
-        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenCommandsDirUnreadable });
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCommandsDirUnreadable });
         expect((caught as Error).message).toContain(resolve(process.cwd(), relativePath));
     });
 
@@ -375,7 +375,7 @@ describe('CodegenRunner', () => {
             caught = error;
         }
 
-        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenCommandConstructorThrew });
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCommandConstructorThrew });
         expect(caught).toHaveProperty('cause.message', 'the database was not ready');
         expect((caught as Error).message).toContain('BrokenCommand');
         expect((caught as Error).message).toContain('the database was not ready');
@@ -408,14 +408,14 @@ describe('CodegenRunner', () => {
             .run(false)
             .catch((error: unknown) => error);
 
-        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliCodegenCommandProblems));
+        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliCommandProblems));
         expect(caught.errors).toMatchObject([
             {
-                code: SeedcordErrorCode.CliCodegenCommandConstructorThrew,
+                code: SeedcordErrorCode.CliCommandConstructorThrew,
                 cause: { message: 'Invalid string length' }
             },
             {
-                code: SeedcordErrorCode.CliCodegenCommandConstructorThrew,
+                code: SeedcordErrorCode.CliCommandConstructorThrew,
                 cause: { message: 'Expected a string for option "sides"' }
             }
         ]);
@@ -452,10 +452,10 @@ describe('CodegenRunner', () => {
             .run(false)
             .catch((error: unknown) => error);
 
-        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliCodegenCommandProblems));
+        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliCommandProblems));
         expect(caught.errors).toMatchObject([
-            { code: SeedcordErrorCode.CliCodegenCommandConstructorThrew },
-            { code: SeedcordErrorCode.CliCodegenCommandConstructorThrew },
+            { code: SeedcordErrorCode.CliCommandConstructorThrew },
+            { code: SeedcordErrorCode.CliCommandConstructorThrew },
             importFailure
         ]);
     });

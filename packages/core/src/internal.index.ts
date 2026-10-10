@@ -38,7 +38,7 @@ export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
 export { resolveEmojis } from '#src/miscellaneous/resolveEmojis';
 
 export { BAKED_IDS_KEY, type BakedIds } from '#src/bakedIds';
-export { installLinks } from '#src/commands/CommandInjector';
+export { installLinks, multiGuildWarning } from '#src/commands/CommandInjector';
 export { resolveDeployTarget } from '#src/commands/deployTarget';
 export { linkCommands, type CommandRef, type LinkedCommands } from '#src/commands/linkCommands';
 export { contextMenuLeaves } from '#src/commands/contextMenuLeaves';

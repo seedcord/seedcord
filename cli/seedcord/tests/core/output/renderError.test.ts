@@ -81,11 +81,11 @@ describe('renderError', () => {
 
     it('adds the cause of each problem in an aggregate under --verbose', () => {
         const constructorThrew = (name: string, reason: string): SeedcordError =>
-            new SeedcordError(SeedcordErrorCode.CliCodegenCommandConstructorThrew, [name, 'src/x.ts', reason], {
+            new SeedcordError(SeedcordErrorCode.CliCommandConstructorThrew, [name, 'src/x.ts', reason], {
                 cause: new Error(reason)
             });
         const error = new SeedcordAggregateError(
-            SeedcordErrorCode.CliCodegenCommandProblems,
+            SeedcordErrorCode.CliCommandProblems,
             [constructorThrew('Ban', 'database not ready'), constructorThrew('Roll', 'bad option')],
             [2]
         );

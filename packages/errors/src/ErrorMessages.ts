@@ -261,12 +261,12 @@ const messages = {
         `${paint.path(folder)} in the bot config is a relative path. A built bot resolves it against the folder it starts in. Build the path from the bot file's folder, like ${paint.sky("resolve(import.meta.dirname, './handlers')")}.`,
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
         `Two commands resolve to the same slash route \`${route}\`. Defined in ${paint.path(firstFile)} and ${paint.path(secondFile)}. Rename one.`,
-    [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>
-        `Could not read the commands directory ${paint.path(dir)} during codegen. ${reason}`,
-    [SeedcordErrorCode.CliCodegenCommandConstructorThrew]: (name: string, file: string, reason: string) =>
-        `${name} threw while codegen constructed it. Fix its constructor in ${paint.path(file)}. ${reason}`,
-    [SeedcordErrorCode.CliCodegenCommandProblems]: (count: number) =>
-        `${count} command files need fixing before codegen can finish. Each one is listed below.`,
+    [SeedcordErrorCode.CliCommandsDirUnreadable]: (dir: string, reason: string) =>
+        `Could not read the commands directory ${paint.path(dir)}. ${reason}`,
+    [SeedcordErrorCode.CliCommandConstructorThrew]: (name: string, file: string, reason: string) =>
+        `${name} threw while seedcord constructed it. Fix its constructor in ${paint.path(file)}. ${reason}`,
+    [SeedcordErrorCode.CliCommandProblems]: (count: number) =>
+        `${count} command files need fixing before seedcord can read the commands. Each one is listed below.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (wranglerConfig: string, tsconfig: string) =>

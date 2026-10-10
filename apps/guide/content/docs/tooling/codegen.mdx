@@ -79,7 +79,7 @@ To read your commands folder and your emoji block, codegen imports the module yo
 
 Even so, your bot never starts. Nothing calls `start()`, so no plugin connects, no task runs, and nothing you've written reaches Discord.
 
-A command constructor that throws fails the whole run, since codegen has to construct the class to read its options. `CliCodegenCommandConstructorThrew` shows the class, the file, and what your constructor threw. Keep anything that can fail out of a command constructor.
+A command constructor that throws fails the whole run, since codegen has to construct the class to read its options. `CliCommandConstructorThrew` shows the class, the file, and what your constructor threw. Keep anything that can fail out of a command constructor.
 
 ## Catching a stale file in CI
 
@@ -97,7 +97,7 @@ Augmentations are out of date. Run `seedcord codegen` and commit /home/you/my-bo
 
 `--check` only reports, so you fix the drift by running plain `seedcord codegen`. The scaffold does not wire a script for it, so put it wherever your pipeline runs its checks.
 
-If codegen can't read your commands folder, it throws `CliCodegenCommandsDirUnreadable`, because a run that found no commands would pass `--check` against a file that's already stale.
+If codegen can't read your commands folder, it throws `CliCommandsDirUnreadable`, because a run that found no commands would pass `--check` against a file that's already stale.
 
 ## Commands codegen passes over
 

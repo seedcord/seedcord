@@ -94,10 +94,12 @@ export function installLinks({ commands, contextMenus }: Pick<LinkedCommands, 'c
     }
 }
 
-function multiGuildConsequence({ type }: CommandRef): string {
-    return type === ApplicationCommandType.ChatInput
-        ? 'falling back to plain text (not clickable)'
-        : 'leaving its id unset';
+export function multiGuildWarning({ name, type }: CommandRef): string {
+    const consequence =
+        type === ApplicationCommandType.ChatInput
+            ? 'falling back to plain text (not clickable)'
+            : 'leaving its id unset';
+    return `${paint.sky.bold(name)} is deployed to multiple guilds, ${consequence}.`;
 }
 
 /** @internal */
@@ -108,11 +110,7 @@ export class CommandInjector {
         const linked = linkCommands(deploy, all);
         installLinks(linked);
 
-        for (const ref of linked.multiGuild) {
-            this.logger.warn(
-                `${paint.sky.bold(ref.name)} is deployed to multiple guilds, ${multiGuildConsequence(ref)}.`
-            );
-        }
+        for (const ref of linked.multiGuild) this.logger.warn(multiGuildWarning(ref));
 
         const routes = Object.values(linked.commands);
         const clickable = routes.filter((command) => command.id !== undefined).length;

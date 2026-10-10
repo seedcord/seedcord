@@ -251,8 +251,8 @@ export enum SeedcordErrorCode {
     CliBuildFailed = 3112,
     /** Two commands resolve to the same slash route during codegen. */
     CliCodegenDuplicateRoute = 3114,
-    /** The commands directory could not be read during codegen. */
-    CliCodegenCommandsDirUnreadable = 3115,
+    /** The commands directory could not be read. */
+    CliCommandsDirUnreadable = 3115,
     /** Two context-menu commands of the same kind share a name during codegen. */
     CliCodegenDuplicateContextMenu = 3116,
     /** Could not resolve the application from the bot token during `commands --clean`. */
@@ -275,8 +275,8 @@ export enum SeedcordErrorCode {
     CliTunnelUnreachable = 3125,
     /** A config field is present with the wrong shape. */
     CliConfigInvalidField = 3126,
-    /** A class carrying `@RegisterCommand` threw while codegen constructed it. */
-    CliCodegenCommandConstructorThrew = 3127,
+    /** A class carrying `@RegisterCommand` threw while seedcord constructed it. */
+    CliCommandConstructorThrew = 3127,
     /** Vite threw while bundling the bot. */
     CliBundleFailed = 3128,
     /** `build.outDir` is `root` or a folder that contains it. */
@@ -293,8 +293,8 @@ export enum SeedcordErrorCode {
     CliBuildOutDirNotEmpty = 3134,
     /** Two or more fields in the seedcord config are missing or invalid. */
     CliConfigProblems = 3135,
-    /** Two or more command constructors threw during codegen. */
-    CliCodegenCommandProblems = 3136,
+    /** Two or more command constructors threw while seedcord read the commands. */
+    CliCommandProblems = 3136,
     /** `seedcord codegen --check` found the committed augmentations stale. */
     CliCodegenOutOfDate = 3137,
     /** A file or folder in the project has a `#` in its path. */

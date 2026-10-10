@@ -47,13 +47,9 @@ function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | Se
         json = component.toJSON();
     } catch (error: unknown) {
         const reason = Error.isError(error) ? error.message : 'Unknown error';
-        return new SeedcordError(
-            SeedcordErrorCode.CliCodegenCommandConstructorThrew,
-            [Command.name, sourceFile, reason],
-            {
-                cause: error
-            }
-        );
+        return new SeedcordError(SeedcordErrorCode.CliCommandConstructorThrew, [Command.name, sourceFile, reason], {
+            cause: error
+        });
     }
 
     if (!isApplicationCommand(json)) return undefined;
@@ -82,7 +78,7 @@ export class CommandScanner {
             problems.push(error);
         }
 
-        throwSingleOrAggregate(problems, SeedcordErrorCode.CliCodegenCommandProblems);
+        throwSingleOrAggregate(problems, SeedcordErrorCode.CliCommandProblems);
         return commands;
     }
 
@@ -93,7 +89,7 @@ export class CommandScanner {
         } catch (error: unknown) {
             const reason = Error.isError(error) ? error.message : 'Unknown error';
             // an unreadable commands dir would pass --check against a stale registry
-            if (isRoot) throw new SeedcordError(SeedcordErrorCode.CliCodegenCommandsDirUnreadable, [dir, reason]);
+            if (isRoot) throw new SeedcordError(SeedcordErrorCode.CliCommandsDirUnreadable, [dir, reason]);
             this.logger.warn(`Skipping unreadable directory ${dir}. ${reason}.`);
             return;
         }
