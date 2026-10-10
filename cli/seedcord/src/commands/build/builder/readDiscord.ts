@@ -14,11 +14,16 @@ import type {
     RESTGetCurrentApplicationResult
 } from 'discord-api-types/v10';
 
+export interface CommandsInCode {
+    found: readonly FoundCommand[];
+    // the bot config's commands.guilds
+    guilds: readonly string[];
+}
+
 interface DiscordReadOptions {
     rest: Pick<REST, 'get'>;
     // undefined when the bot sets no commands folder
-    commands: readonly FoundCommand[] | undefined;
-    guilds: readonly string[];
+    commands: CommandsInCode | undefined;
     emojis: Readonly<Record<string, unknown>> | undefined;
 }
 
@@ -44,11 +49,11 @@ class DiscordReader {
         private readonly applicationId: string
     ) {}
 
-    public async link(commands: readonly FoundCommand[], configuredGuilds: readonly string[]): Promise<LinkedCommands> {
-        const deployed = await this.deployed(targetGuilds(commands, configuredGuilds));
-        const builders = commands.map((command) => command.component);
+    public async link({ found, guilds }: CommandsInCode): Promise<LinkedCommands> {
+        const deployed = await this.deployed(targetGuilds(found, guilds));
+        const builders = found.map((command) => command.component);
         const linked = linkCommands(deployed, builders);
-        assertDeployed(commands, linked.notDeployed);
+        assertDeployed(found, linked.notDeployed);
         return linked;
     }
 
@@ -121,11 +126,11 @@ async function applicationOf(rest: Pick<REST, 'get'>): Promise<RESTGetCurrentApp
     }
 }
 
-export async function readDiscord({ rest, commands, guilds, emojis }: DiscordReadOptions): Promise<DiscordRead> {
+export async function readDiscord({ rest, commands, emojis }: DiscordReadOptions): Promise<DiscordRead> {
     const application = await applicationOf(rest);
     const reader = new DiscordReader(rest, application.id);
     const [linked, resolvedEmojis] = await Promise.all([
-        commands ? reader.link(commands, guilds) : NO_COMMANDS,
+        commands ? reader.link(commands) : NO_COMMANDS,
         emojis ? resolveEmojis(rest, application.id, emojis) : {}
     ]);
 

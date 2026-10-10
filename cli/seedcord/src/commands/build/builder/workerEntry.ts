@@ -1,11 +1,15 @@
+import { BAKED_IDS_KEY } from '@seedcord/core/internal';
+
 import { builtFilesSource } from './builtFiles';
 
 import type { ProjectFiles } from '#core/project/ProjectFiles';
+import type { BakedIds } from '@seedcord/core/internal';
 import type { Plugin } from 'vite';
 
 export const WORKER_ENTRY_ID = 'virtual:seedcord/worker';
 const BIND_ENV_ID = 'virtual:seedcord/bind-env';
 const BUILT_FILES_ID = 'virtual:seedcord/built-files';
+const BAKED_IDS_ID = 'virtual:seedcord/baked-ids';
 
 // workerd has no filesystem behind this path
 const WORKER_ROOT = '/bot';
@@ -22,14 +26,27 @@ interface WorkerEntryOptions {
     instanceKey: string;
     functionExports: string[];
     rootKey: string;
+    ids: BakedIds;
 }
 
-function sources({ files, folders, instanceKey, functionExports, rootKey }: WorkerEntryOptions): Map<string, string> {
+function bakedIdsSource(ids: BakedIds): string {
+    return `globalThis[Symbol.for(${JSON.stringify(BAKED_IDS_KEY)})] = ${JSON.stringify(ids)};\n`;
+}
+
+function sources({
+    files,
+    folders,
+    instanceKey,
+    functionExports,
+    rootKey,
+    ids
+}: WorkerEntryOptions): Map<string, string> {
     const instance = JSON.stringify(instanceKey);
     const lines = [
         // the instance file may read env while it loads
         `import '${BIND_ENV_ID}';`,
         `import '${BUILT_FILES_ID}';`,
+        `import '${BAKED_IDS_ID}';`,
         `export { default } from ${instance};`
     ];
     // cloudflare reads durable object and workflow classes from the worker's named exports
@@ -38,7 +55,8 @@ function sources({ files, folders, instanceKey, functionExports, rootKey }: Work
     return new Map([
         [WORKER_ENTRY_ID, [...lines, ''].join('\n')],
         [BIND_ENV_ID, BIND_ENV],
-        [BUILT_FILES_ID, builtFilesSource({ files, folders, rootExpression: JSON.stringify(WORKER_ROOT), rootKey })]
+        [BUILT_FILES_ID, builtFilesSource({ files, folders, rootExpression: JSON.stringify(WORKER_ROOT), rootKey })],
+        [BAKED_IDS_ID, bakedIdsSource(ids)]
     ]);
 }
 

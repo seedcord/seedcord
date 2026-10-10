@@ -13,9 +13,11 @@ import { TypeChecker } from './builder/TypeChecker';
 import type { Steps } from '#core/output/Steps';
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './builder/output';
-import type { NextCommand, TargetBuild } from './builder/TargetBuild';
+import type { NextCommand } from './builder/TargetBuild';
+import type { Build } from './builder/targetBuildFor';
+import type { BotConfig } from '@seedcord/types';
 
-export const BUILD_STEPS = ['read config', 'load bot', 'type check', 'bundle', 'boot'] as const;
+export const BUILD_STEPS = ['read config', 'load bot', 'type check', 'read discord', 'bundle', 'boot'] as const;
 export type BuildStep = (typeof BUILD_STEPS)[number];
 
 export interface BuildResult {
@@ -27,18 +29,18 @@ interface BuildRunnerDeps {
     readonly steps: Steps<BuildStep>;
     readonly projectLoader: ProjectLoader;
     readonly typeChecker: TypeChecker;
-    readonly buildFor: (project: Project) => TargetBuild;
+    readonly buildFor: (project: Project) => Build;
 }
 
 export class BuildRunner {
     constructor(private readonly deps: BuildRunnerDeps) {}
 
-    public static create(steps: Steps<BuildStep>): BuildRunner {
+    public static create(steps: Steps<BuildStep>, buildFor = targetBuildFor): BuildRunner {
         return new BuildRunner({
             steps,
             projectLoader: new ProjectLoader(openModuleLoader),
             typeChecker: new TypeChecker(),
-            buildFor: targetBuildFor
+            buildFor
         });
     }
 
@@ -50,23 +52,32 @@ export class BuildRunner {
         const { config, modules } = project;
         printResolvedConfig(steps, config);
 
-        await steps.step('load bot', async () => {
-            const instance = await importInstance(modules, config.instance);
-            assertFoldersUnderRoot(instance.config, config.root);
+        const instance = await steps.step('load bot', async () => {
+            const loaded = await importInstance(modules, config.instance);
+            assertFoldersUnderRoot(loaded.config, config.root);
+            return loaded;
         });
         await steps.step(
             'type check',
             () => typeChecker.check(project),
             ({ tsconfig }) => paint.path(tsconfig)
         );
-        const bundle = await steps.step('bundle', () => build.bundle());
+        const bundle = await this.bundle(build, instance.config.bot);
         const boot = build.boot?.bind(build);
         if (boot) await steps.step('boot', boot);
 
         return { bundle, nextCommands: build.nextCommands(bundle) };
     }
 
-    private async open(projectDir: string): Promise<TargetBuild> {
+    private async bundle(build: Build, bot: BotConfig): Promise<BundleStats> {
+        const { steps } = this.deps;
+        if (build.kind === 'server') return steps.step('bundle', () => build.bundle());
+
+        const ids = await steps.step('read discord', () => build.readDiscord(bot));
+        return steps.step('bundle', () => build.bundle(ids));
+    }
+
+    private async open(projectDir: string): Promise<Build> {
         await using onFailure = new AsyncDisposableStack();
         const project = onFailure.use(await this.deps.projectLoader.open(projectDir));
         const build = this.deps.buildFor(project);

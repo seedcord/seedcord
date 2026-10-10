@@ -33,6 +33,8 @@ function outputName(moduleId: string | null | undefined): string {
 }
 
 export class ServerBuild extends TargetBuild {
+    public readonly kind = 'server';
+
     constructor(
         project: Project,
         private readonly entry: string

@@ -4,12 +4,12 @@ import { generateKeyPairSync } from 'node:crypto';
 type Kind = 'http' | 'gateway';
 
 // a discord token is base64 of the app id, a 6 char timestamp, and a 27 char hmac
-const APP_ID = '1000000000000000000';
+export const APP_ID = '1000000000000000000';
 const TIMESTAMP_CHARS = 6;
 const HMAC_CHARS = 27;
 export const FAKE_TOKEN = `${btoa(APP_ID).replaceAll('=', '')}.${'b'.repeat(TIMESTAMP_CHARS)}.${'c'.repeat(HMAC_CHARS)}`;
 
-const ED25519_KEY_BYTES = 32;
+export const ED25519_KEY_BYTES = 32;
 const UNAUTHORIZED = 401;
 const SMOKE_TIMEOUT_MS = 30_000;
 

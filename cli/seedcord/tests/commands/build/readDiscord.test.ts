@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { readDiscord } from '#commands/build/builder/readDiscord';
 
-import type { FoundCommand } from '#core/modules/CommandScanner';
+import type { CommandsInCode } from '#commands/build/builder/readDiscord';
 import type { REST } from '@discordjs/rest';
 import type { CommandMeta } from '@seedcord/core/internal';
 
@@ -19,9 +19,9 @@ class Ping extends BuilderComponent<'command'> {
     }
 }
 
-function found(meta: CommandMeta = { scope: 'global' }): FoundCommand {
+function inCode(meta: CommandMeta = { scope: 'global' }, guilds: string[] = []): CommandsInCode {
     const component = new Ping().component;
-    return { sourceFile: '/bot/src/commands/Ping.ts', json: component.toJSON(), component, meta };
+    return { found: [{ sourceFile: '/bot/src/commands/Ping.ts', json: component.toJSON(), component, meta }], guilds };
 }
 
 function deployed(id: string, name: string): { id: string; name: string; type: number } {
@@ -42,7 +42,7 @@ function restWith(routes: Record<string, unknown> = {}): Pick<REST, 'get'> {
 
 describe('readDiscord', () => {
     it("reads the application's public key", async () => {
-        const read = await readDiscord({ rest: restWith(), commands: undefined, guilds: [], emojis: undefined });
+        const read = await readDiscord({ rest: restWith(), commands: undefined, emojis: undefined });
 
         expect(read.ids.publicKey).toBe(PUBLIC_KEY);
     });
@@ -50,7 +50,7 @@ describe('readDiscord', () => {
     it('resolves the configured emojis', async () => {
         const rest = restWith({ [Routes.applicationEmojis(APP_ID)]: { items: [{ name: 'wave', id: '55' }] } });
 
-        const read = await readDiscord({ rest, commands: undefined, guilds: [], emojis: { Wave: 'wave' } });
+        const read = await readDiscord({ rest, commands: undefined, emojis: { Wave: 'wave' } });
 
         expect(read.ids.emojis.Wave?.id).toBe('55');
     });
@@ -58,7 +58,7 @@ describe('readDiscord', () => {
     it('links a global command to its deployed id', async () => {
         const rest = restWith({ [Routes.applicationCommands(APP_ID)]: [deployed('7', 'ping')] });
 
-        const read = await readDiscord({ rest, commands: [found()], guilds: [], emojis: undefined });
+        const read = await readDiscord({ rest, commands: inCode(), emojis: undefined });
 
         expect(read.ids.commands.ping?.mention).toBe('</ping:7>');
     });
@@ -68,7 +68,7 @@ describe('readDiscord', () => {
             [Routes.applicationCommands(APP_ID)]: [deployed('7', 'ping'), deployed('9', 'probe')]
         });
 
-        const read = await readDiscord({ rest, commands: [found()], guilds: [], emojis: undefined });
+        const read = await readDiscord({ rest, commands: inCode(), emojis: undefined });
 
         expect(read.notInCode).toEqual([{ name: 'probe', type: 1 }]);
     });
@@ -82,8 +82,7 @@ describe('readDiscord', () => {
 
         const read = await readDiscord({
             rest,
-            commands: [found({ scope: 'config' })],
-            guilds: ['g1', 'g2'],
+            commands: inCode({ scope: 'config' }, ['g1', 'g2']),
             emojis: undefined
         });
 
@@ -96,12 +95,7 @@ describe('readDiscord', () => {
             [Routes.applicationGuildCommands(APP_ID, 'g1')]: [deployed('8', 'ping')]
         });
 
-        const read = await readDiscord({
-            rest,
-            commands: [found({ scope: 'config' })],
-            guilds: ['g1'],
-            emojis: undefined
-        });
+        const read = await readDiscord({ rest, commands: inCode({ scope: 'config' }, ['g1']), emojis: undefined });
 
         expect(read.ids.commands.ping?.id).toBe('8');
     });
@@ -109,7 +103,7 @@ describe('readDiscord', () => {
     it('throws CliEdgeCommandsNotDeployed with each undeployed command and its file', async () => {
         const rest = restWith({ [Routes.applicationCommands(APP_ID)]: [] });
 
-        const failure = await readDiscord({ rest, commands: [found()], guilds: [], emojis: undefined }).catch(
+        const failure = await readDiscord({ rest, commands: inCode(), emojis: undefined }).catch(
             (error: unknown) => error
         );
 
@@ -123,8 +117,7 @@ describe('readDiscord', () => {
 
         const failure = await readDiscord({
             rest,
-            commands: [found({ scope: 'guild', guilds: ['g9'] })],
-            guilds: [],
+            commands: inCode({ scope: 'guild', guilds: ['g9'] }),
             emojis: undefined
         }).catch((error: unknown) => error);
 
@@ -136,7 +129,7 @@ describe('readDiscord', () => {
     it('throws CliEdgeApplicationUnreadable when the token cannot read the application', async () => {
         const rest = { get: vi.fn(() => Promise.reject(new Error('401: Unauthorized'))) };
 
-        const failure = await readDiscord({ rest, commands: undefined, guilds: [], emojis: undefined }).catch(
+        const failure = await readDiscord({ rest, commands: undefined, emojis: undefined }).catch(
             (error: unknown) => error
         );
 

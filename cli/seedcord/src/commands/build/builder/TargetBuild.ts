@@ -1,15 +1,16 @@
+import type { BuildTarget } from '#core/config/detectTarget';
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './output';
 
 export type NextCommand = [label: string, command: string];
 
 export abstract class TargetBuild implements AsyncDisposable {
+    public abstract readonly kind: BuildTarget['kind'];
+
     constructor(public readonly project: Project) {}
 
     // runs inside the read config step, before the bot loads
     public abstract check(): void;
-
-    public abstract bundle(): Promise<BundleStats>;
 
     public boot?(): Promise<void>;
 

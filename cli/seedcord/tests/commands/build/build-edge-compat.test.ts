@@ -4,10 +4,7 @@ import { basename, join } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { BuildRunner } from '#commands/build/BuildRunner';
-import { quietSteps } from '#core/output/quietSteps';
-
-import { copyEdgeBotForTest } from './edgeBot';
+import { copyEdgeBotForTest, edgeBuildRunner } from './edgeBot';
 
 async function edgeBotWith(wrangler: Record<string, unknown>): Promise<string> {
     const projectDir = await copyEdgeBotForTest();
@@ -16,7 +13,7 @@ async function edgeBotWith(wrangler: Record<string, unknown>): Promise<string> {
 }
 
 function build(projectDir: string): Promise<unknown> {
-    return BuildRunner.create(quietSteps).run(projectDir);
+    return edgeBuildRunner().run(projectDir);
 }
 
 describe('seedcord build checks that an edge bot keeps Node compat on', () => {
