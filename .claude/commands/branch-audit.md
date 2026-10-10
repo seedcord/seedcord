@@ -16,7 +16,8 @@ When it finishes:
 2. Present the findings as a table with a verdict for each (fix, reject, or the user's call) and the evidence behind the verdict. A finding the user already ruled on earlier in this session goes in a separate table at the bottom, labeled with that ruling and its reason, for example "ruled earlier: reject, too deep". The user can still flip it.
 3. Collect the decisions through AskUserQuestion, in rounds of at most four questions:
     - First, questions per "user's call" finding. Give each option a one or two sentence description, and put the recommended pick first, marked "(Recommended)".
-    - Then multi-select questions confirming the rejections, and one confirming the earlier rulings. Say that a picked option keeps its verdict and an unpicked one gets fixed.
+    - Then multi-select questions asking "Which rejections should be fixed instead?" and "Which earlier rulings do you want to reopen?". A question holds two to four options, so split a longer list across several questions. A single finding gets its own two-option question instead, keep or change. Picking an option changes its verdict, so an empty answer keeps every verdict.
+    - Each reopened ruling gets its own question with the verdicts it can switch to, so a past fix can become a reject too.
     - When the user doesn't understand a finding, explain it in plain words and ask about it again on its own.
 4. Stop and wait for the user to say go before fixing anything.
 

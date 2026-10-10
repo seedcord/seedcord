@@ -28,7 +28,6 @@ function sources({ files, folders, instanceKey, functionExports, rootKey }: Work
     const instance = JSON.stringify(instanceKey);
     const lines = [
         // the instance file may read env while it loads
-        // imports run in the order written
         `import '${BIND_ENV_ID}';`,
         `import '${BUILT_FILES_ID}';`,
         `export { default } from ${instance};`

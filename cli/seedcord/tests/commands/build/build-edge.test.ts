@@ -96,6 +96,13 @@ describe('seedcord build on an edge bot with files it never loads', () => {
         await expect(BuildRunner.create(quietSteps).run(projectDir)).resolves.toBeDefined();
     }, 120_000);
 
+    it('builds an instance file with a top-level await', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await appendFile(join(projectDir, 'src/bot.ts'), '\nawait Promise.resolve();\n');
+
+        await expect(BuildRunner.create(quietSteps).run(projectDir)).resolves.toBeDefined();
+    }, 120_000);
+
     it('leaves a constant the instance file exports out of the worker', async () => {
         const projectDir = await copyEdgeBotForTest();
         await appendFile(join(projectDir, 'src/bot.ts'), "\nexport const BOT_NAME = 'edge-bot';\n");

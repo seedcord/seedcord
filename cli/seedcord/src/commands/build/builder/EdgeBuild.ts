@@ -36,12 +36,13 @@ function isPluginMissing(error: unknown): boolean {
     return notFound && error.message.startsWith(`Cannot find package '${CLOUDFLARE_PLUGIN}'`);
 }
 
-// workerd refuses to load a worker whose named export is anything other than a function or a handler object
+// workerd loads a worker only when each named export is a function or a handler object
 async function functionExportsOf(modules: ModuleLoader, instance: string): Promise<string[]> {
     const module = await modules.importModule<Record<string, unknown>>(instance);
-    return Object.entries(module)
-        .filter(([name, value]) => name !== 'default' && typeof value === 'function')
-        .map(([name]) => name);
+    return Object.entries(module).reduce<string[]>((names, [name, value]) => {
+        if (name !== 'default' && typeof value === 'function') names.push(name);
+        return names;
+    }, []);
 }
 
 function captureChunks(onChunks: (chunks: Rolldown.OutputChunk[]) => void): Plugin {
@@ -63,9 +64,13 @@ function workerEnvironment(outDir: string): Record<string, EnvironmentOptions> {
                 sourcemap: true,
                 minify: false,
                 rolldownOptions: {
-                    // a lazy import of a module bot.ts already imports still loads that same module
+                    // the glob lazily imports files that bot.ts also imports. both get the same module.
                     checks: { ineffectiveDynamicImport: false },
-                    output: { entryFileNames: ENTRY_FILE_NAME }
+                    output: {
+                        entryFileNames: ENTRY_FILE_NAME,
+                        // runs bind-env and the built files before bot.ts, even when a top-level await splits bot.ts into its own chunk
+                        strictExecutionOrder: true
+                    }
                 }
             }
         }
@@ -73,7 +78,8 @@ function workerEnvironment(outDir: string): Record<string, EnvironmentOptions> {
 }
 
 export class EdgeBuild extends TargetBuild {
-    // the plugin writes .wrangler/deploy/config.json under vite's root. wrangler deploy reads it from beside the wrangler config
+    // the plugin writes .wrangler/deploy/config.json under vite's root
+    // wrangler deploy reads it from beside the wrangler config
     private readonly viteRoot: string;
     private cloudflare?: Promise<CloudflarePlugin>;
 

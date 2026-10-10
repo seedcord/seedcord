@@ -99,8 +99,7 @@ export class DevSession {
                 this.stopResolve = resolve;
             });
         } catch (error: unknown) {
-            const reason = Error.isError(error) ? error.message : 'Unknown error';
-            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, reason]);
+            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, asError(error).message]);
         }
     }
 
