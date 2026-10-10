@@ -71,12 +71,17 @@ describe('resolveEmojis', () => {
         expect(String(caught)).toContain('"gone" for "Gone"');
     });
 
-    it('reports a guild fetch failure with its cause', async () => {
-        const fixture = restWith({}, (route) => route === Routes.guildEmojis('g1'));
+    it('reports each emoji when the application emojis could not be read, fetching them once', async () => {
+        const fixture = restWith({}, (route) => route === Routes.applicationEmojis(APP));
 
-        const caught = await failureOf({ Wave: ['wave', 'g1'] }, fixture);
+        const caught = await failureOf({ Confirm: 'confirm', Spin: 'spin' }, fixture);
 
-        expect(String(caught)).toContain('Missing Access');
+        expect(caught).toHaveProperty('message', expect.stringContaining('Could not resolve 2 configured emojis'));
+        expect(String(caught)).toContain(
+            '"confirm" for "Confirm" is an application emoji, and those could not be read (Missing Access)'
+        );
+        expect(String(caught)).toContain('"spin" for "Spin"');
+        expect(fixture.get).toHaveBeenCalledOnce();
     });
 
     it('reports each emoji from a guild that could not be read, fetching it once', async () => {
@@ -84,7 +89,9 @@ describe('resolveEmojis', () => {
 
         const caught = await failureOf({ Wave: ['wave', 'g1'], Nod: ['nod', 'g1'] }, fixture);
 
-        expect(String(caught)).toContain('"wave" for "Wave" targets guild g1');
+        expect(String(caught)).toContain(
+            '"wave" for "Wave" targets guild g1, which could not be read (Missing Access)'
+        );
         expect(String(caught)).toContain('"nod" for "Nod" targets guild g1');
         expect(fixture.get).toHaveBeenCalledOnce();
     });

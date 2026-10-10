@@ -24,7 +24,7 @@ class EmojiResolver {
     private readonly resolved = accessorStore<ResolvedEmoji>();
     private readonly failures: string[] = [];
     private readonly guilds = new Map<string, EmojisByName | Error>();
-    private application?: EmojisByName;
+    private application?: EmojisByName | Error;
 
     constructor(
         private readonly rest: EmojiRest,
@@ -48,19 +48,27 @@ class EmojiResolver {
     }
 
     private async fromApplication(key: string, name: string): Promise<void> {
-        if (!this.application) {
-            try {
-                // justified: the discord api contract for this route
-                const listed = (await this.rest.get(
-                    Routes.applicationEmojis(this.applicationId)
-                )) as RESTGetAPIApplicationEmojisResult;
-                this.application = byName(listed.items);
-            } catch (error) {
-                this.failures.push(`  - the application emojis could not be read (${asError(error).message})`);
-                this.application = new Map();
-            }
+        this.application ??= await this.applicationEmojis();
+
+        if (Error.isError(this.application)) {
+            this.failures.push(
+                `  - "${name}" for "${key}" is an application emoji, and those could not be read (${this.application.message})`
+            );
+            return;
         }
         this.pick(key, name, this.application, 'the application');
+    }
+
+    private async applicationEmojis(): Promise<EmojisByName | Error> {
+        try {
+            // justified: the discord api contract for this route
+            const listed = (await this.rest.get(
+                Routes.applicationEmojis(this.applicationId)
+            )) as RESTGetAPIApplicationEmojisResult;
+            return byName(listed.items);
+        } catch (error) {
+            return asError(error);
+        }
     }
 
     private async fromGuild(key: string, [name, guildId]: readonly [string, string]): Promise<void> {
