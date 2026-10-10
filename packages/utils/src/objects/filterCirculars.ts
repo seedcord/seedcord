@@ -182,28 +182,32 @@ function decycle<ObjType, Marker extends string = '[Circular]'>(
         if (seen.has(obj)) return marker;
         seen.add(obj);
 
-        if (obj instanceof Date) return obj.toISOString();
-        if (obj instanceof RegExp) return obj.toString();
+        try {
+            if (obj instanceof Date) return obj.toISOString();
+            if (obj instanceof RegExp) return obj.toString();
 
-        if (Array.isArray(obj)) {
-            return obj.map((item) => recur(item));
+            if (Array.isArray(obj)) {
+                return obj.map((item) => recur(item));
+            }
+
+            if (obj instanceof Map) {
+                return Array.from(obj, ([k, v]) => [recur(k), recur(v)]);
+            }
+
+            if (obj instanceof Set) {
+                return Array.from(obj, (v) => recur(v));
+            }
+
+            const out: Record<string, unknown> = {};
+            for (const [k, v] of Object.entries(obj)) {
+                if (typeof v === 'function') continue;
+                out[k] = recur(v);
+            }
+
+            return out;
+        } finally {
+            seen.delete(obj);
         }
-
-        if (obj instanceof Map) {
-            return Array.from(obj, ([k, v]) => [recur(k), recur(v)]);
-        }
-
-        if (obj instanceof Set) {
-            return Array.from(obj, (v) => recur(v));
-        }
-
-        const out: Record<string, unknown> = {};
-        for (const [k, v] of Object.entries(obj)) {
-            if (typeof v === 'function') continue;
-            out[k] = recur(v);
-        }
-
-        return out;
     };
 
     return recur(input) as JsonifyWithCirculars<ObjType, Marker>;
