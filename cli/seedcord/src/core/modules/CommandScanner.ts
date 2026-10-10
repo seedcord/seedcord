@@ -3,15 +3,14 @@ import 'reflect-metadata';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { isCommandClass } from '@seedcord/core/internal';
+import { CommandMetadataKey, isCommandClass } from '@seedcord/core/internal';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { isTsOrJsFile } from '@seedcord/utils/node';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
-import type { ScannedCommand } from './AugmentationBuilder';
-import type { CommandCtor } from '@seedcord/core/internal';
+import type { CommandBuilder, CommandCtor, CommandMeta } from '@seedcord/core/internal';
 import type { ILogger } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
@@ -33,10 +32,19 @@ function isApplicationCommand(json: unknown): json is RESTPostAPIApplicationComm
     );
 }
 
-function construct({ sourceFile, Command }: CommandClassFile): ScannedCommand | SeedcordError | undefined {
+export interface FoundCommand {
+    sourceFile: string;
+    json: RESTPostAPIApplicationCommandsJSONBody;
+    component: CommandBuilder;
+    meta: CommandMeta;
+}
+
+function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | SeedcordError | undefined {
+    let component: CommandBuilder;
     let json: unknown;
     try {
-        json = new Command().component.toJSON();
+        component = new Command().component;
+        json = component.toJSON();
     } catch (error: unknown) {
         const reason = Error.isError(error) ? error.message : 'Unknown error';
         return new SeedcordError(
@@ -48,7 +56,10 @@ function construct({ sourceFile, Command }: CommandClassFile): ScannedCommand | 
         );
     }
 
-    return isApplicationCommand(json) ? { sourceFile, json } : undefined;
+    if (!isApplicationCommand(json)) return undefined;
+    // justified: isCommandClass checked this key before the walk yielded the class
+    const meta = Reflect.getMetadata(CommandMetadataKey, Command) as CommandMeta;
+    return { sourceFile, json, component, meta };
 }
 
 export class CommandScanner {
@@ -57,8 +68,8 @@ export class CommandScanner {
         private readonly logger: ILogger
     ) {}
 
-    public async scan(commandsDir: string): Promise<ScannedCommand[]> {
-        const commands: ScannedCommand[] = [];
+    public async scan(commandsDir: string): Promise<FoundCommand[]> {
+        const commands: FoundCommand[] = [];
         const problems: unknown[] = [];
         try {
             for await (const commandClass of this.walk(commandsDir, new Set(), true)) {

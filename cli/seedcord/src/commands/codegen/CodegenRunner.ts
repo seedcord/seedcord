@@ -8,12 +8,12 @@ import { HostAugmentTarget, HostPluginKeys } from '@seedcord/types/internal';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { plural } from '#core/format';
+import { CommandScanner } from '#core/modules/CommandScanner';
 import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { printResolvedConfig } from '#core/output/printResolvedConfig';
 
 import { AugmentationBuilder } from './AugmentationBuilder';
-import { CommandScanner } from './CommandScanner';
 import { renderAugmentation } from './renderAugmentation';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
