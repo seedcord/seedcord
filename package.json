@@ -76,7 +76,6 @@
         "eslint": "catalog:eslint",
         "fallow": "^3.11.0",
         "husky": "^9.1.7",
-        "inquirer": "9",
         "knip": "^6.31.0",
         "lint-staged": "^17.3.0",
         "markdownlint-cli2": "^0.23.3",
