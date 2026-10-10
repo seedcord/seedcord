@@ -268,7 +268,7 @@ export class LogFormatter {
             else if (typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean')
                 primitives.push(String(x));
             else {
-                objects.push(JSON.stringify(filterCirculars(x), null, 2));
+                objects.push(JSON.stringify(filterCirculars(x, { mode: 'json' }), null, 2));
             }
         }
 
