@@ -1,5 +1,5 @@
 import { paint } from '@seedcord/errors';
-import { stripAnsi } from '@seedcord/utils';
+import { filterCirculars, stripAnsi } from '@seedcord/utils';
 import chalk from 'chalk';
 import { format } from 'winston';
 
@@ -268,11 +268,7 @@ export class LogFormatter {
             else if (typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean')
                 primitives.push(String(x));
             else {
-                try {
-                    objects.push(JSON.stringify(x, null, 2));
-                } catch {
-                    objects.push(String(x));
-                }
+                objects.push(JSON.stringify(filterCirculars(x, { mode: 'json' }), null, 2));
             }
         }
 
