@@ -1,22 +1,11 @@
-import { ResolvedEmoji } from '@seedcord/core';
-import { accessorStore, clearStore, guardedAccessor, isEmojiTuple } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { accessorStore, clearStore, guardedAccessor, resolveEmojis } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
-import { asError } from '@seedcord/utils/internal';
-import { Routes } from 'discord-api-types/v10';
 
 import type { Core } from '#interfaces/Core';
+import type { ResolvedEmoji } from '@seedcord/core';
 import type { EmojiMap } from '@seedcord/types';
-import type { APIEmoji } from 'discord-api-types/v10';
 
 const emojiStorage = accessorStore<ResolvedEmoji>();
-
-function byName(list: readonly APIEmoji[]): Map<string, APIEmoji> {
-    const map = new Map<string, APIEmoji>();
-    for (const entry of list) if (entry.name) map.set(entry.name, entry);
-    return map;
-}
 
 /** The global {@link Emojis} accessor type. */
 export type InjectedEmojiMap = {
@@ -44,70 +33,7 @@ export class EmojiInjector {
             return;
         }
 
-        const failures: string[] = [];
-        const guilds = new Map<string, Map<string, APIEmoji>>();
-        let application: Map<string, APIEmoji> | undefined;
-
-        for (const [key, value] of Object.entries(configured)) {
-            if (isEmojiTuple(value)) await this.resolveTuple(key, value, guilds, failures);
-            else if (typeof value === 'string') {
-                application ??= await this.applicationEmojis(failures);
-                this.resolve(key, value, application, failures, 'the application');
-            } else failures.push(`  - "${key}" has an invalid value (expected a name or [name, guildId])`);
-        }
-
-        // surface every unresolved emoji at once so the user fixes the whole config in one pass
-        if (failures.length > 0) {
-            throw new SeedcordError(SeedcordErrorCode.ConfigEmojiUnresolved, [failures.length, failures.join('\n')]);
-        }
-
+        Object.assign(emojiStorage, await resolveEmojis(this.core.rest, this.core.applicationId, configured));
         this.logger.utils.summary('Loaded emojis', { emojis: Object.keys(emojiStorage).length });
-    }
-
-    private async applicationEmojis(failures: string[]): Promise<Map<string, APIEmoji>> {
-        try {
-            const appId = this.core.applicationId;
-            // justified: the discord api contract for this route
-            const listed = (await this.core.rest.get(Routes.applicationEmojis(appId))) as {
-                items: APIEmoji[];
-            };
-            return byName(listed.items);
-        } catch (error) {
-            failures.push(`  - the application emojis could not be read (${asError(error).message})`);
-            return new Map();
-        }
-    }
-
-    private async resolveTuple(
-        key: string,
-        [name, guildId]: readonly [string, string],
-        guilds: Map<string, Map<string, APIEmoji>>,
-        failures: string[]
-    ): Promise<void> {
-        let guild = guilds.get(guildId);
-        if (!guild) {
-            try {
-                // justified: the discord api contract for this route
-                guild = byName((await this.core.rest.get(Routes.guildEmojis(guildId))) as APIEmoji[]);
-            } catch (error) {
-                failures.push(
-                    `  - "${name}" for "${key}" targets guild ${guildId}, which could not be read (${asError(error).message})`
-                );
-                return;
-            }
-            guilds.set(guildId, guild);
-        }
-
-        this.resolve(key, name, guild, failures, `guild ${guildId}`);
-    }
-
-    private resolve(key: string, name: string, source: Map<string, APIEmoji>, failures: string[], where: string): void {
-        const found = source.get(name);
-        if (!found?.id) {
-            failures.push(`  - "${name}" for "${key}" was not found in ${where}`);
-            return;
-        }
-
-        emojiStorage[key] = new ResolvedEmoji(name, found.id, found.animated ?? false);
     }
 }

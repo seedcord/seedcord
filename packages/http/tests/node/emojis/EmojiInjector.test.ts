@@ -14,8 +14,8 @@ const APP = 'app-1';
 // justified: EmojiMap is empty in tests, so runtime values read through a plain record
 const emojis = Emojis as Record<string, ResolvedEmoji>;
 
-function apiEmoji(name: string, id: string, animated = false): APIEmoji {
-    return { name, id, animated };
+function apiEmoji(name: string, id: string): APIEmoji {
+    return { name, id, animated: false };
 }
 
 interface Fixture {
@@ -23,19 +23,10 @@ interface Fixture {
     get: Mock<(route: string) => unknown>;
 }
 
-function coreWith(
-    configEmojis: unknown,
-    guildEmojis: Record<string, APIEmoji[]> = {},
-    failOn: (route: string) => boolean = () => false
-): Fixture {
-    const application = [apiEmoji('confirm', '111'), apiEmoji('spin', '222', true)];
+function coreWith(configEmojis: unknown): Fixture {
+    const application = [apiEmoji('confirm', '111')];
     const get = vi.fn((route: string) => {
-        if (failOn(route)) throw new Error('Missing Access');
-        if (route === Routes.currentApplication()) return { id: APP };
         if (route === Routes.applicationEmojis(APP)) return { items: application };
-        for (const [guildId, list] of Object.entries(guildEmojis)) {
-            if (route === Routes.guildEmojis(guildId)) return list;
-        }
         throw new Error(`unreachable route ${route}`);
     });
 
@@ -56,31 +47,6 @@ describe('EmojiInjector', () => {
         expect(String(emojis.Confirm)).toBe('<:confirm:111>');
     });
 
-    it('carries the animated flag through to the mention', async () => {
-        await new EmojiInjector(coreWith({ Spin: 'spin' }).core).init();
-
-        expect(String(emojis.Spin)).toBe('<a:spin:222>');
-    });
-
-    it('resolves a guild emoji from a name and guild id', async () => {
-        const { core } = coreWith({ Wave: ['wave', 'g1'] }, { g1: [apiEmoji('wave', '333')] });
-
-        await new EmojiInjector(core).init();
-
-        expect(emojis.Wave?.id).toBe('333');
-    });
-
-    it('fetches each guild once for two emojis from the same guild', async () => {
-        const { core, get } = coreWith(
-            { Wave: ['wave', 'g1'], Nod: ['nod', 'g1'] },
-            { g1: [apiEmoji('wave', '333'), apiEmoji('nod', '444')] }
-        );
-
-        await new EmojiInjector(core).init();
-
-        expect(get.mock.calls.filter((call) => call[0] === Routes.guildEmojis('g1'))).toHaveLength(1);
-    });
-
     it('throws listing every emoji it could not resolve', async () => {
         const { core } = coreWith({ Missing: 'nope', Confirm: 'confirm' });
 
@@ -88,38 +54,6 @@ describe('EmojiInjector', () => {
 
         expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.ConfigEmojiUnresolved)).toBe(true);
         expect(String(caught)).toContain('nope');
-    });
-
-    it('leaves the application routes alone when every emoji is a guild tuple', async () => {
-        const { core, get } = coreWith({ Wave: ['wave', 'g1'] }, { g1: [apiEmoji('wave', '333')] });
-
-        await new EmojiInjector(core).init();
-
-        expect(get.mock.calls.map((call) => call[0])).toEqual([Routes.guildEmojis('g1')]);
-    });
-
-    it('collects a guild fetch failure with its cause', async () => {
-        const { core } = coreWith({ Wave: ['wave', 'g1'] }, {}, (route) => route === Routes.guildEmojis('g1'));
-
-        const caught = await new EmojiInjector(core).init().catch((error: unknown) => error);
-
-        expect(String(caught)).toContain('Missing Access');
-    });
-
-    it('reports a configured value that is neither a name nor a tuple', async () => {
-        const { core } = coreWith({ Bad: 42 });
-
-        const caught = await new EmojiInjector(core).init().catch((error: unknown) => error);
-
-        expect(String(caught)).toContain('"Bad" has an invalid value');
-    });
-
-    it('reports an emoji whose payload carries no id', async () => {
-        const { core } = coreWith({ Wave: ['wave', 'g1'] }, { g1: [apiEmoji('wave', '')] });
-
-        const caught = await new EmojiInjector(core).init().catch((error: unknown) => error);
-
-        expect(String(caught)).toContain('was not found in guild g1');
     });
 
     it('skips every request when no emojis are configured', async () => {

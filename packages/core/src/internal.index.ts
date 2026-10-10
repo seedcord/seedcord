@@ -35,6 +35,7 @@ export { slowGateMonitor, type SlowGateMonitor } from '#gates/slowGate';
 export type { GateObserver } from '#gates/runGates';
 export { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/guarded';
 export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
+export { resolveEmojis } from '#src/miscellaneous/resolveEmojis';
 
 export { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
 export type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
