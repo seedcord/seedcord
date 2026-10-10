@@ -22,8 +22,7 @@ export async function runFlow(
     for (const step of steps) {
         if (step.skip?.(answers)) {
             if (step.key in supplied) {
-                const flag = supplied[step.key] === null ? noFlagName(step.flag.name) : step.flag.name;
-                throw new SeedcordError(SeedcordErrorCode.CreateFlagNotApplicable, [flag]);
+                throw new SeedcordError(SeedcordErrorCode.CreateFlagNotApplicable, [step.flag.name]);
             }
             continue;
         }

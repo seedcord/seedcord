@@ -74,17 +74,4 @@ describe('runFlow', () => {
         expect(asked).toEqual([]);
         expect(answers.token).toBeNull();
     });
-
-    it('points at the --no- flag when it was passed for a skipped step', async () => {
-        const asked: (keyof Answers)[] = [];
-        const token: Step<'token'> = {
-            ...stubStep('token', 'prompted', asked),
-            flag: { name: 'token', description: 'a stub', parse: (raw) => raw, noFlag: 'a stub' },
-            skip: (answers) => answers.transport === 'gateway'
-        };
-
-        await expect(runFlow([token], { transport: 'gateway', token: null }, { interactive: true })).rejects.toThrow(
-            /--no-token/
-        );
-    });
 });

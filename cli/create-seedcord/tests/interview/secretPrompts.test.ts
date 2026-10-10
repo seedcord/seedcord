@@ -46,11 +46,8 @@ async function isSettled(answer: Promise<unknown>): Promise<boolean> {
 }
 
 describe('token typed into a terminal', () => {
-    const step = tokenStep;
-    const pasted = TOKEN;
-
     it('keeps the prompt open after the first empty Enter', async () => {
-        const answer = step.ask({});
+        const answer = tokenStep.ask({});
         await press(ENTER);
 
         expect(await isSettled(answer)).toBe(false);
@@ -60,7 +57,7 @@ describe('token typed into a terminal', () => {
     });
 
     it('answers null on the second empty Enter', async () => {
-        const answer = step.ask({});
+        const answer = tokenStep.ask({});
         await press(ENTER);
         await press(ENTER);
 
@@ -68,16 +65,16 @@ describe('token typed into a terminal', () => {
     });
 
     it('still takes a paste after the warning', async () => {
-        const answer = step.ask({});
+        const answer = tokenStep.ask({});
         await press(ENTER);
-        await press(pasted);
+        await press(TOKEN);
         await press(ENTER);
 
-        await expect(answer).resolves.toBe(pasted);
+        await expect(answer).resolves.toBe(TOKEN);
     });
 
     it('counts whitespace as an empty paste', async () => {
-        const answer = step.ask({});
+        const answer = tokenStep.ask({});
         await press('   ');
         await press(ENTER);
 
@@ -88,20 +85,20 @@ describe('token typed into a terminal', () => {
     });
 
     it('keeps the prompt open on a paste that is not the right shape', async () => {
-        const answer = step.ask({});
+        const answer = tokenStep.ask({});
         await press('not it');
         await press(ENTER);
 
         expect(await isSettled(answer)).toBe(false);
 
         await clearLine('not it');
-        await press(pasted);
+        await press(TOKEN);
         await press(ENTER);
-        await expect(answer).resolves.toBe(pasted);
+        await expect(answer).resolves.toBe(TOKEN);
     });
 
     it('warns again after a rejected paste', async () => {
-        const answer = step.ask({});
+        const answer = tokenStep.ask({});
         await press(ENTER);
         await press('not it');
         await press(ENTER);
@@ -115,7 +112,7 @@ describe('token typed into a terminal', () => {
     });
 
     it('cancels on ctrl+c', async () => {
-        const answer = step.ask({}).catch((error: unknown) => error);
+        const answer = tokenStep.ask({}).catch((error: unknown) => error);
         await press(CTRL_C);
 
         expect(isSeedcordError(await answer, undefined, SeedcordErrorCode.CreateCancelled)).toBe(true);

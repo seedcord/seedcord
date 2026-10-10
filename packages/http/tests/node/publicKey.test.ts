@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
-import { Envapter, merge, PortableSource } from 'envapt';
+import { Envapter, PortableSource } from 'envapt';
 import { describe, expect, it, vi } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
@@ -9,7 +9,7 @@ import { VALID_TOKEN } from '#tests/helpers/fixtures';
 import { bindSignedEnv, postSigned, serverConfig } from '#tests/helpers/nodeHost';
 
 function bindTokenOnly(): void {
-    Envapter.useSource(merge(new PortableSource(process.env), new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN })));
+    Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN }));
 }
 
 describe('public key at startup', () => {
@@ -41,23 +41,20 @@ describe('public key at startup', () => {
         expect(failure).toHaveProperty(['errors', 0, 'message'], expect.stringContaining('401: Unauthorized'));
     });
 
-    it('uses DISCORD_PUBLIC_KEY without asking discord', async () => {
-        await bindSignedEnv();
+    it('verifies with DISCORD_PUBLIC_KEY without asking discord', async () => {
+        const signer = await bindSignedEnv();
         await using host = new Seedcord(serverConfig());
         const get = vi.spyOn(host.rest, 'get');
 
         await host.start();
+        const response = await postSigned(host, signer, JSON.stringify({ type: 1 }));
 
+        expect(response.status).toBe(200);
         expect(get).not.toHaveBeenCalledWith(Routes.currentApplication());
     });
 
     it('rejects a malformed DISCORD_PUBLIC_KEY with ConfigInvalidEnv', async () => {
-        Envapter.useSource(
-            merge(
-                new PortableSource(process.env),
-                new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN, DISCORD_PUBLIC_KEY: 'zz'.repeat(32) })
-            )
-        );
+        Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN, DISCORD_PUBLIC_KEY: 'zz'.repeat(32) }));
         await using host = new Seedcord(serverConfig());
 
         const failure = await host.start().catch((error: unknown) => error);
