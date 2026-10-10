@@ -37,7 +37,7 @@
         "cs:pre:exit": "changeset pre exit",
         "cs:publish": "changeset publish",
         "cs:status": "changeset status --output .changeset/status.json",
-        "cs:version": "cross-env-shell NODE_OPTIONS='--import tsx' \"changeset version && pnpm tsx scripts/src/release/tidy-changelogs.ts && prettier --write '**/CHANGELOG.md'\"",
+        "cs:version": "cross-env-shell \"NODE_OPTIONS='--import tsx'\" \"changeset version && pnpm tsx scripts/src/release/tidy-changelogs.ts && prettier --write '**/CHANGELOG.md'\"",
         "release": "pnpm build && pnpm cs:publish",
         "release:notes": "tsx scripts/src/release/release-notes.ts",
         "deps:check": "taze major",
