@@ -47,13 +47,13 @@ describe('runFlow with no terminal', () => {
     });
 
     it('leaves a skipped step alone', async () => {
-        const publicKey: Step<'publicKey'> = {
-            ...neverAsks('publicKey', 'public-key'),
-            skip: (answers) => answers.transport === 'gateway'
+        const capabilities: Step<'capabilities'> = {
+            ...neverAsks('capabilities', 'capabilities'),
+            skip: (answers) => answers.transport === 'http'
         };
 
-        const answers = await runFlow([publicKey], { transport: 'gateway' }, { interactive: false });
+        const answers = await runFlow([capabilities], { transport: 'http' }, { interactive: false });
 
-        expect(answers.publicKey).toBeUndefined();
+        expect(answers.capabilities).toBeUndefined();
     });
 });

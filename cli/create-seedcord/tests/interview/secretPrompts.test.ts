@@ -3,10 +3,8 @@ import { PassThrough } from 'node:stream';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { publicKeyStep } from '#interview/steps/publicKey';
 import { tokenStep } from '#interview/steps/token';
 
-const KEY = 'a'.repeat(64);
 const TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;
 const ENTER = '\r';
 const BACKSPACE = '\x7F';
@@ -47,12 +45,10 @@ async function isSettled(answer: Promise<unknown>): Promise<boolean> {
     return first !== pending;
 }
 
-const secretSteps = [
-    { step: tokenStep, pasted: TOKEN },
-    { step: publicKeyStep, pasted: KEY }
-];
+describe('token typed into a terminal', () => {
+    const step = tokenStep;
+    const pasted = TOKEN;
 
-describe.each(secretSteps)('$step.key typed into a terminal', ({ step, pasted }) => {
     it('keeps the prompt open after the first empty Enter', async () => {
         const answer = step.ask({});
         await press(ENTER);

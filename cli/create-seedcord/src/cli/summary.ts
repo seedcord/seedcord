@@ -17,19 +17,10 @@ const TOGGLE_LABELS: Record<string, string> = {
     MessageContent: 'Message Content Intent'
 };
 
-// the env.hbs keys a null answer leaves empty
-function keysLeftEmpty(answers: ScaffoldAnswers): string[] {
-    return [
-        ...(answers.token === null ? ['DISCORD_BOT_TOKEN'] : []),
-        ...(answers.publicKey === null ? ['DISCORD_PUBLIC_KEY'] : [])
-    ];
-}
-
 export function nextSteps(answers: ScaffoldAnswers, run: { agent: AgentName; installed: boolean }): string[] {
     const prefix = runPrefix(run.agent);
     const install = run.installed ? [] : [`${run.agent} install`];
-    const empty = keysLeftEmpty(answers);
-    const fill = empty.length === 0 ? [] : [`fill in ${empty.join(' and ')} in .env`];
+    const fill = answers.token === null ? ['fill in DISCORD_BOT_TOKEN in .env'] : [];
 
     return [`cd ${answers.directory}`, ...install, ...fill, `${prefix} dev`];
 }
@@ -50,13 +41,12 @@ export function dashboardToggles(capabilities: string[]): string[] {
     ];
 }
 
-// the token and public key stay out, since this line reaches scroll-back and screenshots
+// the token stays out because this line reaches scroll-back and screenshots
 export function reproducingCommand(answers: ScaffoldAnswers, agent: AgentName): string {
     const flags = [
         `--transport ${answers.transport}`,
         ...(answers.capabilities === undefined ? [] : [`--capabilities ${answers.capabilities.join(',')}`]),
         secretFlag(answers.token, 'token', 'YOUR_TOKEN'),
-        ...(answers.publicKey === undefined ? [] : [secretFlag(answers.publicKey, 'public-key', 'YOUR_PUBLIC_KEY')]),
         `--color ${answers.botColor}`
     ];
 

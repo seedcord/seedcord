@@ -57,15 +57,14 @@ describe('runFlow', () => {
 
     it('rejects a flag that supplied a value for a step the answers skip', async () => {
         const asked: (keyof Answers)[] = [];
-        const publicKey: Step<'publicKey'> = {
-            ...stubStep('publicKey', 'prompted', asked),
-            flag: { name: 'public-key', description: 'a stub', parse: (raw) => raw },
-            skip: (answers) => answers.transport === 'gateway'
+        const capabilities: Step<'capabilities'> = {
+            ...stubStep('capabilities', ['reactions'], asked),
+            skip: (answers) => answers.transport === 'http'
         };
 
         await expect(
-            runFlow([publicKey], { transport: 'gateway', publicKey: 'supplied' }, { interactive: true })
-        ).rejects.toThrow(/public-key/);
+            runFlow([capabilities], { transport: 'http', capabilities: ['reactions'] }, { interactive: true })
+        ).rejects.toThrow(/capabilities/);
     });
 
     it('leaves a step unasked when its --no- flag answered null', async () => {
@@ -76,16 +75,16 @@ describe('runFlow', () => {
         expect(answers.token).toBeNull();
     });
 
-    it('points at --no-public-key when it was passed on gateway', async () => {
+    it('points at the --no- flag when it was passed for a skipped step', async () => {
         const asked: (keyof Answers)[] = [];
-        const publicKey: Step<'publicKey'> = {
-            ...stubStep('publicKey', 'prompted', asked),
-            flag: { name: 'public-key', description: 'a stub', parse: (raw) => raw, noFlag: 'a stub' },
+        const token: Step<'token'> = {
+            ...stubStep('token', 'prompted', asked),
+            flag: { name: 'token', description: 'a stub', parse: (raw) => raw, noFlag: 'a stub' },
             skip: (answers) => answers.transport === 'gateway'
         };
 
-        await expect(
-            runFlow([publicKey], { transport: 'gateway', publicKey: null }, { interactive: true })
-        ).rejects.toThrow(/--no-public-key/);
+        await expect(runFlow([token], { transport: 'gateway', token: null }, { interactive: true })).rejects.toThrow(
+            /--no-token/
+        );
     });
 });

@@ -7,7 +7,6 @@ export interface Answers {
     capabilities: string[];
     // null leaves the key empty in .env for the user to fill in
     token: string | null;
-    publicKey: string | null;
     botColor: ColorName | `#${string}`;
 }
 

@@ -18,7 +18,6 @@ const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'http',
     token: 'aaa.bbb.ccc',
-    publicKey: 'a'.repeat(64),
     botColor: 'Blurple'
 };
 
@@ -47,22 +46,12 @@ describe('nextSteps', () => {
         expect(nextSteps(HTTP, { agent: 'pnpm', installed: true }).join('\n')).not.toContain('.env');
     });
 
-    it('lists each key left for .env before the dev script', () => {
-        const steps = nextSteps({ ...HTTP, token: null, publicKey: null }, { agent: 'pnpm', installed: true });
+    it('asks for the token in .env before the dev script when it was left', () => {
+        const steps = nextSteps({ ...HTTP, token: null }, { agent: 'pnpm', installed: true });
         const env = steps.findIndex((step) => step.includes('.env'));
 
         expect(steps[env]).toContain('DISCORD_BOT_TOKEN');
-        expect(steps[env]).toContain('DISCORD_PUBLIC_KEY');
         expect(env).toBeLessThan(steps.indexOf('pnpm run dev'));
-    });
-
-    it('names only the key that was left', () => {
-        const step = nextSteps({ ...HTTP, publicKey: null }, { agent: 'pnpm', installed: true }).find((line) =>
-            line.includes('.env')
-        );
-
-        expect(step).toContain('DISCORD_PUBLIC_KEY');
-        expect(step).not.toContain('DISCORD_BOT_TOKEN');
     });
 });
 
@@ -130,21 +119,15 @@ describe('reproducingCommand', () => {
         }
     });
 
-    it('passes the --no- flags for secrets left for .env', () => {
-        const command = reproducingCommand({ ...HTTP, token: null, publicKey: null }, 'pnpm');
+    it('passes --no-token for a token left for .env', () => {
+        const command = reproducingCommand({ ...HTTP, token: null }, 'pnpm');
 
         expect(command).toContain('--no-token');
-        expect(command).toContain('--no-public-key');
         expect(command).not.toContain('YOUR_TOKEN');
-        expect(command).not.toContain('YOUR_PUBLIC_KEY');
     });
 
     it('leaves capabilities out on http', () => {
         expect(reproducingCommand(HTTP, 'pnpm')).not.toContain('--capabilities');
-    });
-
-    it('leaves the public key flag out on gateway', () => {
-        expect(reproducingCommand(GATEWAY, 'pnpm')).not.toContain('--public-key');
     });
 
     it('puts the double dash in for npm, which needs it before flags', () => {

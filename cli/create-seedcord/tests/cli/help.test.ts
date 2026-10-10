@@ -12,11 +12,8 @@ describe('helpText', () => {
         }
     });
 
-    it('lists --no-token and --no-public-key', () => {
-        const text = helpText();
-
-        expect(text).toContain('--no-token');
-        expect(text).toContain('--no-public-key');
+    it('lists --no-token', () => {
+        expect(helpText()).toContain('--no-token');
     });
 
     it('shows the shorthand beside the flag it stands for', () => {

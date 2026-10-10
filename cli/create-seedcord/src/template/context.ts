@@ -11,7 +11,7 @@ import { intentsFor, partialsFor } from '#interview/capabilities';
 import type { Answers } from '#interview/types';
 import type { AgentName } from 'package-manager-detector';
 
-// capabilities and publicKey each belong to one transport, and runFlow leaves the other unset
+// runFlow leaves capabilities unset for an http bot
 export type ScaffoldAnswers = Partial<Answers> & Pick<Answers, 'botColor' | 'directory' | 'token' | 'transport'>;
 
 // the three that make messageCreate fire
@@ -25,7 +25,6 @@ export interface TemplateContext {
     partials: string[];
     hasMessages: boolean;
     token: string;
-    publicKey: string;
     botColor: string;
     developerUsername: string;
     pm: { run: string; isBun: boolean };
@@ -60,7 +59,6 @@ export function buildContext(
         partials: isGateway ? partialsFor(capabilities) : [],
         hasMessages: capabilities.some((id) => MESSAGE_CAPABILITIES.has(id)),
         token: answers.token ?? '',
-        publicKey: answers.publicKey ?? '',
         botColor: answers.botColor,
         developerUsername: extras.developerUsername,
         pm: { run: runPrefix(extras.agent), isBun: extras.agent === 'bun' },

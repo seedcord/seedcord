@@ -23,7 +23,6 @@ const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'http',
     token: 'aaa.bbb.ccc',
-    publicKey: 'a'.repeat(64),
     botColor: 'Blurple'
 };
 
@@ -199,23 +198,10 @@ describe('the rendered http config', () => {
         expect(bot).not.toContain('clientOptions');
     });
 
-    it('writes the public key into the env file', async () => {
-        const env = await renderOne(HTTP, '.env');
-
-        expect(env).toContain(`DISCORD_PUBLIC_KEY=${'a'.repeat(64)}`);
-    });
-
-    it('writes both keys empty when they were left for later', async () => {
-        const env = await renderOne({ ...HTTP, token: null, publicKey: null }, '.env');
+    it('writes the token empty when it was left for later', async () => {
+        const env = await renderOne({ ...HTTP, token: null }, '.env');
 
         expect(env).toMatch(/^DISCORD_BOT_TOKEN=$/m);
-        expect(env).toMatch(/^DISCORD_PUBLIC_KEY=$/m);
-    });
-
-    it('leaves the public key out on gateway', async () => {
-        const env = await renderOne(GATEWAY, '.env');
-
-        expect(env).not.toContain('DISCORD_PUBLIC_KEY');
     });
 });
 

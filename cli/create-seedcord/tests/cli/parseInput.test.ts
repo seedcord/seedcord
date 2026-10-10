@@ -24,8 +24,6 @@ describe('parseInput', () => {
             'http',
             '--token',
             TOKEN,
-            '--public-key',
-            'a'.repeat(64),
             '--color',
             'Blurple'
         ]);
@@ -34,7 +32,6 @@ describe('parseInput', () => {
             directory: 'my-bot',
             transport: 'http',
             token: TOKEN,
-            publicKey: 'a'.repeat(64),
             botColor: 'Blurple'
         });
     });
@@ -65,11 +62,8 @@ describe('parseInput', () => {
         expect(parseInput(['--no-git']).git).toBe(false);
     });
 
-    it('reads --no-token and --no-public-key as answers left for .env', () => {
-        const { supplied } = parseInput(['--no-token', '--no-public-key']);
-
-        expect(supplied.token).toBeNull();
-        expect(supplied.publicKey).toBeNull();
+    it('reads --no-token as an answer left for .env', () => {
+        expect(parseInput(['--no-token']).supplied.token).toBeNull();
     });
 
     it('rejects a token passed alongside --no-token', () => {
@@ -77,13 +71,6 @@ describe('parseInput', () => {
 
         expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateBadUsage)).toBe(true);
         expect((thrown as Error).message).toContain('--token or --no-token');
-    });
-
-    it('rejects a public key passed alongside --no-public-key', () => {
-        const thrown = thrownBy(() => parseInput(['--public-key', 'a'.repeat(64), '--no-public-key']));
-
-        expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateBadUsage)).toBe(true);
-        expect((thrown as Error).message).toContain('--public-key or --no-public-key');
     });
 
     it('names an unknown flag and points at the help', () => {

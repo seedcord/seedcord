@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { publicKeyStep } from '#interview/steps/publicKey';
 import { tokenStep } from '#interview/steps/token';
 
-const KEY = 'a'.repeat(64);
 const TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;
 
 describe('tokenStep', () => {
@@ -34,29 +32,5 @@ describe('tokenStep', () => {
 
     it('names the flag and the Bot page, since the framework error names neither', () => {
         expect(() => tokenStep.flag.parse('aaa.bbb.ccc')).toThrow(/--token: .*Bot page/);
-    });
-});
-
-describe('publicKeyStep', () => {
-    it('takes the sixty-four hex characters of an Ed25519 key', () => {
-        expect(publicKeyStep.flag.parse(KEY)).toBe(KEY);
-    });
-
-    it('lowercases so two spellings of one key agree', () => {
-        expect(publicKeyStep.flag.parse('A'.repeat(64))).toBe(KEY);
-    });
-
-    it('rejects a key of the wrong length', () => {
-        expect(() => publicKeyStep.flag.parse('a'.repeat(63))).toThrow();
-        expect(() => publicKeyStep.flag.parse('a'.repeat(65))).toThrow();
-    });
-
-    it('rejects a key with a character outside hex', () => {
-        expect(() => publicKeyStep.flag.parse(`${'a'.repeat(63)}z`)).toThrow();
-    });
-
-    it('skips itself on gateway, which needs no public key', () => {
-        expect(publicKeyStep.skip?.({ transport: 'gateway' })).toBe(true);
-        expect(publicKeyStep.skip?.({ transport: 'http' })).toBe(false);
     });
 });

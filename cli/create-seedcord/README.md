@@ -52,7 +52,7 @@ npm create seedcord my-bot -- --transport gateway --capabilities reactions
 pnpm create seedcord my-bot --transport gateway --capabilities reactions
 ```
 
-`--no-install` and `--no-git` turn off those two steps. `--no-token` and `--no-public-key` leave those keys empty without asking. `-v` prints the version and `-h` prints the flag list.
+`--no-install` and `--no-git` turn off those two steps. `--no-token` leaves the token empty without asking. `-v` prints the version and `-h` prints the flag list.
 
 With no terminal to ask on, it reads the flags alone. It prints the flag that would supply any answer you left out.
 

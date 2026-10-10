@@ -33,7 +33,6 @@ const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'http',
     token: 'aaa.bbb.ccc',
-    publicKey: 'a'.repeat(64),
     botColor: 'Blurple'
 };
 
