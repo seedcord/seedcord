@@ -1,5 +1,4 @@
 import { resolve } from 'node:path';
-import { Uptime } from '#src/plugins/Uptime'
 
 {{#if isGateway}}
 import { Seedcord } from '@seedcord/gateway';
@@ -8,6 +7,8 @@ import { GatewayIntentBits{{#if partials}}, Partials{{/if}} } from 'discord.js';
 import { Seedcord } from '@seedcord/http';
 {{/if}}
 import { Envapter } from 'envapt';
+
+import { Uptime } from '#plugins/Uptime'
 
 Envapter.baseDir = resolve(import.meta.dirname, '..');
 

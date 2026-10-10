@@ -1,10 +1,13 @@
 import { Plugin } from '{{ transportPackage }}';
 
+import type { EpochMs } from '{{ transportPackage }}';
+
 export class Uptime extends Plugin {
-    private startedAt = 0;
+    public startedAt = 0 as EpochMs;
 
     public async init(): Promise<void> {
-        this.startedAt = Date.now();
+        this.startedAt = Date.now() as EpochMs;
+        await Promise.resolve();
     }
 
     public elapsed(): number {

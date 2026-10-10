@@ -1,4 +1,4 @@
-import { SlashHandler, SlashRoute, timestampFromSnowflake } from '{{ transportPackage }}';
+import { SlashHandler, SlashRoute, timestampFromSnowflake, toEpochSeconds } from '{{ transportPackage }}';
 
 @SlashRoute('ping')
 export class Ping extends SlashHandler<'ping'> {
@@ -7,7 +7,7 @@ export class Ping extends SlashHandler<'ping'> {
         const lines = ['### Pong', `Roundtrip **${roundtrip}ms**`];
 
         if (this.options.getBoolean('detailed')) {
-            lines.push(`Uptime **${Math.round(process.uptime())}s**`);
+            lines.push(`Up since **<t:${toEpochSeconds(this.core.uptime.startedAt)}:R>**`);
         }
 
         await this.reply(lines.join('\n'));
