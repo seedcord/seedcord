@@ -1,7 +1,6 @@
 import { DiscordAPIError } from '@discordjs/rest';
 import { DispatchContext, Fault, InteractionKind, Notice, Silence } from '@seedcord/core';
 import {
-    asError,
     outcomeFor,
     queuedMsFor,
     reportDispatch,
@@ -13,6 +12,7 @@ import {
 } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
+import { asError } from '@seedcord/utils/internal';
 import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
 
 import { RepliableHandler } from '#handlers/RepliableHandler';

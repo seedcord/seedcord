@@ -23,7 +23,6 @@ const PACKAGE_OF: Record<string, string> = {
 
 const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',
-    language: 'typescript',
     transport: 'gateway',
     capabilities: ['guild-messages'],
     token: 'aaa.bbb.ccc',
@@ -32,7 +31,6 @@ const GATEWAY: ScaffoldAnswers = {
 
 const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
-    language: 'typescript',
     transport: 'http',
     token: 'aaa.bbb.ccc',
     publicKey: 'a'.repeat(64),

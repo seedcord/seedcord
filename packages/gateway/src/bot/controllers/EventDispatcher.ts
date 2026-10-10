@@ -2,8 +2,6 @@
 import { DispatchContext } from '@seedcord/core';
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import {
-    areRoutes,
-    asError,
     EventMetadataKey,
     EventMiddlewareMetadataKey,
     eventResultFor,
@@ -18,6 +16,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath, hasKeys } from '@seedcord/utils';
+import { asError, isStringArray } from '@seedcord/utils/internal';
 import { traverseDirectory } from '@seedcord/utils/node';
 import { Envapter } from 'envapt';
 
@@ -290,7 +289,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
                 register(entry.event, entry.frequency);
             }
         } else {
-            const names = areRoutes(raw) ? raw : typeof raw === 'string' ? [raw] : [];
+            const names = isStringArray(raw) ? raw : typeof raw === 'string' ? [raw] : [];
 
             for (const name of names) {
                 register(name as keyof ClientEvents, 'on');

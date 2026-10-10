@@ -1,6 +1,7 @@
 import { Notice, Silence } from '@seedcord/core';
-import { asError, reportedWrite } from '@seedcord/core/internal';
+import { reportedWrite } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
+import { asError } from '@seedcord/utils/internal';
 import { DiscordAPIError } from 'discord.js';
 
 import { ReplySender } from '#bot/ReplySender';

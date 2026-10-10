@@ -85,6 +85,24 @@ describe('the edge Seedcord', () => {
         expect(ran).toEqual(['ping']);
     });
 
+    it('answers a GET with 405 before reading env or starting plugins', async () => {
+        const calls: string[] = [];
+        class Recorder extends Plugin {
+            public init(): Promise<void> {
+                calls.push('init');
+                return Promise.resolve();
+            }
+        }
+        Envapter.useSource(new PortableSource({}));
+        const seedcord = new Seedcord(config()).attach('recorder', Recorder);
+
+        const response = await seedcord.fetch(new Request('https://bot.example.com/'));
+
+        expect(response.status).toBe(405);
+        expect(response.headers.get('allow')).toBe('POST');
+        expect(calls).toEqual([]);
+    });
+
     it('answers a signed PING with a PONG', async () => {
         const signer = await signedEnv();
         const seedcord = new Seedcord(config());
@@ -296,7 +314,9 @@ describe('the edge Seedcord', () => {
     it('rethrows a failed first request on every later one', async () => {
         Envapter.useSource(new PortableSource({}));
         const seedcord = new Seedcord(config());
-        const first = await seedcord.fetch(new Request('https://bot.example')).catch((caught: unknown) => caught);
+        const first = await seedcord
+            .fetch(new Request('https://bot.example', { method: 'POST' }))
+            .catch((caught: unknown) => caught);
 
         const signer = await signedEnv();
         const second = await seedcord.fetch(await signedRequest(signer, ping)).catch((caught: unknown) => caught);

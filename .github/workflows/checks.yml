@@ -130,7 +130,7 @@ jobs:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
       - uses: ./.github/actions/setup
-      - run: pnpm turbo build --filter='@seedcord/mock-gateway^...' --filter='@seedcord/mock-http^...' --filter='@seedcord/eslint-config...' --filter='@seedcord/eslint-plugin...'
+      - run: pnpm turbo build --filter='@seedcord/mock-gateway^...' --filter='@seedcord/mock-http^...' --filter='@seedcord/mock-edge^...' --filter='@seedcord/eslint-config...' --filter='@seedcord/eslint-plugin...'
       - run: pnpm check:typescript-floor
 
   node-floor:

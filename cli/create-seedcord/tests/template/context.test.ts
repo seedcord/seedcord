@@ -6,7 +6,6 @@ import type { ScaffoldAnswers } from '#template/context';
 
 const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',
-    language: 'typescript',
     transport: 'gateway',
     capabilities: ['reactions'],
     token: 'aaa.bbb.ccc',
@@ -15,7 +14,6 @@ const GATEWAY: ScaffoldAnswers = {
 
 const HTTP: ScaffoldAnswers = {
     directory: 'edge/my-bot',
-    language: 'typescript',
     transport: 'http',
     token: 'aaa.bbb.ccc',
     publicKey: 'a'.repeat(64),

@@ -6,7 +6,7 @@ import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 import { minimatch } from 'minimatch';
 
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { DevEvent } from './events';
 import type { HmrEventType, HmrUpdateEvent } from '@seedcord/types';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
@@ -43,7 +43,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         return this.hot ? wrapHot<SeedcordCliEvents, SeedcordFrameworkEvents>(this.hot) : undefined;
     }
 
-    constructor(private readonly config: ResolvedSeedcordDevConfig) {
+    constructor(private readonly config: ResolvedSeedcordConfig) {
         super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
     }
@@ -143,7 +143,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 
     private isCriticalFile(file: string): boolean {
-        const { root, configFile, entry, instance } = this.config;
+        const { root, configFile, instance, target } = this.config;
         const relPath = relative(root, file);
         const patterns = [...(this.config.hmr?.restart ?? []), ...this.dynamicRestartPatterns];
 
@@ -153,7 +153,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             file.endsWith('package.json') ||
             file.endsWith('tsconfig.json') ||
             file.endsWith('.env') ||
-            file === resolve(root, entry) ||
+            (target.kind === 'server' && file === resolve(root, target.entry)) ||
             file === resolve(root, instance)
         );
     }

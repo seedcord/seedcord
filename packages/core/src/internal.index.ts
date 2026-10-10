@@ -23,7 +23,6 @@ export { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
 
 export type { CommandMeta } from '#decorators/Command';
 export {
-    areRoutes,
     contextMenuRouteOf,
     interactionRoutesOf,
     storeComponentRoute,
@@ -76,7 +75,6 @@ export {
     WebhookUrlMetadataKey
 } from '#src/metadataKeys';
 
-export { asError } from '#stops/asError';
 export { NoticeCard } from '#stops/NoticeCard';
 
 export {

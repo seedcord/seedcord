@@ -2,8 +2,6 @@ import type { ColorName } from '@seedcord/types';
 
 export interface Answers {
     directory: string;
-    // answering JavaScript still records TypeScript
-    language: 'typescript';
     transport: 'gateway' | 'http';
     // capability ids the intent map resolves into intents and partials
     capabilities: string[];

@@ -1,6 +1,6 @@
 import { Notice, Silence } from '@seedcord/core';
-import { asError } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
+import { asError } from '@seedcord/utils/internal';
 import { DiscordAPIError } from 'discord.js';
 
 import { deriveEventActor } from '#miscellaneous/deriveEventActor';
