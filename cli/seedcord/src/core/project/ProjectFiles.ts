@@ -1,5 +1,5 @@
 import { readdir } from 'node:fs/promises';
-import { basename, dirname, join, relative, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -44,8 +44,10 @@ export class ProjectFiles {
         this.skippedFolders = [outDir, ...projectFolders];
     }
 
+    // vite also passes virtual ids like \0seedcord:entry here
+    // isInside resolves a relative path against process.cwd()
     public holds(path: string): boolean {
-        return isInside(this.root, path);
+        return isAbsolute(path) && isInside(this.root, path);
     }
 
     public keyOf(path: string): string {

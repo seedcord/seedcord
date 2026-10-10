@@ -2,12 +2,7 @@ import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
 import { ComponentDefsKey } from '#customId/routing';
-import {
-    areRoutes,
-    contextMenuRouteOf,
-    storeComponentRoute,
-    storeInteractionRoute
-} from '#decorators/interactionRoutes';
+import { contextMenuRouteOf, storeComponentRoute, storeInteractionRoute } from '#decorators/interactionRoutes';
 import { InteractionMetadataKey, InteractionRouteKeys, InteractionKind } from '#src/metadataKeys';
 
 import type { AnyCustomId } from '@seedcord/custom-id';
@@ -84,14 +79,5 @@ describe('route maps', () => {
     it('maps both context menu kinds to their routes', () => {
         expect(contextMenuRouteOf(ApplicationCommandType.User)).toBe(InteractionKind.UserContextMenu);
         expect(contextMenuRouteOf(ApplicationCommandType.Message)).toBe(InteractionKind.MessageContextMenu);
-    });
-});
-
-describe('areRoutes', () => {
-    it('accepts only string arrays', () => {
-        expect(areRoutes(['a', 'b'])).toBe(true);
-        expect(areRoutes([])).toBe(true);
-        expect(areRoutes(['a', 1])).toBe(false);
-        expect(areRoutes('a')).toBe(false);
     });
 });

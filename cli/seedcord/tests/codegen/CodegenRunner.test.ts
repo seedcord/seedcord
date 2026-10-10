@@ -13,7 +13,7 @@ import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { quietSteps } from '#core/output/quietSteps';
 
 import type { ProjectLoader } from '#core/config/ProjectLoader';
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
@@ -45,18 +45,18 @@ function silentLogger(overrides: Partial<ILogger> = {}): ILogger {
 }
 
 // justified: codegen reads only these paths off the config
-function configAt(root: string, instance: string): ResolvedSeedcordDevConfig {
+function configAt(root: string, instance: string): ResolvedSeedcordConfig {
     return {
         root,
         instance,
         configFile: resolve(root, 'seedcord.config.ts'),
         target: { kind: 'server', entry: resolve(root, 'index.ts') },
         build: { outDir: resolve(root, 'dist') }
-    } as ResolvedSeedcordDevConfig;
+    } as ResolvedSeedcordConfig;
 }
 
 function runnerWith(
-    config: ResolvedSeedcordDevConfig,
+    config: ResolvedSeedcordConfig,
     importModule: (entryPath: string) => Promise<unknown>,
     logger: ILogger
 ): CodegenRunner {

@@ -3,9 +3,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { isPlainObject } from '@seedcord/utils/internal';
-
-import { isStringArray } from '#utils/isStringArray';
+import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 
 // cloudflare turns on nodejs_compat by default from this compatibility date
 const NODE_COMPAT_DEFAULT_FROM = '2026-08-04';

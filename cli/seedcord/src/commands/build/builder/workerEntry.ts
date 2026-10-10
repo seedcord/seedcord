@@ -20,10 +20,10 @@ interface WorkerEntryOptions {
     files: ProjectFiles;
     folders: string[];
     instanceKey: string;
-    baseKey: string;
+    rootKey: string;
 }
 
-function sources({ files, folders, instanceKey, baseKey }: WorkerEntryOptions): Map<string, string> {
+function sources({ files, folders, instanceKey, rootKey }: WorkerEntryOptions): Map<string, string> {
     return new Map([
         [
             WORKER_ENTRY_ID,
@@ -38,10 +38,7 @@ function sources({ files, folders, instanceKey, baseKey }: WorkerEntryOptions): 
             ].join('\n')
         ],
         [BIND_ENV_ID, BIND_ENV],
-        [
-            BUILT_FILES_ID,
-            builtFilesSource({ files, folders, rootExpression: JSON.stringify(WORKER_ROOT), base: baseKey })
-        ]
+        [BUILT_FILES_ID, builtFilesSource({ files, folders, rootExpression: JSON.stringify(WORKER_ROOT), rootKey })]
     ]);
 }
 

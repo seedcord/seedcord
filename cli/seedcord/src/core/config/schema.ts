@@ -120,7 +120,7 @@ export interface ResolvedSeedcordBuildConfig {
 }
 
 // every path in here is absolute
-export interface ResolvedSeedcordDevConfig extends Required<TypedOmit<SeedcordConfig, 'build' | 'hmr' | 'tunnel'>> {
+export interface ResolvedSeedcordConfig extends Required<TypedOmit<SeedcordConfig, 'build' | 'hmr' | 'tunnel'>> {
     tunnel: ResolvedTunnel;
     configFile: string;
     target: ResolvedTarget;
@@ -136,7 +136,7 @@ export interface ResolvedSeedcordDevConfig extends Required<TypedOmit<SeedcordCo
 export const SEEDCORD_CONFIG_FILENAMES = ['seedcord.config.ts', 'seedcord.config.mts'] as const;
 
 /**
- * Helper so config files receive proper type inference.
+ * Types the `seedcord.config.ts` of a bot that runs on node or bun.
  */
 export function defineConfig(config: SeedcordServerConfig): SeedcordServerConfig {
     return config;

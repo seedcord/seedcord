@@ -6,7 +6,7 @@ import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 import { minimatch } from 'minimatch';
 
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { DevEvent } from './events';
 import type { HmrEventType, HmrUpdateEvent } from '@seedcord/types';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
@@ -43,7 +43,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         return this.hot ? wrapHot<SeedcordCliEvents, SeedcordFrameworkEvents>(this.hot) : undefined;
     }
 
-    constructor(private readonly config: ResolvedSeedcordDevConfig) {
+    constructor(private readonly config: ResolvedSeedcordConfig) {
         super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
     }

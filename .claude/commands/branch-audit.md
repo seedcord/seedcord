@@ -14,7 +14,11 @@ When it finishes:
 
 1. Reproduce every finding it marks CONFIRMED against the source or the built CLI before calling it real, and check its SUSPECTED ones the same way where the answer changes what gets fixed.
 2. Present the findings as a table with a verdict for each (fix, reject, or the user's call) and the evidence behind the verdict. A finding the user already ruled on earlier in this session goes in a separate table at the bottom, labeled with that ruling and its reason, for example "ruled earlier: reject, too deep". The user can still flip it.
-3. Stop and wait for the user to pick what to fix.
+3. Collect the decisions through AskUserQuestion, in rounds of at most four questions:
+    - First, questions per "user's call" finding. Give each option a one or two sentence description, and put the recommended pick first, marked "(Recommended)".
+    - Then multi-select questions confirming the rejections, and one confirming the earlier rulings. Say that a picked option keeps its verdict and an unpicked one gets fixed.
+    - When the user doesn't understand a finding, explain it in plain words and ask about it again on its own.
+4. Stop and wait for the user to say go before fixing anything.
 
 ---
 

@@ -45,10 +45,6 @@ export class ServerBuild extends TargetBuild {
         if (!existsSync(this.entry)) throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [this.entry]);
     }
 
-    public afterBundle(): Promise<void> {
-        return Promise.resolve();
-    }
-
     public nextCommands(bundle: BundleStats): NextCommand[] {
         return serverCommands(this.project.config.configFile, bundle.entry);
     }

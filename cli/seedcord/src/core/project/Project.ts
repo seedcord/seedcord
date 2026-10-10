@@ -6,7 +6,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { ProjectFiles } from './ProjectFiles';
 
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 
 export class Project implements AsyncDisposable {
@@ -14,7 +14,7 @@ export class Project implements AsyncDisposable {
     public readonly files: ProjectFiles;
 
     constructor(
-        public readonly config: ResolvedSeedcordDevConfig,
+        public readonly config: ResolvedSeedcordConfig,
         private readonly loader: ModuleLoader & AsyncDisposable
     ) {
         this.configDir = dirname(config.configFile);

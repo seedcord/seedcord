@@ -60,7 +60,8 @@ export class BuildRunner {
             ({ tsconfig }) => paint.path(tsconfig)
         );
         const bundle = await steps.step('bundle', () => build.bundle());
-        await build.afterBundle(steps);
+        const boot = build.boot?.bind(build);
+        if (boot) await steps.step('boot', boot);
 
         return { bundle, nextCommands: build.nextCommands(bundle) };
     }

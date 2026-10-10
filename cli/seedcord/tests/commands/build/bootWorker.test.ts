@@ -16,7 +16,23 @@ const answersOk: Plugin = {
     }
 };
 
+const closesConnection: Plugin = {
+    name: 'test:closes-connection',
+    configurePreviewServer(server) {
+        server.middlewares.use((request) => {
+            request.socket.destroy();
+        });
+    }
+};
+
 describe('bootWorker', () => {
+    it('throws CliEdgeBootFailed when the worker closes the connection without answering', async () => {
+        await expect(bootWorker({ root: import.meta.dirname, plugins: [closesConnection] })).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliEdgeBootFailed,
+            cause: expect.any(TypeError) as TypeError
+        });
+    });
+
     it('gives the status in CliEdgeBootFailed when the worker answers without logging an error', async () => {
         await expect(bootWorker({ root: import.meta.dirname, plugins: [answersOk] })).rejects.toMatchObject({
             code: SeedcordErrorCode.CliEdgeBootFailed,

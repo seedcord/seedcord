@@ -8,22 +8,22 @@ interface BuiltFilesOptions {
     files: ProjectFiles;
     folders: string[];
     rootExpression: string;
-    // the bot's root as vite sees it, like /src
-    base: string;
+    rootKey: string;
 }
 
 // the module and text globs follow isModulePath and isTextPath in @seedcord/utils
-export function builtFilesSource({ files, folders, rootExpression, base }: BuiltFilesOptions): string {
+export function builtFilesSource({ files, folders, rootExpression, rootKey }: BuiltFilesOptions): string {
     const excludes = files.globExcludes();
     const modules = ['./**/*.ts', './**/*.js', '!./**/*.d.ts', ...excludes];
     const text = ['./**/*', '!./**/*.ts', '!./**/*.js', '!./**/*.map', ...excludes];
-    const textOptions = { base, query: '?raw', import: 'default' };
+    const moduleOptions = { base: rootKey };
+    const textOptions = { ...moduleOptions, query: '?raw', import: 'default' };
 
     return [
         `${BUILT_FILES_SLOT} = {`,
         `    root: ${rootExpression},`,
         `    folders: ${JSON.stringify(folders)},`,
-        `    modules: import.meta.glob(${JSON.stringify(modules)}, ${JSON.stringify({ base })}),`,
+        `    modules: import.meta.glob(${JSON.stringify(modules)}, ${JSON.stringify(moduleOptions)}),`,
         `    text: import.meta.glob(${JSON.stringify(text)}, ${JSON.stringify(textOptions)})`,
         '};',
         ''

@@ -2,11 +2,10 @@ import { dirname, isAbsolute, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { isPlainObject } from '@seedcord/utils/internal';
+import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 
 import { Project } from '#core/project/Project';
-import { isStringArray } from '#utils/isStringArray';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { assertNoHashPaths } from './assertNoHashPaths';
@@ -18,7 +17,7 @@ import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
 import type { BuildTarget, EdgeTarget, ServerTarget } from './detectTarget';
 import type {
     ResolvedSeedcordBuildConfig,
-    ResolvedSeedcordDevConfig,
+    ResolvedSeedcordConfig,
     ResolvedTarget,
     ResolvedTunnel,
     ResolvedTypecheck,
@@ -127,11 +126,7 @@ function isServerConfig(targeted: TargetedConfig): targeted is Extract<TargetedC
     return targeted.target.kind === 'server';
 }
 
-function validateConfig(
-    raw: unknown,
-    target: BuildTarget,
-    configFile: string
-): asserts raw is SeedcordConfig | SeedcordServerConfig {
+function validateConfig(raw: unknown, target: BuildTarget, configFile: string): asserts raw is SeedcordConfig {
     if (!isPlainObject(raw)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidExport);
     throwSingleOrAggregate([...configProblems(raw, target, configFile)], SeedcordErrorCode.CliConfigProblems);
 }
@@ -157,7 +152,7 @@ export class ProjectLoader {
         modules: ModuleLoader,
         configPath: string,
         target: BuildTarget
-    ): Promise<ResolvedSeedcordDevConfig> {
+    ): Promise<ResolvedSeedcordConfig> {
         const loadedModule = await modules.importModule(configPath);
         const config: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
         validateConfig(config, target, configPath);
@@ -180,7 +175,7 @@ export class ProjectLoader {
             idleAnimation: config.idleAnimation ?? true,
             tunnel: resolveTunnel(config.tunnel),
             hmr: config.hmr
-        } satisfies ResolvedSeedcordDevConfig;
+        } satisfies ResolvedSeedcordConfig;
     }
 
     private resolveWithinRoot(root: string, target: string): string {

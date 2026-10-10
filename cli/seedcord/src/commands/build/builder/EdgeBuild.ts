@@ -2,6 +2,7 @@ import { dirname, join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { isInside } from '@seedcord/utils/node/internal';
 import { createBuilder } from 'vite';
 
 import { viteKey } from '#core/project/ProjectFiles';
@@ -13,9 +14,7 @@ import { pinModulePaths } from './pinModulePaths';
 import { TargetBuild } from './TargetBuild';
 import { WORKER_ENTRY_ID, workerEntry } from './workerEntry';
 
-import type { BuildStep } from '#commands/build/BuildRunner';
 import type { EdgeTarget } from '#core/config/detectTarget';
-import type { Steps } from '#core/output/Steps';
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './output';
 import type { NextCommand } from './TargetBuild';
@@ -28,10 +27,11 @@ type CloudflarePlugin = typeof CloudflareVitePlugin.cloudflare;
 const WORKER_ENVIRONMENT = 'worker';
 const CLOUDFLARE_PLUGIN = '@cloudflare/vite-plugin';
 
-// node and bun put the missing package's name in the message
+// node ends this message with the path of the file that did the import
+// for a missing dependency of the plugin, that path has the plugin's name in it too
 function isPluginMissing(error: unknown): boolean {
     const notFound = Error.isError(error) && 'code' in error && error.code === 'ERR_MODULE_NOT_FOUND';
-    return notFound && error.message.includes(CLOUDFLARE_PLUGIN);
+    return notFound && error.message.startsWith(`Cannot find package '${CLOUDFLARE_PLUGIN}'`);
 }
 
 function captureChunks(onChunks: (chunks: Rolldown.OutputChunk[]) => void): Plugin {
@@ -67,7 +67,7 @@ export class EdgeBuild extends TargetBuild {
     private readonly viteRoot: string;
     private cloudflare?: Promise<CloudflarePlugin>;
 
-    // an optional peer resolves from the bot's project
+    // import() finds the optional peer through seedcord's own folder in node_modules
     constructor(
         project: Project,
         private readonly target: EdgeTarget,
@@ -77,10 +77,9 @@ export class EdgeBuild extends TargetBuild {
         this.viteRoot = dirname(target.wranglerConfig);
     }
 
-    // the worker bundles every file under root, tool configs like eslint.config.ts included
     public check(): void {
         const { config, configDir } = this.project;
-        if (config.root === configDir) {
+        if (isInside(config.root, configDir)) {
             throw new SeedcordError(SeedcordErrorCode.CliEdgeRootIsConfigFolder, [config.configFile, config.root]);
         }
     }
@@ -102,7 +101,7 @@ export class EdgeBuild extends TargetBuild {
                     files,
                     folders,
                     instanceKey: viteKey(viteRoot, config.instance),
-                    baseKey: viteKey(viteRoot, config.root)
+                    rootKey: viteKey(viteRoot, config.root)
                 }),
                 pinModulePaths(files),
                 captureChunks((captured) => {
@@ -119,14 +118,12 @@ export class EdgeBuild extends TargetBuild {
         return bundleStats(chunks, files, join(outDir, ENTRY_FILE_NAME));
     }
 
-    public async afterBundle(steps: Steps<BuildStep>): Promise<void> {
-        await steps.step('boot', async () =>
-            bootWorker({
-                root: this.viteRoot,
-                plugins: [await this.workerPlugins()],
-                environments: workerEnvironment(this.project.config.build.outDir)
-            })
-        );
+    public override async boot(): Promise<void> {
+        await bootWorker({
+            root: this.viteRoot,
+            plugins: [await this.workerPlugins()],
+            environments: workerEnvironment(this.project.config.build.outDir)
+        });
     }
 
     public nextCommands(): NextCommand[] {

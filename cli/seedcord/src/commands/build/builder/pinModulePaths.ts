@@ -34,7 +34,8 @@ function importMetaPaths(program: Parameters<Visitor['visit']>[0]): Rewrite[] {
 const FILE_URL = '__seedcordPathToFileURL';
 const FILE_URL_IMPORT = `import { pathToFileURL as ${FILE_URL} } from 'node:url';`;
 
-// bun --compile gives every module the entry's import.meta. an edge bot's files have no path on disk.
+// bun --compile gives every module the entry's import.meta
+// an edge bot's files have no path on disk
 export function pinModulePaths(files: ProjectFiles): Plugin {
     const builtRoot = `${BUILT_FILES_SLOT}.root`;
 

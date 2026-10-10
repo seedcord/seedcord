@@ -7,7 +7,7 @@ import { assert, describe, it, expect, onTestFinished } from 'vitest';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { OpenModules } from '#core/modules/ModuleLoader';
 
 function tempProject(): string {
@@ -35,12 +35,12 @@ function stubModulesExporting(config: unknown): StubModules {
     return { open: () => Promise.resolve(modules), closed: () => closed };
 }
 
-function projectWith(config: unknown): { projectDir: string; load: () => Promise<ResolvedSeedcordDevConfig> } {
+function projectWith(config: unknown): { projectDir: string; load: () => Promise<ResolvedSeedcordConfig> } {
     const projectDir = tempProject();
     writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
     const { open } = stubModulesExporting(config);
 
-    const load = async (): Promise<ResolvedSeedcordDevConfig> => {
+    const load = async (): Promise<ResolvedSeedcordConfig> => {
         const { config: resolved } = await new ProjectLoader(open).open(projectDir);
         return resolved;
     };
@@ -258,7 +258,7 @@ describe('ProjectLoader validation', () => {
     });
 
     it('resolves each tunnel shape into a mode', async () => {
-        const tunnelOf = async (tunnel: unknown): Promise<ResolvedSeedcordDevConfig['tunnel']> => {
+        const tunnelOf = async (tunnel: unknown): Promise<ResolvedSeedcordConfig['tunnel']> => {
             const resolved = await projectWith({ ...MINIMAL, tunnel }).load();
             return resolved.tunnel;
         };

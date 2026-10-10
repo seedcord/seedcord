@@ -17,7 +17,7 @@ import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { TscRunner } from './TscRunner';
 
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { DevEventHandler } from './runtime/events';
@@ -31,7 +31,7 @@ export class DevSession {
     private stopPromise?: Promise<void>;
 
     constructor(
-        private readonly config: ResolvedSeedcordDevConfig,
+        private readonly config: ResolvedSeedcordConfig,
         private readonly runtime: DevRuntime,
         private readonly store: DevStore,
         private readonly onEvent: DevEventHandler

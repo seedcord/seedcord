@@ -7,9 +7,9 @@ import { DevStore } from '#ui/stores/DevStore';
 
 import type { DevRuntime, DevRuntimeContext } from '#commands/dev/runtime/DevRuntime';
 import type { DevEvent } from '#commands/dev/runtime/events';
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
-function config(): ResolvedSeedcordDevConfig {
+function config(): ResolvedSeedcordConfig {
     return {
         root: process.cwd(),
         configFile: `${process.cwd()}/seedcord.config.ts`,

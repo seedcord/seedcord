@@ -1,11 +1,11 @@
 import { stripVTControlCharacters } from 'node:util';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { createLogger, preview } from 'vite';
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { InlineConfig, Logger, Plugin } from 'vite';
+import type { InlineConfig, Logger, Plugin, PreviewServer } from 'vite';
 
 // the edge Seedcord answers a GET with 405 before it starts the bot
 const LOADED_STATUS = 405;
@@ -37,6 +37,19 @@ function answerErrorsQuietly(): Plugin {
     };
 }
 
+function bootFailed(errors: string[], fallback: string, cause?: unknown): SeedcordError {
+    const reason = errors.length > 0 ? errors.join('\n') : fallback;
+    return new SeedcordError(SeedcordErrorCode.CliEdgeBootFailed, [reason], { cause });
+}
+
+function localUrl(server: PreviewServer): string {
+    const url = server.resolvedUrls?.local[0];
+    if (url === undefined) {
+        throw bootFailed([], 'vite preview listed no local URL, so the build had nowhere to send its test request.');
+    }
+    return url;
+}
+
 // workerd loads the worker on its first request
 export async function bootWorker(config: InlineConfig): Promise<void> {
     const errors: string[] = [];
@@ -50,11 +63,14 @@ export async function bootWorker(config: InlineConfig): Promise<void> {
 
     let status: number | undefined;
     try {
-        const url = server.resolvedUrls?.local[0];
-        if (url === undefined) {
-            throw new SeedcordError(SeedcordErrorCode.CliEdgeBootFailed, ['vite preview started without a local URL.']);
-        }
-        const response = await fetch(url);
+        const response = await fetch(localUrl(server)).catch((error: unknown) => {
+            const message = Error.isError(error) ? error.message : String(error);
+            throw bootFailed(
+                errors,
+                `The worker closed the connection before it answered (${message}). Run ${paint.bold('wrangler dev')} in the project folder to see workerd's output.`,
+                error
+            );
+        });
         status = response.status;
     } finally {
         // close rethrows a failed startup
@@ -64,7 +80,8 @@ export async function bootWorker(config: InlineConfig): Promise<void> {
     }
     if (status === LOADED_STATUS) return;
 
-    const reason =
-        errors.length > 0 ? errors.join('\n') : `The worker answered a GET with ${status}, where a bot answers 405.`;
-    throw new SeedcordError(SeedcordErrorCode.CliEdgeBootFailed, [reason]);
+    throw bootFailed(
+        errors,
+        `The worker answered a GET with ${status}, where a seedcord bot answers 405. Check that ${paint.bold('instance')} default-exports a ${paint.bold('new Seedcord(...)')} from ${paint.bold('@seedcord/http')}.`
+    );
 }

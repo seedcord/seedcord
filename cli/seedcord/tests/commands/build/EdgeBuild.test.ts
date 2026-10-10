@@ -9,8 +9,9 @@ import { openModuleLoader } from '#core/modules/openModuleLoader';
 
 const EDGE_BOT = join(import.meta.dirname, '../../fixtures/edge-bot');
 
-function notFound(name: string): Error {
-    return Object.assign(new Error(`Cannot find package '${name}' imported from somewhere`), {
+// node's wording, with the importing file at the end
+function notFound(name: string, importer: string): Error {
+    return Object.assign(new Error(`Cannot find package '${name}' imported from ${importer}`), {
         code: 'ERR_MODULE_NOT_FOUND'
     });
 }
@@ -21,7 +22,8 @@ describe('EdgeBuild', () => {
         const { target } = project.config;
         assert(target.kind === 'edge');
 
-        const build = new EdgeBuild(project, target, () => Promise.reject(notFound('@cloudflare/vite-plugin')));
+        const missing = notFound('@cloudflare/vite-plugin', '/bot/node_modules/seedcord/dist/cli.mjs');
+        const build = new EdgeBuild(project, target, () => Promise.reject(missing));
 
         await expect(build.bundle()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliEdgeVitePluginMissing,
@@ -34,7 +36,8 @@ describe('EdgeBuild', () => {
         const { target } = project.config;
         assert(target.kind === 'edge');
 
-        const build = new EdgeBuild(project, target, () => Promise.reject(notFound('miniflare')));
+        const missing = notFound('miniflare', '/bot/node_modules/@cloudflare/vite-plugin/dist/index.mjs');
+        const build = new EdgeBuild(project, target, () => Promise.reject(missing));
 
         await expect(build.bundle()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliImportFailed,

@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { appendFile, mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -103,6 +103,16 @@ describe('seedcord build on an edge bot with files it never loads', () => {
     it('throws CliEdgeRootIsConfigFolder for a root that holds the seedcord config', async () => {
         const projectDir = await copyEdgeBotForTest();
         await writeFile(join(projectDir, 'seedcord.config.ts'), "export default { instance: './src/bot.ts' };\n");
+
+        await expect(BuildRunner.create(quietSteps).run(projectDir)).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliEdgeRootIsConfigFolder
+        });
+    }, 120_000);
+
+    it('throws CliEdgeRootIsConfigFolder for a root above the seedcord config', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        const config = { root: '..', instance: `./${basename(projectDir)}/src/bot.ts` };
+        await writeFile(join(projectDir, 'seedcord.config.ts'), `export default ${JSON.stringify(config)};\n`);
 
         await expect(BuildRunner.create(quietSteps).run(projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliEdgeRootIsConfigFolder
