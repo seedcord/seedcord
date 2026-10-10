@@ -12,8 +12,7 @@ import type { Answers } from '#interview/types';
 import type { AgentName } from 'package-manager-detector';
 
 // capabilities and publicKey each belong to one transport, and runFlow leaves the other unset
-export type ScaffoldAnswers = Partial<Answers> &
-    Pick<Answers, 'botColor' | 'directory' | 'language' | 'token' | 'transport'>;
+export type ScaffoldAnswers = Partial<Answers> & Pick<Answers, 'botColor' | 'directory' | 'token' | 'transport'>;
 
 // the three that make messageCreate fire
 const MESSAGE_CAPABILITIES = new Set(['guild-messages', 'message-text', 'direct-messages']);
@@ -33,7 +32,7 @@ export interface TemplateContext {
     engines: { node: string; bun: string };
 }
 
-const REQUIRED = ['directory', 'language', 'transport', 'token', 'botColor'] as const;
+const REQUIRED = ['directory', 'transport', 'token', 'botColor'] as const;
 
 // runFlow either fills these or throws
 export function requireScaffoldAnswers(answers: Partial<Answers>): ScaffoldAnswers {

@@ -8,7 +8,6 @@ import type { ScaffoldAnswers } from '#template/context';
 
 const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',
-    language: 'typescript',
     transport: 'gateway',
     capabilities: ['guild-messages'],
     token: 'aaa.bbb.ccc',
@@ -17,7 +16,6 @@ const GATEWAY: ScaffoldAnswers = {
 
 const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
-    language: 'typescript',
     transport: 'http',
     token: 'aaa.bbb.ccc',
     publicKey: 'a'.repeat(64),
@@ -117,7 +115,6 @@ describe('reproducingCommand', () => {
         const command = reproducingCommand(GATEWAY, 'pnpm');
 
         expect(command).toContain('my-bot');
-        expect(command).toContain('--language typescript');
         expect(command).toContain('--transport gateway');
         expect(command).toContain('--capabilities guild-messages');
         expect(command).toContain('--color Blurple');
