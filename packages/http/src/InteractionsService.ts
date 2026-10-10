@@ -53,16 +53,21 @@ export class InteractionsService {
         this.rest.setToken(this.token);
     }
 
-    public prepareEngine(): Engine {
-        this.builtEngine ??= this.createEngine();
+    public get engine(): Engine {
+        if (!this.builtEngine) throw new SeedcordError(SeedcordErrorCode.CoreFetchBeforeStart);
         return this.builtEngine;
     }
 
-    private createEngine(): Engine {
+    public prepareEngine(publicKey: string): Engine {
+        this.builtEngine ??= this.createEngine(publicKey);
+        return this.builtEngine;
+    }
+
+    private createEngine(publicKey: string): Engine {
         const maps = this.interactions?.maps ?? emptyRouteMaps();
         const middlewares =
             this.interactions?.middlewares ??
             new MiddlewareRegistry<InteractionMiddlewareConstructor>(interactionMiddleware);
-        return buildEngine(this.host, maps, middlewares);
+        return buildEngine(this.host, maps, middlewares, publicKey);
     }
 }

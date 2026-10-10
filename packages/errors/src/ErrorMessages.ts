@@ -18,6 +18,8 @@ const messages = {
         `Add GatewayIntentBits.Guilds to clientOptions.intents. Without it discord.js doesn't cache any guild, so interaction.guild is null inside these commands: ${commands}.`,
     [SeedcordErrorCode.ConfigEdgeRestSweeper]: (key: string) =>
         `Remove ${paint.sky(`bot.restOptions.${key}`)} from your edge config. A sweeper interval starts a timer at the worker's global scope, where workerd throws.`,
+    [SeedcordErrorCode.ConfigPublicKeyUnavailable]: (reason: string) =>
+        `DISCORD_PUBLIC_KEY is unset, and reading the public key from Discord failed (${reason}). Check DISCORD_BOT_TOKEN, or set DISCORD_PUBLIC_KEY to the key on your application's General Information page.`,
     [SeedcordErrorCode.UnsupportedRuntimeVersion]: (runtime: string, required: string, running: string) =>
         `seedcord requires ${runtime} ${required} but this process runs ${running}. Upgrade ${runtime} before starting the bot.`,
 

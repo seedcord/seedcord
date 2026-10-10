@@ -36,8 +36,7 @@ export class NodeEndpoint implements EngineContext {
     // the built-in server calls this directly because it binds in Ready, before start() resolves
     public answer(request: Request): Promise<Response> {
         if (this.inFlight.closed) return Promise.resolve(new Response(null, { status: SERVICE_UNAVAILABLE }));
-        const engine = this.service.prepareEngine();
-        const answering = engine(request, this);
+        const answering = this.service.engine(request, this);
         this.inFlight.track(answering);
         return answering;
     }

@@ -16,6 +16,7 @@ import { InteractionsService } from '#src/InteractionsService';
 import { version as packageVersion } from '#src/version';
 
 import { NodeEndpoint } from './NodeEndpoint';
+import { publicKeyOf } from './publicKey';
 import { toWebRequest, writeWebResponse } from './webBridge';
 
 import type { HttpServerConfig } from '#interfaces/Config';
@@ -153,12 +154,10 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
             return Promise.resolve();
         });
 
-        this.startup.addTask(StartupPhase.Configuration, 'interactions-engine', () => {
-            this.#service.prepareEngine();
-            return Promise.resolve();
+        // these Login tasks read the token that Configuration sets
+        this.startup.addTask(StartupPhase.Login, 'interactions-engine', async () => {
+            this.#service.prepareEngine(await publicKeyOf(this.rest));
         });
-
-        // emoji injection reads the token that Configuration sets
         this.startup.addTask(StartupPhase.Login, 'emoji-injection', () => this.#emojiInjector.init());
 
         const commandRegistry = this.#commandRegistry;

@@ -3,12 +3,10 @@ import { setTimeout } from 'node:timers/promises';
 
 import { shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Envapter, PortableSource } from 'envapt';
 import { describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { signedRequest } from '#tests/helpers/ed25519';
-import { VALID_TOKEN } from '#tests/helpers/fixtures';
 import { slashPayload } from '#tests/helpers/interactions';
 import { bindSignedEnv, serverConfig } from '#tests/helpers/nodeHost';
 
@@ -76,16 +74,6 @@ describe('http Seedcord.fetch on node', () => {
         await host.start();
 
         expect(host.port).toBeUndefined();
-    });
-
-    it('rejects start() on port: false when DISCORD_PUBLIC_KEY is unset', async () => {
-        Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN }));
-        await using host = new Seedcord({ ...config(), port: false });
-
-        await expect(host.start()).rejects.toMatchObject({
-            code: SeedcordErrorCode.LifecyclePhaseFailures,
-            errors: [expect.objectContaining({ code: SeedcordErrorCode.ConfigMissingEnv })]
-        });
     });
 
     it('answers 503 after start() fails', async () => {

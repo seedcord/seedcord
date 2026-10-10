@@ -22,6 +22,8 @@ export enum SeedcordErrorCode {
     ConfigTokenUnreadable = 1009,
     /** An edge config sets a REST sweeper interval. */
     ConfigEdgeRestSweeper = 1010,
+    /** `DISCORD_PUBLIC_KEY` is unset and reading the key from Discord failed. */
+    ConfigPublicKeyUnavailable = 1011,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,

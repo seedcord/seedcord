@@ -10,6 +10,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
+import { Converters, Envapter } from 'envapt';
 
 import { rejectNonPost } from '#src/engine';
 import { InteractionsService } from '#src/InteractionsService';
@@ -113,7 +114,9 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         this.#service.authenticate();
         await this.#service.subscribers.init();
         await this.#service.interactions?.init();
-        return this.#service.prepareEngine();
+        if (!Envapter.has('DISCORD_PUBLIC_KEY'))
+            throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, ['DISCORD_PUBLIC_KEY']);
+        return this.#service.prepareEngine(Envapter.getRequired('DISCORD_PUBLIC_KEY', Converters.String));
     }
 
     async #runStartup(): Promise<void> {
