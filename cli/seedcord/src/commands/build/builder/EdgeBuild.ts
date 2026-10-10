@@ -15,6 +15,7 @@ import { TargetBuild } from './TargetBuild';
 import { WORKER_ENTRY_ID, workerEntry } from './workerEntry';
 
 import type { EdgeTarget } from '#core/config/detectTarget';
+import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './output';
 import type { NextCommand } from './TargetBuild';
@@ -32,6 +33,14 @@ const CLOUDFLARE_PLUGIN = '@cloudflare/vite-plugin';
 function isPluginMissing(error: unknown): boolean {
     const notFound = Error.isError(error) && 'code' in error && error.code === 'ERR_MODULE_NOT_FOUND';
     return notFound && error.message.startsWith(`Cannot find package '${CLOUDFLARE_PLUGIN}'`);
+}
+
+// workerd refuses to load a worker whose named export is anything other than a function or a handler object
+async function functionExportsOf(modules: ModuleLoader, instance: string): Promise<string[]> {
+    const module = await modules.importModule<Record<string, unknown>>(instance);
+    return Object.entries(module)
+        .filter(([name, value]) => name !== 'default' && typeof value === 'function')
+        .map(([name]) => name);
 }
 
 function captureChunks(onChunks: (chunks: Rolldown.OutputChunk[]) => void): Plugin {
@@ -80,15 +89,18 @@ export class EdgeBuild extends TargetBuild {
     public check(): void {
         const { config, configDir } = this.project;
         if (isInside(config.root, configDir)) {
-            throw new SeedcordError(SeedcordErrorCode.CliEdgeRootIsConfigFolder, [config.configFile, config.root]);
+            throw new SeedcordError(SeedcordErrorCode.CliEdgeRootHoldsConfig, [config.configFile, config.root]);
         }
     }
 
     public async bundle(): Promise<BundleStats> {
-        const { config, files } = this.project;
+        const { config, files, modules } = this.project;
         const { viteRoot, target } = this;
         const { outDir } = config.build;
-        const folders = await files.foldersIncludingEmpty();
+        const [folders, functionExports] = await Promise.all([
+            files.foldersIncludingEmpty(),
+            functionExportsOf(modules, config.instance)
+        ]);
 
         let chunks: Rolldown.OutputChunk[] = [];
         const builder = await createBuilder({
@@ -101,6 +113,7 @@ export class EdgeBuild extends TargetBuild {
                     files,
                     folders,
                     instanceKey: viteKey(viteRoot, config.instance),
+                    functionExports,
                     rootKey: viteKey(viteRoot, config.root)
                 }),
                 pinModulePaths(files),

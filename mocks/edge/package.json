@@ -13,7 +13,7 @@
         "build": "seedcord build",
         "deploy": "seedcord build && wrangler deploy",
         "codegen": "seedcord codegen",
-        "clean": "rm -rf dist",
+        "clean": "rm -rf dist .wrangler",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
         "fmt": "prettier --write '**/*.{ts,tsx,json,jsonc,md}' --cache --no-error-on-unmatched-pattern",

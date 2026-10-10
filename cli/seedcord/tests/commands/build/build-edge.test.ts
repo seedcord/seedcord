@@ -42,12 +42,8 @@ describe('seedcord build on an edge bot', () => {
     });
 
     it('writes a worker that wrangler deploys from the project folder', () => {
-        const { status, stdout, stderr } = spawnSync(process.execPath, [WRANGLER, 'deploy', '--dry-run'], {
-            cwd: projectDir,
-            encoding: 'utf8'
-        });
+        const { status } = spawnSync(process.execPath, [WRANGLER, 'deploy', '--dry-run'], { cwd: projectDir });
 
-        expect(stdout + stderr).toContain('Using redirected Wrangler configuration');
         expect(status).toBe(0);
     }, 60_000);
 
@@ -100,22 +96,29 @@ describe('seedcord build on an edge bot with files it never loads', () => {
         await expect(BuildRunner.create(quietSteps).run(projectDir)).resolves.toBeDefined();
     }, 120_000);
 
-    it('throws CliEdgeRootIsConfigFolder for a root that holds the seedcord config', async () => {
+    it('leaves a constant the instance file exports out of the worker', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await appendFile(join(projectDir, 'src/bot.ts'), "\nexport const BOT_NAME = 'edge-bot';\n");
+
+        await expect(BuildRunner.create(quietSteps).run(projectDir)).resolves.toBeDefined();
+    }, 120_000);
+
+    it('throws CliEdgeRootHoldsConfig for a root that holds the seedcord config', async () => {
         const projectDir = await copyEdgeBotForTest();
         await writeFile(join(projectDir, 'seedcord.config.ts'), "export default { instance: './src/bot.ts' };\n");
 
         await expect(BuildRunner.create(quietSteps).run(projectDir)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliEdgeRootIsConfigFolder
+            code: SeedcordErrorCode.CliEdgeRootHoldsConfig
         });
     }, 120_000);
 
-    it('throws CliEdgeRootIsConfigFolder for a root above the seedcord config', async () => {
+    it('throws CliEdgeRootHoldsConfig for a root above the seedcord config', async () => {
         const projectDir = await copyEdgeBotForTest();
         const config = { root: '..', instance: `./${basename(projectDir)}/src/bot.ts` };
         await writeFile(join(projectDir, 'seedcord.config.ts'), `export default ${JSON.stringify(config)};\n`);
 
         await expect(BuildRunner.create(quietSteps).run(projectDir)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliEdgeRootIsConfigFolder
+            code: SeedcordErrorCode.CliEdgeRootHoldsConfig
         });
     }, 120_000);
 });

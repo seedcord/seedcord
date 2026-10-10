@@ -3,7 +3,7 @@ import { dirname, join, relative, sep } from 'node:path';
 
 import { isPlainObject } from '@seedcord/utils/internal';
 
-import type { NextCommand } from './builder/TargetBuild';
+import type { NextCommand } from './TargetBuild';
 
 const FALLBACK_BINARY_NAME = 'bot';
 

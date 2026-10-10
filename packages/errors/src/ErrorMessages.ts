@@ -273,7 +273,7 @@ const messages = {
         `A seedcord edge bot needs Cloudflare's Node compat, but ${paint.path(wranglerConfig)} turns it off with ${paint.bold('"no_nodejs_compat"')}. Remove that flag from ${paint.bold('compatibility_flags')}.`,
     [SeedcordErrorCode.CliEdgeBootFailed]: (reason: string) =>
         `The build could not start the worker in workerd, the runtime Cloudflare runs it on.\n${reason}`,
-    [SeedcordErrorCode.CliEdgeRootIsConfigFolder]: (configFile: string, root: string) =>
+    [SeedcordErrorCode.CliEdgeRootHoldsConfig]: (configFile: string, root: string) =>
         `An edge build bundles every file under ${paint.bold('root')}. ${paint.path(configFile)} sets ${paint.bold('root')} to ${paint.path(root)}, so the bundle would pull in that config file and tool configs like ${paint.sky('eslint.config.ts')}. Those break the bundle. Set ${paint.bold('root')} to the folder that holds the bot's code, like ${paint.sky("'./src'")}.`,
     [SeedcordErrorCode.CliTypescriptNotStarted]: (tsc: string, reason: string) =>
         `Could not start TypeScript at ${paint.path(tsc)}: ${reason}`,

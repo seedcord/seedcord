@@ -20,23 +20,24 @@ interface WorkerEntryOptions {
     files: ProjectFiles;
     folders: string[];
     instanceKey: string;
+    functionExports: string[];
     rootKey: string;
 }
 
-function sources({ files, folders, instanceKey, rootKey }: WorkerEntryOptions): Map<string, string> {
+function sources({ files, folders, instanceKey, functionExports, rootKey }: WorkerEntryOptions): Map<string, string> {
+    const instance = JSON.stringify(instanceKey);
+    const lines = [
+        // the instance file may read env while it loads
+        // imports run in the order written
+        `import '${BIND_ENV_ID}';`,
+        `import '${BUILT_FILES_ID}';`,
+        `export { default } from ${instance};`
+    ];
+    // cloudflare reads durable object and workflow classes from the worker's named exports
+    if (functionExports.length > 0) lines.push(`export { ${functionExports.join(', ')} } from ${instance};`);
+
     return new Map([
-        [
-            WORKER_ENTRY_ID,
-            [
-                // a module's imports run before its own code, in the order written
-                `import '${BIND_ENV_ID}';`,
-                `import '${BUILT_FILES_ID}';`,
-                `export { default } from ${JSON.stringify(instanceKey)};`,
-                // cloudflare reads durable object and workflow classes from the worker's named exports
-                `export * from ${JSON.stringify(instanceKey)};`,
-                ''
-            ].join('\n')
-        ],
+        [WORKER_ENTRY_ID, [...lines, ''].join('\n')],
         [BIND_ENV_ID, BIND_ENV],
         [BUILT_FILES_ID, builtFilesSource({ files, folders, rootExpression: JSON.stringify(WORKER_ROOT), rootKey })]
     ]);

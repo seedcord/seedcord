@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { serverCommands } from '#commands/build/serverCommands';
+import { serverCommands } from '#commands/build/builder/serverCommands';
 
 let projectDir: string;
 

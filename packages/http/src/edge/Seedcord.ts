@@ -56,7 +56,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
      */
     public readonly shutdown = edgeShutdown;
 
-    /** Add a task that runs during startup, on the first request. */
+    /** Add a task that runs during startup, on the first POST. */
     public readonly startup: Pick<CoordinatedStartup, 'addTask'>;
 
     public readonly config: HttpEdgeConfig;
@@ -87,7 +87,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         this.bus = this.#service.bus;
     }
 
-    /** The bot's Discord application id. Throws if you read it before the first request. */
+    /** The bot's Discord application id. Throws if you read it before the first POST. */
     public get applicationId(): string {
         return this.#service.applicationId;
     }

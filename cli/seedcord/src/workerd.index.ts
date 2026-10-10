@@ -1,13 +1,6 @@
 import type { SeedcordConfig } from '#core/config/schema';
 
-export {
-    SEEDCORD_CONFIG_FILENAMES,
-    type SeedcordBuildConfig,
-    type SeedcordConfig,
-    type SeedcordHmrConfig
-} from '#core/config/schema';
-
-export { version } from '#core/version';
+export type { SeedcordBuildConfig, SeedcordConfig, SeedcordHmrConfig } from '#core/config/schema';
 
 /**
  * Types the `seedcord.config.ts` of a bot that runs on Cloudflare Workers.

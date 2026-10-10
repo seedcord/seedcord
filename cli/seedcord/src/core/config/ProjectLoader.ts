@@ -14,7 +14,7 @@ import { detectTarget } from './detectTarget';
 import { locateConfig } from './locateConfig';
 
 import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
-import type { BuildTarget, EdgeTarget, ServerTarget } from './detectTarget';
+import type { BuildTarget } from './detectTarget';
 import type {
     ResolvedSeedcordBuildConfig,
     ResolvedSeedcordConfig,
@@ -119,13 +119,6 @@ function resolveTypecheck(value: SeedcordHmrConfig['typecheck'], root: string): 
     return { enabled: true, tsconfig: resolve(root, value.tsconfig) };
 }
 
-type TargetedConfig =
-    { target: ServerTarget; config: SeedcordServerConfig } | { target: EdgeTarget; config: SeedcordConfig };
-
-function isServerConfig(targeted: TargetedConfig): targeted is Extract<TargetedConfig, { target: ServerTarget }> {
-    return targeted.target.kind === 'server';
-}
-
 function validateConfig(raw: unknown, target: BuildTarget, configFile: string): asserts raw is SeedcordConfig {
     if (!isPlainObject(raw)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidExport);
     throwSingleOrAggregate([...configProblems(raw, target, configFile)], SeedcordErrorCode.CliConfigProblems);
@@ -156,8 +149,6 @@ export class ProjectLoader {
         const loadedModule = await modules.importModule(configPath);
         const config: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
         validateConfig(config, target, configPath);
-        // justified: entryProblems requires entry on a server target and rejects it on edge
-        const targeted = { target, config } as TargetedConfig;
 
         const configDir = dirname(configPath);
         const root = resolve(configDir, config.root ?? '.');
@@ -169,7 +160,7 @@ export class ProjectLoader {
             instance,
             root,
             configFile: configPath,
-            target: this.resolveTarget(root, targeted),
+            target: this.resolveTarget(root, target, config),
             build,
             typecheck,
             idleAnimation: config.idleAnimation ?? true,
@@ -183,14 +174,15 @@ export class ProjectLoader {
         return resolve(root, target);
     }
 
-    private resolveTarget(root: string, targeted: TargetedConfig): ResolvedTarget {
-        if (!isServerConfig(targeted)) return targeted.target;
+    private resolveTarget(root: string, target: BuildTarget, config: SeedcordConfig): ResolvedTarget {
+        if (target.kind === 'edge') return target;
 
-        const entry = this.resolveWithinRoot(root, targeted.config.entry);
+        // justified: entryProblems already required entry on a server target
+        const entry = this.resolveWithinRoot(root, (config as SeedcordServerConfig).entry);
         if (!isInside(root, entry)) {
             throw new SeedcordError(SeedcordErrorCode.CliConfigEntryOutsideRoot, [entry, root]);
         }
-        return { ...targeted.target, entry };
+        return { ...target, entry };
     }
 
     private resolveBuildOptions(

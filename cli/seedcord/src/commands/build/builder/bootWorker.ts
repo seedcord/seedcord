@@ -42,6 +42,10 @@ function bootFailed(errors: string[], fallback: string, cause?: unknown): Seedco
     return new SeedcordError(SeedcordErrorCode.CliEdgeBootFailed, [reason], { cause });
 }
 
+function messageOf(error: unknown): string {
+    return Error.isError(error) ? error.message : String(error);
+}
+
 function localUrl(server: PreviewServer): string {
     const url = server.resolvedUrls?.local[0];
     if (url === undefined) {
@@ -64,10 +68,9 @@ export async function bootWorker(config: InlineConfig): Promise<void> {
     let status: number | undefined;
     try {
         const response = await fetch(localUrl(server)).catch((error: unknown) => {
-            const message = Error.isError(error) ? error.message : String(error);
             throw bootFailed(
                 errors,
-                `The worker closed the connection before it answered (${message}). Run ${paint.bold('wrangler dev')} in the project folder to see workerd's output.`,
+                `The worker closed the connection before it answered (${messageOf(error)}). Run ${paint.bold('wrangler dev')} in the project folder to see workerd's output.`,
                 error
             );
         });
@@ -75,7 +78,13 @@ export async function bootWorker(config: InlineConfig): Promise<void> {
     } finally {
         // close rethrows a failed startup
         await server.close().catch((error: unknown) => {
-            if (status === LOADED_STATUS) throw error;
+            if (status === LOADED_STATUS) {
+                throw bootFailed(
+                    [],
+                    `The worker loaded, then vite preview failed to close (${messageOf(error)}).`,
+                    error
+                );
+            }
         });
     }
     if (status === LOADED_STATUS) return;

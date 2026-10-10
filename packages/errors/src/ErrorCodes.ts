@@ -315,8 +315,8 @@ export enum SeedcordErrorCode {
     CliEdgeNodeCompatOff = 3147,
     /** The build could not start the edge worker in workerd. */
     CliEdgeBootFailed = 3148,
-    /** An edge bot's `root` is the folder that holds its seedcord config. */
-    CliEdgeRootIsConfigFolder = 3149,
+    /** An edge bot's `root` holds its seedcord config. */
+    CliEdgeRootHoldsConfig = 3149,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,
