@@ -1,5 +1,6 @@
+
 ---
 'create-seedcord': minor
 ---
 
-Add Uptime plugin when scaffolding project with create-seedcord
+Add a plugin directory, and a sample plugin in it when scaffolding a new project
