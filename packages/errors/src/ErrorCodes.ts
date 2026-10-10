@@ -323,8 +323,8 @@ export enum SeedcordErrorCode {
     CliEdgeRootHoldsConfig = 3149,
     /** An edge build could not read the application from Discord with `DISCORD_BOT_TOKEN`. */
     CliEdgeApplicationUnreadable = 3150,
-    /** An edge build could not read the commands deployed to a guild its commands target. */
-    CliEdgeGuildCommandsUnreadable = 3151,
+    /** An edge build could not read the commands deployed globally or to a guild its commands target. */
+    CliEdgeCommandsUnreadable = 3151,
     /** An edge build found commands in code that have no deployed id on Discord. */
     CliEdgeCommandsNotDeployed = 3152,
 

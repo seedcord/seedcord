@@ -279,7 +279,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     /** @internal */
     public contextMenuLeaves(): ContextMenuLeaves {
-        return contextMenuLeaves(this.allCommands());
+        return contextMenuLeaves(this.allCommands().map((command) => command.toJSON()));
     }
 }
 

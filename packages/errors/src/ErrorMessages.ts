@@ -251,8 +251,8 @@ const messages = {
         `${paint.bold('build.outDir')} is ${paint.path(outDir)}, which already contains other files. ${paint.bold('seedcord build')} empties ${paint.bold('outDir')} before it writes. Point it at an empty folder, or delete what is in it.`,
     [SeedcordErrorCode.CliEdgeApplicationUnreadable]: (reason: string) =>
         `Reading the application from Discord with ${paint.bold('DISCORD_BOT_TOKEN')} failed (${reason}). An edge build reads the public key and command ids from it. Check that the token belongs to the application you deploy to.`,
-    [SeedcordErrorCode.CliEdgeGuildCommandsUnreadable]: (guildId: string, reason: string) =>
-        `Could not read the commands deployed to guild ${paint.sky(guildId)} (${reason}). A command in your code targets it, so the bot has to be in that guild.`,
+    [SeedcordErrorCode.CliEdgeCommandsUnreadable]: (where: string, reason: string) =>
+        `Could not read the commands deployed ${where} (${reason}). Check ${paint.bold('DISCORD_BOT_TOKEN')}, and that the bot is in every guild a command in your code targets.`,
     [SeedcordErrorCode.CliEdgeCommandsNotDeployed]: (count: number, commands: string) =>
         `${count} command${count === 1 ? ' is' : 's are'} in your code with no deployed id on Discord, so the build cannot link ${count === 1 ? 'it' : 'them'}. Deploy with ${paint.bold('seedcord commands')}, then build again.\n${commands}`,
     [SeedcordErrorCode.CliBuildFolderProblems]: (count: number) =>

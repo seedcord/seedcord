@@ -1,4 +1,3 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
 import { routeLeavesOf } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
@@ -7,8 +6,13 @@ import { accessorStore } from '#src/miscellaneous/guarded';
 
 import type { ContextMenuKind } from '#registries/ContextMenuRegistry';
 import type { CommandInfo, ContextMenuInfo } from '#src/commands/CommandInjector';
-import type { CommandBuilder, DeployResult } from '#src/commands/types';
-import type { APIApplicationCommand, Snowflake } from 'discord-api-types/v10';
+import type { DeployResult } from '#src/commands/types';
+import type {
+    APIApplicationCommand,
+    RESTPostAPIApplicationCommandsJSONBody as CommandJson,
+    RESTPostAPIChatInputApplicationCommandsJSONBody,
+    Snowflake
+} from 'discord-api-types/v10';
 
 export interface CommandRef {
     readonly name: string;
@@ -36,10 +40,16 @@ function keyOf({ type, name }: CommandRef): string {
     return `${type}:${name}`;
 }
 
-function slashBuildersOf(all: readonly CommandBuilder[]): SlashCommandBuilder[] {
-    const slash = all.filter((command): command is SlashCommandBuilder => command instanceof SlashCommandBuilder);
-    // a guild command in N guilds is the same builder pushed once per guild
-    return [...new Set(slash)];
+function isSlash(json: CommandJson): json is RESTPostAPIChatInputApplicationCommandsJSONBody {
+    // discord reads a missing type as a slash command
+    return (json.type ?? ApplicationCommandType.ChatInput) === ApplicationCommandType.ChatInput;
+}
+
+// a guild command in N guilds appears once per guild
+function slashCommandsOf(all: readonly CommandJson[]): RESTPostAPIChatInputApplicationCommandsJSONBody[] {
+    const byName = new Map<string, RESTPostAPIChatInputApplicationCommandsJSONBody>();
+    for (const json of all) if (isSlash(json)) byName.set(json.name, json);
+    return [...byName.values()];
 }
 
 function deployedIds({ global, guilds }: DeployResult): Map<string, DeployedId> {
@@ -76,7 +86,7 @@ class CommandLinker {
         this.ids = deployedIds(deploy);
     }
 
-    public link(all: readonly CommandBuilder[]): LinkedCommands {
+    public link(all: readonly CommandJson[]): LinkedCommands {
         const leaves = contextMenuLeaves(all);
         const commands = this.slashRoutes(all);
         const contextMenus = {
@@ -93,11 +103,11 @@ class CommandLinker {
         };
     }
 
-    private slashRoutes(all: readonly CommandBuilder[]): Record<string, CommandInfo> {
+    private slashRoutes(all: readonly CommandJson[]): Record<string, CommandInfo> {
         const commands = accessorStore<CommandInfo>();
-        for (const command of slashBuildersOf(all)) {
+        for (const command of slashCommandsOf(all)) {
             const id = this.idOf({ name: command.name, type: ApplicationCommandType.ChatInput });
-            for (const { route, description } of routeLeavesOf(command.toJSON())) {
+            for (const { route, description } of routeLeavesOf(command)) {
                 commands[route] = { mention: mentionOf(route, id), ...(id && { id }), route, description };
             }
         }
@@ -135,6 +145,6 @@ class CommandLinker {
     }
 }
 
-export function linkCommands(deploy: DeployResult, all: readonly CommandBuilder[]): LinkedCommands {
+export function linkCommands(deploy: DeployResult, all: readonly CommandJson[]): LinkedCommands {
     return new CommandLinker(deploy).link(all);
 }

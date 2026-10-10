@@ -5,12 +5,11 @@ import { asError } from '@seedcord/utils/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 
 import type { FoundCommand } from '#core/modules/CommandScanner';
-import type { REST } from '@discordjs/rest';
+import type { REST, RouteLike } from '@discordjs/rest';
 import type { BakedIds, CommandRef, DeployResult, LinkedCommands } from '@seedcord/core/internal';
 import type {
     APIApplicationCommand,
     RESTGetAPIApplicationCommandsResult,
-    RESTGetAPIApplicationGuildCommandsResult,
     RESTGetCurrentApplicationResult
 } from 'discord-api-types/v10';
 
@@ -51,8 +50,10 @@ class DiscordReader {
 
     public async link({ found, guilds }: CommandsInCode): Promise<LinkedCommands> {
         const deployed = await this.deployed(targetGuilds(found, guilds));
-        const builders = found.map((command) => command.component);
-        const linked = linkCommands(deployed, builders);
+        const linked = linkCommands(
+            deployed,
+            found.map((command) => command.json)
+        );
         assertDeployed(found, linked.notDeployed);
         return linked;
     }
@@ -65,37 +66,31 @@ class DiscordReader {
         return { global, guilds: new Map(guilds) };
     }
 
-    private async globalCommands(): Promise<Map<string, APIApplicationCommand>> {
-        // justified: the discord api contract for this route
-        const listed = (await this.rest.get(
-            Routes.applicationCommands(this.applicationId)
-        )) as RESTGetAPIApplicationCommandsResult;
-        return byId(listed);
+    private globalCommands(): Promise<Map<string, APIApplicationCommand>> {
+        return this.commandsAt(Routes.applicationCommands(this.applicationId), 'globally');
     }
 
-    private async guildCommands(guildId: string): Promise<Map<string, APIApplicationCommand>> {
+    private guildCommands(guildId: string): Promise<Map<string, APIApplicationCommand>> {
+        const route = Routes.applicationGuildCommands(this.applicationId, guildId);
+        return this.commandsAt(route, `to guild ${paint.sky(guildId)}`);
+    }
+
+    private async commandsAt(route: RouteLike, where: string): Promise<Map<string, APIApplicationCommand>> {
         try {
-            // justified: the discord api contract for this route
-            const listed = (await this.rest.get(
-                Routes.applicationGuildCommands(this.applicationId, guildId)
-            )) as RESTGetAPIApplicationGuildCommandsResult;
-            return byId(listed);
+            // justified: the discord api contract for both command list routes
+            return byId((await this.rest.get(route)) as RESTGetAPIApplicationCommandsResult);
         } catch (error: unknown) {
-            throw new SeedcordError(
-                SeedcordErrorCode.CliEdgeGuildCommandsUnreadable,
-                [guildId, asError(error).message],
-                {
-                    cause: error
-                }
-            );
+            throw new SeedcordError(SeedcordErrorCode.CliEdgeCommandsUnreadable, [where, asError(error).message], {
+                cause: error
+            });
         }
     }
 }
 
 function targetGuilds(commands: readonly FoundCommand[], configured: readonly string[]): Set<string> {
     const guilds = new Set<string>();
-    for (const { meta, component } of commands) {
-        const target = resolveDeployTarget(meta, configured, component.name);
+    for (const { meta, json } of commands) {
+        const target = resolveDeployTarget(meta, configured, json.name);
         if (target.scope === 'guild') for (const guildId of target.guilds) guilds.add(guildId);
     }
     return guilds;

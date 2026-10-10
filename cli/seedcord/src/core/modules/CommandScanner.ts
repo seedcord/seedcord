@@ -10,7 +10,7 @@ import { isTsOrJsFile } from '@seedcord/utils/node';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
-import type { CommandBuilder, CommandCtor, CommandMeta } from '@seedcord/core/internal';
+import type { CommandCtor, CommandMeta } from '@seedcord/core/internal';
 import type { ILogger } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
@@ -35,16 +35,13 @@ function isApplicationCommand(json: unknown): json is RESTPostAPIApplicationComm
 export interface FoundCommand {
     sourceFile: string;
     json: RESTPostAPIApplicationCommandsJSONBody;
-    component: CommandBuilder;
     meta: CommandMeta;
 }
 
 function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | SeedcordError | undefined {
-    let component: CommandBuilder;
     let json: unknown;
     try {
-        component = new Command().component;
-        json = component.toJSON();
+        json = new Command().component.toJSON();
     } catch (error: unknown) {
         const reason = Error.isError(error) ? error.message : 'Unknown error';
         return new SeedcordError(SeedcordErrorCode.CliCommandConstructorThrew, [Command.name, sourceFile, reason], {
@@ -55,7 +52,7 @@ function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | Se
     if (!isApplicationCommand(json)) return undefined;
     // justified: isCommandClass checked this key before the walk yielded the class
     const meta = Reflect.getMetadata(CommandMetadataKey, Command) as CommandMeta;
-    return { sourceFile, json, component, meta };
+    return { sourceFile, json, meta };
 }
 
 export class CommandScanner {

@@ -1,7 +1,6 @@
-import { ContextMenuCommandBuilder } from '@discordjs/builders';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
-import type { SlashCommandBuilder } from '@discordjs/builders';
+import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 /** @internal */
 export interface ContextMenuLeaves {
@@ -10,20 +9,17 @@ export interface ContextMenuLeaves {
 }
 
 /**
- * dedupes names across builders, since the same builder repeats once per guild.
+ * dedupes names across commands, since the same command repeats once per guild.
  * a user and a message command can share a name.
  *
  * @internal
  */
-export function contextMenuLeaves(
-    commands: Iterable<SlashCommandBuilder | ContextMenuCommandBuilder>
-): ContextMenuLeaves {
+export function contextMenuLeaves(commands: Iterable<RESTPostAPIApplicationCommandsJSONBody>): ContextMenuLeaves {
     const user = new Set<string>();
     const message = new Set<string>();
     for (const command of commands) {
-        if (!(command instanceof ContextMenuCommandBuilder)) continue;
         if (command.type === ApplicationCommandType.User) user.add(command.name);
-        else message.add(command.name);
+        else if (command.type === ApplicationCommandType.Message) message.add(command.name);
     }
     return { user, message };
 }

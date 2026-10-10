@@ -6,8 +6,8 @@
     "type": "module",
     "packageManager": "pnpm@12.4.2",
     "scripts": {
-        "build": "turbo build --filter='!./apps/*'",
-        "build:all": "turbo build",
+        "build": "turbo build --filter='!./apps/*' --filter='!@seedcord/mock-edge'",
+        "build:all": "turbo build --filter='!@seedcord/mock-edge'",
         "lint": "turbo lint",
         "lint:fix": "turbo lint:fix",
         "lint:md": "markdownlint-cli2",

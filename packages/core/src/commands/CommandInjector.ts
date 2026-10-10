@@ -107,7 +107,10 @@ export class CommandInjector {
     private readonly logger = new Logger('Commands', { channel: 'bot' });
 
     public inject(deploy: DeployResult, all: readonly CommandBuilder[]): void {
-        const linked = linkCommands(deploy, all);
+        const linked = linkCommands(
+            deploy,
+            all.map((command) => command.toJSON())
+        );
         installLinks(linked);
 
         for (const ref of linked.multiGuild) this.logger.warn(multiGuildWarning(ref));

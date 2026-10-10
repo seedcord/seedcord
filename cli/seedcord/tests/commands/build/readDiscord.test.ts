@@ -20,8 +20,8 @@ class Ping extends BuilderComponent<'command'> {
 }
 
 function inCode(meta: CommandMeta = { scope: 'global' }, guilds: string[] = []): CommandsInCode {
-    const component = new Ping().component;
-    return { found: [{ sourceFile: '/bot/src/commands/Ping.ts', json: component.toJSON(), component, meta }], guilds };
+    const json = new Ping().component.toJSON();
+    return { found: [{ sourceFile: '/bot/src/commands/Ping.ts', json, meta }], guilds };
 }
 
 function deployed(id: string, name: string): { id: string; name: string; type: number } {
@@ -112,7 +112,7 @@ describe('readDiscord', () => {
         expect(failure).toHaveProperty('message', expect.stringContaining('Ping.ts'));
     });
 
-    it("throws CliEdgeGuildCommandsUnreadable with the guild and discord's reason", async () => {
+    it("throws CliEdgeCommandsUnreadable with the guild and discord's reason", async () => {
         const rest = restWith({ [Routes.applicationCommands(APP_ID)]: [] });
 
         const failure = await readDiscord({
@@ -121,8 +121,17 @@ describe('readDiscord', () => {
             emojis: undefined
         }).catch((error: unknown) => error);
 
-        expect(failure).toHaveProperty('code', SeedcordErrorCode.CliEdgeGuildCommandsUnreadable);
+        expect(failure).toHaveProperty('code', SeedcordErrorCode.CliEdgeCommandsUnreadable);
         expect(failure).toHaveProperty('message', expect.stringContaining('g9'));
+        expect(failure).toHaveProperty('message', expect.stringContaining('unreachable'));
+    });
+
+    it("throws CliEdgeCommandsUnreadable with discord's reason when the global read fails", async () => {
+        const failure = await readDiscord({ rest: restWith(), commands: inCode(), emojis: undefined }).catch(
+            (error: unknown) => error
+        );
+
+        expect(failure).toHaveProperty('code', SeedcordErrorCode.CliEdgeCommandsUnreadable);
         expect(failure).toHaveProperty('message', expect.stringContaining('unreachable'));
     });
 

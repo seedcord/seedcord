@@ -29,8 +29,10 @@ interface WorkerEntryOptions {
     ids: BakedIds;
 }
 
+// an object literal would turn a "__proto__" key into the prototype
 function bakedIdsSource(ids: BakedIds): string {
-    return `globalThis[Symbol.for(${JSON.stringify(BAKED_IDS_KEY)})] = ${JSON.stringify(ids)};\n`;
+    const json = JSON.stringify(JSON.stringify(ids));
+    return `globalThis[Symbol.for(${JSON.stringify(BAKED_IDS_KEY)})] = JSON.parse(${json});\n`;
 }
 
 function sources({

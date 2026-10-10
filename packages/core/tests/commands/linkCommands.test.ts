@@ -14,7 +14,7 @@ describe('linkCommands', () => {
                 ]),
                 guilds: new Map()
             },
-            [withSubcommand(), userMenu()]
+            [withSubcommand().toJSON(), userMenu().toJSON()]
         );
 
         expect(linked.commands['ban/list']?.mention).toBe('</ban list:1>');
@@ -22,7 +22,7 @@ describe('linkCommands', () => {
     });
 
     it('lists every command in code with no deployed id', () => {
-        const linked = linkCommands({ global: new Map(), guilds: new Map() }, [ping(), userMenu()]);
+        const linked = linkCommands({ global: new Map(), guilds: new Map() }, [ping().toJSON(), userMenu().toJSON()]);
 
         expect(linked.notDeployed).toEqual([
             { name: 'ping', type: ApplicationCommandType.ChatInput },
@@ -34,7 +34,7 @@ describe('linkCommands', () => {
         const buckets = guildBucket('g1', [['1', 'ping']]);
         buckets.set('g2', deployed([['2', 'ping']]));
 
-        const linked = linkCommands({ global: new Map(), guilds: buckets }, [ping(), ping()]);
+        const linked = linkCommands({ global: new Map(), guilds: buckets }, [ping().toJSON(), ping().toJSON()]);
 
         expect(linked.multiGuild).toEqual([{ name: 'ping', type: ApplicationCommandType.ChatInput }]);
         expect(linked.notDeployed).toEqual([]);
@@ -49,7 +49,7 @@ describe('linkCommands', () => {
                 ]),
                 guilds: guildBucket('g1', [['3', 'probe']])
             },
-            [ping()]
+            [ping().toJSON()]
         );
 
         expect(linked.notInCode).toEqual([{ name: 'probe', type: ApplicationCommandType.ChatInput }]);
