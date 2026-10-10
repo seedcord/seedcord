@@ -1,0 +1,39 @@
+{
+    "name": "@seedcord/mock-edge",
+    "type": "module",
+    "version": "0.0.0",
+    "private": true,
+    "description": "Edge mock bot on Cloudflare Workers for demonstration and testing",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/seedcord/seedcord.git",
+        "directory": "mocks/edge"
+    },
+    "scripts": {
+        "build": "seedcord build",
+        "deploy": "seedcord build && wrangler deploy",
+        "codegen": "seedcord codegen",
+        "clean": "rm -rf dist .wrangler",
+        "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
+        "fmt": "prettier --write '**/*.{ts,tsx,json,jsonc,md}' --cache --no-error-on-unmatched-pattern",
+        "fmt:check": "prettier --check '**/*.{ts,tsx,json,jsonc,md}' --cache --no-error-on-unmatched-pattern",
+        "tc": "tsgo --noEmit"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "dependencies": {
+        "@discordjs/builders": "catalog:deps",
+        "@seedcord/http": "workspace:^",
+        "discord-api-types": "catalog:deps",
+        "envapt": "catalog:peer"
+    },
+    "devDependencies": {
+        "@cloudflare/vite-plugin": "catalog:peer",
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "seedcord": "workspace:^",
+        "wrangler": "catalog:deps"
+    }
+}

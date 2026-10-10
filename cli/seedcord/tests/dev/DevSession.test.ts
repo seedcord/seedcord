@@ -7,15 +7,14 @@ import { DevStore } from '#ui/stores/DevStore';
 
 import type { DevRuntime, DevRuntimeContext } from '#commands/dev/runtime/DevRuntime';
 import type { DevEvent } from '#commands/dev/runtime/events';
-import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
-function config(): ResolvedSeedcordDevConfig {
+function config(): ResolvedSeedcordConfig {
     return {
         root: process.cwd(),
         configFile: `${process.cwd()}/seedcord.config.ts`,
-        target: { kind: 'node' },
+        target: { kind: 'server', entry: `${process.cwd()}/package.json` },
         instance: `${process.cwd()}/package.json`,
-        entry: `${process.cwd()}/package.json`,
         tunnel: { mode: 'quick' },
         typecheck: { enabled: false },
         idleAnimation: true,
@@ -105,5 +104,25 @@ describe('DevSession', () => {
 
         await session.stop();
         await running;
+    });
+
+    it('puts a non-Error value that start() rejects with into CliStartFailed', async () => {
+        const instance = {
+            [SeedcordBrand]: true,
+            [HostVersion]: '1.2.3',
+            [HostAugmentTarget]: '@seedcord/gateway',
+            // eslint-disable-next-line prefer-promise-reject-errors, @typescript-eslint/prefer-promise-reject-errors -- the case under test is a non-Error rejection
+            start: () => Promise.reject('token was revoked'),
+            [HostStartup]: { abort: () => undefined },
+            [HostShutdown]: { run: () => Promise.resolve() }
+        };
+        const session = new DevSession(config(), runtime({ default: instance }), new DevStore(), () => undefined);
+
+        const error = await settle(session, session.start());
+
+        expect(error).toMatchObject({
+            code: SeedcordErrorCode.CliStartFailed,
+            message: expect.stringContaining('token was revoked') as string
+        });
     });
 });

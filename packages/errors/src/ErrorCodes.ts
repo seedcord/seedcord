@@ -305,6 +305,18 @@ export enum SeedcordErrorCode {
     CliHashPathProblems = 3142,
     /** The CLI could not start the TypeScript compiler process. */
     CliTypescriptNotStarted = 3143,
+    /** An edge bot's seedcord config sets `entry`. */
+    CliConfigEntryOnEdge = 3144,
+    /** An edge bot's project does not have `@cloudflare/vite-plugin` installed. */
+    CliEdgeVitePluginMissing = 3145,
+    /** An edge bot's `compatibility_date` predates Cloudflare's Node compat default with no flag to turn it on. */
+    CliEdgeCompatDateTooOld = 3146,
+    /** An edge bot sets `no_nodejs_compat`. */
+    CliEdgeNodeCompatOff = 3147,
+    /** The build could not start the edge worker in workerd. */
+    CliEdgeBootFailed = 3148,
+    /** An edge bot's `root` holds its seedcord config. */
+    CliEdgeRootHoldsConfig = 3149,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

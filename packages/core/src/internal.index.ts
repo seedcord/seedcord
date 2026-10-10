@@ -23,7 +23,6 @@ export { PluginLifecycle } from '#src/lifecycle/PluginLifecycle';
 
 export type { CommandMeta } from '#decorators/Command';
 export {
-    areRoutes,
     contextMenuRouteOf,
     interactionRoutesOf,
     storeComponentRoute,

@@ -7,7 +7,7 @@ type Kind = 'http' | 'gateway';
 const APP_ID = '1000000000000000000';
 const TIMESTAMP_CHARS = 6;
 const HMAC_CHARS = 27;
-const FAKE_TOKEN = `${btoa(APP_ID).replaceAll('=', '')}.${'b'.repeat(TIMESTAMP_CHARS)}.${'c'.repeat(HMAC_CHARS)}`;
+export const FAKE_TOKEN = `${btoa(APP_ID).replaceAll('=', '')}.${'b'.repeat(TIMESTAMP_CHARS)}.${'c'.repeat(HMAC_CHARS)}`;
 
 const ED25519_KEY_BYTES = 32;
 const UNAUTHORIZED = 401;

@@ -1,5 +1,5 @@
 import { readdir } from 'node:fs/promises';
-import { basename, dirname, join, relative, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -22,6 +22,11 @@ function isSkippedName(name: string): boolean {
     return name.startsWith('.') || name === 'node_modules';
 }
 
+// the shape vite gives import.meta.glob keys and root imports, root-relative with a leading slash
+export function viteKey(root: string, path: string): string {
+    return `/${relative(root, path).split(sep).join('/')}`;
+}
+
 interface ProjectEntry {
     path: string;
     isFolder: boolean;
@@ -39,13 +44,14 @@ export class ProjectFiles {
         this.skippedFolders = [outDir, ...projectFolders];
     }
 
+    // vite also passes virtual ids like \0seedcord:entry here
+    // isInside resolves a relative path against process.cwd()
     public holds(path: string): boolean {
-        return isInside(this.root, path);
+        return isAbsolute(path) && isInside(this.root, path);
     }
 
-    // the shape vite gives import.meta.glob keys, root-relative with a leading slash
     public keyOf(path: string): string {
-        return `/${relative(this.root, path).split(sep).join('/')}`;
+        return viteKey(this.root, path);
     }
 
     public async foldersIncludingEmpty(): Promise<string[]> {
@@ -64,6 +70,7 @@ export class ProjectFiles {
             .toSorted();
     }
 
+    // the built files globs use root as their base
     public globExcludes(): string[] {
         const folders = this.skippedFolders.filter((folder) => this.holds(folder));
         const files = this.rootIsConfigDir() ? PROJECT_FILES : [];
@@ -71,8 +78,8 @@ export class ProjectFiles {
             '!**/node_modules/**',
             '!**/.*',
             '!**/.*/**',
-            ...folders.map((folder) => `!${this.keyOf(folder)}/**`),
-            ...files.map((file) => `!/${file}`)
+            ...folders.map((folder) => `!.${this.keyOf(folder)}/**`),
+            ...files.map((file) => `!./${file}`)
         ];
     }
 

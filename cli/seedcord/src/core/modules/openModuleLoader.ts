@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 
+import { asError } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
@@ -33,8 +34,9 @@ class ViteModuleLoader implements ModuleLoader, AsyncDisposable {
         try {
             return await this.runner.import<TModule>(id);
         } catch (error: unknown) {
-            const reason = Error.isError(error) ? error.message : String(error);
-            throw new SeedcordError(SeedcordErrorCode.CliImportFailed, [shownAs, reason], { cause: error });
+            throw new SeedcordError(SeedcordErrorCode.CliImportFailed, [shownAs, asError(error).message], {
+                cause: error
+            });
         }
     }
 

@@ -1,5 +1,5 @@
 import { ResolvedEmoji } from '@seedcord/core';
-import { accessorStore, clearStore, guardedAccessor, isEmojiTuple } from '@seedcord/core/internal';
+import { accessorStore, asError, clearStore, guardedAccessor, isEmojiTuple } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -10,10 +10,6 @@ import type { EmojiMap } from '@seedcord/types';
 import type { APIEmoji } from 'discord-api-types/v10';
 
 const emojiStorage = accessorStore<ResolvedEmoji>();
-
-function reasonOf(error: unknown): string {
-    return Error.isError(error) ? error.message : String(error);
-}
 
 function byName(list: readonly APIEmoji[]): Map<string, APIEmoji> {
     const map = new Map<string, APIEmoji>();
@@ -76,7 +72,7 @@ export class EmojiInjector {
             };
             return byName(listed.items);
         } catch (error) {
-            failures.push(`  - the application emojis could not be read (${reasonOf(error)})`);
+            failures.push(`  - the application emojis could not be read (${asError(error).message})`);
             return new Map();
         }
     }
@@ -94,7 +90,7 @@ export class EmojiInjector {
                 guild = byName((await this.core.rest.get(Routes.guildEmojis(guildId))) as APIEmoji[]);
             } catch (error) {
                 failures.push(
-                    `  - "${name}" for "${key}" targets guild ${guildId}, which could not be read (${reasonOf(error)})`
+                    `  - "${name}" for "${key}" targets guild ${guildId}, which could not be read (${asError(error).message})`
                 );
                 return;
             }
