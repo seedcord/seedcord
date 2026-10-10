@@ -60,7 +60,7 @@
         "@types/pg": "catalog:deps",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
-        "cross-env": "^10.1.0",
+        "cross-env": "catalog:deps",
         "discord-api-types": "catalog:deps",
         "discord.js": "catalog:peer",
         "envapt": "catalog:peer",

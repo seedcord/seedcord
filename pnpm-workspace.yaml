@@ -46,6 +46,7 @@ catalogs:
     '@types/node': ^26.1.2
     '@types/pg': ^8.23.1
     chalk: ^6.0.0
+    cross-env: ^10.1.0
     discord-api-types: ^0.38.52
     lodash.merge: ^4.6.2
     lucide-react: ^1.51.0
