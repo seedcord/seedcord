@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs';
 
-import { asError } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { asError } from '@seedcord/utils/internal';
 import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
 
 import { BIND_ENV_ID, edgeStandIns } from './edgeStandIns';

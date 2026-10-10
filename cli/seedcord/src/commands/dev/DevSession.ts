@@ -1,7 +1,6 @@
 import { existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { asError } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import {
@@ -11,6 +10,7 @@ import {
     HostVersion,
     type SeedcordInstance
 } from '@seedcord/types/internal';
+import { asError } from '@seedcord/utils/internal';
 
 import { toSeedcordInstance } from '#core/modules/importInstance';
 import { profileMark } from '#ui/profile';

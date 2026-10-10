@@ -2,7 +2,6 @@
 import { DispatchContext } from '@seedcord/core';
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import {
-    asError,
     EventMetadataKey,
     EventMiddlewareMetadataKey,
     eventResultFor,
@@ -17,7 +16,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath, hasKeys } from '@seedcord/utils';
-import { isStringArray } from '@seedcord/utils/internal';
+import { asError, isStringArray } from '@seedcord/utils/internal';
 import { traverseDirectory } from '@seedcord/utils/node';
 import { Envapter } from 'envapt';
 

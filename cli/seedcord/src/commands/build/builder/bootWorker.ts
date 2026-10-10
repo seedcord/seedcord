@@ -1,8 +1,8 @@
 import { stripVTControlCharacters } from 'node:util';
 
-import { asError } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { asError } from '@seedcord/utils/internal';
 import { createLogger, preview } from 'vite';
 
 import type { IncomingMessage, ServerResponse } from 'node:http';

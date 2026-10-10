@@ -1,6 +1,6 @@
-import { asError } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { asError } from '@seedcord/utils/internal';
 
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { Rolldown } from 'vite';

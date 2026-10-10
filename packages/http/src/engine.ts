@@ -1,7 +1,8 @@
-import { asError, PublishDefault } from '@seedcord/core/internal';
+import { PublishDefault } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
+import { asError } from '@seedcord/utils/internal';
 import { InteractionResponseType, InteractionType } from 'discord-api-types/v10';
 import { Converters, Envapter } from 'envapt';
 

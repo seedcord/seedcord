@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
 
 import { Logger } from '@seedcord/logger';
+import { asError } from '@seedcord/utils/internal';
 
-import { asError } from '#stops/asError';
 import { PublishDefault } from '#subscribers/publishDefault';
 
 import type { CoreBase } from '#interfaces/CoreBase';

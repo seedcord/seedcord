@@ -1,8 +1,8 @@
 import { dirname, join } from 'node:path';
 
-import { asError } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { asError } from '@seedcord/utils/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 import { createBuilder } from 'vite';
 

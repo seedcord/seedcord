@@ -1,8 +1,9 @@
 import { ResolvedEmoji } from '@seedcord/core';
-import { accessorStore, asError, clearStore, guardedAccessor, isEmojiTuple } from '@seedcord/core/internal';
+import { accessorStore, clearStore, guardedAccessor, isEmojiTuple } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
+import { asError } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
 
 import type { Core } from '#interfaces/Core';

@@ -1,4 +1,4 @@
-import { asError } from '#stops/asError';
+import { asError } from '@seedcord/utils/internal';
 
 import { outcomeFor } from './dispatchReport';
 

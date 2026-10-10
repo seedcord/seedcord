@@ -1,7 +1,7 @@
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
+import { asError } from '@seedcord/utils/internal';
 
-import { asError } from '#stops/asError';
 import { PublishDefault } from '#subscribers/publishDefault';
 
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
