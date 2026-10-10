@@ -2,4 +2,4 @@
 '@seedcord/errors': minor
 ---
 
-**BREAKING:** Renamed `CliCodegenCommandsDirUnreadable`, `CliCodegenCommandConstructorThrew` and `CliCodegenCommandProblems` to `CliCommandsDirUnreadable`, `CliCommandConstructorThrew` and `CliCommandProblems`. Their numbers stay the same.
+**BREAKING:** Renamed `CliCodegenCommandsDirUnreadable` and `CliCodegenCommandConstructorThrew` to `CliCommandsDirUnreadable` and `CliCommandConstructorThrew`. Their numbers stay the same.

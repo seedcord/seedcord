@@ -14,8 +14,9 @@ export type InjectedEmojiMap = {
 };
 
 /**
- * The bot's resolved emojis, keyed by {@link EmojiMap}. Filled by {@link EmojiInjector} during startup.
- * Throws if you read a key the injector did not fill.
+ * The bot's resolved emojis, keyed by {@link EmojiMap}. A node bot fills these during startup. An edge
+ * bot fills them on its first request, from the ids `seedcord build` wrote into the worker. Throws if
+ * you read a key that was not filled.
  */
 export const Emojis = guardedAccessor('Emojis', emojiStorage) as InjectedEmojiMap;
 

@@ -19,7 +19,7 @@ const messages = {
     [SeedcordErrorCode.ConfigEdgeRestSweeper]: (key: string) =>
         `Remove ${paint.sky(`bot.restOptions.${key}`)} from your edge config. A sweeper interval starts a timer at the worker's global scope, where workerd throws.`,
     [SeedcordErrorCode.ConfigPublicKeyUnavailable]: (reason: string) =>
-        `Reading the public key from Discord failed (${reason}). The bot reads it there because DISCORD_PUBLIC_KEY is unset. Check DISCORD_BOT_TOKEN, or set DISCORD_PUBLIC_KEY to the key from your application's General Information page.`,
+        `Reading the public key from Discord failed (${reason}). The bot reads it there because ${paint.bold('DISCORD_PUBLIC_KEY')} is unset. Check ${paint.bold('DISCORD_BOT_TOKEN')}, or set ${paint.bold('DISCORD_PUBLIC_KEY')} to the key from your application's General Information page.`,
     [SeedcordErrorCode.UnsupportedRuntimeVersion]: (runtime: string, required: string, running: string) =>
         `seedcord requires ${runtime} ${required} but this process runs ${running}. Upgrade ${runtime} before starting the bot.`,
 
@@ -66,7 +66,7 @@ const messages = {
     [SeedcordErrorCode.CoreApplicationUnavailable]: () =>
         "The bot's application id resolves during startup. You read it before that. Read it inside a handler, inside a plugin's ready(), or after start() resolves. An edge bot resolves it on its first request.",
     [SeedcordErrorCode.CoreEdgeUnbuilt]: () =>
-        `This worker has no public key or command ids. ${paint.bold('seedcord build')} reads them from Discord and writes them into the worker, so deploy the output it writes to ${paint.path('dist')}.`,
+        `This worker has no public key or command ids. ${paint.bold('seedcord build')} reads them from Discord and writes them into the worker it builds. Deploy that build.`,
     [SeedcordErrorCode.CoreFetchBeforeStart]: () =>
         `${paint.bold('fetch()')} ran before ${paint.bold('start()')}. Call ${paint.bold('await seedcord.start()')} before your server passes requests to ${paint.bold('fetch()')}.`,
     [SeedcordErrorCode.CoreAccessorUnresolved]: (accessor: string, key: string) =>
@@ -250,7 +250,7 @@ const messages = {
     [SeedcordErrorCode.CliBuildOutDirNotEmpty]: (outDir: string) =>
         `${paint.bold('build.outDir')} is ${paint.path(outDir)}, which already contains other files. ${paint.bold('seedcord build')} empties ${paint.bold('outDir')} before it writes. Point it at an empty folder, or delete what is in it.`,
     [SeedcordErrorCode.CliEdgeApplicationUnreadable]: (reason: string) =>
-        `Reading the application from Discord with ${paint.bold('DISCORD_BOT_TOKEN')} failed (${reason}). An edge build reads the public key and command ids from it. Check that the token belongs to the application you deploy to.`,
+        `Reading the application from Discord with ${paint.bold('DISCORD_BOT_TOKEN')} failed (${reason}). An edge build reads the public key and command ids from it. Check that the token is set in your environment or .env and is still valid.`,
     [SeedcordErrorCode.CliEdgeCommandsUnreadable]: (where: string, reason: string) =>
         `Could not read the commands deployed ${where} (${reason}). Check ${paint.bold('DISCORD_BOT_TOKEN')}, and that the bot is in every guild a command in your code targets.`,
     [SeedcordErrorCode.CliEdgeCommandsNotDeployed]: (count: number, commands: string) =>
