@@ -34,15 +34,14 @@ export class EmojiInjector {
     constructor(private readonly core: Core) {}
 
     public async init(): Promise<void> {
-        clearStore(emojiStorage);
-
         const configured = this.core.config.bot.emojis;
         if (!configured || Object.keys(configured).length === 0) {
+            installEmojis({});
             this.logger.debug('No emojis configured, skipping emoji injection.');
             return;
         }
 
-        Object.assign(emojiStorage, await resolveEmojis(this.core.rest, this.core.applicationId, configured));
+        installEmojis(await resolveEmojis(this.core.rest, this.core.applicationId, configured));
         this.logger.utils.summary('Loaded emojis', { emojis: Object.keys(emojiStorage).length });
     }
 }

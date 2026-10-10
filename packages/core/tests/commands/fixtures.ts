@@ -3,7 +3,7 @@ import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
-export type DeployedEntry = [id: string, name: string, type?: ApplicationCommandType];
+type DeployedEntry = [id: string, name: string, type?: ApplicationCommandType];
 
 export function deployed(entries: DeployedEntry[]): Map<string, APIApplicationCommand> {
     const built = new Map<string, APIApplicationCommand>();

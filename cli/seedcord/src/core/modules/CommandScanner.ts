@@ -85,7 +85,7 @@ export class CommandScanner {
             entries = await readdir(dir, { withFileTypes: true });
         } catch (error: unknown) {
             const reason = Error.isError(error) ? error.message : 'Unknown error';
-            // an unreadable commands dir would pass --check against a stale registry
+            // skipping the root would read as a bot with no commands
             if (isRoot) throw new SeedcordError(SeedcordErrorCode.CliCommandsDirUnreadable, [dir, reason]);
             this.logger.warn(`Skipping unreadable directory ${dir}. ${reason}.`);
             return;

@@ -3,6 +3,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { routeLeavesOf, type SlashRouteLeaf } from '@seedcord/utils/internal';
 import { ApplicationCommandOptionType, ApplicationCommandType, InteractionContextType } from 'discord-api-types/v10';
 
+import type { FoundCommand } from '#core/modules/CommandScanner';
 import type { OptionKind, RouteCache, SlashOption, SlashRouteEntry } from '@seedcord/core/internal';
 import type { EmojiConfig, ILogger } from '@seedcord/types';
 import type {
@@ -29,10 +30,7 @@ export interface Augmentation {
     emojis: EmojiKinds;
 }
 
-export interface ScannedCommand {
-    sourceFile: string;
-    json: RESTPostAPIApplicationCommandsJSONBody;
-}
+export type ScannedCommand = Pick<FoundCommand, 'sourceFile' | 'json'>;
 
 type CommandOption = SlashRouteLeaf['options'][number];
 type BasicOption = Exclude<

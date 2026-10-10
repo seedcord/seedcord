@@ -35,12 +35,12 @@ interface BuildRunnerDeps {
 export class BuildRunner {
     constructor(private readonly deps: BuildRunnerDeps) {}
 
-    public static create(steps: Steps<BuildStep>, buildFor = targetBuildFor): BuildRunner {
+    public static create(steps: Steps<BuildStep>): BuildRunner {
         return new BuildRunner({
             steps,
             projectLoader: new ProjectLoader(openModuleLoader),
             typeChecker: new TypeChecker(),
-            buildFor
+            buildFor: targetBuildFor
         });
     }
 

@@ -15,8 +15,7 @@ import type {
 
 export interface CommandsInCode {
     found: readonly FoundCommand[];
-    // the bot config's commands.guilds
-    guilds: readonly string[];
+    configuredGuilds: readonly string[];
 }
 
 interface DiscordReadOptions {
@@ -26,7 +25,7 @@ interface DiscordReadOptions {
     emojis: Readonly<Record<string, unknown>> | undefined;
 }
 
-export interface DiscordRead extends Pick<LinkedCommands, 'notInCode' | 'multiGuild'> {
+interface DiscordRead extends Pick<LinkedCommands, 'notInCode' | 'multiGuild'> {
     ids: BakedIds;
 }
 
@@ -48,8 +47,8 @@ class DiscordReader {
         private readonly applicationId: string
     ) {}
 
-    public async link({ found, guilds }: CommandsInCode): Promise<LinkedCommands> {
-        const deployed = await this.deployed(targetGuilds(found, guilds));
+    public async link({ found, configuredGuilds }: CommandsInCode): Promise<LinkedCommands> {
+        const deployed = await this.deployed(targetGuilds(found, configuredGuilds));
         const linked = linkCommands(
             deployed,
             found.map((command) => command.json)

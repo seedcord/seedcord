@@ -5,8 +5,11 @@ import { basename, join } from 'node:path';
 import { Routes } from 'discord-api-types/v10';
 import { onTestFinished } from 'vitest';
 
-import { targetBuildFor } from '#commands/build/builder/targetBuildFor';
+import { EdgeBuild } from '#commands/build/builder/EdgeBuild';
+import { TypeChecker } from '#commands/build/builder/TypeChecker';
 import { BuildRunner } from '#commands/build/BuildRunner';
+import { ProjectLoader } from '#core/config/ProjectLoader';
+import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { quietSteps } from '#core/output/quietSteps';
 
 import { APP_ID, ED25519_KEY_BYTES, FAKE_TOKEN } from './smoke';
@@ -55,7 +58,16 @@ export function fakeDiscord(publicKey = ANY_PUBLIC_KEY): Pick<REST, 'get'> {
 }
 
 export function edgeBuildRunner(discord = fakeDiscord()): BuildRunner {
-    return BuildRunner.create(quietSteps, (project) => targetBuildFor(project, { openDiscord: () => discord }));
+    return new BuildRunner({
+        steps: quietSteps,
+        projectLoader: new ProjectLoader(openModuleLoader),
+        typeChecker: new TypeChecker(),
+        buildFor: (project) => {
+            const { target } = project.config;
+            if (target.kind !== 'edge') throw new Error(`edgeBuildRunner got a ${target.kind} project`);
+            return new EdgeBuild(project, target, { openDiscord: () => discord });
+        }
+    });
 }
 
 export type SignRequest = (body: string) => Promise<Headers>;

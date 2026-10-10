@@ -79,3 +79,5 @@ pnpm add -D @cloudflare/vite-plugin wrangler
 ```
 
 `seedcord build` bundles the worker into `outDir`, then starts it once in workerd to check that it loads. Run `wrangler deploy` from the project folder to deploy it.
+
+Before it bundles, the build reads the public key, command ids and emoji ids from Discord with `DISCORD_BOT_TOKEN` from your environment or `.env`, and writes them into the worker. Every command in your code has to be deployed already, or the build stops and lists the ones that aren't.

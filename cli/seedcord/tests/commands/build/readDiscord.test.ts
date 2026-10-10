@@ -19,9 +19,9 @@ class Ping extends BuilderComponent<'command'> {
     }
 }
 
-function inCode(meta: CommandMeta = { scope: 'global' }, guilds: string[] = []): CommandsInCode {
+function inCode(meta: CommandMeta = { scope: 'global' }, configuredGuilds: string[] = []): CommandsInCode {
     const json = new Ping().component.toJSON();
-    return { found: [{ sourceFile: '/bot/src/commands/Ping.ts', json, meta }], guilds };
+    return { found: [{ sourceFile: '/bot/src/commands/Ping.ts', json, meta }], configuredGuilds };
 }
 
 function deployed(id: string, name: string): { id: string; name: string; type: number } {

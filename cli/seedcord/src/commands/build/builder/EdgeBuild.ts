@@ -34,13 +34,13 @@ import type { EnvironmentOptions, Plugin, Rolldown } from 'vite';
 
 type CloudflarePlugin = typeof CloudflareVitePlugin.cloudflare;
 
-export interface EdgeBuildDeps {
+interface EdgeBuildDeps {
     importCloudflare: () => Promise<typeof CloudflareVitePlugin>;
     openDiscord: () => Pick<REST, 'get'>;
 }
 
-// import() finds the optional peer through seedcord's own folder in node_modules
 const DEFAULT_DEPS: EdgeBuildDeps = {
+    // import() finds the optional peer through seedcord's own folder in node_modules
     importCloudflare: () => import('@cloudflare/vite-plugin'),
     openDiscord: () => new REST({ version: '10' }).setToken(validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN')))
 };
@@ -190,7 +190,7 @@ export class EdgeBuild extends TargetBuild {
     private async commandsInCode(commands: CommandsConfig): Promise<CommandsInCode | undefined> {
         if (commands.path === null) return undefined;
         const found = await new CommandScanner(this.project.modules, this.logger).scan(commands.path);
-        return { found, guilds: commands.guilds ?? [] };
+        return { found, configuredGuilds: commands.guilds ?? [] };
     }
 
     private async workerPlugins(): Promise<Plugin[]> {

@@ -19,7 +19,7 @@ export interface CommandRef {
     readonly type: ApplicationCommandType;
 }
 
-export interface LinkedContextMenus {
+interface LinkedContextMenus {
     readonly user: Record<string, ContextMenuInfo>;
     readonly message: Record<string, ContextMenuInfo>;
 }
