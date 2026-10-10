@@ -1,3 +1,4 @@
+import { asError } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
@@ -26,6 +27,5 @@ export function bundleStats(chunks: Rolldown.OutputChunk[], files: ProjectFiles,
 }
 
 export function bundleFailed(error: unknown): never {
-    const reason = Error.isError(error) ? error.message : String(error);
-    throw new SeedcordError(SeedcordErrorCode.CliBundleFailed, [reason], { cause: error });
+    throw new SeedcordError(SeedcordErrorCode.CliBundleFailed, [asError(error).message], { cause: error });
 }

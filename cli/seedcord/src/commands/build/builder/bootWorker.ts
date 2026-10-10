@@ -1,5 +1,6 @@
 import { stripVTControlCharacters } from 'node:util';
 
+import { asError } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { createLogger, preview } from 'vite';
@@ -42,10 +43,6 @@ function bootFailed(errors: string[], fallback: string, cause?: unknown): Seedco
     return new SeedcordError(SeedcordErrorCode.CliEdgeBootFailed, [reason], { cause });
 }
 
-function messageOf(error: unknown): string {
-    return Error.isError(error) ? error.message : String(error);
-}
-
 function localUrl(server: PreviewServer): string {
     const url = server.resolvedUrls?.local[0];
     if (url === undefined) {
@@ -70,7 +67,7 @@ export async function bootWorker(config: InlineConfig): Promise<void> {
         const response = await fetch(localUrl(server)).catch((error: unknown) => {
             throw bootFailed(
                 errors,
-                `The worker closed the connection before it answered (${messageOf(error)}). Run ${paint.bold('wrangler dev')} in the project folder to see workerd's output.`,
+                `The worker closed the connection before it answered (${asError(error).message}). Run ${paint.bold('wrangler dev')} in the project folder to see workerd's output.`,
                 error
             );
         });
@@ -81,7 +78,7 @@ export async function bootWorker(config: InlineConfig): Promise<void> {
             if (status === LOADED_STATUS) {
                 throw bootFailed(
                     [],
-                    `The worker loaded, then vite preview failed to close (${messageOf(error)}).`,
+                    `The worker loaded, then vite preview failed to close (${asError(error).message}).`,
                     error
                 );
             }

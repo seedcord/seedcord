@@ -1,5 +1,6 @@
 import { dirname, join } from 'node:path';
 
+import { asError } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { isInside } from '@seedcord/utils/node/internal';
@@ -163,8 +164,9 @@ export class EdgeBuild extends TargetBuild {
             if (isPluginMissing(error)) {
                 throw new SeedcordError(SeedcordErrorCode.CliEdgeVitePluginMissing, [this.viteRoot], { cause: error });
             }
-            const reason = Error.isError(error) ? error.message : String(error);
-            throw new SeedcordError(SeedcordErrorCode.CliImportFailed, [CLOUDFLARE_PLUGIN, reason], { cause: error });
+            throw new SeedcordError(SeedcordErrorCode.CliImportFailed, [CLOUDFLARE_PLUGIN, asError(error).message], {
+                cause: error
+            });
         }
     }
 }

@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 
+import { asError } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import {
@@ -57,8 +58,7 @@ export class DevSession {
             profileMark('entry');
             return module;
         } catch (error: unknown) {
-            const message = Error.isError(error) ? error.message : String(error);
-            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, message]);
+            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, asError(error).message]);
         }
     }
 
