@@ -37,6 +37,9 @@ export { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/g
 export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
 export { resolveEmojis } from '#src/miscellaneous/resolveEmojis';
 
+export { BAKED_IDS_KEY, type BakedIds } from '#src/bakedIds';
+export { resolveDeployTarget } from '#src/commands/deployTarget';
+export { linkCommands, type CommandRef, type LinkedCommands } from '#src/commands/linkCommands';
 export { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
 export type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
 export { isCommandClass, type CommandCtor } from '#src/commands/isCommandClass';

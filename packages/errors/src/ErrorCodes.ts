@@ -319,6 +319,12 @@ export enum SeedcordErrorCode {
     CliEdgeBootFailed = 3148,
     /** An edge bot's `root` holds its seedcord config. */
     CliEdgeRootHoldsConfig = 3149,
+    /** An edge build could not read the application from Discord with `DISCORD_BOT_TOKEN`. */
+    CliEdgeApplicationUnreadable = 3150,
+    /** An edge build could not read the commands deployed to a guild its commands target. */
+    CliEdgeGuildCommandsUnreadable = 3151,
+    /** An edge build found commands in code that have no deployed id on Discord. */
+    CliEdgeCommandsNotDeployed = 3152,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

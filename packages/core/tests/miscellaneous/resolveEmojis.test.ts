@@ -55,7 +55,7 @@ describe('resolveEmojis', () => {
         expect(resolved.Wave?.id).toBe('333');
     });
 
-    it('fetches each guild once and skips the application route when every emoji is a guild tuple', async () => {
+    it('reads only the guild route, once, for two emojis from one guild', async () => {
         const { rest, get } = restWith({ g1: [apiEmoji('wave', '333'), apiEmoji('nod', '444')] });
 
         await resolveEmojis(rest, APP, { Wave: ['wave', 'g1'], Nod: ['nod', 'g1'] });

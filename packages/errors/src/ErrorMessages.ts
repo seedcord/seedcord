@@ -19,7 +19,7 @@ const messages = {
     [SeedcordErrorCode.ConfigEdgeRestSweeper]: (key: string) =>
         `Remove ${paint.sky(`bot.restOptions.${key}`)} from your edge config. A sweeper interval starts a timer at the worker's global scope, where workerd throws.`,
     [SeedcordErrorCode.ConfigPublicKeyUnavailable]: (reason: string) =>
-        `DISCORD_PUBLIC_KEY is unset, and reading the public key from Discord failed (${reason}). Check DISCORD_BOT_TOKEN, or set DISCORD_PUBLIC_KEY to the key on your application's General Information page.`,
+        `Reading the public key from Discord failed (${reason}). The bot reads it there because DISCORD_PUBLIC_KEY is unset. Check DISCORD_BOT_TOKEN, or set DISCORD_PUBLIC_KEY to the key from your application's General Information page.`,
     [SeedcordErrorCode.UnsupportedRuntimeVersion]: (runtime: string, required: string, running: string) =>
         `seedcord requires ${runtime} ${required} but this process runs ${running}. Upgrade ${runtime} before starting the bot.`,
 
@@ -247,6 +247,12 @@ const messages = {
         `${paint.bold('build.outDir')} is ${paint.path(outDir)}, which contains ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} empties ${paint.bold('outDir')} before it writes. Point it at a folder of its own, like ${paint.sky('./dist')}.`,
     [SeedcordErrorCode.CliBuildOutDirNotEmpty]: (outDir: string) =>
         `${paint.bold('build.outDir')} is ${paint.path(outDir)}, which already contains other files. ${paint.bold('seedcord build')} empties ${paint.bold('outDir')} before it writes. Point it at an empty folder, or delete what is in it.`,
+    [SeedcordErrorCode.CliEdgeApplicationUnreadable]: (reason: string) =>
+        `Reading the application from Discord with ${paint.bold('DISCORD_BOT_TOKEN')} failed (${reason}). An edge build reads the public key and command ids from it. Check that the token belongs to the application you deploy to.`,
+    [SeedcordErrorCode.CliEdgeGuildCommandsUnreadable]: (guildId: string, reason: string) =>
+        `Could not read the commands deployed to guild ${paint.sky(guildId)} (${reason}). A command in your code targets it, so the bot has to be in that guild.`,
+    [SeedcordErrorCode.CliEdgeCommandsNotDeployed]: (count: number, commands: string) =>
+        `${count} command${count === 1 ? ' is' : 's are'} in your code with no deployed id on Discord, so the build cannot link ${count === 1 ? 'it' : 'them'}. Deploy with ${paint.bold('seedcord commands')}, then build again.\n${commands}`,
     [SeedcordErrorCode.CliBuildFolderProblems]: (count: number) =>
         `${count} folders in the bot config need fixing before ${paint.bold('seedcord build')} can bundle the bot. Each one is listed below.`,
     [SeedcordErrorCode.CliBuildRelativeFolder]: (folder: string) =>
