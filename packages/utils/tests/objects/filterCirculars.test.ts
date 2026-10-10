@@ -4,13 +4,14 @@ import { filterCirculars } from '#src/objects/filterCirculars';
 
 describe('filterCirculars', () => {
     it('preserves shared objects and marks references on the current path', () => {
-        const item = { id: 42 };
+        const testValue = 42;
+        const item = { id: testValue };
         const value: Record<string, unknown> = { first: item, second: item };
         value.self = value;
 
         expect(filterCirculars(value)).toEqual({
-            first: { id: 42 },
-            second: { id: 42 },
+            first: { id: testValue },
+            second: { id: testValue },
             self: '[Circular]'
         });
     });
