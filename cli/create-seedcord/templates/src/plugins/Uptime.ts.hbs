@@ -1,0 +1,13 @@
+import { Plugin } from '{{ transportPackage }}';
+
+export class Uptime extends Plugin {
+    private startedAt = 0;
+
+    public async init(): Promise<void> {
+        this.startedAt = Date.now();
+    }
+
+    public elapsed(): number {
+        return Date.now() - this.startedAt;
+    }
+}
