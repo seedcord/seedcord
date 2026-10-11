@@ -46,7 +46,6 @@ interface DiscordRead extends Pick<LinkedCommands, 'notInCode' | 'multiGuild'> {
 const NO_COMMANDS: LinkedCommands = {
     commands: {},
     contextMenus: { user: {}, message: {} },
-    notDeployed: [],
     multiGuild: [],
     notInCode: []
 };

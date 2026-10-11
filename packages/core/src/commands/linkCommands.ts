@@ -27,7 +27,6 @@ interface LinkedContextMenus {
 export interface LinkedCommands {
     readonly commands: Record<string, CommandInfo>;
     readonly contextMenus: LinkedContextMenus;
-    readonly notDeployed: CommandRef[];
     readonly multiGuild: CommandRef[];
     readonly notInCode: CommandRef[];
 }
@@ -106,7 +105,6 @@ class CommandLinker {
                 user: this.menus(leaves.user, ApplicationCommandType.User),
                 message: this.menus(leaves.message, ApplicationCommandType.Message)
             },
-            notDeployed: inCode.filter((ref) => !this.ids.has(keyOf(ref))),
             multiGuild: inCode.filter((ref) => this.ids.get(keyOf(ref)) === MULTI_GUILD),
             notInCode: this.notInCode(inCode)
         };

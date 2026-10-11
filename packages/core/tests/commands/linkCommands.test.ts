@@ -21,23 +21,13 @@ describe('linkCommands', () => {
         expect(linked.contextMenus.user['View Profile']?.id).toBe('2');
     });
 
-    it('lists every command in code with no deployed id', () => {
-        const linked = linkCommands({ global: new Map(), guilds: new Map() }, [ping().toJSON(), userMenu().toJSON()]);
-
-        expect(linked.notDeployed).toEqual([
-            { name: 'ping', type: ApplicationCommandType.ChatInput },
-            { name: 'View Profile', type: ApplicationCommandType.User }
-        ]);
-    });
-
-    it('lists a command deployed to two guilds as multi-guild and keeps it out of notDeployed', () => {
+    it('lists a command deployed to two guilds as multi-guild', () => {
         const buckets = guildBucket('g1', [['1', 'ping']]);
         buckets.set('g2', deployed([['2', 'ping']]));
 
         const linked = linkCommands({ global: new Map(), guilds: buckets }, [ping().toJSON(), ping().toJSON()]);
 
         expect(linked.multiGuild).toEqual([{ name: 'ping', type: ApplicationCommandType.ChatInput }]);
-        expect(linked.notDeployed).toEqual([]);
     });
 
     it('lists each deployed command that no command in code matches', () => {
