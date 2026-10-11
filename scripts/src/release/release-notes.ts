@@ -15,7 +15,7 @@ import { ReleaseNotes } from '#src/release/ReleaseNotes';
 
 const run = promisify(execFile);
 
-const flags = new CliFlags('pnpm release:notes [options]', {
+const flags = new CliFlags('vp run release:notes [options]', {
     ...PUBLISHED_FLAGS,
     repo: { type: 'string', describe: 'GitHub repo slug, defaulting to seedcord/seedcord' },
     out: { type: 'string', describe: 'File to write the release body to' }

@@ -35,10 +35,10 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Build
-        run: pnpm build
+        run: vp run build
 
       - name: Sync published docs to R2
-        run: pnpm docs:sync --extract --published "$PUBLISHED" --ref "$REF"
+        run: vp run docs:sync --extract --published "$PUBLISHED" --ref "$REF"
         env:
           PUBLISHED: ${{ inputs.published }}
           REF: ${{ github.event.workflow_run.head_sha || github.sha }}

@@ -33,5 +33,5 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
-      - run: pnpm lint:md
-      - run: pnpm fmt:check
+      - run: vp run lint:md
+      - run: vp run fmt:check

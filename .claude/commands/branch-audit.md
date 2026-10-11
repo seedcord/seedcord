@@ -40,7 +40,7 @@ Treat those files as the rules. Do not substitute your own taste where they alre
 
 ## Audits to run
 
-1. Adversarial: bugs, wrong behavior, edge cases that break, claims in code, comments, docs, or changesets that are false. Try to break it. Where you can, prove a behavior claim by running the package's tests or a small script (`pnpm -C <pkg> exec vitest run <file>`, node one-liners), rather than reasoning about it.
+1. Adversarial: bugs, wrong behavior, edge cases that break, claims in code, comments, docs, or changesets that are false. Try to break it. Where you can, prove a behavior claim by running the package's tests or a small script (`vp -C <pkg> exec vitest run <file>`, node one-liners), rather than reasoning about it.
 2. Code quality per the code-quality skill.
 3. Comments per code-commenting-guidelines, and all prose (comments, README, changesets, CLI output text, error messages) per writing-voice and guide-voice. Apply them at their strictest.
     - Any comments that could be removed by using better naming, refactoring, or code structure.

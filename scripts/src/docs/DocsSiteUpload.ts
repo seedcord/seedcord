@@ -16,7 +16,7 @@ export class DocsSiteUpload {
 
     async upload(build: SiteBuild, files: readonly DocsSiteFile[]): Promise<number> {
         if (!files.some(({ key }) => key === INDEX)) {
-            throw new Error(`the docs export has no ${INDEX}. run \`pnpm -C apps/docs build\` first`);
+            throw new Error(`the docs export has no ${INDEX}. run \`vp -C apps/docs build\` first`);
         }
 
         for (let start = 0; start < files.length; start += WRITES_AT_ONCE) {

@@ -79,41 +79,41 @@ When someone asks how seedcord does something, answer for gateway and for http. 
 - **No dead code.** Before adding `export`, confirm something outside the file names the symbol. A symbol that exists only for a test belongs in the test folder.
 - **Grep every consuming surface before deleting anything.** That includes markdown and generated output. Show no callers or name the replacement.
 - **Commit subjects are one lowercase line with no scope and no body.** Write `feat:`, never `feat(http):`. A breaking change marks the bare type, `feat!:`. A PR title follows the same rule, because a squash merge turns it into the commit.
-- **Move files with `git mv`.** Add dependencies with `pnpm add` so the lockfile updates.
+- **Move files with `git mv`.** Add dependencies with `vp add` so the lockfile updates.
 
 ---
 
 ## Commands and gates
 
-Run from the repo root. `pnpm -C <package> <script>` targets one package.
+Run from the repo root. `vp -C <package> <script>` targets one package.
 
 ```sh
-pnpm -C <pkg> lint:fix   # always lint:fix, never plain lint
-pnpm -C <pkg> tc
-pnpm -C <pkg> test       # after lint and tc pass
+vp -C <pkg> lint:fix   # always lint:fix, never plain lint
+vp -C <pkg> tc
+vp -C <pkg> test       # after lint and tc pass
 ```
 
 Rebuild a shared package before you check its dependents:
 
 ```sh
-pnpm -C packages/<name> build
-pnpm -C packages/<dependent> tc
+vp -C packages/<name> build
+vp -C packages/<dependent> tc
 ```
 
 Two whole-workspace gates exist and they differ:
 
-- `pnpm prePush` runs the checks through `turbo --affected`, against `next`.
-- `pnpm prePush:all` runs every check across every package. A green `prePush` covers less than a green `prePush:all`, so run `prePush:all` before a release and at the end of a long branch.
+- `vp run prePush` runs the checks through `turbo --affected`, against `next`.
+- `vp run prePush:all` runs every check across every package. A green `prePush` covers less than a green `prePush:all`, so run `prePush:all` before a release and at the end of a long branch.
 
 Both start with `build`, which builds everything except the three sites in `apps/`, and `codegen:check`, then `check:catalog`, the script and markdown lint, `tc`, `lint`, `fmt:check`, and `test`. The root `package.json` has the exact chain.
 
-`pnpm knip` (dead code) and `pnpm react-doctor` (React patterns) are real gates. **No hook and no CI job runs them.** Run them by hand when the change warrants it.
+`vp run knip` (dead code) and `vp run react-doctor` (React patterns) are real gates. **No hook and no CI job runs them.** Run them by hand when the change warrants it.
 
 Zero lint errors, zero lint warnings, zero from `tc`, every test passing. Fix the cause. Never comment out a test, weaken an assertion, or add a broad `eslint-disable` to get past a failure. Disable a rule inline with a reason, `// eslint-disable-next-line <rule> -- <why>`, never file-wide.
 
-Watch warnings. `lint-staged` passes `--max-warnings=0`, so a warn-severity rule blocks your commit. Plain `pnpm lint` lets it through.
+Watch warnings. `vp staged` passes `--max-warnings=0`, so a warn-severity rule blocks your commit. Plain `vp run lint` lets it through.
 
-Regenerate docs with `pnpm docs:extract` after changing the public surface.
+Regenerate docs with `vp run docs:extract` after changing the public surface.
 
 ---
 

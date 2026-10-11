@@ -49,7 +49,7 @@ function groupByConfig(files: readonly string[], name: string): Map<string, Grou
 
 // every command starts in the repo root, with no shell to run a cd
 function scoped(rootDir: string | undefined, command: string): string {
-    return rootDir === undefined ? `pnpm exec ${command}` : `pnpm -C ${quote(rootDir)} exec ${command}`;
+    return rootDir === undefined ? `vp exec ${command}` : `vp -C ${quote(rootDir)} exec ${command}`;
 }
 
 export function runPrettier(files: readonly string[]): string[] {

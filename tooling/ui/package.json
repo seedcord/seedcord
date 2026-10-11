@@ -35,8 +35,8 @@
         "LICENSE"
     ],
     "scripts": {
-        "build": "tsdown",
-        "dev": "tsdown --watch",
+        "build": "vp pack",
+        "dev": "vp pack --watch",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",

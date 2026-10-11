@@ -45,9 +45,9 @@ jobs:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
       - uses: ./.github/actions/setup
-      - run: pnpm check:catalog
-      - run: pnpm lint:changesets
-      - run: pnpm lint
+      - run: vp run check:catalog
+      - run: vp run lint:changesets
+      - run: vp run lint
 
   format:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
@@ -63,7 +63,7 @@ jobs:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
       - uses: ./.github/actions/setup
-      - run: pnpm fmt:check
+      - run: vp run fmt:check
 
   typecheck:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
@@ -79,8 +79,8 @@ jobs:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
       - uses: ./.github/actions/setup
-      - run: pnpm tc
-      - run: pnpm tc:root
+      - run: vp run tc
+      - run: vp run tc:root
 
   test:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
@@ -97,7 +97,7 @@ jobs:
           turbo_team: ${{ vars.TURBO_TEAM }}
       - uses: ./.github/actions/setup
       # raising this concurrency starves the eslint and prettier fixture suites into timeouts
-      - run: pnpm turbo test --concurrency=2
+      - run: vp exec turbo test --concurrency=2
 
   build:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
@@ -113,8 +113,8 @@ jobs:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
       - uses: ./.github/actions/setup
-      - run: pnpm build:all
-      - run: pnpm codegen:check
+      - run: vp run build:all
+      - run: vp run codegen:check
 
   typescript-floor:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
@@ -130,8 +130,8 @@ jobs:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
       - uses: ./.github/actions/setup
-      - run: pnpm turbo build --filter='@seedcord/mock-gateway^...' --filter='@seedcord/mock-http^...' --filter='@seedcord/mock-edge^...' --filter='@seedcord/eslint-config...' --filter='@seedcord/eslint-plugin...'
-      - run: pnpm check:typescript-floor
+      - run: vp exec turbo build --filter='@seedcord/mock-gateway^...' --filter='@seedcord/mock-http^...' --filter='@seedcord/mock-edge^...' --filter='@seedcord/eslint-config...' --filter='@seedcord/eslint-plugin...'
+      - run: vp run check:typescript-floor
 
   node-floor:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
@@ -145,7 +145,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           node-version: '24.11'
-      - run: pnpm turbo test --concurrency=2 --continue --filter='!@seedcord/scripts'
+      - run: vp exec turbo test --concurrency=2 --continue --filter='!@seedcord/scripts'
 
   bun:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
@@ -172,14 +172,14 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: ${{ matrix.version }}
-      - run: pnpm turbo build --filter='@seedcord/mock-http^...'
+      - run: vp exec turbo build --filter='@seedcord/mock-http^...'
       - run: bun --bun bin/seedcord.mjs --version
         working-directory: cli/seedcord
       - run: |
           bun run codegen --check
           bun run build
         working-directory: mocks/http
-      - run: pnpm turbo build --filter='seedcord^...'
+      - run: vp exec turbo build --filter='seedcord^...'
       - run: pnpm exec vitest run tests/commands/build
         working-directory: cli/seedcord
 

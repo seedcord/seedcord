@@ -7,4 +7,4 @@
 
 # @seedcord/tsdown-config
 
-The shared tsdown preset seedcord packages build through. A package's own `tsdown.config.ts` imports it and passes its entries.
+The shared tsdown preset seedcord packages build through. A package's own `vite.config.ts` imports it and passes its entries.

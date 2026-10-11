@@ -16,7 +16,7 @@
     "scripts": {
         "dev": "seedcord dev",
         "build": "seedcord build",
-        "start": "pnpm build && node --enable-source-maps dist/index.mjs",
+        "start": "vp run build && node --enable-source-maps dist/index.mjs",
         "codegen": "seedcord codegen",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
