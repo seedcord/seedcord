@@ -84,10 +84,10 @@
         "prettier-plugin-tailwindcss": "catalog:deps",
         "react-doctor": "^0.9.3",
         "taze": "^21.3.0",
-        "tsdown": "catalog:deps",
         "tsx": "catalog:deps",
         "turbo": "^2.11.2",
         "typescript": "catalog:peer",
+        "vite-plus": "catalog:deps",
         "vitest": "catalog:test"
     },
     "engines": {
