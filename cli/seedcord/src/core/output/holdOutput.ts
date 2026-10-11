@@ -1,8 +1,9 @@
-import { LoggerChannelRegistry } from '@seedcord/logger';
-import { formatPretty } from '@seedcord/logger/node';
+import { LEVEL_COLOR, LoggerChannelRegistry } from '@seedcord/logger';
+import { formatBody } from '@seedcord/logger/node';
+import chalk from 'chalk';
 
 import type { Terminal } from './terminal';
-import type { LogLevel } from '@seedcord/types';
+import type { LogLevel, LogRecord } from '@seedcord/types';
 
 export interface HeldOutput {
     readonly writeToTerminal: (text: string) => void;
@@ -10,6 +11,12 @@ export interface HeldOutput {
 }
 
 const LEVELS_SHOWN_WITHOUT_VERBOSE: ReadonlySet<LogLevel> = new Set(['error', 'warn', 'info']);
+
+const LEVEL_MARK: Record<LogLevel, string> = { error: '⬢', warn: '▲', info: '●', debug: '◆', trace: '·' };
+
+function stepLine(record: LogRecord): string {
+    return `${chalk.hex(LEVEL_COLOR[record.level])(LEVEL_MARK[record.level])} ${formatBody(record)}`;
+}
 
 function textOf(chunk: string | Uint8Array): string {
     return typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8');
@@ -32,7 +39,7 @@ export function holdOutput(stdout: Terminal, stderr: Terminal, verbose: boolean)
         {
             kind: 'capture',
             onLog: (record) => {
-                if (verbose || LEVELS_SHOWN_WITHOUT_VERBOSE.has(record.level)) held.push(`${formatPretty(record)}\n`);
+                if (verbose || LEVELS_SHOWN_WITHOUT_VERBOSE.has(record.level)) held.push(`${stepLine(record)}\n`);
             }
         },
         { muteConsole: true }

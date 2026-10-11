@@ -902,6 +902,9 @@ importers:
       '@seedcord/utils':
         specifier: workspace:^
         version: link:../../packages/utils
+      chalk:
+        specifier: catalog:deps
+        version: 6.0.0
       cli-spinners:
         specifier: ^3.4.0
         version: 3.4.0
