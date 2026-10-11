@@ -29,7 +29,7 @@ async function readySeedcord(): Promise<{ signer: Signer; handle: (request: Requ
     return { signer, handle: (request) => seedcord.fetch(request) };
 }
 
-// the env and the baked ids are read on the first POST
+// the edge Seedcord reads the env and the baked ids on its first POST
 function firstRequestError(): Promise<unknown> {
     return edgeSeedcord()
         .fetch(new Request('https://bot.example/interactions', { method: 'POST' }))

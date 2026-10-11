@@ -106,7 +106,6 @@ class EmojiResolver {
     }
 }
 
-// tries every configured emoji, then throws ConfigEmojiUnresolved listing each one that failed
 export function resolveEmojis(
     rest: EmojiRest,
     applicationId: string,

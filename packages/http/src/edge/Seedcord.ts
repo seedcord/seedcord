@@ -27,7 +27,7 @@ import type { Bus } from '@seedcord/core';
 import type { BakedIds } from '@seedcord/core/internal';
 import type { IRateLimiter } from '@seedcord/types';
 
-// the worker entry seedcord build generates writes these before bot.ts loads
+// seedcord build's worker entry writes these before bot.ts loads
 function bakedIds(): BakedIds {
     const ids = Reflect.get(globalThis, Symbol.for(BAKED_IDS_KEY)) as BakedIds | undefined;
     if (!ids) throw new SeedcordError(SeedcordErrorCode.CoreEdgeUnbuilt);

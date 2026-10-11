@@ -61,7 +61,7 @@ describe('EdgeBuild', () => {
         const { target } = project.config;
         assert(target.kind === 'edge');
         const { config } = await importInstance(project.modules, project.config.instance);
-        // loading the bot binds process.env
+        // opening the project binds process.env
         Envapter.useSource(new PortableSource({}));
 
         await expect(new EdgeBuild(project, target).readDiscord(config.bot)).rejects.toMatchObject({
