@@ -11,12 +11,12 @@ The seedcord monorepo enforces quality through layered checks. Most are tool-enf
 
 | Layer | What it catches | How to run today |
 | --- | --- | --- |
-| **ESLint + TypeScript** (tool) | Type errors, lint violations, import order, formatting, rule violations | `pnpm -C <pkg> lint:fix && pnpm -C <pkg> tc` (or `pnpm lint:fix && pnpm tc` from repo root via turbo) |
-| **Vitest** (tool) | Behavior regressions | `pnpm -C <pkg> test` (only after lint + tc pass) |
-| **Prettier** (tool) | Formatting | `pnpm -C <pkg> fmt` / `fmt:check` |
-| **changesets** (tool) | Missing version bump on published packages | `pnpm cs` when touching a published package. `pnpm cs:status` to check |
-| **React 19 antipatterns** (tool) | Mutable deps, index keys, deprecated APIs, hydration mismatches, hand-rolled `useContext`, giant components | `pnpm react-doctor --verbose` from repo root. Configured via `doctor.config.ts`. Run deliberately, NOT on every `prePush` (it's slow + interactive). Use the verbose flag for per-file diagnostics. |
-| **Dead code / unused deps** (tool) | Unused files, exports, types, deps, devDeps, binaries | `pnpm knip` from repo root. Configured via `knip.json`. Run deliberately, NOT on every `prePush`. Triage false positives into `knip.json` `ignoreDependencies` / `ignoreBinaries` / extra `entry` patterns with a comment explaining why. |
+| **ESLint + TypeScript** (tool) | Type errors, lint violations, import order, formatting, rule violations | `vp -C <pkg> lint:fix && vp -C <pkg> tc` (or `vp run lint:fix && vp run tc` from repo root via turbo) |
+| **Vitest** (tool) | Behavior regressions | `vp -C <pkg> test` (only after lint + tc pass) |
+| **Prettier** (tool) | Formatting | `vp -C <pkg> fmt` / `fmt:check` |
+| **changesets** (tool) | Missing version bump on published packages | `vp run cs` when touching a published package. `vp run cs:status` to check |
+| **React 19 antipatterns** (tool) | Mutable deps, index keys, deprecated APIs, hydration mismatches, hand-rolled `useContext`, giant components | `vp run react-doctor --verbose` from repo root. Configured via `doctor.config.ts`. Run deliberately, NOT on every `prePush` (it's slow + interactive). Use the verbose flag for per-file diagnostics. |
+| **Dead code / unused deps** (tool) | Unused files, exports, types, deps, devDeps, binaries | `vp run knip` from repo root. Configured via `knip.json`. Run deliberately, NOT on every `prePush`. Triage false positives into `knip.json` `ignoreDependencies` / `ignoreBinaries` / extra `entry` patterns with a comment explaining why. |
 | **Cross-package source paths** (review) | `paths` or `include` reaching into another package's `src` | Manual review of every new/changed `tsconfig.json` and `vitest.config.ts`. |
 
 <!--prettier-ignore-end-->
@@ -29,23 +29,23 @@ The only acceptable end state for a PR is: **lint:fix and tc exit clean for ever
 
 ```sh
 # Always lint:fix (never plain lint).
-pnpm -C <pkg> lint:fix
+vp -C <pkg> lint:fix
 
 # Then typecheck — must pass before running tests.
-pnpm -C <pkg> tc
+vp -C <pkg> tc
 
 # Then tests, if the package has any.
-pnpm -C <pkg> test
+vp -C <pkg> test
 
 # From the repo root, turbo runs the script across every workspace:
-pnpm lint:fix
-pnpm tc
-pnpm test
-pnpm prePush      # every check, on the packages changed since next
-pnpm prePush:all  # every check, on every package
+vp run lint:fix
+vp run tc
+vp run test
+vp run prePush      # every check, on the packages changed since next
+vp run prePush:all  # every check, on every package
 ```
 
-Vite+ runs `vp staged` (configured in `vite.config.ts`) on commit, and commitlint on the message. No hook runs on push, so run `pnpm prePush` yourself. Don't bypass the hooks.
+Vite+ runs `vp staged` (configured in `vite.config.ts`) on commit, and commitlint on the message. No hook runs on push, so run `vp run prePush` yourself. Don't bypass the hooks.
 
 ---
 
@@ -246,7 +246,7 @@ Until a dead-code scanner is wired into the repo, run this checklist on the pack
     rg "<pkg>" packages/<pkg>/package.json
     ```
 
-    - Nothing found in src/tests and nothing in scripts → **remove from package.json**, then `pnpm install`.
+    - Nothing found in src/tests and nothing in scripts → **remove from package.json**, then `vp install`.
     - Nothing found in src/tests but it appears as a `pnpm exec <pkg>` in scripts → it's a CLI dep, so leave it.
 
 2. **Unused exports.** Before adding `export` to a symbol, verify it's consumed outside the file. After moving code, re-grep:
@@ -284,7 +284,7 @@ Each subagent should:
 
 1. List the antipatterns / dead-code candidates for its package(s)
 2. Fix every issue found
-3. Run `pnpm -C <pkg> lint:fix && pnpm -C <pkg> tc && pnpm -C <pkg> test`
+3. Run `vp -C <pkg> lint:fix && vp -C <pkg> tc && vp -C <pkg> test`
 4. Confirm 0 errors before reporting back
 5. Do not commit here. The orchestrator commits after all subagents complete
 
@@ -297,9 +297,9 @@ For small sweeps (under ~10 issues, 1 to 2 packages), fix inline, since subagent
 When you change a package that others depend on, rebuild and verify dependents before declaring done:
 
 ```sh
-pnpm -C packages/<changed-pkg> build
-pnpm -C packages/<dependent-pkg> tc
-pnpm -C apps/<dependent-app> tc
+vp -C packages/<changed-pkg> build
+vp -C packages/<dependent-pkg> tc
+vp -C apps/<dependent-app> tc
 ```
 
 `packages/seedcord` depends on `services`, `utils`, `types`, `cli` (workspace), `discord.js`, `chalk`, `envapt`, `type-fest`, `reflect-metadata`. The apps consume `docs-engine`, `docs-generator`, `types`, and `eslint-config`. Mental-model that graph before changing a leaf.
@@ -317,7 +317,7 @@ Example milestones:
 - `chore(<pkg>): tighten tsconfig / lint config`, used when adopting stricter rules
 - `chore: add changeset for <pkg>`, used when bumping a published package
 
-For any change touching a package under `packages/` (other than `tsconfig`, `tsup-config`, `eslint-config` which are workspace-internal), add a changeset via `pnpm cs` so the release pipeline can publish correctly.
+For any change touching a package under `packages/` (other than `tsconfig`, `tsup-config`, `eslint-config` which are workspace-internal), add a changeset via `vp run cs` so the release pipeline can publish correctly.
 
 ---
 

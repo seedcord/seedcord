@@ -4,7 +4,7 @@ import { Converters, Envapter } from 'envapt';
 import { CdnPurge } from '#src/docs/CdnPurge';
 import { CliFlags } from '#src/lib/CliFlags';
 
-const flags = new CliFlags('pnpm docs:purge [options]', {
+const flags = new CliFlags('vp run docs:purge [options]', {
     prefixes: {
         type: 'string',
         multiple: true,

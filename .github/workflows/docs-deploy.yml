@@ -55,21 +55,21 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Build packages
-        run: pnpm turbo build --filter="@seedcord/docs^..."
+        run: vp exec turbo build --filter="@seedcord/docs^..."
 
       - name: Render every page
-        run: pnpm -C apps/docs build
+        run: vp -C apps/docs build
         env:
           NEXT_PUBLIC_SITE_URL: https://seedcord.org/docs
           DOCS_BUILD_CPUS: 4
 
       - name: Check every docs link
-        run: pnpm -C apps/docs check:links
+        run: vp -C apps/docs check:links
 
       - name: Upload to R2
         if: github.event_name == 'push' || inputs.deploy
         id: upload
-        run: pnpm docs:upload
+        run: vp run docs:upload
         env:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
@@ -87,7 +87,7 @@ jobs:
 
       - name: Delete builds a rollback no longer needs
         if: steps.upload.outcome == 'success'
-        run: pnpm docs:prune
+        run: vp run docs:prune
         env:
           BUILD_ID: ${{ steps.upload.outputs.build_id }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

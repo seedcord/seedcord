@@ -1,5 +1,5 @@
 name: 'Setup workspace'
-description: 'Install pnpm, set up Node, optionally restore deps via pnpm install --frozen-lockfile.'
+description: 'Install pnpm, set up Node, optionally restore deps via vp install --frozen-lockfile.'
 
 inputs:
   node-version:
@@ -11,7 +11,7 @@ inputs:
     required: false
     default: ''
   install:
-    description: 'Run `pnpm install --frozen-lockfile` as the final step'
+    description: 'Run `vp install --frozen-lockfile` as the final step'
     required: false
     default: 'true'
 
@@ -31,4 +31,4 @@ runs:
     - name: Install dependencies
       if: ${{ inputs.install == 'true' }}
       shell: bash
-      run: pnpm install --frozen-lockfile
+      run: vp install --frozen-lockfile

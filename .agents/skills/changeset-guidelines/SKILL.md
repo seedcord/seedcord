@@ -9,7 +9,7 @@ A changeset becomes a changelog entry, which someone scans while deciding whethe
 
 This skill decides what a changeset says. `writing-voice` covers how any sentence in this repo sounds. `release-version` covers cutting the release itself.
 
-The shape is fixed, and `pnpm lint:changesets` rejects anything else:
+The shape is fixed, and `vp run lint:changesets` rejects anything else:
 
 - One paragraph on one line. No second paragraph, list, heading, quote, or code block.
 - Two sentences for a patch, three at most otherwise. Write the reader's own case in the second one.
@@ -29,7 +29,7 @@ A durable store keyed on the old behavior changes silently. In the worked exampl
 
 A bug fix opens with `Fixed`. A second fix gets its own changeset.
 
-Why: a changelog gets scanned, so the first word has to say what kind of entry this is. `pnpm lint:changesets` holds a patch changeset to one sentence, and each changeset becomes one changelog entry.
+Why: a changelog gets scanned, so the first word has to say what kind of entry this is. `vp run lint:changesets` holds a patch changeset to one sentence, and each changeset becomes one changelog entry.
 
 ---
 
