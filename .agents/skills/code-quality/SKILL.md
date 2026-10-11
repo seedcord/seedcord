@@ -45,7 +45,7 @@ pnpm prePush      # every check, on the packages changed since next
 pnpm prePush:all  # every check, on every package
 ```
 
-Husky runs `lint-staged` (configured in `lint-staged.config.ts`) on commit, and commitlint on the message. No hook runs on push, so run `pnpm prePush` yourself. Don't bypass the hooks.
+Vite+ runs `vp staged` (configured in `vite.config.ts`) on commit, and commitlint on the message. No hook runs on push, so run `pnpm prePush` yourself. Don't bypass the hooks.
 
 ---
 

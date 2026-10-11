@@ -114,9 +114,9 @@ When you add or change a handler in a mock, run `pnpm -C mocks/<name> codegen`. 
 
 ## Hooks
 
-`pnpm install` sets up two husky hooks:
+`pnpm install` sets up two git hooks:
 
-- **pre-commit** runs `lint-staged`, which formats the files you staged and lints them with zero warnings allowed. One lint warning blocks the commit, even though plain `pnpm lint` lets it through.
+- **pre-commit** runs `vp staged`, which formats the files you staged and lints them with zero warnings allowed. One lint warning blocks the commit, even though plain `pnpm lint` lets it through.
 - **commit-msg** runs commitlint on your message.
 
 Run `pnpm prePush` before you open the PR. It checks the packages your branch changed since `next` and the ones that depend on them. `pnpm prePush:all` checks every package. The root `package.json` has both chains.

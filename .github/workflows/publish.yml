@@ -68,7 +68,7 @@ jobs:
           push-git-tags: false
         env:
           NPM_CONFIG_PROVENANCE: 'true'
-          HUSKY: 0
+          VP_GIT_HOOKS: 0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   github-release:

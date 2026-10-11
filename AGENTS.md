@@ -111,7 +111,7 @@ Both start with `build`, which builds everything except the three sites in `apps
 
 Zero lint errors, zero lint warnings, zero from `tc`, every test passing. Fix the cause. Never comment out a test, weaken an assertion, or add a broad `eslint-disable` to get past a failure. Disable a rule inline with a reason, `// eslint-disable-next-line <rule> -- <why>`, never file-wide.
 
-Watch warnings. `lint-staged` passes `--max-warnings=0`, so a warn-severity rule blocks your commit. Plain `pnpm lint` lets it through.
+Watch warnings. `vp staged` passes `--max-warnings=0`, so a warn-severity rule blocks your commit. Plain `pnpm lint` lets it through.
 
 Regenerate docs with `pnpm docs:extract` after changing the public surface.
 
