@@ -1,10 +1,12 @@
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { Envapter, PortableSource } from 'envapt';
 import { assert, describe, expect, it } from 'vitest';
 
 import { EdgeBuild } from '#commands/build/builder/EdgeBuild';
 import { ProjectLoader } from '#core/config/ProjectLoader';
+import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 
 import type { BakedIds } from '@seedcord/core/internal';
@@ -51,6 +53,19 @@ describe('EdgeBuild', () => {
         await expect(build.bundle(NO_IDS)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliImportFailed,
             message: expect.stringContaining('miniflare') as string
+        });
+    });
+
+    it('throws ConfigMissingEnv when DISCORD_BOT_TOKEN is unset', async () => {
+        await using project = await new ProjectLoader(openModuleLoader).open(EDGE_BOT);
+        const { target } = project.config;
+        assert(target.kind === 'edge');
+        const { config } = await importInstance(project.modules, project.config.instance);
+        // loading the bot binds process.env
+        Envapter.useSource(new PortableSource({}));
+
+        await expect(new EdgeBuild(project, target).readDiscord(config.bot)).rejects.toMatchObject({
+            code: SeedcordErrorCode.ConfigMissingEnv
         });
     });
 });

@@ -250,7 +250,7 @@ const messages = {
     [SeedcordErrorCode.CliBuildOutDirNotEmpty]: (outDir: string) =>
         `${paint.bold('build.outDir')} is ${paint.path(outDir)}, which already contains other files. ${paint.bold('seedcord build')} empties ${paint.bold('outDir')} before it writes. Point it at an empty folder, or delete what is in it.`,
     [SeedcordErrorCode.CliEdgeApplicationUnreadable]: (reason: string) =>
-        `Reading the application from Discord with ${paint.bold('DISCORD_BOT_TOKEN')} failed (${reason}). An edge build reads the public key and command ids from it. Check that the token is set in your environment or .env and is still valid.`,
+        `Reading the application from Discord with ${paint.bold('DISCORD_BOT_TOKEN')} failed (${reason}). An edge build reads the public key and command ids from it. Check that the token is still valid.`,
     [SeedcordErrorCode.CliEdgeCommandsUnreadable]: (where: string, reason: string) =>
         `Could not read the commands deployed ${where} (${reason}). Check ${paint.bold('DISCORD_BOT_TOKEN')}, and that the bot is in every guild a command in your code targets.`,
     [SeedcordErrorCode.CliEdgeCommandsNotDeployed]: (count: number, commands: string) =>

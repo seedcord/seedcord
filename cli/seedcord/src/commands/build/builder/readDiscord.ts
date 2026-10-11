@@ -13,7 +13,7 @@ import { Routes } from 'discord-api-types/v10';
 
 import type { FoundCommand } from '#core/modules/CommandScanner';
 import type { REST, RouteLike } from '@discordjs/rest';
-import type { BakedIds, CommandRef, DeployResult, LinkedCommands } from '@seedcord/core/internal';
+import type { BakedIds, DeployResult, LinkedCommands } from '@seedcord/core/internal';
 import type {
     APIApplicationCommand,
     RESTGetAPIApplicationCommandsResult,
@@ -25,9 +25,16 @@ export interface CommandsInCode {
     configuredGuilds: readonly string[];
 }
 
+type DeployTarget = ReturnType<typeof resolveDeployTarget>;
+
+interface TargetedCommand {
+    command: FoundCommand;
+    target: DeployTarget;
+}
+
 interface DiscordReadOptions {
     rest: Pick<REST, 'get'>;
-    // undefined when the bot sets no commands folder
+    // undefined when the bot config's commands.path is null
     commands: CommandsInCode | undefined;
     emojis: Readonly<Record<string, unknown>> | undefined;
 }
@@ -51,13 +58,16 @@ class DiscordReader {
     ) {}
 
     public async link({ found, configuredGuilds }: CommandsInCode): Promise<LinkedCommands> {
-        const deployed = await this.deployed(targetGuilds(found, configuredGuilds));
-        const linked = linkCommands(
+        const targeted = found.map((command) => ({
+            command,
+            target: resolveDeployTarget(command.meta, configuredGuilds, command.className)
+        }));
+        const deployed = await this.deployed(guildsOf(targeted));
+        assertDeployed(targeted.filter(({ command, target }) => !isDeployedTo(deployed, command, target)));
+        return linkCommands(
             deployed,
             found.map((command) => command.json)
         );
-        assertDeployed(found, linked.notDeployed);
-        return linked;
     }
 
     private async deployed(guildIds: ReadonlySet<string>): Promise<DeployResult> {
@@ -89,28 +99,25 @@ class DiscordReader {
     }
 }
 
-function targetGuilds(commands: readonly FoundCommand[], configured: readonly string[]): Set<string> {
+function guildsOf(targeted: readonly TargetedCommand[]): Set<string> {
     const guilds = new Set<string>();
-    for (const { meta, className } of commands) {
-        const target = resolveDeployTarget(meta, configured, className);
+    for (const { target } of targeted) {
         if (target.scope === 'guild') for (const guildId of target.guilds) guilds.add(guildId);
     }
     return guilds;
 }
 
-function sourceFileOf(commands: readonly FoundCommand[], { name, type }: CommandRef): string | undefined {
-    return commands.find(({ json }) => {
-        const ref = commandRefOf(json);
-        return ref.name === name && ref.type === type;
-    })?.sourceFile;
+function isDeployedTo({ global, guilds }: DeployResult, { json }: FoundCommand, target: DeployTarget): boolean {
+    const { name, type } = commandRefOf(json);
+    const scopes = target.scope === 'global' ? [global] : target.guilds.map((guildId) => guilds.get(guildId));
+    return scopes.every((scope) => [...(scope?.values() ?? [])].some((c) => c.name === name && c.type === type));
 }
 
-function assertDeployed(commands: readonly FoundCommand[], notDeployed: readonly CommandRef[]): void {
+function assertDeployed(notDeployed: readonly TargetedCommand[]): void {
     if (notDeployed.length === 0) return;
-    const lines = notDeployed.map((ref) => {
-        const file = sourceFileOf(commands, ref);
-        return `  - ${paint.sky(ref.name)}${file ? ` in ${paint.path(file)}` : ''}`;
-    });
+    const lines = notDeployed.map(
+        ({ command }) => `  - ${paint.sky(command.json.name)} in ${paint.path(command.sourceFile)}`
+    );
     throw new SeedcordError(SeedcordErrorCode.CliEdgeCommandsNotDeployed, [notDeployed.length, lines.join('\n')]);
 }
 

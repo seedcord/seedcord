@@ -97,6 +97,13 @@ export function installLinks({ commands, contextMenus }: Pick<LinkedCommands, 'c
     }
 }
 
+const KIND_LABELS: Record<ApplicationCommandType, string> = {
+    [ApplicationCommandType.ChatInput]: 'slash command',
+    [ApplicationCommandType.User]: 'user menu',
+    [ApplicationCommandType.Message]: 'message menu',
+    [ApplicationCommandType.PrimaryEntryPoint]: 'entry point command'
+};
+
 function multiGuildWarning({ name, type }: CommandRef): string {
     const consequence =
         type === ApplicationCommandType.ChatInput
@@ -110,8 +117,10 @@ export function warnLinks(
     { multiGuild, notInCode }: Pick<LinkedCommands, 'multiGuild' | 'notInCode'>
 ): void {
     for (const ref of multiGuild) logger.warn(multiGuildWarning(ref));
-    for (const { name } of notInCode) {
-        logger.warn(`${paint.sky.bold(name)} is deployed on Discord with no command for it in your code.`);
+    for (const { name, type } of notInCode) {
+        logger.warn(
+            `The ${KIND_LABELS[type]} ${paint.sky.bold(name)} is deployed on Discord with no command for it in your code.`
+        );
     }
 }
 

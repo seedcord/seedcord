@@ -112,6 +112,37 @@ describe('readDiscord', () => {
         expect(failure).toHaveProperty('message', expect.stringContaining('Ping.ts'));
     });
 
+    it('throws CliEdgeCommandsNotDeployed for a guild command missing from one of its guilds', async () => {
+        const rest = restWith({
+            [Routes.applicationCommands(APP_ID)]: [],
+            [Routes.applicationGuildCommands(APP_ID, 'g1')]: [deployed('8', 'ping')],
+            [Routes.applicationGuildCommands(APP_ID, 'g2')]: []
+        });
+
+        const failure = await readDiscord({
+            rest,
+            commands: inCode({ scope: 'config' }, ['g1', 'g2']),
+            emojis: undefined
+        }).catch((error: unknown) => error);
+
+        expect(failure).toHaveProperty('code', SeedcordErrorCode.CliEdgeCommandsNotDeployed);
+    });
+
+    it('throws CliEdgeCommandsNotDeployed for a guild command deployed only globally', async () => {
+        const rest = restWith({
+            [Routes.applicationCommands(APP_ID)]: [deployed('7', 'ping')],
+            [Routes.applicationGuildCommands(APP_ID, 'g1')]: []
+        });
+
+        const failure = await readDiscord({
+            rest,
+            commands: inCode({ scope: 'config' }, ['g1']),
+            emojis: undefined
+        }).catch((error: unknown) => error);
+
+        expect(failure).toHaveProperty('code', SeedcordErrorCode.CliEdgeCommandsNotDeployed);
+    });
+
     it("throws CliEdgeCommandsUnreadable with the guild and discord's reason", async () => {
         const rest = restWith({ [Routes.applicationCommands(APP_ID)]: [] });
 

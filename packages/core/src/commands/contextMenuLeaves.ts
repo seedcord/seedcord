@@ -2,7 +2,6 @@ import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
-/** @internal */
 export interface ContextMenuLeaves {
     readonly user: Set<string>;
     readonly message: Set<string>;

@@ -1,12 +1,13 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandType } from 'discord-api-types/v10';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
-import { CommandInjector, Commands, ContextMenus } from '#src/commands/CommandInjector';
+import { CommandInjector, Commands, ContextMenus, warnLinks } from '#src/commands/CommandInjector';
 import { deployed, grouped, guildBucket, messageMenu, ping, userMenu, withSubcommand } from '#tests/commands/fixtures';
 
 import type { CommandInfo, ContextMenuInfo } from '#src/commands/CommandInjector';
+import type { ILogger } from '@seedcord/types';
 
 // justified: SlashRegistry is empty in tests, so runtime values read through a plain record
 const commands = Commands as Record<string, CommandInfo>;
@@ -273,6 +274,19 @@ describe('CommandInjector', () => {
             expect(userMenus['Inspect User']?.id).toBe('2');
             expect(() => userMenus['View Profile']).toThrow();
         });
+    });
+
+    it('warns "user menu" for a deployed user menu that has no command in code', () => {
+        const warn = vi.fn();
+        // justified: warnLinks only calls warn
+        const logger = { warn } as unknown as ILogger;
+
+        warnLinks(logger, {
+            multiGuild: [],
+            notInCode: [{ name: 'probe', type: ApplicationCommandType.User }]
+        });
+
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining('user menu'));
     });
 
     it('takes each nested route description from its own subcommand', () => {
