@@ -23,7 +23,7 @@
         }
     },
     "scripts": {
-        "build": "tsdown",
+        "build": "vp pack",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.ts' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.ts' --fix --cache --no-error-on-unmatched-pattern",

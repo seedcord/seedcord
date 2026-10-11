@@ -28,7 +28,7 @@
         "src"
     ],
     "scripts": {
-        "build": "tsdown",
+        "build": "vp pack",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.ts' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.ts' --fix --cache --no-error-on-unmatched-pattern",
@@ -36,9 +36,7 @@
         "fmt:check": "prettier --check '**/*.{ts,json,md}' --cache --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit"
     },
-    "dependencies": {
-        "tsdown": "catalog:deps"
-    },
+    "dependencies": {},
     "devDependencies": {
         "@seedcord/eslint-config-base": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
