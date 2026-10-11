@@ -40,9 +40,17 @@ function keyOf({ type, name }: CommandRef): string {
     return `${type}:${name}`;
 }
 
-function isSlash(json: CommandJson): json is RESTPostAPIChatInputApplicationCommandsJSONBody {
+export function commandRefOf({ name, type }: { name: string; type?: ApplicationCommandType | undefined }): CommandRef {
     // discord reads a missing type as a slash command
-    return (json.type ?? ApplicationCommandType.ChatInput) === ApplicationCommandType.ChatInput;
+    return { name, type: type ?? ApplicationCommandType.ChatInput };
+}
+
+export function indexById(commands: readonly APIApplicationCommand[]): Map<string, APIApplicationCommand> {
+    return new Map(commands.map((command) => [command.id, command]));
+}
+
+function isSlash(json: CommandJson): json is RESTPostAPIChatInputApplicationCommandsJSONBody {
+    return commandRefOf(json).type === ApplicationCommandType.ChatInput;
 }
 
 // a guild command in N guilds appears once per guild
@@ -78,35 +86,38 @@ function mentionOf(route: string, id: Snowflake | undefined): string {
 
 class CommandLinker {
     private readonly ids: Map<string, DeployedId>;
-    private readonly inCode = new Set<string>();
-    private readonly notDeployed = new Map<string, CommandRef>();
-    private readonly multiGuild = new Map<string, CommandRef>();
 
     constructor(private readonly deploy: DeployResult) {
         this.ids = deployedIds(deploy);
     }
 
     public link(all: readonly CommandJson[]): LinkedCommands {
+        const slash = slashCommandsOf(all);
         const leaves = contextMenuLeaves(all);
-        const commands = this.slashRoutes(all);
-        const contextMenus = {
-            user: this.menus(leaves.user, ApplicationCommandType.User),
-            message: this.menus(leaves.message, ApplicationCommandType.Message)
-        };
+        const inCode: CommandRef[] = [
+            ...slash.map(commandRefOf),
+            ...[...leaves.user].map((name) => ({ name, type: ApplicationCommandType.User })),
+            ...[...leaves.message].map((name) => ({ name, type: ApplicationCommandType.Message }))
+        ];
 
         return {
-            commands,
-            contextMenus,
-            notDeployed: [...this.notDeployed.values()],
-            multiGuild: [...this.multiGuild.values()],
-            notInCode: this.notInCode()
+            commands: this.slashRoutes(slash),
+            contextMenus: {
+                user: this.menus(leaves.user, ApplicationCommandType.User),
+                message: this.menus(leaves.message, ApplicationCommandType.Message)
+            },
+            notDeployed: inCode.filter((ref) => !this.ids.has(keyOf(ref))),
+            multiGuild: inCode.filter((ref) => this.ids.get(keyOf(ref)) === MULTI_GUILD),
+            notInCode: this.notInCode(inCode)
         };
     }
 
-    private slashRoutes(all: readonly CommandJson[]): Record<string, CommandInfo> {
+    private slashRoutes(
+        slash: readonly RESTPostAPIChatInputApplicationCommandsJSONBody[]
+    ): Record<string, CommandInfo> {
         const commands = accessorStore<CommandInfo>();
-        for (const command of slashCommandsOf(all)) {
-            const id = this.idOf({ name: command.name, type: ApplicationCommandType.ChatInput });
+        for (const command of slash) {
+            const id = this.idOf(commandRefOf(command));
             for (const { route, description } of routeLeavesOf(command)) {
                 commands[route] = { mention: mentionOf(route, id), ...(id && { id }), route, description };
             }
@@ -124,22 +135,16 @@ class CommandLinker {
     }
 
     private idOf(ref: CommandRef): Snowflake | undefined {
-        const key = keyOf(ref);
-        this.inCode.add(key);
-        const id = this.ids.get(key);
-        if (id === MULTI_GUILD) {
-            this.multiGuild.set(key, ref);
-            return undefined;
-        }
-        if (id === undefined) this.notDeployed.set(key, ref);
-        return id;
+        const id = this.ids.get(keyOf(ref));
+        return id === MULTI_GUILD ? undefined : id;
     }
 
-    private notInCode(): CommandRef[] {
+    private notInCode(inCode: readonly CommandRef[]): CommandRef[] {
+        const inCodeKeys = new Set(inCode.map(keyOf));
         const extra = new Map<string, CommandRef>();
         for (const command of allDeployed(this.deploy)) {
             const key = keyOf(command);
-            if (!this.inCode.has(key)) extra.set(key, { name: command.name, type: command.type });
+            if (!inCodeKeys.has(key)) extra.set(key, commandRefOf(command));
         }
         return [...extra.values()];
     }

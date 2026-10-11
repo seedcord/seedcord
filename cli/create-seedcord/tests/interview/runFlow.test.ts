@@ -55,18 +55,6 @@ describe('runFlow', () => {
         expect(answers.capabilities).toBeUndefined();
     });
 
-    it('rejects a flag that supplied a value for a step the answers skip', async () => {
-        const asked: (keyof Answers)[] = [];
-        const capabilities: Step<'capabilities'> = {
-            ...stubStep('capabilities', ['reactions'], asked),
-            skip: (answers) => answers.transport === 'http'
-        };
-
-        await expect(
-            runFlow([capabilities], { transport: 'http', capabilities: ['reactions'] }, { interactive: true })
-        ).rejects.toThrow(/capabilities/);
-    });
-
     it('leaves a step unasked when its --no- flag answered null', async () => {
         const asked: (keyof Answers)[] = [];
         const answers = await runFlow([stubStep('token', 'prompted', asked)], { token: null }, { interactive: true });

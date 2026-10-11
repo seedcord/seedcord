@@ -34,6 +34,7 @@ function isApplicationCommand(json: unknown): json is RESTPostAPIApplicationComm
 
 export interface FoundCommand {
     sourceFile: string;
+    className: string;
     json: RESTPostAPIApplicationCommandsJSONBody;
     meta: CommandMeta;
 }
@@ -52,7 +53,7 @@ function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | Se
     if (!isApplicationCommand(json)) return undefined;
     // justified: isCommandClass checked this key before the walk yielded the class
     const meta = Reflect.getMetadata(CommandMetadataKey, Command) as CommandMeta;
-    return { sourceFile, json, meta };
+    return { sourceFile, className: Command.name, json, meta };
 }
 
 export class CommandScanner {

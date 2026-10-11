@@ -27,7 +27,7 @@ function bakedIdsRun(ids: BakedIds): BakedIds {
 
 describe('the baked ids module', () => {
     it('keeps a command named __proto__ as its own entry', () => {
-        // JSON.parse makes __proto__ an own key, the way linkCommands' null-prototype store holds it
+        // JSON.parse makes __proto__ an own key
         const commands = JSON.parse(
             '{"__proto__":{"mention":"</__proto__:7>","id":"7","route":"__proto__","description":"edge"}}'
         ) as BakedIds['commands'];

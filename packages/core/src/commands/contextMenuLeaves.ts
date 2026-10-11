@@ -8,12 +8,7 @@ export interface ContextMenuLeaves {
     readonly message: Set<string>;
 }
 
-/**
- * dedupes names across commands, since the same command repeats once per guild.
- * a user and a message command can share a name.
- *
- * @internal
- */
+// a user and a message command can share a name
 export function contextMenuLeaves(commands: Iterable<RESTPostAPIApplicationCommandsJSONBody>): ContextMenuLeaves {
     const user = new Set<string>();
     const message = new Set<string>();

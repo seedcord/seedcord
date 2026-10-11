@@ -15,6 +15,7 @@ import { CommandInjector } from '#src/commands/CommandInjector';
 import { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
 import { resolveDeployTarget } from '#src/commands/deployTarget';
 import { isCommandClass } from '#src/commands/isCommandClass';
+import { indexById } from '#src/commands/linkCommands';
 import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 import { CommandMetadataKey } from '#src/metadataKeys';
 import { PublishDefault } from '#subscribers/publishDefault';
@@ -31,10 +32,6 @@ import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 type CommandArtifact = DeployTarget & { name: string };
-
-function indexById(commands: readonly APIApplicationCommand[]): Map<string, APIApplicationCommand> {
-    return new Map(commands.map((command) => [command.id, command]));
-}
 
 /**
  * Scans the command directory, builds each command, and PUTs the global and guild scopes to Discord.

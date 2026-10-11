@@ -1,8 +1,15 @@
-import { currentApplication, linkCommands, resolveDeployTarget, resolveEmojis } from '@seedcord/core/internal';
+import {
+    commandRefOf,
+    currentApplication,
+    indexById,
+    linkCommands,
+    resolveDeployTarget,
+    resolveEmojis
+} from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
-import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
+import { Routes } from 'discord-api-types/v10';
 
 import type { FoundCommand } from '#core/modules/CommandScanner';
 import type { REST, RouteLike } from '@discordjs/rest';
@@ -36,10 +43,6 @@ const NO_COMMANDS: LinkedCommands = {
     multiGuild: [],
     notInCode: []
 };
-
-function byId(commands: readonly APIApplicationCommand[]): Map<string, APIApplicationCommand> {
-    return new Map(commands.map((command) => [command.id, command]));
-}
 
 class DiscordReader {
     constructor(
@@ -77,7 +80,7 @@ class DiscordReader {
     private async commandsAt(route: RouteLike, where: string): Promise<Map<string, APIApplicationCommand>> {
         try {
             // justified: the discord api contract for both command list routes
-            return byId((await this.rest.get(route)) as RESTGetAPIApplicationCommandsResult);
+            return indexById((await this.rest.get(route)) as RESTGetAPIApplicationCommandsResult);
         } catch (error: unknown) {
             throw new SeedcordError(SeedcordErrorCode.CliEdgeCommandsUnreadable, [where, asError(error).message], {
                 cause: error
@@ -88,16 +91,18 @@ class DiscordReader {
 
 function targetGuilds(commands: readonly FoundCommand[], configured: readonly string[]): Set<string> {
     const guilds = new Set<string>();
-    for (const { meta, json } of commands) {
-        const target = resolveDeployTarget(meta, configured, json.name);
+    for (const { meta, className } of commands) {
+        const target = resolveDeployTarget(meta, configured, className);
         if (target.scope === 'guild') for (const guildId of target.guilds) guilds.add(guildId);
     }
     return guilds;
 }
 
 function sourceFileOf(commands: readonly FoundCommand[], { name, type }: CommandRef): string | undefined {
-    return commands.find(({ json }) => json.name === name && (json.type ?? ApplicationCommandType.ChatInput) === type)
-        ?.sourceFile;
+    return commands.find(({ json }) => {
+        const ref = commandRefOf(json);
+        return ref.name === name && ref.type === type;
+    })?.sourceFile;
 }
 
 function assertDeployed(commands: readonly FoundCommand[], notDeployed: readonly CommandRef[]): void {

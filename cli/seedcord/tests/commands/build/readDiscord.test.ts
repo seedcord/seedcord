@@ -21,7 +21,7 @@ class Ping extends BuilderComponent<'command'> {
 
 function inCode(meta: CommandMeta = { scope: 'global' }, configuredGuilds: string[] = []): CommandsInCode {
     const json = new Ping().component.toJSON();
-    return { found: [{ sourceFile: '/bot/src/commands/Ping.ts', json, meta }], configuredGuilds };
+    return { found: [{ sourceFile: '/bot/src/commands/Ping.ts', className: 'Ping', json, meta }], configuredGuilds };
 }
 
 function deployed(id: string, name: string): { id: string; name: string; type: number } {
@@ -144,5 +144,16 @@ describe('readDiscord', () => {
 
         expect(failure).toHaveProperty('code', SeedcordErrorCode.CliEdgeApplicationUnreadable);
         expect(failure).toHaveProperty('message', expect.stringContaining('401: Unauthorized'));
+    });
+
+    it('throws CoreCommandGuildsEmpty with the class name, the way server startup does', async () => {
+        const failure = await readDiscord({
+            rest: restWith(),
+            commands: inCode({ scope: 'guild', guilds: ['config'] }),
+            emojis: undefined
+        }).catch((error: unknown) => error);
+
+        expect(failure).toHaveProperty('code', SeedcordErrorCode.CoreCommandGuildsEmpty);
+        expect(failure).toHaveProperty('message', expect.stringContaining('Ping registers'));
     });
 });
