@@ -29,7 +29,7 @@ describe('public key at startup', () => {
         expect(get).toHaveBeenCalledWith(Routes.currentApplication());
     });
 
-    it('throws ConfigPublicKeyUnavailable with discord’s reason when that read fails', async () => {
+    it("throws ConfigPublicKeyUnavailable with discord's reason when that read fails", async () => {
         bindTokenOnly();
         await using host = new Seedcord(serverConfig());
         vi.spyOn(host.rest, 'get').mockRejectedValue(new Error('401: Unauthorized'));

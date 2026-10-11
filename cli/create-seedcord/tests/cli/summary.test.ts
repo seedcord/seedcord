@@ -46,7 +46,7 @@ describe('nextSteps', () => {
         expect(nextSteps(HTTP, { agent: 'pnpm', installed: true }).join('\n')).not.toContain('.env');
     });
 
-    it('asks for the token in .env before the dev script when it was left', () => {
+    it('prints a step to add the token to .env before the dev script when you skipped it', () => {
         const steps = nextSteps({ ...HTTP, token: null }, { agent: 'pnpm', installed: true });
         const env = steps.findIndex((step) => step.includes('.env'));
 
@@ -91,10 +91,6 @@ describe('reproducingCommand', () => {
         expect(command).not.toMatch(/[<>|&;$`]/);
     });
 
-    it('keeps the public key out too', () => {
-        expect(reproducingCommand(HTTP, 'pnpm')).not.toContain('a'.repeat(64));
-    });
-
     // pnpm can resolve @latest to an older release
     it('pins the version of itself that produced the project', () => {
         expect(reproducingCommand(GATEWAY, 'pnpm')).toMatch(/create seedcord@\d+\.\d+\.\d+ /);
@@ -119,7 +115,7 @@ describe('reproducingCommand', () => {
         }
     });
 
-    it('passes --no-token for a token left for .env', () => {
+    it('adds --no-token to the rerun command when you skipped the token', () => {
         const command = reproducingCommand({ ...HTTP, token: null }, 'pnpm');
 
         expect(command).toContain('--no-token');

@@ -62,7 +62,7 @@ describe('parseInput', () => {
         expect(parseInput(['--no-git']).git).toBe(false);
     });
 
-    it('reads --no-token as an answer left for .env', () => {
+    it('reads --no-token as a token you add to .env later', () => {
         expect(parseInput(['--no-token']).supplied.token).toBeNull();
     });
 

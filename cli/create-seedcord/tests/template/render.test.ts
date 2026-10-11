@@ -198,7 +198,7 @@ describe('the rendered http config', () => {
         expect(bot).not.toContain('clientOptions');
     });
 
-    it('writes the token empty when it was left for later', async () => {
+    it('writes an empty DISCORD_BOT_TOKEN when you skipped the token', async () => {
         const env = await renderOne({ ...HTTP, token: null }, '.env');
 
         expect(env).toMatch(/^DISCORD_BOT_TOKEN=$/m);

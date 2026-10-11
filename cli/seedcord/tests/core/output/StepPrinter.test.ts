@@ -96,7 +96,7 @@ describe('StepPrinter', () => {
         expect(stdout.text()).toMatch(/│ .*connecting to the database/);
     });
 
-    it('prints a held log as its level mark and message', async () => {
+    it('prints a log from inside a step as its level mark and the message', async () => {
         const registry = LoggerChannelRegistry.instance;
         registry.reset();
         registry.configure({ level: 'trace', sinks: [new ConsoleSink()] });

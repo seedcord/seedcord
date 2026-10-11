@@ -71,7 +71,7 @@ describe('resolveEmojis', () => {
         expect(String(caught)).toContain('"gone" for "Gone"');
     });
 
-    it('reports each emoji when the application emojis could not be read, fetching them once', async () => {
+    it('reads the app emoji list once and reports each emoji when that read fails', async () => {
         const fixture = restWith({}, (route) => route === Routes.applicationEmojis(APP));
 
         const caught = await failureOf({ Confirm: 'confirm', Spin: 'spin' }, fixture);
@@ -84,7 +84,7 @@ describe('resolveEmojis', () => {
         expect(fixture.get).toHaveBeenCalledOnce();
     });
 
-    it('reports each emoji from a guild that could not be read, fetching it once', async () => {
+    it('reads a guild once and reports each of its emojis when that read fails', async () => {
         const fixture = restWith({}, (route) => route === Routes.guildEmojis('g1'));
 
         const caught = await failureOf({ Wave: ['wave', 'g1'], Nod: ['nod', 'g1'] }, fixture);

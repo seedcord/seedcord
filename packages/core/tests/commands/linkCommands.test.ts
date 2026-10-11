@@ -30,7 +30,7 @@ describe('linkCommands', () => {
         ]);
     });
 
-    it('lists a command deployed to two or more guilds once, apart from the undeployed ones', () => {
+    it('lists a command deployed to two guilds as multi-guild and keeps it out of notDeployed', () => {
         const buckets = guildBucket('g1', [['1', 'ping']]);
         buckets.set('g2', deployed([['2', 'ping']]));
 
