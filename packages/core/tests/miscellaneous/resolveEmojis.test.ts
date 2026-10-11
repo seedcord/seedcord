@@ -102,6 +102,12 @@ describe('resolveEmojis', () => {
         expect(String(caught)).toContain('"Bad" has an invalid value');
     });
 
+    it('reports a tuple with an empty slot as an invalid value', async () => {
+        const caught = await failureOf({ Hole: ['wave', ,] });
+
+        expect(String(caught)).toContain('"Hole" has an invalid value');
+    });
+
     it('reports an emoji whose payload carries no id', async () => {
         const caught = await failureOf({ Wave: ['wave', 'g1'] }, restWith({ g1: [apiEmoji('wave', '')] }));
 

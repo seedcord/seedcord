@@ -53,10 +53,8 @@ function isSlash(json: CommandJson): json is RESTPostAPIChatInputApplicationComm
 }
 
 // a guild command in N guilds appears once per guild
-function slashCommandsOf(all: readonly CommandJson[]): RESTPostAPIChatInputApplicationCommandsJSONBody[] {
-    const byName = new Map<string, RESTPostAPIChatInputApplicationCommandsJSONBody>();
-    for (const json of all) if (isSlash(json)) byName.set(json.name, json);
-    return [...byName.values()];
+function uniqueRefs(refs: readonly CommandRef[]): CommandRef[] {
+    return [...new Map(refs.map((ref) => [keyOf(ref), ref])).values()];
 }
 
 function deployedIds({ global, guilds }: DeployResult): Map<string, DeployedId> {
@@ -91,13 +89,13 @@ class CommandLinker {
     }
 
     public link(all: readonly CommandJson[]): LinkedCommands {
-        const slash = slashCommandsOf(all);
+        const slash = all.filter(isSlash);
         const leaves = contextMenuLeaves(all);
-        const inCode: CommandRef[] = [
+        const inCode = uniqueRefs([
             ...slash.map(commandRefOf),
             ...[...leaves.user].map((name) => ({ name, type: ApplicationCommandType.User })),
             ...[...leaves.message].map((name) => ({ name, type: ApplicationCommandType.Message }))
-        ];
+        ]);
 
         return {
             commands: this.slashRoutes(slash),
