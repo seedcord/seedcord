@@ -10,8 +10,8 @@ function rendered(error: unknown, options: { verbose?: boolean; width?: number }
     return stripVTControlCharacters(renderError(error, { verbose: false, width: undefined, ...options }));
 }
 
-const relativeFolder = (folder: string): SeedcordError =>
-    new SeedcordError(SeedcordErrorCode.CliBuildRelativeFolder, [folder]);
+const outsideRoot = (folder: string): SeedcordError =>
+    new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [folder, '/bot/src']);
 
 describe('renderError', () => {
     it('prints a seedcord error as its code and message, with every line indented', () => {
@@ -23,22 +23,22 @@ describe('renderError', () => {
     it('lists each problem in an aggregate as a bullet with its own code', () => {
         const error = new SeedcordAggregateError(
             SeedcordErrorCode.CliBuildFolderProblems,
-            [relativeFolder('./handlers'), relativeFolder('./commands')],
+            [outsideRoot('/bot/handlers'), outsideRoot('/bot/commands')],
             [2]
         );
 
         const [headline, ...bullets] = rendered(error).trimEnd().split('\n');
 
-        expect(headline).toMatch(/^ {2}\[3133\] 2 folders/);
+        expect(headline).toMatch(/^ {2}\[3132\] 2 folders/);
         expect(bullets).toHaveLength(2);
-        expect(bullets[0]).toMatch(/^ {2}• \[3132\] \.\/handlers in the bot config/);
-        expect(bullets[1]).toMatch(/^ {2}• \[3132\] \.\/commands in the bot config/);
+        expect(bullets[0]).toMatch(/^ {2}• \[1219\] \/bot\/handlers is outside root/);
+        expect(bullets[1]).toMatch(/^ {2}• \[1219\] \/bot\/commands is outside root/);
     });
 
     it('wraps on words to the width and indents wrapped lines under the bullet text', () => {
         const error = new SeedcordAggregateError(
             SeedcordErrorCode.CliBuildFolderProblems,
-            [relativeFolder('./handlers'), relativeFolder('./commands')],
+            [outsideRoot('/bot/handlers'), outsideRoot('/bot/commands')],
             [2]
         );
 

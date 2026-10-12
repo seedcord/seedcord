@@ -287,48 +287,46 @@ export enum SeedcordErrorCode {
     CliTypescriptMissing = 3130,
     /** `build.tsconfig` is unset. The config file's folder does not contain a `tsconfig.json`. */
     CliBuildNoTsconfig = 3131,
-    /** A folder in the bot config is a relative path. */
-    CliBuildRelativeFolder = 3132,
     /** Two or more folders in the bot config failed the `seedcord build` checks. */
-    CliBuildFolderProblems = 3133,
+    CliBuildFolderProblems = 3132,
     /** `build.outDir` already contains other files. */
-    CliBuildOutDirNotEmpty = 3134,
+    CliBuildOutDirNotEmpty = 3133,
     /** Two or more fields in the seedcord config are missing or invalid. */
-    CliConfigProblems = 3135,
+    CliConfigProblems = 3134,
     /** Two or more command constructors threw while seedcord read the commands. */
-    CliCommandProblems = 3136,
+    CliCommandProblems = 3135,
     /** `seedcord codegen --check` found the committed augmentations stale. */
-    CliCodegenOutOfDate = 3137,
+    CliCodegenOutOfDate = 3136,
     /** A file or folder in the project has a `#` in its path. */
-    CliPathHasHash = 3138,
+    CliPathHasHash = 3137,
     /** An edge bot's tsconfig lacks the `workerd` condition. */
-    CliEdgeWithoutWorkerdCondition = 3139,
+    CliEdgeWithoutWorkerdCondition = 3138,
     /** A bot with no wrangler config sets the `workerd` condition in its tsconfig. */
-    CliWorkerdConditionWithoutWrangler = 3140,
+    CliWorkerdConditionWithoutWrangler = 3139,
     /** TypeScript could not read the project's tsconfig. */
-    CliTsconfigUnreadable = 3141,
+    CliTsconfigUnreadable = 3140,
     /** Two or more files or folders in the project have a `#` in their path. */
-    CliHashPathProblems = 3142,
+    CliHashPathProblems = 3141,
     /** The CLI could not start the TypeScript compiler process. */
-    CliTypescriptNotStarted = 3143,
+    CliTypescriptNotStarted = 3142,
     /** An edge bot's seedcord config sets `entry`. */
-    CliConfigEntryOnEdge = 3144,
+    CliConfigEntryOnEdge = 3143,
     /** An edge bot's project does not have `@cloudflare/vite-plugin` installed. */
-    CliEdgeVitePluginMissing = 3145,
+    CliEdgeVitePluginMissing = 3144,
     /** An edge bot's `compatibility_date` predates Cloudflare's Node compat default with no flag to turn it on. */
-    CliEdgeCompatDateTooOld = 3146,
+    CliEdgeCompatDateTooOld = 3145,
     /** An edge bot sets `no_nodejs_compat`. */
-    CliEdgeNodeCompatOff = 3147,
+    CliEdgeNodeCompatOff = 3146,
     /** The build could not start the edge worker in workerd. */
-    CliEdgeBootFailed = 3148,
+    CliEdgeBootFailed = 3147,
     /** An edge bot's `root` holds its seedcord config. */
-    CliEdgeRootHoldsConfig = 3149,
+    CliEdgeRootHoldsConfig = 3148,
     /** An edge build could not read the application from Discord with `DISCORD_BOT_TOKEN`. */
-    CliEdgeApplicationUnreadable = 3150,
+    CliEdgeApplicationUnreadable = 3149,
     /** An edge build could not read the commands deployed globally or to a guild its commands target. */
-    CliEdgeCommandsUnreadable = 3151,
+    CliEdgeCommandsUnreadable = 3150,
     /** An edge build found commands in code that have no deployed id on Discord. */
-    CliEdgeCommandsNotDeployed = 3152,
+    CliEdgeCommandsNotDeployed = 3151,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

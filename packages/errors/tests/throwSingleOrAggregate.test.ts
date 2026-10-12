@@ -4,7 +4,7 @@ import { SeedcordErrorCode, isSeedcordError } from '#src/index';
 import { SeedcordError, throwSingleOrAggregate } from '#src/internal.index';
 
 const problem = (folder: string): SeedcordError =>
-    new SeedcordError(SeedcordErrorCode.CliBuildRelativeFolder, [folder]);
+    new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [folder, '/bot/src']);
 
 describe('throwSingleOrAggregate', () => {
     it('returns when there are no problems', () => {

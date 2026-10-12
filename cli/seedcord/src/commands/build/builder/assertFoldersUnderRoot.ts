@@ -1,4 +1,4 @@
-import { isAbsolute } from 'node:path';
+import { resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
@@ -25,10 +25,9 @@ function configuredFolders({ bot, subscribers }: Config): string[] {
 
 function* folderProblems(config: Config, root: string): Generator<SeedcordError> {
     for (const folder of configuredFolders(config)) {
-        if (!isAbsolute(folder)) {
-            yield new SeedcordError(SeedcordErrorCode.CliBuildRelativeFolder, [folder]);
-        } else if (!isInside(root, folder)) {
-            yield new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [folder, root]);
+        const resolved = resolve(root, folder);
+        if (!isInside(root, resolved)) {
+            yield new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [resolved, root]);
         }
     }
 }

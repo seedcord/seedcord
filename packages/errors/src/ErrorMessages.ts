@@ -259,8 +259,6 @@ const messages = {
         `${count} command${count === 1 ? ' is' : 's are'} in your code with no deployed id on Discord, so the build cannot link ${count === 1 ? 'it' : 'them'}. Deploy with ${paint.bold('seedcord commands')}, then build again.\n${commands}`,
     [SeedcordErrorCode.CliBuildFolderProblems]: (count: number) =>
         `${count} folders in the bot config need fixing before ${paint.bold('seedcord build')} can bundle the bot. Each one is listed below.`,
-    [SeedcordErrorCode.CliBuildRelativeFolder]: (folder: string) =>
-        `${paint.path(folder)} in the bot config is a relative path. A built bot resolves it against the folder it starts in. Build the path from the bot file's folder, like ${paint.sky("resolve(import.meta.dirname, './handlers')")}.`,
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
         `Two commands resolve to the same slash route \`${route}\`. Defined in ${paint.path(firstFile)} and ${paint.path(secondFile)}. Rename one.`,
     [SeedcordErrorCode.CliCommandsDirUnreadable]: (dir: string, reason: string) =>
