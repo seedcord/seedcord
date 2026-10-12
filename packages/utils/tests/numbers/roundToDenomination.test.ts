@@ -71,4 +71,9 @@ describe('roundToDenomination', () => {
         expect(roundToDenomination(1234, { precision: Number.NaN })).toBe('1.2K');
         expect(roundToDenomination(1234, { precision: 3 })).toBe('1.234K');
     });
+
+    it('preserves large values past the last suffix at high precision', () => {
+        expect(roundToDenomination(1_000_000_000, { suffixes: ['K'], precision: 15 })).toBe('1000000K');
+        expect(roundToDenomination(1e9, { suffixes: ['K'], precision: 15 })).toBe('1000000K');
+    });
 });
