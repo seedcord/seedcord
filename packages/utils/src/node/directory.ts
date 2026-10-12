@@ -128,8 +128,8 @@ function builtFiles(): BuiltFileLoaders | undefined {
     return Reflect.get(globalThis, Symbol.for(BUILT_FILES_KEY)) as BuiltFileLoaders | undefined;
 }
 
-function resolveFolder(dir: string): string {
-    if (path.isAbsolute(dir)) return dir;
+export function resolveFolder(dir: string): string {
+    if (path.isAbsolute(dir)) return path.resolve(dir);
 
     const root = builtFiles()?.root ?? (Reflect.get(globalThis, Symbol.for(ROOT_KEY)) as string | undefined);
     if (!root) throw new SeedcordError(SeedcordErrorCode.CoreDirectoryRootUnknown, [dir]);

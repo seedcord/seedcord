@@ -1,11 +1,10 @@
-import { resolve } from 'node:path';
-
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
+import { resolveFolder } from '@seedcord/utils/node/internal';
 import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
@@ -145,7 +144,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     /** @internal */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        if (event.file.startsWith(resolve(process.cwd(), this.dir))) {
+        if (event.file.startsWith(resolveFolder(this.dir))) {
             this.pendingEvents.delete(event.file);
             this.pendingEvents.set(event.file, event);
             getDevChannel()?.send('seedcord:commands-update-prompt', {

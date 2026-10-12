@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { ROOT_KEY } from '@seedcord/utils/node/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
@@ -54,6 +55,7 @@ describe('HmrModuleHandler', () => {
     });
 
     afterEach(() => {
+        Reflect.deleteProperty(globalThis, Symbol.for(ROOT_KEY));
         rmSync(dir, { recursive: true, force: true });
     });
 
@@ -118,6 +120,23 @@ describe('HmrModuleHandler', () => {
 
         expect(registerHandler).toHaveBeenCalledTimes(1);
         expect(registerHandler.mock.calls[0]?.[1]).toBe(file);
+    });
+
+    it('reloads a handler file when the handlers dir is relative to root', async () => {
+        Reflect.set(globalThis, Symbol.for(ROOT_KEY), dir);
+        const relative = new HmrModuleHandler<TestHandler>({
+            handlersDir: './commands',
+            isHandler,
+            registerHandler,
+            unregisterHandler,
+            logger: fakeLogger().logger
+        });
+        const file = join(handlersDir, 'Ping.mjs');
+        writeFileSync(file, 'export class Ping {}\n');
+
+        await relative.handle({ file, type: 'update' });
+
+        expect(registerHandler).toHaveBeenCalledTimes(1);
     });
 
     it('reports the reload with how long it took', async () => {

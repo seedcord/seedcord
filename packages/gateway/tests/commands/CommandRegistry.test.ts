@@ -1,4 +1,5 @@
 import { HostVersion } from '@seedcord/types/internal';
+import { ROOT_KEY } from '@seedcord/utils/node/internal';
 import { describe, expect, afterEach, vi } from 'vitest';
 
 import { commandRegistryOf } from '#bot/Bot';
@@ -19,6 +20,7 @@ function registryOf(instance: Seedcord): CommandRegistry {
 
 describe('CommandRegistry Integration', () => {
     afterEach(() => {
+        Reflect.deleteProperty(globalThis, Symbol.for(ROOT_KEY));
         vi.clearAllMocks();
     });
 
@@ -132,5 +134,30 @@ describe('CommandRegistry Integration', () => {
 
         expect(registryOf(seedcord).globalCommands).toHaveLength(1);
         expect(registryOf(seedcord).globalCommands[0]?.name).toBe('pong');
+    });
+
+    it('holds an edited command for the refresh prompt when the commands path is relative to root', async ({
+        testEnv
+    }) => {
+        Reflect.set(globalThis, Symbol.for(ROOT_KEY), testEnv.rootDir);
+        const command = (name: string): string => `
+            import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
+
+            @RegisterCommand('global')
+            export class PingCommand extends BuilderComponent<'command'> {
+                constructor() {
+                    super('command');
+                    this.instance.setName('${name}').setDescription('Replies');
+                }
+            }
+            `;
+        const filePath = await testEnv.createFile('commands/PingCommand.ts', command('ping'));
+
+        await using seedcord = new Seedcord(testConfig({ commands: './commands' }));
+        await registryOf(seedcord).init();
+        await testEnv.createFile('commands/PingCommand.ts', command('pong'));
+        await registryOf(seedcord).onHmr({ file: filePath, type: 'update' });
+
+        expect(registryOf(seedcord).globalCommands[0]?.name).toBe('ping');
     });
 });
