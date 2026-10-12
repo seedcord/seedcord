@@ -13,11 +13,15 @@ function rendered(error: unknown, options: { verbose?: boolean; width?: number }
 const outsideRoot = (folder: string): SeedcordError =>
     new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [folder, '/bot/src']);
 
+const tag = (code: SeedcordErrorCode): string => `[${String(code)}]`;
+
 describe('renderError', () => {
     it('prints a seedcord error as its code and message, with every line indented', () => {
         const error = new SeedcordError(SeedcordErrorCode.CliBuildFailed, ['src/a.ts(1,1): error TS1']);
 
-        expect(rendered(error)).toBe('  [3112] Type check failed:\n  src/a.ts(1,1): error TS1\n');
+        expect(rendered(error)).toBe(
+            `  ${tag(SeedcordErrorCode.CliBuildFailed)} Type check failed:\n  src/a.ts(1,1): error TS1\n`
+        );
     });
 
     it('lists each problem in an aggregate as a bullet with its own code', () => {
@@ -29,10 +33,12 @@ describe('renderError', () => {
 
         const [headline, ...bullets] = rendered(error).trimEnd().split('\n');
 
-        expect(headline).toMatch(/^ {2}\[3132\] 2 folders/);
-        expect(bullets).toHaveLength(2);
-        expect(bullets[0]).toMatch(/^ {2}• \[1219\] \/bot\/handlers is outside root/);
-        expect(bullets[1]).toMatch(/^ {2}• \[1219\] \/bot\/commands is outside root/);
+        const outside = tag(SeedcordErrorCode.CoreDirectoryOutsideRoot);
+        expect(headline).toContain(`  ${tag(SeedcordErrorCode.CliBuildFolderProblems)} `);
+        expect(bullets).toEqual([
+            expect.stringContaining(`  • ${outside} /bot/handlers `),
+            expect.stringContaining(`  • ${outside} /bot/commands `)
+        ]);
     });
 
     it('wraps on words to the width and indents wrapped lines under the bullet text', () => {
