@@ -9,6 +9,10 @@ export interface RoundToDenomOptions {
     /**
      * Number of decimal places to include in the rounded result.
      *
+     * Values are truncated toward zero and clamped to the range 0–15.
+     * Non-finite values (NaN, ±Infinity) fall back to the default of 1.
+     * Precision above 15 is not useful: Number only has about 15–17 significant digits.
+     *
      * @defaultValue `1`
      */
     precision?: number;
@@ -34,8 +38,7 @@ export function roundToDenomination(num: number, opts?: RoundToDenomOptions): st
         return num.toString();
     }
 
-    // Clamp to a practical range; non-finite values fall back to the default.
-    // Values above \~15 exceed Number precision, so further digits are noise.
+    // Truncate and clamp; non-finite falls back to the documented default.
     const maxPrecision = 15;
     const precision = Number.isFinite(rawPrecision)
         ? Math.max(0, Math.min(maxPrecision, Math.trunc(rawPrecision)))
@@ -49,14 +52,12 @@ export function roundToDenomination(num: number, opts?: RoundToDenomOptions): st
         index++;
     }
 
-    // Reliable decimal rounding that avoids binary floating-point artifacts.
-    let rounded = Number(Math.round(Number(temp + 'e' + precision)) + 'e-' + precision);
+    let rounded = roundToPrecision(temp, precision);
 
     // Carry into the next denomination only when a further suffix exists.
     if (rounded >= 1000 && index < suffixes.length - 1) {
-        rounded /= 1000;
+        rounded = roundToPrecision(rounded / 1000, precision);
         index++;
-        rounded = Number(Math.round(Number(rounded + 'e' + precision)) + 'e-' + precision);
     }
 
     let result: string;
@@ -68,4 +69,26 @@ export function roundToDenomination(num: number, opts?: RoundToDenomOptions): st
     }
 
     return result + (index >= 0 ? suffixes[index] : '');
+}
+
+/**
+ * Round `value` to `precision` decimal places.
+ *
+ * Uses a decimal shift for ordinary magnitudes (avoids binary floating-point
+ * artifacts). When the magnitude is large enough that the shift would leave
+ * the safe-integer range or produce Infinity, falls back to integer rounding
+ * because further decimal places are meaningless.
+ */
+function roundToPrecision(value: number, precision: number): number {
+    if (precision === 0) {
+        return Math.round(value);
+    }
+
+    const factor = 10 ** precision;
+    if (!Number.isFinite(value * factor) || Math.abs(value) >= Number.MAX_SAFE_INTEGER / factor) {
+        return Math.round(value);
+    }
+
+    const shifted = Math.round(Number(value + 'e' + precision));
+    return Number(shifted + 'e-' + precision);
 }
