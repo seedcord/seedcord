@@ -30,7 +30,7 @@ export const seedcord = new Seedcord({
     dir: resolve(import.meta.dirname, './services'),
     connectionString: 'postgres://localhost:5432/seedcord',
     migrations: {
-        path: resolve(import.meta.dirname, './migrations')
+        dir: resolve(import.meta.dirname, './migrations')
     }
 });
 
@@ -108,7 +108,7 @@ seedcord.attach('db', KyselyPostgres, {
     },
     onConnectSQL: ["set time zone 'UTC'"],
     migrations: {
-        path: resolve(import.meta.dirname, './migrations')
+        dir: resolve(import.meta.dirname, './migrations')
     }
 });
 ```
@@ -136,7 +136,7 @@ seedcord.attach('db', KyselyPostgres, {
     dir: resolve(import.meta.dirname, './services'),
     pool,
     migrations: {
-        path: resolve(import.meta.dirname, './migrations')
+        dir: resolve(import.meta.dirname, './migrations')
     }
 });
 ```
