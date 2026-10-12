@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 
 import type { DevState } from '#ui/stores/DevStore';
 
@@ -15,15 +15,16 @@ function never(): () => void {
     return () => undefined;
 }
 
-// react expects the same snapshot on every read between two ticks
-function currentSecond(): number {
-    return Math.floor(Date.now() / TICK_MS) * TICK_MS;
-}
-
 export function useUptime(state: DevState, shown: boolean): number | null {
-    const { liveSince } = state;
-    const active = liveSince !== null && shown;
-    const now = useSyncExternalStore(active ? everySecond : never, currentSecond);
+    const { liveSinceMs } = state;
+    const active = liveSinceMs !== null && shown;
 
-    return active ? Math.max(0, now - liveSince) : null;
+    // react expects the same snapshot on every read between two ticks
+    const wholeSecondsUp = useCallback(
+        () => (liveSinceMs === null ? 0 : Math.floor((Date.now() - liveSinceMs) / TICK_MS)),
+        [liveSinceMs]
+    );
+    const seconds = useSyncExternalStore(active ? everySecond : never, wholeSecondsUp);
+
+    return active ? seconds * TICK_MS : null;
 }

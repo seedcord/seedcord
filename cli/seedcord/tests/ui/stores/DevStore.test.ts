@@ -163,12 +163,12 @@ describe('DevStore', () => {
         store.setPhase('running');
         vi.setSystemTime(2000);
         store.apply({ type: 'restart-required' });
-        expect(store.getState().liveSince).toBe(1000);
+        expect(store.getState().liveSinceMs).toBe(1000);
 
         store.beginRestart();
-        expect(store.getState().liveSince).toBeNull();
+        expect(store.getState().liveSinceMs).toBeNull();
         store.setPhase('running');
-        expect(store.getState().liveSince).toBe(2000);
+        expect(store.getState().liveSinceMs).toBe(2000);
     });
 
     it('apply throws on an unknown event type (exhaustiveness guard)', () => {

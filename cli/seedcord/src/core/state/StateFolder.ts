@@ -5,6 +5,8 @@ import { paint } from '@seedcord/errors';
 
 import type { ILogger } from '@seedcord/types';
 
+export const STATE_FOLDER = '.seedcord';
+
 const JSON_INDENT = 4;
 
 function readJson(path: string): unknown {
@@ -29,7 +31,7 @@ export class StateFolder {
         projectDir: string,
         private readonly logger: ILogger
     ) {
-        this.dir = join(projectDir, '.seedcord');
+        this.dir = join(projectDir, STATE_FOLDER);
     }
 
     public read<ValueT>(file: StateFile<ValueT>): ValueT {

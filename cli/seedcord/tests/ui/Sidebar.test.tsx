@@ -165,7 +165,7 @@ describe('Sidebar', () => {
         expect(rows).toBeLessThanOrEqual(COMPACT_ROWS);
     });
 
-    // compact measures the rail collapsed and keeps that width
+    // the collapsed rail is the narrowest the filters view can get
     it('fits the filters view inside the compact tier at the collapsed width', async () => {
         const collapsed = await measure('collapsed');
         const { rows } = await measure('filters', collapsed.columns);

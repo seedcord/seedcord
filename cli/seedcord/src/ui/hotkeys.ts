@@ -10,29 +10,17 @@ import type { DevState, DevStore } from '#ui/stores/DevStore';
 import type { LogLevel } from '@seedcord/types';
 import type { Key } from 'ink';
 
-// empty set means all. turning on every channel that has logged collapses back to empty, keeping later channels visible
-function toggleChannel(prev: ReadonlySet<string>, channel: string, all: readonly string[]): ReadonlySet<string> {
-    const base = prev.size === 0 ? new Set(all) : new Set(prev);
-    if (base.has(channel)) base.delete(channel);
-    else base.add(channel);
-    return all.every((name) => base.has(name)) ? new Set<string>() : base;
-}
+type FilterChange = <ItemT>(prev: ReadonlySet<ItemT>, item: ItemT, all: readonly ItemT[]) => ReadonlySet<ItemT>;
 
-function toggleLevel(prev: ReadonlySet<LogLevel>, level: LogLevel): ReadonlySet<LogLevel> {
-    const base = prev.size === 0 ? new Set(FILTER_LEVELS) : new Set(prev);
-    if (base.has(level)) base.delete(level);
-    else base.add(level);
-    return base.size === FILTER_LEVELS.length ? new Set<LogLevel>() : base;
-}
+// empty means every item, including channels that log later
+const toggle: FilterChange = (prev, item, all) => {
+    const base = new Set(prev.size === 0 ? all : prev);
+    if (base.has(item)) base.delete(item);
+    else base.add(item);
+    return all.every((each) => base.has(each)) ? new Set() : base;
+};
 
-// re-soloing the soloed item restores all (empty set = all)
-function soloChannel(prev: ReadonlySet<string>, channel: string): ReadonlySet<string> {
-    return prev.size === 1 && prev.has(channel) ? new Set<string>() : new Set([channel]);
-}
-
-function soloLevel(prev: ReadonlySet<LogLevel>, level: LogLevel): ReadonlySet<LogLevel> {
-    return prev.size === 1 && prev.has(level) ? new Set<LogLevel>() : new Set([level]);
-}
+const solo: FilterChange = (prev, item) => (prev.size === 1 && prev.has(item) ? new Set() : new Set([item]));
 
 interface HotkeyContext {
     readonly input: string;
@@ -82,21 +70,16 @@ function handlePrompt(ctx: HotkeyContext): boolean {
     return true;
 }
 
-function applyAtCursor(
-    ctx: HotkeyContext,
-    channels: readonly string[],
-    onChannel: (prev: ReadonlySet<string>, channel: string, all: readonly string[]) => ReadonlySet<string>,
-    onLevel: (prev: ReadonlySet<LogLevel>, level: LogLevel) => ReadonlySet<LogLevel>
-): void {
+function applyAtCursor(ctx: HotkeyContext, channels: readonly string[], change: FilterChange): void {
     if (ctx.cursor.group === 'channels') {
         const index = focusedIn(ctx.cursor, 'channels', channels.length);
         const channel = index === null ? undefined : channels[index];
-        if (channel !== undefined) ctx.setEnabled(onChannel(ctx.enabled, channel, channels));
+        if (channel !== undefined) ctx.setEnabled(change(ctx.enabled, channel, channels));
         return;
     }
     const index = focusedIn(ctx.cursor, 'levels', FILTER_LEVELS.length);
     const level = index === null ? undefined : FILTER_LEVELS[index];
-    if (level !== undefined) ctx.setEnabledLevels(onLevel(ctx.enabledLevels, level));
+    if (level !== undefined) ctx.setEnabledLevels(change(ctx.enabledLevels, level, FILTER_LEVELS));
 }
 
 function handleFilters(ctx: HotkeyContext): boolean {
@@ -113,8 +96,8 @@ function handleFilters(ctx: HotkeyContext): boolean {
     if (ctx.key.leftArrow) move('left');
     else if (ctx.key.rightArrow) move('right');
     else if (ctx.key.tab) move('switch');
-    else if (ctx.input === ' ') applyAtCursor(ctx, channels, soloChannel, soloLevel);
-    else if (ctx.input === 'o') applyAtCursor(ctx, channels, toggleChannel, toggleLevel);
+    else if (ctx.input === ' ') applyAtCursor(ctx, channels, solo);
+    else if (ctx.input === 'o') applyAtCursor(ctx, channels, toggle);
     else return false;
     return true;
 }

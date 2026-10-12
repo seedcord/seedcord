@@ -124,6 +124,14 @@ describe('dispatchHotkey channel filters', () => {
         expect(setEnabled).toHaveBeenCalledWith(new Set());
     });
 
+    it('toggles the focused level off on o, keeping the rest', () => {
+        const setEnabledLevels = vi.fn();
+
+        dispatchHotkey(makeCtx({ input: 'o', cursor: { ...INITIAL_CURSOR, group: 'levels' }, setEnabledLevels }));
+
+        expect(setEnabledLevels).toHaveBeenCalledWith(new Set(['warn', 'info', 'debug', 'trace']));
+    });
+
     it('does nothing on space or o when no channels exist', () => {
         const setEnabled = vi.fn();
 

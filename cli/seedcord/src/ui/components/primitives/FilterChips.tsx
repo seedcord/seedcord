@@ -22,7 +22,7 @@ interface FilterChipsProps {
 
 const HEADING_WIDTH = 'channels'.length;
 
-// the rail keeps the width it first measured for the whole run (useRailWidth)
+// a long list here would widen the rail for the whole run
 function summarize(selected: ReadonlySet<string>): string {
     const [first, ...rest] = selected;
     if (first === undefined) return 'all';

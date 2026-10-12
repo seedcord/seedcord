@@ -4,6 +4,7 @@ import { resolve, sep } from 'node:path';
 import { mergeConfig } from 'vite';
 
 import { NODE_CONDITIONS, userCodeConfig } from '#core/modules/userCodeConfig';
+import { STATE_FOLDER } from '#core/state/StateFolder';
 
 // a **/logs/** glob would also swallow a source directory named logs
 export function logsIgnore(root: string): (path: string) => boolean {
@@ -19,7 +20,7 @@ export const devServerConfig = mergeConfig(userCodeConfig(NODE_CONDITIONS), {
         hmr: true,
         watch: {
             usePolling: false,
-            ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', '**/.seedcord/**']
+            ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', `**/${STATE_FOLDER}/**`]
         }
     },
     build: {

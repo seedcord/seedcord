@@ -108,7 +108,6 @@ describe('DevApp tiers', () => {
         unmount();
     });
 
-    // a filter key with the chips collapsed would change the pane with nothing on screen to explain it
     it('ignores the filter keys while the chips are collapsed', async () => {
         const app = view(COMPACT);
         await settled(() => expect(app.lastFrame()).toContain('▸ channels'));

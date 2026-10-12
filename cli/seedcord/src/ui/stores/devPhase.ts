@@ -6,7 +6,6 @@ import type { TextProps } from 'ink';
 
 export type DevPhase = 'starting' | 'running' | 'restart-required' | 'disconnected' | 'error' | 'quitting';
 
-// disconnect only applies while a session is running. the other phases have nothing to stop.
 export function isSessionLive(phase: DevPhase): boolean {
     return phase === 'running' || phase === 'restart-required';
 }

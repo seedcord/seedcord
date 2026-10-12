@@ -25,8 +25,7 @@ export interface DevState {
     readonly tunnel: TunnelStatus | null;
     readonly quitArmed: boolean;
     readonly idleAnimation: boolean;
-    // epoch ms. a pending restart keeps it, the restart itself clears it
-    readonly liveSince: number | null;
+    readonly liveSinceMs: number | null;
 }
 
 const INITIAL: DevState = {
@@ -41,7 +40,7 @@ const INITIAL: DevState = {
     tunnel: null,
     quitArmed: false,
     idleAnimation: true,
-    liveSince: null
+    liveSinceMs: null
 };
 
 export class DevStore extends TypedEventEmitter<{ change: [] }> {
@@ -147,8 +146,8 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
 
     private patch(next: Partial<DevState>): void {
         const merged = { ...this.state, ...next };
-        const liveSince = isSessionLive(merged.phase) ? (this.state.liveSince ?? Date.now()) : null;
-        this.state = { ...merged, liveSince };
+        const liveSinceMs = isSessionLive(merged.phase) ? (this.state.liveSinceMs ?? Date.now()) : null;
+        this.state = { ...merged, liveSinceMs };
         this.emit('change');
     }
 }

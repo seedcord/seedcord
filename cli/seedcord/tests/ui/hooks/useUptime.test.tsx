@@ -28,9 +28,24 @@ describe('useUptime', () => {
         vi.useRealTimers();
     });
 
-    it('ticks while the sidebar renders it', async () => {
+    it('ticks every second while the sidebar renders it', async () => {
+        vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
         const { lastFrame, unmount } = render(<Harness state={liveState()} shown />);
-        await settled(() => expect(lastFrame()).toContain('up:0'));
+
+        vi.advanceTimersByTime(2 * SECOND_MS);
+
+        await settled(() => expect(lastFrame()).toContain('up:2'));
+        unmount();
+    });
+
+    it('counts a whole second from the moment the session went live', () => {
+        vi.useFakeTimers({ toFake: ['Date'], now: 1900 });
+        const state = liveState();
+
+        vi.setSystemTime(2900);
+        const { lastFrame, unmount } = render(<Harness state={state} shown />);
+
+        expect(lastFrame()).toBe('up:1');
         unmount();
     });
 

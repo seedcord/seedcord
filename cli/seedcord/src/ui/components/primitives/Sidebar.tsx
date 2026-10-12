@@ -40,7 +40,6 @@ interface SidebarProps {
     readonly ref?: Ref<DOMElement>;
 }
 
-// full holds everything. compact either collapses the chips or swaps the status for them
 export type RailView = 'full' | 'collapsed' | 'filters';
 
 interface RailKeysProps {
