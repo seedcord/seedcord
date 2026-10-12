@@ -7,6 +7,7 @@ import { useDevState } from '#ui/hooks/useDevState';
 import { useFilters } from '#ui/hooks/useFilters';
 import { useLogs } from '#ui/hooks/useLogs';
 import { useMeasuredBox } from '#ui/hooks/useMeasuredBox';
+import { usePanelFit } from '#ui/hooks/usePanelFit';
 import { useRailWidth } from '#ui/hooks/useRailWidth';
 import { useScroll } from '#ui/hooks/useScroll';
 import { useUptime } from '#ui/hooks/useUptime';
@@ -41,6 +42,8 @@ export function DevApp(props: DevAppProps): ReactElement {
 
     const tier = tierFor(rows, columns);
     const { filters, setFilters, view, toggleView } = useFilters(initialFilters, tier, onFiltersChange);
+    const panelFit = usePanelFit();
+    const keysView = tier === 'logs' && !panelFit.fits ? 'collapsed' : view;
     const [cursor, setCursor] = useState(INITIAL_CURSOR);
 
     const logBoxRef = useRef<DOMElement | null>(null);
@@ -74,7 +77,7 @@ export function DevApp(props: DevAppProps): ReactElement {
             store,
             filters,
             setFilters,
-            filterView: view,
+            filterView: keysView,
             toggleFilterView: toggleView,
             cursor,
             setCursor,
@@ -115,6 +118,7 @@ export function DevApp(props: DevAppProps): ReactElement {
                 measured={logBox.height > 0}
                 filters={filters}
                 filterView={view}
+                panelFit={panelFit}
                 cursor={cursor}
                 interactive={interactive}
                 uptimeMs={uptimeMs}

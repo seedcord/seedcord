@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { NO_FILTER_ROOM } from '#ui/components/primitives/FilterPanel';
 import { NO_ROOM } from '#ui/components/primitives/ScrollableLogView';
 import { DevApp } from '#ui/DevApp';
 import { DevStore } from '#ui/stores/DevStore';
@@ -46,6 +47,24 @@ function view(
         size
     );
 }
+
+// every channel the framework logs on
+const MANY_CHANNELS = [
+    'default',
+    'bot',
+    'lifecycle',
+    'health',
+    'interactions',
+    'events',
+    'commands',
+    'subscribers',
+    'errors',
+    'gates',
+    'plugins',
+    'hmr',
+    'cli',
+    'tsc'
+];
 
 function logOn(channel: string): LogRecord {
     return { level: 'info', message: `from ${channel}`, label: 'Bot', channel, timestamp: 1_700_000_000_000 };
@@ -186,6 +205,33 @@ describe('DevApp filters below the full layout', () => {
         app.resize(COMPACT);
 
         await settled(() => expect(app.lastFrame()).toContain('▸ channels'));
+        app.unmount();
+    });
+
+    it('asks for more room and holds the filter keys when the chips do not fit', async () => {
+        const onFiltersChange = vi.fn();
+        const app = view({ rows: 9, columns: 79 }, { onFiltersChange });
+        for (const record of MANY_CHANNELS.map(logOn)) LogStore.instance.onLog(record);
+        await LogStore.instance.flush();
+
+        app.press('f');
+        await settled(() => expect(app.lastFrame()).toContain(NO_FILTER_ROOM));
+        app.press(' ');
+
+        expect(await stableFrame(app.lastFrame)).toContain(NO_FILTER_ROOM);
+        expect(onFiltersChange).not.toHaveBeenCalled();
+        app.unmount();
+    });
+
+    it('shows every chip once the panel has room', async () => {
+        const app = view({ rows: 12, columns: 79 });
+        for (const record of MANY_CHANNELS.map(logOn)) LogStore.instance.onLog(record);
+        await LogStore.instance.flush();
+
+        app.press('f');
+        await settled(() => expect(app.lastFrame()).toContain('o toggle'));
+
+        expect(app.lastFrame()).not.toContain(NO_FILTER_ROOM);
         app.unmount();
     });
 

@@ -12,6 +12,7 @@ import { StatusLine } from '#ui/components/primitives/StatusLine';
 import type { LogFilters } from '#ui/devPrefs';
 import type { FilterCursor } from '#ui/filterCursor';
 import type { FilterView } from '#ui/hooks/useFilters';
+import type { PanelFit } from '#ui/hooks/usePanelFit';
 import type { ScrollApi } from '#ui/hooks/useScroll';
 import type { LogRow } from '#ui/logRows';
 import type { Notice } from '#ui/notices';
@@ -34,6 +35,7 @@ export interface DevLayoutProps {
     readonly measured: boolean;
     readonly filters: LogFilters;
     readonly filterView: FilterView;
+    readonly panelFit: PanelFit;
     readonly cursor: FilterCursor;
     readonly interactive: boolean;
     readonly uptimeMs: number | null;
@@ -42,7 +44,7 @@ export interface DevLayoutProps {
 // notification cards render below the logs so stack traces have room
 export function DevLayout(props: DevLayoutProps): ReactElement {
     const { state, tier, notices, railRef, railWidth, logBoxRef, scroll, viewportHeight, measured } = props;
-    const { filters, filterView, cursor, interactive, uptimeMs } = props;
+    const { filters, filterView, panelFit, cursor, interactive, uptimeMs } = props;
     const railed = tier === 'full' || tier === 'compact';
 
     return (
@@ -83,7 +85,7 @@ export function DevLayout(props: DevLayoutProps): ReactElement {
                 )}
                 {railed ? null : <Rule />}
                 {!railed && filterView === 'shown' ? (
-                    <FilterPanel filters={filters} cursor={cursor} />
+                    <FilterPanel filters={filters} cursor={cursor} {...panelFit} />
                 ) : (
                     <>
                         <LogHeader following={scroll.following} below={scroll.below} />

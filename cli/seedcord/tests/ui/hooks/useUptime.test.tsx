@@ -1,7 +1,7 @@
 import { Text } from 'ink';
 import { render } from 'ink-testing-library';
 import React from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { settled } from '#tests/ui/settled';
 import { useUptime } from '#ui/hooks/useUptime';
@@ -53,6 +53,22 @@ describe('useUptime', () => {
         const { lastFrame, unmount } = render(<Harness state={liveState()} shown={false} />);
         await settled(() => expect(lastFrame()).toContain('up:null'));
         unmount();
+    });
+
+    // react's dev build reads the snapshot twice on mount and logs when the two differ
+    it('reads one snapshot even when a second ticks over between two reads', () => {
+        vi.useFakeTimers({ toFake: ['Date'], now: 1000 });
+        const state = liveState();
+        let clock = 1999;
+        vi.spyOn(Date, 'now').mockImplementation(() => clock++);
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        onTestFinished(() => {
+            vi.restoreAllMocks();
+        });
+
+        render(<Harness state={state} shown />).unmount();
+
+        expect(consoleError).not.toHaveBeenCalled();
     });
 
     it('counts from when the session went live after the sidebar comes back', async () => {
