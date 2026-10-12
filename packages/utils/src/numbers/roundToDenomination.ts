@@ -28,11 +28,18 @@ export interface RoundToDenomOptions {
  * ```
  */
 export function roundToDenomination(num: number, opts?: RoundToDenomOptions): string {
-    const { suffixes = ['K', 'M', 'B', 'T', 'Q'], precision = 1 } = opts ?? {};
+    const { suffixes = ['K', 'M', 'B', 'T', 'Q'], precision: rawPrecision = 1 } = opts ?? {};
 
     if (num < 1000) {
         return num.toString();
     }
+
+    // Clamp to a practical range; non-finite values fall back to the default.
+    // Values above \~15 exceed Number precision, so further digits are noise.
+    const maxPrecision = 15;
+    const precision = Number.isFinite(rawPrecision)
+        ? Math.max(0, Math.min(maxPrecision, Math.trunc(rawPrecision)))
+        : 1;
 
     let index = -1;
     let temp = num;
@@ -42,27 +49,22 @@ export function roundToDenomination(num: number, opts?: RoundToDenomOptions): st
         index++;
     }
 
-    let result;
+    // Reliable decimal rounding that avoids binary floating-point artifacts.
+    let rounded = Number(Math.round(Number(temp + 'e' + precision)) + 'e-' + precision);
 
+    // Carry into the next denomination only when a further suffix exists.
+    if (rounded >= 1000 && index < suffixes.length - 1) {
+        rounded /= 1000;
+        index++;
+        rounded = Number(Math.round(Number(rounded + 'e' + precision)) + 'e-' + precision);
+    }
+
+    let result: string;
     // eslint-disable-next-line unicorn/prefer-number-is-safe-integer -- '% 1 === 0' means whole-number, which isSafeInteger would narrow to the safe range and mis-format very large integers
-    if (temp % 1 === 0) {
-        result = temp.toString();
+    if (rounded % 1 === 0) {
+        result = rounded.toString();
     } else {
-        const adjustedTemp = Math.round(temp * Math.pow(10, precision + 1)) / Math.pow(10, precision + 1);
-        result = adjustedTemp.toFixed(precision);
-    }
-
-    if (result.endsWith('.9')) {
-        result = Math.ceil(Number(result)).toString();
-    }
-
-    if (result.endsWith('.0')) {
-        result = result.slice(0, Math.max(0, result.length - 2));
-    }
-
-    if (result === '1000') {
-        index += 1;
-        result = '1';
+        result = rounded.toFixed(precision).replace(/\.?0+$/, '');
     }
 
     return result + (index >= 0 ? suffixes[index] : '');
