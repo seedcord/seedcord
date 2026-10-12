@@ -1,5 +1,3 @@
-import { resolve } from 'node:path';
-
 import { Seedcord } from '@seedcord/http';
 
 import { PingCounter } from './plugins/PingCounter';
@@ -7,10 +5,10 @@ import { PingCounter } from './plugins/PingCounter';
 export default new Seedcord({
     bot: {
         interactions: {
-            path: resolve(import.meta.dirname, './handlers')
+            path: './handlers'
         },
         commands: {
-            path: resolve(import.meta.dirname, './commands')
+            path: './commands'
         }
     },
     subscribers: {

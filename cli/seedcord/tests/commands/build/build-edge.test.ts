@@ -126,7 +126,7 @@ describe('seedcord build on an edge bot with files it never loads', () => {
         const bot = await readFile(join(projectDir, 'src/bot.ts'), 'utf8');
         await writeFile(
             join(projectDir, 'src/bot.ts'),
-            bot.replace('commands: { path: null }', "commands: { path: resolve(import.meta.dirname, './commands') }")
+            bot.replace('commands: { path: null }', "commands: { path: './commands' }")
         );
 
         await expect(edgeBuildRunner().run(projectDir)).rejects.toMatchObject({

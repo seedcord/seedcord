@@ -33,16 +33,16 @@ export const seedcord = new Seedcord({
             partials: [Partials.GuildMember, Partials.User]
         },
         interactions: {
-            path: resolve(import.meta.dirname, './handlers'),
-            middlewares: resolve(import.meta.dirname, './handlers/middlewares')
+            path: './handlers',
+            middlewares: './handlers/middlewares'
         },
         commands: {
-            path: resolve(import.meta.dirname, './commands'),
+            path: './commands',
             guilds: Vars.commandGuilds
         },
         events: {
-            path: resolve(import.meta.dirname, './events'),
-            middlewares: resolve(import.meta.dirname, './events/middlewares')
+            path: './events',
+            middlewares: './events/middlewares'
         },
         emojis: {
             Confirm: 'confirmation_check',
@@ -54,7 +54,7 @@ export const seedcord = new Seedcord({
     },
     botColor: '#fe565a'
 }).attach('db', Mongoose, {
-    dir: resolve(import.meta.dirname, './services'),
+    dir: './services',
     uri: Vars.mongoUri,
     name: Vars.dbName
 });

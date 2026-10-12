@@ -11,11 +11,11 @@ Envapter.baseDir = resolve(import.meta.dirname, '..');
 export const seedcord = new Seedcord({
     bot: {
         interactions: {
-            path: resolve(import.meta.dirname, './handlers'),
-            middlewares: resolve(import.meta.dirname, './handlers/middlewares')
+            path: './handlers',
+            middlewares: './handlers/middlewares'
         },
         commands: {
-            path: resolve(import.meta.dirname, './commands')
+            path: './commands'
         }
     },
     subscribers: {
