@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { isInside } from './paths';
+import { isInside, resolveFromRoot } from './paths';
 
 import type * as fs from 'node:fs';
 
@@ -143,7 +143,7 @@ export function resolveFolder(dir: string): string {
 
     const root = builtFiles()?.root ?? devRoot();
     if (!root) throw new SeedcordError(SeedcordErrorCode.CoreDirectoryRootUnknown, [dir]);
-    return path.resolve(root, dir);
+    return resolveFromRoot(root, dir);
 }
 
 function fileSource(): FileSource {

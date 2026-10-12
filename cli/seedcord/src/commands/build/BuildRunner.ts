@@ -54,7 +54,7 @@ export class BuildRunner {
 
         const instance = await steps.step('load bot', async () => {
             const loaded = await importInstance(modules, config.instance);
-            assertFoldersUnderRoot(loaded.config, config.root);
+            assertFoldersUnderRoot(loaded.config, project);
             return loaded;
         });
         await steps.step(

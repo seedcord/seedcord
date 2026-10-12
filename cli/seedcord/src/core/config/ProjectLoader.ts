@@ -1,4 +1,4 @@
-import { dirname, isAbsolute, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
@@ -152,7 +152,7 @@ export class ProjectLoader {
 
         const configDir = dirname(configPath);
         const root = resolve(configDir, config.root ?? '.');
-        const instance = this.resolveWithinRoot(root, config.instance);
+        const instance = resolve(root, config.instance);
         const build = this.resolveBuildOptions(configDir, config.build);
         const typecheck = resolveTypecheck(config.hmr?.typecheck, root);
 
@@ -169,16 +169,11 @@ export class ProjectLoader {
         } satisfies ResolvedSeedcordConfig;
     }
 
-    private resolveWithinRoot(root: string, target: string): string {
-        if (isAbsolute(target)) return target;
-        return resolve(root, target);
-    }
-
     private resolveTarget(root: string, target: BuildTarget, config: SeedcordConfig): ResolvedTarget {
         if (target.kind === 'edge') return target;
 
         // justified: entryProblems already required entry on a server target
-        const entry = this.resolveWithinRoot(root, (config as SeedcordServerConfig).entry);
+        const entry = resolve(root, (config as SeedcordServerConfig).entry);
         if (!isInside(root, entry)) {
             throw new SeedcordError(SeedcordErrorCode.CliConfigEntryOutsideRoot, [entry, root]);
         }

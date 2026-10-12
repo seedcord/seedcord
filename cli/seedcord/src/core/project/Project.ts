@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { resolveFromRoot } from '@seedcord/utils/node/internal';
 
 import { ProjectFiles } from './ProjectFiles';
 
@@ -23,6 +24,10 @@ export class Project implements AsyncDisposable {
 
     public get modules(): ModuleLoader {
         return this.loader;
+    }
+
+    public fromRoot(path: string): string {
+        return resolveFromRoot(this.config.root, path);
     }
 
     public tsconfig(): string | undefined {

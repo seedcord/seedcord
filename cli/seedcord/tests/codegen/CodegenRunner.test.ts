@@ -11,6 +11,7 @@ import { assert, describe, expect, it, onTestFinished } from 'vitest';
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { quietSteps } from '#core/output/quietSteps';
+import { Project } from '#core/project/Project';
 
 import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -60,15 +61,10 @@ function runnerWith(
     importModule: (entryPath: string) => Promise<unknown>,
     logger: ILogger
 ): CodegenRunner {
-    // justified: codegen reaches the loader through open() and the returned importModule
-    const projectLoader = {
-        open: () =>
-            Promise.resolve({
-                config,
-                modules: { importModule } as ModuleLoader,
-                [Symbol.asyncDispose]: () => Promise.resolve()
-            })
-    } as unknown as ProjectLoader;
+    // justified: codegen reads only importModule off the loader
+    const modules = { importModule, [Symbol.asyncDispose]: () => Promise.resolve() } as ModuleLoader & AsyncDisposable;
+    // justified: codegen reaches the loader through open()
+    const projectLoader = { open: () => Promise.resolve(new Project(config, modules)) } as unknown as ProjectLoader;
 
     return new CodegenRunner({ steps: quietSteps, projectLoader, generator: new AugmentationBuilder(logger), logger });
 }

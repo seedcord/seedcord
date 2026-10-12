@@ -96,12 +96,12 @@ export class CodegenRunner {
         });
     }
 
-    private async resolveInstance({ modules, config }: Project): Promise<ResolvedInstance> {
-        const instance = await importInstance(modules, config.instance);
+    private async resolveInstance(project: Project): Promise<ResolvedInstance> {
+        const instance = await importInstance(project.modules, project.config.instance);
 
         const commandsPath = instance.config.bot.commands.path;
         return {
-            commandsDir: commandsPath ? resolve(config.root, commandsPath) : undefined,
+            commandsDir: commandsPath ? project.fromRoot(commandsPath) : undefined,
             emojis: instance.config.bot.emojis ?? {},
             augmentTarget: instance[HostAugmentTarget],
             pluginKeys: instance[HostPluginKeys]
