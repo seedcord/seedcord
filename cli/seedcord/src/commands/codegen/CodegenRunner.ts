@@ -99,10 +99,9 @@ export class CodegenRunner {
     private async resolveInstance({ modules, config }: Project): Promise<ResolvedInstance> {
         const instance = await importInstance(modules, config.instance);
 
-        // the bot resolves commands.path against cwd
         const commandsPath = instance.config.bot.commands.path;
         return {
-            commandsDir: commandsPath ? resolve(process.cwd(), commandsPath) : undefined,
+            commandsDir: commandsPath ? resolve(config.root, commandsPath) : undefined,
             emojis: instance.config.bot.emojis ?? {},
             augmentTarget: instance[HostAugmentTarget],
             pluginKeys: instance[HostPluginKeys]

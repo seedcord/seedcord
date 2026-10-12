@@ -271,7 +271,7 @@ describe('CodegenRunner', () => {
         expect(warnings.some((warning) => warning.includes('locked'))).toBe(true);
     });
 
-    it('resolves the commands path relative to cwd', async () => {
+    it('resolves the commands path against root', async () => {
         const root = await tempDir('codegen-');
         const relativePath = 'no/such/rel';
 
@@ -283,7 +283,7 @@ describe('CodegenRunner', () => {
         }
 
         expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCommandsDirUnreadable });
-        expect((caught as Error).message).toContain(resolve(process.cwd(), relativePath));
+        expect((caught as Error).message).toContain(resolve(root, relativePath));
     });
 
     it('throws CliInstanceInvalid when the instance is not a Seedcord instance', async () => {

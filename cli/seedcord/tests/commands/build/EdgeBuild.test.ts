@@ -68,4 +68,17 @@ describe('EdgeBuild', () => {
             code: SeedcordErrorCode.ConfigMissingEnv
         });
     });
+
+    it('scans a relative commands path from root', async () => {
+        await using project = await new ProjectLoader(openModuleLoader).open(EDGE_BOT);
+        const { target, root } = project.config;
+        assert(target.kind === 'edge');
+        const { config } = await importInstance(project.modules, project.config.instance);
+        const build = new EdgeBuild(project, target, { openDiscord: () => ({ get: () => Promise.resolve([]) }) });
+
+        await expect(build.readDiscord({ ...config.bot, commands: { path: './no-commands' } })).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliCommandsDirUnreadable,
+            message: expect.stringContaining(join(root, 'no-commands')) as string
+        });
+    });
 });

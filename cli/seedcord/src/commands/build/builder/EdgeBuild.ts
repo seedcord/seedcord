@@ -1,4 +1,4 @@
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 import { REST } from '@discordjs/rest';
 import { warnLinks } from '@seedcord/core/internal';
@@ -186,7 +186,8 @@ export class EdgeBuild extends TargetBuild {
 
     private async commandsInCode(commands: CommandsConfig): Promise<CommandsInCode | undefined> {
         if (commands.path === null) return undefined;
-        const found = await new CommandScanner(this.project.modules, this.logger).scan(commands.path);
+        const dir = resolve(this.project.config.root, commands.path);
+        const found = await new CommandScanner(this.project.modules, this.logger).scan(dir);
         return { found, configuredGuilds: commands.guilds ?? [] };
     }
 
