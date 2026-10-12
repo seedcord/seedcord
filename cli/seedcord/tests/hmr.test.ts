@@ -159,6 +159,35 @@ describe('HmrPlugin', () => {
         expect(events).toContainEqual({ type: 'server-listening', port: 4000 });
     });
 
+    const root = join(process.cwd(), 'src');
+    it.each(['migrations/**', './migrations/**', join(root, 'migrations/**')])(
+        'asks for a restart on a save matching the plugin pattern %s',
+        (pattern) => {
+            const plugin = new HmrPlugin({ ...mockConfig, root });
+            const listeners = new Map<string, (data: unknown) => void>();
+            // justified: spy on the private `hot` getter
+            const hotHost = plugin as unknown as { hot: { send: Mock; on: Mock } };
+            vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({
+                send: vi.fn(),
+                on: vi.fn((event: string, cb: (data: unknown) => void) => listeners.set(event, cb))
+            });
+
+            const events: DevEvent[] = [];
+            plugin.on('event', (event: DevEvent) => events.push(event));
+
+            const server = {
+                watcher: watcherMock(),
+                environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
+            } as unknown as ViteDevServer;
+            (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
+
+            listeners.get('seedcord:register-critical-files')?.({ patterns: [pattern] });
+            viteHotUpdate(plugin, 'update', join(root, 'migrations/001-create-users.ts'));
+
+            expect(events).toContainEqual(expect.objectContaining({ type: 'restart-required' }));
+        }
+    );
+
     describe('configureServer (File Events)', () => {
         let serverMock: ViteDevServer;
         let watcher: EventEmitter;

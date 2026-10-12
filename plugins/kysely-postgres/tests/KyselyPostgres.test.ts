@@ -1,3 +1,4 @@
+import { setDevChannel } from '@seedcord/core/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { KyselyPostgres } from '#src/KyselyPostgres';
@@ -236,5 +237,20 @@ describe('KyselyPostgres Plugin Integration', () => {
 
         // the failed reload rolled back, so the last-good service round-trips and stays registered
         expect(plugin.services).toHaveProperty('users');
+    });
+
+    it('asks dev for a restart on any save under the migrations dir', () => {
+        const send = vi.fn();
+        // justified: the constructor only sends on the dev channel
+        setDevChannel({ send, on: vi.fn() });
+
+        plugin = new KyselyPostgres(mockCore, {
+            connectionString: 'postgres://localhost:5432/test',
+            migrations: { dir: './migrations' },
+            dir: './services'
+        });
+        setDevChannel(undefined);
+
+        expect(send).toHaveBeenCalledWith('seedcord:register-critical-files', { patterns: ['migrations/**'] });
     });
 });

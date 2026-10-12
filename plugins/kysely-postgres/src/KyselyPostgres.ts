@@ -1,5 +1,7 @@
 import 'reflect-metadata';
 
+import path from 'node:path';
+
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
@@ -70,7 +72,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
 
         if (!Envapter.isDevelopment) return;
 
-        super.registerCriticalFiles([this.options.migrations.dir]);
+        super.registerCriticalFiles([path.posix.join(this.options.migrations.dir, '**')]);
 
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: this.options.dir,

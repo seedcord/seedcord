@@ -4,6 +4,7 @@ import { wrapHot } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
+import { resolveFromRoot } from '@seedcord/utils/node/internal';
 import { minimatch } from 'minimatch';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -145,7 +146,9 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private isCriticalFile(file: string): boolean {
         const { root, configFile, instance, target } = this.config;
         const relPath = relative(root, file);
-        const patterns = [...(this.config.hmr?.restart ?? []), ...this.dynamicRestartPatterns];
+        const patterns = [...(this.config.hmr?.restart ?? []), ...this.dynamicRestartPatterns].map((pattern) =>
+            relative(root, resolveFromRoot(root, pattern))
+        );
 
         return (
             patterns.some((pattern) => minimatch(relPath, pattern)) ||
