@@ -57,6 +57,36 @@ function viteHotUpdate(
     callHotUpdate(plugin, ssr, type, file, ssrModules);
 }
 
+interface ConfiguredPlugin {
+    plugin: HmrPlugin;
+    watcher: EventEmitter;
+    listeners: Map<string, (data: unknown) => void>;
+    events: DevEvent[];
+}
+
+function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0]): ConfiguredPlugin {
+    const plugin = new HmrPlugin(config);
+    const listeners = new Map<string, (data: unknown) => void>();
+    // justified: spy on the private `hot` getter
+    const hotHost = plugin as unknown as { hot: { send: Mock; on: Mock } };
+    vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({
+        send: vi.fn(),
+        on: vi.fn((event: string, cb: (data: unknown) => void) => listeners.set(event, cb))
+    });
+
+    const events: DevEvent[] = [];
+    plugin.on('event', (event: DevEvent) => events.push(event));
+
+    const watcher = watcherMock();
+    const server = {
+        watcher,
+        environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
+    } as unknown as ViteDevServer;
+    (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
+
+    return { plugin, watcher, listeners, events };
+}
+
 const loggerSpies = {
     info: vi.fn(),
     warn: vi.fn(),
@@ -95,6 +125,8 @@ describe('HmrPlugin', () => {
         }
     };
 
+    const srcRoot = join(process.cwd(), 'src');
+
     beforeEach(() => {
         vi.clearAllMocks();
         hmrPlugin = new HmrPlugin(mockConfig);
@@ -115,20 +147,7 @@ describe('HmrPlugin', () => {
 
     it('asks for a restart when the config file above the vite root changes', () => {
         const configFile = join(process.cwd(), 'seedcord.config.ts');
-        const plugin = new HmrPlugin({ ...mockConfig, root: join(process.cwd(), 'src'), configFile });
-        // justified: spy on the private `hot` getter
-        const hotHost = plugin as unknown as { hot: { send: Mock; on: Mock } };
-        vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({ send: vi.fn(), on: vi.fn() });
-
-        const events: DevEvent[] = [];
-        plugin.on('event', (event: DevEvent) => events.push(event));
-
-        const watcher = watcherMock();
-        const server = {
-            watcher,
-            environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
-        } as unknown as ViteDevServer;
-        (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
+        const { watcher, events } = configuredPlugin({ ...mockConfig, root: srcRoot, configFile });
 
         watcher.emit('change', configFile);
 
@@ -136,57 +155,36 @@ describe('HmrPlugin', () => {
     });
 
     it('relays the bound port the framework reports', () => {
-        const plugin = new HmrPlugin(mockConfig);
-        const listeners = new Map<string, (data: unknown) => void>();
-        // justified: spy on the private `hot` getter
-        const hotHost = plugin as unknown as { hot: { send: Mock; on: Mock } };
-        vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({
-            send: vi.fn(),
-            on: vi.fn((event: string, cb: (data: unknown) => void) => listeners.set(event, cb))
-        });
-
-        const events: DevEvent[] = [];
-        plugin.on('event', (event: DevEvent) => events.push(event));
-
-        const server = {
-            watcher: watcherMock(),
-            environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
-        } as unknown as ViteDevServer;
-        (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
+        const { listeners, events } = configuredPlugin(mockConfig);
 
         listeners.get('seedcord:server-listening')?.({ port: 4000 });
 
         expect(events).toContainEqual({ type: 'server-listening', port: 4000 });
     });
 
-    const root = join(process.cwd(), 'src');
-    it.each(['migrations/**', './migrations/**', join(root, 'migrations/**')])(
+    it.each(['migrations/**', './migrations/**', join(srcRoot, 'migrations/**')])(
         'asks for a restart on a save matching the plugin pattern %s',
         (pattern) => {
-            const plugin = new HmrPlugin({ ...mockConfig, root });
-            const listeners = new Map<string, (data: unknown) => void>();
-            // justified: spy on the private `hot` getter
-            const hotHost = plugin as unknown as { hot: { send: Mock; on: Mock } };
-            vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({
-                send: vi.fn(),
-                on: vi.fn((event: string, cb: (data: unknown) => void) => listeners.set(event, cb))
-            });
-
-            const events: DevEvent[] = [];
-            plugin.on('event', (event: DevEvent) => events.push(event));
-
-            const server = {
-                watcher: watcherMock(),
-                environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
-            } as unknown as ViteDevServer;
-            (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
+            const { plugin, listeners, events } = configuredPlugin({ ...mockConfig, root: srcRoot });
 
             listeners.get('seedcord:register-critical-files')?.({ patterns: [pattern] });
-            viteHotUpdate(plugin, 'update', join(root, 'migrations/001-create-users.ts'));
+            viteHotUpdate(plugin, 'update', join(srcRoot, 'migrations/001-create-users.ts'));
 
-            expect(events).toContainEqual(expect.objectContaining({ type: 'restart-required' }));
+            expect(events).toContainEqual({ type: 'restart-required' });
         }
     );
+
+    it('asks for a restart on a save matching a ./ pattern in hmr.restart', () => {
+        const { plugin, events } = configuredPlugin({
+            ...mockConfig,
+            root: srcRoot,
+            hmr: { restart: ['./config/**'] }
+        });
+
+        viteHotUpdate(plugin, 'update', join(srcRoot, 'config/limits.ts'));
+
+        expect(events).toContainEqual({ type: 'restart-required' });
+    });
 
     describe('configureServer (File Events)', () => {
         let serverMock: ViteDevServer;

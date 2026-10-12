@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { setBotRoot } from '@seedcord/utils/node/internal';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type Mock } from 'vitest';
 
 import { KyselyPostgres } from '#src/KyselyPostgres';
 
@@ -8,6 +8,9 @@ import { TestEnvironment } from './utils/test-env';
 
 import type { KyselyMigrationsOptions } from '#src/types/KyselyOptions';
 import type { CoreBase } from '@seedcord/core';
+
+// the pg mock shares one query function across pools
+const { poolQuery } = (await import('pg')) as unknown as { poolQuery: Mock };
 
 const NAMED_EXPORTS = 'export async function up() {}\nexport async function down() {}\n';
 
@@ -22,11 +25,12 @@ describe('KyselyMigrationManager', () => {
     });
 
     afterEach(async () => {
+        poolQuery.mockResolvedValue({ rows: [] });
         setBotRoot(undefined);
         await testEnv.teardown();
     });
 
-    async function listedNames(migrations: KyselyMigrationsOptions): Promise<string[]> {
+    async function initializedPlugin(migrations: KyselyMigrationsOptions): Promise<KyselyPostgres> {
         // the plugin reads nothing off core, this only satisfies the constructor
         const core = { config: {} } as unknown as CoreBase;
         const plugin = new KyselyPostgres(core, {
@@ -35,16 +39,24 @@ describe('KyselyMigrationManager', () => {
             dir: './services'
         });
         await plugin.init();
+        return plugin;
+    }
+
+    async function listedNames(migrations: KyselyMigrationsOptions): Promise<string[]> {
+        const plugin = await initializedPlugin(migrations);
         const listed = await plugin.listMigrations();
         return listed.map((info) => info.name);
     }
 
     // a dev bot loads the .ts file and a built bot the .js one
-    it.each(['ts', 'js'])('reads a relative dir from root and names a .%s file without it', async (extension) => {
-        await testEnv.createFile(`migrations/001-create-users.${extension}`, NAMED_EXPORTS);
+    it.each(['ts', 'js'])(
+        'reads a relative dir from root and names a .%s migration without the extension',
+        async (extension) => {
+            await testEnv.createFile(`migrations/001-create-users.${extension}`, NAMED_EXPORTS);
 
-        await expect(listedNames({ dir: './migrations' })).resolves.toEqual(['001-create-users']);
-    });
+            await expect(listedNames({ dir: './migrations' })).resolves.toEqual(['001-create-users']);
+        }
+    );
 
     it('reads a migration from a default export', async () => {
         await testEnv.createFile(
@@ -82,5 +94,27 @@ describe('KyselyMigrationManager', () => {
         await expect(listedNames({ dir: './migrations' })).rejects.toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginKyselyDuplicateMigrationName })
         );
+    });
+
+    // kysely orders run migrations that share a timestamp with nameComparator
+    it('passes nameComparator to kysely for two migrations that ran at the same time', async () => {
+        await testEnv.createFile('migrations/B.ts', NAMED_EXPORTS);
+        await testEnv.createFile('migrations/a.ts', NAMED_EXPORTS);
+        const ranAt = new Date('2026-01-01T00:00:00Z').toISOString();
+        poolQuery.mockImplementation((sql: unknown) =>
+            Promise.resolve({
+                rows: String(sql).startsWith('select "name", "timestamp"')
+                    ? [
+                          { name: 'B', timestamp: ranAt },
+                          { name: 'a', timestamp: ranAt }
+                      ]
+                    : []
+            })
+        );
+
+        const byCodeUnit = (nameA: string, nameB: string): number => (nameA < nameB ? -1 : Number(nameA > nameB));
+        const plugin = await initializedPlugin({ dir: './migrations', onStartup: false, nameComparator: byCodeUnit });
+
+        await expect(plugin.migrate()).resolves.toBeUndefined();
     });
 });

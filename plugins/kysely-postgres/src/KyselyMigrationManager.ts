@@ -18,7 +18,7 @@ import type {
 
 interface MigrationFile {
     name: string;
-    path: string;
+    file: string;
     migration: Migration;
 }
 
@@ -169,12 +169,18 @@ export class KyselyMigrationManager {
             db: this.ctx.db,
             provider,
             allowUnorderedMigrations: config.allowUnorderedMigrations ?? false,
-            ...keepDefined(config, 'migrationTableName', 'migrationLockTableName', 'migrationTableSchema')
+            ...keepDefined(
+                config,
+                'migrationTableName',
+                'migrationLockTableName',
+                'migrationTableSchema',
+                'nameComparator'
+            )
         });
     }
 
     private async getMigrationProvider(): Promise<MigrationProvider> {
-        const { dir, nameComparator = (nameA: string, nameB: string) => nameA.localeCompare(nameB) } = this.ctx.config;
+        const { dir } = this.ctx.config;
         this.ctx.logger.debug(paint.mute(`Loading migrations from ${paint.path(dir)}`));
 
         const files: MigrationFile[] = [];
@@ -183,14 +189,12 @@ export class KyselyMigrationManager {
             if (!migration) {
                 throw new SeedcordTypeError(SeedcordErrorCode.PluginKyselyInvalidMigrationModule, [relativePath]);
             }
-            files.push({ name: migrationName(relativePath), path: relativePath, migration });
+            files.push({ name: migrationName(relativePath), file: relativePath, migration });
         }
         this.assertUniqueNames(files);
+        this.logPreparedMigrations(files);
 
-        const sorted = files.sort((a, b) => nameComparator(a.name, b.name));
-        this.logPreparedMigrations(sorted);
-
-        const migrations = Object.fromEntries(sorted.map(({ name, migration }) => [name, migration]));
+        const migrations = Object.fromEntries(files.map(({ name, migration }) => [name, migration]));
         return { getMigrations: () => Promise.resolve(migrations) };
     }
 
@@ -230,12 +234,12 @@ export class KyselyMigrationManager {
 
     private assertUniqueNames(files: readonly MigrationFile[]): void {
         const firstFileFor = new Map<string, string>();
-        for (const { name, path: filePath } of files) {
+        for (const { name, file } of files) {
             const first = firstFileFor.get(name);
             if (first !== undefined) {
-                throw new SeedcordError(SeedcordErrorCode.PluginKyselyDuplicateMigrationName, [name, first, filePath]);
+                throw new SeedcordError(SeedcordErrorCode.PluginKyselyDuplicateMigrationName, [name, first, file]);
             }
-            firstFileFor.set(name, filePath);
+            firstFileFor.set(name, file);
         }
     }
 

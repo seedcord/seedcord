@@ -1,4 +1,4 @@
-import { relative, resolve } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 
 import { wrapHot } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
@@ -34,7 +34,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly logger: Logger;
     private readonly lastUpdate = new Map<string, number>();
     private server: ViteDevServer | null = null;
-    private readonly dynamicRestartPatterns = new Set<string>();
+    private readonly restartPatterns: Set<string>;
 
     private get hot(): NormalizedHotChannel | undefined {
         return this.server?.environments.ssr.hot;
@@ -47,6 +47,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     constructor(private readonly config: ResolvedSeedcordConfig) {
         super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
+        this.restartPatterns = new Set((config.hmr?.restart ?? []).map((pattern) => this.fromRoot(pattern)));
     }
 
     public get plugin(): Plugin {
@@ -83,7 +84,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         });
 
         this.dev?.on('seedcord:register-critical-files', (data) => {
-            for (const pattern of data.patterns) this.dynamicRestartPatterns.add(pattern);
+            for (const pattern of data.patterns) this.restartPatterns.add(this.fromRoot(pattern));
             this.logger.debug(`Registered ${String(data.patterns.length)} critical file patterns`);
         });
     }
@@ -146,12 +147,9 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private isCriticalFile(file: string): boolean {
         const { root, configFile, instance, target } = this.config;
         const relPath = relative(root, file);
-        const patterns = [...(this.config.hmr?.restart ?? []), ...this.dynamicRestartPatterns].map((pattern) =>
-            relative(root, resolveFromRoot(root, pattern))
-        );
 
         return (
-            patterns.some((pattern) => minimatch(relPath, pattern)) ||
+            [...this.restartPatterns].some((pattern) => minimatch(relPath, pattern)) ||
             file === configFile ||
             file.endsWith('package.json') ||
             file.endsWith('tsconfig.json') ||
@@ -159,6 +157,12 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             (target.kind === 'server' && file === resolve(root, target.entry)) ||
             file === resolve(root, instance)
         );
+    }
+
+    // minimatch reads a windows separator as an escape
+    private fromRoot(pattern: string): string {
+        const { root } = this.config;
+        return relative(root, resolveFromRoot(root, pattern)).split(sep).join('/');
     }
 }
 

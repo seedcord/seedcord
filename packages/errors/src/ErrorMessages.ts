@@ -218,7 +218,7 @@ const messages = {
     [SeedcordErrorCode.PluginKyselyBootstrapFailed]: (databaseName: string) =>
         `Failed to ensure database ${databaseName} exists.`,
     [SeedcordErrorCode.PluginKyselyDuplicateMigrationName]: (name: string, first: string, second: string) =>
-        `${paint.path(first)} and ${paint.path(second)} are both the migration ${paint.sky(name)}. Kysely identifies a migration by its file name alone, without its folder or extension. Rename one of the files.`,
+        `${paint.path(first)} and ${paint.path(second)} are both the migration ${paint.sky(name)}. A migration's name is its file name without the folder or extension. Rename one of the files.`,
 
     [SeedcordErrorCode.CliConfigInvalidExport]: () => 'Config file must default export an object.',
     [SeedcordErrorCode.CliConfigMissingInstance]: () =>

@@ -70,7 +70,7 @@ Attach before startup. A call after initialization throws `CorePluginAfterInit`.
 
 `Vars.databaseUrl` stands in for an [`envapt`](https://www.npmjs.com/package/envapt) accessor. `process.env.DATABASE_URL` types as `string | undefined`, which `connectionString?: string` rejects under the `exactOptionalPropertyTypes` that `@seedcord/tsconfig` turns on.
 
-`dir` and `migrations.dir` resolve against `root` from `seedcord.config.ts`. Every file under `migrations.dir`, subfolders included, exports `up` and optionally `down`. `migrations.onStartup` runs to latest by default.
+`dir` and `migrations.dir` resolve against `root` from `seedcord.config.ts`. Every `.ts` or `.js` file under `migrations.dir`, subfolders included, exports `up` and optionally `down`. `migrations.onStartup` runs to latest by default.
 
 ## Schema
 

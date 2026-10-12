@@ -23,6 +23,7 @@ describe('KyselyPostgres Plugin Integration', () => {
     });
 
     afterEach(async () => {
+        setDevChannel(undefined);
         await testEnv.teardown();
         vi.clearAllMocks();
     });
@@ -239,9 +240,8 @@ describe('KyselyPostgres Plugin Integration', () => {
         expect(plugin.services).toHaveProperty('users');
     });
 
-    it('asks dev for a restart on any save under the migrations dir', () => {
+    it('registers the migrations dir as a restart pattern', () => {
         const send = vi.fn();
-        // justified: the constructor only sends on the dev channel
         setDevChannel({ send, on: vi.fn() });
 
         plugin = new KyselyPostgres(mockCore, {
@@ -249,7 +249,6 @@ describe('KyselyPostgres Plugin Integration', () => {
             migrations: { dir: './migrations' },
             dir: './services'
         });
-        setDevChannel(undefined);
 
         expect(send).toHaveBeenCalledWith('seedcord:register-critical-files', { patterns: ['migrations/**'] });
     });
