@@ -100,4 +100,22 @@ describe('dev channel routing', () => {
         const promptPayload = send.mock.calls.find((args) => args[0] === 'seedcord:commands-update-prompt')?.[1];
         expect(promptPayload).toHaveProperty('files');
     });
+
+    it('CommandRegistry.onHmr skips the prompt for a sibling folder that shares the commands prefix', async ({
+        testEnv
+    }) => {
+        const { channel, send } = fakeChannel();
+        setDevChannel(channel);
+
+        await testEnv.createFile('commands/Ping.ts', PING_COMMAND);
+        const sibling = await testEnv.createFile('commands-extra/util.ts', 'export const util = 1;\n');
+        const config = testConfig({ commands: testEnv.resolvePath('commands') });
+        await using seedcord = new Seedcord(config);
+        await registryOf(seedcord).init();
+
+        await registryOf(seedcord).onHmr({ file: sibling, type: 'update' });
+
+        const sentEvents = send.mock.calls.map((args) => args[0]);
+        expect(sentEvents).not.toContain('seedcord:commands-update-prompt');
+    });
 });
