@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, onTestFinished, vi } from 'vitest';
 
 import { DevStore } from '#ui/stores/DevStore';
 
@@ -151,6 +151,24 @@ describe('DevStore', () => {
 
         expect(store.getState()).toBe(before);
         expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it('keeps counting while a restart is pending and starts over once the bot restarts', () => {
+        vi.useFakeTimers({ toFake: ['Date'], now: 1000 });
+        onTestFinished(() => {
+            vi.useRealTimers();
+        });
+        const store = new DevStore();
+
+        store.setPhase('running');
+        vi.setSystemTime(2000);
+        store.apply({ type: 'restart-required' });
+        expect(store.getState().liveSince).toBe(1000);
+
+        store.beginRestart();
+        expect(store.getState().liveSince).toBeNull();
+        store.setPhase('running');
+        expect(store.getState().liveSince).toBe(2000);
     });
 
     it('apply throws on an unknown event type (exhaustiveness guard)', () => {
