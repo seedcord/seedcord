@@ -2,6 +2,7 @@ import { dirname, relative } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { ROOT_KEY } from '@seedcord/utils/node/internal';
 import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
 
 import { seedcordDependents } from '#core/modules/seedcordDependents';
@@ -26,6 +27,7 @@ export class ViteDevRuntime implements DevRuntime {
         this.eventHandler = context.onEvent ?? null;
 
         const projectRoot = this.context.config.root;
+        Reflect.set(globalThis, Symbol.for(ROOT_KEY), projectRoot);
 
         this.emit({ type: 'module-loading', path: projectRoot });
 

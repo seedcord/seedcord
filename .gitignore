@@ -42,6 +42,7 @@ dist/
 
 # scratch projects a test compiles, removed in afterAll unless the run dies
 **/.build-fixture
+**/.root-fixture
 
 # the docs-engine suite copies the docs-generator mocks here so the two never share a dist
 /tooling/docs-engine/tests/mock/
