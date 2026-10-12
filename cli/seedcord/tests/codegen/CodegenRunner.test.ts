@@ -13,7 +13,6 @@ import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { quietSteps } from '#core/output/quietSteps';
 import { Project } from '#core/project/Project';
 
-import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
@@ -63,8 +62,7 @@ function runnerWith(
 ): CodegenRunner {
     // justified: codegen reads only importModule off the loader
     const modules = { importModule, [Symbol.asyncDispose]: () => Promise.resolve() } as ModuleLoader & AsyncDisposable;
-    // justified: codegen reaches the loader through open()
-    const projectLoader = { open: () => Promise.resolve(new Project(config, modules)) } as unknown as ProjectLoader;
+    const projectLoader = { open: () => Promise.resolve(new Project(config, modules)) };
 
     return new CodegenRunner({ steps: quietSteps, projectLoader, generator: new AugmentationBuilder(logger), logger });
 }

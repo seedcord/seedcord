@@ -159,5 +159,7 @@ describe('CommandRegistry Integration', () => {
         await registryOf(seedcord).onHmr({ file: filePath, type: 'update' });
 
         expect(registryOf(seedcord).globalCommands[0]?.name).toBe('ping');
+        await registryOf(seedcord).refresh();
+        expect(registryOf(seedcord).globalCommands[0]?.name).toBe('pong');
     });
 });

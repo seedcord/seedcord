@@ -42,7 +42,7 @@ interface CodegenResult {
 
 interface CodegenRunnerDeps {
     readonly steps: Steps<CodegenStep>;
-    readonly projectLoader: ProjectLoader;
+    readonly projectLoader: Pick<ProjectLoader, 'open'>;
     readonly generator: AugmentationBuilder;
     readonly logger: ILogger;
 }
