@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { NO_ROOM } from '#ui/components/primitives/ScrollableLogView';
 import { DevApp } from '#ui/DevApp';
@@ -10,7 +10,7 @@ import { COMPACT_ROWS } from '#ui/tier';
 import { renderAt } from './renderAt';
 import { settled, stableFrame } from './settled';
 
-import type { LogRecord } from '@seedcord/types';
+import type { LogLevel, LogRecord } from '@seedcord/types';
 
 const FULL = { rows: 40, columns: 120 };
 const COMPACT = { rows: COMPACT_ROWS, columns: 120 };
@@ -137,3 +137,40 @@ describe('DevApp tiers', () => {
         }
     });
 }, 30_000);
+
+describe('DevApp saved filters', () => {
+    it('opens with the saved filters applied', async () => {
+        const filters = { channels: new Set(['hmr']), levels: new Set<LogLevel>() };
+        const app = renderAt(
+            <DevApp store={runningStore()} onReady={() => undefined} initialFilters={filters} />,
+            FULL
+        );
+
+        for (const record of ['bot', 'hmr'].map(logOn)) LogStore.instance.onLog(record);
+        await LogStore.instance.flush();
+        await settled(() => expect(app.lastFrame()).toContain('from hmr'));
+
+        expect(app.lastFrame()).not.toContain('from bot');
+        app.unmount();
+    });
+
+    it('reports the filters after a filter key', async () => {
+        const onFiltersChange = vi.fn();
+        const app = renderAt(
+            <DevApp store={runningStore()} onReady={() => undefined} onFiltersChange={onFiltersChange} />,
+            FULL
+        );
+
+        for (const record of ['bot', 'hmr'].map(logOn)) LogStore.instance.onLog(record);
+        await LogStore.instance.flush();
+        await settled(() => expect(app.lastFrame()).toContain('from hmr'));
+        const [focused] = LogStore.instance.getChannels();
+
+        app.press(' ');
+
+        await settled(() =>
+            expect(onFiltersChange).toHaveBeenCalledWith({ channels: new Set([focused]), levels: new Set() })
+        );
+        app.unmount();
+    });
+});

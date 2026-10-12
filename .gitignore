@@ -23,6 +23,7 @@ certs/
 dist/
 *.bun-build
 .wrangler/
+.seedcord/
 
 # Ignore IDE specific files
 **/.idea

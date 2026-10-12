@@ -2,8 +2,10 @@ import { Box, useInput, useWindowSize } from 'ink';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Rule } from '#ui/components/primitives/Rule';
+import { devPrefsFile } from '#ui/devPrefs';
 import { INITIAL_CURSOR } from '#ui/filterCursor';
 import { useDevState } from '#ui/hooks/useDevState';
+import { useFilters } from '#ui/hooks/useFilters';
 import { useLogs } from '#ui/hooks/useLogs';
 import { useMeasuredBox } from '#ui/hooks/useMeasuredBox';
 import { useRailWidth } from '#ui/hooks/useRailWidth';
@@ -17,14 +19,16 @@ import { profileWrap } from '#ui/profile';
 import { LogStore } from '#ui/stores/LogStore';
 import { tierFor } from '#ui/tier';
 
+import type { DevPrefs } from '#ui/devPrefs';
 import type { DevStore } from '#ui/stores/DevStore';
-import type { LogLevel } from '@seedcord/types';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
 
 interface DevAppProps {
     readonly store: DevStore;
     readonly onReady: () => void;
+    readonly initialFilters?: DevPrefs;
+    readonly onFiltersChange?: (filters: DevPrefs) => void;
     readonly onQuit?: () => Promise<void> | void;
     readonly onDisconnect?: () => Promise<void> | void;
     readonly onRestart?: () => Promise<void> | void;
@@ -32,12 +36,11 @@ interface DevAppProps {
 }
 
 export function DevApp(props: DevAppProps): ReactElement {
-    const { store, onReady } = props;
+    const { store, onReady, initialFilters = devPrefsFile.defaults } = props;
     const state = useDevState(store);
     const { rows, columns } = useWindowSize();
 
-    const [enabled, setEnabled] = useState<ReadonlySet<string>>(() => new Set());
-    const [enabledLevels, setEnabledLevels] = useState<ReadonlySet<LogLevel>>(() => new Set());
+    const { filters, setChannels, setLevels } = useFilters(initialFilters, props.onFiltersChange);
     const [cursor, setCursor] = useState(INITIAL_CURSOR);
 
     const logBoxRef = useRef<DOMElement | null>(null);
@@ -49,7 +52,7 @@ export function DevApp(props: DevAppProps): ReactElement {
     const tier = tierFor(rows, columns);
     const notices = noticesOf(state);
 
-    const logs = useLogs(enabled, enabledLevels);
+    const logs = useLogs(filters.channels, filters.levels);
     // the label width only grows with a new entry, so the logs dep already covers it
     const logRows = useMemo(
         () =>
@@ -70,10 +73,10 @@ export function DevApp(props: DevAppProps): ReactElement {
             interactive,
             scroll,
             store,
-            enabled,
-            setEnabled,
-            enabledLevels,
-            setEnabledLevels,
+            enabled: filters.channels,
+            setEnabled: setChannels,
+            enabledLevels: filters.levels,
+            setEnabledLevels: setLevels,
             cursor,
             setCursor,
             filtersOpen: tier === 'full',
@@ -113,8 +116,8 @@ export function DevApp(props: DevAppProps): ReactElement {
                 viewportHeight={viewportHeight}
                 measured={logBox.height > 0}
                 columns={columns}
-                enabled={enabled}
-                enabledLevels={enabledLevels}
+                enabled={filters.channels}
+                enabledLevels={filters.levels}
                 cursor={cursor}
                 interactive={interactive}
                 uptimeMs={uptimeMs}

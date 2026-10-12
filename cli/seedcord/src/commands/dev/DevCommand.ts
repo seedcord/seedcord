@@ -4,7 +4,9 @@ import React from 'react';
 
 import { BaseCommand } from '#core/BaseCommand';
 import { cliLogger } from '#core/cliLogger';
+import { StateFolder } from '#core/state/StateFolder';
 import { DevApp } from '#ui/DevApp';
+import { devPrefsFile } from '#ui/devPrefs';
 import { profileFrame, profileReport, profileStdout } from '#ui/profile';
 import { DevStore } from '#ui/stores/DevStore';
 import { LogStore } from '#ui/stores/LogStore';
@@ -28,6 +30,7 @@ export class DevCommand extends BaseCommand {
                 profileStdout();
                 const store = new DevStore();
                 const runner = DevRunner.create(store);
+                const stateFolder = new StateFolder(process.cwd());
 
                 // ink intercepts Ctrl-C under raw mode. this fires only when stdin is not raw.
                 const onSignal = (): void => {
@@ -37,7 +40,7 @@ export class DevCommand extends BaseCommand {
                 process.once('SIGTERM', onSignal);
 
                 try {
-                    await this.runDevApp(store, runner);
+                    await this.runDevApp(store, runner, stateFolder);
                 } catch (error: unknown) {
                     this.logger.error(`${WORDMARK} dev failed`, error);
                     process.exitCode = 1;
@@ -70,13 +73,17 @@ export class DevCommand extends BaseCommand {
         if (report !== null) await this.write(`${report}\n`);
     }
 
-    private async runDevApp(store: DevStore, runner: DevRunner): Promise<void> {
+    private async runDevApp(store: DevStore, runner: DevRunner, stateFolder: StateFolder): Promise<void> {
         let failure: { error: unknown } | undefined;
         let runResult: Promise<void> = Promise.resolve();
 
         const { unmount, waitUntilExit } = render(
             React.createElement(DevApp, {
                 store,
+                initialFilters: stateFolder.read(devPrefsFile),
+                onFiltersChange: (filters) => {
+                    stateFolder.write(devPrefsFile, filters);
+                },
                 onQuit: () => runner.quit(),
                 onDisconnect: () => runner.disconnect(),
                 onRestart: () => runner.restart(),

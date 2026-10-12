@@ -19,7 +19,7 @@ export const devServerConfig = mergeConfig(userCodeConfig(NODE_CONDITIONS), {
         hmr: true,
         watch: {
             usePolling: false,
-            ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**']
+            ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', '**/.seedcord/**']
         }
     },
     build: {
