@@ -1,18 +1,17 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-const JSON_INDENT = 4;
+import { paint } from '@seedcord/errors';
 
-function isMissing(error: unknown): boolean {
-    return Error.isError(error) && 'code' in error && error.code === 'ENOENT';
-}
+import type { ILogger } from '@seedcord/types';
+
+const JSON_INDENT = 4;
 
 function readJson(path: string): unknown {
     try {
         return JSON.parse(readFileSync(path, 'utf8'));
-    } catch (error: unknown) {
-        if (isMissing(error) || error instanceof SyntaxError) return undefined;
-        throw error;
+    } catch {
+        return undefined;
     }
 }
 
@@ -26,7 +25,10 @@ export interface StateFile<ValueT> {
 export class StateFolder {
     private readonly dir: string;
 
-    constructor(projectDir: string) {
+    constructor(
+        projectDir: string,
+        private readonly logger: ILogger
+    ) {
         this.dir = join(projectDir, '.seedcord');
     }
 
@@ -35,8 +37,13 @@ export class StateFolder {
     }
 
     public write<ValueT>(file: StateFile<ValueT>, value: ValueT): void {
-        mkdirSync(this.dir, { recursive: true });
-        writeFileSync(this.pathOf(file.name), `${JSON.stringify(file.serialize(value), null, JSON_INDENT)}\n`);
+        const path = this.pathOf(file.name);
+        try {
+            mkdirSync(this.dir, { recursive: true });
+            writeFileSync(path, `${JSON.stringify(file.serialize(value), null, JSON_INDENT)}\n`);
+        } catch (error: unknown) {
+            this.logger.warn(`Could not save ${paint.path(path)}`, error);
+        }
     }
 
     private pathOf(name: string): string {

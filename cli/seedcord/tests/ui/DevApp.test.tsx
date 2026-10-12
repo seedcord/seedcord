@@ -10,7 +10,9 @@ import { COMPACT_ROWS } from '#ui/tier';
 import { renderAt } from './renderAt';
 import { settled, stableFrame } from './settled';
 
-import type { LogLevel, LogRecord } from '@seedcord/types';
+import type { DevPrefs } from '#ui/devPrefs';
+import type { LogRecord } from '@seedcord/types';
+import type { ComponentProps } from 'react';
 
 const FULL = { rows: 40, columns: 120 };
 const COMPACT = { rows: COMPACT_ROWS, columns: 120 };
@@ -33,8 +35,16 @@ function squeezedStore(): DevStore {
     return store;
 }
 
-function view(size: { rows: number; columns: number }, store = runningStore()): ReturnType<typeof renderAt> {
-    return renderAt(<DevApp store={store} onReady={() => undefined} />, size);
+const NO_FILTERS: DevPrefs = { channels: new Set(), levels: new Set() };
+
+function view(
+    size: { rows: number; columns: number },
+    props: Partial<ComponentProps<typeof DevApp>> = {}
+): ReturnType<typeof renderAt> {
+    return renderAt(
+        <DevApp store={runningStore()} onReady={() => undefined} initialFilters={NO_FILTERS} {...props} />,
+        size
+    );
 }
 
 function logOn(channel: string): LogRecord {
@@ -81,7 +91,7 @@ describe('DevApp tiers', () => {
     it('names the pending notice on the status line', async () => {
         const store = runningStore();
         store.apply({ type: 'command-update-prompt', files: ['a.ts', 'b.ts'] });
-        const { lastFrame, unmount } = view(LOGS, store);
+        const { lastFrame, unmount } = view(LOGS, { store });
 
         await settled(() => expect(lastFrame()).toContain('2 commands updated'));
         unmount();
@@ -101,21 +111,21 @@ describe('DevApp tiers', () => {
     // the chips are hidden below full, so a keypress that filters them changes what the pane shows with
     // nothing on screen to explain it
     it('ignores the filter keys once the chips are hidden', async () => {
-        const view = renderAt(<DevApp store={runningStore()} onReady={() => undefined} />, COMPACT);
-        await settled(() => expect(view.lastFrame()).toContain('▸ channels'));
+        const app = view(COMPACT);
+        await settled(() => expect(app.lastFrame()).toContain('▸ channels'));
 
         for (const record of ['bot', 'hmr'].map(logOn)) LogStore.instance.onLog(record);
         await LogStore.instance.flush();
-        await settled(() => expect(view.lastFrame()).toContain('from hmr'));
+        await settled(() => expect(app.lastFrame()).toContain('from hmr'));
 
-        view.press(' ');
-        expect(await stableFrame(view.lastFrame)).toContain('from hmr');
+        app.press(' ');
+        expect(await stableFrame(app.lastFrame)).toContain('from hmr');
 
-        view.unmount();
+        app.unmount();
     });
 
     it('opens with a rule across the whole terminal, so nothing sits on the top edge', async () => {
-        const app = renderAt(<DevApp store={runningStore()} onReady={() => undefined} />, FULL);
+        const app = view(FULL);
         const frame = await stableFrame(app.lastFrame);
 
         expect(frame.split('\n')[0]).toBe('─'.repeat(FULL.columns));
@@ -128,7 +138,7 @@ describe('DevApp tiers', () => {
         const store = squeezedStore();
 
         for (let rows = 20; rows <= 34; rows++) {
-            const squeezed = view({ rows, columns: 120 }, store);
+            const squeezed = view({ rows, columns: 120 }, { store });
             const frame = await stableFrame(squeezed.lastFrame);
             squeezed.unmount();
 
@@ -140,11 +150,7 @@ describe('DevApp tiers', () => {
 
 describe('DevApp saved filters', () => {
     it('opens with the saved filters applied', async () => {
-        const filters = { channels: new Set(['hmr']), levels: new Set<LogLevel>() };
-        const app = renderAt(
-            <DevApp store={runningStore()} onReady={() => undefined} initialFilters={filters} />,
-            FULL
-        );
+        const app = view(FULL, { initialFilters: { channels: new Set(['hmr']), levels: new Set() } });
 
         for (const record of ['bot', 'hmr'].map(logOn)) LogStore.instance.onLog(record);
         await LogStore.instance.flush();
@@ -156,10 +162,7 @@ describe('DevApp saved filters', () => {
 
     it('reports the filters after a filter key', async () => {
         const onFiltersChange = vi.fn();
-        const app = renderAt(
-            <DevApp store={runningStore()} onReady={() => undefined} onFiltersChange={onFiltersChange} />,
-            FULL
-        );
+        const app = view(FULL, { onFiltersChange });
 
         for (const record of ['bot', 'hmr'].map(logOn)) LogStore.instance.onLog(record);
         await LogStore.instance.flush();

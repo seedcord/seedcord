@@ -2,7 +2,6 @@ import { Box, useInput, useWindowSize } from 'ink';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Rule } from '#ui/components/primitives/Rule';
-import { devPrefsFile } from '#ui/devPrefs';
 import { INITIAL_CURSOR } from '#ui/filterCursor';
 import { useDevState } from '#ui/hooks/useDevState';
 import { useFilters } from '#ui/hooks/useFilters';
@@ -27,7 +26,7 @@ import type { ReactElement } from 'react';
 interface DevAppProps {
     readonly store: DevStore;
     readonly onReady: () => void;
-    readonly initialFilters?: DevPrefs;
+    readonly initialFilters: DevPrefs;
     readonly onFiltersChange?: (filters: DevPrefs) => void;
     readonly onQuit?: () => Promise<void> | void;
     readonly onDisconnect?: () => Promise<void> | void;
@@ -36,11 +35,11 @@ interface DevAppProps {
 }
 
 export function DevApp(props: DevAppProps): ReactElement {
-    const { store, onReady, initialFilters = devPrefsFile.defaults } = props;
+    const { store, onReady, initialFilters, onFiltersChange } = props;
     const state = useDevState(store);
     const { rows, columns } = useWindowSize();
 
-    const { filters, setChannels, setLevels } = useFilters(initialFilters, props.onFiltersChange);
+    const { filters, setChannels, setLevels } = useFilters(initialFilters, onFiltersChange);
     const [cursor, setCursor] = useState(INITIAL_CURSOR);
 
     const logBoxRef = useRef<DOMElement | null>(null);

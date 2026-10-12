@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { StateFolder } from '#core/state/StateFolder';
+import { silentLogger } from '#tests/silentLogger';
 import { devPrefsFile } from '#ui/devPrefs';
 
 import type { LogLevel } from '@seedcord/types';
@@ -17,7 +18,7 @@ async function projectDir(): Promise<string> {
 
 describe('devPrefsFile', () => {
     it('reads back the filters it wrote', async () => {
-        const state = new StateFolder(await projectDir());
+        const state = new StateFolder(await projectDir(), silentLogger);
 
         state.write(devPrefsFile, { channels: new Set(['hmr', 'db']), levels: new Set<LogLevel>(['error', 'warn']) });
 
@@ -30,8 +31,11 @@ describe('devPrefsFile', () => {
     it('reads the defaults when a level is not one the filters offer', async () => {
         const dir = await projectDir();
         await mkdir(join(dir, '.seedcord'));
-        await writeFile(join(dir, '.seedcord', devPrefsFile.name), '{ "channels": [], "levels": ["verbose"] }');
+        await writeFile(join(dir, '.seedcord', devPrefsFile.name), '{ "channels": ["hmr"], "levels": ["verbose"] }');
 
-        expect(new StateFolder(dir).read(devPrefsFile)).toBe(devPrefsFile.defaults);
+        expect(new StateFolder(dir, silentLogger).read(devPrefsFile)).toEqual({
+            channels: new Set(),
+            levels: new Set()
+        });
     });
 });

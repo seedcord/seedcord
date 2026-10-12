@@ -10,7 +10,7 @@ import type { DevState, DevStore } from '#ui/stores/DevStore';
 import type { LogLevel } from '@seedcord/types';
 import type { Key } from 'ink';
 
-// empty set means all. toggling every channel on collapses back to empty, keeping later channels visible by default
+// empty set means all. turning on every channel that has logged collapses back to empty, keeping later channels visible
 function toggleChannel(prev: ReadonlySet<string>, channel: string, all: readonly string[]): ReadonlySet<string> {
     const base = prev.size === 0 ? new Set(all) : new Set(prev);
     if (base.has(channel)) base.delete(channel);

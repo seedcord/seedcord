@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 
 import { DevApp } from '#ui/DevApp';
+import { devPrefsFile } from '#ui/devPrefs';
 
 import { createPreviewContext } from './PreviewContext';
 
@@ -33,6 +34,7 @@ export function PreviewHarness({ store, scenario }: PreviewHarnessProps): ReactE
     return (
         <DevApp
             store={store}
+            initialFilters={devPrefsFile.defaults}
             onReady={handleReady}
             onQuit={() => process.exit(0)}
             onDisconnect={() => {
