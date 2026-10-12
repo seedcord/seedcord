@@ -206,9 +206,6 @@ const messages = {
     [SeedcordErrorCode.PluginKyselyInvalidStepCount]: () => 'Migration step count must be a non-negative integer.',
     [SeedcordErrorCode.PluginKyselyUnknownDirection]: (direction: unknown) =>
         `Unknown migration direction: ${String(direction)}.`,
-    [SeedcordErrorCode.PluginKyselyUnresolvedMigrationsPath]: (label: string) =>
-        `Unable to resolve migrations at path: ${label}.`,
-    [SeedcordErrorCode.PluginKyselyNoMigrationFiles]: () => 'No migration files provided.',
     [SeedcordErrorCode.PluginKyselyInvalidMigrationModule]: (filePath: string) =>
         `${paint.path(filePath)} needs an up function because it is in the migrations folder. Export up, and down if you need it, by name or on a default export object. Move a helper file out of the folder.`,
     [SeedcordErrorCode.PluginKyselyNonErrorFailure]: (message: string) => `Migration failure: ${message}.`,

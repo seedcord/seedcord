@@ -210,24 +210,20 @@ export enum SeedcordErrorCode {
     PluginKyselyInvalidStepCount = 2203,
     /** Migration direction was not recognized. */
     PluginKyselyUnknownDirection = 2204,
-    /** Provided migrations path could not be resolved. */
-    PluginKyselyUnresolvedMigrationsPath = 2205,
-    /** No migration files were found for execution. */
-    PluginKyselyNoMigrationFiles = 2206,
-    /** A migration module failed to export the expected functions. */
-    PluginKyselyInvalidMigrationModule = 2207,
+    /** A file in the migrations folder is missing its `up` function. */
+    PluginKyselyInvalidMigrationModule = 2205,
     /** An arbitrary (non-Error) failure was reported by a migration. */
-    PluginKyselyNonErrorFailure = 2208,
+    PluginKyselyNonErrorFailure = 2206,
     /** Postgres pool failed to close cleanly during shutdown. */
-    PluginKyselyDisconnectFailed = 2209,
+    PluginKyselyDisconnectFailed = 2207,
     /** Kysely `services` was accessed before the plugin finished initializing. */
-    PluginKyselyServicesNotReady = 2210,
+    PluginKyselyServicesNotReady = 2208,
     /** Postgres pool failed to establish a connection. */
-    PluginKyselyConnectionFailed = 2211,
+    PluginKyselyConnectionFailed = 2209,
     /** Bootstrapper failed to ensure the target Postgres database exists. */
-    PluginKyselyBootstrapFailed = 2212,
-    /** Two listed migration files share a name once their extensions are stripped. */
-    PluginKyselyDuplicateMigrationName = 2213,
+    PluginKyselyBootstrapFailed = 2210,
+    /** Two files in the migrations folder share a name once their folder and extension are stripped. */
+    PluginKyselyDuplicateMigrationName = 2211,
 
     /** Config file default export was not an object. */
     CliConfigInvalidExport = 3101,
