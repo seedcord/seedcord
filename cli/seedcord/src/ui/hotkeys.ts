@@ -3,11 +3,12 @@ import { focusedIn, moveCursor } from '#ui/filterCursor';
 import { isSessionLive } from '#ui/stores/devPhase';
 import { LogStore } from '#ui/stores/LogStore';
 
+import type { LogFilters } from '#ui/devPrefs';
 import type { CursorMove, FilterCursor } from '#ui/filterCursor';
+import type { FilterView } from '#ui/hooks/useFilters';
 import type { ScrollApi } from '#ui/hooks/useScroll';
 import type { LogRow } from '#ui/logRows';
 import type { DevState, DevStore } from '#ui/stores/DevStore';
-import type { LogLevel } from '@seedcord/types';
 import type { Key } from 'ink';
 
 type FilterChange = <ItemT>(prev: ReadonlySet<ItemT>, item: ItemT, all: readonly ItemT[]) => ReadonlySet<ItemT>;
@@ -29,15 +30,12 @@ interface HotkeyContext {
     readonly interactive: boolean;
     readonly scroll: ScrollApi<LogRow>;
     readonly store: DevStore;
-    readonly enabled: ReadonlySet<string>;
-    readonly setEnabled: (next: ReadonlySet<string>) => void;
-    readonly enabledLevels: ReadonlySet<LogLevel>;
-    readonly setEnabledLevels: (next: ReadonlySet<LogLevel>) => void;
+    readonly filters: LogFilters;
+    readonly setFilters: (next: LogFilters) => void;
+    readonly filterView: FilterView;
+    readonly toggleFilterView: () => void;
     readonly cursor: FilterCursor;
     readonly setCursor: (next: FilterCursor) => void;
-    readonly filtersOpen: boolean;
-    // undefined where the chips always show
-    readonly toggleFilters?: (() => void) | undefined;
     readonly onQuit?: (() => Promise<void> | void) | undefined;
     readonly onDisconnect?: (() => Promise<void> | void) | undefined;
     readonly onRestart?: (() => Promise<void> | void) | undefined;
@@ -71,23 +69,26 @@ function handlePrompt(ctx: HotkeyContext): boolean {
 }
 
 function applyAtCursor(ctx: HotkeyContext, channels: readonly string[], change: FilterChange): void {
+    const { filters } = ctx;
     if (ctx.cursor.group === 'channels') {
         const index = focusedIn(ctx.cursor, 'channels', channels.length);
         const channel = index === null ? undefined : channels[index];
-        if (channel !== undefined) ctx.setEnabled(change(ctx.enabled, channel, channels));
+        if (channel === undefined) return;
+        ctx.setFilters({ ...filters, channels: change(filters.channels, channel, channels) });
         return;
     }
     const index = focusedIn(ctx.cursor, 'levels', FILTER_LEVELS.length);
     const level = index === null ? undefined : FILTER_LEVELS[index];
-    if (level !== undefined) ctx.setEnabledLevels(change(ctx.enabledLevels, level, FILTER_LEVELS));
+    if (level === undefined) return;
+    ctx.setFilters({ ...filters, levels: change(filters.levels, level, FILTER_LEVELS) });
 }
 
 function handleFilters(ctx: HotkeyContext): boolean {
-    if (ctx.input === 'f' && ctx.toggleFilters) {
-        ctx.toggleFilters();
+    if (ctx.input === 'f' && ctx.filterView !== 'always') {
+        ctx.toggleFilterView();
         return true;
     }
-    if (!ctx.filtersOpen) return false;
+    if (ctx.filterView === 'collapsed') return false;
 
     const channels = LogStore.instance.getChannels();
     const move = (dir: CursorMove): void =>

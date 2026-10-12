@@ -5,7 +5,7 @@ import { FILTER_LEVELS } from '#ui/components/primitives/FilterChips';
 import type { StateFile } from '#core/state/StateFolder';
 import type { LogLevel } from '@seedcord/types';
 
-export interface DevPrefs {
+export interface LogFilters {
     readonly channels: ReadonlySet<string>;
     readonly levels: ReadonlySet<LogLevel>;
 }
@@ -16,7 +16,7 @@ function isFilterLevels(values: readonly string[]): values is LogLevel[] {
     return values.every((value) => LEVEL_NAMES.has(value));
 }
 
-export const devPrefsFile: StateFile<DevPrefs> = {
+export const devPrefsFile: StateFile<LogFilters> = {
     name: 'dev-prefs.json',
     defaults: { channels: new Set(), levels: new Set() },
     parse(raw) {

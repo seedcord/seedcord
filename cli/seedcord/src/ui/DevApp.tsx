@@ -18,7 +18,7 @@ import { profileWrap } from '#ui/profile';
 import { LogStore } from '#ui/stores/LogStore';
 import { tierFor } from '#ui/tier';
 
-import type { DevPrefs } from '#ui/devPrefs';
+import type { LogFilters } from '#ui/devPrefs';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
@@ -26,8 +26,8 @@ import type { ReactElement } from 'react';
 interface DevAppProps {
     readonly store: DevStore;
     readonly onReady: () => void;
-    readonly initialFilters: DevPrefs;
-    readonly onFiltersChange?: (filters: DevPrefs) => void;
+    readonly initialFilters: LogFilters;
+    readonly onFiltersChange?: (filters: LogFilters) => void;
     readonly onQuit?: () => Promise<void> | void;
     readonly onDisconnect?: () => Promise<void> | void;
     readonly onRestart?: () => Promise<void> | void;
@@ -39,7 +39,8 @@ export function DevApp(props: DevAppProps): ReactElement {
     const state = useDevState(store);
     const { rows, columns } = useWindowSize();
 
-    const { filters, setChannels, setLevels, shown, toggleShown } = useFilters(initialFilters, onFiltersChange);
+    const tier = tierFor(rows, columns);
+    const { filters, setFilters, view, toggleView } = useFilters(initialFilters, tier, onFiltersChange);
     const [cursor, setCursor] = useState(INITIAL_CURSOR);
 
     const logBoxRef = useRef<DOMElement | null>(null);
@@ -48,7 +49,6 @@ export function DevApp(props: DevAppProps): ReactElement {
     const railRef = useRef<DOMElement | null>(null);
     const railWidth = useRailWidth(railRef, state.phase, rows, columns);
 
-    const tier = tierFor(rows, columns);
     const notices = noticesOf(state);
 
     const logs = useLogs(filters.channels, filters.levels);
@@ -72,14 +72,12 @@ export function DevApp(props: DevAppProps): ReactElement {
             interactive,
             scroll,
             store,
-            enabled: filters.channels,
-            setEnabled: setChannels,
-            enabledLevels: filters.levels,
-            setEnabledLevels: setLevels,
+            filters,
+            setFilters,
+            filterView: view,
+            toggleFilterView: toggleView,
             cursor,
             setCursor,
-            filtersOpen: tier === 'full' || shown,
-            toggleFilters: tier === 'full' ? undefined : toggleShown,
             onQuit: props.onQuit,
             onDisconnect: props.onDisconnect,
             onRestart: props.onRestart,
@@ -115,10 +113,9 @@ export function DevApp(props: DevAppProps): ReactElement {
                 scroll={scroll}
                 viewportHeight={viewportHeight}
                 measured={logBox.height > 0}
-                enabled={filters.channels}
-                enabledLevels={filters.levels}
+                filters={filters}
+                filterView={view}
                 cursor={cursor}
-                filtersShown={shown}
                 interactive={interactive}
                 uptimeMs={uptimeMs}
             />

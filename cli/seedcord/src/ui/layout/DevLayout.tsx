@@ -9,14 +9,14 @@ import { ScrollableLogView } from '#ui/components/primitives/ScrollableLogView';
 import { Sidebar } from '#ui/components/primitives/Sidebar';
 import { StatusLine } from '#ui/components/primitives/StatusLine';
 
-import type { RailView } from '#ui/components/primitives/Sidebar';
+import type { LogFilters } from '#ui/devPrefs';
 import type { FilterCursor } from '#ui/filterCursor';
+import type { FilterView } from '#ui/hooks/useFilters';
 import type { ScrollApi } from '#ui/hooks/useScroll';
 import type { LogRow } from '#ui/logRows';
 import type { Notice } from '#ui/notices';
 import type { DevState } from '#ui/stores/DevStore';
 import type { Tier } from '#ui/tier';
-import type { LogLevel } from '@seedcord/types';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
 
@@ -32,23 +32,17 @@ export interface DevLayoutProps {
     readonly scroll: ScrollApi<LogRow>;
     readonly viewportHeight: number;
     readonly measured: boolean;
-    readonly enabled: ReadonlySet<string>;
-    readonly enabledLevels: ReadonlySet<LogLevel>;
+    readonly filters: LogFilters;
+    readonly filterView: FilterView;
     readonly cursor: FilterCursor;
-    readonly filtersShown: boolean;
     readonly interactive: boolean;
     readonly uptimeMs: number | null;
-}
-
-function railViewFor(tier: Tier, filtersShown: boolean): RailView {
-    if (tier === 'full') return 'full';
-    return filtersShown ? 'filters' : 'collapsed';
 }
 
 // notification cards render below the logs so stack traces have room
 export function DevLayout(props: DevLayoutProps): ReactElement {
     const { state, tier, notices, railRef, railWidth, logBoxRef, scroll, viewportHeight, measured } = props;
-    const { enabled, enabledLevels, cursor, filtersShown, interactive, uptimeMs } = props;
+    const { filters, filterView, cursor, interactive, uptimeMs } = props;
     const railed = tier === 'full' || tier === 'compact';
 
     return (
@@ -57,14 +51,13 @@ export function DevLayout(props: DevLayoutProps): ReactElement {
                 <Sidebar
                     ref={railRef}
                     state={state}
-                    enabled={enabled}
-                    enabledLevels={enabledLevels}
+                    filters={filters}
                     uptimeMs={uptimeMs}
                     following={scroll.following}
                     interactive={interactive}
                     cursor={cursor}
                     width={railWidth}
-                    view={railViewFor(tier, filtersShown)}
+                    view={filterView}
                 />
             ) : null}
             <Box
@@ -84,13 +77,13 @@ export function DevLayout(props: DevLayoutProps): ReactElement {
                     <StatusLine
                         state={state}
                         notices={notices}
-                        filtered={enabled.size > 0 || enabledLevels.size > 0}
-                        filtersShown={filtersShown}
+                        filtered={filters.channels.size > 0 || filters.levels.size > 0}
+                        filtersShown={filterView === 'shown'}
                     />
                 )}
                 {railed ? null : <Rule />}
-                {!railed && filtersShown ? (
-                    <FilterPanel enabled={enabled} enabledLevels={enabledLevels} cursor={cursor} />
+                {!railed && filterView === 'shown' ? (
+                    <FilterPanel filters={filters} cursor={cursor} />
                 ) : (
                     <>
                         <LogHeader following={scroll.following} below={scroll.below} />

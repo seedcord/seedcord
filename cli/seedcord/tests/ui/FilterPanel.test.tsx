@@ -10,7 +10,7 @@ describe('FilterPanel', () => {
     it('wraps the keys whole on a phone-width terminal', () => {
         const { lastFrame } = render(
             <Box width={30}>
-                <FilterPanel enabled={new Set()} enabledLevels={new Set()} cursor={INITIAL_CURSOR} />
+                <FilterPanel filters={{ channels: new Set(), levels: new Set() }} cursor={INITIAL_CURSOR} />
             </Box>
         );
 

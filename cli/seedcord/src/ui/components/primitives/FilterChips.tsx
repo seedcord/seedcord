@@ -6,6 +6,7 @@ import { channelColor } from '#ui/channelColor';
 import { focusedIn } from '#ui/filterCursor';
 import { ui } from '#ui/palette';
 
+import type { LogFilters } from '#ui/devPrefs';
 import type { FilterCursor } from '#ui/filterCursor';
 import type { LogLevel } from '@seedcord/types';
 import type { ReactElement } from 'react';
@@ -14,8 +15,7 @@ export const FILTER_LEVELS: readonly LogLevel[] = ['error', 'warn', 'info', 'deb
 
 interface FilterChipsProps {
     readonly channels: readonly string[];
-    readonly enabledChannels: ReadonlySet<string>;
-    readonly enabledLevels: ReadonlySet<LogLevel>;
+    readonly filters: LogFilters;
     readonly cursor: FilterCursor | null;
     readonly open: boolean;
 }
@@ -79,28 +79,22 @@ function Chip({
     );
 }
 
-export function FilterChips({
-    channels,
-    enabledChannels,
-    enabledLevels,
-    cursor,
-    open
-}: FilterChipsProps): ReactElement {
-    const allChannels = enabledChannels.size === 0;
-    const allLevels = enabledLevels.size === 0;
+export function FilterChips({ channels, filters, cursor, open }: FilterChipsProps): ReactElement {
+    const allChannels = filters.channels.size === 0;
+    const allLevels = filters.levels.size === 0;
     const channelFocus = focusedIn(cursor, 'channels', channels.length);
     const levelFocus = focusedIn(cursor, 'levels', FILTER_LEVELS.length);
 
     return (
         <Box flexDirection="column">
-            <Heading label="channels" open={open} selected={enabledChannels} />
+            <Heading label="channels" open={open} selected={filters.channels} />
             {open ? (
                 <Box marginLeft={2} flexWrap="wrap">
                     {channels.map((channel, index) => (
                         <Chip
                             key={channel}
                             label={channel}
-                            on={allChannels || enabledChannels.has(channel)}
+                            on={allChannels || filters.channels.has(channel)}
                             color={channelColor(channel)}
                             focused={channelFocus === index}
                         />
@@ -108,14 +102,14 @@ export function FilterChips({
                 </Box>
             ) : null}
 
-            <Heading label="levels" open={open} selected={enabledLevels} />
+            <Heading label="levels" open={open} selected={filters.levels} />
             {open ? (
                 <Box marginLeft={2} flexWrap="wrap">
                     {FILTER_LEVELS.map((level, index) => (
                         <Chip
                             key={level}
                             label={level}
-                            on={allLevels || enabledLevels.has(level)}
+                            on={allLevels || filters.levels.has(level)}
                             color={LEVEL_COLOR[level]}
                             focused={levelFocus === index}
                         />

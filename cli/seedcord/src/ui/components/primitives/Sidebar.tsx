@@ -14,9 +14,10 @@ import { FilterKeys, FiltersKey, SessionKeys } from './Hotkeys';
 import { Rule } from './Rule';
 
 import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
+import type { LogFilters } from '#ui/devPrefs';
 import type { FilterCursor } from '#ui/filterCursor';
+import type { FilterView } from '#ui/hooks/useFilters';
 import type { DevState, DevTransport } from '#ui/stores/DevStore';
-import type { LogLevel } from '@seedcord/types';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
 
@@ -29,21 +30,18 @@ const LOG_DIR = 'logs/'; // the dev default writes one combined file into this f
 
 interface SidebarProps {
     readonly state: DevState;
-    readonly enabled: ReadonlySet<string>;
-    readonly enabledLevels: ReadonlySet<LogLevel>;
+    readonly filters: LogFilters;
     readonly uptimeMs: number | null;
     readonly following: boolean;
     readonly interactive: boolean;
     readonly cursor: FilterCursor;
     readonly width: number | null;
-    readonly view: RailView;
+    readonly view: FilterView;
     readonly ref?: Ref<DOMElement>;
 }
 
-export type RailView = 'full' | 'collapsed' | 'filters';
-
 interface RailKeysProps {
-    readonly view: RailView;
+    readonly view: FilterView;
     readonly state: DevState;
     readonly interactive: boolean;
     readonly following: boolean;
@@ -87,8 +85,8 @@ function RailKeys({ view, state, interactive, following }: RailKeysProps): React
     return (
         <Box flexShrink={0} marginTop={1} flexDirection="column">
             {view === 'collapsed' ? <FiltersKey shown={false} /> : <FilterKeys />}
-            {view === 'full' ? <Rule /> : null}
-            {view === 'filters' ? (
+            {view === 'always' ? <Rule /> : null}
+            {view === 'shown' ? (
                 <FiltersKey shown />
             ) : (
                 <SessionKeys phase={state.phase} interactive={interactive} following={following} />
@@ -100,8 +98,7 @@ function RailKeys({ view, state, interactive, following }: RailKeysProps): React
 // flexShrink={0} on every section holds its natural height, a short terminal overlaps rows without it
 export function Sidebar({
     state,
-    enabled,
-    enabledLevels,
+    filters,
     uptimeMs,
     following,
     interactive,
@@ -124,7 +121,7 @@ export function Sidebar({
                 <Banner version={version} />
             </Box>
             {/* compact has no room for the status beside the open chips */}
-            {view === 'filters' ? null : (
+            {view === 'shown' ? null : (
                 <Box flexShrink={0} marginTop={1}>
                     <StatusBlock state={state} uptimeMs={uptimeMs} />
                 </Box>
@@ -132,8 +129,7 @@ export function Sidebar({
             <Box flexShrink={0} marginTop={1} flexDirection="column">
                 <FilterChips
                     channels={LogStore.instance.getChannels()}
-                    enabledChannels={enabled}
-                    enabledLevels={enabledLevels}
+                    filters={filters}
                     cursor={cursor}
                     open={view !== 'collapsed'}
                 />

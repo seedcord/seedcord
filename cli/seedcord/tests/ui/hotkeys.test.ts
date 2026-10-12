@@ -4,6 +4,7 @@ import { INITIAL_CURSOR } from '#ui/filterCursor';
 import { dispatchHotkey } from '#ui/hotkeys';
 import { LogStore } from '#ui/stores/LogStore';
 
+import type { LogFilters } from '#ui/devPrefs';
 import type { LogLevel, LogRecord } from '@seedcord/types';
 import type { Key } from 'ink';
 
@@ -30,6 +31,10 @@ function key(overrides: Partial<Key> = {}): Key {
     } as unknown as Key;
 }
 
+function filtersOf(channels: string[] = [], levels: LogLevel[] = []): LogFilters {
+    return { channels: new Set(channels), levels: new Set(levels) };
+}
+
 // fixture: only the fields the filter path reads, the rest stubbed
 function makeCtx(overrides: Partial<Ctx>): Ctx {
     return {
@@ -39,13 +44,12 @@ function makeCtx(overrides: Partial<Ctx>): Ctx {
         interactive: true,
         scroll: {},
         store: {},
-        enabled: new Set<string>(),
-        setEnabled: vi.fn(),
-        enabledLevels: new Set<LogLevel>(),
-        setEnabledLevels: vi.fn(),
+        filters: filtersOf(),
+        setFilters: vi.fn(),
+        filterView: 'always',
+        toggleFilterView: vi.fn(),
         cursor: INITIAL_CURSOR,
         setCursor: vi.fn(),
-        filtersOpen: true,
         ...overrides
     } as unknown as Ctx;
 }
@@ -64,81 +68,80 @@ describe('dispatchHotkey channel filters', () => {
     it('solos the focused channel on space', async () => {
         await seedChannel('alpha');
         await seedChannel('beta');
-        const setEnabled = vi.fn();
+        const setFilters = vi.fn();
 
-        dispatchHotkey(makeCtx({ input: ' ', cursor: INITIAL_CURSOR, setEnabled }));
+        dispatchHotkey(makeCtx({ input: ' ', cursor: INITIAL_CURSOR, setFilters }));
 
-        expect(setEnabled).toHaveBeenCalledWith(new Set(['alpha']));
+        expect(setFilters).toHaveBeenCalledWith(filtersOf(['alpha']));
     });
 
-    // the chips render only in the full tier, and a filter applied without them is invisible
-    it('ignores the filter keys while the chips are closed', async () => {
+    it('ignores the filter keys while the chips are collapsed', async () => {
         await seedChannel('alpha');
-        const setEnabled = vi.fn();
+        const setFilters = vi.fn();
         const setCursor = vi.fn();
 
         for (const input of [' ', 'o']) {
-            dispatchHotkey(makeCtx({ input, filtersOpen: false, setEnabled, setCursor }));
+            dispatchHotkey(makeCtx({ input, filterView: 'collapsed', setFilters, setCursor }));
         }
 
-        expect(setEnabled).not.toHaveBeenCalled();
+        expect(setFilters).not.toHaveBeenCalled();
         expect(setCursor).not.toHaveBeenCalled();
     });
 
     it('restores all on space when the focused channel is already solo', async () => {
         await seedChannel('alpha');
-        const setEnabled = vi.fn();
+        const setFilters = vi.fn();
 
-        dispatchHotkey(makeCtx({ input: ' ', cursor: INITIAL_CURSOR, enabled: new Set(['alpha']), setEnabled }));
+        dispatchHotkey(makeCtx({ input: ' ', cursor: INITIAL_CURSOR, filters: filtersOf(['alpha']), setFilters }));
 
-        expect(setEnabled).toHaveBeenCalledWith(new Set());
+        expect(setFilters).toHaveBeenCalledWith(filtersOf());
     });
 
     it('toggles the focused channel off on o, keeping the rest', async () => {
         await seedChannel('alpha');
         await seedChannel('beta');
-        const setEnabled = vi.fn();
+        const setFilters = vi.fn();
 
-        dispatchHotkey(makeCtx({ input: 'o', cursor: INITIAL_CURSOR, setEnabled }));
+        dispatchHotkey(makeCtx({ input: 'o', cursor: INITIAL_CURSOR, setFilters }));
 
-        expect(setEnabled).toHaveBeenCalledWith(new Set(['beta']));
+        expect(setFilters).toHaveBeenCalledWith(filtersOf(['beta']));
     });
 
     it('keeps the rest off on o when the filter holds a channel that has not logged', async () => {
         await seedChannel('alpha');
         await seedChannel('beta');
-        const setEnabled = vi.fn();
+        const setFilters = vi.fn();
 
-        dispatchHotkey(makeCtx({ input: 'o', cursor: INITIAL_CURSOR, enabled: new Set(['db']), setEnabled }));
+        dispatchHotkey(makeCtx({ input: 'o', cursor: INITIAL_CURSOR, filters: filtersOf(['db']), setFilters }));
 
-        expect(setEnabled).toHaveBeenCalledWith(new Set(['db', 'alpha']));
+        expect(setFilters).toHaveBeenCalledWith(filtersOf(['db', 'alpha']));
     });
 
     it('restores all on o once every channel that logged is on', async () => {
         await seedChannel('alpha');
         await seedChannel('beta');
-        const setEnabled = vi.fn();
+        const setFilters = vi.fn();
 
-        dispatchHotkey(makeCtx({ input: 'o', cursor: INITIAL_CURSOR, enabled: new Set(['db', 'beta']), setEnabled }));
+        dispatchHotkey(makeCtx({ input: 'o', cursor: INITIAL_CURSOR, filters: filtersOf(['db', 'beta']), setFilters }));
 
-        expect(setEnabled).toHaveBeenCalledWith(new Set());
+        expect(setFilters).toHaveBeenCalledWith(filtersOf());
     });
 
     it('toggles the focused level off on o, keeping the rest', () => {
-        const setEnabledLevels = vi.fn();
+        const setFilters = vi.fn();
 
-        dispatchHotkey(makeCtx({ input: 'o', cursor: { ...INITIAL_CURSOR, group: 'levels' }, setEnabledLevels }));
+        dispatchHotkey(makeCtx({ input: 'o', cursor: { ...INITIAL_CURSOR, group: 'levels' }, setFilters }));
 
-        expect(setEnabledLevels).toHaveBeenCalledWith(new Set(['warn', 'info', 'debug', 'trace']));
+        expect(setFilters).toHaveBeenCalledWith(filtersOf([], ['warn', 'info', 'debug', 'trace']));
     });
 
     it('does nothing on space or o when no channels exist', () => {
-        const setEnabled = vi.fn();
+        const setFilters = vi.fn();
 
-        dispatchHotkey(makeCtx({ input: ' ', cursor: INITIAL_CURSOR, setEnabled }));
-        dispatchHotkey(makeCtx({ input: 'o', cursor: INITIAL_CURSOR, setEnabled }));
+        dispatchHotkey(makeCtx({ input: ' ', cursor: INITIAL_CURSOR, setFilters }));
+        dispatchHotkey(makeCtx({ input: 'o', cursor: INITIAL_CURSOR, setFilters }));
 
-        expect(setEnabled).not.toHaveBeenCalled();
+        expect(setFilters).not.toHaveBeenCalled();
     });
 });
 
@@ -180,13 +183,13 @@ describe('scrolling alongside the filters', () => {
     it('keeps t on top-of-log and o on the cursor', async () => {
         await seedChannel('alpha');
         const scroll = scrollSpy();
-        const setEnabled = vi.fn();
+        const setFilters = vi.fn();
 
-        dispatchHotkey(makeCtx({ input: 't', scroll, setEnabled }));
-        dispatchHotkey(makeCtx({ input: 'o', scroll, setEnabled }));
+        dispatchHotkey(makeCtx({ input: 't', scroll, setFilters }));
+        dispatchHotkey(makeCtx({ input: 'o', scroll, setFilters }));
 
         expect(scroll.toTop).toHaveBeenCalledOnce();
-        expect(setEnabled).toHaveBeenCalledOnce();
+        expect(setFilters).toHaveBeenCalledOnce();
     });
 
     it('keeps the session actions reachable', () => {

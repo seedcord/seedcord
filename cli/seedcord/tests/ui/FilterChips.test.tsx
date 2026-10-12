@@ -12,8 +12,7 @@ describe('FilterChips', () => {
         const { lastFrame } = render(
             <FilterChips
                 channels={CHANNELS}
-                enabledChannels={new Set()}
-                enabledLevels={new Set()}
+                filters={{ channels: new Set(), levels: new Set() }}
                 cursor={INITIAL_CURSOR}
                 open
             />
@@ -30,8 +29,7 @@ describe('FilterChips', () => {
         const { lastFrame } = render(
             <FilterChips
                 channels={CHANNELS}
-                enabledChannels={new Set(['hmr', 'gates'])}
-                enabledLevels={new Set()}
+                filters={{ channels: new Set(['hmr', 'gates']), levels: new Set() }}
                 cursor={INITIAL_CURSOR}
                 open={false}
             />

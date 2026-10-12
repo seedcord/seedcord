@@ -10,7 +10,7 @@ import { COMPACT_ROWS } from '#ui/tier';
 import { renderAt } from './renderAt';
 import { settled, stableFrame } from './settled';
 
-import type { DevPrefs } from '#ui/devPrefs';
+import type { LogFilters } from '#ui/devPrefs';
 import type { LogRecord } from '@seedcord/types';
 import type { ComponentProps } from 'react';
 
@@ -35,7 +35,7 @@ function squeezedStore(): DevStore {
     return store;
 }
 
-const NO_FILTERS: DevPrefs = { channels: new Set(), levels: new Set() };
+const NO_FILTERS: LogFilters = { channels: new Set(), levels: new Set() };
 
 function view(
     size: { rows: number; columns: number },
@@ -172,6 +172,20 @@ describe('DevApp filters below the full layout', () => {
 
         app.press('f');
         await settled(() => expect(app.lastFrame()).toContain('from hmr'));
+        app.unmount();
+    });
+
+    it('closes the filters on a trip through full', async () => {
+        const app = view(COMPACT);
+        await settled(() => expect(app.lastFrame()).toContain('▸ channels'));
+        app.press('f');
+        await settled(() => expect(app.lastFrame()).toContain('f back'));
+
+        app.resize(FULL);
+        await settled(() => expect(app.lastFrame()).toContain('q quit'));
+        app.resize(COMPACT);
+
+        await settled(() => expect(app.lastFrame()).toContain('▸ channels'));
         app.unmount();
     });
 

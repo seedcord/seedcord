@@ -13,7 +13,8 @@ import { COMPACT_ROWS, FULL_ROWS } from '#ui/tier';
 import { settled } from './settled';
 
 import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
-import type { RailView } from '#ui/components/primitives/Sidebar';
+import type { LogFilters } from '#ui/devPrefs';
+import type { FilterView } from '#ui/hooks/useFilters';
 import type { DevState } from '#ui/stores/DevStore';
 import type { LogRecord } from '@seedcord/types';
 import type { DOMElement } from 'ink';
@@ -47,6 +48,8 @@ function runningState(): DevState {
 }
 const RUNNING = runningState();
 
+const NO_FILTERS: LogFilters = { channels: new Set(), levels: new Set() };
+
 // an http run adds the port and tunnel rows, which makes it the tallest the rail gets
 function httpState(): DevState {
     const store = new DevStore();
@@ -68,7 +71,7 @@ function tunnelState(status: TunnelStatus): DevState {
 
 // the readout renders outside the measured rail, so it never changes the size it reports
 interface HarnessProps {
-    readonly view: RailView;
+    readonly view: FilterView;
     readonly width: number | null;
     readonly state: DevState;
 }
@@ -91,8 +94,7 @@ function Harness({ view, width, state }: HarnessProps): ReactElement {
                 <Sidebar
                     ref={railRef}
                     state={state}
-                    enabled={new Set()}
-                    enabledLevels={new Set()}
+                    filters={NO_FILTERS}
                     uptimeMs={12_000}
                     following={true}
                     interactive={true}
@@ -114,7 +116,7 @@ function read(frame: string | undefined): { rows: number; columns: number } {
 describe('Sidebar', () => {
     afterEach(() => LogStore.instance.clear());
 
-    async function measure(view: RailView, width: number | null = null): Promise<{ rows: number; columns: number }> {
+    async function measure(view: FilterView, width: number | null = null): Promise<{ rows: number; columns: number }> {
         for (const channel of FRAMEWORK_CHANNELS) {
             LogStore.instance.onLog({
                 level: 'info',
@@ -137,8 +139,7 @@ describe('Sidebar', () => {
         const view = render(
             <Sidebar
                 state={state}
-                enabled={new Set()}
-                enabledLevels={new Set()}
+                filters={NO_FILTERS}
                 uptimeMs={12_000}
                 following={true}
                 interactive={true}
@@ -154,7 +155,7 @@ describe('Sidebar', () => {
 
     // the tier thresholds are authored constants, and this is what keeps them honest as the rail changes
     it('fits the open rail inside the full tier', async () => {
-        const { rows } = await measure('full');
+        const { rows } = await measure('always');
 
         expect(rows).toBeLessThanOrEqual(FULL_ROWS);
     });
@@ -168,7 +169,7 @@ describe('Sidebar', () => {
     // the collapsed rail is the narrowest the filters view can get
     it('fits the filters view inside the compact tier at the collapsed width', async () => {
         const collapsed = await measure('collapsed');
-        const { rows } = await measure('filters', collapsed.columns);
+        const { rows } = await measure('shown', collapsed.columns);
 
         expect(rows).toBeLessThanOrEqual(COMPACT_ROWS);
     });
