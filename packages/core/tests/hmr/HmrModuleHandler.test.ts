@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { ROOT_KEY } from '@seedcord/utils/node/internal';
+import { setBotRoot } from '@seedcord/utils/node/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
@@ -55,7 +55,7 @@ describe('HmrModuleHandler', () => {
     });
 
     afterEach(() => {
-        Reflect.deleteProperty(globalThis, Symbol.for(ROOT_KEY));
+        setBotRoot(undefined);
         rmSync(dir, { recursive: true, force: true });
     });
 
@@ -123,7 +123,7 @@ describe('HmrModuleHandler', () => {
     });
 
     it('reloads a handler file when the handlers dir is relative to root', async () => {
-        Reflect.set(globalThis, Symbol.for(ROOT_KEY), dir);
+        setBotRoot(dir);
         const relative = new HmrModuleHandler<TestHandler>({
             handlersDir: './commands',
             isHandler,

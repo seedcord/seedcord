@@ -5,7 +5,7 @@ import path from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { readTextFiles, ROOT_KEY, traverseDirectory } from '#src/node/directory';
+import { readTextFiles, setBotRoot, traverseDirectory } from '#src/node/directory';
 
 const FIXTURES = path.join(import.meta.dirname, 'fixtures');
 const scratch = await mkdtemp(path.join(os.tmpdir(), 'seedcord-traverse-'));
@@ -71,9 +71,8 @@ describe('traverseDirectory', () => {
 });
 
 describe('a relative folder on disk', () => {
-    // seedcord dev writes this slot before it loads the bot
-    beforeEach(() => Reflect.set(globalThis, Symbol.for(ROOT_KEY), FIXTURES));
-    afterEach(() => Reflect.deleteProperty(globalThis, Symbol.for(ROOT_KEY)));
+    beforeEach(() => setBotRoot(FIXTURES));
+    afterEach(() => setBotRoot(undefined));
 
     it('resolves against root for traverseDirectory', async () => {
         const seen: string[] = [];

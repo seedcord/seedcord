@@ -119,8 +119,8 @@ interface BuiltFileLoaders {
 // seedcord build writes a BuiltFileLoaders object here from the entry it generates
 export const BUILT_FILES_KEY = 'seedcord:utils:built-files';
 
-// seedcord dev writes the bot's root here before it loads the bot
-export const ROOT_KEY = 'seedcord:utils:root';
+// a global because dev loads the bot with its own copy of this module
+const ROOT_SLOT = Symbol.for('seedcord:utils:root');
 
 const builtSources = new WeakMap<BuiltFileLoaders, BuiltFiles>();
 
@@ -128,10 +128,20 @@ function builtFiles(): BuiltFileLoaders | undefined {
     return Reflect.get(globalThis, Symbol.for(BUILT_FILES_KEY)) as BuiltFileLoaders | undefined;
 }
 
+export function setBotRoot(root: string | undefined): void {
+    if (root === undefined) Reflect.deleteProperty(globalThis, ROOT_SLOT);
+    else Reflect.set(globalThis, ROOT_SLOT, root);
+}
+
+function devRoot(): string | undefined {
+    const root: unknown = Reflect.get(globalThis, ROOT_SLOT);
+    return typeof root === 'string' ? root : undefined;
+}
+
 export function resolveFolder(dir: string): string {
     if (path.isAbsolute(dir)) return path.resolve(dir);
 
-    const root = builtFiles()?.root ?? (Reflect.get(globalThis, Symbol.for(ROOT_KEY)) as string | undefined);
+    const root = builtFiles()?.root ?? devRoot();
     if (!root) throw new SeedcordError(SeedcordErrorCode.CoreDirectoryRootUnknown, [dir]);
     return path.resolve(root, dir);
 }

@@ -1,5 +1,5 @@
 import { HostVersion } from '@seedcord/types/internal';
-import { ROOT_KEY } from '@seedcord/utils/node/internal';
+import { setBotRoot } from '@seedcord/utils/node/internal';
 import { describe, expect, afterEach, vi } from 'vitest';
 
 import { commandRegistryOf } from '#bot/Bot';
@@ -20,7 +20,7 @@ function registryOf(instance: Seedcord): CommandRegistry {
 
 describe('CommandRegistry Integration', () => {
     afterEach(() => {
-        Reflect.deleteProperty(globalThis, Symbol.for(ROOT_KEY));
+        setBotRoot(undefined);
         vi.clearAllMocks();
     });
 
@@ -139,7 +139,7 @@ describe('CommandRegistry Integration', () => {
     it('holds an edited command for the refresh prompt when the commands path is relative to root', async ({
         testEnv
     }) => {
-        Reflect.set(globalThis, Symbol.for(ROOT_KEY), testEnv.rootDir);
+        setBotRoot(testEnv.rootDir);
         const command = (name: string): string => `
             import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
 

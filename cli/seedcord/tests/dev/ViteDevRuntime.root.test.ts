@@ -1,6 +1,8 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { readTextFiles } from '@seedcord/utils/node';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
@@ -46,5 +48,19 @@ describe('dev runtime with root set to src', () => {
         const { module } = await runtime.loadEntry();
 
         expect(module).toMatchObject({ texts: ['hello'] });
+    }, 60_000);
+
+    it('forgets root once the runtime is disposed', async () => {
+        await mkdir(SCRATCH_ROOT, { recursive: true });
+        const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
+        await writeProject(dir);
+
+        const runtime = new ViteDevRuntime();
+        await runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        await runtime.dispose();
+
+        await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CoreDirectoryRootUnknown
+        });
     }, 60_000);
 });
