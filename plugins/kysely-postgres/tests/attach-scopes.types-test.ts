@@ -7,7 +7,7 @@ import type { Seedcord as HttpSeedcord } from '@seedcord/http';
 
 const options: KyselyOptions = {
     connectionString: 'postgres://localhost:5432/test',
-    migrations: { path: '/migrations' },
+    migrations: { dir: '/migrations' },
     dir: '/services'
 };
 

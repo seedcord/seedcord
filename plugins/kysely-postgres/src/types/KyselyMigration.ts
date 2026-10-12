@@ -2,24 +2,7 @@ import type { KyselySchema } from './KyselyDatabase';
 import type { KyselyMigrationsOptions } from './KyselyOptions';
 import type { Logger } from '@seedcord/logger';
 import type { Kysely } from 'kysely';
-import type { Migration, NoMigrations } from 'kysely/migration';
-
-/**
- * Type representing a migration function (either `up` or `down`).
- *
- * @internal
- */
-type MigrationFn<TKey extends keyof Migration> = NonNullable<Migration[TKey]>;
-
-/**
- * Module exporting both `up` and `down` migration functions.
- *
- * @internal
- */
-export interface MigrationModule {
-    up: MigrationFn<'up'>;
-    down: MigrationFn<'down'>;
-}
+import type { NoMigrations } from 'kysely/migration';
 
 /**
  * Target migration identifier used to indicate no migrations should be run. Uses Kysely's built-in `NO_MIGRATIONS` constant.
@@ -64,5 +47,4 @@ export interface MigrationManagerContext {
     readonly db: Kysely<KyselySchema>;
     readonly logger: Logger;
     readonly config: KyselyMigrationsOptions;
-    readonly baseDir: string;
 }

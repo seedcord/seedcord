@@ -1,19 +1,13 @@
-import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { inspect } from 'node:util';
 
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { keepDefined } from '@seedcord/utils';
-import { FileMigrationProvider, Migrator, NO_MIGRATIONS } from 'kysely/migration';
+import { traverseDirectory } from '@seedcord/utils/node';
+import { Migrator, NO_MIGRATIONS } from 'kysely/migration';
 
-import type {
-    MigrationManagerContext,
-    MigrationModule,
-    MigrationOptions,
-    StepMigrationOptions
-} from './types/KyselyMigration';
+import type { MigrationManagerContext, MigrationOptions, StepMigrationOptions } from './types/KyselyMigration';
 import type {
     Migration,
     MigrationInfo,
@@ -21,11 +15,26 @@ import type {
     MigrationResult,
     MigrationResultSet
 } from 'kysely/migration';
-import type { Stats } from 'node:fs';
+
+interface MigrationFile {
+    name: string;
+    path: string;
+    migration: Migration;
+}
 
 // kysely's FileMigrationProvider strips the extension the same way
 function migrationName(filePath: string): string {
     return path.basename(filePath, path.extname(filePath));
+}
+
+// kysely's FileMigrationProvider checks the default export first too
+function migrationIn(imported: Record<string, unknown>): Migration | undefined {
+    if (isMigration(imported.default)) return imported.default;
+    return isMigration(imported) ? imported : undefined;
+}
+
+function isMigration(value: unknown): value is Migration {
+    return typeof value === 'object' && value !== null && 'up' in value && typeof value.up === 'function';
 }
 
 /**
@@ -165,93 +174,31 @@ export class KyselyMigrationManager {
     }
 
     private async getMigrationProvider(): Promise<MigrationProvider> {
-        const { path: target } = this.ctx.config;
-        const resolvedTarget = Array.isArray(target)
-            ? target.map((entry) => this.resolvePath(entry))
-            : this.resolvePath(target);
+        const { dir, nameComparator = (nameA: string, nameB: string) => nameA.localeCompare(nameB) } = this.ctx.config;
+        this.ctx.logger.debug(paint.mute(`Loading migrations from ${paint.path(dir)}`));
 
-        if (Array.isArray(resolvedTarget)) {
-            this.logMigrationFiles(resolvedTarget);
-            return this.createModuleProvider(resolvedTarget);
-        }
-
-        let migrationStat: Stats | undefined;
-        try {
-            migrationStat = await fs.stat(resolvedTarget);
-        } catch {
-            migrationStat = undefined;
-        }
-
-        if (migrationStat?.isDirectory()) {
-            this.ctx.logger.debug(paint.mute(`Loading migrations directory ${paint.path(resolvedTarget)}`));
-            return new FileMigrationProvider({ fs, path, migrationFolder: resolvedTarget });
-        }
-
-        if (migrationStat?.isFile() ?? true) {
-            this.logMigrationFiles([resolvedTarget]);
-            return this.createModuleProvider([resolvedTarget]);
-        }
-
-        const label = Array.isArray(target) ? target.join(', ') : target;
-        throw new SeedcordError(SeedcordErrorCode.PluginKyselyUnresolvedMigrationsPath, [label]);
-    }
-
-    private async createModuleProvider(files: string[]): Promise<MigrationProvider> {
-        if (files.length === 0) {
-            throw new SeedcordError(SeedcordErrorCode.PluginKyselyNoMigrationFiles);
+        const files: MigrationFile[] = [];
+        for await (const { relativePath, imported } of traverseDirectory(dir)) {
+            const migration = migrationIn(imported);
+            if (!migration) {
+                throw new SeedcordTypeError(SeedcordErrorCode.PluginKyselyInvalidMigrationModule, [relativePath]);
+            }
+            files.push({ name: migrationName(relativePath), path: relativePath, migration });
         }
         this.assertUniqueNames(files);
 
-        const comparator =
-            this.ctx.config.nameComparator ?? ((nameA: string, nameB: string) => nameA.localeCompare(nameB));
-
-        const entries = await Promise.all(
-            files.map(async (filePath) => {
-                const moduleUrl = pathToFileURL(filePath).href;
-                const mod: unknown = await import(moduleUrl);
-
-                if (!this.isMigrationModule(mod)) {
-                    throw new SeedcordTypeError(SeedcordErrorCode.PluginKyselyInvalidMigrationModule, [filePath]);
-                }
-
-                const { up, down } = mod;
-                const name = migrationName(filePath);
-
-                const migration: Migration = {
-                    async up(db) {
-                        await up(db);
-                    },
-                    async down(db) {
-                        await down(db);
-                    }
-                };
-
-                return [name, migration] as const;
-            })
-        );
-
-        const sorted = entries.sort(([a], [b]) => comparator(a, b));
+        const sorted = files.sort((a, b) => nameComparator(a.name, b.name));
         this.logPreparedMigrations(sorted);
 
-        return {
-            getMigrations: () => Promise.resolve(Object.fromEntries(sorted))
-        } satisfies MigrationProvider;
+        const migrations = Object.fromEntries(sorted.map(({ name, migration }) => [name, migration]));
+        return { getMigrations: () => Promise.resolve(migrations) };
     }
 
-    private logMigrationFiles(files: readonly string[]): void {
+    private logPreparedMigrations(files: readonly MigrationFile[]): void {
         if (files.length === 0) return;
 
-        this.ctx.logger.debug('Loading migration file(s):');
-        for (const file of files) {
-            this.ctx.logger.utils.item(paint.path(file), 'debug');
-        }
-    }
-
-    private logPreparedMigrations(entries: readonly (readonly [string, Migration])[]): void {
-        if (entries.length === 0) return;
-
         this.ctx.logger.debug('Prepared migrations:');
-        for (const [name] of entries) {
+        for (const { name } of files) {
             this.ctx.logger.utils.item(`${paint.mint(name)}`, 'debug');
         }
     }
@@ -281,21 +228,15 @@ export class KyselyMigrationManager {
         }
     }
 
-    private assertUniqueNames(files: string[]): void {
+    private assertUniqueNames(files: readonly MigrationFile[]): void {
         const firstFileFor = new Map<string, string>();
-        for (const filePath of files) {
-            const name = migrationName(filePath);
+        for (const { name, path: filePath } of files) {
             const first = firstFileFor.get(name);
             if (first !== undefined) {
                 throw new SeedcordError(SeedcordErrorCode.PluginKyselyDuplicateMigrationName, [name, first, filePath]);
             }
             firstFileFor.set(name, filePath);
         }
-    }
-
-    private resolvePath(target: string): string {
-        if (path.isAbsolute(target)) return target;
-        return path.resolve(this.ctx.baseDir, target);
     }
 
     private handleMigrationError(error: unknown): never {
@@ -307,14 +248,5 @@ export class KyselyMigrationManager {
         }
 
         throw new SeedcordError(SeedcordErrorCode.PluginKyselyNonErrorFailure, [message]);
-    }
-
-    private isMigrationModule(value: unknown): value is MigrationModule {
-        if (!value || typeof value !== 'object') return false;
-        if (!('up' in value) || !('down' in value)) return false;
-
-        const { up, down } = value;
-
-        return typeof up === 'function' && typeof down === 'function';
     }
 }

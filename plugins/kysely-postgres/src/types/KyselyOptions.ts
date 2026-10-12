@@ -8,8 +8,8 @@ import type { Except } from 'type-fest';
  * behave.
  */
 export interface KyselyMigrationsOptions {
-    /** Directory path, single file path, or array of migration files */
-    readonly path: string | string[];
+    /** Folder holding your migration files, subfolders included. A relative path resolves against `root` from `seedcord.config.ts`. */
+    readonly dir: string;
     /** Allow running migrations even if new ones are inserted out of order */
     readonly allowUnorderedMigrations?: boolean;
     /** Custom table name used to track executed migrations */

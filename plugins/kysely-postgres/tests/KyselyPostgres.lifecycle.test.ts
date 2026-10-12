@@ -36,7 +36,7 @@ describe('KyselyPostgres lifecycle', () => {
     function build(timeout?: number): KyselyPostgres {
         return new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
-            migrations: { path: testEnv.resolvePath('migrations') },
+            migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('services'),
             ...(timeout !== undefined && { timeout })
         });
@@ -45,7 +45,7 @@ describe('KyselyPostgres lifecycle', () => {
     it('translates a connect failure into PluginKyselyConnectionFailed', async () => {
         const plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/postgres',
-            migrations: { path: testEnv.resolvePath('migrations') },
+            migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('services')
         });
         poolConnect.mockRejectedValueOnce(new Error('ECONNREFUSED'));
@@ -68,7 +68,7 @@ describe('KyselyPostgres lifecycle', () => {
         // targeting the admin db returns ensure() early, so the only connect is the plugin's
         const plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/postgres',
-            migrations: { path: testEnv.resolvePath('migrations') },
+            migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('services')
         });
         poolConnect.mockRejectedValueOnce(new Error('ECONNREFUSED'));
@@ -103,7 +103,7 @@ describe('KyselyPostgres lifecycle', () => {
         // targeting the admin db returns ensure() early, so the plugin's own pool is the only one built
         const plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/postgres',
-            migrations: { path: testEnv.resolvePath('migrations') },
+            migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('services')
         });
 
@@ -115,7 +115,7 @@ describe('KyselyPostgres lifecycle', () => {
     it('retries after a failed init', async () => {
         const plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/postgres',
-            migrations: { path: testEnv.resolvePath('migrations') },
+            migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('services')
         });
         poolConnect.mockRejectedValueOnce(new Error('ECONNREFUSED'));
@@ -129,7 +129,7 @@ describe('KyselyPostgres lifecycle', () => {
     it('closes the pool when service loading fails after connecting', async () => {
         const plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
-            migrations: { path: testEnv.resolvePath('migrations') },
+            migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('absent')
         });
 
@@ -144,7 +144,7 @@ describe('KyselyPostgres lifecycle', () => {
     it('keeps the init failure when the cleanup close also fails', async () => {
         const plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
-            migrations: { path: testEnv.resolvePath('migrations') },
+            migrations: { dir: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath('absent')
         });
         // the bootstrapper's admin close comes first, the cleanup close is the one that fails

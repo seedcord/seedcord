@@ -70,8 +70,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
 
         if (!Envapter.isDevelopment) return;
 
-        const relPaths = this.options.migrations.path;
-        super.registerCriticalFiles(Array.isArray(relPaths) ? relPaths : [relPaths]);
+        super.registerCriticalFiles([this.options.migrations.dir]);
 
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: this.options.dir,
@@ -149,8 +148,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
             this.migrationManager = new KyselyMigrationManager({
                 db: this.connection,
                 logger: this.logger,
-                config: this.options.migrations,
-                baseDir: process.cwd()
+                config: this.options.migrations
             });
 
             const dbLabel = this.databaseName ?? 'unknown';
@@ -231,8 +229,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         const manager = new KyselyMigrationManager({
             db: this.connection,
             logger: this.logger,
-            config: this.options.migrations,
-            baseDir: process.cwd()
+            config: this.options.migrations
         });
 
         this.migrationManager = manager;
