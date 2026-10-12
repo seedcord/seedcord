@@ -104,6 +104,26 @@ describe('dispatchHotkey channel filters', () => {
         expect(setEnabled).toHaveBeenCalledWith(new Set(['beta']));
     });
 
+    it('keeps the rest off on o when the filter holds a channel that has not logged', async () => {
+        await seedChannel('alpha');
+        await seedChannel('beta');
+        const setEnabled = vi.fn();
+
+        dispatchHotkey(makeCtx({ input: 'o', cursor: INITIAL_CURSOR, enabled: new Set(['db']), setEnabled }));
+
+        expect(setEnabled).toHaveBeenCalledWith(new Set(['db', 'alpha']));
+    });
+
+    it('restores all on o once every channel that logged is on', async () => {
+        await seedChannel('alpha');
+        await seedChannel('beta');
+        const setEnabled = vi.fn();
+
+        dispatchHotkey(makeCtx({ input: 'o', cursor: INITIAL_CURSOR, enabled: new Set(['db', 'beta']), setEnabled }));
+
+        expect(setEnabled).toHaveBeenCalledWith(new Set());
+    });
+
     it('does nothing on space or o when no channels exist', () => {
         const setEnabled = vi.fn();
 

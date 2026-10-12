@@ -15,7 +15,7 @@ function toggleChannel(prev: ReadonlySet<string>, channel: string, all: readonly
     const base = prev.size === 0 ? new Set(all) : new Set(prev);
     if (base.has(channel)) base.delete(channel);
     else base.add(channel);
-    return base.size === all.length ? new Set<string>() : base;
+    return all.every((name) => base.has(name)) ? new Set<string>() : base;
 }
 
 function toggleLevel(prev: ReadonlySet<LogLevel>, level: LogLevel): ReadonlySet<LogLevel> {
