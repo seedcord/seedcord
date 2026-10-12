@@ -76,6 +76,12 @@ describe('traverseDirectory in a built bot', () => {
         expect(later).not.toHaveBeenCalled();
     });
 
+    it('resolves a relative folder against root', async () => {
+        register({ folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
+
+        await expect(walk('./handlers')).resolves.toEqual([['/bot/handlers/Roll.js', 'Roll']]);
+    });
+
     it('treats a folder whose name starts with two dots as inside root', async () => {
         register({ folders: ['/..cache'], modules: { '/..cache/Warm.ts': stub('Warm') } });
 

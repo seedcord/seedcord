@@ -88,6 +88,8 @@ export enum SeedcordErrorCode {
     CoreFetchBeforeStart = 1222,
     /** An edge worker received a POST without the ids `seedcord build` writes into it. */
     CoreEdgeUnbuilt = 1223,
+    /** A relative folder was read in a process that never received the bot's `root`. */
+    CoreDirectoryRootUnknown = 1224,
 
     /** A command decorator attempted to re-register an existing command scope. */
     DecoratorCommandAlreadyRegistered = 1301,

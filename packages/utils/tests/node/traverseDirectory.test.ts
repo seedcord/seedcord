@@ -3,9 +3,9 @@ import os from 'node:os';
 import path from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { readTextFiles, traverseDirectory } from '#src/node/directory';
+import { readTextFiles, ROOT_KEY, traverseDirectory } from '#src/node/directory';
 
 const FIXTURES = path.join(import.meta.dirname, 'fixtures');
 const scratch = await mkdtemp(path.join(os.tmpdir(), 'seedcord-traverse-'));
@@ -67,6 +67,35 @@ describe('traverseDirectory', () => {
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
         expect(Error.isError(error) ? error.message : '').toMatch(/not-a-real-dir/);
         expect(Error.isError(error) ? error.cause : undefined).toBeInstanceOf(Error);
+    });
+});
+
+describe('a relative folder on disk', () => {
+    // seedcord dev writes this slot before it loads the bot
+    beforeEach(() => Reflect.set(globalThis, Symbol.for(ROOT_KEY), FIXTURES));
+    afterEach(() => Reflect.deleteProperty(globalThis, Symbol.for(ROOT_KEY)));
+
+    it('resolves against root for traverseDirectory', async () => {
+        const seen: string[] = [];
+
+        for await (const { fullPath } of traverseDirectory('./walk/b')) seen.push(fullPath);
+
+        expect(seen).toEqual([path.join(FIXTURES, 'walk', 'b', 'bGood.ts')]);
+    });
+});
+
+describe('a relative folder with no root', () => {
+    it('throws for traverseDirectory with the path it was given', async () => {
+        const error = await rejection(traverseDirectory('./walk'));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryRootUnknown });
+        expect(Error.isError(error) ? error.message : '').toContain('./walk');
+    });
+
+    it('throws for readTextFiles', async () => {
+        const error = await rejection(readTextFiles('./text'));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryRootUnknown });
     });
 });
 

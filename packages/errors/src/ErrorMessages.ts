@@ -51,6 +51,8 @@ const messages = {
     [SeedcordErrorCode.CoreFileUnreadable]: (file: string) => `${paint.path(file)} could not be read as text.`,
     [SeedcordErrorCode.CoreDirectoryOutsideRoot]: (dir: string, root: string) =>
         `${paint.path(dir)} is outside ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move the folder under it, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds both.`,
+    [SeedcordErrorCode.CoreDirectoryRootUnknown]: (dir: string) =>
+        `${paint.path(dir)} is a relative path, and seedcord resolves relative folders against ${paint.bold('root')}. ${paint.bold('root')} is set only when the bot starts through ${paint.bold('seedcord dev')} or its built output. Start it one of those ways, or pass an absolute path like ${paint.sky("resolve(import.meta.dirname, './handlers')")}.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.sky(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>
