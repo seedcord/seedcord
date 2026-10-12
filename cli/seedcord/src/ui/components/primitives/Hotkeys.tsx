@@ -18,7 +18,7 @@ function Hotkey({ keyLabel, action, enabled = true, highlight = false }: HotkeyP
     const keyColor = !enabled ? ui.faint : highlight ? ui.warn : ui.accent;
     const actionColor = enabled ? ui.muted : ui.faint;
     return (
-        <Box marginRight={2}>
+        <Box>
             <Text color={keyColor} bold>
                 {keyLabel}
             </Text>
@@ -48,13 +48,17 @@ export function SessionKeys({ phase, interactive, following }: SessionKeysProps)
     );
 }
 
-export function FilterKeys(): ReactElement {
+export function FilterKeys({ direction = 'column' }: { readonly direction?: 'column' | 'row' }): ReactElement {
     return (
-        <Box flexDirection="column">
+        <Box flexDirection={direction} columnGap={2}>
             <Hotkey keyLabel="←→" action="select" />
             <Hotkey keyLabel="tab" action="group" />
             <Hotkey keyLabel="space" action="filter" />
             <Hotkey keyLabel="o" action="toggle" />
         </Box>
     );
+}
+
+export function FiltersKey({ shown }: { readonly shown: boolean }): ReactElement {
+    return <Hotkey keyLabel="f" action={shown ? 'back' : 'filters'} />;
 }

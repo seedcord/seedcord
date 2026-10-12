@@ -5,23 +5,21 @@ import { Banner } from '#ui/components/Banner';
 import { StatusBadge } from '#ui/components/StatusBadge';
 import { ui } from '#ui/palette';
 
+import { FiltersKey } from './Hotkeys';
+
 import type { Notice } from '#ui/notices';
 import type { DevState } from '#ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
-const HINT = 'resize for full ui';
-
-// below this the hint would crowd out the summary, and it stays optional either way
-const HINT_COLUMNS = 64;
-
 interface StatusLineProps {
     readonly state: DevState;
     readonly notices: readonly Notice[];
-    readonly columns: number;
+    readonly filtered: boolean;
+    readonly filtersShown: boolean;
 }
 
 /** The single row standing in for the rail once the terminal is too small to hold it. */
-export function StatusLine({ state, notices, columns }: StatusLineProps): ReactElement {
+export function StatusLine({ state, notices, filtered, filtersShown }: StatusLineProps): ReactElement {
     const [top, ...rest] = notices;
 
     return (
@@ -33,17 +31,19 @@ export function StatusLine({ state, notices, columns }: StatusLineProps): ReactE
                     {top?.summary ? <Text dimColor> · </Text> : null}
                     {top?.summary ? <Text color={ui.warn}>{top.summary}</Text> : null}
                     {rest.length > 0 ? <Text dimColor> · +{rest.length}</Text> : null}
+                    {filtered ? <Text dimColor> · filtered</Text> : null}
                 </Text>
             </Box>
             {/* flexShrink 0 and the margin keep the key readable against a summary that fills the row */}
             <Box flexShrink={0} marginLeft={2}>
+                {/* an open prompt takes every key, f included */}
                 {top ? (
                     <Text bold color={ui.accent}>
                         {top.action}
                     </Text>
-                ) : null}
-                {/* the action always renders, since a prompt swallows every key and this row is its only affordance */}
-                {!top && columns >= HINT_COLUMNS ? <Text dimColor>{HINT}</Text> : null}
+                ) : (
+                    <FiltersKey shown={filtersShown} />
+                )}
             </Box>
         </Box>
     );

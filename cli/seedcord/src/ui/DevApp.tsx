@@ -39,7 +39,7 @@ export function DevApp(props: DevAppProps): ReactElement {
     const state = useDevState(store);
     const { rows, columns } = useWindowSize();
 
-    const { filters, setChannels, setLevels } = useFilters(initialFilters, onFiltersChange);
+    const { filters, setChannels, setLevels, shown, toggleShown } = useFilters(initialFilters, onFiltersChange);
     const [cursor, setCursor] = useState(INITIAL_CURSOR);
 
     const logBoxRef = useRef<DOMElement | null>(null);
@@ -78,7 +78,8 @@ export function DevApp(props: DevAppProps): ReactElement {
             setEnabledLevels: setLevels,
             cursor,
             setCursor,
-            filtersOpen: tier === 'full',
+            filtersOpen: tier === 'full' || shown,
+            toggleFilters: tier === 'full' ? undefined : toggleShown,
             onQuit: props.onQuit,
             onDisconnect: props.onDisconnect,
             onRestart: props.onRestart,
@@ -114,10 +115,10 @@ export function DevApp(props: DevAppProps): ReactElement {
                 scroll={scroll}
                 viewportHeight={viewportHeight}
                 measured={logBox.height > 0}
-                columns={columns}
                 enabled={filters.channels}
                 enabledLevels={filters.levels}
                 cursor={cursor}
+                filtersShown={shown}
                 interactive={interactive}
                 uptimeMs={uptimeMs}
             />

@@ -26,23 +26,17 @@ describe('FilterChips', () => {
         expect(frame).toContain('trace');
     });
 
-    it('keeps only the two headings when collapsed', () => {
+    it('sums up each filter beside its collapsed heading', () => {
         const { lastFrame } = render(
             <FilterChips
                 channels={CHANNELS}
-                enabledChannels={new Set()}
+                enabledChannels={new Set(['hmr', 'gates'])}
                 enabledLevels={new Set()}
                 cursor={INITIAL_CURSOR}
                 open={false}
             />
         );
 
-        const frame = lastFrame() ?? '';
-        expect(frame).toContain('resize to see filters');
-        expect(frame).toContain('▸ channels');
-        expect(frame).toContain('▸ levels');
-        expect(frame).not.toContain('gates');
-        expect(frame).not.toContain('trace');
-        expect(frame.split('\n')).toHaveLength(3);
+        expect((lastFrame() ?? '').split('\n')).toEqual(['▸ channels  hmr +1', '▸ levels    all']);
     });
 });

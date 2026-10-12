@@ -20,13 +20,35 @@ interface FilterChipsProps {
     readonly open: boolean;
 }
 
-function Heading({ label, open }: { label: string; open: boolean }): ReactElement {
+const HEADING_WIDTH = 'channels'.length;
+
+// the rail keeps the width it first measured for the whole run (useRailWidth)
+function summarize(selected: ReadonlySet<string>): string {
+    const [first, ...rest] = selected;
+    if (first === undefined) return 'all';
+    return rest.length === 0 ? first : `${first} +${rest.length}`;
+}
+
+interface HeadingProps {
+    readonly label: string;
+    readonly open: boolean;
+    readonly selected: ReadonlySet<string>;
+}
+
+function Heading({ label, open, selected }: HeadingProps): ReactElement {
     return (
-        <Text>
+        <Text wrap="truncate">
             <Text color={ui.accent} bold>
                 {open ? '▾' : '▸'}
             </Text>
-            <Text color={ui.muted}> {label}</Text>
+            {open ? (
+                <Text color={ui.muted}> {label}</Text>
+            ) : (
+                <Text>
+                    <Text color={ui.muted}> {label.padEnd(HEADING_WIDTH)}</Text>
+                    {`  ${summarize(selected)}`}
+                </Text>
+            )}
         </Text>
     );
 }
@@ -71,12 +93,7 @@ export function FilterChips({
 
     return (
         <Box flexDirection="column">
-            {open ? null : (
-                <Text dimColor wrap="truncate">
-                    resize to see filters
-                </Text>
-            )}
-            <Heading label="channels" open={open} />
+            <Heading label="channels" open={open} selected={enabledChannels} />
             {open ? (
                 <Box marginLeft={2} flexWrap="wrap">
                     {channels.map((channel, index) => (
@@ -91,7 +108,7 @@ export function FilterChips({
                 </Box>
             ) : null}
 
-            <Heading label="levels" open={open} />
+            <Heading label="levels" open={open} selected={enabledLevels} />
             {open ? (
                 <Box marginLeft={2} flexWrap="wrap">
                     {FILTER_LEVELS.map((level, index) => (

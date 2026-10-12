@@ -1,6 +1,7 @@
 import { Box } from 'ink';
 import React from 'react';
 
+import { FilterPanel } from '#ui/components/primitives/FilterPanel';
 import { LogHeader } from '#ui/components/primitives/LogHeader';
 import { NotificationStack } from '#ui/components/primitives/NotificationStack';
 import { Rule } from '#ui/components/primitives/Rule';
@@ -8,6 +9,7 @@ import { ScrollableLogView } from '#ui/components/primitives/ScrollableLogView';
 import { Sidebar } from '#ui/components/primitives/Sidebar';
 import { StatusLine } from '#ui/components/primitives/StatusLine';
 
+import type { RailView } from '#ui/components/primitives/Sidebar';
 import type { FilterCursor } from '#ui/filterCursor';
 import type { ScrollApi } from '#ui/hooks/useScroll';
 import type { LogRow } from '#ui/logRows';
@@ -30,18 +32,23 @@ export interface DevLayoutProps {
     readonly scroll: ScrollApi<LogRow>;
     readonly viewportHeight: number;
     readonly measured: boolean;
-    readonly columns: number;
     readonly enabled: ReadonlySet<string>;
     readonly enabledLevels: ReadonlySet<LogLevel>;
     readonly cursor: FilterCursor;
+    readonly filtersShown: boolean;
     readonly interactive: boolean;
     readonly uptimeMs: number | null;
+}
+
+function railViewFor(tier: Tier, filtersShown: boolean): RailView {
+    if (tier === 'full') return 'full';
+    return filtersShown ? 'filters' : 'collapsed';
 }
 
 // notification cards render below the logs so stack traces have room
 export function DevLayout(props: DevLayoutProps): ReactElement {
     const { state, tier, notices, railRef, railWidth, logBoxRef, scroll, viewportHeight, measured } = props;
-    const { columns, enabled, enabledLevels, cursor, interactive, uptimeMs } = props;
+    const { enabled, enabledLevels, cursor, filtersShown, interactive, uptimeMs } = props;
     const railed = tier === 'full' || tier === 'compact';
 
     return (
@@ -57,7 +64,7 @@ export function DevLayout(props: DevLayoutProps): ReactElement {
                     interactive={interactive}
                     cursor={cursor}
                     width={railWidth}
-                    filtersOpen={tier === 'full'}
+                    view={railViewFor(tier, filtersShown)}
                 />
             ) : null}
             <Box
@@ -73,13 +80,30 @@ export function DevLayout(props: DevLayoutProps): ReactElement {
                 paddingLeft={railed ? 1 : 0}
                 overflow="hidden"
             >
-                {railed ? null : <StatusLine state={state} notices={notices} columns={columns} />}
+                {railed ? null : (
+                    <StatusLine
+                        state={state}
+                        notices={notices}
+                        filtered={enabled.size > 0 || enabledLevels.size > 0}
+                        filtersShown={filtersShown}
+                    />
+                )}
                 {railed ? null : <Rule />}
-                <LogHeader following={scroll.following} below={scroll.below} />
-                {/* the notification stack is unbounded, so the pane keeps a row back for its own message */}
-                <Box ref={logBoxRef} flexGrow={1} minHeight={1} overflow="hidden">
-                    <ScrollableLogView visible={scroll.visible} viewportHeight={viewportHeight} measured={measured} />
-                </Box>
+                {!railed && filtersShown ? (
+                    <FilterPanel enabled={enabled} enabledLevels={enabledLevels} cursor={cursor} />
+                ) : (
+                    <>
+                        <LogHeader following={scroll.following} below={scroll.below} />
+                        {/* the notification stack is unbounded, so the pane keeps a row back for its own message */}
+                        <Box ref={logBoxRef} flexGrow={1} minHeight={1} overflow="hidden">
+                            <ScrollableLogView
+                                visible={scroll.visible}
+                                viewportHeight={viewportHeight}
+                                measured={measured}
+                            />
+                        </Box>
+                    </>
+                )}
                 {railed ? <NotificationStack notices={notices} /> : null}
             </Box>
         </Box>

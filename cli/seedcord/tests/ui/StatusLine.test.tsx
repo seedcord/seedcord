@@ -13,21 +13,40 @@ function running(): DevStore {
     return store;
 }
 
-function frameOf(store: DevStore, columns = 120): string {
+interface FilterState {
+    readonly filtered?: boolean;
+    readonly filtersShown?: boolean;
+}
+
+function frameOf(store: DevStore, { filtered = false, filtersShown = false }: FilterState = {}): string {
     return (
         render(
-            <StatusLine state={store.getState()} notices={noticesOf(store.getState())} columns={columns} />
+            <StatusLine
+                state={store.getState()}
+                notices={noticesOf(store.getState())}
+                filtered={filtered}
+                filtersShown={filtersShown}
+            />
         ).lastFrame() ?? ''
     );
 }
 
 describe('StatusLine', () => {
-    it('carries the brand, the phase, and the resize hint', () => {
+    it('carries the brand, the phase, and the key that opens the filters', () => {
         const frame = frameOf(running());
 
         expect(frame).toContain('seedcord');
         expect(frame).toContain('running');
-        expect(frame).toContain('resize');
+        expect(frame).toContain('f filters');
+    });
+
+    it('offers f back while the filters show', () => {
+        expect(frameOf(running(), { filtersShown: true })).toContain('f back');
+    });
+
+    it('marks the row while a filter hides lines', () => {
+        expect(frameOf(running())).not.toContain('filtered');
+        expect(frameOf(running(), { filtered: true })).toContain('· filtered');
     });
 
     it('renders the top notice with its keys', () => {
@@ -47,16 +66,12 @@ describe('StatusLine', () => {
         expect(frame).toContain('+1');
     });
 
-    it('drops the resize hint when the width runs out', () => {
-        expect(frameOf(running(), 30)).not.toContain('resize');
-    });
-
-    it('keeps the action on a terminal too narrow for the hint', () => {
+    it('shows the prompt keys in place of the filters key', () => {
         const store = running();
         store.apply({ type: 'command-update-prompt', files: ['a.ts'] });
 
-        const frame = frameOf(store, 50);
-        expect(frame).not.toContain('resize');
+        const frame = frameOf(store);
+        expect(frame).not.toContain('f filters');
         expect(frame).toContain('y/n');
     });
 
@@ -64,7 +79,7 @@ describe('StatusLine', () => {
         const store = running();
         store.setError(new Error('connect ECONNREFUSED 127.0.0.1:27017 while opening the pool'));
 
-        const frame = frameOf(store, 70);
+        const frame = frameOf(store);
         expect(frame).toContain('press r to restart');
         expect(frame).toContain('connect ECONNREFUSED');
     });

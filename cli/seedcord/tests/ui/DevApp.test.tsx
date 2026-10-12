@@ -77,7 +77,7 @@ describe('DevApp tiers', () => {
 
     it('replaces the rail with the status line once the collapsed form stops fitting', async () => {
         const { lastFrame, unmount } = view(LOGS);
-        await settled(() => expect(lastFrame()).toContain('resize'));
+        await settled(() => expect(lastFrame()).toContain('f filters'));
 
         const frame = lastFrame();
         expect(frame).toContain('seedcord');
@@ -99,18 +99,17 @@ describe('DevApp tiers', () => {
 
     it('follows the terminal back up through the tiers', async () => {
         const { lastFrame, resize, unmount } = view(LOGS);
-        await settled(() => expect(lastFrame()).toContain('resize'));
+        await settled(() => expect(lastFrame()).toContain('f filters'));
 
         resize(FULL);
         await settled(() => expect(lastFrame()).toContain('▾ channels'));
 
-        expect(lastFrame()).not.toContain('resize');
+        expect(lastFrame()).not.toContain('f filters');
         unmount();
     });
 
-    // the chips are hidden below full, so a keypress that filters them changes what the pane shows with
-    // nothing on screen to explain it
-    it('ignores the filter keys once the chips are hidden', async () => {
+    // a filter key with the chips collapsed would change the pane with nothing on screen to explain it
+    it('ignores the filter keys while the chips are collapsed', async () => {
         const app = view(COMPACT);
         await settled(() => expect(app.lastFrame()).toContain('▸ channels'));
 
@@ -147,6 +146,65 @@ describe('DevApp tiers', () => {
         }
     });
 }, 30_000);
+
+describe('DevApp filters below the full layout', () => {
+    it('opens the filters in compact on f and closes them on f again', async () => {
+        const app = view(COMPACT);
+        await settled(() => expect(app.lastFrame()).toContain('▸ channels'));
+
+        app.press('f');
+        await settled(() => expect(app.lastFrame()).toContain('▾ channels'));
+        expect(app.lastFrame()).toContain('back');
+
+        app.press('f');
+        await settled(() => expect(app.lastFrame()).toContain('▸ channels'));
+        app.unmount();
+    });
+
+    it('swaps the log pane for the filters in the logs layout on f', async () => {
+        const app = view(LOGS);
+        LogStore.instance.onLog(logOn('hmr'));
+        await LogStore.instance.flush();
+        await settled(() => expect(app.lastFrame()).toContain('from hmr'));
+
+        app.press('f');
+        await settled(() => expect(app.lastFrame()).toContain('▾ channels'));
+        expect(app.lastFrame()).not.toContain('from hmr');
+
+        app.press('f');
+        await settled(() => expect(app.lastFrame()).toContain('from hmr'));
+        app.unmount();
+    });
+
+    it('ignores f in full, where the chips always show', async () => {
+        const app = view(FULL);
+        await settled(() => expect(app.lastFrame()).toContain('▾ channels'));
+
+        app.press('f');
+        app.resize(COMPACT);
+
+        await settled(() => expect(app.lastFrame()).toContain('▸ channels'));
+        app.unmount();
+    });
+
+    it('takes the filter keys once f opens the filters in compact', async () => {
+        const onFiltersChange = vi.fn();
+        const app = view(COMPACT, { onFiltersChange });
+        for (const record of ['bot', 'hmr'].map(logOn)) LogStore.instance.onLog(record);
+        await LogStore.instance.flush();
+        await settled(() => expect(app.lastFrame()).toContain('from hmr'));
+        const [focused] = LogStore.instance.getChannels();
+
+        app.press('f');
+        await settled(() => expect(app.lastFrame()).toContain('▾ channels'));
+        app.press(' ');
+
+        await settled(() =>
+            expect(onFiltersChange).toHaveBeenCalledWith({ channels: new Set([focused]), levels: new Set() })
+        );
+        app.unmount();
+    });
+});
 
 describe('DevApp saved filters', () => {
     it('opens with the saved filters applied', async () => {

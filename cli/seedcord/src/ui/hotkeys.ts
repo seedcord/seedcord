@@ -48,6 +48,8 @@ interface HotkeyContext {
     readonly cursor: FilterCursor;
     readonly setCursor: (next: FilterCursor) => void;
     readonly filtersOpen: boolean;
+    // undefined where the chips always show
+    readonly toggleFilters?: (() => void) | undefined;
     readonly onQuit?: (() => Promise<void> | void) | undefined;
     readonly onDisconnect?: (() => Promise<void> | void) | undefined;
     readonly onRestart?: (() => Promise<void> | void) | undefined;
@@ -98,6 +100,10 @@ function applyAtCursor(
 }
 
 function handleFilters(ctx: HotkeyContext): boolean {
+    if (ctx.input === 'f' && ctx.toggleFilters) {
+        ctx.toggleFilters();
+        return true;
+    }
     if (!ctx.filtersOpen) return false;
 
     const channels = LogStore.instance.getChannels();
