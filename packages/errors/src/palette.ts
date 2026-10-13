@@ -27,27 +27,59 @@ export function setColorLevel(level: ColorSupportLevel): void {
     chalk.level = level;
 }
 
-const sky = chalk.hex('#8fc7ff');
+const SKY = '#8fc7ff';
 
 // truecolor because a terminal theme remaps chalk's 16-color names (blue turns orange in monokai)
+// chalk.hex bakes in the level it ran at. a getter picks up a level set later, like the edge worker's
 export const paint = {
-    sky, // what the line is about, one per line
-    path: (path: string) => sky(relativeToCwd(path)),
-    iris: chalk.hex('#e29bff'), // a count
-    mint: chalk.hex('#66d98a'), // success
-    amber: chalk.hex('#ffc061'), // go do something about this
-    coral: chalk.hex('#ff6b85'), // failure
+    // what the line is about, one per line
+    get sky() {
+        return chalk.hex(SKY);
+    },
+    path: (path: string) => chalk.hex(SKY)(relativeToCwd(path)),
+    // a count
+    get iris() {
+        return chalk.hex('#e29bff');
+    },
+    // success
+    get mint() {
+        return chalk.hex('#66d98a');
+    },
+    // go do something about this
+    get amber() {
+        return chalk.hex('#ffc061');
+    },
+    // failure
+    get coral() {
+        return chalk.hex('#ff6b85');
+    },
     // brand marks
-    flesh: chalk.hex(BRAND.flesh),
-    rind: chalk.hex(BRAND.rind),
-    pith: chalk.hex(BRAND.pith),
-    mute: chalk.dim, // context around the subject
+    get flesh() {
+        return chalk.hex(BRAND.flesh);
+    },
+    get rind() {
+        return chalk.hex(BRAND.rind);
+    },
+    get pith() {
+        return chalk.hex(BRAND.pith);
+    },
+    get mute() {
+        return chalk.dim; // context around the subject
+    },
+
     check: '✔︎', // U+FE0E to prevent emoji font
     cross: '✘',
+
     // weight and shape
-    bold: chalk.bold,
-    italic: chalk.italic,
-    underline: chalk.underline
+    get bold() {
+        return chalk.bold;
+    },
+    get italic() {
+        return chalk.italic;
+    },
+    get underline() {
+        return chalk.underline;
+    }
 } as const;
 
 export const WORDMARK = `${paint.flesh.bold('seed')}${paint.rind.bold('cord')}`;

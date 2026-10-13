@@ -265,8 +265,10 @@ describe('EdgeDevRuntime', () => {
 
         await runtime.startBot(instance);
 
-        // usernameOf paints the username sky blue
-        expect(messagesOf(logs).find((message) => message.startsWith('Running as'))).toContain('\u001B[');
+        // usernameOf paints the username sky blue, #8fc7ff
+        expect(messagesOf(logs).find((message) => message.startsWith('Running as'))).toContain(
+            '\u001B[38;2;143;199;255m'
+        );
     }, 120_000);
 
     it("writes the worker's file paths relative to the CLI's cwd", async () => {
