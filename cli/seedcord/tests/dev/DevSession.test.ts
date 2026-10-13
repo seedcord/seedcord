@@ -1,9 +1,16 @@
+import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { HostAugmentTarget, HostShutdown, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
-import { describe, expect, it, vi } from 'vitest';
+import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { DevSession } from '#commands/dev/DevSession';
+import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
 import { DevStore } from '#ui/stores/DevStore';
+
+import { devConfigFor } from './devConfigFor';
 
 import type { DevRuntime, DevRuntimeContext } from '#commands/dev/runtime/DevRuntime';
 import type { DevEvent } from '#commands/dev/runtime/events';
@@ -126,4 +133,26 @@ describe('DevSession', () => {
             message: expect.stringContaining('token was revoked') as string
         });
     });
+});
+
+describe('DevSession with a broken entry', () => {
+    it('puts the entry path once in front of the parse error', async () => {
+        const temp = await mkdtempDisposable(join(tmpdir(), 'dev-session-'));
+        onTestFinished(() => temp.remove());
+        const entry = join(temp.path, 'src', 'index.ts');
+        await mkdir(join(temp.path, 'src'));
+        await writeFile(join(temp.path, 'package.json'), JSON.stringify({ name: 'dev-fixture', type: 'module' }));
+        await writeFile(entry, 'export const = ;\n');
+        const brokenConfig = { ...devConfigFor(temp.path, 'index.ts'), typecheck: { enabled: false } } as const;
+        const session = new DevSession(brokenConfig, new ViteDevRuntime(), new DevStore(), () => undefined);
+        onTestFinished(() => session.dispose());
+
+        const error: unknown = await session.start().catch((caught: unknown) => caught);
+
+        assert(isSeedcordError(error));
+        // vite's code frame repeats the path after this point
+        const [prefix = '', reason] = error.message.split('Transform failed');
+        expect(prefix.split(entry)).toHaveLength(2);
+        expect(reason).toContain('Unexpected token');
+    }, 60_000);
 });

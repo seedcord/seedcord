@@ -170,7 +170,7 @@ describe('DevRunner codegen', () => {
         await stop();
     });
 
-    it('logs a failed write and keeps the session running', async () => {
+    it('logs a failed write', async () => {
         const failure = new Error('duplicate route');
         const codegen = fakeCodegen(vi.fn<CodegenRunner['writeFrom']>().mockRejectedValue(failure));
         const error = vi.fn();

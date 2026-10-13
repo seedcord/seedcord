@@ -175,7 +175,7 @@ export class DevRunner {
             if (changed) this.deps.codegenLogger.info(`Augmentations written to ${paint.path(outputPath)}`);
         } catch (error: unknown) {
             // a codegen throw must not take the dev session down
-            this.deps.codegenLogger.error('Command registry regeneration failed', error);
+            this.deps.codegenLogger.error('Could not update the command types', error);
         } finally {
             this.isWritingTypes = false;
         }
