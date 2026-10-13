@@ -107,6 +107,40 @@ describe('the edge Seedcord under seedcord dev', () => {
         expect(put).toHaveBeenCalledWith(Routes.applicationCommands(APP_ID), expect.anything());
     });
 
+    it('deploys on a second start after the emojis failed to load the first time', async () => {
+        @RegisterCommand('global')
+        class Ping extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                this.instance.setName('ping').setDescription('Replies with pong');
+            }
+        }
+        registerBuiltFiles({ '/commands/Ping.ts': { Ping } });
+        const cli = connectCli();
+        await liveEnv();
+        const seedcord = new Seedcord({
+            ...config,
+            bot: { ...config.bot, commands: { path: `${BUILT_ROOT}/commands` }, emojis: { Wave: 'wave' } }
+        });
+        let emojiReads = 0;
+        const get = vi.fn((route: string) => {
+            if (route === Routes.user('@me')) return { username: 'wave-bot' };
+            if (route !== Routes.applicationEmojis(APP_ID)) return {};
+            emojiReads++;
+            if (emojiReads === 1) return Promise.reject(new Error('discord answered 500'));
+            return { items: [{ name: 'wave', id: '55' }] };
+        });
+        const put = vi.fn().mockResolvedValue([{ id: '7', name: 'ping', type: ApplicationCommandType.ChatInput }]);
+        Object.assign(seedcord.rest, { get, put });
+
+        cli.start();
+        await vi.waitFor(() => expect(cli.events()).toEqual(['seedcord:start-failed']));
+        cli.start();
+
+        await vi.waitFor(() => expect(cli.events()).toEqual(['seedcord:start-failed', 'seedcord:started']));
+        expect(put).toHaveBeenCalledOnce();
+    });
+
     it("passes a saved file to a plugin's onHmr once started", async () => {
         const saved: string[] = [];
         class Cache extends Plugin {
@@ -136,6 +170,7 @@ describe('the edge Seedcord under seedcord dev', () => {
         const seedcord = new Seedcord(config);
         stubDiscord(seedcord);
         new Logger('Cache', { channel: 'bot' }).info('warming the cache');
+        expect(cli.sent).toEqual([]);
 
         cli.start();
 

@@ -1,23 +1,16 @@
 import type { LogRecord } from './Interfaces/LogSink';
 import type { HmrUpdateEvent } from './Types/Hmr';
 
-/**
- * An `Error` as JSON, for the dev channel between a bot in workerd and the CLI.
- *
- * @internal
- */
+// vite's dev channel carries JSON between a bot in workerd and the CLI
 export interface WireError {
     name: string;
     message: string;
     stack?: string | undefined;
     code?: unknown;
+    cause?: WireError | undefined;
 }
 
-/**
- * A {@link LogRecord} as JSON. Each arg carries either an `Error` or a JSON-safe value.
- *
- * @internal
- */
+// each arg is either an Error or a JSON-safe value
 export interface WireLogRecord extends Omit<LogRecord, 'args'> {
     args?: ({ error: WireError } | { value: unknown })[] | undefined;
 }

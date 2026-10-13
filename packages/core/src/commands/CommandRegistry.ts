@@ -36,7 +36,7 @@ import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 type CommandArtifact = DeployTarget & { name: string };
 
-// both transports' InteractionDispatcher
+// gateway's and http's InteractionDispatcher both fit this
 interface RouteWarnings {
     warnUnhandledRoutes(leaves: Iterable<string>): void;
     warnUnhandledContextMenuRoutes(leaves: ContextMenuLeaves): void;

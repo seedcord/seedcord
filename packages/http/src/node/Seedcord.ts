@@ -1,7 +1,7 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
-import { bindBotColor, busLoggerOf, CommandRegistry, getDevChannel, HmrManager } from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, getDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { DRAIN_TASK_TIMEOUT_MS, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { paint } from '@seedcord/errors';
@@ -10,8 +10,7 @@ import { installNodeDefaults } from '@seedcord/logger/node';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
-import { addDiscordReads } from '#src/discordReads';
-import { addHmrRegistration } from '#src/hmrRegistration';
+import { HttpStartupTasks } from '#src/HttpStartupTasks';
 import { InteractionsService } from '#src/InteractionsService';
 import { usernameOf } from '#src/username';
 import { version as packageVersion } from '#src/version';
@@ -57,7 +56,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
     readonly #service: InteractionsService;
     readonly #endpoint: NodeEndpoint;
-    readonly #commandRegistry?: CommandRegistry;
     readonly #hmrManager: HmrManager;
     readonly #logger = new Logger('Server', { channel: 'bot' });
 
@@ -82,8 +80,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
 
         this.#hmrManager = new HmrManager();
         this.#hmrManager.init();
-
-        if (this.config.bot.commands.path) this.#commandRegistry = new CommandRegistry(this);
 
         this.#registerStartupTasks();
         this.#registerShutdownTasks();
@@ -131,10 +127,8 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     }
 
     #registerStartupTasks(): void {
-        const commands = this.#commandRegistry;
-        if (Envapter.isDevelopment || Envapter.isTest) {
-            addHmrRegistration(this.#hmrManager, { host: this, service: this.#service, commands });
-        }
+        const tasks = new HttpStartupTasks(this, this.#service);
+        if (Envapter.isDevelopment || Envapter.isTest) tasks.registerHmr(this.#hmrManager);
 
         this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'start');
@@ -157,7 +151,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         });
 
         // the Login tasks read the token authenticate sets
-        addDiscordReads({ host: this, service: this.#service, commands });
+        tasks.addDiscordTasks();
 
         this.startup.addTask(StartupPhase.Ready, 'http-server', () => {
             const { port = DEFAULT_PORT } = this.config;

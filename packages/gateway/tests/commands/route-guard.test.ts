@@ -15,7 +15,6 @@ function loggerOf(interactions: Interactions): { warn: (message: string) => void
     return (interactions as unknown as { logger: { warn: (message: string) => void } }).logger;
 }
 
-// deploys through the mock client, then returns the dispatcher's warn spy
 async function deployWarnings(instance: Seedcord): Promise<MockInstance<(message: string) => void>> {
     const registry = commandRegistryOf(instance.bot);
     const interactions = interactionsOf(instance.bot);

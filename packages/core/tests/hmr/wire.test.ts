@@ -25,6 +25,16 @@ describe('wire errors', () => {
         expect(received).toMatchObject({ name: sent.name, message: sent.message, stack: sent.stack });
         expect(received).toHaveProperty('code', SeedcordErrorCode.ConfigMissingEnv);
     });
+
+    it('keeps the error a wrapper was built from', () => {
+        const discord = new Error('Missing Access');
+        const sent = new SeedcordError(SeedcordErrorCode.CoreCommandGuildDeployFailed, ['111'], { cause: discord });
+
+        const received = fromWireError(overTheWire(toWireError(sent)));
+
+        expect(received.cause).toMatchObject({ message: 'Missing Access' });
+        expect(Error.isError(received.cause)).toBe(true);
+    });
 });
 
 describe('wire logs', () => {
