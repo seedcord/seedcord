@@ -16,7 +16,7 @@ export function registerProcessErrors(core: CoreBase, shutdown: CoordinatedShutd
         const error = asError(caught);
         const uuid = crypto.randomUUID();
 
-        if (core.config.errors?.errorStack ?? false) logger.error(uuid, error);
+        if (core.config.errors?.errorStack ?? true) logger.error(uuid, error);
         else logger.error(`${uuid} | ${error.message}`);
 
         core.bus[PublishDefault]('unknownException', { uuid, dispatchId: null, error, origin });

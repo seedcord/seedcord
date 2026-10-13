@@ -103,8 +103,8 @@ async function handleNotice(notice: Notice, uuid: RenderContext['uuid'], scope: 
 async function handleRawFault(error: Error, uuid: RenderContext['uuid'], scope: FaultScope): Promise<void> {
     const { core, sender } = scope;
 
-    if (core.config.errors?.errorStack ?? false) logger().error(paint.mute(uuid), error);
-    else logger().error(`${paint.mute(uuid)} | ${error.message}`);
+    if (core.config.errors?.errorStack ?? true) logger().error(paint.mute(uuid), error);
+    else logger().error(`${paint.mute(uuid)} | ${error.message}${causeLine(error)}`);
 
     reportFault(error, uuid, scope.dispatch, scope.payload, core);
 

@@ -100,7 +100,7 @@ function causeLine(error: Error): string {
 }
 
 function reportRawFault(error: Error, core: Core, fault: ErrorOrigin, uuid: UUID): void {
-    const showStack = core.config.errors?.errorStack ?? false;
+    const showStack = core.config.errors?.errorStack ?? true;
     if (showStack) logger.error(uuid, error);
     else logger.error(`${uuid} | ${error.message}${causeLine(error)}`);
 

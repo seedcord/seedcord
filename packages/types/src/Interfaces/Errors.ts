@@ -19,7 +19,7 @@ export interface ErrorsConfig {
     /**
      * Whether to show the error stack trace in the terminal for an unknown fault.
      *
-     * @defaultValue `false`
+     * @defaultValue `true`
      */
     errorStack?: boolean;
     /**

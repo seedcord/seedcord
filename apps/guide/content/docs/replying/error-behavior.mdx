@@ -36,7 +36,7 @@ export const seedcord = new Seedcord({
     bot,
     subscribers: { path: null },
     errors: {
-        errorStack: true,
+        errorStack: false,
         logSilences: false,
         defaultError: BrandedFault,
         catchProcessErrors: false,
@@ -50,7 +50,7 @@ export const seedcord = new Seedcord({
 
 | key | default | what it changes |
 | --- | --- | --- |
-| `errorStack` | `false` | `true` prints the whole stack in your terminal for an unknown fault |
+| `errorStack` | `true` | `false` prints only `uuid | message` in your terminal for an unknown fault |
 | `logSilences` | `true` | `false` drops the debug line written for a [`Silence`](ref:core/Silence) reason |
 | `defaultError` | the built-in card | the class seedcord renders for an unknown fault |
 | `catchProcessErrors` | `true` | `false` leaves the `unhandledRejection` and `uncaughtException` listeners to you |
