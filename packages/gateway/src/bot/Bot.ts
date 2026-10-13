@@ -163,11 +163,10 @@ export class Bot implements HmrAware {
         // bot-initialization reports why it failed
         if (!(await this.#readyToDeploy.promise)) return;
 
-        await registry.init();
-        assertGuildsIntent(this.#intents, registry.allCommands());
-        await registry.setCommands(signal);
-        this.#interactions?.warnUnhandledRoutes(registry.routeLeaves());
-        this.#interactions?.warnUnhandledContextMenuRoutes(registry.contextMenuLeaves());
+        await registry.deploy(signal, {
+            routes: this.#interactions,
+            check: (commands) => assertGuildsIntent(this.#intents, commands)
+        });
     }
 
     async #stop(): Promise<void> {

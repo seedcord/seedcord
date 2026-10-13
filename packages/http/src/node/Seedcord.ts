@@ -176,10 +176,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
                 async (signal) => {
                     // emoji-injection reports why it failed
                     if (!(await this.#emojisLoaded.promise)) return;
-                    await commandRegistry.init();
-                    await commandRegistry.setCommands(signal);
-                    interactions?.warnUnhandledRoutes(commandRegistry.routeLeaves());
-                    interactions?.warnUnhandledContextMenuRoutes(commandRegistry.contextMenuLeaves());
+                    await commandRegistry.deploy(signal, { routes: interactions });
                 },
                 COMMAND_DEPLOY_TIMEOUT_MS
             );

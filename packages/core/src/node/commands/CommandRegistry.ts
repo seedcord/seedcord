@@ -36,6 +36,17 @@ import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 type CommandArtifact = DeployTarget & { name: string };
 
+// both transports' InteractionDispatcher
+interface RouteWarnings {
+    warnUnhandledRoutes(leaves: Iterable<string>): void;
+    warnUnhandledContextMenuRoutes(leaves: ContextMenuLeaves): void;
+}
+
+interface DeployHooks {
+    routes?: RouteWarnings | undefined;
+    check?: (commands: CommandBuilder[]) => void;
+}
+
 const MS_PER_SECOND = 1000;
 
 // discord's global command bucket allows 2 PUTs a minute
@@ -233,6 +244,15 @@ export class CommandRegistry implements Initializeable, HmrAware {
     }
 
     /** @internal */
+    public async deploy(signal: AbortSignal, { routes, check }: DeployHooks): Promise<void> {
+        await this.init();
+        check?.(this.allCommands());
+        await this.setCommands(signal);
+        routes?.warnUnhandledRoutes(this.routeLeaves());
+        routes?.warnUnhandledContextMenuRoutes(this.contextMenuLeaves());
+    }
+
+    /** @internal */
     public async setCommands(signal?: AbortSignal): Promise<DeployResult> {
         const result: DeployResult = { global: new Map(), guilds: new Map() };
         const appId = this.core.applicationId;
@@ -300,18 +320,15 @@ export class CommandRegistry implements Initializeable, HmrAware {
         }
     }
 
-    /** Every registered builder, global first. A guild command in N guilds appears once per guild. @internal */
-    public allCommands(): CommandBuilder[] {
+    private allCommands(): CommandBuilder[] {
         return [...this.globalCommands, ...this.guildCommands.values()].flat();
     }
 
-    /** @internal */
-    public routeLeaves(): Set<string> {
+    private routeLeaves(): Set<string> {
         return slashRouteLeaves(this.allCommands());
     }
 
-    /** @internal */
-    public contextMenuLeaves(): ContextMenuLeaves {
+    private contextMenuLeaves(): ContextMenuLeaves {
         return contextMenuLeaves(this.allCommands().map((command) => command.toJSON()));
     }
 }
