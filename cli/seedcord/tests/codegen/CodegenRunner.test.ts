@@ -1,4 +1,4 @@
-import { chmod, mkdir, mkdtempDisposable, readFile, stat, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtempDisposable, readFile, stat, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -16,6 +16,7 @@ import { Project } from '#core/project/Project';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 
 const OUTPUT = 'seedcord-gen.d.ts';
 
@@ -156,7 +157,68 @@ describe('CodegenRunner plugin capabilities', () => {
     });
 });
 
+describe('CodegenRunner writeFrom', () => {
+    it('scans with the loader it is given and never opens the project', async () => {
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
+        await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
+        const projectLoader = { open: () => Promise.reject(new Error('dev already loaded the bot')) };
+        const logger = silentLogger();
+        const runner = new CodegenRunner({
+            steps: quietSteps,
+            projectLoader,
+            generator: new AugmentationBuilder(logger),
+            logger
+        });
+
+        // justified: the scan treats every import as an export map
+        const modules = { importModule: () => Promise.resolve({ BanCommand }) } as ModuleLoader;
+        await runner.writeFrom({
+            config: configAt(root, resolve(root, 'bot.ts')),
+            // justified: codegen reads only the brand keys and config.bot off the instance
+            instance: brandedInstance(cmdDir) as SeedcordInstance,
+            modules
+        });
+
+        const written = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(written).toContain("ban: { options: {}; cache: 'cached' }");
+    });
+});
+
 describe('CodegenRunner', () => {
+    it('keeps the project open until the command scan finishes', async () => {
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
+        await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
+        const instancePath = resolve(root, 'bot.ts');
+        let closed = false;
+        // justified: codegen reads only importModule off the loader
+        const modules = {
+            importModule: (entryPath: string) => {
+                if (closed) return Promise.reject(new Error('Vite module runner has been closed.'));
+                return Promise.resolve(
+                    entryPath === instancePath ? { default: brandedInstance(cmdDir) } : { BanCommand }
+                );
+            },
+            [Symbol.asyncDispose]: () => {
+                closed = true;
+                return Promise.resolve();
+            }
+        } as ModuleLoader & AsyncDisposable;
+        const logger = silentLogger();
+        const runner = new CodegenRunner({
+            steps: quietSteps,
+            projectLoader: { open: () => Promise.resolve(new Project(configAt(root, instancePath), modules)) },
+            generator: new AugmentationBuilder(logger),
+            logger
+        });
+
+        await runner.run(false);
+
+        const written = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(written).toContain("ban: { options: {}; cache: 'cached' }");
+    });
+
     it('writes the rendered registry to the project root', async () => {
         const root = await tempDir('codegen-');
         await makeRunner(root, silentLogger()).run(false);
@@ -314,6 +376,19 @@ describe('CodegenRunner', () => {
 
         const afterCheck = await stat(resolve(root, OUTPUT));
         expect(afterCheck.mtimeMs).toBe(written.mtimeMs);
+    });
+
+    it('leaves an unchanged registry file untouched on a regular run', async () => {
+        const root = await tempDir('codegen-');
+        await makeRunner(root, silentLogger()).run(false);
+        const outputPath = resolve(root, OUTPUT);
+        const longAgo = new Date('2020-01-01');
+        await utimes(outputPath, longAgo, longAgo);
+
+        await makeRunner(root, silentLogger()).run(false);
+
+        const { mtimeMs } = await stat(outputPath);
+        expect(mtimeMs).toBe(longAgo.getTime());
     });
 
     it('emits context-menu commands into the user and message registries alongside slash routes', async () => {

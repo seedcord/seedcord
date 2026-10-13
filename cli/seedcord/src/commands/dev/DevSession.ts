@@ -18,6 +18,7 @@ import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { TscRunner } from './TscRunner';
 
+import type { LoadedBot } from '#commands/codegen/CodegenRunner';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DevRuntime } from './runtime/DevRuntime';
@@ -132,5 +133,10 @@ export class DevSession {
 
     public refreshCommands(shouldRefresh: boolean): void {
         this.runtime.refreshCommands?.(shouldRefresh);
+    }
+
+    public loadedBot(): LoadedBot | undefined {
+        if (!this.instance) return undefined;
+        return { config: this.config, instance: this.instance, modules: this.runtime };
     }
 }

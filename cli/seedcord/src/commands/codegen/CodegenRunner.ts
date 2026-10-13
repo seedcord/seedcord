@@ -4,7 +4,8 @@ import { dirname, relative, resolve, sep } from 'node:path';
 
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { HostAugmentTarget, HostPluginKeys } from '@seedcord/types/internal';
+import { HostAugmentTarget, HostPluginKeys, type SeedcordInstance } from '@seedcord/types/internal';
+import { resolveFromRoot } from '@seedcord/utils/node/internal';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { plural } from '#core/format';
@@ -17,20 +18,19 @@ import { AugmentationBuilder } from './AugmentationBuilder';
 import { renderAugmentation } from './renderAugmentation';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
+import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Steps } from '#core/output/Steps';
-import type { Project } from '#core/project/Project';
 import type { ScannedCommand } from './AugmentationBuilder';
-import type { EmojiConfig, ILogger } from '@seedcord/types';
+import type { ILogger } from '@seedcord/types';
 
 const OUTPUT_FILENAME = 'seedcord-gen.d.ts';
 
 const ENTRY_EXTENSION = /\.[mc]?[jt]sx?$/;
 
-interface ResolvedInstance {
-    commandsDir: string | undefined;
-    emojis: EmojiConfig;
-    augmentTarget: string;
-    pluginKeys: readonly string[];
+export interface LoadedBot {
+    readonly config: ResolvedSeedcordConfig;
+    readonly instance: SeedcordInstance;
+    readonly modules: ModuleLoader;
 }
 
 export const CODEGEN_STEPS = ['read config', 'load bot', 'scan commands', 'write types', 'compare types'] as const;
@@ -71,12 +71,24 @@ export class CodegenRunner {
         await using project = await steps.step('read config', () => projectLoader.open());
         const { config, modules } = project;
         printResolvedConfig(steps, config);
-        const instance = await steps.step('load bot', () => this.resolveInstance(project));
+        const instance = await steps.step('load bot', () => importInstance(modules, config.instance));
+
+        // a bare return disposes the project before the scan's imports run
+        return await this.generate({ config, instance, modules }, check);
+    }
+
+    public async writeFrom(bot: LoadedBot): Promise<CodegenResult> {
+        return this.generate(bot, false);
+    }
+
+    private async generate({ config, instance, modules }: LoadedBot, check: boolean): Promise<CodegenResult> {
+        const { steps } = this.deps;
+        const commandsPath = instance.config.bot.commands.path;
         const commands = await steps.step(
             'scan commands',
             () =>
-                instance.commandsDir
-                    ? new CommandScanner(modules, this.deps.logger).scan(instance.commandsDir)
+                commandsPath
+                    ? new CommandScanner(modules, this.deps.logger).scan(resolveFromRoot(config.root, commandsPath))
                     : Promise.resolve([]),
             (found) => paint.mute(plural(found.length, 'command'))
         );
@@ -89,32 +101,28 @@ export class CodegenRunner {
         return { outputPath };
     }
 
-    private render(config: ResolvedSeedcordConfig, instance: ResolvedInstance, commands: ScannedCommand[]): string {
-        return renderAugmentation(this.deps.generator.generate(commands, instance.emojis), instance.augmentTarget, {
+    private render(config: ResolvedSeedcordConfig, instance: SeedcordInstance, commands: ScannedCommand[]): string {
+        const emojis = instance.config.bot.emojis ?? {};
+        return renderAugmentation(this.deps.generator.generate(commands, emojis), instance[HostAugmentTarget], {
             specifier: botSpecifier(config.root, config.instance),
-            keys: instance.pluginKeys
+            keys: instance[HostPluginKeys]
         });
     }
 
-    private async resolveInstance(project: Project): Promise<ResolvedInstance> {
-        const instance = await importInstance(project.modules, project.config.instance);
-
-        const commandsPath = instance.config.bot.commands.path;
-        return {
-            commandsDir: commandsPath ? project.fromRoot(commandsPath) : undefined,
-            emojis: instance.config.bot.emojis ?? {},
-            augmentTarget: instance[HostAugmentTarget],
-            pluginKeys: instance[HostPluginKeys]
-        };
-    }
-
+    // tsc --watch in dev re-checks the project on every write
     private async write(rendered: string, outputPath: string): Promise<void> {
+        if ((await this.onDisk(outputPath)) === rendered) return;
         await mkdir(dirname(outputPath), { recursive: true });
         await writeFile(outputPath, rendered, 'utf8');
     }
 
     private async check(rendered: string, outputPath: string): Promise<void> {
-        const onDisk = existsSync(outputPath) ? await readFile(outputPath, 'utf8') : '';
-        if (onDisk !== rendered) throw new SeedcordError(SeedcordErrorCode.CliCodegenOutOfDate, [outputPath]);
+        if ((await this.onDisk(outputPath)) !== rendered) {
+            throw new SeedcordError(SeedcordErrorCode.CliCodegenOutOfDate, [outputPath]);
+        }
+    }
+
+    private async onDisk(outputPath: string): Promise<string> {
+        return existsSync(outputPath) ? readFile(outputPath, 'utf8') : '';
     }
 }

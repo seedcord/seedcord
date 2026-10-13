@@ -5,6 +5,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { setBotRoot } from '@seedcord/utils/node/internal';
 import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
 
+import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { seedcordDependents } from '#core/modules/seedcordDependents';
 
 import { devServerConfig, logsIgnore } from './devServerConfig';
@@ -19,6 +20,7 @@ export class ViteDevRuntime implements DevRuntime {
     private context: DevRuntimeContext | null = null;
     private viteServer: ViteDevServer | null = null;
     private moduleRunner: ModuleRunner | null = null;
+    private modules: RunnerModuleLoader | null = null;
     private eventHandler: DevEventHandler | null = null;
     private hmrPlugin: HmrPlugin | null = null;
 
@@ -52,6 +54,7 @@ export class ViteDevRuntime implements DevRuntime {
         this.viteServer = await createServer(config);
 
         this.moduleRunner = createServerModuleRunner(this.viteServer.environments.ssr);
+        this.modules = new RunnerModuleLoader(this.moduleRunner);
 
         hmrPlugin.on('event', this.emit.bind(this));
 
@@ -61,6 +64,16 @@ export class ViteDevRuntime implements DevRuntime {
 
     public refreshCommands(shouldRefresh: boolean): void {
         this.hmrPlugin?.sendRefreshCommands(shouldRefresh);
+    }
+
+    public async importModule<TModule = unknown>(path: string): Promise<TModule> {
+        if (!this.modules) {
+            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
+                path,
+                'ViteDevRuntime.start() must complete before importModule()'
+            ]);
+        }
+        return this.modules.importModule<TModule>(path);
     }
 
     public async loadEntry(): Promise<DevRuntimeLoadResult> {
@@ -101,6 +114,7 @@ export class ViteDevRuntime implements DevRuntime {
         }
 
         this.moduleRunner = null;
+        this.modules = null;
         this.hmrPlugin = null;
         this.context = null;
         this.eventHandler = null;

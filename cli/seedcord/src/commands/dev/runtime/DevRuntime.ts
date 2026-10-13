@@ -1,4 +1,5 @@
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
+import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { DevEventHandler } from './events';
 
 export interface DevRuntimeContext {
@@ -6,7 +7,7 @@ export interface DevRuntimeContext {
     readonly onEvent?: DevEventHandler;
 }
 
-export interface DevRuntime {
+export interface DevRuntime extends ModuleLoader {
     /** Called once before any other method. */
     start(context: DevRuntimeContext): Promise<void>;
 

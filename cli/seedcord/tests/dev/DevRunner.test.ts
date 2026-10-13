@@ -1,29 +1,82 @@
 import { join } from 'node:path';
 
+import { HostAugmentTarget, HostShutdown, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DevRunner } from '#commands/dev/DevRunner';
+import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
 
 import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
+import type { DevRuntime } from '#commands/dev/runtime/DevRuntime';
 import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
 import type { ProjectLoader } from '#core/config/ProjectLoader';
 
-// justified: these paths never touch the config loader
-function makeRunner(codegen: { run: ReturnType<typeof vi.fn> }, tunnel: TunnelRouter = fakeTunnel()): DevRunner {
+const readyBot = {
+    [SeedcordBrand]: true,
+    [HostVersion]: '1.2.3',
+    [HostAugmentTarget]: '@seedcord/gateway',
+    start: () => Promise.resolve(),
+    [HostStartup]: { abort: () => undefined },
+    [HostShutdown]: { run: () => Promise.resolve() }
+};
+
+const devConfig = {
+    root: process.cwd(),
+    configFile: join(process.cwd(), 'seedcord.config.ts'),
+    instance: join(process.cwd(), 'package.json'),
+    typecheck: { enabled: false },
+    idleAnimation: true
+};
+
+function readyRuntime(): DevRuntime {
+    return {
+        start: () => Promise.resolve(),
+        loadEntry: () => Promise.resolve({ module: { default: readyBot } }),
+        importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
+        dispose: () => Promise.resolve()
+    } as DevRuntime;
+}
+
+interface FakeCodegen {
+    writeFrom: ReturnType<typeof vi.fn>;
+}
+
+function fakeCodegen(writeFrom = vi.fn().mockResolvedValue({ outputPath: 'seedcord-gen.d.ts' })): FakeCodegen {
+    return { writeFrom };
+}
+
+// justified: the session reads only these config fields. writeFrom is all the runner calls on codegen.
+function makeRunner(codegen: FakeCodegen = fakeCodegen(), tunnel: TunnelRouter = fakeTunnel()): DevRunner {
+    const project = { config: devConfig, [Symbol.asyncDispose]: () => Promise.resolve() };
     return new DevRunner({
-        projectLoader: {} as unknown as ProjectLoader,
+        projectLoader: { open: () => Promise.resolve(project) } as unknown as ProjectLoader,
         store: new DevStore(),
         codegen: codegen as unknown as CodegenRunner,
         codegenLogger: silentLogger,
-        tunnel
+        tunnel,
+        runtime: readyRuntime
     });
 }
 
 // justified: the runner reads only route and stop off the router
 function fakeTunnel(overrides: Partial<TunnelRouter> = {}): TunnelRouter {
     return { route: () => undefined, stop: () => Promise.resolve(), ...overrides } as TunnelRouter;
+}
+
+// resolves once the startup write has gone out, with the run loop still going
+async function startedRunner(codegen: FakeCodegen): Promise<{ runner: DevRunner; stop: () => Promise<void> }> {
+    const runner = makeRunner(codegen);
+    const running = runner.run();
+    await vi.waitFor(() => expect(codegen.writeFrom).toHaveBeenCalledOnce());
+    return {
+        runner,
+        stop: async () => {
+            await runner.quit();
+            await running;
+        }
+    };
 }
 
 describe('DevRunner quit', () => {
@@ -34,7 +87,7 @@ describe('DevRunner quit', () => {
 
     it('tears the tunnel down', async () => {
         const stop = vi.fn().mockResolvedValue(undefined);
-        const runner = makeRunner({ run: vi.fn() }, fakeTunnel({ stop }));
+        const runner = makeRunner(fakeCodegen(), fakeTunnel({ stop }));
 
         await runner.quit();
 
@@ -45,7 +98,7 @@ describe('DevRunner quit', () => {
         vi.useFakeTimers();
         const order: string[] = [];
         const runner = makeRunner(
-            { run: vi.fn() },
+            fakeCodegen(),
             fakeTunnel({
                 stop: () =>
                     new Promise<void>((resolve) => {
@@ -67,7 +120,7 @@ describe('DevRunner quit', () => {
 
     it('resolves when the teardown outlasts its budget', async () => {
         vi.useFakeTimers();
-        const runner = makeRunner({ run: vi.fn() }, fakeTunnel({ stop: () => new Promise(() => undefined) }));
+        const runner = makeRunner(fakeCodegen(), fakeTunnel({ stop: () => new Promise(() => undefined) }));
 
         const quitting = runner.quit();
         await vi.advanceTimersByTimeAsync(3000);
@@ -76,50 +129,70 @@ describe('DevRunner quit', () => {
     });
 });
 
-describe('DevRunner command refresh', () => {
-    it('regenerates the registry when a refresh is accepted', async () => {
-        const codegen = { run: vi.fn().mockResolvedValue(undefined) };
-        makeRunner(codegen).refreshCommands(true);
-        await vi.waitFor(() => {
-            expect(codegen.run).toHaveBeenCalledWith(false);
-        });
+describe('DevRunner codegen', () => {
+    it('writes the types from the running bot once it is ready', async () => {
+        const codegen = fakeCodegen();
+        const { stop } = await startedRunner(codegen);
+
+        expect(codegen.writeFrom).toHaveBeenCalledWith(expect.objectContaining({ instance: readyBot }));
+        await stop();
     });
 
-    it('does not regenerate when a refresh is declined', () => {
-        const codegen = { run: vi.fn().mockResolvedValue(undefined) };
-        makeRunner(codegen).refreshCommands(false);
-        expect(codegen.run).not.toHaveBeenCalled();
+    it('regenerates when a refresh is accepted', async () => {
+        const codegen = fakeCodegen();
+        const { runner, stop } = await startedRunner(codegen);
+
+        runner.refreshCommands(true);
+
+        await vi.waitFor(() => expect(codegen.writeFrom).toHaveBeenCalledTimes(2));
+        await stop();
     });
 
-    it('swallows a regeneration failure so the dev session keeps running', async () => {
-        const codegen = { run: vi.fn().mockRejectedValue(new Error('duplicate route')) };
-        makeRunner(codegen).refreshCommands(true);
-        await vi.waitFor(() => {
-            expect(codegen.run).toHaveBeenCalledWith(false);
-        });
+    it('does not regenerate when a refresh is declined', async () => {
+        const codegen = fakeCodegen();
+        const { runner, stop } = await startedRunner(codegen);
+
+        runner.refreshCommands(false);
+
+        expect(codegen.writeFrom).toHaveBeenCalledOnce();
+        await stop();
+    });
+
+    it('keeps the session running when a regeneration fails', async () => {
+        const codegen = fakeCodegen(vi.fn().mockRejectedValue(new Error('duplicate route')));
+        const runner = makeRunner(codegen);
+        const running = runner.run();
+
+        await vi.waitFor(() => expect(codegen.writeFrom).toHaveBeenCalledOnce());
+        runner.refreshCommands(true);
+        await vi.waitFor(() => expect(codegen.writeFrom).toHaveBeenCalledTimes(2));
+
+        await runner.quit();
+        await running;
     });
 
     it('skips a second regeneration while one is in flight, then allows the next', async () => {
         let release: () => void = () => undefined;
-        const codegen = {
-            run: vi.fn(() => {
+        const codegen = fakeCodegen(
+            vi.fn(() => {
                 // eslint-disable-next-line @typescript-eslint/no-invalid-void-type -- void is valid here as a Promise resolution type
                 const { promise, resolve } = Promise.withResolvers<void>();
                 release = resolve;
                 return promise;
             })
-        };
-        const runner = makeRunner(codegen);
+        );
+        const { runner, stop } = await startedRunner(codegen);
 
         runner.refreshCommands(true);
-        runner.refreshCommands(true);
-        expect(codegen.run).toHaveBeenCalledTimes(1);
+        expect(codegen.writeFrom).toHaveBeenCalledOnce();
 
         release();
-        await vi.waitFor(() => expect(codegen.run).toHaveBeenCalledTimes(1));
-
-        runner.refreshCommands(true);
-        expect(codegen.run).toHaveBeenCalledTimes(2);
+        await vi.waitFor(() => {
+            runner.refreshCommands(true);
+            expect(codegen.writeFrom).toHaveBeenCalledTimes(2);
+        });
+        release();
+        await stop();
     });
 });
 
@@ -154,13 +227,14 @@ describe('DevRunner run', () => {
             )
         };
         const store = new DevStore();
-        // justified: the session reads only these config fields. codegen runs only on a refresh.
+        // justified: the session reads only these config fields. a session that never starts never calls codegen.
         const runner = new DevRunner({
             projectLoader: projectLoader as unknown as ProjectLoader,
             store,
-            codegen: { run: vi.fn() } as unknown as CodegenRunner,
+            codegen: fakeCodegen() as unknown as CodegenRunner,
             codegenLogger: silentLogger,
-            tunnel: fakeTunnel()
+            tunnel: fakeTunnel(),
+            runtime: () => new ViteDevRuntime()
         });
 
         const running = runner.run();
