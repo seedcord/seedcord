@@ -13,7 +13,9 @@ import { ED25519_KEY_BYTES, FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { silentLogger } from '#tests/silentLogger';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
+import type { DevEventHandler } from '#commands/dev/runtime/events';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
+import type { LogRecord } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 function edgeConfig(projectDir: string): ResolvedSeedcordConfig {
@@ -50,11 +52,14 @@ async function writeDevVars(projectDir: string, vars: Record<string, string>): P
     await writeFile(join(projectDir, '.dev.vars'), lines.join(''));
 }
 
-async function startedRuntime(projectDir: string): Promise<{ runtime: EdgeDevRuntime; instance: SeedcordInstance }> {
+async function startedRuntime(
+    projectDir: string,
+    onEvent?: DevEventHandler
+): Promise<{ runtime: EdgeDevRuntime; instance: SeedcordInstance }> {
     const config = edgeConfig(projectDir);
     const runtime = new EdgeDevRuntime({ kind: 'edge', wranglerConfig: join(projectDir, 'wrangler.jsonc') });
     onTestFinished(() => runtime.dispose());
-    await runtime.start({ config });
+    await runtime.start(onEvent ? { config, onEvent } : { config });
     const { module } = await runtime.loadEntry();
     return { runtime, instance: toSeedcordInstance(await resolveDefaultExport(module), config.instance) };
 }
@@ -66,6 +71,33 @@ describe('EdgeDevRuntime', () => {
         const { runtime, instance } = await startedRuntime(projectDir);
 
         await expect(runtime.startBot(instance)).resolves.not.toThrow();
+    }, 120_000);
+
+    it("reports the worker's logs", async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await writeDevVars(projectDir, liveVars);
+        const logs: LogRecord[] = [];
+        const { runtime, instance } = await startedRuntime(projectDir, (event) => {
+            if (event.type === 'log') logs.push(event.record);
+        });
+
+        await runtime.startBot(instance);
+
+        expect(logs.map((record) => record.message)).toContain('Coordinated startup completed successfully');
+    }, 120_000);
+
+    it("reports a console.log from the bot's own code", async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await writeDevVars(projectDir, liveVars);
+        await appendFile(join(projectDir, 'src/bot.ts'), "\nconsole.log('counter ready');\n");
+        const messages: string[] = [];
+        const { runtime, instance } = await startedRuntime(projectDir, (event) => {
+            if (event.type === 'log') messages.push(event.record.message);
+        });
+
+        await runtime.startBot(instance);
+
+        expect(messages).toContainEqual(expect.stringContaining('counter ready'));
     }, 120_000);
 
     it('rejects with the error the worker failed to start with', async () => {

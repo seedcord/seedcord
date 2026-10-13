@@ -1,6 +1,6 @@
 import { dirname } from 'node:path';
 
-import { fromWireError, wrapHot } from '@seedcord/core/internal';
+import { fromWireError, fromWireLog, wrapHot } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { setBotRoot } from '@seedcord/utils/node/internal';
@@ -16,6 +16,7 @@ import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
 
 import { logsIgnore } from './devServerConfig';
 import { loadEntry } from './loadEntry';
+import { workerLogger } from './workerLogger';
 
 import type { EdgeTarget } from '#core/config/detectTarget';
 import type { ImportCloudflare } from '#core/modules/cloudflarePlugin';
@@ -80,7 +81,7 @@ export class EdgeDevRuntime implements DevRuntime {
             mergeConfig(userCodeConfig(WORKERD_CONDITIONS), {
                 root: viteRoot,
                 configFile: false,
-                logLevel: 'error',
+                customLogger: workerLogger((record) => this.emit(context, { type: 'log', record })),
                 clearScreen: false,
                 server: { middlewareMode: true, watch: { ignored: [logsIgnore(config.root)] } },
                 ssr: { noExternal: seedcordDependents(configDir) },
@@ -109,6 +110,10 @@ export class EdgeDevRuntime implements DevRuntime {
         );
         const modules = await modulesReady.promise;
         this.started = { context, server, modules };
+        // the worker already filtered by its own level
+        this.workerChannel().on('seedcord:log', (record) => {
+            this.emit(context, { type: 'log', record: fromWireLog(record) });
+        });
 
         this.emit(context, { type: 'module-loaded', path: config.root });
         this.emit(context, { type: 'ready' });
