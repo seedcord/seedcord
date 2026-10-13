@@ -323,6 +323,8 @@ export enum SeedcordErrorCode {
     CliEdgeCommandsUnreadable = 3150,
     /** An edge build found commands in code that have no deployed id on Discord. */
     CliEdgeCommandsNotDeployed = 3151,
+    /** Edge dev could not listen on the wrangler config's `dev.port`, because something else already does. */
+    CliEdgeDevPortInUse = 3152,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

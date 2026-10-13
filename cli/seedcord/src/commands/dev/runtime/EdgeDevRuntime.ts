@@ -7,7 +7,13 @@ import { setBotRoot } from '@seedcord/utils/node/internal';
 import { createServer, createServerModuleRunner } from 'vite';
 
 import { functionExportsOf, WORKER_ENTRY_ID, workerEntry } from '#commands/build/builder/workerEntry';
-import { importCloudflare, loadCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
+import {
+    importCloudflare,
+    importWrangler,
+    loadCloudflare,
+    readDevPort,
+    WORKER_ENVIRONMENT
+} from '#core/modules/cloudflarePlugin';
 import { edgeStandIns } from '#core/modules/edgeStandIns';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { seedcordDependents } from '#core/modules/seedcordDependents';
@@ -15,11 +21,12 @@ import { mergeViteConfig, userCodeConfig, WORKERD_CONDITIONS } from '#core/modul
 import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
 
 import { logsIgnore } from './devServerConfig';
+import { listenForInteractions } from './interactionsEndpoint';
 import { loadEntry } from './loadEntry';
 import { workerLogger } from './workerLogger';
 
 import type { EdgeTarget } from '#core/config/detectTarget';
-import type { ImportCloudflare } from '#core/modules/cloudflarePlugin';
+import type { ImportCloudflare, ImportWrangler } from '#core/modules/cloudflarePlugin';
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
 import type { DevEvent } from './events';
 import type {
@@ -28,12 +35,19 @@ import type {
     SeedcordFrameworkEvents,
     SeedcordInstance
 } from '@seedcord/types/internal';
+import type { Server as HttpServer } from 'node:http';
 import type { Plugin, ViteDevServer } from 'vite';
 
 interface Started {
     readonly context: DevRuntimeContext;
     readonly server: ViteDevServer;
     readonly modules: RunnerModuleLoader;
+    readonly endpoint: HttpServer;
+}
+
+interface EdgeDevDeps {
+    importCloudflare: ImportCloudflare;
+    importWrangler: ImportWrangler;
 }
 
 // workerd's own cloudflare:workers and envapt binding stay in the worker environment
@@ -59,10 +73,14 @@ export class EdgeDevRuntime implements DevRuntime {
     private started?: Started | undefined;
     private settleStart?: (() => void) | undefined;
 
+    private readonly deps: EdgeDevDeps;
+
     public constructor(
         private readonly target: EdgeTarget,
-        private readonly importPlugin: ImportCloudflare = importCloudflare
-    ) {}
+        deps: Partial<EdgeDevDeps> = {}
+    ) {
+        this.deps = { importCloudflare, importWrangler, ...deps };
+    }
 
     public async start(context: DevRuntimeContext): Promise<void> {
         const { config } = context;
@@ -72,9 +90,10 @@ export class EdgeDevRuntime implements DevRuntime {
         setBotRoot(config.root);
         this.emit(context, { type: 'module-loading', path: config.root });
 
-        const [folders, cloudflare] = await Promise.all([
+        const [folders, cloudflare, port] = await Promise.all([
             files.foldersIncludingEmpty(),
-            loadCloudflare(viteRoot, this.importPlugin)
+            loadCloudflare(viteRoot, this.deps.importCloudflare),
+            readDevPort(this.target.wranglerConfig, this.deps.importWrangler)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
         const server = await createServer(
@@ -109,7 +128,14 @@ export class EdgeDevRuntime implements DevRuntime {
             })
         );
         const modules = await modulesReady.promise;
-        this.started = { context, server, modules };
+        const endpoint = await listenForInteractions(server.middlewares, port, this.target.wranglerConfig).catch(
+            async (error: unknown) => {
+                // workerd is already running
+                await server.close();
+                throw error;
+            }
+        );
+        this.started = { context, server, modules, endpoint };
         // the worker already filtered by its own level
         this.workerChannel().on('seedcord:log', (record) => {
             this.emit(context, { type: 'log', record: fromWireLog(record) });
@@ -117,6 +143,7 @@ export class EdgeDevRuntime implements DevRuntime {
 
         this.emit(context, { type: 'module-loaded', path: config.root });
         this.emit(context, { type: 'ready' });
+        this.emit(context, { type: 'server-listening', port });
     }
 
     public importModule<TModule = unknown>(path: string): Promise<TModule> {
@@ -153,7 +180,10 @@ export class EdgeDevRuntime implements DevRuntime {
     private async close(): Promise<void> {
         const { started } = this;
         this.started = undefined;
-        await started?.server.close();
+        if (!started) return;
+        started.endpoint.closeAllConnections();
+        await new Promise((resolve) => started.endpoint.close(resolve));
+        await started.server.close();
     }
 
     private workerChannel(): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> {
@@ -172,7 +202,7 @@ export class EdgeDevRuntime implements DevRuntime {
         if (!this.started) {
             throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
                 'runtime',
-                'WorkerDevRuntime.start() must complete first'
+                'EdgeDevRuntime.start() must complete first'
             ]);
         }
         return this.started;

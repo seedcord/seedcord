@@ -1,4 +1,6 @@
+import { once } from 'node:events';
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { createServer as createNetServer } from 'node:net';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -13,10 +15,11 @@ import { ED25519_KEY_BYTES, FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { silentLogger } from '#tests/silentLogger';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
-import type { DevEventHandler } from '#commands/dev/runtime/events';
+import type { DevEvent, DevEventHandler } from '#commands/dev/runtime/events';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { LogRecord } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
+import type { AddressInfo } from 'node:net';
 
 function edgeConfig(projectDir: string): ResolvedSeedcordConfig {
     // justified: the runtime reads only these fields
@@ -44,6 +47,21 @@ export class Wave extends BuilderComponent<'command'> {
 
 async function editFile(path: string, edit: (text: string) => string): Promise<void> {
     await writeFile(path, edit(await readFile(path, 'utf8')));
+}
+
+async function freePort(): Promise<number> {
+    const probe = createNetServer().listen(0);
+    await once(probe, 'listening');
+    // justified: address() is AddressInfo once a TCP server is listening
+    const { port } = probe.address() as AddressInfo;
+    probe.close();
+    return port;
+}
+
+async function setDevPort(projectDir: string, port: number): Promise<void> {
+    await editFile(join(projectDir, 'wrangler.jsonc'), (text) =>
+        text.replace('"compatibility_date"', `"dev": { "port": ${String(port)} },\n    "compatibility_date"`)
+    );
 }
 
 // wrangler reads .dev.vars beside the wrangler config into the worker's env
@@ -98,6 +116,47 @@ describe('EdgeDevRuntime', () => {
         await runtime.startBot(instance);
 
         expect(messages).toContainEqual(expect.stringContaining('counter ready'));
+    }, 120_000);
+
+    it("listens on the wrangler config's dev.port and reports it", async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await writeDevVars(projectDir, liveVars);
+        const port = await freePort();
+        await setDevPort(projectDir, port);
+        const events: DevEvent[] = [];
+        const { runtime, instance } = await startedRuntime(projectDir, (event) => events.push(event));
+        await runtime.startBot(instance);
+
+        const unsigned = await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
+
+        expect(events).toContainEqual({ type: 'server-listening', port });
+        // the bot answers an unsigned interaction with 401
+        expect(unsigned.status).toBe(401);
+    }, 120_000);
+
+    it('throws CliEdgeDevPortInUse when something already listens on dev.port', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await writeDevVars(projectDir, liveVars);
+        const port = await freePort();
+        await setDevPort(projectDir, port);
+        const holder = createNetServer().listen(port);
+        await once(holder, 'listening');
+        onTestFinished(() => void holder.close());
+
+        await expect(startedRuntime(projectDir)).rejects.toHaveProperty('code', SeedcordErrorCode.CliEdgeDevPortInUse);
+    }, 120_000);
+
+    it("keeps the bot's source off the endpoint", async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await writeDevVars(projectDir, liveVars);
+        const port = await freePort();
+        await setDevPort(projectDir, port);
+        await startedRuntime(projectDir);
+
+        const source = await fetch(`http://localhost:${port}/src/bot.ts`);
+
+        expect(source.status).toBe(405);
+        expect(await source.text()).not.toContain('Seedcord');
     }, 120_000);
 
     it('rejects with the error the worker failed to start with', async () => {

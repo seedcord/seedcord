@@ -254,6 +254,8 @@ const messages = {
         `Could not read the commands deployed ${where} (${reason}). Check ${paint.bold('DISCORD_BOT_TOKEN')}, and that the bot is in every guild a command in your code targets.`,
     [SeedcordErrorCode.CliEdgeCommandsNotDeployed]: (count: number, commands: string) =>
         `${count} command${count === 1 ? ' is' : 's are'} in your code with no deployed id on Discord, so the build cannot link ${count === 1 ? 'it' : 'them'}. Deploy with ${paint.bold('seedcord commands')}, then build again.\n${commands}`,
+    [SeedcordErrorCode.CliEdgeDevPortInUse]: (port: number, wranglerConfig: string) =>
+        `Something else is listening on port ${port}, where edge dev answers Discord. Stop it, or set ${paint.bold('dev.port')} in ${paint.path(wranglerConfig)} to a free port.`,
     [SeedcordErrorCode.CliBuildFolderProblems]: (count: number) =>
         `${count} folders in the bot config need fixing before ${paint.bold('seedcord build')} can bundle the bot. Each one is listed below.`,
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
