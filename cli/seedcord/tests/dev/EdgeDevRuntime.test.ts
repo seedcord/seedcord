@@ -122,6 +122,15 @@ async function writeDevVars(projectDir: string, vars: Record<string, string>): P
     await writeFile(join(projectDir, '.dev.vars'), lines.join(''));
 }
 
+// two edge dev runs on 8787 at once fail with EADDRINUSE
+async function edgeProject(vars: Record<string, string> = liveVars): Promise<{ projectDir: string; port: number }> {
+    const projectDir = await copyEdgeBotForTest();
+    await writeDevVars(projectDir, vars);
+    const port = await freePort();
+    await setDevPort(projectDir, port);
+    return { projectDir, port };
+}
+
 async function startedRuntime(
     projectDir: string,
     onEvent?: DevEventHandler
@@ -136,16 +145,14 @@ async function startedRuntime(
 
 describe('EdgeDevRuntime', () => {
     it('starts the bot in workerd when the session asks', async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeDevVars(projectDir, liveVars);
+        const { projectDir } = await edgeProject();
         const { runtime, instance } = await startedRuntime(projectDir);
 
         await expect(runtime.startBot(instance)).resolves.not.toThrow();
     }, 120_000);
 
     it("reports the worker's logs", async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeDevVars(projectDir, liveVars);
+        const { projectDir } = await edgeProject();
         const logs: LogRecord[] = [];
         const { runtime, instance } = await startedRuntime(projectDir, (event) => {
             if (event.type === 'log') logs.push(event.record);
@@ -157,8 +164,7 @@ describe('EdgeDevRuntime', () => {
     }, 120_000);
 
     it("reports a console.log from the bot's own code", async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeDevVars(projectDir, liveVars);
+        const { projectDir } = await edgeProject();
         await appendFile(join(projectDir, 'src/bot.ts'), "\nconsole.log('counter ready');\n");
         const messages: string[] = [];
         const { runtime, instance } = await startedRuntime(projectDir, (event) => {
@@ -173,10 +179,7 @@ describe('EdgeDevRuntime', () => {
     it.each(['.dev.vars', '.env', 'wrangler.jsonc'])(
         'reports a restart is required when %s changes, and keeps the bot answering',
         async (file) => {
-            const projectDir = await copyEdgeBotForTest();
-            await writeDevVars(projectDir, liveVars);
-            const port = await freePort();
-            await setDevPort(projectDir, port);
+            const { projectDir, port } = await edgeProject();
             const events: DevEvent[] = [];
             const { runtime, instance } = await startedRuntime(projectDir, (event) => events.push(event));
             await runtime.startBot(instance);
@@ -193,10 +196,7 @@ describe('EdgeDevRuntime', () => {
     );
 
     it("listens on the wrangler config's dev.port and reports it", async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeDevVars(projectDir, liveVars);
-        const port = await freePort();
-        await setDevPort(projectDir, port);
+        const { projectDir, port } = await edgeProject();
         const events: DevEvent[] = [];
         const { runtime, instance } = await startedRuntime(projectDir, (event) => events.push(event));
         await runtime.startBot(instance);
@@ -209,10 +209,7 @@ describe('EdgeDevRuntime', () => {
     }, 120_000);
 
     it('throws CliEdgeDevPortInUse when something already listens on dev.port', async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeDevVars(projectDir, liveVars);
-        const port = await freePort();
-        await setDevPort(projectDir, port);
+        const { projectDir, port } = await edgeProject();
         await using holder = createNetServer().listen(port);
         await once(holder, 'listening');
 
@@ -220,10 +217,7 @@ describe('EdgeDevRuntime', () => {
     }, 120_000);
 
     it("keeps the bot's source off the endpoint", async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeDevVars(projectDir, liveVars);
-        const port = await freePort();
-        await setDevPort(projectDir, port);
+        const { projectDir, port } = await edgeProject();
         await startedRuntime(projectDir);
 
         const source = await fetch(`http://localhost:${port}/src/bot.ts`);
@@ -233,11 +227,9 @@ describe('EdgeDevRuntime', () => {
     }, 120_000);
 
     it('runs the saved version of a handler in the worker', async () => {
-        const projectDir = await copyEdgeBotForTest();
+        const { projectDir, port } = await edgeProject();
         const { publicKey, sign } = await writeSigningEnv(projectDir);
         await writeDevVars(projectDir, { DISCORD_BOT_TOKEN: FAKE_TOKEN, DISCORD_PUBLIC_KEY: publicKey });
-        const port = await freePort();
-        await setDevPort(projectDir, port);
         const handler = join(projectDir, 'src/handlers/Wave.ts');
         await writeFile(handler, waveHandler('waved v1'));
         const messages: string[] = [];
@@ -262,8 +254,7 @@ describe('EdgeDevRuntime', () => {
     }, 120_000);
 
     it('prompts for a saved command and deploys it once the session says so', async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeDevVars(projectDir, liveVars);
+        const { projectDir } = await edgeProject();
         const discord = await fakeDiscordApi();
         await editFile(join(projectDir, 'src/bot.ts'), (text) =>
             text
@@ -292,16 +283,14 @@ describe('EdgeDevRuntime', () => {
     }, 120_000);
 
     it('rejects with the error the worker failed to start with', async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeDevVars(projectDir, { DISCORD_PUBLIC_KEY: 'ab'.repeat(ED25519_KEY_BYTES) });
+        const { projectDir } = await edgeProject({ DISCORD_PUBLIC_KEY: 'ab'.repeat(ED25519_KEY_BYTES) });
         const { runtime, instance } = await startedRuntime(projectDir);
 
         await expect(runtime.startBot(instance)).rejects.toHaveProperty('code', SeedcordErrorCode.ConfigMissingEnv);
     }, 120_000);
 
     it('settles a start that is still running when the session stops', async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeDevVars(projectDir, liveVars);
+        const { projectDir } = await edgeProject();
         const { runtime, instance } = await startedRuntime(projectDir);
 
         const starting = runtime.startBot(instance);
@@ -311,8 +300,7 @@ describe('EdgeDevRuntime', () => {
     }, 120_000);
 
     it('starts a fresh worker for the next session after a stop', async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeDevVars(projectDir, liveVars);
+        const { projectDir } = await edgeProject();
         const first = await startedRuntime(projectDir);
         await first.runtime.startBot(first.instance);
         await first.runtime.stopBot();
@@ -324,8 +312,7 @@ describe('EdgeDevRuntime', () => {
     }, 120_000);
 
     it('gives codegen a node copy of the bot that scans its commands', async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeDevVars(projectDir, liveVars);
+        const { projectDir } = await edgeProject();
         await editFile(join(projectDir, 'src/bot.ts'), (text) =>
             text.replace('commands: { path: null }', "commands: { path: './commands' }")
         );
@@ -344,8 +331,7 @@ describe('EdgeDevRuntime', () => {
     }, 120_000);
 
     it('gives codegen the saved version of a file a command imports', async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeDevVars(projectDir, liveVars);
+        const { projectDir } = await edgeProject();
         await editFile(join(projectDir, 'src/bot.ts'), (text) =>
             text.replace('commands: { path: null }', "commands: { path: './commands' }")
         );
@@ -373,8 +359,7 @@ describe('EdgeDevRuntime', () => {
     }, 120_000);
 
     it('exports the durable object classes bot.ts exports', async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await writeDevVars(projectDir, liveVars);
+        const { projectDir } = await edgeProject();
         await appendFile(
             join(projectDir, 'src/bot.ts'),
             "\nimport { DurableObject } from 'cloudflare:workers';\nexport class Counter extends DurableObject {}\n"
