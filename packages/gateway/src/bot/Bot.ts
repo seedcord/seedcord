@@ -48,7 +48,7 @@ export class Bot implements HmrAware {
     /** @internal */
     readonly [loggerSlot]: Logger = this.#logger;
     #isInitialized = false;
-    readonly #loggedIn = Promise.withResolvers<boolean>();
+    readonly #readyToDeploy = Promise.withResolvers<boolean>();
 
     readonly #intents: BitFieldResolvable<GatewayIntentsString, number>;
     readonly #client: Client;
@@ -142,7 +142,7 @@ export class Bot implements HmrAware {
             return;
         }
         this.#isInitialized = true;
-        signal.addEventListener('abort', () => this.#loggedIn.resolve(false), { once: true });
+        signal.addEventListener('abort', () => this.#readyToDeploy.resolve(false), { once: true });
 
         try {
             const token = this.botToken;
@@ -151,18 +151,17 @@ export class Bot implements HmrAware {
             if (this.#events) await this.#events.init();
 
             await this.#login(token);
+            await this.#emojiInjector.init();
         } catch (error) {
-            this.#loggedIn.resolve(false);
+            this.#readyToDeploy.resolve(false);
             throw error;
         }
-        this.#loggedIn.resolve(true);
-
-        await this.#emojiInjector.init();
+        this.#readyToDeploy.resolve(true);
     }
 
     async #deployCommands(registry: CommandRegistry, signal: AbortSignal): Promise<void> {
-        // bot-initialization reports a failed login
-        if (!(await this.#loggedIn.promise)) return;
+        // bot-initialization reports why it failed
+        if (!(await this.#readyToDeploy.promise)) return;
 
         await registry.init();
         assertGuildsIntent(this.#intents, registry.allCommands());

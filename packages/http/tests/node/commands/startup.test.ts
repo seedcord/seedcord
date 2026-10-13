@@ -13,6 +13,7 @@ import { bindSignedEnv, serverConfig } from '#tests/helpers/nodeHost';
 import type { HttpServerConfig } from '#src/interfaces/Config';
 
 const COMMANDS_DIR = path.resolve(__dirname, './fixtures');
+const EMOJI_COMMANDS_DIR = path.resolve(__dirname, './emoji-fixtures');
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 
 // justified: the generated Commands map is empty in tests, so entries read through a plain record
@@ -140,6 +141,21 @@ describe('command deploy during http startup', () => {
         } finally {
             vi.useRealTimers();
         }
+    });
+
+    it('builds the commands after the emojis load', async () => {
+        // a cached module keeps the import well inside the 100ms emoji fetch
+        await import('./emoji-fixtures/Wave');
+        const base = config(EMOJI_COMMANDS_DIR);
+        await using host = new Seedcord({ ...base, bot: { ...base.bot, emojis: { Wave: 'wave' } } });
+        const get = vi.fn(async (route: string) => {
+            if (route !== Routes.applicationEmojis(APP_ID)) return {};
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            return { items: [{ name: 'wave', id: '111' }] };
+        });
+        Object.assign(host.rest, { get, put: vi.fn().mockResolvedValue([]) });
+
+        await expect(host.start()).resolves.toBe(host);
     });
 
     it('touches no command route when no commands path is configured', async () => {

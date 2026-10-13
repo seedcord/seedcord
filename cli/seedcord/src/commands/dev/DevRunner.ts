@@ -37,6 +37,7 @@ export class DevRunner {
     private shouldQuit = false;
     private quitting?: Promise<void>;
     private isDisconnected = false;
+    private hasPendingRestart = false;
     private isRunning = false;
     private isWritingTypes = false;
     private hasQueuedWrite = false;
@@ -99,9 +100,11 @@ export class DevRunner {
         resetChannelColors();
         this.deps.store.setPhase('starting');
         this.deps.store.setBusy(true);
+        this.hasPendingRestart = false;
         const config = await this.readConfig();
-        // quit() and disconnect() had no session to stop while the config loaded
-        if (this.shouldQuit || this.isDisconnected) return;
+        // a key pressed during the config load had no session to stop
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- restart() sets it during the awaited load
+        if (this.shouldQuit || this.isDisconnected || this.hasPendingRestart) return;
         profileMark('config');
         this.deps.store.setIdleAnimation(config.idleAnimation);
         this.currentSession = new DevSession(config, this.deps.runtime(), this.deps.store, (event) => {
@@ -151,6 +154,7 @@ export class DevRunner {
 
     public async restart(): Promise<void> {
         this.isDisconnected = false;
+        this.hasPendingRestart = true;
         await this.currentSession?.stop();
         this.signalResolve?.();
     }

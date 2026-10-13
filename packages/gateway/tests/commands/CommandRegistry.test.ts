@@ -2,7 +2,7 @@ import { Commands } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostStartup, HostVersion } from '@seedcord/types/internal';
 import { setBotRoot } from '@seedcord/utils/node/internal';
-import { ApplicationCommandType, Events, GatewayIntentBits } from 'discord.js';
+import { ApplicationCommandType, Collection, Events, GatewayIntentBits } from 'discord.js';
 import { type Mock, describe, expect, afterEach, vi } from 'vitest';
 
 import { commandRegistryOf } from '#bot/Bot';
@@ -289,6 +289,43 @@ describe('CommandRegistry Integration', () => {
         await seedcord.start();
 
         expect(seedcord.reader.mention).toBe('</ping:42>');
+    });
+
+    it('builds the commands after the emojis load', async ({ testEnv }) => {
+        const commandFile = await testEnv.createFile(
+            'commands/WaveCommand.ts',
+            `
+            import { BuilderComponent, Emojis, RegisterCommand } from '${seedcordPath}';
+
+            @RegisterCommand('global')
+            export class WaveCommand extends BuilderComponent<'command'> {
+                constructor() {
+                    super('command');
+                    this.instance.setName('wave').setDescription(Emojis.Wave.name);
+                }
+            }
+            `
+        );
+        // a cached module keeps the import well inside the 100ms emoji fetch
+        await import(commandFile);
+        const config = testConfig({ commands: testEnv.resolvePath('commands'), healthCheck: false });
+        config.bot.clientOptions = { intents: [GatewayIntentBits.Guilds] };
+        config.bot.emojis = { Wave: 'wave' };
+        await using seedcord = new Seedcord(config);
+        vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');
+        const client = seedcord.bot.client as unknown as {
+            once: Mock;
+            application: { emojis: { fetch: Mock; cache: Collection<string, { id: string; name: string }> } };
+        };
+        client.once.mockImplementation((event: Events, onReady: () => void) => {
+            if (event === Events.ClientReady) onReady();
+        });
+        client.application.emojis = {
+            fetch: vi.fn(() => new Promise((resolve) => setTimeout(resolve, 100))),
+            cache: new Collection([['1', { id: '1', name: 'wave' }]])
+        };
+
+        await expect(seedcord.start()).resolves.toBe(seedcord);
     });
 
     it('holds an edited command for the refresh prompt when the commands path is relative to root', async ({

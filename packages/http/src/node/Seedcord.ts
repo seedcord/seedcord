@@ -65,6 +65,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     readonly #endpoint: NodeEndpoint;
     readonly #commandRegistry?: CommandRegistry;
     readonly #emojiInjector = new EmojiInjector(this);
+    readonly #emojisLoaded = Promise.withResolvers<boolean>();
     readonly #hmrManager: HmrManager;
     readonly #logger = new Logger('Server', { channel: 'bot' });
 
@@ -164,7 +165,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         this.startup.addTask(StartupPhase.Login, 'interactions-engine', async () => {
             this.#service.prepareEngine(await publicKeyOf(this.rest));
         });
-        this.startup.addTask(StartupPhase.Login, 'emoji-injection', () => this.#emojiInjector.init());
+        this.startup.addTask(StartupPhase.Login, 'emoji-injection', (signal) => this.#injectEmojis(signal));
 
         const commandRegistry = this.#commandRegistry;
         if (commandRegistry) {
@@ -173,6 +174,8 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
                 StartupPhase.Login,
                 'command-deploy',
                 async (signal) => {
+                    // emoji-injection reports why it failed
+                    if (!(await this.#emojisLoaded.promise)) return;
                     await commandRegistry.init();
                     await commandRegistry.setCommands(signal);
                     interactions?.warnUnhandledRoutes(commandRegistry.routeLeaves());
@@ -190,6 +193,18 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         if (!Envapter.isTest) {
             this.startup.addTask(StartupPhase.Ready, 'identity', () => this.#fetchUsername());
         }
+    }
+
+    // command constructors can read Emojis
+    async #injectEmojis(signal: AbortSignal): Promise<void> {
+        signal.addEventListener('abort', () => this.#emojisLoaded.resolve(false), { once: true });
+        try {
+            await this.#emojiInjector.init();
+        } catch (error) {
+            this.#emojisLoaded.resolve(false);
+            throw error;
+        }
+        this.#emojisLoaded.resolve(true);
     }
 
     #registerShutdownTasks(): void {

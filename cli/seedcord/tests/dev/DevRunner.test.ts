@@ -145,6 +145,7 @@ interface SlowConfigRun {
     readonly store: DevStore;
     readonly running: Promise<void>;
     readonly start: Mock<() => Promise<void>>;
+    readonly openConfig: Mock;
     readonly configRequested: Promise<undefined>;
     readonly finishLoad: () => void;
 }
@@ -157,15 +158,14 @@ function runWithSlowConfig(): SlowConfigRun {
     const { promise: configLoaded, resolve: release } = Promise.withResolvers<undefined>();
     const project = { config: devConfig, [Symbol.asyncDispose]: () => Promise.resolve() };
     const store = new DevStore();
+    const openConfig = vi.fn(async () => {
+        markRequested(undefined);
+        await configLoaded;
+        return project;
+    });
     const runner = new DevRunner({
         // justified: the session reads only these config fields
-        projectLoader: {
-            open: async () => {
-                markRequested(undefined);
-                await configLoaded;
-                return project;
-            }
-        } as unknown as Pick<ProjectLoader, 'open'>,
+        projectLoader: { open: openConfig } as unknown as Pick<ProjectLoader, 'open'>,
         store,
         codegen: fakeCodegen(),
         codegenLogger: silentLogger,
@@ -173,7 +173,7 @@ function runWithSlowConfig(): SlowConfigRun {
         runtime: () => ({ ...readyRuntime(), loadEntry: () => Promise.resolve({ module: { default: bot } }) })
     });
     const running = runner.run();
-    return { runner, store, running, start, configRequested, finishLoad: () => release(undefined) };
+    return { runner, store, running, start, openConfig, configRequested, finishLoad: () => release(undefined) };
 }
 
 describe('DevRunner keys before a session exists', () => {
@@ -202,6 +202,21 @@ describe('DevRunner keys before a session exists', () => {
         await running;
 
         expect(start).not.toHaveBeenCalled();
+    });
+
+    it('reads the config again after r during the config load', async () => {
+        const { runner, running, start, openConfig, configRequested, finishLoad } = runWithSlowConfig();
+        onTestFinished(async () => {
+            await runner.quit();
+            await running;
+        });
+
+        await configRequested;
+        await runner.restart();
+        finishLoad();
+
+        await vi.waitFor(() => expect(start).toHaveBeenCalledOnce());
+        expect(openConfig).toHaveBeenCalledTimes(2);
     });
 });
 
