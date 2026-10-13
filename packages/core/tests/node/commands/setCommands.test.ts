@@ -114,6 +114,19 @@ describe('CommandRegistry.setCommands', () => {
         ]);
     });
 
+    it('stops waiting on discord once the deploy is aborted', async () => {
+        // @discordjs/rest's rate-limit sleep ignores the signal
+        const put = vi.fn(() => new Promise<never>(() => undefined));
+        const registry = registryWith(put);
+        registry.globalCommands.push(new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'));
+        const controller = new AbortController();
+
+        const deploying = registry.setCommands(controller.signal);
+        controller.abort();
+
+        await expect(deploying).rejects.toThrow(expect.objectContaining({ name: 'AbortError' }));
+    });
+
     it('publishes commandsDeployed with what discord returned', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
         const core = coreWith(put);

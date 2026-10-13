@@ -1,6 +1,6 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 import { CoordinatedStartup } from '#src/lifecycle/CoordinatedStartup';
 import { StartupPhase } from '#src/lifecycle/phases';
@@ -88,38 +88,6 @@ describe('CoordinatedStartup failure and guards', () => {
         await expect(startup.run()).rejects.toThrow();
 
         expect(taskSignal?.aborted).toBe(true);
-    });
-
-    it('stops waiting on a task that ignores its signal once startup is aborted', async () => {
-        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
-        try {
-            const startup = new CoordinatedStartup();
-            const { promise: taskStarted, resolve: markStarted } = Promise.withResolvers<undefined>();
-            startup.addTask(
-                StartupPhase.Configuration,
-                'sleeps',
-                () => {
-                    markStarted(undefined);
-                    // @discordjs/rest's rate-limit sleep ignores the signal too
-                    return new Promise<void>((resolve) => setTimeout(resolve, 60_000));
-                },
-                75_000
-            );
-            let finished = false;
-            const running = startup.run().then(() => {
-                finished = true;
-            });
-
-            await taskStarted;
-            startup.abort();
-            await vi.advanceTimersByTimeAsync(0);
-
-            expect(finished).toBe(true);
-            await vi.advanceTimersByTimeAsync(60_000);
-            await running;
-        } finally {
-            vi.useRealTimers();
-        }
     });
 
     it('aborts the signal of a running task when startup is aborted', async () => {

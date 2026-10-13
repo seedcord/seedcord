@@ -42,6 +42,17 @@ const MS_PER_SECOND = 1000;
 // 75s covers a full wait plus the request itself
 export const COMMAND_DEPLOY_TIMEOUT_MS = 75_000;
 
+// @discordjs/rest checks the signal before it sends a request. Its rate-limit sleep ignores it
+function unlessAborted<ResultT>(request: Promise<ResultT>, signal: AbortSignal | undefined): Promise<ResultT> {
+    if (!signal) return request;
+    return new Promise((resolve, reject) => {
+        const stop = (): void => reject(new DOMException('The command deploy was aborted', 'AbortError'));
+        if (signal.aborted) stop();
+        signal.addEventListener('abort', stop, { once: true });
+        void request.then(resolve, reject).finally(() => signal.removeEventListener('abort', stop));
+    });
+}
+
 /**
  * Scans the command directory, builds each command, and PUTs the global and guild scopes to Discord.
  *
@@ -283,7 +294,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         rest.on(RESTEvents.RateLimited, reportWait);
         try {
             // justified: the bulk-overwrite routes return the deployed command array
-            return (await rest.put(route, { body, signal })) as APIApplicationCommand[];
+            return (await unlessAborted(rest.put(route, { body, signal }), signal)) as APIApplicationCommand[];
         } finally {
             rest.off(RESTEvents.RateLimited, reportWait);
         }

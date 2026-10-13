@@ -11,16 +11,6 @@ import { withTimeout } from './withTimeout';
 
 import type { LifecycleTask } from './LifecycleTypes';
 
-// a task can ignore its signal, like @discordjs/rest sleeping out a rate limit
-function untilAborted(work: Promise<void>, run: AbortSignal): Promise<void> {
-    return new Promise((resolve, reject) => {
-        const stopWaiting = (): void => resolve();
-        if (run.aborted) stopWaiting();
-        run.addEventListener('abort', stopWaiting, { once: true });
-        void work.then(resolve, reject).finally(() => run.removeEventListener('abort', stopWaiting));
-    });
-}
-
 // base for the startup and shutdown coordinators, runs phase-ordered tasks off a per-phase map
 export abstract class CoordinatedLifecycle<TPhase extends number> {
     protected readonly logger: Logger;
@@ -98,8 +88,7 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         const stopTask = new AbortController();
         const signal = AbortSignal.any([stopTask.signal, this.#run.signal]);
         try {
-            await withTimeout(task.name, () => untilAborted(task.task(signal), this.#run.signal), task.timeout);
-            if (this.isAborted()) return;
+            await withTimeout(task.name, () => task.task(signal), task.timeout);
 
             this.logger.trace(
                 `${paint.italic('Completed')} task ${paint.sky.bold(task.name)} in phase ${paint.iris.bold(this.phaseEnum[phase])}`
