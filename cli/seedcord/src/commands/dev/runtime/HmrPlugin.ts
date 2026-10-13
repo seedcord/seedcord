@@ -38,14 +38,17 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly restartPatterns: Set<string>;
 
     private get hot(): NormalizedHotChannel | undefined {
-        return this.server?.environments.ssr.hot;
+        return this.server?.environments[this.botEnvironment]?.hot;
     }
 
     private get dev(): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> | undefined {
         return this.hot ? wrapHot<SeedcordCliEvents, SeedcordFrameworkEvents>(this.hot) : undefined;
     }
 
-    constructor(private readonly config: ResolvedSeedcordConfig) {
+    constructor(
+        private readonly config: ResolvedSeedcordConfig,
+        private readonly botEnvironment: string
+    ) {
         super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
         this.restartPatterns = new Set((config.hmr?.restart ?? []).map((pattern) => this.fromRoot(pattern)));
@@ -125,8 +128,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     private hotUpdate(environment: DevEnvironment, ctx: HotUpdateOptions): EnvironmentModuleNode[] {
         const { type, file, modules } = ctx;
-        // the bot's modules exist in the ssr environment
-        if (environment.name !== 'ssr' || this.isDebounced(file, type)) return [];
+        if (environment.name !== this.botEnvironment || this.isDebounced(file, type)) return [];
 
         if (this.isCriticalFile(file)) {
             this.reportRestartRequired(file);

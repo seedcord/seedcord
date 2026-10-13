@@ -21,6 +21,7 @@ import { mergeViteConfig, userCodeConfig, WORKERD_CONDITIONS } from '#core/modul
 import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
 
 import { logsIgnore } from './devServerConfig';
+import { HmrPlugin } from './HmrPlugin';
 import { listenForInteractions } from './interactionsEndpoint';
 import { loadEntry } from './loadEntry';
 import { workerLogger } from './workerLogger';
@@ -43,6 +44,7 @@ interface Started {
     readonly server: ViteDevServer;
     readonly modules: RunnerModuleLoader;
     readonly endpoint: HttpServer;
+    readonly hmr: HmrPlugin;
 }
 
 interface EdgeDevDeps {
@@ -96,6 +98,8 @@ export class EdgeDevRuntime implements DevRuntime {
             readDevPort(this.target.wranglerConfig, this.deps.importWrangler)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
+        const hmr = new HmrPlugin(config, WORKER_ENVIRONMENT);
+        hmr.on('event', (event) => this.emit(context, event));
         const server = await createServer(
             mergeViteConfig(userCodeConfig(WORKERD_CONDITIONS), {
                 root: viteRoot,
@@ -118,6 +122,7 @@ export class EdgeDevRuntime implements DevRuntime {
                     }),
                     inNodeOnly(edgeStandIns()),
                     nodeCopy(modulesReady.resolve),
+                    hmr.plugin,
                     cloudflare({
                         configPath: this.target.wranglerConfig,
                         config: { main: WORKER_ENTRY_ID },
@@ -135,7 +140,7 @@ export class EdgeDevRuntime implements DevRuntime {
                 throw error;
             }
         );
-        this.started = { context, server, modules, endpoint };
+        this.started = { context, server, modules, endpoint, hmr };
         // the worker already filtered by its own level
         this.workerChannel().on('seedcord:log', (record) => {
             this.emit(context, { type: 'log', record: fromWireLog(record) });
@@ -172,6 +177,10 @@ export class EdgeDevRuntime implements DevRuntime {
         await this.close();
     }
 
+    public refreshCommands(shouldRefresh: boolean): void {
+        this.require().hmr.sendRefreshCommands(shouldRefresh);
+    }
+
     public async dispose(): Promise<void> {
         await this.close();
         setBotRoot(undefined);
@@ -181,6 +190,7 @@ export class EdgeDevRuntime implements DevRuntime {
         const { started } = this;
         this.started = undefined;
         if (!started) return;
+        started.hmr.removeAllListeners('event');
         started.endpoint.closeAllConnections();
         await new Promise((resolve) => started.endpoint.close(resolve));
         await started.server.close();

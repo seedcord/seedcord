@@ -66,7 +66,7 @@ interface ConfiguredPlugin {
 }
 
 function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0]): ConfiguredPlugin {
-    const plugin = new HmrPlugin(config);
+    const plugin = new HmrPlugin(config, 'ssr');
     const listeners = new Map<string, (data: unknown) => void>();
     // justified: spy on the private `hot` getter
     const hotHost = plugin as unknown as { hot: { send: Mock; on: Mock } };
@@ -136,11 +136,11 @@ describe('HmrPlugin', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        hmrPlugin = new HmrPlugin(mockConfig);
+        hmrPlugin = new HmrPlugin(mockConfig, 'ssr');
     });
 
     it('carries the config rollback flag onto the hmr payload', () => {
-        const plugin = new HmrPlugin({ ...mockConfig, hmr: { rollback: false } });
+        const plugin = new HmrPlugin({ ...mockConfig, hmr: { rollback: false } }, 'ssr');
         const hotSend = vi.fn();
         // justified: spy on the private `hot` getter
         const hotHost = plugin as unknown as { hot: { send: typeof hotSend; on: ReturnType<typeof vi.fn> } };

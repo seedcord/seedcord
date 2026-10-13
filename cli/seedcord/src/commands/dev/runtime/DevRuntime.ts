@@ -27,7 +27,7 @@ export interface DevRuntime extends ModuleLoader {
      * Relays the user's response to a pending command-update prompt to the running instance.
      * @param shouldRefresh - `true` re-registers the changed commands. `false` dismisses the prompt without re-registering.
      */
-    refreshCommands?(shouldRefresh: boolean): void;
+    refreshCommands(shouldRefresh: boolean): void;
 }
 
 export interface DevRuntimeLoadResult<TModule = unknown> {

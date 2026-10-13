@@ -36,7 +36,7 @@ export class ServerDevRuntime implements DevRuntime {
 
         this.emit({ type: 'module-loading', path: projectRoot });
 
-        const hmrPlugin = new HmrPlugin(this.context.config);
+        const hmrPlugin = new HmrPlugin(this.context.config, 'ssr');
         this.hmrPlugin = hmrPlugin;
 
         const projectDir = dirname(this.context.config.configFile);

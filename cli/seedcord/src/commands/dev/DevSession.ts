@@ -108,7 +108,7 @@ export class DevSession {
     }
 
     public refreshCommands(shouldRefresh: boolean): void {
-        this.runtime.refreshCommands?.(shouldRefresh);
+        this.runtime.refreshCommands(shouldRefresh);
     }
 
     public loadedBot(): LoadedBot | undefined {
