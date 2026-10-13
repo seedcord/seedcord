@@ -7,6 +7,7 @@ import { CommandMetadataKey, isCommandClass } from '@seedcord/core/internal';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { isTsOrJsFile } from '@seedcord/utils/node';
+import { resolveFromRoot } from '@seedcord/utils/node/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
@@ -59,14 +60,15 @@ function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | Se
 export class CommandScanner {
     constructor(
         private readonly modules: ModuleLoader,
-        private readonly logger: ILogger
+        private readonly logger: ILogger,
+        private readonly root: string
     ) {}
 
-    public async scan(commandsDir: string): Promise<FoundCommand[]> {
+    public async scan(commandsPath: string): Promise<FoundCommand[]> {
         const commands: FoundCommand[] = [];
         const problems: unknown[] = [];
         try {
-            for await (const commandClass of this.walk(commandsDir, new Set(), true)) {
+            for await (const commandClass of this.walk(resolveFromRoot(this.root, commandsPath), new Set(), true)) {
                 const built = construct(commandClass);
                 if (isSeedcordError(built)) problems.push(built);
                 else if (built) commands.push(built);

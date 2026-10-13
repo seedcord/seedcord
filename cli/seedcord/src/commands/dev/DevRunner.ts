@@ -23,9 +23,9 @@ import type { ILogger } from '@seedcord/types';
 const TUNNEL_TEARDOWN_MS = 3000;
 
 export interface DevRunnerDeps {
-    readonly projectLoader: ProjectLoader;
+    readonly projectLoader: Pick<ProjectLoader, 'open'>;
     readonly store: DevStore;
-    readonly codegen: CodegenRunner;
+    readonly codegen: Pick<CodegenRunner, 'writeFrom'>;
     readonly codegenLogger: ILogger;
     readonly tunnel: TunnelRouter;
     readonly runtime: () => DevRuntime;
@@ -38,7 +38,7 @@ export class DevRunner {
     private quitting?: Promise<void>;
     private isDisconnected = false;
     private isRunning = false;
-    private isRegenerating = false;
+    private isWritingTypes = false;
 
     constructor(private readonly deps: DevRunnerDeps) {}
 
@@ -108,7 +108,7 @@ export class DevRunner {
         try {
             await this.currentSession.start(() => {
                 this.deps.store.setBusy(false);
-                void this.regenerateRegistry();
+                void this.writeTypes();
             });
         } finally {
             this.deps.store.setBusy(true);
@@ -162,23 +162,22 @@ export class DevRunner {
     }
 
     public refreshCommands(shouldRefresh: boolean): void {
-        if (shouldRefresh) void this.regenerateRegistry();
+        if (shouldRefresh) void this.writeTypes();
         this.currentSession?.refreshCommands(shouldRefresh);
     }
 
-    // regenerates so tsc picks up the new command option types
-    private async regenerateRegistry(): Promise<void> {
+    private async writeTypes(): Promise<void> {
         const bot = this.currentSession?.loadedBot();
-        if (!bot || this.isRegenerating) return;
-        this.isRegenerating = true;
+        if (!bot || this.isWritingTypes) return;
+        this.isWritingTypes = true;
         try {
-            const { outputPath } = await this.deps.codegen.writeFrom(bot);
-            this.deps.codegenLogger.info(`Augmentations written to ${paint.path(outputPath)}`);
+            const { outputPath, changed } = await this.deps.codegen.writeFrom(bot);
+            if (changed) this.deps.codegenLogger.info(`Augmentations written to ${paint.path(outputPath)}`);
         } catch (error: unknown) {
             // a codegen throw must not take the dev session down
             this.deps.codegenLogger.error('Command registry regeneration failed', error);
         } finally {
-            this.isRegenerating = false;
+            this.isWritingTypes = false;
         }
     }
 

@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
@@ -49,18 +48,9 @@ export class DevSession {
         });
         profileMark('vite');
 
-        // vite's missing-entry message changed across a minor and broke detection
-        if (!existsSync(this.config.instance)) {
-            throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [this.config.instance]);
-        }
-
-        try {
-            const { module } = await this.runtime.loadEntry();
-            profileMark('entry');
-            return module;
-        } catch (error: unknown) {
-            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, asError(error).message]);
-        }
+        const { module } = await this.runtime.loadEntry();
+        profileMark('entry');
+        return module;
     }
 
     private startTypecheck(): void {

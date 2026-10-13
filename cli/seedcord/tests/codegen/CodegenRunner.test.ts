@@ -192,7 +192,7 @@ describe('CodegenRunner', () => {
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
         const instancePath = resolve(root, 'bot.ts');
         let closed = false;
-        // justified: codegen reads only importModule off the loader
+        // justified: codegen and Project call only these two members
         const modules = {
             importModule: (entryPath: string) => {
                 if (closed) return Promise.reject(new Error('Vite module runner has been closed.'));
@@ -242,7 +242,8 @@ describe('CodegenRunner', () => {
         await makeRunner(root, silentLogger()).run(false);
 
         await expect(makeRunner(root, silentLogger()).run(true)).resolves.toEqual({
-            outputPath: resolve(root, OUTPUT)
+            outputPath: resolve(root, OUTPUT),
+            changed: false
         });
     });
 
@@ -376,6 +377,15 @@ describe('CodegenRunner', () => {
 
         const afterCheck = await stat(resolve(root, OUTPUT));
         expect(afterCheck.mtimeMs).toBe(written.mtimeMs);
+    });
+
+    it('reports whether a regular run changed the registry file', async () => {
+        const root = await tempDir('codegen-');
+
+        const first = await makeRunner(root, silentLogger()).run(false);
+        const second = await makeRunner(root, silentLogger()).run(false);
+
+        expect([first.changed, second.changed]).toStrictEqual([true, false]);
     });
 
     it('leaves an unchanged registry file untouched on a regular run', async () => {

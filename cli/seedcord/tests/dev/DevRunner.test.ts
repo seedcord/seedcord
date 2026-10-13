@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 
 import { HostAugmentTarget, HostShutdown, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { DevRunner } from '#commands/dev/DevRunner';
 import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
@@ -12,6 +12,7 @@ import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import type { DevRuntime } from '#commands/dev/runtime/DevRuntime';
 import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
 import type { ProjectLoader } from '#core/config/ProjectLoader';
+import type { ILogger } from '@seedcord/types';
 
 const readyBot = {
     [SeedcordBrand]: true,
@@ -36,25 +37,31 @@ function readyRuntime(): DevRuntime {
         loadEntry: () => Promise.resolve({ module: { default: readyBot } }),
         importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
         dispose: () => Promise.resolve()
-    } as DevRuntime;
+    };
 }
+
+const WRITTEN = { outputPath: 'seedcord-gen.d.ts', changed: true };
 
 interface FakeCodegen {
-    writeFrom: ReturnType<typeof vi.fn>;
+    writeFrom: Mock<CodegenRunner['writeFrom']>;
 }
 
-function fakeCodegen(writeFrom = vi.fn().mockResolvedValue({ outputPath: 'seedcord-gen.d.ts' })): FakeCodegen {
+function fakeCodegen(writeFrom = vi.fn<CodegenRunner['writeFrom']>().mockResolvedValue(WRITTEN)): FakeCodegen {
     return { writeFrom };
 }
 
-// justified: the session reads only these config fields. writeFrom is all the runner calls on codegen.
-function makeRunner(codegen: FakeCodegen = fakeCodegen(), tunnel: TunnelRouter = fakeTunnel()): DevRunner {
+function makeRunner(
+    codegen: FakeCodegen = fakeCodegen(),
+    tunnel: TunnelRouter = fakeTunnel(),
+    codegenLogger: ILogger = silentLogger
+): DevRunner {
     const project = { config: devConfig, [Symbol.asyncDispose]: () => Promise.resolve() };
     return new DevRunner({
-        projectLoader: { open: () => Promise.resolve(project) } as unknown as ProjectLoader,
+        // justified: the session reads only these config fields
+        projectLoader: { open: () => Promise.resolve(project) } as unknown as Pick<ProjectLoader, 'open'>,
         store: new DevStore(),
-        codegen: codegen as unknown as CodegenRunner,
-        codegenLogger: silentLogger,
+        codegen,
+        codegenLogger,
         tunnel,
         runtime: readyRuntime
     });
@@ -63,6 +70,11 @@ function makeRunner(codegen: FakeCodegen = fakeCodegen(), tunnel: TunnelRouter =
 // justified: the runner reads only route and stop off the router
 function fakeTunnel(overrides: Partial<TunnelRouter> = {}): TunnelRouter {
     return { route: () => undefined, stop: () => Promise.resolve(), ...overrides } as TunnelRouter;
+}
+
+// setImmediate runs after every queued promise callback
+function settled(): Promise<void> {
+    return new Promise((resolve) => setImmediate(resolve));
 }
 
 // resolves once the startup write has gone out, with the run loop still going
@@ -158,27 +170,25 @@ describe('DevRunner codegen', () => {
         await stop();
     });
 
-    it('keeps the session running when a regeneration fails', async () => {
-        const codegen = fakeCodegen(vi.fn().mockRejectedValue(new Error('duplicate route')));
-        const runner = makeRunner(codegen);
+    it('logs a failed write and keeps the session running', async () => {
+        const failure = new Error('duplicate route');
+        const codegen = fakeCodegen(vi.fn<CodegenRunner['writeFrom']>().mockRejectedValue(failure));
+        const error = vi.fn();
+        const runner = makeRunner(codegen, fakeTunnel(), { ...silentLogger, error });
         const running = runner.run();
 
-        await vi.waitFor(() => expect(codegen.writeFrom).toHaveBeenCalledOnce());
-        runner.refreshCommands(true);
-        await vi.waitFor(() => expect(codegen.writeFrom).toHaveBeenCalledTimes(2));
-
+        await vi.waitFor(() => expect(error).toHaveBeenCalledWith(expect.any(String), failure));
         await runner.quit();
         await running;
     });
 
-    it('skips a second regeneration while one is in flight, then allows the next', async () => {
-        let release: () => void = () => undefined;
+    it('skips a second write while one is in flight, then allows the next', async () => {
+        const pending: PromiseWithResolvers<typeof WRITTEN>[] = [];
         const codegen = fakeCodegen(
-            vi.fn(() => {
-                // eslint-disable-next-line @typescript-eslint/no-invalid-void-type -- void is valid here as a Promise resolution type
-                const { promise, resolve } = Promise.withResolvers<void>();
-                release = resolve;
-                return promise;
+            vi.fn<CodegenRunner['writeFrom']>(() => {
+                const next = Promise.withResolvers<typeof WRITTEN>();
+                pending.push(next);
+                return next.promise;
             })
         );
         const { runner, stop } = await startedRunner(codegen);
@@ -186,12 +196,12 @@ describe('DevRunner codegen', () => {
         runner.refreshCommands(true);
         expect(codegen.writeFrom).toHaveBeenCalledOnce();
 
-        release();
-        await vi.waitFor(() => {
-            runner.refreshCommands(true);
-            expect(codegen.writeFrom).toHaveBeenCalledTimes(2);
-        });
-        release();
+        pending[0]?.resolve(WRITTEN);
+        await settled();
+        runner.refreshCommands(true);
+        expect(codegen.writeFrom).toHaveBeenCalledTimes(2);
+
+        pending[1]?.resolve(WRITTEN);
         await stop();
     });
 });
@@ -227,11 +237,11 @@ describe('DevRunner run', () => {
             )
         };
         const store = new DevStore();
-        // justified: the session reads only these config fields. a session that never starts never calls codegen.
         const runner = new DevRunner({
-            projectLoader: projectLoader as unknown as ProjectLoader,
+            // justified: the session reads only these config fields
+            projectLoader: projectLoader as unknown as Pick<ProjectLoader, 'open'>,
             store,
-            codegen: fakeCodegen() as unknown as CodegenRunner,
+            codegen: fakeCodegen(),
             codegenLogger: silentLogger,
             tunnel: fakeTunnel(),
             runtime: () => new ViteDevRuntime()

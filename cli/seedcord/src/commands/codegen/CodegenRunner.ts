@@ -5,7 +5,6 @@ import { dirname, relative, resolve, sep } from 'node:path';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { HostAugmentTarget, HostPluginKeys, type SeedcordInstance } from '@seedcord/types/internal';
-import { resolveFromRoot } from '@seedcord/utils/node/internal';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { plural } from '#core/format';
@@ -38,6 +37,7 @@ type CodegenStep = (typeof CODEGEN_STEPS)[number];
 
 interface CodegenResult {
     outputPath: string;
+    changed: boolean;
 }
 
 interface CodegenRunnerDeps {
@@ -88,17 +88,20 @@ export class CodegenRunner {
             'scan commands',
             () =>
                 commandsPath
-                    ? new CommandScanner(modules, this.deps.logger).scan(resolveFromRoot(config.root, commandsPath))
+                    ? new CommandScanner(modules, this.deps.logger, config.root).scan(commandsPath)
                     : Promise.resolve([]),
             (found) => paint.mute(plural(found.length, 'command'))
         );
 
         const outputPath = resolve(config.root, OUTPUT_FILENAME);
         const render = (): string => this.render(config, instance, commands);
-        if (check) await steps.step('compare types', () => this.check(render(), outputPath));
-        else await steps.step('write types', () => this.write(render(), outputPath));
+        if (check) {
+            await steps.step('compare types', () => this.check(render(), outputPath));
+            return { outputPath, changed: false };
+        }
 
-        return { outputPath };
+        const changed = await steps.step('write types', () => this.write(render(), outputPath));
+        return { outputPath, changed };
     }
 
     private render(config: ResolvedSeedcordConfig, instance: SeedcordInstance, commands: ScannedCommand[]): string {
@@ -109,11 +112,11 @@ export class CodegenRunner {
         });
     }
 
-    // tsc --watch in dev re-checks the project on every write
-    private async write(rendered: string, outputPath: string): Promise<void> {
-        if ((await this.onDisk(outputPath)) === rendered) return;
+    private async write(rendered: string, outputPath: string): Promise<boolean> {
+        if ((await this.onDisk(outputPath)) === rendered) return false; // tsc --watch in dev re-checks on every write
         await mkdir(dirname(outputPath), { recursive: true });
         await writeFile(outputPath, rendered, 'utf8');
+        return true;
     }
 
     private async check(rendered: string, outputPath: string): Promise<void> {

@@ -2,9 +2,12 @@ import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { isSeedcordError } from '@seedcord/errors';
+import { assert, describe, expect, it, onTestFinished } from 'vitest';
 
+import { DevSession } from '#commands/dev/DevSession';
 import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
+import { DevStore } from '#ui/stores/DevStore';
 
 import { devConfigFor } from './devConfigFor';
 
@@ -20,12 +23,35 @@ async function writeProject(dir: string): Promise<void> {
     );
 }
 
+async function tempProject(): Promise<string> {
+    const temp = await mkdtempDisposable(join(tmpdir(), 'dev-modules-'));
+    onTestFinished(() => temp.remove());
+    await writeProject(temp.path);
+    return temp.path;
+}
+
+describe('dev session with a broken entry', () => {
+    it('puts the entry path once in front of the parse error', async () => {
+        const dir = await tempProject();
+        const entry = join(dir, 'src', 'index.ts');
+        await writeFile(entry, 'export const = ;\n');
+        const config = { ...devConfigFor(dir, 'index.ts'), typecheck: { enabled: false } } as const;
+        const session = new DevSession(config, new ViteDevRuntime(), new DevStore(), () => undefined);
+        onTestFinished(() => session.dispose());
+
+        const error: unknown = await session.start().catch((caught: unknown) => caught);
+
+        assert(isSeedcordError(error));
+        // vite's code frame repeats the path after this point
+        const [prefix = '', reason] = error.message.split('Transform failed');
+        expect(prefix.split(entry)).toHaveLength(2);
+        expect(reason).toContain('Unexpected token');
+    }, 60_000);
+});
+
 describe('dev runtime importModule', () => {
     it('returns the module the running bot already imported', async () => {
-        const temp = await mkdtempDisposable(join(tmpdir(), 'dev-modules-'));
-        onTestFinished(() => temp.remove());
-        const dir = temp.path;
-        await writeProject(dir);
+        const dir = await tempProject();
 
         const runtime = new ViteDevRuntime();
         onTestFinished(() => runtime.dispose());

@@ -31,7 +31,7 @@ function runtime(module: unknown, emit?: DevEvent): DevRuntime {
         loadEntry: () => Promise.resolve({ module }),
         importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
         dispose: () => Promise.resolve()
-    } as DevRuntime;
+    };
 }
 
 // start() spawns tsc --watch before it reaches the throw, so every case has to stop the session

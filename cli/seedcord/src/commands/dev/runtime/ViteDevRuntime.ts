@@ -1,4 +1,4 @@
-import { dirname, relative } from 'node:path';
+import { dirname } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -14,12 +14,10 @@ import { HmrPlugin } from './HmrPlugin';
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
 import type { DevEvent, DevEventHandler } from './events';
 import type { ViteDevServer } from 'vite';
-import type { ModuleRunner } from 'vite/module-runner';
 
 export class ViteDevRuntime implements DevRuntime {
     private context: DevRuntimeContext | null = null;
     private viteServer: ViteDevServer | null = null;
-    private moduleRunner: ModuleRunner | null = null;
     private modules: RunnerModuleLoader | null = null;
     private eventHandler: DevEventHandler | null = null;
     private hmrPlugin: HmrPlugin | null = null;
@@ -53,8 +51,7 @@ export class ViteDevRuntime implements DevRuntime {
 
         this.viteServer = await createServer(config);
 
-        this.moduleRunner = createServerModuleRunner(this.viteServer.environments.ssr);
-        this.modules = new RunnerModuleLoader(this.moduleRunner);
+        this.modules = new RunnerModuleLoader(createServerModuleRunner(this.viteServer.environments.ssr));
 
         hmrPlugin.on('event', this.emit.bind(this));
 
@@ -67,32 +64,17 @@ export class ViteDevRuntime implements DevRuntime {
     }
 
     public async importModule<TModule = unknown>(path: string): Promise<TModule> {
-        if (!this.modules) {
-            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
-                path,
-                'ViteDevRuntime.start() must complete before importModule()'
-            ]);
-        }
-        return this.modules.importModule<TModule>(path);
+        return this.started().modules.importModule<TModule>(path);
     }
 
     public async loadEntry(): Promise<DevRuntimeLoadResult> {
-        if (!this.context || !this.viteServer || !this.moduleRunner) {
-            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
-                this.context?.config.instance ?? 'runtime',
-                'ViteDevRuntime.start() must complete before loadEntry()'
-            ]);
-        }
-
-        const { instance: entryPath } = this.context.config;
-        const projectRoot = this.context.config.root;
+        const { context, modules } = this.started();
+        const { instance: entryPath } = context.config;
 
         this.emit({ type: 'module-loading', path: entryPath });
 
         try {
-            const moduleId = toModuleId(projectRoot, entryPath);
-
-            const module = await this.moduleRunner.import<unknown>(moduleId);
+            const module = await modules.importModule(entryPath);
 
             this.emit({ type: 'module-loaded', path: entryPath });
 
@@ -113,7 +95,6 @@ export class ViteDevRuntime implements DevRuntime {
             this.viteServer = null;
         }
 
-        this.moduleRunner = null;
         this.modules = null;
         this.hmrPlugin = null;
         this.context = null;
@@ -121,12 +102,17 @@ export class ViteDevRuntime implements DevRuntime {
         setBotRoot(undefined);
     }
 
+    private started(): { context: DevRuntimeContext; modules: RunnerModuleLoader } {
+        if (!this.context || !this.modules) {
+            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
+                this.context?.config.instance ?? 'runtime',
+                'ViteDevRuntime.start() must complete first'
+            ]);
+        }
+        return { context: this.context, modules: this.modules };
+    }
+
     private emit(event: DevEvent): void {
         this.eventHandler?.(event);
     }
-}
-
-// vite normalizes module ids to forward slashes. relative() yields backslashes on windows
-function toModuleId(projectRoot: string, file: string): string {
-    return `/${relative(projectRoot, file).replaceAll('\\', '/')}`;
 }
