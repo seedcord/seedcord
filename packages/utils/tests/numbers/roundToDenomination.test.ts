@@ -64,16 +64,18 @@ describe('roundToDenomination', () => {
         expect(roundToDenomination(1e18)).toBe('1000Q');
     });
 
-    it('clamps unusual precision values to a safe range', () => {
-        expect(roundToDenomination(1234, { precision: 0 })).toBe('1K');
-        expect(roundToDenomination(1234, { precision: -1 })).toBe('1K');
-        expect(roundToDenomination(1234, { precision: 101 })).toBe('1.234K');
-        expect(roundToDenomination(1234, { precision: Number.NaN })).toBe('1.2K');
-        expect(roundToDenomination(1234, { precision: 3 })).toBe('1.234K');
-    });
-
     it('preserves large values past the last suffix at high precision', () => {
         expect(roundToDenomination(1_000_000_000, { suffixes: ['K'], precision: 15 })).toBe('1000000K');
         expect(roundToDenomination(1e9, { suffixes: ['K'], precision: 15 })).toBe('1000000K');
+    });
+
+    it('keeps fractional digits at high precision for ordinary magnitudes', () => {
+        expect(roundToDenomination(12_345, { precision: 15 })).toBe('12.345K');
+    });
+
+    it('throws RangeError for invalid precision', () => {
+        expect(() => roundToDenomination(1234, { precision: -1 })).toThrow(RangeError);
+        expect(() => roundToDenomination(1234, { precision: 101 })).toThrow(RangeError);
+        expect(() => roundToDenomination(1234, { precision: Number.NaN })).toThrow(RangeError);
     });
 });
