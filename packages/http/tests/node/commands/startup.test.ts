@@ -119,6 +119,29 @@ describe('command deploy during http startup', () => {
         expect(signal.aborted).toBe(true);
     });
 
+    it('starts when discord holds the deploy for 30s', async () => {
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
+        try {
+            await using host = new Seedcord(config(COMMANDS_DIR));
+            stubRest(host);
+            const { promise: putCalled, resolve: sawPut } = Promise.withResolvers<undefined>();
+            const put = vi.fn(async () => {
+                sawPut(undefined);
+                await new Promise((resolve) => setTimeout(resolve, 30_000));
+                return [{ id: 'cmd-1', name: 'ping', type: ApplicationCommandType.ChatInput }];
+            });
+            Object.assign(host.rest, { put });
+
+            const starting = host.start();
+            await putCalled;
+            await vi.advanceTimersByTimeAsync(30_000);
+
+            await expect(starting).resolves.toBe(host);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
     it('touches no command route when no commands path is configured', async () => {
         await using host = new Seedcord(config(null));
         const { get, put } = stubRest(host);

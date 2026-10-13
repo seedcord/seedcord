@@ -20,6 +20,7 @@ const LOGOUT_TIMEOUT_MS = 2000;
 
 const loggerSlot = Symbol('seedcord:bot:logger');
 const initSlot = Symbol('seedcord:bot:init');
+const deploySlot = Symbol('seedcord:bot:deploy');
 const controllersSlot = Symbol('seedcord:bot:controllers');
 
 interface Controllers {
@@ -42,6 +43,7 @@ export class Bot implements HmrAware {
     /** @internal */
     readonly [loggerSlot]: Logger = this.#logger;
     #isInitialized = false;
+    readonly #loggedIn = Promise.withResolvers<boolean>();
 
     readonly #intents: BitFieldResolvable<GatewayIntentsString, number>;
     readonly #client: Client;
@@ -118,25 +120,34 @@ export class Bot implements HmrAware {
             return;
         }
         this.#isInitialized = true;
+        signal.addEventListener('abort', () => this.#loggedIn.resolve(false), { once: true });
 
-        const token = this.botToken;
+        try {
+            const token = this.botToken;
 
-        if (this.#interactions) await this.#interactions.init();
-        if (this.#events) await this.#events.init();
+            if (this.#interactions) await this.#interactions.init();
+            if (this.#events) await this.#events.init();
 
-        await this.#login(token);
+            await this.#login(token);
+        } catch (error) {
+            this.#loggedIn.resolve(false);
+            throw error;
+        }
+        this.#loggedIn.resolve(true);
 
         await this.#emojiInjector.init();
+    }
 
-        if (!this.#commandRegistry) {
-            return;
-        }
+    /** @internal */
+    public async [deploySlot](registry: CommandRegistry, signal: AbortSignal): Promise<void> {
+        // bot-initialization reports a failed login
+        if (!(await this.#loggedIn.promise)) return;
 
-        await this.#commandRegistry.init();
-        assertGuildsIntent(this.#intents, this.#commandRegistry.allCommands());
-        await this.#commandRegistry.setCommands(signal);
-        this.#interactions?.warnUnhandledRoutes(this.#commandRegistry.routeLeaves());
-        this.#interactions?.warnUnhandledContextMenuRoutes(this.#commandRegistry.contextMenuLeaves());
+        await registry.init();
+        assertGuildsIntent(this.#intents, registry.allCommands());
+        await registry.setCommands(signal);
+        this.#interactions?.warnUnhandledRoutes(registry.routeLeaves());
+        this.#interactions?.warnUnhandledContextMenuRoutes(registry.contextMenuLeaves());
     }
 
     async #stop(): Promise<void> {
@@ -170,6 +181,10 @@ export function botLoggerOf(bot: Bot): Logger {
 
 export function initBot(bot: Bot, signal: AbortSignal): Promise<void> {
     return bot[initSlot](signal);
+}
+
+export function deployCommands(bot: Bot, registry: CommandRegistry, signal: AbortSignal): Promise<void> {
+    return bot[deploySlot](registry, signal);
 }
 
 // the gateway integration tests call these three off a live host

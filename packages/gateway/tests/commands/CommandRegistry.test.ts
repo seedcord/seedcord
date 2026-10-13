@@ -1,14 +1,17 @@
+import { Commands } from '@seedcord/core';
 import { HostStartup, HostVersion } from '@seedcord/types/internal';
 import { setBotRoot } from '@seedcord/utils/node/internal';
-import { Events, GatewayIntentBits } from 'discord.js';
+import { ApplicationCommandType, Events, GatewayIntentBits } from 'discord.js';
 import { type Mock, describe, expect, afterEach, vi } from 'vitest';
 
 import { commandRegistryOf } from '#bot/Bot';
+import { Plugin } from '#src/Plugin';
 import { Seedcord } from '#src/Seedcord';
 import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
 
+import type { CommandInfo } from '@seedcord/core';
 import type { CommandRegistry } from '@seedcord/core/node/internal';
 
 import '#tests/utils/mock-env';
@@ -180,6 +183,109 @@ describe('CommandRegistry Integration', () => {
         await starting;
 
         expect(signal.aborted).toBe(true);
+    });
+
+    it('starts when discord holds the deploy for 30s', async ({ testEnv }) => {
+        await testEnv.createFile(
+            'commands/PingCommand.ts',
+            `
+            import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
+
+            @RegisterCommand('global')
+            export class PingCommand extends BuilderComponent<'command'> {
+                constructor() {
+                    super('command');
+                    this.instance.setName('ping').setDescription('Replies');
+                }
+            }
+            `
+        );
+        const config = testConfig({ commands: testEnv.resolvePath('commands'), healthCheck: false });
+        config.bot.clientOptions = { intents: [GatewayIntentBits.Guilds] };
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
+        try {
+            await using seedcord = new Seedcord(config);
+            vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');
+            const client = seedcord.bot.client as unknown as { once: Mock; rest: { put: Mock } };
+            client.once.mockImplementation((event: Events, onReady: () => void) => {
+                if (event === Events.ClientReady) onReady();
+            });
+            const { promise: putCalled, resolve: sawPut } = Promise.withResolvers<undefined>();
+            client.rest.put.mockImplementation(async () => {
+                sawPut(undefined);
+                await new Promise((resolve) => setTimeout(resolve, 30_000));
+                return [];
+            });
+
+            const starting = seedcord.start();
+            await putCalled;
+            await vi.advanceTimersByTimeAsync(30_000);
+
+            await expect(starting).resolves.toBe(seedcord);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('fails startup at the login timeout when login hangs', async ({ testEnv }) => {
+        await testEnv.createFile('commands/.keep', '');
+        const config = testConfig({ commands: testEnv.resolvePath('commands'), healthCheck: false });
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
+        try {
+            await using seedcord = new Seedcord(config);
+            vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');
+            const starting = seedcord.start();
+            const outcome = expect(starting).rejects.toThrow();
+
+            await vi.advanceTimersByTimeAsync(10_000);
+
+            await outcome;
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("deploys before a plugin's ready() runs", async ({ testEnv }) => {
+        await testEnv.createFile(
+            'commands/PingCommand.ts',
+            `
+            import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
+
+            @RegisterCommand('global')
+            export class PingCommand extends BuilderComponent<'command'> {
+                constructor() {
+                    super('command');
+                    this.instance.setName('ping').setDescription('Replies');
+                }
+            }
+            `
+        );
+        class ReadsCommands extends Plugin {
+            public mention: string | undefined;
+
+            public init(): Promise<void> {
+                return Promise.resolve();
+            }
+
+            public override ready(): Promise<void> {
+                // justified: SlashRegistry is empty in tests
+                this.mention = (Commands as Record<string, CommandInfo>).ping?.mention;
+                return Promise.resolve();
+            }
+        }
+        const config = testConfig({ commands: testEnv.resolvePath('commands'), healthCheck: false });
+        config.bot.clientOptions = { intents: [GatewayIntentBits.Guilds] };
+        await using seedcord = new Seedcord(config).attach('reader', ReadsCommands);
+        vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');
+        const client = seedcord.bot.client as unknown as { once: Mock; rest: { put: Mock } };
+        client.once.mockImplementation((event: Events, onReady: () => void) => {
+            if (event === Events.ClientReady) onReady();
+        });
+        client.rest.put.mockResolvedValue([{ id: '42', name: 'ping', type: ApplicationCommandType.ChatInput }]);
+
+        await seedcord.start();
+
+        expect(seedcord.reader.mention).toBe('</ping:42>');
     });
 
     it('holds an edited command for the refresh prompt when the commands path is relative to root', async ({

@@ -3,7 +3,13 @@ import { createServer } from 'node:http';
 
 import { attachmentsOf, bindBotColor, busLoggerOf, getDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
-import { CommandRegistry, DRAIN_TASK_TIMEOUT_MS, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
+import {
+    COMMAND_DEPLOY_TIMEOUT_MS,
+    CommandRegistry,
+    DRAIN_TASK_TIMEOUT_MS,
+    ShutdownPhase,
+    StartupPhase
+} from '@seedcord/core/node/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
@@ -163,12 +169,17 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         const commandRegistry = this.#commandRegistry;
         if (commandRegistry) {
             // one task because tasks in a phase run concurrently and the deploy reads the id
-            this.startup.addTask(StartupPhase.Login, 'command-deploy', async (signal) => {
-                await commandRegistry.init();
-                await commandRegistry.setCommands(signal);
-                interactions?.warnUnhandledRoutes(commandRegistry.routeLeaves());
-                interactions?.warnUnhandledContextMenuRoutes(commandRegistry.contextMenuLeaves());
-            });
+            this.startup.addTask(
+                StartupPhase.Login,
+                'command-deploy',
+                async (signal) => {
+                    await commandRegistry.init();
+                    await commandRegistry.setCommands(signal);
+                    interactions?.warnUnhandledRoutes(commandRegistry.routeLeaves());
+                    interactions?.warnUnhandledContextMenuRoutes(commandRegistry.contextMenuLeaves());
+                },
+                COMMAND_DEPLOY_TIMEOUT_MS
+            );
         }
 
         this.startup.addTask(StartupPhase.Ready, 'http-server', () => {
