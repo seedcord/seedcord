@@ -37,17 +37,14 @@ import type {
     SeedcordFrameworkEvents,
     SeedcordInstance
 } from '@seedcord/types/internal';
-import type { FSWatcher } from 'node:fs';
-import type { Server as HttpServer } from 'node:http';
 import type { Plugin, ViteDevServer } from 'vite';
 
 interface Started {
     readonly context: DevRuntimeContext;
     readonly server: ViteDevServer;
     readonly modules: RunnerModuleLoader;
-    readonly endpoint: HttpServer;
     readonly hmr: HmrPlugin;
-    readonly configWatcher: FSWatcher;
+    readonly resources: AsyncDisposableStack;
 }
 
 interface EdgeDevDeps {
@@ -100,9 +97,13 @@ export class EdgeDevRuntime implements DevRuntime {
             loadCloudflare(viteRoot, this.deps.importCloudflare),
             readDevPort(this.target.wranglerConfig, this.deps.importWrangler)
         ]);
+        await using onFailure = new AsyncDisposableStack();
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
         const hmr = new HmrPlugin(config, WORKER_ENVIRONMENT);
         hmr.on('event', (event) => this.emit(context, event));
+        onFailure.defer(() => {
+            hmr.removeAllListeners('event');
+        });
         const server = await createServer(
             mergeViteConfig(userCodeConfig(WORKERD_CONDITIONS), {
                 root: viteRoot,
@@ -138,18 +139,19 @@ export class EdgeDevRuntime implements DevRuntime {
                 ]
             })
         );
+        // closing the vite server ends workerd
+        onFailure.defer(() => server.close());
         const modules = await modulesReady.promise;
-        const endpoint = await listenForInteractions(server.middlewares, port, this.target.wranglerConfig).catch(
-            async (error: unknown) => {
-                // workerd is already running
-                await server.close();
-                throw error;
-            }
+        const endpoint = onFailure.use(
+            await listenForInteractions(server.middlewares, port, this.target.wranglerConfig)
         );
+        // the endpoint's close waits on open keep-alive sockets
+        onFailure.defer(() => endpoint.closeAllConnections());
         const configWatcher = watchWorkerConfig(this.target.wranglerConfig, (file) => {
             hmr.reportChangeNeedingRestart(file);
         });
-        this.started = { context, server, modules, endpoint, hmr, configWatcher };
+        onFailure.defer(() => configWatcher.close());
+        this.started = { context, server, modules, hmr, resources: onFailure.move() };
         // the worker already filtered by its own level
         this.workerChannel().on('seedcord:log', (record) => {
             this.emit(context, { type: 'log', record: fromWireLog(record) });
@@ -180,7 +182,6 @@ export class EdgeDevRuntime implements DevRuntime {
         });
     }
 
-    // closing the server ends workerd
     public async stopBot(): Promise<void> {
         this.settleStart?.();
         await this.close();
@@ -198,12 +199,7 @@ export class EdgeDevRuntime implements DevRuntime {
     private async close(): Promise<void> {
         const { started } = this;
         this.started = undefined;
-        if (!started) return;
-        started.configWatcher.close();
-        started.hmr.removeAllListeners('event');
-        started.endpoint.closeAllConnections();
-        await new Promise((resolve) => started.endpoint.close(resolve));
-        await started.server.close();
+        await started?.resources.disposeAsync();
     }
 
     private workerChannel(): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> {

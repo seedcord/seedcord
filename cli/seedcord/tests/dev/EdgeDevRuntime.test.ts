@@ -103,11 +103,10 @@ async function editFile(path: string, edit: (text: string) => string): Promise<v
 }
 
 async function freePort(): Promise<number> {
-    const probe = createNetServer().listen(0);
+    await using probe = createNetServer().listen(0);
     await once(probe, 'listening');
     // justified: address() is AddressInfo once a TCP server is listening
     const { port } = probe.address() as AddressInfo;
-    probe.close();
     return port;
 }
 
@@ -214,9 +213,8 @@ describe('EdgeDevRuntime', () => {
         await writeDevVars(projectDir, liveVars);
         const port = await freePort();
         await setDevPort(projectDir, port);
-        const holder = createNetServer().listen(port);
+        await using holder = createNetServer().listen(port);
         await once(holder, 'listening');
-        onTestFinished(() => void holder.close());
 
         await expect(startedRuntime(projectDir)).rejects.toHaveProperty('code', SeedcordErrorCode.CliEdgeDevPortInUse);
     }, 120_000);
