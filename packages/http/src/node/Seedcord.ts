@@ -21,10 +21,10 @@ import { Envapter } from 'envapt';
 
 import { EmojiInjector } from '#src/emojis/EmojiInjector';
 import { InteractionsService } from '#src/InteractionsService';
+import { publicKeyOf } from '#src/publicKey';
 import { version as packageVersion } from '#src/version';
 
 import { NodeEndpoint } from './NodeEndpoint';
-import { publicKeyOf } from './publicKey';
 import { toWebRequest, writeWebResponse } from './webBridge';
 
 import type { HttpServerConfig } from '#interfaces/Config';
