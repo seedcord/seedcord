@@ -179,7 +179,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
             if (process.env.VITEST === 'true') fileUrl += `?update=${Date.now()}`;
 
             // justified: a dynamic import resolves to an untyped export map
-            const imported = (await import(fileUrl)) as Record<string, unknown>;
+            const imported = (await import(/* @vite-ignore */ fileUrl)) as Record<string, unknown>;
 
             const names: string[] = [];
             for (const val of Object.values(imported)) {

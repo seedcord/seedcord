@@ -43,7 +43,7 @@ function connectCli(): FakeCli {
     return {
         sent,
         events: () => sent.map(([event]) => event).filter((event) => event !== 'seedcord:log'),
-        start: () => handlers.get('seedcord:start')?.({}),
+        start: () => handlers.get('seedcord:start')?.({ colorLevel: 0 }),
         save: (event) => handlers.get('seedcord:hmr')?.(event)
     };
 }

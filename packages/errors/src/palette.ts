@@ -1,5 +1,7 @@
 import chalk from 'chalk';
 
+import type { ColorSupportLevel } from 'chalk';
+
 // @seedcord/ui carries the same three for the web
 export const BRAND = {
     flesh: '#f04e36',
@@ -18,6 +20,11 @@ function relativeToCwd(rawPath: string): string {
 
     const underCwd = path.startsWith(`${cwd}/`) || path.startsWith(`${cwd}\\`);
     return underCwd ? path.slice(cwd.length + 1) : path;
+}
+
+// chalk turns color on only for a chromium user agent outside node
+export function setColorLevel(level: ColorSupportLevel): void {
+    chalk.level = level;
 }
 
 const sky = chalk.hex('#8fc7ff');

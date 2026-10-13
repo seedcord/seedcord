@@ -47,7 +47,10 @@ class DiskFiles implements FileSource {
         const all = await DiskFiles.filesUnder(dir);
         const files = all.filter((file) => isModulePath(file) && !isHidden(dir, file));
         // node reads a raw windows path's drive letter as a url protocol
-        return files.map((file) => [file, () => import(pathToFileURL(file).href) as Promise<Record<string, unknown>>]);
+        return files.map((file) => [
+            file,
+            () => import(/* @vite-ignore */ pathToFileURL(file).href) as Promise<Record<string, unknown>>
+        ]);
     }
 
     public async texts(dir: string): Promise<Loaders<TextLoader>> {

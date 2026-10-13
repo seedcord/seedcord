@@ -4,6 +4,7 @@ import { fromWireError, fromWireLog, wrapHot } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { setBotRoot } from '@seedcord/utils/node/internal';
+import chalk from 'chalk';
 import { createServer, createServerModuleRunner } from 'vite';
 
 import { functionExportsOf, WORKER_ENTRY_ID, workerEntry } from '#commands/build/builder/workerEntry';
@@ -113,6 +114,8 @@ export class EdgeDevRuntime implements DevRuntime {
                 clearScreen: false,
                 server: {
                     middlewareMode: true,
+                    // discord's POST arrives under the tunnel's hostname. the endpoint blocks every other request
+                    allowedHosts: true,
                     watch: { ignored: [logsIgnore(config.root), isWorkerConfigFile(this.target.wranglerConfig)] }
                 },
                 ssr: { noExternal: seedcordDependents(configDir) },
@@ -126,7 +129,7 @@ export class EdgeDevRuntime implements DevRuntime {
                         instanceKey: viteKey(viteRoot, config.instance),
                         rootKey: viteKey(viteRoot, config.root),
                         functionExports: async () => functionExportsOf(await modulesReady.promise, config.instance),
-                        mode: { kind: 'dev', root: config.root }
+                        mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
                     }),
                     inNodeOnly(edgeStandIns()),
                     nodeCopy(modulesReady.resolve),
@@ -179,7 +182,7 @@ export class EdgeDevRuntime implements DevRuntime {
             this.settleStart = () => resolve(undefined);
             cli.on('seedcord:started', ({ username }) => resolve(username));
             cli.on('seedcord:start-failed', ({ error }) => reject(fromWireError(error)));
-            cli.send('seedcord:start', {});
+            cli.send('seedcord:start', { colorLevel: chalk.level });
         });
     }
 

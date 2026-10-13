@@ -21,8 +21,15 @@ import { Envapter, PortableSource } from 'envapt';
 Envapter.useSource(new PortableSource(env));
 `;
 
+const DEV_CWD_ID = 'virtual:seedcord/dev-cwd';
+
+// workerd answers process.cwd() with /bundle. a log path should read like node dev's
+function devCwdSource(cwd: string): string {
+    return `process.cwd = () => ${JSON.stringify(cwd)};\n`;
+}
+
 // seedcord dev runs the source files from root and reads Discord at startup
-type EntryMode = { kind: 'build'; ids: BakedIds } | { kind: 'dev'; root: string };
+type EntryMode = { kind: 'build'; ids: BakedIds } | { kind: 'dev'; root: string; cwd: string };
 
 interface WorkerEntryOptions {
     files: ProjectFiles;
@@ -55,13 +62,15 @@ function setupSources({ files, folders, rootKey, mode }: WorkerEntryOptions): Ma
         [BIND_ENV_ID, BIND_ENV],
         [BUILT_FILES_ID, builtFilesSource({ files, folders, rootExpression, rootKey, sourcePaths: isDev })]
     ]);
-    if (!isDev) modules.set(BAKED_IDS_ID, bakedIdsSource(mode.ids));
+    if (isDev) modules.set(DEV_CWD_ID, devCwdSource(mode.cwd));
+    else modules.set(BAKED_IDS_ID, bakedIdsSource(mode.ids));
     return modules;
 }
 
 async function entrySource({ instanceKey, functionExports, mode }: WorkerEntryOptions): Promise<string> {
     const instance = JSON.stringify(instanceKey);
     const lines = [
+        ...(mode.kind === 'dev' ? [`import '${DEV_CWD_ID}';`] : []),
         // the instance file may read env while it loads
         `import '${BIND_ENV_ID}';`,
         `import '${BUILT_FILES_ID}';`,

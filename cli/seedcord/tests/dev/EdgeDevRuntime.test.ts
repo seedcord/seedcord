@@ -1,10 +1,13 @@
 import { once } from 'node:events';
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { createServer as createHttpServer } from 'node:http';
+import { createServer as createHttpServer, request as httpRequest } from 'node:http';
 import { createServer as createNetServer } from 'node:net';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
+import { installNodeDefaults } from '@seedcord/logger/node';
+import chalk from 'chalk';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
@@ -18,8 +21,9 @@ import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import type { DevEvent, DevEventHandler } from '#commands/dev/runtime/events';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
-import type { LogRecord } from '@seedcord/types';
+import type { ILogSink, LogRecord } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
+import type { IncomingMessage } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
 function edgeConfig(projectDir: string): ResolvedSeedcordConfig {
@@ -206,6 +210,73 @@ describe('EdgeDevRuntime', () => {
         expect(events).toContainEqual({ type: 'server-listening', port });
         // the bot answers an unsigned interaction with 401
         expect(unsigned.status).toBe(401);
+    }, 120_000);
+
+    it("colors the worker's logs at the CLI's color level", async () => {
+        const { projectDir } = await edgeProject();
+        const discord = await fakeDiscordApi();
+        await editFile(join(projectDir, 'src/bot.ts'), (text) =>
+            text.replace('bot: { interactions:', `bot: { restOptions: { api: '${discord.api}' }, interactions:`)
+        );
+        const level = chalk.level;
+        chalk.level = 3;
+        onTestFinished(() => {
+            chalk.level = level;
+        });
+        const messages: string[] = [];
+        const { runtime, instance } = await startedRuntime(projectDir, (event) => {
+            if (event.type === 'log') messages.push(event.record.message);
+        });
+
+        await runtime.startBot(instance);
+
+        // usernameOf paints the username sky blue
+        expect(messages.find((message) => message.startsWith('Running as'))).toContain('\u001B[');
+    }, 120_000);
+
+    it("writes the worker's file paths relative to the CLI's cwd", async () => {
+        const { projectDir } = await edgeProject();
+        await writeFile(join(projectDir, 'src/handlers/Wave.ts'), waveHandler('waved'));
+        const records: LogRecord[] = [];
+        const { runtime, instance } = await startedRuntime(projectDir, (event) => {
+            if (event.type === 'log') records.push(event.record);
+        });
+
+        await runtime.startBot(instance);
+
+        const loaded = JSON.stringify(records.filter((record) => record.message.startsWith('Loaded handlers')));
+        expect(loaded).toContain(relative(process.cwd(), join(projectDir, 'src/handlers/Wave.ts')));
+        expect(loaded).not.toContain('../');
+    }, 120_000);
+
+    it("keeps writing the CLI's logs to its sinks after it loads the codegen copy", async () => {
+        const { projectDir } = await edgeProject();
+        const written: string[] = [];
+        const file: ILogSink = { kind: 'file', onLog: (record) => written.push(record.message) };
+        Logger.configure({ level: 'info', sinks: [file] });
+        onTestFinished(() => installNodeDefaults());
+        await startedRuntime(projectDir);
+
+        new Logger('Tunnel').info('reachable');
+
+        expect(written).toContain('reachable');
+    }, 120_000);
+
+    it('answers a POST that arrives through a tunnel hostname', async () => {
+        const { projectDir, port } = await edgeProject();
+        const { runtime, instance } = await startedRuntime(projectDir);
+        await runtime.startBot(instance);
+
+        const request = httpRequest({
+            port,
+            method: 'POST',
+            path: '/',
+            headers: { host: 'quick-name.trycloudflare.com' }
+        }).end('{}');
+        const [response] = (await once(request, 'response')) as [IncomingMessage];
+        response.resume();
+
+        expect(response.statusCode).toBe(401);
     }, 120_000);
 
     it('throws CliEdgeDevPortInUse when something already listens on dev.port', async () => {

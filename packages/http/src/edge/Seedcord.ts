@@ -13,7 +13,7 @@ import {
 } from '@seedcord/core/internal';
 import { PluginHost } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, setColorLevel } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 
@@ -124,7 +124,8 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         const tasks = new HttpStartupTasks(this, this.#service);
         tasks.registerHmr(this.#hmr);
         tasks.addDiscordTasks();
-        cli.on('seedcord:start', () => {
+        cli.on('seedcord:start', ({ colorLevel }) => {
+            setColorLevel(colorLevel);
             logs.open();
             void this.#startForCli(cli);
         });
