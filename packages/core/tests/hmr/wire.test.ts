@@ -35,6 +35,25 @@ describe('wire errors', () => {
         expect(received.cause).toMatchObject({ message: 'Missing Access' });
         expect(Error.isError(received.cause)).toBe(true);
     });
+
+    it('sends a thrown string as an error with that message', () => {
+        expect(fromWireError(overTheWire(toWireError('timeout')))).toMatchObject({ message: 'timeout' });
+    });
+
+    it('ends the chain at a cause that is not an error', () => {
+        const received = fromWireError(overTheWire(toWireError(new Error('request failed', { cause: 'timeout' }))));
+
+        expect(received.cause).toMatchObject({ message: 'timeout' });
+    });
+
+    it('ends the chain at a cause it already sent', () => {
+        const looped = new Error('looped');
+        looped.cause = looped;
+
+        const received = fromWireError(overTheWire(toWireError(looped)));
+
+        expect(received).toMatchObject({ message: 'looped' });
+    });
 });
 
 describe('wire logs', () => {

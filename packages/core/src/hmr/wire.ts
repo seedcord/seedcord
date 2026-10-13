@@ -1,5 +1,4 @@
 import { filterCirculars } from '@seedcord/utils';
-import { asError } from '@seedcord/utils/internal';
 
 import type { LogRecord } from '@seedcord/types';
 import type { WireError, WireLogRecord } from '@seedcord/types/internal';
@@ -7,13 +6,19 @@ import type { WireError, WireLogRecord } from '@seedcord/types/internal';
 type WireArg = NonNullable<WireLogRecord['args']>[number];
 
 export function toWireError(thrown: unknown): WireError {
-    const error = asError(thrown);
+    return encodeError(thrown, new Set());
+}
+
+function encodeError(thrown: unknown, sent: Set<Error>): WireError {
+    if (!Error.isError(thrown)) return { name: 'Error', message: String(thrown) };
+    sent.add(thrown);
+    const { cause } = thrown;
     return {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        code: Reflect.get(error, 'code'),
-        cause: error.cause === undefined ? undefined : toWireError(error.cause)
+        name: thrown.name,
+        message: thrown.message,
+        stack: thrown.stack,
+        code: Reflect.get(thrown, 'code'),
+        cause: cause === undefined || (Error.isError(cause) && sent.has(cause)) ? undefined : encodeError(cause, sent)
     };
 }
 
