@@ -10,9 +10,11 @@ import { seedcordDependents } from '#core/modules/seedcordDependents';
 
 import { devServerConfig, logsIgnore } from './devServerConfig';
 import { HmrPlugin } from './HmrPlugin';
+import { InstanceLifecycle } from './InstanceLifecycle';
 
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
 import type { DevEvent, DevEventHandler } from './events';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { ViteDevServer } from 'vite';
 
 export class ViteDevRuntime implements DevRuntime {
@@ -21,6 +23,7 @@ export class ViteDevRuntime implements DevRuntime {
     private modules: RunnerModuleLoader | null = null;
     private eventHandler: DevEventHandler | null = null;
     private hmrPlugin: HmrPlugin | null = null;
+    private readonly lifecycle = new InstanceLifecycle();
 
     public async start(context: DevRuntimeContext): Promise<void> {
         this.context = context;
@@ -57,6 +60,14 @@ export class ViteDevRuntime implements DevRuntime {
 
         this.emit({ type: 'module-loaded', path: projectRoot });
         this.emit({ type: 'ready' });
+    }
+
+    public startBot(instance: SeedcordInstance): Promise<string | undefined> {
+        return this.lifecycle.start(instance);
+    }
+
+    public stopBot(): Promise<void> {
+        return this.lifecycle.stop();
     }
 
     public refreshCommands(shouldRefresh: boolean): void {

@@ -2,13 +2,7 @@ import { dirname } from 'node:path';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import {
-    HostAugmentTarget,
-    HostShutdown,
-    HostStartup,
-    HostVersion,
-    type SeedcordInstance
-} from '@seedcord/types/internal';
+import { HostAugmentTarget, HostVersion, type SeedcordInstance } from '@seedcord/types/internal';
 import { asError } from '@seedcord/utils/internal';
 
 import { toSeedcordInstance } from '#core/modules/importInstance';
@@ -27,7 +21,6 @@ export class DevSession {
     private stopResolve?: () => void;
     private instance?: SeedcordInstance;
     private isStopped = false;
-    private startupPromise?: Promise<unknown>;
     private tscRunner?: TscRunner;
     private stopPromise?: Promise<void>;
 
@@ -73,8 +66,7 @@ export class DevSession {
         try {
             this.store.setPhase('starting');
             this.store.setStatus('Starting the bot…');
-            this.startupPromise = Promise.resolve(instance.start());
-            await this.startupPromise;
+            const username = await this.runtime.startBot(instance);
 
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- stop() flips isStopped during the awaited startup
             if (this.isStopped) {
@@ -82,7 +74,7 @@ export class DevSession {
             }
 
             this.store.setPhase('running');
-            this.store.setStatus(`${paint.bold(instance.username ?? 'Bot')} is ready!`);
+            this.store.setStatus(`${paint.bold(username ?? 'Bot')} is ready!`);
             profileMark('ready');
             onReady?.();
             // tsc competes with vite's cold transform when it starts any earlier
@@ -106,16 +98,7 @@ export class DevSession {
     private async runStop(): Promise<void> {
         this.isStopped = true;
         this.tscRunner?.stop();
-        this.instance?.[HostStartup].abort();
-
-        if (this.startupPromise) {
-            // so the shutdown below still runs
-            try {
-                await this.startupPromise;
-            } catch {}
-        }
-
-        await this.instance?.[HostShutdown].run(0, false);
+        await this.runtime.stopBot();
         this.stopResolve?.();
     }
 

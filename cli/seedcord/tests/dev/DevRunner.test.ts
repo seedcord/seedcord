@@ -4,6 +4,7 @@ import { HostAugmentTarget, HostShutdown, HostStartup, HostVersion, SeedcordBran
 import { afterEach, describe, expect, it, onTestFinished, vi, type Mock } from 'vitest';
 
 import { DevRunner } from '#commands/dev/DevRunner';
+import { InstanceLifecycle } from '#commands/dev/runtime/InstanceLifecycle';
 import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
@@ -32,9 +33,12 @@ const devConfig = {
 };
 
 function readyRuntime(): DevRuntime {
+    const lifecycle = new InstanceLifecycle();
     return {
         start: () => Promise.resolve(),
         loadEntry: () => Promise.resolve({ module: { default: readyBot } }),
+        startBot: (instance) => lifecycle.start(instance),
+        stopBot: () => lifecycle.stop(),
         importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
         dispose: () => Promise.resolve()
     };

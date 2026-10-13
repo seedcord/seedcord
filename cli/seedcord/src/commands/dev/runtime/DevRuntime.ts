@@ -1,6 +1,7 @@
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { DevEventHandler } from './events';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 
 export interface DevRuntimeContext {
     readonly config: ResolvedSeedcordConfig;
@@ -12,6 +13,12 @@ export interface DevRuntime extends ModuleLoader {
     start(context: DevRuntimeContext): Promise<void>;
 
     loadEntry(): Promise<DevRuntimeLoadResult>;
+
+    /** Resolves with the bot's username once it started. */
+    startBot(instance: SeedcordInstance): Promise<string | undefined>;
+
+    /** Aborts a startup that is still running, then shuts the bot down. */
+    stopBot(): Promise<void>;
 
     /** Called when the dev session ends. */
     dispose(): Promise<void>;

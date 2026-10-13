@@ -7,6 +7,7 @@ import { HostAugmentTarget, HostShutdown, HostStartup, HostVersion, SeedcordBran
 import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { DevSession } from '#commands/dev/DevSession';
+import { InstanceLifecycle } from '#commands/dev/runtime/InstanceLifecycle';
 import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
 import { DevStore } from '#ui/stores/DevStore';
 
@@ -30,12 +31,15 @@ function config(): ResolvedSeedcordConfig {
 }
 
 function runtime(module: unknown, emit?: DevEvent): DevRuntime {
+    const lifecycle = new InstanceLifecycle();
     return {
         start: (context: DevRuntimeContext) => {
             if (emit) context.onEvent?.(emit);
             return Promise.resolve();
         },
         loadEntry: () => Promise.resolve({ module }),
+        startBot: (instance) => lifecycle.start(instance),
+        stopBot: () => lifecycle.stop(),
         importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
         dispose: () => Promise.resolve()
     };
