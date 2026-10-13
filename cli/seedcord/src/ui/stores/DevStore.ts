@@ -2,7 +2,6 @@ import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { assertNever } from '@seedcord/utils';
 
 import { isSessionLive } from './devPhase';
-import { LogStore } from './LogStore';
 
 import type { DevEvent } from '#commands/dev/runtime/events';
 import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
@@ -133,10 +132,6 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
             }
             case 'server-listening': {
                 this.patch({ port: event.port });
-                break;
-            }
-            case 'log': {
-                LogStore.instance.onLog(event.record);
                 break;
             }
             case 'module-loading':

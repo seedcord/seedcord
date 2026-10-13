@@ -1,10 +1,8 @@
 import { describe, it, expect, onTestFinished, vi } from 'vitest';
 
 import { DevStore } from '#ui/stores/DevStore';
-import { LogStore } from '#ui/stores/LogStore';
 
 import type { DevEvent } from '#commands/dev/runtime/events';
-import type { LogRecord } from '@seedcord/types';
 
 describe('DevStore', () => {
     it('starts in the initial state', () => {
@@ -177,22 +175,5 @@ describe('DevStore', () => {
         const store = new DevStore();
         // exhaustiveness is compile-checked via assertNever; this proves the runtime guard too.
         expect(() => store.apply({ type: 'nope' } as unknown as DevEvent)).toThrow();
-    });
-
-    it('shows a log the edge worker sent in the log list', async () => {
-        const logs = LogStore.instance;
-        onTestFinished(() => logs.clear());
-        const record: LogRecord = {
-            level: 'info',
-            message: 'warming the cache',
-            label: 'Cache',
-            channel: 'bot',
-            timestamp: 1
-        };
-
-        new DevStore().apply({ type: 'log', record });
-        await logs.flush();
-
-        expect(logs.getLogs()).toContainEqual(expect.objectContaining({ label: 'Cache', channel: 'bot' }));
     });
 });

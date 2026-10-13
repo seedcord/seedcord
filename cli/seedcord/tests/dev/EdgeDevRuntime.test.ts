@@ -1,13 +1,14 @@
 import { once } from 'node:events';
-import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer as createHttpServer, request as httpRequest } from 'node:http';
 import { createServer as createNetServer } from 'node:net';
 import { join, relative } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
+import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import chalk from 'chalk';
+import { Envapter, Environment } from 'envapt';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
@@ -21,7 +22,7 @@ import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import type { DevEvent, DevEventHandler } from '#commands/dev/runtime/events';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
-import type { ILogSink, LogRecord } from '@seedcord/types';
+import type { LogRecord } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { IncomingMessage } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -135,6 +136,46 @@ async function edgeProject(vars: Record<string, string> = liveVars): Promise<{ p
     return { projectDir, port };
 }
 
+// the worker's records reach the CLI's logger the way a node bot's records do
+function captureLogs(): LogRecord[] {
+    const records: LogRecord[] = [];
+    const handle = LoggerChannelRegistry.instance.installSink({
+        kind: 'capture',
+        onLog: (record) => records.push(record)
+    });
+    onTestFinished(() => handle.dispose());
+    return records;
+}
+
+const LOGS_DIR = join(process.cwd(), 'logs');
+
+async function logFiles(): Promise<string[]> {
+    return readdir(LOGS_DIR).catch(() => []);
+}
+
+// node defaults log at trace and add a combined file only in development
+async function asDevelopment(): Promise<() => Promise<string>> {
+    const environment = Envapter.environment;
+    Envapter.environment = Environment.Development;
+    const before = new Set(await logFiles());
+    const created = async (): Promise<string[]> => {
+        const files = await logFiles();
+        return files.filter((file) => !before.has(file));
+    };
+    onTestFinished(async () => {
+        Envapter.environment = environment;
+        installNodeDefaults();
+        for (const file of await created()) await rm(join(LOGS_DIR, file));
+    });
+    return async () => {
+        const files = await created();
+        const texts = await Promise.all(files.map((file) => readFile(join(LOGS_DIR, file), 'utf8')));
+        return texts.join('');
+    };
+}
+
+const messagesOf = (records: LogRecord[]): string[] => records.map((record) => record.message);
+
 async function startedRuntime(
     projectDir: string,
     onEvent?: DevEventHandler
@@ -157,10 +198,8 @@ describe('EdgeDevRuntime', () => {
 
     it("reports the worker's logs", async () => {
         const { projectDir } = await edgeProject();
-        const logs: LogRecord[] = [];
-        const { runtime, instance } = await startedRuntime(projectDir, (event) => {
-            if (event.type === 'log') logs.push(event.record);
-        });
+        const logs = captureLogs();
+        const { runtime, instance } = await startedRuntime(projectDir);
 
         await runtime.startBot(instance);
 
@@ -170,14 +209,12 @@ describe('EdgeDevRuntime', () => {
     it("reports a console.log from the bot's own code", async () => {
         const { projectDir } = await edgeProject();
         await appendFile(join(projectDir, 'src/bot.ts'), "\nconsole.log('counter ready');\n");
-        const messages: string[] = [];
-        const { runtime, instance } = await startedRuntime(projectDir, (event) => {
-            if (event.type === 'log') messages.push(event.record.message);
-        });
+        const logs = captureLogs();
+        const { runtime, instance } = await startedRuntime(projectDir);
 
         await runtime.startBot(instance);
 
-        expect(messages).toContainEqual(expect.stringContaining('counter ready'));
+        expect(messagesOf(logs)).toContainEqual(expect.stringContaining('counter ready'));
     }, 120_000);
 
     it.each(['.dev.vars', '.env', 'wrangler.jsonc'])(
@@ -223,24 +260,21 @@ describe('EdgeDevRuntime', () => {
         onTestFinished(() => {
             chalk.level = level;
         });
-        const messages: string[] = [];
-        const { runtime, instance } = await startedRuntime(projectDir, (event) => {
-            if (event.type === 'log') messages.push(event.record.message);
-        });
+        const logs = captureLogs();
+        const { runtime, instance } = await startedRuntime(projectDir);
 
         await runtime.startBot(instance);
 
         // usernameOf paints the username sky blue
-        expect(messages.find((message) => message.startsWith('Running as'))).toContain('\u001B[');
+        expect(messagesOf(logs).find((message) => message.startsWith('Running as'))).toContain('\u001B[');
     }, 120_000);
 
     it("writes the worker's file paths relative to the CLI's cwd", async () => {
+        await asDevelopment();
         const { projectDir } = await edgeProject();
         await writeFile(join(projectDir, 'src/handlers/Wave.ts'), waveHandler('waved'));
-        const records: LogRecord[] = [];
-        const { runtime, instance } = await startedRuntime(projectDir, (event) => {
-            if (event.type === 'log') records.push(event.record);
-        });
+        const records = captureLogs();
+        const { runtime, instance } = await startedRuntime(projectDir);
 
         await runtime.startBot(instance);
 
@@ -249,17 +283,18 @@ describe('EdgeDevRuntime', () => {
         expect(loaded).not.toContain('../');
     }, 120_000);
 
-    it("keeps writing the CLI's logs to its sinks after it loads the codegen copy", async () => {
+    it("writes the worker's logs to the session's log file after a server session reset the logger", async () => {
+        const createdLogs = await asDevelopment();
+        // what ServerHost.reset leaves behind
+        LoggerChannelRegistry.instance.configure({});
         const { projectDir } = await edgeProject();
-        const written: string[] = [];
-        const file: ILogSink = { kind: 'file', onLog: (record) => written.push(record.message) };
-        Logger.configure({ level: 'info', sinks: [file] });
-        onTestFinished(() => installNodeDefaults());
-        await startedRuntime(projectDir);
+        const { runtime, instance } = await startedRuntime(projectDir);
 
-        new Logger('Tunnel').info('reachable');
+        await runtime.startBot(instance);
 
-        expect(written).toContain('reachable');
+        await vi.waitFor(async () => {
+            expect(await createdLogs()).toContain('Coordinated startup completed successfully');
+        });
     }, 120_000);
 
     it('answers a POST that arrives through a tunnel hostname', async () => {
@@ -303,10 +338,8 @@ describe('EdgeDevRuntime', () => {
         await writeDevVars(projectDir, { DISCORD_BOT_TOKEN: FAKE_TOKEN, DISCORD_PUBLIC_KEY: publicKey });
         const handler = join(projectDir, 'src/handlers/Wave.ts');
         await writeFile(handler, waveHandler('waved v1'));
-        const messages: string[] = [];
-        const { runtime, instance } = await startedRuntime(projectDir, (event) => {
-            if (event.type === 'log') messages.push(event.record.message);
-        });
+        const logs = captureLogs();
+        const { runtime, instance } = await startedRuntime(projectDir);
         await runtime.startBot(instance);
         const wave = async (): Promise<void> => {
             const body = WAVE_INTERACTION;
@@ -318,7 +351,7 @@ describe('EdgeDevRuntime', () => {
         await vi.waitFor(
             async () => {
                 await wave();
-                expect(messages).toContainEqual(expect.stringContaining('waved v2'));
+                expect(messagesOf(logs)).toContainEqual(expect.stringContaining('waved v2'));
             },
             { timeout: 20_000, interval: 500 }
         );

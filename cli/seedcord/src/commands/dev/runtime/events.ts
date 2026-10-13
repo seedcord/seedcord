@@ -1,5 +1,3 @@
-import type { LogRecord } from '@seedcord/types';
-
 // a new dev signal is a variant here plus a case in DevStore.apply
 export type DevEvent =
     | { type: 'module-loading'; path: string }
@@ -8,7 +6,6 @@ export type DevEvent =
     | { type: 'restart-required' }
     | { type: 'ready' }
     | { type: 'command-update-prompt'; files: string[] }
-    | { type: 'server-listening'; port: number }
-    | { type: 'log'; record: LogRecord };
+    | { type: 'server-listening'; port: number };
 
 export type DevEventHandler = (event: DevEvent) => void;

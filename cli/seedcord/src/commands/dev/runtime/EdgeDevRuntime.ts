@@ -3,6 +3,8 @@ import { dirname } from 'node:path';
 import { fromWireError, fromWireLog, wrapHot } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { LoggerChannelRegistry } from '@seedcord/logger';
+import { installNodeDefaults } from '@seedcord/logger/node';
 import { setBotRoot } from '@seedcord/utils/node/internal';
 import chalk from 'chalk';
 import { createServer, createServerModuleRunner } from 'vite';
@@ -71,6 +73,14 @@ function nodeCopy(onReady: (modules: RunnerModuleLoader) => void): Plugin {
     };
 }
 
+// a node bot installs the logger defaults in its constructor and resets them in ServerHost.reset
+function holdProcessState(stack: AsyncDisposableStack, root: string): void {
+    setBotRoot(root);
+    stack.defer(() => setBotRoot(undefined));
+    installNodeDefaults();
+    stack.defer(() => LoggerChannelRegistry.instance.configure({}));
+}
+
 // runs an edge bot in workerd. The ssr environment holds the copy codegen reads
 export class EdgeDevRuntime implements DevRuntime {
     private started?: Started | undefined;
@@ -91,8 +101,7 @@ export class EdgeDevRuntime implements DevRuntime {
         const configDir = dirname(config.configFile);
         const files = new ProjectFiles(config.root, config.build.outDir, configDir);
         await using onFailure = new AsyncDisposableStack();
-        setBotRoot(config.root);
-        onFailure.defer(() => setBotRoot(undefined));
+        holdProcessState(onFailure, config.root);
         this.emit(context, { type: 'module-loading', path: config.root });
 
         const [folders, cloudflare, port] = await Promise.all([
@@ -110,7 +119,7 @@ export class EdgeDevRuntime implements DevRuntime {
             mergeViteConfig(userCodeConfig(WORKERD_CONDITIONS), {
                 root: viteRoot,
                 configFile: false,
-                customLogger: workerLogger((record) => this.emit(context, { type: 'log', record })),
+                customLogger: workerLogger(),
                 clearScreen: false,
                 server: {
                     middlewareMode: true,
@@ -158,7 +167,7 @@ export class EdgeDevRuntime implements DevRuntime {
         this.started = { context, server, modules, hmr, resources: onFailure.move() };
         // the worker already filtered by its own level
         this.workerChannel().on('seedcord:log', (record) => {
-            this.emit(context, { type: 'log', record: fromWireLog(record) });
+            LoggerChannelRegistry.instance.dispatch(fromWireLog(record));
         });
 
         this.emit(context, { type: 'module-loaded', path: config.root });

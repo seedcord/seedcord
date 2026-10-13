@@ -8,17 +8,22 @@ import { getDevChannel, setDevChannel } from './devChannel';
 import { wrapHot } from './wrapHot';
 
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
-import type { SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
+import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 
 export class HmrManager {
     private readonly logger = new Logger('HMR', { channel: 'hmr' });
     private readonly listeners = new Set<HmrAware>();
 
     /** @internal */
-    public init(): void {
+    public connect(): DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents> | undefined {
         // the only raw `import.meta.hot` read in the framework
         if (import.meta.hot) setDevChannel(wrapHot<SeedcordFrameworkEvents, SeedcordCliEvents>(import.meta.hot));
-        const channel = getDevChannel();
+        return getDevChannel();
+    }
+
+    /** @internal */
+    public init(): void {
+        const channel = this.connect();
         if (!channel) return;
 
         if (!(Envapter.isDevelopment || Envapter.isTest)) {

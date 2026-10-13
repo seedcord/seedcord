@@ -176,7 +176,20 @@ describe('the edge Seedcord under seedcord dev', () => {
 
         await vi.waitFor(() => expect(cli.sent.at(-1)?.[0]).toBe('seedcord:started'));
         const logs = cli.sent.filter(([event]) => event === 'seedcord:log').map(([, record]) => record);
-        expect(logs[0]).toMatchObject({ label: 'Cache', message: 'warming the cache' });
+        expect(logs).toContainEqual(expect.objectContaining({ label: 'Cache', message: 'warming the cache' }));
+    });
+
+    it('sends the logs its own constructor wrote', async () => {
+        const cli = connectCli();
+        await liveEnv();
+        const seedcord = new Seedcord({ ...config, logger: { level: 'debug' } });
+        stubDiscord(seedcord);
+
+        cli.start();
+
+        await vi.waitFor(() => expect(cli.sent.at(-1)?.[0]).toBe('seedcord:started'));
+        const logs = cli.sent.filter(([event]) => event === 'seedcord:log').map(([, record]) => record);
+        expect(logs).toContainEqual(expect.objectContaining({ label: 'HMR', message: 'Enabled' }));
     });
 
     it('sends the error back when the start fails, and requests fail with it too', async () => {
