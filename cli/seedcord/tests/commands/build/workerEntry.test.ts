@@ -14,9 +14,9 @@ function bakedIdsRun(ids: BakedIds): BakedIds {
         files: { globExcludes: () => [] } as unknown as ProjectFiles,
         folders: [],
         instanceKey: '/bot.ts',
-        functionExports: [],
+        functionExports: () => Promise.resolve([]),
         rootKey: '/',
-        ids
+        mode: { kind: 'build', ids }
     });
     // justified: the plugin's load hook is a plain function here
     const load = plugin.load as (id: string) => string;

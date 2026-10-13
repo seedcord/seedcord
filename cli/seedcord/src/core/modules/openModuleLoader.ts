@@ -1,6 +1,6 @@
 import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
 
-import { BIND_ENV_ID, edgeStandIns } from './edgeStandIns';
+import { edgeStandIns } from './edgeStandIns';
 import { RunnerModuleLoader } from './RunnerModuleLoader';
 import { seedcordDependents } from './seedcordDependents';
 import { NODE_CONDITIONS, WORKERD_CONDITIONS, userCodeConfig } from './userCodeConfig';
@@ -16,10 +16,6 @@ class ViteModuleLoader extends RunnerModuleLoader implements AsyncDisposable {
         runner: ModuleRunner
     ) {
         super(runner);
-    }
-
-    public async bindEnv(): Promise<void> {
-        await this.load(BIND_ENV_ID, 'envapt');
     }
 
     public async [Symbol.asyncDispose](): Promise<void> {
@@ -52,7 +48,7 @@ export async function openModuleLoader(
     onFailure.defer(() => runner.close());
 
     const loader = new ViteModuleLoader(server, runner);
-    if (isEdge) await loader.bindEnv();
+    if (isEdge) await loader.bindEdgeEnv();
 
     onFailure.move();
     return loader;

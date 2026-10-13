@@ -10,11 +10,12 @@ import { resetChannelColors } from '#ui/channelColor';
 import { profileMark } from '#ui/profile';
 
 import { DevSession } from './DevSession';
+import { EdgeDevRuntime } from './runtime/EdgeDevRuntime';
 import { ViteDevRuntime } from './runtime/ViteDevRuntime';
 import { createTunnelCoordinator } from './tunnel/createTunnelCoordinator';
 import { TunnelRouter } from './tunnel/TunnelRouter';
 
-import type { ResolvedSeedcordConfig, ResolvedTunnel } from '#core/config/schema';
+import type { ResolvedSeedcordConfig, ResolvedTarget, ResolvedTunnel } from '#core/config/schema';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { TunnelCoordinator } from './tunnel/TunnelCoordinator';
@@ -28,7 +29,7 @@ export interface DevRunnerDeps {
     readonly codegen: Pick<CodegenRunner, 'writeFrom'>;
     readonly codegenLogger: ILogger;
     readonly tunnel: TunnelRouter;
-    readonly runtime: () => DevRuntime;
+    readonly runtime: (target: ResolvedTarget) => DevRuntime;
 }
 
 export class DevRunner {
@@ -56,7 +57,7 @@ export class DevRunner {
             codegen: CodegenRunner.create(quietSteps, codegenLogger),
             codegenLogger,
             tunnel: new TunnelRouter(makeCoordinator, tunnelLogger),
-            runtime: () => new ViteDevRuntime()
+            runtime: (target) => (target.kind === 'edge' ? new EdgeDevRuntime(target) : new ViteDevRuntime())
         });
     }
 
@@ -107,7 +108,7 @@ export class DevRunner {
         if (this.shouldQuit || this.isDisconnected || this.hasPendingRestart) return;
         profileMark('config');
         this.deps.store.setIdleAnimation(config.idleAnimation);
-        this.currentSession = new DevSession(config, this.deps.runtime(), this.deps.store, (event) => {
+        this.currentSession = new DevSession(config, this.deps.runtime(config.target), this.deps.store, (event) => {
             void this.deps.tunnel.route(config.tunnel, event);
         });
 

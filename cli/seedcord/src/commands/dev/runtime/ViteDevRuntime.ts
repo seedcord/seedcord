@@ -11,6 +11,7 @@ import { seedcordDependents } from '#core/modules/seedcordDependents';
 import { devServerConfig, logsIgnore } from './devServerConfig';
 import { HmrPlugin } from './HmrPlugin';
 import { InstanceLifecycle } from './InstanceLifecycle';
+import { loadEntry } from './loadEntry';
 
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
 import type { DevEvent, DevEventHandler } from './events';
@@ -78,22 +79,9 @@ export class ViteDevRuntime implements DevRuntime {
         return this.started().modules.importModule<TModule>(path);
     }
 
-    public async loadEntry(): Promise<DevRuntimeLoadResult> {
+    public loadEntry(): Promise<DevRuntimeLoadResult> {
         const { context, modules } = this.started();
-        const { instance: entryPath } = context.config;
-
-        this.emit({ type: 'module-loading', path: entryPath });
-
-        try {
-            const module = await modules.importModule(entryPath);
-
-            this.emit({ type: 'module-loaded', path: entryPath });
-
-            return { module };
-        } catch (error: unknown) {
-            this.emit({ type: 'module-error', path: entryPath, error });
-            throw error;
-        }
+        return loadEntry(modules, context);
     }
 
     public async dispose(): Promise<void> {
