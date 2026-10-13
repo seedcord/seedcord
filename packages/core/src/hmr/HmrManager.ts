@@ -4,7 +4,7 @@ import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { Envapter } from 'envapt';
 
-import { setDevChannel } from './devChannel';
+import { getDevChannel, setDevChannel } from './devChannel';
 import { wrapHot } from './wrapHot';
 
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
@@ -16,10 +16,10 @@ export class HmrManager {
 
     /** @internal */
     public init(): void {
-        if (!import.meta.hot) return;
         // the only raw `import.meta.hot` read in the framework
-        const channel = wrapHot<SeedcordFrameworkEvents, SeedcordCliEvents>(import.meta.hot);
-        setDevChannel(channel);
+        if (import.meta.hot) setDevChannel(wrapHot<SeedcordFrameworkEvents, SeedcordCliEvents>(import.meta.hot));
+        const channel = getDevChannel();
+        if (!channel) return;
 
         if (!(Envapter.isDevelopment || Envapter.isTest)) {
             return;

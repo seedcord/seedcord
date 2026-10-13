@@ -2,10 +2,14 @@ import {
     attachmentsOf,
     BAKED_IDS_KEY,
     bindBotColor,
+    CommandRegistry,
     CoordinatedStartup,
+    getDevChannel,
+    HmrManager,
     installLinks,
     PluginLifecycle,
-    sealAttachments
+    sealAttachments,
+    toWireError
 } from '@seedcord/core/internal';
 import { PluginHost } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -13,19 +17,23 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 
+import { addDiscordReads } from '#src/discordReads';
 import { installEmojis } from '#src/emojis/EmojiInjector';
 import { rejectNonPost } from '#src/engine';
+import { addHmrRegistration } from '#src/hmrRegistration';
 import { InteractionsService } from '#src/InteractionsService';
+import { usernameOf } from '#src/username';
 import { version as packageVersion } from '#src/version';
 
 import { edgeRestOptions, edgeShutdown } from './defaults';
 
 import type { HttpEdgeConfig } from '#interfaces/Config';
-import type { Engine, EngineContext } from '#src/engine';
+import type { EngineContext } from '#src/engine';
 import type { REST } from '@discordjs/rest';
 import type { Bus } from '@seedcord/core';
 import type { BakedIds } from '@seedcord/core/internal';
 import type { IRateLimiter } from '@seedcord/types';
+import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 
 // seedcord build's worker entry writes these before bot.ts loads
 function bakedIds(): BakedIds {
@@ -42,6 +50,9 @@ function bakedIds(): BakedIds {
  * and the public key, command ids, and emoji ids that `seedcord build` wrote into the worker. It
  * loads the handler and subscriber folders, then runs the startup tasks and every plugin's `init()`
  * and `ready()`. Requests that arrive meanwhile wait for it.
+ *
+ * Under `seedcord dev` the bot starts when the CLI starts it. It reads the public key and emoji
+ * ids from Discord and deploys your commands, the way a node bot does.
  */
 export class Seedcord extends PluginHost<'http', 'edge'> {
     // the CLI reads these to detect and augment the instance
@@ -78,7 +89,12 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     // workerd gives a worker no shutdown hook. dispose() runs only in a rollback.
     readonly #plugins = new PluginLifecycle(this.#startup, { addTask: () => undefined });
 
-    #prepared?: Promise<Engine>;
+    readonly #hmr = new HmrManager();
+    readonly #logger = new Logger('Server', { channel: 'bot' });
+    // only seedcord dev opens this
+    readonly #cli?: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents> | undefined;
+
+    #prepared?: Promise<void>;
     #started?: Promise<void> | undefined;
 
     static #isInstantiated = false;
@@ -97,6 +113,27 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         this.rest = this.#service.rest;
         this.rateLimiter = this.#service.rateLimiter;
         this.bus = this.#service.bus;
+
+        this.#hmr.init();
+        this.#cli = getDevChannel();
+        if (this.#cli) this.#startWhenAsked(this.#cli);
+    }
+
+    #startWhenAsked(cli: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>): void {
+        const commands = this.config.bot.commands.path ? new CommandRegistry(this) : undefined;
+        addHmrRegistration(this.#hmr, { host: this, service: this.#service, commands });
+        addDiscordReads({ host: this, service: this.#service, commands });
+        cli.on('seedcord:start', () => void this.#startForCli(cli));
+    }
+
+    async #startForCli(cli: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>): Promise<void> {
+        try {
+            await this.#start();
+        } catch (error) {
+            cli.send('seedcord:start-failed', { error: toWireError(error) });
+            return;
+        }
+        cli.send('seedcord:started', { username: await usernameOf(this.rest, this.#logger) });
     }
 
     /** The bot's Discord application id. Throws if you read it before the first POST. */
@@ -112,23 +149,28 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         const notPost = rejectNonPost(request);
         if (notPost) return notPost;
 
+        await this.#start();
+        return this.#service.engine(request, ctx);
+    }
+
+    async #start(): Promise<void> {
         this.#prepared ??= this.#prepare();
-        const handle = await this.#prepared;
+        await this.#prepared;
 
         this.#started ??= this.#runStartup();
         await this.#started;
-
-        return handle(request, ctx);
     }
 
-    async #prepare(): Promise<Engine> {
-        const ids = bakedIds();
+    // once per isolate. Running the loaders again would register every subscriber twice
+    async #prepare(): Promise<void> {
+        const ids = this.#cli ? undefined : bakedIds();
         this.#service.authenticate();
         await this.#service.subscribers.init();
         await this.#service.interactions?.init();
+        if (!ids) return;
         installLinks(ids);
         installEmojis(ids.emojis);
-        return this.#service.prepareEngine(ids.publicKey);
+        this.#service.prepareEngine(ids.publicKey);
     }
 
     async #runStartup(): Promise<void> {

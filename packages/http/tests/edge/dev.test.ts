@@ -1,0 +1,141 @@
+import { BuilderComponent, RegisterCommand } from '@seedcord/core';
+import { setDevChannel } from '@seedcord/core/internal';
+import { Plugin } from '@seedcord/core/plugin';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
+import { Envapter, PortableSource } from 'envapt';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { Seedcord } from '#src/edge/Seedcord';
+import { BUILT_ROOT, clearBuiltFiles, registerBuiltFiles } from '#tests/helpers/builtFiles';
+import { createSigner, signedRequest } from '#tests/helpers/ed25519';
+import { APP_ID, VALID_TOKEN } from '#tests/helpers/fixtures';
+
+import type { HttpEdgeConfig } from '#interfaces/Config';
+import type { Signer } from '#tests/helpers/ed25519';
+import type { HmrUpdateEvent } from '@seedcord/types';
+
+const ping = '{"type":1}';
+
+const config: HttpEdgeConfig = {
+    bot: { interactions: { path: null }, commands: { path: null } },
+    subscribers: { path: null }
+};
+
+interface FakeCli {
+    readonly sent: [event: string, data: unknown][];
+    start(): void;
+    save(event: HmrUpdateEvent): void;
+}
+
+// the channel seedcord dev opens to the worker
+function connectCli(): FakeCli {
+    const sent: [string, unknown][] = [];
+    const handlers = new Map<string, (data: unknown) => void>();
+    setDevChannel({
+        send: (event, data) => sent.push([event, data]),
+        // justified: the fake stores every handler under one signature
+        on: (event, handler) => handlers.set(event, handler as (data: unknown) => void)
+    });
+    return {
+        sent,
+        start: () => handlers.get('seedcord:start')?.({}),
+        save: (event) => handlers.get('seedcord:hmr')?.(event)
+    };
+}
+
+async function liveEnv(): Promise<Signer> {
+    const signer = await createSigner();
+    Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: VALID_TOKEN, DISCORD_PUBLIC_KEY: signer.publicKeyHex }));
+    return signer;
+}
+
+function stubDiscord(seedcord: Seedcord): void {
+    const get = vi.fn((route: string) => (route === Routes.user('@me') ? { username: 'wave-bot' } : {}));
+    Object.assign(seedcord.rest, { get });
+}
+
+describe('the edge Seedcord under seedcord dev', () => {
+    afterEach(() => {
+        // @ts-expect-error singleton reset between tests
+        Seedcord.reset();
+        setDevChannel(undefined);
+        clearBuiltFiles();
+    });
+
+    it('starts when the CLI asks and answers without baked ids', async () => {
+        const cli = connectCli();
+        const signer = await liveEnv();
+        const seedcord = new Seedcord(config);
+        stubDiscord(seedcord);
+
+        cli.start();
+
+        await vi.waitFor(() => expect(cli.sent).toContainEqual(['seedcord:started', { username: 'wave-bot' }]));
+        const response = await seedcord.fetch(await signedRequest(signer, ping));
+        expect(response.status).toBe(200);
+    });
+
+    it('deploys the commands from the bot files when it starts', async () => {
+        @RegisterCommand('global')
+        class Ping extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                this.instance.setName('ping').setDescription('Replies with pong');
+            }
+        }
+        registerBuiltFiles({ '/commands/Ping.ts': { Ping } });
+        const cli = connectCli();
+        await liveEnv();
+        const seedcord = new Seedcord({
+            ...config,
+            bot: { ...config.bot, commands: { path: `${BUILT_ROOT}/commands` } }
+        });
+        stubDiscord(seedcord);
+        const put = vi.fn().mockResolvedValue([{ id: '7', name: 'ping', type: ApplicationCommandType.ChatInput }]);
+        Object.assign(seedcord.rest, { put });
+
+        cli.start();
+
+        await vi.waitFor(() => expect(cli.sent.map(([event]) => event)).toEqual(['seedcord:started']));
+        expect(put).toHaveBeenCalledWith(Routes.applicationCommands(APP_ID), expect.anything());
+    });
+
+    it("passes a saved file to a plugin's onHmr once started", async () => {
+        const saved: string[] = [];
+        class Cache extends Plugin {
+            public init(): Promise<void> {
+                return Promise.resolve();
+            }
+            public override onHmr(event: HmrUpdateEvent): Promise<void> {
+                saved.push(event.file);
+                return Promise.resolve();
+            }
+        }
+        const cli = connectCli();
+        await liveEnv();
+        const seedcord = new Seedcord(config).attach('cache', Cache);
+        stubDiscord(seedcord);
+        cli.start();
+        await vi.waitFor(() => expect(cli.sent.map(([event]) => event)).toEqual(['seedcord:started']));
+
+        cli.save({ file: '/bot/config/cache.json', type: 'update' });
+
+        await vi.waitFor(() => expect(saved).toEqual(['/bot/config/cache.json']));
+    });
+
+    it('sends the error back when the start fails, and requests fail with it too', async () => {
+        const cli = connectCli();
+        Envapter.useSource(new PortableSource({}));
+        const seedcord = new Seedcord(config);
+
+        cli.start();
+
+        await vi.waitFor(() => expect(cli.sent.map(([event]) => event)).toEqual(['seedcord:start-failed']));
+        expect(cli.sent[0]?.[1]).toHaveProperty(['error', 'code'], SeedcordErrorCode.ConfigMissingEnv);
+        await expect(seedcord.fetch(new Request('https://bot.example', { method: 'POST' }))).rejects.toHaveProperty(
+            'code',
+            SeedcordErrorCode.ConfigMissingEnv
+        );
+    });
+});

@@ -1,6 +1,18 @@
 import type { HmrUpdateEvent } from './Types/Hmr';
 
 /**
+ * An `Error` as JSON, for the dev channel between a bot in workerd and the CLI.
+ *
+ * @internal
+ */
+export interface WireError {
+    name: string;
+    message: string;
+    stack?: string | undefined;
+    code?: unknown;
+}
+
+/**
  * HMR events the framework (client) sends to the CLI (server).
  *
  * @internal
@@ -9,6 +21,8 @@ export interface SeedcordFrameworkEvents {
     'seedcord:register-critical-files': { patterns: string[] };
     'seedcord:commands-update-prompt': { files: string[] };
     'seedcord:server-listening': { port: number };
+    'seedcord:started': { username: string | undefined };
+    'seedcord:start-failed': { error: WireError };
 }
 
 /**
@@ -19,6 +33,7 @@ export interface SeedcordFrameworkEvents {
 export interface SeedcordCliEvents {
     'seedcord:hmr': HmrUpdateEvent;
     'seedcord:refresh-commands': { shouldRefresh: boolean };
+    'seedcord:start': Record<string, never>;
 }
 
 /**

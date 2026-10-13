@@ -1,5 +1,5 @@
 import { StartupPhase } from '@seedcord/core';
-import { busLoggerOf, COMMAND_DEPLOY_TIMEOUT_MS } from '@seedcord/core/internal';
+import { COMMAND_DEPLOY_TIMEOUT_MS } from '@seedcord/core/internal';
 
 import { EmojiInjector } from '#src/emojis/EmojiInjector';
 import { publicKeyOf } from '#src/publicKey';
@@ -14,33 +14,12 @@ interface StartupParts {
     readonly commands: CommandRegistry | undefined;
 }
 
-export function addDiscordStartup({ host, service, commands }: StartupParts): void {
+// a deployed edge worker reads the key and ids seedcord build baked
+export function addDiscordReads({ host, service, commands }: StartupParts): void {
     const { startup } = host;
     const emojis = new EmojiInjector(host);
     const emojisLoaded = Promise.withResolvers<boolean>();
 
-    startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
-        busLoggerOf(service.bus).utils.initialization('Subscribers', 'start');
-        await service.subscribers.init();
-        busLoggerOf(service.bus).utils.initialization('Subscribers', 'end');
-    });
-
-    const { interactions } = service;
-    if (interactions) {
-        startup.addTask(StartupPhase.Configuration, 'interactions-initialization', async () => {
-            interactions.logger.utils.initialization('Interactions', 'start');
-            await interactions.init();
-            interactions.logger.utils.initialization('Interactions', 'end');
-        });
-    }
-
-    startup.addTask(StartupPhase.Configuration, 'authenticate', () => {
-        service.authenticate();
-        return Promise.resolve();
-    });
-
-    // these Login tasks read the token that Configuration sets.
-    // a deployed edge worker reads the key and ids seedcord build baked
     startup.addTask(StartupPhase.Login, 'interactions-engine', async () => {
         service.prepareEngine(await publicKeyOf(service.rest));
     });
@@ -64,7 +43,7 @@ export function addDiscordStartup({ host, service, commands }: StartupParts): vo
         async (signal) => {
             // emoji-injection reports why it failed
             if (!(await emojisLoaded.promise)) return;
-            await commands.deploy(signal, { routes: interactions });
+            await commands.deploy(signal, { routes: service.interactions });
         },
         COMMAND_DEPLOY_TIMEOUT_MS
     );

@@ -1,18 +1,19 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
-import { attachmentsOf, bindBotColor, CommandRegistry, getDevChannel, HmrManager } from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, CommandRegistry, getDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { DRAIN_TASK_TIMEOUT_MS, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
-import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
-import { addDiscordStartup } from '#src/discordStartup';
+import { addDiscordReads } from '#src/discordReads';
+import { addHmrRegistration } from '#src/hmrRegistration';
 import { InteractionsService } from '#src/InteractionsService';
+import { usernameOf } from '#src/username';
 import { version as packageVersion } from '#src/version';
 
 import { NodeEndpoint } from './NodeEndpoint';
@@ -130,9 +131,33 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     }
 
     #registerStartupTasks(): void {
-        if (Envapter.isDevelopment || Envapter.isTest) this.#registerHmrAwareModules();
+        const commands = this.#commandRegistry;
+        if (Envapter.isDevelopment || Envapter.isTest) {
+            addHmrRegistration(this.#hmrManager, { host: this, service: this.#service, commands });
+        }
 
-        addDiscordStartup({ host: this, service: this.#service, commands: this.#commandRegistry });
+        this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
+            busLoggerOf(this.bus).utils.initialization('Subscribers', 'start');
+            await this.#service.subscribers.init();
+            busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
+        });
+
+        const interactions = this.#service.interactions;
+        if (interactions) {
+            this.startup.addTask(StartupPhase.Configuration, 'interactions-initialization', async () => {
+                interactions.logger.utils.initialization('Interactions', 'start');
+                await interactions.init();
+                interactions.logger.utils.initialization('Interactions', 'end');
+            });
+        }
+
+        this.startup.addTask(StartupPhase.Configuration, 'authenticate', () => {
+            this.#service.authenticate();
+            return Promise.resolve();
+        });
+
+        // the Login tasks read the token authenticate sets
+        addDiscordReads({ host: this, service: this.#service, commands });
 
         this.startup.addTask(StartupPhase.Ready, 'http-server', () => {
             const { port = DEFAULT_PORT } = this.config;
@@ -155,18 +180,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
             () => this.#endpoint.drain(),
             DRAIN_TASK_TIMEOUT_MS
         );
-    }
-
-    #registerHmrAwareModules(): void {
-        this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
-            if (this.#service.interactions) this.#hmrManager.register(this.#service.interactions);
-            if (this.#commandRegistry) this.#hmrManager.register(this.#commandRegistry);
-            this.#hmrManager.register(this.#service.subscribers);
-            for (const { instance } of attachmentsOf(this)) {
-                this.#hmrManager.register(instance);
-            }
-            await Promise.resolve();
-        });
     }
 
     /** The bot's Discord application id. Throws if you read it before the Configuration phase. */
@@ -204,15 +217,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     }
 
     async #fetchUsername(): Promise<void> {
-        try {
-            // justified: the @me payload carries username per the discord api contract
-            const me = (await this.rest.get(Routes.user('@me'))) as { username?: string };
-            this.#fetchedUsername = me.username;
-            if (me.username) this.#logger.info(`Running as ${paint.sky.bold(me.username)}`);
-        } catch (caught) {
-            // a bad token errors on the first real send anyway
-            this.#logger.warn('could not fetch the bot identity', caught);
-        }
+        this.#fetchedUsername = await usernameOf(this.rest, this.#logger);
     }
 
     #stopServer(): Promise<void> {
