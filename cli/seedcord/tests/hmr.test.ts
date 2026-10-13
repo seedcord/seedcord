@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -108,6 +109,12 @@ vi.mock('@seedcord/logger', async (importOriginal) => ({
 
 vi.mock('@seedcord/event-emitter', () => ({
     TypedEventEmitter: EventEmitter
+}));
+
+// most paths below don't exist on disk
+vi.mock('node:fs', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('node:fs')>()),
+    existsSync: vi.fn(() => true)
 }));
 
 describe('HmrPlugin', () => {
@@ -270,6 +277,16 @@ describe('HmrPlugin', () => {
 
         it('sends one delete carrying the importers of the deleted file', () => {
             viteHotUpdate(hmrPlugin, 'delete', file, [moduleNode(file, [moduleNode(importerFile)])]);
+
+            expect(hotSendMock.mock.calls).toEqual([
+                [HMR_EVENT_NAME, { file, type: 'delete', affectedModules: [file, importerFile], rollback: true }]
+            ]);
+        });
+
+        it('sends a delete for an update to a file that is gone', () => {
+            vi.mocked(existsSync).mockReturnValueOnce(false);
+
+            viteHotUpdate(hmrPlugin, 'update', file, [moduleNode(file, [moduleNode(importerFile)])]);
 
             expect(hotSendMock.mock.calls).toEqual([
                 [HMR_EVENT_NAME, { file, type: 'delete', affectedModules: [file, importerFile], rollback: true }]

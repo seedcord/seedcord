@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { relative, resolve, sep } from 'node:path';
 
 import { wrapHot } from '@seedcord/core/internal';
@@ -138,7 +139,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             for (const mod of moduleGraph.getModulesByFile(target) ?? []) moduleGraph.invalidateModule(mod);
         }
 
-        this.send({ file, type, affectedModules });
+        this.send({ file, type: deleteIfGone(type, file), affectedModules });
 
         // [] skips vite's own hmr
         return [];
@@ -164,6 +165,11 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         const { root } = this.config;
         return relative(root, resolveFromRoot(root, pattern)).split(sep).join('/');
     }
+}
+
+// workerd has no access to the project's files
+function deleteIfGone(type: HotUpdateOptions['type'], file: string): HotUpdateOptions['type'] {
+    return type === 'update' && !existsSync(file) ? 'delete' : type;
 }
 
 // vite can hold several modules for one file, each with its own importers
