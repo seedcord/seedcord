@@ -2,4 +2,4 @@
 '@seedcord/utils': patch
 ---
 
-Fixed `roundToDenomination` so decimals ending in `.9` stay as written, higher precision drops trailing zeroes, and results never include the text `undefined` when a value reaches the last suffix or exceeds the built-in list.
+Fixed roundToDenomination rounding 1949 up to 2K and printing 1undefined for a value past the last suffix. Now 1949 gives 1.9K, for example.
