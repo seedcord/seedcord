@@ -1,4 +1,5 @@
 import { Commands } from '@seedcord/core';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostStartup, HostVersion } from '@seedcord/types/internal';
 import { setBotRoot } from '@seedcord/utils/node/internal';
 import { ApplicationCommandType, Events, GatewayIntentBits } from 'discord.js';
@@ -234,12 +235,14 @@ describe('CommandRegistry Integration', () => {
         try {
             await using seedcord = new Seedcord(config);
             vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');
-            const starting = seedcord.start();
-            const outcome = expect(starting).rejects.toThrow();
+            const starting = seedcord.start().catch((error: unknown) => error);
 
             await vi.advanceTimersByTimeAsync(10_000);
+            const failure = await starting;
 
-            await outcome;
+            expect(failure).toHaveProperty('code', SeedcordErrorCode.LifecyclePhaseFailures);
+            expect(failure).toHaveProperty(['errors', 0, 'code'], SeedcordErrorCode.LifecycleTaskTimeout);
+            expect(failure).toHaveProperty(['errors', 0, 'message'], expect.stringContaining('bot-initialization'));
         } finally {
             vi.useRealTimers();
         }

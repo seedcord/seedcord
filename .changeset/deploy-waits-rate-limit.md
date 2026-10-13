@@ -4,4 +4,4 @@
 '@seedcord/http': patch
 ---
 
-Fixed a bot failing to start when Discord held its command deploy longer than 10 seconds, like on a third restart within a minute. The deploy now waits out Discord's rate limit for up to 75 seconds.
+Fixed a bot failing to start when Discord held its command deploy longer than 10 seconds, like on a third restart within a minute. Startup now gives the deploy up to 75 seconds for Discord's rate limit to reset.

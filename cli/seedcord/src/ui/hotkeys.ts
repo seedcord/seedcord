@@ -149,6 +149,7 @@ function handleActions(ctx: HotkeyContext): void {
     }
 }
 
+// r and d abort startup.
 // CommandRegistry stops waiting on an aborted deploy
 export function acceptsSessionKeys(state: Pick<DevState, 'phase' | 'isBusy' | 'restartRequired'>): boolean {
     return !state.isBusy || state.restartRequired || state.phase === 'starting';

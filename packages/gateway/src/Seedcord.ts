@@ -1,13 +1,13 @@
 import { Bus } from '@seedcord/core';
 import { attachmentsOf, bindBotColor, busLoggerOf, HmrManager, SubscriberLoader } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
-import { COMMAND_DEPLOY_TIMEOUT_MS, HealthCheck, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
+import { HealthCheck, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
-import { botLoggerOf, Bot, commandRegistryOf, deployCommands, initBot } from './bot/Bot';
+import { Bot } from './bot/Bot';
 import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
@@ -86,22 +86,6 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
             await this.#subscribers.init();
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
         });
-
-        this.startup.addTask(StartupPhase.Login, 'bot-initialization', async (signal) => {
-            botLoggerOf(this.bot).utils.initialization('Bot', 'start');
-            await initBot(this.bot, signal);
-            botLoggerOf(this.bot).utils.initialization('Bot', 'end');
-        });
-
-        const commandRegistry = commandRegistryOf(this.bot);
-        if (commandRegistry) {
-            this.startup.addTask(
-                StartupPhase.Login,
-                'command-deploy',
-                (signal) => deployCommands(this.bot, commandRegistry, signal),
-                COMMAND_DEPLOY_TIMEOUT_MS
-            );
-        }
 
         const healthCheck = this.#healthCheck;
         if (healthCheck) {

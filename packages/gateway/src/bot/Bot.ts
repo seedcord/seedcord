@@ -1,4 +1,11 @@
-import { CommandRegistry, DRAIN_TASK_TIMEOUT_MS, DRAIN_WINDOW_MS, ShutdownPhase } from '@seedcord/core/node/internal';
+import {
+    COMMAND_DEPLOY_TIMEOUT_MS,
+    CommandRegistry,
+    DRAIN_TASK_TIMEOUT_MS,
+    DRAIN_WINDOW_MS,
+    ShutdownPhase,
+    StartupPhase
+} from '@seedcord/core/node/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -19,8 +26,6 @@ const UNBIND_TIMEOUT_MS = 2000;
 const LOGOUT_TIMEOUT_MS = 2000;
 
 const loggerSlot = Symbol('seedcord:bot:logger');
-const initSlot = Symbol('seedcord:bot:init');
-const deploySlot = Symbol('seedcord:bot:deploy');
 const controllersSlot = Symbol('seedcord:bot:controllers');
 
 interface Controllers {
@@ -75,6 +80,7 @@ export class Bot implements HmrAware {
 
         this.#emojiInjector = new EmojiInjector(core);
 
+        this.#registerStartupTasks(core);
         this.#registerShutdownTasks(core);
     }
 
@@ -88,6 +94,23 @@ export class Bot implements HmrAware {
         const { application } = this.#client;
         if (!application) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
         return application.id;
+    }
+
+    #registerStartupTasks(core: Core): void {
+        core.startup.addTask(StartupPhase.Login, 'bot-initialization', async (signal) => {
+            this.#logger.utils.initialization('Bot', 'start');
+            await this.#init(signal);
+            this.#logger.utils.initialization('Bot', 'end');
+        });
+
+        const registry = this.#commandRegistry;
+        if (!registry) return;
+        core.startup.addTask(
+            StartupPhase.Login,
+            'command-deploy',
+            (signal) => this.#deployCommands(registry, signal),
+            COMMAND_DEPLOY_TIMEOUT_MS
+        );
     }
 
     #registerShutdownTasks(core: Core): void {
@@ -114,8 +137,7 @@ export class Bot implements HmrAware {
         await Promise.allSettled([this.#interactions?.drain(DRAIN_WINDOW_MS), this.#events?.drain(DRAIN_WINDOW_MS)]);
     }
 
-    /** @internal */
-    public async [initSlot](signal: AbortSignal): Promise<void> {
+    async #init(signal: AbortSignal): Promise<void> {
         if (this.#isInitialized) {
             return;
         }
@@ -138,8 +160,7 @@ export class Bot implements HmrAware {
         await this.#emojiInjector.init();
     }
 
-    /** @internal */
-    public async [deploySlot](registry: CommandRegistry, signal: AbortSignal): Promise<void> {
+    async #deployCommands(registry: CommandRegistry, signal: AbortSignal): Promise<void> {
         // bot-initialization reports a failed login
         if (!(await this.#loggedIn.promise)) return;
 
@@ -175,19 +196,11 @@ export class Bot implements HmrAware {
     }
 }
 
+// the gateway integration tests call these off a live host
 export function botLoggerOf(bot: Bot): Logger {
     return bot[loggerSlot];
 }
 
-export function initBot(bot: Bot, signal: AbortSignal): Promise<void> {
-    return bot[initSlot](signal);
-}
-
-export function deployCommands(bot: Bot, registry: CommandRegistry, signal: AbortSignal): Promise<void> {
-    return bot[deploySlot](registry, signal);
-}
-
-// the gateway integration tests call these three off a live host
 export function interactionsOf(bot: Bot): InteractionDispatcher | undefined {
     return bot[controllersSlot].interactions;
 }

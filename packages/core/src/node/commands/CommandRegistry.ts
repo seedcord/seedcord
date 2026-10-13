@@ -38,7 +38,7 @@ type CommandArtifact = DeployTarget & { name: string };
 
 const MS_PER_SECOND = 1000;
 
-// discord's global command bucket allowed 2 PUTs a minute
+// discord's global command bucket allows 2 PUTs a minute
 // 75s covers a full wait plus the request itself
 export const COMMAND_DEPLOY_TIMEOUT_MS = 75_000;
 

@@ -100,6 +100,8 @@ export class DevRunner {
         this.deps.store.setPhase('starting');
         this.deps.store.setBusy(true);
         const config = await this.readConfig();
+        // quit() and disconnect() had no session to stop while the config loaded
+        if (this.shouldQuit || this.isDisconnected) return;
         profileMark('config');
         this.deps.store.setIdleAnimation(config.idleAnimation);
         this.currentSession = new DevSession(config, this.deps.runtime(), this.deps.store, (event) => {

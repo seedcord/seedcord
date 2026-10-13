@@ -140,6 +140,71 @@ describe('DevRunner quit', () => {
     });
 });
 
+interface SlowConfigRun {
+    readonly runner: DevRunner;
+    readonly store: DevStore;
+    readonly running: Promise<void>;
+    readonly start: Mock<() => Promise<void>>;
+    readonly configRequested: Promise<undefined>;
+    readonly finishLoad: () => void;
+}
+
+// no session exists until finishLoad releases projectLoader.open
+function runWithSlowConfig(): SlowConfigRun {
+    const start = vi.fn(() => Promise.resolve());
+    const bot = { ...readyBot, start };
+    const { promise: configRequested, resolve: markRequested } = Promise.withResolvers<undefined>();
+    const { promise: configLoaded, resolve: release } = Promise.withResolvers<undefined>();
+    const project = { config: devConfig, [Symbol.asyncDispose]: () => Promise.resolve() };
+    const store = new DevStore();
+    const runner = new DevRunner({
+        // justified: the session reads only these config fields
+        projectLoader: {
+            open: async () => {
+                markRequested(undefined);
+                await configLoaded;
+                return project;
+            }
+        } as unknown as Pick<ProjectLoader, 'open'>,
+        store,
+        codegen: fakeCodegen(),
+        codegenLogger: silentLogger,
+        tunnel: fakeTunnel(),
+        runtime: () => ({ ...readyRuntime(), loadEntry: () => Promise.resolve({ module: { default: bot } }) })
+    });
+    const running = runner.run();
+    return { runner, store, running, start, configRequested, finishLoad: () => release(undefined) };
+}
+
+describe('DevRunner keys before a session exists', () => {
+    it('keeps the bot offline after d during the config load', async () => {
+        const { runner, store, running, start, configRequested, finishLoad } = runWithSlowConfig();
+        onTestFinished(async () => {
+            await runner.quit();
+            await running;
+        });
+
+        await configRequested;
+        await runner.disconnect();
+        finishLoad();
+
+        await vi.waitFor(() => expect(store.getState().phase).toBe('disconnected'));
+        expect(start).not.toHaveBeenCalled();
+    });
+
+    it('ends the run without starting the bot after q during the config load', async () => {
+        const { runner, running, start, configRequested, finishLoad } = runWithSlowConfig();
+
+        await configRequested;
+        const quitting = runner.quit();
+        finishLoad();
+        await quitting;
+        await running;
+
+        expect(start).not.toHaveBeenCalled();
+    });
+});
+
 describe('DevRunner restart', () => {
     it('swaps in one new session when restarted while the bot starts', async () => {
         let started = 0;
