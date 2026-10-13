@@ -1,10 +1,10 @@
+import { InteractionResponseType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
 import { dispatchInteraction } from '#src/dispatch/dispatchInteraction';
-import { InteractionResponseType } from 'discord-api-types/v10';
-import type { Core } from '#interfaces/Core';
-import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 
+import type { ValidInteractionTypes } from '#handlers/interactionTypes';
+import type { Core } from '#interfaces/Core';
 import type { DispatchArgs } from '#src/dispatch/dispatchInteraction';
 
 describe('dispatchInteraction - errorStack default', () => {
@@ -15,12 +15,12 @@ describe('dispatchInteraction - errorStack default', () => {
 
         // We test the config default behavior:
         const core: Core = {
-            config: { errors: {}, notifications: {} } as any,
-            bus: {} as any,
+            config: { errors: {}, notifications: {} } as unknown,
+            bus: {} as unknown,
             startup: async () => {},
             shutdown: async () => {},
             logger: () => new (require('@seedcord/logger').Logger)('test'),
-            bus: { publishDefault: () => {} },
+            bus: { publishDefault: () => {} }
         } as unknown as Core;
 
         // Verify the default is true
