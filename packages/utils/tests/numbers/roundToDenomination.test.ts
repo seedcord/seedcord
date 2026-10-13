@@ -65,7 +65,6 @@ describe('roundToDenomination', () => {
     });
 
     it('preserves large values past the last suffix at high precision', () => {
-        expect(roundToDenomination(1_000_000_000, { suffixes: ['K'], precision: 15 })).toBe('1000000K');
         expect(roundToDenomination(1e9, { suffixes: ['K'], precision: 15 })).toBe('1000000K');
     });
 
