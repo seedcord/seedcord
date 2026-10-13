@@ -53,7 +53,8 @@ function fakeCodegen(writeFrom = vi.fn<CodegenRunner['writeFrom']>().mockResolve
 function makeRunner(
     codegen: FakeCodegen = fakeCodegen(),
     tunnel: TunnelRouter = fakeTunnel(),
-    codegenLogger: ILogger = silentLogger
+    codegenLogger: ILogger = silentLogger,
+    runtime: () => DevRuntime = readyRuntime
 ): DevRunner {
     const project = { config: devConfig, [Symbol.asyncDispose]: () => Promise.resolve() };
     return new DevRunner({
@@ -63,7 +64,7 @@ function makeRunner(
         codegen,
         codegenLogger,
         tunnel,
-        runtime: readyRuntime
+        runtime
     });
 }
 
@@ -136,6 +137,48 @@ describe('DevRunner quit', () => {
         await vi.advanceTimersByTimeAsync(3000);
 
         await expect(quitting).resolves.toBeUndefined();
+    });
+});
+
+describe('DevRunner restart', () => {
+    it('swaps in one new session when restarted while the bot starts', async () => {
+        let started = 0;
+        let stopped = 0;
+        // the first bot hangs in startup until it is aborted, every later one starts at once
+        const nextBot = (): typeof readyBot => {
+            const aborted = Promise.withResolvers<undefined>();
+            const hangs = started === 0;
+            return {
+                ...readyBot,
+                start: () => {
+                    started++;
+                    return hangs ? aborted.promise : Promise.resolve();
+                },
+                [HostStartup]: { abort: () => void aborted.resolve(undefined) },
+                [HostShutdown]: {
+                    run: () => {
+                        stopped++;
+                        return Promise.resolve();
+                    }
+                }
+            };
+        };
+        const runtime = (): DevRuntime => {
+            const bot = nextBot();
+            return { ...readyRuntime(), loadEntry: () => Promise.resolve({ module: { default: bot } }) };
+        };
+        const runner = makeRunner(fakeCodegen(), fakeTunnel(), silentLogger, runtime);
+        const running = runner.run();
+        onTestFinished(async () => {
+            await runner.quit();
+            await running;
+        });
+        await vi.waitFor(() => expect(started).toBe(1));
+
+        await runner.restart();
+
+        await vi.waitFor(() => expect(started).toBe(2));
+        expect(started - stopped).toBe(1);
     });
 });
 

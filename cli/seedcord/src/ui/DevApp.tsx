@@ -11,7 +11,7 @@ import { usePanelFit } from '#ui/hooks/usePanelFit';
 import { useRailWidth } from '#ui/hooks/useRailWidth';
 import { useScroll } from '#ui/hooks/useScroll';
 import { useUptime } from '#ui/hooks/useUptime';
-import { dispatchHotkey } from '#ui/hotkeys';
+import { acceptsSessionKeys, dispatchHotkey } from '#ui/hotkeys';
 import { DevLayout } from '#ui/layout/DevLayout';
 import { expandRows, rowKey, wrapRows } from '#ui/logRows';
 import { noticesOf } from '#ui/notices';
@@ -65,7 +65,7 @@ export function DevApp(props: DevAppProps): ReactElement {
     const scroll = useScroll(logRows, viewportHeight, rowKey);
     const uptimeMs = useUptime(state, tier !== 'logs');
 
-    const interactive = !state.isBusy || state.restartRequired;
+    const interactive = acceptsSessionKeys(state);
 
     useInput((input, key) => {
         dispatchHotkey({

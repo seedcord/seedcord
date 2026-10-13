@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { INITIAL_CURSOR } from '#ui/filterCursor';
-import { dispatchHotkey } from '#ui/hotkeys';
+import { acceptsSessionKeys, dispatchHotkey } from '#ui/hotkeys';
+import { DevStore } from '#ui/stores/DevStore';
 import { LogStore } from '#ui/stores/LogStore';
 
 import type { LogFilters } from '#ui/devPrefs';
@@ -59,6 +60,28 @@ async function seedChannel(channel: string): Promise<void> {
     LogStore.instance.onLog(record);
     await LogStore.instance.flush();
 }
+
+describe('session keys while the bot starts', () => {
+    const starting = { phase: 'starting', isBusy: true, restartRequired: false } as const;
+
+    it.each([
+        ['while the bot starts', starting, true],
+        ['while the bot runs', { phase: 'running', isBusy: false, restartRequired: false }, true],
+        ['while a restart is required', { phase: 'restart-required', isBusy: true, restartRequired: true }, true],
+        ['while dev quits', { phase: 'quitting', isBusy: true, restartRequired: false }, false]
+    ] as const)('takes r, d and c %s', (_when, state, enabled) => {
+        expect(acceptsSessionKeys(state)).toBe(enabled);
+    });
+
+    it('disconnects on d while the bot starts', () => {
+        const onDisconnect = vi.fn();
+        const store = new DevStore();
+
+        dispatchHotkey(makeCtx({ input: 'd', state: store.getState(), store, onDisconnect }));
+
+        expect(onDisconnect).toHaveBeenCalledOnce();
+    });
+});
 
 describe('dispatchHotkey channel filters', () => {
     afterEach(() => {

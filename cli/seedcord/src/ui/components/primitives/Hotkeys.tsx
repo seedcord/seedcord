@@ -2,7 +2,7 @@ import { Box, Text } from 'ink';
 import React from 'react';
 
 import { ui } from '#ui/palette';
-import { isSessionLive } from '#ui/stores/devPhase';
+import { isStreaming } from '#ui/stores/devPhase';
 
 import type { DevPhase } from '#ui/stores/devPhase';
 import type { ReactElement } from 'react';
@@ -40,7 +40,7 @@ export function SessionKeys({ phase, interactive, following }: SessionKeysProps)
         <Box flexDirection="column">
             <Hotkey keyLabel="q" action="quit" />
             <Hotkey keyLabel="r" action="restart" enabled={interactive} highlight={RESTART_HINT_PHASES.has(phase)} />
-            <Hotkey keyLabel="d" action="disconnect" enabled={interactive && isSessionLive(phase)} />
+            <Hotkey keyLabel="d" action="disconnect" enabled={interactive && isStreaming(phase)} />
             <Hotkey keyLabel="c" action="clear" enabled={interactive} />
             <Hotkey keyLabel="↑↓" action="scroll" />
             <Hotkey keyLabel="t/b" action="top/bottom" highlight={!following} />

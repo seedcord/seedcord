@@ -1,6 +1,6 @@
 import { FILTER_LEVELS } from '#ui/components/primitives/FilterChips';
 import { focusedIn, moveCursor } from '#ui/filterCursor';
-import { isSessionLive } from '#ui/stores/devPhase';
+import { isStreaming } from '#ui/stores/devPhase';
 import { LogStore } from '#ui/stores/LogStore';
 
 import type { LogFilters } from '#ui/devPrefs';
@@ -127,7 +127,7 @@ function handleActions(ctx: HotkeyContext): void {
 
     switch (input) {
         case 'd': {
-            if (!isSessionLive(state.phase)) return;
+            if (!isStreaming(state.phase)) return;
             store.beginDisconnect();
             void ctx.onDisconnect?.();
 
@@ -147,6 +147,11 @@ function handleActions(ctx: HotkeyContext): void {
         }
         // No default
     }
+}
+
+// CommandRegistry stops waiting on an aborted deploy
+export function acceptsSessionKeys(state: Pick<DevState, 'phase' | 'isBusy' | 'restartRequired'>): boolean {
+    return !state.isBusy || state.restartRequired || state.phase === 'starting';
 }
 
 // dispatch checks the prompt before filters. an open y/n prompt would otherwise lose keys to filter hotkeys
