@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
-import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
+import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
 import { devConfigFor } from './devConfigFor';
 
@@ -24,13 +24,13 @@ interface Ban {
     marker: { version: string };
 }
 
-async function startedRuntime(): Promise<{ runtime: ViteDevRuntime; ban: string; entry: unknown }> {
+async function startedRuntime(): Promise<{ runtime: ServerDevRuntime; ban: string; entry: unknown }> {
     const temp = await mkdtempDisposable(join(tmpdir(), 'dev-modules-'));
     onTestFinished(() => temp.remove());
     const dir = temp.path;
     await writeProject(dir);
 
-    const runtime = new ViteDevRuntime();
+    const runtime = new ServerDevRuntime();
     onTestFinished(() => runtime.dispose());
     await runtime.start({ config: devConfigFor(dir, 'index.ts') });
     const { module } = await runtime.loadEntry();

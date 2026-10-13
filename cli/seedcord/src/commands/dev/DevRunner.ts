@@ -11,7 +11,7 @@ import { profileMark } from '#ui/profile';
 
 import { DevSession } from './DevSession';
 import { EdgeDevRuntime } from './runtime/EdgeDevRuntime';
-import { ViteDevRuntime } from './runtime/ViteDevRuntime';
+import { ServerDevRuntime } from './runtime/ServerDevRuntime';
 import { createTunnelCoordinator } from './tunnel/createTunnelCoordinator';
 import { TunnelRouter } from './tunnel/TunnelRouter';
 
@@ -57,7 +57,7 @@ export class DevRunner {
             codegen: CodegenRunner.create(quietSteps, codegenLogger),
             codegenLogger,
             tunnel: new TunnelRouter(makeCoordinator, tunnelLogger),
-            runtime: (target) => (target.kind === 'edge' ? new EdgeDevRuntime(target) : new ViteDevRuntime())
+            runtime: (target) => (target.kind === 'edge' ? new EdgeDevRuntime(target) : new ServerDevRuntime())
         });
     }
 

@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 
 import { afterAll, describe, expect, it, vi } from 'vitest';
 
-import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
+import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
 import { devConfigFor } from './devConfigFor';
 
@@ -14,7 +14,7 @@ const SCRATCH_ROOT = join(import.meta.dirname, '.hmr-fixture');
 const ENTRY = 'export async function read(url: string): Promise<string> { return (await import(url)).value; }\n';
 
 describe('dev runtime hot reload', () => {
-    const runtimes: ViteDevRuntime[] = [];
+    const runtimes: ServerDevRuntime[] = [];
 
     afterAll(async () => {
         await Promise.all(runtimes.map((runtime) => runtime.dispose()));
@@ -31,7 +31,7 @@ describe('dev runtime hot reload', () => {
         await writeFile(join(dir, 'src', 'index.ts'), ENTRY);
         await writeFile(handler, "export const value = 'before';\n");
 
-        const runtime = new ViteDevRuntime();
+        const runtime = new ServerDevRuntime();
         runtimes.push(runtime);
         await runtime.start({ config: devConfigFor(dir, 'index.ts') });
 
@@ -58,7 +58,7 @@ describe('dev runtime hot reload', () => {
         await writeFile(handler, "export { value } from './helper';\n");
         await writeFile(helper, "export const value = 'before';\n");
 
-        const runtime = new ViteDevRuntime();
+        const runtime = new ServerDevRuntime();
         runtimes.push(runtime);
         await runtime.start({ config: devConfigFor(dir, 'index.ts') });
 

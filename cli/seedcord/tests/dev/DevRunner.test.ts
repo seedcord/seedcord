@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, onTestFinished, vi, type Mock } from '
 
 import { DevRunner } from '#commands/dev/DevRunner';
 import { InstanceLifecycle } from '#commands/dev/runtime/InstanceLifecycle';
-import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
+import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
 
@@ -364,7 +364,7 @@ describe('DevRunner run', () => {
             codegen: fakeCodegen(),
             codegenLogger: silentLogger,
             tunnel: fakeTunnel(),
-            runtime: () => new ViteDevRuntime()
+            runtime: () => new ServerDevRuntime()
         });
 
         const running = runner.run();

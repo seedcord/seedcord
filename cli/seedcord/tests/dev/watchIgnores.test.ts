@@ -50,7 +50,7 @@ async function watchProject(root: string): Promise<WatchedProject> {
     const reported = new Set<string>();
 
     server = await createServer(
-        // the same merge ViteDevRuntime does
+        // the same merge ServerDevRuntime does
         mergeConfig(devServerConfig, {
             root,
             logLevel: 'error',

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
+import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
 import { devConfigFor } from './devConfigFor';
 
@@ -34,7 +34,7 @@ async function writeProject(dir: string): Promise<void> {
 }
 
 describe('dev runtime against a project that declares tsconfig paths', () => {
-    const runtimes: ViteDevRuntime[] = [];
+    const runtimes: ServerDevRuntime[] = [];
 
     afterAll(async () => {
         await Promise.all(runtimes.map((runtime) => runtime.dispose()));
@@ -46,7 +46,7 @@ describe('dev runtime against a project that declares tsconfig paths', () => {
         const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
         await writeProject(dir);
 
-        const runtime = new ViteDevRuntime();
+        const runtime = new ServerDevRuntime();
         runtimes.push(runtime);
 
         await runtime.start({ config: devConfigFor(dir, 'index.ts') });

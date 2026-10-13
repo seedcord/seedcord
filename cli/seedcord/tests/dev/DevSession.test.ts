@@ -8,7 +8,7 @@ import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { DevSession } from '#commands/dev/DevSession';
 import { InstanceLifecycle } from '#commands/dev/runtime/InstanceLifecycle';
-import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
+import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { DevStore } from '#ui/stores/DevStore';
 
 import { devConfigFor } from './devConfigFor';
@@ -178,7 +178,7 @@ describe('DevSession with a broken entry', () => {
         await writeFile(join(temp.path, 'package.json'), JSON.stringify({ name: 'dev-fixture', type: 'module' }));
         await writeFile(entry, 'export const = ;\n');
         const brokenConfig = { ...devConfigFor(temp.path, 'index.ts'), typecheck: { enabled: false } } as const;
-        const session = new DevSession(brokenConfig, new ViteDevRuntime(), new DevStore(), () => undefined);
+        const session = new DevSession(brokenConfig, new ServerDevRuntime(), new DevStore(), () => undefined);
         onTestFinished(() => session.dispose());
 
         const error: unknown = await session.start().catch((caught: unknown) => caught);

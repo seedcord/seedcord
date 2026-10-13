@@ -18,7 +18,7 @@ import type { DevEvent, DevEventHandler } from './events';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { ViteDevServer } from 'vite';
 
-export class ViteDevRuntime implements DevRuntime {
+export class ServerDevRuntime implements DevRuntime {
     private context: DevRuntimeContext | null = null;
     private viteServer: ViteDevServer | null = null;
     private modules: RunnerModuleLoader | null = null;
@@ -105,7 +105,7 @@ export class ViteDevRuntime implements DevRuntime {
         if (!this.context || !this.modules) {
             throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
                 this.context?.config.instance ?? 'runtime',
-                'ViteDevRuntime.start() must complete first'
+                'ServerDevRuntime.start() must complete first'
             ]);
         }
         return { context: this.context, modules: this.modules };
