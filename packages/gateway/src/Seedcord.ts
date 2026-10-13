@@ -87,9 +87,9 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
             busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
         });
 
-        this.startup.addTask(StartupPhase.Login, 'bot-initialization', async () => {
+        this.startup.addTask(StartupPhase.Login, 'bot-initialization', async (signal) => {
             botLoggerOf(this.bot).utils.initialization('Bot', 'start');
-            await initBot(this.bot);
+            await initBot(this.bot, signal);
             botLoggerOf(this.bot).utils.initialization('Bot', 'end');
         });
 

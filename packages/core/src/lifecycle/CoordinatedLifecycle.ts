@@ -15,6 +15,7 @@ import type { LifecycleTask } from './LifecycleTypes';
 export abstract class CoordinatedLifecycle<TPhase extends number> {
     protected readonly logger: Logger;
     protected readonly tasksMap = new Map<TPhase, LifecycleTask[]>();
+    #run = new AbortController();
 
     protected constructor(
         loggerName: string,
@@ -25,7 +26,7 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         this.phaseOrder.forEach((phase) => this.tasksMap.set(phase, []));
     }
 
-    public addTask(phase: TPhase, taskName: string, task: () => Promise<void>, timeoutMs: number): void {
+    public addTask(phase: TPhase, taskName: string, task: LifecycleTask['task'], timeoutMs: number): void {
         if (!this.canAddTask()) return;
 
         const tasks = this.tasksMap.get(phase);
@@ -84,13 +85,16 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
             `${paint.italic('Starting')} task ${paint.sky.bold(task.name)} in phase ${paint.iris.bold(this.phaseEnum[phase])}`
         );
 
+        const stopTask = new AbortController();
+        const signal = AbortSignal.any([stopTask.signal, this.#run.signal]);
         try {
-            await withTimeout(task.name, task.task, task.timeout);
+            await withTimeout(task.name, () => task.task(signal), task.timeout);
 
             this.logger.trace(
                 `${paint.italic('Completed')} task ${paint.sky.bold(task.name)} in phase ${paint.iris.bold(this.phaseEnum[phase])}`
             );
         } catch (error) {
+            stopTask.abort(error);
             if (this.isAborted()) return;
             this.logger.error(
                 `${paint.italic('Failed')} task ${paint.sky.bold(task.name)} in phase ${paint.iris.bold(this.phaseEnum[phase])}:`,
@@ -102,6 +106,14 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
 
     protected isAborted(): boolean {
         return false;
+    }
+
+    protected beginRun(): void {
+        this.#run = new AbortController();
+    }
+
+    protected abortRun(): void {
+        this.#run.abort();
     }
 
     protected abstract canAddTask(): boolean;

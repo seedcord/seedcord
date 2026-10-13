@@ -218,12 +218,12 @@ export class CommandRegistry implements Initializeable, HmrAware {
     }
 
     /** @internal */
-    public async setCommands(): Promise<DeployResult> {
+    public async setCommands(signal?: AbortSignal): Promise<DeployResult> {
         const result: DeployResult = { global: new Map(), guilds: new Map() };
         const appId = this.core.applicationId;
 
         if (this.globalCommands.length > 0) {
-            const deployed = await this.put(Routes.applicationCommands(appId), this.globalCommands);
+            const deployed = await this.put(Routes.applicationCommands(appId), this.globalCommands, signal);
             result.global = indexById(deployed);
             const tag = this.globalCommands.length === 1 ? 'command' : 'commands';
             this.logger.utils.block(
@@ -234,7 +234,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         }
 
         for (const [guildId, commands] of this.guildCommands.entries()) {
-            const deployed = await this.putGuild(appId, guildId, commands);
+            const deployed = await this.putGuild(appId, guildId, commands, signal);
             result.guilds.set(guildId, indexById(deployed));
             const tag = commands.length === 1 ? 'command' : 'commands';
             this.logger.utils.block(
@@ -252,16 +252,21 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private async putGuild(
         appId: string,
         guildId: string,
-        commands: readonly CommandBuilder[]
+        commands: readonly CommandBuilder[],
+        signal: AbortSignal | undefined
     ): Promise<APIApplicationCommand[]> {
         try {
-            return await this.put(Routes.applicationGuildCommands(appId, guildId), commands);
+            return await this.put(Routes.applicationGuildCommands(appId, guildId), commands, signal);
         } catch (error) {
             throw new SeedcordError(SeedcordErrorCode.CoreCommandGuildDeployFailed, [guildId], { cause: error });
         }
     }
 
-    private async put(route: `/${string}`, commands: readonly CommandBuilder[]): Promise<APIApplicationCommand[]> {
+    private async put(
+        route: `/${string}`,
+        commands: readonly CommandBuilder[],
+        signal: AbortSignal | undefined
+    ): Promise<APIApplicationCommand[]> {
         const body = commands.map((command) => command.toJSON());
         // read here because gateway assigns core.rest after this registry is constructed
         const { rest } = this.core;
@@ -274,7 +279,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         rest.on(RESTEvents.RateLimited, reportWait);
         try {
             // justified: the bulk-overwrite routes return the deployed command array
-            return (await rest.put(route, { body })) as APIApplicationCommand[];
+            return (await rest.put(route, { body, signal })) as APIApplicationCommand[];
         } finally {
             rest.off(RESTEvents.RateLimited, reportWait);
         }

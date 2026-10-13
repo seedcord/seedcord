@@ -1,6 +1,7 @@
-import { HostVersion } from '@seedcord/types/internal';
+import { HostStartup, HostVersion } from '@seedcord/types/internal';
 import { setBotRoot } from '@seedcord/utils/node/internal';
-import { describe, expect, afterEach, vi } from 'vitest';
+import { Events, GatewayIntentBits } from 'discord.js';
+import { type Mock, describe, expect, afterEach, vi } from 'vitest';
 
 import { commandRegistryOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
@@ -16,6 +17,13 @@ function registryOf(instance: Seedcord): CommandRegistry {
     const registry = commandRegistryOf(instance.bot);
     if (!registry) throw new Error('this test config declares no commands path');
     return registry;
+}
+
+// @discordjs/rest rejects an aborted request with an AbortError before it reaches discord
+function rejectWhenAborted(signal: AbortSignal): Promise<never> {
+    return new Promise((_resolve, reject) => {
+        signal.addEventListener('abort', () => reject(new DOMException('This operation was aborted', 'AbortError')));
+    });
 }
 
 describe('CommandRegistry Integration', () => {
@@ -134,6 +142,44 @@ describe('CommandRegistry Integration', () => {
 
         expect(registryOf(seedcord).globalCommands).toHaveLength(1);
         expect(registryOf(seedcord).globalCommands[0]?.name).toBe('pong');
+    });
+
+    it('cancels a deploy that is still waiting when startup is aborted', async ({ testEnv }) => {
+        await testEnv.createFile(
+            'commands/PingCommand.ts',
+            `
+            import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
+
+            @RegisterCommand('global')
+            export class PingCommand extends BuilderComponent<'command'> {
+                constructor() {
+                    super('command');
+                    this.instance.setName('ping').setDescription('Replies');
+                }
+            }
+            `
+        );
+        const config = testConfig({ commands: testEnv.resolvePath('commands') });
+        config.bot.clientOptions = { intents: [GatewayIntentBits.Guilds] };
+        await using seedcord = new Seedcord(config);
+        vi.spyOn(seedcord.bot, 'botToken', 'get').mockReturnValue('token');
+        // the mock client never connects. login waits on ClientReady
+        const client = seedcord.bot.client as unknown as { once: Mock; rest: { put: Mock } };
+        client.once.mockImplementation((event: Events, onReady: () => void) => {
+            if (event === Events.ClientReady) onReady();
+        });
+        const { promise: putSignal, resolve: sawPut } = Promise.withResolvers<AbortSignal>();
+        client.rest.put.mockImplementation((_route: string, { signal }: { signal: AbortSignal }) => {
+            sawPut(signal);
+            return rejectWhenAborted(signal);
+        });
+
+        const starting = seedcord.start().catch(() => undefined);
+        const signal = await putSignal;
+        seedcord[HostStartup].abort();
+        await starting;
+
+        expect(signal.aborted).toBe(true);
     });
 
     it('holds an edited command for the refresh prompt when the commands path is relative to root', async ({

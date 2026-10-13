@@ -114,7 +114,12 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         this.#startupGate = settled;
     }
 
-    public override addTask(phase: ShutdownPhase, taskName: string, task: () => Promise<void>, timeoutMs = 5000): void {
+    public override addTask(
+        phase: ShutdownPhase,
+        taskName: string,
+        task: LifecycleTask['task'],
+        timeoutMs = 5000
+    ): void {
         super.addTask(phase, taskName, task, timeoutMs);
     }
 

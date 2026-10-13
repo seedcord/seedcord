@@ -163,9 +163,9 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         const commandRegistry = this.#commandRegistry;
         if (commandRegistry) {
             // one task because tasks in a phase run concurrently and the deploy reads the id
-            this.startup.addTask(StartupPhase.Login, 'command-deploy', async () => {
+            this.startup.addTask(StartupPhase.Login, 'command-deploy', async (signal) => {
                 await commandRegistry.init();
-                await commandRegistry.setCommands();
+                await commandRegistry.setCommands(signal);
                 interactions?.warnUnhandledRoutes(commandRegistry.routeLeaves());
                 interactions?.warnUnhandledContextMenuRoutes(commandRegistry.contextMenuLeaves());
             });

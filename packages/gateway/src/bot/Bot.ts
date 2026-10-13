@@ -113,7 +113,7 @@ export class Bot implements HmrAware {
     }
 
     /** @internal */
-    public async [initSlot](): Promise<void> {
+    public async [initSlot](signal: AbortSignal): Promise<void> {
         if (this.#isInitialized) {
             return;
         }
@@ -134,7 +134,7 @@ export class Bot implements HmrAware {
 
         await this.#commandRegistry.init();
         assertGuildsIntent(this.#intents, this.#commandRegistry.allCommands());
-        await this.#commandRegistry.setCommands();
+        await this.#commandRegistry.setCommands(signal);
         this.#interactions?.warnUnhandledRoutes(this.#commandRegistry.routeLeaves());
         this.#interactions?.warnUnhandledContextMenuRoutes(this.#commandRegistry.contextMenuLeaves());
     }
@@ -168,8 +168,8 @@ export function botLoggerOf(bot: Bot): Logger {
     return bot[loggerSlot];
 }
 
-export function initBot(bot: Bot): Promise<void> {
-    return bot[initSlot]();
+export function initBot(bot: Bot, signal: AbortSignal): Promise<void> {
+    return bot[initSlot](signal);
 }
 
 // the gateway integration tests call these three off a live host

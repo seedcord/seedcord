@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import { Commands } from '@seedcord/core';
+import { HostStartup } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -36,6 +37,13 @@ function stubRest(host: Seedcord): { get: ReturnType<typeof vi.fn>; put: ReturnT
     const put = vi.fn().mockResolvedValue([{ id: 'cmd-1', name: 'ping', type: ApplicationCommandType.ChatInput }]);
     Object.assign(host.rest, { get, put });
     return { get, put };
+}
+
+// @discordjs/rest rejects an aborted request with an AbortError before it reaches discord
+function rejectWhenAborted(signal: AbortSignal): Promise<never> {
+    return new Promise((_resolve, reject) => {
+        signal.addEventListener('abort', () => reject(new DOMException('This operation was aborted', 'AbortError')));
+    });
 }
 
 describe('command deploy during http startup', () => {
@@ -91,6 +99,24 @@ describe('command deploy during http startup', () => {
         await host.start();
 
         expect(get).not.toHaveBeenCalledWith(Routes.currentApplication());
+    });
+
+    it('cancels a deploy that is still waiting when startup is aborted', async () => {
+        await using host = new Seedcord(config(COMMANDS_DIR));
+        stubRest(host);
+        const { promise: putSignal, resolve: sawPut } = Promise.withResolvers<AbortSignal>();
+        const put = vi.fn((_route: string, { signal }: { signal: AbortSignal }) => {
+            sawPut(signal);
+            return rejectWhenAborted(signal);
+        });
+        Object.assign(host.rest, { put });
+
+        const starting = host.start().catch(() => undefined);
+        const signal = await putSignal;
+        host[HostStartup].abort();
+        await starting;
+
+        expect(signal.aborted).toBe(true);
     });
 
     it('touches no command route when no commands path is configured', async () => {

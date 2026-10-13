@@ -99,6 +99,21 @@ describe('CommandRegistry.setCommands', () => {
         expect(warnings(records)).toEqual([]);
     });
 
+    it('hands the abort signal to every put', async () => {
+        const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
+        const registry = registryWith(put);
+        registry.globalCommands.push(new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'));
+        registry.guildCommands.set('111', [new SlashCommandBuilder().setName('config').setDescription('Config')]);
+        const { signal } = new AbortController();
+
+        await registry.setCommands(signal);
+
+        expect(put.mock.calls.map(([, options]) => (options as { signal?: AbortSignal }).signal)).toEqual([
+            signal,
+            signal
+        ]);
+    });
+
     it('publishes commandsDeployed with what discord returned', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
         const core = coreWith(put);

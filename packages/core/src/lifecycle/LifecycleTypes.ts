@@ -1,5 +1,5 @@
 export interface LifecycleTask {
     name: string;
-    task: () => Promise<void>;
+    task: (signal: AbortSignal) => Promise<void>;
     timeout: number; // milliseconds
 }

@@ -17,10 +17,14 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         super('Startup', PHASE_ORDER, StartupPhase);
     }
 
+    /**
+     * Adds a task to a startup phase. The task gets a signal that aborts when it outlives `timeoutMs`
+     * or when startup is aborted. Pass it to any request the task makes.
+     */
     public override addTask(
         phase: StartupPhase,
         taskName: string,
-        task: () => Promise<void>,
+        task: LifecycleTask['task'],
         timeoutMs = 10_000
     ): void {
         super.addTask(phase, taskName, task, timeoutMs);
@@ -72,6 +76,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         }
 
         this.#isStartingUp = true;
+        this.beginRun();
         this.logger.info(`${paint.mint.bold('Starting')} coordinated startup sequence`);
 
         try {
@@ -108,6 +113,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         if (!this.#isStartingUp) return;
 
         this.#isStartingUp = false;
+        this.abortRun();
         this.logger.warn('Aborting coordinated startup sequence');
     }
 
