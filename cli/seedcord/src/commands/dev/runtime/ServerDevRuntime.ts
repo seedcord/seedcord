@@ -3,10 +3,11 @@ import { dirname } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { setBotRoot } from '@seedcord/utils/node/internal';
-import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
+import { createServer, createServerModuleRunner } from 'vite';
 
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { seedcordDependents } from '#core/modules/seedcordDependents';
+import { mergeViteConfig } from '#core/modules/userCodeConfig';
 
 import { devServerConfig, logsIgnore } from './devServerConfig';
 import { HmrPlugin } from './HmrPlugin';
@@ -44,7 +45,7 @@ export class ServerDevRuntime implements DevRuntime {
         const base = structuredClone(devServerConfig);
 
         // vite searches its own root for a config file
-        const config = mergeConfig(base, {
+        const config = mergeViteConfig(base, {
             root: projectRoot,
             configFile: false,
             server: { watch: { ignored: [logsIgnore(projectRoot)] } },

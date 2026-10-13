@@ -1,9 +1,9 @@
-import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
+import { createServer, createServerModuleRunner } from 'vite';
 
 import { edgeStandIns } from './edgeStandIns';
 import { RunnerModuleLoader } from './RunnerModuleLoader';
 import { seedcordDependents } from './seedcordDependents';
-import { NODE_CONDITIONS, WORKERD_CONDITIONS, userCodeConfig } from './userCodeConfig';
+import { mergeViteConfig, NODE_CONDITIONS, WORKERD_CONDITIONS, userCodeConfig } from './userCodeConfig';
 
 import type { BuildTarget } from '#core/config/detectTarget';
 import type { ModuleLoader } from './ModuleLoader';
@@ -29,7 +29,7 @@ export async function openModuleLoader(
     target: BuildTarget
 ): Promise<ModuleLoader & AsyncDisposable> {
     const isEdge = target.kind === 'edge';
-    const config = mergeConfig(userCodeConfig(isEdge ? WORKERD_CONDITIONS : NODE_CONDITIONS), {
+    const config = mergeViteConfig(userCodeConfig(isEdge ? WORKERD_CONDITIONS : NODE_CONDITIONS), {
         root: projectDir,
         configFile: false,
         logLevel: 'error',

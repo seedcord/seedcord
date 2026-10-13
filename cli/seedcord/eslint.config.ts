@@ -18,6 +18,24 @@ export default createConfig({
             files: ['**/*.{ts,tsx}'],
             plugins: { 'react-hooks': reactHooksPlugin },
             rules: { ...reactHooks.configs.recommended.rules }
+        },
+        {
+            files: ['**/*.{ts,tsx}'],
+            rules: {
+                '@typescript-eslint/no-restricted-imports': [
+                    'error',
+                    {
+                        paths: [
+                            {
+                                name: 'vite',
+                                importNames: ['mergeConfig'],
+                                message:
+                                    'Use mergeViteConfig from #core/modules/userCodeConfig, which types both configs.'
+                            }
+                        ]
+                    }
+                ]
+            }
         }
     ]
 });

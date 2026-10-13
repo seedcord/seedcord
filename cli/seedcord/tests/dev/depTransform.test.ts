@@ -2,10 +2,11 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
+import { createServer, createServerModuleRunner } from 'vite';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { devServerConfig } from '#commands/dev/runtime/devServerConfig';
+import { mergeViteConfig } from '#core/modules/userCodeConfig';
 
 import type { ViteDevServer } from 'vite';
 
@@ -84,7 +85,7 @@ describe('dev runtime module resolution', () => {
         await writeFixture(root);
 
         server = await createServer(
-            mergeConfig(devServerConfig, { root: join(root, 'src'), server: { hmr: false, watch: null } })
+            mergeViteConfig(devServerConfig, { root: join(root, 'src'), server: { hmr: false, watch: null } })
         );
 
         const runner = createServerModuleRunner(server.environments.ssr);

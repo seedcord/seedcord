@@ -1,4 +1,7 @@
-import type { UserConfig } from 'vite';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports -- the one typed caller of mergeConfig
+import { mergeConfig } from 'vite';
+
+import type { InlineConfig, UserConfig } from 'vite';
 
 interface ResolveConditions {
     conditions: string[];
@@ -10,6 +13,11 @@ export const NODE_CONDITIONS: ResolveConditions = { conditions: ['node', 'import
 // @cloudflare/vite-plugin resolves a worker's imports with these
 const WORKERD = ['workerd', 'worker', 'module', 'browser'];
 export const WORKERD_CONDITIONS: ResolveConditions = { conditions: WORKERD, externalConditions: WORKERD };
+
+export function mergeViteConfig(base: InlineConfig, overrides: InlineConfig): InlineConfig {
+    // justified: vite types mergeConfig's result as Record<string, any>
+    return mergeConfig(base, overrides) as InlineConfig;
+}
 
 export function userCodeConfig(resolve: ResolveConditions): UserConfig {
     return {

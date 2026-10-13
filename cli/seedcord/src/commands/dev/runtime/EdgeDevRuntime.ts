@@ -4,14 +4,14 @@ import { fromWireError, fromWireLog, wrapHot } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { setBotRoot } from '@seedcord/utils/node/internal';
-import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
+import { createServer, createServerModuleRunner } from 'vite';
 
 import { functionExportsOf, WORKER_ENTRY_ID, workerEntry } from '#commands/build/builder/workerEntry';
 import { importCloudflare, loadCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { edgeStandIns } from '#core/modules/edgeStandIns';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { seedcordDependents } from '#core/modules/seedcordDependents';
-import { userCodeConfig, WORKERD_CONDITIONS } from '#core/modules/userCodeConfig';
+import { mergeViteConfig, userCodeConfig, WORKERD_CONDITIONS } from '#core/modules/userCodeConfig';
 import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
 
 import { logsIgnore } from './devServerConfig';
@@ -78,7 +78,7 @@ export class EdgeDevRuntime implements DevRuntime {
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
         const server = await createServer(
-            mergeConfig(userCodeConfig(WORKERD_CONDITIONS), {
+            mergeViteConfig(userCodeConfig(WORKERD_CONDITIONS), {
                 root: viteRoot,
                 configFile: false,
                 customLogger: workerLogger((record) => this.emit(context, { type: 'log', record })),

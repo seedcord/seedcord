@@ -1,9 +1,7 @@
 import { realpathSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
 
-import { mergeConfig } from 'vite';
-
-import { NODE_CONDITIONS, userCodeConfig } from '#core/modules/userCodeConfig';
+import { mergeViteConfig, NODE_CONDITIONS, userCodeConfig } from '#core/modules/userCodeConfig';
 import { STATE_FOLDER } from '#core/state/StateFolder';
 
 // a **/logs/** glob would also swallow a source directory named logs
@@ -14,7 +12,7 @@ export function logsIgnore(root: string): (path: string) => boolean {
     return (path) => path === logs || path.startsWith(logs + sep);
 }
 
-export const devServerConfig = mergeConfig(userCodeConfig(NODE_CONDITIONS), {
+export const devServerConfig = mergeViteConfig(userCodeConfig(NODE_CONDITIONS), {
     server: {
         middlewareMode: true,
         hmr: true,
