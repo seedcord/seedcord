@@ -124,6 +124,13 @@ describe('DevStore', () => {
         expect(store.getState().port).toBe(4000);
     });
 
+    it('apply shows a progress step in the status line', () => {
+        const store = new DevStore();
+        store.apply({ type: 'progress', status: 'Starting workerd…' });
+
+        expect(store.getState().status).toBe('Starting workerd…');
+    });
+
     it('clearPrompt drops the pending prompt with one change', () => {
         const store = new DevStore();
         store.apply({ type: 'command-update-prompt', files: ['a.ts'] });

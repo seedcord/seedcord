@@ -1,4 +1,4 @@
-import { dirname } from 'node:path';
+import { dirname, relative } from 'node:path';
 
 import { fromWireError, fromWireLog, wrapHot } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -104,6 +104,7 @@ export class EdgeDevRuntime implements DevRuntime {
         holdProcessState(onFailure, config.root);
         this.emit(context, { type: 'module-loading', path: config.root });
 
+        this.emit(context, { type: 'progress', status: 'Loading the Cloudflare plugin…' });
         const [folders, cloudflare, port] = await Promise.all([
             files.foldersIncludingEmpty(),
             loadCloudflare(viteRoot, this.deps.importCloudflare),
@@ -137,7 +138,13 @@ export class EdgeDevRuntime implements DevRuntime {
                         folders,
                         instanceKey: viteKey(viteRoot, config.instance),
                         rootKey: viteKey(viteRoot, config.root),
-                        functionExports: async () => functionExportsOf(await modulesReady.promise, config.instance),
+                        functionExports: async () => {
+                            const instance = relative(process.cwd(), config.instance);
+                            this.emit(context, { type: 'progress', status: `Importing ${instance}…` });
+                            const names = await functionExportsOf(await modulesReady.promise, config.instance);
+                            this.emit(context, { type: 'progress', status: 'Starting workerd…' });
+                            return names;
+                        },
                         mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
                     }),
                     inNodeOnly(edgeStandIns()),

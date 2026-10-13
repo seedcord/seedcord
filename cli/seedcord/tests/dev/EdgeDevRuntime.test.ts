@@ -189,6 +189,21 @@ async function startedRuntime(
 }
 
 describe('EdgeDevRuntime', () => {
+    it('reports each slow startup step as it begins', async () => {
+        const { projectDir } = await edgeProject();
+        const steps: string[] = [];
+
+        await startedRuntime(projectDir, (event) => {
+            if (event.type === 'progress') steps.push(event.status);
+        });
+
+        expect(steps).toEqual([
+            'Loading the Cloudflare plugin…',
+            `Importing ${relative(process.cwd(), join(projectDir, 'src/bot.ts'))}…`,
+            'Starting workerd…'
+        ]);
+    }, 120_000);
+
     it('starts the bot in workerd when the session asks', async () => {
         const { projectDir } = await edgeProject();
         const { runtime, instance } = await startedRuntime(projectDir);

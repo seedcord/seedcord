@@ -134,6 +134,10 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
                 this.patch({ port: event.port });
                 break;
             }
+            case 'progress': {
+                this.patch({ status: event.status });
+                break;
+            }
             case 'module-loading':
             case 'module-loaded':
             case 'module-error':
