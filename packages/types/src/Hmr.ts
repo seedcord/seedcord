@@ -1,3 +1,4 @@
+import type { LogRecord } from './Interfaces/LogSink';
 import type { HmrUpdateEvent } from './Types/Hmr';
 
 /**
@@ -13,6 +14,15 @@ export interface WireError {
 }
 
 /**
+ * A {@link LogRecord} as JSON. Each arg carries either an `Error` or a JSON-safe value.
+ *
+ * @internal
+ */
+export interface WireLogRecord extends Omit<LogRecord, 'args'> {
+    args?: ({ error: WireError } | { value: unknown })[] | undefined;
+}
+
+/**
  * HMR events the framework (client) sends to the CLI (server).
  *
  * @internal
@@ -23,6 +33,7 @@ export interface SeedcordFrameworkEvents {
     'seedcord:server-listening': { port: number };
     'seedcord:started': { username: string | undefined };
     'seedcord:start-failed': { error: WireError };
+    'seedcord:log': WireLogRecord;
 }
 
 /**

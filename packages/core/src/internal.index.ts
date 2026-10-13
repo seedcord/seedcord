@@ -62,7 +62,8 @@ export type { GateFitsWith } from '#gates/matching';
 export { getDevChannel, setDevChannel } from '#hmr/devChannel';
 export { HmrManager } from '#hmr/HmrManager';
 export { wrapHot } from '#hmr/wrapHot';
-export { fromWireError, toWireError } from '#hmr/wireError';
+export { fromWireError, fromWireLog, toWireError, toWireLog } from '#hmr/wire';
+export { DevLogForwarder } from '#hmr/DevLogForwarder';
 
 export {
     GateNotice,

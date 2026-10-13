@@ -4,6 +4,7 @@ import {
     bindBotColor,
     CommandRegistry,
     CoordinatedStartup,
+    DevLogForwarder,
     getDevChannel,
     HmrManager,
     installLinks,
@@ -120,10 +121,14 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     #startWhenAsked(cli: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>): void {
+        const logs = new DevLogForwarder(cli);
         const commands = this.config.bot.commands.path ? new CommandRegistry(this) : undefined;
         addHmrRegistration(this.#hmr, { host: this, service: this.#service, commands });
         addDiscordReads({ host: this, service: this.#service, commands });
-        cli.on('seedcord:start', () => void this.#startForCli(cli));
+        cli.on('seedcord:start', () => {
+            logs.open();
+            void this.#startForCli(cli);
+        });
     }
 
     async #startForCli(cli: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>): Promise<void> {

@@ -2,6 +2,7 @@ import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { setDevChannel } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -24,6 +25,8 @@ const config: HttpEdgeConfig = {
 
 interface FakeCli {
     readonly sent: [event: string, data: unknown][];
+    // every event the bot sent besides its logs
+    events(): string[];
     start(): void;
     save(event: HmrUpdateEvent): void;
 }
@@ -39,6 +42,7 @@ function connectCli(): FakeCli {
     });
     return {
         sent,
+        events: () => sent.map(([event]) => event).filter((event) => event !== 'seedcord:log'),
         start: () => handlers.get('seedcord:start')?.({}),
         save: (event) => handlers.get('seedcord:hmr')?.(event)
     };
@@ -61,6 +65,8 @@ describe('the edge Seedcord under seedcord dev', () => {
         Seedcord.reset();
         setDevChannel(undefined);
         clearBuiltFiles();
+        // each bot installs its log forwarder on the process-wide registry
+        LoggerChannelRegistry.instance.reset();
     });
 
     it('starts when the CLI asks and answers without baked ids', async () => {
@@ -97,7 +103,7 @@ describe('the edge Seedcord under seedcord dev', () => {
 
         cli.start();
 
-        await vi.waitFor(() => expect(cli.sent.map(([event]) => event)).toEqual(['seedcord:started']));
+        await vi.waitFor(() => expect(cli.events()).toEqual(['seedcord:started']));
         expect(put).toHaveBeenCalledWith(Routes.applicationCommands(APP_ID), expect.anything());
     });
 
@@ -117,11 +123,25 @@ describe('the edge Seedcord under seedcord dev', () => {
         const seedcord = new Seedcord(config).attach('cache', Cache);
         stubDiscord(seedcord);
         cli.start();
-        await vi.waitFor(() => expect(cli.sent.map(([event]) => event)).toEqual(['seedcord:started']));
+        await vi.waitFor(() => expect(cli.events()).toEqual(['seedcord:started']));
 
         cli.save({ file: '/bot/config/cache.json', type: 'update' });
 
         await vi.waitFor(() => expect(saved).toEqual(['/bot/config/cache.json']));
+    });
+
+    it('sends the logs it wrote before the CLI asked once the CLI starts it', async () => {
+        const cli = connectCli();
+        await liveEnv();
+        const seedcord = new Seedcord(config);
+        stubDiscord(seedcord);
+        new Logger('Cache', { channel: 'bot' }).info('warming the cache');
+
+        cli.start();
+
+        await vi.waitFor(() => expect(cli.sent.at(-1)?.[0]).toBe('seedcord:started'));
+        const logs = cli.sent.filter(([event]) => event === 'seedcord:log').map(([, record]) => record);
+        expect(logs[0]).toMatchObject({ label: 'Cache', message: 'warming the cache' });
     });
 
     it('sends the error back when the start fails, and requests fail with it too', async () => {
@@ -131,8 +151,9 @@ describe('the edge Seedcord under seedcord dev', () => {
 
         cli.start();
 
-        await vi.waitFor(() => expect(cli.sent.map(([event]) => event)).toEqual(['seedcord:start-failed']));
-        expect(cli.sent[0]?.[1]).toHaveProperty(['error', 'code'], SeedcordErrorCode.ConfigMissingEnv);
+        await vi.waitFor(() => expect(cli.events()).toEqual(['seedcord:start-failed']));
+        const [, failed] = cli.sent.find(([event]) => event === 'seedcord:start-failed') ?? [];
+        expect(failed).toHaveProperty(['error', 'code'], SeedcordErrorCode.ConfigMissingEnv);
         await expect(seedcord.fetch(new Request('https://bot.example', { method: 'POST' }))).rejects.toHaveProperty(
             'code',
             SeedcordErrorCode.ConfigMissingEnv
