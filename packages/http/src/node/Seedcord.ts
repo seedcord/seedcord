@@ -1,15 +1,7 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
-import {
-    attachmentsOf,
-    bindBotColor,
-    busLoggerOf,
-    COMMAND_DEPLOY_TIMEOUT_MS,
-    CommandRegistry,
-    getDevChannel,
-    HmrManager
-} from '@seedcord/core/internal';
+import { attachmentsOf, bindBotColor, CommandRegistry, getDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { DRAIN_TASK_TIMEOUT_MS, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { paint } from '@seedcord/errors';
@@ -19,9 +11,8 @@ import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/i
 import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
-import { EmojiInjector } from '#src/emojis/EmojiInjector';
+import { addDiscordStartup } from '#src/discordStartup';
 import { InteractionsService } from '#src/InteractionsService';
-import { publicKeyOf } from '#src/publicKey';
 import { version as packageVersion } from '#src/version';
 
 import { NodeEndpoint } from './NodeEndpoint';
@@ -66,8 +57,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     readonly #service: InteractionsService;
     readonly #endpoint: NodeEndpoint;
     readonly #commandRegistry?: CommandRegistry;
-    readonly #emojiInjector = new EmojiInjector(this);
-    readonly #emojisLoaded = Promise.withResolvers<boolean>();
     readonly #hmrManager: HmrManager;
     readonly #logger = new Logger('Server', { channel: 'bot' });
 
@@ -143,46 +132,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     #registerStartupTasks(): void {
         if (Envapter.isDevelopment || Envapter.isTest) this.#registerHmrAwareModules();
 
-        this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
-            busLoggerOf(this.bus).utils.initialization('Subscribers', 'start');
-            await this.#service.subscribers.init();
-            busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
-        });
-
-        const interactions = this.#service.interactions;
-        if (interactions) {
-            this.startup.addTask(StartupPhase.Configuration, 'interactions-initialization', async () => {
-                interactions.logger.utils.initialization('Interactions', 'start');
-                await interactions.init();
-                interactions.logger.utils.initialization('Interactions', 'end');
-            });
-        }
-
-        this.startup.addTask(StartupPhase.Configuration, 'authenticate', () => {
-            this.#service.authenticate();
-            return Promise.resolve();
-        });
-
-        // these Login tasks read the token that Configuration sets
-        this.startup.addTask(StartupPhase.Login, 'interactions-engine', async () => {
-            this.#service.prepareEngine(await publicKeyOf(this.rest));
-        });
-        this.startup.addTask(StartupPhase.Login, 'emoji-injection', (signal) => this.#injectEmojis(signal));
-
-        const commandRegistry = this.#commandRegistry;
-        if (commandRegistry) {
-            // one task because tasks in a phase run concurrently and the deploy reads the id
-            this.startup.addTask(
-                StartupPhase.Login,
-                'command-deploy',
-                async (signal) => {
-                    // emoji-injection reports why it failed
-                    if (!(await this.#emojisLoaded.promise)) return;
-                    await commandRegistry.deploy(signal, { routes: interactions });
-                },
-                COMMAND_DEPLOY_TIMEOUT_MS
-            );
-        }
+        addDiscordStartup({ host: this, service: this.#service, commands: this.#commandRegistry });
 
         this.startup.addTask(StartupPhase.Ready, 'http-server', () => {
             const { port = DEFAULT_PORT } = this.config;
@@ -192,17 +142,6 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         if (!Envapter.isTest) {
             this.startup.addTask(StartupPhase.Ready, 'identity', () => this.#fetchUsername());
         }
-    }
-
-    async #injectEmojis(signal: AbortSignal): Promise<void> {
-        signal.addEventListener('abort', () => this.#emojisLoaded.resolve(false), { once: true });
-        try {
-            await this.#emojiInjector.init();
-        } catch (error) {
-            this.#emojisLoaded.resolve(false);
-            throw error;
-        }
-        this.#emojisLoaded.resolve(true);
     }
 
     #registerShutdownTasks(): void {
