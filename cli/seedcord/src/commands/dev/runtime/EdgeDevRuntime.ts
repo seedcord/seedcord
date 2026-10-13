@@ -1,6 +1,6 @@
 import { dirname, relative } from 'node:path';
 
-import { fromWireError, fromWireLog, wrapHot } from '@seedcord/core/internal';
+import { fromWireError, wrapHot } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
@@ -104,7 +104,7 @@ export class EdgeDevRuntime implements DevRuntime {
         holdProcessState(onFailure, config.root);
         this.emit(context, { type: 'module-loading', path: config.root });
 
-        this.emit(context, { type: 'progress', status: 'Loading the Cloudflare plugin…' });
+        this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
         const [folders, cloudflare, port] = await Promise.all([
             files.foldersIncludingEmpty(),
             loadCloudflare(viteRoot, this.deps.importCloudflare),
@@ -126,7 +126,7 @@ export class EdgeDevRuntime implements DevRuntime {
                     middlewareMode: true,
                     // discord's POST arrives under the tunnel's hostname. the endpoint blocks every other request
                     allowedHosts: true,
-                    watch: { ignored: [logsIgnore(config.root), isWorkerConfigFile(this.target.wranglerConfig)] }
+                    watch: { ignored: [logsIgnore(process.cwd()), isWorkerConfigFile(this.target.wranglerConfig)] }
                 },
                 ssr: { noExternal: seedcordDependents(configDir) },
                 // the plugin's dep scan finds nothing in a virtual main.
@@ -172,11 +172,6 @@ export class EdgeDevRuntime implements DevRuntime {
         });
         onFailure.defer(() => configWatcher.close());
         this.started = { context, server, modules, hmr, resources: onFailure.move() };
-        // the worker already filtered by its own level
-        this.workerChannel().on('seedcord:log', (record) => {
-            LoggerChannelRegistry.instance.dispatch(fromWireLog(record));
-        });
-
         this.emit(context, { type: 'module-loaded', path: config.root });
         this.emit(context, { type: 'ready' });
         this.emit(context, { type: 'server-listening', port });

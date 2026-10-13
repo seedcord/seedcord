@@ -3,6 +3,7 @@ import { appendFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/pro
 import { createServer as createHttpServer, request as httpRequest } from 'node:http';
 import { createServer as createNetServer } from 'node:net';
 import { join, relative } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
@@ -12,15 +13,20 @@ import { Envapter, Environment } from 'envapt';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
+import { DevRunner } from '#commands/dev/DevRunner';
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { toSeedcordInstance } from '#core/modules/importInstance';
 import { quietSteps } from '#core/output/quietSteps';
 import { copyEdgeBotForTest, writeSigningEnv } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES, FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { silentLogger } from '#tests/silentLogger';
+import { DevStore } from '#ui/stores/DevStore';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import type { DevEvent, DevEventHandler } from '#commands/dev/runtime/events';
+import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
+import type { EdgeTarget } from '#core/config/detectTarget';
+import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { LogRecord } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
@@ -189,19 +195,118 @@ async function startedRuntime(
 }
 
 describe('EdgeDevRuntime', () => {
-    it('reports each slow startup step as it begins', async () => {
+    it('reports each slow startup step before the endpoint listens', async () => {
         const { projectDir } = await edgeProject();
-        const steps: string[] = [];
+        const events: DevEvent[] = [];
 
-        await startedRuntime(projectDir, (event) => {
-            if (event.type === 'progress') steps.push(event.status);
+        await startedRuntime(projectDir, (event) => events.push(event));
+
+        const types = events.map((event) => event.type);
+        const steps = events.flatMap((event) => (event.type === 'progress' ? [event.status] : []));
+        expect(steps).toHaveLength(3);
+        expect(types.lastIndexOf('progress')).toBeLessThan(types.indexOf('server-listening'));
+        expect(steps[1]).toContain(relative(process.cwd(), join(projectDir, 'src/bot.ts')));
+    }, 120_000);
+
+    it('runs one session under seedcord dev until the user acts', async () => {
+        const { projectDir } = await edgeProject();
+        const discord = await fakeDiscordApi();
+        await editFile(join(projectDir, 'src/bot.ts'), (text) =>
+            text
+                .replace(
+                    'bot: { interactions:',
+                    `bot: { restOptions: { api: '${discord.api}' }, commands: { path: './commands' }, interactions:`
+                )
+                .replace(', commands: { path: null }', '')
+        );
+        await mkdir(join(projectDir, 'src/commands'));
+        await writeFile(join(projectDir, 'src/commands/Wave.ts'), WAVE_COMMAND);
+        const logs = captureLogs();
+        const config = {
+            ...edgeConfig(projectDir),
+            tunnel: { mode: 'off' },
+            typecheck: { enabled: false },
+            idleAnimation: false
+        } as ResolvedSeedcordConfig;
+        const store = new DevStore();
+        const runner = new DevRunner({
+            // justified: the runner reads config and disposes the project
+            projectLoader: {
+                open: () => Promise.resolve({ config, [Symbol.asyncDispose]: () => Promise.resolve() })
+            } as unknown as Pick<ProjectLoader, 'open'>,
+            store,
+            codegen: CodegenRunner.create(quietSteps, silentLogger),
+            codegenLogger: silentLogger,
+            // justified: tunnel mode off routes nothing
+            tunnel: { route: () => undefined, stop: () => Promise.resolve() } as unknown as TunnelRouter,
+            runtime: (target) => new EdgeDevRuntime(target as EdgeTarget)
+        });
+        const running = runner.run();
+        onTestFinished(async () => {
+            await runner.quit();
+            await running;
         });
 
-        expect(steps).toEqual([
-            'Loading the Cloudflare plugin…',
-            `Importing ${relative(process.cwd(), join(projectDir, 'src/bot.ts'))}…`,
-            'Starting workerd…'
-        ]);
+        await vi.waitFor(() => expect(store.getState().phase).toBe('running'), { timeout: 60_000 });
+        await new Promise((resolve) => setTimeout(resolve, 6000));
+
+        expect(messagesOf(logs).filter((message) => message === 'Starting coordinated startup sequence')).toHaveLength(
+            1
+        );
+        expect(store.getState().phase).toBe('running');
+    }, 120_000);
+
+    it("logs each request the endpoint passes to the bot, like a node bot's engine does", async () => {
+        // a development env logs at debug, in the worker and in the CLI
+        await asDevelopment();
+        const { projectDir, port } = await edgeProject({ ...liveVars, ENVIRONMENT: 'development' });
+        const logs = captureLogs();
+        const { runtime, instance } = await startedRuntime(projectDir);
+        await runtime.startBot(instance);
+
+        await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
+
+        await vi.waitFor(() => {
+            expect(messagesOf(logs).map((message) => stripVTControlCharacters(message))).toContain('POST unsigned 401');
+        });
+    }, 120_000);
+
+    it('leaves the folder the log file goes to out of hot reload', async () => {
+        await asDevelopment();
+        const { projectDir } = await edgeProject();
+        // the log file goes under the cwd. a bot runs seedcord dev from its project folder
+        const cwd = process.cwd();
+        process.chdir(projectDir);
+        onTestFinished(() => process.chdir(cwd));
+        const logs = captureLogs();
+        const { runtime, instance } = await startedRuntime(projectDir);
+        await runtime.startBot(instance);
+        const hmrLines = (): string[] =>
+            logs.filter((record) => record.label === 'HMR').map((record) => stripVTControlCharacters(record.message));
+
+        await mkdir(join(projectDir, 'logs'), { recursive: true });
+        await appendFile(join(projectDir, 'logs/combined.log'), 'a line\n');
+        await writeFile(join(projectDir, 'src/handlers/Touched.ts'), 'export const touched = 1;\n');
+
+        await vi.waitFor(() => expect(hmrLines()).toContainEqual(expect.stringContaining('src/handlers/Touched.ts')));
+        expect(hmrLines().filter((line) => line.includes('logs/'))).toEqual([]);
+    }, 120_000);
+
+    it('keeps the running worker when a log file in the project changes', async () => {
+        const { projectDir, port } = await edgeProject();
+        const logs = captureLogs();
+        const { runtime, instance } = await startedRuntime(projectDir);
+        await runtime.startBot(instance);
+
+        await mkdir(join(projectDir, 'logs'));
+        await writeFile(join(projectDir, 'logs/combined.log'), 'first line\n');
+        await appendFile(join(projectDir, 'logs/combined.log'), 'second line\n');
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
+
+        expect(messagesOf(logs).filter((message) => message === 'Starting coordinated startup sequence')).toHaveLength(
+            1
+        );
     }, 120_000);
 
     it('starts the bot in workerd when the session asks', async () => {

@@ -2,7 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { describe, expect, it } from 'vitest';
 
-import { fromWireError, fromWireLog, toWireError, toWireLog } from '#hmr/wire';
+import { fromDevLogLine, fromWireError, fromWireLog, toDevLogLine, toWireError, toWireLog } from '#hmr/wire';
 
 import type { LogRecord } from '@seedcord/types';
 
@@ -65,6 +65,19 @@ describe('wire logs', () => {
         expect(received).toMatchObject({ level: 'error', message: 'deploy failed', label: 'Commands', timestamp: 1 });
         expect(Error.isError(received.args?.[0])).toBe(true);
         expect(received.args?.[0]).toHaveProperty('code', SeedcordErrorCode.ConfigMissingEnv);
+    });
+
+    it('reads a record back out of the console line it was written as', () => {
+        const sent = record([new Error('Missing Access')]);
+
+        const received = fromDevLogLine(toDevLogLine(sent));
+
+        expect(received).toMatchObject({ level: 'error', message: 'deploy failed', label: 'Commands', timestamp: 1 });
+        expect(received?.args?.[0]).toMatchObject({ message: 'Missing Access' });
+    });
+
+    it("leaves a console line the bot's own code wrote alone", () => {
+        expect(fromDevLogLine('counter ready')).toBeUndefined();
     });
 
     it('sends a circular arg with the loop cut', () => {

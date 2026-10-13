@@ -1,8 +1,10 @@
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/edge/Seedcord';
+import { clearBakedIds, registerBakedIds } from '#tests/helpers/bakedIds';
+import { createSigner, signedRequest } from '#tests/helpers/ed25519';
 import { VALID_TOKEN } from '#tests/helpers/fixtures';
 
 import type { HttpEdgeConfig } from '#src/interfaces/Config';
@@ -30,10 +32,13 @@ function edgeConfig(logger?: LoggerConfig): HttpEdgeConfig {
     };
 }
 
-function constructBot(config: HttpEdgeConfig): void {
+// the bot applies config.logger when it starts, on its first POST
+async function startBot(config: HttpEdgeConfig): Promise<void> {
     // @ts-expect-error singleton reset between bots
     Seedcord.reset();
-    void new Seedcord(config);
+    const signer = await createSigner();
+    registerBakedIds({ publicKey: signer.publicKeyHex });
+    await new Seedcord(config).fetch(await signedRequest(signer, '{"type":1}'));
 }
 
 beforeEach(() => {
@@ -41,17 +46,19 @@ beforeEach(() => {
     sink = new FakeSink();
 });
 
+afterEach(() => clearBakedIds());
+
 describe('config.logger on an edge bot', () => {
-    it('sends records to a sink the config names', () => {
-        constructBot(edgeConfig({ level: 'trace', sinks: [sink] }));
+    it('sends records to a sink the config names', async () => {
+        await startBot(edgeConfig({ level: 'trace', sinks: [sink] }));
 
         new Logger('edge').info('hello');
 
         expect(sink.records.map((record) => record.message)).toContain('hello');
     });
 
-    it('drops a record under the level the config sets', () => {
-        constructBot(edgeConfig({ level: 'error', sinks: [sink] }));
+    it('drops a record under the level the config sets', async () => {
+        await startBot(edgeConfig({ level: 'error', sinks: [sink] }));
         const logger = new Logger('edge');
 
         logger.info('quiet');
@@ -62,9 +69,9 @@ describe('config.logger on an edge bot', () => {
         expect(messages).not.toContain('quiet');
     });
 
-    it('goes back to the default sink when a later bot omits logger', () => {
-        constructBot(edgeConfig({ level: 'trace', sinks: [sink] }));
-        constructBot(edgeConfig());
+    it('goes back to the default sink when a later bot omits logger', async () => {
+        await startBot(edgeConfig({ level: 'trace', sinks: [sink] }));
+        await startBot(edgeConfig());
 
         new Logger('edge').info('after');
 

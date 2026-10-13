@@ -1,7 +1,7 @@
 import type { LogRecord } from './Interfaces/LogSink';
 import type { HmrUpdateEvent } from './Types/Hmr';
 
-// vite's dev channel carries JSON between a bot in workerd and the CLI
+// the JSON a bot in workerd sends the CLI
 export interface WireError {
     name: string;
     message: string;
@@ -26,7 +26,6 @@ export interface SeedcordFrameworkEvents {
     'seedcord:server-listening': { port: number };
     'seedcord:started': { username: string | undefined };
     'seedcord:start-failed': { error: WireError };
-    'seedcord:log': WireLogRecord;
 }
 
 /**

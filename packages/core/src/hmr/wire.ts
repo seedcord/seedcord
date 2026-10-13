@@ -46,3 +46,17 @@ export function toWireLog({ args, ...record }: LogRecord): WireLogRecord {
 export function fromWireLog({ args, ...record }: WireLogRecord): LogRecord {
     return args ? { ...record, args: args.map(fromWireArg) } : record;
 }
+
+// miniflare prints the worker's console output through vite's logger, where seedcord dev reads it back
+const DEV_LOG_MARKER = 'seedcord:log ';
+
+export function toDevLogLine(record: LogRecord): string {
+    return `${DEV_LOG_MARKER}${JSON.stringify(toWireLog(record))}`;
+}
+
+export function fromDevLogLine(line: string): LogRecord | undefined {
+    const at = line.indexOf(DEV_LOG_MARKER);
+    if (at === -1) return undefined;
+    // justified: toDevLogLine wrote everything after the marker
+    return fromWireLog(JSON.parse(line.slice(at + DEV_LOG_MARKER.length)) as WireLogRecord);
+}

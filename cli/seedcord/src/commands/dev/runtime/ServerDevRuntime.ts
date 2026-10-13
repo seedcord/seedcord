@@ -50,7 +50,7 @@ export class ServerDevRuntime implements DevRuntime {
         const config = mergeViteConfig(base, {
             root,
             configFile: false,
-            server: { watch: { ignored: [logsIgnore(root)] } },
+            server: { watch: { ignored: [logsIgnore(process.cwd())] } },
             // an external plugin would load node's copy of @seedcord/core beside vite's
             ssr: { noExternal: seedcordDependents(dirname(configFile)) },
             plugins: [hmr.plugin]

@@ -5,9 +5,10 @@ import { mergeViteConfig, NODE_CONDITIONS, userCodeConfig } from '#core/modules/
 import { STATE_FOLDER } from '#core/state/StateFolder';
 
 // a **/logs/** glob would also swallow a source directory named logs
-export function logsIgnore(root: string): (path: string) => boolean {
+// WinstonFileSink writes logs/ under the cwd
+export function logsIgnore(cwd: string): (path: string) => boolean {
     // chokidar reports the resolved path, and a mac temp dir arrives through a symlink
-    const logs = resolve(realpathSync(root), 'logs');
+    const logs = resolve(realpathSync(cwd), 'logs');
 
     return (path) => path === logs || path.startsWith(logs + sep);
 }

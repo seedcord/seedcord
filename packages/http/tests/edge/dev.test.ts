@@ -1,11 +1,11 @@
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
-import { setDevChannel } from '@seedcord/core/internal';
+import { fromDevLogLine, setDevChannel } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { Seedcord } from '#src/edge/Seedcord';
 import { BUILT_ROOT, clearBuiltFiles, registerBuiltFiles } from '#tests/helpers/builtFiles';
@@ -25,7 +25,6 @@ const config: HttpEdgeConfig = {
 
 interface FakeCli {
     readonly sent: [event: string, data: unknown][];
-    // every event the bot sent besides its logs
     events(): string[];
     start(): void;
     save(event: HmrUpdateEvent): void;
@@ -42,10 +41,17 @@ function connectCli(): FakeCli {
     });
     return {
         sent,
-        events: () => sent.map(([event]) => event).filter((event) => event !== 'seedcord:log'),
+        events: () => sent.map(([event]) => event),
         start: () => handlers.get('seedcord:start')?.({ colorLevel: 0 }),
         save: (event) => handlers.get('seedcord:hmr')?.(event)
     };
+}
+
+// workerd prints these and seedcord dev reads them back out of its console output
+function consoleLines(): () => string[] {
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    onTestFinished(() => log.mockRestore());
+    return () => log.mock.calls.map((args) => String(args[0]));
 }
 
 async function liveEnv(): Promise<Signer> {
@@ -164,32 +170,29 @@ describe('the edge Seedcord under seedcord dev', () => {
         await vi.waitFor(() => expect(saved).toEqual(['/bot/config/cache.json']));
     });
 
-    it('sends the logs it wrote before the CLI asked once the CLI starts it', async () => {
-        const cli = connectCli();
+    it('writes each log to the console for the CLI as it happens', async () => {
+        connectCli();
         await liveEnv();
-        const seedcord = new Seedcord(config);
-        stubDiscord(seedcord);
+        const lines = consoleLines();
+        void new Seedcord(config);
+
         new Logger('Cache', { channel: 'bot' }).info('warming the cache');
-        expect(cli.sent).toEqual([]);
 
-        cli.start();
-
-        await vi.waitFor(() => expect(cli.sent.at(-1)?.[0]).toBe('seedcord:started'));
-        const logs = cli.sent.filter(([event]) => event === 'seedcord:log').map(([, record]) => record);
-        expect(logs).toContainEqual(expect.objectContaining({ label: 'Cache', message: 'warming the cache' }));
+        expect(lines().map(fromDevLogLine)).toContainEqual(
+            expect.objectContaining({ label: 'Cache', message: 'warming the cache' })
+        );
     });
 
     it('sends the logs its own constructor wrote', async () => {
-        const cli = connectCli();
+        connectCli();
         await liveEnv();
-        const seedcord = new Seedcord({ ...config, logger: { level: 'debug' } });
-        stubDiscord(seedcord);
+        const lines = consoleLines();
 
-        cli.start();
+        void new Seedcord(config);
 
-        await vi.waitFor(() => expect(cli.sent.at(-1)?.[0]).toBe('seedcord:started'));
-        const logs = cli.sent.filter(([event]) => event === 'seedcord:log').map(([, record]) => record);
-        expect(logs).toContainEqual(expect.objectContaining({ label: 'HMR', message: 'Enabled' }));
+        expect(lines().map(fromDevLogLine)).toContainEqual(
+            expect.objectContaining({ label: 'HMR', message: 'Enabled' })
+        );
     });
 
     it('sends the error back when the start fails, and requests fail with it too', async () => {

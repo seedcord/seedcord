@@ -2,6 +2,7 @@ import { Commands, ContextMenus, InteractionKind, StartupPhase, Subscribe, Subsc
 import { storeInteractionRoute } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -68,6 +69,7 @@ describe('the edge Seedcord', () => {
         Seedcord.reset();
         clearBuiltFiles();
         clearBakedIds();
+        LoggerChannelRegistry.instance.reset();
     });
 
     it('fills Commands, ContextMenus, and Emojis from the ids seedcord build wrote', async () => {
@@ -125,6 +127,24 @@ describe('the edge Seedcord', () => {
         expect(response.status).toBe(405);
         expect(response.headers.get('allow')).toBe('POST');
         expect(calls).toEqual([]);
+    });
+
+    it("applies config.logger when it starts, and leaves the process's logger alone before that", async () => {
+        const signer = await signedEnv();
+        const written: string[] = [];
+        // what seedcord dev's codegen copy shares with the CLI
+        LoggerChannelRegistry.instance.configure({
+            level: 'info',
+            sinks: [{ kind: 'file', onLog: (record) => written.push(record.message) }]
+        });
+        const seedcord = new Seedcord({ ...config(), logger: { level: 'warn' } });
+
+        new Logger('Cli').info('after construction');
+        await seedcord.fetch(await signedRequest(signer, ping));
+        new Logger('Cli').info('after start');
+
+        expect(written).toContain('after construction');
+        expect(written).not.toContain('after start');
     });
 
     it('answers a signed PING with a PONG', async () => {
