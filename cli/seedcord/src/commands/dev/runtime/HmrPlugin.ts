@@ -69,6 +69,11 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         this.dev?.send('seedcord:refresh-commands', { shouldRefresh });
     }
 
+    public reportChangeNeedingRestart(file: string): void {
+        if (this.isDebounced(file, 'update')) return;
+        this.reportRestartRequired(file);
+    }
+
     private configureServer(server: ViteDevServer): void {
         this.server = server;
         // vite calls hotUpdate for files only
@@ -105,8 +110,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     // hotUpdate covers a critical file inside the root
     private handleChange(file: string): void {
-        if (!this.isCriticalFile(file) || this.isDebounced(file, 'update')) return;
-        this.reportRestartRequired(file);
+        if (this.isCriticalFile(file)) this.reportChangeNeedingRestart(file);
     }
 
     private reportRestartRequired(file: string): void {

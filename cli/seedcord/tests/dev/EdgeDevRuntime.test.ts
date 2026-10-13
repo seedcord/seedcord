@@ -171,6 +171,28 @@ describe('EdgeDevRuntime', () => {
         expect(messages).toContainEqual(expect.stringContaining('counter ready'));
     }, 120_000);
 
+    it.each(['.dev.vars', '.env', 'wrangler.jsonc'])(
+        'reports a restart is required when %s changes, and keeps the bot answering',
+        async (file) => {
+            const projectDir = await copyEdgeBotForTest();
+            await writeDevVars(projectDir, liveVars);
+            const port = await freePort();
+            await setDevPort(projectDir, port);
+            const events: DevEvent[] = [];
+            const { runtime, instance } = await startedRuntime(projectDir, (event) => events.push(event));
+            await runtime.startBot(instance);
+
+            await appendFile(join(projectDir, file), file === 'wrangler.jsonc' ? '\n' : 'EXTRA=1\n');
+
+            await vi.waitFor(() => {
+                expect(events).toContainEqual({ type: 'restart-required' });
+            });
+            const unsigned = await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
+            expect(unsigned.status).toBe(401);
+        },
+        120_000
+    );
+
     it("listens on the wrangler config's dev.port and reports it", async () => {
         const projectDir = await copyEdgeBotForTest();
         await writeDevVars(projectDir, liveVars);

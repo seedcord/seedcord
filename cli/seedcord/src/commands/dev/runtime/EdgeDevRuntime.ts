@@ -24,6 +24,7 @@ import { logsIgnore } from './devServerConfig';
 import { HmrPlugin } from './HmrPlugin';
 import { listenForInteractions } from './interactionsEndpoint';
 import { loadEntry } from './loadEntry';
+import { isWorkerConfigFile, watchWorkerConfig } from './workerConfigFiles';
 import { workerLogger } from './workerLogger';
 
 import type { EdgeTarget } from '#core/config/detectTarget';
@@ -36,6 +37,7 @@ import type {
     SeedcordFrameworkEvents,
     SeedcordInstance
 } from '@seedcord/types/internal';
+import type { FSWatcher } from 'node:fs';
 import type { Server as HttpServer } from 'node:http';
 import type { Plugin, ViteDevServer } from 'vite';
 
@@ -45,6 +47,7 @@ interface Started {
     readonly modules: RunnerModuleLoader;
     readonly endpoint: HttpServer;
     readonly hmr: HmrPlugin;
+    readonly configWatcher: FSWatcher;
 }
 
 interface EdgeDevDeps {
@@ -106,7 +109,10 @@ export class EdgeDevRuntime implements DevRuntime {
                 configFile: false,
                 customLogger: workerLogger((record) => this.emit(context, { type: 'log', record })),
                 clearScreen: false,
-                server: { middlewareMode: true, watch: { ignored: [logsIgnore(config.root)] } },
+                server: {
+                    middlewareMode: true,
+                    watch: { ignored: [logsIgnore(config.root), isWorkerConfigFile(this.target.wranglerConfig)] }
+                },
                 ssr: { noExternal: seedcordDependents(configDir) },
                 // the plugin's dep scan finds nothing in a virtual main.
                 // vite then reloads during the first load and leaves a second envapt with no source bound
@@ -140,7 +146,10 @@ export class EdgeDevRuntime implements DevRuntime {
                 throw error;
             }
         );
-        this.started = { context, server, modules, endpoint, hmr };
+        const configWatcher = watchWorkerConfig(this.target.wranglerConfig, (file) => {
+            hmr.reportChangeNeedingRestart(file);
+        });
+        this.started = { context, server, modules, endpoint, hmr, configWatcher };
         // the worker already filtered by its own level
         this.workerChannel().on('seedcord:log', (record) => {
             this.emit(context, { type: 'log', record: fromWireLog(record) });
@@ -190,6 +199,7 @@ export class EdgeDevRuntime implements DevRuntime {
         const { started } = this;
         this.started = undefined;
         if (!started) return;
+        started.configWatcher.close();
         started.hmr.removeAllListeners('event');
         started.endpoint.closeAllConnections();
         await new Promise((resolve) => started.endpoint.close(resolve));
