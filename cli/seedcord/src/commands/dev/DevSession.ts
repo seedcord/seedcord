@@ -64,6 +64,8 @@ export class DevSession {
     public async start(onReady?: () => void): Promise<void> {
         const module = await this.loadInstanceModule();
         const instance = toSeedcordInstance(await resolveDefaultExport(module), this.config.instance);
+        // stop() before this point had no bot to shut down
+        if (this.isStopped) return;
 
         this.instance = instance;
         this.store.setTransport({ name: instance[HostAugmentTarget], version: instance[HostVersion] });
@@ -74,6 +76,7 @@ export class DevSession {
             this.startupPromise = Promise.resolve(instance.start());
             await this.startupPromise;
 
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- stop() flips isStopped during the awaited startup
             if (this.isStopped) {
                 return;
             }

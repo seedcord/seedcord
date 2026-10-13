@@ -52,6 +52,36 @@ async function settle(session: DevSession, run: Promise<unknown>): Promise<unkno
 }
 
 describe('DevSession', () => {
+    it('never starts a bot that was stopped while bot.ts loaded', async () => {
+        const start = vi.fn(() => Promise.resolve());
+        const bot = {
+            [SeedcordBrand]: true,
+            [HostVersion]: '1.2.3',
+            [HostAugmentTarget]: '@seedcord/gateway',
+            start,
+            [HostStartup]: { abort: () => undefined },
+            [HostShutdown]: { run: () => Promise.resolve() }
+        };
+        const { promise: entryRequested, resolve: markRequested } = Promise.withResolvers<undefined>();
+        const { promise: entryLoaded, resolve: finishLoad } = Promise.withResolvers<{ module: unknown }>();
+        const slowEntry: DevRuntime = {
+            ...runtime({}),
+            loadEntry: () => {
+                markRequested(undefined);
+                return entryLoaded;
+            }
+        };
+        const session = new DevSession(config(), slowEntry, new DevStore(), () => undefined);
+
+        const starting = session.start();
+        await entryRequested;
+        await session.stop();
+        finishLoad({ module: { default: bot } });
+        await starting;
+
+        expect(start).not.toHaveBeenCalled();
+    });
+
     it('forwards a runtime event past the store', async () => {
         const seen: DevEvent[] = [];
         const session = new DevSession(
