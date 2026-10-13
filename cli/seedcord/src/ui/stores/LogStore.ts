@@ -2,6 +2,8 @@ import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { formatBody } from '@seedcord/logger/node';
 
+import { routeConsoleToLogs } from './routeConsole';
+
 import type { ILogSink, LogLevel, LogRecord, LogSinkHandle } from '@seedcord/types';
 
 export interface LogEntry {
@@ -36,6 +38,7 @@ export class LogStore extends TypedEventEmitter<LogStoreEvents> implements ILogS
     private buffer: LogEntry[] = [];
     private nextId = 1;
     private sinkHandle: LogSinkHandle | null = null;
+    private restoreConsole: (() => void) | null = null;
     private pendingUpdate = false;
     private flushTimer: ReturnType<typeof setTimeout> | null = null;
     private readonly MAX_LOGS = 1000;
@@ -55,10 +58,13 @@ export class LogStore extends TypedEventEmitter<LogStoreEvents> implements ILogS
         this.sinkHandle = LoggerChannelRegistry.instance.installSink(this, {
             muteConsole: true
         });
+        this.restoreConsole = routeConsoleToLogs();
     }
 
     public unmount(): void {
         if (!this.sinkHandle) return;
+        this.restoreConsole?.();
+        this.restoreConsole = null;
         this.sinkHandle.dispose();
         this.sinkHandle = null;
     }

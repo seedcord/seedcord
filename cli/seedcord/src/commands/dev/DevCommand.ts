@@ -105,6 +105,8 @@ export class DevCommand extends BaseCommand {
             // the alternate screen restores the terminal and scrollback on quit, and ink's ESC[3J purge never fires
             {
                 exitOnCtrlC: false,
+                // LogStore turns console calls into log records
+                patchConsole: false,
                 alternateScreen: true,
                 onRender: ({ renderTime }) => {
                     profileFrame(renderTime);

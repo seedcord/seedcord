@@ -12,6 +12,22 @@ describe('LogStore', () => {
     const store = LogStore.instance;
     afterEach(() => store.clear());
 
+    it("shows a library's console output as a log while mounted, and leaves console alone after", async () => {
+        // eslint-disable-next-line no-console -- reads the method to check unmount puts it back
+        const original = console.warn;
+        store.mount();
+        // eslint-disable-next-line no-console -- a library writing to console is what this covers
+        console.warn('Using secrets defined in .dev.vars');
+        store.unmount();
+        await store.flush();
+
+        expect(store.getLogs()).toContainEqual(
+            expect.objectContaining({ level: 'warn', label: 'Console', text: 'Using secrets defined in .dev.vars' })
+        );
+        // eslint-disable-next-line no-console -- reads the method to check unmount puts it back
+        expect(console.warn).toBe(original);
+    });
+
     it('carries level, label, channel, head, and the record timestamp onto each entry', async () => {
         store.onLog(record({ level: 'warn', label: 'Mongoose', channel: 'db', message: 'up', timestamp: 42 }));
         await store.flush();
