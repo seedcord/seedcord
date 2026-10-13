@@ -66,7 +66,7 @@
         "@cloudflare/vite-plugin": "catalog:peer",
         "envapt": "catalog:peer",
         "typescript": "catalog:consumerTypes",
-        "wrangler": "catalog:peer"
+        "wrangler": "catalog:deps"
     },
     "peerDependenciesMeta": {
         "@cloudflare/vite-plugin": {

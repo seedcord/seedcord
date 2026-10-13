@@ -90,7 +90,6 @@ catalogs:
     mongoose: ^9.9.1
     pg: ^8.22.0
     typescript: ^6.0.3
-    wrangler: ^4.149.0
   consumerTypes:
     typescript: ^5.9.3 || ^6.0.0 || ^7.0.0
   # typescript-eslint supports typescript below 6.1
