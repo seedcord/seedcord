@@ -1,15 +1,17 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
-import { attachmentsOf, bindBotColor, busLoggerOf, getDevChannel, HmrManager } from '@seedcord/core/internal';
-import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import {
+    attachmentsOf,
+    bindBotColor,
+    busLoggerOf,
     COMMAND_DEPLOY_TIMEOUT_MS,
     CommandRegistry,
-    DRAIN_TASK_TIMEOUT_MS,
-    ShutdownPhase,
-    StartupPhase
-} from '@seedcord/core/node/internal';
+    getDevChannel,
+    HmrManager
+} from '@seedcord/core/internal';
+import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
+import { DRAIN_TASK_TIMEOUT_MS, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';

@@ -11,7 +11,7 @@ import { it } from '#tests/utils/test-env';
 import '#tests/utils/mock-env';
 
 import type { Core } from '#interfaces/Core';
-import type { CommandRegistry } from '@seedcord/core/node/internal';
+import type { CommandRegistry } from '@seedcord/core/internal';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { Mock } from 'vitest';
 

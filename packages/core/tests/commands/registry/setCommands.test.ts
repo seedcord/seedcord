@@ -7,8 +7,8 @@ import { LoggerChannelRegistry } from '@seedcord/logger';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, it, expect, vi } from 'vitest';
 
-import { CommandRegistry } from '#node/commands/CommandRegistry';
 import { Commands } from '#src/commands/CommandInjector';
+import { CommandRegistry } from '#src/commands/CommandRegistry';
 import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';

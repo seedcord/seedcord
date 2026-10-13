@@ -1,11 +1,5 @@
-import {
-    COMMAND_DEPLOY_TIMEOUT_MS,
-    CommandRegistry,
-    DRAIN_TASK_TIMEOUT_MS,
-    DRAIN_WINDOW_MS,
-    ShutdownPhase,
-    StartupPhase
-} from '@seedcord/core/node/internal';
+import { COMMAND_DEPLOY_TIMEOUT_MS, CommandRegistry } from '@seedcord/core/internal';
+import { DRAIN_TASK_TIMEOUT_MS, DRAIN_WINDOW_MS, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';

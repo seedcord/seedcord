@@ -3,7 +3,7 @@ import path from 'node:path';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CommandRegistry } from '#node/commands/CommandRegistry';
+import { CommandRegistry } from '#src/commands/CommandRegistry';
 import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';

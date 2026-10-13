@@ -13,7 +13,7 @@ import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
 
 import type { CommandInfo } from '@seedcord/core';
-import type { CommandRegistry } from '@seedcord/core/node/internal';
+import type { CommandRegistry } from '@seedcord/core/internal';
 
 import '#tests/utils/mock-env';
 

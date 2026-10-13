@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { CommandRegistry } from '#node/commands/CommandRegistry';
+import { CommandRegistry } from '#src/commands/CommandRegistry';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 
