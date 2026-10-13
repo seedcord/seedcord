@@ -1,6 +1,7 @@
 import { sep } from 'node:path';
 
 import { SlashCommandBuilder } from '@discordjs/builders';
+import { RESTEvents } from '@discordjs/rest';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -29,10 +30,13 @@ import type { CommandCtor } from '#src/commands/isCommandClass';
 import type { CommandBuilder, DeployResult } from '#src/commands/types';
 import type { Initializeable } from '#src/plugin/Plugin';
 import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
+import type { RateLimitData } from '@discordjs/rest';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 type CommandArtifact = DeployTarget & { name: string };
+
+const MS_PER_SECOND = 1000;
 
 /**
  * Scans the command directory, builds each command, and PUTs the global and guild scopes to Discord.
@@ -261,8 +265,19 @@ export class CommandRegistry implements Initializeable, HmrAware {
         const body = commands.map((command) => command.toJSON());
         // read here because gateway assigns core.rest after this registry is constructed
         const { rest } = this.core;
-        // justified: the bulk-overwrite routes return the deployed command array
-        return (await rest.put(route, { body })) as APIApplicationCommand[];
+        const reportWait = (info: RateLimitData): void => {
+            if (info.method !== 'PUT' || !info.url.endsWith(route)) return;
+            const seconds = Math.ceil(info.timeToReset / MS_PER_SECOND);
+            this.logger.warn(`Discord rate-limited the command deploy. It continues in ${paint.amber(`${seconds}s`)}.`);
+        };
+
+        rest.on(RESTEvents.RateLimited, reportWait);
+        try {
+            // justified: the bulk-overwrite routes return the deployed command array
+            return (await rest.put(route, { body })) as APIApplicationCommand[];
+        } finally {
+            rest.off(RESTEvents.RateLimited, reportWait);
+        }
     }
 
     /** Every registered builder, global first. A guild command in N guilds appears once per guild. @internal */

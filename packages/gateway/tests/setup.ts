@@ -24,7 +24,9 @@ function buildMockClient(): unknown {
             id: 'mock-app-id'
         },
         rest: {
-            put: vi.fn().mockResolvedValue([])
+            put: vi.fn().mockResolvedValue([]),
+            on: vi.fn(),
+            off: vi.fn()
         }
     };
 }

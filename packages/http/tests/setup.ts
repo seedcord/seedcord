@@ -17,5 +17,7 @@ vi.mock('@discordjs/rest', async (importOriginal) => ({
         post = vi.fn().mockResolvedValue(undefined);
         patch = vi.fn().mockResolvedValue(undefined);
         setToken = vi.fn().mockReturnThis();
+        on = vi.fn().mockReturnThis();
+        off = vi.fn().mockReturnThis();
     }
 }));
