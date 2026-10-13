@@ -89,7 +89,9 @@ export class EdgeDevRuntime implements DevRuntime {
         const viteRoot = dirname(this.target.wranglerConfig);
         const configDir = dirname(config.configFile);
         const files = new ProjectFiles(config.root, config.build.outDir, configDir);
+        await using onFailure = new AsyncDisposableStack();
         setBotRoot(config.root);
+        onFailure.defer(() => setBotRoot(undefined));
         this.emit(context, { type: 'module-loading', path: config.root });
 
         const [folders, cloudflare, port] = await Promise.all([
@@ -97,7 +99,6 @@ export class EdgeDevRuntime implements DevRuntime {
             loadCloudflare(viteRoot, this.deps.importCloudflare),
             readDevPort(this.target.wranglerConfig, this.deps.importWrangler)
         ]);
-        await using onFailure = new AsyncDisposableStack();
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
         const hmr = new HmrPlugin(config, WORKER_ENVIRONMENT);
         hmr.on('event', (event) => this.emit(context, event));
@@ -191,9 +192,8 @@ export class EdgeDevRuntime implements DevRuntime {
         this.require().hmr.sendRefreshCommands(shouldRefresh);
     }
 
-    public async dispose(): Promise<void> {
-        await this.close();
-        setBotRoot(undefined);
+    public dispose(): Promise<void> {
+        return this.close();
     }
 
     private async close(): Promise<void> {

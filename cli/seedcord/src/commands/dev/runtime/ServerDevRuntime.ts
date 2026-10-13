@@ -15,53 +15,54 @@ import { InstanceLifecycle } from './InstanceLifecycle';
 import { loadEntry } from './loadEntry';
 
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
-import type { DevEvent, DevEventHandler } from './events';
+import type { DevEvent } from './events';
 import type { SeedcordInstance } from '@seedcord/types/internal';
-import type { ViteDevServer } from 'vite';
+
+interface Started {
+    readonly context: DevRuntimeContext;
+    readonly modules: RunnerModuleLoader;
+    readonly hmr: HmrPlugin;
+    readonly resources: AsyncDisposableStack;
+}
 
 export class ServerDevRuntime implements DevRuntime {
-    private context: DevRuntimeContext | null = null;
-    private viteServer: ViteDevServer | null = null;
-    private modules: RunnerModuleLoader | null = null;
-    private eventHandler: DevEventHandler | null = null;
-    private hmrPlugin: HmrPlugin | null = null;
+    private started?: Started | undefined;
     private readonly lifecycle = new InstanceLifecycle();
 
     public async start(context: DevRuntimeContext): Promise<void> {
-        this.context = context;
-        this.eventHandler = context.onEvent ?? null;
+        const { root, configFile } = context.config;
+        await using onFailure = new AsyncDisposableStack();
+        setBotRoot(root);
+        onFailure.defer(() => setBotRoot(undefined));
+        this.emit(context, { type: 'module-loading', path: root });
 
-        const projectRoot = this.context.config.root;
-        setBotRoot(projectRoot);
-
-        this.emit({ type: 'module-loading', path: projectRoot });
-
-        const hmrPlugin = new HmrPlugin(this.context.config, 'ssr');
-        this.hmrPlugin = hmrPlugin;
-
-        const projectDir = dirname(this.context.config.configFile);
+        const hmr = new HmrPlugin(context.config, 'ssr');
+        hmr.on('event', (event) => this.emit(context, event));
+        // a restart builds a new runtime in the same process
+        onFailure.defer(() => {
+            hmr.removeAllListeners('event');
+        });
 
         // vite writes resolved options back into the config object it receives
         const base = structuredClone(devServerConfig);
 
         // vite searches its own root for a config file
         const config = mergeViteConfig(base, {
-            root: projectRoot,
+            root,
             configFile: false,
-            server: { watch: { ignored: [logsIgnore(projectRoot)] } },
+            server: { watch: { ignored: [logsIgnore(root)] } },
             // an external plugin would load node's copy of @seedcord/core beside vite's
-            ssr: { noExternal: seedcordDependents(projectDir) },
-            plugins: [hmrPlugin.plugin]
+            ssr: { noExternal: seedcordDependents(dirname(configFile)) },
+            plugins: [hmr.plugin]
         });
 
-        this.viteServer = await createServer(config);
+        const server = await createServer(config);
+        onFailure.defer(() => server.close());
+        const modules = new RunnerModuleLoader(createServerModuleRunner(server.environments.ssr));
+        this.started = { context, modules, hmr, resources: onFailure.move() };
 
-        this.modules = new RunnerModuleLoader(createServerModuleRunner(this.viteServer.environments.ssr));
-
-        hmrPlugin.on('event', this.emit.bind(this));
-
-        this.emit({ type: 'module-loaded', path: projectRoot });
-        this.emit({ type: 'ready' });
+        this.emit(context, { type: 'module-loaded', path: root });
+        this.emit(context, { type: 'ready' });
     }
 
     public startBot(instance: SeedcordInstance): Promise<string | undefined> {
@@ -73,46 +74,35 @@ export class ServerDevRuntime implements DevRuntime {
     }
 
     public refreshCommands(shouldRefresh: boolean): void {
-        this.hmrPlugin?.sendRefreshCommands(shouldRefresh);
+        this.require().hmr.sendRefreshCommands(shouldRefresh);
     }
 
     public async importModule<TModule = unknown>(path: string): Promise<TModule> {
-        return this.started().modules.importModule<TModule>(path);
+        return this.require().modules.importModule<TModule>(path);
     }
 
     public loadEntry(): Promise<DevRuntimeLoadResult> {
-        const { context, modules } = this.started();
+        const { context, modules } = this.require();
         return loadEntry(modules, context);
     }
 
     public async dispose(): Promise<void> {
-        // restart and disconnect dispose the runtime without exiting the process, so drop the event
-        // wiring here, else each new session leaks the last one's listeners
-        this.hmrPlugin?.removeAllListeners('event');
-
-        if (this.viteServer) {
-            await this.viteServer.close();
-            this.viteServer = null;
-        }
-
-        this.modules = null;
-        this.hmrPlugin = null;
-        this.context = null;
-        this.eventHandler = null;
-        setBotRoot(undefined);
+        const { started } = this;
+        this.started = undefined;
+        await started?.resources.disposeAsync();
     }
 
-    private started(): { context: DevRuntimeContext; modules: RunnerModuleLoader } {
-        if (!this.context || !this.modules) {
+    private require(): Started {
+        if (!this.started) {
             throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
-                this.context?.config.instance ?? 'runtime',
+                'runtime',
                 'ServerDevRuntime.start() must complete first'
             ]);
         }
-        return { context: this.context, modules: this.modules };
+        return this.started;
     }
 
-    private emit(event: DevEvent): void {
-        this.eventHandler?.(event);
+    private emit({ onEvent }: DevRuntimeContext, event: DevEvent): void {
+        onEvent?.(event);
     }
 }
