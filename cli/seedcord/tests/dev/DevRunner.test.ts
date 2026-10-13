@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 
 import { HostAugmentTarget, HostShutdown, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
-import { afterEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi, type Mock } from 'vitest';
 
 import { DevRunner } from '#commands/dev/DevRunner';
 import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
@@ -77,18 +77,16 @@ function settled(): Promise<void> {
     return new Promise((resolve) => setImmediate(resolve));
 }
 
-// resolves once the startup write has gone out, with the run loop still going
-async function startedRunner(codegen: FakeCodegen): Promise<{ runner: DevRunner; stop: () => Promise<void> }> {
-    const runner = makeRunner(codegen);
+// resolves once the startup write has gone out, with the run loop still going until the test ends
+async function startedRunner(codegen: FakeCodegen, codegenLogger: ILogger = silentLogger): Promise<DevRunner> {
+    const runner = makeRunner(codegen, fakeTunnel(), codegenLogger);
     const running = runner.run();
+    onTestFinished(async () => {
+        await runner.quit();
+        await running;
+    });
     await vi.waitFor(() => expect(codegen.writeFrom).toHaveBeenCalledOnce());
-    return {
-        runner,
-        stop: async () => {
-            await runner.quit();
-            await running;
-        }
-    };
+    return runner;
 }
 
 describe('DevRunner quit', () => {
@@ -144,45 +142,39 @@ describe('DevRunner quit', () => {
 describe('DevRunner codegen', () => {
     it('writes the types from the running bot once it is ready', async () => {
         const codegen = fakeCodegen();
-        const { stop } = await startedRunner(codegen);
+        await startedRunner(codegen);
 
         expect(codegen.writeFrom).toHaveBeenCalledWith(expect.objectContaining({ instance: readyBot }));
-        await stop();
     });
 
     it('regenerates when a refresh is accepted', async () => {
         const codegen = fakeCodegen();
-        const { runner, stop } = await startedRunner(codegen);
+        const runner = await startedRunner(codegen);
 
         runner.refreshCommands(true);
 
         await vi.waitFor(() => expect(codegen.writeFrom).toHaveBeenCalledTimes(2));
-        await stop();
     });
 
     it('does not regenerate when a refresh is declined', async () => {
         const codegen = fakeCodegen();
-        const { runner, stop } = await startedRunner(codegen);
+        const runner = await startedRunner(codegen);
 
         runner.refreshCommands(false);
 
         expect(codegen.writeFrom).toHaveBeenCalledOnce();
-        await stop();
     });
 
     it('logs a failed write', async () => {
         const failure = new Error('duplicate route');
         const codegen = fakeCodegen(vi.fn<CodegenRunner['writeFrom']>().mockRejectedValue(failure));
         const error = vi.fn();
-        const runner = makeRunner(codegen, fakeTunnel(), { ...silentLogger, error });
-        const running = runner.run();
+        await startedRunner(codegen, { ...silentLogger, error });
 
         await vi.waitFor(() => expect(error).toHaveBeenCalledWith(expect.any(String), failure));
-        await runner.quit();
-        await running;
     });
 
-    it('skips a second write while one is in flight, then allows the next', async () => {
+    it('runs one more write after the current one when refreshes arrive during it', async () => {
         const pending: PromiseWithResolvers<typeof WRITTEN>[] = [];
         const codegen = fakeCodegen(
             vi.fn<CodegenRunner['writeFrom']>(() => {
@@ -191,18 +183,19 @@ describe('DevRunner codegen', () => {
                 return next.promise;
             })
         );
-        const { runner, stop } = await startedRunner(codegen);
+        const runner = await startedRunner(codegen);
 
+        runner.refreshCommands(true);
         runner.refreshCommands(true);
         expect(codegen.writeFrom).toHaveBeenCalledOnce();
 
         pending[0]?.resolve(WRITTEN);
         await settled();
-        runner.refreshCommands(true);
         expect(codegen.writeFrom).toHaveBeenCalledTimes(2);
 
         pending[1]?.resolve(WRITTEN);
-        await stop();
+        await settled();
+        expect(codegen.writeFrom).toHaveBeenCalledTimes(2);
     });
 });
 

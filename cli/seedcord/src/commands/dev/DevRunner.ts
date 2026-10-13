@@ -39,6 +39,7 @@ export class DevRunner {
     private isDisconnected = false;
     private isRunning = false;
     private isWritingTypes = false;
+    private hasQueuedWrite = false;
 
     constructor(private readonly deps: DevRunnerDeps) {}
 
@@ -168,7 +169,12 @@ export class DevRunner {
 
     private async writeTypes(): Promise<void> {
         const bot = this.currentSession?.loadedBot();
-        if (!bot || this.isWritingTypes) return;
+        if (!bot) return;
+        if (this.isWritingTypes) {
+            // the running scan may have read a command before this refresh changed it
+            this.hasQueuedWrite = true;
+            return;
+        }
         this.isWritingTypes = true;
         try {
             const { outputPath, changed } = await this.deps.codegen.writeFrom(bot);
@@ -179,6 +185,13 @@ export class DevRunner {
         } finally {
             this.isWritingTypes = false;
         }
+
+        if (!this.hasQueuedWrite) {
+            return;
+        }
+
+        this.hasQueuedWrite = false;
+        await this.writeTypes();
     }
 
     private async waitForSignal(): Promise<void> {
