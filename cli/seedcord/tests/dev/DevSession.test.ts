@@ -142,7 +142,11 @@ describe('DevSession', () => {
 
         const running = session.start();
         await vi.waitFor(() =>
-            expect(store.getState().transport).toEqual({ name: '@seedcord/gateway', version: '1.2.3' })
+            expect(store.getState().transport).toEqual({
+                name: '@seedcord/gateway',
+                version: '1.2.3',
+                target: 'server'
+            })
         );
 
         await session.stop();

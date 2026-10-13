@@ -43,7 +43,7 @@ function runningState(): DevState {
     store.setPhase('running');
     store.setBusy(false);
     store.setStatus('Connected as TestBot');
-    store.setTransport({ name: '@seedcord/gateway', version: '0.1.4' });
+    store.setTransport({ name: '@seedcord/gateway', version: '0.1.4', target: 'server' });
     return store.getState();
 }
 const RUNNING = runningState();
@@ -56,7 +56,7 @@ function httpState(): DevState {
     store.setPhase('running');
     store.setBusy(false);
     store.setStatus('Connected as TestBot');
-    store.setTransport({ name: '@seedcord/http', version: '0.2.3' });
+    store.setTransport({ name: '@seedcord/http', version: '0.2.3', target: 'server' });
     store.apply({ type: 'server-listening', port: 4321 });
     store.setTunnel('live');
     return store.getState();
@@ -195,7 +195,7 @@ describe('Sidebar', () => {
 
     it('shows the cli version in the banner and the transport version in its own row', () => {
         const store = new DevStore();
-        store.setTransport({ name: '@seedcord/http', version: '9.9.9' });
+        store.setTransport({ name: '@seedcord/http', version: '9.9.9', target: 'server' });
 
         const frame = frameFor(store.getState());
         const [banner] = frame.split('\n');
@@ -206,9 +206,19 @@ describe('Sidebar', () => {
         expect(frame).toContain('v9.9.9');
     });
 
+    it('shows whether the bot runs on the edge or a server beside the transport version', () => {
+        const edge = new DevStore();
+        edge.setTransport({ name: '@seedcord/http', version: '0.2.3', target: 'edge' });
+        const server = new DevStore();
+        server.setTransport({ name: '@seedcord/http', version: '0.2.3', target: 'server' });
+
+        expect(frameFor(edge.getState())).toContain('v0.2.3 · edge');
+        expect(frameFor(server.getState())).toContain('v0.2.3 · server');
+    });
+
     it('leaves a column between the widest label and its value', () => {
         const store = new DevStore();
-        store.setTransport({ name: '@seedcord/gateway', version: '0.1.4' });
+        store.setTransport({ name: '@seedcord/gateway', version: '0.1.4', target: 'server' });
 
         expect(frameFor(store.getState())).toContain('gateway v0.1.4');
     });

@@ -70,7 +70,10 @@ function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | 
             <StatusBadge phase={state.phase} animate={state.idleAnimation} />
             {state.status ? <Text>{state.status}</Text> : null}
             {state.transport === null ? null : (
-                <Meta label={transportLabel(state.transport)} value={`v${state.transport.version}`} />
+                <Meta
+                    label={transportLabel(state.transport)}
+                    value={`v${state.transport.version} · ${state.transport.target}`}
+                />
             )}
             {uptimeMs === null ? null : <Meta label="up" value={formatUptime(uptimeMs)} />}
             {/* only the http host reports a port */}

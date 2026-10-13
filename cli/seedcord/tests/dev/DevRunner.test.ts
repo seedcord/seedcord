@@ -28,6 +28,7 @@ const devConfig = {
     root: process.cwd(),
     configFile: join(process.cwd(), 'seedcord.config.ts'),
     instance: join(process.cwd(), 'package.json'),
+    target: { kind: 'server', entry: join(process.cwd(), 'package.json') },
     typecheck: { enabled: false },
     idleAnimation: true
 };

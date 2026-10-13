@@ -61,7 +61,11 @@ export class DevSession {
         if (this.isStopped) return;
 
         this.instance = instance;
-        this.store.setTransport({ name: instance[HostAugmentTarget], version: instance[HostVersion] });
+        this.store.setTransport({
+            name: instance[HostAugmentTarget],
+            version: instance[HostVersion],
+            target: this.config.target.kind
+        });
 
         try {
             this.store.setPhase('starting');

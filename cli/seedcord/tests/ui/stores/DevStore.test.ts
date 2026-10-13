@@ -27,7 +27,7 @@ describe('DevStore', () => {
         store.setBusy(false);
         store.setPhase('running');
         store.setError(new Error('boom'));
-        store.setTransport({ name: '@seedcord/gateway', version: '1.2.3' });
+        store.setTransport({ name: '@seedcord/gateway', version: '1.2.3', target: 'server' });
         store.setTunnel('live');
 
         const state = store.getState();
@@ -35,7 +35,7 @@ describe('DevStore', () => {
         expect(state.isBusy).toBe(false);
         expect(state.phase).toBe('running');
         expect(state.error).toBeInstanceOf(Error);
-        expect(state.transport).toEqual({ name: '@seedcord/gateway', version: '1.2.3' });
+        expect(state.transport).toEqual({ name: '@seedcord/gateway', version: '1.2.3', target: 'server' });
         expect(state.tunnel).toBe('live');
         expect(onChange).toHaveBeenCalledTimes(6);
     });
