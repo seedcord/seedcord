@@ -43,6 +43,10 @@ describe('seedcord build on an http bot', () => {
         expect(readFileSync(filename, 'utf8')).toContain('fixture:filename');
     });
 
+    it('reports a module under a scanned folder by its built js path', () => {
+        expect(output).toContain('fixture:module markers.js');
+    });
+
     it('resolves tsconfig path aliases in bot.ts and in handlers', () => {
         expect(output).toContain('fixture:bot-alias-loaded');
         expect(output).toContain('fixture:handlers-loaded');

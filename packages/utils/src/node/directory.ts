@@ -77,13 +77,14 @@ class BuiltFiles implements FileSource {
     private readonly moduleLoaders: Map<string, ModuleLoader>;
     private readonly textLoaders: Map<string, TextLoader>;
 
-    public constructor({ root, folders, modules, text }: BuiltFileLoaders) {
+    public constructor({ root, folders, modules, text, sourcePaths = false }: BuiltFileLoaders) {
         this.root = path.resolve(root);
         this.folders = new Set([this.root, ...folders.map((folder) => path.join(this.root, folder))]);
+        const pathOf = sourcePaths ? (key: string): string => key : builtModulePath;
         this.moduleLoaders = new Map(
             Object.entries(modules)
                 .filter(([key]) => isModulePath(key))
-                .map(([key, load]) => [path.join(this.root, key.replace(/\.ts$/, '.js')), load])
+                .map(([key, load]) => [path.join(this.root, pathOf(key)), load])
         );
         this.textLoaders = new Map(Object.entries(text).map(([key, load]) => [path.join(this.root, key), load]));
     }
@@ -114,10 +115,17 @@ interface BuiltFileLoaders {
     folders: string[];
     modules: Record<string, ModuleLoader>;
     text: Record<string, TextLoader>;
+    // seedcord dev runs the source files themselves
+    sourcePaths?: boolean;
 }
 
 // seedcord build writes a BuiltFileLoaders object here from the entry it generates
 export const BUILT_FILES_KEY = 'seedcord:utils:built-files';
+
+// a built bot reports each module by the path of the file it became
+export function builtModulePath(key: string): string {
+    return key.replace(/\.ts$/, '.js');
+}
 
 // a global because dev loads the bot with its own copy of this module
 const ROOT_SLOT = Symbol.for('seedcord:utils:root');

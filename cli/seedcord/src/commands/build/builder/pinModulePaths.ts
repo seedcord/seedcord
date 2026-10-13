@@ -1,3 +1,4 @@
+import { builtModulePath } from '@seedcord/utils/node/internal';
 import { Visitor } from 'vite';
 
 import { BUILT_FILES_SLOT } from './builtFiles';
@@ -49,7 +50,7 @@ export function pinModulePaths(files: ProjectFiles): Plugin {
             const rewrites = importMetaPaths(this.parse(code));
             if (rewrites.length === 0) return undefined;
 
-            const file = files.keyOf(id).replace(/\.ts$/, '.js');
+            const file = builtModulePath(files.keyOf(id));
             const filename = `(${builtRoot} + ${JSON.stringify(file)})`;
             const values: Record<PathKey, string> = {
                 dirname: `(${builtRoot} + ${JSON.stringify(file.slice(0, file.lastIndexOf('/')))})`,

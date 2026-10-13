@@ -10,14 +10,15 @@ interface BuiltFileLoaders {
     folders: string[];
     modules: Record<string, () => Promise<Record<string, unknown>>>;
     text: Record<string, () => Promise<string>>;
+    sourcePaths?: boolean;
 }
 
 // not on disk
 const ROOT = '/bot';
 
 // writes the slot the way seedcord build's generated entry does
-function register({ root = ROOT, folders = [], modules = {}, text = {} }: Partial<BuiltFileLoaders>): void {
-    Reflect.set(globalThis, Symbol.for(BUILT_FILES_KEY), { root, folders, modules, text });
+function register({ root = ROOT, folders = [], modules = {}, text = {}, ...rest }: Partial<BuiltFileLoaders>): void {
+    Reflect.set(globalThis, Symbol.for(BUILT_FILES_KEY), { root, folders, modules, text, ...rest });
 }
 
 function stub(name: string): () => Promise<Record<string, unknown>> {
@@ -54,6 +55,12 @@ describe('traverseDirectory in a built bot', () => {
             ['/bot/handlers/Roll.js', 'Roll'],
             ['/bot/handlers/mod/Ban.js', 'Ban']
         ]);
+    });
+
+    it('keeps the ts path of a module when the table holds source files', async () => {
+        register({ folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') }, sourcePaths: true });
+
+        await expect(walk('/bot/handlers')).resolves.toEqual([['/bot/handlers/Roll.ts', 'Roll']]);
     });
 
     it('skips registered type declarations, the same as the disk walk', async () => {
