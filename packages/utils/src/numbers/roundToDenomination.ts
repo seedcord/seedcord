@@ -49,7 +49,6 @@ export function roundToDenomination(num: number, opts?: RoundToDenomOptions): st
 
     let result = format.format(temp);
 
-    // Carry into the next denomination only when a further suffix exists.
     if (Number(result) >= 1000 && index < suffixes.length - 1) {
         result = format.format(Number(result) / 1000);
         index++;
