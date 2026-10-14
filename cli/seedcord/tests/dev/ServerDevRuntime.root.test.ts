@@ -2,13 +2,14 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { HostAugmentTarget, HostShutdown, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
+import { HostShutdown } from '@seedcord/types/internal';
 import { readTextFiles } from '@seedcord/utils/node';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
 import { devConfigFor } from './devConfigFor';
+import { fakeBot } from './fakes';
 
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
@@ -86,14 +87,7 @@ describe('dev runtime with root set to src', () => {
         await mkdir(SCRATCH_ROOT, { recursive: true });
         const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
         await writeProject(dir);
-        const failingBot = {
-            [SeedcordBrand]: true,
-            [HostVersion]: '1.2.3',
-            [HostAugmentTarget]: '@seedcord/gateway',
-            start: () => Promise.resolve(),
-            [HostStartup]: { abort: () => undefined },
-            [HostShutdown]: { run: () => Promise.reject(new Error('shutdown failed')) }
-        };
+        const failingBot = fakeBot({ [HostShutdown]: { run: () => Promise.reject(new Error('shutdown failed')) } });
 
         const runtime = new ServerDevRuntime();
         await runtime.start({ config: devConfigFor(dir, 'index.ts') });

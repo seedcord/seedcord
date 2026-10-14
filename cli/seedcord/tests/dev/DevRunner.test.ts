@@ -1,13 +1,14 @@
 import { join } from 'node:path';
 
-import { HostAugmentTarget, HostShutdown, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
+import { HostShutdown, HostStartup } from '@seedcord/types/internal';
 import { afterEach, describe, expect, it, onTestFinished, vi, type Mock } from 'vitest';
 
 import { DevRunner } from '#commands/dev/DevRunner';
-import { InstanceLifecycle } from '#commands/dev/runtime/InstanceLifecycle';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
+
+import { fakeBot, fakeRuntime } from './fakes';
 
 import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import type { DevRuntime } from '#commands/dev/runtime/DevRuntime';
@@ -15,14 +16,7 @@ import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
 import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ILogger } from '@seedcord/types';
 
-const readyBot = {
-    [SeedcordBrand]: true,
-    [HostVersion]: '1.2.3',
-    [HostAugmentTarget]: '@seedcord/gateway',
-    start: () => Promise.resolve(),
-    [HostStartup]: { abort: () => undefined },
-    [HostShutdown]: { run: () => Promise.resolve() }
-};
+const readyBot = fakeBot();
 
 const devConfig = {
     root: process.cwd(),
@@ -34,15 +28,7 @@ const devConfig = {
 };
 
 function readyRuntime(): DevRuntime {
-    const lifecycle = new InstanceLifecycle();
-    return {
-        start: () => Promise.resolve(),
-        loadEntry: () => Promise.resolve({ module: { default: readyBot } }),
-        startBot: (instance) => lifecycle.start(instance),
-        stop: () => lifecycle.stop(),
-        importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
-        refreshCommands: () => undefined
-    };
+    return fakeRuntime({ default: readyBot });
 }
 
 const WRITTEN = { outputPath: 'seedcord-gen.d.ts', changed: true };

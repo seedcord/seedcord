@@ -3,19 +3,18 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { HostAugmentTarget, HostShutdown, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { DevSession } from '#commands/dev/DevSession';
-import { InstanceLifecycle } from '#commands/dev/runtime/InstanceLifecycle';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
 
 import { devConfigFor } from './devConfigFor';
+import { fakeBot, fakeRuntime } from './fakes';
 
 import type { DevSessionDeps } from '#commands/dev/DevSession';
-import type { DevRuntime, DevRuntimeContext } from '#commands/dev/runtime/DevRuntime';
+import type { DevRuntime } from '#commands/dev/runtime/DevRuntime';
 import type { DevEvent, DevEventHandler } from '#commands/dev/runtime/events';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
@@ -29,21 +28,6 @@ function config(): ResolvedSeedcordConfig {
         typecheck: { enabled: false },
         idleAnimation: true,
         build: { outDir: 'dist' }
-    };
-}
-
-function runtime(module: unknown, emit?: DevEvent): DevRuntime {
-    const lifecycle = new InstanceLifecycle();
-    return {
-        start: (context: DevRuntimeContext) => {
-            if (emit) context.onEvent?.(emit);
-            return Promise.resolve();
-        },
-        loadEntry: () => Promise.resolve({ module }),
-        startBot: (instance) => lifecycle.start(instance),
-        stop: () => lifecycle.stop(),
-        importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
-        refreshCommands: () => undefined
     };
 }
 
@@ -66,18 +50,11 @@ async function settle(session: DevSession, run: Promise<unknown>): Promise<unkno
 describe('DevSession', () => {
     it('never starts a bot that was stopped while bot.ts loaded', async () => {
         const start = vi.fn(() => Promise.resolve());
-        const bot = {
-            [SeedcordBrand]: true,
-            [HostVersion]: '1.2.3',
-            [HostAugmentTarget]: '@seedcord/gateway',
-            start,
-            [HostStartup]: { abort: () => undefined },
-            [HostShutdown]: { run: () => Promise.resolve() }
-        };
+        const bot = fakeBot({ start });
         const { promise: entryRequested, resolve: markRequested } = Promise.withResolvers<undefined>();
         const { promise: entryLoaded, resolve: finishLoad } = Promise.withResolvers<{ module: unknown }>();
         const slowEntry: DevRuntime = {
-            ...runtime({}),
+            ...fakeRuntime({}),
             loadEntry: () => {
                 markRequested(undefined);
                 return entryLoaded;
@@ -98,7 +75,7 @@ describe('DevSession', () => {
         const seen: DevEvent[] = [];
         const session = new DevSession(
             config(),
-            runtime({}, { type: 'server-listening', port: 4321 }),
+            fakeRuntime({}, { type: 'server-listening', port: 4321 }),
             sessionDeps(new DevStore(), (event) => seen.push(event))
         );
 
@@ -111,7 +88,7 @@ describe('DevSession', () => {
         const store = new DevStore();
         const session = new DevSession(
             config(),
-            runtime({}, { type: 'server-listening', port: 4321 }),
+            fakeRuntime({}, { type: 'server-listening', port: 4321 }),
             sessionDeps(store)
         );
 
@@ -121,24 +98,15 @@ describe('DevSession', () => {
     });
 
     it('rejects a default export that carries no seedcord brand', async () => {
-        const session = new DevSession(config(), runtime({ default: { start: vi.fn() } }), sessionDeps());
+        const session = new DevSession(config(), fakeRuntime({ default: { start: vi.fn() } }), sessionDeps());
 
         const error = await settle(session, session.start());
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliInstanceInvalid)).toBe(true);
     });
 
     it('accepts a branded instance', async () => {
-        const instance = {
-            [SeedcordBrand]: true,
-            [HostVersion]: '1.2.3',
-            [HostAugmentTarget]: '@seedcord/gateway',
-            username: 'TestBot',
-            start: () => Promise.resolve(),
-            [HostStartup]: { abort: () => undefined },
-            [HostShutdown]: { run: () => Promise.resolve() }
-        };
         const store = new DevStore();
-        const session = new DevSession(config(), runtime({ default: instance }), sessionDeps(store));
+        const session = new DevSession(config(), fakeRuntime({ default: fakeBot() }), sessionDeps(store));
 
         const running = session.start();
         await vi.waitFor(() =>
@@ -154,17 +122,9 @@ describe('DevSession', () => {
     });
 
     it('skips a queued type write once the session stops', async () => {
-        const instance = {
-            [SeedcordBrand]: true,
-            [HostVersion]: '1.2.3',
-            [HostAugmentTarget]: '@seedcord/gateway',
-            start: () => Promise.resolve(),
-            [HostStartup]: { abort: () => undefined },
-            [HostShutdown]: { run: () => Promise.resolve() }
-        };
         const { promise: firstWrite, resolve: finishFirstWrite } = Promise.withResolvers<typeof UNCHANGED>();
         const writeFrom = vi.fn().mockReturnValueOnce(firstWrite).mockResolvedValue(UNCHANGED);
-        const session = new DevSession(config(), runtime({ default: instance }), {
+        const session = new DevSession(config(), fakeRuntime({ default: fakeBot() }), {
             ...sessionDeps(),
             codegen: { writeFrom }
         });
@@ -181,16 +141,11 @@ describe('DevSession', () => {
     });
 
     it('puts a non-Error value that start() rejects with into CliStartFailed', async () => {
-        const instance = {
-            [SeedcordBrand]: true,
-            [HostVersion]: '1.2.3',
-            [HostAugmentTarget]: '@seedcord/gateway',
+        const instance = fakeBot({
             // eslint-disable-next-line prefer-promise-reject-errors, @typescript-eslint/prefer-promise-reject-errors -- the case under test is a non-Error rejection
-            start: () => Promise.reject('token was revoked'),
-            [HostStartup]: { abort: () => undefined },
-            [HostShutdown]: { run: () => Promise.resolve() }
-        };
-        const session = new DevSession(config(), runtime({ default: instance }), sessionDeps());
+            start: () => Promise.reject('token was revoked')
+        });
+        const session = new DevSession(config(), fakeRuntime({ default: instance }), sessionDeps());
 
         const error = await settle(session, session.start());
 
