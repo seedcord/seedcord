@@ -73,7 +73,8 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
-        "envapt": "catalog:peer"
+        "envapt": "catalog:peer",
+        "tsx": "catalog:deps"
     },
     "publishConfig": {
         "access": "public",

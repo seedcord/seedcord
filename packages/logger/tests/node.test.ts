@@ -1,3 +1,5 @@
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
 import { existsSync, mkdtempDisposableSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -39,6 +41,8 @@ async function listWhenWritten(dir: string, timeoutMs = 2000): Promise<string[]>
 }
 
 const plain = (value: string): string => stripAnsi(value);
+
+const LOGS_TO_STDOUT = join(import.meta.dirname, 'fixtures/logsToStdout.ts');
 
 const registry = LoggerChannelRegistry.instance;
 afterEach(() => registry.reset());
@@ -101,6 +105,18 @@ describe('winston sinks', () => {
         const sink = new WinstonConsoleSink({ format: 'json' });
         expect(() => sink.onLog(record({ message: 'hi', args: [{ a: 1 }] }))).not.toThrow();
     });
+
+    it('the console sink keeps the process running after its stdout closes', async () => {
+        const child = spawn(process.execPath, ['--import', 'tsx', LOGS_TO_STDOUT], {
+            stdio: ['ignore', 'pipe', 'pipe']
+        });
+        await once(child.stdout, 'data');
+
+        const exited = new Promise<number | null>((resolve) => child.once('exit', resolve));
+        child.stdout.destroy();
+
+        expect(await exited).toBe(0);
+    }, 20_000);
 
     it('the file sink writes a record to disk', async () => {
         using dir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));

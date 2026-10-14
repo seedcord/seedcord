@@ -6,6 +6,18 @@ import type { SinkFormat } from './winston';
 import type { ILogSink, LogRecord } from '@seedcord/types';
 import type { Logger as Winston } from 'winston';
 
+let stdoutGone = false;
+let watchingStdout = false;
+
+// node throws a failed stdout write, like EPIPE once the reader exits, as an uncaughtException
+function stopWritingWhenStdoutFails(): void {
+    if (watchingStdout) return;
+    watchingStdout = true;
+    process.stdout.on('error', () => {
+        stdoutGone = true;
+    });
+}
+
 /** Node console sink. Pretty output for dev, JSON for prod, both through the shared winston pipeline. */
 export class WinstonConsoleSink implements ILogSink {
     public readonly kind = 'console';
@@ -14,6 +26,7 @@ export class WinstonConsoleSink implements ILogSink {
     private readonly winston: Winston;
 
     constructor(options?: { format?: SinkFormat }) {
+        stopWritingWhenStdoutFails();
         this.winston = createLogger({
             levels: NODE_LEVELS,
             level: 'trace',
@@ -23,6 +36,7 @@ export class WinstonConsoleSink implements ILogSink {
     }
 
     public onLog(record: LogRecord): void {
+        if (stdoutGone) return;
         this.winston.log(toInfo(record));
     }
 }
