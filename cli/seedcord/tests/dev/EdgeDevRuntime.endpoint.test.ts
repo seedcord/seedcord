@@ -119,6 +119,22 @@ describe('EdgeDevRuntime endpoint', () => {
         );
     }, 120_000);
 
+    it('asks for a restart when a file bot.ts imports is saved', async () => {
+        const { projectDir } = await edgeProject();
+        const greeting = join(projectDir, 'src/greeting.ts');
+        await writeFile(greeting, "export const greeting = 'before';\n");
+        await editFile(join(projectDir, 'src/bot.ts'), (text) => `import './greeting';\n${text}`);
+        const events: DevEvent[] = [];
+        const { runtime, instance } = await startedRuntime(projectDir, (event) => events.push(event));
+        await runtime.startBot(instance);
+
+        await writeFile(greeting, "export const greeting = 'after';\n");
+
+        await vi.waitFor(() => {
+            expect(events).toContainEqual({ type: 'restart-required' });
+        });
+    }, 120_000);
+
     it.each(['.dev.vars', '.env', 'wrangler.jsonc'])(
         'reports a restart is required when %s changes, and keeps the bot answering',
         async (file) => {

@@ -149,13 +149,13 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         const { type, file, modules } = ctx;
         if (environment.name !== this.botEnvironment || this.isDebounced(file, type)) return [];
 
-        if (this.isCriticalFile(file)) {
+        const affectedModules = affectedFiles(file, modules);
+        if (affectedModules.some((affected) => this.isCriticalFile(affected))) {
             this.reportRestartRequired(file);
             return [];
         }
 
         const { moduleGraph } = environment;
-        const affectedModules = affectedFiles(file, modules);
         for (const target of affectedModules) {
             for (const mod of moduleGraph.getModulesByFile(target) ?? []) moduleGraph.invalidateModule(mod);
         }

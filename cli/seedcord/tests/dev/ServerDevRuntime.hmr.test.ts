@@ -8,6 +8,8 @@ import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
 import { devConfigFor } from './devConfigFor';
 
+import type { DevEvent } from '#commands/dev/runtime/events';
+
 const SCRATCH_ROOT = join(import.meta.dirname, '.hmr-fixture');
 
 // HmrModuleHandler imports a changed handler by its file url, the same way
@@ -71,5 +73,70 @@ describe('dev runtime hot reload', () => {
         await writeFile(helper, "export const value = 'after';\n");
 
         await vi.waitFor(async () => expect(await read(url)).toBe('after'), { timeout: 10_000, interval: 200 });
+    }, 60_000);
+
+    async function startedProject(
+        files: Record<string, string>,
+        restart: string[] = []
+    ): Promise<{ src: string; runtime: ServerDevRuntime; events: DevEvent[] }> {
+        await mkdir(SCRATCH_ROOT, { recursive: true });
+        const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
+        const src = join(dir, 'src');
+        await mkdir(join(src, 'schema'), { recursive: true });
+        await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'hmr-fixture', type: 'module' }));
+        await writeFile(join(dir, 'seedcord.config.ts'), 'export default {};\n');
+        for (const [file, text] of Object.entries(files)) await writeFile(join(src, file), text);
+        const events: DevEvent[] = [];
+
+        const runtime = new ServerDevRuntime();
+        runtimes.push(runtime);
+        const config = { ...devConfigFor(dir, 'index.ts'), hmr: { restart, rollback: true } };
+        await runtime.start({ config, onEvent: (event) => events.push(event) });
+        return { src, runtime, events };
+    }
+
+    async function expectRestartRequired(events: DevEvent[]): Promise<void> {
+        await vi.waitFor(() => expect(events).toContainEqual({ type: 'restart-required' }), { timeout: 10_000 });
+    }
+
+    it('asks for a restart when a file the entry imports is saved', async () => {
+        const { src, runtime, events } = await startedProject({
+            'index.ts': "export { greeting } from './plugin';\n",
+            'plugin.ts': "export const greeting = 'before';\n"
+        });
+        await runtime.loadEntry();
+
+        await writeFile(join(src, 'plugin.ts'), "export const greeting = 'after';\n");
+
+        await expectRestartRequired(events);
+    }, 60_000);
+
+    it('asks for a restart when a file two imports below the entry is saved', async () => {
+        const { src, runtime, events } = await startedProject({
+            'index.ts': "export { greeting } from './plugin';\n",
+            'plugin.ts': "export { greeting } from './greeting';\n",
+            'greeting.ts': "export const greeting = 'before';\n"
+        });
+        await runtime.loadEntry();
+
+        await writeFile(join(src, 'greeting.ts'), "export const greeting = 'after';\n");
+
+        await expectRestartRequired(events);
+    }, 60_000);
+
+    it('asks for a restart when a file that an hmr.restart match imports is saved', async () => {
+        const { src, runtime, events } = await startedProject(
+            {
+                'index.ts': 'export const ready = true;\n',
+                'schema/user.ts': "export { field } from '../field';\n",
+                'field.ts': "export const field = 'before';\n"
+            },
+            ['schema/**']
+        );
+        await runtime.importModule(join(src, 'schema', 'user.ts'));
+
+        await writeFile(join(src, 'field.ts'), "export const field = 'after';\n");
+
+        await expectRestartRequired(events);
     }, 60_000);
 });
