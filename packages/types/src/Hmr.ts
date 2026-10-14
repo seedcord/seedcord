@@ -1,18 +1,12 @@
-import type { LogRecord } from './Interfaces/LogSink';
 import type { HmrUpdateEvent } from './Types/Hmr';
 
-// the JSON a bot in workerd sends the CLI
+// a thrown error as a bot in workerd sends it to the CLI
 export interface WireError {
     name: string;
     message: string;
     stack?: string | undefined;
     code?: unknown;
     cause?: WireError | undefined;
-}
-
-// each arg is either an Error or a JSON-safe value
-export interface WireLogRecord extends Omit<LogRecord, 'args'> {
-    args?: ({ error: WireError } | { value: unknown })[] | undefined;
 }
 
 /**

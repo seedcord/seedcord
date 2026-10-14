@@ -3,9 +3,14 @@ import { filterCirculars } from '@seedcord/utils';
 import { isPlainObject } from '@seedcord/utils/internal';
 
 import type { LogLevel, LogRecord } from '@seedcord/types';
-import type { WireError, WireLogRecord } from '@seedcord/types/internal';
+import type { WireError } from '@seedcord/types/internal';
 
-type WireArg = NonNullable<WireLogRecord['args']>[number];
+// each arg is either an Error or a JSON-safe value
+type WireArg = { error: WireError } | { value: unknown };
+
+interface WireLogRecord extends Omit<LogRecord, 'args'> {
+    args?: WireArg[] | undefined;
+}
 
 export function toWireError(thrown: unknown): WireError {
     return encodeError(thrown, new Set());
@@ -60,8 +65,23 @@ function isLogLevel(value: unknown): value is LogLevel {
     return typeof value === 'string' && Object.hasOwn(LEVEL_COLOR, value);
 }
 
+function isWireError(value: unknown): value is WireError {
+    return (
+        isPlainObject(value) &&
+        typeof value.name === 'string' &&
+        typeof value.message === 'string' &&
+        (value.stack === undefined || typeof value.stack === 'string') &&
+        (value.cause === undefined || isWireError(value.cause))
+    );
+}
+
+function isWireArg(value: unknown): value is WireArg {
+    if (!isPlainObject(value)) return false;
+    return 'error' in value ? isWireError(value.error) : 'value' in value;
+}
+
 function isWireArgs(value: unknown): value is WireLogRecord['args'] {
-    return value === undefined || (Array.isArray(value) && value.every(isPlainObject));
+    return value === undefined || (Array.isArray(value) && value.every(isWireArg));
 }
 
 function isWireLogRecord(value: unknown): value is WireLogRecord {

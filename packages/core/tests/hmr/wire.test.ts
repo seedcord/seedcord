@@ -75,7 +75,12 @@ describe('wire logs', () => {
     it.each([
         ['an unknown level', { level: 'loud' }],
         ['args that are not a list', { args: 5 }],
-        ['an arg that is not an object', { args: [5] }]
+        ['an arg that is not an object', { args: [5] }],
+        ['an arg with neither value nor error', { args: [{ other: 1 }] }],
+        ['a null error arg', { args: [{ error: null }] }],
+        ['an error arg that is not an object', { args: [{ error: 5 }] }],
+        ['an error arg without a message', { args: [{ error: { name: 'Error' } }] }],
+        ['an error arg with a cause that is not an error', { args: [{ error: { name: 'E', message: 'x', cause: 5 } }] }]
     ])('leaves a marked line with %s alone', (_, broken) => {
         const line = `seedcord:log ${JSON.stringify({ ...record([]), ...broken })}`;
 
