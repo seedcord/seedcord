@@ -29,16 +29,7 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
 
     public async loadEntry(): Promise<DevRuntimeLoadResult> {
         const { context, modules } = this.require('loadEntry');
-        const { instance } = context.config;
-        this.emit(context, { type: 'module-loading', path: instance });
-        try {
-            const module = await modules.importModule(instance);
-            this.emit(context, { type: 'module-loaded', path: instance });
-            return { module };
-        } catch (error: unknown) {
-            this.emit(context, { type: 'module-error', path: instance, error });
-            throw error;
-        }
+        return { module: await modules.importModule(context.config.instance) };
     }
 
     public refreshCommands(shouldRefresh: boolean): void {

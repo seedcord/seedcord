@@ -143,23 +143,6 @@ describe('DevStore', () => {
         expect(onChange).toHaveBeenCalledTimes(1);
     });
 
-    it.each<DevEvent>([
-        { type: 'module-loading', path: 'x' },
-        { type: 'module-loaded', path: 'x' },
-        { type: 'module-error', path: 'x', error: new Error('e') },
-        { type: 'ready' }
-    ])('apply ignores informational event %o without a change', (event) => {
-        const store = new DevStore();
-        const before = store.getState();
-        const onChange = vi.fn();
-        store.on('change', onChange);
-
-        store.apply(event);
-
-        expect(store.getState()).toBe(before);
-        expect(onChange).not.toHaveBeenCalled();
-    });
-
     it('keeps counting while a restart is pending and starts over once the bot restarts', () => {
         vi.useFakeTimers({ toFake: ['Date'], now: 1000 });
         onTestFinished(() => {

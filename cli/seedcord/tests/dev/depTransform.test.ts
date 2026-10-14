@@ -85,7 +85,7 @@ describe('dev runtime module resolution', () => {
         await writeFixture(root);
 
         server = await createServer(
-            mergeViteConfig(devServerConfig, { root: join(root, 'src'), server: { hmr: false, watch: null } })
+            mergeViteConfig(devServerConfig(), { root: join(root, 'src'), server: { hmr: false, watch: null } })
         );
 
         const runner = createServerModuleRunner(server.environments.ssr);

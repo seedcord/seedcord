@@ -1,8 +1,11 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import { createInterface } from 'node:readline';
 
 import { Logger } from '@seedcord/logger';
 
 import { resolveProjectTsc } from '#core/modules/resolveProjectTsc';
+
+import type { Readable } from 'node:stream';
 
 const TSC_GRACEFUL_EXIT_MS = 2000;
 
@@ -38,23 +41,8 @@ export class TscRunner {
             stdio: ['ignore', 'pipe', 'pipe']
         });
 
-        this.process.stdout?.on('data', (data: Buffer) => {
-            const lines = data.toString().split('\n');
-            for (const line of lines) {
-                if (line.trim()) {
-                    this.logger.debug(line.trimEnd());
-                }
-            }
-        });
-
-        this.process.stderr?.on('data', (data: Buffer) => {
-            const lines = data.toString().split('\n');
-            for (const line of lines) {
-                if (line.trim()) {
-                    this.logger.error(line.trimEnd());
-                }
-            }
-        });
+        this.logLines(this.process.stdout, (line) => this.logger.debug(line));
+        this.logLines(this.process.stderr, (line) => this.logger.error(line));
 
         this.process.on('error', (err) => {
             this.logger.error(`Failed to start tsc: ${err.message}`);
@@ -67,6 +55,13 @@ export class TscRunner {
                 this.logger.debug('tsc exited.');
             }
             this.process = null;
+        });
+    }
+
+    private logLines(stream: Readable | null, log: (line: string) => void): void {
+        if (!stream) return;
+        createInterface({ input: stream }).on('line', (line) => {
+            if (line.trim()) log(line.trimEnd());
         });
     }
 

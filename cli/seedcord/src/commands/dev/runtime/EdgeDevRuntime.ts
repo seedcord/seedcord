@@ -26,7 +26,7 @@ import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
 import { logsIgnore } from './devServerConfig';
-import { listenForInteractions } from './interactionsEndpoint';
+import { listenForInteractions } from './listenForInteractions';
 import { workerLogger } from './workerLogger';
 
 import type { EdgeTarget } from '#core/config/detectTarget';
@@ -83,8 +83,6 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         await using onFailure = new AsyncDisposableStack();
         this.bindBotRoot(config.root, onFailure);
         installCliLogSinks(onFailure);
-        this.emit(context, { type: 'module-loading', path: config.root });
-
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
         const [folders, cloudflare, port] = await Promise.all([
             files.foldersIncludingEmpty(),
@@ -144,8 +142,6 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         // close() waits on open keep-alive sockets
         onFailure.defer(() => endpoint.closeAllConnections());
         this.markStarted({ context, server, modules, hmr, port, resources: onFailure.move() });
-        this.emit(context, { type: 'module-loaded', path: config.root });
-        this.emit(context, { type: 'ready' });
     }
 
     // workerd runs its own copy of the bot

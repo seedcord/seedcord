@@ -20,14 +20,10 @@ export class ServerDevRuntime extends BaseDevRuntime {
         const { root, configFile } = context.config;
         await using onFailure = new AsyncDisposableStack();
         this.bindBotRoot(root, onFailure);
-        this.emit(context, { type: 'module-loading', path: root });
 
         const hmr = this.openHmr(context, 'ssr', onFailure);
 
-        // vite writes resolved options back into the config object it receives
-        const base = structuredClone(devServerConfig);
-
-        const config = mergeViteConfig(base, {
+        const config = mergeViteConfig(devServerConfig(), {
             root,
             // vite searches its own root for a config file
             configFile: false,
@@ -41,9 +37,6 @@ export class ServerDevRuntime extends BaseDevRuntime {
         onFailure.defer(() => server.close());
         const modules = new RunnerModuleLoader(createServerModuleRunner(server.environments.ssr));
         this.markStarted({ context, modules, hmr, resources: onFailure.move() });
-
-        this.emit(context, { type: 'module-loaded', path: root });
-        this.emit(context, { type: 'ready' });
     }
 
     public startBot(instance: SeedcordInstance): Promise<string | undefined> {

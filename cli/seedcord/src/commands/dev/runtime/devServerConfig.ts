@@ -4,6 +4,8 @@ import { resolve, sep } from 'node:path';
 import { mergeViteConfig, NODE_CONDITIONS, userCodeConfig } from '#core/modules/userCodeConfig';
 import { STATE_FOLDER } from '#core/state/StateFolder';
 
+import type { InlineConfig } from 'vite';
+
 // a **/logs/** glob would also swallow a source directory named logs
 // WinstonFileSink writes logs/ under the cwd
 export function logsIgnore(cwd: string): (path: string) => boolean {
@@ -13,38 +15,14 @@ export function logsIgnore(cwd: string): (path: string) => boolean {
     return (path) => path === logs || path.startsWith(logs + sep);
 }
 
-export const devServerConfig = mergeViteConfig(userCodeConfig(NODE_CONDITIONS), {
-    server: {
-        middlewareMode: true,
-        hmr: true,
-        watch: {
-            usePolling: false,
-            ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', `**/${STATE_FOLDER}/**`]
-        }
-    },
-    build: {
-        ssr: true,
-        outDir: 'dist',
-        sourcemap: true,
-        minify: false,
-        rollupOptions: {
-            output: {
-                format: 'esm',
-                preserveModules: true
-            }
-        }
-    },
-    future: {
-        removeSsrLoadModule: 'warn',
-        removePluginHookHandleHotUpdate: 'warn',
-        removePluginHookSsrArgument: 'warn',
-        removeServerModuleGraph: 'warn',
-        removeServerReloadModule: 'warn',
-        removeServerPluginContainer: 'warn',
-        removeServerHot: 'warn',
-        removeServerTransformRequest: 'warn',
-        removeServerWarmupRequest: 'warn'
-    },
-    clearScreen: false,
-    logLevel: 'error'
-});
+// vite writes resolved options back into the config object it receives
+export function devServerConfig(): InlineConfig {
+    return mergeViteConfig(userCodeConfig(NODE_CONDITIONS), {
+        server: {
+            middlewareMode: true,
+            watch: { ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', `**/${STATE_FOLDER}/**`] }
+        },
+        clearScreen: false,
+        logLevel: 'error'
+    });
+}

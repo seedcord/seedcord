@@ -63,7 +63,7 @@ describe('TunnelRouter', () => {
     it('ignores every event that is not a bound port', async () => {
         const onPort = vi.fn().mockResolvedValue(undefined);
 
-        await router(fakeCoordinator({ onPort })).route(QUICK, { type: 'ready' });
+        await router(fakeCoordinator({ onPort })).route(QUICK, { type: 'restart-required' });
 
         expect(onPort).not.toHaveBeenCalled();
     });

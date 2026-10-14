@@ -52,7 +52,7 @@ async function watchProject(root: string): Promise<WatchedProject> {
 
     server = await createServer(
         // the same merge ServerDevRuntime does
-        mergeViteConfig(devServerConfig, {
+        mergeViteConfig(devServerConfig(), {
             root,
             logLevel: 'error',
             server: { watch: { ignored: [logsIgnore(root)] } },

@@ -138,12 +138,6 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
                 this.patch({ status: event.status });
                 break;
             }
-            case 'module-loading':
-            case 'module-loaded':
-            case 'module-error':
-            case 'ready': {
-                break;
-            }
             default: {
                 assertNever(event);
             }
