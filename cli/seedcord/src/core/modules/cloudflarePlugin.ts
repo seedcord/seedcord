@@ -9,7 +9,7 @@ import type * as Wrangler from 'wrangler';
 
 export type CloudflarePlugin = typeof CloudflareVitePlugin.cloudflare;
 export type ImportCloudflare = () => Promise<typeof CloudflareVitePlugin>;
-export type ImportWrangler = () => Promise<typeof Wrangler>;
+type ImportWrangler = () => Promise<typeof Wrangler>;
 
 export const WORKER_ENVIRONMENT = 'worker';
 
@@ -28,12 +28,16 @@ function isPackageMissing(error: unknown, name: string): boolean {
     return notFound && error.message.startsWith(`Cannot find package '${name}'`);
 }
 
-async function loadWrangler(wranglerConfig: string, importReader: ImportWrangler): Promise<typeof Wrangler> {
+async function importOptionalPeer<TModule>(
+    name: string,
+    load: () => Promise<TModule>,
+    whenMissing: (cause: unknown) => SeedcordError
+): Promise<TModule> {
     try {
-        return await importReader();
+        return await load();
     } catch (error: unknown) {
-        if (!isPackageMissing(error, 'wrangler')) throw error;
-        throw new SeedcordError(SeedcordErrorCode.CliEdgeWranglerMissing, [dirname(wranglerConfig)], { cause: error });
+        if (isPackageMissing(error, name)) throw whenMissing(error);
+        throw new SeedcordError(SeedcordErrorCode.CliImportFailed, [name, asError(error).message], { cause: error });
     }
 }
 
@@ -47,7 +51,11 @@ function parseFailure(error: unknown): string {
 
 // the plugin reads the config with the same function
 export async function readDevPort(wranglerConfig: string, importReader: ImportWrangler): Promise<number> {
-    const wrangler = await loadWrangler(wranglerConfig, importReader);
+    const wrangler = await importOptionalPeer(
+        'wrangler',
+        importReader,
+        (cause) => new SeedcordError(SeedcordErrorCode.CliEdgeWranglerMissing, [dirname(wranglerConfig)], { cause })
+    );
     // wrangler's types import Config from @cloudflare/workers-utils, a package seedcord doesn't install
     let config: unknown;
     try {
@@ -63,15 +71,10 @@ export async function readDevPort(wranglerConfig: string, importReader: ImportWr
 }
 
 export async function loadCloudflare(viteRoot: string, importPlugin: ImportCloudflare): Promise<CloudflarePlugin> {
-    try {
-        const { cloudflare } = await importPlugin();
-        return cloudflare;
-    } catch (error: unknown) {
-        if (isPackageMissing(error, CLOUDFLARE_PLUGIN)) {
-            throw new SeedcordError(SeedcordErrorCode.CliEdgeVitePluginMissing, [viteRoot], { cause: error });
-        }
-        throw new SeedcordError(SeedcordErrorCode.CliImportFailed, [CLOUDFLARE_PLUGIN, asError(error).message], {
-            cause: error
-        });
-    }
+    const { cloudflare } = await importOptionalPeer(
+        CLOUDFLARE_PLUGIN,
+        importPlugin,
+        (cause) => new SeedcordError(SeedcordErrorCode.CliEdgeVitePluginMissing, [viteRoot], { cause })
+    );
+    return cloudflare;
 }

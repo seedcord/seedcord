@@ -29,12 +29,32 @@ describe('readDevPort', () => {
         );
     });
 
-    it('throws CliWranglerConfigUnreadable when wrangler cannot parse the config', async () => {
+    it('throws CliImportFailed when wrangler fails to load for another reason', async () => {
+        const config = await wranglerConfig('{ "name": "bot" }');
+
+        await expect(
+            readDevPort(config, () => Promise.reject(new SyntaxError('Unexpected token in wrangler.mjs')))
+        ).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliImportFailed,
+            message: expect.stringContaining('Unexpected token in wrangler.mjs') as string
+        });
+    });
+
+    it('throws CliWranglerConfigUnreadable with the position wrangler reports', async () => {
         const config = await wranglerConfig('{ "name": ');
 
         await expect(readDevPort(config, importWrangler)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliWranglerConfigUnreadable,
-            message: expect.stringContaining('wrangler.jsonc') as string
+            message: expect.stringMatching(/wrangler\.jsonc.*at line 1, column \d+/) as string
         });
+    });
+
+    it.each([
+        ['{ "name": "bot" }', 8787],
+        ['{ "name": "bot", "dev": {} }', 8787],
+        ['{ "name": "bot", "dev": { "port": 9000 } }', 9000],
+        ['{ "name": "bot", "dev": { "port": 0 } }', 0]
+    ])('reads the port from %s as %i', async (text, port) => {
+        await expect(readDevPort(await wranglerConfig(text), importWrangler)).resolves.toBe(port);
     });
 });
