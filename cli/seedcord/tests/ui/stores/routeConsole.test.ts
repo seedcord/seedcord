@@ -59,7 +59,7 @@ describe('routeConsoleToLogs', () => {
         expect(records.map((record) => record.message)).toEqual(['first']);
     });
 
-    it('puts every console method back on restore', () => {
+    it('stops routing once restored', () => {
         restore();
         restore = () => undefined;
         terminal.table([{ id: 7 }]);

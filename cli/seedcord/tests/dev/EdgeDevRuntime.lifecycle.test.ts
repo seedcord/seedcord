@@ -43,7 +43,7 @@ describe('EdgeDevRuntime lifecycle', () => {
         expect(steps).toContainEqual(expect.stringContaining(relative(process.cwd(), join(projectDir, 'src/bot.ts'))));
     }, 120_000);
 
-    it('runs one session under seedcord dev until the user acts', async () => {
+    it('runs the startup sequence once in a seedcord dev session', async () => {
         const { projectDir } = await edgeProject();
         const discord = await fakeDiscordApi();
         await editFile(join(projectDir, 'src/bot.ts'), (text) =>

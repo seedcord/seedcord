@@ -85,7 +85,8 @@
             "entry": ["**/*.types-test.ts"]
         },
         "packages/logger": {
-            "entry": ["**/*.types-test.ts"]
+            "entry": ["**/*.types-test.ts", "tests/fixtures/*.ts"],
+            "ignoreDependencies": ["tsx"]
         },
         "packages/rate-limiter": {},
         "packages/types": {
