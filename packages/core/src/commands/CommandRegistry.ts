@@ -6,6 +6,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath } from '@seedcord/utils';
+import { unlessAborted } from '@seedcord/utils/internal';
 import { traverseDirectory } from '@seedcord/utils/node';
 import { resolveFolder } from '@seedcord/utils/node/internal';
 import { Routes } from 'discord-api-types/v10';
@@ -52,17 +53,6 @@ const MS_PER_SECOND = 1000;
 // discord's global command bucket allows 2 PUTs a minute
 // 75s covers a full wait plus the request itself
 export const COMMAND_DEPLOY_TIMEOUT_MS = 75_000;
-
-// @discordjs/rest checks the signal before it sends a request. Its rate-limit sleep ignores it
-function unlessAborted<ResultT>(request: Promise<ResultT>, signal: AbortSignal | undefined): Promise<ResultT> {
-    if (!signal) return request;
-    return new Promise((resolve, reject) => {
-        const stop = (): void => reject(new DOMException('The command deploy was aborted', 'AbortError'));
-        if (signal.aborted) stop();
-        signal.addEventListener('abort', stop, { once: true });
-        void request.then(resolve, reject).finally(() => signal.removeEventListener('abort', stop));
-    });
-}
 
 /**
  * Scans the command directory, builds each command, and PUTs the global and guild scopes to Discord.
@@ -313,6 +303,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
         rest.on(RESTEvents.RateLimited, reportWait);
         try {
+            // @discordjs/rest checks the signal before it sends a request. Its rate-limit sleep ignores it
             // justified: the bulk-overwrite routes return the deployed command array
             return (await unlessAborted(rest.put(route, { body, signal }), signal)) as APIApplicationCommand[];
         } finally {
