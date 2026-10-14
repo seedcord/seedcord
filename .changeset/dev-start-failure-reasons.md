@@ -2,4 +2,4 @@
 'seedcord': patch
 ---
 
-Fixed the `seedcord dev` error card for a bot that failed to start leaving out why. It now lists the error from each startup task that failed.
+Fixed the `seedcord dev` error card leaving out why the bot failed to start. It now lists the error from each startup task that failed.

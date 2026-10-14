@@ -17,7 +17,6 @@ function middlewares(handle: (url: string | undefined, next: (error?: unknown) =
         handle(request.url, next)) as unknown as Connect.Server;
 }
 
-// the endpoint as a quick tunnel binds it
 const QUICK = { port: 0, host: '127.0.0.1', wranglerConfig: 'wrangler.jsonc' };
 
 async function listening(app: Connect.Server): Promise<string> {

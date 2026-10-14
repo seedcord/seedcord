@@ -1,6 +1,6 @@
 import type { HmrUpdateEvent } from './Types/Hmr';
 
-// a thrown error as a bot in workerd sends it to the CLI
+// how a bot in workerd sends a thrown error to the CLI
 export interface WireError {
     name: string;
     message: string;

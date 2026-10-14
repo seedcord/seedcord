@@ -45,7 +45,7 @@ interface EdgeStarted extends StartedRuntime {
     readonly port: number;
 }
 
-// workerd's own cloudflare:workers and envapt binding stay in the worker environment
+// workerd gives the worker environment its own cloudflare:workers and envapt binding
 function inNodeOnly(plugin: Plugin): Plugin {
     return { ...plugin, applyToEnvironment: (environment) => environment.name === 'ssr' };
 }

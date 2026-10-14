@@ -23,12 +23,12 @@ Envapter.useSource(new PortableSource(env));
 
 const DEV_CWD_ID = 'virtual:seedcord/dev-cwd';
 
-// workerd answers process.cwd() with /bundle. a log path should read like node dev's
+// workerd returns /bundle from process.cwd(). paint.path prints paths relative to it
 function devCwdSource(cwd: string): string {
     return `process.cwd = () => ${JSON.stringify(cwd)};\n`;
 }
 
-// seedcord dev runs the source files from root and reads Discord at startup
+// a dev worker reads its ids from Discord at startup. a build bakes them in
 type EntryMode = { kind: 'build'; ids: BakedIds } | { kind: 'dev'; root: string; cwd: string };
 
 interface WorkerEntryOptions {

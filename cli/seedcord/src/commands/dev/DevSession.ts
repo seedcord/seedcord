@@ -100,7 +100,7 @@ export class DevSession {
         profileMark('ready');
         onReady?.();
         this.writeTypes();
-        // tsc competes with vite's cold transform when it starts any earlier
+        // tsc slows vite's first transform if it starts any earlier
         this.startTypecheck();
         // the bot runs until stop()
         await this.unlessStopped(new Promise<never>(() => undefined));
@@ -124,7 +124,7 @@ export class DevSession {
     private async runStop(): Promise<void> {
         this.stopping.abort();
         this.tscRunner?.stop();
-        // codegen imports through the runtime that stop closes
+        // the pending type write imports through this runtime
         await this.typeWrite;
         await this.runtime.stop();
     }
@@ -157,7 +157,7 @@ export class DevSession {
             });
             if (changed) codegenLogger.info(`Augmentations written to ${paint.path(outputPath)}`);
         } catch (error: unknown) {
-            // a codegen throw must not take the dev session down
+            // the dev session keeps running when codegen throws
             codegenLogger.error('Could not update the command types', error);
         }
 
