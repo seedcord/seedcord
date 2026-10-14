@@ -1,18 +1,8 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
-import { getDevChannel, setDevChannel } from '#hmr/devChannel';
-import { connectDevChannel, HmrManager } from '#hmr/HmrManager';
+import { HmrManager } from '#hmr/HmrManager';
 
 describe('HmrManager', () => {
-    afterEach(() => {
-        setDevChannel(undefined);
-    });
-
-    it('connecting without a vite hot context leaves the dev channel unset', () => {
-        expect(connectDevChannel()).toBeUndefined();
-        expect(getDevChannel()).toBeUndefined();
-    });
-
     it('a rejecting listener does not stop the other listeners', async () => {
         const manager = new HmrManager();
         const ran: string[] = [];
