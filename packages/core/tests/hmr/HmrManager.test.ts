@@ -1,16 +1,15 @@
 import { describe, it, expect, afterEach } from 'vitest';
 
 import { getDevChannel, setDevChannel } from '#hmr/devChannel';
-import { HmrManager } from '#hmr/HmrManager';
+import { connectDevChannel, HmrManager } from '#hmr/HmrManager';
 
 describe('HmrManager', () => {
     afterEach(() => {
         setDevChannel(undefined);
     });
 
-    it('init without a vite hot context leaves the dev channel unset', () => {
-        new HmrManager().init();
-
+    it('connecting without a vite hot context leaves the dev channel unset', () => {
+        expect(connectDevChannel()).toBeUndefined();
         expect(getDevChannel()).toBeUndefined();
     });
 

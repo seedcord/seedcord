@@ -2,7 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { describe, expect, it } from 'vitest';
 
-import { fromDevLogLine, fromWireError, fromWireLog, toDevLogLine, toWireError, toWireLog } from '#hmr/wire';
+import { fromDevLogLine, fromWireError, toDevLogLine, toWireError } from '#hmr/wire';
 
 import type { LogRecord } from '@seedcord/types';
 
@@ -57,23 +57,14 @@ describe('wire errors', () => {
 });
 
 describe('wire logs', () => {
-    it('keeps the record and turns an Error arg back into an Error', () => {
+    it('reads a record back out of its console line, with an Error arg as an Error', () => {
         const sent = record([new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, ['DISCORD_BOT_TOKEN'])]);
-
-        const received = fromWireLog(overTheWire(toWireLog(sent)));
-
-        expect(received).toMatchObject({ level: 'error', message: 'deploy failed', label: 'Commands', timestamp: 1 });
-        expect(Error.isError(received.args?.[0])).toBe(true);
-        expect(received.args?.[0]).toHaveProperty('code', SeedcordErrorCode.ConfigMissingEnv);
-    });
-
-    it('reads a record back out of the console line it was written as', () => {
-        const sent = record([new Error('Missing Access')]);
 
         const received = fromDevLogLine(toDevLogLine(sent));
 
         expect(received).toMatchObject({ level: 'error', message: 'deploy failed', label: 'Commands', timestamp: 1 });
-        expect(received?.args?.[0]).toMatchObject({ message: 'Missing Access' });
+        expect(Error.isError(received?.args?.[0])).toBe(true);
+        expect(received?.args?.[0]).toHaveProperty('code', SeedcordErrorCode.ConfigMissingEnv);
     });
 
     it("leaves a console line the bot's own code wrote alone", () => {
@@ -81,12 +72,22 @@ describe('wire logs', () => {
         expect(fromDevLogLine('seedcord:log is starting')).toBeUndefined();
     });
 
+    it.each([
+        ['an unknown level', { level: 'loud' }],
+        ['args that are not a list', { args: 5 }],
+        ['an arg that is not an object', { args: [5] }]
+    ])('leaves a marked line with %s alone', (_, broken) => {
+        const line = `seedcord:log ${JSON.stringify({ ...record([]), ...broken })}`;
+
+        expect(fromDevLogLine(line)).toBeUndefined();
+    });
+
     it('sends a circular arg with the loop cut', () => {
         const guild: Record<string, unknown> = { id: '1' };
         guild.self = guild;
 
-        const received = fromWireLog(overTheWire(toWireLog(record([guild]))));
+        const received = fromDevLogLine(toDevLogLine(record([guild])));
 
-        expect(received.args).toEqual([{ id: '1', self: '[Circular]' }]);
+        expect(received?.args).toEqual([{ id: '1', self: '[Circular]' }]);
     });
 });

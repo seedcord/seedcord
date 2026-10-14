@@ -1,5 +1,12 @@
 import { Bus } from '@seedcord/core';
-import { attachmentsOf, bindBotColor, busLoggerOf, HmrManager, SubscriberLoader } from '@seedcord/core/internal';
+import {
+    attachmentsOf,
+    bindBotColor,
+    busLoggerOf,
+    connectDevChannel,
+    HmrManager,
+    SubscriberLoader
+} from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { HealthCheck, shutdownOf, StartupPhase } from '@seedcord/core/node/internal';
 import { installNodeDefaults } from '@seedcord/logger/node';
@@ -62,7 +69,7 @@ export class Seedcord extends ServerHost<'gateway'> implements SeedcordInstance 
         bindBotColor(() => this.config.botColor);
 
         this.#hmrManager = new HmrManager();
-        this.#hmrManager.init();
+        this.#hmrManager.init(connectDevChannel());
         this.bus = new Bus(this);
         this.#subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         this.bot = new Bot(this);

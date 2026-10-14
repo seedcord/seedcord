@@ -1,7 +1,8 @@
+import { LEVEL_COLOR } from '@seedcord/logger';
 import { filterCirculars } from '@seedcord/utils';
 import { isPlainObject } from '@seedcord/utils/internal';
 
-import type { LogRecord } from '@seedcord/types';
+import type { LogLevel, LogRecord } from '@seedcord/types';
 import type { WireError, WireLogRecord } from '@seedcord/types/internal';
 
 type WireArg = NonNullable<WireLogRecord['args']>[number];
@@ -40,11 +41,11 @@ function fromWireArg(arg: WireArg): unknown {
     return 'error' in arg ? fromWireError(arg.error) : arg.value;
 }
 
-export function toWireLog({ args, ...record }: LogRecord): WireLogRecord {
+function toWireLog({ args, ...record }: LogRecord): WireLogRecord {
     return { ...record, args: args?.map(toWireArg) };
 }
 
-export function fromWireLog({ args, ...record }: WireLogRecord): LogRecord {
+function fromWireLog({ args, ...record }: WireLogRecord): LogRecord {
     return args ? { ...record, args: args.map(fromWireArg) } : record;
 }
 
@@ -55,14 +56,23 @@ export function toDevLogLine(record: LogRecord): string {
     return `${DEV_LOG_MARKER}${JSON.stringify(toWireLog(record))}`;
 }
 
+function isLogLevel(value: unknown): value is LogLevel {
+    return typeof value === 'string' && Object.hasOwn(LEVEL_COLOR, value);
+}
+
+function isWireArgs(value: unknown): value is WireLogRecord['args'] {
+    return value === undefined || (Array.isArray(value) && value.every(isPlainObject));
+}
+
 function isWireLogRecord(value: unknown): value is WireLogRecord {
     return (
         isPlainObject(value) &&
-        typeof value.level === 'string' &&
+        isLogLevel(value.level) &&
         typeof value.message === 'string' &&
         typeof value.label === 'string' &&
         typeof value.channel === 'string' &&
-        typeof value.timestamp === 'number'
+        typeof value.timestamp === 'number' &&
+        isWireArgs(value.args)
     );
 }
 

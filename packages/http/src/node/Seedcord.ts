@@ -1,7 +1,7 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
-import { bindBotColor, busLoggerOf, getDevChannel, HmrManager } from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, connectDevChannel, getDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { DRAIN_TASK_TIMEOUT_MS, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { paint } from '@seedcord/errors';
@@ -79,7 +79,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         this.#endpoint = new NodeEndpoint(this.#service, this.#logger);
 
         this.#hmrManager = new HmrManager();
-        this.#hmrManager.init();
+        this.#hmrManager.init(connectDevChannel());
 
         this.#registerStartupTasks();
         this.#registerShutdownTasks();

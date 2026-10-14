@@ -2,8 +2,9 @@ import {
     attachmentsOf,
     BAKED_IDS_KEY,
     bindBotColor,
+    connectDevChannel,
     CoordinatedStartup,
-    DevLogForwarder,
+    forwardLogsToCli,
     HmrManager,
     installLinks,
     PluginLifecycle,
@@ -111,15 +112,15 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
         this.rateLimiter = this.#service.rateLimiter;
         this.bus = this.#service.bus;
 
-        const cli = this.#hmr.connect();
+        const cli = connectDevChannel();
         this.#readsBakedIds = !cli;
         // the forwarder has to exist before init() logs
         if (cli) this.#startWhenAsked(cli);
-        this.#hmr.init();
+        this.#hmr.init(cli);
     }
 
     #startWhenAsked(cli: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>): void {
-        void new DevLogForwarder();
+        forwardLogsToCli();
         const tasks = new HttpStartupTasks(this, this.#service);
         tasks.registerHmr(this.#hmr);
         tasks.addDiscordTasks();

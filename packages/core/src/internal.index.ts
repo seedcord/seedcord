@@ -60,10 +60,10 @@ export { PermissionNames } from '#gates/catalog/permissions';
 export type { GateFitsWith } from '#gates/matching';
 
 export { getDevChannel, setDevChannel } from '#hmr/devChannel';
-export { HmrManager } from '#hmr/HmrManager';
+export { connectDevChannel, HmrManager } from '#hmr/HmrManager';
 export { wrapHot } from '#hmr/wrapHot';
 export { fromDevLogLine, fromWireError, toWireError } from '#hmr/wire';
-export { DevLogForwarder } from '#hmr/DevLogForwarder';
+export { forwardLogsToCli } from '#hmr/forwardLogsToCli';
 
 export {
     GateNotice,
