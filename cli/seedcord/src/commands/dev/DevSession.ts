@@ -151,7 +151,7 @@ export class DevSession {
             codegenLogger.error('Could not update the command types', error);
         }
 
-        if (!this.hasQueuedWrite) return;
+        if (!this.hasQueuedWrite || this.isStopped) return;
         this.hasQueuedWrite = false;
         await this.writeUntilCurrent(instance);
     }

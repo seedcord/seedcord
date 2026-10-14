@@ -153,6 +153,33 @@ describe('DevSession', () => {
         await running;
     });
 
+    it('skips a queued type write once the session stops', async () => {
+        const instance = {
+            [SeedcordBrand]: true,
+            [HostVersion]: '1.2.3',
+            [HostAugmentTarget]: '@seedcord/gateway',
+            start: () => Promise.resolve(),
+            [HostStartup]: { abort: () => undefined },
+            [HostShutdown]: { run: () => Promise.resolve() }
+        };
+        const { promise: firstWrite, resolve: finishFirstWrite } = Promise.withResolvers<typeof UNCHANGED>();
+        const writeFrom = vi.fn().mockReturnValueOnce(firstWrite).mockResolvedValue(UNCHANGED);
+        const session = new DevSession(config(), runtime({ default: instance }), {
+            ...sessionDeps(),
+            codegen: { writeFrom }
+        });
+
+        const running = session.start();
+        await vi.waitFor(() => expect(writeFrom).toHaveBeenCalledOnce());
+        session.refreshCommands(true);
+        const stopping = session.stop();
+        finishFirstWrite(UNCHANGED);
+        await stopping;
+        await running;
+
+        expect(writeFrom).toHaveBeenCalledOnce();
+    });
+
     it('puts a non-Error value that start() rejects with into CliStartFailed', async () => {
         const instance = {
             [SeedcordBrand]: true,
