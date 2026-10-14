@@ -219,7 +219,7 @@ describe('the edge Seedcord under seedcord dev', () => {
         );
     });
 
-    it('prints a line once when a sink writes it to the console', async () => {
+    it("prints a sink's own console line straight to the terminal", async () => {
         connectCli();
         await liveEnv();
         const lines = consoleLines();

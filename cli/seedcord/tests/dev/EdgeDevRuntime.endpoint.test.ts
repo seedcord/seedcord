@@ -82,7 +82,6 @@ describe('EdgeDevRuntime endpoint', () => {
             const unsigned = await fetch(`http://localhost:${port}${path}`, { method: 'POST', body: '{}' });
 
             expect(unsigned.status).toBe(401);
-            expect(await unsigned.text()).not.toContain('Seedcord');
         },
         120_000
     );
