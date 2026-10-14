@@ -3,20 +3,22 @@ import { LoggerChannelRegistry } from '@seedcord/logger';
 import { createLogger } from 'vite';
 
 import type { LogLevel, LogRecord } from '@seedcord/types';
-import type { Logger } from 'vite';
+import type { LogErrorOptions, Logger } from 'vite';
 
-function workerRecord(level: LogLevel, message: string): LogRecord {
-    return { level, message, label: 'Worker', channel: 'bot', timestamp: Date.now() };
+function workerRecord(level: LogLevel, message: string, options?: LogErrorOptions): LogRecord {
+    const record: LogRecord = { level, message, label: 'Worker', channel: 'bot', timestamp: Date.now() };
+    if (options?.error) record.args = [options.error];
+    return record;
 }
 
 // miniflare writes the worker's console output through vite's logger
-// a line DevLogForwarder wrote carries a bot log record, already filtered by the worker's level
+// a line forwardLogsToCli wrote carries a bot log record, already filtered by the worker's level
 export function workerLogger(): Logger {
     const logger = createLogger();
     const forward =
         (level: LogLevel) =>
-        (message: string): void => {
-            LoggerChannelRegistry.instance.dispatch(fromDevLogLine(message) ?? workerRecord(level, message));
+        (message: string, options?: LogErrorOptions): void => {
+            LoggerChannelRegistry.instance.dispatch(fromDevLogLine(message) ?? workerRecord(level, message, options));
         };
     logger.info = forward('info');
     logger.warn = forward('warn');
