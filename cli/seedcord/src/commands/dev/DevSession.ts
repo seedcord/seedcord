@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { HostAugmentTarget, HostVersion, type SeedcordInstance } from '@seedcord/types/internal';
-import { asError } from '@seedcord/utils/internal';
+import { asError, unlessAborted } from '@seedcord/utils/internal';
 
 import { toSeedcordInstance } from '#core/modules/importInstance';
 import { profileMark } from '#ui/profile';
@@ -26,9 +26,8 @@ export interface DevSessionDeps {
 }
 
 export class DevSession {
-    private stopResolve?: () => void;
+    private readonly stopping = new AbortController();
     private instance?: SeedcordInstance;
-    private isStopped = false;
     private tscRunner?: TscRunner;
     private stopPromise?: Promise<void>;
     private typeWrite?: Promise<void> | undefined;
@@ -39,6 +38,10 @@ export class DevSession {
         private readonly runtime: DevRuntime,
         private readonly deps: DevSessionDeps
     ) {}
+
+    private get isStopped(): boolean {
+        return this.stopping.signal.aborted;
+    }
 
     private async startRuntime(): Promise<void> {
         await this.runtime.start({
@@ -59,17 +62,23 @@ export class DevSession {
         this.tscRunner.start();
     }
 
+    // returns as soon as stop() begins. await stop() to know the runtime closed
     public async start(onReady?: () => void): Promise<void> {
-        const { store } = this.deps;
-        await this.startRuntime();
-        // stop() closed the runtime as it finished starting
-        if (this.isStopped) return;
+        const { signal } = this.stopping;
+        try {
+            await this.run(signal, onReady);
+        } catch (error: unknown) {
+            if (!signal.aborted) throw error;
+        }
+    }
 
-        const { module } = await this.runtime.loadEntry();
+    private async run(signal: AbortSignal, onReady?: () => void): Promise<void> {
+        const { store } = this.deps;
+        await unlessAborted(this.startRuntime(), signal);
+        // vite never settles an import it was closed under
+        const { module } = await unlessAborted(this.runtime.loadEntry(), signal);
         profileMark('entry');
         const instance = toSeedcordInstance(await resolveDefaultExport(module), this.config.instance);
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- stop() flips isStopped while the entry loads
-        if (this.isStopped) return;
 
         this.instance = instance;
         store.setTransport({
@@ -77,29 +86,24 @@ export class DevSession {
             version: instance[HostVersion],
             target: this.config.target.kind
         });
+        store.setPhase('starting');
+        store.setStatus('Starting the bot…');
+        const username = await unlessAborted(this.startBot(instance), signal);
 
+        store.setPhase('running');
+        store.setStatus(`${paint.bold(username ?? 'Bot')} is ready!`);
+        profileMark('ready');
+        onReady?.();
+        this.writeTypes();
+        // tsc competes with vite's cold transform when it starts any earlier
+        this.startTypecheck();
+        // the bot runs until stop()
+        await unlessAborted(new Promise<never>(() => undefined), signal);
+    }
+
+    private async startBot(instance: SeedcordInstance): Promise<string | undefined> {
         try {
-            store.setPhase('starting');
-            store.setStatus('Starting the bot…');
-            const username = await this.runtime.startBot(instance);
-
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- stop() flips isStopped during the awaited startup
-            if (this.isStopped) {
-                return;
-            }
-
-            store.setPhase('running');
-            store.setStatus(`${paint.bold(username ?? 'Bot')} is ready!`);
-            profileMark('ready');
-            onReady?.();
-            this.writeTypes();
-            // tsc competes with vite's cold transform when it starts any earlier
-            this.startTypecheck();
-
-            // resolved by stop(), and no signal handlers here so restarts never accumulate listeners
-            await new Promise<void>((resolve) => {
-                this.stopResolve = resolve;
-            });
+            return await this.runtime.startBot(instance);
         } catch (error: unknown) {
             throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, asError(error).message]);
         }
@@ -111,12 +115,11 @@ export class DevSession {
     }
 
     private async runStop(): Promise<void> {
-        this.isStopped = true;
+        this.stopping.abort();
         this.tscRunner?.stop();
         // codegen imports through the runtime that stop closes
         await this.typeWrite;
         await this.runtime.stop();
-        this.stopResolve?.();
     }
 
     public refreshCommands(shouldRefresh: boolean): void {

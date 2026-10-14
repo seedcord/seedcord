@@ -140,6 +140,20 @@ describe('DevSession', () => {
         expect(writeFrom).toHaveBeenCalledOnce();
     });
 
+    it('ends start() even when stopping the runtime throws', async () => {
+        const runtime: DevRuntime = {
+            ...fakeRuntime({ default: fakeBot() }),
+            stop: () => Promise.reject(new Error('shutdown failed'))
+        };
+        const store = new DevStore();
+        const session = new DevSession(config(), runtime, sessionDeps(store));
+        const running = session.start();
+        await vi.waitFor(() => expect(store.getState().phase).toBe('running'));
+
+        await expect(session.stop()).rejects.toThrow('shutdown failed');
+        await expect(running).resolves.toBeUndefined();
+    });
+
     it('puts a non-Error value that start() rejects with into CliStartFailed', async () => {
         const instance = fakeBot({
             // eslint-disable-next-line prefer-promise-reject-errors, @typescript-eslint/prefer-promise-reject-errors -- the case under test is a non-Error rejection
@@ -157,19 +171,42 @@ describe('DevSession', () => {
 });
 
 describe('DevSession on a real runtime', () => {
-    it('ends quietly when it stops while the runtime starts', async () => {
+    async function project(): Promise<ResolvedSeedcordConfig> {
         const temp = await mkdtempDisposable(join(tmpdir(), 'dev-session-'));
         onTestFinished(() => temp.remove());
         await mkdir(join(temp.path, 'src'));
         await writeFile(join(temp.path, 'package.json'), JSON.stringify({ name: 'dev-fixture', type: 'module' }));
-        await writeFile(join(temp.path, 'src', 'index.ts'), 'export default {};\n');
-        const session = new DevSession(devConfigFor(temp.path, 'index.ts'), new ServerDevRuntime(), sessionDeps());
+        await writeFile(join(temp.path, 'src', 'helper.ts'), 'export const helper = 1;\n');
+        await writeFile(join(temp.path, 'src', 'index.ts'), "export { helper } from './helper';\n");
+        return devConfigFor(temp.path, 'index.ts');
+    }
+
+    it('never loads the entry once it stops while the runtime starts', async () => {
+        const runtime = new ServerDevRuntime();
+        const loadEntry = vi.spyOn(runtime, 'loadEntry');
+        const session = new DevSession(await project(), runtime, sessionDeps());
 
         const starting = session.start();
         await session.stop();
 
         await expect(starting).resolves.toBeUndefined();
+        expect(loadEntry).not.toHaveBeenCalled();
     }, 60_000);
+
+    it('ends quietly when it stops while the entry loads', async () => {
+        const runtime = new ServerDevRuntime();
+        const session = new DevSession(await project(), runtime, sessionDeps());
+        const loadEntry = runtime.loadEntry.bind(runtime);
+        let stopping: Promise<void> | undefined;
+        vi.spyOn(runtime, 'loadEntry').mockImplementation(() => {
+            const loading = loadEntry();
+            stopping = session.stop();
+            return loading;
+        });
+
+        await expect(session.start()).resolves.toBeUndefined();
+        await expect(stopping).resolves.toBeUndefined();
+    }, 20_000);
 });
 
 describe('DevSession with a broken entry', () => {
