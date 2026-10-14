@@ -104,7 +104,6 @@ export class DevSession {
         }
     }
 
-    // every way out of a session ends here
     public async stop(): Promise<void> {
         this.stopPromise ??= this.runStop();
         return this.stopPromise;

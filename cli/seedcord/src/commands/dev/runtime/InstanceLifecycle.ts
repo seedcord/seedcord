@@ -2,7 +2,6 @@ import { HostShutdown, HostStartup } from '@seedcord/types/internal';
 
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
-// starts and stops a bot that runs in the CLI's own process
 export class InstanceLifecycle {
     private instance?: SeedcordInstance;
     private starting?: Promise<unknown>;

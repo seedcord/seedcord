@@ -28,7 +28,6 @@ export interface DevRunnerDeps extends Omit<DevSessionDeps, 'onEvent'> {
     readonly runtime: (target: ResolvedTarget) => DevRuntime;
 }
 
-// what the run loop does once the current session ends
 type NextStep = 'session' | 'disconnected' | 'quit';
 
 export class DevRunner {
