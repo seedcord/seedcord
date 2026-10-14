@@ -17,7 +17,7 @@ export interface DevRuntime extends ModuleLoader {
     /** Resolves with the bot's username once it started. */
     startBot(instance: SeedcordInstance): Promise<string | undefined>;
 
-    /** Aborts a startup that is still running, then shuts the bot down. */
+    /** Aborts a startup that is still running, then shuts the bot down. The edge runtime also closes its vite server. */
     stopBot(): Promise<void>;
 
     /** Called when the dev session ends. */

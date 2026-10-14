@@ -1,7 +1,12 @@
 import { realpathSync, watch } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 
+import { paint } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
+
 import type { FSWatcher } from 'node:fs';
+
+const logger = new Logger('HMR', { channel: 'hmr' });
 
 // the cloudflare plugin restarts vite itself when its watcher reports one of these
 const LOCAL_VARS = ['.dev.vars', '.env'];
@@ -22,8 +27,13 @@ export function isWorkerConfigFile(wranglerConfig: string): (path: string) => bo
 export function watchWorkerConfig(wranglerConfig: string, onChange: (file: string) => void): FSWatcher {
     const isConfig = isWorkerConfigFile(wranglerConfig);
     const dir = dirname(realpathSync(wranglerConfig));
-    return watch(dir, (_event, name) => {
+    const watcher = watch(dir, (_event, name) => {
         const file = name === null ? undefined : join(dir, name);
         if (file !== undefined && isConfig(file)) onChange(file);
     });
+    // node throws process-wide without a listener here
+    watcher.on('error', (error) => {
+        logger.warn(`Stopped watching ${paint.path(dir)} for wrangler config changes: ${error.message}`);
+    });
+    return watcher;
 }

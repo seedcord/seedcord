@@ -9,6 +9,7 @@ import { setBotRoot } from '@seedcord/utils/node/internal';
 import chalk from 'chalk';
 import { createServer, createServerModuleRunner } from 'vite';
 
+import { moduleGlobs } from '#commands/build/builder/builtFiles';
 import { functionExportsOf, WORKER_ENTRY_ID, workerEntry } from '#commands/build/builder/workerEntry';
 import {
     importCloudflare,
@@ -23,17 +24,15 @@ import { seedcordDependents } from '#core/modules/seedcordDependents';
 import { mergeViteConfig, userCodeConfig, WORKERD_CONDITIONS } from '#core/modules/userCodeConfig';
 import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
 
+import { BaseDevRuntime } from './BaseDevRuntime';
 import { logsIgnore } from './devServerConfig';
-import { HmrPlugin } from './HmrPlugin';
 import { listenForInteractions } from './interactionsEndpoint';
-import { loadEntry } from './loadEntry';
 import { isWorkerConfigFile, watchWorkerConfig } from './workerConfigFiles';
 import { workerLogger } from './workerLogger';
 
 import type { EdgeTarget } from '#core/config/detectTarget';
-import type { ImportCloudflare, ImportWrangler } from '#core/modules/cloudflarePlugin';
-import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
-import type { DevEvent } from './events';
+import type { StartedRuntime } from './BaseDevRuntime';
+import type { DevRuntimeContext } from './DevRuntime';
 import type {
     DevChannel,
     SeedcordCliEvents,
@@ -42,17 +41,8 @@ import type {
 } from '@seedcord/types/internal';
 import type { Plugin, ViteDevServer } from 'vite';
 
-interface Started {
-    readonly context: DevRuntimeContext;
+interface EdgeStarted extends StartedRuntime {
     readonly server: ViteDevServer;
-    readonly modules: RunnerModuleLoader;
-    readonly hmr: HmrPlugin;
-    readonly resources: AsyncDisposableStack;
-}
-
-interface EdgeDevDeps {
-    importCloudflare: ImportCloudflare;
-    importWrangler: ImportWrangler;
 }
 
 // workerd's own cloudflare:workers and envapt binding stay in the worker environment
@@ -82,17 +72,11 @@ function holdProcessState(stack: AsyncDisposableStack, root: string): void {
 }
 
 // runs an edge bot in workerd. The ssr environment holds the copy codegen reads
-export class EdgeDevRuntime implements DevRuntime {
-    private started?: Started | undefined;
+export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
     private settleStart?: (() => void) | undefined;
 
-    private readonly deps: EdgeDevDeps;
-
-    public constructor(
-        private readonly target: EdgeTarget,
-        deps: Partial<EdgeDevDeps> = {}
-    ) {
-        this.deps = { importCloudflare, importWrangler, ...deps };
+    public constructor(private readonly target: EdgeTarget) {
+        super();
     }
 
     public async start(context: DevRuntimeContext): Promise<void> {
@@ -107,15 +91,11 @@ export class EdgeDevRuntime implements DevRuntime {
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
         const [folders, cloudflare, port] = await Promise.all([
             files.foldersIncludingEmpty(),
-            loadCloudflare(viteRoot, this.deps.importCloudflare),
-            readDevPort(this.target.wranglerConfig, this.deps.importWrangler)
+            loadCloudflare(viteRoot, importCloudflare),
+            readDevPort(this.target.wranglerConfig, importWrangler)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
-        const hmr = new HmrPlugin(config, WORKER_ENVIRONMENT);
-        hmr.on('event', (event) => this.emit(context, event));
-        onFailure.defer(() => {
-            hmr.removeAllListeners('event');
-        });
+        const hmr = this.openHmr(context, WORKER_ENVIRONMENT, onFailure);
         const server = await createServer(
             mergeViteConfig(userCodeConfig(WORKERD_CONDITIONS), {
                 root: viteRoot,
@@ -131,7 +111,7 @@ export class EdgeDevRuntime implements DevRuntime {
                 ssr: { noExternal: seedcordDependents(configDir) },
                 // the plugin's dep scan finds nothing in a virtual main.
                 // vite then reloads during the first load and leaves a second envapt with no source bound
-                environments: { [WORKER_ENVIRONMENT]: { optimizeDeps: { entries: [`${config.root}/**/*.ts`] } } },
+                environments: { [WORKER_ENVIRONMENT]: { optimizeDeps: { entries: moduleGlobs(config.root) } } },
                 plugins: [
                     workerEntry({
                         files,
@@ -171,19 +151,10 @@ export class EdgeDevRuntime implements DevRuntime {
             hmr.reportChangeNeedingRestart(file);
         });
         onFailure.defer(() => configWatcher.close());
-        this.started = { context, server, modules, hmr, resources: onFailure.move() };
+        this.markStarted({ context, server, modules, hmr, resources: onFailure.move() });
         this.emit(context, { type: 'module-loaded', path: config.root });
         this.emit(context, { type: 'ready' });
         this.emit(context, { type: 'server-listening', port });
-    }
-
-    public importModule<TModule = unknown>(path: string): Promise<TModule> {
-        return this.require().modules.importModule<TModule>(path);
-    }
-
-    public loadEntry(): Promise<DevRuntimeLoadResult> {
-        const { context, modules } = this.require();
-        return loadEntry(modules, context);
     }
 
     // the worker runs its own copy of the bot
@@ -197,27 +168,14 @@ export class EdgeDevRuntime implements DevRuntime {
         });
     }
 
+    // closing the vite server is the only way to stop workerd
     public async stopBot(): Promise<void> {
         this.settleStart?.();
-        await this.close();
-    }
-
-    public refreshCommands(shouldRefresh: boolean): void {
-        this.require().hmr.sendRefreshCommands(shouldRefresh);
-    }
-
-    public dispose(): Promise<void> {
-        return this.close();
-    }
-
-    private async close(): Promise<void> {
-        const { started } = this;
-        this.started = undefined;
-        await started?.resources.disposeAsync();
+        await this.dispose();
     }
 
     private workerChannel(): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> {
-        const { context, server } = this.require();
+        const { context, server } = this.require('startBot');
         const worker = server.environments[WORKER_ENVIRONMENT];
         if (!worker) {
             throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
@@ -226,19 +184,5 @@ export class EdgeDevRuntime implements DevRuntime {
             ]);
         }
         return wrapHot<SeedcordCliEvents, SeedcordFrameworkEvents>(worker.hot);
-    }
-
-    private require(): Started {
-        if (!this.started) {
-            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
-                'runtime',
-                'EdgeDevRuntime.start() must complete first'
-            ]);
-        }
-        return this.started;
-    }
-
-    private emit({ onEvent }: DevRuntimeContext, event: DevEvent): void {
-        onEvent?.(event);
     }
 }

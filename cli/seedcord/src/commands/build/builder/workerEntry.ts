@@ -1,4 +1,5 @@
 import { BAKED_IDS_KEY } from '@seedcord/core/internal';
+import { assertNever } from '@seedcord/utils';
 
 import { builtFilesSource } from './builtFiles';
 
@@ -55,28 +56,45 @@ function bakedIdsSource(ids: BakedIds): string {
     return `globalThis[Symbol.for(${JSON.stringify(BAKED_IDS_KEY)})] = JSON.parse(${json});\n`;
 }
 
-function setupSources({ files, folders, rootKey, mode }: WorkerEntryOptions): Map<string, string> {
-    const isDev = mode.kind === 'dev';
-    const rootExpression = JSON.stringify(isDev ? mode.root : WORKER_ROOT);
-    const modules = new Map([
-        [BIND_ENV_ID, BIND_ENV],
-        [BUILT_FILES_ID, builtFilesSource({ files, folders, rootExpression, rootKey, sourcePaths: isDev })]
-    ]);
-    if (isDev) modules.set(DEV_CWD_ID, devCwdSource(mode.cwd));
-    else modules.set(BAKED_IDS_ID, bakedIdsSource(mode.ids));
-    return modules;
+interface ModeSetup {
+    root: string;
+    sourcePaths: boolean;
+    module: [id: string, source: string];
 }
 
-async function entrySource({ instanceKey, functionExports, mode }: WorkerEntryOptions): Promise<string> {
-    const instance = JSON.stringify(instanceKey);
-    const lines = [
-        ...(mode.kind === 'dev' ? [`import '${DEV_CWD_ID}';`] : []),
+function modeSetup(mode: EntryMode): ModeSetup {
+    switch (mode.kind) {
+        case 'dev': {
+            return { root: mode.root, sourcePaths: true, module: [DEV_CWD_ID, devCwdSource(mode.cwd)] };
+        }
+        case 'build': {
+            return { root: WORKER_ROOT, sourcePaths: false, module: [BAKED_IDS_ID, bakedIdsSource(mode.ids)] };
+        }
+        default: {
+            return assertNever(mode);
+        }
+    }
+}
+
+// the entry imports these in order, ahead of the instance file
+function setupSources({ files, folders, rootKey, mode }: WorkerEntryOptions): Map<string, string> {
+    const { root, sourcePaths, module } = modeSetup(mode);
+    const rootExpression = JSON.stringify(root);
+    return new Map([
+        module,
         // the instance file may read env while it loads
-        `import '${BIND_ENV_ID}';`,
-        `import '${BUILT_FILES_ID}';`,
-        ...(mode.kind === 'build' ? [`import '${BAKED_IDS_ID}';`] : []),
-        `export { default } from ${instance};`
-    ];
+        [BIND_ENV_ID, BIND_ENV],
+        [BUILT_FILES_ID, builtFilesSource({ files, folders, rootExpression, rootKey, sourcePaths })]
+    ]);
+}
+
+async function entrySource(
+    { instanceKey, functionExports }: WorkerEntryOptions,
+    setup: Map<string, string>
+): Promise<string> {
+    const instance = JSON.stringify(instanceKey);
+    const lines = [...setup.keys()].map((id) => `import '${id}';`);
+    lines.push(`export { default } from ${instance};`);
     // cloudflare reads durable object and workflow classes from the worker's named exports
     const named = await functionExports();
     if (named.length > 0) lines.push(`export { ${named.join(', ')} } from ${instance};`);
@@ -84,13 +102,13 @@ async function entrySource({ instanceKey, functionExports, mode }: WorkerEntryOp
 }
 
 export function workerEntry(options: WorkerEntryOptions): Plugin {
-    const modules = setupSources(options);
+    const setup = setupSources(options);
     return {
         name: WORKER_ENTRY_ID,
-        resolveId: (id) => (id === WORKER_ENTRY_ID || modules.has(id) ? `\0${id}` : undefined),
+        resolveId: (id) => (id === WORKER_ENTRY_ID || setup.has(id) ? `\0${id}` : undefined),
         load: (id) => {
-            if (id === `\0${WORKER_ENTRY_ID}`) return entrySource(options);
-            return id.startsWith('\0') ? modules.get(id.slice(1)) : undefined;
+            if (id === `\0${WORKER_ENTRY_ID}`) return entrySource(options, setup);
+            return id.startsWith('\0') ? setup.get(id.slice(1)) : undefined;
         }
     };
 }

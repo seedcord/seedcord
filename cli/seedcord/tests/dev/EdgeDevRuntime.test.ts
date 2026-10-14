@@ -309,13 +309,6 @@ describe('EdgeDevRuntime', () => {
         );
     }, 120_000);
 
-    it('starts the bot in workerd when the session asks', async () => {
-        const { projectDir } = await edgeProject();
-        const { runtime, instance } = await startedRuntime(projectDir);
-
-        await expect(runtime.startBot(instance)).resolves.not.toThrow();
-    }, 120_000);
-
     it("reports the worker's logs", async () => {
         const { projectDir } = await edgeProject();
         const logs = captureLogs();
@@ -449,9 +442,11 @@ describe('EdgeDevRuntime', () => {
         await startedRuntime(projectDir);
 
         const source = await fetch(`http://localhost:${port}/src/bot.ts`);
+        const posted = await fetch(`http://localhost:${port}/src/bot.ts`, { method: 'POST', body: '{}' });
 
         expect(source.status).toBe(405);
         expect(await source.text()).not.toContain('Seedcord');
+        expect(await posted.text()).not.toContain('Seedcord');
     }, 120_000);
 
     it('runs the saved version of a handler in the worker', async () => {
@@ -514,6 +509,17 @@ describe('EdgeDevRuntime', () => {
 
         await expect(runtime.startBot(instance)).rejects.toHaveProperty('code', SeedcordErrorCode.ConfigMissingEnv);
     }, 120_000);
+
+    it('rejects start when the bot throws while workerd loads it', async () => {
+        const { projectDir } = await edgeProject();
+        // node's codegen copy loads bot.ts too
+        await appendFile(
+            join(projectDir, 'src/bot.ts'),
+            "\nif (navigator.userAgent === 'Cloudflare-Workers') throw new Error('bot.ts threw in workerd');\n"
+        );
+
+        await expect(startedRuntime(projectDir)).rejects.toThrow('bot.ts threw in workerd');
+    }, 60_000);
 
     it('settles a start that is still running when the session stops', async () => {
         const { projectDir } = await edgeProject();

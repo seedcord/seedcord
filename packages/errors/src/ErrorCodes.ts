@@ -325,6 +325,12 @@ export enum SeedcordErrorCode {
     CliEdgeCommandsNotDeployed = 3151,
     /** Edge dev could not listen on the wrangler config's `dev.port`, because something else already does. */
     CliEdgeDevPortInUse = 3152,
+    /** An edge bot's project does not have `wrangler` installed. */
+    CliEdgeWranglerMissing = 3153,
+    /** Wrangler could not read an edge bot's wrangler config. */
+    CliWranglerConfigUnreadable = 3154,
+    /** Something called the dev runtime before its `start()` finished. A bug in seedcord. */
+    CliDevRuntimeNotStarted = 3155,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

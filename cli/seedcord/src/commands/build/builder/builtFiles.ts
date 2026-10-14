@@ -12,10 +12,15 @@ interface BuiltFilesOptions {
     sourcePaths: boolean;
 }
 
-// the module and text globs follow isModulePath and isTextPath in @seedcord/utils
+// follows isModulePath in @seedcord/utils
+export function moduleGlobs(base: string): string[] {
+    return [`${base}/**/*.ts`, `${base}/**/*.js`, `!${base}/**/*.d.ts`];
+}
+
+// the text glob follows isTextPath in @seedcord/utils
 export function builtFilesSource({ files, folders, rootExpression, rootKey, sourcePaths }: BuiltFilesOptions): string {
     const excludes = files.globExcludes();
-    const modules = ['./**/*.ts', './**/*.js', '!./**/*.d.ts', ...excludes];
+    const modules = [...moduleGlobs('.'), ...excludes];
     const text = ['./**/*', '!./**/*.ts', '!./**/*.js', '!./**/*.map', ...excludes];
     const moduleOptions = { base: rootKey };
     const textOptions = { ...moduleOptions, query: '?raw', import: 'default' };

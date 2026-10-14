@@ -63,23 +63,15 @@ export const paint = {
     get pith() {
         return chalk.hex(BRAND.pith);
     },
-    get mute() {
-        return chalk.dim; // context around the subject
-    },
+    mute: chalk.dim, // context around the subject
 
     check: '✔︎', // U+FE0E to prevent emoji font
     cross: '✘',
 
     // weight and shape
-    get bold() {
-        return chalk.bold;
-    },
-    get italic() {
-        return chalk.italic;
-    },
-    get underline() {
-        return chalk.underline;
-    }
+    bold: chalk.bold,
+    italic: chalk.italic,
+    underline: chalk.underline
 } as const;
 
 export const WORDMARK = `${paint.flesh.bold('seed')}${paint.rind.bold('cord')}`;
