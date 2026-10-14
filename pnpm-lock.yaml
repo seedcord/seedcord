@@ -238,9 +238,6 @@ catalogs:
     vite:
       specifier: ^8.3.4
       version: 8.3.4
-    wrangler:
-      specifier: ^4.150.0
-      version: 4.150.0
     yaml:
       specifier: ^2.9.1
       version: 2.9.1
@@ -318,6 +315,9 @@ catalogs:
     typescript:
       specifier: ^6.0.3
       version: 6.0.3
+    wrangler:
+      specifier: ^4.150.0
+      version: 4.150.0
   react:
     '@types/react':
       specifier: ^19.3.0
@@ -493,7 +493,7 @@ importers:
         version: 16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       postcss:
         specifier: ^8.5.28
-        version: 8.5.28
+        version: 8.5.30
       prettier:
         specifier: catalog:deps
         version: 3.9.9
@@ -574,7 +574,7 @@ importers:
         specifier: catalog:test
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@30.1.1)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0))
       wrangler:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 4.150.0(@types/node@26.1.2)
 
   apps/guide:
@@ -761,7 +761,7 @@ importers:
         specifier: catalog:test
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@30.1.1)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0))
       wrangler:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 4.150.0(@types/node@26.1.2)
 
   apps/home:
@@ -837,7 +837,7 @@ importers:
         specifier: catalog:peer
         version: 6.0.3
       wrangler:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 4.150.0(@types/node@26.1.2)
 
   cli/create-seedcord:
@@ -988,7 +988,7 @@ importers:
         specifier: catalog:peer
         version: 6.0.3
       wrangler:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 4.150.0(@types/node@26.1.2)
 
   mocks/edge:
@@ -1022,7 +1022,7 @@ importers:
         specifier: workspace:^
         version: link:../../cli/seedcord
       wrangler:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 4.150.0(@types/node@26.1.2)
 
   mocks/gateway:
@@ -8557,10 +8557,6 @@ packages:
     resolution: {integrity: sha512-g50586zr4bZmwFiTlflMu8E0bDTb5I5gertgwAKmsdUlTQIhZtunzUlD1WSzwcVWPoAVpsrA6vlfCD7oXvRwgg==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postcss@8.5.28:
-    resolution: {integrity: sha512-RRuzqDtt5Y9h3quz5hWhK+TPnsmVs6WwSU6LkJMeY4HstUEDuYTG8UJSdawMRzmzAtV+KEoG8N3Qg2qLy5vM/A==}
-    engines: {node: ^10 || ^12 || >=14}
-
   postcss@8.5.30:
     resolution: {integrity: sha512-zkd+e9S1AQHhmaBKye9zlFHWjOwVgqXl1q3ECYy8561K7qxR2cREf/STLskulBFd78k6AOFeA+ff1TtEzk9bAA==}
     engines: {node: ^10 || ^12 || >=14}
@@ -12667,7 +12663,7 @@ snapshots:
       '@alloc/quick-lru': 5.2.0
       '@tailwindcss/node': 4.3.3
       '@tailwindcss/oxide': 4.3.3
-      postcss: 8.5.28
+      postcss: 8.5.30
       tailwindcss: 4.3.3
 
   '@takumi-rs/core-darwin-arm64@2.14.0':
@@ -17022,12 +17018,6 @@ snapshots:
   possible-typed-array-names@1.1.0: {}
 
   postcss@8.5.23:
-    dependencies:
-      nanoid: 3.3.19
-      picocolors: 1.1.1
-      source-map-js: 1.2.2
-
-  postcss@8.5.28:
     dependencies:
       nanoid: 3.3.19
       picocolors: 1.1.1

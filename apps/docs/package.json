@@ -63,6 +63,6 @@
         "tsx": "catalog:deps",
         "typescript": "catalog:peer",
         "vitest": "catalog:test",
-        "wrangler": "catalog:deps"
+        "wrangler": "catalog:peer"
     }
 }

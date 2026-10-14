@@ -84,6 +84,6 @@
         "unified": "^11.0.5",
         "vfile": "^6.0.3",
         "vitest": "catalog:test",
-        "wrangler": "catalog:deps"
+        "wrangler": "catalog:peer"
     }
 }

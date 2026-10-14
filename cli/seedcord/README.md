@@ -78,6 +78,8 @@ A `wrangler.jsonc`, `wrangler.json` or `wrangler.toml` beside `seedcord.config.t
 pnpm add -D @cloudflare/vite-plugin wrangler
 ```
 
+`seedcord dev` runs the bot in workerd through `@cloudflare/vite-plugin`. It listens on the `dev.port` in your wrangler config, or on 8787 if the config doesn't set one. The worker reads its secrets from `.dev.vars` or `.env` beside the wrangler config. A saved handler reloads in place. After you change `.dev.vars`, `.env` or the wrangler config, press `r` to restart.
+
 `seedcord build` bundles the worker into `outDir`, then starts it once in workerd to check that it loads. Run `wrangler deploy` from the project folder to deploy it.
 
 Before it bundles, the build reads the public key, command ids and emoji ids from Discord with `DISCORD_BOT_TOKEN` from your environment or `.env`, and writes them into the worker. Every command in your code has to be deployed already, or the build stops and lists the ones that aren't.

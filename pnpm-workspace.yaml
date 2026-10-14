@@ -62,7 +62,6 @@ catalogs:
     tsx: ^4.23.15
     type-fest: ^5.8.0
     vite: ^8.3.4
-    wrangler: ^4.150.0
     yaml: ^2.9.1
   eslint:
     '@typescript-eslint/rule-tester': ^8.65.0
@@ -90,6 +89,7 @@ catalogs:
     mongoose: ^9.9.1
     pg: ^8.22.0
     typescript: ^6.0.3
+    wrangler: ^4.150.0
   consumerTypes:
     typescript: ^5.9.3 || ^6.0.0 || ^7.0.0
   # typescript-eslint supports typescript below 6.1

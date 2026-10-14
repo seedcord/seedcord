@@ -35,6 +35,6 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "seedcord": "workspace:^",
-        "wrangler": "catalog:deps"
+        "wrangler": "catalog:peer"
     }
 }
