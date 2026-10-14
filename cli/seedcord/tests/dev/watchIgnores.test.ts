@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { createServer } from 'vite';
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
-import { devServerConfig, devWatchIgnores } from '#commands/dev/runtime/devServerConfig';
+import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 
 import type { ViteDevServer } from 'vite';
@@ -51,11 +51,7 @@ async function watchProject(root: string): Promise<WatchedProject> {
     const reported = new Set<string>();
 
     server = await createServer(
-        // the same merge ServerDevRuntime does
-        mergeViteConfig(devServerConfig(), {
-            root,
-            logLevel: 'error',
-            server: { watch: { ignored: devWatchIgnores(root) } },
+        mergeViteConfig(serverViteConfig({ root, configFile: join(root, 'seedcord.config.ts') }, root), {
             plugins: [
                 {
                     name: 'record',

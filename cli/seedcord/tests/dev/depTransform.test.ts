@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { createServer, createServerModuleRunner } from 'vite';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { devServerConfig } from '#commands/dev/runtime/devServerConfig';
+import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 
 import type { ViteDevServer } from 'vite';
@@ -85,7 +85,10 @@ describe('dev runtime module resolution', () => {
         await writeFixture(root);
 
         server = await createServer(
-            mergeViteConfig(devServerConfig(), { root: join(root, 'src'), server: { hmr: false, watch: null } })
+            mergeViteConfig(
+                serverViteConfig({ root: join(root, 'src'), configFile: join(root, 'seedcord.config.ts') }, root),
+                { server: { hmr: false, watch: null } }
+            )
         );
 
         const runner = createServerModuleRunner(server.environments.ssr);

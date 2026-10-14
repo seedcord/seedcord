@@ -1,9 +1,11 @@
 import { realpathSync } from 'node:fs';
-import { resolve, sep } from 'node:path';
+import { dirname, resolve, sep } from 'node:path';
 
+import { seedcordDependents } from '#core/modules/seedcordDependents';
 import { mergeViteConfig, NODE_CONDITIONS, userCodeConfig } from '#core/modules/userCodeConfig';
 import { STATE_FOLDER } from '#core/state/StateFolder';
 
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { InlineConfig } from 'vite';
 
 // a **/logs/** glob would also swallow a source directory named logs
@@ -20,10 +22,18 @@ export function devWatchIgnores(cwd: string): (string | ((path: string) => boole
 }
 
 // vite writes resolved options back into the config object it receives
-export function devServerConfig(): InlineConfig {
+export function serverViteConfig(
+    config: Pick<ResolvedSeedcordConfig, 'root' | 'configFile'>,
+    cwd: string
+): InlineConfig {
     return mergeViteConfig(userCodeConfig(NODE_CONDITIONS), {
-        server: { middlewareMode: true },
+        root: config.root,
+        // vite searches its own root for a config file
+        configFile: false,
+        server: { middlewareMode: true, watch: { ignored: devWatchIgnores(cwd) } },
         clearScreen: false,
-        logLevel: 'error'
+        logLevel: 'error',
+        // an external plugin would load node's copy of @seedcord/core beside vite's
+        ssr: { noExternal: seedcordDependents(dirname(config.configFile)) }
     });
 }
