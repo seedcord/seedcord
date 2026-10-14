@@ -9,21 +9,16 @@ export interface DevRuntimeContext {
 }
 
 export interface DevRuntime extends ModuleLoader {
-    /** Called once before any other method. */
     start(context: DevRuntimeContext): Promise<void>;
 
     loadEntry(): Promise<DevRuntimeLoadResult>;
 
-    /** Resolves with the bot's username once it started. */
     startBot(instance: SeedcordInstance): Promise<string | undefined>;
 
-    /** Aborts a startup that is still running, shuts the bot down, then closes the runtime. Every method throws after this. */
+    // shuts the bot down and closes the runtime
     stopBot(): Promise<void>;
 
-    /**
-     * Relays the user's response to a pending command-update prompt to the running instance.
-     * @param shouldRefresh - `true` re-registers the changed commands. `false` dismisses the prompt without re-registering.
-     */
+    // false dismisses the command-update prompt without registering anything
     refreshCommands(shouldRefresh: boolean): void;
 }
 

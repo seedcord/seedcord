@@ -64,7 +64,21 @@ function nodeCopy(onReady: (modules: RunnerModuleLoader) => void): Plugin {
     };
 }
 
-// a server bot's constructor installs these and ServerHost.reset clears them. an edge bot runs neither in this process
+function workerChannel(
+    server: ViteDevServer,
+    instance: string
+): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> {
+    const worker = server.environments[WORKER_ENVIRONMENT];
+    if (!worker) {
+        throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
+            instance,
+            `@cloudflare/vite-plugin did not create its "${WORKER_ENVIRONMENT}" environment`
+        ]);
+    }
+    return wrapHot<SeedcordCliEvents, SeedcordFrameworkEvents>(worker.hot);
+}
+
+// ServerHost installs these for a server bot. the edge Seedcord never does
 function installCliLogSinks(stack: AsyncDisposableStack): void {
     installNodeDefaults();
     stack.defer(() => LoggerChannelRegistry.instance.configure({}));
@@ -153,8 +167,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
 
     // workerd runs its own copy of the bot
     public startBot(_instance: SeedcordInstance): Promise<string | undefined> {
-        const { context, port } = this.require('startBot');
-        const cli = this.workerChannel();
+        const { context, server, port } = this.require('startBot');
+        const cli = workerChannel(server, context.config.instance);
         return new Promise((resolve, reject) => {
             this.settleStart = () => resolve(undefined);
             cli.on('seedcord:started', ({ username }) => {
@@ -171,17 +185,5 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
     protected stopInstance(): Promise<void> {
         this.settleStart?.();
         return Promise.resolve();
-    }
-
-    private workerChannel(): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> {
-        const { context, server } = this.require('startBot');
-        const worker = server.environments[WORKER_ENVIRONMENT];
-        if (!worker) {
-            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
-                context.config.instance,
-                `@cloudflare/vite-plugin did not create its "${WORKER_ENVIRONMENT}" environment`
-            ]);
-        }
-        return wrapHot<SeedcordCliEvents, SeedcordFrameworkEvents>(worker.hot);
     }
 }

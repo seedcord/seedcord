@@ -51,7 +51,7 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
         this.started = started;
     }
 
-    protected require(method: string): TStarted {
+    protected require(method: keyof DevRuntime): TStarted {
         if (!this.started) throw new SeedcordError(SeedcordErrorCode.CliDevRuntimeNotRunning, [method]);
         return this.started;
     }
