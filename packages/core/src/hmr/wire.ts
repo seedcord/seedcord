@@ -37,9 +37,15 @@ export function fromWireError({ name, message, stack, code, cause }: WireError):
     return error;
 }
 
+// matches node's console.log text for a function or a class
+function functionText(fn: { readonly name: string }): string {
+    if (Function.prototype.toString.call(fn).startsWith('class')) return `[class ${fn.name || '(anonymous)'}]`;
+    return fn.name ? `[Function: ${fn.name}]` : '[Function (anonymous)]';
+}
+
 function toWireArg(arg: unknown): WireArg {
     if (Error.isError(arg)) return { error: toWireError(arg) };
-    // JSON has no form for the first four. each travels as the text console.log prints
+    // JSON can't hold undefined, a symbol, a bigint or a function. each one is sent as text
     switch (typeof arg) {
         case 'undefined':
         case 'symbol': {
@@ -49,7 +55,7 @@ function toWireArg(arg: unknown): WireArg {
             return { value: `${arg}n` };
         }
         case 'function': {
-            return { value: `[Function: ${arg.name || '(anonymous)'}]` };
+            return { value: functionText(arg) };
         }
         default: {
             return { value: filterCirculars(arg, { mode: 'json' }) };

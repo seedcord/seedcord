@@ -89,10 +89,22 @@ describe('wire logs', () => {
 
     it('sends an arg JSON cannot hold as the text console.log prints for it', () => {
         function wave(): void {}
+        class Ticket {
+            public readonly id = 1;
+        }
 
-        const received = fromDevLogLine(toDevLogLine(record([undefined, Symbol('id'), wave, 5n])));
+        const received = fromDevLogLine(
+            toDevLogLine(record([undefined, Symbol('id'), wave, () => undefined, Ticket, 5n]))
+        );
 
-        expect(received?.args).toEqual(['undefined', 'Symbol(id)', '[Function: wave]', '5n']);
+        expect(received?.args).toEqual([
+            'undefined',
+            'Symbol(id)',
+            '[Function: wave]',
+            '[Function (anonymous)]',
+            '[class Ticket]',
+            '5n'
+        ]);
     });
 
     it('sends a circular arg with the loop cut', () => {
