@@ -40,7 +40,7 @@ export class DevSession {
         private readonly deps: DevSessionDeps
     ) {}
 
-    private async loadInstanceModule(): Promise<unknown> {
+    private async startRuntime(): Promise<void> {
         await this.runtime.start({
             config: this.config,
             onEvent: (event) => {
@@ -49,10 +49,6 @@ export class DevSession {
             }
         });
         profileMark('vite');
-
-        const { module } = await this.runtime.loadEntry();
-        profileMark('entry');
-        return module;
     }
 
     private startTypecheck(): void {
@@ -65,9 +61,14 @@ export class DevSession {
 
     public async start(onReady?: () => void): Promise<void> {
         const { store } = this.deps;
-        const module = await this.loadInstanceModule();
+        await this.startRuntime();
+        // stop() closed the runtime as it finished starting
+        if (this.isStopped) return;
+
+        const { module } = await this.runtime.loadEntry();
+        profileMark('entry');
         const instance = toSeedcordInstance(await resolveDefaultExport(module), this.config.instance);
-        // stop() before this point had no bot to shut down
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- stop() flips isStopped while the entry loads
         if (this.isStopped) return;
 
         this.instance = instance;

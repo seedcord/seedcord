@@ -67,6 +67,21 @@ describe('dev runtime with root set to src', () => {
         });
     }, 60_000);
 
+    it('closes a runtime that was stopped while it started', async () => {
+        await mkdir(SCRATCH_ROOT, { recursive: true });
+        const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
+        await writeProject(dir);
+
+        const runtime = new ServerDevRuntime();
+        const starting = runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        await runtime.stopBot();
+        await starting;
+
+        await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CoreDirectoryRootUnknown
+        });
+    }, 60_000);
+
     it("still closes the runtime when the bot's shutdown throws", async () => {
         await mkdir(SCRATCH_ROOT, { recursive: true });
         const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));

@@ -88,13 +88,11 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         super();
     }
 
-    public async start(context: DevRuntimeContext): Promise<void> {
+    protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<EdgeStarted> {
         const { config } = context;
         const viteRoot = dirname(this.target.wranglerConfig);
         const files = new ProjectFiles(config.root, config.build.outDir, dirname(config.configFile));
-        await using onFailure = new AsyncDisposableStack();
-        this.bindBotRoot(config.root, onFailure);
-        installCliLogSinks(onFailure);
+        installCliLogSinks(resources);
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
         const [folders, cloudflare, port] = await Promise.all([
             files.foldersIncludingEmpty(),
@@ -103,7 +101,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
         const workerConfig = new WorkerConfigFiles(this.target.wranglerConfig, Envapter.get('CLOUDFLARE_ENV'));
-        const hmr = this.openHmr(context, WORKER_ENVIRONMENT, onFailure, workerConfig);
+        const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, workerConfig);
         const server = await createServer(
             mergeViteConfig(edgeViteConfig(config, viteRoot, process.cwd()), {
                 plugins: [
@@ -134,13 +132,13 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                 ]
             })
         );
-        onFailure.defer(() => server.close());
+        resources.defer(() => server.close());
         const modules = await modulesReady.promise;
         const endpoint = await listenForInteractions(server.middlewares, port, this.target.wranglerConfig);
-        onFailure.use(endpoint.server);
+        resources.use(endpoint.server);
         // close() waits on open keep-alive sockets
-        onFailure.defer(() => endpoint.server.closeAllConnections());
-        this.markStarted({ context, server, modules, hmr, port: endpoint.port, resources: onFailure.move() });
+        resources.defer(() => endpoint.server.closeAllConnections());
+        return { context, server, modules, hmr, port: endpoint.port, resources };
     }
 
     // workerd runs its own copy of the bot

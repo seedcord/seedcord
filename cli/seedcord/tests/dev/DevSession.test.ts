@@ -201,6 +201,22 @@ describe('DevSession', () => {
     });
 });
 
+describe('DevSession on a real runtime', () => {
+    it('ends quietly when it stops while the runtime starts', async () => {
+        const temp = await mkdtempDisposable(join(tmpdir(), 'dev-session-'));
+        onTestFinished(() => temp.remove());
+        await mkdir(join(temp.path, 'src'));
+        await writeFile(join(temp.path, 'package.json'), JSON.stringify({ name: 'dev-fixture', type: 'module' }));
+        await writeFile(join(temp.path, 'src', 'index.ts'), 'export default {};\n');
+        const session = new DevSession(devConfigFor(temp.path, 'index.ts'), new ServerDevRuntime(), sessionDeps());
+
+        const starting = session.start();
+        await session.stop();
+
+        await expect(starting).resolves.toBeUndefined();
+    }, 60_000);
+});
+
 describe('DevSession with a broken entry', () => {
     it('puts the entry path once in front of the parse error', async () => {
         const temp = await mkdtempDisposable(join(tmpdir(), 'dev-session-'));

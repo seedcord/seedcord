@@ -7,23 +7,21 @@ import { BaseDevRuntime } from './BaseDevRuntime';
 import { serverViteConfig } from './devServerConfig';
 import { InstanceLifecycle } from './InstanceLifecycle';
 
+import type { StartedRuntime } from './BaseDevRuntime';
 import type { DevRuntimeContext } from './DevRuntime';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 export class ServerDevRuntime extends BaseDevRuntime {
     private readonly lifecycle = new InstanceLifecycle();
 
-    public async start(context: DevRuntimeContext): Promise<void> {
-        await using onFailure = new AsyncDisposableStack();
-        this.bindBotRoot(context.config.root, onFailure);
-
-        const hmr = this.openHmr(context, 'ssr', onFailure);
+    protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<StartedRuntime> {
+        const hmr = this.openHmr(context, 'ssr', resources);
         const server = await createServer(
             mergeViteConfig(serverViteConfig(context.config, process.cwd()), { plugins: [hmr.plugin] })
         );
-        onFailure.defer(() => server.close());
+        resources.defer(() => server.close());
         const modules = new RunnerModuleLoader(createServerModuleRunner(server.environments.ssr));
-        this.markStarted({ context, modules, hmr, resources: onFailure.move() });
+        return { context, modules, hmr, resources };
     }
 
     public startBot(instance: SeedcordInstance): Promise<string | undefined> {

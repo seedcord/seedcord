@@ -18,11 +18,32 @@ export interface StartedRuntime {
 }
 
 export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRuntime> implements DevRuntime {
+    private starting?: Promise<TStarted> | undefined;
     private started?: TStarted | undefined;
 
-    public abstract start(context: DevRuntimeContext): Promise<void>;
     public abstract startBot(instance: SeedcordInstance): Promise<string | undefined>;
+    // every resource it creates goes on the stack it receives
+    protected abstract open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<TStarted>;
     protected abstract stopInstance(): Promise<void>;
+
+    public async start(context: DevRuntimeContext): Promise<void> {
+        const starting = this.openWithCleanup(context);
+        this.starting = starting;
+        const started = await starting;
+        if (this.starting === starting) this.started = started;
+    }
+
+    private async openWithCleanup(context: DevRuntimeContext): Promise<TStarted> {
+        const resources = new AsyncDisposableStack();
+        try {
+            setBotRoot(context.config.root);
+            resources.defer(() => setBotRoot(undefined));
+            return await this.open(context, resources);
+        } catch (error: unknown) {
+            await resources.disposeAsync();
+            throw error;
+        }
+    }
 
     public importModule<TModule = unknown>(path: string): Promise<TModule> {
         return this.require('importModule').modules.importModule<TModule>(path);
@@ -38,8 +59,11 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
     }
 
     public async stopBot(): Promise<void> {
-        const { started } = this;
+        const { starting } = this;
+        this.starting = undefined;
         this.started = undefined;
+        // a start that failed already closed what it opened and threw to its own caller
+        const started = await starting?.catch(() => undefined);
         try {
             await this.stopInstance();
         } finally {
@@ -47,18 +71,9 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
         }
     }
 
-    protected markStarted(started: TStarted): void {
-        this.started = started;
-    }
-
     protected require(method: keyof DevRuntime): TStarted {
         if (!this.started) throw new SeedcordError(SeedcordErrorCode.CliDevRuntimeNotRunning, [method]);
         return this.started;
-    }
-
-    protected bindBotRoot(root: string, resources: AsyncDisposableStack): void {
-        setBotRoot(root);
-        resources.defer(() => setBotRoot(undefined));
     }
 
     protected openHmr(
