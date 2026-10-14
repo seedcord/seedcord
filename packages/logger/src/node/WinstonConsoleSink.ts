@@ -6,15 +6,14 @@ import type { SinkFormat } from './winston';
 import type { ILogSink, LogRecord } from '@seedcord/types';
 import type { Logger as Winston } from 'winston';
 
-let stdoutGone = false;
-let watchingStdout = false;
+let stdout: 'unwatched' | 'open' | 'failed' = 'unwatched';
 
-// without a listener, node turns a failed stdout write (EPIPE once the reader exits) into an uncaughtException
 function stopWritingWhenStdoutFails(): void {
-    if (watchingStdout) return;
-    watchingStdout = true;
+    if (stdout !== 'unwatched') return;
+    stdout = 'open';
+    // node throws a stdout write error as an uncaughtException without a listener here
     process.stdout.on('error', () => {
-        stdoutGone = true;
+        stdout = 'failed';
     });
 }
 
@@ -36,7 +35,7 @@ export class WinstonConsoleSink implements ILogSink {
     }
 
     public onLog(record: LogRecord): void {
-        if (stdoutGone) return;
+        if (stdout === 'failed') return;
         this.winston.log(toInfo(record));
     }
 }

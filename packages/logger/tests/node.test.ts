@@ -106,7 +106,7 @@ describe('winston sinks', () => {
         expect(() => sink.onLog(record({ message: 'hi', args: [{ a: 1 }] }))).not.toThrow();
     });
 
-    it('the console sink keeps the process running after its stdout closes', async () => {
+    it('the console sink stops writing once its stdout closes', async () => {
         const child = spawn(process.execPath, ['--import', 'tsx', LOGS_TO_STDOUT], {
             stdio: ['ignore', 'pipe', 'pipe']
         });
