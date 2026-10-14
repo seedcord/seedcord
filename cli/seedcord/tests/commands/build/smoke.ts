@@ -12,6 +12,7 @@ export const FAKE_TOKEN = `${btoa(APP_ID).replaceAll('=', '')}.${'b'.repeat(TIME
 export const ED25519_KEY_BYTES = 32;
 const UNAUTHORIZED = 401;
 const SMOKE_TIMEOUT_MS = 30_000;
+const KILL_AFTER_MS = 10_000;
 
 // an spki-encoded ed25519 key ends with its raw bytes
 function publicKeyHex(): string {
@@ -61,5 +62,8 @@ export async function smoke(kind: Kind, command: string, args: string[] = []): P
         return output;
     } finally {
         child.kill();
+        const forceKill = setTimeout(() => child.kill('SIGKILL'), KILL_AFTER_MS);
+        await exited;
+        clearTimeout(forceKill);
     }
 }

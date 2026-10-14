@@ -1,4 +1,4 @@
-import { BUILT_FILES_KEY } from '@seedcord/utils/node/internal';
+import { BUILT_FILES_KEY, moduleGlobs, textGlobs } from '@seedcord/utils/node/internal';
 
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 
@@ -12,16 +12,10 @@ interface BuiltFilesOptions {
     sourcePaths: boolean;
 }
 
-// follows isModulePath in @seedcord/utils
-export function moduleGlobs(base: string): string[] {
-    return [`${base}/**/*.ts`, `${base}/**/*.js`, `!${base}/**/*.d.ts`];
-}
-
-// the text glob follows isTextPath in @seedcord/utils
 export function builtFilesSource({ files, folders, rootExpression, rootKey, sourcePaths }: BuiltFilesOptions): string {
     const excludes = files.globExcludes();
     const modules = [...moduleGlobs('.'), ...excludes];
-    const text = ['./**/*', '!./**/*.ts', '!./**/*.js', '!./**/*.map', ...excludes];
+    const text = [...textGlobs('.'), ...excludes];
     const moduleOptions = { base: rootKey };
     const textOptions = { ...moduleOptions, query: '?raw', import: 'default' };
 

@@ -46,7 +46,7 @@ describe('routeConsoleToLogs', () => {
         expect(records.map((record) => record.message)).toEqual(['outer', '  inner']);
     });
 
-    it('logs once when a sink writes to the console', () => {
+    it("keeps a sink's own console.log out of the logs", () => {
         const echo = LoggerChannelRegistry.instance.installSink({
             kind: 'capture',
             onLog: (record) => terminal.log(`echo ${record.message}`)

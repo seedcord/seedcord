@@ -5,11 +5,10 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
-import { setBotRoot } from '@seedcord/utils/node/internal';
+import { moduleGlobs, setBotRoot } from '@seedcord/utils/node/internal';
 import chalk from 'chalk';
 import { createServer, createServerModuleRunner } from 'vite';
 
-import { moduleGlobs } from '#commands/build/builder/builtFiles';
 import { functionExportsOf, WORKER_ENTRY_ID, workerEntry } from '#commands/build/builder/workerEntry';
 import {
     importCloudflare,
@@ -69,7 +68,7 @@ function applyServerBotDefaults(stack: AsyncDisposableStack, root: string): void
     stack.defer(() => LoggerChannelRegistry.instance.configure({}));
 }
 
-// the ssr environment holds a node copy of the bot for codegen
+// codegen reads a node copy of the bot out of the ssr environment
 export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
     private settleStart?: (() => void) | undefined;
 
@@ -104,7 +103,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                     middlewareMode: true,
                     // discord's POST arrives under the tunnel's hostname. the endpoint blocks every other request
                     allowedHosts: true,
-                    // the cloudflare plugin restarts vite on its own when this watcher reports a config file
+                    // if this watcher reports a config file, the cloudflare plugin restarts vite on its own
                     watch: { ignored: [logsIgnore(process.cwd()), isWorkerConfigFile(this.target.wranglerConfig)] }
                 },
                 ssr: { noExternal: seedcordDependents(configDir) },
@@ -143,7 +142,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const endpoint = onFailure.use(
             await listenForInteractions(server.middlewares, port, this.target.wranglerConfig)
         );
-        // the endpoint's close waits on open keep-alive sockets
+        // close() waits on open keep-alive sockets
         onFailure.defer(() => endpoint.closeAllConnections());
         const configWatcher = watchWorkerConfig(this.target.wranglerConfig, (file) => {
             hmr.reportChangeNeedingRestart(file);
@@ -155,7 +154,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         this.emit(context, { type: 'server-listening', port });
     }
 
-    // the worker runs its own copy of the bot
+    // workerd runs its own copy of the bot
     public startBot(_instance: SeedcordInstance): Promise<string | undefined> {
         const cli = this.workerChannel();
         return new Promise((resolve, reject) => {
@@ -178,7 +177,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         if (!worker) {
             throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
                 context.config.instance,
-                `@cloudflare/vite-plugin created no "${WORKER_ENVIRONMENT}" environment for the worker`
+                `@cloudflare/vite-plugin did not create its "${WORKER_ENVIRONMENT}" environment`
             ]);
         }
         return wrapHot<SeedcordCliEvents, SeedcordFrameworkEvents>(worker.hot);

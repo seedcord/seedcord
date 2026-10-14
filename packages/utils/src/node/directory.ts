@@ -16,9 +16,13 @@ export function isTsOrJsFile(entry: fs.Dirent): boolean {
     return entry.isFile() && isModulePath(entry.name);
 }
 
+const MODULE_EXTENSIONS = ['.ts', '.js'];
+const DECLARATION_EXTENSION = '.d.ts';
+const NOT_TEXT_EXTENSIONS = [...MODULE_EXTENSIONS, '.map'];
+
 function isModulePath(file: string): boolean {
     const name = path.basename(file);
-    return (name.endsWith('.ts') || name.endsWith('.js')) && !name.endsWith('.d.ts') && !name.endsWith('.map');
+    return MODULE_EXTENSIONS.some((extension) => name.endsWith(extension)) && !name.endsWith(DECLARATION_EXTENSION);
 }
 
 function isHidden(dir: string, file: string): boolean {
@@ -30,7 +34,18 @@ function isHidden(dir: string, file: string): boolean {
 
 function isTextPath(dir: string, file: string): boolean {
     const name = path.basename(file);
-    return !isHidden(dir, file) && !name.endsWith('.ts') && !name.endsWith('.js') && !name.endsWith('.map');
+    return !isHidden(dir, file) && !NOT_TEXT_EXTENSIONS.some((extension) => name.endsWith(extension));
+}
+
+export function moduleGlobs(base: string): string[] {
+    return [
+        ...MODULE_EXTENSIONS.map((extension) => `${base}/**/*${extension}`),
+        `!${base}/**/*${DECLARATION_EXTENSION}`
+    ];
+}
+
+export function textGlobs(base: string): string[] {
+    return [`${base}/**/*`, ...NOT_TEXT_EXTENSIONS.map((extension) => `!${base}/**/*${extension}`)];
 }
 
 type ModuleLoader = () => Promise<Record<string, unknown>>;

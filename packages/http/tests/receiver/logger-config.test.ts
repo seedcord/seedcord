@@ -57,7 +57,7 @@ describe('config.logger on an edge bot', () => {
         expect(sink.records.map((record) => record.message)).toContain('hello');
     });
 
-    it('drops a record under the level the config sets', async () => {
+    it('keeps a record below the configured level out of the sink', async () => {
         await startBot(edgeConfig({ level: 'error', sinks: [sink] }));
         const logger = new Logger('edge');
 

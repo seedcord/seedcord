@@ -19,7 +19,7 @@ const CLOUDFLARE_PLUGIN = '@cloudflare/vite-plugin';
 export const importCloudflare: ImportCloudflare = () => import('@cloudflare/vite-plugin');
 export const importWrangler: ImportWrangler = () => import('wrangler');
 
-// wrangler dev listens here when the config sets no dev.port
+// 8787 is wrangler dev's port when the config doesn't have dev.port set
 const WRANGLER_DEV_PORT = 8787;
 
 // the importer's path at the end of node's message can hold the name too
@@ -37,7 +37,7 @@ async function loadWrangler(wranglerConfig: string, importReader: ImportWrangler
     }
 }
 
-// wrangler's ParseError message is a bare code like ValueExpected, with the position in location
+// a ParseError's message is a bare code like ValueExpected. the position is in location
 function parseFailure(error: unknown): string {
     const failure = asError(error);
     const location: unknown = Reflect.get(failure, 'location');
