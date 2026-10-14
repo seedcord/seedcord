@@ -19,6 +19,19 @@ describe('workerLogger', () => {
 
     afterEach(() => sink.dispose());
 
+    it('logs a warnOnce message the first time only', () => {
+        const logger = workerLogger();
+
+        logger.warnOnce('Sourcemap points to missing source files');
+        logger.warnOnce('Sourcemap points to missing source files');
+        logger.warnOnce('a different warning');
+
+        expect(records.map((record) => record.message)).toEqual([
+            'Sourcemap points to missing source files',
+            'a different warning'
+        ]);
+    });
+
     it('keeps the error passed to error()', () => {
         const error = new Error('transform failed');
         workerLogger().error('Pre-transform error', { error });

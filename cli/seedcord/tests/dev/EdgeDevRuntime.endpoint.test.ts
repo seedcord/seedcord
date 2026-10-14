@@ -56,6 +56,21 @@ describe('EdgeDevRuntime endpoint', () => {
         expect(response.statusCode).toBe(401);
     }, 120_000);
 
+    it.each(['/interactions', '/?probe=1', '/src/bot.ts'])(
+        'passes a POST to %s on to the bot',
+        async (path) => {
+            const { projectDir, port } = await edgeProject();
+            const { runtime, instance } = await startedRuntime(projectDir);
+            await runtime.startBot(instance);
+
+            const unsigned = await fetch(`http://localhost:${port}${path}`, { method: 'POST', body: '{}' });
+
+            expect(unsigned.status).toBe(401);
+            expect(await unsigned.text()).not.toContain('Seedcord');
+        },
+        120_000
+    );
+
     it('throws CliEdgeDevPortInUse when something already listens on dev.port', async () => {
         const { projectDir, port } = await edgeProject();
         await using holder = createNetServer().listen(port);
@@ -64,16 +79,14 @@ describe('EdgeDevRuntime endpoint', () => {
         await expect(startedRuntime(projectDir)).rejects.toHaveProperty('code', SeedcordErrorCode.CliEdgeDevPortInUse);
     }, 120_000);
 
-    it("keeps the bot's source off the endpoint", async () => {
+    it("answers a GET with 405 and keeps the bot's source off it", async () => {
         const { projectDir, port } = await edgeProject();
         await startedRuntime(projectDir);
 
         const source = await fetch(`http://localhost:${port}/src/bot.ts`);
-        const posted = await fetch(`http://localhost:${port}/src/bot.ts`, { method: 'POST', body: '{}' });
 
         expect(source.status).toBe(405);
         expect(await source.text()).not.toContain('Seedcord');
-        expect(await posted.text()).not.toContain('Seedcord');
     }, 120_000);
 
     it('runs the saved version of a handler in the worker', async () => {

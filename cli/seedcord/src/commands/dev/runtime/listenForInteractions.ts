@@ -14,17 +14,18 @@ function isPortInUse(error: unknown): boolean {
     return Error.isError(error) && 'code' in error && error.code === 'EADDRINUSE';
 }
 
-// a listening vite server answers GET /src/... and /@fs/... with the bot's source
 export async function listenForInteractions(
     middlewares: Connect.Server,
     port: number,
     wranglerConfig: string
 ): Promise<Server> {
     const server = createServer((request, response) => {
-        if (request.method !== 'POST' || request.url !== '/') {
+        if (request.method !== 'POST') {
             response.writeHead(METHOD_NOT_ALLOWED, { allow: 'POST' }).end();
             return;
         }
+        // vite serves the bot's source at /src/... and /@fs/...
+        request.url = '/';
         middlewares(request, response, () => response.writeHead(NOT_FOUND).end());
     });
     server.listen(port);

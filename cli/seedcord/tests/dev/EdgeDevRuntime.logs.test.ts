@@ -55,6 +55,31 @@ describe('EdgeDevRuntime logs', () => {
         expect(hmrLines().filter((line) => line.includes('logs/'))).toEqual([]);
     }, 120_000);
 
+    it.each(['dist', '.seedcord', '.wrangler'])(
+        'leaves %s out of hot reload',
+        async (folder) => {
+            await asDevelopment();
+            const { projectDir } = await edgeProject();
+            const logs = captureLogs();
+            const { runtime, instance } = await startedRuntime(projectDir);
+            await runtime.startBot(instance);
+            const hmrLines = (): string[] =>
+                logs
+                    .filter((record) => record.label === 'HMR')
+                    .map((record) => stripVTControlCharacters(record.message));
+
+            await mkdir(join(projectDir, folder), { recursive: true });
+            await writeFile(join(projectDir, folder, 'written.js'), 'export const written = 1;\n');
+            await writeFile(join(projectDir, 'src/handlers/Touched.ts'), 'export const touched = 1;\n');
+
+            await vi.waitFor(() =>
+                expect(hmrLines()).toContainEqual(expect.stringContaining('src/handlers/Touched.ts'))
+            );
+            expect(hmrLines().filter((line) => line.includes(`${folder}/`))).toEqual([]);
+        },
+        120_000
+    );
+
     it("reports the worker's logs", async () => {
         const { projectDir } = await edgeProject();
         const logs = captureLogs();

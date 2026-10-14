@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { createServer } from 'vite';
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
-import { devServerConfig, logsIgnore } from '#commands/dev/runtime/devServerConfig';
+import { devServerConfig, devWatchIgnores } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 
 import type { ViteDevServer } from 'vite';
@@ -55,7 +55,7 @@ async function watchProject(root: string): Promise<WatchedProject> {
         mergeViteConfig(devServerConfig(), {
             root,
             logLevel: 'error',
-            server: { watch: { ignored: [logsIgnore(root)] } },
+            server: { watch: { ignored: devWatchIgnores(root) } },
             plugins: [
                 {
                     name: 'record',

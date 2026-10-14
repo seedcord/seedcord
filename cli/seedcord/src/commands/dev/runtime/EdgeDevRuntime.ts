@@ -7,7 +7,8 @@ import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { moduleGlobs } from '@seedcord/utils/node/internal';
 import chalk from 'chalk';
-import { createServer, createServerModuleRunner } from 'vite';
+import { Envapter } from 'envapt';
+import { createServer, createServerModuleRunner, normalizePath } from 'vite';
 
 import { WORKER_ENTRY_ID, workerEntry } from '#commands/build/builder/workerEntry';
 import {
@@ -25,8 +26,9 @@ import { functionExportsOf } from '#core/modules/workerExports';
 import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
-import { logsIgnore } from './devServerConfig';
+import { devWatchIgnores } from './devServerConfig';
 import { listenForInteractions } from './listenForInteractions';
+import { WorkerConfigFiles } from './workerConfigFiles';
 import { workerLogger } from './workerLogger';
 
 import type { EdgeTarget } from '#core/config/detectTarget';
@@ -90,7 +92,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             readDevPort(this.target.wranglerConfig, importWrangler)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
-        const hmr = this.openHmr(context, WORKER_ENVIRONMENT, onFailure, this.target.wranglerConfig);
+        const workerConfig = new WorkerConfigFiles(this.target.wranglerConfig, Envapter.get('CLOUDFLARE_ENV'));
+        const hmr = this.openHmr(context, WORKER_ENVIRONMENT, onFailure, workerConfig);
         const server = await createServer(
             mergeViteConfig(userCodeConfig(WORKERD_CONDITIONS), {
                 root: viteRoot,
@@ -101,11 +104,16 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                     middlewareMode: true,
                     // discord's POST arrives under the tunnel's hostname. the endpoint blocks every other request
                     allowedHosts: true,
-                    watch: { ignored: [logsIgnore(process.cwd())] }
+                    watch: { ignored: devWatchIgnores(process.cwd()) }
                 },
                 ssr: { noExternal: seedcordDependents(configDir) },
                 // the plugin's dep scan finds nothing in a virtual main. vite then reloads mid-start and leaves a second envapt with no source bound
-                environments: { [WORKER_ENVIRONMENT]: { optimizeDeps: { entries: moduleGlobs(config.root) } } },
+                environments: {
+                    [WORKER_ENVIRONMENT]: {
+                        // a glob reads a windows separator as an escape
+                        optimizeDeps: { entries: moduleGlobs(normalizePath(relative(viteRoot, config.root)) || '.') }
+                    }
+                },
                 plugins: [
                     workerEntry({
                         files,

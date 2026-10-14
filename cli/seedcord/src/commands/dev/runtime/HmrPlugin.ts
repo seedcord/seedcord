@@ -8,10 +8,9 @@ import { Logger } from '@seedcord/logger';
 import { resolveFromRoot } from '@seedcord/utils/node/internal';
 import { minimatch } from 'minimatch';
 
-import { isWorkerConfigFile, watchWorkerConfig } from './workerConfigFiles';
-
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { DevEvent } from './events';
+import type { WorkerConfigFiles } from './workerConfigFiles';
 import type { HmrEventType, HmrUpdateEvent } from '@seedcord/types';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { FSWatcher } from 'node:fs';
@@ -52,7 +51,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     constructor(
         private readonly config: ResolvedSeedcordConfig,
         private readonly botEnvironment: string,
-        private readonly wranglerConfig?: string
+        private readonly workerConfig?: WorkerConfigFiles
     ) {
         super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
@@ -61,12 +60,11 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     public get plugin(): Plugin {
         const onHotUpdate = this.hotUpdate.bind(this);
-        const { wranglerConfig } = this;
+        const { workerConfig } = this;
         return {
             name: 'seedcord:hmr',
             // the cloudflare plugin restarts vite on its own when vite's watcher reports one of these
-            config: () =>
-                wranglerConfig ? { server: { watch: { ignored: [isWorkerConfigFile(wranglerConfig)] } } } : undefined,
+            config: () => (workerConfig ? { server: { watch: { ignored: [workerConfig.includes] } } } : undefined),
             configureServer: this.configureServer.bind(this),
             hotUpdate(ctx) {
                 return onHotUpdate(this.environment, ctx);
@@ -90,11 +88,9 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     private configureServer(server: ViteDevServer): void {
         this.server = server;
-        if (this.wranglerConfig) {
-            this.workerConfigWatcher = watchWorkerConfig(this.wranglerConfig, (file) => {
-                this.reportChangeNeedingRestart(file);
-            });
-        }
+        this.workerConfigWatcher = this.workerConfig?.watch((file) => {
+            this.reportChangeNeedingRestart(file);
+        });
         // vite calls hotUpdate for files only
         server.watcher.on('addDir', (dir) => this.handleDirEvent(dir, 'createDir'));
         server.watcher.on('unlinkDir', (dir) => this.handleDirEvent(dir, 'deleteDir'));

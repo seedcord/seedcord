@@ -88,14 +88,13 @@ function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0]): C
     return { plugin, watcher, listeners, events };
 }
 
-// workerConfigFiles builds its Logger while HmrPlugin's imports load
-const loggerSpies = vi.hoisted(() => ({
+const loggerSpies = {
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
     debug: vi.fn(),
     trace: vi.fn()
-}));
+};
 
 vi.mock('@seedcord/logger', async (importOriginal) => ({
     ...(await importOriginal<typeof import('@seedcord/logger')>()),

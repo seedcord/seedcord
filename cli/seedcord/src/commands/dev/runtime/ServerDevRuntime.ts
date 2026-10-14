@@ -7,7 +7,7 @@ import { seedcordDependents } from '#core/modules/seedcordDependents';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
-import { devServerConfig, logsIgnore } from './devServerConfig';
+import { devServerConfig, devWatchIgnores } from './devServerConfig';
 import { InstanceLifecycle } from './InstanceLifecycle';
 
 import type { DevRuntimeContext } from './DevRuntime';
@@ -27,7 +27,7 @@ export class ServerDevRuntime extends BaseDevRuntime {
             root,
             // vite searches its own root for a config file
             configFile: false,
-            server: { watch: { ignored: [logsIgnore(process.cwd())] } },
+            server: { watch: { ignored: devWatchIgnores(process.cwd()) } },
             // an external plugin would load node's copy of @seedcord/core beside vite's
             ssr: { noExternal: seedcordDependents(dirname(configFile)) },
             plugins: [hmr.plugin]
