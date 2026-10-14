@@ -24,10 +24,11 @@ import type { DevEvent } from '#commands/dev/runtime/events';
 import type { IncomingMessage } from 'node:http';
 
 describe('EdgeDevRuntime endpoint', () => {
-    it("listens on the wrangler config's dev.port and reports it", async () => {
+    it("reports the wrangler config's dev.port once the worker has started", async () => {
         const { projectDir, port } = await edgeProject();
         const events: DevEvent[] = [];
         const { runtime, instance } = await startedRuntime(projectDir, (event) => events.push(event));
+        expect(events).not.toContainEqual({ type: 'server-listening', port });
         await runtime.startBot(instance);
 
         const unsigned = await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });

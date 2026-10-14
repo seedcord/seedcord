@@ -5,11 +5,11 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
-import { moduleGlobs, setBotRoot } from '@seedcord/utils/node/internal';
+import { moduleGlobs } from '@seedcord/utils/node/internal';
 import chalk from 'chalk';
 import { createServer, createServerModuleRunner } from 'vite';
 
-import { functionExportsOf, WORKER_ENTRY_ID, workerEntry } from '#commands/build/builder/workerEntry';
+import { WORKER_ENTRY_ID, workerEntry } from '#commands/build/builder/workerEntry';
 import {
     importCloudflare,
     importWrangler,
@@ -21,12 +21,12 @@ import { edgeStandIns } from '#core/modules/edgeStandIns';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { seedcordDependents } from '#core/modules/seedcordDependents';
 import { mergeViteConfig, userCodeConfig, WORKERD_CONDITIONS } from '#core/modules/userCodeConfig';
+import { functionExportsOf } from '#core/modules/workerExports';
 import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
 import { logsIgnore } from './devServerConfig';
 import { listenForInteractions } from './interactionsEndpoint';
-import { isWorkerConfigFile, watchWorkerConfig } from './workerConfigFiles';
 import { workerLogger } from './workerLogger';
 
 import type { EdgeTarget } from '#core/config/detectTarget';
@@ -42,6 +42,7 @@ import type { Plugin, ViteDevServer } from 'vite';
 
 interface EdgeStarted extends StartedRuntime {
     readonly server: ViteDevServer;
+    readonly port: number;
 }
 
 // workerd's own cloudflare:workers and envapt binding stay in the worker environment
@@ -49,6 +50,7 @@ function inNodeOnly(plugin: Plugin): Plugin {
     return { ...plugin, applyToEnvironment: (environment) => environment.name === 'ssr' };
 }
 
+// codegen reads a node copy of the bot out of the ssr environment
 function nodeCopy(onReady: (modules: RunnerModuleLoader) => void): Plugin {
     return {
         name: 'seedcord:node-copy',
@@ -60,15 +62,12 @@ function nodeCopy(onReady: (modules: RunnerModuleLoader) => void): Plugin {
     };
 }
 
-// a server bot's constructor sets these and ServerHost.reset clears them. an edge bot runs neither in this process
-function applyServerBotDefaults(stack: AsyncDisposableStack, root: string): void {
-    setBotRoot(root);
-    stack.defer(() => setBotRoot(undefined));
+// a server bot's constructor installs these and ServerHost.reset clears them. an edge bot runs neither in this process
+function installCliLogSinks(stack: AsyncDisposableStack): void {
     installNodeDefaults();
     stack.defer(() => LoggerChannelRegistry.instance.configure({}));
 }
 
-// codegen reads a node copy of the bot out of the ssr environment
 export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
     private settleStart?: (() => void) | undefined;
 
@@ -82,7 +81,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const configDir = dirname(config.configFile);
         const files = new ProjectFiles(config.root, config.build.outDir, configDir);
         await using onFailure = new AsyncDisposableStack();
-        applyServerBotDefaults(onFailure, config.root);
+        this.bindBotRoot(config.root, onFailure);
+        installCliLogSinks(onFailure);
         this.emit(context, { type: 'module-loading', path: config.root });
 
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
@@ -92,7 +92,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             readDevPort(this.target.wranglerConfig, importWrangler)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
-        const hmr = this.openHmr(context, WORKER_ENVIRONMENT, onFailure);
+        const hmr = this.openHmr(context, WORKER_ENVIRONMENT, onFailure, this.target.wranglerConfig);
         const server = await createServer(
             mergeViteConfig(userCodeConfig(WORKERD_CONDITIONS), {
                 root: viteRoot,
@@ -103,8 +103,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                     middlewareMode: true,
                     // discord's POST arrives under the tunnel's hostname. the endpoint blocks every other request
                     allowedHosts: true,
-                    // if this watcher reports a config file, the cloudflare plugin restarts vite on its own
-                    watch: { ignored: [logsIgnore(process.cwd()), isWorkerConfigFile(this.target.wranglerConfig)] }
+                    watch: { ignored: [logsIgnore(process.cwd())] }
                 },
                 ssr: { noExternal: seedcordDependents(configDir) },
                 // the plugin's dep scan finds nothing in a virtual main. vite then reloads mid-start and leaves a second envapt with no source bound
@@ -144,31 +143,31 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         );
         // close() waits on open keep-alive sockets
         onFailure.defer(() => endpoint.closeAllConnections());
-        const configWatcher = watchWorkerConfig(this.target.wranglerConfig, (file) => {
-            hmr.reportChangeNeedingRestart(file);
-        });
-        onFailure.defer(() => configWatcher.close());
-        this.markStarted({ context, server, modules, hmr, resources: onFailure.move() });
+        this.markStarted({ context, server, modules, hmr, port, resources: onFailure.move() });
         this.emit(context, { type: 'module-loaded', path: config.root });
         this.emit(context, { type: 'ready' });
-        this.emit(context, { type: 'server-listening', port });
     }
 
     // workerd runs its own copy of the bot
     public startBot(_instance: SeedcordInstance): Promise<string | undefined> {
+        const { context, port } = this.require('startBot');
         const cli = this.workerChannel();
         return new Promise((resolve, reject) => {
             this.settleStart = () => resolve(undefined);
-            cli.on('seedcord:started', ({ username }) => resolve(username));
+            cli.on('seedcord:started', ({ username }) => {
+                // discord pings the endpoint as soon as the tunnel points it here
+                this.emit(context, { type: 'server-listening', port });
+                resolve(username);
+            });
             cli.on('seedcord:start-failed', ({ error }) => reject(fromWireError(error)));
             cli.send('seedcord:start', { colorLevel: chalk.level });
         });
     }
 
-    // closing the vite server is the only way to stop workerd
-    public async stopBot(): Promise<void> {
+    // workerd stops when stopBot closes the vite server next
+    protected stopInstance(): Promise<void> {
         this.settleStart?.();
-        await this.dispose();
+        return Promise.resolve();
     }
 
     private workerChannel(): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> {

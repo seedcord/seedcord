@@ -2,6 +2,7 @@ import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
@@ -31,7 +32,7 @@ async function startedRuntime(): Promise<{ runtime: ServerDevRuntime; ban: strin
     await writeProject(dir);
 
     const runtime = new ServerDevRuntime();
-    onTestFinished(() => runtime.dispose());
+    onTestFinished(() => runtime.stopBot());
     await runtime.start({ config: devConfigFor(dir, 'index.ts') });
     const { module } = await runtime.loadEntry();
 
@@ -58,6 +59,16 @@ describe('dev runtime importModule', () => {
                 expect(marker.version).toBe('after');
             },
             { timeout: 10_000, interval: 200 }
+        );
+    }, 60_000);
+
+    it('rejects an import once the bot stops', async () => {
+        const { runtime, ban } = await startedRuntime();
+
+        await runtime.stopBot();
+
+        expect(() => runtime.importModule(ban)).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CliDevRuntimeNotRunning })
         );
     }, 60_000);
 });

@@ -260,8 +260,8 @@ const messages = {
         `${paint.bold('seedcord dev')} reads an edge bot's wrangler config through ${paint.bold('wrangler')}, which ${paint.path(projectDir)} does not have installed. Add it as a dev dependency.`,
     [SeedcordErrorCode.CliWranglerConfigUnreadable]: (wranglerConfig: string, reason: string) =>
         `Wrangler could not read ${paint.path(wranglerConfig)}: ${reason}`,
-    [SeedcordErrorCode.CliDevRuntimeNotStarted]: (method: string) =>
-        `${paint.bold('seedcord dev')} called ${paint.bold(method)} before the dev runtime started. This is a bug in seedcord.`,
+    [SeedcordErrorCode.CliDevRuntimeNotRunning]: (method: string) =>
+        `${paint.bold('seedcord dev')} called ${paint.bold(method)} while the dev runtime was not running. This is a bug in seedcord.`,
     [SeedcordErrorCode.CliBuildFolderProblems]: (count: number) =>
         `${count} folders in the bot config need fixing before ${paint.bold('seedcord build')} can bundle the bot. Each one is listed below.`,
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>

@@ -3,7 +3,6 @@ import { assertNever } from '@seedcord/utils';
 
 import { builtFilesSource } from './builtFiles';
 
-import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { BakedIds } from '@seedcord/core/internal';
 import type { Plugin } from 'vite';
@@ -39,15 +38,6 @@ interface WorkerEntryOptions {
     rootKey: string;
     functionExports: () => Promise<string[]>;
     mode: EntryMode;
-}
-
-// workerd loads a worker only when each named export is a function or a handler object
-export async function functionExportsOf(modules: ModuleLoader, instance: string): Promise<string[]> {
-    const module = await modules.importModule<Record<string, unknown>>(instance);
-    return Object.entries(module).reduce<string[]>((names, [name, value]) => {
-        if (name !== 'default' && typeof value === 'function') names.push(name);
-        return names;
-    }, []);
 }
 
 // an object literal would turn a "__proto__" key into the prototype

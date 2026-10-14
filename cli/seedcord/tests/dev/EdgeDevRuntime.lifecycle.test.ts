@@ -34,7 +34,8 @@ describe('EdgeDevRuntime lifecycle', () => {
         const { projectDir } = await edgeProject();
         const events: DevEvent[] = [];
 
-        await startedRuntime(projectDir, (event) => events.push(event));
+        const { runtime, instance } = await startedRuntime(projectDir, (event) => events.push(event));
+        await runtime.startBot(instance);
 
         const types = events.map((event) => event.type);
         const steps = events.flatMap((event) => (event.type === 'progress' ? [event.status] : []));
@@ -123,7 +124,6 @@ describe('EdgeDevRuntime lifecycle', () => {
         const first = await startedRuntime(projectDir);
         await first.runtime.startBot(first.instance);
         await first.runtime.stopBot();
-        await first.runtime.dispose();
 
         const second = await startedRuntime(projectDir);
         await second.runtime.startBot(second.instance);

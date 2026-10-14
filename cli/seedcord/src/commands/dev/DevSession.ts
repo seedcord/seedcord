@@ -93,7 +93,7 @@ export class DevSession {
         }
     }
 
-    // quit, restart, disconnect, and dispose all call this
+    // every way out of a session ends here
     public async stop(): Promise<void> {
         this.stopPromise ??= this.runStop();
         return this.stopPromise;
@@ -106,17 +106,13 @@ export class DevSession {
         this.stopResolve?.();
     }
 
-    public async dispose(): Promise<void> {
-        await this.stop();
-        await this.runtime.dispose();
-    }
-
     public refreshCommands(shouldRefresh: boolean): void {
+        if (this.isStopped) return;
         this.runtime.refreshCommands(shouldRefresh);
     }
 
     public loadedBot(): LoadedBot | undefined {
-        if (!this.instance) return undefined;
+        if (!this.instance || this.isStopped) return undefined;
         return { config: this.config, instance: this.instance, modules: this.runtime };
     }
 }

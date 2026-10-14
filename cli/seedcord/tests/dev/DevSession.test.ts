@@ -41,7 +41,6 @@ function runtime(module: unknown, emit?: DevEvent): DevRuntime {
         startBot: (instance) => lifecycle.start(instance),
         stopBot: () => lifecycle.stop(),
         importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
-        dispose: () => Promise.resolve(),
         refreshCommands: () => undefined
     };
 }
@@ -184,7 +183,7 @@ describe('DevSession with a broken entry', () => {
         await writeFile(entry, 'export const = ;\n');
         const brokenConfig = { ...devConfigFor(temp.path, 'index.ts'), typecheck: { enabled: false } } as const;
         const session = new DevSession(brokenConfig, new ServerDevRuntime(), new DevStore(), () => undefined);
-        onTestFinished(() => session.dispose());
+        onTestFinished(() => session.stop());
 
         const error: unknown = await session.start().catch((caught: unknown) => caught);
 

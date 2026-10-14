@@ -329,8 +329,8 @@ export enum SeedcordErrorCode {
     CliEdgeWranglerMissing = 3153,
     /** Wrangler could not read an edge bot's wrangler config. */
     CliWranglerConfigUnreadable = 3154,
-    /** Something called the dev runtime before its `start()` finished. A bug in seedcord. */
-    CliDevRuntimeNotStarted = 3155,
+    /** Something called the dev runtime before `start()` finished or after `stopBot()`. A bug in seedcord. */
+    CliDevRuntimeNotRunning = 3155,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

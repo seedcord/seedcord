@@ -17,7 +17,7 @@ describe('dev runtime hot reload', () => {
     const runtimes: ServerDevRuntime[] = [];
 
     afterAll(async () => {
-        await Promise.all(runtimes.map((runtime) => runtime.dispose()));
+        await Promise.all(runtimes.map((runtime) => runtime.stopBot()));
         await rm(SCRATCH_ROOT, { recursive: true, force: true });
     });
 

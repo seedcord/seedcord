@@ -11,6 +11,7 @@ import { createBuilder } from 'vite';
 import { cliLogger } from '#core/cliLogger';
 import { importCloudflare, loadCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { CommandScanner } from '#core/modules/CommandScanner';
+import { functionExportsOf } from '#core/modules/workerExports';
 import { viteKey } from '#core/project/ProjectFiles';
 
 import { assertNodeCompat } from './assertNodeCompat';
@@ -19,7 +20,7 @@ import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { readDiscord } from './readDiscord';
 import { TargetBuild } from './TargetBuild';
-import { functionExportsOf, WORKER_ENTRY_ID, workerEntry } from './workerEntry';
+import { WORKER_ENTRY_ID, workerEntry } from './workerEntry';
 
 import type { EdgeTarget } from '#core/config/detectTarget';
 import type { CloudflarePlugin, ImportCloudflare } from '#core/modules/cloudflarePlugin';

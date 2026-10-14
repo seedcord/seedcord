@@ -32,7 +32,7 @@ describe('dev runtime with root set to src', () => {
     const runtimes: ServerDevRuntime[] = [];
 
     afterAll(async () => {
-        await Promise.all(runtimes.map((runtime) => runtime.dispose()));
+        await Promise.all(runtimes.map((runtime) => runtime.stopBot()));
         await rm(SCRATCH_ROOT, { recursive: true, force: true });
     });
 
@@ -50,14 +50,14 @@ describe('dev runtime with root set to src', () => {
         expect(module).toMatchObject({ texts: ['hello'] });
     }, 60_000);
 
-    it('forgets root once the runtime is disposed', async () => {
+    it('forgets root once the bot stops', async () => {
         await mkdir(SCRATCH_ROOT, { recursive: true });
         const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
         await writeProject(dir);
 
         const runtime = new ServerDevRuntime();
         await runtime.start({ config: devConfigFor(dir, 'index.ts') });
-        await runtime.dispose();
+        await runtime.stopBot();
 
         await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreDirectoryRootUnknown

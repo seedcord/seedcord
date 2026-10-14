@@ -40,7 +40,7 @@ export class DevRunner {
     private isDisconnected = false;
     private hasPendingRestart = false;
     private isRunning = false;
-    private isWritingTypes = false;
+    private typeWrite?: Promise<void> | undefined;
     private hasQueuedWrite = false;
 
     constructor(private readonly deps: DevRunnerDeps) {}
@@ -115,11 +115,11 @@ export class DevRunner {
         try {
             await this.currentSession.start(() => {
                 this.deps.store.setBusy(false);
-                void this.writeTypes();
+                this.writeTypes();
             });
         } finally {
             this.deps.store.setBusy(true);
-            await this.currentSession.dispose();
+            await this.currentSession.stop();
             this.currentSession = null;
         }
     }
@@ -147,7 +147,7 @@ export class DevRunner {
     private async runQuit(): Promise<void> {
         this.shouldQuit = true;
         this.deps.store.setPhase('quitting');
-        await this.currentSession?.stop();
+        await this.stopSession();
         // the endpoint clear is a discord round trip
         await settleWithin(this.deps.tunnel.stop(), TUNNEL_TEARDOWN_MS);
         this.signalResolve?.();
@@ -156,7 +156,7 @@ export class DevRunner {
     public async restart(): Promise<void> {
         this.isDisconnected = false;
         this.hasPendingRestart = true;
-        await this.currentSession?.stop();
+        await this.stopSession();
         this.signalResolve?.();
     }
 
@@ -165,40 +165,47 @@ export class DevRunner {
         // waking the signal while already parked would fall through and start a fresh session
         if (this.isDisconnected) return;
         this.isDisconnected = true;
-        await this.currentSession?.stop();
+        await this.stopSession();
         this.signalResolve?.();
     }
 
+    // edge's stopBot closes the runtime that codegen imports through
+    private async stopSession(): Promise<void> {
+        await this.typeWrite;
+        await this.currentSession?.stop();
+    }
+
     public refreshCommands(shouldRefresh: boolean): void {
-        if (shouldRefresh) void this.writeTypes();
+        if (shouldRefresh) this.writeTypes();
         this.currentSession?.refreshCommands(shouldRefresh);
     }
 
-    private async writeTypes(): Promise<void> {
-        const bot = this.currentSession?.loadedBot();
-        if (!bot) return;
-        if (this.isWritingTypes) {
+    private writeTypes(): void {
+        if (!this.currentSession?.loadedBot()) return;
+        if (this.typeWrite) {
             // the running scan may have read a command before this refresh changed it
             this.hasQueuedWrite = true;
             return;
         }
-        this.isWritingTypes = true;
+        this.typeWrite = this.writeUntilCurrent().finally(() => {
+            this.typeWrite = undefined;
+        });
+    }
+
+    private async writeUntilCurrent(): Promise<void> {
+        const bot = this.currentSession?.loadedBot();
+        if (!bot) return;
         try {
             const { outputPath, changed } = await this.deps.codegen.writeFrom(bot);
             if (changed) this.deps.codegenLogger.info(`Augmentations written to ${paint.path(outputPath)}`);
         } catch (error: unknown) {
             // a codegen throw must not take the dev session down
             this.deps.codegenLogger.error('Could not update the command types', error);
-        } finally {
-            this.isWritingTypes = false;
         }
 
-        if (!this.hasQueuedWrite) {
-            return;
-        }
-
+        if (!this.hasQueuedWrite) return;
         this.hasQueuedWrite = false;
-        await this.writeTypes();
+        await this.writeUntilCurrent();
     }
 
     private async waitForSignal(): Promise<void> {

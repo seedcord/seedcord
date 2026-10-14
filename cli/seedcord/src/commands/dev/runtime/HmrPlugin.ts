@@ -8,10 +8,13 @@ import { Logger } from '@seedcord/logger';
 import { resolveFromRoot } from '@seedcord/utils/node/internal';
 import { minimatch } from 'minimatch';
 
+import { isWorkerConfigFile, watchWorkerConfig } from './workerConfigFiles';
+
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { DevEvent } from './events';
 import type { HmrEventType, HmrUpdateEvent } from '@seedcord/types';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
+import type { FSWatcher } from 'node:fs';
 import type {
     DevEnvironment,
     EnvironmentModuleNode,
@@ -36,6 +39,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly lastUpdate = new Map<string, number>();
     private server: ViteDevServer | null = null;
     private readonly restartPatterns: Set<string>;
+    private workerConfigWatcher?: FSWatcher | undefined;
 
     private get hot(): NormalizedHotChannel | undefined {
         return this.server?.environments[this.botEnvironment]?.hot;
@@ -47,7 +51,8 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     constructor(
         private readonly config: ResolvedSeedcordConfig,
-        private readonly botEnvironment: string
+        private readonly botEnvironment: string,
+        private readonly wranglerConfig?: string
     ) {
         super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
@@ -56,8 +61,12 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     public get plugin(): Plugin {
         const onHotUpdate = this.hotUpdate.bind(this);
+        const { wranglerConfig } = this;
         return {
             name: 'seedcord:hmr',
+            // the cloudflare plugin restarts vite on its own when vite's watcher reports one of these
+            config: () =>
+                wranglerConfig ? { server: { watch: { ignored: [isWorkerConfigFile(wranglerConfig)] } } } : undefined,
             configureServer: this.configureServer.bind(this),
             hotUpdate(ctx) {
                 return onHotUpdate(this.environment, ctx);
@@ -69,13 +78,23 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         this.dev?.send('seedcord:refresh-commands', { shouldRefresh });
     }
 
-    public reportChangeNeedingRestart(file: string): void {
+    public close(): void {
+        this.workerConfigWatcher?.close();
+        this.removeAllListeners('event');
+    }
+
+    private reportChangeNeedingRestart(file: string): void {
         if (this.isDebounced(file, 'update')) return;
         this.reportRestartRequired(file);
     }
 
     private configureServer(server: ViteDevServer): void {
         this.server = server;
+        if (this.wranglerConfig) {
+            this.workerConfigWatcher = watchWorkerConfig(this.wranglerConfig, (file) => {
+                this.reportChangeNeedingRestart(file);
+            });
+        }
         // vite calls hotUpdate for files only
         server.watcher.on('addDir', (dir) => this.handleDirEvent(dir, 'createDir'));
         server.watcher.on('unlinkDir', (dir) => this.handleDirEvent(dir, 'deleteDir'));

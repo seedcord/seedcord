@@ -41,7 +41,6 @@ function readyRuntime(): DevRuntime {
         startBot: (instance) => lifecycle.start(instance),
         stopBot: () => lifecycle.stop(),
         importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
-        dispose: () => Promise.resolve(),
         refreshCommands: () => undefined
     };
 }
@@ -265,6 +264,44 @@ describe('DevRunner restart', () => {
 
         await vi.waitFor(() => expect(started).toBe(2));
         expect(started - stopped).toBe(1);
+    });
+
+    it('closes the runtime only after the type write that was running finishes', async () => {
+        const order: string[] = [];
+        const writing = Promise.withResolvers<undefined>();
+        const codegen = fakeCodegen(
+            vi.fn<CodegenRunner['writeFrom']>(async () => {
+                order.push('write started');
+                await writing.promise;
+                order.push('write finished');
+                return WRITTEN;
+            })
+        );
+        const runtime = (): DevRuntime => {
+            const ready = readyRuntime();
+            return {
+                ...ready,
+                stopBot: async () => {
+                    await ready.stopBot();
+                    order.push('runtime stopped');
+                }
+            };
+        };
+        const runner = makeRunner(codegen, fakeTunnel(), silentLogger, runtime);
+        const running = runner.run();
+        onTestFinished(async () => {
+            await runner.quit();
+            await running;
+        });
+        await vi.waitFor(() => expect(order).toEqual(['write started']));
+
+        const restarting = runner.restart();
+        await settled();
+        writing.resolve(undefined);
+        await restarting;
+
+        await vi.waitFor(() => expect(order).toContain('runtime stopped'));
+        expect(order.indexOf('write finished')).toBeLessThan(order.indexOf('runtime stopped'));
     });
 });
 

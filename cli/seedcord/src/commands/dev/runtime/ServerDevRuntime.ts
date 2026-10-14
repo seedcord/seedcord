@@ -1,6 +1,5 @@
 import { dirname } from 'node:path';
 
-import { setBotRoot } from '@seedcord/utils/node/internal';
 import { createServer, createServerModuleRunner } from 'vite';
 
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
@@ -20,8 +19,7 @@ export class ServerDevRuntime extends BaseDevRuntime {
     public async start(context: DevRuntimeContext): Promise<void> {
         const { root, configFile } = context.config;
         await using onFailure = new AsyncDisposableStack();
-        setBotRoot(root);
-        onFailure.defer(() => setBotRoot(undefined));
+        this.bindBotRoot(root, onFailure);
         this.emit(context, { type: 'module-loading', path: root });
 
         const hmr = this.openHmr(context, 'ssr', onFailure);
@@ -52,7 +50,7 @@ export class ServerDevRuntime extends BaseDevRuntime {
         return this.lifecycle.start(instance);
     }
 
-    public stopBot(): Promise<void> {
+    protected stopInstance(): Promise<void> {
         return this.lifecycle.stop();
     }
 }
