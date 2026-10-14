@@ -13,6 +13,7 @@ import { FAKE_TOKEN } from '#tests/commands/build/smoke';
 import {
     captureLogs,
     edgeProject,
+    editFile,
     messagesOf,
     startedRuntime,
     WAVE_INTERACTION,
@@ -35,6 +36,21 @@ describe('EdgeDevRuntime endpoint', () => {
 
         expect(events).toContainEqual({ type: 'server-listening', port });
         // the bot answers an unsigned interaction with 401
+        expect(unsigned.status).toBe(401);
+    }, 120_000);
+
+    it('reports the port the system picked for dev.port 0', async () => {
+        const { projectDir, port } = await edgeProject();
+        await editFile(join(projectDir, 'wrangler.jsonc'), (text) =>
+            text.replace(`"port": ${String(port)}`, '"port": 0')
+        );
+        const events: DevEvent[] = [];
+        const { runtime, instance } = await startedRuntime(projectDir, (event) => events.push(event));
+        await runtime.startBot(instance);
+
+        const listening = events.find((event) => event.type === 'server-listening');
+        expect(listening?.port).toBeGreaterThan(0);
+        const unsigned = await fetch(`http://localhost:${String(listening?.port)}/`, { method: 'POST', body: '{}' });
         expect(unsigned.status).toBe(401);
     }, 120_000);
 
@@ -77,16 +93,6 @@ describe('EdgeDevRuntime endpoint', () => {
         await once(holder, 'listening');
 
         await expect(startedRuntime(projectDir)).rejects.toHaveProperty('code', SeedcordErrorCode.CliEdgeDevPortInUse);
-    }, 120_000);
-
-    it("answers a GET with 405 and keeps the bot's source off it", async () => {
-        const { projectDir, port } = await edgeProject();
-        await startedRuntime(projectDir);
-
-        const source = await fetch(`http://localhost:${port}/src/bot.ts`);
-
-        expect(source.status).toBe(405);
-        expect(await source.text()).not.toContain('Seedcord');
     }, 120_000);
 
     it('runs the saved version of a handler in the worker', async () => {

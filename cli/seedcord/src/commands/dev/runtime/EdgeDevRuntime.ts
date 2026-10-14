@@ -144,12 +144,11 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         );
         onFailure.defer(() => server.close());
         const modules = await modulesReady.promise;
-        const endpoint = onFailure.use(
-            await listenForInteractions(server.middlewares, port, this.target.wranglerConfig)
-        );
+        const endpoint = await listenForInteractions(server.middlewares, port, this.target.wranglerConfig);
+        onFailure.use(endpoint.server);
         // close() waits on open keep-alive sockets
-        onFailure.defer(() => endpoint.closeAllConnections());
-        this.markStarted({ context, server, modules, hmr, port, resources: onFailure.move() });
+        onFailure.defer(() => endpoint.server.closeAllConnections());
+        this.markStarted({ context, server, modules, hmr, port: endpoint.port, resources: onFailure.move() });
     }
 
     // workerd runs its own copy of the bot
