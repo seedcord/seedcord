@@ -1,9 +1,14 @@
+import { once } from 'node:events';
+import { createServer as createNetServer } from 'node:net';
+
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { listenForInteractions } from '#commands/dev/runtime/listenForInteractions';
 
 import type { LogRecord } from '@seedcord/types';
+import type { AddressInfo } from 'node:net';
 import type { Connect } from 'vite';
 
 // justified: a Connect app is a request handler, the endpoint calls nothing else on it
@@ -43,6 +48,47 @@ describe('listenForInteractions', () => {
 
         expect(response.status).toBe(405);
         expect(seen).toEqual([]);
+    });
+
+    it('throws PortInUse when another process holds the port on 127.0.0.1', async () => {
+        await using holder = createNetServer().listen(0, '127.0.0.1');
+        await once(holder, 'listening');
+        // justified: address() is AddressInfo once a TCP server is listening
+        const { port } = holder.address() as AddressInfo;
+
+        await expect(
+            listenForInteractions(
+                middlewares(() => undefined),
+                port,
+                'wrangler.jsonc'
+            )
+        ).rejects.toHaveProperty('code', SeedcordErrorCode.PortInUse);
+    });
+
+    it("never leaves the tunnel's address to a process holding the IPv4 wildcard", async () => {
+        // nc -l <port> holds 0.0.0.0. linux refuses the second bind, macos allows it
+        await using holder = createNetServer((socket) => socket.end('HTTP/1.1 200 OK\r\n\r\n')).listen(0, '0.0.0.0');
+        await once(holder, 'listening');
+        // justified: address() is AddressInfo once a TCP server is listening
+        const { port } = holder.address() as AddressInfo;
+
+        const endpoint = await listenForInteractions(
+            middlewares(() => undefined),
+            port,
+            'wrangler.jsonc'
+        ).catch((error: unknown) => error);
+
+        if (Error.isError(endpoint)) {
+            expect(endpoint).toHaveProperty('code', SeedcordErrorCode.PortInUse);
+            return;
+        }
+        // justified: the catch only ever returns an error
+        const { server } = endpoint as Awaited<ReturnType<typeof listenForInteractions>>;
+        onTestFinished(() => {
+            server.close();
+        });
+        const response = await fetch(`http://127.0.0.1:${String(port)}/`);
+        expect(response.status).toBe(405);
     });
 
     it('answers 500 and logs the error a middleware passes on', async () => {

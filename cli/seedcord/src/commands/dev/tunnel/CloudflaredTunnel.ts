@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
 
+import { DEV_SERVER_HOST } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
@@ -56,7 +57,7 @@ export class CloudflaredTunnel {
         const child = this.deps.spawn(this.binary, [
             'tunnel',
             '--url',
-            `http://localhost:${String(targetPort)}`,
+            `http://${DEV_SERVER_HOST}:${String(targetPort)}`,
             '--metrics',
             `127.0.0.1:${String(metricsPort)}`
         ]);

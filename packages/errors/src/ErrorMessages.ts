@@ -20,6 +20,8 @@ const messages = {
         `Remove ${paint.sky(`bot.restOptions.${key}`)} from your edge config. A sweeper interval starts a timer at the worker's global scope, where workerd throws.`,
     [SeedcordErrorCode.ConfigPublicKeyUnavailable]: (reason: string) =>
         `Reading the public key from Discord failed (${reason}). The bot reads it there because ${paint.bold('DISCORD_PUBLIC_KEY')} is unset. Check ${paint.bold('DISCORD_BOT_TOKEN')}, or set ${paint.bold('DISCORD_PUBLIC_KEY')} to the key from your application's General Information page.`,
+    [SeedcordErrorCode.PortInUse]: (port: number, setting: string, configFile?: string) =>
+        `Another process already listens on port ${port}. Stop it, or set ${paint.bold(setting)} in ${configFile ? paint.path(configFile) : 'your Seedcord config'} to a free port.`,
     [SeedcordErrorCode.UnsupportedRuntimeVersion]: (runtime: string, required: string, running: string) =>
         `seedcord requires ${runtime} ${required} but this process runs ${running}. Upgrade ${runtime} before starting the bot.`,
 
@@ -254,8 +256,6 @@ const messages = {
         `Could not read the commands deployed ${where} (${reason}). Check ${paint.bold('DISCORD_BOT_TOKEN')}, and that the bot is in every guild a command in your code targets.`,
     [SeedcordErrorCode.CliEdgeCommandsNotDeployed]: (count: number, commands: string) =>
         `${count} command${count === 1 ? ' is' : 's are'} in your code with no deployed id on Discord, so the build cannot link ${count === 1 ? 'it' : 'them'}. Deploy with ${paint.bold('seedcord commands')}, then build again.\n${commands}`,
-    [SeedcordErrorCode.CliEdgeDevPortInUse]: (port: number, wranglerConfig: string) =>
-        `${paint.bold('seedcord dev')} answers Discord on port ${port}. Something else is already listening there. Stop it, or set ${paint.bold('dev.port')} in ${paint.path(wranglerConfig)} to a free port.`,
     [SeedcordErrorCode.CliEdgeWranglerMissing]: (projectDir: string) =>
         `${paint.bold('seedcord dev')} reads an edge bot's wrangler config through ${paint.bold('wrangler')}, which ${paint.path(projectDir)} does not have installed. Add it as a dev dependency.`,
     [SeedcordErrorCode.CliEdgeWranglerConfigUnreadable]: (wranglerConfig: string, reason: string) =>

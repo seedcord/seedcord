@@ -1,13 +1,22 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
-import { bindBotColor, busLoggerOf, connectDevChannel, getDevChannel, HmrManager } from '@seedcord/core/internal';
+import {
+    bindBotColor,
+    busLoggerOf,
+    connectDevChannel,
+    DEV_SERVER_HOST,
+    getDevChannel,
+    HmrManager
+} from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { DRAIN_TASK_TIMEOUT_MS, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
-import { paint } from '@seedcord/errors';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
+import { isPortInUse } from '@seedcord/utils/node/internal';
 import { Envapter } from 'envapt';
 
 import { HttpStartupTasks } from '#src/HttpStartupTasks';
@@ -195,8 +204,13 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         });
         this.#server = server;
 
-        server.listen(port);
-        await once(server, 'listening');
+        server.listen(port, getDevChannel() ? DEV_SERVER_HOST : undefined);
+        try {
+            await once(server, 'listening');
+        } catch (error: unknown) {
+            if (!isPortInUse(error)) throw error;
+            throw new SeedcordError(SeedcordErrorCode.PortInUse, [port, 'port'], { cause: error });
+        }
         // justified: address() is AddressInfo once a TCP server is listening
         this.#boundPort = (server.address() as AddressInfo).port;
         this.#logger.info(`Interactions server listening on port ${paint.sky.bold(String(this.#boundPort))}`);

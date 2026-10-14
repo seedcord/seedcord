@@ -93,7 +93,7 @@ describe('CloudflaredTunnel', () => {
         expect(spawn.mock.calls[0]?.[1]).toEqual([
             'tunnel',
             '--url',
-            'http://localhost:4321',
+            'http://127.0.0.1:4321',
             '--metrics',
             `127.0.0.1:${String(METRICS_PORT)}`
         ]);

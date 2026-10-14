@@ -59,7 +59,7 @@ export { pickNotice } from '#gates/catalog/options';
 export { PermissionNames } from '#gates/catalog/permissions';
 export type { GateFitsWith } from '#gates/matching';
 
-export { getDevChannel, setDevChannel } from '#hmr/devChannel';
+export { DEV_SERVER_HOST, getDevChannel, setDevChannel } from '#hmr/devChannel';
 export { connectDevChannel, HmrManager } from '#hmr/HmrManager';
 export { wrapHot } from '#hmr/wrapHot';
 export { fromDevLogLine, fromWireError, toWireError } from '#hmr/wire';

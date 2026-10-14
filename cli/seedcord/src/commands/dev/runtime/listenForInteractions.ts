@@ -1,8 +1,10 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
+import { DEV_SERVER_HOST } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { isPortInUse } from '@seedcord/utils/node/internal';
 
 import { cliLogger } from '#core/cliLogger';
 
@@ -15,10 +17,6 @@ const NOT_FOUND = 404;
 const SERVER_ERROR = 500;
 
 const logger = cliLogger('Worker');
-
-function isPortInUse(error: unknown): boolean {
-    return Error.isError(error) && 'code' in error && error.code === 'EADDRINUSE';
-}
 
 interface InteractionsEndpoint {
     server: Server;
@@ -47,12 +45,13 @@ export async function listenForInteractions(
             response.writeHead(SERVER_ERROR).end();
         });
     });
-    server.listen(port);
+    // macOS lets :: bind beside another process's IPv4 listener on the same port
+    server.listen(port, DEV_SERVER_HOST);
     try {
         await once(server, 'listening');
     } catch (error: unknown) {
         if (!isPortInUse(error)) throw error;
-        throw new SeedcordError(SeedcordErrorCode.CliEdgeDevPortInUse, [port, wranglerConfig], { cause: error });
+        throw new SeedcordError(SeedcordErrorCode.PortInUse, [port, 'dev.port', wranglerConfig], { cause: error });
     }
     // justified: address() is AddressInfo once a TCP server is listening
     return { server, port: (server.address() as AddressInfo).port };

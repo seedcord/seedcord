@@ -86,12 +86,12 @@ describe('EdgeDevRuntime endpoint', () => {
         120_000
     );
 
-    it('throws CliEdgeDevPortInUse when something already listens on dev.port', async () => {
+    it('throws PortInUse when something already listens on dev.port', async () => {
         const { projectDir, port } = await edgeProject();
-        await using holder = createNetServer().listen(port);
+        await using holder = createNetServer().listen(port, '127.0.0.1');
         await once(holder, 'listening');
 
-        await expect(startedRuntime(projectDir)).rejects.toHaveProperty('code', SeedcordErrorCode.CliEdgeDevPortInUse);
+        await expect(startedRuntime(projectDir)).rejects.toHaveProperty('code', SeedcordErrorCode.PortInUse);
     }, 120_000);
 
     it('runs the saved version of a handler in the worker', async () => {
