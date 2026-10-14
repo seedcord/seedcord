@@ -98,8 +98,9 @@ class ConsoleRoute {
     }
 }
 
-// returns the function that puts the console back
-export function routeConsole(methods: readonly ConsoleMethod[], route: Route): () => void {
+type RestoreConsole = () => void;
+
+export function routeConsole(methods: readonly ConsoleMethod[], route: Route): RestoreConsole {
     const consoleRoute = new ConsoleRoute(methods, route);
     consoleRoute.install();
     return () => consoleRoute.restore();
