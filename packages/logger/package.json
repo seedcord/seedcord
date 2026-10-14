@@ -37,6 +37,12 @@
                 "types": "./dist/node.d.mts",
                 "default": "./dist/node.mjs"
             }
+        },
+        "./internal": {
+            "import": {
+                "types": "./dist/internal.index.d.mts",
+                "default": "./dist/internal.index.mjs"
+            }
         }
     },
     "files": [

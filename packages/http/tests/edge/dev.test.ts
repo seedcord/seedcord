@@ -50,6 +50,16 @@ function connectCli(): FakeCli {
 // no-console flags the calls these tests make on purpose
 const terminal = console;
 
+// forwardLogsToCli patches the console for the life of the isolate
+const consoleBefore = Object.getOwnPropertyDescriptors(terminal);
+
+function restoreConsole(): void {
+    for (const key of Reflect.ownKeys(terminal)) {
+        if (!Object.hasOwn(consoleBefore, key)) Reflect.deleteProperty(terminal, key);
+    }
+    for (const [key, descriptor] of Object.entries(consoleBefore)) Object.defineProperty(terminal, key, descriptor);
+}
+
 // workerd prints these and seedcord dev reads them back out of its console output
 function consoleLines(): () => string[] {
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -76,6 +86,7 @@ describe('the edge Seedcord under seedcord dev', () => {
         clearBuiltFiles();
         // each bot installs its log forwarder on the process-wide registry
         LoggerChannelRegistry.instance.reset();
+        restoreConsole();
     });
 
     it('starts when the CLI asks and answers without baked ids', async () => {
@@ -194,8 +205,12 @@ describe('the edge Seedcord under seedcord dev', () => {
 
         terminal.warn('quota at %d%%', 90);
         terminal.log({ guilds: 3 });
+        terminal.table([{ id: 7 }]);
 
         const records = lines().map(fromDevLogLine);
+        expect(records).toContainEqual(
+            expect.objectContaining({ label: 'Console', level: 'info', args: [[{ id: 7 }]] })
+        );
         expect(records).toContainEqual(
             expect.objectContaining({ label: 'Console', level: 'warn', message: 'quota at %d%%', args: [90] })
         );
@@ -204,7 +219,7 @@ describe('the edge Seedcord under seedcord dev', () => {
         );
     });
 
-    it('logs once when a sink writes to the console', async () => {
+    it('prints a line once when a sink writes it to the console', async () => {
         connectCli();
         await liveEnv();
         const lines = consoleLines();
