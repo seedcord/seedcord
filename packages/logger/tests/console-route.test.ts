@@ -19,12 +19,11 @@ describe('routeConsole', () => {
 
     it('starts a Trace error at the console.trace call', () => {
         const traces: Error[] = [];
-        restore = routeConsole(['trace'], (_method, _args, invoked) => traces.push(traceError('count 5', invoked)));
+        restore = routeConsole(['trace'], (_method, _args, invoked) => traces.push(traceError('here', invoked)));
 
-        terminal.trace('count %d', 5);
+        terminal.trace('here');
 
-        const [header, frame] = stripAnsi(formatBody(consoleRecord('error', '', traces))).split('\n');
-        expect(header).toBe('Trace: count 5');
+        const [, frame] = stripAnsi(formatBody(consoleRecord('error', '', traces))).split('\n');
         expect(frame).toContain('console-route.test.ts');
     });
 

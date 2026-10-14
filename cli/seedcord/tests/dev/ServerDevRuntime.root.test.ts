@@ -141,18 +141,19 @@ describe('dev runtime with root set to src', () => {
     }, 60_000);
 
     it.each([
-        ['quick', '127.0.0.1'],
-        ['off', undefined]
+        { tunnel: { mode: 'quick' }, host: '127.0.0.1' },
+        { tunnel: { mode: 'url', url: 'https://bot.example.com' }, host: undefined },
+        { tunnel: { mode: 'off' }, host: undefined }
     ] as const)(
-        'tells a bot under a %s tunnel which address to listen on',
-        async (mode, host) => {
+        'sets the listen host on a bot when the tunnel mode is $tunnel.mode',
+        async ({ tunnel, host }) => {
             await mkdir(SCRATCH_ROOT, { recursive: true });
             const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
             await writeProject(dir);
             const bot = fakeBot();
 
             const runtime = new ServerDevRuntime();
-            await runtime.start({ config: { ...devConfigFor(dir, 'index.ts'), tunnel: { mode } } });
+            await runtime.start({ config: { ...devConfigFor(dir, 'index.ts'), tunnel } });
             // justified: the lifecycle reads only start, the startup abort and the shutdown run
             await runtime.startBot(bot as unknown as SeedcordInstance);
             await runtime.stop();

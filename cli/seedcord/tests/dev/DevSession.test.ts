@@ -208,13 +208,18 @@ describe('DevSession on a real runtime', () => {
         return devConfigFor(temp.path, 'index.ts');
     }
 
-    it('ends quietly when it stops while the runtime starts', async () => {
-        const session = new DevSession(await project('export default {};\n'), new ServerDevRuntime(), sessionDeps());
+    it('ends quietly without loading the entry when it stops while the runtime starts', async () => {
+        const entry = 'Reflect.set(globalThis, "entryImported", true);\nexport default {};\n';
+        const session = new DevSession(await project(entry), new ServerDevRuntime(), sessionDeps());
+        onTestFinished(() => {
+            Reflect.deleteProperty(globalThis, 'entryImported');
+        });
 
         const starting = session.start();
         await session.stop();
 
         await expect(starting).resolves.toBeUndefined();
+        expect(Reflect.get(globalThis, 'entryImported')).toBeUndefined();
     }, 60_000);
 
     it('ends quietly when it stops while the entry loads', async () => {

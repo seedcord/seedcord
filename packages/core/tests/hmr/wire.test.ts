@@ -48,6 +48,15 @@ describe('wire errors', () => {
         ]);
     });
 
+    it('ends the chain at an aggregate that lists itself', () => {
+        const looped = new AggregateError([new Error('port taken')], 'Phase Ready failed');
+        looped.errors.push(looped);
+
+        const received = fromWireError(overTheWire(toWireError(looped)));
+
+        expect((received as AggregateError).errors.map((member: Error) => member.message)).toEqual(['port taken']);
+    });
+
     it('sends a thrown string as an error with that message', () => {
         expect(fromWireError(overTheWire(toWireError('timeout')))).toMatchObject({ message: 'timeout' });
     });
@@ -151,6 +160,15 @@ describe('wire logs', () => {
             '[AsyncFunction (anonymous)]',
             '[class (anonymous) extends Ticket]'
         ]);
+    });
+
+    it("sends a function with a null prototype as node's console.log text", () => {
+        function bare(): void {}
+        Object.setPrototypeOf(bare, null);
+
+        const received = fromDevLogLine(toDevLogLine(record([bare])));
+
+        expect(received?.args).toEqual(['[Function (null prototype): bare]']);
     });
 
     it('sends a circular arg with the loop cut', () => {

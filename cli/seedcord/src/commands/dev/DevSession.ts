@@ -66,19 +66,23 @@ export class DevSession {
     public async start(onReady?: () => void): Promise<void> {
         const { signal } = this.stopping;
         try {
-            await this.run(signal, onReady);
+            await this.run(onReady);
         } catch (error: unknown) {
             if (!signal.aborted) throw error;
         }
     }
 
-    private async run(signal: AbortSignal, onReady?: () => void): Promise<void> {
+    private unlessStopped<ResultT>(work: ResultT | PromiseLike<ResultT>): Promise<ResultT> {
+        return unlessAborted(Promise.resolve(work), this.stopping.signal);
+    }
+
+    private async run(onReady?: () => void): Promise<void> {
         const { store } = this.deps;
-        await unlessAborted(this.startRuntime(), signal);
+        await this.unlessStopped(this.startRuntime());
         // vite never settles an import it was closed under
-        const { module } = await unlessAborted(this.runtime.loadEntry(), signal);
+        const { module } = await this.unlessStopped(this.runtime.loadEntry());
         profileMark('entry');
-        const exported = await unlessAborted(Promise.resolve(resolveDefaultExport(module)), signal);
+        const exported = await this.unlessStopped(resolveDefaultExport(module));
         const instance = toSeedcordInstance(exported, this.config.instance);
 
         this.instance = instance;
@@ -89,7 +93,7 @@ export class DevSession {
         });
         store.setPhase('starting');
         store.setStatus('Starting the bot…');
-        const username = await unlessAborted(this.startBot(instance), signal);
+        const username = await this.unlessStopped(this.startBot(instance));
 
         store.setPhase('running');
         store.setStatus(`${paint.bold(username ?? 'Bot')} is ready!`);
@@ -99,7 +103,7 @@ export class DevSession {
         // tsc competes with vite's cold transform when it starts any earlier
         this.startTypecheck();
         // the bot runs until stop()
-        await unlessAborted(new Promise<never>(() => undefined), signal);
+        await this.unlessStopped(new Promise<never>(() => undefined));
     }
 
     private async startBot(instance: SeedcordInstance): Promise<string | undefined> {

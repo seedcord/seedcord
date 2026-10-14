@@ -46,6 +46,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     public readonly [HostAugmentTarget] = '@seedcord/http';
     /** @internal */
     public readonly [HostVersion]: string = packageVersion;
+    /** @internal */
     public [HostListenHost]?: string | undefined;
 
     /** Discord REST client built from `bot.restOptions`. `start()` sets the token. */

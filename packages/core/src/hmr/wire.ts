@@ -19,14 +19,18 @@ export function toWireError(thrown: unknown): WireError {
 function encodeError(thrown: unknown, sent: Set<Error>): WireError {
     if (!Error.isError(thrown)) return { name: 'Error', message: String(thrown) };
     sent.add(thrown);
+    const unsent = (value: unknown): boolean => !Error.isError(value) || !sent.has(value);
     const { cause } = thrown;
     return {
         name: thrown.name,
         message: thrown.message,
         stack: thrown.stack,
         code: Reflect.get(thrown, 'code'),
-        cause: cause === undefined || (Error.isError(cause) && sent.has(cause)) ? undefined : encodeError(cause, sent),
-        errors: thrown instanceof AggregateError ? thrown.errors.map((member) => encodeError(member, sent)) : undefined
+        cause: cause !== undefined && unsent(cause) ? encodeError(cause, sent) : undefined,
+        errors:
+            thrown instanceof AggregateError
+                ? thrown.errors.filter(unsent).map((member) => encodeError(member, sent))
+                : undefined
     };
 }
 
@@ -41,20 +45,14 @@ export function fromWireError({ name, message, stack, code, cause, errors }: Wir
     return error;
 }
 
-interface NamedFunction {
-    readonly name: string;
-    // Function, AsyncFunction, GeneratorFunction or AsyncGeneratorFunction
-    readonly constructor: { readonly name: string };
-}
-
 // node's console.log text for a function or a class
-function functionText(fn: NamedFunction): string {
+function functionText(fn: { readonly name: string }): string {
+    const parent: unknown = Object.getPrototypeOf(fn);
     if (Function.prototype.toString.call(fn).startsWith('class')) {
-        const parent: unknown = Object.getPrototypeOf(fn);
         const extended = typeof parent === 'function' && parent.name ? ` extends ${parent.name}` : '';
         return `[class ${fn.name || '(anonymous)'}${extended}]`;
     }
-    const kind = fn.constructor.name;
+    const kind = parent === null ? 'Function (null prototype)' : fn.constructor.name;
     return fn.name ? `[${kind}: ${fn.name}]` : `[${kind} (anonymous)]`;
 }
 

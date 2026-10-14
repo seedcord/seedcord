@@ -1,10 +1,10 @@
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
 
-import { DEV_SERVER_HOST } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import { DEV_SERVER_HOST } from './listenHost';
 import { awaitReachable } from './probe';
 
 import type { ProbeDeps } from './probe';

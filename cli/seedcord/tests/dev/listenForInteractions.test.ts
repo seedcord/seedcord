@@ -6,7 +6,6 @@ import { LoggerChannelRegistry } from '@seedcord/logger';
 import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { listenForInteractions } from '#commands/dev/runtime/listenForInteractions';
-import { listenHostFor } from '#commands/dev/tunnel/listenHost';
 
 import type { LogRecord } from '@seedcord/types';
 import type { AddressInfo } from 'node:net';
@@ -19,7 +18,7 @@ function middlewares(handle: (url: string | undefined, next: (error?: unknown) =
 }
 
 // the endpoint as a quick tunnel binds it
-const QUICK = { port: 0, host: listenHostFor({ mode: 'quick' }), wranglerConfig: 'wrangler.jsonc' };
+const QUICK = { port: 0, host: '127.0.0.1', wranglerConfig: 'wrangler.jsonc' };
 
 async function listening(app: Connect.Server): Promise<string> {
     const { server, port } = await listenForInteractions(app, QUICK);

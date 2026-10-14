@@ -25,7 +25,7 @@ interface InteractionsEndpoint {
 
 interface ListenOptions {
     readonly port: number;
-    // unset binds every address
+    // undefined binds every address
     readonly host: string | undefined;
     readonly wranglerConfig: string;
 }
