@@ -114,7 +114,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
         const cli = connectDevChannel();
         this.#readsBakedIds = !cli;
-        // the forwarder has to exist before init() logs
+        // init() logs. forwardLogsToCli runs first so that line reaches the CLI
         if (cli) this.#startWhenAsked(cli);
         this.#hmr.init(cli);
     }
@@ -167,7 +167,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
 
     // once per isolate. Running the loaders again would register every subscriber twice
     async #prepare(): Promise<void> {
-        // seedcord dev also constructs this inside the CLI to read the commands, where configure would replace the CLI's sinks
+        // seedcord dev's codegen copy constructs this bot inside the CLI and never starts it. configuring it any earlier replaces the CLI's sinks
         Logger.configure(this.config.logger ?? {});
         const ids = this.#readsBakedIds ? bakedIds() : undefined;
         this.#service.authenticate();

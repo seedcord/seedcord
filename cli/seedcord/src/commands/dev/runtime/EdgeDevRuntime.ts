@@ -50,8 +50,6 @@ function inNodeOnly(plugin: Plugin): Plugin {
     return { ...plugin, applyToEnvironment: (environment) => environment.name === 'ssr' };
 }
 
-// the cloudflare plugin loads the worker entry during createServer
-// keep this ahead of cloudflare(). the entry reads its named exports off this copy
 function nodeCopy(onReady: (modules: RunnerModuleLoader) => void): Plugin {
     return {
         name: 'seedcord:node-copy',
@@ -63,15 +61,15 @@ function nodeCopy(onReady: (modules: RunnerModuleLoader) => void): Plugin {
     };
 }
 
-// a node bot installs the logger defaults in its constructor and resets them in ServerHost.reset
-function holdProcessState(stack: AsyncDisposableStack, root: string): void {
+// a server bot's constructor sets these and ServerHost.reset clears them. an edge bot runs neither in this process
+function applyServerBotDefaults(stack: AsyncDisposableStack, root: string): void {
     setBotRoot(root);
     stack.defer(() => setBotRoot(undefined));
     installNodeDefaults();
     stack.defer(() => LoggerChannelRegistry.instance.configure({}));
 }
 
-// runs an edge bot in workerd. The ssr environment holds the copy codegen reads
+// the ssr environment holds a node copy of the bot for codegen
 export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
     private settleStart?: (() => void) | undefined;
 
@@ -85,7 +83,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const configDir = dirname(config.configFile);
         const files = new ProjectFiles(config.root, config.build.outDir, configDir);
         await using onFailure = new AsyncDisposableStack();
-        holdProcessState(onFailure, config.root);
+        applyServerBotDefaults(onFailure, config.root);
         this.emit(context, { type: 'module-loading', path: config.root });
 
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
@@ -106,11 +104,11 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                     middlewareMode: true,
                     // discord's POST arrives under the tunnel's hostname. the endpoint blocks every other request
                     allowedHosts: true,
+                    // the cloudflare plugin restarts vite on its own when this watcher reports a config file
                     watch: { ignored: [logsIgnore(process.cwd()), isWorkerConfigFile(this.target.wranglerConfig)] }
                 },
                 ssr: { noExternal: seedcordDependents(configDir) },
-                // the plugin's dep scan finds nothing in a virtual main.
-                // vite then reloads during the first load and leaves a second envapt with no source bound
+                // the plugin's dep scan finds nothing in a virtual main. vite then reloads mid-start and leaves a second envapt with no source bound
                 environments: { [WORKER_ENVIRONMENT]: { optimizeDeps: { entries: moduleGlobs(config.root) } } },
                 plugins: [
                     workerEntry({
@@ -128,6 +126,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                         mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
                     }),
                     inNodeOnly(edgeStandIns()),
+                    // cloudflare() loads the worker entry during createServer. the entry's export list comes from this copy
                     nodeCopy(modulesReady.resolve),
                     hmr.plugin,
                     cloudflare({
@@ -139,7 +138,6 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                 ]
             })
         );
-        // closing the vite server ends workerd
         onFailure.defer(() => server.close());
         const modules = await modulesReady.promise;
         const endpoint = onFailure.use(

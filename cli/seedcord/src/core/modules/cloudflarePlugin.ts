@@ -11,7 +11,6 @@ export type CloudflarePlugin = typeof CloudflareVitePlugin.cloudflare;
 export type ImportCloudflare = () => Promise<typeof CloudflareVitePlugin>;
 export type ImportWrangler = () => Promise<typeof Wrangler>;
 
-// the vite environment the plugin runs the worker in
 export const WORKER_ENVIRONMENT = 'worker';
 
 const CLOUDFLARE_PLUGIN = '@cloudflare/vite-plugin';
@@ -23,8 +22,7 @@ export const importWrangler: ImportWrangler = () => import('wrangler');
 // wrangler dev listens here when the config sets no dev.port
 const WRANGLER_DEV_PORT = 8787;
 
-// node ends this message with the path of the file that did the import
-// for a missing dependency of the package, that path has the package's name in it too
+// the importer's path at the end of node's message can hold the name too
 function isPackageMissing(error: unknown, name: string): boolean {
     const notFound = Error.isError(error) && 'code' in error && error.code === 'ERR_MODULE_NOT_FOUND';
     return notFound && error.message.startsWith(`Cannot find package '${name}'`);
@@ -47,10 +45,10 @@ function parseFailure(error: unknown): string {
     return `${failure.message} at line ${String(location.line)}, column ${String(location.column)}`;
 }
 
-// the plugin reads the config with the same function.
-// @cloudflare/workers-utils holds wrangler's Config type and is not installed
+// the plugin reads the config with the same function
 export async function readDevPort(wranglerConfig: string, importReader: ImportWrangler): Promise<number> {
     const wrangler = await loadWrangler(wranglerConfig, importReader);
+    // wrangler's types import Config from @cloudflare/workers-utils, a package seedcord doesn't install
     let config: unknown;
     try {
         config = wrangler.unstable_readConfig({ config: wranglerConfig }, { hideWarnings: true });

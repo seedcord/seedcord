@@ -30,7 +30,7 @@ export function setColorLevel(level: ColorSupportLevel): void {
 const SKY = '#8fc7ff';
 
 // truecolor because a terminal theme remaps chalk's 16-color names (blue turns orange in monokai)
-// chalk.hex bakes in the level it ran at. a getter picks up a level set later, like the edge worker's
+// chalk.hex reads the color level once, when it runs. a getter picks up a level set later, like the edge worker's
 export const paint = {
     // what the line is about, one per line
     get sky() {
@@ -63,7 +63,8 @@ export const paint = {
     get pith() {
         return chalk.hex(BRAND.pith);
     },
-    mute: chalk.dim, // context around the subject
+    // context around the subject
+    mute: chalk.dim,
 
     check: '✔︎', // U+FE0E to prevent emoji font
     cross: '✘',

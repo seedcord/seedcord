@@ -89,8 +89,7 @@ class ConsoleRoute {
     }
 }
 
-// sends wrangler's and a bot's own console calls to the log list and the log file
-// ink's alternate screen shows none of them
+// ink's alternate screen hides wrangler's and the bot's own console output
 export function routeConsoleToLogs(): () => void {
     const route = new ConsoleRoute();
     route.install();

@@ -1,7 +1,6 @@
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
 
-// imports the instance file in node, reporting each step to the TUI
 export async function loadEntry(
     modules: ModuleLoader,
     { config, onEvent }: DevRuntimeContext

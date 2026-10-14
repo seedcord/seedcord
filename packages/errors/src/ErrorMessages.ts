@@ -255,7 +255,7 @@ const messages = {
     [SeedcordErrorCode.CliEdgeCommandsNotDeployed]: (count: number, commands: string) =>
         `${count} command${count === 1 ? ' is' : 's are'} in your code with no deployed id on Discord, so the build cannot link ${count === 1 ? 'it' : 'them'}. Deploy with ${paint.bold('seedcord commands')}, then build again.\n${commands}`,
     [SeedcordErrorCode.CliEdgeDevPortInUse]: (port: number, wranglerConfig: string) =>
-        `Something else is listening on port ${port}, where edge dev answers Discord. Stop it, or set ${paint.bold('dev.port')} in ${paint.path(wranglerConfig)} to a free port.`,
+        `${paint.bold('seedcord dev')} answers Discord on port ${port}. Something else is already listening there. Stop it, or set ${paint.bold('dev.port')} in ${paint.path(wranglerConfig)} to a free port.`,
     [SeedcordErrorCode.CliEdgeWranglerMissing]: (projectDir: string) =>
         `${paint.bold('seedcord dev')} reads an edge bot's wrangler config through ${paint.bold('wrangler')}, which ${paint.path(projectDir)} does not have installed. Add it as a dev dependency.`,
     [SeedcordErrorCode.CliWranglerConfigUnreadable]: (wranglerConfig: string, reason: string) =>

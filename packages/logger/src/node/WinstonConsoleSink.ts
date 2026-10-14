@@ -9,7 +9,7 @@ import type { Logger as Winston } from 'winston';
 let stdoutGone = false;
 let watchingStdout = false;
 
-// node throws a failed stdout write, like EPIPE once the reader exits, as an uncaughtException
+// without a listener, node turns a failed stdout write (EPIPE once the reader exits) into an uncaughtException
 function stopWritingWhenStdoutFails(): void {
     if (watchingStdout) return;
     watchingStdout = true;

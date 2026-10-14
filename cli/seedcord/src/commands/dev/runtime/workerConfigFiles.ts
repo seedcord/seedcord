@@ -8,7 +8,6 @@ import type { FSWatcher } from 'node:fs';
 
 const logger = new Logger('HMR', { channel: 'hmr' });
 
-// the cloudflare plugin restarts vite itself when its watcher reports one of these
 const LOCAL_VARS = ['.dev.vars', '.env'];
 
 // covers the per-environment copies too, like .dev.vars.staging

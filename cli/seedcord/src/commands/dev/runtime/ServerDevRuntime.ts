@@ -29,9 +29,9 @@ export class ServerDevRuntime extends BaseDevRuntime {
         // vite writes resolved options back into the config object it receives
         const base = structuredClone(devServerConfig);
 
-        // vite searches its own root for a config file
         const config = mergeViteConfig(base, {
             root,
+            // vite searches its own root for a config file
             configFile: false,
             server: { watch: { ignored: [logsIgnore(process.cwd())] } },
             // an external plugin would load node's copy of @seedcord/core beside vite's

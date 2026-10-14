@@ -33,7 +33,6 @@ export class HmrManager {
         channel.on('seedcord:hmr', (payload) => void this.handleUpdate(payload));
     }
 
-    /** @internal */
     public register(listener: HmrAware): void {
         this.listeners.add(listener);
     }

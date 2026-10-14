@@ -36,8 +36,7 @@ export interface SeedcordFrameworkEvents {
 export interface SeedcordCliEvents {
     'seedcord:hmr': HmrUpdateEvent;
     'seedcord:refresh-commands': { shouldRefresh: boolean };
-    // chalk's level for the CLI's terminal, 0 for no color up to 3 for truecolor
-    // eslint-disable-next-line no-magic-numbers -- chalk's ColorSupportLevel, copied here to keep chalk out of types
+    // eslint-disable-next-line no-magic-numbers -- chalk's ColorSupportLevel for the CLI's terminal, copied to keep chalk out of types
     'seedcord:start': { colorLevel: 0 | 1 | 2 | 3 };
 }
 
