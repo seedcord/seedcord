@@ -105,7 +105,9 @@ export class DevSession {
         try {
             return await this.runtime.startBot(instance);
         } catch (error: unknown) {
-            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, asError(error).message]);
+            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, asError(error).message], {
+                cause: error
+            });
         }
     }
 

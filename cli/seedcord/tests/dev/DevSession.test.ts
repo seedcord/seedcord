@@ -168,6 +168,19 @@ describe('DevSession', () => {
             message: expect.stringContaining('token was revoked') as string
         });
     });
+
+    it('keeps the startup failure as the cause of CliStartFailed', async () => {
+        const failure = new Error('phase Ready failed');
+        const session = new DevSession(
+            config(),
+            fakeRuntime({ default: fakeBot({ start: () => Promise.reject(failure) }) }),
+            sessionDeps()
+        );
+
+        const error = await settle(session, session.start());
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CliStartFailed, cause: failure });
+    });
 });
 
 describe('DevSession on a real runtime', () => {
