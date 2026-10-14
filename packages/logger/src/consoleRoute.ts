@@ -51,7 +51,17 @@ export function consoleRecord(level: LogLevel, message: string, args?: unknown[]
     return record;
 }
 
-type Route = (method: ConsoleMethod, args: unknown[]) => void;
+type PatchedMethod = (...args: unknown[]) => void;
+
+type Route = (method: ConsoleMethod, args: unknown[], invoked: PatchedMethod) => void;
+
+// node's console.trace prints an error named Trace, its stack starting at the call
+export function traceError(message: string, invoked: PatchedMethod): Error {
+    const trace = new Error(message);
+    trace.name = 'Trace';
+    Error.captureStackTrace(trace, invoked);
+    return trace;
+}
 
 class ConsoleRoute {
     private readonly target = console;
@@ -70,7 +80,7 @@ class ConsoleRoute {
     public install(): void {
         for (const method of this.methods) {
             const original = this.target[method].bind(this.target);
-            const value = (...args: unknown[]): void => this.call(method, original, args);
+            const value: PatchedMethod = (...args) => this.call(method, original, args, value);
             Object.defineProperty(this.target, method, { configurable: true, writable: true, value });
         }
     }
@@ -83,7 +93,12 @@ class ConsoleRoute {
         }
     }
 
-    private call(method: ConsoleMethod, original: (...args: never[]) => void, args: unknown[]): void {
+    private call(
+        method: ConsoleMethod,
+        original: (...args: never[]) => void,
+        args: unknown[],
+        invoked: PatchedMethod
+    ): void {
         // a sink that logs to the console would route its own line back to itself
         if (this.routing) {
             Reflect.apply(original, undefined, args);
@@ -91,7 +106,7 @@ class ConsoleRoute {
         }
         this.routing = true;
         try {
-            this.route(method, args);
+            this.route(method, args, invoked);
         } finally {
             this.routing = false;
         }

@@ -219,6 +219,22 @@ describe('the edge Seedcord under seedcord dev', () => {
         );
     });
 
+    it('sends console.trace as a Trace error with the stack from where it was called', async () => {
+        connectCli();
+        await liveEnv();
+        const lines = consoleLines();
+        void new Seedcord(config);
+
+        terminal.trace('cache miss');
+
+        const trace = lines()
+            .map(fromDevLogLine)
+            .flatMap((record) => record?.args ?? [])
+            .find((arg): arg is Error => Error.isError(arg) && arg.name === 'Trace');
+        expect(trace?.message).toBe('cache miss');
+        expect(trace?.stack?.split('\n')[1]).toContain('dev.test.ts');
+    });
+
     it("prints a sink's own console line straight to the terminal", async () => {
         connectCli();
         await liveEnv();

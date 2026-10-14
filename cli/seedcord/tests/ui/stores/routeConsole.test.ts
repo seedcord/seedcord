@@ -31,12 +31,21 @@ describe('routeConsoleToLogs', () => {
         ['table', () => terminal.table([{ id: 7 }]), 'info', '│ id │'],
         ['dir', () => terminal.dir({ nested: { deep: 1 } }), 'info', 'nested: { deep: 1 }'],
         ['count', () => terminal.count('hits'), 'info', 'hits: 1'],
-        ['trace', () => terminal.trace('where'), 'error', 'Trace: where'],
         ['assert', () => terminal.assert(false, 'broke'), 'warn', 'Assertion failed: broke']
     ] as const)('sends console.%s to the logs', (_method, call, level, text) => {
         call();
         const record = records.find((logged) => logged.message.includes(text));
         expect(record).toMatchObject({ level, label: 'Console' });
+    });
+
+    it('sends console.trace as a Trace error with the stack from where it was called', () => {
+        terminal.trace('cache miss', 3);
+
+        const trace = records
+            .flatMap((record) => record.args ?? [])
+            .find((arg): arg is Error => Error.isError(arg) && arg.name === 'Trace');
+        expect(trace?.message).toBe('cache miss 3');
+        expect(trace?.stack?.split('\n')[1]).toContain('routeConsole.test.ts');
     });
 
     it('indents a log inside console.group', () => {
