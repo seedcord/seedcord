@@ -2,4 +2,4 @@
 '@seedcord/logger': patch
 ---
 
-Fixed a node bot with an `uncaughtException` handler spinning a CPU core after its stdout closed, for example when you pipe its output into `head`. Console logs now stop once stdout closes.
+A node bot now keeps running after its stdout closes, for example when you pipe its output into `head`, and its console logs stop. Before, it crashed on the failed write, or spun a CPU core if it had an `uncaughtException` handler.
