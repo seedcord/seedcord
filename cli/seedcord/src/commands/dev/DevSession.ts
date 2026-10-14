@@ -78,7 +78,8 @@ export class DevSession {
         // vite never settles an import it was closed under
         const { module } = await unlessAborted(this.runtime.loadEntry(), signal);
         profileMark('entry');
-        const instance = toSeedcordInstance(await resolveDefaultExport(module), this.config.instance);
+        const exported = await unlessAborted(Promise.resolve(resolveDefaultExport(module)), signal);
+        const instance = toSeedcordInstance(exported, this.config.instance);
 
         this.instance = instance;
         store.setTransport({

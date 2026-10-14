@@ -18,6 +18,7 @@ seedcord asks for a full restart when you save one of these, since the CLI or th
 - `seedcord.config.ts`
 - a `package.json`, `tsconfig.json`, or `.env` file under `root`
 - the two files `entry` and `instance` point at
+- a file those two import, directly or through another file, like a plugin your bot file attaches
 
 The watcher only covers `root` and the config file itself. With the scaffold's `root: './src'`, saving the `package.json` or `.env` beside `seedcord.config.ts` doesn't trigger anything, so press `r` yourself after changing one. A file named `.env.local` or `tsconfig.build.json` doesn't count either.
 
@@ -44,7 +45,7 @@ export default defineConfig({
 });
 ```
 
-With this config, saving anything under `src/config/` or `src/constants.ts` asks for a restart. A plugin can add patterns to the same list with [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles), which [Writing your own](/plugins/your-own#reacting-to-a-dev-reload) shows.
+With this config, saving anything under `src/config/` or `src/constants.ts` asks for a restart, and so does saving a file that one of them imports. A plugin can add patterns to the same list with [`registerCriticalFiles`](ref:core/Plugin.registerCriticalFiles), which [Writing your own](/plugins/your-own#reacting-to-a-dev-reload) shows.
 
 ## A save that throws on import
 

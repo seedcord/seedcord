@@ -28,7 +28,8 @@ export function edgeConfig(projectDir: string): ResolvedSeedcordConfig {
         root: join(projectDir, 'src'),
         instance: join(projectDir, 'src/bot.ts'),
         target: { kind: 'edge', wranglerConfig: join(projectDir, 'wrangler.jsonc') },
-        build: { outDir: join(projectDir, 'dist') }
+        build: { outDir: join(projectDir, 'dist') },
+        tunnel: { mode: 'quick' }
     } as ResolvedSeedcordConfig;
 }
 

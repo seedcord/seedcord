@@ -1,21 +1,14 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
-import {
-    bindBotColor,
-    busLoggerOf,
-    connectDevChannel,
-    DEV_SERVER_HOST,
-    getDevChannel,
-    HmrManager
-} from '@seedcord/core/internal';
+import { bindBotColor, busLoggerOf, connectDevChannel, getDevChannel, HmrManager } from '@seedcord/core/internal';
 import { CoordinatedShutdown, CoordinatedStartup, ServerHost } from '@seedcord/core/node';
 import { DRAIN_TASK_TIMEOUT_MS, ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
-import { HostAugmentTarget, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
+import { HostAugmentTarget, HostListenHost, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { isPortInUse } from '@seedcord/utils/node/internal';
 import { Envapter } from 'envapt';
 
@@ -53,6 +46,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
     public readonly [HostAugmentTarget] = '@seedcord/http';
     /** @internal */
     public readonly [HostVersion]: string = packageVersion;
+    public [HostListenHost]?: string | undefined;
 
     /** Discord REST client built from `bot.restOptions`. `start()` sets the token. */
     public readonly rest: REST;
@@ -204,7 +198,7 @@ export class Seedcord extends ServerHost<'http'> implements SeedcordInstance {
         });
         this.#server = server;
 
-        server.listen(port, getDevChannel() ? DEV_SERVER_HOST : undefined);
+        server.listen(port, this[HostListenHost]);
         try {
             await once(server, 'listening');
         } catch (error: unknown) {

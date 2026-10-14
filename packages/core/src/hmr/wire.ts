@@ -25,27 +25,42 @@ function encodeError(thrown: unknown, sent: Set<Error>): WireError {
         message: thrown.message,
         stack: thrown.stack,
         code: Reflect.get(thrown, 'code'),
-        cause: cause === undefined || (Error.isError(cause) && sent.has(cause)) ? undefined : encodeError(cause, sent)
+        cause: cause === undefined || (Error.isError(cause) && sent.has(cause)) ? undefined : encodeError(cause, sent),
+        errors: thrown instanceof AggregateError ? thrown.errors.map((member) => encodeError(member, sent)) : undefined
     };
 }
 
-export function fromWireError({ name, message, stack, code, cause }: WireError): Error {
-    const error = new Error(message, cause && { cause: fromWireError(cause) });
+export function fromWireError({ name, message, stack, code, cause, errors }: WireError): Error {
+    const options = cause && { cause: fromWireError(cause) };
+    const error = errors
+        ? new AggregateError(errors.map(fromWireError), message, options)
+        : new Error(message, options);
     error.name = name;
     if (stack !== undefined) error.stack = stack;
     if (code !== undefined) Reflect.set(error, 'code', code);
     return error;
 }
 
-// matches node's console.log text for a function or a class
-function functionText(fn: { readonly name: string }): string {
-    if (Function.prototype.toString.call(fn).startsWith('class')) return `[class ${fn.name || '(anonymous)'}]`;
-    return fn.name ? `[Function: ${fn.name}]` : '[Function (anonymous)]';
+interface NamedFunction {
+    readonly name: string;
+    // Function, AsyncFunction, GeneratorFunction or AsyncGeneratorFunction
+    readonly constructor: { readonly name: string };
+}
+
+// node's console.log text for a function or a class
+function functionText(fn: NamedFunction): string {
+    if (Function.prototype.toString.call(fn).startsWith('class')) {
+        const parent: unknown = Object.getPrototypeOf(fn);
+        const extended = typeof parent === 'function' && parent.name ? ` extends ${parent.name}` : '';
+        return `[class ${fn.name || '(anonymous)'}${extended}]`;
+    }
+    const kind = fn.constructor.name;
+    return fn.name ? `[${kind}: ${fn.name}]` : `[${kind} (anonymous)]`;
 }
 
 function toWireArg(arg: unknown): WireArg {
     if (Error.isError(arg)) return { error: toWireError(arg) };
-    // JSON can't hold undefined, a symbol, a bigint or a function. each one is sent as text
+    // JSON can't hold undefined, a symbol, a bigint or a function
     switch (typeof arg) {
         case 'undefined':
         case 'symbol': {
@@ -92,7 +107,8 @@ function isWireError(value: unknown): value is WireError {
         typeof value.name === 'string' &&
         typeof value.message === 'string' &&
         (value.stack === undefined || typeof value.stack === 'string') &&
-        (value.cause === undefined || isWireError(value.cause))
+        (value.cause === undefined || isWireError(value.cause)) &&
+        (value.errors === undefined || (Array.isArray(value.errors) && value.errors.every(isWireError)))
     );
 }
 

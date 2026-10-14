@@ -1,6 +1,8 @@
+import { stripAnsi } from '@seedcord/utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { routeConsole } from '#src/consoleRoute';
+import { consoleRecord, routeConsole, traceError } from '#src/consoleRoute';
+import { formatBody } from '#src/node';
 
 import type { ConsoleMethod } from '#src/consoleRoute';
 
@@ -13,6 +15,17 @@ describe('routeConsole', () => {
     afterEach(() => {
         restore?.();
         restore = undefined;
+    });
+
+    it('starts a Trace error at the console.trace call', () => {
+        const traces: Error[] = [];
+        restore = routeConsole(['trace'], (_method, _args, invoked) => traces.push(traceError('count 5', invoked)));
+
+        terminal.trace('count %d', 5);
+
+        const [header, frame] = stripAnsi(formatBody(consoleRecord('error', '', traces))).split('\n');
+        expect(header).toBe('Trace: count 5');
+        expect(frame).toContain('console-route.test.ts');
     });
 
     it('sends each listed method to the route with its args', () => {

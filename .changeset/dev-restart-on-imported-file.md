@@ -2,4 +2,4 @@
 'seedcord': patch
 ---
 
-`seedcord dev` now asks you to restart when you save a file a critical file imports, like a plugin your bot file uses.
+Fixed `seedcord dev` hot-reloading a plugin or any other file your bot file imports. It now asks you to restart, the same as when you save the bot file.

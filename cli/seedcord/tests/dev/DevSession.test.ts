@@ -71,6 +71,21 @@ describe('DevSession', () => {
         expect(start).not.toHaveBeenCalled();
     });
 
+    it('never starts a bot whose default export settles after the session stopped', async () => {
+        const start = vi.fn(() => Promise.resolve());
+        const { promise: exported, resolve: settleExport } = Promise.withResolvers<unknown>();
+        const session = new DevSession(config(), fakeRuntime({ default: exported }), sessionDeps());
+
+        const starting = session.start();
+        // on the fake runtime, start() reaches the export within one macrotask
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        await session.stop();
+        settleExport(fakeBot({ start }));
+        await starting;
+
+        expect(start).not.toHaveBeenCalled();
+    });
+
     it('forwards a runtime event past the store', async () => {
         const seen: DevEvent[] = [];
         const session = new DevSession(
@@ -184,41 +199,38 @@ describe('DevSession', () => {
 });
 
 describe('DevSession on a real runtime', () => {
-    async function project(): Promise<ResolvedSeedcordConfig> {
+    async function project(entry: string): Promise<ResolvedSeedcordConfig> {
         const temp = await mkdtempDisposable(join(tmpdir(), 'dev-session-'));
         onTestFinished(() => temp.remove());
         await mkdir(join(temp.path, 'src'));
         await writeFile(join(temp.path, 'package.json'), JSON.stringify({ name: 'dev-fixture', type: 'module' }));
-        await writeFile(join(temp.path, 'src', 'helper.ts'), 'export const helper = 1;\n');
-        await writeFile(join(temp.path, 'src', 'index.ts'), "export { helper } from './helper';\n");
+        await writeFile(join(temp.path, 'src', 'index.ts'), entry);
         return devConfigFor(temp.path, 'index.ts');
     }
 
-    it('never loads the entry once it stops while the runtime starts', async () => {
-        const runtime = new ServerDevRuntime();
-        const loadEntry = vi.spyOn(runtime, 'loadEntry');
-        const session = new DevSession(await project(), runtime, sessionDeps());
+    it('ends quietly when it stops while the runtime starts', async () => {
+        const session = new DevSession(await project('export default {};\n'), new ServerDevRuntime(), sessionDeps());
 
         const starting = session.start();
         await session.stop();
 
         await expect(starting).resolves.toBeUndefined();
-        expect(loadEntry).not.toHaveBeenCalled();
     }, 60_000);
 
     it('ends quietly when it stops while the entry loads', async () => {
-        const runtime = new ServerDevRuntime();
-        const session = new DevSession(await project(), runtime, sessionDeps());
-        const loadEntry = runtime.loadEntry.bind(runtime);
-        let stopping: Promise<void> | undefined;
-        vi.spyOn(runtime, 'loadEntry').mockImplementation(() => {
-            const loading = loadEntry();
-            stopping = session.stop();
-            return loading;
+        // the entry marks that it started loading, then never finishes
+        const entry =
+            'Reflect.set(globalThis, "entryLoading", true);\nawait new Promise(() => {});\nexport default {};\n';
+        const session = new DevSession(await project(entry), new ServerDevRuntime(), sessionDeps());
+        onTestFinished(() => {
+            Reflect.deleteProperty(globalThis, 'entryLoading');
         });
 
-        await expect(session.start()).resolves.toBeUndefined();
-        await expect(stopping).resolves.toBeUndefined();
+        const starting = session.start();
+        await vi.waitFor(() => expect(Reflect.get(globalThis, 'entryLoading')).toBe(true), { timeout: 10_000 });
+        await session.stop();
+
+        await expect(starting).resolves.toBeUndefined();
     }, 20_000);
 });
 

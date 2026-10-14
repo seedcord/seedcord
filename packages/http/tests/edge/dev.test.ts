@@ -225,13 +225,13 @@ describe('the edge Seedcord under seedcord dev', () => {
         const lines = consoleLines();
         void new Seedcord(config);
 
-        terminal.trace('cache miss');
+        terminal.trace('cache misses %d', 3);
 
         const trace = lines()
             .map(fromDevLogLine)
             .flatMap((record) => record?.args ?? [])
             .find((arg): arg is Error => Error.isError(arg) && arg.name === 'Trace');
-        expect(trace?.message).toBe('cache miss');
+        expect(trace?.message).toBe('cache misses 3');
         expect(trace?.stack?.split('\n')[1]).toContain('dev.test.ts');
     });
 

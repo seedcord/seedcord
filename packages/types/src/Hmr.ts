@@ -7,6 +7,7 @@ export interface WireError {
     stack?: string | undefined;
     code?: unknown;
     cause?: WireError | undefined;
+    errors?: WireError[] | undefined; // an AggregateError's members
 }
 
 /**

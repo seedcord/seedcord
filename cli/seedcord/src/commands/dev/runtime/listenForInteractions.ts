@@ -1,7 +1,6 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 
-import { DEV_SERVER_HOST } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { isPortInUse } from '@seedcord/utils/node/internal';
@@ -24,10 +23,16 @@ interface InteractionsEndpoint {
     port: number;
 }
 
+interface ListenOptions {
+    readonly port: number;
+    // unset binds every address
+    readonly host: string | undefined;
+    readonly wranglerConfig: string;
+}
+
 export async function listenForInteractions(
     middlewares: Connect.Server,
-    port: number,
-    wranglerConfig: string
+    { port, host, wranglerConfig }: ListenOptions
 ): Promise<InteractionsEndpoint> {
     const server = createServer((request, response) => {
         if (request.method !== 'POST') {
@@ -45,8 +50,7 @@ export async function listenForInteractions(
             response.writeHead(SERVER_ERROR).end();
         });
     });
-    // macOS lets :: bind beside another process's IPv4 listener on the same port
-    server.listen(port, DEV_SERVER_HOST);
+    server.listen(port, host);
     try {
         await once(server, 'listening');
     } catch (error: unknown) {

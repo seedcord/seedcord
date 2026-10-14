@@ -1,5 +1,7 @@
+import { HostListenHost } from '@seedcord/types/internal';
 import { createServer, createServerModuleRunner } from 'vite';
 
+import { listenHostFor } from '#commands/dev/tunnel/listenHost';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 
@@ -25,6 +27,7 @@ export class ServerDevRuntime extends BaseDevRuntime {
     }
 
     public startBot(instance: SeedcordInstance): Promise<string | undefined> {
+        instance[HostListenHost] = listenHostFor(this.require('startBot').context.config.tunnel);
         return this.lifecycle.start(instance);
     }
 

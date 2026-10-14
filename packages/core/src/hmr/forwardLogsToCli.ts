@@ -1,3 +1,5 @@
+import { format } from 'node:util';
+
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { CONSOLE_LEVEL, consoleRecord, routeConsole, traceError } from '@seedcord/logger/internal';
 
@@ -26,14 +28,14 @@ export function forwardLogsToCli(): void {
     const print = console.log.bind(console);
     registry.installSink({ kind: 'capture', onLog: (record) => print(toDevLogLine(record)) }, { muteConsole: true });
     routeConsole(WORKER_ROUTED, (method, args, invoked) => {
-        const [first, ...rest] = args;
-        const message = typeof first === 'string' ? first : '';
-        const values = typeof first === 'string' ? rest : args;
         const level = CONSOLE_LEVEL[method];
+        if (method === 'trace') {
+            registry.dispatch(consoleRecord(level, '', [traceError(format(...args), invoked)]));
+            return;
+        }
+        const [first, ...rest] = args;
         registry.dispatch(
-            method === 'trace'
-                ? consoleRecord(level, '', [traceError(message, invoked), ...values])
-                : consoleRecord(level, message, values)
+            typeof first === 'string' ? consoleRecord(level, first, rest) : consoleRecord(level, '', args)
         );
     });
 }

@@ -1,4 +1,3 @@
-// settles with `work`, or rejects with the signal's reason once it aborts
 export function unlessAborted<ResultT>(work: Promise<ResultT>, signal: AbortSignal | undefined): Promise<ResultT> {
     if (!signal) return work;
     return new Promise((resolve, reject) => {

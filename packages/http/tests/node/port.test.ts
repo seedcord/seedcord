@@ -1,9 +1,9 @@
 import { once } from 'node:events';
 import { createServer } from 'node:net';
 
-import { setDevChannel } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterEach, describe, expect, it } from 'vitest';
+import { HostListenHost } from '@seedcord/types/internal';
+import { describe, expect, it } from 'vitest';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { bindSignedEnv, serverConfig } from '#tests/helpers/nodeHost';
@@ -26,10 +26,6 @@ async function heldPort(host?: string): Promise<{ port: number } & AsyncDisposab
 }
 
 describe('the interactions server port', () => {
-    afterEach(() => {
-        setDevChannel(undefined);
-    });
-
     it('throws PortInUse when another process already listens on the port', async () => {
         await using held = await heldPort();
         await bindSignedEnv();
@@ -40,11 +36,11 @@ describe('the interactions server port', () => {
         expect(codesIn(error)).toContain(SeedcordErrorCode.PortInUse);
     });
 
-    it('under seedcord dev, throws PortInUse when another process holds the port on 127.0.0.1', async () => {
-        setDevChannel({ send: () => undefined, on: () => undefined });
+    it('throws PortInUse when another process holds the listen host seedcord dev set', async () => {
         await using held = await heldPort('127.0.0.1');
         await bindSignedEnv();
         await using host = new Seedcord({ ...serverConfig(), port: held.port });
+        host[HostListenHost] = '127.0.0.1';
 
         const error: unknown = await host.start().catch((caught: unknown) => caught);
 

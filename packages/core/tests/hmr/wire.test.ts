@@ -36,6 +36,18 @@ describe('wire errors', () => {
         expect(Error.isError(received.cause)).toBe(true);
     });
 
+    it('keeps every member of an aggregate error', () => {
+        const sent = new AggregateError([new Error('port taken'), new Error('token revoked')], 'Phase Ready failed');
+
+        const received = fromWireError(overTheWire(toWireError(sent)));
+
+        expect(received).toBeInstanceOf(AggregateError);
+        expect((received as AggregateError).errors.map((member: Error) => member.message)).toEqual([
+            'port taken',
+            'token revoked'
+        ]);
+    });
+
     it('sends a thrown string as an error with that message', () => {
         expect(fromWireError(overTheWire(toWireError('timeout')))).toMatchObject({ message: 'timeout' });
     });
@@ -104,6 +116,40 @@ describe('wire logs', () => {
             '[Function (anonymous)]',
             '[class Ticket]',
             '5n'
+        ]);
+    });
+
+    it("sends async functions, generators and subclasses as node's console.log text", () => {
+        class Ticket {
+            public readonly id = 1;
+        }
+        class VipTicket extends Ticket {}
+        async function load(): Promise<void> {}
+        function* pages(): Generator<number> {}
+        async function* stream(): AsyncGenerator<number> {}
+
+        const received = fromDevLogLine(
+            toDevLogLine(
+                record([
+                    load,
+                    pages,
+                    stream,
+                    VipTicket,
+                    async () => {
+                        await load();
+                    },
+                    class extends Ticket {}
+                ])
+            )
+        );
+
+        expect(received?.args).toEqual([
+            '[AsyncFunction: load]',
+            '[GeneratorFunction: pages]',
+            '[AsyncGeneratorFunction: stream]',
+            '[class VipTicket extends Ticket]',
+            '[AsyncFunction (anonymous)]',
+            '[class (anonymous) extends Ticket]'
         ]);
     });
 

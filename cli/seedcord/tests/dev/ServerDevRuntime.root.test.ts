@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { HostShutdown } from '@seedcord/types/internal';
+import { HostListenHost, HostShutdown } from '@seedcord/types/internal';
 import { readTextFiles } from '@seedcord/utils/node';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 
@@ -139,6 +139,28 @@ describe('dev runtime with root set to src', () => {
             code: SeedcordErrorCode.CoreDirectoryRootUnknown
         });
     }, 60_000);
+
+    it.each([
+        ['quick', '127.0.0.1'],
+        ['off', undefined]
+    ] as const)(
+        'tells a bot under a %s tunnel which address to listen on',
+        async (mode, host) => {
+            await mkdir(SCRATCH_ROOT, { recursive: true });
+            const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
+            await writeProject(dir);
+            const bot = fakeBot();
+
+            const runtime = new ServerDevRuntime();
+            await runtime.start({ config: { ...devConfigFor(dir, 'index.ts'), tunnel: { mode } } });
+            // justified: the lifecycle reads only start, the startup abort and the shutdown run
+            await runtime.startBot(bot as unknown as SeedcordInstance);
+            await runtime.stop();
+
+            expect(bot[HostListenHost]).toBe(host);
+        },
+        60_000
+    );
 
     it("still closes the runtime when the bot's shutdown throws", async () => {
         await mkdir(SCRATCH_ROOT, { recursive: true });

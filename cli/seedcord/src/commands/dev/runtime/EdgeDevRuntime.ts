@@ -10,6 +10,7 @@ import { Envapter } from 'envapt';
 import { createServer, createServerModuleRunner } from 'vite';
 
 import { WORKER_ENTRY_ID, workerEntry } from '#commands/build/builder/workerEntry';
+import { listenHostFor } from '#commands/dev/tunnel/listenHost';
 import {
     importCloudflare,
     importWrangler,
@@ -134,7 +135,11 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         );
         resources.defer(() => server.close());
         const modules = await modulesReady.promise;
-        const endpoint = await listenForInteractions(server.middlewares, port, this.target.wranglerConfig);
+        const endpoint = await listenForInteractions(server.middlewares, {
+            port,
+            host: listenHostFor(config.tunnel),
+            wranglerConfig: this.target.wranglerConfig
+        });
         resources.use(endpoint.server);
         // close() waits on open keep-alive sockets
         resources.defer(() => endpoint.server.closeAllConnections());

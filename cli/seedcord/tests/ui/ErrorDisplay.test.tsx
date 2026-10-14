@@ -1,3 +1,4 @@
+import { fromWireError, toWireError } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
 import { render } from 'ink-testing-library';
@@ -46,6 +47,17 @@ describe('ErrorDisplay', () => {
         const frame = render(<ErrorDisplay error={error} />).lastFrame() ?? '';
 
         expect(frame).toContain('Another process already listens on port 8787');
+    });
+
+    it('lists the problems of an aggregate an edge bot sent over the wire', () => {
+        const startup = fromWireError(toWireError(new AggregateError([new Error('port taken')], 'Phase Ready failed')));
+        const error = new SeedcordError(SeedcordErrorCode.CliStartFailed, ['src/bot.ts', startup.message], {
+            cause: startup
+        });
+
+        const frame = render(<ErrorDisplay error={error} />).lastFrame() ?? '';
+
+        expect(frame).toContain('port taken');
     });
 
     it('lists two problems with the same message twice without a react key warning', () => {

@@ -24,7 +24,7 @@ export enum SeedcordErrorCode {
     ConfigEdgeRestSweeper = 1010,
     /** `DISCORD_PUBLIC_KEY` is unset and reading the key from Discord failed. */
     ConfigPublicKeyUnavailable = 1011,
-    /** Another process already listens on a port a seedcord server binds. */
+    /** Another process already listens on the port seedcord tries to listen on. */
     PortInUse = 1012,
 
     /** Attempted to add lifecycle tasks after startup already completed. */

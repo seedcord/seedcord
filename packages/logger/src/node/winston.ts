@@ -61,7 +61,7 @@ export function toInfo(record: LogRecord): WinstonInfo {
         timestamp: new Date(record.timestamp).toISOString(),
         ...(stack !== undefined && { stack }),
         [LEVEL]: record.level, // formatPretty bypasses createLogger, so set the level symbol here
-        // format.splat removes values from this array as it fills them in. every sink gets the same record
+        // format.splat edits this array in place
         [SPLAT]: [...(record.args ?? [])]
     };
 }
