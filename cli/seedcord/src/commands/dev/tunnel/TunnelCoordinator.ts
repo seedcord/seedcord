@@ -33,15 +33,15 @@ function opening(kind: CoordinatorDeps['kind']): string {
 }
 
 export class TunnelCoordinator {
-    private target: number | undefined;
+    private livePort: number | undefined;
     private current: AbortController | undefined;
 
     constructor(private readonly deps: CoordinatorDeps) {}
 
     public async onPort(port: number): Promise<void> {
-        if (this.target === port) return;
+        if (this.livePort === port) return;
 
-        this.target = port;
+        this.livePort = undefined;
         const attempt = this.begin();
         const startedAt = Date.now();
         const since = (): string => paint.mute(`+${formatUptime(Date.now() - startedAt)}`);
@@ -62,6 +62,7 @@ export class TunnelCoordinator {
             await this.deps.endpoint.set(url, attempt.signal);
             if (superseded(attempt)) return;
 
+            this.livePort = port;
             this.deps.onStatus('live');
             this.deps.logger.info(`Interactions endpoint set on the dev dashboard ${since()}`);
         } catch (error: unknown) {
@@ -75,14 +76,12 @@ export class TunnelCoordinator {
     private reportLost(attempt: AbortController): void {
         if (superseded(attempt)) return;
 
-        this.target = undefined;
+        this.livePort = undefined;
         this.deps.onStatus('lost');
         this.deps.logger.error('cloudflared exited, so the bot has no public endpoint');
     }
 
     private reportFailure(error: unknown, patched: boolean): void {
-        // so a retry on this port is not skipped
-        this.target = undefined;
         this.deps.onStatus(null);
         this.deps.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
         // patched means the abort above stopped the tunnel. the paste hint only holds while it is up.
@@ -92,7 +91,7 @@ export class TunnelCoordinator {
     public async stop(): Promise<void> {
         if (!this.current) return;
 
-        this.target = undefined;
+        this.livePort = undefined;
         this.current.abort();
         this.current = undefined;
         this.deps.onStatus(null);

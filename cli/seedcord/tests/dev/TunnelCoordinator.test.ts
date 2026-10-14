@@ -216,6 +216,29 @@ describe('TunnelCoordinator', () => {
         expect(open).toHaveBeenCalledOnce();
     });
 
+    it('replaces a tunnel on the same port that never went live', async () => {
+        const stopped: string[] = [];
+        let made = 0;
+        const coordinator = new TunnelCoordinator(
+            deps({
+                makeTunnel: () => {
+                    const label = `t${String(++made)}`;
+                    return {
+                        open: (_signal, port) =>
+                            label === 't1' ? new Promise<string>(() => undefined) : Promise.resolve(urlFor(port)),
+                        stop: () => stopped.push(label)
+                    };
+                }
+            })
+        );
+
+        void coordinator.onPort(3000);
+        await coordinator.onPort(3000);
+
+        expect(made).toBe(2);
+        expect(stopped).toEqual(['t1']);
+    });
+
     it('replaces the tunnel when a restart binds a different port', async () => {
         const open = vi.fn<CoordinatorTunnel['open']>().mockResolvedValue(urlFor(1));
         const stop = vi.fn();
