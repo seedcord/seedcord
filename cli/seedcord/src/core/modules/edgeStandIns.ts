@@ -5,12 +5,12 @@ const RESOLVED_BIND_ENV_ID = `\0${BIND_ENV_ID}`;
 const CLOUDFLARE_WORKERS_ID = '\0seedcord:cloudflare-workers';
 
 // envapt's workerd build throws on a read until something binds a source
-const BIND_ENV = `import { Envapter, PortableSource } from 'envapt';
-Envapter.useSource(new PortableSource(process.env));
+const bindEnv = (env: string): string => `import { Envapter, PortableSource } from 'envapt';
+Envapter.useSource(new PortableSource(${env}));
 `;
 
 // cloudflare:workers exists only inside workerd. these are its runtime exports in @cloudflare/workers-types
-const CLOUDFLARE_WORKERS = `export const env = process.env;
+const cloudflareWorkers = (env: string): string => `export const env = ${env};
 export const exports = {};
 export const cache = {};
 export const tracing = {};
@@ -26,7 +26,9 @@ export function withExports(_exports, fn) { return fn(); }
 export function withEnvAndExports(_env, _exports, fn) { return fn(); }
 `;
 
-export function edgeStandIns(): Plugin {
+// vars override process.env
+export function edgeStandIns(vars: Record<string, unknown> = {}): Plugin {
+    const env = `{ ...process.env, ...${JSON.stringify(vars)} }`;
     return {
         name: 'seedcord:edge-stand-ins',
         resolveId(id) {
@@ -35,8 +37,8 @@ export function edgeStandIns(): Plugin {
             return undefined;
         },
         load(id) {
-            if (id === RESOLVED_BIND_ENV_ID) return BIND_ENV;
-            if (id === CLOUDFLARE_WORKERS_ID) return CLOUDFLARE_WORKERS;
+            if (id === RESOLVED_BIND_ENV_ID) return bindEnv(env);
+            if (id === CLOUDFLARE_WORKERS_ID) return cloudflareWorkers(env);
             return undefined;
         }
     };

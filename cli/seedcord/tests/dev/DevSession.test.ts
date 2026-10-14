@@ -155,6 +155,26 @@ describe('DevSession', () => {
         expect(writeFrom).toHaveBeenCalledOnce();
     });
 
+    it('stops the runtime even when the type write never finishes', async () => {
+        const writeFrom = vi.fn(() => new Promise<never>(() => undefined));
+        const runtimeStop = vi.fn(() => Promise.resolve());
+        const runtime: DevRuntime = { ...fakeRuntime({ default: fakeBot() }), stop: runtimeStop };
+        const session = new DevSession(config(), runtime, { ...sessionDeps(), codegen: { writeFrom } });
+        const running = session.start();
+        await vi.waitFor(() => expect(writeFrom).toHaveBeenCalledOnce());
+        vi.useFakeTimers();
+        onTestFinished(() => {
+            vi.useRealTimers();
+        });
+
+        const stopping = session.stop();
+        await vi.runAllTimersAsync();
+        await stopping;
+        await running;
+
+        expect(runtimeStop).toHaveBeenCalledOnce();
+    });
+
     it('ends start() even when stopping the runtime throws', async () => {
         const runtime: DevRuntime = {
             ...fakeRuntime({ default: fakeBot() }),

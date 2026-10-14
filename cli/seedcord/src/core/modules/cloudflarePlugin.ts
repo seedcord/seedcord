@@ -49,7 +49,24 @@ function parseFailure(error: unknown): string {
     return `${failure.message} at line ${String(location.line)}, column ${String(location.column)}`;
 }
 
-export async function readDevPort(wranglerConfig: string, importReader: ImportWrangler): Promise<number> {
+export interface WranglerDev {
+    port: number;
+    // the env workerd gets from the config's vars plus .dev.vars, or the .env files without one
+    vars: Record<string, unknown>;
+}
+
+function bindingValues(bindings: unknown): Record<string, unknown> {
+    if (!isPlainObject(bindings)) return {};
+    return Object.fromEntries(
+        Object.entries(bindings).map(([name, binding]) => [name, isPlainObject(binding) ? binding.value : undefined])
+    );
+}
+
+export async function readWranglerDev(
+    wranglerConfig: string,
+    environment: string | undefined,
+    importReader: ImportWrangler
+): Promise<WranglerDev> {
     const wrangler = await importOptionalPeer(
         'wrangler',
         importReader,
@@ -58,7 +75,7 @@ export async function readDevPort(wranglerConfig: string, importReader: ImportWr
     // wrangler's types import Config from @cloudflare/workers-utils, a package seedcord doesn't install
     let config: unknown;
     try {
-        config = wrangler.unstable_readConfig({ config: wranglerConfig }, { hideWarnings: true });
+        config = wrangler.unstable_readConfig({ config: wranglerConfig, env: environment }, { hideWarnings: true });
     } catch (error: unknown) {
         throw new SeedcordError(
             SeedcordErrorCode.CliEdgeWranglerConfigUnreadable,
@@ -68,9 +85,17 @@ export async function readDevPort(wranglerConfig: string, importReader: ImportWr
             }
         );
     }
-    const dev = isPlainObject(config) ? config.dev : undefined;
-    const port = isPlainObject(dev) ? dev.port : undefined;
-    return typeof port === 'number' ? port : WRANGLER_DEV_PORT;
+    if (!isPlainObject(config)) return { port: WRANGLER_DEV_PORT, vars: {} };
+    const port = isPlainObject(config.dev) ? config.dev.port : undefined;
+    const bindings = wrangler.unstable_getVarsForDev(
+        wranglerConfig,
+        undefined,
+        config.vars,
+        environment,
+        true,
+        config.secrets
+    );
+    return { port: typeof port === 'number' ? port : WRANGLER_DEV_PORT, vars: bindingValues(bindings) };
 }
 
 export async function loadCloudflare(viteRoot: string, importPlugin: ImportCloudflare): Promise<CloudflarePlugin> {

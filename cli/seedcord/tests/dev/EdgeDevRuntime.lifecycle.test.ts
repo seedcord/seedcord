@@ -18,6 +18,7 @@ import {
     edgeProject,
     editFile,
     fakeDiscordApi,
+    liveVars,
     messagesOf,
     startedRuntime,
     WAVE_COMMAND
@@ -30,6 +31,23 @@ import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
 describe('EdgeDevRuntime lifecycle', () => {
+    it("gives codegen's node copy the secrets from .dev.vars", async () => {
+        const { projectDir } = await edgeProject({ ...liveVars, API_TOKEN: ' from-dev-vars ' });
+        await editFile(join(projectDir, 'src/bot.ts'), (text) =>
+            text.replace(
+                "import type { CoreBase } from '@seedcord/http';",
+                "import type { CoreBase } from '@seedcord/http';\n\nReflect.set(globalThis, 'apiToken', env.API_TOKEN.trim());"
+            )
+        );
+        onTestFinished(() => {
+            Reflect.deleteProperty(globalThis, 'apiToken');
+        });
+
+        await startedRuntime(projectDir);
+
+        expect(Reflect.get(globalThis, 'apiToken')).toBe('from-dev-vars');
+    }, 120_000);
+
     it('reports each slow startup step before the endpoint listens', async () => {
         const { projectDir } = await edgeProject();
         const events: DevEvent[] = [];

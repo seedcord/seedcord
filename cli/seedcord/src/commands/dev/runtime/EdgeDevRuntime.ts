@@ -15,7 +15,7 @@ import {
     importCloudflare,
     importWrangler,
     loadCloudflare,
-    readDevPort,
+    readWranglerDev,
     WORKER_ENVIRONMENT
 } from '#core/modules/cloudflarePlugin';
 import { edgeStandIns } from '#core/modules/edgeStandIns';
@@ -95,13 +95,14 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const files = new ProjectFiles(config.root, config.build.outDir, dirname(config.configFile));
         installCliLogSinks(resources);
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
-        const [folders, cloudflare, port] = await Promise.all([
+        const environment = Envapter.get('CLOUDFLARE_ENV');
+        const [folders, cloudflare, { port, vars }] = await Promise.all([
             files.foldersIncludingEmpty(),
             loadCloudflare(viteRoot, importCloudflare),
-            readDevPort(this.target.wranglerConfig, importWrangler)
+            readWranglerDev(this.target.wranglerConfig, environment, importWrangler)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
-        const workerConfig = new WorkerConfigFiles(this.target.wranglerConfig, Envapter.get('CLOUDFLARE_ENV'));
+        const workerConfig = new WorkerConfigFiles(this.target.wranglerConfig, environment);
         const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, workerConfig);
         const server = await createServer(
             mergeViteConfig(edgeViteConfig(config, viteRoot, process.cwd()), {
@@ -120,7 +121,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                         },
                         mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
                     }),
-                    inNodeOnly(edgeStandIns()),
+                    inNodeOnly(edgeStandIns(vars)),
                     // cloudflare() loads the worker entry during createServer. the entry's export list comes from this copy
                     nodeCopy(modulesReady.resolve),
                     hmr.plugin,

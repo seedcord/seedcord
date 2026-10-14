@@ -18,6 +18,9 @@ import type { DevRuntime } from './runtime/DevRuntime';
 import type { DevEventHandler } from './runtime/events';
 import type { ILogger } from '@seedcord/types';
 
+// gonna wait up to 5s otherwise a command import could block quitting forever
+const TYPE_WRITE_STOP_MS = 5000;
+
 export interface DevSessionDeps {
     readonly store: DevStore;
     readonly codegen: Pick<CodegenRunner, 'writeFrom'>;
@@ -124,9 +127,17 @@ export class DevSession {
     private async runStop(): Promise<void> {
         this.stopping.abort();
         this.tscRunner?.stop();
-        // the pending type write imports through this runtime
-        await this.typeWrite;
+        await this.typeWriteSettled();
         await this.runtime.stop();
+    }
+
+    // the pending type write imports through this runtime
+    private async typeWriteSettled(): Promise<void> {
+        if (!this.typeWrite) return;
+        const { promise: timedOut, resolve } = Promise.withResolvers<undefined>();
+        const timer = setTimeout(() => resolve(undefined), TYPE_WRITE_STOP_MS);
+        await Promise.race([this.typeWrite, timedOut]);
+        clearTimeout(timer);
     }
 
     public refreshCommands(shouldRefresh: boolean): void {
