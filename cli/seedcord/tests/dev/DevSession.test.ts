@@ -9,12 +9,14 @@ import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { DevSession } from '#commands/dev/DevSession';
 import { InstanceLifecycle } from '#commands/dev/runtime/InstanceLifecycle';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
+import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
 
 import { devConfigFor } from './devConfigFor';
 
+import type { DevSessionDeps } from '#commands/dev/DevSession';
 import type { DevRuntime, DevRuntimeContext } from '#commands/dev/runtime/DevRuntime';
-import type { DevEvent } from '#commands/dev/runtime/events';
+import type { DevEvent, DevEventHandler } from '#commands/dev/runtime/events';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
 function config(): ResolvedSeedcordConfig {
@@ -43,6 +45,12 @@ function runtime(module: unknown, emit?: DevEvent): DevRuntime {
         importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
         refreshCommands: () => undefined
     };
+}
+
+const UNCHANGED = { outputPath: 'seedcord-gen.d.ts', changed: false };
+
+function sessionDeps(store = new DevStore(), onEvent: DevEventHandler = () => undefined): DevSessionDeps {
+    return { store, onEvent, codegen: { writeFrom: () => Promise.resolve(UNCHANGED) }, codegenLogger: silentLogger };
 }
 
 // start() spawns tsc --watch before it reaches the throw, so every case has to stop the session
@@ -75,7 +83,7 @@ describe('DevSession', () => {
                 return entryLoaded;
             }
         };
-        const session = new DevSession(config(), slowEntry, new DevStore(), () => undefined);
+        const session = new DevSession(config(), slowEntry, sessionDeps());
 
         const starting = session.start();
         await entryRequested;
@@ -91,8 +99,7 @@ describe('DevSession', () => {
         const session = new DevSession(
             config(),
             runtime({}, { type: 'server-listening', port: 4321 }),
-            new DevStore(),
-            (event) => seen.push(event)
+            sessionDeps(new DevStore(), (event) => seen.push(event))
         );
 
         await settle(session, session.start());
@@ -105,8 +112,7 @@ describe('DevSession', () => {
         const session = new DevSession(
             config(),
             runtime({}, { type: 'server-listening', port: 4321 }),
-            store,
-            () => undefined
+            sessionDeps(store)
         );
 
         await settle(session, session.start());
@@ -115,12 +121,7 @@ describe('DevSession', () => {
     });
 
     it('rejects a default export that carries no seedcord brand', async () => {
-        const session = new DevSession(
-            config(),
-            runtime({ default: { start: vi.fn() } }),
-            new DevStore(),
-            () => undefined
-        );
+        const session = new DevSession(config(), runtime({ default: { start: vi.fn() } }), sessionDeps());
 
         const error = await settle(session, session.start());
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliInstanceInvalid)).toBe(true);
@@ -137,7 +138,7 @@ describe('DevSession', () => {
             [HostShutdown]: { run: () => Promise.resolve() }
         };
         const store = new DevStore();
-        const session = new DevSession(config(), runtime({ default: instance }), store, () => undefined);
+        const session = new DevSession(config(), runtime({ default: instance }), sessionDeps(store));
 
         const running = session.start();
         await vi.waitFor(() =>
@@ -162,7 +163,7 @@ describe('DevSession', () => {
             [HostStartup]: { abort: () => undefined },
             [HostShutdown]: { run: () => Promise.resolve() }
         };
-        const session = new DevSession(config(), runtime({ default: instance }), new DevStore(), () => undefined);
+        const session = new DevSession(config(), runtime({ default: instance }), sessionDeps());
 
         const error = await settle(session, session.start());
 
@@ -182,7 +183,7 @@ describe('DevSession with a broken entry', () => {
         await writeFile(join(temp.path, 'package.json'), JSON.stringify({ name: 'dev-fixture', type: 'module' }));
         await writeFile(entry, 'export const = ;\n');
         const brokenConfig = { ...devConfigFor(temp.path, 'index.ts'), typecheck: { enabled: false } } as const;
-        const session = new DevSession(brokenConfig, new ServerDevRuntime(), new DevStore(), () => undefined);
+        const session = new DevSession(brokenConfig, new ServerDevRuntime(), sessionDeps());
         onTestFinished(() => session.stop());
 
         const error: unknown = await session.start().catch((caught: unknown) => caught);
