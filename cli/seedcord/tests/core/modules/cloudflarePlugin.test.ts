@@ -40,11 +40,11 @@ describe('readDevPort', () => {
         });
     });
 
-    it('throws CliWranglerConfigUnreadable with the position wrangler reports', async () => {
+    it('throws CliEdgeWranglerConfigUnreadable with the position wrangler reports', async () => {
         const config = await wranglerConfig('{ "name": ');
 
         await expect(readDevPort(config, importWrangler)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliWranglerConfigUnreadable,
+            code: SeedcordErrorCode.CliEdgeWranglerConfigUnreadable,
             message: expect.stringMatching(/wrangler\.jsonc.*at line 1, column \d+/) as string
         });
     });

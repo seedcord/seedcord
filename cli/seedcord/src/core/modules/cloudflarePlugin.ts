@@ -49,7 +49,6 @@ function parseFailure(error: unknown): string {
     return `${failure.message} at line ${String(location.line)}, column ${String(location.column)}`;
 }
 
-// the plugin reads the config with the same function
 export async function readDevPort(wranglerConfig: string, importReader: ImportWrangler): Promise<number> {
     const wrangler = await importOptionalPeer(
         'wrangler',
@@ -59,11 +58,16 @@ export async function readDevPort(wranglerConfig: string, importReader: ImportWr
     // wrangler's types import Config from @cloudflare/workers-utils, a package seedcord doesn't install
     let config: unknown;
     try {
+        // @cloudflare/vite-plugin reads the port through this call too
         config = wrangler.unstable_readConfig({ config: wranglerConfig }, { hideWarnings: true });
     } catch (error: unknown) {
-        throw new SeedcordError(SeedcordErrorCode.CliWranglerConfigUnreadable, [wranglerConfig, parseFailure(error)], {
-            cause: error
-        });
+        throw new SeedcordError(
+            SeedcordErrorCode.CliEdgeWranglerConfigUnreadable,
+            [wranglerConfig, parseFailure(error)],
+            {
+                cause: error
+            }
+        );
     }
     const dev = isPlainObject(config) ? config.dev : undefined;
     const port = isPlainObject(dev) ? dev.port : undefined;

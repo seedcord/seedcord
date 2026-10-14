@@ -258,7 +258,7 @@ const messages = {
         `${paint.bold('seedcord dev')} answers Discord on port ${port}. Something else is already listening there. Stop it, or set ${paint.bold('dev.port')} in ${paint.path(wranglerConfig)} to a free port.`,
     [SeedcordErrorCode.CliEdgeWranglerMissing]: (projectDir: string) =>
         `${paint.bold('seedcord dev')} reads an edge bot's wrangler config through ${paint.bold('wrangler')}, which ${paint.path(projectDir)} does not have installed. Add it as a dev dependency.`,
-    [SeedcordErrorCode.CliWranglerConfigUnreadable]: (wranglerConfig: string, reason: string) =>
+    [SeedcordErrorCode.CliEdgeWranglerConfigUnreadable]: (wranglerConfig: string, reason: string) =>
         `Wrangler could not read ${paint.path(wranglerConfig)}: ${reason}`,
     [SeedcordErrorCode.CliDevRuntimeNotRunning]: (method: string) =>
         `${paint.bold('seedcord dev')} called ${paint.bold(method)} while the dev runtime was not running. This is a bug in seedcord.`,
