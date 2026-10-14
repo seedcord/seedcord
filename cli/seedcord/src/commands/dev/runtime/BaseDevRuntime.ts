@@ -18,8 +18,9 @@ export interface StartedRuntime {
 }
 
 export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRuntime> implements DevRuntime {
-    private starting?: Promise<TStarted> | undefined;
+    private starting?: Promise<TStarted>;
     private started?: TStarted | undefined;
+    private stopping?: Promise<void>;
 
     public abstract startBot(instance: SeedcordInstance): Promise<string | undefined>;
     // every resource it creates goes on the stack it receives
@@ -27,10 +28,9 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
     protected abstract stopInstance(): Promise<void>;
 
     public async start(context: DevRuntimeContext): Promise<void> {
-        const starting = this.openWithCleanup(context);
-        this.starting = starting;
-        const started = await starting;
-        if (this.starting === starting) this.started = started;
+        this.starting = this.openWithCleanup(context);
+        const started = await this.starting;
+        if (!this.stopping) this.started = started;
     }
 
     private async openWithCleanup(context: DevRuntimeContext): Promise<TStarted> {
@@ -58,12 +58,15 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
         this.require('refreshCommands').hmr.sendRefreshCommands(shouldRefresh);
     }
 
-    public async stop(): Promise<void> {
-        const { starting } = this;
-        this.starting = undefined;
+    public stop(): Promise<void> {
+        this.stopping ??= this.close();
+        return this.stopping;
+    }
+
+    private async close(): Promise<void> {
         this.started = undefined;
         // a start that failed already closed what it opened and threw to its own caller
-        const started = await starting?.catch(() => undefined);
+        const started = await this.starting?.catch(() => undefined);
         try {
             await this.stopInstance();
         } finally {

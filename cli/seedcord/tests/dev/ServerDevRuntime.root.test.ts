@@ -4,13 +4,15 @@ import { join } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostShutdown } from '@seedcord/types/internal';
 import { readTextFiles } from '@seedcord/utils/node';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
 import { devConfigFor } from './devConfigFor';
 import { fakeBot } from './fakes';
 
+import type { StartedRuntime } from '#commands/dev/runtime/BaseDevRuntime';
+import type { DevRuntimeContext } from '#commands/dev/runtime/DevRuntime';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 const SCRATCH_ROOT = join(import.meta.dirname, '.root-fixture');
@@ -77,6 +79,61 @@ describe('dev runtime with root set to src', () => {
         const starting = runtime.start({ config: devConfigFor(dir, 'index.ts') });
         await runtime.stop();
         await starting;
+
+        await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CoreDirectoryRootUnknown
+        });
+    }, 60_000);
+
+    it('finishes a second stop only once the runtime has closed', async () => {
+        await mkdir(SCRATCH_ROOT, { recursive: true });
+        const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
+        await writeProject(dir);
+
+        const runtime = new ServerDevRuntime();
+        await runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        const first = runtime.stop();
+        await runtime.stop();
+
+        await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CoreDirectoryRootUnknown
+        });
+        await first;
+    }, 60_000);
+
+    it("runs the bot's shutdown once however often it stops", async () => {
+        await mkdir(SCRATCH_ROOT, { recursive: true });
+        const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
+        await writeProject(dir);
+        const shutdown = vi.fn(() => Promise.resolve());
+
+        const runtime = new ServerDevRuntime();
+        await runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        // justified: the lifecycle reads only start, the startup abort and the shutdown run
+        await runtime.startBot(fakeBot({ [HostShutdown]: { run: shutdown } }) as unknown as SeedcordInstance);
+        await runtime.stop();
+        await runtime.stop();
+
+        expect(shutdown).toHaveBeenCalledOnce();
+    }, 60_000);
+
+    it('closes what it opened when the start throws', async () => {
+        await mkdir(SCRATCH_ROOT, { recursive: true });
+        const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
+        await writeProject(dir);
+        // opens vite for real, then fails the way a later setup step would
+        class FailsAfterOpening extends ServerDevRuntime {
+            protected override async open(
+                context: DevRuntimeContext,
+                resources: AsyncDisposableStack
+            ): Promise<StartedRuntime> {
+                await super.open(context, resources);
+                throw new Error('setup failed');
+            }
+        }
+
+        const runtime = new FailsAfterOpening();
+        await expect(runtime.start({ config: devConfigFor(dir, 'index.ts') })).rejects.toThrow('setup failed');
 
         await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreDirectoryRootUnknown
