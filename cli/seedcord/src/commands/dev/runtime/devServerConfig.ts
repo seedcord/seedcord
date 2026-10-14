@@ -1,12 +1,20 @@
 import { realpathSync } from 'node:fs';
-import { dirname, resolve, sep } from 'node:path';
+import { dirname, relative, resolve, sep } from 'node:path';
 
+import { moduleGlobs } from '@seedcord/utils/node/internal';
+import { normalizePath } from 'vite';
+
+import { WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { seedcordDependents } from '#core/modules/seedcordDependents';
-import { mergeViteConfig, NODE_CONDITIONS, userCodeConfig } from '#core/modules/userCodeConfig';
+import { mergeViteConfig, NODE_CONDITIONS, userCodeConfig, WORKERD_CONDITIONS } from '#core/modules/userCodeConfig';
 import { STATE_FOLDER } from '#core/state/StateFolder';
+
+import { workerLogger } from './workerLogger';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { InlineConfig } from 'vite';
+
+type DevConfigPaths = Pick<ResolvedSeedcordConfig, 'root' | 'configFile'>;
 
 // a **/logs/** glob would also swallow a source directory named logs
 // WinstonFileSink writes logs/ under the cwd
@@ -17,23 +25,43 @@ function logsIgnore(cwd: string): (path: string) => boolean {
     return (path) => path === logs || path.startsWith(logs + sep);
 }
 
-export function devWatchIgnores(cwd: string): (string | ((path: string) => boolean))[] {
-    return ['**/node_modules/**', '**/dist/**', '**/.git/**', `**/${STATE_FOLDER}/**`, logsIgnore(cwd)];
-}
-
 // vite writes resolved options back into the config object it receives
-export function serverViteConfig(
-    config: Pick<ResolvedSeedcordConfig, 'root' | 'configFile'>,
+function devViteConfig(
+    conditions: Parameters<typeof userCodeConfig>[0],
+    config: DevConfigPaths,
     cwd: string
 ): InlineConfig {
-    return mergeViteConfig(userCodeConfig(NODE_CONDITIONS), {
-        root: config.root,
+    return mergeViteConfig(userCodeConfig(conditions), {
         // vite searches its own root for a config file
         configFile: false,
-        server: { middlewareMode: true, watch: { ignored: devWatchIgnores(cwd) } },
         clearScreen: false,
-        logLevel: 'error',
+        server: {
+            middlewareMode: true,
+            watch: {
+                ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', `**/${STATE_FOLDER}/**`, logsIgnore(cwd)]
+            }
+        },
         // an external plugin would load node's copy of @seedcord/core beside vite's
         ssr: { noExternal: seedcordDependents(dirname(config.configFile)) }
+    });
+}
+
+export function serverViteConfig(config: DevConfigPaths, cwd: string): InlineConfig {
+    return mergeViteConfig(devViteConfig(NODE_CONDITIONS, config, cwd), { root: config.root, logLevel: 'error' });
+}
+
+export function edgeViteConfig(config: DevConfigPaths, viteRoot: string, cwd: string): InlineConfig {
+    return mergeViteConfig(devViteConfig(WORKERD_CONDITIONS, config, cwd), {
+        root: viteRoot,
+        customLogger: workerLogger(),
+        // discord's POST arrives under the tunnel's hostname. the endpoint blocks every other request
+        server: { allowedHosts: true },
+        // the plugin's dep scan finds nothing in a virtual main. vite then reloads mid-start and leaves a second envapt with no source bound
+        environments: {
+            [WORKER_ENVIRONMENT]: {
+                // a glob reads a windows separator as an escape
+                optimizeDeps: { entries: moduleGlobs(normalizePath(relative(viteRoot, config.root)) || '.') }
+            }
+        }
     });
 }
