@@ -1,4 +1,5 @@
 import { filterCirculars } from '@seedcord/utils';
+import { isPlainObject } from '@seedcord/utils/internal';
 
 import type { LogRecord } from '@seedcord/types';
 import type { WireError, WireLogRecord } from '@seedcord/types/internal';
@@ -54,9 +55,25 @@ export function toDevLogLine(record: LogRecord): string {
     return `${DEV_LOG_MARKER}${JSON.stringify(toWireLog(record))}`;
 }
 
+function isWireLogRecord(value: unknown): value is WireLogRecord {
+    return (
+        isPlainObject(value) &&
+        typeof value.level === 'string' &&
+        typeof value.message === 'string' &&
+        typeof value.label === 'string' &&
+        typeof value.channel === 'string' &&
+        typeof value.timestamp === 'number'
+    );
+}
+
+// the bot's own console output can start with the marker too
 export function fromDevLogLine(line: string): LogRecord | undefined {
-    const at = line.indexOf(DEV_LOG_MARKER);
-    if (at === -1) return undefined;
-    // justified: toDevLogLine wrote everything after the marker
-    return fromWireLog(JSON.parse(line.slice(at + DEV_LOG_MARKER.length)) as WireLogRecord);
+    if (!line.startsWith(DEV_LOG_MARKER)) return undefined;
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(line.slice(DEV_LOG_MARKER.length));
+    } catch {
+        return undefined;
+    }
+    return isWireLogRecord(parsed) ? fromWireLog(parsed) : undefined;
 }

@@ -78,6 +78,7 @@ describe('wire logs', () => {
 
     it("leaves a console line the bot's own code wrote alone", () => {
         expect(fromDevLogLine('counter ready')).toBeUndefined();
+        expect(fromDevLogLine('seedcord:log is starting')).toBeUndefined();
     });
 
     it('sends a circular arg with the loop cut', () => {
