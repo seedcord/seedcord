@@ -87,6 +87,14 @@ describe('wire logs', () => {
         expect(fromDevLogLine(line)).toBeUndefined();
     });
 
+    it('sends an arg JSON cannot hold as the text console.log prints for it', () => {
+        function wave(): void {}
+
+        const received = fromDevLogLine(toDevLogLine(record([undefined, Symbol('id'), wave, 5n])));
+
+        expect(received?.args).toEqual(['undefined', 'Symbol(id)', '[Function: wave]', '5n']);
+    });
+
     it('sends a circular arg with the loop cut', () => {
         const guild: Record<string, unknown> = { id: '1' };
         guild.self = guild;

@@ -39,7 +39,22 @@ export function fromWireError({ name, message, stack, code, cause }: WireError):
 
 function toWireArg(arg: unknown): WireArg {
     if (Error.isError(arg)) return { error: toWireError(arg) };
-    return { value: filterCirculars(arg, { mode: 'json' }) };
+    // JSON has no form for the first four. each travels as the text console.log prints
+    switch (typeof arg) {
+        case 'undefined':
+        case 'symbol': {
+            return { value: String(arg) };
+        }
+        case 'bigint': {
+            return { value: `${arg}n` };
+        }
+        case 'function': {
+            return { value: `[Function: ${arg.name || '(anonymous)'}]` };
+        }
+        default: {
+            return { value: filterCirculars(arg, { mode: 'json' }) };
+        }
+    }
 }
 
 function fromWireArg(arg: WireArg): unknown {
