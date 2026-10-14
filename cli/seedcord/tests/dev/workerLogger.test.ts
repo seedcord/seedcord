@@ -19,6 +19,12 @@ describe('workerLogger', () => {
 
     afterEach(() => sink.dispose());
 
+    it('labels a line without the bot log marker as Vite', () => {
+        workerLogger().info('Re-optimizing dependencies because vite config has changed');
+
+        expect(records).toEqual([expect.objectContaining({ label: 'Vite', channel: 'default', level: 'info' })]);
+    });
+
     it('logs a warnOnce message the first time only', () => {
         const logger = workerLogger();
 

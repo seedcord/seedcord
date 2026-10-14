@@ -90,7 +90,7 @@ describe('EdgeDevRuntime logs', () => {
         expect(logs.map((record) => record.message)).toContain('Coordinated startup completed successfully');
     }, 120_000);
 
-    it("reports a console.log from the bot's own code", async () => {
+    it("reports a console.log from the bot's own code under the Console label", async () => {
         const { projectDir } = await edgeProject();
         await appendFile(join(projectDir, 'src/bot.ts'), "\nconsole.log('counter ready');\n");
         const logs = captureLogs();
@@ -98,7 +98,7 @@ describe('EdgeDevRuntime logs', () => {
 
         await runtime.startBot(instance);
 
-        expect(messagesOf(logs)).toContainEqual(expect.stringContaining('counter ready'));
+        expect(logs).toContainEqual(expect.objectContaining({ label: 'Console', message: 'counter ready' }));
     }, 120_000);
 
     it("colors the worker's logs at the CLI's color level", async () => {

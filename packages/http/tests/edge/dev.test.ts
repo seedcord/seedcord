@@ -47,6 +47,9 @@ function connectCli(): FakeCli {
     };
 }
 
+// no-console flags the calls these tests make on purpose
+const terminal = console;
+
 // workerd prints these and seedcord dev reads them back out of its console output
 function consoleLines(): () => string[] {
     const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -181,6 +184,39 @@ describe('the edge Seedcord under seedcord dev', () => {
         expect(lines().map(fromDevLogLine)).toContainEqual(
             expect.objectContaining({ label: 'Cache', message: 'warming the cache' })
         );
+    });
+
+    it("sends the bot's own console calls to the CLI as Console records", async () => {
+        connectCli();
+        await liveEnv();
+        const lines = consoleLines();
+        void new Seedcord(config);
+
+        terminal.warn('quota at %d%%', 90);
+        terminal.log({ guilds: 3 });
+
+        const records = lines().map(fromDevLogLine);
+        expect(records).toContainEqual(
+            expect.objectContaining({ label: 'Console', level: 'warn', message: 'quota at %d%%', args: [90] })
+        );
+        expect(records).toContainEqual(
+            expect.objectContaining({ label: 'Console', level: 'info', message: '', args: [{ guilds: 3 }] })
+        );
+    });
+
+    it('logs once when a sink writes to the console', async () => {
+        connectCli();
+        await liveEnv();
+        const lines = consoleLines();
+        void new Seedcord(config);
+        LoggerChannelRegistry.instance.installSink({
+            kind: 'capture',
+            onLog: (record) => terminal.log(`echo ${record.message}`)
+        });
+
+        terminal.log('first');
+
+        expect(lines().filter((line) => line.includes('first'))).toHaveLength(2);
     });
 
     it('sends the logs its own constructor wrote', async () => {

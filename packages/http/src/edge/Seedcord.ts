@@ -97,6 +97,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     #started?: Promise<void> | undefined;
 
     static #isInstantiated = false;
+    static #stopForwardingLogs: (() => void) | undefined;
 
     constructor(config: HttpEdgeConfig) {
         super('http', 'edge');
@@ -120,7 +121,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     }
 
     #startWhenAsked(cli: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>): void {
-        forwardLogsToCli();
+        Seedcord.#stopForwardingLogs = forwardLogsToCli();
         const tasks = new HttpStartupTasks(this, this.#service);
         tasks.registerHmr(this.#hmr);
         tasks.addDiscordTasks();
@@ -196,5 +197,7 @@ export class Seedcord extends PluginHost<'http', 'edge'> {
     /** @internal */
     protected static reset(): void {
         Seedcord.#isInstantiated = false;
+        Seedcord.#stopForwardingLogs?.();
+        Seedcord.#stopForwardingLogs = undefined;
     }
 }
