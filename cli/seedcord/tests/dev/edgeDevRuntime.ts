@@ -181,7 +181,7 @@ export async function startedRuntime(
 ): Promise<{ runtime: EdgeDevRuntime; instance: SeedcordInstance }> {
     const config = edgeConfig(projectDir);
     const runtime = new EdgeDevRuntime({ kind: 'edge', wranglerConfig: join(projectDir, 'wrangler.jsonc') });
-    onTestFinished(() => runtime.stopBot());
+    onTestFinished(() => runtime.stop());
     await runtime.start(onEvent ? { config, onEvent } : { config });
     const { module } = await runtime.loadEntry();
     return { runtime, instance: toSeedcordInstance(await resolveDefaultExport(module), config.instance) };

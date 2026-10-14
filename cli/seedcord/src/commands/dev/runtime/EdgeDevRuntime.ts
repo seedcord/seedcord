@@ -157,7 +157,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         });
     }
 
-    // workerd stops when stopBot closes the vite server next
+    // workerd exits once stop() closes the vite server
     protected stopInstance(): Promise<void> {
         this.settleStart?.();
         return Promise.resolve();

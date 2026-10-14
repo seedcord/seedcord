@@ -114,7 +114,7 @@ describe('EdgeDevRuntime lifecycle', () => {
         const { runtime, instance } = await startedRuntime(projectDir);
 
         const starting = runtime.startBot(instance);
-        await runtime.stopBot();
+        await runtime.stop();
 
         await expect(starting).resolves.toBeUndefined();
     }, 120_000);
@@ -123,7 +123,7 @@ describe('EdgeDevRuntime lifecycle', () => {
         const { projectDir, port } = await edgeProject();
         const first = await startedRuntime(projectDir);
         await first.runtime.startBot(first.instance);
-        await first.runtime.stopBot();
+        await first.runtime.stop();
 
         const second = await startedRuntime(projectDir);
         await second.runtime.startBot(second.instance);

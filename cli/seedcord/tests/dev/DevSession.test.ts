@@ -41,7 +41,7 @@ function runtime(module: unknown, emit?: DevEvent): DevRuntime {
         },
         loadEntry: () => Promise.resolve({ module }),
         startBot: (instance) => lifecycle.start(instance),
-        stopBot: () => lifecycle.stop(),
+        stop: () => lifecycle.stop(),
         importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
         refreshCommands: () => undefined
     };

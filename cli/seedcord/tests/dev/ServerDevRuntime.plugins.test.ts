@@ -85,7 +85,7 @@ async function withRuntime(
         await runtime.start({ config: devConfigFor(project.path, 'bot.ts') });
         await run(runtime);
     } finally {
-        await runtime.stopBot();
+        await runtime.stop();
     }
 }
 

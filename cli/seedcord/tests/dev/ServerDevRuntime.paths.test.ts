@@ -37,7 +37,7 @@ describe('dev runtime against a project that declares tsconfig paths', () => {
     const runtimes: ServerDevRuntime[] = [];
 
     afterAll(async () => {
-        await Promise.all(runtimes.map((runtime) => runtime.stopBot()));
+        await Promise.all(runtimes.map((runtime) => runtime.stop()));
         await rm(SCRATCH_ROOT, { recursive: true, force: true });
     });
 

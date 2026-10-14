@@ -113,9 +113,9 @@ export class DevSession {
     private async runStop(): Promise<void> {
         this.isStopped = true;
         this.tscRunner?.stop();
-        // codegen imports through the runtime that stopBot closes
+        // codegen imports through the runtime that stop closes
         await this.typeWrite;
-        await this.runtime.stopBot();
+        await this.runtime.stop();
         this.stopResolve?.();
     }
 

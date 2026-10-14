@@ -15,8 +15,7 @@ export interface DevRuntime extends ModuleLoader {
 
     startBot(instance: SeedcordInstance): Promise<string | undefined>;
 
-    // shuts the bot down and closes the runtime
-    stopBot(): Promise<void>;
+    stop(): Promise<void>;
 
     // false dismisses the command-update prompt without registering anything
     refreshCommands(shouldRefresh: boolean): void;

@@ -32,7 +32,7 @@ async function startedRuntime(): Promise<{ runtime: ServerDevRuntime; ban: strin
     await writeProject(dir);
 
     const runtime = new ServerDevRuntime();
-    onTestFinished(() => runtime.stopBot());
+    onTestFinished(() => runtime.stop());
     await runtime.start({ config: devConfigFor(dir, 'index.ts') });
     const { module } = await runtime.loadEntry();
 
@@ -65,7 +65,7 @@ describe('dev runtime importModule', () => {
     it('rejects an import once the bot stops', async () => {
         const { runtime, ban } = await startedRuntime();
 
-        await runtime.stopBot();
+        await runtime.stop();
 
         expect(() => runtime.importModule(ban)).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CliDevRuntimeNotRunning })

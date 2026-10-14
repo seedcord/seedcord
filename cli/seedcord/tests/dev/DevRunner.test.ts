@@ -39,7 +39,7 @@ function readyRuntime(): DevRuntime {
         start: () => Promise.resolve(),
         loadEntry: () => Promise.resolve({ module: { default: readyBot } }),
         startBot: (instance) => lifecycle.start(instance),
-        stopBot: () => lifecycle.stop(),
+        stop: () => lifecycle.stop(),
         importModule: () => Promise.reject(new Error('the fake runtime loads no files')),
         refreshCommands: () => undefined
     };
@@ -281,8 +281,8 @@ describe('DevRunner restart', () => {
             const ready = readyRuntime();
             return {
                 ...ready,
-                stopBot: async () => {
-                    await ready.stopBot();
+                stop: async () => {
+                    await ready.stop();
                     order.push('runtime stopped');
                 }
             };

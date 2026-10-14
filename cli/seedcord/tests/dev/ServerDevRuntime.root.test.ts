@@ -35,7 +35,7 @@ describe('dev runtime with root set to src', () => {
     const runtimes: ServerDevRuntime[] = [];
 
     afterAll(async () => {
-        await Promise.all(runtimes.map((runtime) => runtime.stopBot()));
+        await Promise.all(runtimes.map((runtime) => runtime.stop()));
         await rm(SCRATCH_ROOT, { recursive: true, force: true });
     });
 
@@ -60,7 +60,7 @@ describe('dev runtime with root set to src', () => {
 
         const runtime = new ServerDevRuntime();
         await runtime.start({ config: devConfigFor(dir, 'index.ts') });
-        await runtime.stopBot();
+        await runtime.stop();
 
         await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreDirectoryRootUnknown
@@ -74,7 +74,7 @@ describe('dev runtime with root set to src', () => {
 
         const runtime = new ServerDevRuntime();
         const starting = runtime.start({ config: devConfigFor(dir, 'index.ts') });
-        await runtime.stopBot();
+        await runtime.stop();
         await starting;
 
         await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
@@ -100,7 +100,7 @@ describe('dev runtime with root set to src', () => {
         // justified: the lifecycle reads only start, the startup abort and the shutdown run
         await runtime.startBot(failingBot as unknown as SeedcordInstance);
 
-        await expect(runtime.stopBot()).rejects.toThrow('shutdown failed');
+        await expect(runtime.stop()).rejects.toThrow('shutdown failed');
         await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreDirectoryRootUnknown
         });

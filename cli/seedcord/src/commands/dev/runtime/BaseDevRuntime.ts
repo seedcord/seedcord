@@ -58,7 +58,7 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
         this.require('refreshCommands').hmr.sendRefreshCommands(shouldRefresh);
     }
 
-    public async stopBot(): Promise<void> {
+    public async stop(): Promise<void> {
         const { starting } = this;
         this.starting = undefined;
         this.started = undefined;
