@@ -38,10 +38,13 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
     }
 
     public async stopBot(): Promise<void> {
-        await this.stopInstance();
         const { started } = this;
         this.started = undefined;
-        await started?.resources.disposeAsync();
+        try {
+            await this.stopInstance();
+        } finally {
+            await started?.resources.disposeAsync();
+        }
     }
 
     protected markStarted(started: TStarted): void {

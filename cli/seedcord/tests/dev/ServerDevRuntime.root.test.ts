@@ -2,12 +2,15 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { HostAugmentTarget, HostShutdown, HostStartup, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
 import { readTextFiles } from '@seedcord/utils/node';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
 import { devConfigFor } from './devConfigFor';
+
+import type { SeedcordInstance } from '@seedcord/types/internal';
 
 const SCRATCH_ROOT = join(import.meta.dirname, '.root-fixture');
 
@@ -59,6 +62,30 @@ describe('dev runtime with root set to src', () => {
         await runtime.start({ config: devConfigFor(dir, 'index.ts') });
         await runtime.stopBot();
 
+        await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CoreDirectoryRootUnknown
+        });
+    }, 60_000);
+
+    it("still closes the runtime when the bot's shutdown throws", async () => {
+        await mkdir(SCRATCH_ROOT, { recursive: true });
+        const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
+        await writeProject(dir);
+        const failingBot = {
+            [SeedcordBrand]: true,
+            [HostVersion]: '1.2.3',
+            [HostAugmentTarget]: '@seedcord/gateway',
+            start: () => Promise.resolve(),
+            [HostStartup]: { abort: () => undefined },
+            [HostShutdown]: { run: () => Promise.reject(new Error('shutdown failed')) }
+        };
+
+        const runtime = new ServerDevRuntime();
+        await runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        // justified: the lifecycle reads only start, the startup abort and the shutdown run
+        await runtime.startBot(failingBot as unknown as SeedcordInstance);
+
+        await expect(runtime.stopBot()).rejects.toThrow('shutdown failed');
         await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreDirectoryRootUnknown
         });
