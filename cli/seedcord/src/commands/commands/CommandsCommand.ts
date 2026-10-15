@@ -15,10 +15,13 @@ import { executeClean } from './clean/executeClean';
 import { PROCEED } from './confirm';
 import { DeployPresenter } from './deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from './deploy/DeployRunner';
+import { ListPresenter } from './list/ListPresenter';
+import { LIST_STEPS, ListRunner } from './list/ListRunner';
 
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Confirm } from './confirm';
 import type { DeployStep } from './deploy/DeployRunner';
+import type { ListStep } from './list/ListRunner';
 import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
 
 interface CommandsDeps {
@@ -34,7 +37,7 @@ interface CleanInvocation {
 }
 
 type WizardStep = (typeof WIZARD_STEPS)[number];
-type MenuAction = 'deploy' | 'clean';
+type MenuAction = 'deploy' | 'list' | 'clean';
 
 const MENU_STEPS = [...DEPLOY_STEPS, ...WIZARD_STEPS] as const;
 
@@ -70,6 +73,13 @@ export class CommandsCommand extends BaseCommand {
             );
 
         commands
+            .command('list')
+            .description('List the commands Discord has for your bot')
+            .action((_options, command) =>
+                this.runSteps(command, LIST_STEPS, (printer) => this.list(printer, command))
+            );
+
+        commands
             .command('clean')
             .description('Delete guild commands that duplicate a global command')
             .option('--guild <ids...>', 'Guild ids to inspect')
@@ -96,9 +106,13 @@ export class CommandsCommand extends BaseCommand {
         }
 
         await this.runSteps(command, MENU_STEPS, async (printer) => {
+            const actions: Record<MenuAction, () => Promise<void>> = {
+                deploy: () => this.deploy(printer, command),
+                list: () => this.list(printer, command),
+                clean: () => this.cleanWizard(printer)
+            };
             const action = await this.pickAction(printer);
-            if (action === 'deploy') await this.deploy(printer, command);
-            else if (action === 'clean') await this.cleanWizard(printer);
+            if (action) await actions[action]();
         });
     }
 
@@ -108,6 +122,7 @@ export class CommandsCommand extends BaseCommand {
                 message: 'What do you want to do?',
                 choices: [
                     { value: 'deploy', label: 'Deploy the commands in your code' },
+                    { value: 'list', label: 'List the commands Discord has' },
                     { value: 'clean', label: 'Remove guild commands that duplicate a global command' }
                 ]
             });
@@ -121,6 +136,10 @@ export class CommandsCommand extends BaseCommand {
     private deploy(printer: StepPrinter<DeployStep>, command: CommandUnknownOpts): Promise<void> {
         const confirm: Confirm = isInteractive() ? (message) => this.prompter.confirm({ message }) : PROCEED;
         return DeployRunner.create().run(new DeployPresenter(printer, confirm, isVerbose(command)));
+    }
+
+    private list(printer: StepPrinter<ListStep>, command: CommandUnknownOpts): Promise<void> {
+        return ListRunner.create().run(new ListPresenter(printer, isVerbose(command)));
     }
 
     private cleanWizard(printer: StepPrinter<WizardStep>): Promise<void> {

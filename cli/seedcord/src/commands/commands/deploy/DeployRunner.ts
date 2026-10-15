@@ -1,13 +1,12 @@
-import { REST } from '@discordjs/rest';
 import { putCommands } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
-import { Envapter } from 'envapt';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { LOAD_STEPS, loadCodeScopes } from '#commands/commands/codeScopes';
 import { readDiscordState } from '#commands/commands/discordState';
 import { cliLogger } from '#core/cliLogger';
 import { ProjectLoader } from '#core/config/ProjectLoader';
+import { restFromEnv } from '#core/discord/restFromEnv';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 
 import { diffScope } from './deployPlan';
@@ -15,6 +14,7 @@ import { diffScope } from './deployPlan';
 import type { ScopesInCode } from '#commands/commands/codeScopes';
 import type { DiscordState } from '#commands/commands/discordState';
 import type { DeployPresenter, ScopePlan } from './DeployPresenter';
+import type { REST } from '@discordjs/rest';
 import type { ILogger } from '@seedcord/types';
 
 export const DEPLOY_STEPS = [...LOAD_STEPS, 'read discord', 'deploy'] as const;
@@ -34,9 +34,7 @@ export class DeployRunner {
     public static create(): DeployRunner {
         return new DeployRunner({
             projectLoader: new ProjectLoader(openModuleLoader),
-            // opening the project loads .env first
-            openDiscord: () =>
-                new REST({ version: '10' }).setToken(validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'))),
+            openDiscord: restFromEnv,
             logger: cliLogger('Commands')
         });
     }

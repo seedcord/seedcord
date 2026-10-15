@@ -1,138 +1,20 @@
-import { EventEmitter } from 'node:events';
-import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
-import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { SeedcordBrand } from '@seedcord/types/internal';
-import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { Routes } from 'discord-api-types/v10';
+import { describe, expect, it } from 'vitest';
 
 import { PROCEED } from '#commands/commands/confirm';
 import { DeployPresenter } from '#commands/commands/deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from '#commands/commands/deploy/DeployRunner';
 import { StepPrinter } from '#core/output/StepPrinter';
-import { Project } from '#core/project/Project';
+import { APP_ID, Config, fakeDiscord, fakeProject, Ping, pipedTerminal, slash } from '#tests/commands/commands/fakeBot';
 import { silentLogger } from '#tests/silentLogger';
 
 import type { Confirm } from '#commands/commands/confirm';
-import type { ProjectLoader } from '#core/config/ProjectLoader';
-import type { ResolvedSeedcordConfig } from '#core/config/schema';
-import type { ModuleLoader } from '#core/modules/ModuleLoader';
-import type { Terminal } from '#core/output/terminal';
+import type { ProjectOpener } from '#tests/commands/commands/fakeBot';
 import type { REST } from '@discordjs/rest';
-
-const APP_ID = 'app-1';
-
-class Ping extends BuilderComponent<'command'> {
-    public constructor() {
-        super('command');
-        this.instance.setName('ping').setDescription('Replies with pong');
-    }
-}
-RegisterCommand('global')(Ping);
-
-class Config extends BuilderComponent<'command'> {
-    public constructor() {
-        super('command');
-        this.instance.setName('config').setDescription('Settings');
-    }
-}
-RegisterCommand('guild', ['111'])(Config);
-
-type CommandClass = new () => BuilderComponent<'command'>;
-
-interface BotOptions {
-    commands?: CommandClass[];
-    commandsPath?: string | null;
-    edge?: boolean;
-}
-
-function slash(name: string): { id: string; name: string; type: ApplicationCommandType } {
-    return { id: `${name}-id`, name, type: ApplicationCommandType.ChatInput };
-}
-
-type ProjectOpener = Pick<ProjectLoader, 'open'>;
-
-interface FakeDiscord {
-    rest: REST;
-    puts: { route: string; names: string[] }[];
-}
-
-async function fakeProject({
-    commands = [Ping, Config],
-    commandsPath = './commands',
-    edge = false
-}: BotOptions = {}): Promise<ProjectOpener> {
-    const dir = await mkdtempDisposable(join(tmpdir(), 'deploy-'));
-    onTestFinished(() => dir.remove());
-    const root = dir.path;
-    await mkdir(join(root, 'commands'));
-    const byPath = new Map<string, Record<string, unknown>>();
-    for (const Command of commands) {
-        const file = join(root, 'commands', `${Command.name}.ts`);
-        await writeFile(file, '');
-        byPath.set(file, { [Command.name]: Command });
-    }
-
-    const instance = resolve(root, 'bot.ts');
-    byPath.set(instance, {
-        default: { [SeedcordBrand]: true, config: { bot: { commands: { path: commandsPath, guilds: [] } } } }
-    });
-
-    // justified: deploy reads only these paths off the config
-    const config = {
-        root,
-        instance,
-        configFile: resolve(root, 'seedcord.config.ts'),
-        target: edge
-            ? { kind: 'edge', wranglerConfig: resolve(root, 'wrangler.jsonc') }
-            : { kind: 'server', entry: resolve(root, 'index.ts') },
-        build: { outDir: resolve(root, 'dist') }
-    } as ResolvedSeedcordConfig;
-    // justified: deploy reads only importModule off the loader
-    const modules = {
-        importModule: (path: string) => Promise.resolve(byPath.get(path) ?? {}),
-        [Symbol.asyncDispose]: () => Promise.resolve()
-    } as ModuleLoader & AsyncDisposable;
-    return { open: () => Promise.resolve(new Project(config, modules)) };
-}
-
-function fakeDiscord(onDiscord: Record<string, unknown[]> = {}): FakeDiscord {
-    const puts: FakeDiscord['puts'] = [];
-    const answers: Record<string, unknown> = {
-        [Routes.currentApplication()]: { id: APP_ID },
-        [Routes.applicationCommands(APP_ID)]: [],
-        [Routes.guild('111')]: { id: '111', name: 'Alpha' },
-        [Routes.applicationGuildCommands(APP_ID, '111')]: [],
-        ...onDiscord
-    };
-    const rest = Object.assign(new EventEmitter(), {
-        get: vi.fn((route: string) => Promise.resolve(answers[route])),
-        put: vi.fn((route: string, { body }: { body: { name: string }[] }) => {
-            puts.push({ route, names: body.map((command) => command.name) });
-            return Promise.resolve([]);
-        })
-    });
-    // justified: deploy calls only get, put, on and off
-    return { rest: rest as unknown as REST, puts };
-}
-
-function terminal(): Terminal & { text: () => string } {
-    let written = '';
-    return {
-        isTTY: false,
-        columns: 0,
-        write: (chunk: string | Uint8Array) => {
-            written += String(chunk);
-            return true;
-        },
-        text: () => stripVTControlCharacters(written).replaceAll(' ', ' ')
-    };
-}
 
 interface DeployOptions {
     verbose?: boolean;
@@ -145,7 +27,7 @@ async function deploy(
     rest: REST,
     { verbose = false, answer = true, confirm = () => Promise.resolve(answer) }: DeployOptions = {}
 ): Promise<string> {
-    const stdout = terminal();
+    const stdout = pipedTerminal();
     const printer = new StepPrinter({ command: 'commands', labels: DEPLOY_STEPS, verbose, stdout, stderr: stdout });
     const presenter = new DeployPresenter(printer, confirm, verbose);
     await new DeployRunner({ projectLoader: project, openDiscord: () => rest, logger: silentLogger }).run(presenter);
@@ -240,7 +122,7 @@ describe('DeployRunner', () => {
     });
 
     it('fails the read discord step when the token is missing', async () => {
-        const stdout = terminal();
+        const stdout = pipedTerminal();
         const printer = new StepPrinter({
             command: 'commands',
             labels: DEPLOY_STEPS,

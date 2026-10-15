@@ -113,13 +113,14 @@ describe('seedcord commands, on a terminal', () => {
         }
     );
 
-    it('asks whether to deploy or clean, then opens the clean wizard on clean', async () => {
+    it('asks whether to deploy, list or clean, then opens the clean wizard on clean', async () => {
         using output = captureOutput();
         using terminal = new PromptTerminal();
         const running = runWith(fakeRunner(), terminal.prompter);
 
         await vi.waitFor(async () => expect(await terminal.screen()).toContain('Deploy the commands in your code'));
-        await terminal.press(KEY.down, KEY.enter);
+        expect(await terminal.screen()).toContain('List the commands Discord has');
+        await terminal.press(KEY.down, KEY.down, KEY.enter);
         await vi.waitFor(async () => expect(await terminal.screen()).toContain('Which guilds?'));
         await terminal.press(KEY.escape);
         await running;

@@ -1,14 +1,13 @@
 import { dirname, join } from 'node:path';
 
-import { REST } from '@discordjs/rest';
 import { warnLinks } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { isInside } from '@seedcord/utils/node/internal';
-import { Envapter } from 'envapt';
 import { createBuilder } from 'vite';
 
 import { cliLogger } from '#core/cliLogger';
+import { restFromEnv } from '#core/discord/restFromEnv';
 import { importCloudflare, loadCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { CommandScanner } from '#core/modules/CommandScanner';
 import { functionExportsOf } from '#core/modules/workerExports';
@@ -28,6 +27,7 @@ import type { Project } from '#core/project/Project';
 import type { BundleStats } from './output';
 import type { CommandsInCode } from './readDiscord';
 import type { NextCommand } from './TargetBuild';
+import type { REST } from '@discordjs/rest';
 import type { BakedIds } from '@seedcord/core/internal';
 import type { BotConfig, CommandsConfig } from '@seedcord/types';
 import type { EnvironmentOptions, Plugin, Rolldown } from 'vite';
@@ -37,10 +37,7 @@ interface EdgeBuildDeps {
     openDiscord: () => Pick<REST, 'get'>;
 }
 
-const DEFAULT_DEPS: EdgeBuildDeps = {
-    importCloudflare,
-    openDiscord: () => new REST({ version: '10' }).setToken(validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN')))
-};
+const DEFAULT_DEPS: EdgeBuildDeps = { importCloudflare, openDiscord: restFromEnv };
 
 function captureChunks(onChunks: (chunks: Rolldown.OutputChunk[]) => void): Plugin {
     return {
