@@ -20,7 +20,9 @@ describe('Prompter.confirm', () => {
         ['a second ← flips back to no', [KEY.left, KEY.left], false],
         ['↑ then → flips there and back', [KEY.up, KEY.right], false],
         ['y picks yes', ['y'], true],
-        ['n after y picks no', ['y', 'n'], false]
+        ['n after y picks no', ['y', 'n'], false],
+        ['Y picks yes', ['Y'], true],
+        ['N after Y picks no', ['Y', 'N'], false]
     ])('%s', async (_name, keys, expected) => {
         const terminal = new PromptTerminal();
         const answer = terminal.prompter.confirm(DELETE);

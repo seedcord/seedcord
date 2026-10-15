@@ -1,4 +1,4 @@
-import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
+import { isSeedcordError } from '@seedcord/errors';
 import { validateDiscordToken, WORDMARK } from '@seedcord/errors/internal';
 import { Envapter } from 'envapt';
 
@@ -64,9 +64,6 @@ export class CommandsCommand extends BaseCommand {
         try {
             await this.dispatch(options, command);
         } catch (error: unknown) {
-            // a cancelled prompt exits quietly here because it's an intentional abort
-            if (isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.CliCancelled)) return;
-
             this.logger.error(`${WORDMARK} commands failed`, error);
             if (isSeedcordError(error)) process.exitCode = 1;
             else process.exit(1);

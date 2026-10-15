@@ -1,4 +1,3 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { KEY, PromptTerminal } from './promptTerminal';
@@ -46,10 +45,7 @@ describe('Prompter.select', () => {
         ['Esc', KEY.escape]
     ])('throws CliCancelled on %s', async (_name, key) => {
         const terminal = new PromptTerminal();
-        const answer = terminal.prompter.select(WHICH_GUILDS);
 
-        await terminal.press(key);
-
-        await expect(answer).rejects.toMatchObject({ code: SeedcordErrorCode.CliCancelled });
+        await terminal.cancel(terminal.prompter.select(WHICH_GUILDS), key);
     });
 });

@@ -1,24 +1,11 @@
+import { connectStep, deleteStep, scanStep } from './cleanSteps';
+
 import type { CleanOps, CleanScope, DeleteResult, GuildSummary, ScanResult, SkippedGuild } from './CleanRunner';
-
-export type CleanStep =
-    | { readonly label: 'connect' }
-    | { readonly label: 'scan'; readonly guildCount: number }
-    | { readonly label: 'delete'; readonly commandCount: number };
-
-interface CleanStepResults {
-    connect: Awaited<ReturnType<CleanOps['resolveTargets']>>;
-    scan: Awaited<ReturnType<CleanOps['scanGuilds']>>;
-    delete: Awaited<ReturnType<CleanOps['applyDeletions']>>;
-}
-
-export type CleanStepResult<Step extends CleanStep> = CleanStepResults[Step['label']];
+import type { CleanStep } from './cleanSteps';
 
 // the wizard and the flag path print every line and ask every question through one of these
 export interface CleanPresenter {
-    step<Step extends CleanStep>(
-        step: Step,
-        task: () => Promise<CleanStepResult<Step>>
-    ): Promise<CleanStepResult<Step>>;
+    step<Result>(step: CleanStep<Result>, task: () => Promise<Result>): Promise<Result>;
     preview(scan: ScanResult): void;
     largeBotGuard(guildCount: number): Promise<boolean>;
     confirmDelete(count: number, skippedCount: number): Promise<boolean>;
@@ -52,12 +39,12 @@ export function emptyOutcome(scan: ScanResult, purge: boolean): EmptyOutcome {
 export async function executeClean(request: CleanRequest): Promise<void> {
     const { runner, scope, apply, token, presenter, knownGuilds } = request;
 
-    const { appId, guilds } = await presenter.step({ label: 'connect' }, () => runner.resolveTargets(scope, token));
+    const { appId, guilds } = await presenter.step(connectStep(), () => runner.resolveTargets(scope, token));
 
     if (scope.allGuilds && guilds.length > LARGE_BOT_THRESHOLD && !(await presenter.largeBotGuard(guilds.length)))
         return;
 
-    const scan = await presenter.step({ label: 'scan', guildCount: guilds.length }, () =>
+    const scan = await presenter.step(scanStep(guilds.length, scope.purge), () =>
         runner.scanGuilds(token, appId, overlayNames(guilds, knownGuilds), scope.purge)
     );
 
@@ -75,7 +62,7 @@ export async function executeClean(request: CleanRequest): Promise<void> {
 
     if (!(await presenter.confirmDelete(scan.flagged.length, scan.skipped.length))) return;
 
-    const deletion = await presenter.step({ label: 'delete', commandCount: scan.flagged.length }, () =>
+    const deletion = await presenter.step(deleteStep(scan.flagged.length), () =>
         runner.applyDeletions(token, appId, scan.flagged)
     );
     presenter.result(deletion, scan.skipped);

@@ -41,6 +41,25 @@ describe('Prompter.pickMany', () => {
         await expect(answer).resolves.toEqual([expected]);
     });
 
+    it.each([
+        ['Cyrillic', 'сервер', 'ru'],
+        ['Japanese', '日本', 'jp']
+    ])('finds a %s guild name by part of it', async (_name, typed, expected) => {
+        const terminal = new PromptTerminal();
+        const answer = terminal.prompter.pickMany({
+            message: 'Guilds to clean',
+            choices: [
+                { value: 'ru', label: 'Сервер Друзей' },
+                { value: 'jp', label: '日本サーバー' },
+                { value: 'en', label: 'Main Hub' }
+            ]
+        });
+
+        await terminal.press(...typed, KEY.tab, KEY.enter);
+
+        await expect(answer).resolves.toEqual([expected]);
+    });
+
     it('lists typo matches after the skipped-letter ones', async () => {
         const terminal = new PromptTerminal();
         const answer = terminal.prompter.pickMany({
@@ -72,8 +91,7 @@ describe('Prompter.pickMany', () => {
         await terminal.press(...'ma', KEY.tab);
 
         await settled(async () => expect(await terminal.screen()).toContain('1 selected · 3 of 4 match'));
-        await terminal.press(KEY.escape);
-        await expect(answer).rejects.toThrow();
+        await terminal.cancel(answer);
     });
 
     it('shows ten rows and keeps the highlighted one among them', async () => {
@@ -88,7 +106,6 @@ describe('Prompter.pickMany', () => {
             expect(screen).toContain(`${PROMPT_MARKS.cursor} ${PROMPT_MARKS.unpicked} Guild 14`);
             expect(screen.match(/Guild \d+/g)).toHaveLength(10);
         });
-        await terminal.press(KEY.escape);
-        await expect(answer).rejects.toThrow();
+        await terminal.cancel(answer);
     });
 });

@@ -24,8 +24,9 @@ function isArrow(key: Key): boolean {
 const CONFIRM_MACHINE: PromptMachine<boolean, boolean> = {
     initial: false,
     press: (yes, { input, key }) => {
-        if (input === 'y') return true;
-        if (input === 'n') return false;
+        const letter = input.toLowerCase();
+        if (letter === 'y') return true;
+        if (letter === 'n') return false;
         if (isArrow(key)) return !yes;
         return yes;
     },

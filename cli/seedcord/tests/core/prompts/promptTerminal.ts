@@ -1,3 +1,4 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { expect, vi } from 'vitest';
 
 import { Prompter } from '#core/prompts/Prompter';
@@ -44,6 +45,13 @@ export class PromptTerminal {
             this.stdin.write(key);
             await vi.waitFor(() => expect(this.stdin.readableLength).toBe(0));
         }
+    }
+
+    // the prompt rejects before press resolves
+    public async cancel(answer: Promise<unknown>, key: string = KEY.escape): Promise<void> {
+        const cancelled = expect(answer).rejects.toMatchObject({ code: SeedcordErrorCode.CliCancelled });
+        await this.press(key);
+        await cancelled;
     }
 
     // stands in for the next line StepPrinter writes

@@ -96,6 +96,7 @@
         "minimatch": "^10.2.6",
         "react": "catalog:react",
         "reflect-metadata": "catalog:deps",
+        "string-width": "^8.3.0",
         "vite": "catalog:deps",
         "wrap-ansi": "^10.0.0"
     },

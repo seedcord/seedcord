@@ -3,13 +3,14 @@ import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
 import { plural } from '#core/format';
 
 import { InteractivePresenter } from './cleanPresenters';
+import { CLEAN_STEP_LABELS } from './cleanSteps';
 import { executeClean } from './executeClean';
 
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Prompter } from '#core/prompts/Prompter';
 import type { CleanRunner, CleanScope, GuildSummary } from './CleanRunner';
 
-export const WIZARD_STEPS = ['guilds', 'connect', 'scan', 'delete'] as const;
+export const WIZARD_STEPS = ['guilds', ...CLEAN_STEP_LABELS] as const;
 type WizardStep = (typeof WIZARD_STEPS)[number];
 
 interface ScopePlan {
@@ -39,7 +40,7 @@ export async function runCleanWizard(
             scope: plan.scope,
             apply: true,
             token,
-            presenter: new InteractivePresenter(printer, prompter, plan.scope.purge),
+            presenter: new InteractivePresenter(printer, prompter),
             knownGuilds: plan.knownGuilds
         });
     } catch (error: unknown) {

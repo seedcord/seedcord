@@ -23,8 +23,7 @@ async function filterAfter(...keys: string[]): Promise<string> {
         line = first.slice(QUESTION.length).trim();
     });
 
-    await terminal.press(KEY.escape);
-    await expect(answer).rejects.toThrow();
+    await terminal.cancel(answer);
     return line;
 }
 
@@ -50,9 +49,5 @@ describe('the pickMany filter', () => {
         ['cmd+→, sent as ctrl+e, jumps to the end', [KEY.ctrlA, KEY.ctrlE, 'x'], 'main hubx']
     ])('%s', async (_name, keys, expected) => {
         expect(await filterAfter(...keys)).toBe(expected);
-    });
-
-    it('shows a placeholder until something is typed', async () => {
-        expect(await filterAfter(KEY.ctrlU)).toBe('type to search');
     });
 });

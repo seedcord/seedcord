@@ -53,7 +53,7 @@
         "coverage": "vitest run --coverage"
     },
     "devDependencies": {
-        "@clack/prompts": "catalog:deps",
+        "@clack/prompts": "^1.7.0",
         "@seedcord/errors": "workspace:^",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",

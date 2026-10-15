@@ -1,5 +1,6 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import stringWidth from 'string-width';
 
 import { plural } from '#core/format';
 
@@ -8,8 +9,9 @@ import { confirmCount } from './confirm';
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Prompter } from '#core/prompts/Prompter';
 import type { Flagged } from './classify';
-import type { DeleteResult, ResolvedTargets, ScanResult, SkippedGuild } from './CleanRunner';
-import type { CleanPresenter, CleanStep, CleanStepResult, EmptyOutcome } from './executeClean';
+import type { DeleteResult, ScanResult, SkippedGuild } from './CleanRunner';
+import type { CleanStep } from './cleanSteps';
+import type { CleanPresenter, EmptyOutcome } from './executeClean';
 import type { ILogger } from '@seedcord/types';
 
 interface GuildGroup {
@@ -65,31 +67,32 @@ function emptyLines(scan: ScanResult, outcome: EmptyOutcome): { info: string[]; 
 
 const UNTOUCHED = 'Global commands untouched.';
 
-type CleanOutput = Pick<StepPrinter<CleanStep['label']>, 'step' | 'line' | 'warn'>;
+type CleanOutput = Pick<StepPrinter<CleanStep<unknown>['label']>, 'step' | 'line' | 'warn'>;
+
+// a CJK character takes two columns where padEnd counts one
+function padToWidth(text: string, width: number): string {
+    return text + ' '.repeat(width - stringWidth(text));
+}
 
 // prints the clean flow as StepPrinter rows between ink prompts
 export class InteractivePresenter implements CleanPresenter {
     constructor(
         private readonly output: CleanOutput,
-        private readonly prompter: Prompter,
-        private readonly purge: boolean
+        private readonly prompter: Prompter
     ) {}
 
-    public step<Step extends CleanStep>(
-        step: Step,
-        task: () => Promise<CleanStepResult<Step>>
-    ): Promise<CleanStepResult<Step>> {
-        return this.output.step(step.label, task, (result) => this.note(result));
+    public step<Result>(step: CleanStep<Result>, task: () => Promise<Result>): Promise<Result> {
+        return this.output.step(step.label, task, step.note);
     }
 
     public preview(scan: ScanResult): void {
         const groups = groupByGuild(scan.flagged);
-        const width = Math.max(...groups.map((group) => group.guildName.length));
+        const width = Math.max(...groups.map((group) => stringWidth(group.guildName)));
 
         this.output.line();
         for (const group of groups) {
             const commands = group.commands.map((command) => paint.sky(`/${command.name}`)).join(' ');
-            this.output.line(`  ${group.guildName.padEnd(width)}  ${commands}`);
+            this.output.line(`  ${padToWidth(group.guildName, width)}  ${commands}`);
         }
         this.output.line();
         if (scan.skipped.length > 0) this.output.warn(skippedSummary(scan.skipped));
@@ -124,35 +127,17 @@ export class InteractivePresenter implements CleanPresenter {
     public dryRunHint(): void {
         this.output.line(paint.mute('Dry run, nothing was deleted.'));
     }
-
-    private note(result: ResolvedTargets | ScanResult | DeleteResult): string {
-        if ('flagged' in result) {
-            const found = plural(result.flagged.length, this.purge ? 'command' : 'duplicate');
-            return `${paint.iris(found)} in ${paint.iris(plural(result.scannedGuildCount, 'guild'))}`;
-        }
-        if ('deleted' in result) return `${paint.iris(String(result.deleted))} deleted`;
-        return '';
-    }
 }
 
-function startMessage(step: CleanStep): string {
-    if (step.label === 'connect') return 'Connecting to Discord…';
-    if (step.label === 'scan') return `Scanning ${plural(step.guildCount, 'guild')} for commands…`;
-    return `Deleting ${plural(step.commandCount, 'guild command')}…`;
-}
-
-/** Renders the clean flow as plain logger lines for the flag, CI, and non-TTY path. */
+// prints the clean flow as logger lines in flag mode
 export class FlagPresenter implements CleanPresenter {
     constructor(
         private readonly logger: ILogger,
         private readonly yes: boolean
     ) {}
 
-    public step<Step extends CleanStep>(
-        step: Step,
-        task: () => Promise<CleanStepResult<Step>>
-    ): Promise<CleanStepResult<Step>> {
-        this.logger.info(startMessage(step));
+    public step<Result>(step: CleanStep<Result>, task: () => Promise<Result>): Promise<Result> {
+        this.logger.info(step.start);
         return task();
     }
 
@@ -170,7 +155,6 @@ export class FlagPresenter implements CleanPresenter {
         return Promise.reject(new SeedcordError(SeedcordErrorCode.CliCleanLargeBotUnconfirmed, [guildCount]));
     }
 
-    // flag mode asks for a typed count through readline
     public confirmDelete(count: number, skippedCount: number): Promise<boolean> {
         if (this.yes) return Promise.resolve(true);
         // readline cannot prompt without a terminal

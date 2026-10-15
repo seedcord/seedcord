@@ -20,7 +20,8 @@ function ranked(search: uFuzzy, labels: string[], filter: string): number[] {
     return order.flatMap((at) => info.idx[at] ?? []);
 }
 
-// skipped-letter matches, then typo-only matches, then an id that contains the filter
+// skipped-letter matches, then typo-only matches, then a label or id that contains the filter.
+// uFuzzy matches latin letters only
 export function matchChoices<Value extends string>(
     choices: readonly Choice<Value>[],
     filter: string
@@ -30,7 +31,7 @@ export function matchChoices<Value extends string>(
     const labels = choices.map((choice) => choice.label);
     const matched = new Set([...ranked(SKIPPED_LETTERS, labels, filter), ...ranked(ONE_TYPO, labels, filter)]);
     for (const [index, choice] of choices.entries()) {
-        if (includesIgnoreCase(choice.value, filter)) matched.add(index);
+        if (includesIgnoreCase(choice.label, filter) || includesIgnoreCase(choice.value, filter)) matched.add(index);
     }
 
     return [...matched].flatMap((index) => choices[index] ?? []);

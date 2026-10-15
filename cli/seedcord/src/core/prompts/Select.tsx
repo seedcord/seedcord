@@ -1,6 +1,6 @@
 import { paint } from '@seedcord/errors';
 import { Box, Text } from 'ink';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { ListCursor } from './ListCursor';
 import { cursorRow, question } from './rows';
@@ -34,7 +34,8 @@ function selectMachine<Value extends string>(
 }
 
 export function Select<Value extends string>({ message, choices, onEnd }: SelectProps<Value>): ReactElement {
-    const cursor = usePrompt(selectMachine(choices), onEnd);
+    const machine = useMemo(() => selectMachine(choices), [choices]);
+    const cursor = usePrompt(machine, onEnd);
 
     return (
         <Box flexDirection="column" paddingLeft={2}>

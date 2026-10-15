@@ -1,6 +1,6 @@
 import { paint } from '@seedcord/errors';
 import { Box, Text } from 'ink';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { LineEditor } from './LineEditor';
 import { editLine } from './lineKeys';
@@ -22,7 +22,6 @@ interface PickManyProps<Value extends string> extends PickManyPrompt<Value> {
     readonly onEnd: (outcome: Outcome<Value[]>) => void;
 }
 
-// the row count clack used
 const VISIBLE_ROWS = 10;
 
 interface PickState<Value extends string> {
@@ -66,7 +65,8 @@ function counts(picked: number, matches: number, total: number): string {
 }
 
 export function PickMany<Value extends string>({ message, choices, onEnd }: PickManyProps<Value>): ReactElement {
-    const { filter, cursor, picked } = usePrompt(pickManyMachine(choices), onEnd);
+    const machine = useMemo(() => pickManyMachine(choices), [choices]);
+    const { filter, cursor, picked } = usePrompt(machine, onEnd);
     const { start, items } = cursor.window(VISIBLE_ROWS);
 
     return (
