@@ -14,7 +14,8 @@ import type { APIApplicationCommand, RESTPostAPIApplicationCommandsJSONBody } fr
 export type CommandBody = RESTPostAPIApplicationCommandsJSONBody;
 
 export interface CommandScopes {
-    readonly global: readonly CommandBody[];
+    // leave it undefined to keep what discord has. an empty list clears it
+    readonly global?: readonly CommandBody[] | undefined;
     readonly guilds: ReadonlyMap<string, readonly CommandBody[]>;
 }
 
@@ -35,7 +36,7 @@ export async function putCommands(scopes: CommandScopes, options: PutCommandsOpt
     const { applicationId, onDeployed } = options;
     const result: DeployResult = { global: new Map(), guilds: new Map() };
 
-    if (scopes.global.length > 0) {
+    if (scopes.global) {
         result.global = indexById(await put(Routes.applicationCommands(applicationId), scopes.global, options));
         onDeployed?.({ scope: 'global' }, scopes.global);
     }

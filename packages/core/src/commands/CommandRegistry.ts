@@ -241,7 +241,8 @@ export class CommandRegistry implements Initializeable, HmrAware {
     public async setCommands(signal?: AbortSignal): Promise<DeployResult> {
         const result = await putCommands(
             {
-                global: this.globalCommands.map((command) => command.toJSON()),
+                // a guild-only start keeps the global commands another deploy put there
+                global: this.globalCommands.length > 0 ? this.globalCommands.map((c) => c.toJSON()) : undefined,
                 guilds: new Map(
                     [...this.guildCommands].map(([guildId, commands]) => [guildId, commands.map((c) => c.toJSON())])
                 )

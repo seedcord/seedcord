@@ -92,14 +92,16 @@ describe('CommandRegistry.setCommands', () => {
         expect(mentions.ping?.mention).toBe('</ping:123>');
     });
 
-    it('puts each guild bucket to that guild commands route', async () => {
+    it('puts only the guild route when the bot has no global commands', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('g-1', 'config'));
         const registry = registryWith(put);
         registry.guildCommands.set('111', [new SlashCommandBuilder().setName('config').setDescription('Config')]);
 
         const result = await registry.setCommands();
 
-        expect(put.mock.calls[0]?.[0]).toBe(Routes.applicationGuildCommands(APP, '111'));
+        expect(put.mock.calls.map(([route]: unknown[]) => route)).toEqual([
+            Routes.applicationGuildCommands(APP, '111')
+        ]);
         expect(result.guilds.get('111')?.get('g-1')?.name).toBe('config');
     });
 

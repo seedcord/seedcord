@@ -54,7 +54,7 @@ function deploy(scopes: Partial<CommandScopes>, rest: FakeRest, extra: { signal?
     const warn = vi.fn();
     const onDeployed = vi.fn();
     const deploying = putCommands(
-        { global: scopes.global ?? [], guilds: scopes.guilds ?? new Map() },
+        { global: scopes.global, guilds: scopes.guilds ?? new Map() },
         {
             // justified: putCommands calls only put, on and off
             rest: rest as unknown as REST,
@@ -77,7 +77,7 @@ describe('putCommands', () => {
         expect(result.global.get('123')?.name).toBe('ping');
     });
 
-    it('puts each guild to its own route and skips an empty global scope', async () => {
+    it('puts each guild to its own route and leaves the global scope alone when none is given', async () => {
         const put: Put = vi.fn().mockResolvedValue(deployedAs('g-1', 'config'));
 
         const result = await deploy({ guilds: new Map([['111', [CONFIG]]]) }, restWith(put)).deploying;
@@ -86,7 +86,15 @@ describe('putCommands', () => {
         expect(result.guilds.get('111')?.get('g-1')?.name).toBe('config');
     });
 
-    it('puts nothing when every scope is empty', async () => {
+    it('puts an empty global list, which clears every global command', async () => {
+        const put: Put = vi.fn().mockResolvedValue([]);
+
+        await deploy({ global: [] }, restWith(put)).deploying;
+
+        expect(put).toHaveBeenCalledWith(Routes.applicationCommands(APP), { body: [], signal: undefined });
+    });
+
+    it('puts nothing when no scope is given', async () => {
         const put = vi.fn();
 
         const result = await deploy({}, restWith(put)).deploying;
