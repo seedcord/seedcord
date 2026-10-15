@@ -51,6 +51,7 @@
     "scripts": {
         "dev": "tsx src/cli.ts",
         "preview": "tsx playground/preview.tsx",
+        "preview:prompts": "tsx playground/prompts.ts",
         "build": "tsdown",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' 'bin/**/*.mjs' --cache --no-error-on-unmatched-pattern",
