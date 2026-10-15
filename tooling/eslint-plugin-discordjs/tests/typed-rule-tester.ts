@@ -1,9 +1,10 @@
 import * as path from 'node:path';
 
 import { RuleTester } from '@typescript-eslint/rule-tester';
-import { afterAll, describe, it } from 'vitest';
+import { describe, it } from 'vitest';
 
-RuleTester.afterAll = afterAll;
+// RuleTester registers afterAll only to clear the parser caches. the project service stubs its file watchers
+RuleTester.afterAll = (): void => undefined;
 RuleTester.describe = describe;
 RuleTester.it = it;
 RuleTester.itOnly = it.only;
