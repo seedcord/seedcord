@@ -61,7 +61,8 @@ function dispatcherLines(): string[] {
 
 describe('dispatch logging', () => {
     it('names the route and the handler that ran', async () => {
-        const { signer, handle } = await readyEngine(banClasses());
+        using engine = await readyEngine(banClasses());
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('ban')), ctx);
@@ -73,7 +74,8 @@ describe('dispatch logging', () => {
     });
 
     it('logs once per dispatched interaction', async () => {
-        const { signer, handle } = await readyEngine(banClasses());
+        using engine = await readyEngine(banClasses());
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('ban')), ctx);

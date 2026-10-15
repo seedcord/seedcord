@@ -16,7 +16,7 @@ function foldersOf(keys: readonly string[]): string[] {
 export function registerBuiltFiles(
     modules: Record<string, Record<string, unknown>>,
     emptyFolders: readonly string[] = []
-): void {
+): Disposable {
     Reflect.set(globalThis, Symbol.for(BUILT_FILES_KEY), {
         root: BUILT_ROOT,
         folders: [...new Set([...foldersOf(Object.keys(modules)), ...emptyFolders])],
@@ -25,6 +25,7 @@ export function registerBuiltFiles(
         ),
         text: {}
     });
+    return { [Symbol.dispose]: clearBuiltFiles };
 }
 
 export function clearBuiltFiles(): void {

@@ -84,7 +84,8 @@ describe('handler gates', () => {
             throw new TestNotice();
         });
         const { classes, executed } = gated([refuse]);
-        const { signer, handle } = await readyEngine(classes);
+        using engine = await readyEngine(classes);
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('guarded')), ctx);
@@ -111,7 +112,8 @@ describe('handler gates', () => {
             throw new Silence('blacklisted');
         });
         const { classes, executed } = gated([drop]);
-        const { signer, handle } = await readyEngine(classes);
+        using engine = await readyEngine(classes);
+        const { signer, handle } = engine;
 
         const response = await handle(await signedRequest(signer, slashPayload('guarded')));
 
@@ -125,7 +127,8 @@ describe('handler gates', () => {
             /* passes */
         });
         const { classes, executed } = gated([open]);
-        const { signer, handle } = await readyEngine(classes);
+        using engine = await readyEngine(classes);
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('guarded')), ctx);
@@ -140,7 +143,8 @@ describe('handler gates', () => {
             seen = gateCtx;
         });
         const { classes } = gated([capture]);
-        const { signer, handle } = await readyEngine(classes);
+        using engine = await readyEngine(classes);
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const payload = {
@@ -172,7 +176,8 @@ describe('handler gates', () => {
             seen = gateCtx;
         });
         const { classes } = gated([capture]);
-        const { signer, handle } = await readyEngine(classes);
+        using engine = await readyEngine(classes);
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const payload = { ...slashPayload('guarded'), user: { id: 'u-dm', username: 'dm' } };
@@ -193,7 +198,8 @@ describe('handler gates', () => {
             seen = gateCtx;
         });
         const { classes } = gated([capture]);
-        const { signer, handle } = await readyEngine(classes);
+        using engine = await readyEngine(classes);
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const payload = {
@@ -218,7 +224,8 @@ describe('handler gates', () => {
             seen = gateCtx;
         });
         const { classes } = gated([capture]);
-        const { signer, handle } = await readyEngine(classes);
+        using engine = await readyEngine(classes);
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const payload = { ...slashPayload('guarded'), user: { id: 'u-dm', username: 'dm' } };
@@ -232,7 +239,8 @@ describe('handler gates', () => {
 
     it('renders a core catalog RequirePermissions refusal as an ephemeral type 4', async () => {
         const { classes, executed } = gated([RequirePermissions([PermissionFlagsBits.BanMembers])]);
-        const { signer, handle } = await readyEngine(classes);
+        using engine = await readyEngine(classes);
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const payload = {
@@ -258,7 +266,8 @@ describe('handler gates', () => {
 
     it('runs execute when a core catalog RequirePermissions gate passes', async () => {
         const { classes, executed } = gated([RequirePermissions([PermissionFlagsBits.BanMembers])]);
-        const { signer, handle } = await readyEngine(classes);
+        using engine = await readyEngine(classes);
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const payload = {
@@ -278,7 +287,8 @@ describe('handler gates', () => {
 
     it('renders a core catalog RequireBotPermissions refusal naming the bot as the subject', async () => {
         const { classes, executed } = gated([RequireBotPermissions([PermissionFlagsBits.BanMembers])]);
-        const { signer, handle } = await readyEngine(classes);
+        using engine = await readyEngine(classes);
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const payload = {
@@ -304,7 +314,8 @@ describe('handler gates', () => {
 
     it('runs execute when a core catalog RequireBotPermissions gate passes', async () => {
         const { classes, executed } = gated([RequireBotPermissions([PermissionFlagsBits.BanMembers])]);
-        const { signer, handle } = await readyEngine(classes);
+        using engine = await readyEngine(classes);
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const payload = {

@@ -1,3 +1,4 @@
+import { extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { parseTsconfig } from 'get-tsconfig';
@@ -7,6 +8,12 @@ import type { ViteUserConfig } from 'vitest/config';
 
 const base = defineConfig({
     test: {
+        // isolating every file cost about 40% of the suite's CPU
+        isolate: false,
+        // mergeConfig puts these before a package's own setupFiles
+        setupFiles: [fileURLToPath(new URL(`freshModules${extname(import.meta.url)}`, import.meta.url))],
+        // envapt caches process.env on first read
+        server: { deps: { inline: ['envapt'] } },
         testTimeout: 10_000,
         passWithNoTests: true,
         exclude: [...configDefaults.exclude, '**/.claude/**'],

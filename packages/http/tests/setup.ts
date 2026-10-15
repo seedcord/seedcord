@@ -2,7 +2,14 @@ import { vi } from 'vitest';
 
 import 'reflect-metadata';
 
+import { clearBakedIds } from '#tests/helpers/bakedIds';
+import { clearBuiltFiles } from '#tests/helpers/builtFiles';
+
 import type * as DiscordRest from '@discordjs/rest';
+
+// globalThis survives vi.resetModules
+clearBuiltFiles();
+clearBakedIds();
 
 // the default reporters read these at registration, so a Bus built in a test has them set
 process.env.UNKNOWN_EXCEPTION_WEBHOOK_URL ??= 'https://discord.com/api/webhooks/1/aaa';

@@ -44,7 +44,8 @@ describe('engine dispatch', () => {
                 await this.reply('done');
             }
         }
-        const { signer, handle } = await readyEngine(routedHandler(InteractionKind.Slash, 'ban', Ban));
+        using engine = await readyEngine(routedHandler(InteractionKind.Slash, 'ban', Ban));
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('ban')), ctx);
@@ -69,7 +70,8 @@ describe('engine dispatch', () => {
                 executeFinished = true;
             }
         }
-        const { signer, handle } = await readyEngine(routedHandler(InteractionKind.Slash, 'slow', Slow));
+        using engine = await readyEngine(routedHandler(InteractionKind.Slash, 'slow', Slow));
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('slow')), ctx);
@@ -90,7 +92,8 @@ describe('engine dispatch', () => {
                 await this.reply('pong');
             }
         }
-        const { signer, handle } = await readyEngine(routedHandler(InteractionKind.Slash, 'ping', Ping));
+        using engine = await readyEngine(routedHandler(InteractionKind.Slash, 'ping', Ping));
+        const { signer, handle } = engine;
 
         const response = await handle(await signedRequest(signer, slashPayload('ping')));
 
@@ -108,7 +111,8 @@ describe('engine dispatch', () => {
                 await this.reply('ok');
             }
         }
-        const { signer, handle } = await readyEngine(routedHandler(InteractionKind.Slash, 'track', Track));
+        using engine = await readyEngine(routedHandler(InteractionKind.Slash, 'track', Track));
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('track')), ctx);
@@ -124,7 +128,8 @@ describe('engine dispatch', () => {
             }
         }
         const approveId = new CustomId('approve').snowflake('userId');
-        const { signer, handle } = await readyEngine(routedHandler(InteractionKind.Button, 'approve', Approve));
+        using engine = await readyEngine(routedHandler(InteractionKind.Button, 'approve', Approve));
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const payload = {
@@ -145,7 +150,8 @@ describe('engine dispatch', () => {
     });
 
     it('dispatches an unmatched slash to the unhandled default, whose reply posts the card', async () => {
-        const { signer, handle } = await readyEngine(noClasses());
+        using engine = await readyEngine(noClasses());
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, slashPayload('ghost')), ctx);
@@ -162,7 +168,8 @@ describe('engine dispatch', () => {
     });
 
     it('answers an unmatched autocomplete through the unhandled default with empty choices', async () => {
-        const { signer, handle } = await readyEngine(noClasses());
+        using engine = await readyEngine(noClasses());
+        const { signer, handle } = engine;
         const payload = {
             type: 4,
             id: 'int-1',

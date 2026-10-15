@@ -3,9 +3,9 @@ import { PublishDefault, SubscriberLoader } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { BUILT_ROOT, clearBuiltFiles, registerBuiltFiles } from '#tests/helpers/builtFiles';
+import { BUILT_ROOT, registerBuiltFiles } from '#tests/helpers/builtFiles';
 
 import type { CoreBase, SubscriptionData } from '@seedcord/core';
 
@@ -41,7 +41,9 @@ function stubBus(): Bus {
 }
 
 async function loadInto(bus: Bus, subscriber: abstract new (...args: never[]) => object): Promise<void> {
-    registerBuiltFiles({ [`/subscribers/${subscriber.name}.ts`]: { [subscriber.name]: subscriber } });
+    using _builtFiles = registerBuiltFiles({
+        [`/subscribers/${subscriber.name}.ts`]: { [subscriber.name]: subscriber }
+    });
     await new SubscriberLoader(bus, `${BUILT_ROOT}/subscribers`).init();
 }
 
@@ -57,8 +59,6 @@ describe('subscribers loaded from the built files on workerd', () => {
     beforeEach(() => {
         Envapter.useSource(new PortableSource({}));
     });
-
-    afterEach(clearBuiltFiles);
 
     it('runs a loaded subscriber on publish', async () => {
         ran.length = 0;

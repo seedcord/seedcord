@@ -54,15 +54,17 @@ interface EngineOptions {
     readonly env?: Readonly<Record<string, string>>;
 }
 
+interface ReadyEngine extends Disposable {
+    readonly signer: Signer;
+    readonly handle: Engine;
+}
+
 // a fresh edge Seedcord per call, loading the classes from a fresh file table
-export async function readyEngine(
-    classes: BotClasses,
-    options: EngineOptions = {}
-): Promise<{ signer: Signer; handle: Engine }> {
+export async function readyEngine(classes: BotClasses, options: EngineOptions = {}): Promise<ReadyEngine> {
     const signer = await createSigner();
     Envapter.useSource(new PortableSource({ ...options.env, DISCORD_BOT_TOKEN: VALID_TOKEN }));
-    registerBakedIds({ publicKey: signer.publicKeyHex });
-    registerBuiltFiles(filesOf(classes), Object.values(FOLDERS));
+    const bakedIds = registerBakedIds({ publicKey: signer.publicKeyHex });
+    const builtFiles = registerBuiltFiles(filesOf(classes), Object.values(FOLDERS));
 
     // @ts-expect-error singleton reset between engines
     Seedcord.reset();
@@ -77,7 +79,14 @@ export async function readyEngine(
         },
         subscribers: { path: `${BUILT_ROOT}/${FOLDERS.subscribers}` }
     });
-    return { signer, handle: (request, ctx) => seedcord.fetch(request, undefined, ctx) };
+    return {
+        signer,
+        handle: (request, ctx) => seedcord.fetch(request, undefined, ctx),
+        [Symbol.dispose]: () => {
+            builtFiles[Symbol.dispose]();
+            bakedIds[Symbol.dispose]();
+        }
+    };
 }
 
 export { capturingCtx, slashPayload } from '#tests/helpers/interactions';

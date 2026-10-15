@@ -2,6 +2,12 @@ import '@testing-library/jest-dom/vitest';
 
 import { pathToFileURL } from 'node:url';
 
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
+
+// testing-library's auto cleanup only covers the first file in a worker
+afterEach(cleanup);
+
 export const DOCS_INDEX_FIXTURE = pathToFileURL(`${import.meta.dirname}/fixtures/docs-index.json`).href;
 
 process.env.SEEDCORD_DOCS_INDEX_URL = DOCS_INDEX_FIXTURE;

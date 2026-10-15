@@ -81,7 +81,8 @@ describe('slow-gate dev warning', () => {
         const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
         const advance = fakeClock();
         const slow = defineGate('slowgate', () => advance(800));
-        const { handle, signer } = await engineFor(guarded([slow]), false);
+        using engine = await engineFor(guarded([slow]), false);
+        const { handle, signer } = engine;
         const request = await signedRequest(signer, slashPayload('guarded'));
         const ctx = capturingCtx();
 
@@ -96,7 +97,8 @@ describe('slow-gate dev warning', () => {
         const advance = fakeClock();
         const first = defineGate('firstgate', () => advance(400));
         const second = defineGate('secondgate', () => advance(400));
-        const { handle, signer } = await engineFor(guarded([first, second]), false);
+        using engine = await engineFor(guarded([first, second]), false);
+        const { handle, signer } = engine;
         const request = await signedRequest(signer, slashPayload('guarded'));
         const ctx = capturingCtx();
 
@@ -111,7 +113,8 @@ describe('slow-gate dev warning', () => {
         const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
         const advance = fakeClock();
         const fast = defineGate('fastgate', () => advance(10));
-        const { handle, signer } = await engineFor(guarded([fast]), false);
+        using engine = await engineFor(guarded([fast]), false);
+        const { handle, signer } = engine;
         const request = await signedRequest(signer, slashPayload('guarded'));
         const ctx = capturingCtx();
 
@@ -125,7 +128,8 @@ describe('slow-gate dev warning', () => {
         const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
         const advance = fakeClock();
         const slow = defineGate('slowgate', () => advance(800));
-        const { handle, signer } = await engineFor(guarded([slow]), true);
+        using engine = await engineFor(guarded([slow]), true);
+        const { handle, signer } = engine;
         const request = await signedRequest(signer, slashPayload('guarded'));
         const ctx = capturingCtx();
 

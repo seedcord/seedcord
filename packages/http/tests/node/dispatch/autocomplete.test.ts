@@ -84,7 +84,8 @@ describe('autocomplete dispatch', () => {
                 await this.respond([{ name: 'apple', value: 'apple' }]);
             }
         }
-        const { signer, handle } = await readyEngine(completes(Search, 'search'));
+        using engine = await readyEngine(completes(Search, 'search'));
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, autocompletePayload('search')), ctx);
@@ -110,7 +111,8 @@ describe('autocomplete dispatch', () => {
         });
         // @Gated rejects a gate on an autocomplete handler at compile time. writing the metadata skips that check.
         Reflect.defineMetadata(GatedMetadataKey, [refuse], Search);
-        const { signer, handle } = await readyEngine(completes(Search, 'search'));
+        using engine = await readyEngine(completes(Search, 'search'));
+        const { signer, handle } = engine;
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, autocompletePayload('search')), ctx);
