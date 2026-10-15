@@ -250,9 +250,9 @@ const messages = {
         `${paint.bold('build.outDir')} is ${paint.path(outDir)}, which contains ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} empties ${paint.bold('outDir')} before it writes. Point it at a folder of its own, like ${paint.sky('./dist')}.`,
     [SeedcordErrorCode.CliBuildOutDirNotEmpty]: (outDir: string) =>
         `${paint.bold('build.outDir')} is ${paint.path(outDir)}, which already contains other files. ${paint.bold('seedcord build')} empties ${paint.bold('outDir')} before it writes. Point it at an empty folder, or delete what is in it.`,
-    [SeedcordErrorCode.CliEdgeApplicationUnreadable]: (reason: string) =>
-        `Reading the application from Discord with ${paint.bold('DISCORD_BOT_TOKEN')} failed (${reason}). An edge build reads the public key and command ids from it. Check that the token is still valid.`,
-    [SeedcordErrorCode.CliEdgeCommandsUnreadable]: (where: string, reason: string) =>
+    [SeedcordErrorCode.CliApplicationUnreadable]: (reason: string) =>
+        `Reading the application from Discord with ${paint.bold('DISCORD_BOT_TOKEN')} failed (${reason}). Check that the token is still valid.`,
+    [SeedcordErrorCode.CliCommandsUnreadable]: (where: string, reason: string) =>
         `Could not read the commands deployed ${where} (${reason}). Check ${paint.bold('DISCORD_BOT_TOKEN')}, and that the bot is in every guild a command in your code targets.`,
     [SeedcordErrorCode.CliEdgeCommandsNotDeployed]: (count: number, commands: string) =>
         `${count} command${count === 1 ? ' is' : 's are'} in your code with no deployed id on Discord, so the build cannot link ${count === 1 ? 'it' : 'them'}. Deploy with ${paint.bold('seedcord commands')}, then build again.\n${commands}`,
@@ -303,8 +303,6 @@ const messages = {
         secondFile: string
     ) =>
         `Two ${kind} context-menu commands share the name \`${name}\`. Defined in ${paint.path(firstFile)} and ${paint.path(secondFile)}. Rename one.`,
-    [SeedcordErrorCode.CliCleanAppFetchFailed]: (reason: string) =>
-        `Could not resolve the application from the bot token. ${reason}`,
     [SeedcordErrorCode.CliCleanNoGuilds]: () =>
         'No guilds given. Pass --guild <ids...> or --all-guilds. Global commands are never touched.',
     [SeedcordErrorCode.CliCleanPurgeAllGuilds]: () =>

@@ -80,13 +80,13 @@ describe('CleanRunner.resolveTargets', () => {
         });
     });
 
-    it('throws CliCleanAppFetchFailed when the application lookup fails', async () => {
+    it('throws CliApplicationUnreadable when the application lookup fails', async () => {
         const get = vi.fn(() => Promise.reject(new Error('401')));
         const runner = new CleanRunner(fakeRest(get, vi.fn()));
 
         await expect(
             runner.resolveTargets({ guildIds: ['g1'], allGuilds: false, purge: false }, 'token')
-        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliCleanAppFetchFailed });
+        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliApplicationUnreadable });
     });
 });
 

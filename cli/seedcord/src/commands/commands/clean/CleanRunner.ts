@@ -1,14 +1,15 @@
 import { REST } from '@discordjs/rest';
-import { currentApplication } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Routes } from 'discord-api-types/v10';
+
+import { applicationOf } from '#core/discord/applicationOf';
+import { readDeployed } from '#core/discord/readDeployed';
 
 import { classifyGuildCommands } from './classify';
 
 import type { Flagged, GuildCommands } from './classify';
 import type {
-    RESTGetAPIApplicationCommandsResult,
     RESTGetAPIApplicationGuildCommandsResult,
     RESTGetAPICurrentUserGuildsResult,
     Snowflake
@@ -80,7 +81,7 @@ export class CleanRunner implements CleanOps {
         }
 
         const rest = this.makeRest(token);
-        const appId = await this.resolveAppId(rest);
+        const { id: appId } = await applicationOf(rest);
         const guilds = scope.allGuilds
             ? await this.fetchBotGuilds(rest)
             : scope.guildIds.map((id) => ({ id, name: id }));
@@ -147,16 +148,6 @@ export class CleanRunner implements CleanOps {
         return { deleted, failed };
     }
 
-    private async resolveAppId(rest: RestClient): Promise<Snowflake> {
-        try {
-            const application = await currentApplication(rest);
-            return application.id;
-        } catch (error: unknown) {
-            const reason = Error.isError(error) ? error.message : 'Unknown error';
-            throw new SeedcordError(SeedcordErrorCode.CliCleanAppFetchFailed, [reason]);
-        }
-    }
-
     private async fetchBotGuilds(rest: RestClient): Promise<GuildSummary[]> {
         const guilds: GuildSummary[] = [];
         let after: string | undefined;
@@ -176,7 +167,7 @@ export class CleanRunner implements CleanOps {
     }
 
     private async fetchGlobalNames(rest: RestClient, appId: Snowflake): Promise<Set<string>> {
-        const global = (await rest.get(Routes.applicationCommands(appId))) as RESTGetAPIApplicationCommandsResult;
-        return new Set(global.map((command) => command.name));
+        const { global } = await readDeployed(rest, appId, []);
+        return new Set([...global.values()].map((command) => command.name));
     }
 }

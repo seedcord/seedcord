@@ -255,8 +255,6 @@ export enum SeedcordErrorCode {
     CliCommandsDirUnreadable = 3115,
     /** Two context-menu commands of the same kind share a name during codegen. */
     CliCodegenDuplicateContextMenu = 3116,
-    /** Could not resolve the application from the bot token during `commands clean`. */
-    CliCleanAppFetchFailed = 3117,
     /** `commands clean` ran with neither --guild nor --all-guilds. */
     CliCleanNoGuilds = 3118,
     /** `commands clean` combined --purge with --all-guilds. */
@@ -315,10 +313,10 @@ export enum SeedcordErrorCode {
     CliEdgeBootFailed = 3147,
     /** An edge bot's `root` holds its seedcord config. */
     CliEdgeRootHoldsConfig = 3148,
-    /** An edge build could not read the application from Discord with `DISCORD_BOT_TOKEN`. */
-    CliEdgeApplicationUnreadable = 3149,
-    /** An edge build could not read the commands deployed globally or to a guild its commands target. */
-    CliEdgeCommandsUnreadable = 3150,
+    /** The CLI could not read the application from Discord with `DISCORD_BOT_TOKEN`. */
+    CliApplicationUnreadable = 3149,
+    /** The CLI could not read the commands deployed globally or to a guild. */
+    CliCommandsUnreadable = 3150,
     /** An edge build found commands in code that have no deployed id on Discord. */
     CliEdgeCommandsNotDeployed = 3151,
     /** An edge bot's project does not have `wrangler` installed. */
