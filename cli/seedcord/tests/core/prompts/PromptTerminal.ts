@@ -43,7 +43,7 @@ export class PromptTerminal {
     public async press(...keys: string[]): Promise<void> {
         for (const key of keys) {
             this.stdin.write(key);
-            await vi.waitFor(() => expect(this.stdin.readableLength).toBe(0));
+            await vi.waitFor(() => expect(this.stdin.readableLength).toBe(0), { interval: 1 });
         }
     }
 
