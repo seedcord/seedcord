@@ -3,16 +3,32 @@ import { expect, vi } from 'vitest';
 import { Prompter } from '#core/prompts/Prompter';
 import { KeyboardStdin, ScreenStdout } from '#tests/ui/terminalStubs';
 
+// the bytes terminals send for each key
 export const KEY = {
     up: '\u001B[A',
     down: '\u001B[B',
     right: '\u001B[C',
     left: '\u001B[D',
+    home: '\u001B[H',
+    end: '\u001B[F',
     enter: '\r',
     tab: '\t',
     backspace: '\u007F',
+    forwardDelete: '\u001B[3~',
     escape: '\u001B',
-    ctrlC: '\u0003'
+    altBackspace: '\u001B\u007F',
+    altB: '\u001Bb',
+    altF: '\u001Bf',
+    altD: '\u001Bd',
+    ctrlA: '\u0001',
+    ctrlC: '\u0003',
+    ctrlE: '\u0005',
+    ctrlK: '\u000B',
+    ctrlU: '\u0015',
+    ctrlW: '\u0017',
+    ctrlLeft: '\u001B[1;5D',
+    ctrlRight: '\u001B[1;5C',
+    ctrlDelete: '\u001B[3;5~'
 } as const;
 
 export class PromptTerminal {

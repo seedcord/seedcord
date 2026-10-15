@@ -6,14 +6,9 @@ import { ListCursor } from './ListCursor';
 import { cursorRow, question } from './rows';
 import { usePrompt } from './usePrompt';
 
+import type { Choice } from './Choice';
 import type { Outcome, PromptMachine } from './usePrompt';
 import type { ReactElement } from 'react';
-
-export interface Choice<Value extends string> {
-    readonly value: Value;
-    readonly label: string;
-    readonly hint?: string;
-}
 
 export interface SelectPrompt<Value extends string> {
     readonly message: string;

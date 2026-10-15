@@ -27,7 +27,10 @@ describe('Prompter.pickMany', () => {
     it.each([
         ['part of a label, any case', 'KART', '103'],
         ['an id', '104', '104'],
-        ['a space', 'n h', '102']
+        ['a space', 'n h', '102'],
+        ['skipped letters', 'mhub', '102'],
+        ['a typo', 'mian', '102'],
+        ['the best match first', 'ma', '102']
     ])('filters by %s', async (_name, typed, expected) => {
         const terminal = new PromptTerminal();
         const answer = terminal.prompter.pickMany(GUILDS);
@@ -37,22 +40,26 @@ describe('Prompter.pickMany', () => {
         await expect(answer).resolves.toEqual([expected]);
     });
 
-    it('takes the last filter character back on backspace', async () => {
+    it('lists typo matches after the skipped-letter ones', async () => {
         const terminal = new PromptTerminal();
-        const answer = terminal.prompter.pickMany(GUILDS);
+        const answer = terminal.prompter.pickMany({
+            message: 'Guilds to clean',
+            choices: [
+                { value: 'typo', label: 'Main Hub' },
+                { value: 'skipped', label: 'Mexican' }
+            ]
+        });
 
-        await terminal.press(...'kartx', KEY.backspace, KEY.tab, KEY.enter);
+        await terminal.press(...'mian', KEY.tab, KEY.enter);
 
-        await expect(answer).resolves.toEqual(['103']);
+        await expect(answer).resolves.toEqual(['skipped']);
     });
 
     it('keeps picks across filters and returns them in list order', async () => {
         const terminal = new PromptTerminal();
         const answer = terminal.prompter.pickMany(GUILDS);
 
-        await terminal.press(...'kart', KEY.tab);
-        await terminal.press(...'kart'.split('').map(() => KEY.backspace));
-        await terminal.press(KEY.down, KEY.tab, KEY.enter);
+        await terminal.press(...'kart', KEY.tab, KEY.ctrlU, KEY.down, KEY.tab, KEY.enter);
 
         await expect(answer).resolves.toEqual(['102', '103']);
     });

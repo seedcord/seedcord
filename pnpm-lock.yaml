@@ -181,6 +181,9 @@ catalogs:
     '@discordjs/rest':
       specifier: ^2.6.3
       version: 2.6.3
+    '@leeoniya/ufuzzy':
+      specifier: ^1.0.19
+      version: 1.0.19
     '@tailwindcss/postcss':
       specifier: ^4.3.3
       version: 4.3.3
@@ -890,6 +893,9 @@ importers:
       '@discordjs/rest':
         specifier: catalog:deps
         version: 2.6.3
+      '@leeoniya/ufuzzy':
+        specifier: catalog:deps
+        version: 1.0.19
       '@seedcord/core':
         specifier: workspace:^
         version: link:../../packages/core
@@ -1691,7 +1697,7 @@ importers:
   tooling/docs-engine:
     dependencies:
       '@leeoniya/ufuzzy':
-        specifier: ^1.0.19
+        specifier: catalog:deps
         version: 1.0.19
       '@microsoft/api-extractor-model':
         specifier: 7.33.14
@@ -12078,8 +12084,7 @@ snapshots:
   '@oxlint/binding-win32-x64-msvc@1.76.0':
     optional: true
 
-  '@pkgjs/parseargs@0.11.0':
-    optional: true
+  '@pkgjs/parseargs@0.11.0': {}
 
   '@pkgr/core@0.3.6': {}
 

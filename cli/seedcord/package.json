@@ -81,6 +81,7 @@
         "@clack/prompts": "catalog:deps",
         "@commander-js/extra-typings": "^15.0.0",
         "@discordjs/rest": "catalog:deps",
+        "@leeoniya/ufuzzy": "catalog:deps",
         "@seedcord/core": "workspace:^",
         "@seedcord/errors": "workspace:^",
         "@seedcord/event-emitter": "workspace:^",

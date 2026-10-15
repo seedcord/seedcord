@@ -2,14 +2,15 @@ import { paint } from '@seedcord/errors';
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { includesIgnoreCase } from '#core/format';
-
+import { LineEditor } from './LineEditor';
+import { editLine } from './lineKeys';
 import { ListCursor } from './ListCursor';
-import { cursorRow, keyHints, question } from './rows';
+import { matchChoices } from './matchChoices';
+import { cursorRow, keyHints, lineField, question } from './rows';
 import { usePrompt } from './usePrompt';
 
-import type { Choice } from './Select';
-import type { KeyPress, Outcome, PromptMachine } from './usePrompt';
+import type { Choice } from './Choice';
+import type { Outcome, PromptMachine } from './usePrompt';
 import type { ReactElement } from 'react';
 
 export interface PickManyPrompt<Value extends string> {
@@ -25,7 +26,7 @@ interface PickManyProps<Value extends string> extends PickManyPrompt<Value> {
 const VISIBLE_ROWS = 10;
 
 interface PickState<Value extends string> {
-    readonly filter: string;
+    readonly filter: LineEditor;
     readonly cursor: ListCursor<Choice<Value>>;
     readonly picked: ReadonlySet<Value>;
 }
@@ -36,25 +37,11 @@ function toggle<Value extends string>(picked: ReadonlySet<Value>, value: Value):
     return next;
 }
 
-function nextFilter(filter: string, { input, key }: KeyPress): string {
-    // ink reports the \x7f a mac backspace sends as delete
-    if (key.backspace || key.delete) return filter.slice(0, -1);
-    if (input === '' || key.ctrl || key.meta || key.tab) return filter;
-    return filter + input;
-}
-
 function pickManyMachine<Value extends string>(
     choices: readonly Choice<Value>[]
 ): PromptMachine<PickState<Value>, Value[]> {
-    const filtered = (filter: string): ListCursor<Choice<Value>> =>
-        new ListCursor(
-            choices.filter(
-                (choice) => includesIgnoreCase(choice.label, filter) || includesIgnoreCase(choice.value, filter)
-            )
-        );
-
     return {
-        initial: { filter: '', cursor: new ListCursor(choices), picked: new Set() },
+        initial: { filter: LineEditor.empty(), cursor: new ListCursor(choices), picked: new Set() },
         press: (state, keyPress) => {
             const { key } = keyPress;
             if (key.upArrow) return { ...state, cursor: state.cursor.previous() };
@@ -63,8 +50,9 @@ function pickManyMachine<Value extends string>(
             const current = state.cursor.current;
             if (key.tab && current) return { ...state, picked: toggle(state.picked, current.value) };
 
-            const filter = nextFilter(state.filter, keyPress);
-            return filter === state.filter ? state : { ...state, filter, cursor: filtered(filter) };
+            const filter = editLine(state.filter, keyPress);
+            if (filter.text === state.filter.text) return { ...state, filter };
+            return { ...state, filter, cursor: new ListCursor(matchChoices(choices, filter.text)) };
         },
         answer: ({ picked }) => choices.flatMap((choice) => (picked.has(choice.value) ? [choice.value] : []))
     };
@@ -84,7 +72,7 @@ export function PickMany<Value extends string>({ message, choices, onEnd }: Pick
     return (
         <Box flexDirection="column" paddingLeft={2}>
             <Text>
-                {question(message)} {paint.sky(filter)}
+                {question(message)} {lineField(filter, 'type to search')}
             </Text>
             {items.map((choice, offset) => {
                 const box = picked.has(choice.value) ? paint.mint('■') : paint.mute('□');
@@ -94,8 +82,10 @@ export function PickMany<Value extends string>({ message, choices, onEnd }: Pick
                     </Text>
                 );
             })}
-            <Text> {counts(picked.size, cursor.items.length, choices.length)}</Text>
-            <Text> {HINTS}</Text>
+            <Box flexDirection="column" paddingLeft={2}>
+                <Text>{counts(picked.size, cursor.items.length, choices.length)}</Text>
+                <Text>{HINTS}</Text>
+            </Box>
         </Box>
     );
 }
