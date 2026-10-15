@@ -12,7 +12,7 @@ const WHICH_GUILDS = {
 
 describe('Prompter.select', () => {
     it('resolves the value of the highlighted choice on enter', async () => {
-        const terminal = new PromptTerminal();
+        using terminal = new PromptTerminal();
         const answer = terminal.prompter.select(WHICH_GUILDS);
 
         await terminal.press(KEY.down, KEY.enter);
@@ -21,7 +21,7 @@ describe('Prompter.select', () => {
     });
 
     it('wraps from the first choice to the last on up', async () => {
-        const terminal = new PromptTerminal();
+        using terminal = new PromptTerminal();
         const answer = terminal.prompter.select(WHICH_GUILDS);
 
         await terminal.press(KEY.up, KEY.enter);
@@ -30,7 +30,7 @@ describe('Prompter.select', () => {
     });
 
     it('hands its rows back to whatever prints next', async () => {
-        const terminal = new PromptTerminal();
+        using terminal = new PromptTerminal();
         const answer = terminal.prompter.select(WHICH_GUILDS);
 
         await terminal.press(KEY.enter);
@@ -44,7 +44,7 @@ describe('Prompter.select', () => {
         ['Ctrl+C', KEY.ctrlC],
         ['Esc', KEY.escape]
     ])('throws CliCancelled on %s', async (_name, key) => {
-        const terminal = new PromptTerminal();
+        using terminal = new PromptTerminal();
 
         await terminal.cancel(terminal.prompter.select(WHICH_GUILDS), key);
     });

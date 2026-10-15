@@ -1,9 +1,8 @@
+import type { APIApplicationCommand } from 'discord-api-types/v10';
+
 type CleanReason = 'overlap' | 'purge';
 
-interface DeployedCommand {
-    id: string;
-    name: string;
-}
+type DeployedCommand = Pick<APIApplicationCommand, 'id' | 'name' | 'type'>;
 
 export interface GuildCommands {
     guildId: string;
@@ -31,9 +30,9 @@ export function classifyGuildCommands(
     for (const { guildId, guildName, commands } of guilds) {
         for (const command of commands) {
             if (purge) {
-                flagged.push({ guildId, guildName, id: command.id, name: command.name, reason: 'purge' });
+                flagged.push({ ...command, guildId, guildName, reason: 'purge' });
             } else if (globalNames.has(command.name)) {
-                flagged.push({ guildId, guildName, id: command.id, name: command.name, reason: 'overlap' });
+                flagged.push({ ...command, guildId, guildName, reason: 'overlap' });
             }
         }
     }

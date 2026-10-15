@@ -109,7 +109,7 @@ export class CleanRunner implements CleanOps {
                 const deployed = (await rest.get(
                     Routes.applicationGuildCommands(appId, guild.id)
                 )) as RESTGetAPIApplicationGuildCommandsResult;
-                const commands = deployed.map((command) => ({ id: command.id, name: command.name }));
+                const commands = deployed.map(({ id, name, type }) => ({ id, name, type }));
                 scannedCommandCount += commands.length;
                 buckets.push({ guildId: guild.id, guildName: guild.name, commands });
             } catch (error: unknown) {

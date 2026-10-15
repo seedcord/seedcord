@@ -1,6 +1,9 @@
+import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, it, expect } from 'vitest';
 
 import { classifyGuildCommands } from '#commands/commands/classify';
+
+const slash = (id: string, name: string) => ({ id, name, type: ApplicationCommandType.ChatInput }) as const;
 
 describe('classifyGuildCommands', () => {
     it('flags a guild command whose name is also global as overlap, leaves guild-only commands alone', () => {
@@ -10,16 +13,13 @@ describe('classifyGuildCommands', () => {
                 {
                     guildId: 'g1',
                     guildName: 'Alpha',
-                    commands: [
-                        { id: '1', name: 'ban' },
-                        { id: '2', name: 'setup' }
-                    ]
+                    commands: [slash('1', 'ban'), slash('2', 'setup')]
                 }
             ],
             false
         );
 
-        expect(result).toEqual([{ guildId: 'g1', guildName: 'Alpha', id: '1', name: 'ban', reason: 'overlap' }]);
+        expect(result).toEqual([{ ...slash('1', 'ban'), guildId: 'g1', guildName: 'Alpha', reason: 'overlap' }]);
     });
 
     it('flags every guild command as purge regardless of global overlap', () => {
@@ -29,10 +29,7 @@ describe('classifyGuildCommands', () => {
                 {
                     guildId: 'g1',
                     guildName: 'Alpha',
-                    commands: [
-                        { id: '1', name: 'ban' },
-                        { id: '2', name: 'setup' }
-                    ]
+                    commands: [slash('1', 'ban'), slash('2', 'setup')]
                 }
             ],
             true

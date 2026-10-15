@@ -11,7 +11,7 @@ const GUILDS = {
 };
 
 async function filterAfter(...keys: string[]): Promise<string> {
-    const terminal = new PromptTerminal();
+    using terminal = new PromptTerminal();
     const answer = terminal.prompter.pickMany(GUILDS);
     await terminal.press(...'main hub', ...keys);
 

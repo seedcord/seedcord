@@ -17,7 +17,7 @@ const GUILDS = {
 
 describe('Prompter.pickMany', () => {
     it('picks the highlighted row on tab', async () => {
-        const terminal = new PromptTerminal();
+        using terminal = new PromptTerminal();
         const answer = terminal.prompter.pickMany(GUILDS);
 
         await terminal.press(KEY.down, KEY.tab, KEY.enter);
@@ -33,7 +33,7 @@ describe('Prompter.pickMany', () => {
         ['a typo', 'mian', '102'],
         ['the best match first', 'ma', '102']
     ])('filters by %s', async (_name, typed, expected) => {
-        const terminal = new PromptTerminal();
+        using terminal = new PromptTerminal();
         const answer = terminal.prompter.pickMany(GUILDS);
 
         await terminal.press(...typed, KEY.tab, KEY.enter);
@@ -45,7 +45,7 @@ describe('Prompter.pickMany', () => {
         ['Cyrillic', 'сервер', 'ru'],
         ['Japanese', '日本', 'jp']
     ])('finds a %s guild name by part of it', async (_name, typed, expected) => {
-        const terminal = new PromptTerminal();
+        using terminal = new PromptTerminal();
         const answer = terminal.prompter.pickMany({
             message: 'Guilds to clean',
             choices: [
@@ -61,7 +61,7 @@ describe('Prompter.pickMany', () => {
     });
 
     it('lists typo matches after the skipped-letter ones', async () => {
-        const terminal = new PromptTerminal();
+        using terminal = new PromptTerminal();
         const answer = terminal.prompter.pickMany({
             message: 'Guilds to clean',
             choices: [
@@ -76,7 +76,7 @@ describe('Prompter.pickMany', () => {
     });
 
     it('keeps picks across filters and returns them in list order', async () => {
-        const terminal = new PromptTerminal();
+        using terminal = new PromptTerminal();
         const answer = terminal.prompter.pickMany(GUILDS);
 
         await terminal.press(...'kart', KEY.tab, KEY.ctrlU, KEY.down, KEY.tab, KEY.enter);
@@ -85,7 +85,7 @@ describe('Prompter.pickMany', () => {
     });
 
     it('counts the picks and the matches', async () => {
-        const terminal = new PromptTerminal();
+        using terminal = new PromptTerminal();
         const answer = terminal.prompter.pickMany(GUILDS);
 
         await terminal.press(...'ma', KEY.tab);
@@ -95,7 +95,7 @@ describe('Prompter.pickMany', () => {
     });
 
     it('shows ten rows and keeps the highlighted one among them', async () => {
-        const terminal = new PromptTerminal();
+        using terminal = new PromptTerminal();
         const choices = Array.from({ length: 20 }, (_, index) => ({ value: `${index}`, label: `Guild ${index}` }));
         const answer = terminal.prompter.pickMany({ message: 'Guilds to clean', choices });
 

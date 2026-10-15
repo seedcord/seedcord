@@ -1,4 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
 import { CleanRunner } from '#commands/commands/CleanRunner';
@@ -163,9 +164,10 @@ describe('CleanRunner.scanGuilds', () => {
 });
 
 describe('CleanRunner.applyDeletions', () => {
+    const slash = ApplicationCommandType.ChatInput;
     const flagged: Flagged[] = [
-        { guildId: 'g1', guildName: 'Alpha', id: '1', name: 'ban', reason: 'overlap' },
-        { guildId: 'g1', guildName: 'Alpha', id: '2', name: 'setup', reason: 'purge' }
+        { guildId: 'g1', guildName: 'Alpha', id: '1', name: 'ban', type: slash, reason: 'overlap' },
+        { guildId: 'g1', guildName: 'Alpha', id: '2', name: 'setup', type: slash, reason: 'purge' }
     ];
 
     it('deletes through guild routes only and counts what it removed', async () => {

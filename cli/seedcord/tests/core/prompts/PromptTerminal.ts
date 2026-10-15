@@ -62,4 +62,9 @@ export class PromptTerminal {
     public screen(): Promise<string> {
         return this.stdout.screen();
     }
+
+    public [Symbol.dispose](): void {
+        this.stdin.destroy();
+        this.stdout.destroy();
+    }
 }

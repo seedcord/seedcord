@@ -41,7 +41,13 @@ export class Prompter {
 
     private async ask<Answer>(prompt: (onEnd: EndPrompt<Answer>) => ReactElement): Promise<Answer> {
         const ended = Promise.withResolvers<Outcome<Answer>>();
-        const app = render(prompt(ended.resolve), { ...this.streams, exitOnCtrlC: false, patchConsole: false });
+        const app = render(prompt(ended.resolve), {
+            ...this.streams,
+            // ink draws only a final frame when CI is set
+            interactive: true,
+            exitOnCtrlC: false,
+            patchConsole: false
+        });
 
         const outcome = await ended.promise;
         // unmount alone leaves the last frame on screen

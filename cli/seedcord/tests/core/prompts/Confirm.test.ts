@@ -6,7 +6,7 @@ const DELETE = { message: 'Delete 3 guild commands? This cannot be undone.' };
 
 describe('Prompter.confirm', () => {
     it('answers no when enter comes first', async () => {
-        const terminal = new PromptTerminal();
+        using terminal = new PromptTerminal();
         const answer = terminal.prompter.confirm(DELETE);
 
         await terminal.press(KEY.enter);
@@ -24,7 +24,7 @@ describe('Prompter.confirm', () => {
         ['Y picks yes', ['Y'], true],
         ['N after Y picks no', ['Y', 'N'], false]
     ])('%s', async (_name, keys, expected) => {
-        const terminal = new PromptTerminal();
+        using terminal = new PromptTerminal();
         const answer = terminal.prompter.confirm(DELETE);
 
         await terminal.press(...keys, KEY.enter);

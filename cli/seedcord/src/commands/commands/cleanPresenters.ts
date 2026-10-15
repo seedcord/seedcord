@@ -1,5 +1,6 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { ApplicationCommandType } from 'discord-api-types/v10';
 import stringWidth from 'string-width';
 
 import { plural } from '#core/format';
@@ -69,6 +70,11 @@ const UNTOUCHED = 'Global commands untouched.';
 
 type CleanOutput = Pick<StepPrinter<CleanStepLabel>, 'step' | 'line' | 'warn'>;
 
+// a user or message command shows in Discord's context menu under its bare name
+function commandLabel(command: Flagged): string {
+    return command.type === ApplicationCommandType.ChatInput ? `/${command.name}` : command.name;
+}
+
 // a CJK character takes two columns where padEnd counts one
 function padToWidth(text: string, width: number): string {
     return text + ' '.repeat(width - stringWidth(text));
@@ -90,7 +96,7 @@ export class InteractivePresenter implements CleanPresenter {
 
         this.output.line();
         for (const group of groups) {
-            const commands = group.commands.map((command) => paint.sky(`/${command.name}`)).join(' ');
+            const commands = group.commands.map((command) => paint.sky(commandLabel(command))).join(' ');
             this.output.line(`  ${padToWidth(group.guildName, width)}  ${commands}`);
         }
         this.output.line();
