@@ -10,12 +10,12 @@ const base = defineConfig({
     test: {
         // isolating every file cost about 40% of the suite's CPU
         isolate: false,
-        // with turbo.json's 2 tasks at once, 25% each leaves about half the cores free
-        maxWorkers: '25%',
+        // on a dev machine with turbo.json's 2 tasks at once, 25% each leaves about half the cores free
+        ...(!process.env.CI && { maxWorkers: '25%' }),
         // mergeConfig puts these before a package's own setupFiles
         setupFiles: [fileURLToPath(new URL(`freshModules${extname(import.meta.url)}`, import.meta.url))],
-        // envapt caches process.env on first read
-        server: { deps: { inline: ['envapt'] } },
+        // node_modules packages that keep state between test files
+        server: { deps: { inline: ['envapt', '@testing-library/react'] } },
         testTimeout: 10_000,
         passWithNoTests: true,
         exclude: [...configDefaults.exclude, '**/.claude/**'],
@@ -32,7 +32,7 @@ const base = defineConfig({
 type Alias = Extract<NonNullable<NonNullable<ViteUserConfig['resolve']>['alias']>, readonly unknown[]>[number];
 
 // configUrl is expected to be the caller's import.meta.url
-export function aliasFromTsconfig(configUrl: string): Alias[] {
+function aliasFromTsconfig(configUrl: string): Alias[] {
     // parseTsconfig because tsconfig can be jsonc
     const paths = parseTsconfig(fileURLToPath(new URL('tsconfig.json', configUrl))).compilerOptions?.paths ?? {};
     // vite takes the first alias that matches. tsc takes an exact key first, then the longest wildcard prefix

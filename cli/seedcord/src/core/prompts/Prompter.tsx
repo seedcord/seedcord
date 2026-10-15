@@ -50,7 +50,7 @@ export class Prompter {
         });
 
         const outcome = await ended.promise;
-        // unmount draws whatever frame ink's 34ms throttle still holds
+        // unmount draws whatever frame ink's render throttle still holds
         await app.waitUntilRenderFlush();
         // unmount alone leaves the last frame on screen
         app.clear();

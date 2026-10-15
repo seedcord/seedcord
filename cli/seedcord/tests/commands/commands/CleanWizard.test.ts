@@ -31,8 +31,8 @@ const ROUTES: Record<string, unknown> = {
     '/applications/app1/guilds/g2/commands': [{ id: '21', name: 'kick', type: ApplicationCommandType.ChatInput }]
 };
 
-// a step's time and the padding StepPrinter puts before it depend on the machine
-const masked = (screen: string): string => screen.replaceAll(/ +\d[\d.]*m?s\b/gu, ' T');
+// a step's time depends on the machine
+const masked = (screen: string): string => screen.replaceAll(/ +\d[\d.]*m?s\b/gu, (time) => 'T'.padStart(time.length));
 const finished = (row: string): string => `  ${paint.check} ${row}`;
 
 // an Error as a route's value makes that request reject with it
@@ -81,14 +81,14 @@ describe('CleanWizard', () => {
         ]);
         expect(masked(await terminal.screen())).toBe(
             [
-                finished('guilds T  3 guilds'),
-                finished('connect T'),
-                finished('scan T  2 duplicates in 2 guilds'),
+                finished('guilds        T  3 guilds'),
+                finished('connect       T'),
+                finished('scan          T  2 duplicates in 2 guilds'),
                 '',
                 '    Alpha  /ban',
                 '    Beta   /kick',
                 '',
-                finished('delete T  2 deleted'),
+                finished('delete        T  2 deleted'),
                 '',
                 '  Global commands untouched.'
             ].join('\n')
@@ -125,7 +125,7 @@ describe('CleanWizard', () => {
         await done;
 
         const screen = masked(await terminal.screen());
-        expect(screen).toContain('scan T  3 commands in 1 guild');
+        expect(screen).toContain('scan          T  3 commands in 1 guild');
         expect(screen).toContain('    Alpha  /ban /setup Report');
     });
 
@@ -137,7 +137,7 @@ describe('CleanWizard', () => {
         await done;
 
         expect(deleted).toEqual(['/applications/app1/guilds/g1/commands/11']);
-        expect(masked(await terminal.screen())).toContain('guilds T  1 guild, using Alpha');
+        expect(masked(await terminal.screen())).toContain('guilds        T  1 guild, using Alpha');
     });
 
     it.each([

@@ -96,8 +96,7 @@ jobs:
           turbo_token: ${{ secrets.TURBO_TOKEN }}
           turbo_team: ${{ vars.TURBO_TEAM }}
       - uses: $/.github/actions/setup
-      # raising this concurrency starves the eslint and prettier fixture suites into timeouts
-      - run: pnpm turbo test --concurrency=2
+      - run: pnpm turbo test
 
   build:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
@@ -145,7 +144,7 @@ jobs:
       - uses: $/.github/actions/setup
         with:
           node-version: '24.11'
-      - run: pnpm turbo test --concurrency=2 --continue --filter='!@seedcord/scripts'
+      - run: pnpm turbo test --continue --filter='!@seedcord/scripts'
 
   bun:
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}

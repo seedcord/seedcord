@@ -6,20 +6,17 @@ import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { quietSteps } from '#core/output/quietSteps';
 
 import type { Build } from '#commands/build/builder/targetBuildFor';
+import type { runProjectTsc } from '#core/modules/runProjectTsc';
 import type { Project } from '#core/project/Project';
 
-// tsc costs about a second per build. build-type-error and build-http keep the real check
-export class SkippedTypeCheck extends TypeChecker {
-    public override check(project: Project): Promise<{ tsconfig: string }> {
-        return Promise.resolve({ tsconfig: project.tsconfig() ?? '' });
-    }
-}
+// tsc costs about a second per build
+const passingTsc: typeof runProjectTsc = () => Promise.resolve({ exitCode: 0, stdout: '', stderr: '' });
 
 export function quickBuildRunner(buildFor: (project: Project) => Build = targetBuildFor): BuildRunner {
     return new BuildRunner({
         steps: quietSteps,
         projectLoader: new ProjectLoader(openModuleLoader),
-        typeChecker: new SkippedTypeCheck(),
+        typeChecker: new TypeChecker(passingTsc),
         buildFor
     });
 }

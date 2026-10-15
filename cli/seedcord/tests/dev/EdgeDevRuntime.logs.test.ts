@@ -43,7 +43,7 @@ describe('EdgeDevRuntime logs', () => {
         // the log file goes under the cwd. a bot runs seedcord dev from its project folder
         const cwd = process.cwd();
         process.chdir(projectDir);
-        onTestFinished(() => process.chdir(cwd));
+        using _restoreCwd = { [Symbol.dispose]: () => process.chdir(cwd) };
         const logs = captureLogs();
         await using started = await startedRuntime(projectDir);
         const { runtime, instance } = started;

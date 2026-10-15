@@ -29,7 +29,7 @@ describe('Prompter.select', () => {
         await expect(answer).resolves.toBe('all');
     });
 
-    it('hands its rows back to whatever prints next', async () => {
+    it('clears its rows for whatever prints next', async () => {
         using terminal = new PromptTerminal();
         const answer = terminal.prompter.select(WHICH_GUILDS);
 
@@ -40,7 +40,7 @@ describe('Prompter.select', () => {
         expect(await terminal.screen()).toBe('next');
     });
 
-    it('hands its rows back when enter follows another key within one frame', async () => {
+    it('clears its rows when enter follows another key within one frame', async () => {
         using terminal = new PromptTerminal();
         const answer = terminal.prompter.select(WHICH_GUILDS);
 
