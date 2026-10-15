@@ -1,7 +1,8 @@
 import { connectStep, deleteStep, scanStep } from './cleanSteps';
 
+import type { GuildSummary } from '#core/discord/readBotGuilds';
 import type { CleanPresenter } from './CleanPresenter';
-import type { CleanOps, CleanScope, GuildSummary, ScanResult } from './CleanRunner';
+import type { CleanOps, CleanScope, ScanResult } from './CleanRunner';
 
 export interface CleanRequest {
     runner: CleanOps;

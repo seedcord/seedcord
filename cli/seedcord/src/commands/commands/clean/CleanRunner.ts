@@ -4,16 +4,14 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Routes } from 'discord-api-types/v10';
 
 import { applicationOf } from '#core/discord/applicationOf';
+import { readBotGuilds } from '#core/discord/readBotGuilds';
 import { readDeployed } from '#core/discord/readDeployed';
 
 import { classifyGuildCommands } from './classify';
 
+import type { GuildSummary } from '#core/discord/readBotGuilds';
 import type { Flagged, GuildCommands } from './classify';
-import type {
-    RESTGetAPIApplicationGuildCommandsResult,
-    RESTGetAPICurrentUserGuildsResult,
-    Snowflake
-} from 'discord-api-types/v10';
+import type { RESTGetAPIApplicationGuildCommandsResult, Snowflake } from 'discord-api-types/v10';
 
 type RestClient = Pick<REST, 'get' | 'delete'>;
 
@@ -21,11 +19,6 @@ export interface CleanScope {
     guildIds: string[];
     allGuilds: boolean;
     purge: boolean;
-}
-
-export interface GuildSummary {
-    id: string;
-    name: string;
 }
 
 export interface ResolvedTargets {
@@ -63,8 +56,6 @@ export interface CleanOps {
     applyDeletions(token: string, appId: Snowflake, flagged: Flagged[]): Promise<DeleteResult>;
 }
 
-const GUILD_PAGE = 200;
-
 export class CleanRunner implements CleanOps {
     constructor(private readonly makeRest: (token: string) => RestClient) {}
 
@@ -82,15 +73,13 @@ export class CleanRunner implements CleanOps {
 
         const rest = this.makeRest(token);
         const { id: appId } = await applicationOf(rest);
-        const guilds = scope.allGuilds
-            ? await this.fetchBotGuilds(rest)
-            : scope.guildIds.map((id) => ({ id, name: id }));
+        const guilds = scope.allGuilds ? await readBotGuilds(rest) : scope.guildIds.map((id) => ({ id, name: id }));
 
         return { appId, guilds };
     }
 
     public async listBotGuilds(token: string): Promise<GuildSummary[]> {
-        return this.fetchBotGuilds(this.makeRest(token));
+        return readBotGuilds(this.makeRest(token));
     }
 
     public async scanGuilds(
@@ -146,24 +135,6 @@ export class CleanRunner implements CleanOps {
         }
 
         return { deleted, failed };
-    }
-
-    private async fetchBotGuilds(rest: RestClient): Promise<GuildSummary[]> {
-        const guilds: GuildSummary[] = [];
-        let after: string | undefined;
-        let page: RESTGetAPICurrentUserGuildsResult;
-
-        do {
-            const query = new URLSearchParams({ limit: String(GUILD_PAGE) });
-            if (after) query.set('after', after);
-
-            page = (await rest.get(Routes.userGuilds(), { query })) as RESTGetAPICurrentUserGuildsResult;
-            for (const guild of page) guilds.push({ id: guild.id, name: guild.name });
-
-            after = page.at(-1)?.id;
-        } while (page.length === GUILD_PAGE && after);
-
-        return guilds;
     }
 
     private async fetchGlobalNames(rest: RestClient, appId: Snowflake): Promise<Set<string>> {

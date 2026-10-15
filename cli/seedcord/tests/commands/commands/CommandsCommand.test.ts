@@ -13,7 +13,8 @@ import { FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { KEY, PromptTerminal } from '#tests/core/prompts/PromptTerminal';
 
 import type { Flagged } from '#commands/commands/clean/classify';
-import type { CleanOps, CleanRunner, GuildSummary } from '#commands/commands/clean/CleanRunner';
+import type { CleanOps, CleanRunner } from '#commands/commands/clean/CleanRunner';
+import type { GuildSummary } from '#core/discord/readBotGuilds';
 import type { Prompter } from '#core/prompts/Prompter';
 import type { Mock } from 'vitest';
 

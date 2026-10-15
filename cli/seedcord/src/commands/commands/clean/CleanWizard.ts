@@ -6,9 +6,10 @@ import { CleanPresenter } from './CleanPresenter';
 import { CLEAN_STEP_LABELS } from './cleanSteps';
 import { executeClean } from './executeClean';
 
+import type { GuildSummary } from '#core/discord/readBotGuilds';
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Prompter } from '#core/prompts/Prompter';
-import type { CleanRunner, CleanScope, GuildSummary } from './CleanRunner';
+import type { CleanRunner, CleanScope } from './CleanRunner';
 
 export const WIZARD_STEPS = ['guilds', ...CLEAN_STEP_LABELS] as const;
 type WizardStep = (typeof WIZARD_STEPS)[number];

@@ -7,7 +7,8 @@ import { CleanPresenter } from '#commands/commands/clean/CleanPresenter';
 import { emptyOutcome, executeClean, LARGE_BOT_THRESHOLD } from '#commands/commands/clean/executeClean';
 
 import type { Flagged } from '#commands/commands/clean/classify';
-import type { CleanOps, CleanScope, GuildSummary, ScanResult } from '#commands/commands/clean/CleanRunner';
+import type { CleanOps, CleanScope, ScanResult } from '#commands/commands/clean/CleanRunner';
+import type { GuildSummary } from '#core/discord/readBotGuilds';
 
 const flagged: Flagged[] = [
     {
