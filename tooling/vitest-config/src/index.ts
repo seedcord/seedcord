@@ -10,7 +10,7 @@ const base = defineConfig({
     test: {
         // isolating every file cost about 40% of the suite's CPU
         isolate: false,
-        // with the 4 tasks turbo.json runs at once, 25% each is about one worker per core
+        // with turbo.json's 2 tasks at once, 25% each leaves about half the cores free
         maxWorkers: '25%',
         // mergeConfig puts these before a package's own setupFiles
         setupFiles: [fileURLToPath(new URL(`freshModules${extname(import.meta.url)}`, import.meta.url))],
