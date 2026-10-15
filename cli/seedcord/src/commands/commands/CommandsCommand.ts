@@ -15,6 +15,7 @@ import { PROCEED } from './confirm';
 import { DeployPresenter } from './deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from './deploy/DeployRunner';
 
+import type { Confirm } from './confirm';
 import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
 
 interface CleanInvocation {
@@ -77,8 +78,9 @@ export class CommandsCommand extends BaseCommand {
     }
 
     private async deploy(command: CommandUnknownOpts): Promise<void> {
+        const confirm: Confirm = isInteractive() ? (message) => new Prompter().confirm({ message }) : PROCEED;
         await this.runSteps(command, DEPLOY_STEPS, (printer) =>
-            DeployRunner.create().run(new DeployPresenter(printer, PROCEED, isVerbose(command)))
+            DeployRunner.create().run(new DeployPresenter(printer, confirm, isVerbose(command)))
         );
     }
 

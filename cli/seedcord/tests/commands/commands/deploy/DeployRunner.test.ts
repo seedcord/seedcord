@@ -18,6 +18,7 @@ import { StepPrinter } from '#core/output/StepPrinter';
 import { Project } from '#core/project/Project';
 import { silentLogger } from '#tests/silentLogger';
 
+import type { Confirm } from '#commands/commands/confirm';
 import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
@@ -133,10 +134,20 @@ function terminal(): Terminal & { text: () => string } {
     };
 }
 
-async function deploy(project: ProjectOpener, rest: REST, { verbose = false, answer = true } = {}): Promise<string> {
+interface DeployOptions {
+    verbose?: boolean;
+    answer?: boolean;
+    confirm?: Confirm;
+}
+
+async function deploy(
+    project: ProjectOpener,
+    rest: REST,
+    { verbose = false, answer = true, confirm = () => Promise.resolve(answer) }: DeployOptions = {}
+): Promise<string> {
     const stdout = terminal();
     const printer = new StepPrinter({ command: 'commands', labels: DEPLOY_STEPS, verbose, stdout, stderr: stdout });
-    const presenter = new DeployPresenter(printer, () => Promise.resolve(answer), verbose);
+    const presenter = new DeployPresenter(printer, confirm, verbose);
     await new DeployRunner({ projectLoader: project, openDiscord: () => rest, logger: silentLogger }).run(presenter);
     return stdout.text();
 }
@@ -206,6 +217,17 @@ describe('DeployRunner', () => {
 
         expect(puts).toEqual([]);
         expect(output.trimEnd().split('\n').at(-1)).toBe('  Nothing deployed.');
+    });
+
+    it('deploys nothing and prints cancelled when the question is cancelled', async () => {
+        const { rest, puts } = fakeDiscord();
+
+        const output = await deploy(await fakeProject(), rest, {
+            confirm: () => Promise.reject(new SeedcordError(SeedcordErrorCode.CliCancelled))
+        });
+
+        expect(puts).toEqual([]);
+        expect(output.trimEnd().split('\n').at(-1)).toBe('  cancelled');
     });
 
     it('throws CliDeployNoCommandsFolder and sends nothing when the bot has no commands folder', async () => {

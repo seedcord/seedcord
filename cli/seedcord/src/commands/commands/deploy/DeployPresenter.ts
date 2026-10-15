@@ -1,4 +1,4 @@
-import { paint } from '@seedcord/errors';
+import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
 
 import { commandLabel, printSections } from '#commands/commands/commandRows';
 import { plural } from '#core/format';
@@ -54,9 +54,15 @@ export class DeployPresenter {
 
     public async approve(plans: readonly ScopePlan[]): Promise<boolean> {
         const message = `Deploy to ${plural(plans.length, 'scope')}? Discord replaces the commands in each.`;
-        const yes = await this.confirm(message);
-        if (!yes) this.output.line(paint.mute('Nothing deployed.'));
-        return yes;
+        try {
+            const yes = await this.confirm(message);
+            if (!yes) this.output.line(paint.mute('Nothing deployed.'));
+            return yes;
+        } catch (error: unknown) {
+            if (!isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.CliCancelled)) throw error;
+            this.output.line(paint.mute('cancelled'));
+            return false;
+        }
     }
 
     public deploy(task: () => Promise<unknown>, scopes: ScopesInCode): Promise<unknown> {
