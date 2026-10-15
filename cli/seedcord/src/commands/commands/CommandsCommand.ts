@@ -14,7 +14,6 @@ import { runCleanFromFlags } from './flagClean';
 import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
 
 export interface CleanInvocation {
-    clean: boolean;
     guild: string[];
     allGuilds: boolean;
     apply: boolean;
@@ -23,32 +22,37 @@ export interface CleanInvocation {
 }
 
 export function hasCleanFlags(options: CleanInvocation): boolean {
-    return [options.clean, options.allGuilds, options.apply, options.purge].some(Boolean) || options.guild.length > 0;
+    return [options.allGuilds, options.apply, options.purge].some(Boolean) || options.guild.length > 0;
+}
+
+function readToken(): string {
+    return validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
 }
 
 export class CommandsCommand extends BaseCommand {
     private readonly logger = cliLogger('Commands');
-    private readonly cleanRunner: CleanRunner;
 
-    constructor() {
-        super('commands', 'Inspect and clean deployed guild commands');
-        this.cleanRunner = CleanRunner.create();
+    constructor(private readonly cleanRunner: CleanRunner = CleanRunner.create()) {
+        super('commands', 'Manage the commands registered on Discord');
     }
 
     public register(program: Command): void {
-        program
+        const commands = program
             .command(this.name)
             .description(this.description)
-            .option('--clean', 'Report guild commands that duplicate a global command (deletes only with --apply)')
+            .action((_options, command) => this.openWizard(command));
+
+        commands
+            .command('clean')
+            .description('Delete guild commands that duplicate a global command')
             .option('--guild <ids...>', 'Guild ids to inspect')
             .option('--all-guilds', 'Scan every guild the bot is in (overlaps only, cannot combine with --purge)')
             .option('--apply', 'Delete the reported commands instead of running a dry run')
             .option('--purge', 'Select every command in the named guilds, not only global overlaps')
             .option('--yes', 'Skip prompts and the typed-count confirm (for scripts and CI)')
-            .action(async (options, command) =>
-                this.run(
+            .action((options, command) =>
+                this.clean(
                     {
-                        clean: options.clean ?? false,
                         guild: options.guild ?? [],
                         allGuilds: options.allGuilds ?? false,
                         apply: options.apply ?? false,
@@ -60,9 +64,33 @@ export class CommandsCommand extends BaseCommand {
             );
     }
 
-    private async run(options: CleanInvocation, command: CommandUnknownOpts): Promise<void> {
+    private async openWizard(command: CommandUnknownOpts): Promise<void> {
+        if (!isInteractive({}, false)) {
+            command.outputHelp();
+            return;
+        }
+        await this.runCleanWizard(command);
+    }
+
+    private async clean(options: CleanInvocation, command: CommandUnknownOpts): Promise<void> {
+        if (isInteractive(options, hasCleanFlags(options))) {
+            await this.runCleanWizard(command);
+            return;
+        }
+
         try {
-            await this.dispatch(options, command);
+            await runCleanFromFlags(
+                this.cleanRunner,
+                {
+                    guildIds: options.guild,
+                    allGuilds: options.allGuilds,
+                    apply: options.apply,
+                    purge: options.purge,
+                    yes: options.yes
+                },
+                readToken(),
+                this.logger
+            );
         } catch (error: unknown) {
             this.logger.error(`${WORDMARK} commands failed`, error);
             if (isSeedcordError(error)) process.exitCode = 1;
@@ -70,35 +98,9 @@ export class CommandsCommand extends BaseCommand {
         }
     }
 
-    private async dispatch(options: CleanInvocation, command: CommandUnknownOpts): Promise<void> {
-        const flags = hasCleanFlags(options);
-        const interactive = isInteractive(options, flags);
-
-        if (!interactive && !flags) {
-            this.logger.info('Nothing to do. Pass --clean to inspect deployed commands.');
-            return;
-        }
-
-        const token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
-
-        if (interactive) {
-            await this.runSteps(command, WIZARD_STEPS, (printer) =>
-                new CleanWizard(this.cleanRunner, token, printer, new Prompter()).run()
-            );
-            return;
-        }
-
-        await runCleanFromFlags(
-            this.cleanRunner,
-            {
-                guildIds: options.guild,
-                allGuilds: options.allGuilds,
-                apply: options.apply,
-                purge: options.purge,
-                yes: options.yes
-            },
-            token,
-            this.logger
+    private async runCleanWizard(command: CommandUnknownOpts): Promise<void> {
+        await this.runSteps(command, WIZARD_STEPS, (printer) =>
+            new CleanWizard(this.cleanRunner, readToken(), printer, new Prompter()).run()
         );
     }
 }
