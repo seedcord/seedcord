@@ -3,10 +3,11 @@ import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
 import { commandLabel, printSections } from '#commands/commands/commandRows';
 import { plural } from '#core/format';
 
+import type { ScopesInCode } from '#commands/commands/codeScopes';
 import type { CommandRow, CommandSection } from '#commands/commands/commandRows';
 import type { Confirm } from '#commands/commands/confirm';
 import type { StepPrinter } from '#core/output/StepPrinter';
-import type { ScopeDiff, ScopesInCode } from './deployPlan';
+import type { ScopeDiff } from './deployPlan';
 import type { DeployStep } from './DeployRunner';
 import type { CommandBody } from '@seedcord/core/internal';
 
