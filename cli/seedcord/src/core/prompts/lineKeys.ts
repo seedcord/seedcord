@@ -9,7 +9,8 @@ const ctrl =
     ({ input, key }: KeyPress): boolean =>
         key.ctrl && input === letter;
 
-// ink reads a mac option+letter as meta plus the letter
+// option+letter reaches ink as meta only when the terminal sends option as escape: iTerm's Esc+,
+// Terminal.app's "Use Option as Meta key" or Ghostty's macos-option-as-alt
 const alt =
     (letter: string) =>
     ({ input, key }: KeyPress): boolean =>
@@ -24,7 +25,7 @@ const KEY_RULES: readonly KeyRule[] = [
     [({ key }) => key.delete && byWord(key), (line) => line.deleteWordForward()],
     [alt('d'), (line) => line.deleteWordForward()],
     [({ key }) => key.delete && !byWord(key), (line) => line.deleteForward()],
-    // mac terminals send cmd+backspace as ctrl+u
+    // Ghostty and iTerm send cmd+backspace as ctrl+u. unverified on other terminals
     [ctrl('u'), (line) => line.deleteToStart()],
     [ctrl('k'), (line) => line.deleteToEnd()],
     [({ key }) => key.leftArrow && byWord(key), (line) => line.wordLeft()],

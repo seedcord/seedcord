@@ -1,4 +1,6 @@
-// one line of text and a caret, edited the way readline edits it
+// a family emoji is several code points that draw as one character
+const GRAPHEMES = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+
 export class LineEditor {
     private constructor(
         public readonly text: string,
@@ -69,12 +71,17 @@ export class LineEditor {
         return this.moveTo(this.text.length);
     }
 
+    public get atCaret(): string {
+        const [first] = GRAPHEMES.segment(this.after);
+        return first?.segment ?? '';
+    }
+
     private charStartBefore(): number {
-        return Math.max(0, this.caret - 1);
+        return [...GRAPHEMES.segment(this.before)].at(-1)?.index ?? 0;
     }
 
     private charEndAfter(): number {
-        return Math.min(this.text.length, this.caret + 1);
+        return this.caret + this.atCaret.length;
     }
 
     // a word move skips the spaces next to the caret, then the word past them

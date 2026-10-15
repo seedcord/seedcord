@@ -168,7 +168,7 @@ Accepted:
 The changelog credits each changeset to the PR whose commit added its file. `@changesets/git` finds that commit with `git log --diff-filter=AC --follow`, and `scripts/src/release/ChangelogRenderer.ts:20` reads the `(#N)` at the end of its subject.
 
 - Rewrite the text in place, in the file from the PR you want credited, then delete the duplicates.
-- Rename a file only with `git mv`, since `--follow` traces it back to the PR that added it.
+- A renamed file keeps its credit while its text stays close to the original. `--follow` matches a rename by content, so rename and rewrite in separate commits.
 - Never write a new file to hold merged text. It would credit the dedupe PR.
 - When one line covers two PRs, only the surviving file's PR gets linked. Write the other one into the text as a bare `#N`.
 

@@ -6,23 +6,23 @@ import type { DeleteResult, ResolvedTargets, ScanResult } from './CleanRunner';
 
 export const CLEAN_STEP_LABELS = ['connect', 'scan', 'delete'] as const;
 
+export type CleanStepLabel = (typeof CLEAN_STEP_LABELS)[number];
+
 export interface CleanStep<Result> {
-    readonly label: (typeof CLEAN_STEP_LABELS)[number];
-    // the flag path logs this before the step runs
-    readonly start: string;
-    // the wizard prints this after the step's time
-    readonly note: (result: Result) => string;
+    readonly label: CleanStepLabel;
+    readonly startMessage: string;
+    readonly doneNote: (result: Result) => string;
 }
 
 export function connectStep(): CleanStep<ResolvedTargets> {
-    return { label: 'connect', start: 'Connecting to Discord…', note: () => '' };
+    return { label: 'connect', startMessage: 'Connecting to Discord…', doneNote: () => '' };
 }
 
 export function scanStep(guildCount: number, purge: boolean): CleanStep<ScanResult> {
     return {
         label: 'scan',
-        start: `Scanning ${plural(guildCount, 'guild')} for commands…`,
-        note: (scan) => {
+        startMessage: `Scanning ${plural(guildCount, 'guild')} for commands…`,
+        doneNote: (scan) => {
             const found = plural(scan.flagged.length, purge ? 'command' : 'duplicate');
             return `${paint.iris(found)} in ${paint.iris(plural(scan.scannedGuildCount, 'guild'))}`;
         }
@@ -32,7 +32,7 @@ export function scanStep(guildCount: number, purge: boolean): CleanStep<ScanResu
 export function deleteStep(commandCount: number): CleanStep<DeleteResult> {
     return {
         label: 'delete',
-        start: `Deleting ${plural(commandCount, 'guild command')}…`,
-        note: (deletion) => `${paint.iris(String(deletion.deleted))} deleted`
+        startMessage: `Deleting ${plural(commandCount, 'guild command')}…`,
+        doneNote: (deletion) => `${paint.iris(String(deletion.deleted))} deleted`
     };
 }

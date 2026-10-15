@@ -3,7 +3,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
 
 import { CleanRunner } from '#commands/commands/CleanRunner';
-import { runCleanWizard, WIZARD_STEPS } from '#commands/commands/wizard';
+import { CleanWizard, WIZARD_STEPS } from '#commands/commands/CleanWizard';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { Prompter } from '#core/prompts/Prompter';
 
@@ -57,7 +57,7 @@ const SCENARIOS: Record<string, Scenario> = {
     wizard: async (prompter) => {
         const printer = new StepPrinter({ command: 'commands', labels: WIZARD_STEPS, verbose: false });
         printer.header();
-        await runCleanWizard(new CleanRunner(() => rest), 'token', printer, prompter);
+        await new CleanWizard(new CleanRunner(() => rest), 'token', printer, prompter).run();
         return 'done';
     }
 };

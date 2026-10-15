@@ -10,7 +10,7 @@ import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Prompter } from '#core/prompts/Prompter';
 import type { Flagged } from './classify';
 import type { DeleteResult, ScanResult, SkippedGuild } from './CleanRunner';
-import type { CleanStep } from './cleanSteps';
+import type { CleanStep, CleanStepLabel } from './cleanSteps';
 import type { CleanPresenter, EmptyOutcome } from './executeClean';
 import type { ILogger } from '@seedcord/types';
 
@@ -67,14 +67,13 @@ function emptyLines(scan: ScanResult, outcome: EmptyOutcome): { info: string[]; 
 
 const UNTOUCHED = 'Global commands untouched.';
 
-type CleanOutput = Pick<StepPrinter<CleanStep<unknown>['label']>, 'step' | 'line' | 'warn'>;
+type CleanOutput = Pick<StepPrinter<CleanStepLabel>, 'step' | 'line' | 'warn'>;
 
 // a CJK character takes two columns where padEnd counts one
 function padToWidth(text: string, width: number): string {
     return text + ' '.repeat(width - stringWidth(text));
 }
 
-// prints the clean flow as StepPrinter rows between ink prompts
 export class InteractivePresenter implements CleanPresenter {
     constructor(
         private readonly output: CleanOutput,
@@ -82,7 +81,7 @@ export class InteractivePresenter implements CleanPresenter {
     ) {}
 
     public step<Result>(step: CleanStep<Result>, task: () => Promise<Result>): Promise<Result> {
-        return this.output.step(step.label, task, step.note);
+        return this.output.step(step.label, task, step.doneNote);
     }
 
     public preview(scan: ScanResult): void {
@@ -129,7 +128,6 @@ export class InteractivePresenter implements CleanPresenter {
     }
 }
 
-// prints the clean flow as logger lines in flag mode
 export class FlagPresenter implements CleanPresenter {
     constructor(
         private readonly logger: ILogger,
@@ -137,7 +135,7 @@ export class FlagPresenter implements CleanPresenter {
     ) {}
 
     public step<Result>(step: CleanStep<Result>, task: () => Promise<Result>): Promise<Result> {
-        this.logger.info(step.start);
+        this.logger.info(step.startMessage);
         return task();
     }
 

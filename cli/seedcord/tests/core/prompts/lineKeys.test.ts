@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { settled } from '#tests/ui/settled';
 
-import { KEY, PromptTerminal } from './promptTerminal';
+import { KEY, PromptTerminal } from './PromptTerminal';
 
 const QUESTION = '  ? Guilds to clean';
 const GUILDS = {

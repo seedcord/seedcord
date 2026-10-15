@@ -10,8 +10,7 @@ export const PROMPT_MARKS = {
 } as const;
 
 const ROW_INDENT = '  ';
-// a row without the cursor lines its text up with the highlighted one
-const PAST_CURSOR = ' '.repeat(PROMPT_MARKS.cursor.length + 1);
+const CURSOR_GUTTER = ' '.repeat(PROMPT_MARKS.cursor.length + 1);
 
 export function question(message: string): string {
     return `${paint.sky(PROMPT_MARKS.question)} ${message}`;
@@ -20,17 +19,17 @@ export function question(message: string): string {
 export function cursorRow(text: string, highlighted: boolean): string {
     return highlighted
         ? `${ROW_INDENT}${paint.sky(PROMPT_MARKS.cursor)} ${paint.sky.bold(text)}`
-        : `${ROW_INDENT}${PAST_CURSOR}${text}`;
+        : `${ROW_INDENT}${CURSOR_GUTTER}${text}`;
 }
 
 export function checkbox(picked: boolean): string {
     return picked ? paint.mint(PROMPT_MARKS.picked) : paint.mute(PROMPT_MARKS.unpicked);
 }
 
-// the caret draws over the character it sits before, or over a space at the end of the line
+// the caret inverts the character after it, or a space at the end of the line
 export function lineField(line: LineEditor, placeholder: string): string {
-    const under = line.after.charAt(0) || ' ';
-    const tail = line.text === '' ? paint.mute(placeholder) : paint.sky(line.after.slice(1));
+    const under = line.atCaret || ' ';
+    const tail = line.text === '' ? paint.mute(placeholder) : paint.sky(line.after.slice(line.atCaret.length));
     return `${paint.sky(line.before)}${paint.sky.inverse(under)}${tail}`;
 }
 

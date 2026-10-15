@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { KEY, PromptTerminal } from './promptTerminal';
+import { KEY, PromptTerminal } from './PromptTerminal';
 
 const DELETE = { message: 'Delete 3 guild commands? This cannot be undone.' };
 

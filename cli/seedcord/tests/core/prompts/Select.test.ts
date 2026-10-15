@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { KEY, PromptTerminal } from './promptTerminal';
+import { KEY, PromptTerminal } from './PromptTerminal';
 
 const WHICH_GUILDS = {
     message: 'Which guilds?',

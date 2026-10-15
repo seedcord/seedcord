@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PROMPT_MARKS } from '#core/prompts/rows';
 import { settled } from '#tests/ui/settled';
 
-import { KEY, PromptTerminal } from './promptTerminal';
+import { KEY, PromptTerminal } from './PromptTerminal';
 
 const GUILDS = {
     message: 'Guilds to clean',

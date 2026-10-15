@@ -8,8 +8,8 @@ import { isInteractive } from '#core/interactive';
 import { Prompter } from '#core/prompts/Prompter';
 
 import { CleanRunner } from './CleanRunner';
+import { CleanWizard, WIZARD_STEPS } from './CleanWizard';
 import { runCleanFromFlags } from './flagClean';
-import { runCleanWizard, WIZARD_STEPS } from './wizard';
 
 import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
 
@@ -83,7 +83,7 @@ export class CommandsCommand extends BaseCommand {
 
         if (interactive) {
             await this.runSteps(command, WIZARD_STEPS, (printer) =>
-                runCleanWizard(this.cleanRunner, token, printer, new Prompter())
+                new CleanWizard(this.cleanRunner, token, printer, new Prompter()).run()
             );
             return;
         }

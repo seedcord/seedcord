@@ -4,10 +4,10 @@ import { paint } from '@seedcord/errors';
 import { describe, expect, it, vi } from 'vitest';
 
 import { CleanRunner } from '#commands/commands/CleanRunner';
-import { runCleanWizard, WIZARD_STEPS } from '#commands/commands/wizard';
+import { CleanWizard, WIZARD_STEPS } from '#commands/commands/CleanWizard';
 import { levelMark } from '#core/output/levelMark';
 import { StepPrinter } from '#core/output/StepPrinter';
-import { KEY, PromptTerminal } from '#tests/core/prompts/promptTerminal';
+import { KEY, PromptTerminal } from '#tests/core/prompts/PromptTerminal';
 
 import type { REST } from '@discordjs/rest';
 
@@ -60,11 +60,11 @@ function wizard(overrides: Record<string, unknown> = {}): {
         stdout: terminal.stdout,
         stderr: terminal.stdout
     });
-    const done = runCleanWizard(new CleanRunner(() => rest), 'token', printer, terminal.prompter);
+    const done = new CleanWizard(new CleanRunner(() => rest), 'token', printer, terminal.prompter).run();
     return { terminal, deleted, done };
 }
 
-describe('runCleanWizard', () => {
+describe('CleanWizard', () => {
     it('leaves only the steps, the preview and the outcome once the picked duplicates are gone', async () => {
         const { terminal, deleted, done } = wizard();
 
