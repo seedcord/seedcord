@@ -2,6 +2,7 @@ import { paint } from '@seedcord/errors';
 import { Box, Text } from 'ink';
 import React from 'react';
 
+import { question } from './rows';
 import { usePrompt } from './usePrompt';
 
 import type { Outcome, PromptMachine } from './usePrompt';
@@ -41,7 +42,7 @@ export function Confirm({ message, onEnd }: ConfirmProps): ReactElement {
     return (
         <Box paddingLeft={2}>
             <Text>
-                {paint.sky('?')} {message} {option('yes', yes)} {paint.mute('/')} {option('no', !yes)}
+                {question(message)} {option('yes', yes)} {paint.mute('/')} {option('no', !yes)}
             </Text>
         </Box>
     );

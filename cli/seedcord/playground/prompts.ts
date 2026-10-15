@@ -5,6 +5,9 @@ import { Prompter } from '#core/prompts/Prompter';
 
 type Scenario = (prompter: Prompter) => Promise<unknown>;
 
+const FIRST_GUILD_ID = 1_000_000;
+const GUILD_NAMES = ["Materwelon's Lab", 'Main Hub', 'Mario Kart Club', 'Test Server', 'Staff Room', 'Bot Testing'];
+
 const SCENARIOS: Record<string, Scenario> = {
     select: (prompter) =>
         prompter.select({
@@ -18,7 +21,15 @@ const SCENARIOS: Record<string, Scenario> = {
                 }
             ]
         }),
-    confirm: (prompter) => prompter.confirm({ message: 'Delete 3 guild commands? This cannot be undone.' })
+    confirm: (prompter) => prompter.confirm({ message: 'Delete 3 guild commands? This cannot be undone.' }),
+    'pick-many': (prompter) =>
+        prompter.pickMany({
+            message: 'Select guilds to clean',
+            choices: Array.from({ length: 40 }, (_, index) => ({
+                value: String(FIRST_GUILD_ID + index),
+                label: GUILD_NAMES[index % GUILD_NAMES.length] + (index >= GUILD_NAMES.length ? ` ${index}` : '')
+            }))
+        })
 };
 
 function write(line: string): void {

@@ -3,6 +3,7 @@ import { Box, Text } from 'ink';
 import React from 'react';
 
 import { ListCursor } from './ListCursor';
+import { cursorRow, question } from './rows';
 import { usePrompt } from './usePrompt';
 
 import type { Outcome, PromptMachine } from './usePrompt';
@@ -42,13 +43,10 @@ export function Select<Value extends string>({ message, choices, onEnd }: Select
 
     return (
         <Box flexDirection="column" paddingLeft={2}>
-            <Text>
-                {paint.sky('?')} {message}
-            </Text>
+            <Text>{question(message)}</Text>
             {choices.map((choice, index) => (
                 <Text key={choice.value}>
-                    {'  '}
-                    {index === cursor.index ? `${paint.sky('❯')} ${paint.bold(choice.label)}` : `  ${choice.label}`}
+                    {cursorRow(choice.label, index === cursor.index)}
                     {choice.hint ? `  ${paint.mute(choice.hint)}` : ''}
                 </Text>
             ))}

@@ -4,9 +4,11 @@ import { render } from 'ink';
 import React from 'react';
 
 import { Confirm } from './Confirm';
+import { PickMany } from './PickMany';
 import { Select } from './Select';
 
 import type { ConfirmPrompt } from './Confirm';
+import type { PickManyPrompt } from './PickMany';
 import type { SelectPrompt } from './Select';
 import type { Outcome } from './usePrompt';
 import type { ReactElement } from 'react';
@@ -31,6 +33,10 @@ export class Prompter {
 
     public confirm(prompt: ConfirmPrompt): Promise<boolean> {
         return this.ask<boolean>((onEnd) => <Confirm {...prompt} onEnd={onEnd} />);
+    }
+
+    public pickMany<Value extends string>(prompt: PickManyPrompt<Value>): Promise<Value[]> {
+        return this.ask<Value[]>((onEnd) => <PickMany {...prompt} onEnd={onEnd} />);
     }
 
     private async ask<Answer>(prompt: (onEnd: EndPrompt<Answer>) => ReactElement): Promise<Answer> {
