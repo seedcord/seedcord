@@ -1,9 +1,6 @@
 import { EventEmitter } from 'node:events';
 
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { RESTEvents } from '@discordjs/rest';
-import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { LoggerChannelRegistry } from '@seedcord/logger';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -13,8 +10,6 @@ import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { CommandInfo } from '#src/commands/CommandInjector';
-import type { RateLimitData } from '@discordjs/rest';
-import type { LogRecord } from '@seedcord/types';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 const APP = 'app-1';
@@ -27,11 +22,11 @@ function deployedAs(id: string, name: string): APIApplicationCommand[] {
     return [{ id, name, type: ApplicationCommandType.ChatInput } as APIApplicationCommand];
 }
 
-function coreWith(put: ReturnType<typeof vi.fn>, rest: object = Object.assign(new EventEmitter(), { put })): CoreBase {
+function coreWith(put: ReturnType<typeof vi.fn>): CoreBase {
     // justified: the registry reads only these four members off core
     const core = {
         config: { bot: { commands: { path: 'commands' } } },
-        rest,
+        rest: Object.assign(new EventEmitter(), { put }),
         applicationId: APP
     } as unknown as { bus: Bus };
     core.bus = new Bus(core as unknown as CoreBase);
@@ -42,63 +37,7 @@ function registryWith(put: ReturnType<typeof vi.fn>): CommandRegistry {
     return new CommandRegistry(coreWith(put));
 }
 
-function rateLimit(method: string, route: string, waitMs = 59_747): RateLimitData {
-    // justified: the registry reads only these fields
-    return { method, url: `https://discord.com/api/v10${route}`, timeToReset: waitMs } as RateLimitData;
-}
-
-// @discordjs/rest emits rateLimited before it waits out timeToReset
-function rateLimitedRest(limited: (route: string) => RateLimitData): EventEmitter & { put: ReturnType<typeof vi.fn> } {
-    const rest = new EventEmitter();
-    const put = vi.fn((route: string) => {
-        rest.emit(RESTEvents.RateLimited, limited(route));
-        return Promise.resolve(deployedAs('123', 'ping'));
-    });
-    return Object.assign(rest, { put });
-}
-
-function warnings(records: LogRecord[]): string[] {
-    return records.filter((record) => record.level === 'warn').map((record) => record.message);
-}
-
 describe('CommandRegistry.setCommands', () => {
-    it('logs the wait when discord rate-limits the deploy', async () => {
-        const rest = rateLimitedRest((route) => rateLimit('PUT', route));
-        const registry = new CommandRegistry(coreWith(rest.put, rest));
-        registry.globalCommands.push(new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'));
-        const records: LogRecord[] = [];
-        using _capture = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => records.push(r) });
-
-        await registry.setCommands();
-
-        expect(warnings(records)).toEqual([expect.stringContaining('60s')]);
-    });
-
-    it('ignores a rate limit on another route while the deploy runs', async () => {
-        const rest = rateLimitedRest(() => rateLimit('POST', '/channels/1/messages'));
-        const registry = new CommandRegistry(coreWith(rest.put, rest));
-        registry.globalCommands.push(new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'));
-        const records: LogRecord[] = [];
-        using _capture = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => records.push(r) });
-
-        await registry.setCommands();
-
-        expect(warnings(records)).toEqual([]);
-    });
-
-    it('stops reporting rate limits once the deploy finishes', async () => {
-        const rest = Object.assign(new EventEmitter(), { put: vi.fn().mockResolvedValue(deployedAs('123', 'ping')) });
-        const registry = new CommandRegistry(coreWith(rest.put, rest));
-        registry.globalCommands.push(new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'));
-        const records: LogRecord[] = [];
-        using _capture = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => records.push(r) });
-
-        await registry.setCommands();
-        rest.emit(RESTEvents.RateLimited, rateLimit('PUT', Routes.applicationCommands(APP)));
-
-        expect(warnings(records)).toEqual([]);
-    });
-
     it('hands the abort signal to every put', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
         const registry = registryWith(put);
@@ -112,19 +51,6 @@ describe('CommandRegistry.setCommands', () => {
             signal,
             signal
         ]);
-    });
-
-    it('stops waiting on discord once the deploy is aborted', async () => {
-        // @discordjs/rest's rate-limit sleep ignores the signal
-        const put = vi.fn(() => new Promise<never>(() => undefined));
-        const registry = registryWith(put);
-        registry.globalCommands.push(new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'));
-        const controller = new AbortController();
-
-        const deploying = registry.setCommands(controller.signal);
-        controller.abort();
-
-        await expect(deploying).rejects.toThrow(expect.objectContaining({ name: 'AbortError' }));
     });
 
     it('publishes commandsDeployed with what discord returned', async () => {
@@ -166,18 +92,6 @@ describe('CommandRegistry.setCommands', () => {
         expect(mentions.ping?.mention).toBe('</ping:123>');
     });
 
-    it('puts the global bucket to the application commands route and indexes the result by id', async () => {
-        const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
-        const registry = registryWith(put);
-        registry.globalCommands.push(new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'));
-
-        const result = await registry.setCommands();
-
-        expect(put).toHaveBeenCalledOnce();
-        expect(put.mock.calls[0]?.[0]).toBe(Routes.applicationCommands(APP));
-        expect(result.global.get('123')?.name).toBe('ping');
-    });
-
     it('puts each guild bucket to that guild commands route', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('g-1', 'config'));
         const registry = registryWith(put);
@@ -199,28 +113,5 @@ describe('CommandRegistry.setCommands', () => {
         const { body } = put.mock.calls[0]?.[1] as { body: { name: string }[] };
         expect(body).toHaveLength(1);
         expect(body[0]?.name).toBe('ping');
-    });
-
-    it('reports the guild whose deploy failed, keeping discord’s reason as the cause', async () => {
-        const refused = new Error('Missing Access');
-        const put = vi.fn().mockRejectedValue(refused);
-        const registry = registryWith(put);
-        registry.guildCommands.set('999', [new SlashCommandBuilder().setName('config').setDescription('Config')]);
-
-        const caught: unknown = await registry.setCommands().catch((error: unknown) => error);
-
-        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.CoreCommandGuildDeployFailed)).toBe(true);
-        expect(Error.isError(caught) ? caught.message : '').toContain('999');
-        expect(Error.isError(caught) ? caught.cause : undefined).toBe(refused);
-    });
-
-    it('puts nothing when no commands are registered', async () => {
-        const put = vi.fn();
-
-        const result = await registryWith(put).setCommands();
-
-        expect(put).not.toHaveBeenCalled();
-        expect(result.global.size).toBe(0);
-        expect(result.guilds.size).toBe(0);
     });
 });
