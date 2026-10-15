@@ -1,11 +1,8 @@
-import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/errors';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import stringWidth from 'string-width';
 
 import { plural } from '#core/format';
-
-import { confirmCount } from './confirm';
 
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Prompter } from '#core/prompts/Prompter';
@@ -135,10 +132,7 @@ export class InteractivePresenter implements CleanPresenter {
 }
 
 export class FlagPresenter implements CleanPresenter {
-    constructor(
-        private readonly logger: ILogger,
-        private readonly yes: boolean
-    ) {}
+    constructor(private readonly logger: ILogger) {}
 
     public step<Result>(step: CleanStep<Result>, task: () => Promise<Result>): Promise<Result> {
         this.logger.info(step.startMessage);
@@ -154,20 +148,13 @@ export class FlagPresenter implements CleanPresenter {
         for (const skip of scan.skipped) this.logger.warn(`Skipped ${skip.guildName} (${skip.reason}).`);
     }
 
-    public largeBotGuard(guildCount: number): Promise<boolean> {
-        if (this.yes) return Promise.resolve(true);
-        return Promise.reject(new SeedcordError(SeedcordErrorCode.CliCleanLargeBotUnconfirmed, [guildCount]));
+    // in flag mode --all-guilds and --apply are the go-ahead
+    public largeBotGuard(): Promise<boolean> {
+        return Promise.resolve(true);
     }
 
-    public confirmDelete(count: number, skippedCount: number): Promise<boolean> {
-        if (this.yes) return Promise.resolve(true);
-        // readline cannot prompt without a terminal
-        if (!process.stdin.isTTY || !process.stdout.isTTY) {
-            return Promise.reject(new SeedcordError(SeedcordErrorCode.CliCleanApplyNeedsYes));
-        }
-        if (skippedCount > 0)
-            this.logger.warn(`${plural(skippedCount, 'guild')} could not be read and were not scanned.`);
-        return confirmCount(count, this.logger);
+    public confirmDelete(): Promise<boolean> {
+        return Promise.resolve(true);
     }
 
     public result(deletion: DeleteResult, skipped: SkippedGuild[]): void {

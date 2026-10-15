@@ -18,7 +18,6 @@ export interface CleanInvocation {
     allGuilds: boolean;
     apply: boolean;
     purge: boolean;
-    yes: boolean;
 }
 
 export function hasCleanFlags(options: CleanInvocation): boolean {
@@ -49,15 +48,13 @@ export class CommandsCommand extends BaseCommand {
             .option('--all-guilds', 'Scan every guild the bot is in (overlaps only, cannot combine with --purge)')
             .option('--apply', 'Delete the reported commands instead of running a dry run')
             .option('--purge', 'Select every command in the named guilds, not only global overlaps')
-            .option('--yes', 'Skip prompts and the typed-count confirm (for scripts and CI)')
             .action((options, command) =>
                 this.clean(
                     {
                         guild: options.guild ?? [],
                         allGuilds: options.allGuilds ?? false,
                         apply: options.apply ?? false,
-                        purge: options.purge ?? false,
-                        yes: options.yes ?? false
+                        purge: options.purge ?? false
                     },
                     command
                 )
@@ -65,7 +62,7 @@ export class CommandsCommand extends BaseCommand {
     }
 
     private async openWizard(command: CommandUnknownOpts): Promise<void> {
-        if (!isInteractive({}, false)) {
+        if (!isInteractive()) {
             command.outputHelp();
             return;
         }
@@ -73,7 +70,7 @@ export class CommandsCommand extends BaseCommand {
     }
 
     private async clean(options: CleanInvocation, command: CommandUnknownOpts): Promise<void> {
-        if (isInteractive(options, hasCleanFlags(options))) {
+        if (!hasCleanFlags(options) && isInteractive()) {
             await this.runCleanWizard(command);
             return;
         }
@@ -85,8 +82,7 @@ export class CommandsCommand extends BaseCommand {
                     guildIds: options.guild,
                     allGuilds: options.allGuilds,
                     apply: options.apply,
-                    purge: options.purge,
-                    yes: options.yes
+                    purge: options.purge
                 },
                 readToken(),
                 this.logger

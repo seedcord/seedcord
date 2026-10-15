@@ -310,10 +310,6 @@ const messages = {
     [SeedcordErrorCode.CliCleanPurgeAllGuilds]: () =>
         '--purge cannot be combined with --all-guilds. Use --guild <ids> to purge specific guilds.',
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
-    [SeedcordErrorCode.CliCleanLargeBotUnconfirmed]: (count: number) =>
-        `Refusing to scan ${count} guilds without confirmation. Re-run with --yes, or name specific guilds with --guild <ids>.`,
-    [SeedcordErrorCode.CliCleanApplyNeedsYes]: () =>
-        'Refusing to delete without confirmation in a non-interactive environment. Re-run with --yes.',
     [SeedcordErrorCode.CliTunnelUrlUnavailable]: (seconds: number) =>
         `cloudflared did not report a tunnel URL within ${seconds}s. Check that the binary runs and that the network allows it.`,
     [SeedcordErrorCode.CliTunnelNotVerified]: (url: string) => `Discord rejected ${url} as an interactions endpoint.`,

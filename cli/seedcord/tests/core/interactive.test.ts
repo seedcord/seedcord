@@ -23,33 +23,23 @@ afterEach(() => {
 });
 
 describe('isInteractive', () => {
-    it('is true on a real terminal with no action flags, no CI, no --yes', () => {
+    it('is true on a real terminal outside CI', () => {
         setEnv(true, true, false);
-        expect(isInteractive({}, false)).toBe(true);
-    });
-
-    it('is false when an action flag was passed', () => {
-        setEnv(true, true, false);
-        expect(isInteractive({}, true)).toBe(false);
+        expect(isInteractive()).toBe(true);
     });
 
     it('is false when stdin is not a TTY (piped input)', () => {
         setEnv(false, true, false);
-        expect(isInteractive({}, false)).toBe(false);
+        expect(isInteractive()).toBe(false);
     });
 
     it('is false when stdout is not a TTY (redirected output)', () => {
         setEnv(true, false, false);
-        expect(isInteractive({}, false)).toBe(false);
+        expect(isInteractive()).toBe(false);
     });
 
     it('is false under CI even on a full TTY', () => {
         setEnv(true, true, true);
-        expect(isInteractive({}, false)).toBe(false);
-    });
-
-    it('is false when --yes forces the non-interactive path', () => {
-        setEnv(true, true, false);
-        expect(isInteractive({ yes: true }, false)).toBe(false);
+        expect(isInteractive()).toBe(false);
     });
 });

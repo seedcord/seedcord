@@ -9,7 +9,6 @@ export interface CleanFlags {
     allGuilds: boolean;
     apply: boolean;
     purge: boolean;
-    yes: boolean;
 }
 
 export async function runCleanFromFlags(
@@ -23,6 +22,6 @@ export async function runCleanFromFlags(
         scope: { guildIds: flags.guildIds, allGuilds: flags.allGuilds, purge: flags.purge },
         apply: flags.apply,
         token,
-        presenter: new FlagPresenter(logger, flags.yes)
+        presenter: new FlagPresenter(logger)
     });
 }

@@ -1,19 +1,22 @@
 import { Command } from '@commander-js/extra-typings';
+import { ApplicationCommandType } from 'discord-api-types/v10';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CommandsCommand, hasCleanFlags } from '#commands/commands/CommandsCommand';
+import { LARGE_BOT_THRESHOLD } from '#commands/commands/executeClean';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
 
-import type { CleanRunner } from '#commands/commands/CleanRunner';
+import type { Flagged } from '#commands/commands/classify';
+import type { CleanOps, CleanRunner, GuildSummary } from '#commands/commands/CleanRunner';
 import type { CleanInvocation } from '#commands/commands/CommandsCommand';
+import type { Mock } from 'vitest';
 
 const base: CleanInvocation = {
     guild: [],
     allGuilds: false,
     apply: false,
-    purge: false,
-    yes: false
+    purge: false
 };
 
 describe('hasCleanFlags', () => {
@@ -28,13 +31,39 @@ describe('hasCleanFlags', () => {
     it('is true for --apply alone', () => {
         expect(hasCleanFlags({ ...base, apply: true })).toBe(true);
     });
-
-    it('treats --yes alone as no action', () => {
-        expect(hasCleanFlags({ ...base, yes: true })).toBe(false);
-    });
 });
 
-describe('seedcord commands', () => {
+const DUPLICATE: Flagged = {
+    id: '11',
+    name: 'ban',
+    type: ApplicationCommandType.ChatInput,
+    guildId: '1',
+    guildName: 'one',
+    reason: 'overlap'
+};
+
+function fakeRunner(guilds: GuildSummary[] = [{ id: '1', name: 'one' }]): Record<keyof CleanOps, Mock> {
+    return {
+        resolveTargets: vi.fn().mockResolvedValue({ appId: 'app-1', guilds }),
+        scanGuilds: vi.fn().mockResolvedValue({
+            flagged: [DUPLICATE],
+            skipped: [],
+            scannedGuildCount: guilds.length,
+            scannedCommandCount: 1,
+            globalCommandCount: 1
+        }),
+        applyDeletions: vi.fn().mockResolvedValue({ deleted: 1, failed: [] })
+    };
+}
+
+async function run(runner: Record<keyof CleanOps, Mock>, ...args: string[]): Promise<void> {
+    const program = new Command().exitOverride();
+    // justified: flag mode calls only the CleanOps methods
+    new CommandsCommand(runner as unknown as CleanRunner).register(program);
+    await program.parseAsync(['commands', ...args], { from: 'user' });
+}
+
+describe('seedcord commands clean, off a terminal', () => {
     const stdinIsTTY = process.stdin.isTTY;
 
     beforeEach(() => {
@@ -46,27 +75,32 @@ describe('seedcord commands', () => {
         process.stdin.isTTY = stdinIsTTY;
     });
 
-    function cliWith(runner: Partial<CleanRunner>): Command {
-        const program = new Command().exitOverride();
-        // justified: a flag-mode clean calls only resolveTargets and scanGuilds
-        new CommandsCommand(runner as CleanRunner).register(program);
-        return program;
-    }
+    it('lists the duplicates in the guilds passed to it and deletes nothing', async () => {
+        const runner = fakeRunner();
 
-    it('runs clean as a dry run on the guilds passed to it', async () => {
-        const resolveTargets = vi.fn().mockResolvedValue({ appId: 'app-1', guilds: [{ id: '1', name: 'one' }] });
-        const scanGuilds = vi.fn().mockResolvedValue({
-            flagged: [],
-            skipped: [],
-            scannedGuildCount: 1,
-            scannedCommandCount: 0,
-            globalCommandCount: 0
-        });
+        await run(runner, 'clean', '--guild', '1');
 
-        await cliWith({ resolveTargets, scanGuilds }).parseAsync(['commands', 'clean', '--guild', '1'], {
-            from: 'user'
-        });
+        expect(runner.resolveTargets).toHaveBeenCalledWith(
+            { guildIds: ['1'], allGuilds: false, purge: false },
+            FAKE_TOKEN
+        );
+        expect(runner.applyDeletions).not.toHaveBeenCalled();
+    });
 
-        expect(resolveTargets).toHaveBeenCalledWith({ guildIds: ['1'], allGuilds: false, purge: false }, FAKE_TOKEN);
+    it('deletes the duplicates with --apply and asks nothing', async () => {
+        const runner = fakeRunner();
+
+        await run(runner, 'clean', '--guild', '1', '--apply');
+
+        expect(runner.applyDeletions).toHaveBeenCalledWith(FAKE_TOKEN, 'app-1', [DUPLICATE]);
+    });
+
+    it('scans every guild with --all-guilds, however many the bot is in', async () => {
+        const guilds = Array.from({ length: LARGE_BOT_THRESHOLD + 1 }, (_, i) => ({ id: String(i), name: String(i) }));
+        const runner = fakeRunner(guilds);
+
+        await run(runner, 'clean', '--all-guilds');
+
+        expect(runner.scanGuilds).toHaveBeenCalledOnce();
     });
 });

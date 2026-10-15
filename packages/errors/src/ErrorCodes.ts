@@ -255,18 +255,14 @@ export enum SeedcordErrorCode {
     CliCommandsDirUnreadable = 3115,
     /** Two context-menu commands of the same kind share a name during codegen. */
     CliCodegenDuplicateContextMenu = 3116,
-    /** Could not resolve the application from the bot token during `commands --clean`. */
+    /** Could not resolve the application from the bot token during `commands clean`. */
     CliCleanAppFetchFailed = 3117,
-    /** `commands --clean` ran with neither --guild nor --all-guilds. */
+    /** `commands clean` ran with neither --guild nor --all-guilds. */
     CliCleanNoGuilds = 3118,
-    /** `commands --clean` combined --purge with --all-guilds, which would wipe every guild. */
+    /** `commands clean` combined --purge with --all-guilds. */
     CliCleanPurgeAllGuilds = 3119,
     /** An interactive prompt was cancelled (Ctrl-C), so the command aborts without changes. */
     CliCancelled = 3120,
-    /** `commands --clean --all-guilds` matched more guilds than the safety threshold without `--yes`. */
-    CliCleanLargeBotUnconfirmed = 3121,
-    /** `commands --clean --apply` ran in a non-interactive environment without `--yes`, where it cannot prompt. */
-    CliCleanApplyNeedsYes = 3122,
     /** The cloudflared metrics server never reported a quick-tunnel hostname. */
     CliTunnelUrlUnavailable = 3123,
     /** Discord rejected the tunnel URL as an interactions endpoint. */
