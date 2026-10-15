@@ -6,14 +6,11 @@ import { Routes } from 'discord-api-types/v10';
 import { onTestFinished } from 'vitest';
 
 import { EdgeBuild } from '#commands/build/builder/EdgeBuild';
-import { TypeChecker } from '#commands/build/builder/TypeChecker';
-import { BuildRunner } from '#commands/build/BuildRunner';
-import { ProjectLoader } from '#core/config/ProjectLoader';
-import { openModuleLoader } from '#core/modules/openModuleLoader';
-import { quietSteps } from '#core/output/quietSteps';
 
+import { quickBuildRunner } from './quickBuildRunner';
 import { APP_ID, ED25519_KEY_BYTES, FAKE_TOKEN } from './smoke';
 
+import type { BuildRunner } from '#commands/build/BuildRunner';
 import type { REST } from '@discordjs/rest';
 
 const EDGE_BOT = join(import.meta.dirname, '../../fixtures/edge-bot');
@@ -60,15 +57,10 @@ export function fakeDiscord(publicKey = ANY_PUBLIC_KEY): Pick<REST, 'get'> {
 }
 
 export function edgeBuildRunner(discord = fakeDiscord()): BuildRunner {
-    return new BuildRunner({
-        steps: quietSteps,
-        projectLoader: new ProjectLoader(openModuleLoader),
-        typeChecker: new TypeChecker(),
-        buildFor: (project) => {
-            const { target } = project.config;
-            if (target.kind !== 'edge') throw new Error(`edgeBuildRunner got a ${target.kind} project`);
-            return new EdgeBuild(project, target, { openDiscord: () => discord });
-        }
+    return quickBuildRunner((project) => {
+        const { target } = project.config;
+        if (target.kind !== 'edge') throw new Error(`edgeBuildRunner got a ${target.kind} project`);
+        return new EdgeBuild(project, target, { openDiscord: () => discord });
     });
 }
 
