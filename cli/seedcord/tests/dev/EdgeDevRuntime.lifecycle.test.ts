@@ -101,10 +101,12 @@ describe('EdgeDevRuntime lifecycle', () => {
             runtime: (target) => new EdgeDevRuntime(target as EdgeTarget)
         });
         const running = runner.run();
-        onTestFinished(async () => {
-            await runner.quit();
-            await running;
-        });
+        await using _quit = {
+            [Symbol.asyncDispose]: async () => {
+                await runner.quit();
+                await running;
+            }
+        };
 
         await vi.waitFor(() => expect(store.getState().phase).toBe('running'), { timeout: 60_000 });
 
