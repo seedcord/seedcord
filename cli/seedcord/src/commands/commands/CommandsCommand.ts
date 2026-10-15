@@ -21,7 +21,7 @@ import { LIST_STEPS, ListRunner } from './list/ListRunner';
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Confirm } from './confirm';
 import type { DeployStep } from './deploy/DeployRunner';
-import type { ListStep } from './list/ListRunner';
+import type { ListScope, ListStep } from './list/ListRunner';
 import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
 
 interface CommandsDeps {
@@ -75,8 +75,15 @@ export class CommandsCommand extends BaseCommand {
         commands
             .command('list')
             .description('List the commands Discord has for your bot')
-            .action((_options, command) =>
-                this.runSteps(command, LIST_STEPS, (printer) => this.list(printer, command))
+            .option('--guild <ids...>', 'Also list these guilds')
+            .option('--all-guilds', 'Also list every guild the bot is in')
+            .action((options, command) =>
+                this.runSteps(command, LIST_STEPS, (printer) =>
+                    this.list(printer, command, {
+                        guildIds: options.guild ?? [],
+                        allGuilds: options.allGuilds ?? false
+                    })
+                )
             );
 
         commands
@@ -138,8 +145,8 @@ export class CommandsCommand extends BaseCommand {
         return DeployRunner.create().run(new DeployPresenter(printer, confirm, isVerbose(command)));
     }
 
-    private list(printer: StepPrinter<ListStep>, command: CommandUnknownOpts): Promise<void> {
-        return ListRunner.create().run(new ListPresenter(printer, isVerbose(command)));
+    private list(printer: StepPrinter<ListStep>, command: CommandUnknownOpts, scope?: ListScope): Promise<void> {
+        return ListRunner.create().run(new ListPresenter(printer, isVerbose(command)), scope);
     }
 
     private cleanWizard(printer: StepPrinter<WizardStep>): Promise<void> {

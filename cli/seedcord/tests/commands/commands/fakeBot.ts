@@ -47,6 +47,7 @@ export type ProjectOpener = Pick<ProjectLoader, 'open'>;
 
 interface FakeDiscord {
     rest: REST;
+    gets: string[];
     puts: { route: string; names: string[] }[];
 }
 
@@ -94,6 +95,7 @@ export async function fakeProject({
 }
 
 export function fakeDiscord(onDiscord: Record<string, unknown> = {}): FakeDiscord {
+    const gets: string[] = [];
     const puts: FakeDiscord['puts'] = [];
     const answers: Record<string, unknown> = {
         [Routes.currentApplication()]: { id: APP_ID },
@@ -103,14 +105,17 @@ export function fakeDiscord(onDiscord: Record<string, unknown> = {}): FakeDiscor
         ...onDiscord
     };
     const rest = Object.assign(new EventEmitter(), {
-        get: vi.fn((route: string) => Promise.resolve(answers[route])),
+        get: vi.fn((route: string) => {
+            gets.push(route);
+            return Promise.resolve(answers[route]);
+        }),
         put: vi.fn((route: string, { body }: { body: { name: string }[] }) => {
             puts.push({ route, names: body.map((command) => command.name) });
             return Promise.resolve([]);
         })
     });
     // eslint-disable-next-line no-restricted-syntax -- the runners call only get, put, on and off on this double
-    return { rest: rest as unknown as REST, puts };
+    return { rest: rest as unknown as REST, gets, puts };
 }
 
 // a piped terminal, read back without colors and with plain spaces

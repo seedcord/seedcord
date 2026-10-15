@@ -28,12 +28,14 @@ async function guildName(rest: ReadRest, guildId: string): Promise<string> {
 
 export async function readDiscordState<Rest extends ReadRest>(
     rest: Rest,
-    guildIds: readonly string[]
+    guildIds: readonly string[],
+    knownNames: ReadonlyMap<string, string> = new Map()
 ): Promise<DiscordState<Rest>> {
+    const nameOf = async (guildId: string): Promise<string> => knownNames.get(guildId) ?? guildName(rest, guildId);
     const { id } = await applicationOf(rest);
     const [deployed, names] = await Promise.all([
         readDeployed(rest, id, guildIds),
-        Promise.all(guildIds.map(async (guildId) => [guildId, await guildName(rest, guildId)] as const))
+        Promise.all(guildIds.map(async (guildId) => [guildId, await nameOf(guildId)] as const))
     ]);
     return { rest, applicationId: id, deployed, guildNames: new Map(names) };
 }
