@@ -1,6 +1,8 @@
 {
     "$schema": "https://turbo.build/schema.json",
     "ui": "tui",
+    // each vitest task starts cores - 1 workers. at the default of 10 tasks the docs and guide tests time out
+    "concurrency": "4",
     "tasks": {
         "build": {
             "dependsOn": ["^build"],
