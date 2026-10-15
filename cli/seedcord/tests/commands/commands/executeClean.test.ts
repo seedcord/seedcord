@@ -30,7 +30,7 @@ function fakeRunner(over: { guilds?: GuildSummary[]; scan?: ScanResult } = {}): 
 
 function fakePresenter(over: Partial<Record<keyof CleanPresenter, Mock>> = {}): Record<keyof CleanPresenter, Mock> {
     return {
-        status: vi.fn((_message: string, task: () => Promise<unknown>) => task()),
+        step: vi.fn((_step: unknown, task: () => Promise<unknown>) => task()),
         preview: vi.fn(),
         largeBotGuard: vi.fn(() => Promise.resolve(true)),
         confirmDelete: vi.fn(() => Promise.resolve(true)),

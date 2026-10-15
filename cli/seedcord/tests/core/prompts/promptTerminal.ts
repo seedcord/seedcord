@@ -33,7 +33,8 @@ export const KEY = {
 
 export class PromptTerminal {
     private readonly stdin = new KeyboardStdin();
-    private readonly stdout = new ScreenStdout({ rows: 24, columns: 100 });
+    // StepPrinter writes here too, the way both share process.stdout for real
+    public readonly stdout = new ScreenStdout({ rows: 24, columns: 100 });
 
     public readonly prompter = new Prompter({ stdin: this.stdin, stdout: this.stdout });
 

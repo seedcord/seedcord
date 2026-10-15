@@ -1,9 +1,24 @@
-import { plural } from '#core/format';
-
 import type { CleanOps, CleanScope, DeleteResult, GuildSummary, ScanResult, SkippedGuild } from './CleanRunner';
 
+export type CleanStep =
+    | { readonly label: 'connect' }
+    | { readonly label: 'scan'; readonly guildCount: number }
+    | { readonly label: 'delete'; readonly commandCount: number };
+
+interface CleanStepResults {
+    connect: Awaited<ReturnType<CleanOps['resolveTargets']>>;
+    scan: Awaited<ReturnType<CleanOps['scanGuilds']>>;
+    delete: Awaited<ReturnType<CleanOps['applyDeletions']>>;
+}
+
+export type CleanStepResult<Step extends CleanStep> = CleanStepResults[Step['label']];
+
+// the wizard and the flag path print every line and ask every question through one of these
 export interface CleanPresenter {
-    status<Value>(message: string, task: () => Promise<Value>, done?: string): Promise<Value>;
+    step<Step extends CleanStep>(
+        step: Step,
+        task: () => Promise<CleanStepResult<Step>>
+    ): Promise<CleanStepResult<Step>>;
     preview(scan: ScanResult): void;
     largeBotGuard(guildCount: number): Promise<boolean>;
     confirmDelete(count: number, skippedCount: number): Promise<boolean>;
@@ -18,7 +33,7 @@ export interface CleanRequest {
     apply: boolean;
     token: string;
     presenter: CleanPresenter;
-    /** Names the caller already fetched (the wizard picker), used to label guilds the scan only knows by id. */
+    // the guilds the wizard already fetched, used to label guilds the scan only knows by id
     knownGuilds?: GuildSummary[] | undefined;
 }
 
@@ -34,23 +49,16 @@ export function emptyOutcome(scan: ScanResult, purge: boolean): EmptyOutcome {
     return 'no-overlaps';
 }
 
-/** The wizard and the flag path share this flow through different presenters, which own all output and both confirmations. */
 export async function executeClean(request: CleanRequest): Promise<void> {
     const { runner, scope, apply, token, presenter, knownGuilds } = request;
 
-    const { appId, guilds } = await presenter.status(
-        'Connecting to Discord…',
-        () => runner.resolveTargets(scope, token),
-        'Connected to Discord.'
-    );
+    const { appId, guilds } = await presenter.step({ label: 'connect' }, () => runner.resolveTargets(scope, token));
 
     if (scope.allGuilds && guilds.length > LARGE_BOT_THRESHOLD && !(await presenter.largeBotGuard(guilds.length)))
         return;
 
-    const scan = await presenter.status(
-        `Scanning ${plural(guilds.length, 'guild')} for commands…`,
-        () => runner.scanGuilds(token, appId, overlayNames(guilds, knownGuilds), scope.purge),
-        `Scanned ${plural(guilds.length, 'guild')}.`
+    const scan = await presenter.step({ label: 'scan', guildCount: guilds.length }, () =>
+        runner.scanGuilds(token, appId, overlayNames(guilds, knownGuilds), scope.purge)
     );
 
     if (scan.flagged.length === 0) {
@@ -67,10 +75,8 @@ export async function executeClean(request: CleanRequest): Promise<void> {
 
     if (!(await presenter.confirmDelete(scan.flagged.length, scan.skipped.length))) return;
 
-    const deletion = await presenter.status(
-        `Deleting ${plural(scan.flagged.length, 'guild command')}…`,
-        () => runner.applyDeletions(token, appId, scan.flagged),
-        'Deletion complete.'
+    const deletion = await presenter.step({ label: 'delete', commandCount: scan.flagged.length }, () =>
+        runner.applyDeletions(token, appId, scan.flagged)
     );
     presenter.result(deletion, scan.skipped);
 }

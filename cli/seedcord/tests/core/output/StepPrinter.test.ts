@@ -1,8 +1,10 @@
 import { stripVTControlCharacters } from 'node:util';
 
+import { paint } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { levelMark } from '#core/output/levelMark';
 import { StepPrinter } from '#core/output/StepPrinter';
 
 import type { Terminal } from '#core/output/terminal';
@@ -33,6 +35,8 @@ class ConsoleSink implements ILogSink {
     }
 }
 
+const WARN_MARK = stripVTControlCharacters(levelMark('warn'));
+
 let stdout: FakeTerminal;
 let stderr: FakeTerminal;
 
@@ -60,14 +64,19 @@ describe('StepPrinter', () => {
             (tsconfig) => tsconfig
         );
 
-        expect(stdout.text()).toMatch(/^ {2}✔︎ config {6}\s+\d+ms\n {2}✔︎ type check {2}\s+\d+ms {2}tsconfig\.json\n$/);
+        expect(stdout.text()).toMatch(
+            new RegExp(
+                String.raw`^ {2}${paint.check} config {6}\s+\d+ms\n {2}${paint.check} type check {2}\s+\d+ms {2}tsconfig\.json\n$`,
+                'u'
+            )
+        );
     });
 
     it('marks a failed step with a cross and rethrows', async () => {
         const failure = new Error('tsc crashed');
 
         await expect(printer().step('type check', () => Promise.reject(failure))).rejects.toBe(failure);
-        expect(stdout.text()).toMatch(/^ {2}✘ type check/);
+        expect(stdout.text().startsWith(`  ${paint.cross} type check`)).toBe(true);
     });
 
     it('holds what the task writes and prints it under the finished step', async () => {
@@ -77,7 +86,7 @@ describe('StepPrinter', () => {
         });
 
         const [stepLine, heldLine] = stdout.text().split('\n');
-        expect(stepLine).toMatch(/✔︎ config/);
+        expect(stepLine).toContain(`${paint.check} config`);
         expect(heldLine).toBe('      │ loaded 3 feature flags');
     });
 
@@ -106,7 +115,7 @@ describe('StepPrinter', () => {
             return Promise.resolve();
         });
 
-        expect(stdout.text().split('\n')[1]).toBe('      │ ▲ cache is stale');
+        expect(stdout.text().split('\n')[1]).toBe(`      │ ${WARN_MARK} cache is stale`);
     });
 
     it('shows logger output below info under a step only with --verbose', async () => {
@@ -131,6 +140,17 @@ describe('StepPrinter', () => {
 
         printer(true).detail('root', 'src');
         expect(stdout.text()).toBe('      root      src\n');
+    });
+
+    it('prints a warning with its mark in the step column', async () => {
+        const steps = printer();
+
+        await steps.step('config', () => Promise.resolve());
+        steps.warn('Could not read 1 guild (Old Server).');
+
+        const [stepRow = '', warning = ''] = stdout.text().split('\n');
+        expect(warning).toBe(`  ${WARN_MARK} Could not read 1 guild (Old Server).`);
+        expect(warning.indexOf(WARN_MARK)).toBe(stepRow.indexOf(paint.check));
     });
 
     it('writes a failure to stderr after a blank line', () => {

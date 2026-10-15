@@ -78,7 +78,6 @@
         }
     },
     "dependencies": {
-        "@clack/prompts": "catalog:deps",
         "@commander-js/extra-typings": "^15.0.0",
         "@discordjs/rest": "catalog:deps",
         "@leeoniya/ufuzzy": "catalog:deps",

@@ -1,6 +1,7 @@
-import { LEVEL_COLOR, LoggerChannelRegistry } from '@seedcord/logger';
+import { LoggerChannelRegistry } from '@seedcord/logger';
 import { formatBody } from '@seedcord/logger/node';
-import chalk from 'chalk';
+
+import { levelMark } from './levelMark';
 
 import type { Terminal } from './terminal';
 import type { LogLevel, LogRecord } from '@seedcord/types';
@@ -12,10 +13,8 @@ export interface HeldOutput {
 
 const LEVELS_SHOWN_WITHOUT_VERBOSE: ReadonlySet<LogLevel> = new Set(['error', 'warn', 'info']);
 
-const LEVEL_MARK: Record<LogLevel, string> = { error: '⬢', warn: '▲', info: '●', debug: '◆', trace: '·' };
-
 function stepLine(record: LogRecord): string {
-    return `${chalk.hex(LEVEL_COLOR[record.level])(LEVEL_MARK[record.level])} ${formatBody(record)}`;
+    return `${levelMark(record.level)} ${formatBody(record)}`;
 }
 
 function textOf(chunk: string | Uint8Array): string {

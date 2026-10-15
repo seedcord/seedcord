@@ -5,6 +5,7 @@ import { formatDuration } from '#core/format';
 import { version } from '#core/version';
 
 import { holdOutput } from './holdOutput';
+import { levelMark } from './levelMark';
 import { renderError } from './renderError';
 import { Spinner } from './Spinner';
 import { widthOf } from './terminal';
@@ -78,6 +79,10 @@ export class StepPrinter<Label extends string> implements Steps<Label> {
 
     public detail(key: string, value: string): void {
         if (this.verbose) this.stdout.write(`      ${paint.mute(key.padEnd(DETAIL_KEY_WIDTH))}${value}\n`);
+    }
+
+    public warn(text: string): void {
+        this.stdout.write(`  ${levelMark('warn')} ${text}\n`);
     }
 
     public line(text = ''): void {

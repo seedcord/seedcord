@@ -6,7 +6,7 @@ import { LineEditor } from './LineEditor';
 import { editLine } from './lineKeys';
 import { ListCursor } from './ListCursor';
 import { matchChoices } from './matchChoices';
-import { cursorRow, keyHints, lineField, question } from './rows';
+import { checkbox, cursorRow, keyHints, lineField, question } from './rows';
 import { usePrompt } from './usePrompt';
 
 import type { Choice } from './Choice';
@@ -75,12 +75,8 @@ export function PickMany<Value extends string>({ message, choices, onEnd }: Pick
                 {question(message)} {lineField(filter, 'type to search')}
             </Text>
             {items.map((choice, offset) => {
-                const box = picked.has(choice.value) ? paint.mint('■') : paint.mute('□');
-                return (
-                    <Text key={choice.value}>
-                        {cursorRow(`${box} ${choice.label}`, start + offset === cursor.index)}
-                    </Text>
-                );
+                const row = `${checkbox(picked.has(choice.value))} ${choice.label}`;
+                return <Text key={choice.value}>{cursorRow(row, start + offset === cursor.index)}</Text>;
             })}
             <Box flexDirection="column" paddingLeft={2}>
                 <Text>{counts(picked.size, cursor.items.length, choices.length)}</Text>

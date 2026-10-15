@@ -884,9 +884,6 @@ importers:
 
   cli/seedcord:
     dependencies:
-      '@clack/prompts':
-        specifier: catalog:deps
-        version: 1.7.0
       '@commander-js/extra-typings':
         specifier: ^15.0.0
         version: 15.0.0(commander@15.0.0)

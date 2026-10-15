@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { PROMPT_MARKS } from '#core/prompts/rows';
 import { settled } from '#tests/ui/settled';
 
 import { KEY, PromptTerminal } from './promptTerminal';
@@ -84,7 +85,7 @@ describe('Prompter.pickMany', () => {
 
         await settled(async () => {
             const screen = await terminal.screen();
-            expect(screen).toContain('❯ □ Guild 14');
+            expect(screen).toContain(`${PROMPT_MARKS.cursor} ${PROMPT_MARKS.unpicked} Guild 14`);
             expect(screen.match(/Guild \d+/g)).toHaveLength(10);
         });
         await terminal.press(KEY.escape);
