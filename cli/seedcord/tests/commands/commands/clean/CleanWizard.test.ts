@@ -4,8 +4,8 @@ import { paint } from '@seedcord/errors';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CleanRunner } from '#commands/commands/CleanRunner';
-import { CleanWizard, WIZARD_STEPS } from '#commands/commands/CleanWizard';
+import { CleanRunner } from '#commands/commands/clean/CleanRunner';
+import { CleanWizard, WIZARD_STEPS } from '#commands/commands/clean/CleanWizard';
 import { levelMark } from '#core/output/levelMark';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { KEY, PromptTerminal } from '#tests/core/prompts/PromptTerminal';

@@ -3,11 +3,11 @@ import { stripVTControlCharacters } from 'node:util';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it, vi, type Mock } from 'vitest';
 
-import { CleanPresenter } from '#commands/commands/CleanPresenter';
-import { emptyOutcome, executeClean, LARGE_BOT_THRESHOLD } from '#commands/commands/executeClean';
+import { CleanPresenter } from '#commands/commands/clean/CleanPresenter';
+import { emptyOutcome, executeClean, LARGE_BOT_THRESHOLD } from '#commands/commands/clean/executeClean';
 
-import type { Flagged } from '#commands/commands/classify';
-import type { CleanOps, CleanScope, GuildSummary, ScanResult } from '#commands/commands/CleanRunner';
+import type { Flagged } from '#commands/commands/clean/classify';
+import type { CleanOps, CleanScope, GuildSummary, ScanResult } from '#commands/commands/clean/CleanRunner';
 
 const flagged: Flagged[] = [
     {

@@ -2,8 +2,8 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
 
-import { CleanRunner } from '#commands/commands/CleanRunner';
-import { CleanWizard, WIZARD_STEPS } from '#commands/commands/CleanWizard';
+import { CleanRunner } from '#commands/commands/clean/CleanRunner';
+import { CleanWizard, WIZARD_STEPS } from '#commands/commands/clean/CleanWizard';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { Prompter } from '#core/prompts/Prompter';
 

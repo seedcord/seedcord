@@ -7,12 +7,12 @@ import { ApplicationCommandType } from 'discord-api-types/v10';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { LARGE_BOT_THRESHOLD } from '#commands/commands/clean/executeClean';
 import { CommandsCommand } from '#commands/commands/CommandsCommand';
-import { LARGE_BOT_THRESHOLD } from '#commands/commands/executeClean';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
 
-import type { Flagged } from '#commands/commands/classify';
-import type { CleanOps, CleanRunner, GuildSummary } from '#commands/commands/CleanRunner';
+import type { Flagged } from '#commands/commands/clean/classify';
+import type { CleanOps, CleanRunner, GuildSummary } from '#commands/commands/clean/CleanRunner';
 import type { Mock } from 'vitest';
 
 const DUPLICATE: Flagged = {

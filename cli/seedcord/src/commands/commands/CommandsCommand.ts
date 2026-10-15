@@ -5,13 +5,13 @@ import { BaseCommand } from '#core/BaseCommand';
 import { isInteractive } from '#core/interactive';
 import { Prompter } from '#core/prompts/Prompter';
 
-import { CleanPresenter } from './CleanPresenter';
-import { CleanRunner } from './CleanRunner';
-import { CLEAN_STEP_LABELS } from './cleanSteps';
-import { CleanWizard, WIZARD_STEPS } from './CleanWizard';
-import { executeClean } from './executeClean';
+import { CleanPresenter } from './clean/CleanPresenter';
+import { CleanRunner } from './clean/CleanRunner';
+import { CLEAN_STEP_LABELS } from './clean/cleanSteps';
+import { CleanWizard, WIZARD_STEPS } from './clean/CleanWizard';
+import { executeClean } from './clean/executeClean';
 
-import type { Confirm } from './CleanPresenter';
+import type { Confirm } from './clean/CleanPresenter';
 import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
 
 interface CleanInvocation {

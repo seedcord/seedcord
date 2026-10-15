@@ -2,9 +2,9 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CleanRunner } from '#commands/commands/CleanRunner';
+import { CleanRunner } from '#commands/commands/clean/CleanRunner';
 
-import type { Flagged } from '#commands/commands/classify';
+import type { Flagged } from '#commands/commands/clean/classify';
 import type { REST } from '@discordjs/rest';
 import type { Mock } from 'vitest';
 

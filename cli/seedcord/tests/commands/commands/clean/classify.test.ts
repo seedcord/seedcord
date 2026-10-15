@@ -1,7 +1,7 @@
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, it, expect } from 'vitest';
 
-import { classifyGuildCommands } from '#commands/commands/classify';
+import { classifyGuildCommands } from '#commands/commands/clean/classify';
 
 const slash = (id: string, name: string) => ({ id, name, type: ApplicationCommandType.ChatInput }) as const;
 
