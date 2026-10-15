@@ -87,6 +87,7 @@ describe('executeClean', () => {
         const output = {
             step: <Result>(_label: string, task: () => Promise<Result>) => task(),
             line: (text = '') => lines.push(stripVTControlCharacters(text)),
+            wrapped: (text: string) => lines.push(stripVTControlCharacters(text)),
             warn: (text: string) => lines.push(text)
         };
         await executeClean({
@@ -114,7 +115,7 @@ describe('executeClean', () => {
 
         const { lines, confirm } = await run(runner, { apply: false });
 
-        expect(lines).toContain('  Alpha  /ban');
+        expect(lines).toContain('/ban');
         expect(lines).toContain('Dry run. Re-run with --apply to delete these.');
         expect(confirm).not.toHaveBeenCalled();
         expect(runner.applyDeletions).not.toHaveBeenCalled();

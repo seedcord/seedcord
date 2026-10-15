@@ -9,6 +9,7 @@ import { levelMark } from './levelMark';
 import { renderError } from './renderError';
 import { Spinner } from './Spinner';
 import { widthOf } from './terminal';
+import { wrapLines } from './wrapLines';
 
 import type { HeldOutput } from './holdOutput';
 import type { Steps } from './Steps';
@@ -87,6 +88,12 @@ export class StepPrinter<Label extends string> implements Steps<Label> {
 
     public line(text = ''): void {
         this.stdout.write(text === '' ? '\n' : `  ${text}\n`);
+    }
+
+    // piped output stays on one line
+    public wrapped(text: string, indent: string): void {
+        const prefix = `  ${indent}`;
+        this.stdout.write(wrapLines(text, widthOf(this.stdout), { first: prefix, rest: prefix }));
     }
 
     public fail(error: unknown): void {

@@ -152,7 +152,7 @@ describe('seedcord commands clean, off a terminal', () => {
         const check = stripVTControlCharacters(paint.check);
         expect(output.stdout()).toMatch(new RegExp(String.raw`${check} connect +\S+\n`, 'u'));
         expect(output.stdout()).toMatch(new RegExp(String.raw`${check} scan +\S+ +1 duplicate in 1 guild\n`, 'u'));
-        expect(output.stdout()).toContain('    one  /ban\n');
+        expect(output.stdout()).toContain('  one  1 duplicate\n      /ban\n');
         expect(output.stdout()).toContain('--apply');
     });
 

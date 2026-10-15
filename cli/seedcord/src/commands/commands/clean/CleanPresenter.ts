@@ -1,9 +1,9 @@
 import { paint } from '@seedcord/errors';
-import { ApplicationCommandType } from 'discord-api-types/v10';
-import stringWidth from 'string-width';
 
+import { commandLabel, printSections } from '#commands/commands/commandRows';
 import { plural } from '#core/format';
 
+import type { CommandSection } from '#commands/commands/commandRows';
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Flagged } from './classify';
 import type { DeleteResult, ScanResult, SkippedGuild } from './CleanRunner';
@@ -12,7 +12,7 @@ import type { EmptyOutcome } from './executeClean';
 
 export type Confirm = (message: string) => Promise<boolean>;
 
-type CleanOutput = Pick<StepPrinter<CleanStepLabel>, 'step' | 'line' | 'warn'>;
+type CleanOutput = Pick<StepPrinter<CleanStepLabel>, 'step' | 'line' | 'wrapped' | 'warn'>;
 
 interface GuildGroup {
     guildName: string;
@@ -65,14 +65,9 @@ function emptyLines(scan: ScanResult, outcome: EmptyOutcome): { info: string[]; 
     return variants[outcome];
 }
 
-// a user or message command shows in Discord's context menu under its bare name
-function commandLabel(command: Flagged): string {
-    return command.type === ApplicationCommandType.ChatInput ? `/${command.name}` : command.name;
-}
-
-// a CJK character takes two columns where padEnd counts one
-function padToWidth(text: string, width: number): string {
-    return text + ' '.repeat(width - stringWidth(text));
+function guildSection({ guildName, commands }: GuildGroup): CommandSection {
+    const noun = commands[0]?.reason === 'purge' ? 'command' : 'duplicate';
+    return { title: guildName, note: plural(commands.length, noun), commands: commands.map(commandLabel) };
 }
 
 export class CleanPresenter {
@@ -86,25 +81,17 @@ export class CleanPresenter {
     }
 
     public preview(scan: ScanResult): void {
-        const groups = groupByGuild(scan.flagged);
-        const width = Math.max(...groups.map((group) => stringWidth(group.guildName)));
-
-        this.output.line();
-        for (const group of groups) {
-            const commands = group.commands.map((command) => paint.sky(commandLabel(command))).join(' ');
-            this.output.line(`  ${padToWidth(group.guildName, width)}  ${commands}`);
-        }
-        this.output.line();
+        printSections(this.output, groupByGuild(scan.flagged).map(guildSection));
         if (scan.skipped.length > 0) this.output.warn(skippedSummary(scan.skipped));
     }
 
     public largeBotGuard(guildCount: number): Promise<boolean> {
-        return this.confirm(`The bot is in ${guildCount} guilds. Scan all of them? This makes ${guildCount} requests.`);
+        return this.ask(`The bot is in ${guildCount} guilds. Scan all of them? This makes ${guildCount} requests.`);
     }
 
     public confirmDelete(count: number, skippedCount: number): Promise<boolean> {
         const skips = skippedCount > 0 ? ` ${plural(skippedCount, 'guild')} could not be read.` : '';
-        return this.confirm(`Delete ${plural(count, 'guild command')}? This cannot be undone.${skips}`);
+        return this.ask(`Delete ${plural(count, 'guild command')}? This cannot be undone.${skips}`);
     }
 
     public result(deletion: DeleteResult): void {
@@ -122,5 +109,11 @@ export class CleanPresenter {
 
     public dryRunHint(): void {
         this.output.line(paint.mute('Dry run. Re-run with --apply to delete these.'));
+    }
+
+    private async ask(message: string): Promise<boolean> {
+        const yes = await this.confirm(message);
+        if (!yes) this.output.line(paint.mute('Nothing deleted.'));
+        return yes;
     }
 }

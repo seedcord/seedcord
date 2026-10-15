@@ -85,8 +85,11 @@ describe('CleanWizard', () => {
                 finished('connect       T'),
                 finished('scan          T  2 duplicates in 2 guilds'),
                 '',
-                '    Alpha  /ban',
-                '    Beta   /kick',
+                '  Alpha  1 duplicate',
+                '      /ban',
+                '',
+                '  Beta  1 duplicate',
+                '      /kick',
                 '',
                 finished('delete        T  2 deleted'),
                 '',
@@ -106,7 +109,7 @@ describe('CleanWizard', () => {
         expect(await terminal.screen()).toBe('  cancelled');
     });
 
-    it('deletes nothing when the delete is declined', async () => {
+    it('deletes nothing and says so when the delete is declined', async () => {
         using terminal = new PromptTerminal();
         const { deleted, done } = wizard(terminal);
 
@@ -114,19 +117,21 @@ describe('CleanWizard', () => {
         await done;
 
         expect(deleted).toEqual([]);
-        expect(masked(await terminal.screen())).not.toContain('delete');
+        const screen = masked(await terminal.screen());
+        expect(screen).not.toContain('delete  ');
+        expect(screen.trimEnd().split('\n').at(-1)).toBe('  Nothing deleted.');
     });
 
-    it('counts every command for a full reset and marks only slash commands with /', async () => {
+    it('counts every command for a full reset and tags each context menu with its kind', async () => {
         using terminal = new PromptTerminal();
         const { done } = wizard(terminal);
 
         await terminal.press(KEY.enter, KEY.tab, KEY.enter, KEY.down, KEY.enter, 'y', KEY.enter);
         await done;
 
-        const screen = masked(await terminal.screen());
+        const screen = masked(await terminal.screen()).replaceAll(' ', ' ');
         expect(screen).toContain('scan          T  3 commands in 1 guild');
-        expect(screen).toContain('    Alpha  /ban /setup Report');
+        expect(screen).toContain('  Alpha  3 commands\n      /ban /setup Report (message)');
     });
 
     it('skips the picker when the bot is in one guild', async () => {
