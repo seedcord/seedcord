@@ -128,16 +128,24 @@ describe('DevApp tiers', () => {
         unmount();
     });
 
+    // nothing animates while offline
     it('redraws the whole screen when the terminal gets wider', async () => {
+        const offlineStore = (): DevStore => {
+            const store = runningStore();
+            store.setPhase('disconnected');
+            return store;
+        };
         const app = (): ReactElement => (
-            <DevApp store={runningStore()} onReady={() => undefined} initialFilters={NO_FILTERS} />
+            <DevApp store={offlineStore()} onReady={() => undefined} initialFilters={NO_FILTERS} />
         );
         const widened = renderOnScreen(app(), { rows: 40, columns: 90 });
         await stableFrame(widened.screen);
         widened.resize(FULL);
 
         const fresh = renderOnScreen(app(), FULL);
-        expect(await stableFrame(widened.screen)).toBe(await stableFrame(fresh.screen));
+        const expected = await stableFrame(fresh.screen);
+        expect(expected).toContain('○ offline');
+        expect(await stableFrame(widened.screen)).toBe(expected);
 
         widened.unmount();
         fresh.unmount();
