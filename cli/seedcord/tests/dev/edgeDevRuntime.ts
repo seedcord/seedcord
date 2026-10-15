@@ -11,7 +11,7 @@ import { onTestFinished } from 'vitest';
 
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { toSeedcordInstance } from '#core/modules/importInstance';
-import { copyEdgeBotForTest } from '#tests/commands/build/edgeBot';
+import { copyEdgeBot } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES, FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
@@ -124,15 +124,21 @@ export async function writeDevVars(projectDir: string, vars: Record<string, stri
     await writeFile(join(projectDir, '.dev.vars'), lines.join(''));
 }
 
+interface EdgeProject extends AsyncDisposable {
+    readonly projectDir: string;
+    readonly port: number;
+}
+
 // two edge dev runs on 8787 at once fail with EADDRINUSE
-export async function edgeProject(
-    vars: Record<string, string> = liveVars
-): Promise<{ projectDir: string; port: number }> {
-    const projectDir = await copyEdgeBotForTest();
+export async function edgeProject(vars: Record<string, string> = liveVars): Promise<EdgeProject> {
+    await using cleanup = new AsyncDisposableStack();
+    const { projectDir, remove } = await copyEdgeBot();
+    cleanup.defer(remove);
     await writeDevVars(projectDir, vars);
     const port = await freePort();
     await setDevPort(projectDir, port);
-    return { projectDir, port };
+    const owned = cleanup.move();
+    return { projectDir, port, [Symbol.asyncDispose]: () => owned.disposeAsync() };
 }
 
 // the worker's records reach the CLI's logger the way a node bot's records do
@@ -176,14 +182,19 @@ export async function asDevelopment(): Promise<() => Promise<string>> {
 
 export const messagesOf = (records: LogRecord[]): string[] => records.map((record) => record.message);
 
-export async function startedRuntime(
-    projectDir: string,
-    onEvent?: DevEventHandler
-): Promise<{ runtime: EdgeDevRuntime; instance: SeedcordInstance }> {
+interface StartedRuntime extends AsyncDisposable {
+    readonly runtime: EdgeDevRuntime;
+    readonly instance: SeedcordInstance;
+}
+
+export async function startedRuntime(projectDir: string, onEvent?: DevEventHandler): Promise<StartedRuntime> {
     const config = edgeConfig(projectDir);
     const runtime = new EdgeDevRuntime({ kind: 'edge', wranglerConfig: join(projectDir, 'wrangler.jsonc') });
-    onTestFinished(() => runtime.stop());
+    await using cleanup = new AsyncDisposableStack();
+    cleanup.defer(() => runtime.stop());
     await runtime.start(onEvent ? { config, onEvent } : { config });
     const { module } = await runtime.loadEntry();
-    return { runtime, instance: toSeedcordInstance(await resolveDefaultExport(module), config.instance) };
+    const instance = toSeedcordInstance(await resolveDefaultExport(module), config.instance);
+    const owned = cleanup.move();
+    return { runtime, instance, [Symbol.asyncDispose]: () => owned.disposeAsync() };
 }

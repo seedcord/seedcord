@@ -32,7 +32,8 @@ import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
 describe('EdgeDevRuntime lifecycle', () => {
     it("gives codegen's node copy the secrets from .dev.vars", async () => {
-        const { projectDir } = await edgeProject({ ...liveVars, API_TOKEN: ' from-dev-vars ' });
+        await using project = await edgeProject({ ...liveVars, API_TOKEN: ' from-dev-vars ' });
+        const { projectDir } = project;
         await editFile(join(projectDir, 'src/bot.ts'), (text) =>
             text.replace(
                 "import type { CoreBase } from '@seedcord/http';",
@@ -43,16 +44,18 @@ describe('EdgeDevRuntime lifecycle', () => {
             Reflect.deleteProperty(globalThis, 'apiToken');
         });
 
-        await startedRuntime(projectDir);
+        await using _started = await startedRuntime(projectDir);
 
         expect(Reflect.get(globalThis, 'apiToken')).toBe('from-dev-vars');
     }, 120_000);
 
     it('reports each slow startup step before the endpoint listens', async () => {
-        const { projectDir } = await edgeProject();
+        await using project = await edgeProject();
+        const { projectDir } = project;
         const events: DevEvent[] = [];
 
-        const { runtime, instance } = await startedRuntime(projectDir, (event) => events.push(event));
+        await using started = await startedRuntime(projectDir, (event) => events.push(event));
+        const { runtime, instance } = started;
         await runtime.startBot(instance);
 
         const types = events.map((event) => event.type);
@@ -62,7 +65,8 @@ describe('EdgeDevRuntime lifecycle', () => {
     }, 120_000);
 
     it('runs the startup sequence once in a seedcord dev session', async () => {
-        const { projectDir } = await edgeProject();
+        await using project = await edgeProject();
+        const { projectDir } = project;
         const discord = await fakeDiscordApi();
         await editFile(join(projectDir, 'src/bot.ts'), (text) =>
             text
@@ -110,14 +114,17 @@ describe('EdgeDevRuntime lifecycle', () => {
     }, 120_000);
 
     it('rejects with the error the worker failed to start with', async () => {
-        const { projectDir } = await edgeProject({ DISCORD_PUBLIC_KEY: 'ab'.repeat(ED25519_KEY_BYTES) });
-        const { runtime, instance } = await startedRuntime(projectDir);
+        await using project = await edgeProject({ DISCORD_PUBLIC_KEY: 'ab'.repeat(ED25519_KEY_BYTES) });
+        const { projectDir } = project;
+        await using started = await startedRuntime(projectDir);
+        const { runtime, instance } = started;
 
         await expect(runtime.startBot(instance)).rejects.toHaveProperty('code', SeedcordErrorCode.ConfigMissingEnv);
     }, 120_000);
 
     it('rejects start when the bot throws while workerd loads it', async () => {
-        const { projectDir } = await edgeProject();
+        await using project = await edgeProject();
+        const { projectDir } = project;
         // node's codegen copy loads bot.ts too
         await appendFile(
             join(projectDir, 'src/bot.ts'),
@@ -128,8 +135,10 @@ describe('EdgeDevRuntime lifecycle', () => {
     }, 60_000);
 
     it('settles a start that is still running when the session stops', async () => {
-        const { projectDir } = await edgeProject();
-        const { runtime, instance } = await startedRuntime(projectDir);
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        await using started = await startedRuntime(projectDir);
+        const { runtime, instance } = started;
 
         const starting = runtime.startBot(instance);
         await runtime.stop();
@@ -138,12 +147,13 @@ describe('EdgeDevRuntime lifecycle', () => {
     }, 120_000);
 
     it('starts a fresh worker for the next session after a stop', async () => {
-        const { projectDir, port } = await edgeProject();
-        const first = await startedRuntime(projectDir);
+        await using project = await edgeProject();
+        const { projectDir, port } = project;
+        await using first = await startedRuntime(projectDir);
         await first.runtime.startBot(first.instance);
         await first.runtime.stop();
 
-        const second = await startedRuntime(projectDir);
+        await using second = await startedRuntime(projectDir);
         await second.runtime.startBot(second.instance);
 
         const unsigned = await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
@@ -151,7 +161,8 @@ describe('EdgeDevRuntime lifecycle', () => {
     }, 120_000);
 
     it('exports the durable object classes bot.ts exports', async () => {
-        const { projectDir, port } = await edgeProject();
+        await using project = await edgeProject();
+        const { projectDir, port } = project;
         await appendFile(
             join(projectDir, 'src/bot.ts'),
             "\nimport { DurableObject } from 'cloudflare:workers';\nexport class Counter extends DurableObject {}\n"
@@ -162,7 +173,8 @@ describe('EdgeDevRuntime lifecycle', () => {
                 '"durable_objects": { "bindings": [{ "name": "COUNTER", "class_name": "Counter" }] },\n    "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Counter"] }],\n    "compatibility_date"'
             )
         );
-        const { runtime, instance } = await startedRuntime(projectDir);
+        await using started = await startedRuntime(projectDir);
+        const { runtime, instance } = started;
         await runtime.startBot(instance);
 
         const unsigned = await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });

@@ -13,13 +13,15 @@ import type { DevEvent } from '#commands/dev/runtime/events';
 
 describe('EdgeDevRuntime codegen', () => {
     it('gives codegen a node copy of the bot that scans its commands', async () => {
-        const { projectDir } = await edgeProject();
+        await using project = await edgeProject();
+        const { projectDir } = project;
         await editFile(join(projectDir, 'src/bot.ts'), (text) =>
             text.replace('commands: { path: null }', "commands: { path: './commands' }")
         );
         await mkdir(join(projectDir, 'src/commands'));
         await writeFile(join(projectDir, 'src/commands/Wave.ts'), WAVE_COMMAND);
-        const { runtime, instance } = await startedRuntime(projectDir);
+        await using started = await startedRuntime(projectDir);
+        const { runtime, instance } = started;
         const config = edgeConfig(projectDir);
 
         const { outputPath } = await CodegenRunner.create(quietSteps, silentLogger).writeFrom({
@@ -32,7 +34,8 @@ describe('EdgeDevRuntime codegen', () => {
     }, 120_000);
 
     it('gives codegen the saved version of a file a command imports', async () => {
-        const { projectDir } = await edgeProject();
+        await using project = await edgeProject();
+        const { projectDir } = project;
         await editFile(join(projectDir, 'src/bot.ts'), (text) =>
             text.replace('commands: { path: null }', "commands: { path: './commands' }")
         );
@@ -43,7 +46,8 @@ describe('EdgeDevRuntime codegen', () => {
             join(projectDir, 'src/commands/Wave.ts'),
             `import { WAVE } from '../names';\n${WAVE_COMMAND.replace("setName('wave')", 'setName(WAVE)')}`
         );
-        const { runtime, instance } = await startedRuntime(projectDir);
+        await using started = await startedRuntime(projectDir);
+        const { runtime, instance } = started;
         const codegen = CodegenRunner.create(quietSteps, silentLogger);
         const bot = { config: edgeConfig(projectDir), instance, modules: runtime };
         await codegen.writeFrom(bot);
@@ -60,7 +64,8 @@ describe('EdgeDevRuntime codegen', () => {
     }, 120_000);
 
     it('prompts for a saved command and deploys it once the session says so', async () => {
-        const { projectDir } = await edgeProject();
+        await using project = await edgeProject();
+        const { projectDir } = project;
         const discord = await fakeDiscordApi();
         await editFile(join(projectDir, 'src/bot.ts'), (text) =>
             text
@@ -74,7 +79,8 @@ describe('EdgeDevRuntime codegen', () => {
         const command = join(projectDir, 'src/commands/Wave.ts');
         await writeFile(command, WAVE_COMMAND);
         const events: DevEvent[] = [];
-        const { runtime, instance } = await startedRuntime(projectDir, (event) => events.push(event));
+        await using started = await startedRuntime(projectDir, (event) => events.push(event));
+        const { runtime, instance } = started;
         await runtime.startBot(instance);
 
         await editFile(command, (text) => text.replace("setName('wave')", "setName('salute')"));

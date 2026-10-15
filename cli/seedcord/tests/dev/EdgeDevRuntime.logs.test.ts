@@ -22,9 +22,11 @@ describe('EdgeDevRuntime logs', () => {
     it("logs each request the endpoint passes to the bot, like a node bot's engine does", async () => {
         // a development env logs at debug, in the worker and in the CLI
         await asDevelopment();
-        const { projectDir, port } = await edgeProject({ ...liveVars, ENVIRONMENT: 'development' });
+        await using project = await edgeProject({ ...liveVars, ENVIRONMENT: 'development' });
+        const { projectDir, port } = project;
         const logs = captureLogs();
-        const { runtime, instance } = await startedRuntime(projectDir);
+        await using started = await startedRuntime(projectDir);
+        const { runtime, instance } = started;
         await runtime.startBot(instance);
 
         await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
@@ -36,13 +38,15 @@ describe('EdgeDevRuntime logs', () => {
 
     it('leaves the folder the log file goes to out of hot reload', async () => {
         await asDevelopment();
-        const { projectDir } = await edgeProject();
+        await using project = await edgeProject();
+        const { projectDir } = project;
         // the log file goes under the cwd. a bot runs seedcord dev from its project folder
         const cwd = process.cwd();
         process.chdir(projectDir);
         onTestFinished(() => process.chdir(cwd));
         const logs = captureLogs();
-        const { runtime, instance } = await startedRuntime(projectDir);
+        await using started = await startedRuntime(projectDir);
+        const { runtime, instance } = started;
         await runtime.startBot(instance);
         const hmrLines = (): string[] =>
             logs.filter((record) => record.label === 'HMR').map((record) => stripVTControlCharacters(record.message));
@@ -59,9 +63,11 @@ describe('EdgeDevRuntime logs', () => {
         'leaves %s out of hot reload',
         async (folder) => {
             await asDevelopment();
-            const { projectDir } = await edgeProject();
+            await using project = await edgeProject();
+            const { projectDir } = project;
             const logs = captureLogs();
-            const { runtime, instance } = await startedRuntime(projectDir);
+            await using started = await startedRuntime(projectDir);
+            const { runtime, instance } = started;
             await runtime.startBot(instance);
             const hmrLines = (): string[] =>
                 logs
@@ -81,9 +87,11 @@ describe('EdgeDevRuntime logs', () => {
     );
 
     it("reports the worker's logs", async () => {
-        const { projectDir } = await edgeProject();
+        await using project = await edgeProject();
+        const { projectDir } = project;
         const logs = captureLogs();
-        const { runtime, instance } = await startedRuntime(projectDir);
+        await using started = await startedRuntime(projectDir);
+        const { runtime, instance } = started;
 
         await runtime.startBot(instance);
 
@@ -91,10 +99,12 @@ describe('EdgeDevRuntime logs', () => {
     }, 120_000);
 
     it("reports a console.log from the bot's own code under the Console label", async () => {
-        const { projectDir } = await edgeProject();
+        await using project = await edgeProject();
+        const { projectDir } = project;
         await appendFile(join(projectDir, 'src/bot.ts'), "\nconsole.log('counter ready');\n");
         const logs = captureLogs();
-        const { runtime, instance } = await startedRuntime(projectDir);
+        await using started = await startedRuntime(projectDir);
+        const { runtime, instance } = started;
 
         await runtime.startBot(instance);
 
@@ -102,7 +112,8 @@ describe('EdgeDevRuntime logs', () => {
     }, 120_000);
 
     it("colors the worker's logs at the CLI's color level", async () => {
-        const { projectDir } = await edgeProject();
+        await using project = await edgeProject();
+        const { projectDir } = project;
         const discord = await fakeDiscordApi();
         await editFile(join(projectDir, 'src/bot.ts'), (text) =>
             text.replace('bot: { interactions:', `bot: { restOptions: { api: '${discord.api}' }, interactions:`)
@@ -113,7 +124,8 @@ describe('EdgeDevRuntime logs', () => {
             chalk.level = level;
         });
         const logs = captureLogs();
-        const { runtime, instance } = await startedRuntime(projectDir);
+        await using started = await startedRuntime(projectDir);
+        const { runtime, instance } = started;
 
         await runtime.startBot(instance);
 
@@ -125,10 +137,12 @@ describe('EdgeDevRuntime logs', () => {
 
     it("writes the worker's file paths relative to the CLI's cwd", async () => {
         await asDevelopment();
-        const { projectDir } = await edgeProject();
+        await using project = await edgeProject();
+        const { projectDir } = project;
         await writeFile(join(projectDir, 'src/handlers/Wave.ts'), waveHandler('waved'));
         const records = captureLogs();
-        const { runtime, instance } = await startedRuntime(projectDir);
+        await using started = await startedRuntime(projectDir);
+        const { runtime, instance } = started;
 
         await runtime.startBot(instance);
 
@@ -141,8 +155,10 @@ describe('EdgeDevRuntime logs', () => {
         const createdLogs = await asDevelopment();
         // what ServerHost.reset leaves behind
         LoggerChannelRegistry.instance.configure({});
-        const { projectDir } = await edgeProject();
-        const { runtime, instance } = await startedRuntime(projectDir);
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        await using started = await startedRuntime(projectDir);
+        const { runtime, instance } = started;
 
         await runtime.startBot(instance);
 
