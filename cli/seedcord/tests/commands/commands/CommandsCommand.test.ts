@@ -10,9 +10,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LARGE_BOT_THRESHOLD } from '#commands/commands/clean/executeClean';
 import { CommandsCommand } from '#commands/commands/CommandsCommand';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
+import { KEY, PromptTerminal } from '#tests/core/prompts/PromptTerminal';
 
 import type { Flagged } from '#commands/commands/clean/classify';
 import type { CleanOps, CleanRunner, GuildSummary } from '#commands/commands/clean/CleanRunner';
+import type { Prompter } from '#core/prompts/Prompter';
 import type { Mock } from 'vitest';
 
 const DUPLICATE: Flagged = {
@@ -66,14 +68,23 @@ function captureOutput(): CapturedOutput {
     };
 }
 
-async function run(runner: Record<keyof CleanOps, Mock>, ...args: string[]): Promise<void> {
+async function runWith(
+    runner: Record<keyof CleanOps, Mock>,
+    prompter: Prompter | undefined,
+    ...args: string[]
+): Promise<void> {
     const program = new Command().exitOverride();
-    // justified: flag mode calls only the CleanOps methods
-    new CommandsCommand(runner as unknown as CleanRunner).register(program);
+    // justified: the clean flows call only the CleanOps methods and listBotGuilds
+    const cleanRunner = runner as unknown as CleanRunner;
+    new CommandsCommand(prompter ? { cleanRunner, prompter } : { cleanRunner }).register(program);
     await program.parseAsync(['commands', ...args], { from: 'user' });
 }
 
-describe('seedcord commands clean, on a terminal', () => {
+function run(runner: Record<keyof CleanOps, Mock>, ...args: string[]): Promise<void> {
+    return runWith(runner, undefined, ...args);
+}
+
+describe('seedcord commands, on a terminal', () => {
     const original = { stdin: process.stdin.isTTY, stdout: process.stdout.isTTY, ci: process.env.CI };
 
     beforeEach(() => {
@@ -101,6 +112,33 @@ describe('seedcord commands clean, on a terminal', () => {
             expect(runner.resolveTargets).toHaveBeenCalledOnce();
         }
     );
+
+    it('asks whether to deploy or clean, then opens the clean wizard on clean', async () => {
+        using output = captureOutput();
+        using terminal = new PromptTerminal();
+        const running = runWith(fakeRunner(), terminal.prompter);
+
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Deploy the commands in your code'));
+        await terminal.press(KEY.down, KEY.enter);
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Which guilds?'));
+        await terminal.press(KEY.escape);
+        await running;
+
+        expect(output.stdout()).toContain('  cancelled');
+    });
+
+    it('prints cancelled when the first question is cancelled', async () => {
+        using output = captureOutput();
+        using terminal = new PromptTerminal();
+        const running = runWith(fakeRunner(), terminal.prompter);
+
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('Deploy the commands in your code'));
+        await terminal.press(KEY.escape);
+        await running;
+
+        expect(output.stdout().trimEnd().split('\n').at(-1)).toBe('  cancelled');
+        expect(process.exitCode).toBeUndefined();
+    });
 });
 
 describe('seedcord commands clean, off a terminal', () => {

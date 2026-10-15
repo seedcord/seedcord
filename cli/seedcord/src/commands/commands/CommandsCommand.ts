@@ -1,3 +1,4 @@
+import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
 import { validateDiscordToken } from '@seedcord/errors/internal';
 import { Envapter } from 'envapt';
 
@@ -15,8 +16,15 @@ import { PROCEED } from './confirm';
 import { DeployPresenter } from './deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from './deploy/DeployRunner';
 
+import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Confirm } from './confirm';
+import type { DeployStep } from './deploy/DeployRunner';
 import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
+
+interface CommandsDeps {
+    cleanRunner: CleanRunner;
+    prompter: Prompter;
+}
 
 interface CleanInvocation {
     guild: string[];
@@ -24,6 +32,11 @@ interface CleanInvocation {
     apply: boolean;
     purge: boolean;
 }
+
+type WizardStep = (typeof WIZARD_STEPS)[number];
+type MenuAction = 'deploy' | 'clean';
+
+const MENU_STEPS = [...DEPLOY_STEPS, ...WIZARD_STEPS] as const;
 
 function hasCleanFlags(options: CleanInvocation): boolean {
     return [options.allGuilds, options.apply, options.purge].some(Boolean) || options.guild.length > 0;
@@ -34,20 +47,27 @@ function readToken(): string {
 }
 
 export class CommandsCommand extends BaseCommand {
-    constructor(private readonly cleanRunner: CleanRunner = CleanRunner.create()) {
+    private readonly cleanRunner: CleanRunner;
+    private readonly prompter: Prompter;
+
+    constructor({ cleanRunner = CleanRunner.create(), prompter = new Prompter() }: Partial<CommandsDeps> = {}) {
         super('commands', 'Manage the commands registered on Discord');
+        this.cleanRunner = cleanRunner;
+        this.prompter = prompter;
     }
 
     public register(program: Command): void {
         const commands = program
             .command(this.name)
             .description(this.description)
-            .action((_options, command) => this.openWizard(command));
+            .action((_options, command) => this.openMenu(command));
 
         commands
             .command('deploy')
             .description('Deploy the commands in your code to Discord')
-            .action((_options, command) => this.deploy(command));
+            .action((_options, command) =>
+                this.runSteps(command, DEPLOY_STEPS, (printer) => this.deploy(printer, command))
+            );
 
         commands
             .command('clean')
@@ -69,24 +89,47 @@ export class CommandsCommand extends BaseCommand {
             );
     }
 
-    private async openWizard(command: CommandUnknownOpts): Promise<void> {
+    private async openMenu(command: CommandUnknownOpts): Promise<void> {
         if (!isInteractive()) {
             command.outputHelp();
             return;
         }
-        await this.runCleanWizard(command);
+
+        await this.runSteps(command, MENU_STEPS, async (printer) => {
+            const action = await this.pickAction(printer);
+            if (action === 'deploy') await this.deploy(printer, command);
+            else if (action === 'clean') await this.cleanWizard(printer);
+        });
     }
 
-    private async deploy(command: CommandUnknownOpts): Promise<void> {
-        const confirm: Confirm = isInteractive() ? (message) => new Prompter().confirm({ message }) : PROCEED;
-        await this.runSteps(command, DEPLOY_STEPS, (printer) =>
-            DeployRunner.create().run(new DeployPresenter(printer, confirm, isVerbose(command)))
-        );
+    private async pickAction(printer: StepPrinter<string>): Promise<MenuAction | undefined> {
+        try {
+            return await this.prompter.select<MenuAction>({
+                message: 'What do you want to do?',
+                choices: [
+                    { value: 'deploy', label: 'Deploy the commands in your code' },
+                    { value: 'clean', label: 'Remove guild commands that duplicate a global command' }
+                ]
+            });
+        } catch (error: unknown) {
+            if (!isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.CliCancelled)) throw error;
+            printer.line(paint.mute('cancelled'));
+            return undefined;
+        }
+    }
+
+    private deploy(printer: StepPrinter<DeployStep>, command: CommandUnknownOpts): Promise<void> {
+        const confirm: Confirm = isInteractive() ? (message) => this.prompter.confirm({ message }) : PROCEED;
+        return DeployRunner.create().run(new DeployPresenter(printer, confirm, isVerbose(command)));
+    }
+
+    private cleanWizard(printer: StepPrinter<WizardStep>): Promise<void> {
+        return new CleanWizard(this.cleanRunner, readToken(), printer, this.prompter).run();
     }
 
     private async clean(options: CleanInvocation, command: CommandUnknownOpts): Promise<void> {
         if (!hasCleanFlags(options) && isInteractive()) {
-            await this.runCleanWizard(command);
+            await this.runSteps(command, WIZARD_STEPS, (printer) => this.cleanWizard(printer));
             return;
         }
 
@@ -98,12 +141,6 @@ export class CommandsCommand extends BaseCommand {
                 token: readToken(),
                 presenter: new CleanPresenter(printer, PROCEED)
             })
-        );
-    }
-
-    private async runCleanWizard(command: CommandUnknownOpts): Promise<void> {
-        await this.runSteps(command, WIZARD_STEPS, (printer) =>
-            new CleanWizard(this.cleanRunner, readToken(), printer, new Prompter()).run()
         );
     }
 }
