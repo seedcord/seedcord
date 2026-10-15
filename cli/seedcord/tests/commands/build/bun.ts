@@ -5,7 +5,9 @@ import { join } from 'node:path';
 
 import { smoke } from './smoke';
 
-export function hasBun(): boolean {
+// only CI compiles bun binaries, at about 10 CPU-seconds each
+export function compilesBunBinaries(): boolean {
+    if (!process.env.CI) return false;
     try {
         execFileSync('bun', ['--version'], { stdio: 'ignore' });
         return true;

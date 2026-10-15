@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { BuildRunner } from '#commands/build/BuildRunner';
 import { quietSteps } from '#core/output/quietSteps';
 
-import { hasBun, smokeBunBinary } from './bun';
+import { compilesBunBinaries, smokeBunBinary } from './bun';
 import { smoke } from './smoke';
 
 const GATEWAY_BOT = join(import.meta.dirname, '../../fixtures/gateway-bot');
@@ -21,7 +21,7 @@ describe('seedcord build on a gateway bot', () => {
         expect(output).toContain('fixture:handlers-loaded');
     }, 120_000);
 
-    it.skipIf(!hasBun())(
+    it.skipIf(!compilesBunBinaries())(
         'loads its handlers as a bun binary moved away from dist',
         async () => {
             const output = await smokeBunBinary('gateway', GATEWAY_BOT);

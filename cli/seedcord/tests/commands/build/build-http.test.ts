@@ -6,7 +6,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { BuildRunner } from '#commands/build/BuildRunner';
 import { quietSteps } from '#core/output/quietSteps';
 
-import { hasBun, smokeBunBinary } from './bun';
+import { compilesBunBinaries, smokeBunBinary } from './bun';
 import { smoke } from './smoke';
 
 import type { BuildResult } from '#commands/build/BuildRunner';
@@ -64,7 +64,7 @@ describe('seedcord build on an http bot', () => {
         expect(output).toContain('fixture:text a source folder named logs');
     });
 
-    it.skipIf(!hasBun())(
+    it.skipIf(!compilesBunBinaries())(
         'still loads its files as a bun binary moved away from dist',
         async () => {
             const binaryOutput = await smokeBunBinary('http', HTTP_BOT);
