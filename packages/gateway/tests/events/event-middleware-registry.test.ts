@@ -7,8 +7,6 @@ import { seedcordPath } from '#tests/utils/source-path';
 import { testConfig } from '#tests/utils/test-config';
 import { it } from '#tests/utils/test-env';
 
-import '#tests/utils/mock-env';
-
 interface PrivateEventDispatcher {
     init(): Promise<void>;
     onHmr(event: unknown): Promise<void>;

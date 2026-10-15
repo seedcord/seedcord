@@ -3,38 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { restClients } from '#tests/helpers/restClients';
 
 import { capturingCtx, noClasses, readyEngine, routedHandler, signedRequest, slashPayload } from './harness';
 
-const rest = vi.hoisted(() => {
-    interface FakeRestInstance {
-        post: ReturnType<typeof vi.fn>;
-        patch: ReturnType<typeof vi.fn>;
-    }
-    const instances: FakeRestInstance[] = [];
-    class FakeRest {
-        public post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
-        public patch = vi.fn().mockResolvedValue({ id: 'm-1' });
-
-        public constructor() {
-            instances.push(this);
-        }
-
-        public setToken(): this {
-            return this;
-        }
-    }
-    return { instances, FakeRest };
-});
-
-// vitest loads a mock factory's imports in a bypass context. a project module imported here caches unmocked.
-vi.mock('@discordjs/rest', async (importOriginal) => ({
-    ...(await importOriginal<object>()),
-    REST: rest.FakeRest
-}));
-
 beforeEach(() => {
-    rest.instances.length = 0;
+    restClients().length = 0;
 });
 
 describe('engine dispatch', () => {
@@ -53,7 +27,7 @@ describe('engine dispatch', () => {
 
         expect(response.status).toBe(202);
         await expect(response.text()).resolves.toBe('');
-        const first = rest.instances[0];
+        const first = restClients()[0];
         expect(first?.post).toHaveBeenCalledTimes(1);
         const [route, options] = first?.post.mock.calls[0] as [string, { body: { type: number } }];
         expect(route).toBe('/interactions/int-1/tok/callback');
@@ -83,7 +57,7 @@ describe('engine dispatch', () => {
         releaseExecute(null);
         await ctx.settled();
         expect(executeFinished).toBe(true);
-        expect(rest.instances[0]?.post).toHaveBeenCalledTimes(1);
+        expect(restClients()[0]?.post).toHaveBeenCalledTimes(1);
     });
 
     it('completes the handler without a ctx, tracking the work in flight', async () => {
@@ -99,7 +73,7 @@ describe('engine dispatch', () => {
 
         expect(response.status).toBe(202);
         await vi.waitFor(() => {
-            expect(rest.instances[0]?.post).toHaveBeenCalledTimes(1);
+            expect(restClients()[0]?.post).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -144,7 +118,7 @@ describe('engine dispatch', () => {
         await ctx.settled();
 
         expect(response.status).toBe(202);
-        const [route, options] = rest.instances[0]?.post.mock.calls[0] as [string, { body: { type: number } }];
+        const [route, options] = restClients()[0]?.post.mock.calls[0] as [string, { body: { type: number } }];
         expect(route).toBe('/interactions/int-1/tok/callback');
         expect(options.body.type).toBe(7);
     });
@@ -158,7 +132,7 @@ describe('engine dispatch', () => {
         await ctx.settled();
 
         expect(response.status).toBe(202);
-        const [route, options] = rest.instances[0]?.post.mock.calls[0] as [
+        const [route, options] = restClients()[0]?.post.mock.calls[0] as [
             string,
             { body: { type: number; data: { components: { content?: string }[] } } }
         ];
@@ -182,7 +156,7 @@ describe('engine dispatch', () => {
         await handle(await signedRequest(signer, payload), ctx);
         await ctx.settled();
 
-        const [, options] = rest.instances[0]?.post.mock.calls[0] as [
+        const [, options] = restClients()[0]?.post.mock.calls[0] as [
             string,
             { body: { type: number; data: { choices: unknown[] } } }
         ];

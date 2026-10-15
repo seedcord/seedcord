@@ -32,7 +32,7 @@ const base = defineConfig({
 type Alias = Extract<NonNullable<NonNullable<ViteUserConfig['resolve']>['alias']>, readonly unknown[]>[number];
 
 // configUrl is expected to be the caller's import.meta.url
-function aliasFromTsconfig(configUrl: string): Alias[] {
+export function aliasFromTsconfig(configUrl: string): Alias[] {
     // parseTsconfig because tsconfig can be jsonc
     const paths = parseTsconfig(fileURLToPath(new URL('tsconfig.json', configUrl))).compilerOptions?.paths ?? {};
     // vite takes the first alias that matches. tsc takes an exact key first, then the longest wildcard prefix

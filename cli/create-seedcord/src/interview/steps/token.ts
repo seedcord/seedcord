@@ -26,9 +26,10 @@ export const tokenStep: Step<'token'> = {
         parse: parseToken,
         noFlag: 'leave the bot token empty in .env to fill in later'
     },
-    ask: async () => {
+    ask: async (_answers, streams) => {
         const pasted = requireAnswer(
             await password({
+                ...streams,
                 message: `Paste your bot token ${paint.mute(SKIP_HINT)}`,
                 validate: skippable(parseToken, 'Invalid token.')
             })

@@ -1,27 +1,21 @@
+import { DiscordAPIError, REST } from '@discordjs/rest';
 import { ComponentType } from 'discord-api-types/v10';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
 import { WebhookSender } from '#subscribers/bases/WebhookSender';
 
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
-const mocks = vi.hoisted(() => ({
-    postMock: vi.fn().mockResolvedValue(undefined),
-    getMock: vi.fn().mockResolvedValue({})
-}));
-const { postMock, getMock } = mocks;
-
-vi.mock('@discordjs/rest', async (importOriginal) => ({
-    ...(await importOriginal<typeof import('@discordjs/rest')>()),
-    REST: class {
-        post = mocks.postMock;
-        get = mocks.getMock;
-    }
-}));
+let postMock: MockInstance<REST['post']>;
+let getMock: MockInstance<REST['get']>;
 
 beforeEach(() => {
-    postMock.mockClear();
-    getMock.mockReset().mockResolvedValue({});
+    postMock = vi.spyOn(REST.prototype, 'post');
+    getMock = vi.spyOn(REST.prototype, 'get');
+});
+
+afterEach(() => {
+    vi.restoreAllMocks();
 });
 
 describe('WebhookSender', () => {
@@ -75,7 +69,6 @@ describe('WebhookSender.verify', () => {
     });
 
     it('resolves missing on a 404 from discord', async () => {
-        const { DiscordAPIError } = await import('@discordjs/rest');
         getMock.mockRejectedValueOnce(
             new DiscordAPIError({ message: 'Unknown Webhook', code: 10_015 }, 10_015, 404, 'GET', 'url', {})
         );
@@ -83,7 +76,6 @@ describe('WebhookSender.verify', () => {
     });
 
     it('resolves missing on a 401 from discord', async () => {
-        const { DiscordAPIError } = await import('@discordjs/rest');
         getMock.mockRejectedValueOnce(
             new DiscordAPIError({ message: 'Invalid Webhook Token', code: 50_027 }, 50_027, 401, 'GET', 'url', {})
         );

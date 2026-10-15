@@ -1,28 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { DocKind } from '#model/kinds';
+import { AnchorStrategy } from '#routing/AnchorStrategy';
+import { ReferenceResolver } from '#routing/ReferenceResolver';
+import { orderedPackageCandidates } from '#routing/resolve-helpers';
+
 import type { CrossPackageEntity, NodeLookup, PackageRegistry } from '#routing/lookup';
 import type { EntityTone } from '#src/tones';
 import type { DocNode, DocPackageModel, DocReference } from '#src/types';
-
-// justified: stub kindName to echo the fixture's `kind` string so fixtures use kind names directly.
-vi.mock('#src/kinds', async () => {
-    const actual = await vi.importActual<typeof import('#src/kinds')>('#src/kinds');
-    return {
-        ...actual,
-        kindName: (kind: unknown): string => (typeof kind === 'string' ? kind : String(kind))
-    };
-});
-
-const { orderedPackageCandidates } = await import('#routing/resolve-helpers');
-const { AnchorStrategy } = await import('#routing/AnchorStrategy');
-const { ReferenceResolver } = await import('#routing/ReferenceResolver');
 
 function makeNode(overrides: Partial<DocNode>): DocNode {
     const base: Partial<DocNode> = {
         id: 1,
         name: 'Stub',
         slug: 'stub',
-        kind: 'class' as unknown as DocNode['kind'],
+        kind: DocKind.Class,
         kindLabel: 'Class',
         packageName: 'seedcord',
         sourcePackage: { name: 'seedcord', version: '1.0.0' },
@@ -144,7 +136,7 @@ describe('ReferenceResolver.href', () => {
     it('builds an internal href for a top-level entity node resolved by key', () => {
         const node = makeNode({
             slug: 'mock-class',
-            kind: 'class' as unknown as DocNode['kind'],
+            kind: DocKind.Class,
             qualifiedName: 'MockClass',
             sourcePackage: { name: 'seedcord', version: '2.0.0' }
         });
@@ -159,7 +151,7 @@ describe('ReferenceResolver.href', () => {
     it('resolves a reference within a loaded package by qualified name (resolveWithinPackage path)', () => {
         const node = makeNode({
             slug: 'mock-class',
-            kind: 'class' as unknown as DocNode['kind'],
+            kind: DocKind.Class,
             qualifiedName: 'MockClass',
             sourcePackage: { name: 'seedcord', version: '2.0.0' }
         });
@@ -183,12 +175,12 @@ describe('ReferenceResolver.href', () => {
         const owner = makeNode({
             slug: 'MockClass',
             qualifiedName: 'MockClass',
-            kind: 'class' as unknown as DocNode['kind']
+            kind: DocKind.Class
         });
         const member = makeNode({
             slug: 'MockClass/doThing',
             qualifiedName: 'MockClass.doThing',
-            kind: 'method' as unknown as DocNode['kind']
+            kind: DocKind.Method
         });
         const { resolver } = makeResolver({
             nodesByKey: new Map([['k', member]]),
@@ -205,17 +197,17 @@ describe('ReferenceResolver.href', () => {
         const owner = makeNode({
             slug: 'MockClass',
             qualifiedName: 'MockClass',
-            kind: 'class' as unknown as DocNode['kind']
+            kind: DocKind.Class
         });
         const method = makeNode({
             slug: 'MockClass/doThing',
             qualifiedName: 'MockClass.doThing',
-            kind: 'method' as unknown as DocNode['kind']
+            kind: DocKind.Method
         });
         const param = makeNode({
             slug: 'MockClass/doThing/arg',
             qualifiedName: 'MockClass.doThing.arg',
-            kind: 'parameter' as unknown as DocNode['kind']
+            kind: DocKind.Parameter
         });
         const { resolver } = makeResolver({
             nodesByKey: new Map([['k', param]]),
@@ -233,17 +225,17 @@ describe('ReferenceResolver.href', () => {
         const owner = makeNode({
             slug: 'MockClass',
             qualifiedName: 'MockClass',
-            kind: 'class' as unknown as DocNode['kind']
+            kind: DocKind.Class
         });
         const ctor = makeNode({
             slug: 'MockClass/constructor',
             qualifiedName: 'MockClass.constructor',
-            kind: 'constructor' as unknown as DocNode['kind']
+            kind: DocKind.Constructor
         });
         const param = makeNode({
             slug: 'MockClass/constructor/options',
             qualifiedName: 'MockClass.constructor.options',
-            kind: 'parameter' as unknown as DocNode['kind']
+            kind: DocKind.Parameter
         });
         const { resolver } = makeResolver({
             nodesByKey: new Map([['k', param]]),
@@ -261,13 +253,13 @@ describe('ReferenceResolver.href', () => {
         const owner = makeNode({
             slug: 'MockClass',
             qualifiedName: 'MockClass',
-            kind: 'class' as unknown as DocNode['kind'],
+            kind: DocKind.Class,
             sourcePackage: { name: 'seedcord', version: '3.1.4' }
         });
         const member = makeNode({
             slug: 'something/orphanMember',
             qualifiedName: 'MockClass.orphanMember',
-            kind: 'property' as unknown as DocNode['kind']
+            kind: DocKind.Property
         });
         const { resolver } = makeResolver({
             nodesByKey: new Map([['k', member]]),
@@ -282,7 +274,7 @@ describe('ReferenceResolver.href', () => {
         const member = makeNode({
             slug: 'a/b/c',
             qualifiedName: 'unrelated',
-            kind: 'property' as unknown as DocNode['kind']
+            kind: DocKind.Property
         });
         const { resolver } = makeResolver({
             nodesByKey: new Map([['k', member]]),
@@ -310,7 +302,7 @@ describe('ReferenceResolver.href', () => {
         const node = makeNode({
             slug: 'LateBound',
             qualifiedName: 'LateBound',
-            kind: 'interface' as unknown as DocNode['kind'],
+            kind: DocKind.Interface,
             sourcePackage: { name: 'seedcord', version: '1.0.0' }
         });
         const { resolver } = makeResolver({

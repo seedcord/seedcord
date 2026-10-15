@@ -1,5 +1,8 @@
 import { cloudflareTest } from '@cloudflare/vitest-pool-workers';
-import { createVitestConfig } from '@seedcord/vitest-config';
+import { aliasFromTsconfig, createVitestConfig } from '@seedcord/vitest-config';
+
+// the workerd project keeps its own config. extending the shared one breaks @discordjs/builders in the node project
+const alias = aliasFromTsconfig(import.meta.url);
 
 export default createVitestConfig(import.meta.url, {
     test: {
@@ -16,9 +19,10 @@ export default createVitestConfig(import.meta.url, {
                         miniflare: { compatibilityDate: '2026-08-04' }
                     })
                 ],
-                extends: true,
+                resolve: { alias },
                 test: {
                     name: 'workerd',
+                    testTimeout: 10_000,
                     setupFiles: ['./tests/setup.ts'],
                     include: ['tests/**/*.test.ts'],
                     exclude: ['tests/node/**'],

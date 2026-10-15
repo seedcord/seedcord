@@ -10,8 +10,6 @@ import { Seedcord } from '#src/Seedcord';
 
 import { testConfig } from './utils/test-config';
 
-import './utils/mock-env';
-
 import type { Client } from 'discord.js';
 
 function reset(): void {

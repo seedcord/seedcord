@@ -24,9 +24,10 @@ function parseTransport(raw: string): Answers['transport'] {
 export const transportStep: Step<'transport'> = {
     key: 'transport',
     flag: { name: 'transport', description: 'http or gateway', parse: parseTransport },
-    ask: async () =>
+    ask: async (_answers, streams) =>
         requireAnswer(
             await select<Answers['transport']>({
+                ...streams,
                 message: 'How should Discord reach your bot?',
                 options: [
                     {

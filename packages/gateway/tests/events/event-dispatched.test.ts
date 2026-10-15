@@ -8,8 +8,6 @@ import { it } from '#tests/utils/test-env';
 
 import type { SubscriptionData } from '@seedcord/core';
 
-import '#tests/utils/mock-env';
-
 interface PrivateEventDispatcher {
     init(): Promise<void>;
     processEvent(eventName: string, args: unknown[]): Promise<void>;

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { REST } from '@discordjs/rest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { Notice } from '#stops/Notice';
 import { HandledException } from '#subscribers/default/HandledException';
@@ -9,19 +10,6 @@ import { UnknownException } from '#subscribers/default/UnknownException';
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { InteractionFaultSource } from '#subscribers/types/Subscriptions';
 import type { ReplyResponse } from '@seedcord/types';
-
-const hoisted = vi.hoisted(() => {
-    process.env.UNKNOWN_EXCEPTION_WEBHOOK_URL = 'https://discord.com/api/webhooks/11/unknown-tok';
-    process.env.HANDLED_EXCEPTION_WEBHOOK_URL = 'https://discord.com/api/webhooks/22/handled-tok';
-    return { postMock: vi.fn() };
-});
-
-vi.mock('@discordjs/rest', async (importOriginal) => ({
-    ...(await importOriginal<object>()),
-    REST: class {
-        post = hoisted.postMock;
-    }
-}));
 
 class Boom extends Notice {
     constructor() {
@@ -48,12 +36,13 @@ const source: InteractionFaultSource = {
 // justified: the Subscriber base only stores core
 const core = {} as unknown as CoreBase;
 
-beforeEach(() => {
-    hoisted.postMock.mockReset().mockResolvedValue(undefined);
+afterEach(() => {
+    vi.restoreAllMocks();
 });
 
 describe('the two default reporters', () => {
     it('keep their own throttle windows on one route and one error name', async () => {
+        const post = vi.spyOn(REST.prototype, 'post');
         const origin = 'slash:ban';
         const dispatchId = 'd-1';
 
@@ -63,6 +52,6 @@ describe('the two default reporters', () => {
             core
         ).execute();
 
-        expect(hoisted.postMock).toHaveBeenCalledTimes(2);
+        expect(post).toHaveBeenCalledTimes(2);
     });
 });

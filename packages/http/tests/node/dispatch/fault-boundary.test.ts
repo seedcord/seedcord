@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { restClients } from '#tests/helpers/restClients';
 
 import { capturingCtx, readyEngine, routedHandler, signedRequest, slashPayload, type BotClasses } from './harness';
 
@@ -14,34 +15,6 @@ import type { Core } from '#interfaces/Core';
 import type { DispatchContext } from '@seedcord/core';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 import type { UUID } from 'node:crypto';
-
-const rest = vi.hoisted(() => {
-    interface FakeRestInstance {
-        post: ReturnType<typeof vi.fn>;
-        patch: ReturnType<typeof vi.fn>;
-    }
-    const instances: FakeRestInstance[] = [];
-    class FakeRest {
-        public post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
-        public patch = vi.fn().mockResolvedValue({ id: 'm-1' });
-
-        public constructor() {
-            instances.push(this);
-        }
-
-        public setToken(): this {
-            return this;
-        }
-    }
-    return { instances, FakeRest };
-});
-
-// the factory must not import project modules, because vitest loads factory imports in a mock-bypass
-// context that would cache the engine graph unmocked
-vi.mock('@discordjs/rest', async (importOriginal) => ({
-    ...(await importOriginal<object>()),
-    REST: rest.FakeRest
-}));
 
 function apiError(code: number): DiscordAPIError {
     return new DiscordAPIError({ code, message: 'boom' }, code, 404, 'POST', 'url', {});
@@ -58,12 +31,12 @@ interface SentBody {
 }
 
 function postedBodies(): { route: string; body: SentBody }[] {
-    const calls = (rest.instances[0]?.post.mock.calls ?? []) as [string, { body: SentBody }][];
+    const calls = (restClients()[0]?.post.mock.calls ?? []) as [string, { body: SentBody }][];
     return calls.map(([route, options]) => ({ route, body: options.body }));
 }
 
 beforeEach(() => {
-    rest.instances.length = 0;
+    restClients().length = 0;
 });
 
 describe('fault boundary', () => {
@@ -253,7 +226,7 @@ describe('fault boundary', () => {
 
         await handle(await signedRequest(signer, slashPayload('broken')), ctx);
         // the card send fails on a dead interaction token
-        rest.instances[0]?.post.mockRejectedValueOnce(apiError(10_062));
+        restClients()[0]?.post.mockRejectedValueOnce(apiError(10_062));
         releaseExecute(null);
 
         await expect(ctx.settled()).resolves.toBeUndefined();

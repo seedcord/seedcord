@@ -4,8 +4,6 @@ import { Seedcord } from '#src/Seedcord';
 
 import { testConfig } from './utils/test-config';
 
-import './utils/mock-env';
-
 describe('the Bot surface a bot author reaches', () => {
     it('drops the calls the host drives', async () => {
         await using seedcord = new Seedcord(testConfig());

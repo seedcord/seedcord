@@ -1,4 +1,8 @@
+import type { password } from '@clack/prompts';
 import type { ColorName } from '@seedcord/types';
+
+// clack uses the process streams when these are unset
+type PromptStreams = Pick<Parameters<typeof password>[0], 'input' | 'output'>;
 
 export interface Answers {
     directory: string;
@@ -25,7 +29,7 @@ export interface Step<Key extends keyof Answers> {
     flag: FlagSpec<Key>;
     // a skipped step leaves its key unset
     skip?: (answers: Partial<Answers>) => boolean;
-    ask: (answers: Partial<Answers>) => Promise<Answers[Key]>;
+    ask: (answers: Partial<Answers>, streams?: PromptStreams) => Promise<Answers[Key]>;
 }
 
 // a mixed list of steps assigns to one array

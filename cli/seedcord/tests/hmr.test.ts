@@ -1,8 +1,10 @@
 import { EventEmitter } from 'node:events';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 
-import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Logger } from '@seedcord/logger';
+import { type Mock, type MockInstance, afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HmrPlugin } from '#commands/dev/runtime/HmrPlugin';
 
@@ -10,6 +12,22 @@ import type { DevEvent } from '#commands/dev/runtime/events';
 import type { EnvironmentModuleNode, HotUpdateOptions, ViteDevServer } from 'vite';
 
 const HMR_EVENT_NAME = 'seedcord:hmr';
+
+// the plugin turns a save of a missing file into a delete
+const projectRoot = mkdtempSync(join(tmpdir(), 'seedcord-hmr-'));
+for (const saved of [
+    'src/commands/ping.ts',
+    'src/commands/Click.ts',
+    'src/components/Button.ts',
+    'src/config/limits.ts',
+    'src/migrations/001-create-users.ts'
+]) {
+    mkdirSync(dirname(join(projectRoot, saved)), { recursive: true });
+    writeFileSync(join(projectRoot, saved), '');
+}
+afterAll(() => {
+    rmSync(projectRoot, { recursive: true, force: true });
+});
 
 function watcherMock(): EventEmitter & { add: Mock } {
     return Object.assign(new EventEmitter(), { add: vi.fn() });
@@ -88,35 +106,6 @@ function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0]): C
     return { plugin, watcher, listeners, events };
 }
 
-const loggerSpies = {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-    trace: vi.fn()
-};
-
-vi.mock('@seedcord/logger', async (importOriginal) => ({
-    ...(await importOriginal<typeof import('@seedcord/logger')>()),
-    Logger: class {
-        public info = loggerSpies.info;
-        public warn = loggerSpies.warn;
-        public error = loggerSpies.error;
-        public debug = loggerSpies.debug;
-        public trace = loggerSpies.trace;
-    }
-}));
-
-vi.mock('@seedcord/event-emitter', () => ({
-    TypedEventEmitter: EventEmitter
-}));
-
-// most paths below don't exist on disk
-vi.mock('node:fs', async (importOriginal) => ({
-    ...(await importOriginal<typeof import('node:fs')>()),
-    existsSync: vi.fn(() => true)
-}));
-
 describe('HmrPlugin', () => {
     let hmrPlugin: HmrPlugin;
     const mockConfig = {
@@ -132,11 +121,19 @@ describe('HmrPlugin', () => {
         }
     };
 
-    const srcRoot = join(process.cwd(), 'src');
+    const srcRoot = join(projectRoot, 'src');
+    let trace: MockInstance<Logger['trace']>;
 
     beforeEach(() => {
-        vi.clearAllMocks();
+        for (const level of ['info', 'warn', 'error', 'debug'] as const) {
+            vi.spyOn(Logger.prototype, level).mockImplementation(() => undefined);
+        }
+        trace = vi.spyOn(Logger.prototype, 'trace').mockImplementation(() => undefined);
         hmrPlugin = new HmrPlugin(mockConfig, 'ssr');
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
     it('carries the config rollback flag onto the hmr payload', () => {
@@ -146,14 +143,14 @@ describe('HmrPlugin', () => {
         const hotHost = plugin as unknown as { hot: { send: typeof hotSend; on: ReturnType<typeof vi.fn> } };
         vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({ send: hotSend, on: vi.fn() });
 
-        const file = join(process.cwd(), 'src/commands/ping.ts');
+        const file = join(projectRoot, 'src/commands/ping.ts');
         viteHotUpdate(plugin, 'create', file);
 
         expect(hotSend).toHaveBeenCalledWith(HMR_EVENT_NAME, expect.objectContaining({ file, rollback: false }));
     });
 
     it('asks for a restart when the config file above the vite root changes', () => {
-        const configFile = join(process.cwd(), 'seedcord.config.ts');
+        const configFile = join(projectRoot, 'seedcord.config.ts');
         const { watcher, events } = configuredPlugin({ ...mockConfig, root: srcRoot, configFile });
 
         watcher.emit('change', configFile);
@@ -232,10 +229,10 @@ describe('HmrPlugin', () => {
         });
 
         it('should handle "addDir" event as "createDir"', () => {
-            const file = join(process.cwd(), 'src/commands/group');
+            const file = join(projectRoot, 'src/commands/group');
             watcher.emit('addDir', file);
 
-            expect(loggerSpies.trace).toHaveBeenCalledWith(expect.stringContaining('CREATEDIR'));
+            expect(trace).toHaveBeenCalledWith(expect.stringContaining('CREATEDIR'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'createDir',
@@ -244,10 +241,10 @@ describe('HmrPlugin', () => {
         });
 
         it('should handle "unlinkDir" event as "deleteDir"', () => {
-            const file = join(process.cwd(), 'src/commands/group');
+            const file = join(projectRoot, 'src/commands/group');
             watcher.emit('unlinkDir', file);
 
-            expect(loggerSpies.trace).toHaveBeenCalledWith(expect.stringContaining('DELETEDIR'));
+            expect(trace).toHaveBeenCalledWith(expect.stringContaining('DELETEDIR'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'deleteDir',
@@ -257,8 +254,8 @@ describe('HmrPlugin', () => {
     });
 
     describe('hotUpdate', () => {
-        const file = join(process.cwd(), 'src/components/Button.ts');
-        const importerFile = join(process.cwd(), 'src/commands/Click.ts');
+        const file = join(projectRoot, 'src/components/Button.ts');
+        const importerFile = join(projectRoot, 'src/commands/Click.ts');
         let hotSendMock: Mock;
 
         beforeEach(() => {
@@ -284,12 +281,12 @@ describe('HmrPlugin', () => {
         });
 
         it('sends a delete for an update to a file that is gone', () => {
-            vi.mocked(existsSync).mockReturnValueOnce(false);
+            const gone = join(projectRoot, 'src/components/Gone.ts');
 
-            viteHotUpdate(hmrPlugin, 'update', file, [moduleNode(file, [moduleNode(importerFile)])]);
+            viteHotUpdate(hmrPlugin, 'update', gone, [moduleNode(gone, [moduleNode(importerFile)])]);
 
             expect(hotSendMock.mock.calls).toEqual([
-                [HMR_EVENT_NAME, { file, type: 'delete', affectedModules: [file, importerFile], rollback: true }]
+                [HMR_EVENT_NAME, { file: gone, type: 'delete', affectedModules: [gone, importerFile], rollback: true }]
             ]);
         });
 

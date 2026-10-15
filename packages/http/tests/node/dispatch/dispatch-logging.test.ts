@@ -1,31 +1,12 @@
 import { InteractionKind } from '@seedcord/core';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import { capturingCtx, readyEngine, routedHandler, signedRequest, slashPayload, type BotClasses } from './harness';
 
 import type { LogRecord, LogSinkHandle } from '@seedcord/types';
-
-const rest = vi.hoisted(() => {
-    class FakeRest {
-        public post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
-        public patch = vi.fn().mockResolvedValue({ id: 'm-1' });
-
-        public setToken(): this {
-            return this;
-        }
-    }
-    return { FakeRest };
-});
-
-// the factory must not import project modules, because vitest loads factory imports in a mock-bypass
-// context that would cache the engine graph unmocked
-vi.mock('@discordjs/rest', async (importOriginal) => ({
-    ...(await importOriginal<object>()),
-    REST: rest.FakeRest
-}));
 
 class Ban extends SlashHandler<never> {
     async execute(): Promise<void> {

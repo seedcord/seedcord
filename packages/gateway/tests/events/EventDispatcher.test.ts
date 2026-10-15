@@ -9,8 +9,6 @@ import { it } from '#tests/utils/test-env';
 
 import type { SubscriptionData } from '@seedcord/core';
 
-import '#tests/utils/mock-env';
-
 interface PrivateEventDispatcher {
     eventMap: Map<string, unknown[]>;
     init(): Promise<void>;

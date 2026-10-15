@@ -15,8 +15,6 @@ import { it } from '#tests/utils/test-env';
 import type { CommandInfo } from '@seedcord/core';
 import type { CommandRegistry } from '@seedcord/core/internal';
 
-import '#tests/utils/mock-env';
-
 function registryOf(instance: Seedcord): CommandRegistry {
     const registry = commandRegistryOf(instance.bot);
     if (!registry) throw new Error('this test config declares no commands path');

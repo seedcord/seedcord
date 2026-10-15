@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { InteractionKind, Notice } from '@seedcord/core';
 import { interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { dispatchInteraction } from '#src/dispatch/dispatchInteraction';
@@ -18,18 +18,6 @@ import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from '#src/dispatch/resolve';
 import type { SubscriptionData } from '@seedcord/core';
 import type { ReplyResponse } from '@seedcord/types';
-
-vi.mock('@discordjs/rest', async (importOriginal) => {
-    class FakeRest {
-        public post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
-        public patch = vi.fn().mockResolvedValue({ id: 'm-1' });
-
-        public setToken(): this {
-            return this;
-        }
-    }
-    return { ...(await importOriginal<object>()), REST: FakeRest };
-});
 
 class Reported extends Notice {
     public override report = true;

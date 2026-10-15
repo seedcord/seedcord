@@ -15,16 +15,21 @@ clearBakedIds();
 process.env.UNKNOWN_EXCEPTION_WEBHOOK_URL ??= 'https://discord.com/api/webhooks/1/aaa';
 process.env.HANDLED_EXCEPTION_WEBHOOK_URL ??= 'https://discord.com/api/webhooks/2/bbb';
 
-// publishing a default key runs a shipped reporter, and a real REST client would post to discord
-vi.mock('@discordjs/rest', async (importOriginal) => ({
-    ...(await importOriginal<typeof DiscordRest>()),
-    REST: class {
-        constructor(public readonly options: Partial<DiscordRest.RESTOptions> = {}) {}
-        get = vi.fn().mockResolvedValue({});
-        post = vi.fn().mockResolvedValue(undefined);
-        patch = vi.fn().mockResolvedValue(undefined);
-        setToken = vi.fn().mockReturnThis();
-        on = vi.fn().mockReturnThis();
-        off = vi.fn().mockReturnThis();
+// a real REST client would post to discord. tests read the clients through restClients()
+// a factory that imports a project module caches the engine graph unmocked
+vi.mock('@discordjs/rest', async (importOriginal) => {
+    class FakeRest {
+        public static readonly instances: FakeRest[] = [];
+        public readonly get = vi.fn().mockResolvedValue({});
+        public readonly post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
+        public readonly patch = vi.fn().mockResolvedValue({ id: 'm-1' });
+        public readonly setToken = vi.fn().mockReturnThis();
+        public readonly on = vi.fn().mockReturnThis();
+        public readonly off = vi.fn().mockReturnThis();
+
+        public constructor(public readonly options: Partial<DiscordRest.RESTOptions> = {}) {
+            FakeRest.instances.push(this);
+        }
     }
-}));
+    return { ...(await importOriginal<typeof DiscordRest>()), REST: FakeRest };
+});

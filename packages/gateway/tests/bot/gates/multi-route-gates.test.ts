@@ -9,8 +9,6 @@ import { it } from '#tests/utils/test-env';
 import type { Seedcord } from '#src/Seedcord';
 import type { SubscriptionData } from '@seedcord/core';
 
-import '#tests/utils/mock-env';
-
 interface PrivateInteractionDispatcher {
     maps: Record<InteractionKind, Map<string, unknown>>;
     init(): Promise<void>;

@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { defineGate, Fault, InteractionKind, RegisterInteractionMiddleware, Silence } from '@seedcord/core';
 import { GatedMetadataKey, interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
@@ -18,18 +18,6 @@ import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#hand
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { ResolvedRoute } from '#src/dispatch/resolve';
 import type { SubscriptionData } from '@seedcord/core';
-
-vi.mock('@discordjs/rest', async (importOriginal) => {
-    class FakeRest {
-        public post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
-        public patch = vi.fn().mockResolvedValue({ id: 'm-1' });
-
-        public setToken(): this {
-            return this;
-        }
-    }
-    return { ...(await importOriginal<object>()), REST: FakeRest };
-});
 
 class OkHandler extends SlashHandler<never> {
     async execute(): Promise<void> {

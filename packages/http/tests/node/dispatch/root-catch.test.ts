@@ -16,18 +16,6 @@ import { signedRequest, slashPayload } from './harness';
 import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { SubscriptionData } from '@seedcord/core';
 
-vi.mock('@discordjs/rest', async (importOriginal) => {
-    class FakeRest {
-        public post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
-        public patch = vi.fn().mockResolvedValue({ id: 'm-1' });
-
-        public setToken(): this {
-            return this;
-        }
-    }
-    return { ...(await importOriginal<object>()), REST: FakeRest };
-});
-
 afterEach(() => {
     Envapter.useSource(new PortableSource({}));
 });

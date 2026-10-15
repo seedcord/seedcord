@@ -2,42 +2,15 @@ import 'reflect-metadata';
 
 import { defineGate, InteractionKind, Notice } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import { restClients } from '#tests/helpers/restClients';
 
 import { capturingCtx, readyEngine, routedHandler, signedRequest, type BotClasses } from './harness';
 
 import type { HandlerConstructor } from '#handlers/constructors';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
-
-const rest = vi.hoisted(() => {
-    interface FakeRestInstance {
-        post: ReturnType<typeof vi.fn>;
-        patch: ReturnType<typeof vi.fn>;
-    }
-    const instances: FakeRestInstance[] = [];
-    class FakeRest {
-        public post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
-        public patch = vi.fn().mockResolvedValue({ id: 'm-1' });
-
-        public constructor() {
-            instances.push(this);
-        }
-
-        public setToken(): this {
-            return this;
-        }
-    }
-    return { instances, FakeRest };
-});
-
-// the factory must not import project modules, because vitest loads factory imports in a mock-bypass
-// context that would cache the engine graph unmocked
-vi.mock('@discordjs/rest', async (importOriginal) => ({
-    ...(await importOriginal<object>()),
-    REST: rest.FakeRest
-}));
 
 class TestNotice extends Notice {
     public constructor() {
@@ -69,12 +42,12 @@ interface CallbackCall {
 }
 
 function firstPost(): CallbackCall {
-    const [route, options] = rest.instances[0]?.post.mock.calls[0] as [string, { body: CallbackCall['body'] }];
+    const [route, options] = restClients()[0]?.post.mock.calls[0] as [string, { body: CallbackCall['body'] }];
     return { route, body: options.body };
 }
 
 beforeEach(() => {
-    rest.instances.length = 0;
+    restClients().length = 0;
 });
 
 describe('autocomplete dispatch', () => {

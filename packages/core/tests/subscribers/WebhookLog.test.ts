@@ -1,6 +1,7 @@
+import { REST } from '@discordjs/rest';
 import { Logger } from '@seedcord/logger';
 import { ComponentType } from 'discord-api-types/v10';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
 import { PublishDefault } from '#src/subscribers/publishDefault';
 import { WebhookLog } from '#subscribers/bases/WebhookLog';
@@ -14,20 +15,19 @@ import type { WebhookReport } from '#subscribers/bases/WebhookLog';
 import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
-const hoisted = vi.hoisted(() => {
-    process.env.REPORTER_WEBHOOK_URL = 'https://discord.com/api/webhooks/77/tok-en';
-    process.env.REPORTER_REUSE_WEBHOOK_URL = 'https://discord.com/api/webhooks/88/reuse-tok';
-    return { postMock: vi.fn(), restConstructions: { count: 0 } };
+// envapt snapshots process.env on its first read, before any test runs
+const WEBHOOK_ENV = vi.hoisted(() => {
+    const env = {
+        REPORTER_WEBHOOK_URL: 'https://discord.com/api/webhooks/77/tok-en',
+        REPORTER_REUSE_WEBHOOK_URL: 'https://discord.com/api/webhooks/88/reuse-tok'
+    };
+    Object.assign(process.env, env);
+    return env;
 });
 
-vi.mock('@discordjs/rest', () => ({
-    REST: class {
-        post = hoisted.postMock;
-        constructor() {
-            hoisted.restConstructions.count += 1;
-        }
-    }
-}));
+afterAll(() => {
+    for (const key of Object.keys(WEBHOOK_ENV)) Reflect.deleteProperty(process.env, key);
+});
 
 // justified: report() under test ignores the payload
 const data = {} as unknown as AllSubscriptions['unknownException'];
@@ -43,8 +43,14 @@ interface SentBody {
 
 const component = { toJSON: (): APIMessageTopLevelComponent => ({ type: ComponentType.Container, components: [] }) };
 
+let post: MockInstance<REST['post']>;
+
 beforeEach(() => {
-    hoisted.postMock.mockReset().mockResolvedValue(undefined);
+    post = vi.spyOn(REST.prototype, 'post');
+});
+
+afterEach(() => {
+    vi.restoreAllMocks();
 });
 
 describe('WebhookLog', () => {
@@ -59,7 +65,7 @@ describe('WebhookLog', () => {
 
         await new CustomReporter(data, core).execute();
 
-        const [route, options] = hoisted.postMock.mock.calls[0] as [string, { body: { username: string } }];
+        const [route, options] = post.mock.calls[0] as [string, { body: { username: string } }];
         expect(route).toBe('/webhooks/77/tok-en');
         expect(options.body.username).toBe('Custom');
     });
@@ -75,7 +81,7 @@ describe('WebhookLog', () => {
 
         await new NamedReporter(data, core).execute();
 
-        const [, options] = hoisted.postMock.mock.calls[0] as [string, { body: { username: string } }];
+        const [, options] = post.mock.calls[0] as [string, { body: { username: string } }];
         expect(options.body.username).toBe('NamedReporter');
     });
 
@@ -99,7 +105,7 @@ describe('WebhookLog', () => {
         await new Faced(data, freshCore()).execute();
         await new Plain(data, freshCore()).execute();
 
-        const bodies = hoisted.postMock.mock.calls.map(([, options]) => (options as SentBody).body);
+        const bodies = post.mock.calls.map(([, options]) => (options as SentBody).body);
         expect(bodies[0]?.avatar_url).toBe('https://cdn.example/av.png');
         expect(bodies[1]).not.toHaveProperty('avatar_url');
     });
@@ -113,13 +119,11 @@ describe('WebhookLog', () => {
             }
         }
 
-        const before = hoisted.restConstructions.count;
         await new RepeatReporter(data, core).execute();
-        expect(hoisted.restConstructions.count - before).toBe(1);
         await new RepeatReporter(data, core).execute();
 
-        expect(hoisted.postMock).toHaveBeenCalledTimes(2);
-        expect(hoisted.restConstructions.count - before).toBe(1);
+        expect(post).toHaveBeenCalledTimes(2);
+        expect(post.mock.contexts[1]).toBe(post.mock.contexts[0]);
     });
 
     it('logs a send failure and resolves', async () => {
@@ -131,7 +135,7 @@ describe('WebhookLog', () => {
             }
         }
 
-        hoisted.postMock.mockRejectedValueOnce(new Error('down'));
+        post.mockRejectedValueOnce(new Error('down'));
         const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
         await expect(new FailingReporter(data, core).execute()).resolves.toBeUndefined();
@@ -155,7 +159,7 @@ describe('WebhookLog', () => {
         bus[PublishDefault]('unknownException', data);
 
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('UnsetReporter'));
-        expect(hoisted.postMock).not.toHaveBeenCalled();
+        expect(post).not.toHaveBeenCalled();
         warnSpy.mockRestore();
     });
 
@@ -172,7 +176,7 @@ describe('WebhookLog', () => {
         await new Chatty(data, own).execute();
         await new Chatty(data, own).execute();
 
-        expect(hoisted.postMock).toHaveBeenCalledTimes(2);
+        expect(post).toHaveBeenCalledTimes(2);
     });
 
     it('puts the suppressed count on the next card', async () => {
@@ -196,7 +200,7 @@ describe('WebhookLog', () => {
         await new Grouped(data, own).execute();
         vi.useRealTimers();
 
-        const sent = hoisted.postMock.mock.calls.map(([, options]) => (options as SentBody).body.username);
+        const sent = post.mock.calls.map(([, options]) => (options as SentBody).body.username);
         expect(sent).toEqual(['n=0', 'n=1']);
     });
 
@@ -215,7 +219,7 @@ describe('WebhookLog', () => {
 
         const own = freshCore();
         const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
-        hoisted.postMock.mockRejectedValueOnce(new Error('down'));
+        post.mockRejectedValueOnce(new Error('down'));
 
         vi.useFakeTimers();
         await new Retried(data, own).execute();
@@ -224,7 +228,7 @@ describe('WebhookLog', () => {
         await new Retried(data, own).execute();
         vi.useRealTimers();
 
-        const sent = hoisted.postMock.mock.calls.map(([, options]) => (options as SentBody).body.username);
+        const sent = post.mock.calls.map(([, options]) => (options as SentBody).body.username);
         expect(sent).toEqual(['n=0', 'n=2']);
         errorSpy.mockRestore();
     });
@@ -255,7 +259,7 @@ describe('WebhookLog', () => {
         await new Flaky(data, own).execute();
         vi.useRealTimers();
 
-        const sent = hoisted.postMock.mock.calls.map(([, options]) => (options as SentBody).body.username);
+        const sent = post.mock.calls.map(([, options]) => (options as SentBody).body.username);
         expect(sent).toEqual(['n=1']);
         errorSpy.mockRestore();
     });

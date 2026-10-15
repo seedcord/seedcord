@@ -3,8 +3,6 @@ import { describe, it, expect } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
 
-import './utils/mock-env';
-
 class Card extends BuilderComponent<'container'> {
     constructor() {
         super('container');

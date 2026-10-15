@@ -39,9 +39,10 @@ export const capabilitiesStep: Step<'capabilities'> = {
         parse: parseCapabilities
     },
     skip: (answers) => answers.transport === 'http',
-    ask: async () =>
+    ask: async (_answers, streams) =>
         requireAnswer(
             await multiselect<string>({
+                ...streams,
                 message: 'What should your bot react to?',
                 options: CAPABILITIES.map((capability) => ({
                     value: capability.id,

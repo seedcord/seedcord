@@ -42,10 +42,11 @@ function parseDirectory(raw: string): string {
 export const directoryStep: Step<'directory'> = {
     key: 'directory',
     flag: { name: 'dir', description: 'where the project goes', parse: parseDirectory },
-    ask: async () =>
+    ask: async (_answers, streams) =>
         parseDirectory(
             requireAnswer(
                 await text({
+                    ...streams,
                     message: `Where should the project go? ${paint.mute(FORMAT)}`,
                     placeholder: 'my-bot',
                     validate: (value) => {

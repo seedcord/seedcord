@@ -5,8 +5,6 @@ import { Seedcord } from '#src/Seedcord';
 
 import { testConfig } from './utils/test-config';
 
-import './utils/mock-env';
-
 describe('config.store', () => {
     it('backs core.rateLimiter with the provided store', async () => {
         const store = new MemoryRateLimiter();

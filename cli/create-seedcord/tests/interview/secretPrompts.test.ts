@@ -1,7 +1,7 @@
 import { PassThrough } from 'node:stream';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { tokenStep } from '#interview/steps/token';
 
@@ -12,23 +12,14 @@ const CTRL_C = '\x03';
 
 let keyboard = new PassThrough();
 
-// real clack prompts, reading keys from `keyboard`
-vi.mock('@clack/prompts', async (importOriginal) => {
-    const clack = await importOriginal<typeof import('@clack/prompts')>();
-    const output = (): PassThrough => new PassThrough().resume();
-
-    return {
-        ...clack,
-        password: (options: Parameters<typeof clack.password>[0]) =>
-            clack.password({ ...options, input: keyboard, output: output() }),
-        text: (options: Parameters<typeof clack.text>[0]) =>
-            clack.text({ ...options, input: keyboard, output: output() })
-    };
-});
-
 beforeEach(() => {
     keyboard = new PassThrough();
 });
+
+// the real clack prompt, reading keys from `keyboard`
+function askToken(): Promise<string | null> {
+    return tokenStep.ask({}, { input: keyboard, output: new PassThrough().resume() });
+}
 
 async function press(key: string): Promise<void> {
     await new Promise((resolve) => setImmediate(resolve));
@@ -47,7 +38,7 @@ async function isSettled(answer: Promise<unknown>): Promise<boolean> {
 
 describe('token typed into a terminal', () => {
     it('keeps the prompt open after the first empty Enter', async () => {
-        const answer = tokenStep.ask({});
+        const answer = askToken();
         await press(ENTER);
 
         expect(await isSettled(answer)).toBe(false);
@@ -57,7 +48,7 @@ describe('token typed into a terminal', () => {
     });
 
     it('answers null on the second empty Enter', async () => {
-        const answer = tokenStep.ask({});
+        const answer = askToken();
         await press(ENTER);
         await press(ENTER);
 
@@ -65,7 +56,7 @@ describe('token typed into a terminal', () => {
     });
 
     it('still takes a paste after the warning', async () => {
-        const answer = tokenStep.ask({});
+        const answer = askToken();
         await press(ENTER);
         await press(TOKEN);
         await press(ENTER);
@@ -74,7 +65,7 @@ describe('token typed into a terminal', () => {
     });
 
     it('counts whitespace as an empty paste', async () => {
-        const answer = tokenStep.ask({});
+        const answer = askToken();
         await press('   ');
         await press(ENTER);
 
@@ -85,7 +76,7 @@ describe('token typed into a terminal', () => {
     });
 
     it('keeps the prompt open on a paste that is not the right shape', async () => {
-        const answer = tokenStep.ask({});
+        const answer = askToken();
         await press('not it');
         await press(ENTER);
 
@@ -98,7 +89,7 @@ describe('token typed into a terminal', () => {
     });
 
     it('warns again after a rejected paste', async () => {
-        const answer = tokenStep.ask({});
+        const answer = askToken();
         await press(ENTER);
         await press('not it');
         await press(ENTER);
@@ -112,7 +103,7 @@ describe('token typed into a terminal', () => {
     });
 
     it('cancels on ctrl+c', async () => {
-        const answer = tokenStep.ask({}).catch((error: unknown) => error);
+        const answer = askToken().catch((error: unknown) => error);
         await press(CTRL_C);
 
         expect(isSeedcordError(await answer, undefined, SeedcordErrorCode.CreateCancelled)).toBe(true);

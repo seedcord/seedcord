@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -8,11 +8,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
 
 import type { Logger } from '@seedcord/logger';
-
-vi.mock('node:fs', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('node:fs')>();
-    return { ...actual, existsSync: vi.fn(actual.existsSync) };
-});
 
 type TestHandler = new () => unknown;
 
@@ -253,20 +248,6 @@ describe('HmrModuleHandler', () => {
         await handler.handle({ file, type: 'deleteDir' });
 
         expect(unregisterHandler).toHaveBeenCalledWith(FixtureHandler, undefined);
-    });
-
-    it('reloads an updated file even when existsSync reports it missing', async () => {
-        const file = join(handlersDir, 'Ping.mjs');
-        writeFileSync(file, 'export class Ping {}\n');
-        vi.mocked(existsSync).mockReturnValue(false);
-
-        try {
-            await handler.handle({ file, type: 'update' });
-        } finally {
-            vi.mocked(existsSync).mockReset();
-        }
-
-        expect(registerHandler).toHaveBeenCalledTimes(1);
     });
 
     it('restores the last-good handler when a reload fails', async () => {

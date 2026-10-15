@@ -9,10 +9,10 @@ Every package's tests run in shared workers, inside a workspace run that already
 
 ## How the workers run
 
-`@seedcord/vitest-config` sets these for every package. Leave them alone in a package's own config.
+`@seedcord/vitest-config` sets these for every package. Leave them alone in a package's own config. apps/docs is the one exception, with `isolate: true` until its tests stop mocking its own modules.
 
 - `isolate: false`. A worker process runs many test files in turn.
-- A setup file calls `vi.resetModules()` before each file. Each file gets fresh instances of the modules vitest runs, so a `vi.mock`, a static cache, or a module-level singleton stays inside its file.
+- A setup file calls `vi.resetModules()` before each file. Each file gets fresh instances of the modules vitest runs, so a static cache or a module-level singleton stays inside its file.
 - `maxWorkers: '25%'` when `CI` is unset, with `concurrency: "2"` in `turbo.json`. Together they keep about half of a dev machine's cores free. CI runners keep vitest's default.
 
 The reset covers only modules vitest runs itself. Everything below survives into the next file in the same worker:
@@ -24,6 +24,14 @@ The reset covers only modules vitest runs itself. Everything below survives into
 - packages in `node_modules`, which Node loads once
 
 A package from `node_modules` that keeps state across calls goes in `server.deps.inline` in the shared config. vitest then runs it, and the reset reloads it for each file. envapt is there because it caches `process.env` on first read. `@testing-library/react` is there because it registers its auto cleanup when it loads.
+
+## Mocks
+
+The reset leaves vitest's mock registry alone. A `vi.mock` in one test file replaces that module for every later file in the same worker, so `vi.mock` and `vi.doMock` go only in `tests/setup.ts`. That includes helpers a test file imports.
+
+- A module every test in the package needs faked goes in `tests/setup.ts`, mocked the same way for every file. See the REST fake in `packages/http/tests/setup.ts` and its `restClients()` helper.
+- A test that needs to read or change one call spies on the class with `vi.spyOn(SomeClass.prototype, 'method')` and restores it in `afterEach`. A spy patches the class this file loaded and leaves the module registry alone.
+- A test that needs its own behavior passes the fake in, through a constructor argument or a parameter. `TypeChecker` takes its `tsc` runner this way, and the create-seedcord steps take their prompt streams.
 
 ## Clean up with Disposable handles
 
@@ -60,8 +68,8 @@ The full suite runs with the machine busy, so a step that takes 3ms alone can ta
 
 Run these before calling a test change done:
 
-1. `pnpm -C <pkg> exec vitest run --maxWorkers=1`. One worker runs every file in one process, which shows a cross-file leak in a single run.
-2. Run the package suite twice. An order-dependent leak can pass once.
+1. `pnpm -C <pkg> exec vitest run --maxWorkers=1`. One worker runs every file in one process, which shows a cross-file leak in a single run. In packages/http, add `--project node`, since the workerd pool isolates its own files.
+2. Run it with `--sequence.shuffle.files --sequence.seed=<n>` for two or three seeds. CI groups files into workers differently from your machine, and a leak that depends on file order shows up under a different order.
 3. Confirm `tests/temp` is empty afterwards. `pnpm clean:scratch` clears what a killed run left behind.
 
 To find where a suite spends its time, read [`PROFILING.md`](PROFILING.md).

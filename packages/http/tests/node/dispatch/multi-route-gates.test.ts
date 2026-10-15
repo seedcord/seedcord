@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { Cooldown, InteractionKind } from '@seedcord/core';
 import { GatedMetadataKey, interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { dispatchInteraction } from '#src/dispatch/dispatchInteraction';
@@ -16,18 +16,6 @@ import type { InteractionMiddlewareConstructor } from '#handlers/constructors';
 import type { ValidInteractionTypes } from '#handlers/interactionTypes';
 import type { Core } from '#interfaces/Core';
 import type { SubscriptionData } from '@seedcord/core';
-
-vi.mock('@discordjs/rest', async (importOriginal) => {
-    class FakeRest {
-        public post = vi.fn().mockResolvedValue({ resource: { message: { id: 'm-1' } } });
-        public patch = vi.fn().mockResolvedValue({ id: 'm-1' });
-
-        public setToken(): this {
-            return this;
-        }
-    }
-    return { ...(await importOriginal<object>()), REST: FakeRest };
-});
 
 class Vote extends SlashHandler<never> {
     public async execute(): Promise<void> {

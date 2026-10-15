@@ -82,10 +82,11 @@ function colorOptions(this: { userInput: string }): Option<string>[] {
 export const botColorStep: Step<'botColor'> = {
     key: 'botColor',
     flag: { name: 'color', description: 'a color name or a six-digit hex', parse: parseColor },
-    ask: async () =>
+    ask: async (_answers, streams) =>
         parseColor(
             requireAnswer(
                 await autocomplete<string>({
+                    ...streams,
                     message: 'Pick an accent color, or type a hex',
                     options: colorOptions,
                     initialValue: 'Blurple',

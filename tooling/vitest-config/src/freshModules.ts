@@ -1,4 +1,4 @@
 import { vi } from 'vitest';
 
-// vi.mock only replaces imports in modules loaded after it
+// fresh module instances for every test file. vitest keeps its vi.mock registry through this
 vi.resetModules();
