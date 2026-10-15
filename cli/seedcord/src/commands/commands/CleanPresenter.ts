@@ -5,12 +5,14 @@ import stringWidth from 'string-width';
 import { plural } from '#core/format';
 
 import type { StepPrinter } from '#core/output/StepPrinter';
-import type { Prompter } from '#core/prompts/Prompter';
 import type { Flagged } from './classify';
 import type { DeleteResult, ScanResult, SkippedGuild } from './CleanRunner';
 import type { CleanStep, CleanStepLabel } from './cleanSteps';
-import type { CleanPresenter, EmptyOutcome } from './executeClean';
-import type { ILogger } from '@seedcord/types';
+import type { EmptyOutcome } from './executeClean';
+
+export type Confirm = (message: string) => Promise<boolean>;
+
+type CleanOutput = Pick<StepPrinter<CleanStepLabel>, 'step' | 'line' | 'warn'>;
 
 interface GuildGroup {
     guildName: string;
@@ -48,24 +50,20 @@ function emptyLines(scan: ScanResult, outcome: EmptyOutcome): { info: string[]; 
         'no-globals': {
             info: [
                 'This app has no global commands, so nothing can duplicate one.',
-                'Re-run and choose a full reset to remove guild commands.'
+                'Re-run with a full reset (--purge) to remove guild commands.'
             ],
             outro: 'Nothing to clean.'
         },
         'no-overlaps': {
             info: [
                 `Scanned ${plural(scan.scannedCommandCount, 'guild command')} across ${plural(scan.scannedGuildCount, 'guild')}. None duplicate a global command.`,
-                'Re-run and choose a full reset to remove all of them.'
+                'Re-run with a full reset (--purge) to remove all of them.'
             ],
             outro: 'Nothing to clean.'
         }
     };
     return variants[outcome];
 }
-
-const UNTOUCHED = 'Global commands untouched.';
-
-type CleanOutput = Pick<StepPrinter<CleanStepLabel>, 'step' | 'line' | 'warn'>;
 
 // a user or message command shows in Discord's context menu under its bare name
 function commandLabel(command: Flagged): string {
@@ -77,10 +75,10 @@ function padToWidth(text: string, width: number): string {
     return text + ' '.repeat(width - stringWidth(text));
 }
 
-export class InteractivePresenter implements CleanPresenter {
+export class CleanPresenter {
     constructor(
         private readonly output: CleanOutput,
-        private readonly prompter: Prompter
+        private readonly confirm: Confirm
     ) {}
 
     public step<Result>(step: CleanStep<Result>, task: () => Promise<Result>): Promise<Result> {
@@ -101,22 +99,18 @@ export class InteractivePresenter implements CleanPresenter {
     }
 
     public largeBotGuard(guildCount: number): Promise<boolean> {
-        return this.prompter.confirm({
-            message: `The bot is in ${guildCount} guilds. Scan all of them? This makes ${guildCount} requests.`
-        });
+        return this.confirm(`The bot is in ${guildCount} guilds. Scan all of them? This makes ${guildCount} requests.`);
     }
 
     public confirmDelete(count: number, skippedCount: number): Promise<boolean> {
         const skips = skippedCount > 0 ? ` ${plural(skippedCount, 'guild')} could not be read.` : '';
-        return this.prompter.confirm({
-            message: `Delete ${plural(count, 'guild command')}? This cannot be undone.${skips}`
-        });
+        return this.confirm(`Delete ${plural(count, 'guild command')}? This cannot be undone.${skips}`);
     }
 
     public result(deletion: DeleteResult): void {
         for (const failure of deletion.failed) this.output.warn(failedDelete(failure));
         this.output.line();
-        this.output.line(paint.mute(UNTOUCHED));
+        this.output.line(paint.mute('Global commands untouched.'));
     }
 
     public nothingToClean(scan: ScanResult, outcome: EmptyOutcome): void {
@@ -127,49 +121,6 @@ export class InteractivePresenter implements CleanPresenter {
     }
 
     public dryRunHint(): void {
-        this.output.line(paint.mute('Dry run, nothing was deleted.'));
-    }
-}
-
-export class FlagPresenter implements CleanPresenter {
-    constructor(private readonly logger: ILogger) {}
-
-    public step<Result>(step: CleanStep<Result>, task: () => Promise<Result>): Promise<Result> {
-        this.logger.info(step.startMessage);
-        return task();
-    }
-
-    public preview(scan: ScanResult): void {
-        this.logger.info(paint.bold(`${plural(scan.flagged.length, 'guild command')} selected for deletion`));
-        for (const group of groupByGuild(scan.flagged)) {
-            this.logger.info(paint.sky(group.guildName));
-            for (const command of group.commands) this.logger.info(`  ${command.name}`);
-        }
-        for (const skip of scan.skipped) this.logger.warn(`Skipped ${skip.guildName} (${skip.reason}).`);
-    }
-
-    // in flag mode --all-guilds and --apply are the go-ahead
-    public largeBotGuard(): Promise<boolean> {
-        return Promise.resolve(true);
-    }
-
-    public confirmDelete(): Promise<boolean> {
-        return Promise.resolve(true);
-    }
-
-    public result(deletion: DeleteResult, skipped: SkippedGuild[]): void {
-        for (const failure of deletion.failed) this.logger.warn(failedDelete(failure));
-        if (skipped.length > 0) this.logger.warn(skippedSummary(skipped));
-        this.logger.info(paint.mint(`Deleted ${plural(deletion.deleted, 'guild command')}. ${UNTOUCHED}`));
-    }
-
-    public nothingToClean(scan: ScanResult, outcome: EmptyOutcome): void {
-        const lines = emptyLines(scan, outcome);
-        for (const line of lines.info) this.logger.info(line);
-        this.logger.info(paint.mint(lines.outro));
-    }
-
-    public dryRunHint(): void {
-        this.logger.info(paint.italic('Dry run. Re-run with --apply to delete the above.'));
+        this.output.line(paint.mute('Dry run. Re-run with --apply to delete these.'));
     }
 }

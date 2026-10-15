@@ -1,11 +1,13 @@
+import { stripVTControlCharacters } from 'node:util';
+
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it, vi, type Mock } from 'vitest';
 
+import { CleanPresenter } from '#commands/commands/CleanPresenter';
 import { emptyOutcome, executeClean, LARGE_BOT_THRESHOLD } from '#commands/commands/executeClean';
 
 import type { Flagged } from '#commands/commands/classify';
 import type { CleanOps, CleanScope, GuildSummary, ScanResult } from '#commands/commands/CleanRunner';
-import type { CleanPresenter } from '#commands/commands/executeClean';
 
 const flagged: Flagged[] = [
     {
@@ -35,19 +37,6 @@ function fakeRunner(over: { guilds?: GuildSummary[]; scan?: ScanResult } = {}): 
         ),
         scanGuilds: vi.fn(() => Promise.resolve(over.scan ?? fullScan)),
         applyDeletions: vi.fn(() => Promise.resolve({ deleted: flagged.length, failed: [] }))
-    };
-}
-
-function fakePresenter(over: Partial<Record<keyof CleanPresenter, Mock>> = {}): Record<keyof CleanPresenter, Mock> {
-    return {
-        step: vi.fn((_step: unknown, task: () => Promise<unknown>) => task()),
-        preview: vi.fn(),
-        largeBotGuard: vi.fn(() => Promise.resolve(true)),
-        confirmDelete: vi.fn(() => Promise.resolve(true)),
-        result: vi.fn(),
-        nothingToClean: vi.fn(),
-        dryRunHint: vi.fn(),
-        ...over
     };
 }
 
@@ -84,79 +73,88 @@ describe('emptyOutcome', () => {
 });
 
 describe('executeClean', () => {
-    function run(
-        runner: Record<keyof CleanOps, Mock>,
-        presenter: CleanPresenter,
-        apply: boolean,
-        over: Partial<CleanScope> = {}
-    ): Promise<void> {
-        return executeClean({ runner, scope: { ...scope, ...over }, apply, token: 'token', presenter });
+    interface Run {
+        lines: string[];
+        confirm: Mock<(message: string) => Promise<boolean>>;
     }
 
-    it('reports nothing to clean and never previews, confirms, or deletes when the scan is empty', async () => {
+    async function run(
+        runner: Record<keyof CleanOps, Mock>,
+        { apply, answer = true, over = {} }: { apply: boolean; answer?: boolean; over?: Partial<CleanScope> }
+    ): Promise<Run> {
+        const lines: string[] = [];
+        const confirm = vi.fn(() => Promise.resolve(answer));
+        const output = {
+            step: <Result>(_label: string, task: () => Promise<Result>) => task(),
+            line: (text = '') => lines.push(stripVTControlCharacters(text)),
+            warn: (text: string) => lines.push(text)
+        };
+        await executeClean({
+            runner,
+            scope: { ...scope, ...over },
+            apply,
+            token: 'token',
+            presenter: new CleanPresenter(output, confirm)
+        });
+        return { lines, confirm };
+    }
+
+    it('reports nothing to clean and never asks or deletes when the scan is empty', async () => {
         const runner = fakeRunner({ scan: emptyScan });
-        const presenter = fakePresenter();
 
-        await run(runner, presenter, true);
+        const { lines, confirm } = await run(runner, { apply: true });
 
-        expect(presenter.nothingToClean).toHaveBeenCalledOnce();
-        expect(presenter.preview).not.toHaveBeenCalled();
-        expect(presenter.confirmDelete).not.toHaveBeenCalled();
+        expect(lines).toContain('Nothing to clean.');
+        expect(confirm).not.toHaveBeenCalled();
         expect(runner.applyDeletions).not.toHaveBeenCalled();
     });
 
-    it('previews and shows the dry-run hint without confirming or deleting when apply is false', async () => {
+    it('lists the duplicates and says how to delete them on a dry run', async () => {
         const runner = fakeRunner();
-        const presenter = fakePresenter();
 
-        await run(runner, presenter, false);
+        const { lines, confirm } = await run(runner, { apply: false });
 
-        expect(presenter.preview).toHaveBeenCalledOnce();
-        expect(presenter.dryRunHint).toHaveBeenCalledOnce();
-        expect(presenter.confirmDelete).not.toHaveBeenCalled();
+        expect(lines).toContain('  Alpha  /ban');
+        expect(lines).toContain('Dry run. Re-run with --apply to delete these.');
+        expect(confirm).not.toHaveBeenCalled();
         expect(runner.applyDeletions).not.toHaveBeenCalled();
     });
 
-    it('deletes and renders the result when apply is true and the delete is confirmed', async () => {
+    it('asks before it deletes, then deletes what the scan flagged', async () => {
         const runner = fakeRunner();
-        const presenter = fakePresenter();
 
-        await run(runner, presenter, true);
+        const { confirm } = await run(runner, { apply: true });
 
-        expect(presenter.confirmDelete).toHaveBeenCalledWith(1, 0);
+        expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Delete 1 guild command?'));
         expect(runner.applyDeletions).toHaveBeenCalledWith('token', 'app1', flagged);
-        expect(presenter.result).toHaveBeenCalledOnce();
     });
 
-    it('does not delete when the confirm is declined', async () => {
+    it('deletes nothing when the delete is declined', async () => {
         const runner = fakeRunner();
-        const presenter = fakePresenter({ confirmDelete: vi.fn(() => Promise.resolve(false)) });
 
-        await run(runner, presenter, true);
+        const { lines } = await run(runner, { apply: true, answer: false });
 
         expect(runner.applyDeletions).not.toHaveBeenCalled();
-        expect(presenter.result).not.toHaveBeenCalled();
+        expect(lines).not.toContain('Global commands untouched.');
     });
 
-    it('runs the large-bot guard above the threshold and aborts before scanning when declined', async () => {
+    it('asks before scanning more guilds than one page holds, and stops when declined', async () => {
         const guilds = Array.from({ length: LARGE_BOT_THRESHOLD + 1 }, (_, i) => ({ id: String(i), name: String(i) }));
         const runner = fakeRunner({ guilds });
-        const presenter = fakePresenter({ largeBotGuard: vi.fn(() => Promise.resolve(false)) });
 
-        await run(runner, presenter, true, { guildIds: [], allGuilds: true });
+        const { confirm } = await run(runner, { apply: true, answer: false, over: { guildIds: [], allGuilds: true } });
 
-        expect(presenter.largeBotGuard).toHaveBeenCalledWith(guilds.length);
+        expect(confirm).toHaveBeenCalledWith(expect.stringContaining(`${guilds.length} guilds`));
         expect(runner.scanGuilds).not.toHaveBeenCalled();
     });
 
-    it('skips the large-bot guard at or below the threshold', async () => {
+    it('scans without asking at or below one page of guilds', async () => {
         const guilds = Array.from({ length: LARGE_BOT_THRESHOLD }, (_, i) => ({ id: String(i), name: String(i) }));
         const runner = fakeRunner({ guilds });
-        const presenter = fakePresenter();
 
-        await run(runner, presenter, false, { guildIds: [], allGuilds: true });
+        const { confirm } = await run(runner, { apply: false, over: { guildIds: [], allGuilds: true } });
 
-        expect(presenter.largeBotGuard).not.toHaveBeenCalled();
+        expect(confirm).not.toHaveBeenCalled();
         expect(runner.scanGuilds).toHaveBeenCalledOnce();
     });
 });

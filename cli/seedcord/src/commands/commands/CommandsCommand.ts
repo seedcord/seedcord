@@ -1,36 +1,38 @@
-import { isSeedcordError } from '@seedcord/errors';
-import { validateDiscordToken, WORDMARK } from '@seedcord/errors/internal';
+import { validateDiscordToken } from '@seedcord/errors/internal';
 import { Envapter } from 'envapt';
 
 import { BaseCommand } from '#core/BaseCommand';
-import { cliLogger } from '#core/cliLogger';
 import { isInteractive } from '#core/interactive';
 import { Prompter } from '#core/prompts/Prompter';
 
+import { CleanPresenter } from './CleanPresenter';
 import { CleanRunner } from './CleanRunner';
+import { CLEAN_STEP_LABELS } from './cleanSteps';
 import { CleanWizard, WIZARD_STEPS } from './CleanWizard';
-import { runCleanFromFlags } from './flagClean';
+import { executeClean } from './executeClean';
 
+import type { Confirm } from './CleanPresenter';
 import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
 
-export interface CleanInvocation {
+interface CleanInvocation {
     guild: string[];
     allGuilds: boolean;
     apply: boolean;
     purge: boolean;
 }
 
-export function hasCleanFlags(options: CleanInvocation): boolean {
+function hasCleanFlags(options: CleanInvocation): boolean {
     return [options.allGuilds, options.apply, options.purge].some(Boolean) || options.guild.length > 0;
 }
+
+// in flag mode --all-guilds and --apply are the go-ahead
+const PROCEED: Confirm = () => Promise.resolve(true);
 
 function readToken(): string {
     return validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
 }
 
 export class CommandsCommand extends BaseCommand {
-    private readonly logger = cliLogger('Commands');
-
     constructor(private readonly cleanRunner: CleanRunner = CleanRunner.create()) {
         super('commands', 'Manage the commands registered on Discord');
     }
@@ -75,23 +77,15 @@ export class CommandsCommand extends BaseCommand {
             return;
         }
 
-        try {
-            await runCleanFromFlags(
-                this.cleanRunner,
-                {
-                    guildIds: options.guild,
-                    allGuilds: options.allGuilds,
-                    apply: options.apply,
-                    purge: options.purge
-                },
-                readToken(),
-                this.logger
-            );
-        } catch (error: unknown) {
-            this.logger.error(`${WORDMARK} commands failed`, error);
-            if (isSeedcordError(error)) process.exitCode = 1;
-            else process.exit(1);
-        }
+        await this.runSteps(command, CLEAN_STEP_LABELS, (printer) =>
+            executeClean({
+                runner: this.cleanRunner,
+                scope: { guildIds: options.guild, allGuilds: options.allGuilds, purge: options.purge },
+                apply: options.apply,
+                token: readToken(),
+                presenter: new CleanPresenter(printer, PROCEED)
+            })
+        );
     }
 
     private async runCleanWizard(command: CommandUnknownOpts): Promise<void> {

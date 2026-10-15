@@ -2,7 +2,7 @@ import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
 
 import { plural } from '#core/format';
 
-import { InteractivePresenter } from './cleanPresenters';
+import { CleanPresenter } from './CleanPresenter';
 import { CLEAN_STEP_LABELS } from './cleanSteps';
 import { executeClean } from './executeClean';
 
@@ -42,7 +42,7 @@ export class CleanWizard {
                 scope: plan.scope,
                 apply: true,
                 token: this.token,
-                presenter: new InteractivePresenter(this.printer, this.prompter),
+                presenter: new CleanPresenter(this.printer, (message) => this.prompter.confirm({ message })),
                 knownGuilds: plan.knownGuilds
             });
         } catch (error: unknown) {

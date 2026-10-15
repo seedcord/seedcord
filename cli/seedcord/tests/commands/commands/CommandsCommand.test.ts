@@ -1,37 +1,19 @@
+import { stripVTControlCharacters } from 'node:util';
+
 import { Command } from '@commander-js/extra-typings';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CommandsCommand, hasCleanFlags } from '#commands/commands/CommandsCommand';
+import { CommandsCommand } from '#commands/commands/CommandsCommand';
 import { LARGE_BOT_THRESHOLD } from '#commands/commands/executeClean';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
 
 import type { Flagged } from '#commands/commands/classify';
 import type { CleanOps, CleanRunner, GuildSummary } from '#commands/commands/CleanRunner';
-import type { CleanInvocation } from '#commands/commands/CommandsCommand';
 import type { Mock } from 'vitest';
-
-const base: CleanInvocation = {
-    guild: [],
-    allGuilds: false,
-    apply: false,
-    purge: false
-};
-
-describe('hasCleanFlags', () => {
-    it('is false with no flags', () => {
-        expect(hasCleanFlags(base)).toBe(false);
-    });
-
-    it('is true when only --guild is given, so it never silently no-ops', () => {
-        expect(hasCleanFlags({ ...base, guild: ['123'] })).toBe(true);
-    });
-
-    it('is true for --apply alone', () => {
-        expect(hasCleanFlags({ ...base, apply: true })).toBe(true);
-    });
-});
 
 const DUPLICATE: Flagged = {
     id: '11',
@@ -56,12 +38,70 @@ function fakeRunner(guilds: GuildSummary[] = [{ id: '1', name: 'one' }]): Record
     };
 }
 
+interface CapturedOutput extends Disposable {
+    stdout(): string;
+    stderr(): string;
+}
+
+function captureOutput(): CapturedOutput {
+    const capture = (stream: NodeJS.WriteStream): { text: () => string; restore: () => void } => {
+        const chunks: string[] = [];
+        const spy = vi.spyOn(stream, 'write').mockImplementation((chunk: string | Uint8Array) => {
+            chunks.push(String(chunk));
+            return true;
+        });
+        return { text: () => stripVTControlCharacters(chunks.join('')), restore: () => spy.mockRestore() };
+    };
+    const stdout = capture(process.stdout);
+    const stderr = capture(process.stderr);
+
+    return {
+        stdout: stdout.text,
+        stderr: stderr.text,
+        [Symbol.dispose]: () => {
+            stdout.restore();
+            stderr.restore();
+            process.exitCode = undefined;
+        }
+    };
+}
+
 async function run(runner: Record<keyof CleanOps, Mock>, ...args: string[]): Promise<void> {
     const program = new Command().exitOverride();
     // justified: flag mode calls only the CleanOps methods
     new CommandsCommand(runner as unknown as CleanRunner).register(program);
     await program.parseAsync(['commands', ...args], { from: 'user' });
 }
+
+describe('seedcord commands clean, on a terminal', () => {
+    const original = { stdin: process.stdin.isTTY, stdout: process.stdout.isTTY, ci: process.env.CI };
+
+    beforeEach(() => {
+        process.stdin.isTTY = true;
+        process.stdout.isTTY = true;
+        delete process.env.CI;
+        Envapter.useSource(new PortableSource({ DISCORD_BOT_TOKEN: FAKE_TOKEN }));
+    });
+
+    afterEach(() => {
+        process.stdin.isTTY = original.stdin;
+        process.stdout.isTTY = original.stdout;
+        if (original.ci !== undefined) process.env.CI = original.ci;
+    });
+
+    // the wizard would wait on a keypress and time the test out
+    it.each([['--guild', '1'], ['--all-guilds'], ['--apply'], ['--purge']])(
+        'runs straight through with %s and opens no wizard',
+        async (...flags) => {
+            using _output = captureOutput();
+            const runner = fakeRunner();
+
+            await run(runner, 'clean', ...flags);
+
+            expect(runner.resolveTargets).toHaveBeenCalledOnce();
+        }
+    );
+});
 
 describe('seedcord commands clean, off a terminal', () => {
     const stdinIsTTY = process.stdin.isTTY;
@@ -102,5 +142,29 @@ describe('seedcord commands clean, off a terminal', () => {
         await run(runner, 'clean', '--all-guilds');
 
         expect(runner.scanGuilds).toHaveBeenCalledOnce();
+    });
+
+    it('prints a row per step, then the duplicates and how to delete them', async () => {
+        using output = captureOutput();
+
+        await run(fakeRunner(), 'clean', '--guild', '1');
+
+        const check = stripVTControlCharacters(paint.check);
+        expect(output.stdout()).toMatch(new RegExp(String.raw`${check} connect +\S+\n`, 'u'));
+        expect(output.stdout()).toMatch(new RegExp(String.raw`${check} scan +\S+ +1 duplicate in 1 guild\n`, 'u'));
+        expect(output.stdout()).toContain('    one  /ban\n');
+        expect(output.stdout()).toContain('--apply');
+    });
+
+    it('prints a failure as its code and message, with no stack', async () => {
+        using output = captureOutput();
+        const runner = fakeRunner();
+        runner.resolveTargets.mockRejectedValue(new SeedcordError(SeedcordErrorCode.CliCleanNoGuilds));
+
+        await run(runner, 'clean', '--apply');
+
+        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliCleanNoGuilds}] No guilds given.`);
+        expect(output.stderr()).not.toMatch(/^\s+at /mu);
+        expect(process.exitCode).toBe(1);
     });
 });

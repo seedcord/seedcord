@@ -1,18 +1,7 @@
 import { connectStep, deleteStep, scanStep } from './cleanSteps';
 
-import type { CleanOps, CleanScope, DeleteResult, GuildSummary, ScanResult, SkippedGuild } from './CleanRunner';
-import type { CleanStep } from './cleanSteps';
-
-// the wizard and the flag path print every line and ask every question through one of these
-export interface CleanPresenter {
-    step<Result>(step: CleanStep<Result>, task: () => Promise<Result>): Promise<Result>;
-    preview(scan: ScanResult): void;
-    largeBotGuard(guildCount: number): Promise<boolean>;
-    confirmDelete(count: number, skippedCount: number): Promise<boolean>;
-    result(deletion: DeleteResult, skipped: SkippedGuild[]): void;
-    nothingToClean(scan: ScanResult, outcome: EmptyOutcome): void;
-    dryRunHint(): void;
-}
+import type { CleanPresenter } from './CleanPresenter';
+import type { CleanOps, CleanScope, GuildSummary, ScanResult } from './CleanRunner';
 
 export interface CleanRequest {
     runner: CleanOps;
@@ -65,7 +54,7 @@ export async function executeClean(request: CleanRequest): Promise<void> {
     const deletion = await presenter.step(deleteStep(scan.flagged.length), () =>
         runner.applyDeletions(token, appId, scan.flagged)
     );
-    presenter.result(deletion, scan.skipped);
+    presenter.result(deletion);
 }
 
 function overlayNames(guilds: GuildSummary[], knownGuilds?: GuildSummary[]): GuildSummary[] {
