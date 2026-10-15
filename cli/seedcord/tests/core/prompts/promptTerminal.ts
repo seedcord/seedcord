@@ -1,9 +1,13 @@
+import { expect, vi } from 'vitest';
+
 import { Prompter } from '#core/prompts/Prompter';
 import { KeyboardStdin, ScreenStdout } from '#tests/ui/terminalStubs';
 
 export const KEY = {
     up: '\u001B[A',
     down: '\u001B[B',
+    right: '\u001B[C',
+    left: '\u001B[D',
     enter: '\r',
     tab: '\t',
     backspace: '\u007F',
@@ -17,8 +21,12 @@ export class PromptTerminal {
 
     public readonly prompter = new Prompter({ stdin: this.stdin, stdout: this.stdout });
 
-    public press(...keys: string[]): void {
-        for (const key of keys) this.stdin.write(key);
+    // ink reads two keys left in the stream together as one pasted string
+    public async press(...keys: string[]): Promise<void> {
+        for (const key of keys) {
+            this.stdin.write(key);
+            await vi.waitFor(() => expect(this.stdin.readableLength).toBe(0));
+        }
     }
 
     // stands in for the next line StepPrinter writes

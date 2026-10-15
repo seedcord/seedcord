@@ -17,7 +17,8 @@ const SCENARIOS: Record<string, Scenario> = {
                     hint: 'duplicates only, pick specific guilds for a full reset'
                 }
             ]
-        })
+        }),
+    confirm: (prompter) => prompter.confirm({ message: 'Delete 3 guild commands? This cannot be undone.' })
 };
 
 function write(line: string): void {

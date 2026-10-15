@@ -16,7 +16,7 @@ describe('Prompter.select', () => {
         const terminal = new PromptTerminal();
         const answer = terminal.prompter.select(WHICH_GUILDS);
 
-        terminal.press(KEY.down, KEY.enter);
+        await terminal.press(KEY.down, KEY.enter);
 
         await expect(answer).resolves.toBe('all');
     });
@@ -25,7 +25,7 @@ describe('Prompter.select', () => {
         const terminal = new PromptTerminal();
         const answer = terminal.prompter.select(WHICH_GUILDS);
 
-        terminal.press(KEY.up, KEY.enter);
+        await terminal.press(KEY.up, KEY.enter);
 
         await expect(answer).resolves.toBe('all');
     });
@@ -34,7 +34,7 @@ describe('Prompter.select', () => {
         const terminal = new PromptTerminal();
         const answer = terminal.prompter.select(WHICH_GUILDS);
 
-        terminal.press(KEY.enter);
+        await terminal.press(KEY.enter);
         await answer;
         terminal.print('next');
 
@@ -48,7 +48,7 @@ describe('Prompter.select', () => {
         const terminal = new PromptTerminal();
         const answer = terminal.prompter.select(WHICH_GUILDS);
 
-        terminal.press(key);
+        await terminal.press(key);
 
         await expect(answer).rejects.toMatchObject({ code: SeedcordErrorCode.CliCancelled });
     });
