@@ -37,7 +37,7 @@ export async function readDeployed(
 ): Promise<DeployResult> {
     const [global, ...guilds] = await Promise.all([
         commandsAt(rest, Routes.applicationCommands(applicationId), 'globally'),
-        ...[...guildIds].map((guildId) => guildEntry(rest, applicationId, guildId))
+        ...Iterator.from(guildIds).map((guildId) => guildEntry(rest, applicationId, guildId))
     ]);
     return { global, guilds: new Map(guilds) };
 }

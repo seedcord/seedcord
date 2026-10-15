@@ -4,13 +4,12 @@ import { commandLabel, printSections } from '#commands/commands/commandRows';
 import { plural } from '#core/format';
 
 import type { CommandSection } from '#commands/commands/commandRows';
+import type { Confirm } from '#commands/commands/confirm';
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Flagged } from './classify';
 import type { DeleteResult, ScanResult, SkippedGuild } from './CleanRunner';
 import type { CleanStep, CleanStepLabel } from './cleanSteps';
 import type { EmptyOutcome } from './executeClean';
-
-export type Confirm = (message: string) => Promise<boolean>;
 
 type CleanOutput = Pick<StepPrinter<CleanStepLabel>, 'step' | 'line' | 'wrapped' | 'warn'>;
 
@@ -67,7 +66,8 @@ function emptyLines(scan: ScanResult, outcome: EmptyOutcome): { info: string[]; 
 
 function guildSection({ guildName, commands }: GuildGroup): CommandSection {
     const noun = commands[0]?.reason === 'purge' ? 'command' : 'duplicate';
-    return { title: guildName, note: plural(commands.length, noun), commands: commands.map(commandLabel) };
+    const items = commands.map((command) => commandLabel(command));
+    return { title: guildName, note: plural(commands.length, noun), rows: [{ items }] };
 }
 
 export class CleanPresenter {

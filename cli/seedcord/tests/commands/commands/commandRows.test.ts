@@ -40,8 +40,8 @@ describe('printSections', () => {
         const stdout = terminal();
 
         printSections(printerOn(stdout), [
-            { title: 'Alpha', note: '3 duplicates', commands: [ban, report, translate] },
-            { title: 'Beta', note: '1 duplicate', commands: [kick] }
+            { title: 'Alpha', note: '3 duplicates', rows: [{ items: [ban, report, translate] }] },
+            { title: 'Beta', note: '1 duplicate', rows: [{ items: [kick] }] }
         ]);
 
         expect(stdout.lines()).toEqual([
@@ -59,7 +59,7 @@ describe('printSections', () => {
     it('wraps at the terminal width under the same indent and keeps a context menu name whole', () => {
         const stdout = terminal(28);
 
-        printSections(printerOn(stdout), [{ title: 'Alpha', commands: [ban, kick, report, ban, kick] }]);
+        printSections(printerOn(stdout), [{ title: 'Alpha', rows: [{ items: [ban, kick, report, ban, kick] }] }]);
 
         expect(stdout.lines()).toEqual([
             '',
@@ -67,6 +67,32 @@ describe('printSections', () => {
             '      /ban /kick',
             '      Report User (user)',
             '      /ban /kick',
+            '',
+            ''
+        ]);
+    });
+
+    it('prints a row marker ahead of the commands and wraps the row under them', () => {
+        const stdout = terminal(28);
+
+        printSections(printerOn(stdout), [
+            {
+                title: 'global',
+                rows: [
+                    { marker: '+', items: [ban, kick, report] },
+                    { marker: '-', items: [translate] },
+                    { items: ['1 unchanged'] }
+                ]
+            }
+        ]);
+
+        expect(stdout.lines()).toEqual([
+            '',
+            '  global',
+            '    + /ban /kick',
+            '      Report User (user)',
+            '    - Translate (message)',
+            '      1 unchanged',
             '',
             ''
         ]);

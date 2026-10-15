@@ -325,6 +325,8 @@ export enum SeedcordErrorCode {
     CliEdgeWranglerConfigUnreadable = 3154,
     /** Something called the dev runtime before `start()` finished or after `stop()`. A bug in seedcord. */
     CliDevRuntimeNotRunning = 3155,
+    /** `seedcord commands deploy` ran on a bot whose `commands.path` is `null`. */
+    CliDeployNoCommandsFolder = 3156,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

@@ -4,14 +4,17 @@ import { Envapter } from 'envapt';
 import { BaseCommand } from '#core/BaseCommand';
 import { isInteractive } from '#core/interactive';
 import { Prompter } from '#core/prompts/Prompter';
+import { isVerbose } from '#core/verbose';
 
 import { CleanPresenter } from './clean/CleanPresenter';
 import { CleanRunner } from './clean/CleanRunner';
 import { CLEAN_STEP_LABELS } from './clean/cleanSteps';
 import { CleanWizard, WIZARD_STEPS } from './clean/CleanWizard';
 import { executeClean } from './clean/executeClean';
+import { PROCEED } from './confirm';
+import { DeployPresenter } from './deploy/DeployPresenter';
+import { DEPLOY_STEPS, DeployRunner } from './deploy/DeployRunner';
 
-import type { Confirm } from './clean/CleanPresenter';
 import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
 
 interface CleanInvocation {
@@ -24,9 +27,6 @@ interface CleanInvocation {
 function hasCleanFlags(options: CleanInvocation): boolean {
     return [options.allGuilds, options.apply, options.purge].some(Boolean) || options.guild.length > 0;
 }
-
-// in flag mode --all-guilds and --apply are the go-ahead
-const PROCEED: Confirm = () => Promise.resolve(true);
 
 function readToken(): string {
     return validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
@@ -42,6 +42,11 @@ export class CommandsCommand extends BaseCommand {
             .command(this.name)
             .description(this.description)
             .action((_options, command) => this.openWizard(command));
+
+        commands
+            .command('deploy')
+            .description('Deploy the commands in your code to Discord')
+            .action((_options, command) => this.deploy(command));
 
         commands
             .command('clean')
@@ -69,6 +74,12 @@ export class CommandsCommand extends BaseCommand {
             return;
         }
         await this.runCleanWizard(command);
+    }
+
+    private async deploy(command: CommandUnknownOpts): Promise<void> {
+        await this.runSteps(command, DEPLOY_STEPS, (printer) =>
+            DeployRunner.create().run(new DeployPresenter(printer, PROCEED, isVerbose(command)))
+        );
     }
 
     private async clean(options: CleanInvocation, command: CommandUnknownOpts): Promise<void> {
