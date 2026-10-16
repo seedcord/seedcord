@@ -10,7 +10,7 @@ export async function applicationOf(rest: Pick<REST, 'get'>): Promise<RESTGetCur
     try {
         return await currentApplication(rest);
     } catch (error: unknown) {
-        throw new SeedcordError(SeedcordErrorCode.CliApplicationUnreadable, [asError(error).message], {
+        throw new SeedcordError(SeedcordErrorCode.CoreDiscordReadFailed, ['the application', asError(error).message], {
             cause: error
         });
     }

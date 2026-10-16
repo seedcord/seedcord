@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { resolveProjectTsc } from './resolveProjectTsc';
@@ -13,7 +13,13 @@ interface TscResult {
 
 export async function runProjectTsc(projectDir: string, args: string[]): Promise<TscResult> {
     const tsc = resolveProjectTsc(projectDir);
-    if (!tsc) throw new SeedcordError(SeedcordErrorCode.CliTypescriptMissing, [projectDir]);
+    if (!tsc) {
+        throw new SeedcordError(SeedcordErrorCode.CliDependencyMissing, [
+            ['typescript'],
+            projectDir,
+            `seedcord reads your tsconfig with it, and ${paint.bold('seedcord build')} type checks with it.`
+        ]);
+    }
 
     return await new Promise((resolvePromise, rejectPromise) => {
         const child = spawn(process.execPath, [tsc, ...args], { cwd: projectDir, stdio: ['ignore', 'pipe', 'pipe'] });

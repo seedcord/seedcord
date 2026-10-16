@@ -141,11 +141,11 @@ describe('ProjectLoader target', () => {
         expect(target.kind).toBe('edge');
     });
 
-    it('throws CliTsconfigUnreadable for a tsconfig TypeScript cannot parse', async () => {
+    it('throws CliConfigFileUnreadable for a tsconfig TypeScript cannot parse', async () => {
         const { projectDir, load } = projectWith(MINIMAL);
         writeFileSync(join(projectDir, 'tsconfig.json'), JSON.stringify({ extends: './missing.json' }));
 
-        await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliTsconfigUnreadable });
+        await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigFileUnreadable });
     });
 });
 

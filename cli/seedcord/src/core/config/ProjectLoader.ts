@@ -176,7 +176,7 @@ export class ProjectLoader {
         // justified: entryProblems already required entry on a server target
         const entry = resolve(root, (config as SeedcordServerConfig).entry);
         if (!isInside(root, entry)) {
-            throw new SeedcordTypeError(SeedcordErrorCode.CliConfigEntryOutsideRoot, [entry, root]);
+            throw new SeedcordTypeError(SeedcordErrorCode.CorePathOutsideRoot, [entry, root]);
         }
         return { ...target, entry };
     }

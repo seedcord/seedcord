@@ -232,12 +232,12 @@ describe('seedcord commands clean and purge, off a terminal', () => {
         expect(gets).toContain(Routes.applicationGuildCommands(APP_ID, `g${GUILD_PAGE}`));
     });
 
-    it('prints CliCleanNoGuilds with no stack when clean gets no guilds', async () => {
+    it('prints CliNoScopeGiven with no stack when clean gets no guilds', async () => {
         using output = captureOutput();
 
         await run(['clean', '--yes']);
 
-        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliCleanNoGuilds}] No guilds given.`);
+        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliNoScopeGiven}] No scope given.`);
         expect(output.stderr()).not.toMatch(/^\s+at /mu);
         expect(process.exitCode).toBe(1);
     });
@@ -267,12 +267,12 @@ describe('seedcord commands clean and purge, off a terminal', () => {
         expect(puts).toEqual([{ route: Routes.applicationCommands(APP_ID), names: [] }]);
     });
 
-    it('throws CliPurgeNoTargets when purge gets nothing to empty', async () => {
+    it('throws CliNoScopeGiven when purge gets nothing to empty', async () => {
         using output = captureOutput();
 
         await run(['purge', '--yes']);
 
-        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliPurgeNoTargets}]`);
+        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliNoScopeGiven}]`);
         expect(process.exitCode).toBe(1);
     });
 

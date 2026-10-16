@@ -89,7 +89,7 @@ export class CommandScanner {
             entries = await readdir(dir, { withFileTypes: true });
         } catch (error: unknown) {
             // skipping a folder would delete its commands on the next deploy
-            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryUnreadable, [dir, asError(error).message], {
+            throw new SeedcordError(SeedcordErrorCode.CorePathUnreadable, [dir, asError(error).message], {
                 cause: error
             });
         }

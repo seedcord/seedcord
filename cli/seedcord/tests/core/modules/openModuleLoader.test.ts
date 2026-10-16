@@ -148,7 +148,7 @@ describe('openModuleLoader', () => {
         });
     });
 
-    it('throws CliImportFailed with the reason when a module throws while it loads', async () => {
+    it('throws CoreImportFailed with the reason when a module throws while it loads', async () => {
         const root = await project();
         const entry = join(root, 'src', 'broken.ts');
         await writeFile(entry, `throw new Error('top level boom');\n`, 'utf8');
@@ -157,7 +157,7 @@ describe('openModuleLoader', () => {
         const caught: unknown = await modules.importModule(entry).catch((error: unknown) => error);
 
         assert(isSeedcordError(caught));
-        expect(caught.code).toBe(SeedcordErrorCode.CliImportFailed);
+        expect(caught.code).toBe(SeedcordErrorCode.CoreImportFailed);
         expect(caught.message).toContain('top level boom');
     });
 
@@ -234,11 +234,11 @@ describe('openModuleLoader for an edge bot', () => {
         expect(Object.keys(module).toSorted()).toEqual(['Api', 'Counter', 'Signup']);
     });
 
-    it('throws CliImportFailed for an edge bot without envapt installed', async () => {
+    it('throws CoreImportFailed for an edge bot without envapt installed', async () => {
         const root = await project();
 
         await expect(openModuleLoader(root, edgeTarget(root))).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliImportFailed,
+            code: SeedcordErrorCode.CoreImportFailed,
             message: expect.stringContaining('envapt') as string
         });
     });

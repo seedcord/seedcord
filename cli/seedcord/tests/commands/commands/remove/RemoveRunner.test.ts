@@ -70,7 +70,7 @@ describe('RemoveRunner.run', () => {
         expect(deletes).toEqual([]);
     });
 
-    it('throws CliCommandsUnreadable before it deletes anything when a guild cannot be read', async () => {
+    it('throws CoreDiscordReadFailed before it deletes anything when a guild cannot be read', async () => {
         const discord = fakeDiscord({
             ...ON_DISCORD,
             [Routes.applicationGuildCommands(APP_ID, '222')]: new Error('Missing Access')
@@ -83,7 +83,7 @@ describe('RemoveRunner.run', () => {
             apply: true
         });
 
-        await expect(removal).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandsUnreadable });
+        await expect(removal).rejects.toMatchObject({ code: SeedcordErrorCode.CoreDiscordReadFailed });
         expect(discord.deletes).toEqual([]);
     });
 

@@ -13,8 +13,8 @@ describe('seedcord build on a bot with several bad folders', () => {
         await expect(BuildRunner.create(quietSteps).run(BAD_FOLDERS_BOT)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliProblems,
             errors: [
-                expect.objectContaining({ code: SeedcordErrorCode.CoreDirectoryOutsideRoot }),
-                expect.objectContaining({ code: SeedcordErrorCode.CoreDirectoryOutsideRoot })
+                expect.objectContaining({ code: SeedcordErrorCode.CorePathOutsideRoot }),
+                expect.objectContaining({ code: SeedcordErrorCode.CorePathOutsideRoot })
             ]
         });
     }, 120_000);

@@ -11,7 +11,7 @@ function rendered(error: unknown, options: { verbose?: boolean; width?: number }
 }
 
 const outsideRoot = (folder: string): SeedcordError =>
-    new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [folder, '/bot/src']);
+    new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, '/bot/src']);
 
 const tag = (code: SeedcordErrorCode): string => `[${String(code)}]`;
 
@@ -33,7 +33,7 @@ describe('renderError', () => {
 
         const [headline, ...bullets] = rendered(error).trimEnd().split('\n');
 
-        const outside = tag(SeedcordErrorCode.CoreDirectoryOutsideRoot);
+        const outside = tag(SeedcordErrorCode.CorePathOutsideRoot);
         expect(headline).toContain(`  ${tag(SeedcordErrorCode.CliProblems)} `);
         expect(bullets).toEqual([
             expect.stringContaining(`  • ${outside} /bot/handlers `),

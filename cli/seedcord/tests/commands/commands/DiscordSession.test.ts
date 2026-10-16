@@ -24,11 +24,11 @@ describe('DiscordSession.open', () => {
         expect(session.appId).toBe(APP_ID);
     });
 
-    it('throws CliApplicationUnreadable when the application lookup fails', async () => {
+    it('throws CoreDiscordReadFailed when the application lookup fails', async () => {
         const { rest } = fakeDiscord({ [Routes.currentApplication()]: new Error('401') });
 
         await expect(DiscordSession.open(rest)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliApplicationUnreadable
+            code: SeedcordErrorCode.CoreDiscordReadFailed
         });
     });
 });
@@ -74,7 +74,7 @@ describe('DiscordSession.readScopes', () => {
         });
     });
 
-    it('throws CliCommandsUnreadable on a guild it cannot read', async () => {
+    it('throws CoreDiscordReadFailed on a guild it cannot read', async () => {
         const { session } = await sessionOn({
             [Routes.applicationGuildCommands(APP_ID, '222')]: new Error('Missing Access')
         });
@@ -84,7 +84,7 @@ describe('DiscordSession.readScopes', () => {
             { id: '222', name: 'Beta' }
         ]);
 
-        await expect(scan).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandsUnreadable });
+        await expect(scan).rejects.toMatchObject({ code: SeedcordErrorCode.CoreDiscordReadFailed });
         await expect(scan).rejects.toThrow('222');
     });
 });

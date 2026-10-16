@@ -28,7 +28,7 @@ function notFound(name: string, importer: string): Error {
 }
 
 describe('EdgeBuild', () => {
-    it('throws CliEdgeVitePluginMissing when the project lacks @cloudflare/vite-plugin', async () => {
+    it('throws CliDependencyMissing when the project lacks @cloudflare/vite-plugin', async () => {
         await using project = await new ProjectLoader(openModuleLoader).open(EDGE_BOT);
         const { target } = project.config;
         assert(target.kind === 'edge');
@@ -37,12 +37,12 @@ describe('EdgeBuild', () => {
         const build = new EdgeBuild(project, target, { importCloudflare: () => Promise.reject(missing) });
 
         await expect(build.bundle(NO_IDS)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliEdgeVitePluginMissing,
+            code: SeedcordErrorCode.CliDependencyMissing,
             message: expect.stringContaining('edge-bot') as string
         });
     });
 
-    it('throws CliImportFailed when the plugin loads but one of its own imports is missing', async () => {
+    it('throws CoreImportFailed when the plugin loads but one of its own imports is missing', async () => {
         await using project = await new ProjectLoader(openModuleLoader).open(EDGE_BOT);
         const { target } = project.config;
         assert(target.kind === 'edge');
@@ -51,7 +51,7 @@ describe('EdgeBuild', () => {
         const build = new EdgeBuild(project, target, { importCloudflare: () => Promise.reject(missing) });
 
         await expect(build.bundle(NO_IDS)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliImportFailed,
+            code: SeedcordErrorCode.CoreImportFailed,
             message: expect.stringContaining('miniflare') as string
         });
     });
@@ -77,7 +77,7 @@ describe('EdgeBuild', () => {
         const build = new EdgeBuild(project, target, { openDiscord: () => ({ get: () => Promise.resolve([]) }) });
 
         await expect(build.readDiscord({ ...config.bot, commands: { path: './no-commands' } })).rejects.toMatchObject({
-            code: SeedcordErrorCode.CoreDirectoryUnreadable,
+            code: SeedcordErrorCode.CorePathUnreadable,
             message: expect.stringContaining(join(root, 'no-commands')) as string
         });
     });

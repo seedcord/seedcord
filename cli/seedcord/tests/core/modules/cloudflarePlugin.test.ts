@@ -16,7 +16,7 @@ async function wranglerConfig(text: string): Promise<string> {
 }
 
 describe('readWranglerDev', () => {
-    it('throws CliEdgeWranglerMissing when the project lacks wrangler', async () => {
+    it('throws CliDependencyMissing when the project lacks wrangler', async () => {
         const config = await wranglerConfig('{ "name": "bot" }');
         const missing = Object.assign(
             new Error("Cannot find package 'wrangler' imported from /bot/node_modules/seedcord/dist/cli.mjs"),
@@ -25,11 +25,11 @@ describe('readWranglerDev', () => {
 
         await expect(readWranglerDev(config, undefined, () => Promise.reject(missing))).rejects.toHaveProperty(
             'code',
-            SeedcordErrorCode.CliEdgeWranglerMissing
+            SeedcordErrorCode.CliDependencyMissing
         );
     });
 
-    it('throws CliImportFailed when wrangler fails to load for another reason', async () => {
+    it('throws CoreImportFailed when wrangler fails to load for another reason', async () => {
         const config = await wranglerConfig('{ "name": "bot" }');
 
         await expect(
@@ -37,17 +37,17 @@ describe('readWranglerDev', () => {
                 Promise.reject(new SyntaxError('Unexpected token in wrangler.mjs'))
             )
         ).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliImportFailed,
+            code: SeedcordErrorCode.CoreImportFailed,
             message: expect.stringContaining('Unexpected token in wrangler.mjs') as string
         });
     });
 
-    it('throws CliEdgeWranglerConfigUnreadable with the position wrangler reports', async () => {
+    it('throws CliConfigFileUnreadable with the position wrangler reports', async () => {
         const config = await wranglerConfig('{ "name": ');
 
         await expect(readWranglerDev(config, undefined, importWrangler)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliEdgeWranglerConfigUnreadable,
-            message: expect.stringMatching(/wrangler\.jsonc.*at line 1, column \d+/) as string
+            code: SeedcordErrorCode.CliConfigFileUnreadable,
+            message: expect.stringMatching(/wrangler\.jsonc[\s\S]*at line 1, column \d+/) as string
         });
     });
 

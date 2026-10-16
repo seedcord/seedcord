@@ -19,7 +19,9 @@ export class PurgeMode extends RemoveMode {
 
     public assertTargets(guilds: GuildTargets): void {
         if (!this.includesGlobal && guilds.kind === 'none')
-            throw new SeedcordTypeError(SeedcordErrorCode.CliPurgeNoTargets);
+            throw new SeedcordTypeError(SeedcordErrorCode.CliNoScopeGiven, [
+                ['--global', '--guilds <ids...>', '--all-guilds']
+            ]);
     }
 
     public select(scan: Scan): ScopedCommands[] {

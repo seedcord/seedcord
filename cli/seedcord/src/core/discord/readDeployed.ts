@@ -15,9 +15,15 @@ async function commandsAt(rest: Rest, route: RouteLike, where: string): Promise<
         // justified: the discord api contract for both command list routes
         return indexById((await rest.get(route)) as RESTGetAPIApplicationCommandsResult);
     } catch (error: unknown) {
-        throw new SeedcordError(SeedcordErrorCode.CliCommandsUnreadable, [where, asError(error).message], {
-            cause: error
-        });
+        throw new SeedcordError(
+            SeedcordErrorCode.CoreDiscordReadFailed,
+            [
+                `the commands deployed ${where}`,
+                asError(error).message,
+                `Check ${paint.bold('DISCORD_BOT_TOKEN')}. For a guild, also check that the bot is in it.`
+            ],
+            { cause: error }
+        );
     }
 }
 

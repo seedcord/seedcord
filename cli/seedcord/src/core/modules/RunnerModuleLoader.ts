@@ -27,7 +27,7 @@ export class RunnerModuleLoader implements ModuleLoader {
         try {
             return await this.runner.import<TModule>(id);
         } catch (error: unknown) {
-            throw new SeedcordError(SeedcordErrorCode.CliImportFailed, [shownAs, asError(error).message], {
+            throw new SeedcordError(SeedcordErrorCode.CoreImportFailed, [shownAs, asError(error).message], {
                 cause: error
             });
         }

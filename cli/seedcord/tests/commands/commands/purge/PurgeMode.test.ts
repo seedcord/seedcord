@@ -20,9 +20,9 @@ const scan: Scan = {
 };
 
 describe('PurgeMode', () => {
-    it('throws CliPurgeNoTargets with no guilds and no global', () => {
+    it('throws CliNoScopeGiven with no guilds and no global', () => {
         expect(() => new PurgeMode(false).assertTargets({ kind: 'none' })).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.CliPurgeNoTargets })
+            expect.objectContaining({ code: SeedcordErrorCode.CliNoScopeGiven })
         );
     });
 

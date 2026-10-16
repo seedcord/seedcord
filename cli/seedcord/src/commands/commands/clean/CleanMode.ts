@@ -19,7 +19,12 @@ export class CleanMode extends RemoveMode {
     public readonly includesGlobal = false;
 
     public assertTargets(guilds: GuildTargets): void {
-        if (guilds.kind === 'none') throw new SeedcordTypeError(SeedcordErrorCode.CliCleanNoGuilds);
+        if (guilds.kind === 'none') {
+            throw new SeedcordTypeError(SeedcordErrorCode.CliNoScopeGiven, [
+                ['--guilds <ids...>', '--all-guilds'],
+                'Clean never touches global commands.'
+            ]);
+        }
     }
 
     public select(scan: Scan): ScopedCommands[] {

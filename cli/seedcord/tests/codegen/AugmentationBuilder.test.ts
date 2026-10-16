@@ -138,7 +138,7 @@ describe('AugmentationBuilder', () => {
             caught = error;
         }
 
-        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenDuplicateRoute });
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
         const message = (caught as Error).message;
         expect(message).toContain('ban');
         expect(message).toContain('commands/ban.ts');
@@ -388,7 +388,7 @@ describe('AugmentationBuilder', () => {
         expect(warnings.some((warning) => warning.includes('admin/empty'))).toBe(true);
     });
 
-    it('throws CliCodegenDuplicateRoute naming both files when a flat command and a group leaf collide', () => {
+    it('throws CoreDuplicateName naming both files when a flat command and a group leaf collide', () => {
         const generator = new AugmentationBuilder(silentLogger);
         const commands = [
             {
@@ -426,7 +426,7 @@ describe('AugmentationBuilder', () => {
             caught = error;
         }
 
-        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenDuplicateRoute });
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
         const message = (caught as Error).message;
         expect(message).toContain('role/add/user');
         expect(message).toContain('commands/role-add-user.ts');
@@ -494,7 +494,7 @@ describe('AugmentationBuilder', () => {
             caught = error;
         }
 
-        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenDuplicateContextMenu });
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
         const message = (caught as Error).message;
         expect(message).toContain('user');
         expect(message).toContain('View Profile');
@@ -522,7 +522,7 @@ describe('AugmentationBuilder', () => {
             caught = error;
         }
 
-        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenDuplicateContextMenu });
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
         expect((caught as Error).message).toContain('message');
     });
 });

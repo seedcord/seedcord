@@ -27,7 +27,7 @@ function* folderProblems(config: Config, project: Project): Generator<SeedcordEr
     for (const folder of configuredFolders(config)) {
         const resolved = project.fromRoot(folder);
         if (!isInside(root, resolved)) {
-            yield new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [resolved, root]);
+            yield new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [resolved, root]);
         }
     }
 }

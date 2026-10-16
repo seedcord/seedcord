@@ -143,7 +143,7 @@ describe('readDiscord', () => {
         expect(failure).toHaveProperty('code', SeedcordErrorCode.CliEdgeCommandsNotDeployed);
     });
 
-    it("throws CliCommandsUnreadable with the guild and discord's reason", async () => {
+    it("throws CoreDiscordReadFailed with the guild and discord's reason", async () => {
         const rest = restWith({ [Routes.applicationCommands(APP_ID)]: [] });
 
         const failure = await readDiscord({
@@ -152,28 +152,28 @@ describe('readDiscord', () => {
             emojis: undefined
         }).catch((error: unknown) => error);
 
-        expect(failure).toHaveProperty('code', SeedcordErrorCode.CliCommandsUnreadable);
+        expect(failure).toHaveProperty('code', SeedcordErrorCode.CoreDiscordReadFailed);
         expect(failure).toHaveProperty('message', expect.stringContaining('g9'));
         expect(failure).toHaveProperty('message', expect.stringContaining('unreachable'));
     });
 
-    it("throws CliCommandsUnreadable with discord's reason when the global read fails", async () => {
+    it("throws CoreDiscordReadFailed with discord's reason when the global read fails", async () => {
         const failure = await readDiscord({ rest: restWith(), commands: inCode(), emojis: undefined }).catch(
             (error: unknown) => error
         );
 
-        expect(failure).toHaveProperty('code', SeedcordErrorCode.CliCommandsUnreadable);
+        expect(failure).toHaveProperty('code', SeedcordErrorCode.CoreDiscordReadFailed);
         expect(failure).toHaveProperty('message', expect.stringContaining('unreachable'));
     });
 
-    it('throws CliApplicationUnreadable when the token cannot read the application', async () => {
+    it('throws CoreDiscordReadFailed when the token cannot read the application', async () => {
         const rest = { get: vi.fn(() => Promise.reject(new Error('401: Unauthorized'))) };
 
         const failure = await readDiscord({ rest, commands: undefined, emojis: undefined }).catch(
             (error: unknown) => error
         );
 
-        expect(failure).toHaveProperty('code', SeedcordErrorCode.CliApplicationUnreadable);
+        expect(failure).toHaveProperty('code', SeedcordErrorCode.CoreDiscordReadFailed);
         expect(failure).toHaveProperty('message', expect.stringContaining('401: Unauthorized'));
     });
 

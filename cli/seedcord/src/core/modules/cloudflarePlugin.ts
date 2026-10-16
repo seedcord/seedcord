@@ -1,6 +1,6 @@
 import { dirname } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError, isPlainObject } from '@seedcord/utils/internal';
 
@@ -37,7 +37,7 @@ async function importOptionalPeer<TModule>(
         return await load();
     } catch (error: unknown) {
         if (isPackageMissing(error, name)) throw whenMissing(error);
-        throw new SeedcordError(SeedcordErrorCode.CliImportFailed, [name, asError(error).message], { cause: error });
+        throw new SeedcordError(SeedcordErrorCode.CoreImportFailed, [name, asError(error).message], { cause: error });
     }
 }
 
@@ -70,7 +70,16 @@ export async function readWranglerDev(
     const wrangler = await importOptionalPeer(
         'wrangler',
         importReader,
-        (cause) => new SeedcordError(SeedcordErrorCode.CliEdgeWranglerMissing, [dirname(wranglerConfig)], { cause })
+        (cause) =>
+            new SeedcordError(
+                SeedcordErrorCode.CliDependencyMissing,
+                [
+                    ['wrangler'],
+                    dirname(wranglerConfig),
+                    `${paint.bold('seedcord dev')} reads an edge bot's wrangler config through it.`
+                ],
+                { cause }
+            )
     );
     // wrangler's types import Config from @cloudflare/workers-utils, a package seedcord doesn't install
     let config: unknown;
@@ -78,11 +87,9 @@ export async function readWranglerDev(
         config = wrangler.unstable_readConfig({ config: wranglerConfig, env: environment }, { hideWarnings: true });
     } catch (error: unknown) {
         throw new SeedcordError(
-            SeedcordErrorCode.CliEdgeWranglerConfigUnreadable,
-            [wranglerConfig, parseFailure(error)],
-            {
-                cause: error
-            }
+            SeedcordErrorCode.CliConfigFileUnreadable,
+            ['Wrangler', wranglerConfig, parseFailure(error)],
+            { cause: error }
         );
     }
     if (!isPlainObject(config)) return { port: WRANGLER_DEV_PORT, vars: {} };
@@ -102,7 +109,16 @@ export async function loadCloudflare(viteRoot: string, importPlugin: ImportCloud
     const { cloudflare } = await importOptionalPeer(
         CLOUDFLARE_PLUGIN,
         importPlugin,
-        (cause) => new SeedcordError(SeedcordErrorCode.CliEdgeVitePluginMissing, [viteRoot], { cause })
+        (cause) =>
+            new SeedcordError(
+                SeedcordErrorCode.CliDependencyMissing,
+                [
+                    [CLOUDFLARE_PLUGIN, 'wrangler'],
+                    viteRoot,
+                    `${paint.bold('seedcord dev')} and ${paint.bold('seedcord build')} run an edge bot through them.`
+                ],
+                { cause }
+            )
     );
     return cloudflare;
 }

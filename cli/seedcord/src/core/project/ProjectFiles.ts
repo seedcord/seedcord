@@ -90,7 +90,7 @@ export class ProjectFiles {
 
     private async *entriesUnder(dir: string): AsyncGenerator<ProjectEntry> {
         const entries = await readdir(dir, { withFileTypes: true }).catch((error: unknown) => {
-            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryUnreadable, [dir, asError(error).message], {
+            throw new SeedcordError(SeedcordErrorCode.CorePathUnreadable, [dir, asError(error).message], {
                 cause: error
             });
         });

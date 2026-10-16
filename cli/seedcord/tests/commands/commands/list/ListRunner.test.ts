@@ -73,7 +73,7 @@ describe('ListRunner', () => {
         expect(output).toContain('  Alpha  1 command\n      /config\n\n  Beta  1 command\n      /setup\n');
     });
 
-    it('throws CliCommandsUnreadable on a guild it cannot read', async () => {
+    it('throws CoreDiscordReadFailed on a guild it cannot read', async () => {
         const { rest } = fakeDiscord({
             ...ON_DISCORD,
             [Routes.guild('222')]: { id: '222', name: 'Beta' },
@@ -82,7 +82,7 @@ describe('ListRunner', () => {
 
         const listing = list(await fakeProject(), rest, { scope: { guildIds: ['222'], allGuilds: false } });
 
-        await expect(listing).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandsUnreadable });
+        await expect(listing).rejects.toMatchObject({ code: SeedcordErrorCode.CoreDiscordReadFailed });
     });
 
     it('lists every guild the bot is in with --all-guilds and reads no guild names one by one', async () => {

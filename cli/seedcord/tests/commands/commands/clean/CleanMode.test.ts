@@ -18,9 +18,9 @@ function scan(over: Partial<Scan> = {}): Scan {
 describe('CleanMode', () => {
     const clean = new CleanMode();
 
-    it('throws CliCleanNoGuilds when no guild is targeted', () => {
+    it('throws CliNoScopeGiven when no guild is targeted', () => {
         expect(() => clean.assertTargets({ kind: 'none' })).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.CliCleanNoGuilds })
+            expect.objectContaining({ code: SeedcordErrorCode.CliNoScopeGiven })
         );
     });
 

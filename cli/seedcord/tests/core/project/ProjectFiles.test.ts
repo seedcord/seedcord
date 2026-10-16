@@ -28,7 +28,7 @@ describe('ProjectFiles', () => {
     // root reads a folder whatever its mode.
     // windows ignores the posix mode bits.
     it.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
-        'throws CoreDirectoryUnreadable for a folder it cannot read',
+        'throws CorePathUnreadable for a folder it cannot read',
         async () => {
             const root = await projectRoot();
             const locked = join(root, 'locked');
@@ -37,7 +37,7 @@ describe('ProjectFiles', () => {
             onTestFinished(() => chmod(locked, 0o700));
 
             await expect(new ProjectFiles(root, join(root, 'dist'), root).pathsWithHash()).rejects.toMatchObject({
-                code: SeedcordErrorCode.CoreDirectoryUnreadable,
+                code: SeedcordErrorCode.CorePathUnreadable,
                 message: expect.stringContaining('locked') as string
             });
         }

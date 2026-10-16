@@ -288,7 +288,7 @@ describe('CodegenRunner', () => {
         expect(written).toContain("ban: { options: {}; cache: 'cached' }");
     });
 
-    it('throws CoreDirectoryUnreadable when the top-level commands dir is unreadable', async () => {
+    it('throws CorePathUnreadable when the top-level commands dir is unreadable', async () => {
         const root = await tempDir('codegen-');
         const missing = join(root, 'does-not-exist');
 
@@ -299,12 +299,12 @@ describe('CodegenRunner', () => {
             caught = error;
         }
 
-        expect(caught).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CorePathUnreadable });
         expect((caught as Error).message).toContain(missing);
     });
 
     // root reads a 0o000 folder anyway
-    it.skipIf(process.getuid?.() === 0)('throws CoreDirectoryUnreadable for a nested unreadable subdir', async () => {
+    it.skipIf(process.getuid?.() === 0)('throws CorePathUnreadable for a nested unreadable subdir', async () => {
         const root = await tempDir('codegen-');
         const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
@@ -316,7 +316,7 @@ describe('CodegenRunner', () => {
 
         const run = scanRunner(root, cmdDir, () => ({ BanCommand }), silentLogger()).run(false);
 
-        await expect(run).rejects.toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
+        await expect(run).rejects.toMatchObject({ code: SeedcordErrorCode.CorePathUnreadable });
         await expect(run).rejects.toThrow(locked);
     });
 
@@ -351,7 +351,7 @@ describe('CodegenRunner', () => {
             caught = error;
         }
 
-        expect(caught).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CorePathUnreadable });
         expect((caught as Error).message).toContain(resolve(root, relativePath));
     });
 
