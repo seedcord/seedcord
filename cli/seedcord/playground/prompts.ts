@@ -1,6 +1,6 @@
-import { EventEmitter } from 'node:events';
 import { setTimeout as sleep } from 'node:timers/promises';
 
+import { REST } from '@discordjs/rest';
 import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
 
 import { askClean } from '#commands/commands/clean/CleanMode';
@@ -11,7 +11,6 @@ import { StepPrinter } from '#core/output/StepPrinter';
 import { Prompter } from '#core/prompts/Prompter';
 
 import type { WizardQuestions } from '#commands/commands/remove/RemoveWizard';
-import type { DiscordRest } from '#commands/commands/runnerDeps';
 
 type Scenario = (prompter: Prompter) => Promise<unknown>;
 
@@ -37,9 +36,10 @@ async function fakeDiscord(route: string): Promise<unknown> {
     ];
 }
 
-const emitter = Object.assign(new EventEmitter(), { get: fakeDiscord, delete: fakeDiscord, put: fakeDiscord });
-// eslint-disable-next-line no-restricted-syntax -- the commands call only get, put, delete, on and off on this double
-const rest = emitter as unknown as DiscordRest;
+const rest = new REST();
+rest.get = fakeDiscord;
+rest.put = fakeDiscord;
+rest.delete = fakeDiscord;
 
 const SCENARIOS: Record<string, Scenario> = {
     select: (prompter) =>

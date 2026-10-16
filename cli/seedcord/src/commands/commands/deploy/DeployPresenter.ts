@@ -38,6 +38,11 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
         super(output);
     }
 
+    public nothingToDeploy(): void {
+        this.output.line();
+        this.output.line('Nothing to deploy.');
+    }
+
     public preview(plans: readonly ScopePlan[]): void {
         printSections(
             this.output,
@@ -58,9 +63,9 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
 
     public edgeHint(): void {
         this.output.line();
-        this.output.line(paint.mute('Your edge worker still has the old command ids built in.'));
+        this.output.line(paint.mute('Your edge worker has no ids for the commands this deploy added.'));
         this.output.line(
-            paint.mute(`Run ${paint.bold('seedcord build')} and deploy the worker again to pick up the new ones.`)
+            paint.mute(`Run ${paint.bold('seedcord build')} and deploy the worker again to pick them up.`)
         );
     }
 

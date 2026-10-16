@@ -46,12 +46,12 @@ export class ListRunner {
         return new ListRunner(defaultRunnerDeps());
     }
 
-    public async run(presenter: ListPresenter, scope = NO_EXTRA_GUILDS): Promise<void> {
+    public async run(presenter: ListPresenter, scope?: ListScope): Promise<void> {
         presenter.list(await this.read(presenter, scope));
     }
 
-    public async read(steps: Steps<ListStep>, scope = NO_EXTRA_GUILDS, projectDir = process.cwd()): Promise<Listing> {
-        const { scopes } = await loadCodeScopes(steps, this.deps, projectDir);
+    public async read(steps: Steps<ListStep>, scope = NO_EXTRA_GUILDS): Promise<Listing> {
+        const { scopes } = await loadCodeScopes(steps, this.deps, process.cwd());
         const codeGuildIds = scopes?.guilds.keys() ?? [];
 
         const { session, scan } = await steps.step('read discord', async () => {

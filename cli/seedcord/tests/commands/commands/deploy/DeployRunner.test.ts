@@ -92,6 +92,17 @@ describe('DeployRunner', () => {
         expect(output).not.toContain('/ban');
     });
 
+    it('says there is nothing to deploy and asks nothing when the code has no commands', async () => {
+        const { rest, puts } = fakeDiscord();
+        const confirm = vi.fn((_message: string) => Promise.resolve(true));
+
+        const output = await deploy(await fakeProject({ commands: [] }), rest, { confirm });
+
+        expect(output.trimEnd().split('\n').at(-1)).toBe('  Nothing to deploy.');
+        expect(confirm).not.toHaveBeenCalled();
+        expect(puts).toEqual([]);
+    });
+
     it('asks about the scopes the preview shows', async () => {
         const { rest } = fakeDiscord();
         const confirm = vi.fn((_message: string) => Promise.resolve(true));

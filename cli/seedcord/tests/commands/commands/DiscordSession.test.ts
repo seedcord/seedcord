@@ -111,17 +111,14 @@ describe('DiscordSession.clearScopes', () => {
     });
 
     it('records a scope it could not clear and keeps going', async () => {
-        const { rest, puts } = fakeDiscord();
-        const session = await DiscordSession.open(rest);
-        rest.put = (route: string) =>
-            route === Routes.applicationCommands(APP_ID) ? Promise.reject(new Error('500')) : Promise.resolve([]);
+        const { session, puts } = await sessionOn({ [Routes.applicationCommands(APP_ID)]: new Error('500') });
 
         const result = await session.clearScopes([
             { scope: GLOBAL_SCOPE, commands: [slash('ping')] },
             { scope: alpha, commands: [slash('ban')] }
         ]);
 
-        expect(puts).toEqual([]);
+        expect(puts).toEqual([{ route: Routes.applicationGuildCommands(APP_ID, '111'), names: [] }]);
         expect(result).toEqual({ deleted: 1, failed: [{ kind: 'scope', scope: GLOBAL_SCOPE, reason: '500' }] });
     });
 });

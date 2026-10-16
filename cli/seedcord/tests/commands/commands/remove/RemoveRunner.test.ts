@@ -7,7 +7,6 @@ import { CleanMode } from '#commands/commands/clean/CleanMode';
 import { PurgeMode } from '#commands/commands/purge/PurgeMode';
 import { RemovePresenter } from '#commands/commands/remove/RemovePresenter';
 import { RemoveRunner } from '#commands/commands/remove/RemoveRunner';
-import { GUILD_PAGE } from '#core/discord/readBotGuilds';
 import { APP_ID, botGuilds, fakeDiscord, slash } from '#tests/commands/commands/fakeBot';
 
 import type { RemoveMode } from '#commands/commands/remove/RemoveMode';
@@ -15,6 +14,9 @@ import type { GuildTargets } from '#commands/commands/scope';
 import type { Mock } from 'vitest';
 
 const ALPHA: GuildTargets = { kind: 'named', ids: ['111'] };
+
+// the run asks before scanning more guilds than this
+const LARGE_BOT_GUILDS = 200;
 
 const ON_DISCORD = {
     [Routes.applicationCommands(APP_ID)]: [slash('ban')],
@@ -73,6 +75,7 @@ describe('RemoveRunner.run', () => {
             onDiscord: {
                 [Routes.applicationCommands(APP_ID)]: [slash('ban')],
                 [Routes.applicationGuildCommands(APP_ID, '111')]: [slash('setup')],
+                [Routes.guild('222')]: new Error('Missing Access'),
                 [Routes.applicationGuildCommands(APP_ID, '222')]: new Error('Missing Access')
             }
         });
@@ -133,10 +136,10 @@ describe('RemoveRunner.run', () => {
         const { confirm, gets } = await run({
             guilds: { kind: 'all' },
             answer: false,
-            onDiscord: botGuilds(GUILD_PAGE + 1)
+            onDiscord: botGuilds(LARGE_BOT_GUILDS + 1)
         });
 
-        expect(confirm).toHaveBeenCalledWith(expect.stringContaining(`${GUILD_PAGE + 1} guilds`));
+        expect(confirm).toHaveBeenCalledWith(expect.stringContaining(`${LARGE_BOT_GUILDS + 1} guilds`));
         expect(gets).not.toContain(Routes.applicationCommands(APP_ID));
     });
 
@@ -144,7 +147,7 @@ describe('RemoveRunner.run', () => {
         const { confirm, gets } = await run({
             guilds: { kind: 'all' },
             apply: false,
-            onDiscord: botGuilds(GUILD_PAGE)
+            onDiscord: botGuilds(LARGE_BOT_GUILDS)
         });
 
         expect(confirm).not.toHaveBeenCalled();

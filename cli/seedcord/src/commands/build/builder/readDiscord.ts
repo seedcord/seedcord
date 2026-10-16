@@ -2,6 +2,7 @@ import { commandRefOf, linkCommands, resolveDeployTarget, resolveEmojis } from '
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import { scopesInCode } from '#commands/commands/codeScopes';
 import { applicationOf } from '#core/discord/applicationOf';
 import { readDeployed } from '#core/discord/readDeployed';
 
@@ -48,20 +49,12 @@ async function linkDeployed(
         command,
         target: resolveDeployTarget(command.meta, configuredGuilds, command.className)
     }));
-    const deployed = await readDeployed(rest, applicationId, guildsOf(targeted));
+    const deployed = await readDeployed(rest, applicationId, scopesInCode(found, configuredGuilds).guilds.keys());
     assertDeployed(targeted.filter(({ command, target }) => !isDeployedTo(deployed, command, target)));
     return linkCommands(
         deployed,
         found.map((command) => command.json)
     );
-}
-
-function guildsOf(targeted: readonly TargetedCommand[]): Set<string> {
-    const guilds = new Set<string>();
-    for (const { target } of targeted) {
-        if (target.scope === 'guild') for (const guildId of target.guilds) guilds.add(guildId);
-    }
-    return guilds;
 }
 
 function isDeployedTo({ global, guilds }: DeployResult, { json }: FoundCommand, target: DeployTarget): boolean {

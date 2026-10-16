@@ -13,7 +13,6 @@ import { askClean, CleanMode } from './clean/CleanMode';
 import { PROCEED } from './confirm';
 import { DeployPresenter } from './deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from './deploy/DeployRunner';
-import { skippedLine } from './DiscordSession';
 import { listingJson } from './list/listingJson';
 import { ListPresenter } from './list/ListPresenter';
 import { LIST_STEPS, ListRunner } from './list/ListRunner';
@@ -40,7 +39,6 @@ interface CommandsDeps {
     prompter: Prompter;
 }
 
-// the flags remove reads off clean's and purge's commander options
 type RemoveFlags = GuildFlags & { readonly yes?: boolean | undefined };
 
 type WizardStep = (typeof WIZARD_STEPS)[number];
@@ -160,9 +158,7 @@ export class CommandsCommand extends BaseCommand {
     }
 
     private async listJson(scope: ListScope): Promise<ReturnType<typeof listingJson>> {
-        const listing = await this.listRunner.read(stderrSteps(), scope);
-        if (listing.skipped.length > 0) process.stderr.write(`${skippedLine(listing.skipped)}\n`);
-        return listingJson(listing);
+        return listingJson(await this.listRunner.read(stderrSteps(), scope));
     }
 
     private wizard(printer: StepPrinter<WizardStep>, command: CommandUnknownOpts): RemoveWizard {

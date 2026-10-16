@@ -6,12 +6,11 @@ import { CommandScanner } from '#core/modules/CommandScanner';
 import { importInstance } from '#core/modules/importInstance';
 import { printResolvedConfig } from '#core/output/printResolvedConfig';
 
-import type { ProjectLoader } from '#core/config/ProjectLoader';
+import type { RunnerDeps } from '#commands/commands/runnerDeps';
 import type { ResolvedTarget } from '#core/config/schema';
 import type { FoundCommand } from '#core/modules/CommandScanner';
 import type { Steps } from '#core/output/Steps';
 import type { CommandBody, CommandScopes } from '@seedcord/core/internal';
-import type { ILogger } from '@seedcord/types';
 
 export const LOAD_STEPS = ['read config', 'load bot', 'scan'] as const;
 type LoadStep = (typeof LOAD_STEPS)[number];
@@ -29,12 +28,9 @@ interface CodeScopes {
     scopes: ScopesInCode | undefined;
 }
 
-interface LoadDeps {
-    readonly projectLoader: Pick<ProjectLoader, 'open'>;
-    readonly logger: ILogger;
-}
+type LoadDeps = Pick<RunnerDeps, 'projectLoader' | 'logger'>;
 
-function scopesInCode(found: readonly FoundCommand[], configuredGuilds: readonly string[]): ScopesInCode {
+export function scopesInCode(found: readonly FoundCommand[], configuredGuilds: readonly string[]): ScopesInCode {
     const global: CommandBody[] = [];
     const guilds = new Map<string, CommandBody[]>();
     for (const { json, meta, className } of found) {

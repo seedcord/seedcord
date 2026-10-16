@@ -22,13 +22,13 @@ const scan: Scan = {
 
 describe('PurgeMode', () => {
     it('throws CliPurgeNoTargets with no guilds and no global', () => {
-        expect(() => new PurgeMode(false).checkTargets({ kind: 'none' })).toThrow(
+        expect(() => new PurgeMode(false).assertTargets({ kind: 'none' })).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CliPurgeNoTargets })
         );
     });
 
     it('accepts global on its own', () => {
-        expect(() => new PurgeMode(true).checkTargets({ kind: 'none' })).not.toThrow();
+        expect(() => new PurgeMode(true).assertTargets({ kind: 'none' })).not.toThrow();
     });
 
     it('picks every command in each guild that has some', () => {

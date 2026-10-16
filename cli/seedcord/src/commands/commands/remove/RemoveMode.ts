@@ -11,8 +11,7 @@ export abstract class RemoveMode {
     public abstract readonly itemName: string;
     public abstract readonly includesGlobal: boolean;
 
-    // throws when the targets give the scan nothing to read
-    public abstract checkTargets(guilds: GuildTargets): void;
+    public abstract assertTargets(guilds: GuildTargets): void;
 
     public abstract select(scan: Scan): ScopedCommands[];
 

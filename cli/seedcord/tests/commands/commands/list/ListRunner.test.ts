@@ -117,7 +117,23 @@ describe('listingJson', () => {
 
         expect(listingJson(listings)).toEqual({
             global: [slash('ping'), slash('legacy')],
-            guilds: { '111': [config] }
+            guilds: { '111': [config] },
+            skipped: []
         });
+    });
+
+    it('lists a guild it could not read under skipped, with the reason', async () => {
+        const { rest } = fakeDiscord({
+            ...ON_DISCORD,
+            [Routes.guild('222')]: { id: '222', name: 'Beta' },
+            [Routes.applicationGuildCommands(APP_ID, '222')]: new Error('Missing Access')
+        });
+
+        const listings = await runnerFor(await fakeProject(), rest).read(quietSteps, {
+            guildIds: ['222'],
+            allGuilds: false
+        });
+
+        expect(listingJson(listings).skipped).toEqual([{ id: '222', name: 'Beta', reason: 'Missing Access' }]);
     });
 });

@@ -59,8 +59,8 @@ seedcord commands deploy --yes              # deploy without asking
 seedcord commands list                      # show the commands Discord has
 seedcord commands list --all-guilds         # include every guild the bot is in
 seedcord commands list --json               # print them as JSON
-seedcord commands clean                     # pick guilds, then remove commands that copy a global one
-seedcord commands clean --all-guilds        # list those copies in every guild
+seedcord commands clean                     # pick guilds, then delete commands that duplicate a global one
+seedcord commands clean --all-guilds        # list those duplicates in every guild
 seedcord commands clean --all-guilds --yes  # delete them
 seedcord commands purge                     # pick where, then delete every command there
 seedcord commands purge --guilds 111 222    # list every command in those guilds

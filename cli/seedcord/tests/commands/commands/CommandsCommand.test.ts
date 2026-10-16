@@ -10,7 +10,6 @@ import { CommandsCommand } from '#commands/commands/CommandsCommand';
 import { DeployRunner } from '#commands/commands/deploy/DeployRunner';
 import { ListRunner } from '#commands/commands/list/ListRunner';
 import { RemoveRunner } from '#commands/commands/remove/RemoveRunner';
-import { GUILD_PAGE } from '#core/discord/readBotGuilds';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { APP_ID, botGuilds, fakeDiscord, fakeProject, slash } from '#tests/commands/commands/fakeBot';
 import { KEY, PromptTerminal } from '#tests/core/prompts/PromptTerminal';
@@ -19,6 +18,9 @@ import { silentLogger } from '#tests/silentLogger';
 import type { Prompter } from '#core/prompts/Prompter';
 import type { ProjectOpener } from '#tests/commands/commands/fakeBot';
 import type { Mock } from 'vitest';
+
+// the run asks before scanning more guilds than this
+const LARGE_BOT_GUILDS = 200;
 
 const ON_DISCORD = {
     [Routes.applicationCommands(APP_ID)]: [slash('ban')],
@@ -150,6 +152,18 @@ describe('seedcord commands, on a terminal', () => {
         expect(output.stdout()).toContain('  cancelled');
     });
 
+    it('lists the commands Discord has from the menu', async () => {
+        using output = captureOutput();
+        using terminal = new PromptTerminal();
+        const running = run([], { prompter: terminal.prompter });
+
+        await vi.waitFor(async () => expect(await terminal.screen()).toContain('List the commands Discord has'));
+        await terminal.press(KEY.down, KEY.enter);
+        await running;
+
+        expect(output.stdout()).toContain('  global  1 command\n      /ban\n');
+    });
+
     it('opens the purge wizard from the menu', async () => {
         using output = captureOutput();
         using terminal = new PromptTerminal();
@@ -214,9 +228,9 @@ describe('seedcord commands clean and purge, off a terminal', () => {
     it('scans every guild with --all-guilds, however many the bot is in', async () => {
         using _output = captureOutput();
 
-        const { gets } = await run(['clean', '--all-guilds'], { onDiscord: botGuilds(GUILD_PAGE + 1) });
+        const { gets } = await run(['clean', '--all-guilds'], { onDiscord: botGuilds(LARGE_BOT_GUILDS + 1) });
 
-        expect(gets).toContain(Routes.applicationGuildCommands(APP_ID, `g${GUILD_PAGE}`));
+        expect(gets).toContain(Routes.applicationGuildCommands(APP_ID, `g${LARGE_BOT_GUILDS}`));
     });
 
     it('prints CliCleanNoGuilds with no stack when clean gets no guilds', async () => {

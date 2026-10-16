@@ -19,7 +19,7 @@ describe('CleanMode', () => {
     const clean = new CleanMode();
 
     it('throws CliCleanNoGuilds when no guild is targeted', () => {
-        expect(() => clean.checkTargets({ kind: 'none' })).toThrow(
+        expect(() => clean.assertTargets({ kind: 'none' })).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.CliCleanNoGuilds })
         );
     });

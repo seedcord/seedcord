@@ -3,4 +3,4 @@
 '@seedcord/errors': minor
 ---
 
-A global command deploy that Discord refuses at startup now throws `CoreCommandGlobalDeployFailed`, with Discord's error as its cause.
+`@seedcord/core` now throws `CoreCommandGlobalDeployFailed` when Discord refuses the global commands, with Discord's error as its cause.

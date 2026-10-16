@@ -182,4 +182,14 @@ describe('putCommands', () => {
 
         await expect(deploying).rejects.toThrow(expect.objectContaining({ name: 'AbortError' }));
     });
+
+    it('rejects an aborted guild deploy with the abort itself', async () => {
+        const rest = restWith(vi.fn(() => new Promise<never>(() => undefined)));
+        const controller = new AbortController();
+
+        const { deploying } = deploy({ guilds: new Map([['999', [CONFIG]]]) }, rest, { signal: controller.signal });
+        controller.abort();
+
+        await expect(deploying).rejects.toThrow(expect.objectContaining({ name: 'AbortError' }));
+    });
 });

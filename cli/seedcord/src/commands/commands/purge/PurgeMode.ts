@@ -17,7 +17,7 @@ export class PurgeMode extends RemoveMode {
         super();
     }
 
-    public checkTargets(guilds: GuildTargets): void {
+    public assertTargets(guilds: GuildTargets): void {
         if (!this.includesGlobal && guilds.kind === 'none')
             throw new SeedcordError(SeedcordErrorCode.CliPurgeNoTargets);
     }

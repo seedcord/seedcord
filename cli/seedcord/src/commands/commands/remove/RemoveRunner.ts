@@ -1,7 +1,6 @@
 import { DiscordSession } from '#commands/commands/DiscordSession';
 import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
 import { commandCount } from '#commands/commands/scope';
-import { GUILD_PAGE, readBotGuilds } from '#core/discord/readBotGuilds';
 
 import { deletedNote, scanNote } from './removeSteps';
 
@@ -12,34 +11,43 @@ import type { RemoveMode } from './RemoveMode';
 import type { RemovePresenter } from './RemovePresenter';
 import type { Selection } from './removeSteps';
 
-export interface RemovePlan {
+interface RemovePlan {
     mode: RemoveMode;
     guilds: GuildTargets;
     // false prints what would go and deletes nothing
     apply: boolean;
 }
 
+// one page of the bot's guild list
+const LARGE_BOT_GUILDS = 200;
+
 export class RemoveRunner {
+    private opened?: Promise<DiscordSession>;
+
     constructor(private readonly deps: Pick<RunnerDeps, 'openDiscord'>) {}
 
     public static create(): RemoveRunner {
         return new RemoveRunner(defaultRunnerDeps());
     }
 
-    public listBotGuilds(): Promise<GuildSummary[]> {
-        return readBotGuilds(this.deps.openDiscord());
+    public async listBotGuilds(): Promise<GuildSummary[]> {
+        const session = await this.session();
+        return session.guildsOf({ kind: 'all' });
     }
 
     public async run(presenter: RemovePresenter, { mode, guilds, apply }: RemovePlan): Promise<void> {
-        mode.checkTargets(guilds);
+        mode.assertTargets(guilds);
 
         const { session, resolved } = await presenter.step('connect', async () => {
-            const session = await DiscordSession.open(this.deps.openDiscord());
+            const session = await this.session();
             return { session, resolved: await session.guildsOf(guilds) };
         });
 
-        // past one page of guilds, the scan's request per guild adds up
-        if (guilds.kind === 'all' && resolved.length > GUILD_PAGE && !(await presenter.largeBotGuard(resolved.length)))
+        if (
+            guilds.kind === 'all' &&
+            resolved.length > LARGE_BOT_GUILDS &&
+            !(await presenter.largeBotGuard(resolved.length))
+        )
             return;
 
         const { scan, selected } = await presenter.step(
@@ -70,5 +78,11 @@ export class RemoveRunner {
             result,
             selected.some(({ scope }) => scope.kind === 'global')
         );
+    }
+
+    // the wizard's guild list and the run share one session
+    private session(): Promise<DiscordSession> {
+        this.opened ??= DiscordSession.open(this.deps.openDiscord());
+        return this.opened;
     }
 }

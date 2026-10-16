@@ -106,12 +106,12 @@ export async function fakeProject({
     return { open: () => Promise.resolve(new Project(config, modules)) };
 }
 
-// an Error as a route's answer makes every request to that route reject with it.
 // a function answers a GET from its query
 function answersFromQuery(answer: unknown): answer is (query: URLSearchParams | undefined) => unknown {
     return typeof answer === 'function';
 }
 
+// an Error as a route's answer makes every request to that route reject with it
 function reply(answer: unknown): Promise<unknown> {
     return Error.isError(answer) ? Promise.reject(answer) : Promise.resolve(answer);
 }

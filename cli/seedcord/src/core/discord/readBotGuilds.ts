@@ -9,7 +9,7 @@ export interface GuildSummary {
 }
 
 // discord returns at most 200 guilds a page
-export const GUILD_PAGE = 200;
+const GUILD_PAGE = 200;
 
 export async function readBotGuilds(rest: Pick<REST, 'get'>): Promise<GuildSummary[]> {
     const guilds: GuildSummary[] = [];

@@ -18,7 +18,7 @@ export class CleanMode extends RemoveMode {
     public readonly itemName = 'duplicate';
     public readonly includesGlobal = false;
 
-    public checkTargets(guilds: GuildTargets): void {
+    public assertTargets(guilds: GuildTargets): void {
         if (guilds.kind === 'none') throw new SeedcordError(SeedcordErrorCode.CliCleanNoGuilds);
     }
 

@@ -4,7 +4,6 @@ interface LineOutput {
     line(text?: string): void;
 }
 
-// prints cancelled and returns undefined when the user cancels a prompt in the task
 export async function unlessCancelled<Result>(
     output: LineOutput,
     task: () => Promise<Result>
