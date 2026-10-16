@@ -194,6 +194,31 @@ describe('EdgeDevRuntime lifecycle', () => {
         expect(unsigned.status).toBe(401);
     }, 120_000);
 
+    it('starts a bot.ts that has a named export', async () => {
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        await appendFile(join(projectDir, 'src/bot.ts'), '\nexport function helper(): number {\n    return 1;\n}\n');
+        await using started = await startedRuntime(projectDir);
+        const { runtime, instance } = started;
+        await runtime.startBot(instance);
+
+        const unsigned = await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body: '{}' });
+        expect(unsigned.status).toBe(401);
+    }, 60_000);
+
+    it('throws CliStartFailed when the worker answers a GET with something other than 405', async () => {
+        await using project = await edgeProject();
+        await writeFile(
+            join(project.projectDir, 'src/bot.ts'),
+            "export default { fetch: () => new Response('not a seedcord bot') };\n"
+        );
+
+        await expect(startedRuntime(project.projectDir)).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliStartFailed,
+            message: expect.stringContaining('answered a GET with 200') as string
+        });
+    }, 60_000);
+
     it('exports the durable object classes bot.ts exports', async () => {
         await using project = await edgeProject();
         const { projectDir } = project;

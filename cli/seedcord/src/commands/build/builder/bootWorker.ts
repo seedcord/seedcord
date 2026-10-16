@@ -9,7 +9,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { InlineConfig, Logger, Plugin, PreviewServer } from 'vite';
 
 // the edge Seedcord answers a GET with 405 before it starts the bot
-const LOADED_STATUS = 405;
+export const LOADED_STATUS = 405;
 const INTERNAL_SERVER_ERROR = 500;
 
 // the cloudflare plugin passes workerd's startup error to this logger
@@ -86,8 +86,9 @@ export async function bootWorker(config: InlineConfig): Promise<void> {
     }
     if (status === LOADED_STATUS) return;
 
-    throw bootFailed(
-        errors,
-        `The worker answered a GET with ${status}, where a seedcord bot answers 405. Check that ${paint.bold('instance')} default-exports a ${paint.bold('new Seedcord(...)')} from ${paint.bold('@seedcord/http')}.`
-    );
+    throw bootFailed(errors, notLoadedReason(status));
+}
+
+export function notLoadedReason(status: number | undefined): string {
+    return `The worker answered a GET with ${status}, where a seedcord bot answers ${LOADED_STATUS}. Check that ${paint.bold('instance')} default-exports a ${paint.bold('new Seedcord(...)')} from ${paint.bold('@seedcord/http')}.`;
 }

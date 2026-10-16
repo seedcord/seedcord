@@ -27,6 +27,7 @@ import { viteMode } from '#core/viteMode';
 import { BaseDevRuntime } from './BaseDevRuntime';
 import { edgeViteConfig } from './devServerConfig';
 import { listenForInteractions } from './listenForInteractions';
+import { loadWorkerEntry } from './loadWorkerEntry';
 import { WorkerConfigFiles } from './workerConfigFiles';
 
 import type { ResolvedEdgeTarget } from '#core/config/schema';
@@ -138,6 +139,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             throw explainMissingCf(error, viteRoot);
         });
         resources.defer(() => server.close());
+        await loadWorkerEntry(server.middlewares, config.instance);
         const modules = await modulesReady.promise;
         const endpoint = await listenForInteractions(server.middlewares, {
             port: this.target.port,
