@@ -97,7 +97,7 @@ Augmentations are out of date. Run `seedcord codegen` and commit /home/you/my-bo
 
 `--check` only reports, so you fix the drift by running plain `seedcord codegen`. The scaffold does not wire a script for it, so put it wherever your pipeline runs its checks.
 
-If codegen can't read your commands folder, it throws `CliCommandsDirUnreadable`, because a run that found no commands would pass `--check` against a file that's already stale.
+If codegen can't read your commands folder, it throws `CoreDirectoryUnreadable`, because a run that found no commands would pass `--check` against a file that's already stale.
 
 ## Commands codegen passes over
 

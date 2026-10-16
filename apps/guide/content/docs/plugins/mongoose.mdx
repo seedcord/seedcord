@@ -65,9 +65,9 @@ When the environment is `production`, the plugin adds `tls: true` and `ssl: true
 
 A bot that fails halfway through startup can leave its MongoDB connection open. The mongoose plugin closes that connection for you. `init()` connects, then loads every service class from `dir`. If either step fails, `init()` closes the connection before it rethrows the error.
 
-If the connection fails, `init()` throws `PluginMongooseConnectionFailed`. Its message includes the database from your `name` option, and mongoose's own error is in its `cause`.
+If the connection fails, `init()` throws `PluginConnectionFailed`. Its message includes the database from your `name` option, and mongoose's own error is in its `cause`.
 
-Shutdown runs the same steps backwards. `dispose()` clears the service registry and every loaded model, then closes the connection. If closing fails, `dispose()` throws `PluginMongooseDisconnectFailed`.
+Shutdown runs the same steps backwards. `dispose()` clears the service registry and every loaded model, then closes the connection. If closing fails, `dispose()` throws `PluginDisconnectFailed`.
 
 ## The mongoose instance
 
@@ -98,6 +98,6 @@ class History extends SlashHandler<'history'> {
 
 The handler reads `readyState` from Mongoose's `Connection`, which is `1` while the bot is connected. `this.core.db` only has a type once you've run [`seedcord codegen`](/plugins/typing).
 
-`connection` and `services` are only ready after `init()` resolves. If you read `connection` before then, you get `undefined`, even though its type says it's always set. Reading `services` before then throws `PluginMongooseServicesNotReady`.
+`connection` and `services` are only ready after `init()` resolves. If you read `connection` before then, you get `undefined`, even though its type says it's always set. Reading `services` before then throws `PluginServicesNotReady`.
 
 Next, write the [service classes](/plugins/mongoose-services) the plugin loads from `dir`.

@@ -232,4 +232,4 @@ class Leaderboard extends SlashHandler<'leaderboard'> {
 
 `findByDiscordId` resolves to `undefined` when no row matches, so the handler checks `found` before it reads `streak`.
 
-If you read `services` before the plugin's `init()` has connected, migrated, and loaded every class, it throws `PluginKyselyServicesNotReady`. Your handlers never read it that early, though, because they only start receiving interactions once `init()` has finished.
+If you read `services` before the plugin's `init()` has connected, migrated, and loaded every class, it throws `PluginServicesNotReady`. Your handlers never read it that early, though, because they only start receiving interactions once `init()` has finished.

@@ -168,7 +168,7 @@ If anything else fails here, like a database user without permission to create d
 
 `init()` connects, runs your migrations unless you [turned that off](/plugins/kysely-migrations), then loads every service class from `dir`. If any of those steps fails, `init()` closes the pool itself before it rethrows the error, since seedcord doesn't call `dispose()` for a plugin whose `init()` failed. A bot whose migration fails never reaches its handlers.
 
-If the pool can't connect after that check, `init()` throws `PluginKyselyConnectionFailed`. Its message includes the database name when the plugin could find one, and pg's own error is in its `cause`.
+If the pool can't connect after that check, `init()` throws `PluginConnectionFailed`. Its message includes the database name when the plugin could find one, and pg's own error is in its `cause`.
 
 <Callout type="warning">
 
@@ -176,7 +176,7 @@ The migrations directory has to exist before the first start. The plugin treats 
 
 </Callout>
 
-Shutdown runs fewer steps. `dispose()` clears the service registry, then closes the pool. If closing the pool fails, `dispose()` throws `PluginKyselyDisconnectFailed`.
+Shutdown runs fewer steps. `dispose()` clears the service registry, then closes the pool. If closing the pool fails, `dispose()` throws `PluginDisconnectFailed`.
 
 ## The Kysely instance
 

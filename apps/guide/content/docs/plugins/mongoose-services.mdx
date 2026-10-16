@@ -181,4 +181,4 @@ class History extends SlashHandler<'history'> {
 
 `findByName` resolves to an `IUser` or `null`, so the handler checks `found` before it reads `username`.
 
-If you read `services` before the plugin's `init()` has finished, it throws `PluginMongooseServicesNotReady`. Your handlers never read it that early, though, because they only start receiving interactions once `init()` has finished.
+If you read `services` before the plugin's `init()` has finished, it throws `PluginServicesNotReady`. Your handlers never read it that early, though, because they only start receiving interactions once `init()` has finished.
