@@ -8,13 +8,12 @@ import { CommandsCommand } from '#commands/commands/CommandsCommand';
 import { DevCommand } from '#commands/dev/DevCommand';
 import { cliLogger } from '#core/cliLogger';
 import { addVerboseOption } from '#core/verbose';
+import { environmentIsSet } from '#core/viteMode';
 
 import { version } from '.';
 
 async function main(): Promise<void> {
-    if (!process.env.ENV && !process.env.ENVIRONMENT && !process.env.NODE_ENV) {
-        Envapter.environment = Environment.Development;
-    }
+    if (!environmentIsSet()) Envapter.environment = Environment.Development;
 
     installNodeDefaults();
 

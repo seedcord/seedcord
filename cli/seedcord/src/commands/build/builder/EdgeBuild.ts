@@ -12,6 +12,7 @@ import { importCloudflare, loadCloudflare, WORKER_ENVIRONMENT } from '#core/modu
 import { CommandScanner } from '#core/modules/CommandScanner';
 import { functionExportsOf } from '#core/modules/workerExports';
 import { viteKey } from '#core/project/ProjectFiles';
+import { viteMode } from '#core/viteMode';
 
 import { assertNodeCompat } from './assertNodeCompat';
 import { bootWorker } from './bootWorker';
@@ -84,6 +85,7 @@ export class EdgeBuild extends TargetBuild {
     // cf deploy --prebuilt reads .cloudflare/output from here
     private readonly viteRoot: string;
     private readonly deps: EdgeBuildDeps;
+    private readonly mode = viteMode('production');
     private readonly logger = cliLogger('Build');
     private cloudflare?: Promise<CloudflarePlugin>;
 
@@ -123,6 +125,7 @@ export class EdgeBuild extends TargetBuild {
         let output: WorkerOutput | undefined;
         const builder = await createBuilder({
             root: viteRoot,
+            mode: this.mode,
             configFile: false,
             publicDir: false,
             logLevel: 'warn',
@@ -154,6 +157,7 @@ export class EdgeBuild extends TargetBuild {
     public override async boot(): Promise<void> {
         await bootWorker({
             root: this.viteRoot,
+            mode: this.mode,
             plugins: [await this.workerPlugins()],
             environments: workerEnvironment()
         });

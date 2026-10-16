@@ -13,6 +13,7 @@ import { deployedCommandsFile } from '#core/state/deployedCommands';
 import { StateFolder } from '#core/state/StateFolder';
 import { writeCloudflareConfig } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES } from '#tests/commands/build/smoke';
+import { withEnv } from '#tests/envapt';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
 
@@ -32,25 +33,37 @@ import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
 import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/schema';
 
+// the API_TOKEN that codegen's node copy of bot.ts reads from cloudflare:workers
+async function nodeCopyApiToken(projectDir: string): Promise<unknown> {
+    // workerd runs this line too, with no API_TOKEN since cloudflare.config.ts does not declare it
+    await editFile(join(projectDir, 'src/bot.ts'), (text) =>
+        text.replace(
+            "import type { CoreBase } from '@seedcord/http';",
+            "import type { CoreBase } from '@seedcord/http';\n\nReflect.set(globalThis, 'apiToken', env.API_TOKEN);"
+        )
+    );
+    onTestFinished(() => {
+        Reflect.deleteProperty(globalThis, 'apiToken');
+    });
+
+    await using _started = await startedRuntime(projectDir);
+    return Reflect.get(globalThis, 'apiToken');
+}
+
 describe('EdgeDevRuntime lifecycle', () => {
     it("gives codegen's node copy the values from .env", async () => {
         await using project = await edgeProject();
-        const { projectDir } = project;
-        await writeFile(join(projectDir, '.env'), 'API_TOKEN=from-dot-env\n');
-        // workerd runs this line too, with no API_TOKEN since cloudflare.config.ts does not declare it
-        await editFile(join(projectDir, 'src/bot.ts'), (text) =>
-            text.replace(
-                "import type { CoreBase } from '@seedcord/http';",
-                "import type { CoreBase } from '@seedcord/http';\n\nReflect.set(globalThis, 'apiToken', env.API_TOKEN);"
-            )
-        );
-        onTestFinished(() => {
-            Reflect.deleteProperty(globalThis, 'apiToken');
-        });
+        await writeFile(join(project.projectDir, '.env'), 'API_TOKEN=from-dot-env\n');
 
-        await using _started = await startedRuntime(projectDir);
+        await expect(nodeCopyApiToken(project.projectDir)).resolves.toBe('from-dot-env');
+    }, 120_000);
 
-        expect(Reflect.get(globalThis, 'apiToken')).toBe('from-dot-env');
+    it('reads the .env file for the mode ENVIRONMENT sets', async () => {
+        withEnv({ ENVIRONMENT: 'staging' });
+        await using project = await edgeProject();
+        await writeFile(join(project.projectDir, '.env.staging'), 'API_TOKEN=from-staging\n');
+
+        await expect(nodeCopyApiToken(project.projectDir)).resolves.toBe('from-staging');
     }, 120_000);
 
     it('reports each slow startup step before the endpoint listens', async () => {
