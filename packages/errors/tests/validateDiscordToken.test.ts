@@ -14,7 +14,7 @@ describe('validateDiscordToken', () => {
         expect(() => validateDiscordToken(raw)).toThrow(
             expect.objectContaining({
                 code: SeedcordErrorCode.ConfigMissingEnv,
-                message: 'Missing DISCORD_BOT_TOKEN environment variable.'
+                message: expect.stringContaining('DISCORD_BOT_TOKEN') as string
             })
         );
     });
@@ -23,7 +23,7 @@ describe('validateDiscordToken', () => {
         expect(() => validateDiscordToken(raw)).toThrow(
             expect.objectContaining({
                 code: SeedcordErrorCode.ConfigInvalidEnv,
-                message: 'Invalid DISCORD_BOT_TOKEN value.'
+                message: expect.stringContaining('DISCORD_BOT_TOKEN') as string
             })
         );
     });

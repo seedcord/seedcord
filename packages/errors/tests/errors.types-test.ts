@@ -35,7 +35,10 @@ function errorTypeContracts(): void {
 
     assertType<SeedcordErrorTypeString>('SeedcordRangeError');
 
-    const maybeError: unknown = new SeedcordTypeError(SeedcordErrorCode.DecoratorInvalidMiddlewarePriority);
+    const maybeError: unknown = new SeedcordTypeError(SeedcordErrorCode.DecoratorInvalidMiddlewarePriority, [
+        'Audit',
+        'NaN'
+    ]);
     if (isSeedcordError(maybeError, 'SeedcordTypeError', SeedcordErrorCode.DecoratorInvalidMiddlewarePriority)) {
         expectTypeOf(maybeError).toEqualTypeOf<
             SeedcordTypeError<SeedcordErrorCode.DecoratorInvalidMiddlewarePriority>

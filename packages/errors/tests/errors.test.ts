@@ -26,7 +26,7 @@ describe('Seedcord error constructors', () => {
     });
 
     it('supports SeedcordTypeError and SeedcordRangeError variants', () => {
-        const typeError = new SeedcordTypeError(SeedcordErrorCode.DecoratorInvalidMiddlewarePriority);
+        const typeError = new SeedcordTypeError(SeedcordErrorCode.DecoratorInvalidMiddlewarePriority, ['Audit', 'NaN']);
         const rangeError = new SeedcordRangeError(SeedcordErrorCode.PluginKyselyInvalidMigrationModule, ['foo.ts']);
 
         expect(typeError).toBeInstanceOf(TypeError);
@@ -37,7 +37,7 @@ describe('Seedcord error constructors', () => {
 
 describe('isSeedcordError type guard', () => {
     const baseError = new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
-    const typeError = new SeedcordTypeError(SeedcordErrorCode.DecoratorInvalidMiddlewarePriority);
+    const typeError = new SeedcordTypeError(SeedcordErrorCode.DecoratorInvalidMiddlewarePriority, ['Audit', 'NaN']);
 
     it('detects any Seedcord error without filters', () => {
         expect(isSeedcordError(baseError)).toBe(true);
