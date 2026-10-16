@@ -1,5 +1,5 @@
 import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
-import { validateDiscordToken } from '@seedcord/errors/internal';
+import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Envapter } from 'envapt';
 
 import { BaseCommand } from '#core/BaseCommand';
@@ -28,13 +28,14 @@ import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
 
 interface CommandsDeps {
     cleanRunner: CleanRunner;
+    deployRunner: DeployRunner;
     prompter: Prompter;
 }
 
 interface CleanInvocation {
     guild: string[];
     allGuilds: boolean;
-    apply: boolean;
+    yes: boolean;
     purge: boolean;
 }
 
@@ -44,8 +45,10 @@ type MenuAction = 'deploy' | 'list' | 'clean';
 const MENU_STEPS = [...DEPLOY_STEPS, ...WIZARD_STEPS] as const;
 
 function hasCleanFlags(options: CleanInvocation): boolean {
-    return [options.allGuilds, options.apply, options.purge].some(Boolean) || options.guild.length > 0;
+    return [options.allGuilds, options.yes, options.purge].some(Boolean) || options.guild.length > 0;
 }
+
+const NEEDS_YES: Confirm = () => Promise.reject(new SeedcordError(SeedcordErrorCode.CliDeployNeedsYes));
 
 function readToken(): string {
     return validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
@@ -53,11 +56,17 @@ function readToken(): string {
 
 export class CommandsCommand extends BaseCommand {
     private readonly cleanRunner: CleanRunner;
+    private readonly deployRunner: DeployRunner;
     private readonly prompter: Prompter;
 
-    constructor({ cleanRunner = CleanRunner.create(), prompter = new Prompter() }: Partial<CommandsDeps> = {}) {
+    constructor({
+        cleanRunner = CleanRunner.create(),
+        deployRunner = DeployRunner.create(),
+        prompter = new Prompter()
+    }: Partial<CommandsDeps> = {}) {
         super('commands', 'Manage the commands registered on Discord');
         this.cleanRunner = cleanRunner;
+        this.deployRunner = deployRunner;
         this.prompter = prompter;
     }
 
@@ -70,8 +79,9 @@ export class CommandsCommand extends BaseCommand {
         commands
             .command('deploy')
             .description('Deploy the commands in your code to Discord')
-            .action((_options, command) =>
-                this.runSteps(command, DEPLOY_STEPS, (printer) => this.deploy(printer, command))
+            .option('--yes', 'Deploy without asking first')
+            .action((options, command) =>
+                this.runSteps(command, DEPLOY_STEPS, (printer) => this.deploy(printer, command, options.yes))
             );
 
         commands
@@ -95,14 +105,14 @@ export class CommandsCommand extends BaseCommand {
             .description('Delete guild commands that duplicate a global command')
             .option('--guild <ids...>', 'Guild ids to inspect')
             .option('--all-guilds', 'Scan every guild the bot is in (overlaps only, cannot combine with --purge)')
-            .option('--apply', 'Delete the reported commands instead of running a dry run')
+            .option('--yes', 'Delete the reported commands without asking')
             .option('--purge', 'Select every command in the named guilds, not only global overlaps')
             .action((options, command) =>
                 this.clean(
                     {
                         guild: options.guild ?? [],
                         allGuilds: options.allGuilds ?? false,
-                        apply: options.apply ?? false,
+                        yes: options.yes ?? false,
                         purge: options.purge ?? false
                     },
                     command
@@ -144,9 +154,13 @@ export class CommandsCommand extends BaseCommand {
         }
     }
 
-    private deploy(printer: StepPrinter<DeployStep>, command: CommandUnknownOpts): Promise<void> {
-        const confirm: Confirm = isInteractive() ? (message) => this.prompter.confirm({ message }) : PROCEED;
-        return DeployRunner.create().run(new DeployPresenter(printer, confirm, isVerbose(command)));
+    private deploy(printer: StepPrinter<DeployStep>, command: CommandUnknownOpts, yes = false): Promise<void> {
+        return this.deployRunner.run(new DeployPresenter(printer, this.deployConfirm(yes), isVerbose(command)));
+    }
+
+    private deployConfirm(yes: boolean): Confirm {
+        if (yes) return PROCEED;
+        return isInteractive() ? (message) => this.prompter.confirm({ message }) : NEEDS_YES;
     }
 
     private async list(printer: StepPrinter<ListStep>, command: CommandUnknownOpts, scope?: ListScope): Promise<void> {
@@ -168,7 +182,7 @@ export class CommandsCommand extends BaseCommand {
             executeClean({
                 runner: this.cleanRunner,
                 scope: { guildIds: options.guild, allGuilds: options.allGuilds, purge: options.purge },
-                apply: options.apply,
+                apply: options.yes,
                 token: readToken(),
                 presenter: new CleanPresenter(printer, PROCEED)
             })

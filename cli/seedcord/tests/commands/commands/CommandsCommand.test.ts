@@ -9,8 +9,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LARGE_BOT_THRESHOLD } from '#commands/commands/clean/executeClean';
 import { CommandsCommand } from '#commands/commands/CommandsCommand';
+import { DeployRunner } from '#commands/commands/deploy/DeployRunner';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
+import { fakeDiscord, fakeProject } from '#tests/commands/commands/fakeBot';
 import { KEY, PromptTerminal } from '#tests/core/prompts/PromptTerminal';
+import { silentLogger } from '#tests/silentLogger';
 
 import type { Flagged } from '#commands/commands/clean/classify';
 import type { CleanOps, CleanRunner } from '#commands/commands/clean/CleanRunner';
@@ -69,16 +72,35 @@ function captureOutput(): CapturedOutput {
     };
 }
 
-async function runWith(
+function asCleanRunner(runner: Record<keyof CleanOps, Mock>): CleanRunner {
+    // justified: the clean flows call only the CleanOps methods and listBotGuilds
+    return runner as unknown as CleanRunner;
+}
+
+async function runCommands(deps: ConstructorParameters<typeof CommandsCommand>[0], ...args: string[]): Promise<void> {
+    const program = new Command().exitOverride();
+    new CommandsCommand(deps).register(program);
+    await program.parseAsync(['commands', ...args], { from: 'user' });
+}
+
+function runWith(
     runner: Record<keyof CleanOps, Mock>,
     prompter: Prompter | undefined,
     ...args: string[]
 ): Promise<void> {
-    const program = new Command().exitOverride();
-    // justified: the clean flows call only the CleanOps methods and listBotGuilds
-    const cleanRunner = runner as unknown as CleanRunner;
-    new CommandsCommand(prompter ? { cleanRunner, prompter } : { cleanRunner }).register(program);
-    await program.parseAsync(['commands', ...args], { from: 'user' });
+    const cleanRunner = asCleanRunner(runner);
+    return runCommands(prompter ? { cleanRunner, prompter } : { cleanRunner }, ...args);
+}
+
+async function runDeploy(...args: string[]): Promise<{ puts: unknown[] }> {
+    const { rest, puts } = fakeDiscord();
+    const deployRunner = new DeployRunner({
+        projectLoader: await fakeProject(),
+        openDiscord: () => rest,
+        logger: silentLogger
+    });
+    await runCommands({ cleanRunner: asCleanRunner(fakeRunner()), deployRunner }, 'deploy', ...args);
+    return { puts };
 }
 
 function run(runner: Record<keyof CleanOps, Mock>, ...args: string[]): Promise<void> {
@@ -102,7 +124,7 @@ describe('seedcord commands, on a terminal', () => {
     });
 
     // the wizard would wait on a keypress and time the test out
-    it.each([['--guild', '1'], ['--all-guilds'], ['--apply'], ['--purge']])(
+    it.each([['--guild', '1'], ['--all-guilds'], ['--yes'], ['--purge']])(
         'runs straight through with %s and opens no wizard',
         async (...flags) => {
             using _output = captureOutput();
@@ -167,10 +189,10 @@ describe('seedcord commands clean, off a terminal', () => {
         expect(runner.applyDeletions).not.toHaveBeenCalled();
     });
 
-    it('deletes the duplicates with --apply and asks nothing', async () => {
+    it('deletes the duplicates with --yes and asks nothing', async () => {
         const runner = fakeRunner();
 
-        await run(runner, 'clean', '--guild', '1', '--apply');
+        await run(runner, 'clean', '--guild', '1', '--yes');
 
         expect(runner.applyDeletions).toHaveBeenCalledWith(FAKE_TOKEN, 'app-1', [DUPLICATE]);
     });
@@ -193,7 +215,7 @@ describe('seedcord commands clean, off a terminal', () => {
         expect(output.stdout()).toMatch(new RegExp(String.raw`${check} connect +\S+\n`, 'u'));
         expect(output.stdout()).toMatch(new RegExp(String.raw`${check} scan +\S+ +1 duplicate in 1 guild\n`, 'u'));
         expect(output.stdout()).toContain('  one  1 duplicate\n      /ban\n');
-        expect(output.stdout()).toContain('--apply');
+        expect(output.stdout()).toContain('--yes');
     });
 
     it('prints a failure as its code and message, with no stack', async () => {
@@ -201,10 +223,41 @@ describe('seedcord commands clean, off a terminal', () => {
         const runner = fakeRunner();
         runner.resolveTargets.mockRejectedValue(new SeedcordError(SeedcordErrorCode.CliCleanNoGuilds));
 
-        await run(runner, 'clean', '--apply');
+        await run(runner, 'clean', '--yes');
 
         expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliCleanNoGuilds}] No guilds given.`);
         expect(output.stderr()).not.toMatch(/^\s+at /mu);
         expect(process.exitCode).toBe(1);
+    });
+});
+
+describe('seedcord commands deploy, off a terminal', () => {
+    const stdinIsTTY = process.stdin.isTTY;
+
+    beforeEach(() => {
+        process.stdin.isTTY = false;
+    });
+
+    afterEach(() => {
+        process.stdin.isTTY = stdinIsTTY;
+    });
+
+    it('prints the plan, then throws CliDeployNeedsYes and deploys nothing', async () => {
+        using output = captureOutput();
+
+        const { puts } = await runDeploy();
+
+        expect(output.stdout()).toContain('  global  1 command\n    + /ping');
+        expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliDeployNeedsYes}]`);
+        expect(process.exitCode).toBe(1);
+        expect(puts).toEqual([]);
+    });
+
+    it('deploys with --yes', async () => {
+        using _output = captureOutput();
+
+        const { puts } = await runDeploy('--yes');
+
+        expect(puts).toHaveLength(2);
     });
 });

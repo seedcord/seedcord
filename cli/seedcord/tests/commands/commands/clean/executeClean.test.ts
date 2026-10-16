@@ -117,7 +117,7 @@ describe('executeClean', () => {
         const { lines, confirm } = await run(runner, { apply: false });
 
         expect(lines).toContain('/ban');
-        expect(lines).toContain('Dry run. Re-run with --apply to delete these.');
+        expect(lines).toContain('Dry run. Re-run with --yes to delete these.');
         expect(confirm).not.toHaveBeenCalled();
         expect(runner.applyDeletions).not.toHaveBeenCalled();
     });

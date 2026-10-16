@@ -53,16 +53,18 @@ pnpm add -D seedcord
 `commands` reads `DISCORD_BOT_TOKEN` from your environment or `.env`:
 
 ```sh
-seedcord commands                    # pick what to do from a menu
-seedcord commands deploy             # deploy the commands in your code
-seedcord commands list               # show the commands Discord has
-seedcord commands list --all-guilds  # include every guild the bot is in
-seedcord commands list --json        # print them as JSON
-seedcord commands clean              # find guild commands that copy a global one
-seedcord commands clean --apply      # delete them
+seedcord commands                           # pick what to do from a menu
+seedcord commands deploy                    # show what changes, then ask before deploying
+seedcord commands deploy --yes              # deploy without asking
+seedcord commands list                      # show the commands Discord has
+seedcord commands list --all-guilds         # include every guild the bot is in
+seedcord commands list --json               # print them as JSON
+seedcord commands clean                     # pick guilds, then remove commands that copy a global one
+seedcord commands clean --all-guilds        # list those copies in every guild
+seedcord commands clean --all-guilds --yes  # delete them
 ```
 
-`deploy` shows what it'll add and remove, then asks before it changes anything. In CI it doesn't ask.
+In CI, or anywhere without a terminal, nothing changes on Discord unless you pass `--yes`.
 
 On the http transport, `dev` also opens a cloudflared tunnel and points Discord's interactions URL at it.
 

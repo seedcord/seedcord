@@ -108,7 +108,7 @@ export class CleanPresenter {
     }
 
     public dryRunHint(): void {
-        this.output.line(paint.mute('Dry run. Re-run with --apply to delete these.'));
+        this.output.line(paint.mute('Dry run. Re-run with --yes to delete these.'));
     }
 
     private async ask(message: string): Promise<boolean> {

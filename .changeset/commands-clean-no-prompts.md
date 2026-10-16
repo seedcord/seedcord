@@ -3,4 +3,4 @@
 '@seedcord/errors': minor
 ---
 
-**BREAKING:** `seedcord commands clean` with flags now runs without asking, even with `--apply` in CI. `--yes` is removed along with the `CliCleanApplyNeedsYes` and `CliCleanLargeBotUnconfirmed` codes.
+**BREAKING:** `seedcord commands clean` now deletes with `--yes` in place of `--apply`. With flags, it no longer asks before deleting. The old `--apply` and `--yes` pair is gone, along with the `CliCleanApplyNeedsYes` and `CliCleanLargeBotUnconfirmed` codes.

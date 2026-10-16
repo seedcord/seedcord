@@ -327,6 +327,8 @@ export enum SeedcordErrorCode {
     CliDevRuntimeNotRunning = 3155,
     /** `seedcord commands deploy` ran on a bot whose `commands.path` is `null`. */
     CliDeployNoCommandsFolder = 3156,
+    /** `seedcord commands deploy` ran where it cannot ask first, without `--yes`. */
+    CliDeployNeedsYes = 3157,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,
