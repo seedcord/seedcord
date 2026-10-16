@@ -23,10 +23,8 @@ function projectFor(tsconfig?: string): Project {
     const config = {
         root: projectDir,
         configFile: join(projectDir, 'seedcord.config.ts'),
-        build:
-            tsconfig === undefined
-                ? { outDir: join(projectDir, 'dist') }
-                : { outDir: join(projectDir, 'dist'), tsconfig }
+        target: { kind: 'server', entry: join(projectDir, 'index.ts'), outDir: join(projectDir, 'dist') },
+        build: tsconfig === undefined ? {} : { tsconfig }
     } as ResolvedSeedcordConfig;
     const loader = {
         importModule: () => Promise.reject(new Error('the type checker loads no modules')),

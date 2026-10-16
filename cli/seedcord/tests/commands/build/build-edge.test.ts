@@ -131,6 +131,14 @@ describe('a built edge worker', () => {
 });
 
 describe('seedcord build on an edge bot with files it never loads', () => {
+    it('builds next to a dist folder that holds other files', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await mkdir(join(projectDir, 'dist'));
+        await writeFile(join(projectDir, 'dist/notes.txt'), 'not a build\n');
+
+        await expect(edgeBuildRunner().run(projectDir)).resolves.toBeDefined();
+    }, 120_000);
+
     it('builds a file under root that sets a timer at load, since nothing imports it', async () => {
         const projectDir = await copyEdgeBotForTest();
         await mkdir(join(projectDir, 'src/scripts'));

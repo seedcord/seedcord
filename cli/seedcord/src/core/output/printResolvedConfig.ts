@@ -13,5 +13,5 @@ export function printResolvedConfig(steps: Steps<string>, config: ResolvedSeedco
         return;
     }
     steps.detail('entry', paint.path(target.entry));
-    steps.detail('outDir', paint.path(config.build.outDir));
+    steps.detail('outDir', paint.path(target.outDir));
 }

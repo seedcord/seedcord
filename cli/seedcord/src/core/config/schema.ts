@@ -134,12 +134,13 @@ export type ResolvedTunnel = { mode: 'off' } | { mode: 'quick' } | { mode: 'url'
 
 export type ResolvedEdgeTarget = EdgeTarget & { port: number };
 
-export type ResolvedTarget = (ServerTarget & { entry: string }) | ResolvedEdgeTarget;
+export type ResolvedServerTarget = ServerTarget & { entry: string; outDir: string };
+
+export type ResolvedTarget = ResolvedServerTarget | ResolvedEdgeTarget;
 
 export type ResolvedTypecheck = { enabled: false } | { enabled: true; tsconfig?: string };
 
 export interface ResolvedSeedcordBuildConfig {
-    outDir: string;
     tsconfig?: string;
 }
 

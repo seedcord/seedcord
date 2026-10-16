@@ -36,7 +36,7 @@ export function edgeConfig(projectDir: string, port = ANY_PORT): ResolvedSeedcor
         root: join(projectDir, 'src'),
         instance: join(projectDir, 'src/bot.ts'),
         target: edgeTarget(projectDir, port),
-        build: { outDir: join(projectDir, 'dist') },
+        build: {},
         tunnel: { mode: 'quick' }
     } as ResolvedSeedcordConfig;
 }

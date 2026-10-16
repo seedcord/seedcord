@@ -19,7 +19,12 @@ export class Project implements AsyncDisposable {
         private readonly loader: ModuleLoader & AsyncDisposable
     ) {
         this.configDir = dirname(config.configFile);
-        this.files = new ProjectFiles(config.root, config.build.outDir, this.configDir);
+        const { target } = config;
+        this.files = new ProjectFiles(
+            config.root,
+            this.configDir,
+            target.kind === 'server' ? target.outDir : undefined
+        );
     }
 
     public get modules(): ModuleLoader {

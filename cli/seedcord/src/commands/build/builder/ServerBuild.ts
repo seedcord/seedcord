@@ -5,12 +5,14 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { build } from 'vite';
 
+import { assertOutDirSafe } from './assertOutDirSafe';
 import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { serverCommands } from './serverCommands';
 import { ENTRY_ID, isServerEntry, serverEntry } from './serverEntry';
 import { TargetBuild } from './TargetBuild';
 
+import type { ResolvedServerTarget } from '#core/config/schema';
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './output';
 import type { NextCommand } from './TargetBuild';
@@ -37,13 +39,15 @@ export class ServerBuild extends TargetBuild {
 
     constructor(
         project: Project,
-        private readonly entry: string
+        private readonly target: ResolvedServerTarget
     ) {
         super(project);
     }
 
     public check(): void {
-        if (!existsSync(this.entry)) throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [this.entry]);
+        const { entry, outDir } = this.target;
+        if (!existsSync(entry)) throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [entry]);
+        assertOutDirSafe(outDir, this.project.config.root);
     }
 
     public nextCommands(bundle: BundleStats): NextCommand[] {
@@ -52,9 +56,8 @@ export class ServerBuild extends TargetBuild {
 
     public async bundle(): Promise<BundleStats> {
         const { config, files } = this.project;
-        const { entry } = this;
+        const { entry, outDir } = this.target;
         const { root } = config;
-        const { outDir } = config.build;
         const folders = await files.foldersIncludingEmpty();
 
         const result = await build({

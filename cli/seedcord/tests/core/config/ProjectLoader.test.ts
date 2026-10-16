@@ -64,8 +64,11 @@ describe('ProjectLoader', () => {
 
         expect(resolved.root).toBe(resolve(projectDir, 'src'));
         expect(resolved.instance).toBe(resolve(projectDir, 'src/bot.ts'));
-        expect(resolved.target).toEqual({ kind: 'server', entry: resolve(projectDir, 'src/index.ts') });
-        expect(resolved.build.outDir).toBe(resolve(projectDir, 'dist'));
+        expect(resolved.target).toEqual({
+            kind: 'server',
+            entry: resolve(projectDir, 'src/index.ts'),
+            outDir: resolve(projectDir, 'dist')
+        });
         expect(resolved.build.tsconfig).toBeUndefined();
     });
 });
@@ -76,7 +79,7 @@ describe('ProjectLoader target', () => {
 
         const { target } = await load();
 
-        expect(target).toEqual({ kind: 'server', entry: join(projectDir, 'index.ts') });
+        expect(target).toMatchObject({ kind: 'server', entry: join(projectDir, 'index.ts') });
     });
 
     it('targets edge when a cloudflare.config.ts and a tsconfig with the workerd condition are in the config folder', async () => {
@@ -395,8 +398,8 @@ describe('ProjectLoader validation', () => {
     it('loads a build.outDir that holds root', async () => {
         const { projectDir, load } = projectWith({ ...MINIMAL, root: './src', build: { outDir: '.' } });
 
-        const { build } = await load();
+        const { target } = await load();
 
-        expect(build.outDir).toBe(projectDir);
+        expect(target).toMatchObject({ outDir: projectDir });
     });
 });

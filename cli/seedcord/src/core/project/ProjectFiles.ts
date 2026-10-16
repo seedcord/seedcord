@@ -38,11 +38,11 @@ export class ProjectFiles {
 
     constructor(
         private readonly root: string,
-        outDir: string,
-        private readonly configDir: string
+        private readonly configDir: string,
+        outDir?: string
     ) {
         const projectFolders = this.rootIsConfigDir() ? PROJECT_FOLDERS.map((name) => join(root, name)) : [];
-        this.skippedFolders = [outDir, ...projectFolders];
+        this.skippedFolders = outDir === undefined ? projectFolders : [outDir, ...projectFolders];
     }
 
     // vite also passes virtual ids like \0seedcord:entry here

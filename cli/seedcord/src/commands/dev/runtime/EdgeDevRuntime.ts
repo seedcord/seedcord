@@ -94,7 +94,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         assertNotBun();
         const { config } = context;
         const viteRoot = dirname(this.target.cloudflareConfig);
-        const files = new ProjectFiles(config.root, config.build.outDir, dirname(config.configFile));
+        const files = new ProjectFiles(config.root, dirname(config.configFile));
         installCliLogSinks(resources);
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
         const [folders, cloudflare] = await Promise.all([

@@ -193,7 +193,7 @@ export class ProjectLoader {
             instance,
             root,
             configFile: configPath,
-            target: this.resolveTarget(root, target, config),
+            target: this.resolveTarget(root, configDir, target, config),
             build,
             typecheck,
             idleAnimation: config.idleAnimation ?? true,
@@ -202,24 +202,27 @@ export class ProjectLoader {
         } satisfies ResolvedSeedcordConfig;
     }
 
-    private resolveTarget(root: string, target: BuildTarget, config: SeedcordConfig): ResolvedTarget {
+    private resolveTarget(
+        root: string,
+        configDir: string,
+        target: BuildTarget,
+        config: SeedcordConfig
+    ): ResolvedTarget {
         if (target.kind === 'edge') return { ...target, port: config.port ?? EDGE_DEV_PORT };
 
         // justified: entryProblems already required entry on a server target
-        const entry = resolve(root, (config as SeedcordServerConfig).entry);
+        const server = config as SeedcordServerConfig;
+        const entry = resolve(root, server.entry);
         if (!isInside(root, entry)) {
             throw new SeedcordTypeError(SeedcordErrorCode.CorePathOutsideRoot, [entry, root]);
         }
-        return { ...target, entry };
+        return { ...target, entry, outDir: resolve(configDir, server.build?.outDir ?? 'dist') };
     }
 
     private resolveBuildOptions(
         configDir: string,
         build: SeedcordBuildConfig | undefined
     ): ResolvedSeedcordBuildConfig {
-        const outDir = resolve(configDir, build?.outDir ?? 'dist');
-        const tsconfig = build?.tsconfig ? resolve(configDir, build.tsconfig) : undefined;
-
-        return tsconfig ? { outDir, tsconfig } : { outDir };
+        return build?.tsconfig ? { tsconfig: resolve(configDir, build.tsconfig) } : {};
     }
 }

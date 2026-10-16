@@ -6,7 +6,6 @@ import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { printResolvedConfig } from '#core/output/printResolvedConfig';
 
 import { assertFoldersUnderRoot } from './builder/assertFoldersUnderRoot';
-import { assertOutDirSafe } from './builder/assertOutDirSafe';
 import { targetBuildFor } from './builder/targetBuildFor';
 import { TypeChecker } from './builder/TypeChecker';
 
@@ -82,7 +81,6 @@ export class BuildRunner {
         const project = onFailure.use(await this.deps.projectLoader.open(projectDir));
         const build = this.deps.buildFor(project);
         build.check();
-        assertOutDirSafe(project.config.build.outDir, project.config.root);
 
         onFailure.move();
         return build;

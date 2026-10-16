@@ -52,8 +52,8 @@ function configAt(root: string, instance: string): ResolvedSeedcordConfig {
         root,
         instance,
         configFile: resolve(root, 'seedcord.config.ts'),
-        target: { kind: 'server', entry: resolve(root, 'index.ts') },
-        build: { outDir: resolve(root, 'dist') }
+        target: { kind: 'server', entry: resolve(root, 'index.ts'), outDir: resolve(root, 'dist') },
+        build: {}
     } as ResolvedSeedcordConfig;
 }
 
