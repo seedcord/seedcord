@@ -10,21 +10,12 @@ export interface WireError {
     errors?: WireError[] | undefined; // an AggregateError's members
 }
 
-/**
- * The last deploy of one application's commands, as a hash per command scope.
- *
- * @internal
- */
 export interface DeployedHashes {
     applicationId: string;
     scopes: Record<string, string>; // keyed by guild id, or 'global'
 }
 
-/**
- * HMR events the framework (client) sends to the CLI (server).
- *
- * @internal
- */
+// the bot sends these to the CLI
 export interface SeedcordFrameworkEvents {
     'seedcord:register-critical-files': { patterns: string[] };
     'seedcord:commands-update-prompt': { files: string[] };
@@ -35,11 +26,7 @@ export interface SeedcordFrameworkEvents {
     'seedcord:commands-deployed': DeployedHashes;
 }
 
-/**
- * HMR events the CLI (server) sends to the framework (client).
- *
- * @internal
- */
+// the CLI sends these back
 export interface SeedcordCliEvents {
     'seedcord:hmr': HmrUpdateEvent;
     'seedcord:refresh-commands': { shouldRefresh: boolean };
@@ -48,12 +35,7 @@ export interface SeedcordCliEvents {
     'seedcord:last-deploy': { deployed: DeployedHashes | undefined };
 }
 
-/**
- * A typed dev channel over a raw vite hot object, carrying the framework and CLI HMR wire so neither
- * side needs the ambient `vite-hmr.d.ts` augmentation.
- *
- * @internal
- */
+// vite's hot object with typed events
 export interface DevChannel<TSend, TRecv> {
     send<Key extends keyof TSend & string>(event: Key, data: TSend[Key]): void;
     on<Key extends keyof TRecv & string>(event: Key, cb: (data: TRecv[Key]) => void): void;

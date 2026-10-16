@@ -245,7 +245,8 @@ export class CommandRegistry implements Initializeable, HmrAware {
         const plan = await planDeploy(this.commandBodies(), last?.scopes, (unchanged) =>
             readCommands(unchanged, { rest, applicationId, signal })
         );
-        await this.reporter.readGuildNames(rest, [...plan.toPut.keys(), ...plan.skipped]);
+        await this.reporter.readGuildNames(rest, [...plan.toPut.keys(), ...plan.skipped], signal);
+        if (plan.toPut.size > 0) this.lastDeploy.save({ applicationId, scopes: plan.skippedHashes });
         const put = await putCommands(plan.toPut, {
             rest,
             applicationId,

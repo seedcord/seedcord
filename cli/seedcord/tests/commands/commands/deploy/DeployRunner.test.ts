@@ -9,6 +9,7 @@ import { PROCEED } from '#commands/commands/confirm';
 import { DeployPresenter } from '#commands/commands/deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from '#commands/commands/deploy/DeployRunner';
 import { StepPrinter } from '#core/output/StepPrinter';
+import { lastDeployOf } from '#core/state/deployedCommands';
 import { APP_ID, Config, fakeDiscord, fakeProject, Ping, pipedTerminal, slash } from '#tests/commands/commands/fakeBot';
 import { silentLogger } from '#tests/silentLogger';
 
@@ -158,6 +159,21 @@ describe('DeployRunner', () => {
 
         expect(puts.map(({ route }) => route)).toEqual([Routes.applicationGuildCommands(APP_ID, '111')]);
         expect(output).toContain('  Skipped the global commands because they match the last deploy.\n');
+    });
+
+    it('forgets the hash of every scope it was putting when a put fails', async () => {
+        const project = await fakeProject();
+        await deploy(project, fakeDiscord().rest);
+        const { rest } = fakeDiscord();
+        const guildRoute = Routes.applicationGuildCommands(APP_ID, '111');
+        const put = rest.put.bind(rest);
+        vi.spyOn(rest, 'put').mockImplementation((route, options) =>
+            route === guildRoute ? Promise.reject(new Error('Internal Server Error')) : put(route, options)
+        );
+
+        await expect(deploy(project, rest, { yes: true })).rejects.toThrow();
+
+        expect(lastDeployOf(project.state, APP_ID)?.scopes).toEqual({});
     });
 
     it('asks again after a declined deploy', async () => {

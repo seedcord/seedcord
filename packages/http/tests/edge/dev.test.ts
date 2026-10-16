@@ -129,7 +129,12 @@ describe('the edge Seedcord under seedcord dev', () => {
         cli.start();
 
         await vi.waitFor(() =>
-            expect(cli.events()).toEqual(['seedcord:read-deployed', 'seedcord:commands-deployed', 'seedcord:started'])
+            expect(cli.events()).toEqual([
+                'seedcord:read-deployed',
+                'seedcord:commands-deployed',
+                'seedcord:commands-deployed',
+                'seedcord:started'
+            ])
         );
         expect(put).toHaveBeenCalledWith(Routes.applicationCommands(APP_ID), expect.anything());
     });
@@ -153,7 +158,7 @@ describe('the edge Seedcord under seedcord dev', () => {
         Object.assign(firstBot.rest, { put: vi.fn().mockResolvedValue(deployedPing) });
         first.start();
         await vi.waitFor(() => expect(first.events()).toContain('seedcord:started'));
-        const [, deployed] = first.sent.find(([event]) => event === 'seedcord:commands-deployed') ?? [];
+        const [, deployed] = first.sent.findLast(([event]) => event === 'seedcord:commands-deployed') ?? [];
         // @ts-expect-error singleton reset between the two starts
         Seedcord.reset();
 
@@ -206,6 +211,7 @@ describe('the edge Seedcord under seedcord dev', () => {
             expect(cli.events()).toEqual([
                 'seedcord:start-failed',
                 'seedcord:read-deployed',
+                'seedcord:commands-deployed',
                 'seedcord:commands-deployed',
                 'seedcord:started'
             ])

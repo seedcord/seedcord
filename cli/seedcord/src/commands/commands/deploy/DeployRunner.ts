@@ -55,6 +55,7 @@ export class DeployRunner {
                 : await askToForce(presenter, plan.skipped, scopes, yes);
         if (!approved) return;
 
+        state.write(deployedCommandsFile, { applicationId: session.appId, scopes: plan.skippedHashes });
         await presenter.deploy(() => session.deploy(approved, this.deps.logger), approved);
         state.write(deployedCommandsFile, { applicationId: session.appId, scopes: plan.hashes });
         // discord's docs count only new commands as creates. we read that as an existing command keeping its id

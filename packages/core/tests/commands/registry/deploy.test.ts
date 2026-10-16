@@ -53,7 +53,7 @@ function registryWith(put: Mock, get?: Mock): CommandRegistry {
 async function deployedOnce(): Promise<DeployedHashes> {
     const { sent } = cliWith(undefined);
     await registryWith(vi.fn().mockResolvedValue(BARE)).deploy(new AbortController().signal, {});
-    const [, saved] = sent.find(([event]) => event === 'seedcord:commands-deployed') ?? [];
+    const [, saved] = sent.findLast(([event]) => event === 'seedcord:commands-deployed') ?? [];
     // justified: the registry sends DeployedHashes on seedcord:commands-deployed
     return saved as DeployedHashes;
 }
@@ -174,6 +174,19 @@ describe('CommandRegistry.deploy', () => {
         await expect(deploying).rejects.toThrow('Missing Access');
     });
 
+    it('forgets the hash of a scope whose put fails', async () => {
+        const { sent } = cliWith(await deployedOnce());
+        const put = vi.fn().mockRejectedValue(new Error('Internal Server Error'));
+
+        const deploying = registryWith(put, vi.fn().mockResolvedValue([])).deploy(new AbortController().signal, {});
+
+        await expect(deploying).rejects.toMatchObject({ code: SeedcordErrorCode.CoreCommandGlobalDeployFailed });
+        expect(sent.findLast(([event]) => event === 'seedcord:commands-deployed')).toEqual([
+            'seedcord:commands-deployed',
+            { applicationId: APP, scopes: {} }
+        ]);
+    });
+
     it('asks seedcord dev for the last deploy of its application, then sends what it deployed', async () => {
         const deployed = await deployedOnce();
         const { sent } = cliWith(undefined);
@@ -182,6 +195,7 @@ describe('CommandRegistry.deploy', () => {
 
         expect(sent).toEqual([
             ['seedcord:read-deployed', { applicationId: APP }],
+            ['seedcord:commands-deployed', { applicationId: APP, scopes: {} }],
             ['seedcord:commands-deployed', deployed]
         ]);
     });
@@ -234,6 +248,21 @@ describe('CommandRegistry.deploy', () => {
         expect(messages).toContainEqual(expect.stringContaining('Deployed 1 command to Alpha'));
         expect(messages).toContain('Skipped the commands in Alpha because they match the last deploy.');
         expect(get.mock.calls.filter(([route]) => route === Routes.guild('111'))).toHaveLength(1);
+    });
+
+    it('rejects when the deploy is aborted while it reads a guild name', async () => {
+        cliWith(undefined);
+        const controller = new AbortController();
+        const get = vi.fn((route: string) => {
+            if (route !== Routes.guild('111')) return Promise.resolve(BARE);
+            controller.abort();
+            return new Promise(() => undefined);
+        });
+        const registry = new CommandRegistry(coreWith(vi.fn().mockResolvedValue(BARE), get, ['111']));
+
+        await expect(registry.deploy(controller.signal, {})).rejects.toThrow(
+            expect.objectContaining({ name: 'AbortError' })
+        );
     });
 
     it('logs a guild by its id outside seedcord dev, and reads no guild', async () => {

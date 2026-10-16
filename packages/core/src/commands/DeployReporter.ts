@@ -1,5 +1,5 @@
 import { paint } from '@seedcord/errors';
-import { pluralize } from '@seedcord/utils/internal';
+import { pluralize, unlessAborted } from '@seedcord/utils/internal';
 
 import { getDevChannel } from '#hmr/devChannel';
 import { guildSummaries } from '#src/commands/guildSummaries';
@@ -16,10 +16,16 @@ export class DeployReporter {
     constructor(private readonly logger: Logger) {}
 
     // only seedcord dev reads guild names
-    public async readGuildNames(rest: Pick<REST, 'get'>, scopes: readonly ScopeId[]): Promise<void> {
+    public async readGuildNames(
+        rest: Pick<REST, 'get'>,
+        scopes: readonly ScopeId[],
+        signal: AbortSignal | undefined
+    ): Promise<void> {
         if (!getDevChannel()) return;
         const unread = scopes.filter((scope) => scope !== GLOBAL_ID && !this.guildNames.has(scope));
-        for (const { id, name } of await guildSummaries(rest, unread)) this.guildNames.set(id, name);
+        for (const { id, name } of await unlessAborted(guildSummaries(rest, unread), signal)) {
+            this.guildNames.set(id, name);
+        }
     }
 
     public skipped(scopes: readonly ScopeId[]): void {

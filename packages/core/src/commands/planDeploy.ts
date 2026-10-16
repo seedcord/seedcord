@@ -11,6 +11,8 @@ type ScopeHashes = DeployedHashes['scopes'];
 
 interface DeployPlan {
     hashes: ScopeHashes;
+    // saved before the PUTs in case one fails
+    skippedHashes: ScopeHashes;
     toPut: CommandScopes;
     skipped: ScopeId[];
     onDiscord: DeployResult;
@@ -57,6 +59,7 @@ export async function planDeploy(
     );
     return {
         hashes,
+        skippedHashes: Object.fromEntries(Object.entries(hashes).filter(([scope]) => skipped.has(scope))),
         toPut: new Map(scopes.entries().filter(([scope]) => !skipped.has(scope))),
         skipped: [...skipped],
         onDiscord
