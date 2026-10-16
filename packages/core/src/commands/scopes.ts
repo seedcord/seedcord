@@ -1,4 +1,3 @@
-import { pluralize } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
 
 import type { DeployTarget } from '#src/commands/deployTarget';
@@ -34,8 +33,14 @@ export function scopeIdsOf(target: DeployTarget): readonly ScopeId[] {
     return target.scope === 'global' ? [GLOBAL_ID] : target.guilds;
 }
 
-export function skippedNote(labels: readonly string[]): string {
-    return `Skipped ${allOf.format(labels)}. ${pluralize(labels.length, 'Its', 'Their')} commands match the last deploy.`;
+export function skippedNote(skipped: readonly ScopeId[], guildLabel: (guildId: string) => string): string {
+    const guilds = skipped.filter((scope) => scope !== GLOBAL_ID).map(guildLabel);
+    const parts = [
+        ...(skipped.includes(GLOBAL_ID) ? ['the global commands'] : []),
+        ...(guilds.length > 0 ? [`the commands in ${allOf.format(guilds)}`] : [])
+    ];
+    const note = `${allOf.format(parts)} match the last deploy. Left them alone.`;
+    return note.charAt(0).toUpperCase() + note.slice(1);
 }
 
 export function groupByScope<ItemT>(

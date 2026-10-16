@@ -43,7 +43,7 @@ export class DeployRunner {
         const state = StateFolder.besideConfig(configFile, this.deps.logger);
         const last = force ? undefined : lastDeployOf(state, session.appId);
         const plan = await planDeploy(scopes, last?.scopes, () => Promise.resolve(targets.deployed));
-        presenter.skipped(plan.skipped.map((scope) => titleOf(scope, targets)));
+        presenter.skipped(plan.skipped, (guildId) => guildLabel(guildId, targets));
 
         const plans = plansFor(plan.toPut, targets);
         const approved =
@@ -81,8 +81,12 @@ async function askToForce(
     return (await presenter.deployAnyway()) ? scopes : undefined;
 }
 
-function titleOf(scope: ScopeId, { guildNames }: DeployTargets): string {
-    return scope === GLOBAL_ID ? 'global' : (guildNames.get(scope) ?? scope);
+function guildLabel(guildId: string, { guildNames }: DeployTargets): string {
+    return guildNames.get(guildId) ?? guildId;
+}
+
+function titleOf(scope: ScopeId, targets: DeployTargets): string {
+    return scope === GLOBAL_ID ? 'global' : guildLabel(scope, targets);
 }
 
 function plansFor(scopes: CommandScopes, targets: DeployTargets): ScopePlan[] {

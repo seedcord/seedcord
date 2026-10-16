@@ -11,7 +11,7 @@ import type { Confirm } from '#commands/commands/confirm';
 import type { PresenterOutput } from '#commands/commands/StepsPresenter';
 import type { DeployStep } from './DeployRunner';
 import type { ScopeDiff } from './diffScope';
-import type { CommandBody, CommandScopes } from '@seedcord/core/internal';
+import type { CommandBody, CommandScopes, ScopeId } from '@seedcord/core/internal';
 
 export interface ScopePlan {
     title: string;
@@ -40,10 +40,10 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
         super(output);
     }
 
-    public skipped(titles: readonly string[]): void {
-        if (titles.length === 0) return;
+    public skipped(scopes: readonly ScopeId[], guildLabel: (guildId: string) => string): void {
+        if (scopes.length === 0) return;
         this.output.line();
-        this.output.line(skippedNote(titles));
+        this.output.line(skippedNote(scopes, guildLabel));
     }
 
     public nothingToDeploy(): void {

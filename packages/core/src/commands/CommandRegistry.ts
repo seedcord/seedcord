@@ -15,6 +15,7 @@ import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
 import { CommandInjector } from '#src/commands/CommandInjector';
 import { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
 import { resolveDeployTarget } from '#src/commands/deployTarget';
+import { guildSummaries } from '#src/commands/guildSummaries';
 import { isCommandClass } from '#src/commands/isCommandClass';
 import { LastDeploy } from '#src/commands/LastDeploy';
 import { planDeploy } from '#src/commands/planDeploy';
@@ -76,6 +77,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private readonly pendingEvents = new Map<string, HmrUpdateEvent>();
     private readonly injector = new CommandInjector();
     private readonly lastDeploy = new LastDeploy();
+    private readonly guildNames = new Map<string, string>();
 
     private readonly dir: string;
     private readonly configuredGuilds: readonly string[];
@@ -244,6 +246,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         const plan = await planDeploy(this.commandBodies(), last?.scopes, (unchanged) =>
             readCommands(unchanged, { rest, applicationId, signal })
         );
+        await this.readGuildNames([...plan.toPut.keys(), ...plan.skipped]);
         const put = await putCommands(plan.toPut, {
             rest,
             applicationId,
@@ -269,9 +272,18 @@ export class CommandRegistry implements Initializeable, HmrAware {
         return new Map(deployable.map(([scope, commands]) => [scope, commands.map((c) => c.toJSON())]));
     }
 
+    private async readGuildNames(scopes: readonly ScopeId[]): Promise<void> {
+        const unread = scopes.filter((scope) => scope !== GLOBAL_ID && !this.guildNames.has(scope));
+        for (const { id, name } of await guildSummaries(this.core.rest, unread)) this.guildNames.set(id, name);
+    }
+
+    private guildLabel(guildId: string): string {
+        return paint.sky.bold(this.guildNames.get(guildId) ?? guildId);
+    }
+
     private reportSkipped(skipped: readonly ScopeId[]): void {
         if (skipped.length === 0) return;
-        this.logger.info(skippedNote(skipped.map((scope) => (scope === GLOBAL_ID ? 'global' : paint.sky.bold(scope)))));
+        this.logger.info(skippedNote(skipped, (guildId) => this.guildLabel(guildId)));
     }
 
     private reportDeployed(scope: ScopeId, commands: readonly CommandBody[]): void {
@@ -281,7 +293,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         const title =
             scope === GLOBAL_ID
                 ? `Deployed ${count} global ${tag}`
-                : `Deployed ${count} ${tag} to ${paint.sky.bold(scope)}`;
+                : `Deployed ${count} ${tag} to ${this.guildLabel(scope)}`;
 
         utils.block(title, utils.wrap(commands.map((command) => command.name)), 'info');
     }

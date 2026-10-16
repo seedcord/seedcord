@@ -9,10 +9,10 @@ import { deletedNote, scanNote } from './removeSteps';
 
 import type { RunnerDeps } from '#commands/commands/runnerDeps';
 import type { GuildTargets } from '#commands/commands/scope';
-import type { GuildSummary } from '#core/discord/readBotGuilds';
 import type { RemoveMode } from './RemoveMode';
 import type { RemovePresenter } from './RemovePresenter';
 import type { Selection } from './removeSteps';
+import type { GuildSummary } from '@seedcord/core/internal';
 
 interface RemovePlan {
     mode: RemoveMode;

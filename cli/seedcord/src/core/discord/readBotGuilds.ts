@@ -1,12 +1,8 @@
 import { Routes } from 'discord-api-types/v10';
 
 import type { REST } from '@discordjs/rest';
+import type { GuildSummary } from '@seedcord/core/internal';
 import type { RESTGetAPICurrentUserGuildsResult } from 'discord-api-types/v10';
-
-export interface GuildSummary {
-    id: string;
-    name: string;
-}
 
 // discord returns at most 200 guilds a page
 const GUILD_PAGE = 200;

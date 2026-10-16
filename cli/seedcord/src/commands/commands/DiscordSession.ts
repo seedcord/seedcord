@@ -2,6 +2,7 @@ import {
     commandRoute,
     commandsRoute,
     GLOBAL_ID,
+    guildSummaries,
     putCommands,
     readCommands,
     readCommandsAt
@@ -9,13 +10,11 @@ import {
 import { asError } from '@seedcord/utils/internal';
 
 import { applicationOf } from '#core/discord/applicationOf';
-import { guildSummaries } from '#core/discord/guildSummaries';
 import { readBotGuilds } from '#core/discord/readBotGuilds';
 
-import type { GuildSummary } from '#core/discord/readBotGuilds';
 import type { DiscordRest } from './runnerDeps';
 import type { GuildScope, GuildTargets, Scope, ScopedCommands } from './scope';
-import type { CommandScopes, DeployResult, ScopeId } from '@seedcord/core/internal';
+import type { CommandScopes, DeployResult, GuildSummary, ScopeId } from '@seedcord/core/internal';
 import type { ILogger } from '@seedcord/types';
 import type { APIApplicationCommand, Snowflake } from 'discord-api-types/v10';
 

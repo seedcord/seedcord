@@ -1,8 +1,12 @@
 import { Routes } from 'discord-api-types/v10';
 
-import type { GuildSummary } from './readBotGuilds';
 import type { REST } from '@discordjs/rest';
 import type { RESTGetAPIGuildResult } from 'discord-api-types/v10';
+
+export interface GuildSummary {
+    id: string;
+    name: string;
+}
 
 type ReadRest = Pick<REST, 'get'>;
 

@@ -1,6 +1,6 @@
 import { GLOBAL_ID } from '@seedcord/core/internal';
 
-import type { GuildSummary } from '#core/discord/readBotGuilds';
+import type { GuildSummary } from '@seedcord/core/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 export type Scope =

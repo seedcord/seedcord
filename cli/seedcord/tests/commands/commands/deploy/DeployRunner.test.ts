@@ -102,8 +102,20 @@ describe('DeployRunner', () => {
         const output = await deploy(project, rest, { yes: true });
 
         expect(puts).toHaveLength(2);
-        expect(output).toContain('  Skipped global and Alpha. Their commands match the last deploy.\n');
+        expect(output).toContain(
+            '  The global commands and the commands in Alpha match the last deploy. Left them alone.\n'
+        );
         expect(output.trimEnd().split('\n').at(-1)).toBe('  Nothing to deploy.');
+    });
+
+    it('says which guilds it skipped when the code has only guild commands', async () => {
+        const project = await fakeProject({ commands: [Config] });
+        const { rest } = fakeDiscord();
+        await deploy(project, rest);
+
+        const output = await deploy(project, rest, { yes: true });
+
+        expect(output).toContain('  The commands in Alpha match the last deploy. Left them alone.\n');
     });
 
     it('asks once whether to deploy the skipped scopes anyway when every scope is skipped', async () => {
@@ -140,7 +152,7 @@ describe('DeployRunner', () => {
         const output = await deploy(project, rest);
 
         expect(puts.map(({ route }) => route)).toEqual([Routes.applicationGuildCommands(APP_ID, '111')]);
-        expect(output).toContain('  Skipped global. Its commands match the last deploy.\n');
+        expect(output).toContain('  The global commands match the last deploy. Left them alone.\n');
     });
 
     it('asks again after a declined deploy', async () => {

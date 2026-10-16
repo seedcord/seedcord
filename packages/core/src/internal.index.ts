@@ -45,6 +45,7 @@ export { resolveDeployTarget } from '#src/commands/deployTarget';
 export { putCommands, type CommandBody, type CommandScopes } from '#src/commands/putCommands';
 export { readCommands, readCommandsAt } from '#src/commands/readCommands';
 export { planDeploy } from '#src/commands/planDeploy';
+export { guildSummaries, type GuildSummary } from '#src/commands/guildSummaries';
 export {
     commandRoute,
     commandsRoute,

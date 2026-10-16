@@ -1,6 +1,8 @@
 import path from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { LoggerChannelRegistry } from '@seedcord/logger';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
@@ -27,10 +29,10 @@ const BARE: APIApplicationCommand[] = [
     { id: '1', name: 'bare', type: ApplicationCommandType.ChatInput } as APIApplicationCommand
 ];
 
-function coreWith(put: Mock, get: Mock = vi.fn().mockResolvedValue(BARE)): CoreBase {
+function coreWith(put: Mock, get: Mock = vi.fn().mockResolvedValue(BARE), guilds?: string[]): CoreBase {
     // justified: deploy reads only these members off core
     const core = {
-        config: { bot: { commands: { path: FIXTURE } } },
+        config: { bot: { commands: { path: FIXTURE, guilds } } },
         rest: { put, get, on: vi.fn(), off: vi.fn() },
         applicationId: APP
     } as unknown as { bus: Bus };
@@ -182,6 +184,25 @@ describe('CommandRegistry.deploy', () => {
         const deploying = registryWith(vi.fn()).deploy(controller.signal, {});
 
         await expect(deploying).rejects.toThrow(expect.objectContaining({ name: 'AbortError' }));
+    });
+
+    it('logs a guild by its name, which it reads from discord once', async () => {
+        const get = vi.fn((route: string) =>
+            Promise.resolve(route === Routes.guild('111') ? { id: '111', name: 'Alpha' } : BARE)
+        );
+        const registry = new CommandRegistry(coreWith(vi.fn().mockResolvedValue(BARE), get, ['111']));
+        const messages: string[] = [];
+        using _capture = LoggerChannelRegistry.instance.installSink({
+            kind: 'capture',
+            onLog: (record) => messages.push(stripVTControlCharacters(record.message))
+        });
+
+        await registry.deploy(new AbortController().signal, {});
+        await registry.setCommands();
+
+        expect(messages).toContainEqual(expect.stringContaining('Deployed 1 command to Alpha'));
+        expect(messages).toContain('The commands in Alpha match the last deploy. Left them alone.');
+        expect(get.mock.calls.filter(([route]) => route === Routes.guild('111'))).toHaveLength(1);
     });
 
     it('skips the put on a refresh that changed no command', async () => {

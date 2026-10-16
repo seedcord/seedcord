@@ -7,11 +7,11 @@ import { RemovePresenter } from './RemovePresenter';
 import { REMOVE_STEPS } from './removeSteps';
 
 import type { GuildTargets } from '#commands/commands/scope';
-import type { GuildSummary } from '#core/discord/readBotGuilds';
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Prompter } from '#core/prompts/Prompter';
 import type { RemoveMode } from './RemoveMode';
 import type { RemoveRunner } from './RemoveRunner';
+import type { GuildSummary } from '@seedcord/core/internal';
 
 export const WIZARD_STEPS = ['guilds', ...REMOVE_STEPS] as const;
 type WizardStep = (typeof WIZARD_STEPS)[number];
