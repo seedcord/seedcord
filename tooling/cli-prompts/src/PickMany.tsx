@@ -6,6 +6,7 @@ import { LineEditor } from './LineEditor';
 import { editLine } from './lineKeys';
 import { ListCursor } from './ListCursor';
 import { matchChoices } from './matchChoices';
+import { inListOrder, toggle } from './picks';
 import { checkbox, cursorRow, keyHints, lineField, question } from './rows';
 import { usePrompt } from './usePrompt';
 
@@ -30,12 +31,6 @@ interface PickState<Value extends string> {
     readonly picked: ReadonlySet<Value>;
 }
 
-function toggle<Value extends string>(picked: ReadonlySet<Value>, value: Value): ReadonlySet<Value> {
-    const next = new Set(picked);
-    if (!next.delete(value)) next.add(value);
-    return next;
-}
-
 function pickManyMachine<Value extends string>(
     choices: readonly Choice<Value>[]
 ): PromptMachine<PickState<Value>, Value[]> {
@@ -53,7 +48,7 @@ function pickManyMachine<Value extends string>(
             if (filter.text === state.filter.text) return { ...state, filter };
             return { ...state, filter, cursor: new ListCursor(matchChoices(choices, filter.text)) };
         },
-        answer: ({ picked }) => choices.flatMap((choice) => (picked.has(choice.value) ? [choice.value] : []))
+        submit: ({ picked }) => ({ answer: inListOrder(choices, picked) })
     };
 }
 

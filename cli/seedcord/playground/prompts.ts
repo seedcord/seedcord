@@ -80,20 +80,6 @@ async function rateLimitedDeploy(): Promise<string> {
 }
 
 const SCENARIOS: Record<string, Scenario> = {
-    select: (prompter) =>
-        prompter.select({
-            message: 'Remove guild commands that duplicate a global command. Which guilds?',
-            choices: [
-                { value: 'pick', label: 'Pick specific guilds' },
-                { value: 'all', label: 'All guilds the bot is in' }
-            ]
-        }),
-    confirm: (prompter) => prompter.confirm({ message: 'Delete 3 commands? This cannot be undone.' }),
-    'pick-many': (prompter) =>
-        prompter.pickMany({
-            message: 'Select guilds',
-            choices: GUILDS.map((guild) => ({ value: guild.id, label: guild.name }))
-        }),
     clean: (prompter) => runWizard(prompter, askClean),
     purge: (prompter) => runWizard(prompter, askPurge),
     deploy: rateLimitedDeploy

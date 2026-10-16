@@ -22,6 +22,10 @@ export function cursorRow(text: string, highlighted: boolean): string {
         : `${ROW_INDENT}${CURSOR_GUTTER}${text}`;
 }
 
+export function hinted(row: string, hint: string | undefined): string {
+    return hint ? `${row}  ${paint.mute(hint)}` : row;
+}
+
 export function checkbox(picked: boolean): string {
     return picked ? paint.mint(PROMPT_MARKS.picked) : paint.mute(PROMPT_MARKS.unpicked);
 }

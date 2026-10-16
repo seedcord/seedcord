@@ -30,7 +30,7 @@ const CONFIRM_MACHINE: PromptMachine<boolean, boolean> = {
         if (isArrow(key)) return !yes;
         return yes;
     },
-    answer: (yes) => yes
+    submit: (yes) => ({ answer: yes })
 };
 
 function option(label: string, picked: boolean): string {

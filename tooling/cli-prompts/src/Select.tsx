@@ -1,9 +1,8 @@
-import { paint } from '@seedcord/errors';
 import { Box, Text } from 'ink';
 import React, { useMemo } from 'react';
 
 import { ListCursor } from './ListCursor';
-import { cursorRow, question } from './rows';
+import { cursorRow, hinted, question } from './rows';
 import { usePrompt } from './usePrompt';
 
 import type { Choice } from './Choice';
@@ -29,7 +28,7 @@ function selectMachine<Value extends string>(
             if (key.downArrow) return cursor.next();
             return cursor;
         },
-        answer: (cursor) => cursor.current?.value
+        submit: (cursor) => (cursor.current ? { answer: cursor.current.value } : { stay: cursor })
     };
 }
 
@@ -41,10 +40,7 @@ export function Select<Value extends string>({ message, choices, onEnd }: Select
         <Box flexDirection="column" paddingLeft={2}>
             <Text>{question(message)}</Text>
             {choices.map((choice, index) => (
-                <Text key={choice.value}>
-                    {cursorRow(choice.label, index === cursor.index)}
-                    {choice.hint ? `  ${paint.mute(choice.hint)}` : ''}
-                </Text>
+                <Text key={choice.value}>{hinted(cursorRow(choice.label, index === cursor.index), choice.hint)}</Text>
             ))}
         </Box>
     );

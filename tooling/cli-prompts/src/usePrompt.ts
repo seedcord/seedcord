@@ -8,11 +8,12 @@ export interface KeyPress {
     readonly key: Key;
 }
 
+type Submitted<State, Answer> = { readonly answer: Answer } | { readonly stay: State };
+
 export interface PromptMachine<State, Answer> {
     readonly initial: State;
     readonly press: (state: State, keyPress: KeyPress) => State;
-    // undefined leaves enter doing nothing
-    readonly answer: (state: State) => Answer | undefined;
+    readonly submit: (state: State) => Submitted<State, Answer>;
 }
 
 export type Outcome<Answer> = { readonly kind: 'answered'; readonly answer: Answer } | { readonly kind: 'cancelled' };
@@ -35,8 +36,23 @@ function advance<State, Answer>(
     if (isCancel(keyPress)) return { ...progress, outcome: { kind: 'cancelled' } };
     if (!keyPress.key.return) return { state: machine.press(progress.state, keyPress) };
 
-    const answer = machine.answer(progress.state);
-    return answer === undefined ? progress : { ...progress, outcome: { kind: 'answered', answer } };
+    const submitted = machine.submit(progress.state);
+    return 'stay' in submitted
+        ? { state: submitted.stay }
+        : { ...progress, outcome: { kind: 'answered', answer: submitted.answer } };
+}
+
+const LINE_BREAK = /\r\n|\r|\n/u;
+
+// ink reads a paste as one string, enter included
+function keyPressesIn({ input, key }: KeyPress): KeyPress[] {
+    if (key.return || !LINE_BREAK.test(input)) return [{ input, key }];
+
+    const enter: KeyPress = { input: '\r', key: { ...key, return: true } };
+    return input.split(LINE_BREAK).flatMap((text, index) => {
+        const typed: KeyPress[] = text === '' ? [] : [{ input: text, key }];
+        return index === 0 ? typed : [enter, ...typed];
+    });
 }
 
 export function usePrompt<State, Answer>(
@@ -48,7 +64,12 @@ export function usePrompt<State, Answer>(
         { state: machine.initial }
     );
 
-    useInput((input, key) => press({ input, key }), { isActive: !outcome });
+    useInput(
+        (input, key) => {
+            for (const keyPress of keyPressesIn({ input, key })) press(keyPress);
+        },
+        { isActive: !outcome }
+    );
 
     useEffect(() => {
         if (outcome) onEnd(outcome);

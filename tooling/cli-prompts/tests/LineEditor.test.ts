@@ -24,4 +24,10 @@ describe('LineEditor', () => {
     it('moves over an emoji whole', () => {
         expect(caretAtEnd('a👨‍👩‍👧b').left().left().insert('x').text).toBe('ax👨‍👩‍👧b');
     });
+
+    it('masks each character and keeps the caret between the same ones', () => {
+        const masked = caretAtEnd('a👨‍👩‍👧b').left().masked('•');
+
+        expect([masked.before, masked.after]).toEqual(['••', '•']);
+    });
 });

@@ -71,6 +71,11 @@ export class LineEditor {
         return this.moveTo(this.text.length);
     }
 
+    public masked(mark: string): LineEditor {
+        const count = (text: string): number => [...GRAPHEMES.segment(text)].length;
+        return new LineEditor(mark.repeat(count(this.text)), mark.length * count(this.before));
+    }
+
     public get atCaret(): string {
         const [first] = GRAPHEMES.segment(this.after);
         return first?.segment ?? '';
