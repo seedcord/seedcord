@@ -7,9 +7,10 @@ import { restFromEnv } from '#core/discord/restFromEnv';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 
 import type { DiscordState } from '#commands/commands/discordState';
-import type { ListPresenter, ScopeListing } from './ListPresenter';
+import type { Steps } from '#core/output/Steps';
 import type { REST } from '@discordjs/rest';
 import type { ILogger } from '@seedcord/types';
+import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 export const LIST_STEPS = [...LOAD_STEPS, 'read discord'] as const;
 export type ListStep = (typeof LIST_STEPS)[number];
@@ -22,13 +23,24 @@ export interface ListScope {
     allGuilds: boolean;
 }
 
-const NO_EXTRA_GUILDS: ListScope = { guildIds: [], allGuilds: false };
+export interface GuildListing {
+    id: string;
+    name: string;
+    commands: APIApplicationCommand[];
+}
+
+export interface Listing {
+    global: APIApplicationCommand[];
+    guilds: GuildListing[];
+}
 
 interface ListRunnerDeps {
     readonly projectLoader: Pick<ProjectLoader, 'open'>;
     readonly openDiscord: () => ReadRest;
     readonly logger: ILogger;
 }
+
+const NO_EXTRA_GUILDS: ListScope = { guildIds: [], allGuilds: false };
 
 export class ListRunner {
     constructor(private readonly deps: ListRunnerDeps) {}
@@ -41,27 +53,28 @@ export class ListRunner {
         });
     }
 
-    public async run(presenter: ListPresenter, scope = NO_EXTRA_GUILDS, projectDir = process.cwd()): Promise<void> {
-        const { scopes } = await loadCodeScopes(presenter, this.deps, projectDir);
+    public async read(steps: Steps<ListStep>, scope = NO_EXTRA_GUILDS, projectDir = process.cwd()): Promise<Listing> {
+        const { scopes } = await loadCodeScopes(steps, this.deps, projectDir);
         const codeGuildIds = scopes?.guilds.keys() ?? [];
 
-        const discord = await presenter.step('read discord', async () => {
+        const discord = await steps.step('read discord', async () => {
             const rest = this.deps.openDiscord();
             const botGuilds = scope.allGuilds ? await readBotGuilds(rest) : [];
             const guildIds = new Set([...codeGuildIds, ...scope.guildIds, ...botGuilds.map((guild) => guild.id)]);
             const knownNames = new Map(botGuilds.map((guild) => [guild.id, guild.name]));
             return readDiscordState(rest, [...guildIds], knownNames);
         });
-        presenter.detail('app', discord.applicationId);
-        presenter.list(listingsOf(discord));
+        steps.detail('app', discord.applicationId);
+        return listingOf(discord);
     }
 }
 
 // guildNames holds every listed guild, in the order they were asked for
-function listingsOf({ deployed, guildNames }: DiscordState<ReadRest>): ScopeListing[] {
-    const guilds = guildNames.entries().map(([guildId, title]) => ({
-        title,
-        commands: [...(deployed.guilds.get(guildId)?.values() ?? [])]
+function listingOf({ deployed, guildNames }: DiscordState<ReadRest>): Listing {
+    const guilds = guildNames.entries().map(([id, name]) => ({
+        id,
+        name,
+        commands: [...(deployed.guilds.get(id)?.values() ?? [])]
     }));
-    return [{ title: 'global', commands: [...deployed.global.values()] }, ...guilds];
+    return { global: [...deployed.global.values()], guilds: [...guilds] };
 }

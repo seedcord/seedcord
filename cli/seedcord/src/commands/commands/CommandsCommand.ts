@@ -4,6 +4,7 @@ import { Envapter } from 'envapt';
 
 import { BaseCommand } from '#core/BaseCommand';
 import { isInteractive } from '#core/interactive';
+import { quietSteps } from '#core/output/quietSteps';
 import { Prompter } from '#core/prompts/Prompter';
 import { isVerbose } from '#core/verbose';
 
@@ -15,6 +16,7 @@ import { executeClean } from './clean/executeClean';
 import { PROCEED } from './confirm';
 import { DeployPresenter } from './deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from './deploy/DeployRunner';
+import { listingJson } from './list/listingJson';
 import { ListPresenter } from './list/ListPresenter';
 import { LIST_STEPS, ListRunner } from './list/ListRunner';
 
@@ -77,14 +79,16 @@ export class CommandsCommand extends BaseCommand {
             .description('List the commands Discord has for your bot')
             .option('--guild <ids...>', 'Also list these guilds')
             .option('--all-guilds', 'Also list every guild the bot is in')
-            .action((options, command) =>
-                this.runSteps(command, LIST_STEPS, (printer) =>
-                    this.list(printer, command, {
-                        guildIds: options.guild ?? [],
-                        allGuilds: options.allGuilds ?? false
-                    })
-                )
-            );
+            .option('--json', 'Print the listing as JSON for scripts')
+            .action((options, command) => {
+                const scope = { guildIds: options.guild ?? [], allGuilds: options.allGuilds ?? false };
+                if (options.json) {
+                    return this.runJson(command, async () =>
+                        listingJson(await ListRunner.create().read(quietSteps, scope))
+                    );
+                }
+                return this.runSteps(command, LIST_STEPS, (printer) => this.list(printer, command, scope));
+            });
 
         commands
             .command('clean')
@@ -145,8 +149,9 @@ export class CommandsCommand extends BaseCommand {
         return DeployRunner.create().run(new DeployPresenter(printer, confirm, isVerbose(command)));
     }
 
-    private list(printer: StepPrinter<ListStep>, command: CommandUnknownOpts, scope?: ListScope): Promise<void> {
-        return ListRunner.create().run(new ListPresenter(printer, isVerbose(command)), scope);
+    private async list(printer: StepPrinter<ListStep>, command: CommandUnknownOpts, scope?: ListScope): Promise<void> {
+        const listing = await ListRunner.create().read(printer, scope);
+        new ListPresenter(printer, isVerbose(command)).list(listing);
     }
 
     private cleanWizard(printer: StepPrinter<WizardStep>): Promise<void> {

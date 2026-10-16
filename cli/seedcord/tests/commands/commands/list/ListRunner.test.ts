@@ -1,8 +1,10 @@
-import { Routes } from 'discord-api-types/v10';
+import { ApplicationCommandOptionType, Routes } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
+import { listingJson } from '#commands/commands/list/listingJson';
 import { ListPresenter } from '#commands/commands/list/ListPresenter';
 import { LIST_STEPS, ListRunner } from '#commands/commands/list/ListRunner';
+import { quietSteps } from '#core/output/quietSteps';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { APP_ID, fakeDiscord, fakeProject, pipedTerminal, slash } from '#tests/commands/commands/fakeBot';
 import { silentLogger } from '#tests/silentLogger';
@@ -16,13 +18,14 @@ interface ListOptions {
     scope?: ListScope;
 }
 
+function runnerFor(project: ProjectOpener, rest: REST): ListRunner {
+    return new ListRunner({ projectLoader: project, openDiscord: () => rest, logger: silentLogger });
+}
+
 async function list(project: ProjectOpener, rest: REST, { verbose = false, scope }: ListOptions = {}): Promise<string> {
     const stdout = pipedTerminal();
     const printer = new StepPrinter({ command: 'commands', labels: LIST_STEPS, verbose, stdout, stderr: stdout });
-    await new ListRunner({ projectLoader: project, openDiscord: () => rest, logger: silentLogger }).run(
-        new ListPresenter(printer, verbose),
-        scope
-    );
+    new ListPresenter(printer, verbose).list(await runnerFor(project, rest).read(printer, scope));
     return stdout.text();
 }
 
@@ -83,5 +86,25 @@ describe('ListRunner', () => {
 
         expect(output).toContain('  Gamma  1 command\n      /rank\n');
         expect(gets).not.toContain(Routes.guild('333'));
+    });
+});
+
+describe('listingJson', () => {
+    it('keys each guild by id and passes every command through as discord sent it', async () => {
+        const config = {
+            ...slash('config'),
+            guild_id: '111',
+            description: 'Change the settings',
+            options: [{ type: ApplicationCommandOptionType.String, name: 'key', description: 'Setting' }],
+            version: '9'
+        };
+        const { rest } = fakeDiscord({ ...ON_DISCORD, [Routes.applicationGuildCommands(APP_ID, '111')]: [config] });
+
+        const listings = await runnerFor(await fakeProject(), rest).read(quietSteps);
+
+        expect(listingJson(listings)).toEqual({
+            global: [slash('ping'), slash('legacy')],
+            guilds: { '111': [config] }
+        });
     });
 });

@@ -5,15 +5,10 @@ import { plural } from '#core/format';
 
 import type { CommandRow, CommandSection } from '#commands/commands/commandRows';
 import type { StepPrinter } from '#core/output/StepPrinter';
-import type { ListStep } from './ListRunner';
+import type { Listing } from './ListRunner';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
-type ListOutput = Pick<StepPrinter<ListStep>, 'step' | 'detail' | 'line' | 'wrapped'>;
-
-export interface ScopeListing {
-    title: string;
-    commands: readonly APIApplicationCommand[];
-}
+type ListOutput = Pick<StepPrinter<string>, 'line' | 'wrapped'>;
 
 export class ListPresenter {
     constructor(
@@ -21,26 +16,14 @@ export class ListPresenter {
         private readonly verbose: boolean
     ) {}
 
-    public step<Result>(
-        label: ListStep,
-        task: () => Promise<Result>,
-        note?: (result: Result) => string
-    ): Promise<Result> {
-        return this.output.step(label, task, note);
+    public list({ global, guilds }: Listing): void {
+        printSections(this.output, [
+            this.section('global', global),
+            ...guilds.map((guild) => this.section(guild.name, guild.commands))
+        ]);
     }
 
-    public detail(key: string, value: string): void {
-        this.output.detail(key, value);
-    }
-
-    public list(listings: readonly ScopeListing[]): void {
-        printSections(
-            this.output,
-            listings.map((listing) => this.section(listing))
-        );
-    }
-
-    private section({ title, commands }: ScopeListing): CommandSection {
+    private section(title: string, commands: readonly APIApplicationCommand[]): CommandSection {
         return { title, note: plural(commands.length, 'command'), rows: this.rows(commands) };
     }
 

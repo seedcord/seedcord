@@ -1,9 +1,15 @@
 import { isSeedcordError } from '@seedcord/errors';
 
+import { renderError } from '#core/output/renderError';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { isVerbose } from '#core/verbose';
 
 import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
+
+function exitFor(error: unknown): void {
+    if (isSeedcordError(error)) process.exitCode = 1;
+    else process.exit(1);
+}
 
 export abstract class BaseCommand {
     constructor(
@@ -24,8 +30,17 @@ export abstract class BaseCommand {
             await run(printer);
         } catch (error: unknown) {
             printer.fail(error);
-            if (isSeedcordError(error)) process.exitCode = 1;
-            else process.exit(1);
+            exitFor(error);
+        }
+    }
+
+    // stdout carries only the json. errors go to stderr
+    protected async runJson(command: CommandUnknownOpts, run: () => Promise<unknown>): Promise<void> {
+        try {
+            process.stdout.write(`${JSON.stringify(await run(), null, 2)}\n`);
+        } catch (error: unknown) {
+            process.stderr.write(renderError(error, { verbose: isVerbose(command), width: undefined }));
+            exitFor(error);
         }
     }
 }
