@@ -1,7 +1,10 @@
+import { diffScope } from '#src/commands/diffScope';
 import { commandKey } from '#src/commands/linkCommands';
 
 import type { CommandBody, CommandScopes } from '#src/commands/putCommands';
+import type { DeployResult } from '#src/commands/types';
 import type { DeployedHashes } from '@seedcord/types/internal';
+import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 export type ScopeHashes = Omit<DeployedHashes, 'applicationId'>;
 
@@ -31,6 +34,26 @@ export function splitByHash(scopes: CommandScopes, hashes: ScopeHashes, last: Sc
     return {
         changed: { global: globalUnchanged ? undefined : scopes.global, guilds: changed },
         unchanged: { global: globalUnchanged ? scopes.global : undefined, guilds: unchanged }
+    };
+}
+
+// a missing scope holds no commands
+function matches(
+    inCode: readonly CommandBody[],
+    deployed: ReadonlyMap<string, APIApplicationCommand> | undefined
+): boolean {
+    const { added, removed } = diffScope(inCode, deployed?.values() ?? []);
+    return added.length === 0 && removed.length === 0;
+}
+
+// compares by name and type
+export function scopesDiscordLacks(unchanged: CommandScopes, read: DeployResult): CommandScopes {
+    const lacksGlobal = unchanged.global !== undefined && !matches(unchanged.global, read.global);
+    return {
+        global: lacksGlobal ? unchanged.global : undefined,
+        guilds: new Map(
+            [...unchanged.guilds].filter(([guildId, commands]) => !matches(commands, read.guilds.get(guildId)))
+        )
     };
 }
 

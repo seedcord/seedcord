@@ -11,7 +11,7 @@ export interface WireError {
 }
 
 /**
- * What `seedcord dev` last deployed for one application, as a hash per command scope.
+ * The last deploy of one application's commands, as a hash per command scope.
  *
  * @internal
  */
@@ -32,6 +32,8 @@ export interface SeedcordFrameworkEvents {
     'seedcord:server-listening': { port: number };
     'seedcord:started': { username: string | undefined };
     'seedcord:start-failed': { error: WireError };
+    'seedcord:read-deployed': { applicationId: string };
+    'seedcord:commands-deployed': DeployedHashes;
 }
 
 /**
@@ -44,6 +46,8 @@ export interface SeedcordCliEvents {
     'seedcord:refresh-commands': { shouldRefresh: boolean };
     // eslint-disable-next-line no-magic-numbers -- chalk's ColorSupportLevel for the CLI's terminal, copied to keep chalk out of types
     'seedcord:start': { colorLevel: 0 | 1 | 2 | 3 };
+    // the answer to seedcord:read-deployed
+    'seedcord:deployed': { deployed: DeployedHashes | undefined };
 }
 
 /**

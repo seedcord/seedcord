@@ -8,6 +8,8 @@ import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { DevRunner } from '#commands/dev/DevRunner';
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { quietSteps } from '#core/output/quietSteps';
+import { deployedCommandsFile } from '#core/state/deployedCommands';
+import { StateFolder } from '#core/state/StateFolder';
 import { ED25519_KEY_BYTES } from '#tests/commands/build/smoke';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
@@ -87,6 +89,7 @@ describe('EdgeDevRuntime lifecycle', () => {
             idleAnimation: false
         } as ResolvedSeedcordConfig;
         const store = new DevStore();
+        const state = new StateFolder(projectDir, silentLogger);
         const runner = new DevRunner({
             // justified: the runner reads config and disposes the project
             projectLoader: {
@@ -113,6 +116,7 @@ describe('EdgeDevRuntime lifecycle', () => {
         expect(messagesOf(logs).filter((message) => message === 'Starting coordinated startup sequence')).toHaveLength(
             1
         );
+        await vi.waitFor(() => expect(state.read(deployedCommandsFile)?.guilds).toBeDefined());
     }, 120_000);
 
     it('rejects with the error the worker failed to start with', async () => {

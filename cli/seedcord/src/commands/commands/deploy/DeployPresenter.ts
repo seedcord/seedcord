@@ -9,9 +9,8 @@ import type { ScopesInCode } from '#commands/commands/codeScopes';
 import type { CommandRow, CommandSection } from '#commands/commands/commandRows';
 import type { Confirm } from '#commands/commands/confirm';
 import type { PresenterOutput } from '#commands/commands/StepsPresenter';
-import type { ScopeDiff } from './deployPlan';
 import type { DeployStep } from './DeployRunner';
-import type { CommandBody } from '@seedcord/core/internal';
+import type { CommandBody, ScopeDiff } from '@seedcord/core/internal';
 
 export interface ScopePlan {
     title: string;

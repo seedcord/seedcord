@@ -1,11 +1,10 @@
+import { diffScope } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { LOAD_STEPS, loadCodeScopes } from '#commands/commands/codeScopes';
 import { DiscordSession } from '#commands/commands/DiscordSession';
 import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
-
-import { diffScope } from './deployPlan';
 
 import type { ScopesInCode } from '#commands/commands/codeScopes';
 import type { DeployTargets } from '#commands/commands/DiscordSession';

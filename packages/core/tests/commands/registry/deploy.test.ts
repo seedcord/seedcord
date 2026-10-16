@@ -2,8 +2,9 @@ import path from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
+import { setDevChannel } from '#hmr/devChannel';
 import { Commands } from '#src/commands/CommandInjector';
 import { CommandRegistry } from '#src/commands/CommandRegistry';
 import { scopeHashes } from '#src/commands/scopeHashes';
@@ -15,6 +16,7 @@ import type { CommandBody } from '#src/commands/putCommands';
 import type { CommandBuilder } from '#src/commands/types';
 import type { DeployedHashes } from '@seedcord/types/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
+import type { Mock } from 'vitest';
 
 // justified: SlashRegistry is empty in tests
 const mentions = Commands as Record<string, CommandInfo>;
@@ -27,7 +29,7 @@ const BARE: APIApplicationCommand[] = [
     { id: '1', name: 'bare', type: ApplicationCommandType.ChatInput } as APIApplicationCommand
 ];
 
-function registryWith(put: ReturnType<typeof vi.fn>, get = vi.fn().mockResolvedValue(BARE)): CommandRegistry {
+function coreWith(put: Mock, get: Mock = vi.fn().mockResolvedValue(BARE)): CoreBase {
     // justified: deploy reads only these members off core
     const core = {
         config: { bot: { commands: { path: FIXTURE } } },
@@ -35,15 +37,36 @@ function registryWith(put: ReturnType<typeof vi.fn>, get = vi.fn().mockResolvedV
         applicationId: APP
     } as unknown as { bus: Bus };
     core.bus = new Bus(core as unknown as CoreBase);
-    return new CommandRegistry(core as unknown as CoreBase);
+    return core as unknown as CoreBase;
+}
+
+function registryWith(put: Mock, get?: Mock): CommandRegistry {
+    return new CommandRegistry(coreWith(put, get));
 }
 
 // what a first deploy of the fixture puts, as seedcord dev would cache it
-async function deployedOnce(applicationId = APP): Promise<DeployedHashes> {
+async function deployedOnce(): Promise<DeployedHashes> {
+    const applicationId = APP;
     const put = vi.fn().mockResolvedValue(BARE);
     await registryWith(put).deploy(new AbortController().signal, {});
     const { body } = put.mock.calls[0]?.[1] as { body: CommandBody[] };
     return { applicationId, ...(await scopeHashes({ global: body, guilds: new Map() })) };
+}
+
+// seedcord dev, answering the registry's read with the last deploy
+function cliWith(deployed: DeployedHashes | undefined): [string, unknown][] {
+    const sent: [string, unknown][] = [];
+    const handlers = new Map<string, (data: unknown) => void>();
+    setDevChannel({
+        send: (event, data) => {
+            sent.push([event, data]);
+            if (event === 'seedcord:read-deployed') handlers.get('seedcord:deployed')?.({ deployed });
+        },
+        // justified: the fake keeps every handler under one signature
+        on: (event, handler) => handlers.set(event, handler as (data: unknown) => void)
+    });
+    onTestFinished(() => setDevChannel(undefined));
+    return sent;
 }
 
 describe('CommandRegistry.deploy', () => {
@@ -70,34 +93,60 @@ describe('CommandRegistry.deploy', () => {
     });
 
     it('reads the ids of a scope whose commands match the last deploy and puts nothing', async () => {
-        const deployed = await deployedOnce();
+        cliWith(await deployedOnce());
         const put = vi.fn();
         const get = vi.fn().mockResolvedValue(BARE);
 
-        await registryWith(put, get).deploy(new AbortController().signal, { deployed });
+        await registryWith(put, get).deploy(new AbortController().signal, {});
 
         expect(put).not.toHaveBeenCalled();
         expect(get.mock.calls.map(([route]: unknown[]) => route)).toEqual([Routes.applicationCommands(APP)]);
         expect(mentions.bare?.mention).toBe('</bare:1>');
     });
 
+    it('deploys an unchanged scope again when discord is missing one of its commands', async () => {
+        cliWith(await deployedOnce());
+        const put = vi.fn().mockResolvedValue(BARE);
+
+        await registryWith(put, vi.fn().mockResolvedValue([])).deploy(new AbortController().signal, {});
+
+        expect(put.mock.calls.map(([route]: unknown[]) => route)).toEqual([Routes.applicationCommands(APP)]);
+        expect(mentions.bare?.mention).toBe('</bare:1>');
+    });
+
+    it('publishes only what a redeploy left on discord', async () => {
+        cliWith(await deployedOnce());
+        // justified: the deploy reads only these three fields
+        const stray = { id: '9', name: 'stray', type: ApplicationCommandType.ChatInput } as APIApplicationCommand;
+        const core = coreWith(vi.fn().mockResolvedValue(BARE), vi.fn().mockResolvedValue([...BARE, stray]));
+        const heard = vi.fn();
+        core.bus.on('commandsDeployed', heard);
+
+        await new CommandRegistry(core).deploy(new AbortController().signal, {});
+
+        expect(heard).toHaveBeenCalledWith({ global: BARE, guilds: {} });
+    });
+
     it('throws CoreDiscordReadFailed when an unchanged scope cannot be read back', async () => {
-        const deployed = await deployedOnce();
+        cliWith(await deployedOnce());
         const get = vi.fn().mockRejectedValue(new Error('Missing Access'));
 
-        const deploying = registryWith(vi.fn(), get).deploy(new AbortController().signal, { deployed });
+        const deploying = registryWith(vi.fn(), get).deploy(new AbortController().signal, {});
 
         await expect(deploying).rejects.toMatchObject({ code: SeedcordErrorCode.CoreDiscordReadFailed });
         await expect(deploying).rejects.toThrow('Missing Access');
     });
 
-    it('puts every scope when the last deploy was for another application', async () => {
-        const deployed = await deployedOnce('app-2');
-        const put = vi.fn().mockResolvedValue(BARE);
+    it('asks seedcord dev for the last deploy of its application, then sends what it deployed', async () => {
+        const deployed = await deployedOnce();
+        const sent = cliWith(undefined);
 
-        await registryWith(put).deploy(new AbortController().signal, { deployed });
+        await registryWith(vi.fn().mockResolvedValue(BARE)).deploy(new AbortController().signal, {});
 
-        expect(put.mock.calls.map(([route]: unknown[]) => route)).toEqual([Routes.applicationCommands(APP)]);
+        expect(sent).toEqual([
+            ['seedcord:read-deployed', { applicationId: APP }],
+            ['seedcord:commands-deployed', deployed]
+        ]);
     });
 
     it('skips the put on a refresh that changed no command', async () => {

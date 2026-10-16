@@ -4,7 +4,18 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 import { Logger } from '@seedcord/logger';
-import { type Mock, type MockInstance, afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+    type Mock,
+    type MockInstance,
+    afterAll,
+    afterEach,
+    beforeEach,
+    describe,
+    expect,
+    it,
+    onTestFinished,
+    vi
+} from 'vitest';
 
 import { HmrPlugin } from '#commands/dev/runtime/HmrPlugin';
 
@@ -80,6 +91,7 @@ interface ConfiguredPlugin {
     plugin: HmrPlugin;
     watcher: EventEmitter;
     listeners: Map<string, (data: unknown) => void>;
+    sent: Mock;
     events: DevEvent[];
 }
 
@@ -88,8 +100,9 @@ function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0]): C
     const listeners = new Map<string, (data: unknown) => void>();
     // justified: spy on the private `hot` getter
     const hotHost = plugin as unknown as { hot: { send: Mock; on: Mock } };
+    const sent = vi.fn();
     vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({
-        send: vi.fn(),
+        send: sent,
         on: vi.fn((event: string, cb: (data: unknown) => void) => listeners.set(event, cb))
     });
 
@@ -103,7 +116,7 @@ function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0]): C
     } as unknown as ViteDevServer;
     (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
 
-    return { plugin, watcher, listeners, events };
+    return { plugin, watcher, listeners, sent, events };
 }
 
 describe('HmrPlugin', () => {
@@ -164,6 +177,35 @@ describe('HmrPlugin', () => {
         listeners.get('seedcord:server-listening')?.({ port: 4000 });
 
         expect(events).toContainEqual({ type: 'server-listening', port: 4000 });
+    });
+
+    describe('the last deploy', () => {
+        const deployed = { applicationId: 'app-1', global: 'a1b2', guilds: { '111': 'c3d4' } };
+
+        // .seedcord sits beside the config file
+        function besideConfig(): ConfiguredPlugin {
+            const dir = mkdtempSync(join(tmpdir(), 'seedcord-hmr-state-'));
+            onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
+            return configuredPlugin({ ...mockConfig, configFile: join(dir, 'seedcord.config.ts') });
+        }
+
+        it('answers a read with the deploy the framework reported for that application', () => {
+            const { listeners, sent } = besideConfig();
+
+            listeners.get('seedcord:commands-deployed')?.(deployed);
+            listeners.get('seedcord:read-deployed')?.({ applicationId: 'app-1' });
+
+            expect(sent).toHaveBeenCalledWith('seedcord:deployed', { deployed });
+        });
+
+        it('answers nothing for a deploy saved for another application', () => {
+            const { listeners, sent } = besideConfig();
+
+            listeners.get('seedcord:commands-deployed')?.(deployed);
+            listeners.get('seedcord:read-deployed')?.({ applicationId: 'app-2' });
+
+            expect(sent).toHaveBeenCalledWith('seedcord:deployed', { deployed: undefined });
+        });
     });
 
     it.each(['migrations/**', './migrations/**', join(srcRoot, 'migrations/**')])(

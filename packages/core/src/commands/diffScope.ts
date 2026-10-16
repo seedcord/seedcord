@@ -1,6 +1,6 @@
-import { commandKey } from '@seedcord/core/internal';
+import { commandKey } from '#src/commands/linkCommands';
 
-import type { CommandBody } from '@seedcord/core/internal';
+import type { CommandBody } from '#src/commands/putCommands';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 export interface ScopeDiff {

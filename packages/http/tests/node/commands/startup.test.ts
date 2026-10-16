@@ -1,9 +1,10 @@
 import path from 'node:path';
 
 import { Commands } from '@seedcord/core';
+import { setDevChannel } from '@seedcord/core/internal';
 import { HostStartup } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';
 import { Seedcord } from '#src/node/Seedcord';
@@ -11,6 +12,7 @@ import { APP_ID } from '#tests/helpers/fixtures';
 import { bindSignedEnv, serverConfig } from '#tests/helpers/nodeHost';
 
 import type { HttpServerConfig } from '#src/interfaces/Config';
+import type { DeployedHashes } from '@seedcord/types/internal';
 
 const COMMANDS_DIR = path.resolve(__dirname, './fixtures');
 const EMOJI_COMMANDS_DIR = path.resolve(__dirname, './emoji-fixtures');
@@ -27,15 +29,18 @@ beforeEach(async () => {
     await bindSignedEnv();
 });
 
+const DEPLOYED = [{ id: 'cmd-1', name: 'ping', type: ApplicationCommandType.ChatInput }];
+
 // REST's verb methods sit far up its prototype chain, where vi.spyOn resolves get and reports put
 // as undefined. assigning own properties shadows both.
 function stubRest(host: Seedcord): { get: ReturnType<typeof vi.fn>; put: ReturnType<typeof vi.fn> } {
     const get = vi.fn((route: string) => {
         if (route === Routes.currentApplication()) return { id: APP_ID };
         if (route === Routes.applicationEmojis(APP_ID)) return { items: [{ name: 'confirm', id: '111' }] };
+        if (route === Routes.applicationCommands(APP_ID)) return DEPLOYED;
         return {};
     });
-    const put = vi.fn().mockResolvedValue([{ id: 'cmd-1', name: 'ping', type: ApplicationCommandType.ChatInput }]);
+    const put = vi.fn().mockResolvedValue(DEPLOYED);
     Object.assign(host.rest, { get, put });
     return { get, put };
 }
@@ -66,6 +71,33 @@ describe('command deploy during http startup', () => {
         await host.start();
 
         expect(commands.ping?.id).toBe('cmd-1');
+        expect(commands.ping?.mention).toBe('</ping:cmd-1>');
+    });
+
+    it('reads the ids and deploys nothing when seedcord dev holds the hashes of an unchanged deploy', async () => {
+        let saved: DeployedHashes | undefined;
+        const handlers = new Map<string, (data: unknown) => void>();
+        setDevChannel({
+            send: (event, data) => {
+                if (event === 'seedcord:commands-deployed') saved = data as DeployedHashes;
+                else if (event === 'seedcord:read-deployed') handlers.get('seedcord:deployed')?.({ deployed: saved });
+            },
+            // justified: the fake keeps every handler under one signature
+            on: (event, handler) => handlers.set(event, handler as (data: unknown) => void)
+        });
+        onTestFinished(() => setDevChannel(undefined));
+        {
+            await using first = new Seedcord(config(COMMANDS_DIR));
+            stubRest(first);
+            await first.start();
+        }
+
+        await using second = new Seedcord(config(COMMANDS_DIR));
+        const { get, put } = stubRest(second);
+        await second.start();
+
+        expect(put).not.toHaveBeenCalled();
+        expect(get).toHaveBeenCalledWith(Routes.applicationCommands(APP_ID), expect.anything());
         expect(commands.ping?.mention).toBe('</ping:cmd-1>');
     });
 

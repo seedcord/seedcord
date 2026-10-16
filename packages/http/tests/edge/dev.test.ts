@@ -15,6 +15,7 @@ import { APP_ID, VALID_TOKEN } from '#tests/helpers/fixtures';
 import type { HttpEdgeConfig } from '#interfaces/Config';
 import type { Signer } from '#tests/helpers/ed25519';
 import type { HmrUpdateEvent } from '@seedcord/types';
+import type { DeployedHashes } from '@seedcord/types/internal';
 
 const ping = '{"type":1}';
 
@@ -30,12 +31,15 @@ interface FakeCli {
     save(event: HmrUpdateEvent): void;
 }
 
-// the channel seedcord dev opens to the worker
-function connectCli(): FakeCli {
+// the channel seedcord dev opens to the worker. it answers a read with `deployed`
+function connectCli(deployed?: DeployedHashes): FakeCli {
     const sent: [string, unknown][] = [];
     const handlers = new Map<string, (data: unknown) => void>();
     setDevChannel({
-        send: (event, data) => sent.push([event, data]),
+        send: (event, data) => {
+            sent.push([event, data]);
+            if (event === 'seedcord:read-deployed') handlers.get('seedcord:deployed')?.({ deployed });
+        },
         // justified: the fake stores every handler under one signature
         on: (event, handler) => handlers.set(event, handler as (data: unknown) => void)
     });
@@ -123,8 +127,48 @@ describe('the edge Seedcord under seedcord dev', () => {
 
         cli.start();
 
-        await vi.waitFor(() => expect(cli.events()).toEqual(['seedcord:started']));
+        await vi.waitFor(() =>
+            expect(cli.events()).toEqual(['seedcord:read-deployed', 'seedcord:commands-deployed', 'seedcord:started'])
+        );
         expect(put).toHaveBeenCalledWith(Routes.applicationCommands(APP_ID), expect.anything());
+    });
+
+    it('reads the ids and deploys nothing when the CLI passes the hashes of an unchanged deploy', async () => {
+        @RegisterCommand('global')
+        class Ping extends BuilderComponent<'command'> {
+            constructor() {
+                super('command');
+                this.instance.setName('ping').setDescription('Replies with pong');
+            }
+        }
+        registerBuiltFiles({ '/commands/Ping.ts': { Ping } });
+        const deployedPing = [{ id: '7', name: 'ping', type: ApplicationCommandType.ChatInput }];
+        const commandsConfig = { ...config, bot: { ...config.bot, commands: { path: `${BUILT_ROOT}/commands` } } };
+        await liveEnv();
+
+        const first = connectCli();
+        const firstBot = new Seedcord(commandsConfig);
+        stubDiscord(firstBot);
+        Object.assign(firstBot.rest, { put: vi.fn().mockResolvedValue(deployedPing) });
+        first.start();
+        await vi.waitFor(() => expect(first.events()).toContain('seedcord:started'));
+        const [, deployed] = first.sent.find(([event]) => event === 'seedcord:commands-deployed') ?? [];
+        // @ts-expect-error singleton reset between the two starts
+        Seedcord.reset();
+
+        const cli = connectCli(deployed as DeployedHashes);
+        const seedcord = new Seedcord(commandsConfig);
+        const put = vi.fn();
+        const get = vi.fn((route: string) => {
+            if (route === Routes.user('@me')) return { username: 'wave-bot' };
+            return route === Routes.applicationCommands(APP_ID) ? deployedPing : {};
+        });
+        Object.assign(seedcord.rest, { get, put });
+        cli.start();
+
+        await vi.waitFor(() => expect(cli.events()).toContain('seedcord:started'));
+        expect(put).not.toHaveBeenCalled();
+        expect(get).toHaveBeenCalledWith(Routes.applicationCommands(APP_ID), expect.anything());
     });
 
     it('deploys on a second start after the emojis failed to load the first time', async () => {
@@ -157,7 +201,14 @@ describe('the edge Seedcord under seedcord dev', () => {
         await vi.waitFor(() => expect(cli.events()).toEqual(['seedcord:start-failed']));
         cli.start();
 
-        await vi.waitFor(() => expect(cli.events()).toEqual(['seedcord:start-failed', 'seedcord:started']));
+        await vi.waitFor(() =>
+            expect(cli.events()).toEqual([
+                'seedcord:start-failed',
+                'seedcord:read-deployed',
+                'seedcord:commands-deployed',
+                'seedcord:started'
+            ])
+        );
         expect(put).toHaveBeenCalledOnce();
     });
 

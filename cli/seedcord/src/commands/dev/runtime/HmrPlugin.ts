@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { relative, resolve, sep } from 'node:path';
+import { dirname, relative, resolve, sep } from 'node:path';
 
 import { wrapHot } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
@@ -7,6 +7,9 @@ import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 import { resolveFromRoot } from '@seedcord/utils/node/internal';
 import { minimatch } from 'minimatch';
+
+import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
+import { StateFolder } from '#core/state/StateFolder';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { DevEvent } from './events';
@@ -35,6 +38,7 @@ const TYPE_COLOR = {
 
 export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly logger: Logger;
+    private readonly state: StateFolder;
     private readonly lastUpdate = new Map<string, number>();
     private server: ViteDevServer | null = null;
     private readonly restartPatterns: Set<string>;
@@ -55,6 +59,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     ) {
         super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
+        this.state = new StateFolder(dirname(config.configFile), this.logger);
         this.restartPatterns = new Set((config.hmr?.restart ?? []).map((pattern) => this.fromRoot(pattern)));
     }
 
@@ -105,6 +110,14 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
         this.dev?.on('seedcord:server-listening', (data) => {
             this.emit('event', { type: 'server-listening', port: data.port });
+        });
+
+        this.dev?.on('seedcord:read-deployed', ({ applicationId }) => {
+            this.dev?.send('seedcord:deployed', { deployed: lastDeployOf(this.state, applicationId) });
+        });
+
+        this.dev?.on('seedcord:commands-deployed', (deployed) => {
+            this.state.write(deployedCommandsFile, deployed);
         });
 
         this.dev?.on('seedcord:register-critical-files', (data) => {
