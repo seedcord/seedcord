@@ -144,6 +144,16 @@ describe('seedcord build on an edge bot with files it never loads', () => {
         });
     }, 120_000);
 
+    it('throws CliConfigFieldUnused for a cloudflare.config.ts that sets entrypoint', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await writeCloudflareConfig(projectDir, { entrypoint: './src/bot.ts' });
+
+        await expect(edgeBuildRunner().run(projectDir)).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigFieldUnused,
+            message: expect.stringContaining('cloudflare.config.ts') as string
+        });
+    }, 120_000);
+
     it('throws CliEdgeRootHoldsConfig for a root that holds the seedcord config', async () => {
         const projectDir = await copyEdgeBotForTest();
         await writeFile(join(projectDir, 'seedcord.config.ts'), "export default { instance: './src/bot.ts' };\n");

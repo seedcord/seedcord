@@ -8,7 +8,7 @@ import { installNodeDefaults } from '@seedcord/logger/node';
 import chalk from 'chalk';
 import { createServer, createServerModuleRunner } from 'vite';
 
-import { WORKER_ENTRY_ID, workerEntry } from '#commands/build/builder/workerEntry';
+import { workerEntry, workerEntryConfig } from '#commands/build/builder/workerEntry';
 import { listenHostFor } from '#commands/dev/tunnel/listenHost';
 import { importCloudflare, loadCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { edgeStandIns } from '#core/modules/edgeStandIns';
@@ -121,7 +121,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                     nodeCopy(modulesReady.resolve),
                     hmr.plugin,
                     cloudflare({
-                        config: { entrypoint: WORKER_ENTRY_ID },
+                        config: workerEntryConfig(this.target.cloudflareConfig),
                         viteEnvironment: { name: WORKER_ENVIRONMENT },
                         inspectorPort: false
                     })

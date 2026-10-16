@@ -191,6 +191,15 @@ describe('ProjectLoader entry on an edge bot', () => {
         });
     });
 
+    it('throws CliConfigFieldUnused for an edge config that sets build.outDir', async () => {
+        const { projectDir, load } = edgeProjectWith({ ...EDGE_MINIMAL, build: { outDir: './out' } });
+
+        await expect(load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigFieldUnused,
+            message: expect.stringContaining(join(projectDir, 'seedcord.config.ts')) as string
+        });
+    });
+
     it('throws CliConfigFieldUnused for an edge config that sets entry', async () => {
         const { projectDir, load } = edgeProjectWith(MINIMAL);
 

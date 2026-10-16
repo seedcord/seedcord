@@ -1,4 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 
@@ -26,6 +26,8 @@ export function bundleStats(chunks: Rolldown.OutputChunk[], files: ProjectFiles,
     };
 }
 
+// a plugin hook can throw a seedcord error that already says what to fix
 export function bundleFailed(error: unknown): never {
+    if (isSeedcordError(error)) throw error;
     throw new SeedcordError(SeedcordErrorCode.CliBundleFailed, [asError(error).message], { cause: error });
 }

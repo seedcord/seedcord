@@ -38,13 +38,22 @@ function invalidField(field: string, expected: string): SeedcordTypeError {
     return new SeedcordTypeError(SeedcordErrorCode.CliConfigInvalidField, [field, expected]);
 }
 
-function* buildProblems(value: unknown): Generator<SeedcordTypeError> {
+function unusedField(field: string, configFile: string, why: string): SeedcordTypeError {
+    return new SeedcordTypeError(SeedcordErrorCode.CliConfigFieldUnused, [field, configFile, why]);
+}
+
+function* buildProblems(value: unknown, target: BuildTarget, configFile: string): Generator<SeedcordTypeError> {
     if (value === undefined) return;
     if (!isPlainObject(value)) {
         yield invalidField('build', 'an object');
         return;
     }
-    if (!isOptionalString(value.outDir)) yield invalidField('build.outDir', 'a string');
+    if (target.kind === 'edge' && value.outDir !== undefined) {
+        const why = `${paint.bold('@cloudflare/vite-plugin')} writes an edge bot's worker to ${paint.path('.cloudflare/output')}, where ${paint.bold('cf deploy --prebuilt')} reads it.`;
+        yield unusedField('build.outDir', configFile, why);
+    } else if (!isOptionalString(value.outDir)) {
+        yield invalidField('build.outDir', 'a string');
+    }
     if (!isOptionalString(value.tsconfig)) yield invalidField('build.tsconfig', 'a string');
 }
 
@@ -94,10 +103,6 @@ function* entryProblems(entry: unknown, target: BuildTarget, configFile: string)
     }
 }
 
-function unusedField(field: string, configFile: string, why: string): SeedcordTypeError {
-    return new SeedcordTypeError(SeedcordErrorCode.CliConfigFieldUnused, [field, configFile, why]);
-}
-
 const MAX_PORT = 65_535;
 const PORT_RANGE = `an integer from 0 to ${MAX_PORT}`;
 
@@ -131,7 +136,7 @@ function* configProblems(
         yield invalidField('idleAnimation', 'a boolean');
     }
     yield* tunnelProblems(raw.tunnel);
-    yield* buildProblems(raw.build);
+    yield* buildProblems(raw.build, target, configFile);
     yield* hmrProblems(raw.hmr);
 }
 

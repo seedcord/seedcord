@@ -2,21 +2,28 @@ import type { EdgeTarget, ServerTarget } from './detectTarget';
 import type { TypedOmit } from '@seedcord/types';
 
 /**
- * Build configuration used by the Seedcord CLI.
+ * Build options for a bot that runs on Cloudflare Workers. `@cloudflare/vite-plugin` sets the
+ * worker's output folder to `.cloudflare/output`.
  */
-export interface SeedcordBuildConfig {
-    /**
-     * Directory where build artifacts should be emitted.
-     *
-     * @defaultValue `./dist` relative to the config directory
-     */
-    outDir?: string;
+export interface SeedcordEdgeBuildConfig {
     /**
      * The tsconfig that `seedcord build` type checks the project with.
      *
      * @defaultValue the `tsconfig.json` beside the config file
      */
     tsconfig?: string;
+}
+
+/**
+ * Build options for a bot that runs on node or bun.
+ */
+export interface SeedcordBuildConfig extends SeedcordEdgeBuildConfig {
+    /**
+     * Directory where build artifacts should be emitted.
+     *
+     * @defaultValue `./dist` relative to the config directory
+     */
+    outDir?: string;
 }
 
 /**
@@ -98,7 +105,7 @@ export interface SeedcordConfig {
     /**
      * Optional build configuration overrides.
      */
-    build?: SeedcordBuildConfig;
+    build?: SeedcordEdgeBuildConfig;
     /**
      * Optional HMR configuration.
      */
@@ -113,6 +120,10 @@ export interface SeedcordServerConfig extends SeedcordConfig {
      * The file that starts the bot, the one that calls `start()`.
      */
     entry: string;
+    /**
+     * Optional build configuration overrides.
+     */
+    build?: SeedcordBuildConfig;
     /**
      * A node http bot sets its port in `new Seedcord({ port })`.
      */

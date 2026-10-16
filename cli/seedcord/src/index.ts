@@ -3,6 +3,7 @@ export {
     SEEDCORD_CONFIG_FILENAMES,
     type SeedcordBuildConfig,
     type SeedcordConfig,
+    type SeedcordEdgeBuildConfig,
     type SeedcordHmrConfig,
     type SeedcordServerConfig
 } from '#core/config/schema';

@@ -20,7 +20,7 @@ import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { readDiscord } from './readDiscord';
 import { TargetBuild } from './TargetBuild';
-import { WORKER_ENTRY_ID, workerEntry } from './workerEntry';
+import { workerEntry, workerEntryConfig } from './workerEntry';
 
 import type { EdgeTarget } from '#core/config/detectTarget';
 import type { CloudflarePlugin, ImportCloudflare } from '#core/modules/cloudflarePlugin';
@@ -178,7 +178,7 @@ export class EdgeBuild extends TargetBuild {
         this.cloudflare ??= loadCloudflare(this.viteRoot, this.deps.importCloudflare);
         const cloudflare = await this.cloudflare;
         return cloudflare({
-            config: { entrypoint: WORKER_ENTRY_ID },
+            config: workerEntryConfig(this.target.cloudflareConfig),
             viteEnvironment: { name: WORKER_ENVIRONMENT },
             inspectorPort: false,
             persistState: false

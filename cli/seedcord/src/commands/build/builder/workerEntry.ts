@@ -1,13 +1,29 @@
 import { BAKED_IDS_KEY } from '@seedcord/core/internal';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { assertNever } from '@seedcord/utils';
 
 import { builtFilesSource } from './builtFiles';
 
+import type { CloudflarePlugin } from '#core/modules/cloudflarePlugin';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { BakedIds } from '@seedcord/core/internal';
 import type { Plugin } from 'vite';
 
 export const WORKER_ENTRY_ID = 'virtual:seedcord/worker';
+
+type EntryCustomizer = NonNullable<NonNullable<Parameters<CloudflarePlugin>[0]>['config']>;
+
+// the plugin passes cloudflare.config.ts parsed. the fields this returns replace the file's
+export function workerEntryConfig(cloudflareConfig: string): EntryCustomizer {
+    return ({ entrypoint }) => {
+        if (entrypoint !== undefined) {
+            const why = `seedcord builds the worker's entry from ${paint.bold('instance')} in your seedcord config.`;
+            throw new SeedcordTypeError(SeedcordErrorCode.CliConfigFieldUnused, ['entrypoint', cloudflareConfig, why]);
+        }
+        return { entrypoint: WORKER_ENTRY_ID };
+    };
+}
 const BIND_ENV_ID = 'virtual:seedcord/bind-env';
 const BUILT_FILES_ID = 'virtual:seedcord/built-files';
 const BAKED_IDS_ID = 'virtual:seedcord/baked-ids';
