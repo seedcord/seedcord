@@ -6,7 +6,6 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import chalk from 'chalk';
-import { Envapter } from 'envapt';
 import { createServer, createServerModuleRunner } from 'vite';
 
 import { WORKER_ENTRY_ID, workerEntry } from '#commands/build/builder/workerEntry';
@@ -33,6 +32,9 @@ import type {
     SeedcordInstance
 } from '@seedcord/types/internal';
 import type { Plugin, ViteDevServer } from 'vite';
+
+// vite's default mode for a dev server. vite and the cloudflare plugin read the .env and .dev.vars files named after it
+const DEV_MODE = 'development';
 
 interface EdgeStarted extends StartedRuntime {
     readonly server: ViteDevServer;
@@ -94,10 +96,11 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             loadCloudflare(viteRoot, importCloudflare)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
-        const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, Envapter.get('CLOUDFLARE_ENV'));
+        const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, DEV_MODE);
         const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, workerConfig);
         const server = await createServer(
             mergeViteConfig(edgeViteConfig(config, viteRoot, process.cwd()), {
+                mode: DEV_MODE,
                 plugins: [
                     workerEntry({
                         files,

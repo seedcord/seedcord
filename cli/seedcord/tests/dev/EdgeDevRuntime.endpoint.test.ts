@@ -130,7 +130,7 @@ describe('EdgeDevRuntime endpoint', () => {
         });
     }, 120_000);
 
-    it.each(['.dev.vars', '.env', 'wrangler.jsonc'])(
+    it.each(['.dev.vars', '.env', '.env.development', 'cloudflare.config.ts'])(
         'reports a restart is required when %s changes, and keeps the bot answering',
         async (file) => {
             await using project = await edgeProject();
@@ -140,7 +140,7 @@ describe('EdgeDevRuntime endpoint', () => {
             const { runtime, instance } = started;
             await runtime.startBot(instance);
 
-            await appendFile(join(projectDir, file), file === 'wrangler.jsonc' ? '\n' : 'EXTRA=1\n');
+            await appendFile(join(projectDir, file), file === 'cloudflare.config.ts' ? '\n' : 'EXTRA=1\n');
 
             await vi.waitFor(() => {
                 expect(events).toContainEqual({ type: 'restart-required' });

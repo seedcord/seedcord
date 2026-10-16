@@ -10,38 +10,41 @@ import { WorkerConfigFiles } from '#commands/dev/runtime/workerConfigFiles';
 
 import type { LogRecord } from '@seedcord/types';
 
-async function wranglerConfigIn(): Promise<string> {
+async function cloudflareConfigIn(): Promise<string> {
     const dir = await mkdtemp(join(tmpdir(), 'seedcord-config-'));
     onTestFinished(() => rm(dir, { recursive: true, force: true }));
-    const config = join(dir, 'wrangler.jsonc');
-    await writeFile(config, '{}');
+    const config = join(dir, 'cloudflare.config.ts');
+    await writeFile(config, 'export default {};\n');
     return config;
 }
 
 describe('WorkerConfigFiles', () => {
     it.each([
-        ['wrangler.jsonc', undefined, true],
-        ['.dev.vars', undefined, true],
-        ['.env', undefined, true],
-        ['.env.local', undefined, true],
-        ['.env.example', undefined, false],
-        ['.dev.vars.example', undefined, false],
-        ['.env.staging', undefined, false],
-        ['.envrc', undefined, false],
-        ['.dev.vars.staging', 'staging', true],
+        ['cloudflare.config.ts', 'development', true],
+        ['.dev.vars', 'development', true],
+        ['.dev.vars.development', 'development', true],
+        ['.env', 'development', true],
+        ['.env.local', 'development', true],
+        ['.env.development', 'development', true],
+        ['.env.development.local', 'development', true],
+        ['.env.production', 'development', false],
+        ['.dev.vars.production', 'development', false],
+        ['.env.example', 'development', false],
+        ['.dev.vars.example', 'development', false],
+        ['.envrc', 'development', false],
         ['.env.staging', 'staging', true],
         ['.env.staging.local', 'staging', true],
-        ['.env.production', 'staging', false],
-        ['.env', 'staging', true]
-    ] as const)('includes %s with CLOUDFLARE_ENV=%s: %s', async (name, environment, expected) => {
-        const config = await wranglerConfigIn();
-        const files = new WorkerConfigFiles(config, environment);
+        ['.dev.vars.staging', 'staging', true],
+        ['.env.development', 'staging', false]
+    ] as const)('includes %s in mode %s: %s', async (name, mode, expected) => {
+        const config = await cloudflareConfigIn();
+        const files = new WorkerConfigFiles(config, mode);
 
         expect(files.includes(join(dirname(realpathSync(config)), name))).toBe(expected);
     });
 
     it('leaves a .env in another folder out', async () => {
-        const files = new WorkerConfigFiles(await wranglerConfigIn(), undefined);
+        const files = new WorkerConfigFiles(await cloudflareConfigIn(), 'development');
 
         expect(files.includes(join(tmpdir(), 'elsewhere', '.env'))).toBe(false);
     });
@@ -50,7 +53,7 @@ describe('WorkerConfigFiles', () => {
         const records: LogRecord[] = [];
         const handle = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => records.push(r) });
         onTestFinished(() => handle.dispose());
-        const watcher = new WorkerConfigFiles(await wranglerConfigIn(), undefined).watch(() => undefined);
+        const watcher = new WorkerConfigFiles(await cloudflareConfigIn(), 'development').watch(() => undefined);
         onTestFinished(() => watcher.close());
 
         watcher.emit('error', new Error('EMFILE: too many open files'));
