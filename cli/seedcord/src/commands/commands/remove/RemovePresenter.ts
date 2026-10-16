@@ -1,14 +1,13 @@
 import { paint } from '@seedcord/errors';
 
 import { labelRows, printSections } from '#commands/commands/commandRows';
-import { skippedLine } from '#commands/commands/DiscordSession';
 import { scopeTitle } from '#commands/commands/scope';
 import { StepsPresenter } from '#commands/commands/StepsPresenter';
 import { plural } from '#core/format';
 
 import type { CommandSection } from '#commands/commands/commandRows';
 import type { Confirm } from '#commands/commands/confirm';
-import type { RemoveFailure, RemoveResult, SkippedGuild } from '#commands/commands/DiscordSession';
+import type { RemoveFailure, RemoveResult } from '#commands/commands/DiscordSession';
 import type { ScopedCommands } from '#commands/commands/scope';
 import type { PresenterOutput } from '#commands/commands/StepsPresenter';
 import type { EmptyMessage } from './RemoveMode';
@@ -30,10 +29,6 @@ export class RemovePresenter extends StepsPresenter<RemoveStep> {
         super(output);
     }
 
-    public skipped(skipped: readonly SkippedGuild[]): void {
-        if (skipped.length > 0) this.output.warn(skippedLine(skipped));
-    }
-
     public preview(selected: readonly ScopedCommands[], itemName: string): void {
         printSections(
             this.output,
@@ -45,9 +40,8 @@ export class RemovePresenter extends StepsPresenter<RemoveStep> {
         return this.ask(`The bot is in ${guildCount} guilds. Scan all of them? This makes ${guildCount} requests.`);
     }
 
-    public confirmDelete(count: number, skippedCount: number): Promise<boolean> {
-        const skips = skippedCount > 0 ? ` ${plural(skippedCount, 'guild')} could not be read.` : '';
-        return this.ask(`Delete ${plural(count, 'command')}? This cannot be undone.${skips}`);
+    public confirmDelete(count: number): Promise<boolean> {
+        return this.ask(`Delete ${plural(count, 'command')}? This cannot be undone.`);
     }
 
     public result({ failed }: RemoveResult, touchedGlobal: boolean): void {

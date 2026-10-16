@@ -33,7 +33,7 @@ export class PurgeMode extends RemoveMode {
         return session.clearScopes(selected);
     }
 
-    protected nothingSelected(): EmptyMessage {
+    public nothingToRemove(): EmptyMessage {
         return { info: [], outro: 'No commands to delete.' };
     }
 }

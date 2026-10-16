@@ -1,5 +1,6 @@
 import { stripVTControlCharacters } from 'node:util';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -48,16 +49,19 @@ async function run({
     const discord = fakeDiscord(onDiscord);
     const lines: string[] = [];
     const confirm = vi.fn((_message: string) => Promise.resolve(answer));
-    const output = {
+    const runner = new RemoveRunner({ openDiscord: () => discord.rest });
+    await runner.run(new RemovePresenter(outputInto(lines), confirm, verbose), { mode, guilds, apply });
+    return { ...discord, lines, confirm };
+}
+
+function outputInto(lines: string[]): ConstructorParameters<typeof RemovePresenter>[0] {
+    return {
         step: <Result>(_label: string, task: () => Promise<Result>) => task(),
         detail: () => undefined,
         line: (text = '') => lines.push(stripVTControlCharacters(text)),
         wrapped: (text: string) => lines.push(stripVTControlCharacters(text)),
         warn: (text: string) => lines.push(text)
     };
-    const runner = new RemoveRunner({ openDiscord: () => discord.rest });
-    await runner.run(new RemovePresenter(output, confirm, verbose), { mode, guilds, apply });
-    return { ...discord, lines, confirm };
 }
 
 describe('RemoveRunner.run', () => {
@@ -69,19 +73,21 @@ describe('RemoveRunner.run', () => {
         expect(deletes).toEqual([]);
     });
 
-    it('warns about a guild it could not read even when nothing else is selected', async () => {
-        const { lines } = await run({
+    it('throws CliCommandsUnreadable before it deletes anything when a guild cannot be read', async () => {
+        const discord = fakeDiscord({
+            ...ON_DISCORD,
+            [Routes.applicationGuildCommands(APP_ID, '222')]: new Error('Missing Access')
+        });
+        const presenter = new RemovePresenter(outputInto([]), () => Promise.resolve(true), false);
+
+        const removal = new RemoveRunner({ openDiscord: () => discord.rest }).run(presenter, {
+            mode: new CleanMode(),
             guilds: { kind: 'named', ids: ['111', '222'] },
-            onDiscord: {
-                [Routes.applicationCommands(APP_ID)]: [slash('ban')],
-                [Routes.applicationGuildCommands(APP_ID, '111')]: [slash('setup')],
-                [Routes.guild('222')]: new Error('Missing Access'),
-                [Routes.applicationGuildCommands(APP_ID, '222')]: new Error('Missing Access')
-            }
+            apply: true
         });
 
-        expect(lines).toContain('Could not read 1 guild (222).');
-        expect(lines.at(-1)).toBe('Nothing to clean.');
+        await expect(removal).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandsUnreadable });
+        expect(discord.deletes).toEqual([]);
     });
 
     it('lists what it found and says how to delete it on a dry run', async () => {

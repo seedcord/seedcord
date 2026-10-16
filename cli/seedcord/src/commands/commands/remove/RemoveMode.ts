@@ -17,14 +17,5 @@ export abstract class RemoveMode {
 
     public abstract remove(session: DiscordSession, selected: readonly ScopedCommands[]): Promise<RemoveResult>;
 
-    public nothingToRemove(scan: Scan): EmptyMessage {
-        if (this.readNothing(scan)) return { info: [], outro: 'Nothing was scanned.' };
-        return this.nothingSelected(scan);
-    }
-
-    protected abstract nothingSelected(scan: Scan): EmptyMessage;
-
-    private readNothing(scan: Scan): boolean {
-        return !this.includesGlobal && scan.guilds.length === 0 && scan.skipped.length > 0;
-    }
+    public abstract nothingToRemove(scan: Scan): EmptyMessage;
 }

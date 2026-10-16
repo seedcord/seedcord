@@ -12,7 +12,7 @@ const alpha: GuildScope = { kind: 'guild', id: 'g1', name: 'Alpha' };
 const beta: GuildScope = { kind: 'guild', id: 'g2', name: 'Beta' };
 
 function scan(over: Partial<Scan> = {}): Scan {
-    return { global: [slash('ban')], guilds: [], skipped: [], ...over };
+    return { global: [slash('ban')], guilds: [], ...over };
 }
 
 describe('CleanMode', () => {
@@ -43,14 +43,6 @@ describe('CleanMode', () => {
         const selected = clean.select(scan({ guilds: [{ scope: alpha, commands: [userMenu] }] }));
 
         expect(selected).toEqual([]);
-    });
-
-    it('says when every guild it asked for failed to read', () => {
-        const message = clean.nothingToRemove(
-            scan({ skipped: [{ guild: { id: 'g1', name: 'Alpha' }, reason: '403' }] })
-        );
-
-        expect(message.outro).toBe('Nothing was scanned.');
     });
 
     it('says the scanned guilds hold no commands', () => {

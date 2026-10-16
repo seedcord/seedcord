@@ -146,10 +146,9 @@ describe('RemoveWizard with the clean questions', () => {
         expect(await terminal.screen()).toContain(line);
     });
 
-    it('warns about a guild it could not read and a command it could not delete', async () => {
+    it('warns about a command it could not delete', async () => {
         using terminal = new PromptTerminal();
         const { done } = wizard(terminal, {
-            '/applications/app-1/guilds/g2/commands': new Error('Missing Access'),
             '/applications/app-1/guilds/g1/commands/11': new Error('Unknown Command')
         });
 
@@ -158,7 +157,6 @@ describe('RemoveWizard with the clean questions', () => {
 
         const screen = await terminal.screen();
         const warning = stripVTControlCharacters(levelMark('warn'));
-        expect(screen).toContain(`  ${warning} Could not read 1 guild (Beta).`);
         expect(screen).toContain(`  ${warning} Could not delete ban in Alpha (Unknown Command).`);
     });
 });

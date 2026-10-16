@@ -58,7 +58,6 @@ export class RemoveRunner {
             },
             (selection) => scanNote(mode, selection)
         );
-        presenter.skipped(scan.skipped);
 
         const count = commandCount(selected);
         if (count === 0) {
@@ -71,7 +70,7 @@ export class RemoveRunner {
             presenter.dryRunHint();
             return;
         }
-        if (!(await presenter.confirmDelete(count, scan.skipped.length))) return;
+        if (!(await presenter.confirmDelete(count))) return;
 
         const result = await presenter.step('delete', () => mode.remove(session, selected), deletedNote);
         presenter.result(

@@ -2,7 +2,7 @@ import { LOAD_STEPS, loadCodeScopes } from '#commands/commands/codeScopes';
 import { DiscordSession } from '#commands/commands/DiscordSession';
 import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
 
-import type { Scan, SkippedGuild } from '#commands/commands/DiscordSession';
+import type { Scan } from '#commands/commands/DiscordSession';
 import type { RunnerDeps } from '#commands/commands/runnerDeps';
 import type { Steps } from '#core/output/Steps';
 import type { ListPresenter } from './ListPresenter';
@@ -26,16 +26,14 @@ interface GuildListing {
 export interface Listing {
     global: APIApplicationCommand[];
     guilds: GuildListing[];
-    skipped: SkippedGuild[];
 }
 
 const NO_EXTRA_GUILDS: ListScope = { guildIds: [], allGuilds: false };
 
-function listingOf({ global, guilds, skipped }: Scan): Listing {
+function listingOf({ global, guilds }: Scan): Listing {
     return {
         global,
-        guilds: guilds.map(({ scope: { id, name }, commands }) => ({ id, name, commands })),
-        skipped
+        guilds: guilds.map(({ scope: { id, name }, commands }) => ({ id, name, commands }))
     };
 }
 

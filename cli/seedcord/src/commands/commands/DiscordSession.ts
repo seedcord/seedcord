@@ -5,26 +5,19 @@ import { Routes } from 'discord-api-types/v10';
 import { applicationOf } from '#core/discord/applicationOf';
 import { guildSummaries } from '#core/discord/guildSummaries';
 import { readBotGuilds } from '#core/discord/readBotGuilds';
-import { readDeployed } from '#core/discord/readDeployed';
-import { plural } from '#core/format';
+import { readDeployed, readGlobalCommands, readGuildCommands } from '#core/discord/readDeployed';
 
 import type { GuildSummary } from '#core/discord/readBotGuilds';
 import type { DiscordRest } from './runnerDeps';
 import type { GuildScope, GuildTargets, Scope, ScopedCommands } from './scope';
 import type { CommandScopes, DeployResult } from '@seedcord/core/internal';
 import type { ILogger } from '@seedcord/types';
-import type { APIApplicationCommand, RESTGetAPIApplicationCommandsResult, Snowflake } from 'discord-api-types/v10';
-
-export interface SkippedGuild {
-    guild: GuildSummary;
-    reason: string;
-}
+import type { APIApplicationCommand, Snowflake } from 'discord-api-types/v10';
 
 export interface Scan {
     global: APIApplicationCommand[];
-    // the guilds it could read, in the order they were asked for
+    // in the order they were asked for
     guilds: ScopedCommands<GuildScope>[];
-    skipped: SkippedGuild[];
 }
 
 export interface DeployTargets {
@@ -44,11 +37,6 @@ export type RemoveFailure =
 export interface RemoveResult {
     deleted: number;
     failed: RemoveFailure[];
-}
-
-export function skippedLine(skipped: readonly SkippedGuild[]): string {
-    const names = skipped.map(({ guild }) => guild.name).join(', ');
-    return `Could not read ${plural(skipped.length, 'guild')} (${names}).`;
 }
 
 function commandsRoute(appId: Snowflake, scope: Scope): `/${string}` {
@@ -94,13 +82,11 @@ export class DiscordSession {
     }
 
     public async readScopes(guilds: readonly GuildSummary[]): Promise<Scan> {
-        const { global } = await readDeployed(this.rest, this.appId, []);
-        const reads = await Promise.all(guilds.map((guild) => this.readGuild(guild)));
-        return {
-            global: [...global.values()],
-            guilds: reads.filter((read) => 'commands' in read),
-            skipped: reads.filter((read) => 'reason' in read)
-        };
+        const [global, ...guildScopes] = await Promise.all([
+            readGlobalCommands(this.rest, this.appId),
+            ...guilds.map((guild) => this.readGuild(guild))
+        ]);
+        return { global: [...global.values()], guilds: guildScopes };
     }
 
     public async deleteCommands(selected: readonly ScopedCommands[]): Promise<RemoveResult> {
@@ -131,17 +117,8 @@ export class DiscordSession {
         return result;
     }
 
-    private async readGuild(guild: GuildSummary): Promise<ScopedCommands<GuildScope> | SkippedGuild> {
-        const scope: GuildScope = { kind: 'guild', ...guild };
-        try {
-            return { scope, commands: await this.commandsIn(scope) };
-        } catch (error: unknown) {
-            return { guild, reason: asError(error).message };
-        }
-    }
-
-    private async commandsIn(scope: Scope): Promise<APIApplicationCommand[]> {
-        // justified: the discord api contract for both command list routes
-        return (await this.rest.get(commandsRoute(this.appId, scope))) as RESTGetAPIApplicationCommandsResult;
+    private async readGuild(guild: GuildSummary): Promise<ScopedCommands<GuildScope>> {
+        const commands = await readGuildCommands(this.rest, this.appId, guild.id);
+        return { scope: { kind: 'guild', ...guild }, commands: [...commands.values()] };
     }
 }

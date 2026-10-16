@@ -1,3 +1,4 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandOptionType, Routes } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
@@ -72,17 +73,16 @@ describe('ListRunner', () => {
         expect(output).toContain('  Alpha  1 command\n      /config\n\n  Beta  1 command\n      /setup\n');
     });
 
-    it('lists the guilds it can read and warns about one it cannot', async () => {
+    it('throws CliCommandsUnreadable on a guild it cannot read', async () => {
         const { rest } = fakeDiscord({
             ...ON_DISCORD,
             [Routes.guild('222')]: { id: '222', name: 'Beta' },
             [Routes.applicationGuildCommands(APP_ID, '222')]: new Error('Missing Access')
         });
 
-        const output = await list(await fakeProject(), rest, { scope: { guildIds: ['222'], allGuilds: false } });
+        const listing = list(await fakeProject(), rest, { scope: { guildIds: ['222'], allGuilds: false } });
 
-        expect(output).toContain('  Alpha  1 command\n      /config\n');
-        expect(output).toContain('Could not read 1 guild (Beta).');
+        await expect(listing).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandsUnreadable });
     });
 
     it('lists every guild the bot is in with --all-guilds and reads no guild names one by one', async () => {
@@ -117,23 +117,7 @@ describe('listingJson', () => {
 
         expect(listingJson(listings)).toEqual({
             global: [slash('ping'), slash('legacy')],
-            guilds: { '111': [config] },
-            skipped: []
+            guilds: { '111': [config] }
         });
-    });
-
-    it('lists a guild it could not read under skipped, with the reason', async () => {
-        const { rest } = fakeDiscord({
-            ...ON_DISCORD,
-            [Routes.guild('222')]: { id: '222', name: 'Beta' },
-            [Routes.applicationGuildCommands(APP_ID, '222')]: new Error('Missing Access')
-        });
-
-        const listings = await runnerFor(await fakeProject(), rest).read(quietSteps, {
-            guildIds: ['222'],
-            allGuilds: false
-        });
-
-        expect(listingJson(listings).skipped).toEqual([{ id: '222', name: 'Beta', reason: 'Missing Access' }]);
     });
 });

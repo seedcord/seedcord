@@ -21,13 +21,25 @@ async function commandsAt(rest: Rest, route: RouteLike, where: string): Promise<
     }
 }
 
+export function readGlobalCommands(rest: Rest, applicationId: string): Promise<Map<string, APIApplicationCommand>> {
+    return commandsAt(rest, Routes.applicationCommands(applicationId), 'globally');
+}
+
+export function readGuildCommands(
+    rest: Rest,
+    applicationId: string,
+    guildId: string
+): Promise<Map<string, APIApplicationCommand>> {
+    const route = Routes.applicationGuildCommands(applicationId, guildId);
+    return commandsAt(rest, route, `to guild ${paint.sky(guildId)}`);
+}
+
 async function guildEntry(
     rest: Rest,
     applicationId: string,
     guildId: string
 ): Promise<[string, Map<string, APIApplicationCommand>]> {
-    const route = Routes.applicationGuildCommands(applicationId, guildId);
-    return [guildId, await commandsAt(rest, route, `to guild ${paint.sky(guildId)}`)];
+    return [guildId, await readGuildCommands(rest, applicationId, guildId)];
 }
 
 export async function readDeployed(
@@ -36,7 +48,7 @@ export async function readDeployed(
     guildIds: Iterable<string>
 ): Promise<DeployResult> {
     const [global, ...guilds] = await Promise.all([
-        commandsAt(rest, Routes.applicationCommands(applicationId), 'globally'),
+        readGlobalCommands(rest, applicationId),
         ...Iterator.from(guildIds).map((guildId) => guildEntry(rest, applicationId, guildId))
     ]);
     return { global, guilds: new Map(guilds) };

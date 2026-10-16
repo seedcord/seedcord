@@ -16,8 +16,7 @@ const scan: Scan = {
     guilds: [
         { scope: alpha, commands: [slash('ban'), slash('setup')] },
         { scope: beta, commands: [] }
-    ],
-    skipped: []
+    ]
 };
 
 describe('PurgeMode', () => {

@@ -33,7 +33,7 @@ export class CleanMode extends RemoveMode {
         return session.deleteCommands(selected);
     }
 
-    protected nothingSelected(scan: Scan): EmptyMessage {
+    public nothingToRemove(scan: Scan): EmptyMessage {
         const guilds = plural(scan.guilds.length, 'guild');
         const scanned = commandCount(scan.guilds);
         if (scanned === 0)

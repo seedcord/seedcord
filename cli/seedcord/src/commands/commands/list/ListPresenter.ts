@@ -1,5 +1,4 @@
 import { labelRows, printSections } from '#commands/commands/commandRows';
-import { skippedLine } from '#commands/commands/DiscordSession';
 import { StepsPresenter } from '#commands/commands/StepsPresenter';
 import { plural } from '#core/format';
 
@@ -16,12 +15,11 @@ export class ListPresenter extends StepsPresenter<ListStep> {
         super(output);
     }
 
-    public list({ global, guilds, skipped }: Listing): void {
+    public list({ global, guilds }: Listing): void {
         printSections(this.output, [
             this.section('global', global),
             ...guilds.map((guild) => this.section(guild.name, guild.commands))
         ]);
-        if (skipped.length > 0) this.output.warn(skippedLine(skipped));
     }
 
     private section(title: string, commands: readonly APIApplicationCommand[]): CommandSection {

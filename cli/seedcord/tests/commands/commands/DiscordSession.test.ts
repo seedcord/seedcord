@@ -53,11 +53,11 @@ describe('DiscordSession.guildsOf', () => {
 });
 
 describe('DiscordSession.readScopes', () => {
-    it('reads the global commands and each guild, and skips a guild it cannot read', async () => {
+    it('reads the global commands and each guild in the order asked', async () => {
         const { session } = await sessionOn({
             [Routes.applicationCommands(APP_ID)]: [slash('ban')],
             [Routes.applicationGuildCommands(APP_ID, '111')]: [slash('ban'), slash('setup')],
-            [Routes.applicationGuildCommands(APP_ID, '222')]: new Error('Missing Access')
+            [Routes.applicationGuildCommands(APP_ID, '222')]: [slash('rank')]
         });
 
         const scan = await session.readScopes([
@@ -67,9 +67,25 @@ describe('DiscordSession.readScopes', () => {
 
         expect(scan).toEqual({
             global: [slash('ban')],
-            guilds: [{ scope: alpha, commands: [slash('ban'), slash('setup')] }],
-            skipped: [{ guild: { id: '222', name: 'Beta' }, reason: 'Missing Access' }]
+            guilds: [
+                { scope: { kind: 'guild', id: '222', name: 'Beta' }, commands: [slash('rank')] },
+                { scope: alpha, commands: [slash('ban'), slash('setup')] }
+            ]
         });
+    });
+
+    it('throws CliCommandsUnreadable on a guild it cannot read', async () => {
+        const { session } = await sessionOn({
+            [Routes.applicationGuildCommands(APP_ID, '222')]: new Error('Missing Access')
+        });
+
+        const scan = session.readScopes([
+            { id: '111', name: 'Alpha' },
+            { id: '222', name: 'Beta' }
+        ]);
+
+        await expect(scan).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandsUnreadable });
+        await expect(scan).rejects.toThrow('222');
     });
 });
 
