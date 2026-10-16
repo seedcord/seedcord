@@ -2,6 +2,7 @@ import { routeLeavesOf } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
+import { GLOBAL_ID } from '#src/commands/scopes';
 import { accessorStore } from '#src/miscellaneous/guarded';
 
 import type { ContextMenuKind } from '#registries/ContextMenuRegistry';
@@ -63,9 +64,10 @@ function uniqueRefs(refs: readonly CommandRef[]): CommandRef[] {
     return [...new Map(refs.map((ref) => [commandKey(ref), ref])).values()];
 }
 
-function deployedIds({ global, guilds }: DeployResult): Map<string, DeployedId> {
+function deployedIds(deploy: DeployResult): Map<string, DeployedId> {
     const ids = new Map<string, DeployedId>();
-    for (const collection of guilds.values()) {
+    for (const [scope, collection] of deploy) {
+        if (scope === GLOBAL_ID) continue;
         for (const command of collection.values()) {
             const key = commandKey(command);
             const existing = ids.get(key);
@@ -74,12 +76,13 @@ function deployedIds({ global, guilds }: DeployResult): Map<string, DeployedId> 
             else if (existing !== command.id) ids.set(key, MULTI_GUILD);
         }
     }
-    for (const command of global.values()) ids.set(commandKey(command), command.id);
+    // a global command's one id wins over any guild copy
+    for (const command of deploy.get(GLOBAL_ID)?.values() ?? []) ids.set(commandKey(command), command.id);
     return ids;
 }
 
-function allDeployed({ global, guilds }: DeployResult): APIApplicationCommand[] {
-    return [...global.values(), ...[...guilds.values()].flatMap((collection) => [...collection.values()])];
+function allDeployed(deploy: DeployResult): APIApplicationCommand[] {
+    return [...deploy.values()].flatMap((collection) => [...collection.values()]);
 }
 
 function mentionOf(route: string, id: Snowflake | undefined): string {

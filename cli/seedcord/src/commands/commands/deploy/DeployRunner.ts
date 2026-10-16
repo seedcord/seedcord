@@ -1,4 +1,4 @@
-import { diffScope } from '@seedcord/core/internal';
+import { diffScope, GLOBAL_ID, globalFirst } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
@@ -6,10 +6,10 @@ import { LOAD_STEPS, loadCodeScopes } from '#commands/commands/codeScopes';
 import { DiscordSession } from '#commands/commands/DiscordSession';
 import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
 
-import type { ScopesInCode } from '#commands/commands/codeScopes';
 import type { DeployTargets } from '#commands/commands/DiscordSession';
 import type { RunnerDeps } from '#commands/commands/runnerDeps';
 import type { DeployPresenter, ScopePlan } from './DeployPresenter';
+import type { CommandScopes } from '@seedcord/core/internal';
 
 export const DEPLOY_STEPS = [...LOAD_STEPS, 'read discord', 'deploy'] as const;
 export type DeployStep = (typeof DEPLOY_STEPS)[number];
@@ -27,7 +27,7 @@ export class DeployRunner {
 
         const { session, targets } = await presenter.step('read discord', async () => {
             const session = await DiscordSession.open(this.deps.openDiscord());
-            return { session, targets: await session.readTargets([...scopes.guilds.keys()]) };
+            return { session, targets: await session.readTargets([...scopes.keys()]) };
         });
         presenter.detail('app', paint.mute(session.appId));
 
@@ -45,13 +45,10 @@ export class DeployRunner {
     }
 }
 
-function plansFor(scopes: ScopesInCode, { deployed, guildNames }: DeployTargets): ScopePlan[] {
-    const guilds = scopes.guilds.entries().map(([guildId, inCode]) => ({
-        title: guildNames.get(guildId) ?? guildId,
+function plansFor(scopes: CommandScopes, { deployed, guildNames }: DeployTargets): ScopePlan[] {
+    return globalFirst(scopes).map(([scope, inCode]) => ({
+        title: scope === GLOBAL_ID ? 'global' : (guildNames.get(scope) ?? scope),
         inCode,
-        diff: diffScope(inCode, deployed.guilds.get(guildId)?.values() ?? [])
+        diff: diffScope(inCode, deployed.get(scope)?.values() ?? [])
     }));
-    if (!scopes.global) return [...guilds];
-    const global = { title: 'global', inCode: scopes.global, diff: diffScope(scopes.global, deployed.global.values()) };
-    return [global, ...guilds];
 }

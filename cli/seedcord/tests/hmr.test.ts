@@ -180,7 +180,7 @@ describe('HmrPlugin', () => {
     });
 
     describe('the last deploy', () => {
-        const deployed = { applicationId: 'app-1', global: 'a1b2', guilds: { '111': 'c3d4' } };
+        const deployed = { applicationId: 'app-1', scopes: { global: 'a1b2', '111': 'c3d4' } };
 
         // .seedcord sits beside the config file
         function besideConfig(): ConfiguredPlugin {

@@ -6,8 +6,10 @@ import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
 import { putCommands } from '#src/commands/putCommands';
+import { GLOBAL_ID } from '#src/commands/scopes';
 
-import type { CommandScopes } from '#src/commands/putCommands';
+import type { CommandBody } from '#src/commands/putCommands';
+import type { ScopeId } from '#src/commands/scopes';
 import type { DeployResult } from '#src/commands/types';
 import type { RateLimitData, REST } from '@discordjs/rest';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
@@ -50,20 +52,17 @@ function rateLimitedRest(limited: (route: string) => RateLimitData): FakeRest {
     return rest;
 }
 
-function deploy(scopes: Partial<CommandScopes>, rest: FakeRest, extra: { signal?: AbortSignal } = {}): Deploy {
+function deploy(scopes: [ScopeId, CommandBody[]][], rest: FakeRest, extra: { signal?: AbortSignal } = {}): Deploy {
     const warn = vi.fn();
     const onDeployed = vi.fn();
-    const deploying = putCommands(
-        { global: scopes.global, guilds: scopes.guilds ?? new Map() },
-        {
-            // justified: putCommands calls only put, on and off
-            rest: rest as unknown as REST,
-            applicationId: APP,
-            logger: { warn },
-            onDeployed,
-            ...extra
-        }
-    );
+    const deploying = putCommands(new Map(scopes), {
+        // justified: putCommands calls only put, on and off
+        rest: rest as unknown as REST,
+        applicationId: APP,
+        logger: { warn },
+        onDeployed,
+        ...extra
+    });
     return { deploying, warn, onDeployed };
 }
 
@@ -71,25 +70,25 @@ describe('putCommands', () => {
     it('puts the global commands to the application route and indexes the result by id', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
 
-        const result = await deploy({ global: [PING] }, restWith(put)).deploying;
+        const result = await deploy([[GLOBAL_ID, [PING]]], restWith(put)).deploying;
 
         expect(put).toHaveBeenCalledWith(Routes.applicationCommands(APP), { body: [PING], signal: undefined });
-        expect(result.global.get('123')?.name).toBe('ping');
+        expect(result.get(GLOBAL_ID)?.get('123')?.name).toBe('ping');
     });
 
     it('puts each guild to its own route and leaves the global scope alone when none is given', async () => {
         const put: Put = vi.fn().mockResolvedValue(deployedAs('g-1', 'config'));
 
-        const result = await deploy({ guilds: new Map([['111', [CONFIG]]]) }, restWith(put)).deploying;
+        const result = await deploy([['111', [CONFIG]]], restWith(put)).deploying;
 
         expect(put.mock.calls.map(([route]) => route)).toEqual([Routes.applicationGuildCommands(APP, '111')]);
-        expect(result.guilds.get('111')?.get('g-1')?.name).toBe('config');
+        expect(result.get('111')?.get('g-1')?.name).toBe('config');
     });
 
     it('puts an empty global list, which clears every global command', async () => {
         const put: Put = vi.fn().mockResolvedValue([]);
 
-        await deploy({ global: [] }, restWith(put)).deploying;
+        await deploy([[GLOBAL_ID, []]], restWith(put)).deploying;
 
         expect(put).toHaveBeenCalledWith(Routes.applicationCommands(APP), { body: [], signal: undefined });
     });
@@ -97,24 +96,27 @@ describe('putCommands', () => {
     it('puts nothing when no scope is given', async () => {
         const put = vi.fn();
 
-        const result = await deploy({}, restWith(put)).deploying;
+        const result = await deploy([], restWith(put)).deploying;
 
         expect(put).not.toHaveBeenCalled();
-        expect(result).toEqual({ global: new Map(), guilds: new Map() });
+        expect(result).toEqual(new Map());
     });
 
     it('reports each scope once discord accepts it', async () => {
         const put = vi.fn().mockResolvedValue([]);
 
         const { deploying, onDeployed } = deploy(
-            { global: [PING], guilds: new Map([['111', [CONFIG]]]) },
+            [
+                [GLOBAL_ID, [PING]],
+                ['111', [CONFIG]]
+            ],
             restWith(put)
         );
         await deploying;
 
         expect(onDeployed.mock.calls).toEqual([
-            [{ scope: 'global' }, [PING]],
-            [{ scope: 'guild', guildId: '111' }, [CONFIG]]
+            [GLOBAL_ID, [PING]],
+            ['111', [CONFIG]]
         ]);
     });
 
@@ -122,7 +124,7 @@ describe('putCommands', () => {
         const refused = new Error('Missing Access');
 
         const caught: unknown = await deploy(
-            { guilds: new Map([['999', [CONFIG]]]) },
+            [['999', [CONFIG]]],
             restWith(vi.fn().mockRejectedValue(refused))
         ).deploying.catch((error: unknown) => error);
 
@@ -135,7 +137,7 @@ describe('putCommands', () => {
         const refused = new Error('Invalid Form Body');
 
         const caught: unknown = await deploy(
-            { global: [PING], guilds: new Map() },
+            [[GLOBAL_ID, [PING]]],
             restWith(vi.fn().mockRejectedValue(refused))
         ).deploying.catch((error: unknown) => error);
 
@@ -145,7 +147,7 @@ describe('putCommands', () => {
 
     it('logs the wait when discord rate-limits the deploy', async () => {
         const { deploying, warn } = deploy(
-            { global: [PING] },
+            [[GLOBAL_ID, [PING]]],
             rateLimitedRest((route) => rateLimit('PUT', route))
         );
         await deploying;
@@ -156,7 +158,7 @@ describe('putCommands', () => {
     it('ignores a rate limit on another route while the deploy runs', async () => {
         const rest = rateLimitedRest(() => rateLimit('POST', '/channels/1/messages'));
 
-        const { deploying, warn } = deploy({ global: [PING] }, rest);
+        const { deploying, warn } = deploy([[GLOBAL_ID, [PING]]], rest);
         await deploying;
 
         expect(warn).not.toHaveBeenCalled();
@@ -165,7 +167,7 @@ describe('putCommands', () => {
     it('stops reporting rate limits once the deploy finishes', async () => {
         const rest = restWith(vi.fn().mockResolvedValue(deployedAs('123', 'ping')));
 
-        const { deploying, warn } = deploy({ global: [PING] }, rest);
+        const { deploying, warn } = deploy([[GLOBAL_ID, [PING]]], rest);
         await deploying;
         rest.emit(RESTEvents.RateLimited, rateLimit('PUT', Routes.applicationCommands(APP)));
 
@@ -177,7 +179,7 @@ describe('putCommands', () => {
         const rest = restWith(vi.fn(() => new Promise<never>(() => undefined)));
         const controller = new AbortController();
 
-        const { deploying } = deploy({ global: [PING] }, rest, { signal: controller.signal });
+        const { deploying } = deploy([[GLOBAL_ID, [PING]]], rest, { signal: controller.signal });
         controller.abort();
 
         await expect(deploying).rejects.toThrow(expect.objectContaining({ name: 'AbortError' }));
@@ -187,7 +189,7 @@ describe('putCommands', () => {
         const rest = restWith(vi.fn(() => new Promise<never>(() => undefined)));
         const controller = new AbortController();
 
-        const { deploying } = deploy({ guilds: new Map([['999', [CONFIG]]]) }, rest, { signal: controller.signal });
+        const { deploying } = deploy([['999', [CONFIG]]], rest, { signal: controller.signal });
         controller.abort();
 
         await expect(deploying).rejects.toThrow(expect.objectContaining({ name: 'AbortError' }));

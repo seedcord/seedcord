@@ -1,11 +1,14 @@
+import { GLOBAL_ID } from '@seedcord/core/internal';
+
 import type { GuildSummary } from '#core/discord/readBotGuilds';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
-export type Scope = { readonly kind: 'global' } | ({ readonly kind: 'guild' } & GuildSummary);
+export type Scope =
+    { readonly kind: 'global'; readonly id: typeof GLOBAL_ID } | ({ readonly kind: 'guild' } & GuildSummary);
 
 export type GuildScope = Extract<Scope, { kind: 'guild' }>;
 
-export const GLOBAL_SCOPE: Scope = { kind: 'global' };
+export const GLOBAL_SCOPE: Scope = { kind: 'global', id: GLOBAL_ID };
 
 export interface ScopedCommands<Where extends Scope = Scope> {
     readonly scope: Where;

@@ -8,6 +8,7 @@ import { setDevChannel } from '#hmr/devChannel';
 import { Commands } from '#src/commands/CommandInjector';
 import { CommandRegistry } from '#src/commands/CommandRegistry';
 import { scopeHashes } from '#src/commands/scopeHashes';
+import { GLOBAL_ID } from '#src/commands/scopes';
 import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -46,11 +47,10 @@ function registryWith(put: Mock, get?: Mock): CommandRegistry {
 
 // what a first deploy of the fixture puts, as seedcord dev would cache it
 async function deployedOnce(): Promise<DeployedHashes> {
-    const applicationId = APP;
     const put = vi.fn().mockResolvedValue(BARE);
     await registryWith(put).deploy(new AbortController().signal, {});
     const { body } = put.mock.calls[0]?.[1] as { body: CommandBody[] };
-    return { applicationId, ...(await scopeHashes({ global: body, guilds: new Map() })) };
+    return { applicationId: APP, scopes: await scopeHashes(new Map([[GLOBAL_ID, body]])) };
 }
 
 // seedcord dev, answering the registry's read with the last deploy

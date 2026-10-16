@@ -46,6 +46,16 @@ export { putCommands, type CommandBody, type CommandScopes } from '#src/commands
 export { readCommands, readCommandsAt } from '#src/commands/readCommands';
 export { diffScope, type ScopeDiff } from '#src/commands/diffScope';
 export {
+    commandRoute,
+    commandsRoute,
+    GLOBAL_ID,
+    globalFirst,
+    groupByScope,
+    scopeIdsOf,
+    type ScopeId,
+    type ScopeMap
+} from '#src/commands/scopes';
+export {
     commandKey,
     commandRefOf,
     indexById,

@@ -2,10 +2,11 @@ import { RESTEvents } from '@discordjs/rest';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { unlessAborted } from '@seedcord/utils/internal';
-import { Routes } from 'discord-api-types/v10';
 
 import { indexById } from '#src/commands/linkCommands';
+import { commandsRoute, GLOBAL_ID, globalFirst } from '#src/commands/scopes';
 
+import type { ScopeId, ScopeMap } from '#src/commands/scopes';
 import type { DeployResult } from '#src/commands/types';
 import type { RateLimitData, REST } from '@discordjs/rest';
 import type { ILogger } from '@seedcord/types';
@@ -13,64 +14,41 @@ import type { APIApplicationCommand, RESTPostAPIApplicationCommandsJSONBody } fr
 
 export type CommandBody = RESTPostAPIApplicationCommandsJSONBody;
 
-export interface CommandScopes {
-    // leave it undefined to keep what discord has. an empty list clears it
-    readonly global?: readonly CommandBody[] | undefined;
-    readonly guilds: ReadonlyMap<string, readonly CommandBody[]>;
-}
-
-export type DeployedScope = { readonly scope: 'global' } | { readonly scope: 'guild'; readonly guildId: string };
+// a scope left out keeps what discord has. an empty list clears it
+export type CommandScopes = ScopeMap<readonly CommandBody[]>;
 
 interface PutCommandsOptions {
     readonly rest: Pick<REST, 'put' | 'on' | 'off'>;
     readonly applicationId: string;
     readonly logger: Pick<ILogger, 'warn'>;
     readonly signal?: AbortSignal | undefined;
-    readonly onDeployed?: (where: DeployedScope, commands: readonly CommandBody[]) => void;
+    readonly onDeployed?: (scope: ScopeId, commands: readonly CommandBody[]) => void;
 }
 
 const MS_PER_SECOND = 1000;
 
 // discord replaces every command in a scope with the PUT body
 export async function putCommands(scopes: CommandScopes, options: PutCommandsOptions): Promise<DeployResult> {
-    const { onDeployed } = options;
-    const result: DeployResult = { global: new Map(), guilds: new Map() };
-
-    if (scopes.global) {
-        result.global = indexById(await putGlobal(scopes.global, options));
-        onDeployed?.({ scope: 'global' }, scopes.global);
+    const result: DeployResult = new Map();
+    for (const [scope, commands] of globalFirst(scopes)) {
+        result.set(scope, indexById(await putScope(scope, commands, options)));
+        options.onDeployed?.(scope, commands);
     }
-
-    for (const [guildId, commands] of scopes.guilds) {
-        result.guilds.set(guildId, indexById(await putGuild(guildId, commands, options)));
-        onDeployed?.({ scope: 'guild', guildId }, commands);
-    }
-
     return result;
 }
 
-async function putGlobal(
+async function putScope(
+    scope: ScopeId,
     commands: readonly CommandBody[],
     options: PutCommandsOptions
 ): Promise<APIApplicationCommand[]> {
     try {
-        return await put(Routes.applicationCommands(options.applicationId), commands, options);
+        return await put(commandsRoute(options.applicationId, scope), commands, options);
     } catch (error) {
         if (options.signal?.aborted) throw error;
-        throw new SeedcordError(SeedcordErrorCode.CoreCommandGlobalDeployFailed, { cause: error });
-    }
-}
-
-async function putGuild(
-    guildId: string,
-    commands: readonly CommandBody[],
-    options: PutCommandsOptions
-): Promise<APIApplicationCommand[]> {
-    try {
-        return await put(Routes.applicationGuildCommands(options.applicationId, guildId), commands, options);
-    } catch (error) {
-        if (options.signal?.aborted) throw error;
-        throw new SeedcordError(SeedcordErrorCode.CoreCommandGuildDeployFailed, [guildId], { cause: error });
+        throw scope === GLOBAL_ID
+            ? new SeedcordError(SeedcordErrorCode.CoreCommandGlobalDeployFailed, { cause: error })
+            : new SeedcordError(SeedcordErrorCode.CoreCommandGuildDeployFailed, [scope], { cause: error });
     }
 }
 

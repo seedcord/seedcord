@@ -1,3 +1,4 @@
+import { GLOBAL_ID } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 
 import { LOAD_STEPS, loadCodeScopes } from '#commands/commands/codeScopes';
@@ -52,7 +53,7 @@ export class ListRunner {
 
     public async read(steps: Steps<ListStep>, scope = NO_EXTRA_GUILDS): Promise<Listing> {
         const { scopes } = await loadCodeScopes(steps, this.deps, process.cwd());
-        const codeGuildIds = scopes?.guilds.keys() ?? [];
+        const codeGuildIds = [...(scopes?.keys() ?? [])].filter((id) => id !== GLOBAL_ID);
 
         const { session, scan } = await steps.step('read discord', async () => {
             const session = await DiscordSession.open(this.deps.openDiscord());

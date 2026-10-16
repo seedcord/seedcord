@@ -116,7 +116,7 @@ describe('EdgeDevRuntime lifecycle', () => {
         expect(messagesOf(logs).filter((message) => message === 'Starting coordinated startup sequence')).toHaveLength(
             1
         );
-        await vi.waitFor(() => expect(state.read(deployedCommandsFile)?.guilds).toBeDefined());
+        await vi.waitFor(() => expect(state.read(deployedCommandsFile)?.scopes).toBeDefined());
     }, 120_000);
 
     it('rejects with the error the worker failed to start with', async () => {

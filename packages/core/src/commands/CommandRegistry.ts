@@ -19,6 +19,7 @@ import { isCommandClass } from '#src/commands/isCommandClass';
 import { putCommands } from '#src/commands/putCommands';
 import { readCommands } from '#src/commands/readCommands';
 import { scopeHashes, scopesDiscordLacks, splitByHash } from '#src/commands/scopeHashes';
+import { GLOBAL_ID, scopeIdsOf } from '#src/commands/scopes';
 import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 import { CommandMetadataKey } from '#src/metadataKeys';
 import { PublishDefault } from '#subscribers/publishDefault';
@@ -28,7 +29,8 @@ import type { CoreBase } from '#interfaces/CoreBase';
 import type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
 import type { DeployTarget } from '#src/commands/deployTarget';
 import type { CommandCtor } from '#src/commands/isCommandClass';
-import type { CommandBody, CommandScopes, DeployedScope } from '#src/commands/putCommands';
+import type { CommandBody, CommandScopes } from '#src/commands/putCommands';
+import type { ScopeId } from '#src/commands/scopes';
 import type { CommandBuilder, DeployResult } from '#src/commands/types';
 import type { Initializeable } from '#src/plugin/Plugin';
 import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
@@ -72,8 +74,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private readonly logger = new Logger('Commands', { channel: 'commands' });
     private isInitialised = false;
 
-    public readonly globalCommands: CommandBuilder[] = [];
-    public readonly guildCommands = new Map<string, CommandBuilder[]>();
+    public readonly scopedCommands = new Map<ScopeId, CommandBuilder[]>();
 
     private readonly ctorToCommand = new Map<CommandCtor, CommandArtifact>();
 
@@ -138,7 +139,10 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
         utils.summary(
             'Loaded commands',
-            { global: this.globalCommands.length, 'guild groups': this.guildCommands.size },
+            {
+                global: this.scopedCommands.get(GLOBAL_ID)?.length ?? 0,
+                'guild groups': [...this.scopedCommands.keys()].filter((scope) => scope !== GLOBAL_ID).length
+            },
             'debug'
         );
 
@@ -209,14 +213,10 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
         const target = resolveDeployTarget(meta, this.configuredGuilds, Ctor.name);
 
-        if (target.scope === 'global') {
-            this.globalCommands.push(comp);
-        } else {
-            for (const g of target.guilds) {
-                const arr = this.guildCommands.get(g) ?? [];
-                arr.push(comp);
-                this.guildCommands.set(g, arr);
-            }
+        for (const scope of scopeIdsOf(target)) {
+            const inScope = this.scopedCommands.get(scope);
+            if (inScope) inScope.push(comp);
+            else this.scopedCommands.set(scope, [comp]);
         }
 
         this.ctorToCommand.set(Ctor, { name: comp.name, ...target });
@@ -230,16 +230,10 @@ export class CommandRegistry implements Initializeable, HmrAware {
         const info = artifacts ?? this.ctorToCommand.get(ctor);
         if (!info) return;
 
-        if (info.scope === 'global') {
-            const idx = this.globalCommands.findIndex((c) => c.name === info.name);
-            if (idx !== -1) this.globalCommands.splice(idx, 1);
-        } else {
-            for (const g of info.guilds) {
-                const arr = this.guildCommands.get(g);
-                if (!arr) continue;
-                const idx = arr.findIndex((c) => c.name === info.name);
-                if (idx !== -1) arr.splice(idx, 1);
-            }
+        for (const scope of scopeIdsOf(info)) {
+            const inScope = this.scopedCommands.get(scope) ?? [];
+            const idx = inScope.findIndex((c) => c.name === info.name);
+            if (idx !== -1) inScope.splice(idx, 1);
         }
         this.ctorToCommand.delete(ctor);
     }
@@ -255,32 +249,30 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     /** @internal */
     public async setCommands(signal?: AbortSignal): Promise<DeployResult> {
-        const scopes = this.scopes();
+        const scopes = this.commandBodies();
         const hashes = await scopeHashes(scopes);
         // read here because gateway assigns core.rest after this registry is constructed
         const { rest, applicationId } = this.core;
         const last = await this.lastDeploy(applicationId, signal);
-        const { changed, unchanged } = splitByHash(scopes, hashes, last);
+        const { changed, unchanged } = splitByHash(scopes, hashes, last?.scopes);
         const putOptions = {
             rest,
             applicationId,
             logger: this.logger,
             signal,
-            onDeployed: (where: DeployedScope, commands: readonly CommandBody[]) => this.reportDeployed(where, commands)
+            onDeployed: (scope: ScopeId, commands: readonly CommandBody[]) => this.reportDeployed(scope, commands)
         };
 
         const [put, read] = await Promise.all([
             putCommands(changed, putOptions),
-            readCommands(
-                { global: unchanged.global !== undefined, guildIds: unchanged.guilds.keys() },
-                { rest, applicationId, signal }
-            )
+            readCommands(unchanged.keys(), { rest, applicationId, signal })
         ]);
         const lacking = scopesDiscordLacks(unchanged, read);
         const redeployed = await putCommands(lacking, putOptions);
         this.reportSkipped(unchanged, lacking);
-        const result = mergeResults([unchanged, read], [changed, put], [lacking, redeployed]);
-        this.deployed = { applicationId, ...hashes };
+        // a redeployed scope replaces what the read found there
+        const result: DeployResult = new Map([...read, ...put, ...redeployed]);
+        this.deployed = { applicationId, scopes: hashes };
         getDevChannel()?.send('seedcord:commands-deployed', this.deployed);
 
         this.injector.inject(result, this.allCommands());
@@ -296,39 +288,36 @@ export class CommandRegistry implements Initializeable, HmrAware {
         return unlessAborted(this.savedDeploy, signal);
     }
 
-    private scopes(): CommandScopes {
-        return {
-            // a guild-only start keeps the global commands another deploy put there
-            global: this.globalCommands.length > 0 ? this.globalCommands.map((c) => c.toJSON()) : undefined,
-            guilds: new Map(
-                [...this.guildCommands].map(([guildId, commands]) => [guildId, commands.map((c) => c.toJSON())])
-            )
-        };
+    private commandBodies(): CommandScopes {
+        // a guild-only start keeps the global commands another deploy put there
+        const deployable = this.scopedCommands
+            .entries()
+            .filter(([scope, commands]) => scope !== GLOBAL_ID || commands.length > 0);
+        return new Map(deployable.map(([scope, commands]) => [scope, commands.map((c) => c.toJSON())]));
     }
 
     private reportSkipped(unchanged: CommandScopes, lacking: CommandScopes): void {
-        const global = unchanged.global && !lacking.global ? ['global'] : [];
-        const guilds = [...unchanged.guilds.keys()].filter((id) => !lacking.guilds.has(id));
-        const scopes = [...global, ...guilds.map((id) => paint.sky.bold(id))];
-        if (scopes.length === 0) return;
-        const list = new Intl.ListFormat('en', { type: 'conjunction' }).format(scopes);
+        const skipped = [...unchanged.keys()].filter((scope) => !lacking.has(scope));
+        if (skipped.length === 0) return;
+        const labels = skipped.map((scope) => (scope === GLOBAL_ID ? 'global' : paint.sky.bold(scope)));
+        const list = new Intl.ListFormat('en', { type: 'conjunction' }).format(labels);
         this.logger.info(`Skipped deploying ${list}. Their commands match the last deploy.`);
     }
 
-    private reportDeployed(where: DeployedScope, commands: readonly CommandBody[]): void {
+    private reportDeployed(scope: ScopeId, commands: readonly CommandBody[]): void {
         const { utils } = this.logger;
         const count = paint.iris.bold(commands.length);
         const tag = pluralize(commands.length, 'command');
         const title =
-            where.scope === 'global'
+            scope === GLOBAL_ID
                 ? `Deployed ${count} global ${tag}`
-                : `Deployed ${count} ${tag} to ${paint.sky.bold(where.guildId)}`;
+                : `Deployed ${count} ${tag} to ${paint.sky.bold(scope)}`;
 
         utils.block(title, utils.wrap(commands.map((command) => command.name)), 'info');
     }
 
     private allCommands(): CommandBuilder[] {
-        return [...this.globalCommands, ...this.guildCommands.values()].flat();
+        return [...this.scopedCommands.values()].flat();
     }
 
     private routeLeaves(): Set<string> {
@@ -340,17 +329,10 @@ export class CommandRegistry implements Initializeable, HmrAware {
     }
 }
 
-// each scope comes whole from the last step that sent or read it
-function mergeResults(...steps: [CommandScopes, DeployResult][]): DeployResult {
-    const global =
-        steps.findLast(([scopes]) => scopes.global !== undefined)?.[1].global ??
-        new Map<string, APIApplicationCommand>();
-    return { global, guilds: new Map(steps.flatMap(([, result]) => [...result.guilds])) };
-}
-
 function deployedPayload(result: DeployResult): AllSubscriptions['commandsDeployed'] {
     const guilds: Record<string, APIApplicationCommand[]> = {};
-    for (const [guildId, deployed] of result.guilds) guilds[guildId] = [...deployed.values()];
-
-    return { global: [...result.global.values()], guilds };
+    for (const [scope, deployed] of result) {
+        if (scope !== GLOBAL_ID) guilds[scope] = [...deployed.values()];
+    }
+    return { global: [...(result.get(GLOBAL_ID)?.values() ?? [])], guilds };
 }

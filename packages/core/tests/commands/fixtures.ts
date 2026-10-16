@@ -1,6 +1,9 @@
 import { ContextMenuCommandBuilder, SlashCommandBuilder } from '@discordjs/builders';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
+import { GLOBAL_ID } from '#src/commands/scopes';
+
+import type { DeployResult } from '#src/commands/types';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 type DeployedEntry = [id: string, name: string, type?: ApplicationCommandType];
@@ -11,6 +14,10 @@ export function deployed(entries: DeployedEntry[]): Map<string, APIApplicationCo
     for (const [id, name, type = ApplicationCommandType.ChatInput] of entries)
         built.set(id, { id, name, type } as APIApplicationCommand);
     return built;
+}
+
+export function deploy(global: Map<string, APIApplicationCommand>, guilds: DeployResult = new Map()): DeployResult {
+    return new Map([[GLOBAL_ID, global], ...guilds]);
 }
 
 export function guildBucket(

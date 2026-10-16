@@ -3,6 +3,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { CommandRegistry } from '#src/commands/CommandRegistry';
+import { GLOBAL_ID } from '#src/commands/scopes';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 
@@ -21,9 +22,9 @@ describe('CommandRegistry.init', () => {
 
         await registry.init();
 
-        expect(registry.guildCommands.get('111')?.map((command) => command.name)).toEqual(['bare']);
-        expect(registry.guildCommands.get('222')?.map((command) => command.name)).toEqual(['bare']);
-        expect(registry.globalCommands).toHaveLength(0);
+        expect(registry.scopedCommands.get('111')?.map((command) => command.name)).toEqual(['bare']);
+        expect(registry.scopedCommands.get('222')?.map((command) => command.name)).toEqual(['bare']);
+        expect(registry.scopedCommands.has(GLOBAL_ID)).toBe(false);
     });
 
     it('loads a command with no scope globally when the config names no guilds', async () => {
@@ -31,7 +32,7 @@ describe('CommandRegistry.init', () => {
 
         await registry.init();
 
-        expect(registry.globalCommands.map((command) => command.name)).toEqual(['bare']);
-        expect(registry.guildCommands.size).toBe(0);
+        expect([...registry.scopedCommands.keys()]).toEqual([GLOBAL_ID]);
+        expect(registry.scopedCommands.get(GLOBAL_ID)?.map((command) => command.name)).toEqual(['bare']);
     });
 });

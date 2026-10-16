@@ -17,8 +17,7 @@ export interface WireError {
  */
 export interface DeployedHashes {
     applicationId: string;
-    global?: string | undefined;
-    guilds: Record<string, string>;
+    scopes: Record<string, string>; // keyed by guild id, or 'global'
 }
 
 /**

@@ -6,6 +6,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 import { Commands } from '#src/commands/CommandInjector';
 import { CommandRegistry } from '#src/commands/CommandRegistry';
+import { GLOBAL_ID } from '#src/commands/scopes';
 import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -41,8 +42,10 @@ describe('CommandRegistry.setCommands', () => {
     it('hands the abort signal to every put', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
         const registry = registryWith(put);
-        registry.globalCommands.push(new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'));
-        registry.guildCommands.set('111', [new SlashCommandBuilder().setName('config').setDescription('Config')]);
+        registry.scopedCommands.set(GLOBAL_ID, [
+            new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!')
+        ]);
+        registry.scopedCommands.set('111', [new SlashCommandBuilder().setName('config').setDescription('Config')]);
         const { signal } = new AbortController();
 
         await registry.setCommands(signal);
@@ -57,7 +60,9 @@ describe('CommandRegistry.setCommands', () => {
         const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
         const core = coreWith(put);
         const registry = new CommandRegistry(core);
-        registry.globalCommands.push(new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'));
+        registry.scopedCommands.set(GLOBAL_ID, [
+            new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!')
+        ]);
         const heard = vi.fn();
         core.bus.on('commandsDeployed', heard);
 
@@ -70,7 +75,7 @@ describe('CommandRegistry.setCommands', () => {
         const put = vi.fn().mockResolvedValue(deployedAs('g-1', 'config'));
         const core = coreWith(put);
         const registry = new CommandRegistry(core);
-        registry.guildCommands.set('111', [new SlashCommandBuilder().setName('config').setDescription('Config')]);
+        registry.scopedCommands.set('111', [new SlashCommandBuilder().setName('config').setDescription('Config')]);
         const heard = vi.fn();
         core.bus.on('commandsDeployed', heard);
 
@@ -85,7 +90,9 @@ describe('CommandRegistry.setCommands', () => {
     it('fills the command mention accessor from the deploy', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
         const registry = registryWith(put);
-        registry.globalCommands.push(new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'));
+        registry.scopedCommands.set(GLOBAL_ID, [
+            new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!')
+        ]);
 
         await registry.setCommands();
 
@@ -95,20 +102,22 @@ describe('CommandRegistry.setCommands', () => {
     it('puts only the guild route when the bot has no global commands', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('g-1', 'config'));
         const registry = registryWith(put);
-        registry.guildCommands.set('111', [new SlashCommandBuilder().setName('config').setDescription('Config')]);
+        registry.scopedCommands.set('111', [new SlashCommandBuilder().setName('config').setDescription('Config')]);
 
         const result = await registry.setCommands();
 
         expect(put.mock.calls.map(([route]: unknown[]) => route)).toEqual([
             Routes.applicationGuildCommands(APP, '111')
         ]);
-        expect(result.guilds.get('111')?.get('g-1')?.name).toBe('config');
+        expect(result.get('111')?.get('g-1')?.name).toBe('config');
     });
 
     it('sends the built command json as the put body', async () => {
         const put = vi.fn().mockResolvedValue(deployedAs('123', 'ping'));
         const registry = registryWith(put);
-        registry.globalCommands.push(new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'));
+        registry.scopedCommands.set(GLOBAL_ID, [
+            new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!')
+        ]);
 
         await registry.setCommands();
 

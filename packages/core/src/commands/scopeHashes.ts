@@ -1,4 +1,3 @@
-import { diffScope } from '#src/commands/diffScope';
 import { commandKey } from '#src/commands/linkCommands';
 
 import type { CommandBody, CommandScopes } from '#src/commands/putCommands';
@@ -6,7 +5,7 @@ import type { DeployResult } from '#src/commands/types';
 import type { DeployedHashes } from '@seedcord/types/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
-export type ScopeHashes = Omit<DeployedHashes, 'applicationId'>;
+export type ScopeHashes = DeployedHashes['scopes'];
 
 const HEX = 16;
 
@@ -17,50 +16,27 @@ async function hashOf(commands: readonly CommandBody[]): Promise<string> {
     return [...new Uint8Array(digest)].map((byte) => byte.toString(HEX).padStart(2, '0')).join('');
 }
 
-interface SplitScopes {
-    changed: CommandScopes;
-    unchanged: CommandScopes;
+export async function scopeHashes(scopes: CommandScopes): Promise<ScopeHashes> {
+    const hashed = [...scopes].map(async ([scope, commands]) => [scope, await hashOf(commands)] as const);
+    return Object.fromEntries(await Promise.all(hashed));
 }
 
 // last is undefined until something deployed for this application
-export function splitByHash(scopes: CommandScopes, hashes: ScopeHashes, last: ScopeHashes | undefined): SplitScopes {
-    const globalUnchanged = scopes.global !== undefined && hashes.global === last?.global;
-    const changed = new Map<string, readonly CommandBody[]>();
-    const unchanged = new Map<string, readonly CommandBody[]>();
-    for (const [guildId, commands] of scopes.guilds) {
-        const same = hashes.guilds[guildId] === last?.guilds[guildId];
-        (same ? unchanged : changed).set(guildId, commands);
-    }
-    return {
-        changed: { global: globalUnchanged ? undefined : scopes.global, guilds: changed },
-        unchanged: { global: globalUnchanged ? scopes.global : undefined, guilds: unchanged }
-    };
+export function splitByHash(
+    scopes: CommandScopes,
+    hashes: ScopeHashes,
+    last: ScopeHashes | undefined
+): { changed: CommandScopes; unchanged: CommandScopes } {
+    const groups = Map.groupBy(scopes, ([scope]) => (hashes[scope] === last?.[scope] ? 'unchanged' : 'changed'));
+    return { changed: new Map(groups.get('changed')), unchanged: new Map(groups.get('unchanged')) };
 }
 
-// a missing scope holds no commands
-function matches(
-    inCode: readonly CommandBody[],
-    deployed: ReadonlyMap<string, APIApplicationCommand> | undefined
-): boolean {
-    const { added, removed } = diffScope(inCode, deployed?.values() ?? []);
-    return added.length === 0 && removed.length === 0;
+function matches(inCode: readonly CommandBody[], deployed: Map<string, APIApplicationCommand> | undefined): boolean {
+    const onDiscord = new Set(deployed?.values().map(commandKey));
+    return new Set(inCode.map(commandKey)).symmetricDifference(onDiscord).size === 0;
 }
 
 // compares by name and type
 export function scopesDiscordLacks(unchanged: CommandScopes, read: DeployResult): CommandScopes {
-    const lacksGlobal = unchanged.global !== undefined && !matches(unchanged.global, read.global);
-    return {
-        global: lacksGlobal ? unchanged.global : undefined,
-        guilds: new Map(
-            [...unchanged.guilds].filter(([guildId, commands]) => !matches(commands, read.guilds.get(guildId)))
-        )
-    };
-}
-
-export async function scopeHashes({ global, guilds }: CommandScopes): Promise<ScopeHashes> {
-    const guildHashes = await Promise.all(
-        [...guilds].map(async ([guildId, commands]) => [guildId, await hashOf(commands)] as const)
-    );
-    const hashes = { guilds: Object.fromEntries(guildHashes) };
-    return global ? { ...hashes, global: await hashOf(global) } : hashes;
+    return new Map(unchanged.entries().filter(([scope, commands]) => !matches(commands, read.get(scope))));
 }

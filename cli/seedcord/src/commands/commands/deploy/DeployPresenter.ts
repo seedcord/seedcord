@@ -1,3 +1,4 @@
+import { GLOBAL_ID } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 
 import { commandLabel, printSections } from '#commands/commands/commandRows';
@@ -5,12 +6,11 @@ import { StepsPresenter } from '#commands/commands/StepsPresenter';
 import { plural } from '#core/format';
 import { unlessCancelled } from '#core/prompts/unlessCancelled';
 
-import type { ScopesInCode } from '#commands/commands/codeScopes';
 import type { CommandRow, CommandSection } from '#commands/commands/commandRows';
 import type { Confirm } from '#commands/commands/confirm';
 import type { PresenterOutput } from '#commands/commands/StepsPresenter';
 import type { DeployStep } from './DeployRunner';
-import type { CommandBody, ScopeDiff } from '@seedcord/core/internal';
+import type { CommandBody, CommandScopes, ScopeDiff } from '@seedcord/core/internal';
 
 export interface ScopePlan {
     title: string;
@@ -18,12 +18,14 @@ export interface ScopePlan {
     diff: ScopeDiff;
 }
 
-function deployedNote({ global, guilds }: ScopesInCode): string {
+function deployedNote(scopes: CommandScopes): string {
     const parts: string[] = [];
+    const global = scopes.get(GLOBAL_ID);
     if (global) parts.push(`${paint.iris(String(global.length))} global`);
-    if (guilds.size > 0) {
-        const inGuilds = guilds.values().reduce((sum, commands) => sum + commands.length, 0);
-        parts.push(`${paint.iris(String(inGuilds))} in ${plural(guilds.size, 'guild')}`);
+    const guilds = [...scopes].filter(([scope]) => scope !== GLOBAL_ID);
+    if (guilds.length > 0) {
+        const inGuilds = guilds.reduce((sum, [, commands]) => sum + commands.length, 0);
+        parts.push(`${paint.iris(String(inGuilds))} in ${plural(guilds.length, 'guild')}`);
     }
     return parts.join(', ');
 }
@@ -56,7 +58,7 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
         return yes === true;
     }
 
-    public deploy(task: () => Promise<unknown>, scopes: ScopesInCode): Promise<unknown> {
+    public deploy(task: () => Promise<unknown>, scopes: CommandScopes): Promise<unknown> {
         return this.output.step('deploy', task, () => deployedNote(scopes));
     }
 
