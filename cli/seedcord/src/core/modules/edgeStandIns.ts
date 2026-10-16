@@ -1,6 +1,5 @@
-import { loadEnv } from 'vite';
-
-import type { Plugin, ResolvedConfig } from 'vite';
+import type { WorkerEnv } from './workerEnv';
+import type { Plugin } from 'vite';
 
 export const BIND_ENV_ID = 'seedcord:bind-env';
 const RESOLVED_BIND_ENV_ID = `\0${BIND_ENV_ID}`;
@@ -28,12 +27,7 @@ export function withExports(_exports, fn) { return fn(); }
 export function withEnvAndExports(_env, _exports, fn) { return fn(); }
 `;
 
-// with an empty prefix, loadEnv returns every key from process.env and the mode's .env files. a process.env value replaces a file's value for the same key
-function envFor({ mode, envDir }: ResolvedConfig): string {
-    return JSON.stringify(loadEnv(mode, envDir, ''));
-}
-
-export function edgeStandIns(): Plugin {
+export function edgeStandIns(workerEnv: WorkerEnv): Plugin {
     return {
         name: 'seedcord:edge-stand-ins',
         resolveId(id) {
@@ -42,8 +36,8 @@ export function edgeStandIns(): Plugin {
             return undefined;
         },
         load(id) {
-            if (id === RESOLVED_BIND_ENV_ID) return bindEnv(envFor(this.environment.config));
-            if (id === CLOUDFLARE_WORKERS_ID) return cloudflareWorkers(envFor(this.environment.config));
+            if (id === RESOLVED_BIND_ENV_ID) return bindEnv(JSON.stringify(workerEnv.values()));
+            if (id === CLOUDFLARE_WORKERS_ID) return cloudflareWorkers(JSON.stringify(workerEnv.values()));
             return undefined;
         }
     };

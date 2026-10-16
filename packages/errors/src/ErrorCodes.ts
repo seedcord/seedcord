@@ -282,6 +282,8 @@ export enum SeedcordErrorCode {
     CliCommandsNotDeleted = 3135,
     /** `seedcord build` or `seedcord dev` ran on Bun for an edge bot. */
     CliEdgeOnBun = 3136,
+    /** Something read an edge bot's worker env before seedcord read `cloudflare.config.ts`, which is a bug in seedcord. */
+    CliWorkerEnvNotRead = 3137,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

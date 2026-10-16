@@ -7,6 +7,7 @@ import { asError } from '@seedcord/utils/internal';
 import { BIND_ENV_ID } from './edgeStandIns';
 
 import type { ModuleLoader } from './ModuleLoader';
+import type { WorkerEnv } from './workerEnv';
 import type { ModuleRunner } from 'vite/module-runner';
 
 export class RunnerModuleLoader implements ModuleLoader {
@@ -18,8 +19,8 @@ export class RunnerModuleLoader implements ModuleLoader {
         return this.load<TModule>(path, path);
     }
 
-    // an edge bot's envapt reads nothing until edgeStandIns binds it to process.env
-    public async bindEdgeEnv(): Promise<void> {
+    public async bindEdgeEnv(workerEnv: WorkerEnv, cloudflareConfig: string): Promise<void> {
+        await workerEnv.readConfig(this, cloudflareConfig);
         await this.load(BIND_ENV_ID, 'envapt');
     }
 

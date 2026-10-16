@@ -23,6 +23,7 @@ import {
     edgeProject,
     editFile,
     fakeDiscordApi,
+    liveVars,
     messagesOf,
     startedRuntime,
     WAVE_COMMAND
@@ -51,17 +52,20 @@ async function nodeCopyApiToken(projectDir: string): Promise<unknown> {
 }
 
 describe('EdgeDevRuntime lifecycle', () => {
-    it("gives codegen's node copy the values from .env", async () => {
-        await using project = await edgeProject();
+    it("gives codegen's node copy the values from .dev.vars", async () => {
+        await using project = await edgeProject({ ...liveVars, API_TOKEN: 'from-dev-vars' });
         await writeFile(join(project.projectDir, '.env'), 'API_TOKEN=from-dot-env\n');
 
-        await expect(nodeCopyApiToken(project.projectDir)).resolves.toBe('from-dot-env');
+        await expect(nodeCopyApiToken(project.projectDir)).resolves.toBe('from-dev-vars');
     }, 120_000);
 
-    it('reads the .env file for the mode ENVIRONMENT sets', async () => {
+    it('reads the .dev.vars file for the mode ENVIRONMENT sets', async () => {
         withShellEnv({ ENVIRONMENT: 'staging' });
         await using project = await edgeProject();
-        await writeFile(join(project.projectDir, '.env.staging'), 'API_TOKEN=from-staging\n');
+        const staging = Object.entries({ ...liveVars, API_TOKEN: 'from-staging' }).map(
+            ([key, value]) => `${key}=${value}`
+        );
+        await writeFile(join(project.projectDir, '.dev.vars.staging'), `${staging.join('\n')}\n`);
 
         await expect(nodeCopyApiToken(project.projectDir)).resolves.toBe('from-staging');
     }, 120_000);

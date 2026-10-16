@@ -4,6 +4,7 @@ import { edgeStandIns } from './edgeStandIns';
 import { RunnerModuleLoader } from './RunnerModuleLoader';
 import { seedcordDependents } from './seedcordDependents';
 import { mergeViteConfig, NODE_CONDITIONS, WORKERD_CONDITIONS, userCodeConfig } from './userCodeConfig';
+import { WorkerEnv } from './workerEnv';
 
 import type { BuildTarget } from '#core/config/detectTarget';
 import type { ModuleLoader } from './ModuleLoader';
@@ -30,6 +31,7 @@ export async function openModuleLoader(
     mode: string
 ): Promise<ModuleLoader & AsyncDisposable> {
     const isEdge = target.kind === 'edge';
+    const workerEnv = new WorkerEnv(projectDir, mode);
     const config = mergeViteConfig(userCodeConfig(isEdge ? WORKERD_CONDITIONS : NODE_CONDITIONS), {
         root: projectDir,
         mode,
@@ -41,7 +43,7 @@ export async function openModuleLoader(
         // the ssr runner never reads the client dep cache in node_modules/.vite
         optimizeDeps: { noDiscovery: true, include: [] },
         ssr: { noExternal: seedcordDependents(projectDir) },
-        plugins: isEdge ? [edgeStandIns()] : []
+        plugins: isEdge ? [edgeStandIns(workerEnv)] : []
     });
     await using onFailure = new AsyncDisposableStack();
     const server = await createServer(config);
@@ -50,7 +52,7 @@ export async function openModuleLoader(
     onFailure.defer(() => runner.close());
 
     const loader = new ViteModuleLoader(server, runner);
-    if (isEdge) await loader.bindEdgeEnv();
+    if (target.kind === 'edge') await loader.bindEdgeEnv(workerEnv, target.cloudflareConfig);
 
     onFailure.move();
     return loader;

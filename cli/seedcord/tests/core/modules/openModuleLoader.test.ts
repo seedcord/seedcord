@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { mkdir, mkdtempDisposable, symlink, writeFile } from 'node:fs/promises';
 import { createServer as createNetServer } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -18,8 +18,11 @@ afterEach(() => {
 
 const SERVER: BuildTarget = { kind: 'server' };
 
+// detectTarget picks edge by this file
 function edgeTarget(root: string): BuildTarget {
-    return { kind: 'edge', cloudflareConfig: join(root, 'cloudflare.config.ts') };
+    const cloudflareConfig = join(root, 'cloudflare.config.ts');
+    writeFileSync(cloudflareConfig, 'export default { worker: {} };\n');
+    return { kind: 'edge', cloudflareConfig };
 }
 
 // a package whose default export reports which build its conditions picked

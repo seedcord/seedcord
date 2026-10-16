@@ -2,12 +2,13 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { HostPluginKeys } from '@seedcord/types/internal';
+import { bindings } from 'cf/config';
 import { describe, expect, it } from 'vitest';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
-import { copyEdgeBotForTest } from '#tests/commands/build/edgeBot';
+import { copyEdgeBotForTest, writeCloudflareConfig } from '#tests/commands/build/edgeBot';
 
 const EDGE_BOT = join(import.meta.dirname, '../../fixtures/edge-bot');
 
@@ -31,4 +32,32 @@ describe('loading an edge bot', () => {
 
         await expect(project.modules.importModule(probe)).resolves.toMatchObject({ value: 'from-production' });
     });
+
+    it('reads a text binding from cloudflare.config.ts', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await writeCloudflareConfig(projectDir, { env: { PROBE: bindings.text('from-config') } });
+        await writeFile(join(projectDir, '.env.development'), 'PROBE=from-env\n');
+        const probe = await writeProbe(projectDir);
+
+        await using project = await new ProjectLoader(openModuleLoader).open(projectDir);
+
+        await expect(project.modules.importModule(probe)).resolves.toMatchObject({ value: 'from-config' });
+    });
+
+    it('reads .dev.vars in place of the .env files when it exists', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        await writeFile(join(projectDir, '.dev.vars'), 'PROBE=from-dev-vars\n');
+        await writeFile(join(projectDir, '.env.development'), 'PROBE=from-env\n');
+        const probe = await writeProbe(projectDir);
+
+        await using project = await new ProjectLoader(openModuleLoader).open(projectDir);
+
+        await expect(project.modules.importModule(probe)).resolves.toMatchObject({ value: 'from-dev-vars' });
+    });
 });
+
+async function writeProbe(projectDir: string): Promise<string> {
+    const probe = join(projectDir, 'src/probe.ts');
+    await writeFile(probe, "import { env } from 'cloudflare:workers';\nexport const value = env.PROBE;\n");
+    return probe;
+}
