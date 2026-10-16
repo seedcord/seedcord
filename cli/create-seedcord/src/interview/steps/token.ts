@@ -1,6 +1,6 @@
 import { password } from '@clack/prompts';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
+import { SeedcordTypeError, validateDiscordToken } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 import { SKIP_HINT, answerOf, skippable } from './skippable';
@@ -11,7 +11,7 @@ function parseToken(raw: string): string {
     try {
         return validateDiscordToken(raw);
     } catch {
-        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+        throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [
             'token',
             'That does not look like a bot token. Copy it from the Bot page of your app.'
         ]);

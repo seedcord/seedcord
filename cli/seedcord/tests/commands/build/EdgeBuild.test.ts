@@ -77,7 +77,7 @@ describe('EdgeBuild', () => {
         const build = new EdgeBuild(project, target, { openDiscord: () => ({ get: () => Promise.resolve([]) }) });
 
         await expect(build.readDiscord({ ...config.bot, commands: { path: './no-commands' } })).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliCommandsDirUnreadable,
+            code: SeedcordErrorCode.CoreDirectoryUnreadable,
             message: expect.stringContaining(join(root, 'no-commands')) as string
         });
     });

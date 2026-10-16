@@ -1,7 +1,7 @@
 import { basename } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import ownPackage from '#package' with { type: 'json' };
 
@@ -37,7 +37,7 @@ const REQUIRED = ['directory', 'transport', 'token', 'botColor'] as const;
 export function requireScaffoldAnswers(answers: Partial<Answers>): ScaffoldAnswers {
     for (const key of REQUIRED) {
         if (answers[key] === undefined) {
-            throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [key, 'No answer was collected.']);
+            throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [key, 'No answer was collected.']);
         }
     }
 

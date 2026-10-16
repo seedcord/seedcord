@@ -33,7 +33,8 @@ export class Project implements AsyncDisposable {
     public tsconfig(): string | undefined {
         const { tsconfig } = this.config.build;
         if (tsconfig) {
-            if (!existsSync(tsconfig)) throw new SeedcordError(SeedcordErrorCode.CliBuildTsconfigNotFound, [tsconfig]);
+            if (!existsSync(tsconfig))
+                throw new SeedcordError(SeedcordErrorCode.CliTsconfigNotFound, [this.configDir, tsconfig]);
             return tsconfig;
         }
 

@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { noFlagName } from './applyFlags';
 
@@ -22,14 +22,17 @@ export async function runFlow(
     for (const step of steps) {
         if (step.skip?.(answers)) {
             if (step.key in supplied) {
-                throw new SeedcordError(SeedcordErrorCode.CreateFlagNotApplicable, [step.flag.name]);
+                throw new SeedcordTypeError(SeedcordErrorCode.CreateFlagNotApplicable, [step.flag.name]);
             }
             continue;
         }
         if (answers[step.key] !== undefined) continue;
 
         if (!options.interactive) {
-            throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [step.flag.name, unansweredReason(step)]);
+            throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [
+                step.flag.name,
+                unansweredReason(step)
+            ]);
         }
 
         // justified: Step<Key> ties each key to its own answer type

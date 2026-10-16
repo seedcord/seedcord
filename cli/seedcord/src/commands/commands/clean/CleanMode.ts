@@ -1,6 +1,6 @@
 import { commandKey } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { RemoveMode } from '#commands/commands/remove/RemoveMode';
 import { commandCount } from '#commands/commands/scope';
@@ -19,7 +19,7 @@ export class CleanMode extends RemoveMode {
     public readonly includesGlobal = false;
 
     public assertTargets(guilds: GuildTargets): void {
-        if (guilds.kind === 'none') throw new SeedcordError(SeedcordErrorCode.CliCleanNoGuilds);
+        if (guilds.kind === 'none') throw new SeedcordTypeError(SeedcordErrorCode.CliCleanNoGuilds);
     }
 
     public select(scan: Scan): ScopedCommands[] {

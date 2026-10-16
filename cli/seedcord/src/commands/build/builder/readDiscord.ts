@@ -68,7 +68,7 @@ function assertDeployed(notDeployed: readonly TargetedCommand[]): void {
     const lines = notDeployed.map(
         ({ command }) => `  - ${paint.sky(command.json.name)} in ${paint.path(command.sourceFile)}`
     );
-    throw new SeedcordError(SeedcordErrorCode.CliEdgeCommandsNotDeployed, [notDeployed.length, lines.join('\n')]);
+    throw new SeedcordError(SeedcordErrorCode.CliEdgeCommandsNotDeployed, [lines]);
 }
 
 export async function readDiscord({ rest, commands, emojis }: DiscordReadOptions): Promise<DiscordRead> {

@@ -116,11 +116,11 @@ describe('ProjectLoader target', () => {
         await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliEdgeWithoutWorkerdCondition });
     });
 
-    it('throws CliBuildNoTsconfig for a wrangler config with no tsconfig', async () => {
+    it('throws CliTsconfigNotFound for a wrangler config with no tsconfig', async () => {
         const { projectDir, load } = projectWith(EDGE_MINIMAL);
         writeFileSync(join(projectDir, 'wrangler.jsonc'), '');
 
-        await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliBuildNoTsconfig });
+        await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliTsconfigNotFound });
     });
 
     it('throws CliWorkerdConditionWithoutWrangler for the workerd condition with no wrangler config', async () => {
@@ -206,7 +206,7 @@ describe('ProjectLoader paths with a #', () => {
 
         const caught: unknown = await load().catch((error: unknown) => error);
 
-        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliHashPathProblems));
+        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliProblems));
         expect(caught.errors).toEqual([
             expect.objectContaining({ message: expect.stringContaining('c#d.ts') as string }),
             expect.objectContaining({ message: expect.stringContaining('old#handlers') as string })
@@ -238,7 +238,7 @@ describe('ProjectLoader validation', () => {
         const modules = stubModulesExporting({ entry: './index.ts' });
 
         await expect(new ProjectLoader(modules.open).open(projectDir)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliConfigMissingInstance
+            code: SeedcordErrorCode.CliConfigInvalidField
         });
         expect(modules.closed()).toBe(true);
     });
@@ -275,19 +275,21 @@ describe('ProjectLoader validation', () => {
     it.each([['yes'], ['http://bot.example.com'], [42]])('rejects %s as a tunnel', async (tunnel) => {
         await expect(projectWith({ ...MINIMAL, tunnel }).load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
-            message: expect.stringContaining('`tunnel`') as string
+            message: expect.stringContaining('tunnel in the seedcord config') as string
         });
     });
 
     it('throws when instance is missing', async () => {
         await expect(projectWith({ entry: './index.ts' }).load()).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliConfigMissingInstance
+            code: SeedcordErrorCode.CliConfigInvalidField,
+            message: expect.stringContaining('instance in the seedcord config') as string
         });
     });
 
     it('throws when entry is missing', async () => {
         await expect(projectWith({ instance: './bot.ts' }).load()).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliConfigMissingEntry
+            code: SeedcordErrorCode.CliConfigInvalidField,
+            message: expect.stringContaining('entry in the seedcord config') as string
         });
     });
 
@@ -296,13 +298,16 @@ describe('ProjectLoader validation', () => {
             .load()
             .catch((caught: unknown) => caught);
 
-        assert(isSeedcordError(error, 'SeedcordAggregateError', SeedcordErrorCode.CliConfigProblems));
+        assert(isSeedcordError(error, 'SeedcordAggregateError', SeedcordErrorCode.CliProblems));
         expect(error.errors).toMatchObject([
-            { code: SeedcordErrorCode.CliConfigMissingInstance },
-            { code: SeedcordErrorCode.CliConfigInvalidField, message: expect.stringContaining('`tunnel`') as string },
+            { code: SeedcordErrorCode.CliConfigInvalidField },
             {
                 code: SeedcordErrorCode.CliConfigInvalidField,
-                message: expect.stringContaining('`build.outDir`') as string
+                message: expect.stringContaining('tunnel in the seedcord config') as string
+            },
+            {
+                code: SeedcordErrorCode.CliConfigInvalidField,
+                message: expect.stringContaining('build.outDir in the seedcord config') as string
             }
         ]);
     });
@@ -328,9 +333,9 @@ describe('ProjectLoader validation', () => {
     });
 
     it.each([
-        [{ restart: 'nope' }, 'Config `hmr.restart` must be an array of strings when provided.'],
-        [{ rollback: 'nope' }, 'Config `hmr.rollback` must be a boolean when provided.'],
-        [{ typecheck: 'nope' }, 'Config `hmr.typecheck` must be a boolean or an object when provided.']
+        [{ restart: 'nope' }, 'hmr.restart in the seedcord config must be an array of strings.'],
+        [{ rollback: 'nope' }, 'hmr.rollback in the seedcord config must be a boolean.'],
+        [{ typecheck: 'nope' }, 'hmr.typecheck in the seedcord config must be a boolean or an object.']
     ])('rejects hmr %o', async (hmr, message) => {
         await expect(projectWith({ ...MINIMAL, hmr }).load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
@@ -347,7 +352,7 @@ describe('ProjectLoader validation', () => {
     it('rejects a non-boolean idleAnimation', async () => {
         await expect(projectWith({ ...MINIMAL, idleAnimation: 'nope' }).load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
-            message: 'Config `idleAnimation` must be a boolean when provided.'
+            message: 'idleAnimation in the seedcord config must be a boolean.'
         });
     });
 

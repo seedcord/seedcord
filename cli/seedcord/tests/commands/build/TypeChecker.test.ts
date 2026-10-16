@@ -38,13 +38,13 @@ function projectFor(tsconfig?: string): Project {
 describe('TypeChecker', () => {
     it('reports a build.tsconfig that points at a missing file', async () => {
         await expect(new TypeChecker().check(projectFor(join(projectDir, 'nope.json')))).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliBuildTsconfigNotFound
+            code: SeedcordErrorCode.CliTsconfigNotFound
         });
     });
 
     it('reports a project with no tsconfig.json and no build.tsconfig', async () => {
         await expect(new TypeChecker().check(projectFor())).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliBuildNoTsconfig
+            code: SeedcordErrorCode.CliTsconfigNotFound
         });
     });
 });

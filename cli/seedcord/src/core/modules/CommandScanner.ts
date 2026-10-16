@@ -5,7 +5,8 @@ import { join } from 'node:path';
 
 import { CommandMetadataKey, isCommandClass } from '@seedcord/core/internal';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
+import { asError } from '@seedcord/utils/internal';
 import { isTsOrJsFile } from '@seedcord/utils/node';
 import { resolveFromRoot } from '@seedcord/utils/node/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
@@ -39,19 +40,19 @@ export interface FoundCommand {
     meta: CommandMeta;
 }
 
-function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | SeedcordError {
+function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | SeedcordError | SeedcordTypeError {
     let json: unknown;
     try {
         json = new Command().component.toJSON();
     } catch (error: unknown) {
-        const reason = Error.isError(error) ? error.message : 'Unknown error';
+        const reason = asError(error).message;
         return new SeedcordError(SeedcordErrorCode.CliCommandConstructorThrew, [Command.name, sourceFile, reason], {
             cause: error
         });
     }
 
     if (!isApplicationCommand(json)) {
-        return new SeedcordError(SeedcordErrorCode.CliCommandNotACommand, [Command.name, sourceFile]);
+        return new SeedcordTypeError(SeedcordErrorCode.CliCommandNotACommand, [Command.name, sourceFile]);
     }
     // justified: isCommandClass checked this key before the walk yielded the class
     const meta = Reflect.getMetadata(CommandMetadataKey, Command) as CommandMeta;
@@ -78,7 +79,7 @@ export class CommandScanner {
             problems.push(error);
         }
 
-        throwSingleOrAggregate(problems, SeedcordErrorCode.CliCommandProblems);
+        throwSingleOrAggregate(problems, SeedcordErrorCode.CliProblems);
         return commands;
     }
 
@@ -87,10 +88,10 @@ export class CommandScanner {
         try {
             entries = await readdir(dir, { withFileTypes: true });
         } catch (error: unknown) {
-            const reason = Error.isError(error) ? error.message : 'Unknown error';
             // skipping a folder would delete its commands on the next deploy
-            // better to just fail fast
-            throw new SeedcordError(SeedcordErrorCode.CliCommandsDirUnreadable, [dir, reason], { cause: error });
+            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryUnreadable, [dir, asError(error).message], {
+                cause: error
+            });
         }
 
         // readdir order differs between filesystems

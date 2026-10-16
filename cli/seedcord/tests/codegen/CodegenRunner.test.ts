@@ -288,7 +288,7 @@ describe('CodegenRunner', () => {
         expect(written).toContain("ban: { options: {}; cache: 'cached' }");
     });
 
-    it('throws CliCommandsDirUnreadable when the top-level commands dir is unreadable', async () => {
+    it('throws CoreDirectoryUnreadable when the top-level commands dir is unreadable', async () => {
         const root = await tempDir('codegen-');
         const missing = join(root, 'does-not-exist');
 
@@ -299,12 +299,12 @@ describe('CodegenRunner', () => {
             caught = error;
         }
 
-        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCommandsDirUnreadable });
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
         expect((caught as Error).message).toContain(missing);
     });
 
     // root reads a 0o000 folder anyway
-    it.skipIf(process.getuid?.() === 0)('throws CliCommandsDirUnreadable for a nested unreadable subdir', async () => {
+    it.skipIf(process.getuid?.() === 0)('throws CoreDirectoryUnreadable for a nested unreadable subdir', async () => {
         const root = await tempDir('codegen-');
         const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
@@ -316,7 +316,7 @@ describe('CodegenRunner', () => {
 
         const run = scanRunner(root, cmdDir, () => ({ BanCommand }), silentLogger()).run(false);
 
-        await expect(run).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandsDirUnreadable });
+        await expect(run).rejects.toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
         await expect(run).rejects.toThrow(locked);
     });
 
@@ -351,7 +351,7 @@ describe('CodegenRunner', () => {
             caught = error;
         }
 
-        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCommandsDirUnreadable });
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
         expect((caught as Error).message).toContain(resolve(root, relativePath));
     });
 
@@ -499,7 +499,7 @@ describe('CodegenRunner', () => {
             .run(false)
             .catch((error: unknown) => error);
 
-        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliCommandProblems));
+        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliProblems));
         expect(caught.errors).toMatchObject([
             {
                 code: SeedcordErrorCode.CliCommandConstructorThrew,
@@ -543,7 +543,7 @@ describe('CodegenRunner', () => {
             .run(false)
             .catch((error: unknown) => error);
 
-        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliCommandProblems));
+        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.CliProblems));
         expect(caught.errors).toMatchObject([
             { code: SeedcordErrorCode.CliCommandConstructorThrew },
             { code: SeedcordErrorCode.CliCommandConstructorThrew },

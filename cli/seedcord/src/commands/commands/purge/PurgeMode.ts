@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { RemoveMode } from '#commands/commands/remove/RemoveMode';
 import { GLOBAL_SCOPE } from '#commands/commands/scope';
@@ -19,7 +19,7 @@ export class PurgeMode extends RemoveMode {
 
     public assertTargets(guilds: GuildTargets): void {
         if (!this.includesGlobal && guilds.kind === 'none')
-            throw new SeedcordError(SeedcordErrorCode.CliPurgeNoTargets);
+            throw new SeedcordTypeError(SeedcordErrorCode.CliPurgeNoTargets);
     }
 
     public select(scan: Scan): ScopedCommands[] {

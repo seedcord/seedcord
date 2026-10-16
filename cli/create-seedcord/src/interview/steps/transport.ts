@@ -1,6 +1,6 @@
 import { select } from '@clack/prompts';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
@@ -12,7 +12,7 @@ function parseTransport(raw: string): Answers['transport'] {
     const value = raw.trim().toLowerCase();
     const match = TRANSPORTS.find((transport) => transport === value);
     if (!match) {
-        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+        throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [
             'transport',
             `Unknown transport "${raw}". Pick http or gateway.`
         ]);

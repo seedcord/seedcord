@@ -106,6 +106,6 @@ describe('token typed into a terminal', () => {
         const answer = askToken().catch((error: unknown) => error);
         await press(CTRL_C);
 
-        expect(isSeedcordError(await answer, undefined, SeedcordErrorCode.CreateCancelled)).toBe(true);
+        expect(isSeedcordError(await answer, undefined, SeedcordErrorCode.CliCancelled)).toBe(true);
     });
 });

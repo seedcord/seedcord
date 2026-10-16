@@ -1,6 +1,6 @@
 import { Option } from '@commander-js/extra-typings';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { BaseCommand } from '#core/BaseCommand';
 import { isInteractive } from '#core/interactive';
@@ -148,7 +148,7 @@ export class CommandsCommand extends BaseCommand {
     }
 
     private async deploy(printer: StepPrinter<DeployStep>, command: CommandUnknownOpts, yes: boolean): Promise<void> {
-        if (!yes && !isInteractive()) throw new SeedcordError(SeedcordErrorCode.CliDeployNeedsYes);
+        if (!yes && !isInteractive()) throw new SeedcordTypeError(SeedcordErrorCode.CliDeployNeedsYes);
         const confirm: Confirm = yes ? PROCEED : (message) => this.prompter.confirm({ message });
         await this.deployRunner.run(new DeployPresenter(printer, confirm, isVerbose(command)));
     }

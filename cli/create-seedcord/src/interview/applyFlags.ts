@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import type { AnyStep, Answers } from './types';
 
@@ -18,7 +18,7 @@ export function applyFlags(steps: AnyStep[], raw: Record<string, string | boolea
         const answeredNull = step.flag.noFlag !== undefined && raw[noName] === true;
 
         if (answeredNull && value !== undefined) {
-            throw new SeedcordError(SeedcordErrorCode.CreateBadUsage, [
+            throw new SeedcordTypeError(SeedcordErrorCode.CreateBadUsage, [
                 `Pass --${step.flag.name} or --${noName}, not both.`
             ]);
         }

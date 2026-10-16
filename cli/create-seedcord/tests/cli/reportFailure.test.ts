@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { reportFailure } from '#cli/reportFailure';
 
 const THROWN = [
-    new SeedcordError(SeedcordErrorCode.CreateCancelled),
+    new SeedcordError(SeedcordErrorCode.CliCancelled),
     new SeedcordError(SeedcordErrorCode.CreateTargetNotEmpty, ['my-bot']),
     new SeedcordError(SeedcordErrorCode.CreateStepFailed, ['pnpm add', 'ECONNREFUSED']),
     new Error('boom'),
@@ -15,7 +15,7 @@ const THROWN = [
 
 describe('reportFailure', () => {
     it('exits a cancel successfully and prints no error above the closing line', () => {
-        const failure = reportFailure(new SeedcordError(SeedcordErrorCode.CreateCancelled));
+        const failure = reportFailure(new SeedcordError(SeedcordErrorCode.CliCancelled));
 
         expect(failure).toEqual({ code: 0, message: null, closing: 'Nothing was written.' });
     });

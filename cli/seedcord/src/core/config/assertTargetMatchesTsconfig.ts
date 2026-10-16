@@ -24,7 +24,7 @@ export async function assertTargetMatchesTsconfig(project: Project): Promise<voi
     const tsconfig = project.tsconfig();
 
     if (tsconfig === undefined) {
-        if (target.kind === 'edge') throw new SeedcordError(SeedcordErrorCode.CliBuildNoTsconfig, [project.configDir]);
+        if (target.kind === 'edge') throw new SeedcordError(SeedcordErrorCode.CliTsconfigNotFound, [project.configDir]);
         return;
     }
 

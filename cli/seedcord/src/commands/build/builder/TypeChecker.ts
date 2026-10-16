@@ -12,7 +12,7 @@ export class TypeChecker {
 
     public async check(project: Project): Promise<{ tsconfig: string }> {
         const tsconfig = project.tsconfig();
-        if (!tsconfig) throw new SeedcordError(SeedcordErrorCode.CliBuildNoTsconfig, [project.configDir]);
+        if (!tsconfig) throw new SeedcordError(SeedcordErrorCode.CliTsconfigNotFound, [project.configDir]);
 
         const result = await this.runTsc(project.configDir, ['-p', tsconfig, '--noEmit', '--pretty', 'false']);
         if (result.exitCode === 0) return { tsconfig };

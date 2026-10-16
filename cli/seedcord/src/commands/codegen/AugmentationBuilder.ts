@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { routeLeavesOf, type SlashRouteLeaf } from '@seedcord/utils/internal';
 import { ApplicationCommandOptionType, ApplicationCommandType, InteractionContextType } from 'discord-api-types/v10';
 
@@ -118,7 +118,7 @@ export class AugmentationBuilder {
             // declaration merging folds a duplicate route in silently
             const firstFile = sourceByRoute.get(leaf.route);
             if (firstFile !== undefined) {
-                throw new SeedcordError(SeedcordErrorCode.CliCodegenDuplicateRoute, [
+                throw new SeedcordTypeError(SeedcordErrorCode.CliCodegenDuplicateRoute, [
                     leaf.route,
                     firstFile,
                     sourceFile
@@ -138,7 +138,7 @@ export class AugmentationBuilder {
     ): void {
         const firstFile = sourceByName.get(json.name);
         if (firstFile !== undefined) {
-            throw new SeedcordError(SeedcordErrorCode.CliCodegenDuplicateContextMenu, [
+            throw new SeedcordTypeError(SeedcordErrorCode.CliCodegenDuplicateContextMenu, [
                 kind,
                 json.name,
                 firstFile,

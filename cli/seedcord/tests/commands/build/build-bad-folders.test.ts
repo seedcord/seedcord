@@ -11,7 +11,7 @@ const BAD_FOLDERS_BOT = join(import.meta.dirname, '../../fixtures/bad-folders-bo
 describe('seedcord build on a bot with several bad folders', () => {
     it('reports every bad folder in one error', async () => {
         await expect(BuildRunner.create(quietSteps).run(BAD_FOLDERS_BOT)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliBuildFolderProblems,
+            code: SeedcordErrorCode.CliProblems,
             errors: [
                 expect.objectContaining({ code: SeedcordErrorCode.CoreDirectoryOutsideRoot }),
                 expect.objectContaining({ code: SeedcordErrorCode.CoreDirectoryOutsideRoot })

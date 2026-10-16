@@ -34,6 +34,6 @@ describe('requireAnswer', () => {
             return undefined;
         })();
 
-        expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateCancelled)).toBe(true);
+        expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CliCancelled)).toBe(true);
     });
 });

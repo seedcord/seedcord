@@ -34,5 +34,5 @@ function* folderProblems(config: Config, project: Project): Generator<SeedcordEr
 
 // plugin folders get only the runtime check in @seedcord/utils
 export function assertFoldersUnderRoot(config: Config, project: Project): void {
-    throwSingleOrAggregate([...folderProblems(config, project)], SeedcordErrorCode.CliBuildFolderProblems);
+    throwSingleOrAggregate([...folderProblems(config, project)], SeedcordErrorCode.CliProblems);
 }

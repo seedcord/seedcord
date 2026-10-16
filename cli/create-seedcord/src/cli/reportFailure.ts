@@ -11,7 +11,7 @@ const CANCELLED: Failure = { code: 0, message: null, closing: 'Nothing was writt
 
 // a failed step comes back through ScaffoldResult
 export function reportFailure(error: unknown): Failure {
-    if (isSeedcordError(error, undefined, SeedcordErrorCode.CreateCancelled)) return CANCELLED;
+    if (isSeedcordError(error, undefined, SeedcordErrorCode.CliCancelled)) return CANCELLED;
 
     const message = isSeedcordError(error) || Error.isError(error) ? error.message : String(error);
 

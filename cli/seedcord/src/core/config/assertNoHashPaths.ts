@@ -12,5 +12,5 @@ export async function assertNoHashPaths({ config, files }: Project): Promise<voi
 
     const paths = await files.pathsWithHash();
     const problems = paths.map((path) => new SeedcordError(SeedcordErrorCode.CliPathHasHash, [path]));
-    throwSingleOrAggregate(problems, SeedcordErrorCode.CliHashPathProblems);
+    throwSingleOrAggregate(problems, SeedcordErrorCode.CliProblems);
 }

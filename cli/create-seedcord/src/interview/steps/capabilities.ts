@@ -1,6 +1,6 @@
 import { multiselect } from '@clack/prompts';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { CAPABILITIES, isPrivileged } from '#interview/capabilities';
 
@@ -16,7 +16,7 @@ function parseCapabilities(raw: string): string[] {
 
     for (const id of ids) {
         if (!CAPABILITIES.some((capability) => capability.id === id)) {
-            throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+            throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [
                 'capabilities',
                 `Unknown capability "${id}". Run with --help for the list.`
             ]);

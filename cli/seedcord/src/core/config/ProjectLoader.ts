@@ -1,7 +1,7 @@
 import { dirname, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
+import { SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 
@@ -31,11 +31,11 @@ function isOptionalString(value: unknown): boolean {
     return value === undefined || typeof value === 'string';
 }
 
-function invalidField(field: string, expected: string): SeedcordError {
-    return new SeedcordError(SeedcordErrorCode.CliConfigInvalidField, [field, expected]);
+function invalidField(field: string, expected: string): SeedcordTypeError {
+    return new SeedcordTypeError(SeedcordErrorCode.CliConfigInvalidField, [field, expected]);
 }
 
-function* buildProblems(value: unknown): Generator<SeedcordError> {
+function* buildProblems(value: unknown): Generator<SeedcordTypeError> {
     if (value === undefined) return;
     if (!isPlainObject(value)) {
         yield invalidField('build', 'an object');
@@ -45,7 +45,7 @@ function* buildProblems(value: unknown): Generator<SeedcordError> {
     if (!isOptionalString(value.tsconfig)) yield invalidField('build.tsconfig', 'a string');
 }
 
-function* typecheckProblems(value: unknown): Generator<SeedcordError> {
+function* typecheckProblems(value: unknown): Generator<SeedcordTypeError> {
     if (value === undefined || typeof value === 'boolean') return;
     if (!isPlainObject(value)) {
         yield invalidField('hmr.typecheck', 'a boolean or an object');
@@ -54,7 +54,7 @@ function* typecheckProblems(value: unknown): Generator<SeedcordError> {
     if (!isOptionalString(value.tsconfig)) yield invalidField('hmr.typecheck.tsconfig', 'a string');
 }
 
-function* hmrProblems(value: unknown): Generator<SeedcordError> {
+function* hmrProblems(value: unknown): Generator<SeedcordTypeError> {
     if (value === undefined) return;
     if (!isPlainObject(value)) {
         yield invalidField('hmr', 'an object');
@@ -69,7 +69,7 @@ function* hmrProblems(value: unknown): Generator<SeedcordError> {
     yield* typecheckProblems(value.typecheck);
 }
 
-function* tunnelProblems(value: unknown): Generator<SeedcordError> {
+function* tunnelProblems(value: unknown): Generator<SeedcordTypeError> {
     if (value === undefined || typeof value === 'boolean') return;
     // discord only accepts an https interactions endpoint
     if (typeof value !== 'string' || URL.parse(value)?.protocol !== 'https:') {
@@ -81,12 +81,12 @@ function isNonEmptyString(value: unknown): boolean {
     return typeof value === 'string' && value.length > 0;
 }
 
-function* entryProblems(entry: unknown, target: BuildTarget, configFile: string): Generator<SeedcordError> {
+function* entryProblems(entry: unknown, target: BuildTarget, configFile: string): Generator<SeedcordTypeError> {
     if (target.kind === 'server' && !isNonEmptyString(entry)) {
-        yield new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
+        yield invalidField('entry', 'a string that points to your startup script');
     }
     if (target.kind === 'edge' && entry !== undefined) {
-        yield new SeedcordError(SeedcordErrorCode.CliConfigEntryOnEdge, [configFile, target.wranglerConfig]);
+        yield new SeedcordTypeError(SeedcordErrorCode.CliConfigEntryOnEdge, [configFile, target.wranglerConfig]);
     }
 }
 
@@ -94,8 +94,9 @@ function* configProblems(
     raw: Record<string, unknown>,
     target: BuildTarget,
     configFile: string
-): Generator<SeedcordError> {
-    if (!isNonEmptyString(raw.instance)) yield new SeedcordError(SeedcordErrorCode.CliConfigMissingInstance);
+): Generator<SeedcordTypeError> {
+    if (!isNonEmptyString(raw.instance))
+        yield invalidField('instance', 'a string that points to the file that default exports your bot');
     yield* entryProblems(raw.entry, target, configFile);
     if (!isOptionalString(raw.root)) yield invalidField('root', 'a string');
     if (raw.idleAnimation !== undefined && typeof raw.idleAnimation !== 'boolean') {
@@ -120,8 +121,8 @@ function resolveTypecheck(value: SeedcordHmrConfig['typecheck'], root: string): 
 }
 
 function validateConfig(raw: unknown, target: BuildTarget, configFile: string): asserts raw is SeedcordConfig {
-    if (!isPlainObject(raw)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidExport);
-    throwSingleOrAggregate([...configProblems(raw, target, configFile)], SeedcordErrorCode.CliConfigProblems);
+    if (!isPlainObject(raw)) throw new SeedcordTypeError(SeedcordErrorCode.CliConfigInvalidExport);
+    throwSingleOrAggregate([...configProblems(raw, target, configFile)], SeedcordErrorCode.CliProblems);
 }
 
 export class ProjectLoader {
@@ -175,7 +176,7 @@ export class ProjectLoader {
         // justified: entryProblems already required entry on a server target
         const entry = resolve(root, (config as SeedcordServerConfig).entry);
         if (!isInside(root, entry)) {
-            throw new SeedcordError(SeedcordErrorCode.CliConfigEntryOutsideRoot, [entry, root]);
+            throw new SeedcordTypeError(SeedcordErrorCode.CliConfigEntryOutsideRoot, [entry, root]);
         }
         return { ...target, entry };
     }

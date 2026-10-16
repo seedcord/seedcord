@@ -2,7 +2,7 @@ import { basename } from 'node:path';
 
 import { text } from '@clack/prompts';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
@@ -16,21 +16,24 @@ const MAX_NAME = 64;
 function parseDirectory(raw: string): string {
     const value = raw.trim();
     if (value === '') {
-        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, ['dir', 'A project directory cannot be empty.']);
+        throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [
+            'dir',
+            'A project directory cannot be empty.'
+        ]);
     }
 
     // context.ts copies the basename into package.json as the package name
     const name = basename(value);
 
     if (name.length > MAX_NAME) {
-        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+        throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [
             'dir',
             `Keep the folder name to ${MAX_NAME} characters or fewer.`
         ]);
     }
 
     if (!PACKAGE_NAME.test(name)) {
-        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+        throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [
             'dir',
             `The folder name becomes the package name. Use ${FORMAT}, starting with a letter or digit.`
         ]);

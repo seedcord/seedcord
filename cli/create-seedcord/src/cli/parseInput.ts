@@ -1,7 +1,7 @@
 import { parseArgs } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { applyFlags, noFlagName } from '#interview/applyFlags';
 import { STEPS } from '#interview/steps';
@@ -41,7 +41,7 @@ function readArgv(argv: string[]): { values: Record<string, unknown>; positional
     try {
         return parseArgs({ args: argv, options: OPTIONS, allowPositionals: true, strict: true });
     } catch (error) {
-        throw new SeedcordError(SeedcordErrorCode.CreateBadUsage, [
+        throw new SeedcordTypeError(SeedcordErrorCode.CreateBadUsage, [
             Error.isError(error) ? error.message : 'Could not read the command line.'
         ]);
     }
@@ -49,12 +49,12 @@ function readArgv(argv: string[]): { values: Record<string, unknown>; positional
 
 function directoryFrom(positionals: string[], flagged: unknown): string | undefined {
     if (positionals.length > 1) {
-        throw new SeedcordError(SeedcordErrorCode.CreateBadUsage, ['Pass one directory at most.']);
+        throw new SeedcordTypeError(SeedcordErrorCode.CreateBadUsage, ['Pass one directory at most.']);
     }
 
     const [bare] = positionals;
     if (bare !== undefined && typeof flagged === 'string' && flagged !== bare) {
-        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+        throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [
             'dir',
             'The directory was given twice. Pass it as an argument or as a flag.'
         ]);

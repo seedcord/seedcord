@@ -397,7 +397,7 @@ describe('DevRunner run', () => {
         await runner.quit();
         await running;
 
-        expect(error.message).toMatch(/Cannot find entry file|Failed to load url/);
+        expect(error.message).toMatch(/Cannot find the entry file|Failed to load url/);
         expect(projectLoader.open).toHaveBeenCalledOnce();
     });
 });
