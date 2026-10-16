@@ -8,16 +8,13 @@ import { CleanMode } from '#commands/commands/clean/CleanMode';
 import { PurgeMode } from '#commands/commands/purge/PurgeMode';
 import { RemovePresenter } from '#commands/commands/remove/RemovePresenter';
 import { RemoveRunner } from '#commands/commands/remove/RemoveRunner';
-import { APP_ID, botGuilds, fakeDiscord, slash } from '#tests/commands/commands/fakeBot';
+import { APP_ID, fakeDiscord, slash } from '#tests/commands/commands/fakeBot';
 
 import type { RemoveMode } from '#commands/commands/remove/RemoveMode';
 import type { GuildTargets } from '#commands/commands/scope';
 import type { Mock } from 'vitest';
 
 const ALPHA: GuildTargets = { kind: 'named', ids: ['111'] };
-
-// the run asks before scanning more guilds than this
-const LARGE_BOT_GUILDS = 200;
 
 const ON_DISCORD = {
     [Routes.applicationCommands(APP_ID)]: [slash('ban')],
@@ -156,27 +153,5 @@ describe('RemoveRunner.run', () => {
 
         expect(puts.map(({ route }) => route)).toEqual([Routes.applicationCommands(APP_ID)]);
         expect(gets).not.toContain(Routes.applicationGuildCommands(APP_ID, '111'));
-    });
-
-    it('asks before scanning more guilds than one page holds, and stops when declined', async () => {
-        const { confirm, gets } = await run({
-            guilds: { kind: 'all' },
-            answer: false,
-            onDiscord: botGuilds(LARGE_BOT_GUILDS + 1)
-        });
-
-        expect(confirm).toHaveBeenCalledWith(expect.stringContaining(`${LARGE_BOT_GUILDS + 1} guilds`));
-        expect(gets).not.toContain(Routes.applicationCommands(APP_ID));
-    });
-
-    it('scans without asking at or below one page of guilds', async () => {
-        const { confirm, gets } = await run({
-            guilds: { kind: 'all' },
-            apply: false,
-            onDiscord: botGuilds(LARGE_BOT_GUILDS)
-        });
-
-        expect(confirm).not.toHaveBeenCalled();
-        expect(gets).toContain(Routes.applicationCommands(APP_ID));
     });
 });

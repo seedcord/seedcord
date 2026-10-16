@@ -36,10 +36,6 @@ export class RemovePresenter extends StepsPresenter<RemoveStep> {
         );
     }
 
-    public largeBotGuard(guildCount: number): Promise<boolean> {
-        return this.ask(`The bot is in ${guildCount} guilds. Scan all of them? This makes ${guildCount} requests.`);
-    }
-
     public confirmDelete(count: number): Promise<boolean> {
         return this.ask(`Delete ${plural(count, 'command')}? This cannot be undone.`);
     }

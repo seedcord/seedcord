@@ -21,9 +21,6 @@ interface RemovePlan {
     apply: boolean;
 }
 
-// one page of the bot's guild list
-const LARGE_BOT_GUILDS = 200;
-
 export class RemoveRunner {
     private opened?: Promise<DiscordSession>;
 
@@ -45,13 +42,6 @@ export class RemoveRunner {
             const session = await this.session();
             return { session, resolved: await session.guildsOf(guilds) };
         });
-
-        if (
-            guilds.kind === 'all' &&
-            resolved.length > LARGE_BOT_GUILDS &&
-            !(await presenter.largeBotGuard(resolved.length))
-        )
-            return;
 
         const { scan, selected } = await presenter.step(
             'scan',

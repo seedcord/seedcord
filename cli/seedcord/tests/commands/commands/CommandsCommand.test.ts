@@ -19,8 +19,7 @@ import type { Prompter } from '#core/prompts/Prompter';
 import type { ProjectOpener } from '#tests/commands/commands/fakeBot';
 import type { Mock } from 'vitest';
 
-// the run asks before scanning more guilds than this
-const LARGE_BOT_GUILDS = 200;
+const GUILD_PAGE = 200;
 
 const ON_DISCORD = {
     [Routes.applicationCommands(APP_ID)]: [slash('ban')],
@@ -225,12 +224,12 @@ describe('seedcord commands clean and purge, off a terminal', () => {
         expect(deletes).toEqual([Routes.applicationGuildCommand(APP_ID, '111', 'ban-id')]);
     });
 
-    it('scans every guild with --all-guilds, however many the bot is in', async () => {
+    it('scans every guild with --all-guilds, past the first page', async () => {
         using _output = captureOutput();
 
-        const { gets } = await run(['clean', '--all-guilds'], { onDiscord: botGuilds(LARGE_BOT_GUILDS + 1) });
+        const { gets } = await run(['clean', '--all-guilds'], { onDiscord: botGuilds(GUILD_PAGE + 1) });
 
-        expect(gets).toContain(Routes.applicationGuildCommands(APP_ID, `g${LARGE_BOT_GUILDS}`));
+        expect(gets).toContain(Routes.applicationGuildCommands(APP_ID, `g${GUILD_PAGE}`));
     });
 
     it('prints CliCleanNoGuilds with no stack when clean gets no guilds', async () => {
