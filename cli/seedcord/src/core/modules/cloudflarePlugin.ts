@@ -11,8 +11,18 @@ export const WORKER_ENVIRONMENT = 'worker';
 
 const CLOUDFLARE_PLUGIN = '@cloudflare/vite-plugin';
 
-// import() finds the optional peer through seedcord's own folder in node_modules
-export const importCloudflare: ImportCloudflare = () => import('@cloudflare/vite-plugin');
+let pluginLoads = 0;
+
+// the plugin keeps the last dev session's worker exports in module state. workerd fails to start
+// from them after bot.ts removes an export, so each session loads its own copy of the module
+// need to remember to remove this when cloudflare/workers-sdk#16324 is fixed
+export function importCloudflare(): Promise<typeof CloudflareVitePlugin> {
+    pluginLoads += 1;
+    // resolve finds the optional peer through seedcord's own folder in node_modules
+    const url = `${import.meta.resolve('@cloudflare/vite-plugin')}?load=${pluginLoads}`;
+    // justified: the URL resolves to the module the type import reads
+    return import(url) as Promise<typeof CloudflareVitePlugin>;
+}
 
 // the importer's path at the end of node's message can hold the name too
 function isPackageMissing(error: unknown, name: string): boolean {
@@ -40,9 +50,13 @@ export async function loadCloudflare(viteRoot: string, importPlugin: ImportCloud
     } catch (error: unknown) {
         if (isPackageMissing(error, CLOUDFLARE_PLUGIN)) {
             const why = `${paint.bold('seedcord dev')} and ${paint.bold('seedcord build')} run an edge bot through them.`;
-            throw new SeedcordError(SeedcordErrorCode.CliDependencyMissing, [[CLOUDFLARE_PLUGIN, 'cf'], viteRoot, why], {
-                cause: error
-            });
+            throw new SeedcordError(
+                SeedcordErrorCode.CliDependencyMissing,
+                [[CLOUDFLARE_PLUGIN, 'cf'], viteRoot, why],
+                {
+                    cause: error
+                }
+            );
         }
         throw new SeedcordError(SeedcordErrorCode.CoreImportFailed, [CLOUDFLARE_PLUGIN, asError(error).message], {
             cause: error
