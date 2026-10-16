@@ -4,39 +4,23 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { LOAD_STEPS, loadCodeScopes } from '#commands/commands/codeScopes';
 import { readDiscordState } from '#commands/commands/discordState';
-import { cliLogger } from '#core/cliLogger';
-import { ProjectLoader } from '#core/config/ProjectLoader';
-import { restFromEnv } from '#core/discord/restFromEnv';
-import { openModuleLoader } from '#core/modules/openModuleLoader';
+import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
 
 import { diffScope } from './deployPlan';
 
 import type { ScopesInCode } from '#commands/commands/codeScopes';
 import type { DiscordState } from '#commands/commands/discordState';
+import type { RunnerDeps } from '#commands/commands/runnerDeps';
 import type { DeployPresenter, ScopePlan } from './DeployPresenter';
-import type { REST } from '@discordjs/rest';
-import type { ILogger } from '@seedcord/types';
 
 export const DEPLOY_STEPS = [...LOAD_STEPS, 'read discord', 'deploy'] as const;
 export type DeployStep = (typeof DEPLOY_STEPS)[number];
 
-type DiscordRest = Pick<REST, 'get' | 'put' | 'on' | 'off'>;
-
-interface DeployRunnerDeps {
-    readonly projectLoader: Pick<ProjectLoader, 'open'>;
-    readonly openDiscord: () => DiscordRest;
-    readonly logger: ILogger;
-}
-
 export class DeployRunner {
-    constructor(private readonly deps: DeployRunnerDeps) {}
+    constructor(private readonly deps: RunnerDeps) {}
 
     public static create(): DeployRunner {
-        return new DeployRunner({
-            projectLoader: new ProjectLoader(openModuleLoader),
-            openDiscord: restFromEnv,
-            logger: cliLogger('Commands')
-        });
+        return new DeployRunner(defaultRunnerDeps());
     }
 
     public async run(presenter: DeployPresenter, projectDir = process.cwd()): Promise<void> {
@@ -46,8 +30,11 @@ export class DeployRunner {
         if (!scopes) throw new SeedcordError(SeedcordErrorCode.CliDeployNoCommandsFolder, [instance]);
 
         const guildIds = [...scopes.guilds.keys()];
-        const discord = await presenter.step('read discord', () => readDiscordState(openDiscord(), guildIds));
-        const { rest, applicationId } = discord;
+        const { rest, discord } = await presenter.step('read discord', async () => {
+            const rest = openDiscord();
+            return { rest, discord: await readDiscordState(rest, guildIds) };
+        });
+        const { applicationId } = discord;
         presenter.detail('app', applicationId);
 
         const plans = plansFor(scopes, discord);
@@ -55,20 +42,18 @@ export class DeployRunner {
         if (!(await presenter.approve(plans))) return;
 
         await presenter.deploy(() => putCommands(scopes, { rest, applicationId, logger }), scopes);
-        if (target === 'edge') presenter.edgeHint();
+        // a command that already exists keeps its id through a bulk overwrite based on the docs
+        if (target === 'edge' && plans.some(({ diff }) => diff.added.length > 0)) presenter.edgeHint();
     }
 }
 
-function plansFor(scopes: ScopesInCode, { deployed, guildNames }: DiscordState<DiscordRest>): ScopePlan[] {
-    const global: ScopePlan = {
-        title: 'global',
-        inCode: scopes.global,
-        diff: diffScope(scopes.global, deployed.global.values())
-    };
+function plansFor(scopes: ScopesInCode, { deployed, guildNames }: DiscordState): ScopePlan[] {
     const guilds = scopes.guilds.entries().map(([guildId, inCode]) => ({
         title: guildNames.get(guildId) ?? guildId,
         inCode,
         diff: diffScope(inCode, deployed.guilds.get(guildId)?.values() ?? [])
     }));
+    if (!scopes.global) return [...guilds];
+    const global = { title: 'global', inCode: scopes.global, diff: diffScope(scopes.global, deployed.global.values()) };
     return [global, ...guilds];
 }

@@ -33,11 +33,11 @@ const MS_PER_SECOND = 1000;
 
 // discord replaces every command in a scope with the PUT body
 export async function putCommands(scopes: CommandScopes, options: PutCommandsOptions): Promise<DeployResult> {
-    const { applicationId, onDeployed } = options;
+    const { onDeployed } = options;
     const result: DeployResult = { global: new Map(), guilds: new Map() };
 
     if (scopes.global) {
-        result.global = indexById(await put(Routes.applicationCommands(applicationId), scopes.global, options));
+        result.global = indexById(await putGlobal(scopes.global, options));
         onDeployed?.({ scope: 'global' }, scopes.global);
     }
 
@@ -49,6 +49,18 @@ export async function putCommands(scopes: CommandScopes, options: PutCommandsOpt
     return result;
 }
 
+async function putGlobal(
+    commands: readonly CommandBody[],
+    options: PutCommandsOptions
+): Promise<APIApplicationCommand[]> {
+    try {
+        return await put(Routes.applicationCommands(options.applicationId), commands, options);
+    } catch (error) {
+        if (options.signal?.aborted) throw error;
+        throw new SeedcordError(SeedcordErrorCode.CoreCommandGlobalDeployFailed, { cause: error });
+    }
+}
+
 async function putGuild(
     guildId: string,
     commands: readonly CommandBody[],
@@ -57,6 +69,7 @@ async function putGuild(
     try {
         return await put(Routes.applicationGuildCommands(options.applicationId, guildId), commands, options);
     } catch (error) {
+        if (options.signal?.aborted) throw error;
         throw new SeedcordError(SeedcordErrorCode.CoreCommandGuildDeployFailed, [guildId], { cause: error });
     }
 }

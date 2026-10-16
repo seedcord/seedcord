@@ -8,14 +8,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CommandsCommand } from '#commands/commands/CommandsCommand';
 import { DeployRunner } from '#commands/commands/deploy/DeployRunner';
-import { LARGE_BOT_THRESHOLD } from '#commands/commands/remove/executeRemove';
+import { ListRunner } from '#commands/commands/list/ListRunner';
 import { RemoveRunner } from '#commands/commands/remove/RemoveRunner';
+import { GUILD_PAGE } from '#core/discord/readBotGuilds';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { APP_ID, botGuilds, fakeDiscord, fakeProject, slash } from '#tests/commands/commands/fakeBot';
 import { KEY, PromptTerminal } from '#tests/core/prompts/PromptTerminal';
 import { silentLogger } from '#tests/silentLogger';
 
 import type { Prompter } from '#core/prompts/Prompter';
+import type { ProjectOpener } from '#tests/commands/commands/fakeBot';
+import type { Mock } from 'vitest';
 
 const ON_DISCORD = {
     [Routes.applicationCommands(APP_ID)]: [slash('ban')],
@@ -59,28 +62,45 @@ async function runCommands(deps: ConstructorParameters<typeof CommandsCommand>[0
 interface RunOptions {
     prompter?: Prompter;
     onDiscord?: Record<string, unknown>;
+    project?: ProjectOpener;
 }
 
 async function run(
     args: string[],
-    { prompter, onDiscord = {} }: RunOptions = {}
+    { prompter, onDiscord = {}, project }: RunOptions = {}
 ): Promise<ReturnType<typeof fakeDiscord>> {
     const discord = fakeDiscord({ ...ON_DISCORD, ...onDiscord });
-    const removeRunner = new RemoveRunner(() => discord.rest);
-    await runCommands(prompter ? { removeRunner, prompter } : { removeRunner }, ...args);
+    const deps = {
+        projectLoader: project ?? (await fakeProject()),
+        openDiscord: () => discord.rest,
+        logger: silentLogger
+    };
+    const runners = {
+        deployRunner: new DeployRunner(deps),
+        listRunner: new ListRunner(deps),
+        removeRunner: new RemoveRunner(deps)
+    };
+    await runCommands(prompter ? { ...runners, prompter } : runners, ...args);
     return discord;
 }
 
-async function runDeploy(...args: string[]): Promise<{ puts: unknown[] }> {
-    const { rest, puts } = fakeDiscord();
-    const deployRunner = new DeployRunner({
-        projectLoader: await fakeProject(),
-        openDiscord: () => rest,
-        logger: silentLogger
-    });
-    await runCommands({ deployRunner }, 'deploy', ...args);
-    return { puts };
+interface RefusingPrompter {
+    prompter: Prompter;
+    asked: Mock;
 }
+
+// every method rejects. a prompt nobody answers would hang the test
+function refusingPrompter(): RefusingPrompter {
+    const asked = vi.fn((): Promise<never> => Promise.reject(new Error('the command asked a question')));
+    // justified: the commands call only these three methods on a prompter
+    const prompter = { select: asked, confirm: asked, pickMany: asked } as unknown as Prompter;
+    return { prompter, asked };
+}
+
+const EMPTY_DISCORD = {
+    [Routes.applicationCommands(APP_ID)]: [],
+    [Routes.applicationGuildCommands(APP_ID, '111')]: []
+};
 
 describe('seedcord commands, on a terminal', () => {
     const original = { stdin: process.stdin.isTTY, stdout: process.stdout.isTTY, ci: process.env.CI };
@@ -98,7 +118,6 @@ describe('seedcord commands, on a terminal', () => {
         if (original.ci !== undefined) process.env.CI = original.ci;
     });
 
-    // the wizard would wait on a keypress and time the test out
     it.each([
         ['clean', '--guilds', '111'],
         ['clean', '--all-guilds'],
@@ -107,10 +126,13 @@ describe('seedcord commands, on a terminal', () => {
         ['purge', '--guilds', '111'],
         ['purge', '--all-guilds'],
         ['purge', '--yes']
-    ])('runs %s %s straight through and opens no wizard', async (...args) => {
+    ])('runs %s %s without asking anything', async (...args) => {
         using _output = captureOutput();
+        const { prompter, asked } = refusingPrompter();
 
-        await run(args);
+        await run(args, { prompter });
+
+        expect(asked).not.toHaveBeenCalled();
     });
 
     it('opens the clean wizard from the menu', async () => {
@@ -176,7 +198,7 @@ describe('seedcord commands clean and purge, off a terminal', () => {
         const check = stripVTControlCharacters(paint.check);
         expect(output.stdout()).toMatch(new RegExp(String.raw`${check} connect +\S+\n`, 'u'));
         expect(output.stdout()).toMatch(new RegExp(String.raw`${check} scan +\S+ +1 duplicate in 1 guild\n`, 'u'));
-        expect(output.stdout()).toContain('  111  1 duplicate\n      /ban\n');
+        expect(output.stdout()).toContain('  Alpha  1 duplicate\n      /ban\n');
         expect(output.stdout()).toContain('--yes');
         expect(deletes).toEqual([]);
     });
@@ -192,9 +214,9 @@ describe('seedcord commands clean and purge, off a terminal', () => {
     it('scans every guild with --all-guilds, however many the bot is in', async () => {
         using _output = captureOutput();
 
-        const { gets } = await run(['clean', '--all-guilds'], { onDiscord: botGuilds(LARGE_BOT_THRESHOLD + 1) });
+        const { gets } = await run(['clean', '--all-guilds'], { onDiscord: botGuilds(GUILD_PAGE + 1) });
 
-        expect(gets).toContain(Routes.applicationGuildCommands(APP_ID, `g${LARGE_BOT_THRESHOLD}`));
+        expect(gets).toContain(Routes.applicationGuildCommands(APP_ID, `g${GUILD_PAGE}`));
     });
 
     it('prints CliCleanNoGuilds with no stack when clean gets no guilds', async () => {
@@ -212,7 +234,7 @@ describe('seedcord commands clean and purge, off a terminal', () => {
 
         const { puts } = await run(['purge', '--guilds', '111']);
 
-        expect(output.stdout()).toContain('  111  2 commands\n      /ban /setup\n');
+        expect(output.stdout()).toContain('  Alpha  2 commands\n      /ban /setup\n');
         expect(puts).toEqual([]);
     });
 
@@ -259,22 +281,43 @@ describe('seedcord commands deploy, off a terminal', () => {
         process.stdin.isTTY = stdinIsTTY;
     });
 
-    it('prints the plan, then throws CliDeployNeedsYes and deploys nothing', async () => {
+    it('throws CliDeployNeedsYes before it reads anything', async () => {
         using output = captureOutput();
 
-        const { puts } = await runDeploy();
+        const { gets, puts } = await run(['deploy'], { onDiscord: EMPTY_DISCORD });
 
-        expect(output.stdout()).toContain('  global  1 command\n    + /ping');
         expect(output.stderr()).toContain(`[${SeedcordErrorCode.CliDeployNeedsYes}]`);
         expect(process.exitCode).toBe(1);
+        expect(gets).toEqual([]);
         expect(puts).toEqual([]);
     });
 
-    it('deploys with --yes', async () => {
+    it('deploys every scope in the code with --yes', async () => {
         using _output = captureOutput();
 
-        const { puts } = await runDeploy('--yes');
+        const { puts } = await run(['deploy', '--yes'], { onDiscord: EMPTY_DISCORD });
 
-        expect(puts).toHaveLength(2);
+        expect(puts).toEqual([
+            { route: Routes.applicationCommands(APP_ID), names: ['ping'] },
+            { route: Routes.applicationGuildCommands(APP_ID, '111'), names: ['config'] }
+        ]);
+    });
+});
+
+describe('seedcord commands list --json', () => {
+    it('prints only the JSON on stdout and moves what the bot printed to stderr', async () => {
+        using output = captureOutput();
+        const inner = await fakeProject();
+        const project: ProjectOpener = {
+            open: (dir) => {
+                process.stdout.write('loading the bot\n');
+                return inner.open(dir);
+            }
+        };
+
+        await run(['list', '--json'], { project });
+
+        expect(JSON.parse(output.stdout())).toMatchObject({ global: [{ name: 'ban' }] });
+        expect(output.stderr()).toContain('loading the bot');
     });
 });

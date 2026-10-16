@@ -16,6 +16,7 @@ import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Terminal } from '#core/output/terminal';
 import type { REST } from '@discordjs/rest';
+import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 export const APP_ID = 'app-1';
 
@@ -40,6 +41,7 @@ type CommandClass = new () => BuilderComponent<'command'>;
 interface BotOptions {
     commands?: CommandClass[];
     commandsPath?: string | null;
+    guilds?: string[];
     edge?: boolean;
 }
 
@@ -52,13 +54,22 @@ interface FakeDiscord {
     deletes: string[];
 }
 
-export function slash(name: string): { id: string; name: string; type: ApplicationCommandType } {
-    return { id: `${name}-id`, name, type: ApplicationCommandType.ChatInput };
+export function slash(name: string): APIApplicationCommand {
+    return {
+        id: `${name}-id`,
+        application_id: APP_ID,
+        name,
+        description: name,
+        type: ApplicationCommandType.ChatInput,
+        default_member_permissions: null,
+        version: '1'
+    };
 }
 
 export async function fakeProject({
     commands = [Ping, Config],
     commandsPath = './commands',
+    guilds = [],
     edge = false
 }: BotOptions = {}): Promise<ProjectOpener> {
     const dir = await mkdtempDisposable(join(tmpdir(), 'bot-'));
@@ -74,7 +85,7 @@ export async function fakeProject({
 
     const instance = resolve(root, 'bot.ts');
     byPath.set(instance, {
-        default: { [SeedcordBrand]: true, config: { bot: { commands: { path: commandsPath, guilds: [] } } } }
+        default: { [SeedcordBrand]: true, config: { bot: { commands: { path: commandsPath, guilds } } } }
     });
 
     // justified: the commands runners read only these paths off the config
@@ -144,7 +155,8 @@ export function botGuilds(count: number): Record<string, unknown> {
         const after = guilds.findIndex(({ id }) => id === query.get('after'));
         return guilds.slice(after + 1, after + 1 + Number(query.get('limit')));
     };
-    return { [Routes.userGuilds()]: page };
+    const commandRoutes = guilds.map(({ id }): [string, unknown] => [Routes.applicationGuildCommands(APP_ID, id), []]);
+    return { [Routes.userGuilds()]: page, ...Object.fromEntries(commandRoutes) };
 }
 
 // a piped terminal, read back without colors and with plain spaces

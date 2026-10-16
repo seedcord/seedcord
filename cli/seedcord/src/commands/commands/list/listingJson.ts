@@ -2,8 +2,8 @@ import type { Listing } from './ListRunner';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 interface ListingJson {
-    global: APIApplicationCommand[];
-    guilds: Record<string, APIApplicationCommand[]>;
+    global: readonly APIApplicationCommand[];
+    guilds: Record<string, readonly APIApplicationCommand[]>;
 }
 
 export function listingJson({ global, guilds }: Listing): ListingJson {

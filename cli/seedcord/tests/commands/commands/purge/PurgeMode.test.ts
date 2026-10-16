@@ -2,14 +2,14 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { PurgeMode } from '#commands/commands/purge/PurgeMode';
-import { GLOBAL_SCOPE } from '#commands/commands/remove/scope';
+import { GLOBAL_SCOPE } from '#commands/commands/scope';
 import { slash } from '#tests/commands/commands/fakeBot';
 
-import type { Scan } from '#commands/commands/remove/RemoveRunner';
-import type { Scope } from '#commands/commands/remove/scope';
+import type { Scan } from '#commands/commands/DiscordSession';
+import type { GuildScope } from '#commands/commands/scope';
 
-const alpha: Scope = { kind: 'guild', id: 'g1', name: 'Alpha' };
-const beta: Scope = { kind: 'guild', id: 'g2', name: 'Beta' };
+const alpha: GuildScope = { kind: 'guild', id: 'g1', name: 'Alpha' };
+const beta: GuildScope = { kind: 'guild', id: 'g2', name: 'Beta' };
 
 const scan: Scan = {
     global: [slash('ping')],
@@ -40,11 +40,5 @@ describe('PurgeMode', () => {
             { scope: GLOBAL_SCOPE, commands: [slash('ping')] },
             { scope: alpha, commands: [slash('ban'), slash('setup')] }
         ]);
-    });
-
-    it('says when nothing is left to delete', () => {
-        expect(new PurgeMode(true).nothingToRemove({ global: [], guilds: [], skipped: [] }).outro).toBe(
-            'No commands to delete.'
-        );
     });
 });

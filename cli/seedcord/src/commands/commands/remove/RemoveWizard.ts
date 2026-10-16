@@ -1,17 +1,17 @@
-import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
+import { paint } from '@seedcord/errors';
 
 import { plural } from '#core/format';
+import { unlessCancelled } from '#core/prompts/unlessCancelled';
 
-import { executeRemove } from './executeRemove';
 import { RemovePresenter } from './RemovePresenter';
 import { REMOVE_STEPS } from './removeSteps';
 
+import type { GuildTargets } from '#commands/commands/scope';
 import type { GuildSummary } from '#core/discord/readBotGuilds';
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Prompter } from '#core/prompts/Prompter';
 import type { RemoveMode } from './RemoveMode';
 import type { RemoveRunner } from './RemoveRunner';
-import type { GuildTargets } from './scope';
 
 export const WIZARD_STEPS = ['guilds', ...REMOVE_STEPS] as const;
 type WizardStep = (typeof WIZARD_STEPS)[number];
@@ -22,7 +22,7 @@ export interface WizardPlan {
 }
 
 // undefined stops the wizard after it printed why
-export type WizardQuestions = (wizard: RemoveWizard) => Promise<WizardPlan | undefined>;
+export type WizardQuestions = (wizard: RemoveWizard, prompter: Prompter) => Promise<WizardPlan | undefined>;
 
 function guildsNote(guilds: GuildSummary[]): string {
     const [only] = guilds;
@@ -33,32 +33,19 @@ function guildsNote(guilds: GuildSummary[]): string {
 export class RemoveWizard {
     constructor(
         private readonly runner: RemoveRunner,
-        private readonly token: string,
         private readonly printer: StepPrinter<WizardStep>,
-        public readonly prompter: Prompter,
+        private readonly prompter: Prompter,
         private readonly verbose: boolean
     ) {}
 
     public async run(questions: WizardQuestions): Promise<void> {
-        try {
-            const plan = await questions(this);
+        await unlessCancelled(this.printer, async () => {
+            const plan = await questions(this, this.prompter);
             if (!plan) return;
 
-            await executeRemove({
-                ops: this.runner,
-                ...plan,
-                apply: true,
-                token: this.token,
-                presenter: new RemovePresenter(
-                    this.printer,
-                    (message) => this.prompter.confirm({ message }),
-                    this.verbose
-                )
-            });
-        } catch (error: unknown) {
-            if (!isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.CliCancelled)) throw error;
-            this.printer.line(paint.mute('cancelled'));
-        }
+            const confirm = (message: string): Promise<boolean> => this.prompter.confirm({ message });
+            await this.runner.run(new RemovePresenter(this.printer, confirm, this.verbose), { ...plan, apply: true });
+        });
     }
 
     public async askGuilds(message: string): Promise<GuildTargets | undefined> {
@@ -71,9 +58,14 @@ export class RemoveWizard {
         });
         if (target === 'all') return { kind: 'all' };
 
-        const guilds = await this.printer.step('guilds', () => this.runner.listBotGuilds(this.token), guildsNote);
+        const guilds = await this.printer.step('guilds', () => this.runner.listBotGuilds(), guildsNote);
         const picked = await this.pickGuilds(guilds);
-        return picked && { kind: 'named', guilds: picked };
+        if (!picked) return undefined;
+        return {
+            kind: 'named',
+            ids: picked.map(({ id }) => id),
+            knownNames: new Map(guilds.map((g) => [g.id, g.name]))
+        };
     }
 
     private async pickGuilds(guilds: GuildSummary[]): Promise<GuildSummary[] | undefined> {

@@ -1,47 +1,41 @@
+import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { describe, expect, it } from 'vitest';
 
-import { scopesInCode } from '#commands/commands/codeScopes';
+import { loadCodeScopes } from '#commands/commands/codeScopes';
+import { quietSteps } from '#core/output/quietSteps';
+import { fakeProject } from '#tests/commands/commands/fakeBot';
+import { silentLogger } from '#tests/silentLogger';
 
-import type { FoundCommand } from '#core/modules/CommandScanner';
-import type { CommandMeta } from '@seedcord/core/internal';
-import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
+import type { ProjectOpener } from '#tests/commands/commands/fakeBot';
 
-function slash(name: string): RESTPostAPIApplicationCommandsJSONBody {
-    return { name, description: name };
+class Help extends BuilderComponent<'command'> {
+    public constructor() {
+        super('command');
+        this.instance.setName('help').setDescription('Lists the commands');
+    }
+}
+RegisterCommand()(Help);
+
+function scopesOf(projectLoader: ProjectOpener): ReturnType<typeof loadCodeScopes> {
+    return loadCodeScopes(quietSteps, { projectLoader, logger: silentLogger }, '');
 }
 
-function found(json: RESTPostAPIApplicationCommandsJSONBody, meta: CommandMeta): FoundCommand {
-    return { sourceFile: `/bot/commands/${json.name}.ts`, className: json.name, json, meta };
+function names(commands: { name: string }[] | undefined): string[] | undefined {
+    return commands?.map(({ name }) => name);
 }
 
-describe('scopesInCode', () => {
-    it('puts each command in the scope its decorator picks', () => {
-        const scopes = scopesInCode(
-            [
-                found(slash('ping'), { scope: 'global' }),
-                found(slash('config'), { scope: 'guild', guilds: ['111', '222'] })
-            ],
-            []
-        );
+describe('loadCodeScopes', () => {
+    it('puts each command in the scope its decorator picks', async () => {
+        const { scopes } = await scopesOf(await fakeProject());
 
-        expect(scopes.global.map((c) => c.name)).toEqual(['ping']);
-        expect([...scopes.guilds].map(([id, commands]) => [id, commands.map((c) => c.name)])).toEqual([
-            ['111', ['config']],
-            ['222', ['config']]
-        ]);
+        expect(names(scopes?.global)).toEqual(['ping']);
+        expect(names(scopes?.guilds.get('111'))).toEqual(['config']);
     });
 
-    it('sends config-scoped commands to the configured guilds', () => {
-        const scopes = scopesInCode(
-            [found(slash('setup'), { scope: 'guild', guilds: ['config'] }), found(slash('help'), { scope: 'config' })],
-            ['111']
-        );
+    it('sends a command with no scope to the configured guilds and leaves global unset', async () => {
+        const { scopes } = await scopesOf(await fakeProject({ commands: [Help], guilds: ['111', '222'] }));
 
-        expect(scopes.global).toEqual([]);
-        expect(scopes.guilds.get('111')?.map((c) => c.name)).toEqual(['setup', 'help']);
-    });
-
-    it('keeps an empty global scope so the deploy clears it', () => {
-        expect(scopesInCode([], []).global).toEqual([]);
+        expect(scopes?.global).toBeUndefined();
+        expect([...(scopes?.guilds.keys() ?? [])]).toEqual(['111', '222']);
     });
 });

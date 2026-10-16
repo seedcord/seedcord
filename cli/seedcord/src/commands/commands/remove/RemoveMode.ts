@@ -1,8 +1,5 @@
-import { plural } from '#core/format';
-
-import type { RemoveOps, RemoveResult, Scan } from './RemoveRunner';
-import type { GuildTargets, ScopedCommands } from './scope';
-import type { Snowflake } from 'discord-api-types/v10';
+import type { DiscordSession, RemoveResult, Scan } from '#commands/commands/DiscordSession';
+import type { GuildTargets, ScopedCommands } from '#commands/commands/scope';
 
 export interface EmptyMessage {
     info: string[];
@@ -10,7 +7,8 @@ export interface EmptyMessage {
 }
 
 export abstract class RemoveMode {
-    public abstract readonly noun: 'duplicate' | 'command';
+    // the word the output uses for one selected command
+    public abstract readonly itemName: string;
     public abstract readonly includesGlobal: boolean;
 
     // throws when the targets give the scan nothing to read
@@ -18,20 +16,10 @@ export abstract class RemoveMode {
 
     public abstract select(scan: Scan): ScopedCommands[];
 
-    public abstract remove(
-        ops: RemoveOps,
-        token: string,
-        appId: Snowflake,
-        selected: readonly ScopedCommands[]
-    ): Promise<RemoveResult>;
+    public abstract remove(session: DiscordSession, selected: readonly ScopedCommands[]): Promise<RemoveResult>;
 
     public nothingToRemove(scan: Scan): EmptyMessage {
-        if (this.readNothing(scan)) {
-            return {
-                info: [],
-                outro: `Could not read any of the ${plural(scan.skipped.length, 'guild')}, nothing was scanned.`
-            };
-        }
+        if (this.readNothing(scan)) return { info: [], outro: 'Nothing was scanned.' };
         return this.nothingSelected(scan);
     }
 

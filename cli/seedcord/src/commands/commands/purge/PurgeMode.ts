@@ -2,16 +2,16 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { RemoveMode } from '#commands/commands/remove/RemoveMode';
-import { GLOBAL_SCOPE } from '#commands/commands/remove/scope';
+import { GLOBAL_SCOPE } from '#commands/commands/scope';
 
+import type { DiscordSession, RemoveResult, Scan } from '#commands/commands/DiscordSession';
 import type { EmptyMessage } from '#commands/commands/remove/RemoveMode';
-import type { RemoveOps, RemoveResult, Scan } from '#commands/commands/remove/RemoveRunner';
 import type { RemoveWizard, WizardPlan } from '#commands/commands/remove/RemoveWizard';
-import type { GuildTargets, ScopedCommands } from '#commands/commands/remove/scope';
-import type { Snowflake } from 'discord-api-types/v10';
+import type { GuildTargets, ScopedCommands } from '#commands/commands/scope';
+import type { Prompter } from '#core/prompts/Prompter';
 
 export class PurgeMode extends RemoveMode {
-    public readonly noun = 'command';
+    public readonly itemName = 'command';
 
     constructor(public readonly includesGlobal: boolean) {
         super();
@@ -23,20 +23,14 @@ export class PurgeMode extends RemoveMode {
     }
 
     public select(scan: Scan): ScopedCommands[] {
-        const scopes = this.includesGlobal
+        const scopes: ScopedCommands[] = this.includesGlobal
             ? [{ scope: GLOBAL_SCOPE, commands: scan.global }, ...scan.guilds]
             : scan.guilds;
         return scopes.filter(({ commands }) => commands.length > 0);
     }
 
-    // one PUT empties a whole scope
-    public remove(
-        ops: RemoveOps,
-        token: string,
-        appId: Snowflake,
-        selected: readonly ScopedCommands[]
-    ): Promise<RemoveResult> {
-        return ops.clearScopes(token, appId, selected);
+    public remove(session: DiscordSession, selected: readonly ScopedCommands[]): Promise<RemoveResult> {
+        return session.clearScopes(selected);
     }
 
     protected nothingSelected(): EmptyMessage {
@@ -46,8 +40,8 @@ export class PurgeMode extends RemoveMode {
 
 type PurgeWhere = 'guilds' | 'global' | 'both';
 
-export async function askPurge(wizard: RemoveWizard): Promise<WizardPlan | undefined> {
-    const where = await wizard.prompter.select<PurgeWhere>({
+export async function askPurge(wizard: RemoveWizard, prompter: Prompter): Promise<WizardPlan | undefined> {
+    const where = await prompter.select<PurgeWhere>({
         message: 'Delete every command where?',
         choices: [
             { value: 'guilds', label: 'In guilds' },

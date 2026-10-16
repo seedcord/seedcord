@@ -16,13 +16,13 @@ import type { ILogger } from '@seedcord/types';
 export const LOAD_STEPS = ['read config', 'load bot', 'scan'] as const;
 type LoadStep = (typeof LOAD_STEPS)[number];
 
-// an empty global list makes a deploy clear the global scope
+// global is unset when no command in code targets it
 export interface ScopesInCode extends CommandScopes {
-    readonly global: CommandBody[];
+    readonly global?: CommandBody[];
     readonly guilds: Map<string, CommandBody[]>;
 }
 
-export interface CodeScopes {
+interface CodeScopes {
     target: ResolvedTarget['kind'];
     instance: string;
     // undefined when the bot sets commands.path to null
@@ -34,21 +34,22 @@ interface LoadDeps {
     readonly logger: ILogger;
 }
 
-export function scopesInCode(found: readonly FoundCommand[], configuredGuilds: readonly string[]): ScopesInCode {
-    const scopes: ScopesInCode = { global: [], guilds: new Map() };
+function scopesInCode(found: readonly FoundCommand[], configuredGuilds: readonly string[]): ScopesInCode {
+    const global: CommandBody[] = [];
+    const guilds = new Map<string, CommandBody[]>();
     for (const { json, meta, className } of found) {
         const target = resolveDeployTarget(meta, configuredGuilds, className);
         if (target.scope === 'global') {
-            scopes.global.push(json);
+            global.push(json);
             continue;
         }
         for (const guildId of target.guilds) {
-            const inGuild = scopes.guilds.get(guildId) ?? [];
+            const inGuild = guilds.get(guildId) ?? [];
             inGuild.push(json);
-            scopes.guilds.set(guildId, inGuild);
+            guilds.set(guildId, inGuild);
         }
     }
-    return scopes;
+    return global.length > 0 ? { global, guilds } : { guilds };
 }
 
 export async function loadCodeScopes(

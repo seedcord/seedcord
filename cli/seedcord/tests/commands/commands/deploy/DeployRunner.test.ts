@@ -3,7 +3,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Routes } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { PROCEED } from '#commands/commands/confirm';
 import { DeployPresenter } from '#commands/commands/deploy/DeployPresenter';
@@ -83,13 +83,22 @@ describe('DeployRunner', () => {
         expect(output).toContain('    - /legacy\n      /ping\n');
     });
 
-    it('clears the global scope when the code has no global commands', async () => {
+    it('leaves the global commands alone when the code has none', async () => {
         const { rest, puts } = fakeDiscord({ [Routes.applicationCommands(APP_ID)]: [slash('ban')] });
 
         const output = await deploy(await fakeProject({ commands: [Config] }), rest);
 
-        expect(puts[0]).toEqual({ route: Routes.applicationCommands(APP_ID), names: [] });
-        expect(output).toContain('  global  0 commands\n    - /ban\n');
+        expect(puts.map(({ route }) => route)).toEqual([Routes.applicationGuildCommands(APP_ID, '111')]);
+        expect(output).not.toContain('/ban');
+    });
+
+    it('asks about the scopes the preview shows', async () => {
+        const { rest } = fakeDiscord();
+        const confirm = vi.fn((_message: string) => Promise.resolve(true));
+
+        await deploy(await fakeProject({ commands: [Config] }), rest, { confirm });
+
+        expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Deploy to 1 scope?'));
     });
 
     it('deploys nothing and says so when the deploy is declined', async () => {
@@ -149,5 +158,16 @@ describe('DeployRunner', () => {
         const output = await deploy(await fakeProject({ edge: true }), rest);
 
         expect(output).toContain('Run seedcord build and deploy the worker again');
+    });
+
+    it('skips the rebuild hint when the deploy adds no command', async () => {
+        const { rest } = fakeDiscord({
+            [Routes.applicationCommands(APP_ID)]: [slash('ping')],
+            [Routes.applicationGuildCommands(APP_ID, '111')]: [slash('config')]
+        });
+
+        const output = await deploy(await fakeProject({ edge: true }), rest);
+
+        expect(output).not.toContain('seedcord build');
     });
 });

@@ -1,14 +1,15 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
 import { CleanMode } from '#commands/commands/clean/CleanMode';
 import { slash } from '#tests/commands/commands/fakeBot';
 
-import type { Scan } from '#commands/commands/remove/RemoveRunner';
-import type { Scope } from '#commands/commands/remove/scope';
+import type { Scan } from '#commands/commands/DiscordSession';
+import type { GuildScope } from '#commands/commands/scope';
 
-const alpha: Scope = { kind: 'guild', id: 'g1', name: 'Alpha' };
-const beta: Scope = { kind: 'guild', id: 'g2', name: 'Beta' };
+const alpha: GuildScope = { kind: 'guild', id: 'g1', name: 'Alpha' };
+const beta: GuildScope = { kind: 'guild', id: 'g2', name: 'Beta' };
 
 function scan(over: Partial<Scan> = {}): Scan {
     return { global: [slash('ban')], guilds: [], skipped: [], ...over };
@@ -36,12 +37,20 @@ describe('CleanMode', () => {
         expect(selected).toEqual([{ scope: alpha, commands: [slash('ban')] }]);
     });
 
+    it('leaves a guild context menu alone when only a global slash command shares its name', () => {
+        const userMenu = { ...slash('ban'), id: 'menu-id', type: ApplicationCommandType.User };
+
+        const selected = clean.select(scan({ guilds: [{ scope: alpha, commands: [userMenu] }] }));
+
+        expect(selected).toEqual([]);
+    });
+
     it('says when every guild it asked for failed to read', () => {
         const message = clean.nothingToRemove(
             scan({ skipped: [{ guild: { id: 'g1', name: 'Alpha' }, reason: '403' }] })
         );
 
-        expect(message.outro).toBe('Could not read any of the 1 guild, nothing was scanned.');
+        expect(message.outro).toBe('Nothing was scanned.');
     });
 
     it('says the scanned guilds hold no commands', () => {
@@ -50,15 +59,12 @@ describe('CleanMode', () => {
         expect(message.outro).toBe('Scanned 1 guild with no guild commands deployed. Nothing to clean.');
     });
 
-    it('points at purge when the app has no global commands', () => {
+    it('says the app has no global commands when it has none', () => {
         const message = clean.nothingToRemove(
             scan({ global: [], guilds: [{ scope: alpha, commands: [slash('setup')] }] })
         );
 
-        expect(message.info).toEqual([
-            'This app has no global commands, so nothing can duplicate one.',
-            'Run seedcord commands purge to delete every command instead.'
-        ]);
+        expect(message.info[0]).toBe('This app has no global commands, so nothing can duplicate one.');
     });
 
     it('counts what it scanned when nothing duplicates a global command', () => {

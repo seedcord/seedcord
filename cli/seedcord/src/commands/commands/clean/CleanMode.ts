@@ -1,21 +1,21 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import { commandKey } from '#commands/commands/commandKey';
 import { RemoveMode } from '#commands/commands/remove/RemoveMode';
-import { commandCount } from '#commands/commands/remove/scope';
+import { commandCount } from '#commands/commands/scope';
 import { plural } from '#core/format';
 
+import type { DiscordSession, RemoveResult, Scan } from '#commands/commands/DiscordSession';
 import type { EmptyMessage } from '#commands/commands/remove/RemoveMode';
-import type { RemoveOps, RemoveResult, Scan } from '#commands/commands/remove/RemoveRunner';
 import type { RemoveWizard, WizardPlan } from '#commands/commands/remove/RemoveWizard';
-import type { GuildTargets, ScopedCommands } from '#commands/commands/remove/scope';
-import type { Snowflake } from 'discord-api-types/v10';
+import type { GuildTargets, ScopedCommands } from '#commands/commands/scope';
 
-const PURGE_HINT = 'Run seedcord commands purge to delete every command instead.';
+const PURGE_HINT = `Run ${paint.bold('seedcord commands purge')} to delete every command instead.`;
 
-// a guild command with a global command's name shows up twice in discord's picker
+// a guild command with a global command's name and type shows up twice in discord's picker
 export class CleanMode extends RemoveMode {
-    public readonly noun = 'duplicate';
+    public readonly itemName = 'duplicate';
     public readonly includesGlobal = false;
 
     public checkTargets(guilds: GuildTargets): void {
@@ -23,19 +23,14 @@ export class CleanMode extends RemoveMode {
     }
 
     public select(scan: Scan): ScopedCommands[] {
-        const globalNames = new Set(scan.global.map((command) => command.name));
+        const globalKeys = new Set(scan.global.map(commandKey));
         return scan.guilds
-            .map(({ scope, commands }) => ({ scope, commands: commands.filter((c) => globalNames.has(c.name)) }))
+            .map(({ scope, commands }) => ({ scope, commands: commands.filter((c) => globalKeys.has(commandKey(c))) }))
             .filter(({ commands }) => commands.length > 0);
     }
 
-    public remove(
-        ops: RemoveOps,
-        token: string,
-        appId: Snowflake,
-        selected: readonly ScopedCommands[]
-    ): Promise<RemoveResult> {
-        return ops.deleteCommands(token, appId, selected);
+    public remove(session: DiscordSession, selected: readonly ScopedCommands[]): Promise<RemoveResult> {
+        return session.deleteCommands(selected);
     }
 
     protected nothingSelected(scan: Scan): EmptyMessage {
@@ -60,6 +55,6 @@ export class CleanMode extends RemoveMode {
 }
 
 export async function askClean(wizard: RemoveWizard): Promise<WizardPlan | undefined> {
-    const guilds = await wizard.askGuilds('Remove guild commands that duplicate a global command. Which guilds?');
+    const guilds = await wizard.askGuilds('Delete guild commands that duplicate a global command. Which guilds?');
     return guilds && { mode: new CleanMode(), guilds };
 }

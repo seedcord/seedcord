@@ -1,24 +1,27 @@
 import { labelRows, printSections } from '#commands/commands/commandRows';
+import { skippedLine } from '#commands/commands/DiscordSession';
+import { StepsPresenter } from '#commands/commands/StepsPresenter';
 import { plural } from '#core/format';
 
 import type { CommandRow, CommandSection } from '#commands/commands/commandRows';
-import type { StepPrinter } from '#core/output/StepPrinter';
-import type { Listing } from './ListRunner';
+import type { PresenterOutput } from '#commands/commands/StepsPresenter';
+import type { Listing, ListStep } from './ListRunner';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
-type ListOutput = Pick<StepPrinter<string>, 'line' | 'wrapped'>;
-
-export class ListPresenter {
+export class ListPresenter extends StepsPresenter<ListStep> {
     constructor(
-        private readonly output: ListOutput,
+        output: PresenterOutput<ListStep>,
         private readonly verbose: boolean
-    ) {}
+    ) {
+        super(output);
+    }
 
-    public list({ global, guilds }: Listing): void {
+    public list({ global, guilds, skipped }: Listing): void {
         printSections(this.output, [
             this.section('global', global),
             ...guilds.map((guild) => this.section(guild.name, guild.commands))
         ]);
+        if (skipped.length > 0) this.output.warn(skippedLine(skipped));
     }
 
     private section(title: string, commands: readonly APIApplicationCommand[]): CommandSection {

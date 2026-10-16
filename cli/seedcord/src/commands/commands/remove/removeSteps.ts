@@ -1,41 +1,32 @@
 import { paint } from '@seedcord/errors';
 
+import { commandCount } from '#commands/commands/scope';
 import { plural } from '#core/format';
 
-import { commandCount } from './scope';
-
+import type { RemoveResult, Scan } from '#commands/commands/DiscordSession';
+import type { ScopedCommands } from '#commands/commands/scope';
 import type { RemoveMode } from './RemoveMode';
-import type { Connected, RemoveResult, Scan } from './RemoveRunner';
 
 export const REMOVE_STEPS = ['connect', 'scan', 'delete'] as const;
 
-export type RemoveStepLabel = (typeof REMOVE_STEPS)[number];
-
-export interface RemoveStep<Result> {
-    readonly label: RemoveStepLabel;
-    readonly doneNote: (result: Result) => string;
-}
+export type RemoveStep = (typeof REMOVE_STEPS)[number];
 
 function scannedWhere(includesGlobal: boolean, guildCount: number): string {
     const guilds = paint.iris(plural(guildCount, 'guild'));
-    if (!includesGlobal) return guilds;
-    return guildCount === 0 ? 'global' : `global and ${guilds}`;
+    if (!includesGlobal) return `in ${guilds}`;
+    return guildCount === 0 ? 'globally' : `globally and in ${guilds}`;
 }
 
-export function connectStep(): RemoveStep<Connected> {
-    return { label: 'connect', doneNote: () => '' };
+export interface Selection {
+    scan: Scan;
+    selected: ScopedCommands[];
 }
 
-export function scanStep(mode: RemoveMode): RemoveStep<Scan> {
-    return {
-        label: 'scan',
-        doneNote: (scan) => {
-            const found = paint.iris(plural(commandCount(mode.select(scan)), mode.noun));
-            return `${found} in ${scannedWhere(mode.includesGlobal, scan.guilds.length)}`;
-        }
-    };
+export function scanNote(mode: RemoveMode, { scan, selected }: Selection): string {
+    const found = paint.iris(plural(commandCount(selected), mode.itemName));
+    return `${found} ${scannedWhere(mode.includesGlobal, scan.guilds.length)}`;
 }
 
-export function deleteStep(): RemoveStep<RemoveResult> {
-    return { label: 'delete', doneNote: (result) => `${paint.iris(String(result.deleted))} deleted` };
+export function deletedNote(result: RemoveResult): string {
+    return `${paint.iris(String(result.deleted))} deleted`;
 }

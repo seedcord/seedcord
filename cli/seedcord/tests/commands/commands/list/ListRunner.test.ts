@@ -25,7 +25,7 @@ function runnerFor(project: ProjectOpener, rest: REST): ListRunner {
 async function list(project: ProjectOpener, rest: REST, { verbose = false, scope }: ListOptions = {}): Promise<string> {
     const stdout = pipedTerminal();
     const printer = new StepPrinter({ command: 'commands', labels: LIST_STEPS, verbose, stdout, stderr: stdout });
-    new ListPresenter(printer, verbose).list(await runnerFor(project, rest).read(printer, scope));
+    await runnerFor(project, rest).run(new ListPresenter(printer, verbose), scope);
     return stdout.text();
 }
 
@@ -60,7 +60,7 @@ describe('ListRunner', () => {
         expect(output).not.toContain('Alpha');
     });
 
-    it('adds the guilds passed with --guild', async () => {
+    it('adds the guilds passed with --guilds', async () => {
         const { rest } = fakeDiscord({
             ...ON_DISCORD,
             [Routes.guild('222')]: { id: '222', name: 'Beta' },
@@ -70,6 +70,19 @@ describe('ListRunner', () => {
         const output = await list(await fakeProject(), rest, { scope: { guildIds: ['222'], allGuilds: false } });
 
         expect(output).toContain('  Alpha  1 command\n      /config\n\n  Beta  1 command\n      /setup\n');
+    });
+
+    it('lists the guilds it can read and warns about one it cannot', async () => {
+        const { rest } = fakeDiscord({
+            ...ON_DISCORD,
+            [Routes.guild('222')]: { id: '222', name: 'Beta' },
+            [Routes.applicationGuildCommands(APP_ID, '222')]: new Error('Missing Access')
+        });
+
+        const output = await list(await fakeProject(), rest, { scope: { guildIds: ['222'], allGuilds: false } });
+
+        expect(output).toContain('  Alpha  1 command\n      /config\n');
+        expect(output).toContain('Could not read 1 guild (Beta).');
     });
 
     it('lists every guild the bot is in with --all-guilds and reads no guild names one by one', async () => {

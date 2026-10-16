@@ -1,28 +1,28 @@
 import { Option } from '@commander-js/extra-typings';
-import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
-import { Envapter } from 'envapt';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { BaseCommand } from '#core/BaseCommand';
 import { isInteractive } from '#core/interactive';
-import { quietSteps } from '#core/output/quietSteps';
+import { stderrSteps } from '#core/output/stderrSteps';
 import { Prompter } from '#core/prompts/Prompter';
+import { unlessCancelled } from '#core/prompts/unlessCancelled';
 import { isVerbose } from '#core/verbose';
 
 import { askClean, CleanMode } from './clean/CleanMode';
 import { PROCEED } from './confirm';
 import { DeployPresenter } from './deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from './deploy/DeployRunner';
+import { skippedLine } from './DiscordSession';
 import { listingJson } from './list/listingJson';
 import { ListPresenter } from './list/ListPresenter';
 import { LIST_STEPS, ListRunner } from './list/ListRunner';
 import { askPurge, PurgeMode } from './purge/PurgeMode';
-import { executeRemove } from './remove/executeRemove';
 import { RemovePresenter } from './remove/RemovePresenter';
 import { RemoveRunner } from './remove/RemoveRunner';
 import { REMOVE_STEPS } from './remove/removeSteps';
 import { RemoveWizard, WIZARD_STEPS } from './remove/RemoveWizard';
-import { guildTargetsOf } from './remove/scope';
+import { guildTargetsOf } from './scope';
 
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Confirm } from './confirm';
@@ -30,38 +30,25 @@ import type { DeployStep } from './deploy/DeployRunner';
 import type { ListScope, ListStep } from './list/ListRunner';
 import type { RemoveMode } from './remove/RemoveMode';
 import type { WizardQuestions } from './remove/RemoveWizard';
-import type { GuildFlags } from './remove/scope';
+import type { GuildFlags } from './scope';
 import type { Command, CommandUnknownOpts } from '@commander-js/extra-typings';
 
 interface CommandsDeps {
-    removeRunner: RemoveRunner;
     deployRunner: DeployRunner;
+    listRunner: ListRunner;
+    removeRunner: RemoveRunner;
     prompter: Prompter;
 }
 
-interface RemoveFlags extends GuildFlags {
-    readonly global?: boolean | undefined;
-    readonly yes?: boolean | undefined;
-}
-
-interface RemoveCommand {
-    readonly flags: RemoveFlags;
-    readonly mode: RemoveMode;
-    readonly questions: WizardQuestions;
-}
+// the flags remove reads off clean's and purge's commander options
+type RemoveFlags = GuildFlags & { readonly yes?: boolean | undefined };
 
 type WizardStep = (typeof WIZARD_STEPS)[number];
 type MenuAction = 'deploy' | 'list' | 'clean' | 'purge';
 
 const MENU_STEPS = [...DEPLOY_STEPS, ...WIZARD_STEPS] as const;
 
-const NEEDS_YES: Confirm = () => Promise.reject(new SeedcordError(SeedcordErrorCode.CliDeployNeedsYes));
-
-function readToken(): string {
-    return validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
-}
-
-function hasFlags(flags: RemoveFlags): boolean {
+function hasFlags(flags: object): boolean {
     return Object.values(flags).some((value) => value !== undefined);
 }
 
@@ -70,18 +57,21 @@ function allGuildsOption(description: string): Option<'--all-guilds'> {
 }
 
 export class CommandsCommand extends BaseCommand {
-    private readonly removeRunner: RemoveRunner;
     private readonly deployRunner: DeployRunner;
+    private readonly listRunner: ListRunner;
+    private readonly removeRunner: RemoveRunner;
     private readonly prompter: Prompter;
 
     constructor({
-        removeRunner = RemoveRunner.create(),
         deployRunner = DeployRunner.create(),
+        listRunner = ListRunner.create(),
+        removeRunner = RemoveRunner.create(),
         prompter = new Prompter()
     }: Partial<CommandsDeps> = {}) {
         super('commands', 'Manage the commands registered on Discord');
-        this.removeRunner = removeRunner;
         this.deployRunner = deployRunner;
+        this.listRunner = listRunner;
+        this.removeRunner = removeRunner;
         this.prompter = prompter;
     }
 
@@ -96,7 +86,7 @@ export class CommandsCommand extends BaseCommand {
             .description('Deploy the commands in your code to Discord')
             .option('--yes', 'Deploy without asking first')
             .action((options, command) =>
-                this.runSteps(command, DEPLOY_STEPS, (printer) => this.deploy(printer, command, options.yes))
+                this.runSteps(command, DEPLOY_STEPS, (printer) => this.deploy(printer, command, options.yes ?? false))
             );
 
         commands
@@ -107,11 +97,7 @@ export class CommandsCommand extends BaseCommand {
             .option('--json', 'Print the listing as JSON for scripts')
             .action((options, command) => {
                 const scope = { guildIds: options.guilds ?? [], allGuilds: options.allGuilds ?? false };
-                if (options.json) {
-                    return this.runJson(command, async () =>
-                        listingJson(await ListRunner.create().read(quietSteps, scope))
-                    );
-                }
+                if (options.json) return this.runJson(command, () => this.listJson(scope));
                 return this.runSteps(command, LIST_STEPS, (printer) => this.list(printer, command, scope));
             });
 
@@ -121,7 +107,7 @@ export class CommandsCommand extends BaseCommand {
             .option('--guilds <ids...>', 'Guild ids to scan')
             .addOption(allGuildsOption('Scan every guild the bot is in'))
             .option('--yes', 'Delete the duplicates without asking')
-            .action((flags, command) => this.remove(command, { flags, mode: new CleanMode(), questions: askClean }));
+            .action((flags, command) => this.remove(command, flags, new CleanMode(), askClean));
 
         commands
             .command('purge')
@@ -130,9 +116,7 @@ export class CommandsCommand extends BaseCommand {
             .option('--guilds <ids...>', 'Delete every command in these guilds')
             .addOption(allGuildsOption('Delete every command in every guild the bot is in'))
             .option('--yes', 'Delete the commands without asking')
-            .action((flags, command) =>
-                this.remove(command, { flags, mode: new PurgeMode(flags.global ?? false), questions: askPurge })
-            );
+            .action((flags, command) => this.remove(command, flags, new PurgeMode(flags.global ?? false), askPurge));
     }
 
     private async openMenu(command: CommandUnknownOpts): Promise<void> {
@@ -143,65 +127,63 @@ export class CommandsCommand extends BaseCommand {
 
         await this.runSteps(command, MENU_STEPS, async (printer) => {
             const actions: Record<MenuAction, () => Promise<void>> = {
-                deploy: () => this.deploy(printer, command),
+                deploy: () => this.deploy(printer, command, false),
                 list: () => this.list(printer, command),
                 clean: () => this.wizard(printer, command).run(askClean),
                 purge: () => this.wizard(printer, command).run(askPurge)
             };
-            const action = await this.pickAction(printer);
+            const action = await unlessCancelled(printer, () => this.pickAction());
             if (action) await actions[action]();
         });
     }
 
-    private async pickAction(printer: StepPrinter<string>): Promise<MenuAction | undefined> {
-        try {
-            return await this.prompter.select<MenuAction>({
-                message: 'What do you want to do?',
-                choices: [
-                    { value: 'deploy', label: 'Deploy the commands in your code' },
-                    { value: 'list', label: 'List the commands Discord has' },
-                    { value: 'clean', label: 'Remove guild commands that duplicate a global command' },
-                    { value: 'purge', label: 'Delete every command globally or in guilds' }
-                ]
-            });
-        } catch (error: unknown) {
-            if (!isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.CliCancelled)) throw error;
-            printer.line(paint.mute('cancelled'));
-            return undefined;
-        }
+    private pickAction(): Promise<MenuAction> {
+        return this.prompter.select<MenuAction>({
+            message: 'What do you want to do?',
+            choices: [
+                { value: 'deploy', label: 'Deploy the commands in your code' },
+                { value: 'list', label: 'List the commands Discord has' },
+                { value: 'clean', label: 'Delete guild commands that duplicate a global command' },
+                { value: 'purge', label: 'Delete every command globally or in guilds' }
+            ]
+        });
     }
 
-    private deploy(printer: StepPrinter<DeployStep>, command: CommandUnknownOpts, yes = false): Promise<void> {
-        return this.deployRunner.run(new DeployPresenter(printer, this.deployConfirm(yes), isVerbose(command)));
+    private async deploy(printer: StepPrinter<DeployStep>, command: CommandUnknownOpts, yes: boolean): Promise<void> {
+        if (!yes && !isInteractive()) throw new SeedcordError(SeedcordErrorCode.CliDeployNeedsYes);
+        const confirm: Confirm = yes ? PROCEED : (message) => this.prompter.confirm({ message });
+        await this.deployRunner.run(new DeployPresenter(printer, confirm, isVerbose(command)));
     }
 
-    private deployConfirm(yes: boolean): Confirm {
-        if (yes) return PROCEED;
-        return isInteractive() ? (message) => this.prompter.confirm({ message }) : NEEDS_YES;
+    private list(printer: StepPrinter<ListStep>, command: CommandUnknownOpts, scope?: ListScope): Promise<void> {
+        return this.listRunner.run(new ListPresenter(printer, isVerbose(command)), scope);
     }
 
-    private async list(printer: StepPrinter<ListStep>, command: CommandUnknownOpts, scope?: ListScope): Promise<void> {
-        const listing = await ListRunner.create().read(printer, scope);
-        new ListPresenter(printer, isVerbose(command)).list(listing);
+    private async listJson(scope: ListScope): Promise<ReturnType<typeof listingJson>> {
+        const listing = await this.listRunner.read(stderrSteps(), scope);
+        if (listing.skipped.length > 0) process.stderr.write(`${skippedLine(listing.skipped)}\n`);
+        return listingJson(listing);
     }
 
     private wizard(printer: StepPrinter<WizardStep>, command: CommandUnknownOpts): RemoveWizard {
-        return new RemoveWizard(this.removeRunner, readToken(), printer, this.prompter, isVerbose(command));
+        return new RemoveWizard(this.removeRunner, printer, this.prompter, isVerbose(command));
     }
 
-    private remove(command: CommandUnknownOpts, { flags, mode, questions }: RemoveCommand): Promise<void> {
+    private remove(
+        command: CommandUnknownOpts,
+        flags: RemoveFlags,
+        mode: RemoveMode,
+        questions: WizardQuestions
+    ): Promise<void> {
         if (!hasFlags(flags) && isInteractive()) {
             return this.runSteps(command, WIZARD_STEPS, (printer) => this.wizard(printer, command).run(questions));
         }
 
         return this.runSteps(command, REMOVE_STEPS, (printer) =>
-            executeRemove({
-                ops: this.removeRunner,
+            this.removeRunner.run(new RemovePresenter(printer, PROCEED, isVerbose(command)), {
                 mode,
                 guilds: guildTargetsOf(flags),
-                apply: flags.yes ?? false,
-                token: readToken(),
-                presenter: new RemovePresenter(printer, PROCEED, isVerbose(command))
+                apply: flags.yes ?? false
             })
         );
     }

@@ -1,145 +1,74 @@
-import { REST } from '@discordjs/rest';
-import { asError } from '@seedcord/utils/internal';
-import { Routes } from 'discord-api-types/v10';
+import { DiscordSession } from '#commands/commands/DiscordSession';
+import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
+import { commandCount } from '#commands/commands/scope';
+import { GUILD_PAGE, readBotGuilds } from '#core/discord/readBotGuilds';
 
-import { applicationOf } from '#core/discord/applicationOf';
-import { readBotGuilds } from '#core/discord/readBotGuilds';
+import { deletedNote, scanNote } from './removeSteps';
 
+import type { RunnerDeps } from '#commands/commands/runnerDeps';
+import type { GuildTargets } from '#commands/commands/scope';
 import type { GuildSummary } from '#core/discord/readBotGuilds';
-import type { DeployedCommand, GuildTargets, Scope, ScopedCommands } from './scope';
-import type { RESTGetAPIApplicationCommandsResult, Snowflake } from 'discord-api-types/v10';
+import type { RemoveMode } from './RemoveMode';
+import type { RemovePresenter } from './RemovePresenter';
+import type { Selection } from './removeSteps';
 
-type RestClient = Pick<REST, 'get' | 'delete' | 'put'>;
-
-export interface Connected {
-    appId: Snowflake;
-    guilds: GuildSummary[];
+export interface RemovePlan {
+    mode: RemoveMode;
+    guilds: GuildTargets;
+    // false prints what would go and deletes nothing
+    apply: boolean;
 }
 
-export interface SkippedGuild {
-    guild: GuildSummary;
-    reason: string;
-}
-
-export interface Scan {
-    global: DeployedCommand[];
-    // the guilds that could be read, in the order they were asked for
-    guilds: ScopedCommands[];
-    skipped: SkippedGuild[];
-}
-
-export interface RemoveFailure {
-    scope: Scope;
-    // unset when a whole scope failed to clear
-    command?: DeployedCommand | undefined;
-    reason: string;
-}
-
-export interface RemoveResult {
-    deleted: number;
-    failed: RemoveFailure[];
-}
-
-export interface RemoveOps {
-    connect(targets: GuildTargets, token: string): Promise<Connected>;
-    scan(token: string, appId: Snowflake, guilds: readonly GuildSummary[]): Promise<Scan>;
-    deleteCommands(token: string, appId: Snowflake, selected: readonly ScopedCommands[]): Promise<RemoveResult>;
-    clearScopes(token: string, appId: Snowflake, selected: readonly ScopedCommands[]): Promise<RemoveResult>;
-}
-
-function commandsRoute(appId: Snowflake, scope: Scope): `/${string}` {
-    return scope.kind === 'global'
-        ? Routes.applicationCommands(appId)
-        : Routes.applicationGuildCommands(appId, scope.id);
-}
-
-function commandRoute(appId: Snowflake, scope: Scope, commandId: Snowflake): `/${string}` {
-    return scope.kind === 'global'
-        ? Routes.applicationCommand(appId, commandId)
-        : Routes.applicationGuildCommand(appId, scope.id, commandId);
-}
-
-export class RemoveRunner implements RemoveOps {
-    constructor(private readonly makeRest: (token: string) => RestClient) {}
+export class RemoveRunner {
+    constructor(private readonly deps: Pick<RunnerDeps, 'openDiscord'>) {}
 
     public static create(): RemoveRunner {
-        return new RemoveRunner((token) => new REST({ version: '10' }).setToken(token));
+        return new RemoveRunner(defaultRunnerDeps());
     }
 
-    public async connect(targets: GuildTargets, token: string): Promise<Connected> {
-        const rest = this.makeRest(token);
-        const { id: appId } = await applicationOf(rest);
-        return { appId, guilds: await this.guildsOf(rest, targets) };
+    public listBotGuilds(): Promise<GuildSummary[]> {
+        return readBotGuilds(this.deps.openDiscord());
     }
 
-    public listBotGuilds(token: string): Promise<GuildSummary[]> {
-        return readBotGuilds(this.makeRest(token));
-    }
+    public async run(presenter: RemovePresenter, { mode, guilds, apply }: RemovePlan): Promise<void> {
+        mode.checkTargets(guilds);
 
-    public async scan(token: string, appId: Snowflake, guilds: readonly GuildSummary[]): Promise<Scan> {
-        const rest = this.makeRest(token);
-        const scan: Scan = { global: await this.read(rest, appId, { kind: 'global' }), guilds: [], skipped: [] };
+        const { session, resolved } = await presenter.step('connect', async () => {
+            const session = await DiscordSession.open(this.deps.openDiscord());
+            return { session, resolved: await session.guildsOf(guilds) };
+        });
 
-        for (const guild of guilds) {
-            const scope: Scope = { kind: 'guild', ...guild };
-            try {
-                scan.guilds.push({ scope, commands: await this.read(rest, appId, scope) });
-            } catch (error: unknown) {
-                scan.skipped.push({ guild, reason: asError(error).message });
-            }
+        // past one page of guilds, the scan's request per guild adds up
+        if (guilds.kind === 'all' && resolved.length > GUILD_PAGE && !(await presenter.largeBotGuard(resolved.length)))
+            return;
+
+        const { scan, selected } = await presenter.step(
+            'scan',
+            async (): Promise<Selection> => {
+                const scan = await session.readScopes(resolved);
+                return { scan, selected: mode.select(scan) };
+            },
+            (selection) => scanNote(mode, selection)
+        );
+        presenter.skipped(scan.skipped);
+
+        const count = commandCount(selected);
+        if (count === 0) {
+            presenter.nothing(mode.nothingToRemove(scan));
+            return;
         }
-        return scan;
-    }
 
-    public async deleteCommands(
-        token: string,
-        appId: Snowflake,
-        selected: readonly ScopedCommands[]
-    ): Promise<RemoveResult> {
-        const rest = this.makeRest(token);
-        const result: RemoveResult = { deleted: 0, failed: [] };
-
-        for (const { scope, commands } of selected) {
-            for (const command of commands) {
-                try {
-                    await rest.delete(commandRoute(appId, scope, command.id));
-                    result.deleted++;
-                } catch (error: unknown) {
-                    result.failed.push({ scope, command, reason: asError(error).message });
-                }
-            }
+        presenter.preview(selected, mode.itemName);
+        if (!apply) {
+            presenter.dryRunHint();
+            return;
         }
-        return result;
-    }
+        if (!(await presenter.confirmDelete(count, scan.skipped.length))) return;
 
-    // discord replaces every command in a scope with the PUT body
-    public async clearScopes(
-        token: string,
-        appId: Snowflake,
-        selected: readonly ScopedCommands[]
-    ): Promise<RemoveResult> {
-        const rest = this.makeRest(token);
-        const result: RemoveResult = { deleted: 0, failed: [] };
-
-        for (const { scope, commands } of selected) {
-            try {
-                await rest.put(commandsRoute(appId, scope), { body: [] });
-                result.deleted += commands.length;
-            } catch (error: unknown) {
-                result.failed.push({ scope, reason: asError(error).message });
-            }
-        }
-        return result;
-    }
-
-    private async guildsOf(rest: RestClient, targets: GuildTargets): Promise<GuildSummary[]> {
-        if (targets.kind === 'all') return readBotGuilds(rest);
-        return targets.kind === 'named' ? [...targets.guilds] : [];
-    }
-
-    private async read(rest: RestClient, appId: Snowflake, scope: Scope): Promise<DeployedCommand[]> {
-        // justified: the discord api contract for both command list routes
-        const deployed = (await rest.get(commandsRoute(appId, scope))) as RESTGetAPIApplicationCommandsResult;
-        return deployed.map(({ id, name, type }) => ({ id, name, type }));
+        const result = await presenter.step('delete', () => mode.remove(session, selected), deletedNote);
+        presenter.result(
+            result,
+            selected.some(({ scope }) => scope.kind === 'global')
+        );
     }
 }

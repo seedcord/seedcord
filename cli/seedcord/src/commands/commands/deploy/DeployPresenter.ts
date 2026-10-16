@@ -1,17 +1,17 @@
-import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
+import { paint } from '@seedcord/errors';
 
 import { commandLabel, printSections } from '#commands/commands/commandRows';
+import { StepsPresenter } from '#commands/commands/StepsPresenter';
 import { plural } from '#core/format';
+import { unlessCancelled } from '#core/prompts/unlessCancelled';
 
 import type { ScopesInCode } from '#commands/commands/codeScopes';
 import type { CommandRow, CommandSection } from '#commands/commands/commandRows';
 import type { Confirm } from '#commands/commands/confirm';
-import type { StepPrinter } from '#core/output/StepPrinter';
+import type { PresenterOutput } from '#commands/commands/StepsPresenter';
 import type { ScopeDiff } from './deployPlan';
 import type { DeployStep } from './DeployRunner';
 import type { CommandBody } from '@seedcord/core/internal';
-
-type DeployOutput = Pick<StepPrinter<DeployStep>, 'step' | 'detail' | 'line' | 'wrapped'>;
 
 export interface ScopePlan {
     title: string;
@@ -20,50 +20,36 @@ export interface ScopePlan {
 }
 
 function deployedNote({ global, guilds }: ScopesInCode): string {
-    const globalCount = `${paint.iris(String(global.length))} global`;
-    if (guilds.size === 0) return globalCount;
-    const inGuilds = guilds.values().reduce((sum, commands) => sum + commands.length, 0);
-    return `${globalCount}, ${paint.iris(String(inGuilds))} in ${plural(guilds.size, 'guild')}`;
+    const parts: string[] = [];
+    if (global) parts.push(`${paint.iris(String(global.length))} global`);
+    if (guilds.size > 0) {
+        const inGuilds = guilds.values().reduce((sum, commands) => sum + commands.length, 0);
+        parts.push(`${paint.iris(String(inGuilds))} in ${plural(guilds.size, 'guild')}`);
+    }
+    return parts.join(', ');
 }
 
-export class DeployPresenter {
+export class DeployPresenter extends StepsPresenter<DeployStep> {
     constructor(
-        private readonly output: DeployOutput,
+        output: PresenterOutput<DeployStep>,
         private readonly confirm: Confirm,
         private readonly verbose: boolean
-    ) {}
-
-    public step<Result>(
-        label: DeployStep,
-        task: () => Promise<Result>,
-        note?: (result: Result) => string
-    ): Promise<Result> {
-        return this.output.step(label, task, note);
-    }
-
-    public detail(key: string, value: string): void {
-        this.output.detail(key, value);
+    ) {
+        super(output);
     }
 
     public preview(plans: readonly ScopePlan[]): void {
-        const touched = plans.filter(({ inCode, diff }) => inCode.length > 0 || diff.removed.length > 0);
         printSections(
             this.output,
-            touched.map((plan) => this.section(plan))
+            plans.map((plan) => this.section(plan))
         );
     }
 
     public async approve(plans: readonly ScopePlan[]): Promise<boolean> {
         const message = `Deploy to ${plural(plans.length, 'scope')}? Discord replaces the commands in each.`;
-        try {
-            const yes = await this.confirm(message);
-            if (!yes) this.output.line(paint.mute('Nothing deployed.'));
-            return yes;
-        } catch (error: unknown) {
-            if (!isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.CliCancelled)) throw error;
-            this.output.line(paint.mute('cancelled'));
-            return false;
-        }
+        const yes = await unlessCancelled(this.output, () => this.confirm(message));
+        if (yes === false) this.output.line(paint.mute('Nothing deployed.'));
+        return yes === true;
     }
 
     public deploy(task: () => Promise<unknown>, scopes: ScopesInCode): Promise<unknown> {

@@ -92,6 +92,8 @@ export enum SeedcordErrorCode {
     CoreEdgeUnbuilt = 1223,
     /** A relative folder was read in a process that never received the bot's `root`. */
     CoreDirectoryRootUnknown = 1224,
+    /** Discord refused the global command deploy. */
+    CoreCommandGlobalDeployFailed = 1225,
 
     /** A command decorator attempted to re-register an existing command scope. */
     DecoratorCommandAlreadyRegistered = 1301,

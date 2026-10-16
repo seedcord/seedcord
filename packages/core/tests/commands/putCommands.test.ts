@@ -131,6 +131,18 @@ describe('putCommands', () => {
         expect(Error.isError(caught) ? caught.cause : undefined).toBe(refused);
     });
 
+    it('throws CoreCommandGlobalDeployFailed with discord’s reason as the cause when the global deploy fails', async () => {
+        const refused = new Error('Invalid Form Body');
+
+        const caught: unknown = await deploy(
+            { global: [PING], guilds: new Map() },
+            restWith(vi.fn().mockRejectedValue(refused))
+        ).deploying.catch((error: unknown) => error);
+
+        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.CoreCommandGlobalDeployFailed)).toBe(true);
+        expect(Error.isError(caught) ? caught.cause : undefined).toBe(refused);
+    });
+
     it('logs the wait when discord rate-limits the deploy', async () => {
         const { deploying, warn } = deploy(
             { global: [PING] },

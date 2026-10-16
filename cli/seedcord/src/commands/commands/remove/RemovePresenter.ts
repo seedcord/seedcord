@@ -1,49 +1,44 @@
 import { paint } from '@seedcord/errors';
 
 import { labelRows, printSections } from '#commands/commands/commandRows';
+import { skippedLine } from '#commands/commands/DiscordSession';
+import { scopeTitle } from '#commands/commands/scope';
+import { StepsPresenter } from '#commands/commands/StepsPresenter';
 import { plural } from '#core/format';
-
-import { scopeTitle } from './scope';
 
 import type { CommandSection } from '#commands/commands/commandRows';
 import type { Confirm } from '#commands/commands/confirm';
-import type { StepPrinter } from '#core/output/StepPrinter';
+import type { RemoveFailure, RemoveResult, SkippedGuild } from '#commands/commands/DiscordSession';
+import type { ScopedCommands } from '#commands/commands/scope';
+import type { PresenterOutput } from '#commands/commands/StepsPresenter';
 import type { EmptyMessage } from './RemoveMode';
-import type { RemoveFailure, RemoveResult, SkippedGuild } from './RemoveRunner';
-import type { RemoveStep, RemoveStepLabel } from './removeSteps';
-import type { ScopedCommands } from './scope';
+import type { RemoveStep } from './removeSteps';
 
-type RemoveOutput = Pick<StepPrinter<RemoveStepLabel>, 'step' | 'line' | 'wrapped' | 'warn'>;
-
-function skippedSummary(skipped: readonly SkippedGuild[]): string {
-    const names = skipped.map(({ guild }) => guild.name).join(', ');
-    return `Could not read ${plural(skipped.length, 'guild')} (${names}).`;
+function failureLine(failure: RemoveFailure): string {
+    const where = scopeTitle(failure.scope);
+    return failure.kind === 'command'
+        ? `Could not delete ${failure.command.name} in ${where} (${failure.reason}).`
+        : `Could not delete the commands in ${where} (${failure.reason}).`;
 }
 
-function failureLine({ scope, command, reason }: RemoveFailure): string {
-    const where = scopeTitle(scope);
-    return command
-        ? `Could not delete ${command.name} in ${where} (${reason}).`
-        : `Could not delete the commands in ${where} (${reason}).`;
-}
-
-export class RemovePresenter {
+export class RemovePresenter extends StepsPresenter<RemoveStep> {
     constructor(
-        private readonly output: RemoveOutput,
+        output: PresenterOutput<RemoveStep>,
         private readonly confirm: Confirm,
         private readonly verbose: boolean
-    ) {}
-
-    public step<Result>(step: RemoveStep<Result>, task: () => Promise<Result>): Promise<Result> {
-        return this.output.step(step.label, task, step.doneNote);
+    ) {
+        super(output);
     }
 
-    public preview(selected: readonly ScopedCommands[], skipped: readonly SkippedGuild[], noun: string): void {
+    public skipped(skipped: readonly SkippedGuild[]): void {
+        if (skipped.length > 0) this.output.warn(skippedLine(skipped));
+    }
+
+    public preview(selected: readonly ScopedCommands[], itemName: string): void {
         printSections(
             this.output,
-            selected.map((scoped) => this.section(scoped, noun))
+            selected.map((scoped) => this.section(scoped, itemName))
         );
-        if (skipped.length > 0) this.output.warn(skippedSummary(skipped));
     }
 
     public largeBotGuard(guildCount: number): Promise<boolean> {
@@ -69,13 +64,13 @@ export class RemovePresenter {
     }
 
     public dryRunHint(): void {
-        this.output.line(paint.mute('Dry run. Re-run with --yes to delete these.'));
+        this.output.line(paint.mute(`Dry run. Re-run with ${paint.bold('--yes')} to delete these.`));
     }
 
-    private section({ scope, commands }: ScopedCommands, noun: string): CommandSection {
+    private section({ scope, commands }: ScopedCommands, itemName: string): CommandSection {
         return {
             title: scopeTitle(scope),
-            note: plural(commands.length, noun),
+            note: plural(commands.length, itemName),
             rows: labelRows(commands, this.verbose)
         };
     }

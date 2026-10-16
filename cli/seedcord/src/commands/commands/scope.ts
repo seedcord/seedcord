@@ -1,20 +1,20 @@
 import type { GuildSummary } from '#core/discord/readBotGuilds';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
-export type DeployedCommand = Pick<APIApplicationCommand, 'id' | 'name' | 'type'>;
-
 export type Scope = { readonly kind: 'global' } | ({ readonly kind: 'guild' } & GuildSummary);
+
+export type GuildScope = Extract<Scope, { kind: 'guild' }>;
 
 export const GLOBAL_SCOPE: Scope = { kind: 'global' };
 
-export interface ScopedCommands {
-    readonly scope: Scope;
-    readonly commands: readonly DeployedCommand[];
+export interface ScopedCommands<Where extends Scope = Scope> {
+    readonly scope: Where;
+    readonly commands: readonly APIApplicationCommand[];
 }
 
 export type GuildTargets =
     | { readonly kind: 'none' }
-    | { readonly kind: 'named'; readonly guilds: readonly GuildSummary[] }
+    | { readonly kind: 'named'; readonly ids: readonly string[]; readonly knownNames?: ReadonlyMap<string, string> }
     | { readonly kind: 'all' };
 
 export interface GuildFlags {
@@ -22,11 +22,9 @@ export interface GuildFlags {
     readonly allGuilds?: boolean | undefined;
 }
 
-// a guild passed by id shows its id until something reads its name
 export function guildTargetsOf({ guilds = [], allGuilds = false }: GuildFlags): GuildTargets {
     if (allGuilds) return { kind: 'all' };
-    if (guilds.length === 0) return { kind: 'none' };
-    return { kind: 'named', guilds: guilds.map((id) => ({ id, name: id })) };
+    return guilds.length === 0 ? { kind: 'none' } : { kind: 'named', ids: guilds };
 }
 
 export function scopeTitle(scope: Scope): string {
