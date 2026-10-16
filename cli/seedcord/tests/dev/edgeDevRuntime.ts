@@ -112,7 +112,7 @@ export async function editFile(path: string, edit: (text: string) => string): Pr
     await writeFile(path, edit(await readFile(path, 'utf8')));
 }
 
-// wrangler reads .dev.vars beside the wrangler config into the worker's env
+// the plugin reads .dev.vars beside cloudflare.config.ts into the worker's env
 export async function writeDevVars(projectDir: string, vars: Record<string, string>): Promise<void> {
     const lines = Object.entries(vars).map(([key, value]) => `${key}=${value}\n`);
     await writeFile(join(projectDir, '.dev.vars'), lines.join(''));

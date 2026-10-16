@@ -66,14 +66,10 @@
     "peerDependencies": {
         "@cloudflare/vite-plugin": "catalog:peer",
         "envapt": "catalog:peer",
-        "typescript": "catalog:consumerTypes",
-        "wrangler": "catalog:peer"
+        "typescript": "catalog:consumerTypes"
     },
     "peerDependenciesMeta": {
         "@cloudflare/vite-plugin": {
-            "optional": true
-        },
-        "wrangler": {
             "optional": true
         }
     },
@@ -116,8 +112,7 @@
         "eslint-plugin-react-hooks": "catalog:eslint",
         "ink-testing-library": "^4.0.0",
         "tsx": "catalog:deps",
-        "typescript": "catalog:peer",
-        "wrangler": "catalog:peer"
+        "typescript": "catalog:peer"
     },
     "publishConfig": {
         "access": "public",

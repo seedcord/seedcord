@@ -32,8 +32,8 @@ export async function loadCloudflare(viteRoot: string, importPlugin: ImportCloud
         return cloudflare;
     } catch (error: unknown) {
         if (isPackageMissing(error, CLOUDFLARE_PLUGIN)) {
-            const why = `${paint.bold('seedcord dev')} and ${paint.bold('seedcord build')} run an edge bot through it.`;
-            throw new SeedcordError(SeedcordErrorCode.CliDependencyMissing, [[CLOUDFLARE_PLUGIN], viteRoot, why], {
+            const why = `${paint.bold('seedcord dev')} and ${paint.bold('seedcord build')} run an edge bot through them.`;
+            throw new SeedcordError(SeedcordErrorCode.CliDependencyMissing, [[CLOUDFLARE_PLUGIN, 'cf'], viteRoot, why], {
                 cause: error
             });
         }

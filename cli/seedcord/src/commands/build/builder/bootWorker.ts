@@ -67,7 +67,7 @@ export async function bootWorker(config: InlineConfig): Promise<void> {
         const response = await fetch(localUrl(server)).catch((error: unknown) => {
             throw bootFailed(
                 errors,
-                `The worker closed the connection before it answered (${asError(error).message}). Run ${paint.bold('wrangler dev')} in the project folder to see workerd's output.`,
+                `The worker closed the connection before it answered (${asError(error).message}). Run ${paint.bold('seedcord dev')} to see workerd's output.`,
                 error
             );
         });
