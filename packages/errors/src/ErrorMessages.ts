@@ -295,6 +295,8 @@ const messages = {
         `${paint.bold(name)} in ${paint.path(file)} carries ${paint.bold('@RegisterCommand')}, but its component is not a slash command or a context menu. Extend ${paint.bold("BuilderComponent<'command'>")} or ${paint.bold("BuilderComponent<'context_menu'>")}.`,
     [SeedcordErrorCode.CliCommandsNotDeleted]: () =>
         'Some commands could not be deleted. The warnings above give the reason for each one.',
+    [SeedcordErrorCode.CliEdgeOnBun]: () =>
+        `${paint.bold('seedcord build')} and ${paint.bold('seedcord dev')} load ${paint.bold('cloudflare.config.ts')} through Cloudflare's config loader, which throws on Bun. Run the CLI on Node by leaving out ${paint.bold('--bun')}, as in ${paint.bold('bun run dev')}.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>

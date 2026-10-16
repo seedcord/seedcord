@@ -66,6 +66,18 @@ describe('EdgeDevRuntime lifecycle', () => {
         await expect(nodeCopyApiToken(project.projectDir)).resolves.toBe('from-staging');
     }, 120_000);
 
+    it('throws CliEdgeOnBun on bun', async () => {
+        vi.stubGlobal('Bun', {});
+        onTestFinished(() => {
+            vi.unstubAllGlobals();
+        });
+        await using project = await edgeProject();
+
+        await expect(startedRuntime(project.projectDir)).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliEdgeOnBun
+        });
+    }, 120_000);
+
     it('reports each slow startup step before the endpoint listens', async () => {
         await using project = await edgeProject();
         const { projectDir } = project;

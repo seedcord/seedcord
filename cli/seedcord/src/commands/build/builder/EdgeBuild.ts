@@ -8,7 +8,7 @@ import { createBuilder } from 'vite';
 
 import { cliLogger } from '#core/cliLogger';
 import { restFromEnv } from '#core/discord/restFromEnv';
-import { importCloudflare, loadCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
+import { assertNotBun, importCloudflare, loadCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { CommandScanner } from '#core/modules/CommandScanner';
 import { functionExportsOf } from '#core/modules/workerExports';
 import { viteKey } from '#core/project/ProjectFiles';
@@ -100,6 +100,7 @@ export class EdgeBuild extends TargetBuild {
     }
 
     public check(): void {
+        assertNotBun();
         const { config, configDir } = this.project;
         if (isInside(config.root, configDir)) {
             throw new SeedcordError(SeedcordErrorCode.CliEdgeRootHoldsConfig, [config.configFile, config.root]);

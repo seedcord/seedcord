@@ -10,7 +10,7 @@ import { createServer, createServerModuleRunner } from 'vite';
 
 import { workerEntry, workerEntryConfig } from '#commands/build/builder/workerEntry';
 import { listenHostFor } from '#commands/dev/tunnel/listenHost';
-import { importCloudflare, loadCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
+import { assertNotBun, importCloudflare, loadCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { edgeStandIns } from '#core/modules/edgeStandIns';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
@@ -84,6 +84,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
     }
 
     protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<EdgeStarted> {
+        assertNotBun();
         const { config } = context;
         const viteRoot = dirname(this.target.cloudflareConfig);
         const files = new ProjectFiles(config.root, config.build.outDir, dirname(config.configFile));

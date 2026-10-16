@@ -7,7 +7,7 @@ import { cloudflare } from '@cloudflare/vite-plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { bindings, exports } from 'cf/config';
 import { preview } from 'vite';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 
@@ -22,6 +22,7 @@ import {
 
 import type { BuildResult } from '#commands/build/BuildRunner';
 import type { SignRequest } from './edgeBot';
+import type { REST } from '@discordjs/rest';
 
 const CF = join(import.meta.dirname, '../../../node_modules/cf/bin/cf');
 const PING = '{"type":1}';
@@ -142,6 +143,27 @@ describe('seedcord build on an edge bot with files it never loads', () => {
             code: SeedcordErrorCode.CliEdgeCommandsNotDeployed,
             message: expect.stringContaining('Hello.ts') as string
         });
+    }, 120_000);
+
+    it('throws CliEdgeOnBun on bun before it reads anything from discord', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        vi.stubGlobal('Bun', {});
+        onTestFinished(() => {
+            vi.unstubAllGlobals();
+        });
+        const reads: string[] = [];
+        const discord = fakeDiscord();
+        const recording: Pick<REST, 'get'> = {
+            get: (route, options) => {
+                reads.push(route);
+                return discord.get(route, options);
+            }
+        };
+
+        await expect(edgeBuildRunner(recording).run(projectDir)).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliEdgeOnBun
+        });
+        expect(reads).toEqual([]);
     }, 120_000);
 
     it('throws CliConfigFieldUnused for a cloudflare.config.ts that sets entrypoint', async () => {

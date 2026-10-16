@@ -280,6 +280,8 @@ export enum SeedcordErrorCode {
     CliCommandNotACommand = 3134,
     /** `seedcord commands clean` or `purge` could not delete some of the commands it picked. */
     CliCommandsNotDeleted = 3135,
+    /** `seedcord build` or `seedcord dev` ran on Bun for an edge bot. */
+    CliEdgeOnBun = 3136,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

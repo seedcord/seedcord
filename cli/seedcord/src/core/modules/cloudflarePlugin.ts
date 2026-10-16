@@ -20,6 +20,12 @@ function isPackageMissing(error: unknown, name: string): boolean {
     return notFound && error.message.startsWith(`Cannot find package '${name}'`);
 }
 
+// @cloudflare/config loads cloudflare.config.ts through node's module.registerHooks and throws on bun.
+// delete this once bun ships registerHooks and cloudflare stops throwing on it
+export function assertNotBun(): void {
+    if ('Bun' in globalThis) throw new SeedcordError(SeedcordErrorCode.CliEdgeOnBun);
+}
+
 export async function loadCloudflare(viteRoot: string, importPlugin: ImportCloudflare): Promise<CloudflarePlugin> {
     try {
         const { cloudflare } = await importPlugin();
