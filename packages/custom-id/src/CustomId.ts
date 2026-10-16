@@ -126,11 +126,12 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
         name: Name,
         field: CustomIdField<Decoded>
     ): CustomId<Prefix, Shape & Record<Name, CustomIdField<Decoded>>> {
-        // integer-like keys get reordered by js, which would scramble the field order.
         if (/^(?:0|[1-9]\d*)$/.test(name))
             throw new SeedcordTypeError(SeedcordErrorCode.CustomIdReservedFieldName, [name]);
         // a repeat name collapses the decoded type to never and overwrites the earlier field at runtime.
-        if (name in this.shape) throw new SeedcordTypeError(SeedcordErrorCode.CustomIdDuplicateFieldName, [name]);
+        if (name in this.shape) {
+            throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [`customId ${this.prefix} field`, name]);
+        }
         // justified: the spread plus a computed key cannot be proven to the exact intersection
         const shape = { ...this.shape, [name]: field } as Shape & Record<Name, CustomIdField<Decoded>>;
         return new CustomId(this.prefix, shape);
@@ -297,7 +298,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     encode(values: DecodedParams<Shape>): string {
         const wire = `${this.routeKey}:${encodeBody(this.shape, values)}`;
         if (wire.length > MAX_WIRE_LENGTH) {
-            throw new SeedcordRangeError(SeedcordErrorCode.CustomIdWireTooLong, [wire.length]);
+            throw new SeedcordRangeError(SeedcordErrorCode.CustomIdWireTooLong, [this.prefix, wire.length]);
         }
         return wire;
     }

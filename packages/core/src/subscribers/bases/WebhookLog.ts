@@ -108,7 +108,12 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
         if (!Envapter.has(envKey)) return null;
         const raw = Envapter.getRequired(envKey, Converters.String).trim();
         if (raw === '') return null;
-        if (!isDiscordWebhookUrl(raw)) throw new SeedcordError(SeedcordErrorCode.ConfigWebhookUrlInvalid, [envKey]);
+        if (!isDiscordWebhookUrl(raw)) {
+            throw new SeedcordError(SeedcordErrorCode.ConfigInvalidEnv, [
+                envKey,
+                "the webhook URL from the channel's Integrations settings"
+            ]);
+        }
         return raw;
     }
 }

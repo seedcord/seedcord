@@ -133,6 +133,6 @@ describe('the event middleware registry', () => {
                 (caught: unknown) => caught
             );
 
-        expect(error).toMatchObject({ code: SeedcordErrorCode.DuplicateMiddleware });
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
     });
 });

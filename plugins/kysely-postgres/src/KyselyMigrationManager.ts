@@ -61,7 +61,7 @@ export class KyselyMigrationManager {
             case 'down': {
                 const stepCount = steps ?? 1;
                 if (!Number.isSafeInteger(stepCount) || stepCount < 0) {
-                    throw new SeedcordRangeError(SeedcordErrorCode.PluginKyselyInvalidStepCount);
+                    throw new SeedcordRangeError(SeedcordErrorCode.PluginKyselyInvalidStepCount, [stepCount]);
                 }
 
                 if (stepCount === 0) {
@@ -237,7 +237,12 @@ export class KyselyMigrationManager {
         for (const { name, file } of files) {
             const first = firstFileFor.get(name);
             if (first !== undefined) {
-                throw new SeedcordTypeError(SeedcordErrorCode.PluginKyselyDuplicateMigrationName, [name, first, file]);
+                throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
+                    'migration',
+                    name,
+                    [paint.path(first), paint.path(file)],
+                    "A migration's name is its file name without the folder or extension."
+                ]);
             }
             firstFileFor.set(name, file);
         }

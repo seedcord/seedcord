@@ -92,7 +92,7 @@ describe('KyselyMigrationManager', () => {
         await testEnv.createFile('migrations/guilds/001-init.ts', NAMED_EXPORTS);
 
         await expect(listedNames({ dir: './migrations' })).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginKyselyDuplicateMigrationName })
+            expect.objectContaining({ code: SeedcordErrorCode.CoreDuplicateName })
         );
     });
 

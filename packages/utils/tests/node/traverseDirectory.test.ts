@@ -54,7 +54,7 @@ describe('traverseDirectory', () => {
     it('reports the file whose module failed to import, keeping the original as the cause', async () => {
         const error = await rejection(traverseDirectory(path.join(FIXTURES, 'broken')));
 
-        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryImportFailed });
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreImportFailed });
         expect(Error.isError(error) ? error.message : '').toMatch(/Broken\.ts/);
         expect(Error.isError(error) ? error.cause : undefined).toBeInstanceOf(Error);
     });
@@ -64,7 +64,7 @@ describe('traverseDirectory', () => {
 
         const error = await rejection(traverseDirectory(missing));
 
-        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathUnreadable });
         expect(Error.isError(error) ? error.message : '').toMatch(/not-a-real-dir/);
         expect(Error.isError(error) ? error.cause : undefined).toBeInstanceOf(Error);
     });
@@ -115,7 +115,7 @@ describe('readTextFiles', () => {
     it('reports the directory it could not read, keeping the original as the cause', async () => {
         const error = await rejection(readTextFiles(path.join(FIXTURES, 'not-a-real-dir')));
 
-        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathUnreadable });
         expect(Error.isError(error) ? error.cause : undefined).toBeInstanceOf(Error);
     });
 });

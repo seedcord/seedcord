@@ -75,7 +75,7 @@ export function RegisterInteractionMiddleware<
                 String(options.priority)
             ]);
         if (options.kinds?.length === 0)
-            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorEmptyMiddlewareFilter, ['kinds']);
+            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorEmptyMiddlewareFilter, [ctor.name, 'kinds']);
 
         const metadata: InteractionMiddlewareMetadata = {
             priority,

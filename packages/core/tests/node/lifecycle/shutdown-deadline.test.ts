@@ -127,7 +127,7 @@ describe('CoordinatedShutdown deadline', () => {
             code = (error as SeedcordError).code; // fixture cast, setDeadline only throws a SeedcordRangeError
         }
 
-        expect(code).toBe(SeedcordErrorCode.LifecycleInvalidShutdownDeadline);
+        expect(code).toBe(SeedcordErrorCode.LifecycleInvalidTimeout);
     });
 
     it('reports a failure it collected before the deadline passed', async () => {

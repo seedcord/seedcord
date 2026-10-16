@@ -90,7 +90,7 @@ describe('subscribers loaded from the built files on workerd', () => {
         Envapter.useSource(new PortableSource({ EDGE_BAD_WEBHOOK_URL: 'https://example.com/nope' }));
 
         await expect(loadInto(stubBus(), MalformedReporter)).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.ConfigWebhookUrlInvalid })
+            expect.objectContaining({ code: SeedcordErrorCode.ConfigInvalidEnv })
         );
     });
 });

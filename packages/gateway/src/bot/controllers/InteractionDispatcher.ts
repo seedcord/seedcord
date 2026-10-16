@@ -316,11 +316,14 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 const existing = this.maps[kind].get(route);
                 // a different class on the same route would silently shadow (last write wins)
                 if (existing && existing !== handlerClass) {
-                    throw new SeedcordTypeError(SeedcordErrorCode.InteractionDuplicateRoute, [
+                    throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, [
+                        'route',
                         `${kind}:${route}`,
-                        // a stale hmr artifact list can leave a class in a route map after its entry here is gone
-                        `${existing.name} (${this.handlerFiles.get(existing) ?? 'unknown file'})`,
-                        `${handlerClass.name} (${from})`
+                        [
+                            // a stale hmr artifact list can leave a class in a route map after its entry here is gone
+                            `${paint.bold(existing.name)} (${paint.path(this.handlerFiles.get(existing) ?? 'unknown file')})`,
+                            `${paint.bold(handlerClass.name)} (${paint.path(from)})`
+                        ]
                     ]);
                 }
                 writes.push({ kind, route });

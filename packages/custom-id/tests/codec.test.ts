@@ -518,7 +518,7 @@ describe('CustomId definition guards', () => {
 
     it('rejects a duplicate field name', () => {
         expect(thrownCode(() => new CustomId('page').int('index', 0, 9).bool('index'))).toBe(
-            SeedcordErrorCode.CustomIdDuplicateFieldName
+            SeedcordErrorCode.CoreDuplicateName
         );
     });
 

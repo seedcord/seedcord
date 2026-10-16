@@ -16,7 +16,7 @@ describe('http filesystem discovery, duplicate routes', () => {
             (caught: unknown) => caught
         );
 
-        expect(error).toMatchObject({ code: SeedcordErrorCode.InteractionDuplicateRoute });
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
         // the same shape the edge builder renders
         const message = Error.isError(error) ? error.message : String(error);
         expect(message).toContain('slash:ping');

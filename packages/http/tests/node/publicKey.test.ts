@@ -29,7 +29,7 @@ describe('public key at startup', () => {
         expect(get).toHaveBeenCalledWith(Routes.currentApplication());
     });
 
-    it("throws ConfigPublicKeyUnavailable with discord's reason when that read fails", async () => {
+    it("throws CoreDiscordReadFailed with discord's reason when that read fails", async () => {
         bindTokenOnly();
         await using host = new Seedcord(serverConfig());
         vi.spyOn(host.rest, 'get').mockRejectedValue(new Error('401: Unauthorized'));
@@ -37,7 +37,7 @@ describe('public key at startup', () => {
         const failure = await host.start().catch((error: unknown) => error);
 
         expect(failure).toHaveProperty('code', SeedcordErrorCode.LifecyclePhaseFailures);
-        expect(failure).toHaveProperty(['errors', 0, 'code'], SeedcordErrorCode.ConfigPublicKeyUnavailable);
+        expect(failure).toHaveProperty(['errors', 0, 'code'], SeedcordErrorCode.CoreDiscordReadFailed);
         expect(failure).toHaveProperty(['errors', 0, 'message'], expect.stringContaining('401: Unauthorized'));
     });
 

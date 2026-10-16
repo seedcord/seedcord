@@ -45,7 +45,10 @@ function timeoutOf(
 ): number {
     if (declared === undefined) return fallback;
     if (!Number.isFinite(declared) || declared <= 0) {
-        throw new SeedcordRangeError(SeedcordErrorCode.PluginInvalidLifecycleTimeout, [pluginName, field, declared]);
+        throw new SeedcordRangeError(SeedcordErrorCode.LifecycleInvalidTimeout, [
+            `${pluginName}'s lifecycle ${field}.timeout`,
+            declared
+        ]);
     }
     return declared;
 }

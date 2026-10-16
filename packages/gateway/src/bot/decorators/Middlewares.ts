@@ -57,7 +57,7 @@ export function RegisterEventMiddleware<
             ]);
         }
         if (options.events?.length === 0) {
-            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorEmptyMiddlewareFilter, ['events']);
+            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorEmptyMiddlewareFilter, [ctor.name, 'events']);
         }
 
         const metadata: EventMiddlewareMetadata = {

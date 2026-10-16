@@ -1,4 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
@@ -46,7 +46,13 @@ class EmojiResolver {
         this.application ??= await this.applicationEmojis();
 
         if (Error.isError(this.application)) {
-            this.unreadable(key, name, 'the application', this.application);
+            this.unreadable(
+                key,
+                name,
+                'the application',
+                this.application,
+                `Check that ${paint.bold('DISCORD_BOT_TOKEN')} is still valid.`
+            );
             return;
         }
         this.pick(key, name, this.application, 'the application');
@@ -72,7 +78,7 @@ class EmojiResolver {
         }
 
         if (Error.isError(guild)) {
-            this.unreadable(key, name, `guild ${guildId}`, guild);
+            this.unreadable(key, name, `guild ${guildId}`, guild, 'Check that the bot is in that guild.');
             return;
         }
         this.pick(key, name, guild, `guild ${guildId}`);
@@ -96,9 +102,9 @@ class EmojiResolver {
         this.resolved[key] = new ResolvedEmoji(name, found.id, found.animated ?? false);
     }
 
-    private unreadable(key: string, name: string, where: string, cause: Error): void {
+    private unreadable(key: string, name: string, where: string, cause: Error, fix: string): void {
         this.problems.push(
-            new SeedcordError(SeedcordErrorCode.ConfigEmojiSourceUnreadable, [key, name, where, cause.message], {
+            new SeedcordError(SeedcordErrorCode.ConfigEmojiSourceUnreadable, [key, name, where, cause.message, fix], {
                 cause
             })
         );

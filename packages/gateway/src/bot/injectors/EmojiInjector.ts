@@ -92,7 +92,8 @@ export class EmojiInjector {
                     key,
                     emojiName,
                     `guild ${guildId}`,
-                    'discord.js has no cached guild with that id. Check that the bot is in it, and that clientOptions.intents includes GatewayIntentBits.Guilds'
+                    'discord.js has no cached guild with that id',
+                    'Check that the bot is in that guild, and that clientOptions.intents includes GatewayIntentBits.Guilds.'
                 ])
             );
             return;

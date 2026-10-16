@@ -39,7 +39,10 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
     /** @internal */
     public setDeadline(deadlineMs: number): void {
         if (!Number.isFinite(deadlineMs) || deadlineMs <= 0) {
-            throw new SeedcordRangeError(SeedcordErrorCode.LifecycleInvalidShutdownDeadline, [deadlineMs]);
+            throw new SeedcordRangeError(SeedcordErrorCode.LifecycleInvalidTimeout, [
+                'lifecycle.shutdownDeadline',
+                deadlineMs
+            ]);
         }
         this.#deadlineMs = deadlineMs;
     }

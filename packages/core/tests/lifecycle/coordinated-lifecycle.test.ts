@@ -45,7 +45,7 @@ describe('CoordinatedStartup failure and guards', () => {
             startup.addTask(StartupPhase.Configuration, 'late', () => Promise.resolve());
             expect.fail('expected a throw');
         } catch (err) {
-            expect(isSeedcordError(err, undefined, SeedcordErrorCode.LifecycleAddAfterCompletion)).toBe(true);
+            expect(isSeedcordError(err, undefined, SeedcordErrorCode.LifecycleTaskChangeRejected)).toBe(true);
         }
     });
 
@@ -62,7 +62,7 @@ describe('CoordinatedStartup failure and guards', () => {
         });
 
         await startup.run();
-        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.LifecycleChangeDuringRun)).toBe(true);
+        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.LifecycleTaskChangeRejected)).toBe(true);
     });
 
     it('times out a never-resolving task', async () => {

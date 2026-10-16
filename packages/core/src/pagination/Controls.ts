@@ -100,11 +100,8 @@ export class Controls implements PaginatorControls {
     }
 
     row(...keys: ControlKey[]): ActionRowBuilder<ButtonBuilder> {
-        if (keys.length === 0) {
-            throw new SeedcordRangeError(SeedcordErrorCode.PaginationEmptyControls);
-        }
-        if (keys.length > MAX_BUTTONS_PER_ROW) {
-            throw new SeedcordRangeError(SeedcordErrorCode.PaginationTooManyControls, [keys.length]);
+        if (keys.length === 0 || keys.length > MAX_BUTTONS_PER_ROW) {
+            throw new SeedcordRangeError(SeedcordErrorCode.PaginationControlCount, [keys.length, MAX_BUTTONS_PER_ROW]);
         }
         // repeating a control reuses its slot and page, so the custom_ids collide and Discord rejects the message.
         const seen = new Set<ControlKey>();

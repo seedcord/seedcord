@@ -62,7 +62,7 @@ describe('MiddlewareRegistry', () => {
         registry.register(middleware('Audit'));
 
         expect(() => registry.register(middleware('Audit'))).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.DuplicateMiddleware })
+            expect.objectContaining({ code: SeedcordErrorCode.CoreDuplicateName })
         );
     });
 

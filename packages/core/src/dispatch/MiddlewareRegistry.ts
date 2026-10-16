@@ -68,7 +68,7 @@ export class MiddlewareRegistry<Ctor extends AnyMiddlewareCtor, Key extends stri
         // a double import or an hmr re-scan registers the same class twice
         if (this.entries.some((entry) => entry.ctor === ctor)) return undefined;
         if (this.entries.some((entry) => entry.ctor.name === ctor.name)) {
-            throw new SeedcordTypeError(SeedcordErrorCode.DuplicateMiddleware, [ctor.name]);
+            throw new SeedcordTypeError(SeedcordErrorCode.CoreDuplicateName, ['middleware class name', ctor.name]);
         }
 
         this.entries.push({

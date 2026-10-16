@@ -81,7 +81,7 @@ class DiskFiles implements FileSource {
         try {
             entries = await readdir(dir, { withFileTypes: true, recursive: true });
         } catch (err) {
-            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryUnreadable, [dir, asError(err).message], {
+            throw new SeedcordError(SeedcordErrorCode.CorePathUnreadable, [dir, asError(err).message], {
                 cause: err
             });
         }
@@ -122,7 +122,7 @@ class BuiltFiles implements FileSource {
     private under<Loader>(loaders: Map<string, Loader>, dir: string): Loaders<Loader> {
         const resolved = path.resolve(dir);
         if (!isInside(this.root, resolved)) {
-            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryOutsideRoot, [resolved, this.root]);
+            throw new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [resolved, this.root]);
         }
         if (!this.folders.has(resolved))
             throw new SeedcordError(SeedcordErrorCode.CoreDirectoryNotBuilt, [dir, this.root]);
@@ -219,7 +219,9 @@ export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFi
         try {
             imported = await load();
         } catch (err) {
-            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryImportFailed, [relativePath], { cause: err });
+            throw new SeedcordError(SeedcordErrorCode.CoreImportFailed, [relativePath, asError(err).message], {
+                cause: err
+            });
         }
         yield { fullPath, relativePath, imported };
     }
@@ -246,7 +248,9 @@ export async function* readTextFiles(dir: string): AsyncGenerator<TextFile> {
         try {
             text = await load();
         } catch (err) {
-            throw new SeedcordError(SeedcordErrorCode.CoreFileUnreadable, [relativePath], { cause: err });
+            throw new SeedcordError(SeedcordErrorCode.CorePathUnreadable, [relativePath, asError(err).message], {
+                cause: err
+            });
         }
         yield { fullPath, relativePath, text };
     }

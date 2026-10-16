@@ -245,7 +245,7 @@ describe('InteractionDispatcher Integration', () => {
             () => null,
             (caught: unknown) => caught
         );
-        expect(error).toMatchObject({ code: SeedcordErrorCode.InteractionDuplicateRoute });
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
         const message = Error.isError(error) ? error.message : String(error);
         expect(message).toContain('slash:ping');
         expect(message).toContain('PingOne (');
@@ -299,7 +299,7 @@ describe('InteractionDispatcher Integration', () => {
             () => null,
             (caught: unknown) => caught
         );
-        expect(error).toMatchObject({ code: SeedcordErrorCode.DuplicateMiddleware });
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
         const message = Error.isError(error) ? error.message : String(error);
         expect(message).toContain('RateLimit');
     });
