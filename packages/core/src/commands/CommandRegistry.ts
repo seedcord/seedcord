@@ -17,6 +17,8 @@ import { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
 import { resolveDeployTarget } from '#src/commands/deployTarget';
 import { isCommandClass } from '#src/commands/isCommandClass';
 import { putCommands } from '#src/commands/putCommands';
+import { readCommands } from '#src/commands/readCommands';
+import { scopeHashes, splitByHash } from '#src/commands/scopeHashes';
 import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 import { CommandMetadataKey } from '#src/metadataKeys';
 import { PublishDefault } from '#subscribers/publishDefault';
@@ -26,11 +28,12 @@ import type { CoreBase } from '#interfaces/CoreBase';
 import type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
 import type { DeployTarget } from '#src/commands/deployTarget';
 import type { CommandCtor } from '#src/commands/isCommandClass';
-import type { CommandBody, DeployedScope } from '#src/commands/putCommands';
+import type { CommandBody, CommandScopes, DeployedScope } from '#src/commands/putCommands';
 import type { CommandBuilder, DeployResult } from '#src/commands/types';
 import type { Initializeable } from '#src/plugin/Plugin';
 import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
+import type { DeployedHashes } from '@seedcord/types/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 type CommandArtifact = DeployTarget & { name: string };
@@ -41,9 +44,11 @@ interface RouteWarnings {
     warnUnhandledContextMenuRoutes(leaves: ContextMenuLeaves): void;
 }
 
-interface DeployHooks {
+interface DeployOptions {
     routes?: RouteWarnings | undefined;
     check?: (commands: CommandBuilder[]) => void;
+    // seedcord dev passes what it deployed last time
+    deployed?: DeployedHashes | undefined;
 }
 
 // discord's global command bucket allows 2 PUTs a minute
@@ -71,6 +76,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private readonly hmrHandler?: HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>;
     private readonly pendingEvents = new Map<string, HmrUpdateEvent>();
     private readonly injector = new CommandInjector();
+    private deployed?: DeployedHashes | undefined;
 
     private readonly dir: string;
     private readonly configuredGuilds: readonly string[];
@@ -230,9 +236,10 @@ export class CommandRegistry implements Initializeable, HmrAware {
     }
 
     /** @internal */
-    public async deploy(signal: AbortSignal, { routes, check }: DeployHooks): Promise<void> {
+    public async deploy(signal: AbortSignal, { routes, check, deployed }: DeployOptions): Promise<void> {
         await this.init();
         check?.(this.allCommands());
+        this.deployed = deployed;
         await this.setCommands(signal);
         routes?.warnUnhandledRoutes(this.routeLeaves());
         routes?.warnUnhandledContextMenuRoutes(this.contextMenuLeaves());
@@ -240,27 +247,50 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     /** @internal */
     public async setCommands(signal?: AbortSignal): Promise<DeployResult> {
-        const result = await putCommands(
-            {
-                // a guild-only start keeps the global commands another deploy put there
-                global: this.globalCommands.length > 0 ? this.globalCommands.map((c) => c.toJSON()) : undefined,
-                guilds: new Map(
-                    [...this.guildCommands].map(([guildId, commands]) => [guildId, commands.map((c) => c.toJSON())])
-                )
-            },
-            {
-                // read here because gateway assigns core.rest after this registry is constructed
-                rest: this.core.rest,
-                applicationId: this.core.applicationId,
+        const scopes = this.scopes();
+        const hashes = await scopeHashes(scopes);
+        // read here because gateway assigns core.rest after this registry is constructed
+        const { rest, applicationId } = this.core;
+        const last = this.deployed?.applicationId === applicationId ? this.deployed : undefined;
+        const { changed, unchanged } = splitByHash(scopes, hashes, last);
+        this.reportUnchanged(unchanged);
+
+        const [put, read] = await Promise.all([
+            putCommands(changed, {
+                rest,
+                applicationId,
                 logger: this.logger,
                 signal,
                 onDeployed: (where, commands) => this.reportDeployed(where, commands)
-            }
-        );
+            }),
+            readCommands(
+                { global: unchanged.global !== undefined, guildIds: unchanged.guilds.keys() },
+                { rest, applicationId, signal }
+            )
+        ]);
+        const result = mergeResults(put, read);
+        this.deployed = { applicationId, ...hashes };
 
         this.injector.inject(result, this.allCommands());
         this.core.bus[PublishDefault]('commandsDeployed', deployedPayload(result));
         return result;
+    }
+
+    private scopes(): CommandScopes {
+        return {
+            // a guild-only start keeps the global commands another deploy put there
+            global: this.globalCommands.length > 0 ? this.globalCommands.map((c) => c.toJSON()) : undefined,
+            guilds: new Map(
+                [...this.guildCommands].map(([guildId, commands]) => [guildId, commands.map((c) => c.toJSON())])
+            )
+        };
+    }
+
+    private reportUnchanged({ global, guilds }: CommandScopes): void {
+        const scopes = [...(global ? ['global'] : []), ...[...guilds.keys()].map((id) => paint.sky.bold(id))];
+        if (scopes.length === 0) return;
+        const list = new Intl.ListFormat('en', { type: 'conjunction' }).format(scopes);
+        this.logger.info(`Skipped deploying ${list}. Their commands match the last deploy.`);
     }
 
     private reportDeployed(where: DeployedScope, commands: readonly CommandBody[]): void {
@@ -286,6 +316,13 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private contextMenuLeaves(): ContextMenuLeaves {
         return contextMenuLeaves(this.allCommands().map((command) => command.toJSON()));
     }
+}
+
+function mergeResults(put: DeployResult, read: DeployResult): DeployResult {
+    return {
+        global: new Map([...put.global, ...read.global]),
+        guilds: new Map([...put.guilds, ...read.guilds])
+    };
 }
 
 function deployedPayload(result: DeployResult): AllSubscriptions['commandsDeployed'] {

@@ -11,6 +11,17 @@ export interface WireError {
 }
 
 /**
+ * What `seedcord dev` last deployed for one application, as a hash per command scope.
+ *
+ * @internal
+ */
+export interface DeployedHashes {
+    applicationId: string;
+    global?: string | undefined;
+    guilds: Record<string, string>;
+}
+
+/**
  * HMR events the framework (client) sends to the CLI (server).
  *
  * @internal

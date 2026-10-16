@@ -1,11 +1,10 @@
-import { putCommands } from '@seedcord/core/internal';
+import { putCommands, readCommands, readCommandsAt } from '@seedcord/core/internal';
 import { asError } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
 
 import { applicationOf } from '#core/discord/applicationOf';
 import { guildSummaries } from '#core/discord/guildSummaries';
 import { readBotGuilds } from '#core/discord/readBotGuilds';
-import { readDeployed, readGlobalCommands, readGuildCommands } from '#core/discord/readDeployed';
 
 import type { GuildSummary } from '#core/discord/readBotGuilds';
 import type { DiscordRest } from './runnerDeps';
@@ -71,7 +70,7 @@ export class DiscordSession {
     // throws on the first guild it cannot read, since a deploy replaces each one
     public async readTargets(guildIds: readonly string[]): Promise<DeployTargets> {
         const [deployed, guilds] = await Promise.all([
-            readDeployed(this.rest, this.appId, guildIds),
+            readCommands({ global: true, guildIds }, this.reads()),
             guildSummaries(this.rest, guildIds)
         ]);
         return { deployed, guildNames: new Map(guilds.map(({ id, name }) => [id, name])) };
@@ -83,7 +82,7 @@ export class DiscordSession {
 
     public async readScopes(guilds: readonly GuildSummary[]): Promise<Scan> {
         const [global, ...guildScopes] = await Promise.all([
-            readGlobalCommands(this.rest, this.appId),
+            readCommandsAt(undefined, this.reads()),
             ...guilds.map((guild) => this.readGuild(guild))
         ]);
         return { global: [...global.values()], guilds: guildScopes };
@@ -118,7 +117,11 @@ export class DiscordSession {
     }
 
     private async readGuild(guild: GuildSummary): Promise<ScopedCommands<GuildScope>> {
-        const commands = await readGuildCommands(this.rest, this.appId, guild.id);
+        const commands = await readCommandsAt(guild.id, this.reads());
         return { scope: { kind: 'guild', ...guild }, commands: [...commands.values()] };
+    }
+
+    private reads(): { rest: DiscordRest; applicationId: Snowflake } {
+        return { rest: this.rest, applicationId: this.appId };
     }
 }

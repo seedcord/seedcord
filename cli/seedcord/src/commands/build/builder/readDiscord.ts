@@ -1,10 +1,9 @@
-import { commandRefOf, linkCommands, resolveDeployTarget, resolveEmojis } from '@seedcord/core/internal';
+import { commandRefOf, linkCommands, readCommands, resolveDeployTarget, resolveEmojis } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { scopesInCode } from '#commands/commands/codeScopes';
 import { applicationOf } from '#core/discord/applicationOf';
-import { readDeployed } from '#core/discord/readDeployed';
 
 import type { FoundCommand } from '#core/modules/CommandScanner';
 import type { REST } from '@discordjs/rest';
@@ -49,7 +48,8 @@ async function linkDeployed(
         command,
         target: resolveDeployTarget(command.meta, configuredGuilds, command.className)
     }));
-    const deployed = await readDeployed(rest, applicationId, scopesInCode(found, configuredGuilds).guilds.keys());
+    const guildIds = scopesInCode(found, configuredGuilds).guilds.keys();
+    const deployed = await readCommands({ global: true, guildIds }, { rest, applicationId });
     assertDeployed(targeted.filter(({ command, target }) => !isDeployedTo(deployed, command, target)));
     return linkCommands(
         deployed,
