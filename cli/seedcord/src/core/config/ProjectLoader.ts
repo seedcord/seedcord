@@ -1,7 +1,7 @@
 import { dirname, resolve } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordRangeError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 
@@ -26,6 +26,9 @@ import type {
     SeedcordHmrConfig,
     SeedcordServerConfig
 } from './schema';
+
+// wrangler dev's default port
+const EDGE_DEV_PORT = 8787;
 
 function isOptionalString(value: unknown): boolean {
     return value === undefined || typeof value === 'string';
@@ -86,7 +89,31 @@ function* entryProblems(entry: unknown, target: BuildTarget, configFile: string)
         yield invalidField('entry', 'a string that points to your startup script');
     }
     if (target.kind === 'edge' && entry !== undefined) {
-        yield new SeedcordTypeError(SeedcordErrorCode.CliConfigEntryOnEdge, [configFile, target.cloudflareConfig]);
+        const why = `${paint.path(target.cloudflareConfig)} makes this an edge bot, and Cloudflare calls the default export of ${paint.bold('instance')}.`;
+        yield unusedField('entry', configFile, why);
+    }
+}
+
+function unusedField(field: string, configFile: string, why: string): SeedcordTypeError {
+    return new SeedcordTypeError(SeedcordErrorCode.CliConfigFieldUnused, [field, configFile, why]);
+}
+
+const MAX_PORT = 65_535;
+const PORT_RANGE = `an integer from 0 to ${MAX_PORT}`;
+
+function* portProblems(
+    port: unknown,
+    target: BuildTarget,
+    configFile: string
+): Generator<SeedcordTypeError | SeedcordRangeError> {
+    if (port === undefined) return;
+    if (target.kind === 'server') {
+        const why = `Only an edge bot reads it. A node bot listens on the ${paint.bold('port')} it passes to ${paint.bold('new Seedcord({ ... })')}.`;
+        yield unusedField('port', configFile, why);
+    } else if (typeof port !== 'number' || !Number.isSafeInteger(port)) {
+        yield invalidField('port', PORT_RANGE);
+    } else if (port < 0 || port > MAX_PORT) {
+        yield new SeedcordRangeError(SeedcordErrorCode.CliConfigInvalidField, ['port', PORT_RANGE]);
     }
 }
 
@@ -94,10 +121,11 @@ function* configProblems(
     raw: Record<string, unknown>,
     target: BuildTarget,
     configFile: string
-): Generator<SeedcordTypeError> {
+): Generator<SeedcordTypeError | SeedcordRangeError> {
     if (!isNonEmptyString(raw.instance))
         yield invalidField('instance', 'a string that points to the file that default exports your bot');
     yield* entryProblems(raw.entry, target, configFile);
+    yield* portProblems(raw.port, target, configFile);
     if (!isOptionalString(raw.root)) yield invalidField('root', 'a string');
     if (raw.idleAnimation !== undefined && typeof raw.idleAnimation !== 'boolean') {
         yield invalidField('idleAnimation', 'a boolean');
@@ -171,7 +199,7 @@ export class ProjectLoader {
     }
 
     private resolveTarget(root: string, target: BuildTarget, config: SeedcordConfig): ResolvedTarget {
-        if (target.kind === 'edge') return target;
+        if (target.kind === 'edge') return { ...target, port: config.port ?? EDGE_DEV_PORT };
 
         // justified: entryProblems already required entry on a server target
         const entry = resolve(root, (config as SeedcordServerConfig).entry);

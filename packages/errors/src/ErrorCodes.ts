@@ -258,8 +258,8 @@ export enum SeedcordErrorCode {
     CliConfigFileUnreadable = 3123,
     /** The CLI could not start the TypeScript compiler. */
     CliTypescriptNotStarted = 3124,
-    /** An edge bot's seedcord config sets `entry`. */
-    CliConfigEntryOnEdge = 3125,
+    /** A config file sets a field this bot's target does not use, like `entry` on an edge bot or `port` on a server bot. */
+    CliConfigFieldUnused = 3125,
     /** An edge bot's `compatibility_date` is older than Cloudflare's Node compat default, and no flag turns it on. */
     CliEdgeCompatDateTooOld = 3126,
     /** An edge bot sets `no_nodejs_compat`. */

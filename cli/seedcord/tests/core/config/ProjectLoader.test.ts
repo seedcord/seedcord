@@ -86,7 +86,7 @@ describe('ProjectLoader target', () => {
 
         const { target } = await load();
 
-        expect(target).toEqual({ kind: 'edge', cloudflareConfig: join(projectDir, CLOUDFLARE_CONFIG) });
+        expect(target).toMatchObject({ kind: 'edge', cloudflareConfig: join(projectDir, CLOUDFLARE_CONFIG) });
     });
 
     it('reads the workerd condition through the tsconfig extends chain', async () => {
@@ -119,6 +119,15 @@ describe('ProjectLoader target', () => {
         writeFileSync(join(projectDir, CLOUDFLARE_CONFIG), '');
 
         await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliTsconfigNotFound });
+    });
+
+    it('throws CliConfigFieldUnused for a server config that sets port', async () => {
+        const { projectDir, load } = projectWith({ ...MINIMAL, port: 9000 });
+
+        await expect(load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigFieldUnused,
+            message: expect.stringContaining(join(projectDir, 'seedcord.config.ts')) as string
+        });
     });
 
     it('throws CliWorkerdConditionWithoutCloudflareConfig for the workerd condition with no cloudflare.config.ts', async () => {
@@ -162,14 +171,31 @@ describe('ProjectLoader entry on an edge bot', () => {
 
         const { target } = await load();
 
-        expect(target).toEqual({ kind: 'edge', cloudflareConfig: join(projectDir, CLOUDFLARE_CONFIG) });
+        expect(target).toEqual({ kind: 'edge', cloudflareConfig: join(projectDir, CLOUDFLARE_CONFIG), port: 8787 });
     });
 
-    it('throws CliConfigEntryOnEdge for a config that sets entry', async () => {
+    it('reads the dev port from port', async () => {
+        const { load } = edgeProjectWith({ ...EDGE_MINIMAL, port: 9000 });
+
+        const { target } = await load();
+
+        expect(target).toMatchObject({ kind: 'edge', port: 9000 });
+    });
+
+    it.each([-1, 65_536, 80.5, '8787'])('throws CliConfigInvalidField for a port of %j', async (port) => {
+        const { load } = edgeProjectWith({ ...EDGE_MINIMAL, port });
+
+        await expect(load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigInvalidField,
+            message: expect.stringContaining('port') as string
+        });
+    });
+
+    it('throws CliConfigFieldUnused for an edge config that sets entry', async () => {
         const { projectDir, load } = edgeProjectWith(MINIMAL);
 
         await expect(load()).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliConfigEntryOnEdge,
+            code: SeedcordErrorCode.CliConfigFieldUnused,
             message: expect.stringContaining(join(projectDir, 'seedcord.config.ts')) as string
         });
     });

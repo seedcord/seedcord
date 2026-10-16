@@ -29,7 +29,7 @@ import { edgeViteConfig } from './devServerConfig';
 import { listenForInteractions } from './listenForInteractions';
 import { WorkerConfigFiles } from './workerConfigFiles';
 
-import type { EdgeTarget } from '#core/config/detectTarget';
+import type { ResolvedEdgeTarget } from '#core/config/schema';
 import type { StartedRuntime } from './BaseDevRuntime';
 import type { DevRuntimeContext } from './DevRuntime';
 import type {
@@ -85,7 +85,7 @@ function installCliLogSinks(stack: AsyncDisposableStack): void {
 export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
     private settleStart?: (() => void) | undefined;
 
-    public constructor(private readonly target: EdgeTarget) {
+    public constructor(private readonly target: ResolvedEdgeTarget) {
         super();
     }
 
@@ -96,7 +96,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         installCliLogSinks(resources);
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
         const environment = Envapter.get('CLOUDFLARE_ENV');
-        const [folders, cloudflare, { port, vars }] = await Promise.all([
+        const [folders, cloudflare, { vars }] = await Promise.all([
             files.foldersIncludingEmpty(),
             loadCloudflare(viteRoot, importCloudflare),
             readWranglerDev(this.target.cloudflareConfig, environment, importWrangler)
@@ -137,9 +137,9 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         resources.defer(() => server.close());
         const modules = await modulesReady.promise;
         const endpoint = await listenForInteractions(server.middlewares, {
-            port,
+            port: this.target.port,
             host: listenHostFor(config.tunnel),
-            wranglerConfig: this.target.cloudflareConfig
+            configFile: config.configFile
         });
         resources.use(endpoint.server);
         // close() waits on open keep-alive sockets

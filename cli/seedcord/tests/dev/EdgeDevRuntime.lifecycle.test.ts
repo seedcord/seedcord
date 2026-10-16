@@ -28,9 +28,8 @@ import {
 
 import type { DevEvent } from '#commands/dev/runtime/events';
 import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
-import type { EdgeTarget } from '#core/config/detectTarget';
 import type { ProjectLoader } from '#core/config/ProjectLoader';
-import type { ResolvedSeedcordConfig } from '#core/config/schema';
+import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/schema';
 
 describe('EdgeDevRuntime lifecycle', () => {
     it("gives codegen's node copy the secrets from .dev.vars", async () => {
@@ -102,7 +101,7 @@ describe('EdgeDevRuntime lifecycle', () => {
             // justified: tunnel mode off routes nothing
             tunnel: { route: () => undefined, stop: () => Promise.resolve() } as unknown as TunnelRouter,
             // justified: edgeConfig sets an edge target
-            runtime: (target) => new EdgeDevRuntime(target as EdgeTarget)
+            runtime: (target) => new EdgeDevRuntime(target as ResolvedEdgeTarget)
         });
         const running = runner.run();
         await using _quit = {

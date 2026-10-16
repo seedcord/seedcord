@@ -14,7 +14,6 @@ import {
     captureLogs,
     edgeProject,
     editFile,
-    liveVars,
     messagesOf,
     startedRuntime,
     WAVE_INTERACTION,
@@ -43,7 +42,7 @@ describe('EdgeDevRuntime endpoint', () => {
             return () => owned.disposeAsync();
         }, 120_000);
 
-        it('reports the port the system picked for dev.port 0 once the worker has started', async () => {
+        it('reports the port the system picked for port 0 once the worker has started', async () => {
             const unsigned = await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
 
             expect(port).toBeGreaterThan(0);
@@ -73,14 +72,17 @@ describe('EdgeDevRuntime endpoint', () => {
         });
     });
 
-    it('throws PortInUse when something already listens on dev.port', async () => {
+    it('throws PortInUse with the seedcord config when something already listens on port', async () => {
         await using holder = createNetServer().listen(0, '127.0.0.1');
         await once(holder, 'listening');
         // justified: address() is AddressInfo once a TCP server is listening
         const { port } = holder.address() as AddressInfo;
-        await using project = await edgeProject(liveVars, port);
+        await using project = await edgeProject();
 
-        await expect(startedRuntime(project.projectDir)).rejects.toHaveProperty('code', SeedcordErrorCode.PortInUse);
+        await expect(startedRuntime(project.projectDir, undefined, port)).rejects.toMatchObject({
+            code: SeedcordErrorCode.PortInUse,
+            message: expect.stringContaining('seedcord.config.ts') as string
+        });
     }, 120_000);
 
     it('runs the saved version of a handler in the worker', async () => {

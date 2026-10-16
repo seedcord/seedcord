@@ -17,7 +17,7 @@ function middlewares(handle: (url: string | undefined, next: (error?: unknown) =
         handle(request.url, next)) as unknown as Connect.Server;
 }
 
-const QUICK = { port: 0, host: '127.0.0.1', wranglerConfig: 'wrangler.jsonc' };
+const QUICK = { port: 0, host: '127.0.0.1', configFile: 'seedcord.config.ts' };
 
 async function listening(app: Connect.Server): Promise<string> {
     const { server, port } = await listenForInteractions(app, QUICK);

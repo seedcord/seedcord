@@ -19,7 +19,7 @@ const logger = cliLogger('Worker');
 
 interface InteractionsEndpoint {
     server: Server;
-    // dev.port 0 lets the system pick one
+    // port 0 lets the system pick one
     port: number;
 }
 
@@ -27,12 +27,12 @@ interface ListenOptions {
     readonly port: number;
     // undefined binds every address
     readonly host: string | undefined;
-    readonly wranglerConfig: string;
+    readonly configFile: string;
 }
 
 export async function listenForInteractions(
     middlewares: Connect.Server,
-    { port, host, wranglerConfig }: ListenOptions
+    { port, host, configFile }: ListenOptions
 ): Promise<InteractionsEndpoint> {
     const server = createServer((request, response) => {
         if (request.method !== 'POST') {
@@ -55,7 +55,7 @@ export async function listenForInteractions(
         await once(server, 'listening');
     } catch (error: unknown) {
         if (!isPortInUse(error)) throw error;
-        throw new SeedcordError(SeedcordErrorCode.PortInUse, [port, 'dev.port', wranglerConfig], { cause: error });
+        throw new SeedcordError(SeedcordErrorCode.PortInUse, [port, 'port', configFile], { cause: error });
     }
     // justified: address() is AddressInfo once a TCP server is listening
     return { server, port: (server.address() as AddressInfo).port };

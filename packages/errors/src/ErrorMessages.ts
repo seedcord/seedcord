@@ -303,8 +303,8 @@ const messages = {
         `${paint.path(tsconfig)} sets the ${paint.bold('workerd')} condition, which only an edge bot uses, but ${paint.path(configDir)} has no ${paint.bold('cloudflare.config.ts')}. Add one for an edge bot. For a node bot, remove ${paint.bold('"workerd"')} from customConditions.`,
     [SeedcordErrorCode.CliConfigFileUnreadable]: (tool: string, file: string, output: string) =>
         `${tool} could not read ${paint.path(file)}. Fix the problem it reports:\n${output}`,
-    [SeedcordErrorCode.CliConfigEntryOnEdge]: (configFile: string, cloudflareConfig: string) =>
-        `${paint.path(cloudflareConfig)} makes this an edge bot. An edge bot has no ${paint.bold('entry')} because Cloudflare calls the default export of ${paint.bold('instance')}. Remove ${paint.bold('entry')} from ${paint.path(configFile)}.`,
+    [SeedcordErrorCode.CliConfigFieldUnused]: (field: string, file: string, why: string) =>
+        `${paint.path(file)} sets ${paint.bold(field)}, which this bot doesn't use. ${why} Remove ${paint.bold(field)} from ${paint.path(file)}.`,
     [SeedcordErrorCode.CliEdgeCompatDateTooOld]: (cloudflareConfig: string, date: string, firstDate: string) =>
         `A seedcord edge bot needs Cloudflare's Node compat. ${paint.path(cloudflareConfig)} sets ${paint.bold('compatibilityDate')} to ${date}, but Cloudflare turns Node compat on by default only from ${firstDate}. Set the date to ${firstDate} or later, or add ${paint.bold("'nodejs_compat'")} to ${paint.bold('compatibilityFlags')}.`,
     [SeedcordErrorCode.CliEdgeNodeCompatOff]: (cloudflareConfig: string) =>
