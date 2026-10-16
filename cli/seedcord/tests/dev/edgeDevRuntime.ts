@@ -28,7 +28,7 @@ export function edgeConfig(projectDir: string): ResolvedSeedcordConfig {
         configFile: join(projectDir, 'seedcord.config.ts'),
         root: join(projectDir, 'src'),
         instance: join(projectDir, 'src/bot.ts'),
-        target: { kind: 'edge', wranglerConfig: join(projectDir, 'wrangler.jsonc') },
+        target: { kind: 'edge', cloudflareConfig: join(projectDir, 'cloudflare.config.ts') },
         build: { outDir: join(projectDir, 'dist') },
         tunnel: { mode: 'quick' }
     } as ResolvedSeedcordConfig;
@@ -184,7 +184,7 @@ interface StartedRuntime extends AsyncDisposable {
 
 export async function startedRuntime(projectDir: string, onEvent?: DevEventHandler): Promise<StartedRuntime> {
     const config = edgeConfig(projectDir);
-    const runtime = new EdgeDevRuntime({ kind: 'edge', wranglerConfig: join(projectDir, 'wrangler.jsonc') });
+    const runtime = new EdgeDevRuntime({ kind: 'edge', cloudflareConfig: join(projectDir, 'cloudflare.config.ts') });
     let listening: number | undefined;
     const recordPort: DevEventHandler = (event) => {
         if (event.type === 'server-listening') listening = event.port;

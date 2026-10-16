@@ -19,7 +19,7 @@ afterEach(() => {
 const SERVER: BuildTarget = { kind: 'server' };
 
 function edgeTarget(root: string): BuildTarget {
-    return { kind: 'edge', wranglerConfig: join(root, 'wrangler.jsonc') };
+    return { kind: 'edge', cloudflareConfig: join(root, 'cloudflare.config.ts') };
 }
 
 // a package whose default export reports which build its conditions picked

@@ -86,7 +86,7 @@ export class EdgeBuild extends TargetBuild {
         deps: Partial<EdgeBuildDeps> = {}
     ) {
         super(project);
-        this.viteRoot = dirname(target.wranglerConfig);
+        this.viteRoot = dirname(target.cloudflareConfig);
         this.deps = { ...DEFAULT_DEPS, ...deps };
     }
 
@@ -139,7 +139,7 @@ export class EdgeBuild extends TargetBuild {
             environments: workerEnvironment(outDir)
         }).catch(bundleFailed);
         await builder.buildApp().catch(bundleFailed);
-        assertNodeCompat(outDir, target.wranglerConfig);
+        assertNodeCompat(outDir, target.cloudflareConfig);
 
         return bundleStats(chunks, files, join(outDir, ENTRY_FILE_NAME));
     }
@@ -167,7 +167,7 @@ export class EdgeBuild extends TargetBuild {
         this.cloudflare ??= loadCloudflare(this.viteRoot, this.deps.importCloudflare);
         const cloudflare = await this.cloudflare;
         return cloudflare({
-            configPath: this.target.wranglerConfig,
+            configPath: this.target.cloudflareConfig,
             config: { main: WORKER_ENTRY_ID },
             viteEnvironment: { name: WORKER_ENVIRONMENT },
             inspectorPort: false,

@@ -86,7 +86,7 @@ function* entryProblems(entry: unknown, target: BuildTarget, configFile: string)
         yield invalidField('entry', 'a string that points to your startup script');
     }
     if (target.kind === 'edge' && entry !== undefined) {
-        yield new SeedcordTypeError(SeedcordErrorCode.CliConfigEntryOnEdge, [configFile, target.wranglerConfig]);
+        yield new SeedcordTypeError(SeedcordErrorCode.CliConfigEntryOnEdge, [configFile, target.cloudflareConfig]);
     }
 }
 

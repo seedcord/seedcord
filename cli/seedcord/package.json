@@ -110,6 +110,7 @@
         "@seedcord/tsdown-config": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
         "@types/react": "catalog:react",
+        "cf": "catalog:peer",
         "discord.js": "catalog:peer",
         "envapt": "catalog:peer",
         "eslint-plugin-react-hooks": "catalog:eslint",

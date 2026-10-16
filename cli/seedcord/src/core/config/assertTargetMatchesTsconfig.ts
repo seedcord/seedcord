@@ -34,9 +34,12 @@ export async function assertTargetMatchesTsconfig(project: Project): Promise<voi
 
     const hasWorkerd = await hasWorkerdCondition(tsconfig, project.configDir);
     if (target.kind === 'edge' && !hasWorkerd) {
-        throw new SeedcordError(SeedcordErrorCode.CliEdgeWithoutWorkerdCondition, [target.wranglerConfig, tsconfig]);
+        throw new SeedcordError(SeedcordErrorCode.CliEdgeWithoutWorkerdCondition, [target.cloudflareConfig, tsconfig]);
     }
     if (target.kind === 'server' && hasWorkerd) {
-        throw new SeedcordError(SeedcordErrorCode.CliWorkerdConditionWithoutWrangler, [tsconfig, project.configDir]);
+        throw new SeedcordError(SeedcordErrorCode.CliWorkerdConditionWithoutCloudflareConfig, [
+            tsconfig,
+            project.configDir
+        ]);
     }
 }

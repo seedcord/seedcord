@@ -9,6 +9,6 @@ export function printResolvedConfig(steps: Steps<string>, config: ResolvedSeedco
     steps.detail('instance', paint.path(config.instance));
     const { target } = config;
     if (target.kind === 'server') steps.detail('entry', paint.path(target.entry));
-    else steps.detail('wrangler', paint.path(target.wranglerConfig));
+    else steps.detail('cloudflare', paint.path(target.cloudflareConfig));
     steps.detail('outDir', paint.path(config.build.outDir));
 }

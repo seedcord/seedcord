@@ -297,14 +297,14 @@ const messages = {
         'Some commands could not be deleted. The warnings above give the reason for each one.',
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
-    [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (wranglerConfig: string, tsconfig: string) =>
-        `${paint.path(wranglerConfig)} makes this an edge bot, but ${paint.path(tsconfig)} leaves out ${paint.bold('"customConditions": ["workerd"]')}. Add it to compilerOptions for an edge bot, or set ${paint.bold('build.tsconfig')} to the tsconfig that holds it. For a node bot, move ${paint.path(wranglerConfig)} out of this folder.`,
-    [SeedcordErrorCode.CliWorkerdConditionWithoutWrangler]: (tsconfig: string, configDir: string) =>
-        `${paint.path(tsconfig)} sets the ${paint.bold('workerd')} condition, which only an edge bot uses, but ${paint.path(configDir)} has no wrangler config. Add a ${paint.bold('wrangler.jsonc')} for an edge bot. For a node bot, remove ${paint.bold('"workerd"')} from customConditions.`,
+    [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>
+        `${paint.path(cloudflareConfig)} makes this an edge bot, but ${paint.path(tsconfig)} leaves out ${paint.bold('"customConditions": ["workerd"]')}. Add it to compilerOptions for an edge bot, or set ${paint.bold('build.tsconfig')} to the tsconfig that holds it. For a node bot, move ${paint.path(cloudflareConfig)} out of this folder.`,
+    [SeedcordErrorCode.CliWorkerdConditionWithoutCloudflareConfig]: (tsconfig: string, configDir: string) =>
+        `${paint.path(tsconfig)} sets the ${paint.bold('workerd')} condition, which only an edge bot uses, but ${paint.path(configDir)} has no ${paint.bold('cloudflare.config.ts')}. Add one for an edge bot. For a node bot, remove ${paint.bold('"workerd"')} from customConditions.`,
     [SeedcordErrorCode.CliConfigFileUnreadable]: (tool: string, file: string, output: string) =>
         `${tool} could not read ${paint.path(file)}. Fix the problem it reports:\n${output}`,
-    [SeedcordErrorCode.CliConfigEntryOnEdge]: (configFile: string, wranglerConfig: string) =>
-        `${paint.path(wranglerConfig)} makes this an edge bot. An edge bot has no ${paint.bold('entry')} because Cloudflare calls the default export of ${paint.bold('instance')}. Remove ${paint.bold('entry')} from ${paint.path(configFile)}.`,
+    [SeedcordErrorCode.CliConfigEntryOnEdge]: (configFile: string, cloudflareConfig: string) =>
+        `${paint.path(cloudflareConfig)} makes this an edge bot. An edge bot has no ${paint.bold('entry')} because Cloudflare calls the default export of ${paint.bold('instance')}. Remove ${paint.bold('entry')} from ${paint.path(configFile)}.`,
     [SeedcordErrorCode.CliEdgeCompatDateTooOld]: (wranglerConfig: string, date: string, firstDate: string) =>
         `A seedcord edge bot needs Cloudflare's Node compat. ${paint.path(wranglerConfig)} sets ${paint.bold('compatibility_date')} to ${date}, but Cloudflare turns Node compat on by default only from ${firstDate}. Set the date to ${firstDate} or later, or add ${paint.bold('"nodejs_compat"')} to ${paint.bold('compatibility_flags')}.`,
     [SeedcordErrorCode.CliEdgeNodeCompatOff]: (wranglerConfig: string) =>

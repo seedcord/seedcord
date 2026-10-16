@@ -252,8 +252,8 @@ export enum SeedcordErrorCode {
     CliPathHasHash = 3120,
     /** An edge bot's tsconfig is missing the `workerd` condition. */
     CliEdgeWithoutWorkerdCondition = 3121,
-    /** A bot with no wrangler config sets the `workerd` condition in its tsconfig. */
-    CliWorkerdConditionWithoutWrangler = 3122,
+    /** A bot with no `cloudflare.config.ts` sets the `workerd` condition in its tsconfig. */
+    CliWorkerdConditionWithoutCloudflareConfig = 3122,
     /** TypeScript or wrangler could not read the project's tsconfig or wrangler config. */
     CliConfigFileUnreadable = 3123,
     /** The CLI could not start the TypeScript compiler. */

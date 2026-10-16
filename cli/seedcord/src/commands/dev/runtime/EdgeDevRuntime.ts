@@ -91,7 +91,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
 
     protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<EdgeStarted> {
         const { config } = context;
-        const viteRoot = dirname(this.target.wranglerConfig);
+        const viteRoot = dirname(this.target.cloudflareConfig);
         const files = new ProjectFiles(config.root, config.build.outDir, dirname(config.configFile));
         installCliLogSinks(resources);
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
@@ -99,10 +99,10 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const [folders, cloudflare, { port, vars }] = await Promise.all([
             files.foldersIncludingEmpty(),
             loadCloudflare(viteRoot, importCloudflare),
-            readWranglerDev(this.target.wranglerConfig, environment, importWrangler)
+            readWranglerDev(this.target.cloudflareConfig, environment, importWrangler)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
-        const workerConfig = new WorkerConfigFiles(this.target.wranglerConfig, environment);
+        const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, environment);
         const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, workerConfig);
         const server = await createServer(
             mergeViteConfig(edgeViteConfig(config, viteRoot, process.cwd()), {
@@ -126,7 +126,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                     nodeCopy(modulesReady.resolve),
                     hmr.plugin,
                     cloudflare({
-                        configPath: this.target.wranglerConfig,
+                        configPath: this.target.cloudflareConfig,
                         config: { main: WORKER_ENTRY_ID },
                         viteEnvironment: { name: WORKER_ENVIRONMENT },
                         inspectorPort: false
@@ -139,7 +139,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const endpoint = await listenForInteractions(server.middlewares, {
             port,
             host: listenHostFor(config.tunnel),
-            wranglerConfig: this.target.wranglerConfig
+            wranglerConfig: this.target.cloudflareConfig
         });
         resources.use(endpoint.server);
         // close() waits on open keep-alive sockets

@@ -104,7 +104,7 @@ export async function fakeProject({
         instance,
         configFile: resolve(root, 'seedcord.config.ts'),
         target: edge
-            ? { kind: 'edge', wranglerConfig: resolve(root, 'wrangler.jsonc') }
+            ? { kind: 'edge', cloudflareConfig: resolve(root, 'cloudflare.config.ts') }
             : { kind: 'server', entry: resolve(root, 'index.ts') },
         build: { outDir: resolve(root, 'dist') }
     } as ResolvedSeedcordConfig;

@@ -50,6 +50,7 @@ function projectWith(config: unknown): { projectDir: string; load: () => Promise
 
 const MINIMAL = { instance: './bot.ts', entry: './index.ts' };
 const EDGE_MINIMAL = { instance: './bot.ts' };
+const CLOUDFLARE_CONFIG = 'cloudflare.config.ts';
 
 function writeTsconfig(projectDir: string, compilerOptions: Record<string, unknown>, name = 'tsconfig.json'): void {
     writeFileSync(join(projectDir, name), JSON.stringify({ compilerOptions, include: ['seedcord.config.ts'] }));
@@ -70,7 +71,7 @@ describe('ProjectLoader', () => {
 });
 
 describe('ProjectLoader target', () => {
-    it('targets a server when the config folder has no wrangler config', async () => {
+    it('targets a server when the config folder has no cloudflare.config.ts', async () => {
         const { projectDir, load } = projectWith(MINIMAL);
 
         const { target } = await load();
@@ -78,22 +79,19 @@ describe('ProjectLoader target', () => {
         expect(target).toEqual({ kind: 'server', entry: join(projectDir, 'index.ts') });
     });
 
-    it.each(['wrangler.json', 'wrangler.jsonc', 'wrangler.toml'])(
-        'targets edge when a %s and a tsconfig with the workerd condition are in the config folder',
-        async (wranglerFile) => {
-            const { projectDir, load } = projectWith(EDGE_MINIMAL);
-            writeFileSync(join(projectDir, wranglerFile), '');
-            writeTsconfig(projectDir, { customConditions: ['workerd'] });
+    it('targets edge when a cloudflare.config.ts and a tsconfig with the workerd condition are in the config folder', async () => {
+        const { projectDir, load } = projectWith(EDGE_MINIMAL);
+        writeFileSync(join(projectDir, CLOUDFLARE_CONFIG), '');
+        writeTsconfig(projectDir, { customConditions: ['workerd'] });
 
-            const { target } = await load();
+        const { target } = await load();
 
-            expect(target).toEqual({ kind: 'edge', wranglerConfig: join(projectDir, wranglerFile) });
-        }
-    );
+        expect(target).toEqual({ kind: 'edge', cloudflareConfig: join(projectDir, CLOUDFLARE_CONFIG) });
+    });
 
     it('reads the workerd condition through the tsconfig extends chain', async () => {
         const { projectDir, load } = projectWith(EDGE_MINIMAL);
-        writeFileSync(join(projectDir, 'wrangler.jsonc'), '');
+        writeFileSync(join(projectDir, CLOUDFLARE_CONFIG), '');
         writeFileSync(
             join(projectDir, 'base.json'),
             JSON.stringify({ compilerOptions: { customConditions: ['workerd'] } })
@@ -108,31 +106,33 @@ describe('ProjectLoader target', () => {
         expect(target.kind).toBe('edge');
     });
 
-    it('throws CliEdgeWithoutWorkerdCondition for a wrangler config whose tsconfig lacks the condition', async () => {
+    it('throws CliEdgeWithoutWorkerdCondition for a cloudflare.config.ts whose tsconfig lacks the condition', async () => {
         const { projectDir, load } = projectWith(EDGE_MINIMAL);
-        writeFileSync(join(projectDir, 'wrangler.jsonc'), '');
+        writeFileSync(join(projectDir, CLOUDFLARE_CONFIG), '');
         writeTsconfig(projectDir, {});
 
         await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliEdgeWithoutWorkerdCondition });
     });
 
-    it('throws CliTsconfigNotFound for a wrangler config with no tsconfig', async () => {
+    it('throws CliTsconfigNotFound for a cloudflare.config.ts with no tsconfig', async () => {
         const { projectDir, load } = projectWith(EDGE_MINIMAL);
-        writeFileSync(join(projectDir, 'wrangler.jsonc'), '');
+        writeFileSync(join(projectDir, CLOUDFLARE_CONFIG), '');
 
         await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliTsconfigNotFound });
     });
 
-    it('throws CliWorkerdConditionWithoutWrangler for the workerd condition with no wrangler config', async () => {
+    it('throws CliWorkerdConditionWithoutCloudflareConfig for the workerd condition with no cloudflare.config.ts', async () => {
         const { projectDir, load } = projectWith(MINIMAL);
         writeTsconfig(projectDir, { customConditions: ['workerd'] });
 
-        await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliWorkerdConditionWithoutWrangler });
+        await expect(load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliWorkerdConditionWithoutCloudflareConfig
+        });
     });
 
     it('reads the tsconfig that build.tsconfig points at', async () => {
         const { projectDir, load } = projectWith({ ...EDGE_MINIMAL, build: { tsconfig: './tsconfig.build.json' } });
-        writeFileSync(join(projectDir, 'wrangler.jsonc'), '');
+        writeFileSync(join(projectDir, CLOUDFLARE_CONFIG), '');
         writeTsconfig(projectDir, {});
         writeTsconfig(projectDir, { customConditions: ['workerd'] }, 'tsconfig.build.json');
 
@@ -152,7 +152,7 @@ describe('ProjectLoader target', () => {
 describe('ProjectLoader entry on an edge bot', () => {
     function edgeProjectWith(config: unknown): ReturnType<typeof projectWith> {
         const project = projectWith(config);
-        writeFileSync(join(project.projectDir, 'wrangler.jsonc'), '');
+        writeFileSync(join(project.projectDir, CLOUDFLARE_CONFIG), '');
         writeTsconfig(project.projectDir, { customConditions: ['workerd'] });
         return project;
     }
@@ -162,7 +162,7 @@ describe('ProjectLoader entry on an edge bot', () => {
 
         const { target } = await load();
 
-        expect(target).toEqual({ kind: 'edge', wranglerConfig: join(projectDir, 'wrangler.jsonc') });
+        expect(target).toEqual({ kind: 'edge', cloudflareConfig: join(projectDir, CLOUDFLARE_CONFIG) });
     });
 
     it('throws CliConfigEntryOnEdge for a config that sets entry', async () => {
