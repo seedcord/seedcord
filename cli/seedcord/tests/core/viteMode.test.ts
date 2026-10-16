@@ -1,3 +1,4 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { viteMode } from '#core/viteMode';
@@ -22,11 +23,21 @@ describe('viteMode', () => {
         [{ ENVIRONMENT: 'staging' }, 'staging'],
         [{ ENV: 'production' }, 'production'],
         [{ NODE_ENV: 'test' }, 'test'],
-        [{ ENVIRONMENT: 'Development' }, 'development'],
-        [{ ENVIRONMENT: 'preview' }, 'development']
+        [{ ENVIRONMENT: 'Development' }, 'development']
     ])('returns the environment envapt resolves from the shell %j', (vars, mode) => {
         withShellEnv(vars);
 
         expect(viteMode('production')).toBe(mode);
+    });
+
+    it('throws ConfigInvalidEnv for a name envapt does not know', () => {
+        withShellEnv({ ENV: 'preview' });
+
+        expect(() => viteMode('production')).toThrow(
+            expect.objectContaining({
+                code: SeedcordErrorCode.ConfigInvalidEnv,
+                message: expect.stringContaining('development, staging, production, or test') as string
+            })
+        );
     });
 });

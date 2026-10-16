@@ -28,7 +28,8 @@ function config(): ResolvedSeedcordConfig {
         tunnel: { mode: 'quick' },
         typecheck: { enabled: false },
         idleAnimation: true,
-        build: {}
+        build: {},
+        mode: 'development'
     };
 }
 

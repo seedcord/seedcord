@@ -6,6 +6,7 @@ import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 
 import { Project } from '#core/project/Project';
+import { viteMode } from '#core/viteMode';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { assertNoHashPaths } from './assertNoHashPaths';
@@ -14,6 +15,7 @@ import { detectTarget } from './detectTarget';
 import { locateConfig } from './locateConfig';
 
 import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
+import type { DefaultMode } from '#core/viteMode';
 import type { BuildTarget } from './detectTarget';
 import type {
     ResolvedSeedcordBuildConfig,
@@ -158,15 +160,19 @@ function validateConfig(raw: unknown, target: BuildTarget, configFile: string): 
 }
 
 export class ProjectLoader {
-    constructor(private readonly openModules: OpenModules) {}
+    constructor(
+        private readonly openModules: OpenModules,
+        private readonly defaultMode: DefaultMode = 'development'
+    ) {}
 
     public async open(projectDir = process.cwd()): Promise<Project> {
+        const mode = viteMode(this.defaultMode);
         const configPath = locateConfig(projectDir);
         const configDir = dirname(configPath);
         const target = detectTarget(configDir);
         await using onFailure = new AsyncDisposableStack();
-        const modules = onFailure.use(await this.openModules(configDir, target));
-        const project = new Project(await this.readConfig(modules, configPath, target), modules);
+        const modules = onFailure.use(await this.openModules(configDir, target, mode));
+        const project = new Project(await this.readConfig(modules, configPath, target, mode), modules);
         await assertNoHashPaths(project);
         await assertTargetMatchesTsconfig(project);
 
@@ -177,7 +183,8 @@ export class ProjectLoader {
     private async readConfig(
         modules: ModuleLoader,
         configPath: string,
-        target: BuildTarget
+        target: BuildTarget,
+        mode: string
     ): Promise<ResolvedSeedcordConfig> {
         const loadedModule = await modules.importModule(configPath);
         const config: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
@@ -197,6 +204,7 @@ export class ProjectLoader {
             build,
             typecheck,
             idleAnimation: config.idleAnimation ?? true,
+            mode,
             tunnel: resolveTunnel(config.tunnel),
             hmr: config.hmr
         } satisfies ResolvedSeedcordConfig;

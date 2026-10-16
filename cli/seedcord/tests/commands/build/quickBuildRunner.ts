@@ -1,8 +1,6 @@
 import { targetBuildFor } from '#commands/build/builder/targetBuildFor';
 import { TypeChecker } from '#commands/build/builder/TypeChecker';
 import { BuildRunner } from '#commands/build/BuildRunner';
-import { ProjectLoader } from '#core/config/ProjectLoader';
-import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { quietSteps } from '#core/output/quietSteps';
 
 import type { Build } from '#commands/build/builder/targetBuildFor';
@@ -15,7 +13,7 @@ const passingTsc: typeof runProjectTsc = () => Promise.resolve({ exitCode: 0, st
 export function quickBuildRunner(buildFor: (project: Project) => Build = targetBuildFor): BuildRunner {
     return new BuildRunner({
         steps: quietSteps,
-        projectLoader: new ProjectLoader(openModuleLoader),
+        projectLoader: BuildRunner.projectLoader(),
         typeChecker: new TypeChecker(passingTsc),
         buildFor
     });

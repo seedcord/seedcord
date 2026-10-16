@@ -26,11 +26,13 @@ class ViteModuleLoader extends RunnerModuleLoader implements AsyncDisposable {
 
 export async function openModuleLoader(
     projectDir: string,
-    target: BuildTarget
+    target: BuildTarget,
+    mode: string
 ): Promise<ModuleLoader & AsyncDisposable> {
     const isEdge = target.kind === 'edge';
     const config = mergeViteConfig(userCodeConfig(isEdge ? WORKERD_CONDITIONS : NODE_CONDITIONS), {
         root: projectDir,
+        mode,
         configFile: false,
         logLevel: 'error',
         clearScreen: false,

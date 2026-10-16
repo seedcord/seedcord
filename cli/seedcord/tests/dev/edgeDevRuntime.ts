@@ -11,6 +11,7 @@ import { onTestFinished } from 'vitest';
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { toSeedcordInstance } from '#core/modules/importInstance';
 import { StateFolder } from '#core/state/StateFolder';
+import { viteMode } from '#core/viteMode';
 import { copyEdgeBot } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES, FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { silentLogger } from '#tests/silentLogger';
@@ -37,6 +38,7 @@ export function edgeConfig(projectDir: string, port = ANY_PORT): ResolvedSeedcor
         instance: join(projectDir, 'src/bot.ts'),
         target: edgeTarget(projectDir, port),
         build: {},
+        mode: viteMode('development'),
         tunnel: { mode: 'quick' }
     } as ResolvedSeedcordConfig;
 }

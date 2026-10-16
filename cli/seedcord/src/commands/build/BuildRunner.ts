@@ -34,10 +34,15 @@ interface BuildRunnerDeps {
 export class BuildRunner {
     constructor(private readonly deps: BuildRunnerDeps) {}
 
+    // a build is what you deploy, so it runs in production unless the shell sets a mode
+    public static projectLoader(): ProjectLoader {
+        return new ProjectLoader(openModuleLoader, 'production');
+    }
+
     public static create(steps: Steps<BuildStep>): BuildRunner {
         return new BuildRunner({
             steps,
-            projectLoader: new ProjectLoader(openModuleLoader),
+            projectLoader: BuildRunner.projectLoader(),
             typeChecker: new TypeChecker(),
             buildFor: targetBuildFor
         });

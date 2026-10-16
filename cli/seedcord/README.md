@@ -116,7 +116,7 @@ export default defineConfig({
 
 `seedcord build` writes the worker to `.cloudflare/output`, then starts it once in workerd to check that it loads. Deploy it with `cf deploy --prebuilt`. Cloudflare refuses to deploy a worker while one of its declared secrets has no value, so the first deploy of a new worker needs `--secrets-file` with a value for each one.
 
-`ENVIRONMENT`, `ENV` or `NODE_ENV` in your shell sets the Vite mode, as in `ENV=staging pnpm build`. A value in an env file doesn't count, since the mode decides which `.env.<mode>` files get read, and `.env` usually holds your dev environment. Vite reads the `.env.<mode>` files for the mode, and a `cloudflare.config.ts` that exports a function gets it as `mode`. With none of them set, `seedcord dev` runs in `development`, and `seedcord build` runs in `production` because the build is what you deploy.
+`ENVIRONMENT`, `ENV` or `NODE_ENV` in your shell sets the Vite mode, as in `ENV=staging pnpm build`. A value in an env file doesn't count, since the mode decides which `.env.<mode>` files get read, and `.env` usually holds your dev environment. Vite reads the `.env.<mode>` files for the mode, and a `cloudflare.config.ts` that exports a function gets it as `mode`. With none of them set, `seedcord dev` runs in `development`, and `seedcord build` runs in `production` because the build is what you deploy. The mode has to be `development`, `staging`, `production` or `test`, the four environments envapt knows, so a node bot and an edge bot read the same files for one value.
 
 Local env files never replace a `bindings.text()` value. For a value that differs per environment, export a function and read `mode`, as in `ENV: bindings.text(mode)`.
 

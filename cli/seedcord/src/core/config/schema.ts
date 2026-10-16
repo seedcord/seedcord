@@ -153,6 +153,8 @@ export interface ResolvedSeedcordConfig extends Required<
     target: ResolvedTarget;
     build: ResolvedSeedcordBuildConfig;
     typecheck: ResolvedTypecheck;
+    // the vite mode, which picks the .env files and the cloudflare.config.ts mode
+    mode: string;
     // restart globs pass through unresolved
     hmr?: SeedcordHmrConfig | undefined;
 }

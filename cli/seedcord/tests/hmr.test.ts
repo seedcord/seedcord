@@ -134,7 +134,8 @@ describe('HmrPlugin', () => {
         typecheck: { enabled: false } as const,
         idleAnimation: true,
         tunnel: { mode: 'quick' } as const,
-        build: {}
+        build: {},
+        mode: 'development'
     };
 
     const srcRoot = join(projectRoot, 'src');

@@ -22,7 +22,6 @@ import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 import { functionExportsOf } from '#core/modules/workerExports';
 import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
-import { viteMode } from '#core/viteMode';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
 import { edgeViteConfig } from './devServerConfig';
@@ -102,8 +101,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             loadCloudflare(viteRoot, importCloudflare)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
-        // vite and the cloudflare plugin read the .env and .dev.vars files named after the mode
-        const mode = viteMode('development');
+        const { mode } = config;
         const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, mode);
         const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, workerConfig);
         const server = await createServer(
