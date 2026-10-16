@@ -1,4 +1,4 @@
-import { appendFile, mkdir, writeFile } from 'node:fs/promises';
+import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -209,6 +209,32 @@ describe('EdgeDevRuntime lifecycle', () => {
             message: expect.stringContaining('answered a GET with 200') as string
         });
     }, 60_000);
+
+    // cloudflare/workers-sdk#16324
+    it('starts a session that swaps a named export for a durable object', async () => {
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        const bot = join(projectDir, 'src/bot.ts');
+        const original = await readFile(bot, 'utf8');
+        await writeFile(bot, `${original}\nexport function helper(): number {\n    return 1;\n}\n`);
+        await using first = await startedRuntime(projectDir);
+        await first.runtime.startBot(first.instance);
+        await first.runtime.stop();
+
+        await writeFile(
+            bot,
+            `${original}\nimport { DurableObject } from 'cloudflare:workers';\nexport class Counter extends DurableObject {}\n`
+        );
+        await writeCloudflareConfig(projectDir, {
+            env: { COUNTER: bindings.durableObject({ worker: 'edge-bot', exportName: 'Counter' }) },
+            exports: { Counter: exports.durableObject({ storage: 'sqlite' }) }
+        });
+        await using second = await startedRuntime(projectDir);
+        await second.runtime.startBot(second.instance);
+
+        const unsigned = await fetch(`http://localhost:${second.port()}/`, { method: 'POST', body: '{}' });
+        expect(unsigned.status).toBe(401);
+    }, 120_000);
 
     it('exports the durable object classes bot.ts exports', async () => {
         await using project = await edgeProject();
