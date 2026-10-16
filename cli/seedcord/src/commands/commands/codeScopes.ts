@@ -28,7 +28,7 @@ interface CodeScopes {
     scopes: ScopesInCode | undefined;
 }
 
-type LoadDeps = Pick<RunnerDeps, 'projectLoader' | 'logger'>;
+type LoadDeps = Pick<RunnerDeps, 'projectLoader'>;
 
 export function scopesInCode(found: readonly FoundCommand[], configuredGuilds: readonly string[]): ScopesInCode {
     const global: CommandBody[] = [];
@@ -50,7 +50,7 @@ export function scopesInCode(found: readonly FoundCommand[], configuredGuilds: r
 
 export async function loadCodeScopes(
     steps: Steps<LoadStep>,
-    { projectLoader, logger }: LoadDeps,
+    { projectLoader }: LoadDeps,
     projectDir: string
 ): Promise<CodeScopes> {
     await using project = await steps.step('read config', () => projectLoader.open(projectDir));
@@ -68,7 +68,7 @@ export async function loadCodeScopes(
 
     const found = await steps.step(
         'scan',
-        () => new CommandScanner(modules, logger, config.root).scan(path),
+        () => new CommandScanner(modules, config.root).scan(path),
         (commands) => plural(commands.length, 'command')
     );
     return { ...loaded, scopes: scopesInCode(found, guilds) };

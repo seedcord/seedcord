@@ -279,6 +279,8 @@ const messages = {
         `Could not read the commands directory ${paint.path(dir)}. ${reason}`,
     [SeedcordErrorCode.CliCommandConstructorThrew]: (name: string, file: string, reason: string) =>
         `${name} threw while seedcord constructed it. Fix its constructor in ${paint.path(file)}. ${reason}`,
+    [SeedcordErrorCode.CliCommandNotACommand]: (name: string, file: string) =>
+        `${paint.bold(name)} in ${paint.path(file)} carries ${paint.bold('@RegisterCommand')}, but its component is not a slash command or a context menu. Extend ${paint.bold("BuilderComponent<'command'>")} or ${paint.bold("BuilderComponent<'context_menu'>")}.`,
     [SeedcordErrorCode.CliCommandProblems]: (count: number) =>
         `${count} command files need fixing before seedcord can read the commands. Each one is listed below.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>

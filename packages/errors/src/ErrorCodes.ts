@@ -331,6 +331,8 @@ export enum SeedcordErrorCode {
     CliDeployNeedsYes = 3157,
     /** `seedcord commands purge` ran with none of --global, --guilds or --all-guilds. */
     CliPurgeNoTargets = 3158,
+    /** A class carrying `@RegisterCommand` builds a component that is not a command or a context menu. */
+    CliCommandNotACommand = 3159,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

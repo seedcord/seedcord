@@ -158,7 +158,7 @@ export class EdgeBuild extends TargetBuild {
 
     private async commandsInCode(commands: CommandsConfig): Promise<CommandsInCode | undefined> {
         if (commands.path === null) return undefined;
-        const scanner = new CommandScanner(this.project.modules, this.logger, this.project.config.root);
+        const scanner = new CommandScanner(this.project.modules, this.project.config.root);
         const found = await scanner.scan(commands.path);
         return { found, configuredGuilds: commands.guilds ?? [] };
     }

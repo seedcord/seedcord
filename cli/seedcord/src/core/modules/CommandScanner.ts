@@ -12,7 +12,6 @@ import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { CommandCtor, CommandMeta } from '@seedcord/core/internal';
-import type { ILogger } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 interface CommandClassFile {
@@ -40,7 +39,7 @@ export interface FoundCommand {
     meta: CommandMeta;
 }
 
-function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | SeedcordError | undefined {
+function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | SeedcordError {
     let json: unknown;
     try {
         json = new Command().component.toJSON();
@@ -51,7 +50,9 @@ function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | Se
         });
     }
 
-    if (!isApplicationCommand(json)) return undefined;
+    if (!isApplicationCommand(json)) {
+        return new SeedcordError(SeedcordErrorCode.CliCommandNotACommand, [Command.name, sourceFile]);
+    }
     // justified: isCommandClass checked this key before the walk yielded the class
     const meta = Reflect.getMetadata(CommandMetadataKey, Command) as CommandMeta;
     return { sourceFile, className: Command.name, json, meta };
@@ -60,7 +61,6 @@ function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | Se
 export class CommandScanner {
     constructor(
         private readonly modules: ModuleLoader,
-        private readonly logger: ILogger,
         private readonly root: string
     ) {}
 
@@ -68,10 +68,10 @@ export class CommandScanner {
         const commands: FoundCommand[] = [];
         const problems: unknown[] = [];
         try {
-            for await (const commandClass of this.walk(resolveFromRoot(this.root, commandsPath), new Set(), true)) {
+            for await (const commandClass of this.walk(resolveFromRoot(this.root, commandsPath), new Set())) {
                 const built = construct(commandClass);
                 if (isSeedcordError(built)) problems.push(built);
-                else if (built) commands.push(built);
+                else commands.push(built);
             }
         } catch (error: unknown) {
             // the walk stops at the first file that fails to import
@@ -82,23 +82,22 @@ export class CommandScanner {
         return commands;
     }
 
-    private async *walk(dir: string, seen: Set<unknown>, isRoot: boolean): AsyncGenerator<CommandClassFile> {
+    private async *walk(dir: string, seen: Set<unknown>): AsyncGenerator<CommandClassFile> {
         let entries;
         try {
             entries = await readdir(dir, { withFileTypes: true });
         } catch (error: unknown) {
             const reason = Error.isError(error) ? error.message : 'Unknown error';
-            // skipping the root would read as a bot with no commands
-            if (isRoot) throw new SeedcordError(SeedcordErrorCode.CliCommandsDirUnreadable, [dir, reason]);
-            this.logger.warn(`Skipping unreadable directory ${dir}. ${reason}.`);
-            return;
+            // skipping a folder would delete its commands on the next deploy
+            // better to just fail fast
+            throw new SeedcordError(SeedcordErrorCode.CliCommandsDirUnreadable, [dir, reason], { cause: error });
         }
 
         // readdir order differs between filesystems
         for (const entry of entries.toSorted((a, b) => a.name.localeCompare(b.name))) {
             const fullPath = join(dir, entry.name);
             if (entry.isDirectory()) {
-                yield* this.walk(fullPath, seen, false);
+                yield* this.walk(fullPath, seen);
             } else if (isTsOrJsFile(entry)) {
                 const imported = await this.modules.importModule<Record<string, unknown>>(fullPath);
                 for (const exported of Object.values(imported)) {

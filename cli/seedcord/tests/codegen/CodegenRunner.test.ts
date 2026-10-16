@@ -3,9 +3,10 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
+import { CommandMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { HostAugmentTarget, HostPluginKeys, SeedcordBrand } from '@seedcord/types/internal';
-import { ApplicationCommandType } from 'discord.js';
+import { ApplicationCommandType, ButtonStyle } from 'discord.js';
 import { assert, describe, expect, it, onTestFinished } from 'vitest';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
@@ -302,7 +303,7 @@ describe('CodegenRunner', () => {
         expect((caught as Error).message).toContain(missing);
     });
 
-    it('warns and skips a nested unreadable subdir instead of throwing', async () => {
+    it('throws CliCommandsDirUnreadable for a nested unreadable subdir', async () => {
         const root = await tempDir('codegen-');
         const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
@@ -310,22 +311,32 @@ describe('CodegenRunner', () => {
         await mkdir(locked);
         await writeFile(join(locked, 'x.ts'), 'export {};', 'utf8');
         await chmod(locked, 0o000);
+        onTestFinished(() => chmod(locked, 0o755));
 
-        const warnings: string[] = [];
-        try {
-            await scanRunner(
-                root,
-                cmdDir,
-                () => ({ BanCommand }),
-                silentLogger({ warn: (message) => warnings.push(String(message)) })
-            ).run(false);
-        } finally {
-            await chmod(locked, 0o755);
+        const run = scanRunner(root, cmdDir, () => ({ BanCommand }), silentLogger()).run(false);
+
+        await expect(run).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandsDirUnreadable });
+        await expect(run).rejects.toThrow(locked);
+    });
+
+    it('throws CliCommandNotACommand for a registered class whose component is not a command', async () => {
+        const root = await tempDir('codegen-');
+        const cmdDir = await tempDir('cmds-');
+        await writeFile(join(cmdDir, 'confirm.ts'), 'export {};', 'utf8');
+
+        class ConfirmButton extends BuilderComponent<'button'> {
+            public constructor() {
+                super('button');
+                this.instance.setCustomId('confirm').setLabel('Confirm').setStyle(ButtonStyle.Primary);
+            }
         }
+        // a cast or plain JS gets past RegisterCommand's types
+        Reflect.defineMetadata(CommandMetadataKey, { scope: 'global' }, ConfirmButton);
 
-        const written = await readFile(resolve(root, OUTPUT), 'utf8');
-        expect(written).toContain("ban: { options: {}; cache: 'cached' }");
-        expect(warnings.some((warning) => warning.includes('locked'))).toBe(true);
+        const run = scanRunner(root, cmdDir, () => ({ ConfirmButton }), silentLogger()).run(false);
+
+        await expect(run).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandNotACommand });
+        await expect(run).rejects.toThrow('ConfirmButton');
     });
 
     it('resolves the commands path against root', async () => {

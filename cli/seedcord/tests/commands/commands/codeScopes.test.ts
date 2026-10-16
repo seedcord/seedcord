@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest';
 import { loadCodeScopes } from '#commands/commands/codeScopes';
 import { quietSteps } from '#core/output/quietSteps';
 import { fakeProject } from '#tests/commands/commands/fakeBot';
-import { silentLogger } from '#tests/silentLogger';
 
 import type { ProjectOpener } from '#tests/commands/commands/fakeBot';
 
@@ -17,7 +16,7 @@ class Help extends BuilderComponent<'command'> {
 RegisterCommand()(Help);
 
 function scopesOf(projectLoader: ProjectOpener): ReturnType<typeof loadCodeScopes> {
-    return loadCodeScopes(quietSteps, { projectLoader, logger: silentLogger }, '');
+    return loadCodeScopes(quietSteps, { projectLoader }, '');
 }
 
 function names(commands: { name: string }[] | undefined): string[] | undefined {
