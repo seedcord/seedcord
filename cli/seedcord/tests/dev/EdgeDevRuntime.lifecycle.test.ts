@@ -13,7 +13,7 @@ import { deployedCommandsFile } from '#core/state/deployedCommands';
 import { StateFolder } from '#core/state/StateFolder';
 import { writeCloudflareConfig } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES } from '#tests/commands/build/smoke';
-import { withEnv } from '#tests/envapt';
+import { withShellEnv } from '#tests/envapt';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
 
@@ -59,7 +59,7 @@ describe('EdgeDevRuntime lifecycle', () => {
     }, 120_000);
 
     it('reads the .env file for the mode ENVIRONMENT sets', async () => {
-        withEnv({ ENVIRONMENT: 'staging' });
+        withShellEnv({ ENVIRONMENT: 'staging' });
         await using project = await edgeProject();
         await writeFile(join(project.projectDir, '.env.staging'), 'API_TOKEN=from-staging\n');
 

@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { isPlainObject } from '@seedcord/utils/internal';
 import { describe, expect, it } from 'vitest';
 
-import { withEnv } from '#tests/envapt';
+import { withShellEnv } from '#tests/envapt';
 
 import { copyEdgeBotForTest, edgeBuildRunner } from './edgeBot';
 
@@ -30,13 +30,13 @@ async function builtWorkerName(): Promise<unknown> {
 
 describe('seedcord build mode on an edge bot', () => {
     it('builds in production when ENVIRONMENT, ENV and NODE_ENV are unset', async () => {
-        withEnv({});
+        withShellEnv({});
 
         await expect(builtWorkerName()).resolves.toBe('edge-bot-production');
     }, 120_000);
 
     it('builds in the mode ENVIRONMENT sets', async () => {
-        withEnv({ ENVIRONMENT: 'staging' });
+        withShellEnv({ ENVIRONMENT: 'staging' });
 
         await expect(builtWorkerName()).resolves.toBe('edge-bot-staging');
     }, 120_000);

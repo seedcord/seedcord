@@ -9,7 +9,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { writeSigningEnv } from '#tests/commands/build/edgeBot';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
-import { withEnv } from '#tests/envapt';
+import { withShellEnv } from '#tests/envapt';
 
 import {
     captureLogs,
@@ -134,7 +134,7 @@ describe('EdgeDevRuntime endpoint', () => {
     it.each(['.dev.vars', '.env', '.env.staging', 'cloudflare.config.ts'])(
         'reports a restart is required when %s changes in mode staging, and keeps the bot answering',
         async (file) => {
-            withEnv({ ENVIRONMENT: 'staging' });
+            withShellEnv({ ENVIRONMENT: 'staging' });
             await using project = await edgeProject();
             const { projectDir } = project;
             const events: DevEvent[] = [];
