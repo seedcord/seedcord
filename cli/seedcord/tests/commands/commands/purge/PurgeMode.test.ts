@@ -1,0 +1,50 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { describe, expect, it } from 'vitest';
+
+import { PurgeMode } from '#commands/commands/purge/PurgeMode';
+import { GLOBAL_SCOPE } from '#commands/commands/remove/scope';
+import { slash } from '#tests/commands/commands/fakeBot';
+
+import type { Scan } from '#commands/commands/remove/RemoveRunner';
+import type { Scope } from '#commands/commands/remove/scope';
+
+const alpha: Scope = { kind: 'guild', id: 'g1', name: 'Alpha' };
+const beta: Scope = { kind: 'guild', id: 'g2', name: 'Beta' };
+
+const scan: Scan = {
+    global: [slash('ping')],
+    guilds: [
+        { scope: alpha, commands: [slash('ban'), slash('setup')] },
+        { scope: beta, commands: [] }
+    ],
+    skipped: []
+};
+
+describe('PurgeMode', () => {
+    it('throws CliPurgeNoTargets with no guilds and no global', () => {
+        expect(() => new PurgeMode(false).checkTargets({ kind: 'none' })).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CliPurgeNoTargets })
+        );
+    });
+
+    it('accepts global on its own', () => {
+        expect(() => new PurgeMode(true).checkTargets({ kind: 'none' })).not.toThrow();
+    });
+
+    it('picks every command in each guild that has some', () => {
+        expect(new PurgeMode(false).select(scan)).toEqual([{ scope: alpha, commands: [slash('ban'), slash('setup')] }]);
+    });
+
+    it('puts the global commands first when global is included', () => {
+        expect(new PurgeMode(true).select(scan)).toEqual([
+            { scope: GLOBAL_SCOPE, commands: [slash('ping')] },
+            { scope: alpha, commands: [slash('ban'), slash('setup')] }
+        ]);
+    });
+
+    it('says when nothing is left to delete', () => {
+        expect(new PurgeMode(true).nothingToRemove({ global: [], guilds: [], skipped: [] }).outro).toBe(
+            'No commands to delete.'
+        );
+    });
+});

@@ -49,6 +49,7 @@ interface FakeDiscord {
     rest: REST;
     gets: string[];
     puts: { route: string; names: string[] }[];
+    deletes: string[];
 }
 
 export function slash(name: string): { id: string; name: string; type: ApplicationCommandType } {
@@ -94,28 +95,56 @@ export async function fakeProject({
     return { open: () => Promise.resolve(new Project(config, modules)) };
 }
 
+// an Error as a route's answer makes every request to that route reject with it.
+// a function answers a GET from its query
+function answersFromQuery(answer: unknown): answer is (query: URLSearchParams | undefined) => unknown {
+    return typeof answer === 'function';
+}
+
+function reply(answer: unknown): Promise<unknown> {
+    return Error.isError(answer) ? Promise.reject(answer) : Promise.resolve(answer);
+}
+
 export function fakeDiscord(onDiscord: Record<string, unknown> = {}): FakeDiscord {
     const gets: string[] = [];
     const puts: FakeDiscord['puts'] = [];
+    const deletes: string[] = [];
     const answers: Record<string, unknown> = {
         [Routes.currentApplication()]: { id: APP_ID },
         [Routes.applicationCommands(APP_ID)]: [],
         [Routes.guild('111')]: { id: '111', name: 'Alpha' },
         [Routes.applicationGuildCommands(APP_ID, '111')]: [],
+        [Routes.userGuilds()]: [],
         ...onDiscord
     };
     const rest = Object.assign(new EventEmitter(), {
-        get: vi.fn((route: string) => {
+        get: vi.fn((route: string, options?: { query?: URLSearchParams }) => {
             gets.push(route);
-            return Promise.resolve(answers[route]);
+            const answer = answers[route];
+            return reply(answersFromQuery(answer) ? answer(options?.query) : answer);
         }),
-        put: vi.fn((route: string, { body }: { body: { name: string }[] }) => {
+        put: vi.fn(async (route: string, { body }: { body: { name: string }[] }) => {
+            await reply(answers[route]);
             puts.push({ route, names: body.map((command) => command.name) });
-            return Promise.resolve([]);
+            return [];
+        }),
+        delete: vi.fn(async (route: string) => {
+            await reply(answers[route]);
+            deletes.push(route);
         })
     });
-    // eslint-disable-next-line no-restricted-syntax -- the runners call only get, put, on and off on this double
-    return { rest: rest as unknown as REST, gets, puts };
+    // eslint-disable-next-line no-restricted-syntax -- the runners call only get, put, delete, on and off on this double
+    return { rest: rest as unknown as REST, gets, puts, deletes };
+}
+
+// the bot's guild list, paged the way discord pages it after the id in the query
+export function botGuilds(count: number): Record<string, unknown> {
+    const guilds = Array.from({ length: count }, (_, i) => ({ id: `g${i}`, name: `G${i}` }));
+    const page = (query: URLSearchParams): unknown[] => {
+        const after = guilds.findIndex(({ id }) => id === query.get('after'));
+        return guilds.slice(after + 1, after + 1 + Number(query.get('limit')));
+    };
+    return { [Routes.userGuilds()]: page };
 }
 
 // a piped terminal, read back without colors and with plain spaces

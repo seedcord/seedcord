@@ -62,6 +62,9 @@ seedcord commands list --json               # print them as JSON
 seedcord commands clean                     # pick guilds, then remove commands that copy a global one
 seedcord commands clean --all-guilds        # list those copies in every guild
 seedcord commands clean --all-guilds --yes  # delete them
+seedcord commands purge                     # pick where, then delete every command there
+seedcord commands purge --guilds 111 222    # list every command in those guilds
+seedcord commands purge --global --yes      # delete every global command
 ```
 
 In CI, or anywhere without a terminal, nothing changes on Discord unless you pass `--yes`.

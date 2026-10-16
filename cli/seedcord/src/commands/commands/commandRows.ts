@@ -36,6 +36,11 @@ export function commandLabel(command: CommandLike, tone?: Tone): string {
     return `${(tone ?? paint.iris)(name.replaceAll(' ', NO_BREAK))}${paint.mute(`${NO_BREAK}(${menu})`)}`;
 }
 
+export function labelRows(commands: readonly (CommandLike & { id: string })[], verbose: boolean): CommandRow[] {
+    if (verbose) return commands.map((command) => ({ items: [`${commandLabel(command)}  ${paint.mute(command.id)}`] }));
+    return [{ items: commands.map((command) => commandLabel(command)) }];
+}
+
 export function printSections(output: SectionOutput, sections: readonly CommandSection[]): void {
     output.line();
     for (const { title, note, rows } of sections) {

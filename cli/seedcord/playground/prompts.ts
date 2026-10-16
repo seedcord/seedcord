@@ -2,11 +2,14 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 import { isSeedcordError, paint, SeedcordErrorCode } from '@seedcord/errors';
 
-import { CleanRunner } from '#commands/commands/clean/CleanRunner';
-import { CleanWizard, WIZARD_STEPS } from '#commands/commands/clean/CleanWizard';
+import { askClean } from '#commands/commands/clean/CleanMode';
+import { askPurge } from '#commands/commands/purge/PurgeMode';
+import { RemoveRunner } from '#commands/commands/remove/RemoveRunner';
+import { RemoveWizard, WIZARD_STEPS } from '#commands/commands/remove/RemoveWizard';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { Prompter } from '#core/prompts/Prompter';
 
+import type { WizardQuestions } from '#commands/commands/remove/RemoveWizard';
 import type { REST } from '@discordjs/rest';
 
 type Scenario = (prompter: Prompter) => Promise<unknown>;
@@ -33,7 +36,7 @@ async function fakeDiscord(route: string): Promise<unknown> {
     ];
 }
 
-const rest: Pick<REST, 'get' | 'delete'> = { get: fakeDiscord, delete: fakeDiscord };
+const rest: Pick<REST, 'get' | 'delete' | 'put'> = { get: fakeDiscord, delete: fakeDiscord, put: fakeDiscord };
 
 const SCENARIOS: Record<string, Scenario> = {
     select: (prompter) =>
@@ -41,26 +44,25 @@ const SCENARIOS: Record<string, Scenario> = {
             message: 'Remove guild commands that duplicate a global command. Which guilds?',
             choices: [
                 { value: 'pick', label: 'Pick specific guilds' },
-                {
-                    value: 'all',
-                    label: 'All guilds the bot is in',
-                    hint: 'duplicates only, pick specific guilds for a full reset'
-                }
+                { value: 'all', label: 'All guilds the bot is in' }
             ]
         }),
-    confirm: (prompter) => prompter.confirm({ message: 'Delete 3 guild commands? This cannot be undone.' }),
+    confirm: (prompter) => prompter.confirm({ message: 'Delete 3 commands? This cannot be undone.' }),
     'pick-many': (prompter) =>
         prompter.pickMany({
-            message: 'Select guilds to clean',
+            message: 'Select guilds',
             choices: GUILDS.map((guild) => ({ value: guild.id, label: guild.name }))
         }),
-    wizard: async (prompter) => {
-        const printer = new StepPrinter({ command: 'commands', labels: WIZARD_STEPS, verbose: false });
-        printer.header();
-        await new CleanWizard(new CleanRunner(() => rest), 'token', printer, prompter).run();
-        return 'done';
-    }
+    clean: (prompter) => runWizard(prompter, askClean),
+    purge: (prompter) => runWizard(prompter, askPurge)
 };
+
+async function runWizard(prompter: Prompter, questions: WizardQuestions): Promise<string> {
+    const printer = new StepPrinter({ command: 'commands', labels: WIZARD_STEPS, verbose: false });
+    printer.header();
+    await new RemoveWizard(new RemoveRunner(() => rest), 'token', printer, prompter, false).run(questions);
+    return 'done';
+}
 
 function write(line: string): void {
     process.stdout.write(`${line}\n`);

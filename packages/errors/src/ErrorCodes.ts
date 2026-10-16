@@ -255,10 +255,8 @@ export enum SeedcordErrorCode {
     CliCommandsDirUnreadable = 3115,
     /** Two context-menu commands of the same kind share a name during codegen. */
     CliCodegenDuplicateContextMenu = 3116,
-    /** `commands clean` ran with neither --guild nor --all-guilds. */
+    /** `commands clean` ran with neither --guilds nor --all-guilds. */
     CliCleanNoGuilds = 3118,
-    /** `commands clean` combined --purge with --all-guilds. */
-    CliCleanPurgeAllGuilds = 3119,
     /** An interactive prompt was cancelled (Ctrl-C), so the command aborts without changes. */
     CliCancelled = 3120,
     /** The cloudflared metrics server never reported a quick-tunnel hostname. */
@@ -329,6 +327,8 @@ export enum SeedcordErrorCode {
     CliDeployNoCommandsFolder = 3156,
     /** `seedcord commands deploy` ran where it cannot ask first, without `--yes`. */
     CliDeployNeedsYes = 3157,
+    /** `seedcord commands purge` ran with none of --global, --guilds or --all-guilds. */
+    CliPurgeNoTargets = 3158,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

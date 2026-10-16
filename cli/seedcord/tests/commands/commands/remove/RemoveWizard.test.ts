@@ -4,12 +4,15 @@ import { paint } from '@seedcord/errors';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CleanRunner } from '#commands/commands/clean/CleanRunner';
-import { CleanWizard, WIZARD_STEPS } from '#commands/commands/clean/CleanWizard';
+import { askClean } from '#commands/commands/clean/CleanMode';
+import { askPurge } from '#commands/commands/purge/PurgeMode';
+import { RemoveRunner } from '#commands/commands/remove/RemoveRunner';
+import { RemoveWizard, WIZARD_STEPS } from '#commands/commands/remove/RemoveWizard';
 import { levelMark } from '#core/output/levelMark';
 import { StepPrinter } from '#core/output/StepPrinter';
 import { KEY, PromptTerminal } from '#tests/core/prompts/PromptTerminal';
 
+import type { WizardQuestions } from '#commands/commands/remove/RemoveWizard';
 import type { REST } from '@discordjs/rest';
 
 const ROUTES: Record<string, unknown> = {
@@ -40,17 +43,29 @@ function reply(value: unknown): Promise<unknown> {
     return Error.isError(value) ? Promise.reject(value) : Promise.resolve(value ?? []);
 }
 
+interface WizardRun {
+    deleted: string[];
+    cleared: string[];
+    done: Promise<void>;
+}
+
 function wizard(
     terminal: PromptTerminal,
-    overrides: Record<string, unknown> = {}
-): { deleted: string[]; done: Promise<void> } {
+    overrides: Record<string, unknown> = {},
+    questions: WizardQuestions = askClean
+): WizardRun {
     const routes = { ...ROUTES, ...overrides };
     const deleted: string[] = [];
-    const rest: Pick<REST, 'get' | 'delete'> = {
+    const cleared: string[] = [];
+    const rest: Pick<REST, 'get' | 'delete' | 'put'> = {
         get: vi.fn((route: string) => reply(routes[route])),
         delete: vi.fn(async (route: string) => {
             await reply(routes[route]);
             deleted.push(route);
+        }),
+        put: vi.fn((route: string) => {
+            cleared.push(route);
+            return Promise.resolve([]);
         })
     };
     const printer = new StepPrinter({
@@ -60,18 +75,18 @@ function wizard(
         stdout: terminal.stdout,
         stderr: terminal.stdout
     });
-    const done = new CleanWizard(new CleanRunner(() => rest), 'token', printer, terminal.prompter).run();
-    return { deleted, done };
+    const runner = new RemoveRunner(() => rest);
+    const done = new RemoveWizard(runner, 'token', printer, terminal.prompter, false).run(questions);
+    return { deleted, cleared, done };
 }
 
-describe('CleanWizard', () => {
+describe('RemoveWizard with the clean questions', () => {
     it('leaves only the steps, the preview and the outcome once the picked duplicates are gone', async () => {
         using terminal = new PromptTerminal();
         const { deleted, done } = wizard(terminal);
 
         await terminal.press(KEY.enter);
         await terminal.press(KEY.tab, KEY.down, KEY.tab, KEY.enter);
-        await terminal.press(KEY.enter);
         await terminal.press('y', KEY.enter);
         await done;
 
@@ -113,7 +128,7 @@ describe('CleanWizard', () => {
         using terminal = new PromptTerminal();
         const { deleted, done } = wizard(terminal);
 
-        await terminal.press(KEY.enter, KEY.tab, KEY.enter, KEY.enter, KEY.enter);
+        await terminal.press(KEY.enter, KEY.tab, KEY.enter, KEY.enter);
         await done;
 
         expect(deleted).toEqual([]);
@@ -122,23 +137,11 @@ describe('CleanWizard', () => {
         expect(screen.trimEnd().split('\n').at(-1)).toBe('  Nothing deleted.');
     });
 
-    it('counts every command for a full reset and tags each context menu with its kind', async () => {
-        using terminal = new PromptTerminal();
-        const { done } = wizard(terminal);
-
-        await terminal.press(KEY.enter, KEY.tab, KEY.enter, KEY.down, KEY.enter, 'y', KEY.enter);
-        await done;
-
-        const screen = masked(await terminal.screen()).replaceAll(' ', ' ');
-        expect(screen).toContain('scan          T  3 commands in 1 guild');
-        expect(screen).toContain('  Alpha  3 commands\n      /ban /setup Report (message)');
-    });
-
     it('skips the picker when the bot is in one guild', async () => {
         using terminal = new PromptTerminal();
         const { deleted, done } = wizard(terminal, { '/users/@me/guilds': [{ id: 'g1', name: 'Alpha' }] });
 
-        await terminal.press(KEY.enter, KEY.enter, 'y', KEY.enter);
+        await terminal.press(KEY.enter, 'y', KEY.enter);
         await done;
 
         expect(deleted).toEqual(['/applications/app1/guilds/g1/commands/11']);
@@ -166,12 +169,55 @@ describe('CleanWizard', () => {
             '/applications/app1/guilds/g1/commands/11': new Error('Unknown Command')
         });
 
-        await terminal.press(KEY.enter, KEY.tab, KEY.down, KEY.tab, KEY.enter, KEY.enter, 'y', KEY.enter);
+        await terminal.press(KEY.enter, KEY.tab, KEY.down, KEY.tab, KEY.enter, 'y', KEY.enter);
         await done;
 
         const screen = await terminal.screen();
         const warning = stripVTControlCharacters(levelMark('warn'));
         expect(screen).toContain(`  ${warning} Could not read 1 guild (Beta).`);
         expect(screen).toContain(`  ${warning} Could not delete ban in Alpha (Unknown Command).`);
+    });
+});
+
+describe('RemoveWizard with the purge questions', () => {
+    it('empties a picked guild and tags each context menu with its kind', async () => {
+        using terminal = new PromptTerminal();
+        const { cleared, deleted, done } = wizard(terminal, {}, askPurge);
+
+        await terminal.press(KEY.enter, KEY.enter, KEY.tab, KEY.enter, 'y', KEY.enter);
+        await done;
+
+        expect(cleared).toEqual(['/applications/app1/guilds/g1/commands']);
+        expect(deleted).toEqual([]);
+        const screen = masked(await terminal.screen()).replaceAll(' ', ' ');
+        expect(screen).toContain('scan          T  3 commands in 1 guild');
+        expect(screen).toContain('  Alpha  3 commands\n      /ban /setup Report (message)');
+    });
+
+    it('empties only global without asking about guilds', async () => {
+        using terminal = new PromptTerminal();
+        const { cleared, done } = wizard(terminal, {}, askPurge);
+
+        await terminal.press(KEY.down, KEY.enter, 'y', KEY.enter);
+        await done;
+
+        expect(cleared).toEqual(['/applications/app1/commands']);
+        const screen = masked(await terminal.screen());
+        expect(screen).toContain('scan          T  2 commands in global');
+        expect(screen).not.toContain('Global commands untouched.');
+    });
+
+    it('empties global and every guild that has commands', async () => {
+        using terminal = new PromptTerminal();
+        const { cleared, done } = wizard(terminal, {}, askPurge);
+
+        await terminal.press(KEY.down, KEY.down, KEY.enter, KEY.down, KEY.enter, 'y', KEY.enter);
+        await done;
+
+        expect(cleared).toEqual([
+            '/applications/app1/commands',
+            '/applications/app1/guilds/g1/commands',
+            '/applications/app1/guilds/g2/commands'
+        ]);
     });
 });

@@ -1,6 +1,4 @@
-import { paint } from '@seedcord/errors';
-
-import { commandLabel, printSections } from '#commands/commands/commandRows';
+import { labelRows, printSections } from '#commands/commands/commandRows';
 import { plural } from '#core/format';
 
 import type { CommandRow, CommandSection } from '#commands/commands/commandRows';
@@ -28,10 +26,6 @@ export class ListPresenter {
     }
 
     private rows(commands: readonly APIApplicationCommand[]): CommandRow[] {
-        if (commands.length === 0) return [];
-        if (this.verbose) {
-            return commands.map((command) => ({ items: [`${commandLabel(command)}  ${paint.mute(command.id)}`] }));
-        }
-        return [{ items: commands.map((command) => commandLabel(command)) }];
+        return commands.length === 0 ? [] : labelRows(commands, this.verbose);
     }
 }

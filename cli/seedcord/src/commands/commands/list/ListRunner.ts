@@ -23,7 +23,7 @@ export interface ListScope {
     allGuilds: boolean;
 }
 
-export interface GuildListing {
+interface GuildListing {
     id: string;
     name: string;
     commands: APIApplicationCommand[];

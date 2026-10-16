@@ -266,6 +266,8 @@ const messages = {
         `${paint.path(instance)} sets ${paint.bold('bot.commands.path')} to ${paint.bold('null')}. Point it at the folder that holds your commands to deploy them.`,
     [SeedcordErrorCode.CliDeployNeedsYes]: () =>
         `${paint.bold('seedcord commands deploy')} asks before it deploys, and it can only ask in a terminal with ${paint.bold('CI')} unset. Pass ${paint.bold('--yes')} to deploy without asking.`,
+    [SeedcordErrorCode.CliPurgeNoTargets]: () =>
+        `Nothing to purge. Pass ${paint.bold('--global')}, ${paint.bold('--guilds <ids...>')} or ${paint.bold('--all-guilds')}.`,
     [SeedcordErrorCode.CliBuildFolderProblems]: (count: number) =>
         `${count} folders in the bot config need fixing before ${paint.bold('seedcord build')} can bundle the bot. Each one is listed below.`,
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
@@ -308,9 +310,7 @@ const messages = {
     ) =>
         `Two ${kind} context-menu commands share the name \`${name}\`. Defined in ${paint.path(firstFile)} and ${paint.path(secondFile)}. Rename one.`,
     [SeedcordErrorCode.CliCleanNoGuilds]: () =>
-        'No guilds given. Pass --guild <ids...> or --all-guilds. Global commands are never touched.',
-    [SeedcordErrorCode.CliCleanPurgeAllGuilds]: () =>
-        '--purge cannot be combined with --all-guilds. Use --guild <ids> to purge specific guilds.',
+        'No guilds given. Pass --guilds <ids...> or --all-guilds. Global commands are never touched.',
     [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
     [SeedcordErrorCode.CliTunnelUrlUnavailable]: (seconds: number) =>
         `cloudflared did not report a tunnel URL within ${seconds}s. Check that the binary runs and that the network allows it.`,
