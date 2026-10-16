@@ -306,7 +306,7 @@ const messages = {
     [SeedcordErrorCode.CliConfigFileUnreadable]: (tool: string, file: string, output: string) =>
         `${tool} could not read ${paint.path(file)}. Fix the problem it reports:\n${output}`,
     [SeedcordErrorCode.CliConfigFieldUnused]: (field: string, file: string, why: string) =>
-        `${paint.path(file)} sets ${paint.bold(field)}, which this bot doesn't use. ${why} Remove ${paint.bold(field)} from ${paint.path(file)}.`,
+        `${paint.path(file)} sets ${paint.bold(field)}. ${why} Remove ${paint.bold(field)} from ${paint.path(file)}.`,
     [SeedcordErrorCode.CliEdgeCompatDateTooOld]: (cloudflareConfig: string, date: string, firstDate: string) =>
         `A seedcord edge bot needs Cloudflare's Node compat. ${paint.path(cloudflareConfig)} sets ${paint.bold('compatibilityDate')} to ${date}, but Cloudflare turns Node compat on by default only from ${firstDate}. Set the date to ${firstDate} or later, or add ${paint.bold("'nodejs_compat'")} to ${paint.bold('compatibilityFlags')}.`,
     [SeedcordErrorCode.CliEdgeNodeCompatOff]: (cloudflareConfig: string) =>

@@ -18,12 +18,13 @@ type EntryCustomizer = NonNullable<NonNullable<Parameters<CloudflarePlugin>[0]>[
 export function workerEntryConfig(cloudflareConfig: string): EntryCustomizer {
     return ({ entrypoint }) => {
         if (entrypoint !== undefined) {
-            const why = `seedcord builds the worker's entry from ${paint.bold('instance')} in your seedcord config.`;
+            const why = `seedcord sets it to the default export of ${paint.bold('instance')} in your seedcord config.`;
             throw new SeedcordTypeError(SeedcordErrorCode.CliConfigFieldUnused, ['entrypoint', cloudflareConfig, why]);
         }
         return { entrypoint: WORKER_ENTRY_ID };
     };
 }
+
 const BIND_ENV_ID = 'virtual:seedcord/bind-env';
 const BUILT_FILES_ID = 'virtual:seedcord/built-files';
 const BAKED_IDS_ID = 'virtual:seedcord/baked-ids';

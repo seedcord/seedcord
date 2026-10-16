@@ -49,7 +49,7 @@ function* buildProblems(value: unknown, target: BuildTarget, configFile: string)
         return;
     }
     if (target.kind === 'edge' && value.outDir !== undefined) {
-        const why = `${paint.bold('@cloudflare/vite-plugin')} writes an edge bot's worker to ${paint.path('.cloudflare/output')}, where ${paint.bold('cf deploy --prebuilt')} reads it.`;
+        const why = `An edge bot can't set it, because ${paint.bold('@cloudflare/vite-plugin')} writes the worker to ${paint.path('.cloudflare/output')}, where ${paint.bold('cf deploy --prebuilt')} reads it.`;
         yield unusedField('build.outDir', configFile, why);
     } else if (!isOptionalString(value.outDir)) {
         yield invalidField('build.outDir', 'a string');
@@ -94,11 +94,10 @@ function isNonEmptyString(value: unknown): boolean {
 }
 
 function* entryProblems(entry: unknown, target: BuildTarget, configFile: string): Generator<SeedcordTypeError> {
-    if (target.kind === 'server' && !isNonEmptyString(entry)) {
-        yield invalidField('entry', 'a string that points to your startup script');
-    }
-    if (target.kind === 'edge' && entry !== undefined) {
-        const why = `${paint.path(target.cloudflareConfig)} makes this an edge bot, and Cloudflare calls the default export of ${paint.bold('instance')}.`;
+    if (target.kind === 'server') {
+        if (!isNonEmptyString(entry)) yield invalidField('entry', 'a string that points to your startup script');
+    } else if (entry !== undefined) {
+        const why = `${paint.path(target.cloudflareConfig)} makes this an edge bot, which has no entry because Cloudflare calls the default export of ${paint.bold('instance')}.`;
         yield unusedField('entry', configFile, why);
     }
 }
