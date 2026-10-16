@@ -4,75 +4,67 @@
  * All Seedcord error codes.
  */
 export enum SeedcordErrorCode {
-    /** Two or more configured emojis could not be resolved at startup. */
+    /** Two or more configured emojis failed to resolve at startup. */
     ConfigEmojiUnresolved = 1001,
-    /** A configured emoji's value is neither a name nor a `[name, guildId]` pair. */
+    /** A configured emoji is neither a name nor a `[name, guildId]` pair. */
     ConfigEmojiInvalid = 1002,
-    /** A configured emoji's name is missing from the application or guild it points at. */
+    /** The application or guild a configured emoji points at has no emoji with that name. */
     ConfigEmojiNotFound = 1003,
-    /** The application or guild a configured emoji points at could not be read. */
+    /** Reading the emojis of the application or guild a configured emoji points at failed. */
     ConfigEmojiSourceUnreadable = 1004,
-    /** A webhook reporter's env var is set but fails webhook URL validation. */
-    ConfigWebhookUrlInvalid = 1005,
-    /** A configured webhook does not exist on Discord (deleted, or a wrong id or token). */
-    ConfigWebhookNotFound = 1006,
-    /** A required environment variable is not present. */
-    ConfigMissingEnv = 1007,
-    /** An environment variable is present and fails validation. */
-    ConfigInvalidEnv = 1008,
-    /** A command usable in a guild is registered without the `Guilds` intent that caches guilds. */
-    MissingGuildsIntent = 1009,
-    /** The running Node or Bun version is below the range seedcord declares for it in `engines`. */
-    UnsupportedRuntimeVersion = 1010,
-    /** `DISCORD_BOT_TOKEN` passed its shape check and carries no readable application id. */
-    ConfigTokenUnreadable = 1011,
+    /** Discord has no webhook at a configured URL, because it was deleted or the id or token is wrong. */
+    ConfigWebhookNotFound = 1005,
+    /** A required environment variable is unset. */
+    ConfigMissingEnv = 1006,
+    /** An environment variable is set to a value seedcord cannot use. */
+    ConfigInvalidEnv = 1007,
+    /** A command that runs in guilds is registered without the `Guilds` intent, so discord.js caches no guild. */
+    MissingGuildsIntent = 1008,
+    /** The running Node or Bun is older than the range seedcord declares in `engines`. */
+    UnsupportedRuntimeVersion = 1009,
     /** An edge config sets a REST sweeper interval. */
-    ConfigEdgeRestSweeper = 1012,
-    /** `DISCORD_PUBLIC_KEY` is unset and reading the key from Discord failed. */
-    ConfigPublicKeyUnavailable = 1013,
+    ConfigEdgeRestSweeper = 1010,
     /** Another process already listens on the port seedcord tries to listen on. */
-    PortInUse = 1014,
+    PortInUse = 1011,
 
-    /** Attempted to add lifecycle tasks after startup already completed. */
-    LifecycleAddAfterCompletion = 1101,
-    /** Attempted to add or remove lifecycle tasks while startup is still running. */
-    LifecycleChangeDuringRun = 1102,
-    /** Provided lifecycle phase identifier is not recognized. */
-    LifecycleUnknownPhase = 1103,
-    /** Startup phase completed with one or more task failures. */
-    LifecyclePhaseFailures = 1104,
-    /** A lifecycle task exceeded its configured timeout. */
-    LifecycleTaskTimeout = 1105,
+    /** A startup task was added or removed while startup ran, or added after it finished. */
+    LifecycleTaskChangeRejected = 1101,
+    /** A lifecycle call got a phase that is not a member of `StartupPhase` or `ShutdownPhase`. */
+    LifecycleUnknownPhase = 1102,
+    /** One or more tasks failed during a startup phase. */
+    LifecyclePhaseFailures = 1103,
+    /** A lifecycle task ran past its timeout. */
+    LifecycleTaskTimeout = 1104,
     /** A host whose startup failed was started again. */
-    LifecycleRestartAfterFailure = 1106,
-    /** The configured shutdown deadline is zero, negative, or not finite. */
-    LifecycleInvalidShutdownDeadline = 1107,
+    LifecycleRestartAfterFailure = 1105,
+    /** A shutdown deadline or a plugin's lifecycle timeout is zero, negative, or not finite. */
+    LifecycleInvalidTimeout = 1106,
 
-    /** Multiple Seedcord instances were created simultaneously. */
+    /** A second Seedcord instance was constructed while one already exists. */
     CoreSingletonViolation = 1201,
-    /** A plugin was attached once the bot had started. */
+    /** A plugin was attached after the bot started. */
     CorePluginAfterInit = 1202,
-    /** A plugin tried to register with a key that already exists. */
+    /** A plugin was attached under a key another plugin already uses. */
     CorePluginKeyExists = 1203,
-    /** Bot role lookup failed within the provided guild. */
+    /** The bot's own role is missing from the guild's role cache. */
     CoreBotRoleMissing = 1204,
-    /** A bot controller was constructed without its required handlers directory. */
+    /** A bot controller was constructed without the folder that holds its handlers. */
     CoreControllerPathMissing = 1205,
-    /** A file in a scanned directory threw while being imported. */
-    CoreDirectoryImportFailed = 1206,
-    /** A scanned directory could not be read. */
-    CoreDirectoryUnreadable = 1207,
-    /** A plugin was attached under a key the framework logs on. */
+    /** A file threw while seedcord imported it, in the bot or in the CLI. */
+    CoreImportFailed = 1206,
+    /** A file or folder that seedcord reads could not be read. */
+    CorePathUnreadable = 1207,
+    /** A plugin was attached under a key that the framework logs on. */
     CorePluginReservedChannel = 1208,
     /** The application id was read before startup resolved it. */
     CoreApplicationUnavailable = 1209,
-    /** A generated accessor was read for a key that holds no value. */
+    /** A generated accessor like `Emojis` or `Commands` was read for a key that has no value yet. */
     CoreAccessorUnresolved = 1210,
-    /** A shutdown task was added on an edge bot. */
+    /** A shutdown task was added on an edge bot. Cloudflare stops an isolate without a shutdown hook. */
     CoreLifecycleUnavailable = 1211,
-    /** `emit` was called on the bus. It reaches listeners and skips every subscriber. */
+    /** `emit` was called on the bus. It reaches listeners but skips every subscriber. */
     CoreBusEmitUnavailable = 1212,
-    /** A command decorator passed `'config'` while `commands.guilds` is empty. */
+    /** A command registers to the `'config'` guilds while `commands.guilds` is empty. */
     CoreCommandGuildsEmpty = 1213,
     /** Discord refused the command deploy for one guild. */
     CoreCommandGuildDeployFailed = 1214,
@@ -80,252 +72,223 @@ export enum SeedcordErrorCode {
     CorePluginGroupTaken = 1215,
     /** A plugin was attached at a name that holds a group of plugins. */
     CorePluginKeyHoldsGroup = 1216,
-    /** A plugin key is empty, has an empty part, or carries more than one dot. */
+    /** A plugin key is empty, has an empty part, or has more than one dot. */
     CorePluginKeyMalformed = 1217,
-    /** An attached plugin doesn't extend the `Plugin` class of the bot's `@seedcord/core`. */
+    /** An attached plugin extends the `Plugin` class of a different copy of `@seedcord/core`. */
     CorePluginFromOtherCore = 1218,
-    /** A built bot scanned a folder outside `root`. */
-    CoreDirectoryOutsideRoot = 1219,
-    /** A file in a scanned directory could not be read as text. */
-    CoreFileUnreadable = 1220,
-    /** A plugin's declared transport or runtime differs from the bot it was attached to. */
-    CorePluginScopeMismatch = 1221,
-    /** A node http bot received a request through `fetch` before `start()` was called. */
-    CoreFetchBeforeStart = 1222,
-    /** An edge worker received a POST without the ids `seedcord build` writes into it. */
-    CoreEdgeUnbuilt = 1223,
-    /** A relative folder was read in a process that never received the bot's `root`. */
-    CoreDirectoryRootUnknown = 1224,
+    /** A folder or the entry file is outside `root`. */
+    CorePathOutsideRoot = 1219,
+    /** A plugin declares a transport or runtime the bot doesn't use. */
+    CorePluginScopeMismatch = 1220,
+    /** A node http bot got a request through `fetch` before `start()` was called. */
+    CoreFetchBeforeStart = 1221,
+    /** An edge worker got a POST without the ids that `seedcord build` writes into it. */
+    CoreEdgeUnbuilt = 1222,
+    /** A relative folder was read in a process that never got the bot's `root`. */
+    CoreDirectoryRootUnknown = 1223,
     /** Discord refused the global command deploy. */
-    CoreCommandGlobalDeployFailed = 1225,
-    /** A built bot scanned a folder that did not exist under `root` when `seedcord build` ran. */
-    CoreDirectoryNotBuilt = 1226,
+    CoreCommandGlobalDeployFailed = 1224,
+    /** A built bot read a folder that did not exist under `root` when `seedcord build` ran. */
+    CoreDirectoryNotBuilt = 1225,
+    /** A webhook sender was constructed with a URL that is not a Discord webhook URL. */
+    CoreWebhookUrlInvalid = 1226,
+    /** Reading from Discord with `DISCORD_BOT_TOKEN` failed, like the application, its public key, or its commands. */
+    CoreDiscordReadFailed = 1227,
+    /** Two routes, commands, middleware classes, migrations, or customId fields have the same name. */
+    CoreDuplicateName = 1228,
 
-    /** A command decorator attempted to re-register an existing command scope. */
+    /** A command class carries `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,
-    /** A global command decorator specified guild IDs, which is not allowed. */
+    /** `@RegisterCommand('global')` was given guild ids. */
     DecoratorCommandGlobalWithGuilds = 1302,
-    /** A guild command decorator omitted the required guild ID list. */
+    /** `@RegisterCommand('guild')` was given no guild ids. */
     DecoratorCommandGuildWithoutGuilds = 1303,
-    /** Middleware priority provided by the decorator was not a finite number. */
+    /** A middleware decorator sets a priority that is not a finite number. */
     DecoratorInvalidMiddlewarePriority = 1304,
-    /** A WebhookLog subclass is missing its `@WebhookUrl` decorator. */
+    /** A `WebhookLog` subclass is missing its `@WebhookUrl` decorator. */
     DecoratorWebhookUrlMissing = 1305,
-    /** A middleware decorator was given an empty filter array. */
+    /** A middleware decorator got an empty filter array. */
     DecoratorEmptyMiddlewareFilter = 1306,
 
-    /** Two interaction handlers registered the same route within a scope. */
-    InteractionDuplicateRoute = 1401,
-    /** Two different middleware classes share a class name. */
-    DuplicateMiddleware = 1402,
-
-    /** A reply method was called in an ack state where it is illegal. */
+    /** A reply method was called in an ack state where Discord rejects it. */
     ReplyIllegalAckState = 1501,
-    /** A reply component failed to serialize to raw API data. */
+    /** A reply component threw while seedcord serialized it. */
     ReplyComponentSerialization = 1502,
-    /** edit() was passed a message the interaction did not send. */
+    /** `edit()` got a message that the interaction did not send. */
     ReplyForeignEditTarget = 1503,
-    /** update() or deferUpdate() was called on a modal with no source message. */
+    /** `update()` or `deferUpdate()` was called on a modal that has no source message. */
     ReplyUpdateWithoutSource = 1504,
-    /** A withResponse interaction callback returned no created message. */
+    /** Discord's response to a `withResponse` callback has no message in it. */
     ReplyCallbackMissingMessage = 1505,
 
-    /** A customId definition prefix contains a reserved character (a colon or a control char). */
+    /** A customId prefix is empty, or holds a colon or a control character. */
     CustomIdInvalidPrefix = 1601,
-    /** A customId field name is integer-like, which JS would silently reorder. */
+    /** A customId field name looks like an integer. JS reorders integer keys. */
     CustomIdReservedFieldName = 1602,
-    /** A oneOf() or someOf() field was declared with no choices. */
+    /** A `oneOf()` or `someOf()` field was declared with no choices. */
     CustomIdEmptyChoices = 1603,
-    /** An int() field was declared with min greater than max. */
+    /** An `int()` field was declared with a min greater than its max. */
     CustomIdInvalidBounds = 1604,
-    /** A field rejected the value given to encode(). */
+    /** `encode()` got a value that doesn't fit its field. */
     CustomIdValueRejected = 1605,
-    /** An encoded customId exceeds Discord's 100-character limit. */
+    /** An encoded customId is longer than the 100 characters Discord allows. */
     CustomIdWireTooLong = 1606,
-    /** A field name is declared more than once in the same customId chain. */
-    CustomIdDuplicateFieldName = 1607,
     /** A component handler is missing the route decorator that matches its base. */
-    CustomIdHandlerRouteMissing = 1608,
-    /** A handler's match() has no arm for the route, field, event, or command that fired. */
-    MatchArmMissing = 1609,
-    /** An event handler or middleware read the fired event name but was constructed without one. */
-    EventNameUnavailable = 1610,
-    /** An autocomplete payload carried no focused option. */
-    AutocompleteNoFocusedOption = 1611,
-    /** No field in the submitted modal carries the requested custom id. */
-    ModalFieldNotFound = 1612,
+    CustomIdHandlerRouteMissing = 1607,
+    /** A handler's `match()` has no arm for the route, field, event, or command that fired. */
+    MatchArmMissing = 1608,
+    /** An event handler or middleware read the fired event's name but was constructed without one. */
+    EventNameUnavailable = 1609,
+    /** Discord sent an autocomplete payload with no focused option. */
+    AutocompleteNoFocusedOption = 1610,
+    /** The submitted modal has no field with the requested custom id. */
+    ModalFieldNotFound = 1611,
     /** A modal field getter was called on a field of another kind. */
-    ModalFieldWrongKind = 1613,
-    /** Nothing was picked in a modal field read as required. */
-    ModalFieldEmpty = 1614,
-    /** A channel select field picked a channel outside the types getSelectedChannels() allows. */
-    ModalFieldChannelType = 1615,
-    /** A customId was minted under an older shape of the same definition. */
-    CustomIdWireStale = 1616,
-    /** A customId wire is corrupt, truncated, or was minted by a different definition. */
-    CustomIdWireInvalid = 1617,
-    /** `dispatch.require()` was called for a key nothing wrote on this dispatch. */
-    DispatchStateMissing = 1618,
+    ModalFieldWrongKind = 1612,
+    /** A modal field read as required has nothing picked. */
+    ModalFieldEmpty = 1613,
+    /** A channel select picked a channel type that `getSelectedChannels()` was told to exclude. */
+    ModalFieldChannelType = 1614,
+    /** A customId was encoded under an older shape of the same definition. */
+    CustomIdWireStale = 1615,
+    /** A customId is corrupt, truncated, or was encoded by a different definition. */
+    CustomIdWireInvalid = 1616,
+    /** `dispatch.require()` was called for a key that nothing set on this dispatch. */
+    DispatchStateMissing = 1617,
 
-    /** A Cooldown gate was given a duration string that is not a well-formed positive duration. */
+    /** A `Cooldown` gate got a duration that doesn't parse, or one of zero or less. */
     GateInvalidCooldownDuration = 1701,
 
-    /** A paginator source was given a perPage that is not a positive integer. */
+    /** A paginator got a `perPage` that is not a positive integer. */
     PaginationInvalidPerPage = 1801,
-    /** A control row was assembled with more than the five buttons Discord allows. */
-    PaginationTooManyControls = 1802,
-    /** A control row was assembled with no controls. */
-    PaginationEmptyControls = 1803,
-    /** A control row repeats the same control, which would collide the custom_ids. */
-    PaginationDuplicateControls = 1804,
+    /** A control row has no controls, or more than the five buttons Discord allows. */
+    PaginationControlCount = 1802,
+    /** A control row repeats a control, which would give two buttons the same custom_id. */
+    PaginationDuplicateControls = 1803,
 
-    /** A color value could not be resolved to a Discord color integer. */
+    /** A color value doesn't resolve to a Discord color integer. */
     ColorUnresolvable = 1901,
-    /** A resolved color fell outside Discord's 0x000000 to 0xffffff range. */
+    /** A resolved color is outside Discord's range of 0x000000 to 0xffffff. */
     ColorOutOfRange = 1902,
 
-    /** `renderTable` was given a `maxWidth` or `padding` outside the values it accepts. */
+    /** `renderTable` got a `maxWidth` or `padding` outside the values it accepts. */
     UtilTableOptionInvalid = 1951,
-    /** `assertNever` was reached at run time with a value its types ruled out. */
+    /** `assertNever` ran with a value that its types ruled out. */
     UtilUnhandledUnionMember = 1952,
 
-    /** A plugin's constructor rejected its options through `rejectOptions`. */
+    /** A plugin's constructor called `rejectOptions` on the options it got. */
     PluginOptionsRejected = 2001,
     /** Two or more plugins threw while disposing. */
     PluginDisposeFailures = 2002,
-    /** A plugin declared a lifecycle timeout that is not a positive, finite number of milliseconds. */
-    PluginInvalidLifecycleTimeout = 2003,
     /** A plugin service class is missing the decorator that registers it. */
-    PluginServiceDecoratorMissing = 2004,
-    /** A plugin's `services` was read before the plugin finished initializing. */
-    PluginServicesNotReady = 2005,
+    PluginServiceDecoratorMissing = 2003,
+    /** A plugin's `services` was read before the plugin finished `init()`. */
+    PluginServicesNotReady = 2004,
     /** A plugin could not connect to the service it wraps. */
-    PluginConnectionFailed = 2006,
-    /** A plugin could not disconnect cleanly from the service it wraps during shutdown. */
-    PluginDisconnectFailed = 2007,
+    PluginConnectionFailed = 2005,
+    /** A plugin could not close its connection cleanly during shutdown. */
+    PluginDisconnectFailed = 2006,
 
-    /** Mongoose rejected the model, usually a duplicate model name or an absent schema. */
+    /** Mongoose threw while building a model, usually for a duplicate model name or a missing schema. */
     PluginMongooseModelCreationFailed = 2101,
-    /** A mongoose service was registered with an empty model name override. */
+    /** A mongoose service was registered with an empty model name. */
     PluginMongooseModelNameMissing = 2102,
 
-    /** Kysely service class is missing its table metadata. */
+    /** A kysely service class has no table. */
     PluginKyselyServiceTableMissing = 2201,
-    /** Migration manager received an invalid step count. */
+    /** A migration run got a step count that is not a non-negative integer. */
     PluginKyselyInvalidStepCount = 2202,
-    /** Migration direction was not recognized. */
+    /** A migration run got a direction other than `up` or `down`. */
     PluginKyselyUnknownDirection = 2203,
-    /** A file in the migrations folder is missing its `up` function. */
+    /** A file in the migrations folder has no `up` function. */
     PluginKyselyInvalidMigrationModule = 2204,
-    /** An arbitrary (non-Error) failure was reported by a migration. */
+    /** A migration failed with a thrown value that is not an `Error`. */
     PluginKyselyNonErrorFailure = 2205,
-    /** Bootstrapper failed to ensure the target Postgres database exists. */
+    /** Creating the target Postgres database failed. */
     PluginKyselyBootstrapFailed = 2206,
-    /** Two files in the migrations folder share a name once their folder and extension are stripped. */
-    PluginKyselyDuplicateMigrationName = 2207,
 
-    /** An interactive prompt in `seedcord` or `create-seedcord` was cancelled (Ctrl-C). */
+    /** Someone pressed Ctrl-C at a prompt in `seedcord` or `create-seedcord`. */
     CliCancelled = 3001,
 
-    /** Config file default export was not an object. */
+    /** The seedcord config file's default export is not an object. */
     CliConfigInvalidExport = 3101,
-    /** Unable to locate a Seedcord config file. */
+    /** No seedcord config file exists in the folder the CLI searched. */
     CliConfigNotFound = 3102,
-    /** CLI entry file does not exist. */
+    /** The entry file does not exist. */
     CliEntryNotFound = 3103,
-    /** The CLI could not load a config, bot, or command file. */
-    CliImportFailed = 3104,
     /** The instance file's default export is not a constructed `Seedcord`. */
-    CliInstanceInvalid = 3105,
-    /** Seedcord instance threw during startup. */
-    CliStartFailed = 3106,
-    /** Entry file must be inside the configured root directory. */
-    CliConfigEntryOutsideRoot = 3107,
+    CliInstanceInvalid = 3104,
+    /** The bot threw during startup. */
+    CliStartFailed = 3105,
     /** `build.tsconfig` points at a missing file, or it is unset and the config's folder has no `tsconfig.json`. */
-    CliTsconfigNotFound = 3108,
-    /** `seedcord build` found type errors in the project. */
-    CliBuildFailed = 3109,
-    /** Two commands resolve to the same slash route during codegen. */
-    CliCodegenDuplicateRoute = 3110,
-    /** Two context-menu commands of the same kind share a name during codegen. */
-    CliCodegenDuplicateContextMenu = 3111,
-    /** `commands clean` ran with neither --guilds nor --all-guilds. */
-    CliCleanNoGuilds = 3112,
-    /** The cloudflared metrics server never reported a quick-tunnel hostname. */
-    CliTunnelUrlUnavailable = 3113,
+    CliTsconfigNotFound = 3106,
+    /** `seedcord build` found type errors. */
+    CliBuildFailed = 3107,
+    /** `commands clean` or `commands purge` ran without a flag that picks where it deletes. */
+    CliNoScopeGiven = 3108,
+    /** cloudflared never reported a quick tunnel hostname. */
+    CliTunnelUrlUnavailable = 3109,
     /** Discord rejected the tunnel URL as an interactions endpoint. */
-    CliTunnelNotVerified = 3114,
+    CliTunnelNotVerified = 3110,
     /** The tunnel URL never answered its health probe. */
-    CliTunnelUnreachable = 3115,
-    /** A config field is missing or has the wrong shape. */
-    CliConfigInvalidField = 3116,
+    CliTunnelUnreachable = 3111,
+    /** A field in the seedcord config is missing or has the wrong shape. */
+    CliConfigInvalidField = 3112,
     /** A class carrying `@RegisterCommand` threw while seedcord constructed it. */
-    CliCommandConstructorThrew = 3117,
+    CliCommandConstructorThrew = 3113,
     /** Vite threw while bundling the bot. */
-    CliBundleFailed = 3118,
+    CliBundleFailed = 3114,
     /** `build.outDir` is `root` or a folder that contains it. */
-    CliConfigOutDirDeletesRoot = 3119,
-    /** `typescript` is not installed in the project. */
-    CliTypescriptMissing = 3120,
-    /** `build.outDir` already contains other files. */
-    CliBuildOutDirNotEmpty = 3121,
+    CliConfigOutDirDeletesRoot = 3115,
+    /** The project is missing a dev dependency the CLI runs, like `typescript` or `wrangler`. */
+    CliDependencyMissing = 3116,
+    /** `build.outDir` already has other files in it. */
+    CliBuildOutDirNotEmpty = 3117,
     /** One CLI step found two or more problems. Each one is in the error's `errors`. */
-    CliProblems = 3122,
-    /** `seedcord codegen --check` found the committed augmentations stale. */
-    CliCodegenOutOfDate = 3123,
+    CliProblems = 3118,
+    /** `seedcord codegen --check` found the committed augmentations out of date. */
+    CliCodegenOutOfDate = 3119,
     /** A file or folder in the project has a `#` in its path. */
-    CliPathHasHash = 3124,
-    /** An edge bot's tsconfig lacks the `workerd` condition. */
-    CliEdgeWithoutWorkerdCondition = 3125,
+    CliPathHasHash = 3120,
+    /** An edge bot's tsconfig is missing the `workerd` condition. */
+    CliEdgeWithoutWorkerdCondition = 3121,
     /** A bot with no wrangler config sets the `workerd` condition in its tsconfig. */
-    CliWorkerdConditionWithoutWrangler = 3126,
-    /** TypeScript could not read the project's tsconfig. */
-    CliTsconfigUnreadable = 3127,
-    /** The CLI could not start the TypeScript compiler process. */
-    CliTypescriptNotStarted = 3128,
+    CliWorkerdConditionWithoutWrangler = 3122,
+    /** TypeScript or wrangler could not read the project's tsconfig or wrangler config. */
+    CliConfigFileUnreadable = 3123,
+    /** The CLI could not start the TypeScript compiler. */
+    CliTypescriptNotStarted = 3124,
     /** An edge bot's seedcord config sets `entry`. */
-    CliConfigEntryOnEdge = 3129,
-    /** An edge bot's project does not have `@cloudflare/vite-plugin` installed. */
-    CliEdgeVitePluginMissing = 3130,
-    /** An edge bot's `compatibility_date` predates Cloudflare's Node compat default with no flag to turn it on. */
-    CliEdgeCompatDateTooOld = 3131,
+    CliConfigEntryOnEdge = 3125,
+    /** An edge bot's `compatibility_date` is older than Cloudflare's Node compat default, and no flag turns it on. */
+    CliEdgeCompatDateTooOld = 3126,
     /** An edge bot sets `no_nodejs_compat`. */
-    CliEdgeNodeCompatOff = 3132,
+    CliEdgeNodeCompatOff = 3127,
     /** The build could not start the edge worker in workerd. */
-    CliEdgeBootFailed = 3133,
+    CliEdgeBootFailed = 3128,
     /** An edge bot's `root` holds its seedcord config. */
-    CliEdgeRootHoldsConfig = 3134,
-    /** The CLI could not read the application from Discord with `DISCORD_BOT_TOKEN`. */
-    CliApplicationUnreadable = 3135,
-    /** The CLI could not read the commands deployed globally or to a guild. */
-    CliCommandsUnreadable = 3136,
+    CliEdgeRootHoldsConfig = 3129,
     /** An edge build found commands in code that have no deployed id on Discord. */
-    CliEdgeCommandsNotDeployed = 3137,
-    /** An edge bot's project does not have `wrangler` installed. */
-    CliEdgeWranglerMissing = 3138,
-    /** Wrangler could not read an edge bot's wrangler config. */
-    CliEdgeWranglerConfigUnreadable = 3139,
-    /** Something called the dev runtime before `start()` finished or after `stop()`. A bug in seedcord. */
-    CliDevRuntimeNotRunning = 3140,
+    CliEdgeCommandsNotDeployed = 3130,
+    /** Something called the dev runtime before `start()` finished or after `stop()`, which is a bug in seedcord. */
+    CliDevRuntimeNotRunning = 3131,
     /** `seedcord commands deploy` ran on a bot whose `commands.path` is `null`. */
-    CliDeployNoCommandsFolder = 3141,
-    /** `seedcord commands deploy` ran where it cannot ask first, without `--yes`. */
-    CliDeployNeedsYes = 3142,
-    /** `seedcord commands purge` ran with none of --global, --guilds or --all-guilds. */
-    CliPurgeNoTargets = 3143,
+    CliDeployNoCommandsFolder = 3132,
+    /** `seedcord commands deploy` ran without `--yes` where it cannot ask first. */
+    CliDeployNeedsYes = 3133,
     /** A class carrying `@RegisterCommand` builds a component that is not a command or a context menu. */
-    CliCommandNotACommand = 3144,
-    /** `seedcord commands clean` or `purge` could not delete some of the commands it selected. */
-    CliCommandsNotDeleted = 3145,
+    CliCommandNotACommand = 3134,
+    /** `seedcord commands clean` or `purge` could not delete some of the commands it picked. */
+    CliCommandsNotDeleted = 3135,
 
-    /** A flag supplied an answer for a question the earlier answers skip. */
+    /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,
-    /** A flag carried a value its question rejects. */
+    /** A flag has a value its question rejects. */
     CreateInvalidAnswer = 3202,
     /** The command line did not parse. */
     CreateBadUsage = 3203,
-    /** The target path already holds something. */
+    /** The target path already has files in it. */
     CreateTargetNotEmpty = 3204,
-    /** A command the scaffolder shelled out to exited non-zero. */
+    /** A command that create-seedcord ran exited non-zero. */
     CreateStepFailed = 3205
 }
