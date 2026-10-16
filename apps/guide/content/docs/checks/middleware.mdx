@@ -229,6 +229,6 @@ export const seedcord = new Seedcord({
 
 If a class in that directory doesn't have the decorator, seedcord loads it and never runs it. A handler missing its route decorator behaves the same way. seedcord's `middleware-missing-register-decorator` lint rule flags that class while you write it.
 
-If two middleware classes share a name, seedcord throws `DuplicateMiddleware` when it loads the second one. Give every class a unique name.
+If two middleware classes share a name, seedcord throws `CoreDuplicateName` when it loads the second one. Give every class a unique name.
 
 A middleware passes values to the handler and its gates through [the dispatch context](/checks/dispatch-context).

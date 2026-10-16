@@ -123,16 +123,16 @@ An `init()` waiting on a service that never answers would hang your bot's startu
 If a method runs past its timeout, seedcord throws `LifecycleTaskTimeout`. The task name in the message carries the attach key and which method ran.
 
 ```txt output
-Task "Plugin (db)" timed out after 15000ms.
-Task "Plugin:db:ready" timed out after 15000ms.
-Task "Plugin:db:dispose" timed out after 10000ms.
+Task "Plugin (db)" timed out after 15000ms. Check what it waits on, or give it a longer timeout.
+Task "Plugin:db:ready" timed out after 15000ms. Check what it waits on, or give it a longer timeout.
+Task "Plugin:db:dispose" timed out after 10000ms. Check what it waits on, or give it a longer timeout.
 ```
 
-A timeout of zero, a negative number, or `Infinity` throws `PluginInvalidLifecycleTimeout` in the constructor, before any of your code runs.
+A timeout of zero, a negative number, or `Infinity` throws `LifecycleInvalidTimeout` in the constructor, before any of your code runs.
 
 ### The shutdown deadline
 
-Those timeouts limit one method each. Your hosting platform kills the process if shutdown as a whole takes too long, so seedcord also bounds the whole shutdown with a single deadline, 25000ms by default. Once it elapses seedcord skips the phases it never reached and exits. A task already running keeps going until the process exits three seconds later. A deadline of zero, a negative number, or `Infinity` throws `LifecycleInvalidShutdownDeadline`.
+Those timeouts limit one method each. Your hosting platform kills the process if shutdown as a whole takes too long, so seedcord also bounds the whole shutdown with a single deadline, 25000ms by default. Once it elapses seedcord skips the phases it never reached and exits. A task already running keeps going until the process exits three seconds later. A deadline of zero, a negative number, or `Infinity` throws `LifecycleInvalidTimeout`.
 
 If shutdown starts while the bot is still starting, it waits for startup to finish, and that wait counts against the same deadline. If the deadline passes first, seedcord doesn't dispose the plugins that finish starting after that.
 

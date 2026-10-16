@@ -97,7 +97,7 @@ Augmentations are out of date. Run `seedcord codegen` and commit /home/you/my-bo
 
 `--check` only reports, so you fix the drift by running plain `seedcord codegen`. The scaffold does not wire a script for it, so put it wherever your pipeline runs its checks.
 
-If codegen can't read your commands folder, it throws `CoreDirectoryUnreadable`, because a run that found no commands would pass `--check` against a file that's already stale.
+If codegen can't read your commands folder, it throws `CorePathUnreadable`, because a run that found no commands would pass `--check` against a file that's already stale.
 
 ## Commands codegen passes over
 
@@ -107,4 +107,4 @@ Your commands folder can hold helpers and constants too. Codegen imports each of
 
 ## Two commands, one name
 
-Discord scopes command names per kind. seedcord enforces the same rule. Two commands resolving to one slash route throw `CliCodegenDuplicateRoute`. Two context menus of one kind sharing a name throw `CliCodegenDuplicateContextMenu`. Both errors print the two file paths, so you know which one to rename.
+Discord scopes command names per kind. seedcord enforces the same rule. If two commands resolve to one slash route, or two context menus of one kind share a name, codegen throws `CoreDuplicateName` with both file paths, so you know which one to rename.
