@@ -1,7 +1,7 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
-import { isPlainObject } from '@seedcord/utils/internal';
+import { readBuildOutput } from '@cloudflare/build-output-utils';
 import { describe, expect, it } from 'vitest';
 
 import { withShellEnv } from '#tests/envapt';
@@ -9,23 +9,23 @@ import { withShellEnv } from '#tests/envapt';
 import { copyEdgeBotForTest, edgeBuildRunner } from './edgeBot';
 
 // the plugin calls a config that exports a function with vite's mode
-const MODE_NAMED_CONFIG = `export default ({ mode }) => ({
+const MODE_NAMED_CONFIG = `import { bindings, defineConfig } from 'cf/config';
+
+export default defineConfig(({ mode }) => ({
     worker: {
         name: \`edge-bot-\${mode}\`,
         compatibilityDate: '2026-08-04',
-        env: { DISCORD_BOT_TOKEN: { type: 'secret' }, DISCORD_PUBLIC_KEY: { type: 'secret' } }
+        env: { DISCORD_BOT_TOKEN: bindings.secret(), DISCORD_PUBLIC_KEY: bindings.secret() }
     }
-});
+}));
 `;
 
-async function builtWorkerName(): Promise<unknown> {
+async function builtWorkerName(): Promise<string> {
     const projectDir = await copyEdgeBotForTest();
     await writeFile(join(projectDir, 'cloudflare.config.ts'), MODE_NAMED_CONFIG);
-    const { bundle } = await edgeBuildRunner().run(projectDir);
-    // cloudflare's build output spec puts worker.config.json beside the bundle folder
-    const workerConfig = join(dirname(dirname(bundle.entry)), 'worker.config.json');
-    const config: unknown = JSON.parse(await readFile(workerConfig, 'utf8'));
-    return isPlainObject(config) ? config.name : undefined;
+    await edgeBuildRunner().run(projectDir);
+    const { workers } = await readBuildOutput(projectDir);
+    return workers.default.config.name;
 }
 
 describe('seedcord build mode on an edge bot', () => {

@@ -4,7 +4,7 @@ import { createServer } from 'node:http';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { LOADED_STATUS, notLoadedReason } from '#commands/build/builder/bootWorker';
+import { probeWorker } from '#commands/build/builder/probeWorker';
 
 import type { AddressInfo } from 'node:net';
 import type { Connect } from 'vite';
@@ -22,10 +22,12 @@ export async function loadWorkerEntry(middlewares: Connect.Server, instance: str
         await once(server, 'listening');
         // justified: address() is AddressInfo once a TCP server is listening
         const { port } = server.address() as AddressInfo;
-        const response = await fetch(`http://127.0.0.1:${port}/`);
-        if (response.status === LOADED_STATUS) return;
-        const reason = `${notLoadedReason(response.status)}\n${await response.text()}`;
-        throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [instance, reason]);
+        const failure = await probeWorker(`http://127.0.0.1:${port}/`);
+        if (failure !== undefined) {
+            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [instance, failure.reason], {
+                cause: failure.cause
+            });
+        }
     } finally {
         server.closeAllConnections();
         server.close();

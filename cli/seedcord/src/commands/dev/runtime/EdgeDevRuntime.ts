@@ -8,16 +8,10 @@ import { installNodeDefaults } from '@seedcord/logger/node';
 import chalk from 'chalk';
 import { createServer, createServerModuleRunner } from 'vite';
 
-import { workerEntry, workerEntryConfig } from '#commands/build/builder/workerEntry';
+import { CloudflareWorker } from '#commands/build/builder/CloudflareWorker';
+import { workerEntry } from '#commands/build/builder/workerEntry';
 import { listenHostFor } from '#commands/dev/tunnel/listenHost';
-import {
-    assertNotBun,
-    explainMissingCf,
-    importCloudflare,
-    loadCloudflare,
-    reportWorkerExports,
-    WORKER_ENVIRONMENT
-} from '#core/modules/cloudflarePlugin';
+import { reportWorkerExports, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { edgeStandIns } from '#core/modules/edgeStandIns';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
@@ -95,7 +89,6 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
     }
 
     protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<EdgeStarted> {
-        assertNotBun();
         const { config } = context;
         const viteRoot = dirname(this.target.cloudflareConfig);
         const files = new ProjectFiles(config.root, dirname(config.configFile));
@@ -103,7 +96,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
         const [folders, cloudflare] = await Promise.all([
             files.foldersIncludingEmpty(),
-            loadCloudflare(viteRoot, importCloudflare)
+            CloudflareWorker.load(this.target.cloudflareConfig)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
         const { mode } = config;
@@ -136,15 +129,11 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                         modulesReady.resolve
                     ),
                     hmr.plugin,
-                    cloudflare({
-                        config: workerEntryConfig(this.target.cloudflareConfig),
-                        viteEnvironment: { name: WORKER_ENVIRONMENT },
-                        inspectorPort: false
-                    })
+                    cloudflare.plugins()
                 ]
             })
         ).catch((error: unknown) => {
-            throw explainMissingCf(error, viteRoot);
+            throw cloudflare.explain(error);
         });
         resources.defer(() => server.close());
         await loadWorkerEntry(server.middlewares, config.instance);
