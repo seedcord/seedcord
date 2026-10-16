@@ -107,6 +107,20 @@ Saying "compatibility issue" without checking the upstream version range is a li
 
 ---
 
+### 9. Does a dependency already in the tree export it?
+
+Before you write a type, a helper, a constant, or a parser for something a dependency deals with, check whether that dependency exports one. Check 7 covers a package you are adding. This check covers every package already installed.
+
+1. Read the `exports` map in the dependency's `package.json`. A subpath like `cf/config` or `@seedcord/errors/internal` is a separate surface.
+2. Open the `.d.ts` behind each entry and read its export list. A bundled `.d.ts` re-exports from a chunk file, so follow the import to find the declarations.
+3. Use the exported type with `Parameters`, `ReturnType`, `Partial`, or an indexed access. Call the exported helper. Only write your own when the dependency has nothing that fits, and say so in the PR.
+
+A real miss: a test helper took `{ env?: Record<string, unknown>; [field: string]: unknown }` for a `cloudflare.config.ts` worker, where `cf/config` already exported `WorkerConfig` and the `bindings` and `exports` helpers. A Durable Object binding missing its `worker` field then failed at build time. With `Partial<WorkerConfig>`, `tc` would have reported it.
+
+This applies to tests as much as to source. A test helper typed loosely accepts a config the real tool rejects.
+
+---
+
 ## Code-Quality Rules (Part 2)
 
 Type standards, error handling, structure, commenting, and validation discipline are defined as global always-on rules in `AGENTS.md`. Follow those while writing. They apply to every PR, whether or not you are running a reinvention audit.
@@ -185,7 +199,7 @@ If the change is published-package-affecting, also add a `changeset` (`pnpm cs`)
 
 Before opening a PR, ask:
 
-1. Did I grep the relevant `@seedcord/*` package indexes (and the app's `lib/` / `components/ui/`) before writing my helper / type / primitive?
+1. Did I grep the relevant `@seedcord/*` package indexes (and the app's `lib/` / `components/ui/`) before writing my helper / type / primitive? Did I read the `.d.ts` exports of every third-party dependency it describes?
 2. Is every repeated literal either a named constant in a shared package or a typed alias in `@seedcord/types`?
 3. Am I using `cn()` for classNames in app code, and avoiding array `.join`?
 4. Are my tests in `tests/` mirroring `src/` like every other package?
