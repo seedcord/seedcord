@@ -411,6 +411,12 @@ describe('CustomId encode guards', () => {
         expect(thrownCode(() => Counter.encode({ total: 2 ** 53 }))).toBe(SeedcordErrorCode.CustomIdValueRejected);
     });
 
+    it('throws a range error for an unbounded int past the safe range and a type error for a fraction', () => {
+        const Counter = new CustomId('counter').int('total');
+        expect(() => Counter.encode({ total: 2 ** 53 })).toThrow(RangeError);
+        expect(() => Counter.encode({ total: 1.5 })).toThrow(TypeError);
+    });
+
     it('rejects a str that is not a string', () => {
         const Note = new CustomId('note').str('body');
         expect(

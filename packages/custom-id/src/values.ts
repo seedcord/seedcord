@@ -68,9 +68,7 @@ export function boundedToBigint(field: CustomIdField<unknown>, name: string, val
     }
     const slot = boundedSlot(field, name, value);
     // out of range would carry into the neighbouring field on decode.
-    if (slot < 0n || slot >= radixOf(field)) {
-        throw new SeedcordRangeError(SeedcordErrorCode.CustomIdValueRejected, [name, expectation(field), show(value)]);
-    }
+    if (slot < 0n || slot >= radixOf(field)) rejectOutOfRange(field, name, value);
     return slot;
 }
 
@@ -134,6 +132,10 @@ function boundedSlot(field: CustomIdField<unknown>, name: string, value: unknown
 
 export function reject(field: CustomIdField<unknown>, name: string, value: unknown): never {
     throw new SeedcordTypeError(SeedcordErrorCode.CustomIdValueRejected, [name, expectation(field), show(value)]);
+}
+
+export function rejectOutOfRange(field: CustomIdField<unknown>, name: string, value: unknown): never {
+    throw new SeedcordRangeError(SeedcordErrorCode.CustomIdValueRejected, [name, expectation(field), show(value)]);
 }
 
 // what the field takes, written to finish the sentence "expects ...".

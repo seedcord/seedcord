@@ -1,7 +1,7 @@
 /* eslint-disable no-magic-numbers -- lots of bigints */
 
 import { invalidError } from './errors';
-import { bigintToBoundedValue, boundedToBigint, isBounded, radixOf, reject } from './values';
+import { bigintToBoundedValue, boundedToBigint, isBounded, radixOf, reject, rejectOutOfRange } from './values';
 
 import type { CustomIdField, CustomIdShape } from './Field';
 
@@ -102,7 +102,9 @@ function encodeUnboundedToken(field: CustomIdField<unknown>, name: string, value
         return PRESENT + encodeUnboundedToken({ ...field, nullable: false }, name, value);
     }
     if (field.kind === 'int') {
-        if (!Number.isSafeInteger(value)) reject(field, name, value);
+        // eslint-disable-next-line unicorn/prefer-number-is-safe-integer -- a fraction is the wrong kind, an integer past 2^53 is out of range
+        if (!Number.isInteger(value)) reject(field, name, value);
+        if (!Number.isSafeInteger(value)) rejectOutOfRange(field, name, value);
         return bigintToBase64(zigzagEncode(value as number));
     }
     if (typeof value !== 'string') return reject(field, name, value);
