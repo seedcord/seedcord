@@ -13,7 +13,6 @@ import { version } from '.';
 
 async function main(): Promise<void> {
     const shell = ShellMode.read();
-    shell.applyToEnvapt();
 
     installNodeDefaults();
 

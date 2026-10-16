@@ -93,7 +93,7 @@ export interface SeedcordConfig {
      * The port `seedcord dev` serves the worker's interactions endpoint on. `0` picks a free port
      * on each run. A `tunnel` URL needs a fixed port.
      *
-     * @defaultValue `8787`
+     * @defaultValue `3000`
      */
     port?: number;
     /**

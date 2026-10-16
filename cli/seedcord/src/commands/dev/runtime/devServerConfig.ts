@@ -37,6 +37,8 @@ function devViteConfig(
         clearScreen: false,
         server: {
             middlewareMode: true,
+            // no browser connects to vite's hmr socket on port 24678
+            ws: false,
             watch: {
                 ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', `**/${STATE_FOLDER}/**`, logsIgnore(cwd)]
             }

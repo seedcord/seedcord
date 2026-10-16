@@ -3,14 +3,14 @@ import { assertNever } from '@seedcord/utils';
 
 import { builtFilesSource } from './builtFiles';
 
-import type { CloudflarePlugin } from '#core/modules/cloudflarePlugin';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
+import type { PluginConfig } from '@cloudflare/vite-plugin';
 import type { BakedIds } from '@seedcord/core/internal';
 import type { Plugin } from 'vite';
 
 const WORKER_ENTRY_ID = 'virtual:seedcord/worker';
 
-type EntryCustomizer = NonNullable<NonNullable<Parameters<CloudflarePlugin>[0]>['config']>;
+type EntryCustomizer = NonNullable<PluginConfig['config']>;
 
 // the fields this returns replace the ones in cloudflare.config.ts
 export const workerEntryConfig: EntryCustomizer = () => ({ entrypoint: WORKER_ENTRY_ID });

@@ -20,6 +20,26 @@ describe('WorkerEnv', () => {
         expect(workerEnv.values()).toEqual({ DISCORD_BOT_TOKEN: 'from-env', ENV: 'staging' });
     });
 
+    it('gives the node copy the value of a json binding', async () => {
+        const { cloudflareConfig } = await edgeFolder(cloudflareConfigSource('LIMITS: bindings.json({ max: 3 })'));
+
+        const workerEnv = await WorkerEnv.load(cloudflareConfig, 'development');
+
+        expect(workerEnv.values()).toEqual({ LIMITS: { max: 3 } });
+    });
+
+    it.each([
+        ['throws', "throw new Error('boom in config');\n"],
+        ['does not parse', "export default { worker: { name: 'x',\n"]
+    ])('throws CliConfigFileUnreadable with the file for a cloudflare.config.ts that %s', async (_case, source) => {
+        const { cloudflareConfig } = await edgeFolder(source);
+
+        await expect(WorkerEnv.load(cloudflareConfig, 'development')).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigFileUnreadable,
+            message: expect.stringContaining('cloudflare.config.ts') as string
+        });
+    });
+
     it('throws CliDependencyMissing when cloudflare.config.ts imports cf and the project lacks it', async () => {
         const { cloudflareConfig } = await edgeFolder(SECRET_AND_TEXT, []);
 

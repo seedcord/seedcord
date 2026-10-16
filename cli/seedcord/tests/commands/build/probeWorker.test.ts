@@ -40,6 +40,17 @@ describe('probeWorker', () => {
         expect(failure?.reason).toContain('bot.ts threw');
     });
 
+    it.each([
+        [200, true],
+        [500, false]
+    ])('points at the instance export only when the worker answers %i', async (status, hinted) => {
+        await using worker = await serve((_request, response) => response.writeHead(status).end());
+
+        const failure = await probeWorker(worker.url);
+
+        expect(failure?.reason.includes('default-exports')).toBe(hinted);
+    });
+
     it('reports the wait when the worker never answers', async () => {
         await using worker = await serve(() => undefined);
 

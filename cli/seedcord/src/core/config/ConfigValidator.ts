@@ -96,7 +96,7 @@ export class ConfigValidator {
     private *portProblems(port: unknown): Generator<ConfigProblem> {
         if (port === undefined) return;
         if (this.target.kind === 'server') {
-            const why = `Only an edge bot reads it. An http bot on node listens on the ${paint.bold('port')} it passes to ${paint.bold('new Seedcord({ ... })')}.`;
+            const why = `Only an edge bot reads it. A node http bot sets ${paint.bold('port')} in ${paint.bold('new Seedcord({ ... })')}, and a gateway bot listens on no port.`;
             yield this.unusedField('port', why);
         } else if (typeof port !== 'number' || !Number.isSafeInteger(port)) {
             yield invalidField('port', PORT_RANGE);

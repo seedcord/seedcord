@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
+import { Envapter, Environment } from 'envapt';
 import { assert, describe, it, expect, onTestFinished } from 'vitest';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
@@ -77,6 +78,23 @@ describe('ProjectLoader', () => {
             outDir: resolve(projectDir, 'dist')
         });
         expect(resolved.build.tsconfig).toBeUndefined();
+    });
+
+    it.each([
+        [new ShellMode(), Environment.Production],
+        [new ShellMode({ key: 'ENV', value: 'staging' }), Environment.Staging]
+    ])("sets envapt's environment to the mode the bot loads in", async (shell, environment) => {
+        const before = Envapter.environment;
+        onTestFinished(() => {
+            Envapter.environment = before;
+        });
+        const projectDir = tempProject();
+        writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
+        const { open } = stubModulesExporting(MINIMAL);
+
+        await using _project = await new ProjectLoader(open, shell, 'production').open(projectDir);
+
+        expect(Envapter.environment).toBe(environment);
     });
 });
 
@@ -184,7 +202,7 @@ describe('ProjectLoader entry on an edge bot', () => {
         expect(target).toMatchObject({
             kind: 'edge',
             cloudflareConfig: join(projectDir, CLOUDFLARE_CONFIG),
-            port: 8787
+            port: 3000
         });
     });
 

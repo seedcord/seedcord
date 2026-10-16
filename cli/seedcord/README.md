@@ -114,7 +114,7 @@ export default defineConfig({
 
 `bindings.secret()` declares `DISCORD_BOT_TOKEN` without a value, so the token never sits in the file. Its value comes from your local env files in dev and from the secrets you upload when you deploy.
 
-`seedcord dev` runs the bot in workerd through `@cloudflare/vite-plugin`. It listens on `port` from `seedcord.config.ts`, or on 8787 if you leave it out. The worker gets its secrets from `.dev.vars`, or from the `.env` files and your shell when there's no `.dev.vars`. A saved handler reloads in place. After you change `cloudflare.config.ts`, a `.dev.vars` file or a `.env` file, press `r` to restart.
+`seedcord dev` runs the bot in workerd through `@cloudflare/vite-plugin`. It listens on `port` from `seedcord.config.ts`, or on 3000 if you leave it out. The worker gets its secrets from `.dev.vars`, or from the `.env` files and your shell when there's no `.dev.vars`. A saved handler reloads in place. After you change `cloudflare.config.ts`, a `.dev.vars` file or a `.env` file, press `r` to restart.
 
 `seedcord build` writes the worker to `.cloudflare/output`, then starts it once in workerd to check that it loads. Deploy it with `cf deploy --prebuilt`. Cloudflare refuses to deploy a worker while one of its declared secrets has no value, so the first deploy of a new worker needs `--secrets-file` with a value for each one.
 

@@ -1,6 +1,5 @@
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
-import { createServer as createNetServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -10,6 +9,7 @@ import { afterEach, assert, describe, expect, it, onTestFinished, vi } from 'vit
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { cloudflareConfigSource, linkPackages } from '#tests/edgeFolder';
+import { holdViteHmrPort } from '#tests/viteHmrPort';
 
 import type { BuildTarget } from '#core/config/detectTarget';
 
@@ -70,22 +70,9 @@ async function writeEntry(root: string, specifier: string): Promise<string> {
     return entry;
 }
 
-// vite's default hmr websocket port
-const VITE_HMR_PORT = 24_678;
-
-// a dev server in another test worker may already hold it
-async function holdPort(port: number): Promise<void> {
-    const holder = createNetServer();
-    await new Promise<void>((resolve) => {
-        holder.once('error', () => resolve());
-        holder.listen(port, () => resolve());
-    });
-    onTestFinished(() => new Promise<void>((resolve) => holder.close(() => resolve())));
-}
-
 describe('openModuleLoader', () => {
     it('opens no hmr websocket while another process holds its port', async () => {
-        await holdPort(VITE_HMR_PORT);
+        await holdViteHmrPort();
         const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
         const root = await project();
 

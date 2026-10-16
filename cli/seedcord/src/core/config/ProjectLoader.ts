@@ -3,6 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { isInside } from '@seedcord/utils/node/internal';
+import { Envapter } from 'envapt';
 
 import { Project } from '#core/project/Project';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
@@ -28,8 +29,8 @@ import type {
     SeedcordServerConfig
 } from './schema';
 
-// wrangler dev's default port
-const EDGE_DEV_PORT = 8787;
+// the node http Seedcord's default port
+const EDGE_DEV_PORT = 3000;
 
 function resolveTunnel(value: boolean | string | undefined): ResolvedTunnel {
     if (value === false) return { mode: 'off' };
@@ -53,6 +54,7 @@ export class ProjectLoader {
 
     public async open(projectDir = process.cwd()): Promise<Project> {
         const mode = this.shell.viteMode(this.defaultMode);
+        Envapter.environment = mode;
         const configPath = locateConfig(projectDir);
         const configDir = dirname(configPath);
         const target = await detectTarget(configDir, mode);

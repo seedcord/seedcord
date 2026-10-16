@@ -43,7 +43,7 @@ describe('ShellMode', () => {
         expect(() => shell.viteMode('production')).toThrow(
             expect.objectContaining({
                 code: SeedcordErrorCode.ConfigInvalidEnv,
-                message: expect.stringContaining('development, staging, production, or test') as string
+                message: expect.stringMatching(/preview.*development, staging, production, or test/su) as string
             })
         );
     });

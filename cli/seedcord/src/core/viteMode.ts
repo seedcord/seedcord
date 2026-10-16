@@ -1,6 +1,6 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Envapter, Environment } from 'envapt';
+import { Environment } from 'envapt';
 
 // envapt reads these in this order
 const ENVIRONMENT_KEYS = ['ENVIRONMENT', 'ENV', 'NODE_ENV', 'MODE'] as const;
@@ -31,15 +31,11 @@ export class ShellMode {
         return new ShellMode();
     }
 
-    public applyToEnvapt(): void {
-        Envapter.environment = this.variable?.value ?? Environment.Development;
-    }
-
     public viteMode(defaultMode: DefaultMode): string {
         if (this.variable === undefined) return defaultMode;
         const mode = this.variable.value.toLowerCase();
         if (MODES.includes(mode)) return mode;
-        const why = 'seedcord runs your bot in this mode and loads the .env files for it.';
+        const why = `It's ${paint.bold(this.variable.value)}. seedcord runs your bot in this mode and loads the .env files for it.`;
         throw new SeedcordError(SeedcordErrorCode.ConfigInvalidEnv, [this.variable.key, MODE_LIST, why]);
     }
 }

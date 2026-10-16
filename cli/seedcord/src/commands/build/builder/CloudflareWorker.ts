@@ -1,6 +1,5 @@
 import { dirname } from 'node:path';
 
-import { readBuildOutput } from '@cloudflare/build-output-utils';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
@@ -12,9 +11,8 @@ import { workerEntryConfig } from './workerEntry';
 
 import type { CloudflarePlugin, ImportCloudflare } from '#core/modules/cloudflarePlugin';
 import type { ResolvedOutputWorkerConfig } from '@cloudflare/build-output-utils';
+import type { PluginConfig } from '@cloudflare/vite-plugin';
 import type { Plugin } from 'vite';
-
-type PluginOptions = NonNullable<Parameters<CloudflarePlugin>[0]>;
 
 export interface BuiltWorker {
     config: ResolvedOutputWorkerConfig;
@@ -54,7 +52,7 @@ export class CloudflareWorker {
         return new CloudflareWorker(await loadPlugin(viteRoot, importPlugin), viteRoot);
     }
 
-    public plugins(options: Pick<PluginOptions, 'persistState'> = {}): Plugin[] {
+    public plugins(options: Pick<PluginConfig, 'persistState'> = {}): Plugin[] {
         return this.cloudflare({
             config: workerEntryConfig,
             viteEnvironment: { name: WORKER_ENVIRONMENT },
@@ -64,6 +62,8 @@ export class CloudflareWorker {
     }
 
     public async built(): Promise<BuiltWorker> {
+        // a gateway or node http bot never loads this or the @cloudflare/config it imports
+        const { readBuildOutput } = await import('@cloudflare/build-output-utils');
         const { workers } = await readBuildOutput(this.viteRoot);
         const { config, bundleDir } = workers.default;
         return bundleDir === undefined

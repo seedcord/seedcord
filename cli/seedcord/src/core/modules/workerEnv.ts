@@ -2,9 +2,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { parseEnv } from 'node:util';
 
-import { loadAndParseConfig } from '@cloudflare/config';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { asError } from '@seedcord/utils/internal';
 import { loadEnv } from 'vite';
 
 import { isPackageMissing } from './cloudflarePlugin';
@@ -21,12 +21,20 @@ function assertNotBun(): void {
     if ('Bun' in globalThis) throw new SeedcordError(SeedcordErrorCode.CliEdgeOnBun);
 }
 
+function unreadable(cloudflareConfig: string, problem: string, cause?: unknown): SeedcordError {
+    return new SeedcordError(SeedcordErrorCode.CliConfigFileUnreadable, [CONFIG_LOADER, cloudflareConfig, problem], {
+        cause
+    });
+}
+
 async function loadWorker(cloudflareConfig: string, mode: string): Promise<ParsedInputWorkerConfig> {
     assertNotBun();
+    // a gateway or node http bot never loads it
+    const { loadAndParseConfig } = await import('@cloudflare/config');
     // the plugin passes its own isPreviewBuild() here. it doesn't export that function
     const { result } = await loadAndParseConfig(cloudflareConfig, { isPreview: false, mode }).catch(
         (error: unknown) => {
-            if (!isPackageMissing(error, 'cf')) throw error;
+            if (!isPackageMissing(error, 'cf')) throw unreadable(cloudflareConfig, asError(error).message, error);
             const why = `${paint.path('cloudflare.config.ts')} imports ${paint.bold('cf/config')}.`;
             throw new SeedcordError(SeedcordErrorCode.CliDependencyMissing, [['cf'], dirname(cloudflareConfig), why], {
                 cause: error
@@ -36,20 +44,10 @@ async function loadWorker(cloudflareConfig: string, mode: string): Promise<Parse
 
     if (!result.success) {
         const problems = result.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`);
-        throw new SeedcordError(SeedcordErrorCode.CliConfigFileUnreadable, [
-            CONFIG_LOADER,
-            cloudflareConfig,
-            problems.join('\n')
-        ]);
+        throw unreadable(cloudflareConfig, problems.join('\n'));
     }
     const { worker } = result.data;
-    if (worker === undefined) {
-        throw new SeedcordError(SeedcordErrorCode.CliConfigFileUnreadable, [
-            CONFIG_LOADER,
-            cloudflareConfig,
-            'It must define a Worker using the worker property.'
-        ]);
-    }
+    if (worker === undefined) throw unreadable(cloudflareConfig, 'It must define a Worker using the worker property.');
     if (worker.entrypoint !== undefined) {
         const why = `seedcord sets it to the default export of ${paint.bold('instance')} in your seedcord config.`;
         throw new SeedcordTypeError(SeedcordErrorCode.CliConfigFieldUnused, ['entrypoint', cloudflareConfig, why]);
@@ -61,6 +59,8 @@ async function loadWorker(cloudflareConfig: string, mode: string): Promise<Parse
 export class WorkerEnv {
     public readonly files: readonly string[];
     private readonly envDir: string;
+    // the plugin takes the first one that exists over the .env files and the shell
+    private readonly devVarsFiles: readonly string[];
 
     private constructor(
         private readonly worker: ParsedInputWorkerConfig,
@@ -68,30 +68,28 @@ export class WorkerEnv {
         private readonly mode: string
     ) {
         this.envDir = dirname(cloudflareConfig);
-        this.files = ['.dev.vars', `.dev.vars.${mode}`, '.env', '.env.local', `.env.${mode}`, `.env.${mode}.local`];
+        this.devVarsFiles = [`.dev.vars.${mode}`, '.dev.vars'];
+        this.files = [...this.devVarsFiles, '.env', '.env.local', `.env.${mode}`, `.env.${mode}.local`];
     }
 
     public static async load(cloudflareConfig: string, mode: string): Promise<WorkerEnv> {
         return new WorkerEnv(await loadWorker(cloudflareConfig, mode), cloudflareConfig, mode);
     }
 
-    // the plugin's resolveLocalBindings builds the worker's env by the same rules
-    public values(): Record<string, string> {
+    // the plugin's resolveLocalBindings uses the same rules. kv, d1 and the other resources have no node stand-in
+    public values(): Record<string, unknown> {
         const local = this.localVars();
-        const values: Record<string, string> = {};
+        const values: Record<string, unknown> = {};
         for (const [name, binding] of Object.entries(this.worker.env ?? {})) {
             const secret = local[name];
-            if (binding.type === 'text') values[name] = binding.value;
+            if (binding.type === 'text' || binding.type === 'json') values[name] = binding.value;
             else if (binding.type === 'secret' && secret !== undefined) values[name] = secret;
         }
         return values;
     }
 
-    // the plugin takes the first .dev.vars file it finds over the .env files and the shell
     private localVars(): LocalVars {
-        const devVars = [`.dev.vars.${this.mode}`, '.dev.vars']
-            .map((name) => join(this.envDir, name))
-            .find((path) => existsSync(path));
+        const devVars = this.devVarsFiles.map((name) => join(this.envDir, name)).find((path) => existsSync(path));
         if (devVars !== undefined) return parseEnv(readFileSync(devVars, 'utf8'));
         // an empty prefix makes loadEnv return process.env too
         return loadEnv(this.mode, this.envDir, '');

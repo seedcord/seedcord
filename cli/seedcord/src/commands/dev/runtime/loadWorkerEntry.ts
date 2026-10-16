@@ -11,7 +11,7 @@ import type { Connect } from 'vite';
 
 const NOT_FOUND = 404;
 
-// @cloudflare/vite-plugin imports the worker entry on a request. when bot.ts exports something the
+// @cloudflare/vite-plugin imports the worker entry on a request. when the instance file exports something the
 // config doesn't declare, the plugin restarts miniflare and nothing imports the entry again
 export async function loadWorkerEntry(middlewares: Connect.Server, instance: string): Promise<void> {
     const server = createServer((request, response) => {
