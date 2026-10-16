@@ -1,4 +1,5 @@
 import { filterCirculars, stripAnsi } from '@seedcord/utils';
+import { pluralize } from '@seedcord/utils/internal';
 import { SeparatorSpacingSize } from 'discord-api-types/v10';
 
 import { BuilderComponent } from '#components/Component';
@@ -38,7 +39,7 @@ function clamp(text: string, budget: number): string {
 }
 
 function omittedLine(count: number): string {
-    return `\n\nand ${count} more failure${count === 1 ? '' : 's'}`;
+    return `\n\nand ${count} more ${pluralize(count, 'failure')}`;
 }
 
 function memberReport(members: readonly unknown[], budget: number): string {

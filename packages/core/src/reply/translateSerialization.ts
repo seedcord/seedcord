@@ -1,5 +1,8 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { pluralize } from '@seedcord/utils/internal';
+
+const allOf = new Intl.ListFormat('en', { type: 'conjunction' });
 
 // shapeshift aggregate errors nest, so the cap bounds the recursion
 const MAX_DEPTH = 8;
@@ -66,9 +69,9 @@ function needPhrase(expected: string, given: unknown): string | null {
         const word = OPERATOR_WORD[operator ?? ''] ?? operator ?? '';
         if (!lengthPart) return `${word} ${limit}`;
         const unit = typeof given === 'string' ? 'character' : 'item';
-        return `${word} ${limit} ${Number(limit) === 1 ? unit : `${unit}s`}`;
+        return `${word} ${limit} ${pluralize(Number(limit), unit)}`;
     });
-    return phrases.join(' and ');
+    return allOf.format(phrases);
 }
 
 function instanceName(expected: unknown): string {

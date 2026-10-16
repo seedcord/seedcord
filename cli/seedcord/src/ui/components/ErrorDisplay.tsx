@@ -1,6 +1,7 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
+import { plural } from '#core/format';
 import { messageOf } from '#core/output/renderError';
 import { ui } from '#ui/palette';
 
@@ -34,7 +35,7 @@ export function ErrorDisplay({ error }: ErrorDisplayProps): ReactElement {
                             {line}
                         </Text>
                     ))}
-                    {hidden > 0 && <Text dimColor>{`… ${hidden} more line${hidden === 1 ? '' : 's'}`}</Text>}
+                    {hidden > 0 && <Text dimColor>{`… ${plural(hidden, 'more line', 'more lines')}`}</Text>}
                 </Box>
             )}
             <Box marginTop={1}>

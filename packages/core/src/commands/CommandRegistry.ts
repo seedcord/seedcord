@@ -5,6 +5,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath } from '@seedcord/utils';
+import { pluralize } from '@seedcord/utils/internal';
 import { traverseDirectory } from '@seedcord/utils/node';
 import { resolveFolder } from '@seedcord/utils/node/internal';
 import { Envapter } from 'envapt';
@@ -265,7 +266,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private reportDeployed(where: DeployedScope, commands: readonly CommandBody[]): void {
         const { utils } = this.logger;
         const count = paint.iris.bold(commands.length);
-        const tag = commands.length === 1 ? 'command' : 'commands';
+        const tag = pluralize(commands.length, 'command');
         const title =
             where.scope === 'global'
                 ? `Deployed ${count} global ${tag}`

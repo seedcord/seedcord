@@ -20,6 +20,8 @@ const EXIT: Readonly<Record<CheckResult['status'], { code: number; meaning: stri
     unreadable: { code: 2, meaning: "a target can't be read, or the command is wrong" }
 };
 
+const plurals = new Intl.PluralRules('en');
+
 const BIN = 'discord-component-embed';
 const USAGE = `${BIN} check <file or url>...`;
 
@@ -150,7 +152,8 @@ function report(target: string, result: CheckResult, paint: Paint): string {
         return lines(`${paint('warn', '✘')} ${target}  ${paint('warn', 'unreadable')}`, `  ${result.reason}`);
     }
 
-    const count = result.problems.length === 1 ? '1 problem' : `${String(result.problems.length)} problems`;
+    const { length } = result.problems;
+    const count = `${String(length)} ${plurals.select(length) === 'one' ? 'problem' : 'problems'}`;
     const hint = result.hint === undefined ? [] : [`  ${paint('muted', result.hint)}`];
     return lines(
         `${paint('bad', '✘')} ${target}  ${paint('bad', count)}`,

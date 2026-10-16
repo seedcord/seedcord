@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { plural } from '#core/format';
 import { CommandRefreshPrompt } from '#ui/components/CommandRefreshPrompt';
 import { ErrorDisplay } from '#ui/components/ErrorDisplay';
 import { QuitConfirmCard } from '#ui/components/QuitConfirmCard';
@@ -39,7 +40,7 @@ export function noticesOf(state: DevState): readonly Notice[] {
         const count = state.commandUpdatePrompt.length;
         notices.push({
             key: 'commands',
-            summary: `${count} command${count === 1 ? '' : 's'} updated`,
+            summary: `${plural(count, 'command')} updated`,
             action: 'refresh? y/n',
             card: <CommandRefreshPrompt files={[...state.commandUpdatePrompt]} />
         });

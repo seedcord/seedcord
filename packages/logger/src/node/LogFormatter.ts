@@ -1,5 +1,6 @@
 import { paint } from '@seedcord/errors';
 import { filterCirculars, stripAnsi } from '@seedcord/utils';
+import { pluralize } from '@seedcord/utils/internal';
 import chalk from 'chalk';
 import { format } from 'winston';
 
@@ -122,7 +123,7 @@ export class LogFormatter {
         }
 
         const hidden = members.length - MEMBER_CAP;
-        if (hidden > 0) blocks += `\n${aside(`and ${hidden} more failure${hidden === 1 ? '' : 's'}`)}`;
+        if (hidden > 0) blocks += `\n${aside(`and ${hidden} more ${pluralize(hidden, 'failure')}`)}`;
         return blocks;
     }
 
