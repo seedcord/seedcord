@@ -198,7 +198,7 @@ describe('HmrPlugin', () => {
             expect(sent).toHaveBeenCalledWith('seedcord:last-deploy', { deployed });
         });
 
-        it('answers nothing for a deploy saved for another application', () => {
+        it('answers undefined for a deploy saved for another application', () => {
             const { listeners, sent } = besideConfig();
 
             listeners.get('seedcord:commands-deployed')?.(deployed);

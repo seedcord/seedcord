@@ -33,14 +33,17 @@ const DEPLOYED = [{ id: 'cmd-1', name: 'ping', type: ApplicationCommandType.Chat
 
 // REST's verb methods sit far up its prototype chain, where vi.spyOn resolves get and reports put
 // as undefined. assigning own properties shadows both.
-function stubRest(host: Seedcord): { get: ReturnType<typeof vi.fn>; put: ReturnType<typeof vi.fn> } {
+function stubRest(
+    host: Seedcord,
+    deployed = DEPLOYED
+): { get: ReturnType<typeof vi.fn>; put: ReturnType<typeof vi.fn> } {
     const get = vi.fn((route: string) => {
         if (route === Routes.currentApplication()) return { id: APP_ID };
         if (route === Routes.applicationEmojis(APP_ID)) return { items: [{ name: 'confirm', id: '111' }] };
-        if (route === Routes.applicationCommands(APP_ID)) return DEPLOYED;
+        if (route === Routes.applicationCommands(APP_ID)) return deployed;
         return {};
     });
-    const put = vi.fn().mockResolvedValue(DEPLOYED);
+    const put = vi.fn().mockResolvedValue(deployed);
     Object.assign(host.rest, { get, put });
     return { get, put };
 }
@@ -94,12 +97,13 @@ describe('command deploy during http startup', () => {
         }
 
         await using second = new Seedcord(config(COMMANDS_DIR));
-        const { get, put } = stubRest(second);
+        // a new id proves the second start injected what it read
+        const { get, put } = stubRest(second, [{ id: 'cmd-2', name: 'ping', type: ApplicationCommandType.ChatInput }]);
         await second.start();
 
         expect(put).not.toHaveBeenCalled();
         expect(get).toHaveBeenCalledWith(Routes.applicationCommands(APP_ID), expect.anything());
-        expect(commands.ping?.mention).toBe('</ping:cmd-1>');
+        expect(commands.ping?.mention).toBe('</ping:cmd-2>');
     });
 
     it('reads the application id out of the bot token', async () => {

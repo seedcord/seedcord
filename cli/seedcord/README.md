@@ -56,6 +56,7 @@ pnpm add -D seedcord
 seedcord commands                           # pick what to do from a menu
 seedcord commands deploy                    # show what changes, then ask before deploying
 seedcord commands deploy --yes              # deploy without asking
+seedcord commands deploy --force            # also deploy scopes that match the last deploy
 seedcord commands list                      # show the commands Discord has
 seedcord commands list --all-guilds         # include every guild the bot is in
 seedcord commands list --json               # print them as JSON

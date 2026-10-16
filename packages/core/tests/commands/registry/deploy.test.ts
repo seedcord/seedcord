@@ -28,6 +28,11 @@ const BARE: APIApplicationCommand[] = [
     // justified: the deploy reads only these three fields
     { id: '1', name: 'bare', type: ApplicationCommandType.ChatInput } as APIApplicationCommand
 ];
+// a new id proves a later deploy injected what it read or put
+const BARE_AGAIN: APIApplicationCommand[] = [
+    // justified: the deploy reads only these three fields
+    { id: '2', name: 'bare', type: ApplicationCommandType.ChatInput } as APIApplicationCommand
+];
 
 function coreWith(put: Mock, get: Mock = vi.fn().mockResolvedValue(BARE), guilds?: string[]): CoreBase {
     // justified: deploy reads only these members off core
@@ -106,23 +111,23 @@ describe('CommandRegistry.deploy', () => {
     it('reads the ids of a scope whose commands match the last deploy and puts nothing', async () => {
         cliWith(await deployedOnce());
         const put = vi.fn();
-        const get = vi.fn().mockResolvedValue(BARE);
+        const get = vi.fn().mockResolvedValue(BARE_AGAIN);
 
         await registryWith(put, get).deploy(new AbortController().signal, {});
 
         expect(put).not.toHaveBeenCalled();
         expect(get.mock.calls.map(([route]: unknown[]) => route)).toEqual([Routes.applicationCommands(APP)]);
-        expect(mentions.bare?.mention).toBe('</bare:1>');
+        expect(mentions.bare?.mention).toBe('</bare:2>');
     });
 
     it('deploys an unchanged scope again when discord is missing one of its commands', async () => {
         cliWith(await deployedOnce());
-        const put = vi.fn().mockResolvedValue(BARE);
+        const put = vi.fn().mockResolvedValue(BARE_AGAIN);
 
         await registryWith(put, vi.fn().mockResolvedValue([])).deploy(new AbortController().signal, {});
 
         expect(put.mock.calls.map(([route]: unknown[]) => route)).toEqual([Routes.applicationCommands(APP)]);
-        expect(mentions.bare?.mention).toBe('</bare:1>');
+        expect(mentions.bare?.mention).toBe('</bare:2>');
     });
 
     it('publishes only what a redeploy left on discord', async () => {
