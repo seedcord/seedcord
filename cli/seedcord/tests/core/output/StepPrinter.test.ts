@@ -157,7 +157,13 @@ describe('StepPrinter', () => {
         expect(stdout.text()).toBe('');
 
         printer(true).detail('root', 'src');
-        expect(stdout.text()).toBe('      root      src\n');
+        expect(stdout.text()).toBe('      root       src\n');
+    });
+
+    it('keeps a space between the value and a key as long as the key column', () => {
+        printer(true).detail('cloudflare', 'cloudflare.config.ts');
+
+        expect(stdout.text()).toBe('      cloudflare cloudflare.config.ts\n');
     });
 
     it('prints a warning with its mark in the step column', async () => {

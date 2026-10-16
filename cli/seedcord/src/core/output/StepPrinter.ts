@@ -84,7 +84,7 @@ export class StepPrinter<Label extends string> implements Steps<Label> {
     }
 
     public detail(key: string, value: string): void {
-        if (this.verbose) this.stdout.write(`      ${paint.mute(key.padEnd(DETAIL_KEY_WIDTH))}${value}\n`);
+        if (this.verbose) this.stdout.write(`      ${paint.mute(key.padEnd(DETAIL_KEY_WIDTH))} ${value}\n`);
     }
 
     public warn(text: string): void {
