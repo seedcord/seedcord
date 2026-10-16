@@ -11,9 +11,9 @@ import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { quietSteps } from '#core/output/quietSteps';
 import { deployedCommandsFile } from '#core/state/deployedCommands';
 import { StateFolder } from '#core/state/StateFolder';
+import { ShellMode } from '#core/viteMode';
 import { writeCloudflareConfig } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES } from '#tests/commands/build/smoke';
-import { withShellEnv } from '#tests/envapt';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
 
@@ -35,7 +35,7 @@ import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/schema';
 
 // the API_TOKEN that codegen's node copy of bot.ts reads from cloudflare:workers
-async function nodeCopyApiToken(projectDir: string): Promise<unknown> {
+async function nodeCopyApiToken(projectDir: string, viteMode = 'development'): Promise<unknown> {
     await writeCloudflareConfig(projectDir, { env: { API_TOKEN: bindings.secret() } });
     await editFile(join(projectDir, 'src/bot.ts'), (text) =>
         text.replace(
@@ -47,7 +47,7 @@ async function nodeCopyApiToken(projectDir: string): Promise<unknown> {
         Reflect.deleteProperty(globalThis, 'apiToken');
     });
 
-    await using _started = await startedRuntime(projectDir);
+    await using _started = await startedRuntime(projectDir, undefined, { viteMode });
     return Reflect.get(globalThis, 'apiToken');
 }
 
@@ -59,15 +59,14 @@ describe('EdgeDevRuntime lifecycle', () => {
         await expect(nodeCopyApiToken(project.projectDir)).resolves.toBe('from-dev-vars');
     }, 120_000);
 
-    it('reads the .dev.vars file for the mode ENVIRONMENT sets', async () => {
-        withShellEnv({ ENVIRONMENT: 'staging' });
+    it('reads the .dev.vars file for the vite mode', async () => {
         await using project = await edgeProject();
         const staging = Object.entries({ ...liveVars, API_TOKEN: 'from-staging' }).map(
             ([key, value]) => `${key}=${value}`
         );
         await writeFile(join(project.projectDir, '.dev.vars.staging'), `${staging.join('\n')}\n`);
 
-        await expect(nodeCopyApiToken(project.projectDir)).resolves.toBe('from-staging');
+        await expect(nodeCopyApiToken(project.projectDir, 'staging')).resolves.toBe('from-staging');
     }, 120_000);
 
     it('reports each slow startup step before the endpoint listens', async () => {
@@ -116,7 +115,7 @@ describe('EdgeDevRuntime lifecycle', () => {
             } as unknown as Pick<ProjectLoader, 'open'>,
             store,
             state,
-            codegen: CodegenRunner.create(quietSteps, silentLogger),
+            codegen: CodegenRunner.create(quietSteps, silentLogger, new ShellMode()),
             codegenLogger: silentLogger,
             // justified: tunnel mode off routes nothing
             tunnel: { route: () => undefined, stop: () => Promise.resolve() } as unknown as TunnelRouter,

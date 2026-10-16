@@ -11,6 +11,7 @@ import { TypeChecker } from './builder/TypeChecker';
 
 import type { Steps } from '#core/output/Steps';
 import type { Project } from '#core/project/Project';
+import type { ShellMode } from '#core/viteMode';
 import type { BundleStats } from './builder/output';
 import type { NextCommand } from './builder/TargetBuild';
 import type { Build } from './builder/targetBuildFor';
@@ -34,15 +35,14 @@ interface BuildRunnerDeps {
 export class BuildRunner {
     constructor(private readonly deps: BuildRunnerDeps) {}
 
-    // a build is what you deploy, so it runs in production unless the shell sets a mode
-    public static projectLoader(): ProjectLoader {
-        return new ProjectLoader(openModuleLoader, 'production');
+    public static productionProjectLoader(shell: ShellMode): ProjectLoader {
+        return new ProjectLoader(openModuleLoader, shell, 'production');
     }
 
-    public static create(steps: Steps<BuildStep>): BuildRunner {
+    public static create(steps: Steps<BuildStep>, shell: ShellMode): BuildRunner {
         return new BuildRunner({
             steps,
-            projectLoader: BuildRunner.projectLoader(),
+            projectLoader: BuildRunner.productionProjectLoader(shell),
             typeChecker: new TypeChecker(),
             buildFor: targetBuildFor
         });

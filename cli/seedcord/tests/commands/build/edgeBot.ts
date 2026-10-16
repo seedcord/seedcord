@@ -7,6 +7,7 @@ import { Routes } from 'discord-api-types/v10';
 import { onTestFinished } from 'vitest';
 
 import { EdgeBuild } from '#commands/build/builder/EdgeBuild';
+import { ShellMode } from '#core/viteMode';
 
 import { quickBuildRunner } from './quickBuildRunner';
 import { APP_ID, ED25519_KEY_BYTES, FAKE_TOKEN } from './smoke';
@@ -58,12 +59,12 @@ export function fakeDiscord(publicKey = ANY_PUBLIC_KEY): Pick<REST, 'get'> {
     };
 }
 
-export function edgeBuildRunner(discord = fakeDiscord()): BuildRunner {
+export function edgeBuildRunner(discord = fakeDiscord(), shell = new ShellMode()): BuildRunner {
     return quickBuildRunner((project) => {
         const { target } = project.config;
         if (target.kind !== 'edge') throw new Error(`edgeBuildRunner got a ${target.kind} project`);
         return new EdgeBuild(project, target, { openDiscord: () => discord });
-    });
+    }, shell);
 }
 
 // writes cloudflare.config.ts with the fixture's name, date and secrets, plus the fields passed in

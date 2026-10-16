@@ -12,7 +12,6 @@ import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { toSeedcordInstance } from '#core/modules/importInstance';
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { StateFolder } from '#core/state/StateFolder';
-import { viteMode } from '#core/viteMode';
 import { copyEdgeBot } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES, FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { silentLogger } from '#tests/silentLogger';
@@ -27,13 +26,13 @@ import type { AddressInfo } from 'node:net';
 // a port probed up front can go to another worker before the runtime binds it
 const ANY_PORT = 0;
 
-async function edgeTarget(projectDir: string, port: number): Promise<ResolvedEdgeTarget> {
+async function edgeTarget(projectDir: string, port: number, viteMode: string): Promise<ResolvedEdgeTarget> {
     const cloudflareConfig = join(projectDir, 'cloudflare.config.ts');
-    const env = await WorkerEnv.load(cloudflareConfig, viteMode('development'));
+    const env = await WorkerEnv.load(cloudflareConfig, viteMode);
     return { kind: 'edge', cloudflareConfig, env, port };
 }
 
-function configWith(projectDir: string, target: ResolvedEdgeTarget): ResolvedSeedcordConfig {
+function configWith(projectDir: string, target: ResolvedEdgeTarget, viteMode: string): ResolvedSeedcordConfig {
     // justified: the runtime reads only these fields
     return {
         configFile: join(projectDir, 'seedcord.config.ts'),
@@ -41,13 +40,13 @@ function configWith(projectDir: string, target: ResolvedEdgeTarget): ResolvedSee
         instance: join(projectDir, 'src/bot.ts'),
         target,
         build: {},
-        mode: viteMode('development'),
+        viteMode,
         tunnel: { mode: 'quick' }
     } as ResolvedSeedcordConfig;
 }
 
 export async function edgeConfig(projectDir: string, port = ANY_PORT): Promise<ResolvedSeedcordConfig> {
-    return configWith(projectDir, await edgeTarget(projectDir, port));
+    return configWith(projectDir, await edgeTarget(projectDir, port, 'development'), 'development');
 }
 
 export const liveVars = { DISCORD_BOT_TOKEN: FAKE_TOKEN, DISCORD_PUBLIC_KEY: 'ab'.repeat(ED25519_KEY_BYTES) };
@@ -191,10 +190,10 @@ interface StartedRuntime extends AsyncDisposable {
 export async function startedRuntime(
     projectDir: string,
     onEvent?: DevEventHandler,
-    devPort = ANY_PORT
+    { devPort = ANY_PORT, viteMode = 'development' } = {}
 ): Promise<StartedRuntime> {
-    const target = await edgeTarget(projectDir, devPort);
-    const config = configWith(projectDir, target);
+    const target = await edgeTarget(projectDir, devPort, viteMode);
+    const config = configWith(projectDir, target, viteMode);
     const runtime = new EdgeDevRuntime(target);
     let listening: number | undefined;
     const recordPort: DevEventHandler = (event) => {

@@ -95,12 +95,11 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             CloudflareWorker.load(this.target.cloudflareConfig)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
-        const { mode } = config;
         const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, this.target.env.files);
         const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, workerConfig);
         const server = await createServer(
             mergeViteConfig(edgeViteConfig(config, viteRoot, process.cwd()), {
-                mode,
+                mode: config.viteMode,
                 plugins: [
                     workerEntry({
                         files,

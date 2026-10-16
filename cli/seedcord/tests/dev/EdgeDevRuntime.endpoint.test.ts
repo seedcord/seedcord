@@ -9,7 +9,6 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { writeSigningEnv } from '#tests/commands/build/edgeBot';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
-import { withShellEnv } from '#tests/envapt';
 
 import {
     captureLogs,
@@ -80,7 +79,7 @@ describe('EdgeDevRuntime endpoint', () => {
         const { port } = holder.address() as AddressInfo;
         await using project = await edgeProject();
 
-        await expect(startedRuntime(project.projectDir, undefined, port)).rejects.toMatchObject({
+        await expect(startedRuntime(project.projectDir, undefined, { devPort: port })).rejects.toMatchObject({
             code: SeedcordErrorCode.PortInUse,
             message: expect.stringContaining('seedcord.config.ts') as string
         });
@@ -134,11 +133,12 @@ describe('EdgeDevRuntime endpoint', () => {
     it.each(['.dev.vars', '.env', '.env.staging', 'cloudflare.config.ts'])(
         'reports a restart is required when %s changes in mode staging, and keeps the bot answering',
         async (file) => {
-            withShellEnv({ ENVIRONMENT: 'staging' });
             await using project = await edgeProject();
             const { projectDir } = project;
             const events: DevEvent[] = [];
-            await using started = await startedRuntime(projectDir, (event) => events.push(event));
+            await using started = await startedRuntime(projectDir, (event) => events.push(event), {
+                viteMode: 'staging'
+            });
             const { runtime, instance } = started;
             await runtime.startBot(instance);
 

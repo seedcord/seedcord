@@ -5,10 +5,11 @@ import { cliLogger } from '#core/cliLogger';
 
 import { CODEGEN_STEPS, CodegenRunner } from './CodegenRunner';
 
+import type { ShellMode } from '#core/viteMode';
 import type { Command } from '@commander-js/extra-typings';
 
 export class CodegenCommand extends BaseCommand {
-    constructor() {
+    constructor(private readonly shell: ShellMode) {
         super('codegen', 'Generate typed augmentations from your commands and config');
     }
 
@@ -20,9 +21,8 @@ export class CodegenCommand extends BaseCommand {
             .action((options, command) =>
                 this.runSteps(command, CODEGEN_STEPS, async (printer) => {
                     const check = options.check ?? false;
-                    const { outputPath, changed } = await CodegenRunner.create(printer, cliLogger('Codegen')).run(
-                        check
-                    );
+                    const runner = CodegenRunner.create(printer, cliLogger('Codegen'), this.shell);
+                    const { outputPath, changed } = await runner.run(check);
                     printer.line();
                     printer.line(
                         changed ? `wrote ${paint.path(outputPath)}` : `${paint.path(outputPath)} is up to date`

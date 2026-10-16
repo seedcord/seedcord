@@ -16,6 +16,7 @@ import { TunnelRouter } from './tunnel/TunnelRouter';
 
 import type { ResolvedSeedcordConfig, ResolvedTarget, ResolvedTunnel } from '#core/config/schema';
 import type { StateFolder } from '#core/state/StateFolder';
+import type { ShellMode } from '#core/viteMode';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DevSessionDeps } from './DevSession';
 import type { DevRuntime } from './runtime/DevRuntime';
@@ -40,17 +41,17 @@ export class DevRunner {
 
     constructor(private readonly deps: DevRunnerDeps) {}
 
-    public static create(store: DevStore, state: StateFolder): DevRunner {
+    public static create(store: DevStore, state: StateFolder, shell: ShellMode): DevRunner {
         const codegenLogger = cliLogger('Codegen');
         const tunnelLogger = cliLogger('Tunnel');
         const makeCoordinator = (tunnel: ResolvedTunnel): TunnelCoordinator | undefined =>
             createTunnelCoordinator(tunnelLogger, (status) => store.setTunnel(status), tunnel);
 
         return new DevRunner({
-            projectLoader: new ProjectLoader(openModuleLoader),
+            projectLoader: new ProjectLoader(openModuleLoader, shell),
             store,
             state,
-            codegen: CodegenRunner.create(quietSteps, codegenLogger),
+            codegen: CodegenRunner.create(quietSteps, codegenLogger, shell),
             codegenLogger,
             tunnel: new TunnelRouter(makeCoordinator, tunnelLogger),
             runtime: (target) => (target.kind === 'edge' ? new EdgeDevRuntime(target) : new ServerDevRuntime())

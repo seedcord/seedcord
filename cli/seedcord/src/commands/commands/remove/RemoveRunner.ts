@@ -2,8 +2,8 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { DiscordSession } from '#commands/commands/DiscordSession';
-import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
 import { commandCount } from '#commands/commands/scope';
+import { restFromEnv } from '#core/discord/restFromEnv';
 
 import { deletedNote, scanNote } from './removeSteps';
 
@@ -27,7 +27,7 @@ export class RemoveRunner {
     constructor(private readonly deps: Pick<RunnerDeps, 'openDiscord'>) {}
 
     public static create(): RemoveRunner {
-        return new RemoveRunner(defaultRunnerDeps());
+        return new RemoveRunner({ openDiscord: restFromEnv });
     }
 
     public async listBotGuilds(): Promise<GuildSummary[]> {

@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { quietSteps } from '#core/output/quietSteps';
+import { ShellMode } from '#core/viteMode';
 import { silentLogger } from '#tests/silentLogger';
 
 import { edgeConfig, edgeProject, editFile, fakeDiscordApi, startedRuntime, WAVE_COMMAND } from './edgeDevRuntime';
@@ -24,7 +25,7 @@ describe('EdgeDevRuntime codegen', () => {
         const { runtime, instance } = started;
         const config = await edgeConfig(projectDir);
 
-        const { outputPath } = await CodegenRunner.create(quietSteps, silentLogger).writeFrom({
+        const { outputPath } = await CodegenRunner.create(quietSteps, silentLogger, new ShellMode()).writeFrom({
             config,
             instance,
             modules: runtime
@@ -48,7 +49,7 @@ describe('EdgeDevRuntime codegen', () => {
         );
         await using started = await startedRuntime(projectDir);
         const { runtime, instance } = started;
-        const codegen = CodegenRunner.create(quietSteps, silentLogger);
+        const codegen = CodegenRunner.create(quietSteps, silentLogger, new ShellMode());
         const bot = { config: await edgeConfig(projectDir), instance, modules: runtime };
         await codegen.writeFrom(bot);
 

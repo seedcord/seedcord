@@ -5,7 +5,6 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 
 import { Project } from '#core/project/Project';
-import { viteMode } from '#core/viteMode';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { assertNoHashPaths } from './assertNoHashPaths';
@@ -15,7 +14,7 @@ import { detectTarget } from './detectTarget';
 import { locateConfig } from './locateConfig';
 
 import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
-import type { DefaultMode } from '#core/viteMode';
+import type { DefaultMode, ShellMode } from '#core/viteMode';
 import type { BuildTarget } from './detectTarget';
 import type {
     ResolvedSeedcordBuildConfig,
@@ -48,11 +47,12 @@ function resolveTypecheck(value: SeedcordHmrConfig['typecheck'], root: string): 
 export class ProjectLoader {
     constructor(
         private readonly openModules: OpenModules,
+        private readonly shell: ShellMode,
         private readonly defaultMode: DefaultMode = 'development'
     ) {}
 
     public async open(projectDir = process.cwd()): Promise<Project> {
-        const mode = viteMode(this.defaultMode);
+        const mode = this.shell.viteMode(this.defaultMode);
         const configPath = locateConfig(projectDir);
         const configDir = dirname(configPath);
         const target = await detectTarget(configDir, mode);
@@ -91,7 +91,7 @@ export class ProjectLoader {
             build,
             typecheck,
             idleAnimation: config.idleAnimation ?? true,
-            mode,
+            viteMode: mode,
             tunnel: resolveTunnel(config.tunnel),
             hmr: config.hmr
         } satisfies ResolvedSeedcordConfig;

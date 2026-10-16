@@ -6,6 +6,7 @@ import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { assert, describe, it, expect, onTestFinished } from 'vitest';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
+import { ShellMode } from '#core/viteMode';
 import { cloudflareConfigSource, linkPackages } from '#tests/edgeFolder';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -42,7 +43,7 @@ function projectWith(config: unknown): { projectDir: string; load: () => Promise
     const { open } = stubModulesExporting(config);
 
     const load = async (): Promise<ResolvedSeedcordConfig> => {
-        const { config: resolved } = await new ProjectLoader(open).open(projectDir);
+        const { config: resolved } = await new ProjectLoader(open, new ShellMode()).open(projectDir);
         return resolved;
     };
 
@@ -275,7 +276,7 @@ describe('ProjectLoader validation', () => {
     it('throws CliConfigNotFound for a folder with no seedcord config', async () => {
         const open: OpenModules = () => Promise.reject(new Error('never opened'));
 
-        await expect(new ProjectLoader(open).open(tempProject())).rejects.toMatchObject({
+        await expect(new ProjectLoader(open, new ShellMode()).open(tempProject())).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigNotFound
         });
     });
@@ -285,7 +286,7 @@ describe('ProjectLoader validation', () => {
         writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
         const modules = stubModulesExporting({ entry: './index.ts' });
 
-        await expect(new ProjectLoader(modules.open).open(projectDir)).rejects.toMatchObject({
+        await expect(new ProjectLoader(modules.open, new ShellMode()).open(projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField
         });
         expect(modules.closed()).toBe(true);
@@ -297,7 +298,7 @@ describe('ProjectLoader validation', () => {
         const modules = stubModulesExporting(MINIMAL);
 
         {
-            await using project = await new ProjectLoader(modules.open).open(projectDir);
+            await using project = await new ProjectLoader(modules.open, new ShellMode()).open(projectDir);
             expect(modules.closed()).toBe(false);
             expect(project.config.instance).toBe(resolve(projectDir, 'bot.ts'));
         }

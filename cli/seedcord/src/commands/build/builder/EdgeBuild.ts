@@ -114,7 +114,7 @@ export class EdgeBuild extends TargetBuild {
         let chunks: Rolldown.OutputChunk[] | undefined;
         const builder = await createBuilder({
             root: viteRoot,
-            mode: config.mode,
+            mode: config.viteMode,
             configFile: false,
             publicDir: false,
             logLevel: 'warn',
@@ -148,7 +148,7 @@ export class EdgeBuild extends TargetBuild {
         const cloudflare = await this.worker();
         await bootWorker({
             root: this.viteRoot,
-            mode: this.project.config.mode,
+            mode: this.project.config.viteMode,
             plugins: [cloudflare.plugins({ persistState: false })],
             environments: workerEnvironment()
         });

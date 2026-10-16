@@ -19,6 +19,7 @@ import { renderAugmentation } from './renderAugmentation';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Steps } from '#core/output/Steps';
+import type { ShellMode } from '#core/viteMode';
 import type { ScannedCommand } from './AugmentationBuilder';
 import type { ILogger } from '@seedcord/types';
 
@@ -56,10 +57,10 @@ function botSpecifier(root: string, instance: string): string {
 export class CodegenRunner {
     constructor(private readonly deps: CodegenRunnerDeps) {}
 
-    public static create(steps: Steps<CodegenStep>, logger: ILogger): CodegenRunner {
+    public static create(steps: Steps<CodegenStep>, logger: ILogger, shell: ShellMode): CodegenRunner {
         return new CodegenRunner({
             steps,
-            projectLoader: new ProjectLoader(openModuleLoader),
+            projectLoader: new ProjectLoader(openModuleLoader, shell),
             generator: new AugmentationBuilder(logger),
             logger
         });

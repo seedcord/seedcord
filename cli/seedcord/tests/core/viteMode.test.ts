@@ -1,39 +1,46 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { viteMode } from '#core/viteMode';
-import { withEnv, withShellEnv } from '#tests/envapt';
+import { ShellMode } from '#core/viteMode';
 
-describe('viteMode', () => {
-    it('returns the default when the shell sets none of ENVIRONMENT, ENV and NODE_ENV', () => {
-        withShellEnv({});
+type ShellVars = Partial<Record<'ENVIRONMENT' | 'ENV' | 'NODE_ENV' | 'MODE', string>>;
 
-        expect(viteMode('production')).toBe('production');
-        expect(viteMode('development')).toBe('development');
-    });
+// vitest sets NODE_ENV to test
+function readShell(vars: ShellVars): ShellMode {
+    vi.stubEnv('ENVIRONMENT', vars.ENVIRONMENT);
+    vi.stubEnv('ENV', vars.ENV);
+    vi.stubEnv('NODE_ENV', vars.NODE_ENV);
+    vi.stubEnv('MODE', vars.MODE);
+    return ShellMode.read();
+}
 
-    it('returns the default when only a .env file sets ENV', () => {
-        withEnv({ ENV: 'development' });
-        withShellEnv({});
+afterEach(() => {
+    vi.unstubAllEnvs();
+});
 
-        expect(viteMode('production')).toBe('production');
+describe('ShellMode', () => {
+    it('returns the default when the shell sets none of ENVIRONMENT, ENV, NODE_ENV and MODE', () => {
+        const shell = readShell({});
+
+        expect(shell.viteMode('production')).toBe('production');
+        expect(shell.viteMode('development')).toBe('development');
     });
 
     it.each([
         [{ ENVIRONMENT: 'staging' }, 'staging'],
         [{ ENV: 'production' }, 'production'],
         [{ NODE_ENV: 'test' }, 'test'],
-        [{ ENVIRONMENT: 'Development' }, 'development']
-    ])('returns the environment envapt resolves from the shell %j', (vars, mode) => {
-        withShellEnv(vars);
-
-        expect(viteMode('production')).toBe(mode);
+        [{ MODE: 'staging' }, 'staging'],
+        [{ ENVIRONMENT: 'Development' }, 'development'],
+        [{ ENV: 'staging', MODE: 'production' }, 'staging']
+    ])('reads the mode from the shell %j in the order envapt does', (vars, mode) => {
+        expect(readShell(vars).viteMode('production')).toBe(mode);
     });
 
-    it('throws ConfigInvalidEnv for a name envapt does not know', () => {
-        withShellEnv({ ENV: 'preview' });
+    it("throws ConfigInvalidEnv for a name outside envapt's four", () => {
+        const shell = readShell({ ENV: 'preview' });
 
-        expect(() => viteMode('production')).toThrow(
+        expect(() => shell.viteMode('production')).toThrow(
             expect.objectContaining({
                 code: SeedcordErrorCode.ConfigInvalidEnv,
                 message: expect.stringContaining('development, staging, production, or test') as string
