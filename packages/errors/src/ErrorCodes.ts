@@ -50,7 +50,7 @@ export enum SeedcordErrorCode {
     CoreBotRoleMissing = 1204,
     /** A bot controller was constructed without the folder that holds its handlers. */
     CoreControllerPathMissing = 1205,
-    /** A file threw while seedcord imported it, in the bot or in the CLI. */
+    /** A file that seedcord could not import, in the bot or in the CLI. */
     CoreImportFailed = 1206,
     /** A file or folder that seedcord reads could not be read. */
     CorePathUnreadable = 1207,

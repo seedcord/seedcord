@@ -79,7 +79,7 @@ const messages = {
     [SeedcordErrorCode.CoreControllerPathMissing]: (controllerName: string, pathKind: string) =>
         `${paint.sky(controllerName)} was constructed without a ${pathKind} path. This is a bug in seedcord.`,
     [SeedcordErrorCode.CoreImportFailed]: (file: string, reason: string) =>
-        `${paint.path(file)} threw while seedcord imported it. ${sentence(reason)}`,
+        `Could not import ${paint.path(file)}. ${sentence(reason)}`,
     [SeedcordErrorCode.CorePathUnreadable]: (path: string, reason: string) =>
         `Could not read ${paint.path(path)}. ${sentence(reason)} Check that it exists and that this process can read it.`,
     [SeedcordErrorCode.CorePathOutsideRoot]: (path: string, root: string) =>

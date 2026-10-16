@@ -125,7 +125,7 @@ describe('a built edge worker', () => {
             await server.close();
         }
 
-        expect(body).toContain('handlers/Broken.js threw while seedcord imported it');
+        expect(body).toContain('Could not import handlers/Broken.js');
         expect(body).not.toContain('../');
     }, 120_000);
 });
