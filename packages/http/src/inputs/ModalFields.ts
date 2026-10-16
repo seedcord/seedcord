@@ -182,11 +182,10 @@ export class ModalFields {
         if (!picked || channelTypes.length === 0) return picked;
         for (const found of picked.values()) {
             if (channelTypes.includes(found.type)) continue;
-            const allowed = channelTypes.map(nameOfChannelType).join(', ');
             throw new SeedcordTypeError(SeedcordErrorCode.ModalFieldChannelType, [
                 customId,
                 nameOfChannelType(found.type),
-                allowed
+                channelTypes.map(nameOfChannelType)
             ]);
         }
         return picked;

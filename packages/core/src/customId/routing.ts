@@ -2,7 +2,7 @@ import 'reflect-metadata';
 
 import { decodeFor } from '@seedcord/custom-id';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import type { ComponentDefsBrand } from '#src/decorators/brands';
 import type { AnyCustomId, DecodedParams } from '@seedcord/custom-id';
@@ -42,7 +42,7 @@ export interface DecodedComponentRoute {
  */
 export function decodeComponentRoute(handlerClass: { name: string }, wire: string): DecodedComponentRoute {
     const defs = Reflect.getMetadata(ComponentDefsKey, handlerClass) as readonly AnyCustomId[] | undefined;
-    if (!defs) throw new SeedcordError(SeedcordErrorCode.CustomIdHandlerRouteMissing, [handlerClass.name]);
+    if (!defs) throw new SeedcordTypeError(SeedcordErrorCode.CustomIdHandlerRouteMissing, [handlerClass.name]);
     return decodeFor(defs, wire);
 }
 

@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { parseDuration, type ValidDuration } from '@seedcord/utils';
 
 import { defineEffectGate } from '#gates/Gate';
@@ -65,13 +65,14 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
 
 /**
  * Allows `limit` uses per window, scoped by `per`. A number `duration` is **seconds**, and a string is
- * a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError** at construction. The
+ * a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError** at construction, and a zero or
+ * negative one throws a **SeedcordRangeError**. The
  * slot is charged in commit, only after the whole gate set passes, so a later refusal never burns the cooldown.
  * That split also means two requests racing the same key can both pass before either charges the slot.
  * The key combines the handler's route with the window settings, keeping two different handlers on separate
  * windows. Reword the refusal with {@link CooldownOptions.message} or replace it with {@link CooldownOptions.notice}.
  *
- * @param duration - A number is seconds, and a string is a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError**.
+ * @param duration - A number is seconds, and a string is a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError**, and a zero or negative one a **SeedcordRangeError**.
  * @param options - Sets the scope with `per`, the uses per window with `limit`, and the refusal text with `message` or `notice`.
  *
  * @see the `@Gated` decorator from your transport package
@@ -119,9 +120,9 @@ export function Cooldown(
         if (parsed === null) throw new SeedcordTypeError(SeedcordErrorCode.GateInvalidCooldownDuration, [duration]);
         windowMs = parsed;
     }
-    // refused the same way as an unparseable string, because a zero or negative window would never limit
+    // a zero or negative window would never limit
     if (windowMs <= 0) {
-        throw new SeedcordTypeError(SeedcordErrorCode.GateInvalidCooldownDuration, [String(duration)]);
+        throw new SeedcordRangeError(SeedcordErrorCode.GateInvalidCooldownDuration, [String(duration)]);
     }
 
     const per = options?.per ?? 'user';

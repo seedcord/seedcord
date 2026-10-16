@@ -145,7 +145,7 @@ describe('this.params on a single-route handler', () => {
         expect(denialNameFrom(() => handler.read())).toBe('InvalidCustomId');
     });
 
-    it('throws CustomIdMatchArmMissing for a prototype-named prefix with no arm', async () => {
+    it('throws MatchArmMissing for a prototype-named prefix with no arm', async () => {
         const Ctor = new CustomId('constructor').snowflake('userId');
         @ButtonRoute(Ctor)
         class WeirdButton extends ButtonHandler<[typeof Ctor]> {
@@ -156,7 +156,7 @@ describe('this.params on a single-route handler', () => {
         }
         const handler = new WeirdButton(button(Ctor.encode({ userId: USER })), core, dispatch);
         await expect(handler.execute()).rejects.toMatchObject({
-            code: SeedcordErrorCode.CustomIdMatchArmMissing
+            code: SeedcordErrorCode.MatchArmMissing
         });
     });
 

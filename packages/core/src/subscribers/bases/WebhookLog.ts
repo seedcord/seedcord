@@ -99,7 +99,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
     /** @internal */
     static envKeyOf(ctor: NewableFunction): string {
         const envKey = Reflect.getMetadata(WebhookUrlMetadataKey, ctor) as string | undefined;
-        if (!envKey) throw new SeedcordError(SeedcordErrorCode.DecoratorWebhookUrlMissing, [ctor.name]);
+        if (!envKey) throw new SeedcordTypeError(SeedcordErrorCode.DecoratorWebhookUrlMissing, [ctor.name]);
         return envKey;
     }
 
@@ -108,7 +108,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
         if (!Envapter.has(envKey)) return null;
         const raw = Envapter.getRequired(envKey, Converters.String).trim();
         if (raw === '') return null;
-        if (!isDiscordWebhookUrl(raw)) throw new SeedcordTypeError(SeedcordErrorCode.ConfigWebhookUrlInvalid, [envKey]);
+        if (!isDiscordWebhookUrl(raw)) throw new SeedcordError(SeedcordErrorCode.ConfigWebhookUrlInvalid, [envKey]);
         return raw;
     }
 }

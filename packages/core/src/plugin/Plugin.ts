@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 
 import { getDevChannel } from '#hmr/devChannel';
@@ -142,12 +142,12 @@ export abstract class Plugin<
     dispose?(): Promise<void>;
 
     /**
-     * Throws a `SeedcordError` that contains the plugin class name and the reason.
+     * Throws a `SeedcordTypeError` that contains the plugin class name and the reason.
      *
      * @param reason - Why the options are invalid.
      */
     protected rejectOptions(reason: string): never {
-        throw new SeedcordError(SeedcordErrorCode.PluginOptionsRejected, [this.constructor.name, reason]);
+        throw new SeedcordTypeError(SeedcordErrorCode.PluginOptionsRejected, [this.constructor.name, reason]);
     }
 
     /** Override to reload plugin state on an HMR update. */

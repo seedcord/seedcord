@@ -43,7 +43,7 @@ describe('decodeComponentRoute', () => {
         } catch (error) {
             caught = error;
         }
-        expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CustomIdHandlerRouteMissing)).toBe(true);
+        expect(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.CustomIdHandlerRouteMissing)).toBe(true);
     });
 
     it('refuses a wire no stored def owns with InvalidCustomId', () => {

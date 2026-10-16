@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { ConfigGuilds } from '#decorators/Command';
 
@@ -19,7 +19,7 @@ export function resolveDeployTarget(
     }
 
     if (configured.length === 0 && meta.guilds.includes(ConfigGuilds)) {
-        throw new SeedcordError(SeedcordErrorCode.CoreCommandGuildsEmpty, [commandName]);
+        throw new SeedcordTypeError(SeedcordErrorCode.CoreCommandGuildsEmpty, [commandName]);
     }
 
     return guildTarget(meta.guilds.flatMap((target) => (target === ConfigGuilds ? configured : target)));

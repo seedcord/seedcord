@@ -25,10 +25,15 @@ type MessageMenuArms<Names extends NamesFor<ApplicationCommandType.Message>, Ret
     (target: APIMessage) => Promisable<Ret>
 >;
 
-function armFor<Ret>(arms: object, name: string): (...args: never[]) => Promisable<Ret> {
+function armFor<Ret>(handler: object, arms: object, name: string): (...args: never[]) => Promisable<Ret> {
     // hasOwn, since a plain lookup for a command named `constructor` returns Object.prototype's
     const arm = Object.hasOwn(arms, name) ? (arms as Record<string, unknown>)[name] : undefined;
-    if (typeof arm !== 'function') throw new SeedcordTypeError(SeedcordErrorCode.ContextMenuMatchArmMissing, [name]);
+    if (typeof arm !== 'function')
+        throw new SeedcordTypeError(SeedcordErrorCode.MatchArmMissing, [
+            handler.constructor.name,
+            'context menu command',
+            name
+        ]);
     return arm as (...args: never[]) => Promisable<Ret>;
 }
 
@@ -91,7 +96,7 @@ export abstract class UserContextMenuHandler<
      * ```
      */
     protected async match<Ret>(arms: UserMenuArms<Names, Ret>): Promise<Ret> {
-        const arm = armFor<Ret>(arms, this.event.data.name);
+        const arm = armFor<Ret>(this, arms, this.event.data.name);
         return await (
             arm as (target: APIUser, member: APIInteractionDataResolvedGuildMember | null) => Promisable<Ret>
         )(this.target, this.targetMember);
@@ -150,7 +155,7 @@ export abstract class MessageContextMenuHandler<
      * ```
      */
     protected async match<Ret>(arms: MessageMenuArms<Names, Ret>): Promise<Ret> {
-        const arm = armFor<Ret>(arms, this.event.data.name);
+        const arm = armFor<Ret>(this, arms, this.event.data.name);
         return await (arm as (target: APIMessage) => Promisable<Ret>)(this.target);
     }
 }

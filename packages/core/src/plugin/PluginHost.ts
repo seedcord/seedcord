@@ -73,7 +73,7 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
      *
      * @param key - Also the channel the plugin logs on, dots included. Reserved channel names throw.
      * @param args - Whatever your constructor takes after the host.
-     * @throws A **SeedcordError** if you attach after the bot has started. A taken or reserved key throws too.
+     * @throws A **SeedcordError** if you attach after the bot has started, and a **SeedcordTypeError** for a taken or reserved key.
      * So does a plugin that extends `Plugin` from another copy of `@seedcord/core`.
      * @example
      * ```ts
@@ -132,17 +132,17 @@ export abstract class PluginHost<BotT extends Transport, BotRt extends Runtime> 
 
     #assertFree(head: string, leaf: string | undefined, key: string): void {
         if (leaf === undefined) {
-            if (this.#groups.has(key)) throw new SeedcordError(SeedcordErrorCode.CorePluginKeyHoldsGroup, [key]);
-            if (key in this) throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
+            if (this.#groups.has(key)) throw new SeedcordTypeError(SeedcordErrorCode.CorePluginKeyHoldsGroup, [key]);
+            if (key in this) throw new SeedcordTypeError(SeedcordErrorCode.CorePluginKeyExists, [key]);
             return;
         }
 
         const group = this.#groups.get(head);
         if (!group) {
-            if (head in this) throw new SeedcordError(SeedcordErrorCode.CorePluginGroupTaken, [head, key]);
+            if (head in this) throw new SeedcordTypeError(SeedcordErrorCode.CorePluginGroupTaken, [head, key]);
             return;
         }
-        if (Object.hasOwn(group, leaf)) throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
+        if (Object.hasOwn(group, leaf)) throw new SeedcordTypeError(SeedcordErrorCode.CorePluginKeyExists, [key]);
     }
 
     // the types already reject a mismatch. plain JS and casts reach this.

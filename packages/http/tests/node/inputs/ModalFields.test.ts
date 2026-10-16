@@ -382,7 +382,7 @@ describe('payloads the pinned types forbid', () => {
             message = (error as Error).message;
         }
         expect(message).toContain('component type 99');
-        expect(message).toContain('No getter reads that kind');
+        expect(message).toContain('none of the getters read that kind');
     });
 
     it('names a channel type the pinned enum does not carry', () => {

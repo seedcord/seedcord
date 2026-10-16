@@ -95,9 +95,7 @@ describe('EventMiddleware', () => {
 
     it('throws when the fired event name is unavailable', () => {
         const mw = new SingleMw(createPayload(fakeMessage()), core, dispatch);
-        expect(() => mw.readName()).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.EventMiddlewareNameUnavailable })
-        );
+        expect(() => mw.readName()).toThrow(expect.objectContaining({ code: SeedcordErrorCode.EventNameUnavailable }));
     });
 });
 

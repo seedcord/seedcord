@@ -1,3 +1,6 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordRangeError } from '@seedcord/errors/internal';
+
 import { paginate } from './pagination';
 import { renderSingle } from './renderSingle';
 
@@ -64,9 +67,17 @@ export function renderTable(
 function validateOptions(options: TableOptions): void {
     const { maxWidth, padding } = options;
     if (maxWidth !== undefined && (!Number.isSafeInteger(maxWidth) || maxWidth < 1)) {
-        throw new RangeError(`renderTable maxWidth must be a positive integer, got ${maxWidth}`);
+        throw new SeedcordRangeError(SeedcordErrorCode.UtilTableOptionInvalid, [
+            'maxWidth',
+            'a positive integer',
+            maxWidth
+        ]);
     }
     if (padding !== undefined && (!Number.isSafeInteger(padding) || padding < 0)) {
-        throw new RangeError(`renderTable padding must be a non-negative integer, got ${padding}`);
+        throw new SeedcordRangeError(SeedcordErrorCode.UtilTableOptionInvalid, [
+            'padding',
+            'zero or a positive integer',
+            padding
+        ]);
     }
 }

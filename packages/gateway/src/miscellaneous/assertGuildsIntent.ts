@@ -26,5 +26,5 @@ export function assertGuildsIntent(
     const needing = commands.filter((command) => reachesGuilds(command)).map((command) => command.name);
     if (needing.length === 0) return;
 
-    throw new SeedcordError(SeedcordErrorCode.MissingGuildsIntent, [needing.join(', ')]);
+    throw new SeedcordError(SeedcordErrorCode.MissingGuildsIntent, [needing]);
 }

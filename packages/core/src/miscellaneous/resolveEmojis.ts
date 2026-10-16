@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
 
@@ -22,7 +22,7 @@ function byName(list: readonly APIEmoji[]): EmojisByName {
 
 class EmojiResolver {
     private readonly resolved = accessorStore<ResolvedEmoji>();
-    private readonly failures: string[] = [];
+    private readonly problems: Error[] = [];
     private readonly guilds = new Map<string, EmojisByName | Error>();
     private application?: EmojisByName | Error;
 
@@ -35,15 +35,10 @@ class EmojiResolver {
         for (const [key, value] of Object.entries(configured)) {
             if (isEmojiTuple(value)) await this.fromGuild(key, value);
             else if (typeof value === 'string') await this.fromApplication(key, value);
-            else this.failures.push(`  - "${key}" has an invalid value (expected a name or [name, guildId])`);
+            else this.problems.push(new SeedcordTypeError(SeedcordErrorCode.ConfigEmojiInvalid, [key]));
         }
 
-        if (this.failures.length > 0) {
-            throw new SeedcordError(SeedcordErrorCode.ConfigEmojiUnresolved, [
-                this.failures.length,
-                this.failures.join('\n')
-            ]);
-        }
+        throwSingleOrAggregate(this.problems, SeedcordErrorCode.ConfigEmojiUnresolved);
         return this.resolved;
     }
 
@@ -51,9 +46,7 @@ class EmojiResolver {
         this.application ??= await this.applicationEmojis();
 
         if (Error.isError(this.application)) {
-            this.failures.push(
-                `  - "${name}" for "${key}" is an application emoji, and those could not be read (${this.application.message})`
-            );
+            this.unreadable(key, name, 'the application', this.application);
             return;
         }
         this.pick(key, name, this.application, 'the application');
@@ -79,9 +72,7 @@ class EmojiResolver {
         }
 
         if (Error.isError(guild)) {
-            this.failures.push(
-                `  - "${name}" for "${key}" targets guild ${guildId}, which could not be read (${guild.message})`
-            );
+            this.unreadable(key, name, `guild ${guildId}`, guild);
             return;
         }
         this.pick(key, name, guild, `guild ${guildId}`);
@@ -99,10 +90,18 @@ class EmojiResolver {
     private pick(key: string, name: string, source: EmojisByName, where: string): void {
         const found = source.get(name);
         if (!found?.id) {
-            this.failures.push(`  - "${name}" for "${key}" was not found in ${where}`);
+            this.problems.push(new SeedcordError(SeedcordErrorCode.ConfigEmojiNotFound, [key, name, where]));
             return;
         }
         this.resolved[key] = new ResolvedEmoji(name, found.id, found.animated ?? false);
+    }
+
+    private unreadable(key: string, name: string, where: string, cause: Error): void {
+        this.problems.push(
+            new SeedcordError(SeedcordErrorCode.ConfigEmojiSourceUnreadable, [key, name, where, cause.message], {
+                cause
+            })
+        );
     }
 }
 

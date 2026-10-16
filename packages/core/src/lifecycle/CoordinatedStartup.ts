@@ -36,7 +36,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         }
 
         if (this.#isStartingUp) {
-            throw new SeedcordError(SeedcordErrorCode.LifecycleAddDuringRun);
+            throw new SeedcordError(SeedcordErrorCode.LifecycleChangeDuringRun, ['add']);
         }
 
         return true;
@@ -44,7 +44,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
 
     protected canRemoveTask(): boolean {
         if (this.#isStartingUp) {
-            throw new SeedcordError(SeedcordErrorCode.LifecycleRemoveDuringRun);
+            throw new SeedcordError(SeedcordErrorCode.LifecycleChangeDuringRun, ['remove']);
         }
 
         return true;

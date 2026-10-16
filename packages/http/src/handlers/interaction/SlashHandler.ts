@@ -68,7 +68,12 @@ export abstract class SlashHandler<
         const arm = Object.hasOwn(arms, route)
             ? (arms as Record<string, (options: SlashOptions<Route>) => Promisable<Ret>>)[route]
             : undefined;
-        if (!arm) throw new SeedcordTypeError(SeedcordErrorCode.SlashMatchArmMissing, [route]);
+        if (!arm)
+            throw new SeedcordTypeError(SeedcordErrorCode.MatchArmMissing, [
+                this.constructor.name,
+                'command route',
+                route
+            ]);
         return await arm(this.options);
     }
 }

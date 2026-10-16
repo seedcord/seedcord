@@ -1,3 +1,6 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
+
 /**
  * Exhaustiveness guard for discriminated unions. Place in the `default` branch of a `switch` over a
  * union's discriminant: if a new variant is added without a matching case, the call fails to compile.
@@ -17,5 +20,5 @@
  * ```
  */
 export function assertNever(value: never): never {
-    throw new Error(`Unhandled discriminated union member: ${JSON.stringify(value)}`);
+    throw new SeedcordTypeError(SeedcordErrorCode.UtilUnhandledUnionMember, [JSON.stringify(value)]);
 }

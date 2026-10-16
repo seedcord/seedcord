@@ -113,12 +113,12 @@ describe('traverseDirectory in a built bot', () => {
         await expect(walk('/bot/subscribers')).resolves.toEqual([]);
     });
 
-    it('reports a folder the build never registered as unreadable', async () => {
+    it('reports a folder the build never registered as missing from the build', async () => {
         register({ folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
 
         const error = await rejection(traverseDirectory('/bot/handlerz'));
 
-        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryUnreadable });
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryNotBuilt });
         expect(Error.isError(error) ? error.message : '').toMatch(/handlerz/);
     });
 

@@ -40,7 +40,9 @@ export abstract class EventMiddleware<
      * `this.event` directly and does not need this.
      */
     protected get eventName(): EventName {
-        if (this.firedEvent === undefined) throw new SeedcordError(SeedcordErrorCode.EventMiddlewareNameUnavailable);
+        if (this.firedEvent === undefined) {
+            throw new SeedcordError(SeedcordErrorCode.EventNameUnavailable, [this.constructor.name, 'this.eventName']);
+        }
         return this.firedEvent;
     }
 

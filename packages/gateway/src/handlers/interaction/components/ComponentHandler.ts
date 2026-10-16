@@ -66,7 +66,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      *
      * Provide one arm per registered route, keyed by its prefix, and each arm receives that route's own
      * decoded params. The arms cover every registered route prefix, checked at compile time, and a prefix
-     * unmatched at runtime throws `CustomIdMatchArmMissing`. Decoding runs before any arm, so a stale or
+     * unmatched at runtime throws `MatchArmMissing`. Decoding runs before any arm, so a stale or
      * corrupt wire throws before an arm body executes.
      *
      * @param arms - One callback per registered route, keyed by prefix.
@@ -91,7 +91,12 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
         const arm = Object.hasOwn(arms, prefix)
             ? (arms as Record<string, (params: Record<string, unknown>) => Promisable<Ret>>)[prefix]
             : undefined;
-        if (!arm) throw new SeedcordTypeError(SeedcordErrorCode.CustomIdMatchArmMissing, [prefix]);
+        if (!arm)
+            throw new SeedcordTypeError(SeedcordErrorCode.MatchArmMissing, [
+                this.constructor.name,
+                'component route',
+                prefix
+            ]);
         return await arm(params);
     }
 }

@@ -143,14 +143,13 @@ describe('http context menu match', () => {
 
     it('throws when the fired command has no arm', async () => {
         await expect(new Menu(userMenuEvent('hb Greet'), core, dispatch).runPartial()).rejects.toSatisfy(
-            (error: unknown) =>
-                isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.ContextMenuMatchArmMissing)
+            (error: unknown) => isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
         );
     });
 
     it('throws for a command named after an Object.prototype member', async () => {
         await expect(new Menu(userMenuEvent('constructor'), core, dispatch).run()).rejects.toSatisfy((error: unknown) =>
-            isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.ContextMenuMatchArmMissing)
+            isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
         );
     });
 

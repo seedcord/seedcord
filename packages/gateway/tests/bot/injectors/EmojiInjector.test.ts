@@ -95,32 +95,38 @@ describe('EmojiInjector', () => {
     it('collects every unresolvable emoji into one error rather than throwing on the first', async () => {
         const error = await initError(stubCore({ emojis: { Confirm: 'check', Cancel: 'cross' }, appEmojis: [] }));
 
-        expect(error).toMatchObject({ code: SeedcordErrorCode.ConfigEmojiUnresolved });
-        expect(error?.message).toContain('check');
-        expect(error?.message).toContain('cross');
+        expect(error).toMatchObject({
+            code: SeedcordErrorCode.ConfigEmojiUnresolved,
+            errors: [
+                { code: SeedcordErrorCode.ConfigEmojiNotFound, message: expect.stringContaining('check') as string },
+                { code: SeedcordErrorCode.ConfigEmojiNotFound, message: expect.stringContaining('cross') as string }
+            ]
+        });
     });
 
     it('reports an uncached guild for a tuple emoji', async () => {
         const error = await initError(stubCore({ emojis: { Wave: ['wave', 'g1'] } }));
 
-        expect(error).toMatchObject({ code: SeedcordErrorCode.ConfigEmojiUnresolved });
-        expect(error?.message).toContain('g1');
+        expect(error).toMatchObject({
+            code: SeedcordErrorCode.ConfigEmojiSourceUnreadable,
+            message: expect.stringContaining('Guilds') as string
+        });
     });
 
     it('reports a tuple emoji missing from a present guild', async () => {
         const error = await initError(stubCore({ emojis: { Wave: ['wave', 'g1'] }, guilds: { g1: [] } }));
 
-        expect(error).toMatchObject({ code: SeedcordErrorCode.ConfigEmojiUnresolved });
-        expect(error?.message).toContain('wave');
-        expect(error?.message).toContain('g1');
+        expect(error).toMatchObject({
+            code: SeedcordErrorCode.ConfigEmojiNotFound,
+            message: expect.stringContaining('guild g1') as string
+        });
     });
 
     it('reports a config value that is neither a name nor a tuple', async () => {
         // fixture: a non-string, non-tuple value to exercise the invalid-value branch
         const error = await initError(stubCore({ emojis: { Bad: 42 as unknown as string } }));
 
-        expect(error).toMatchObject({ code: SeedcordErrorCode.ConfigEmojiUnresolved });
-        expect(error?.message).toContain('invalid value');
+        expect(error).toMatchObject({ code: SeedcordErrorCode.ConfigEmojiInvalid });
     });
 
     it('fetches a guild before reading its emoji cache', async () => {

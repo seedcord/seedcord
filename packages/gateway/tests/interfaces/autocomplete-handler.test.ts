@@ -249,18 +249,18 @@ describe('AutocompleteHandler', () => {
         expect(captured).toEqual([{ name: 'sp', value: 'sp' }]);
     });
 
-    it('throws AutocompleteMatchArmMissing when the focused field has no arm', async () => {
+    it('throws MatchArmMissing when the focused field has no arm', async () => {
         // a stale-deployed field arrives that the handler does not branch on
         const handler = new SearchMatch(autocompleteRespond('ghost', 'x', []), core, dispatch);
         await expect(handler.execute()).rejects.toMatchObject({
-            code: SeedcordErrorCode.AutocompleteMatchArmMissing
+            code: SeedcordErrorCode.MatchArmMissing
         });
     });
 
-    it('throws AutocompleteMatchArmMissing for a prototype-named focused field', async () => {
+    it('throws MatchArmMissing for a prototype-named focused field', async () => {
         const handler = new SearchMatch(autocompleteRespond('constructor', 'x', []), core, dispatch);
         await expect(handler.execute()).rejects.toMatchObject({
-            code: SeedcordErrorCode.AutocompleteMatchArmMissing
+            code: SeedcordErrorCode.MatchArmMissing
         });
     });
 

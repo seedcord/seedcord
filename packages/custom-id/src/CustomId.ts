@@ -279,7 +279,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     }
 
     /**
-     * Mint a wire string from values. Throws if a value is out of its field's range or the wire is over 100 chars.
+     * Mint a wire string from values. Throws if a value doesn't fit its field or the wire is over 100 chars.
      *
      * @param values - One value per field, typed by the chain.
      * @returns The wire string to put on the component's customId.

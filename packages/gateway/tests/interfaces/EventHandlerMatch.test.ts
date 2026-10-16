@@ -203,14 +203,14 @@ describe('EventHandler.match', () => {
         expect(handler.read()).toHaveLength(1);
     });
 
-    it('throws EventMatchArmMissing when the fired event has no arm', async () => {
+    it('throws MatchArmMissing when the fired event has no arm', async () => {
         // a stale-deployed event arrives that the handler does not branch on
         const handler = new PingMulti(createPayload(fakeMessage()), core, dispatch, 'ghost' as Events.MessageCreate);
-        await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.EventMatchArmMissing });
+        await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.MatchArmMissing });
     });
 
-    it('throws EventMatchArmMissing when constructed without an event name', async () => {
+    it('throws EventNameUnavailable when constructed without an event name', async () => {
         const handler = new PingMulti(createPayload(fakeMessage()), core, dispatch);
-        await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.EventMatchArmMissing });
+        await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.EventNameUnavailable });
     });
 });

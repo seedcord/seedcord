@@ -70,12 +70,12 @@ describe('Ed25519Verifier', () => {
         ['non-hex characters', 'zz'.repeat(32)],
         ['wrong length', 'ab'.repeat(31)],
         ['empty', '']
-    ])('throws ConfigIncorrectPublicKey on a malformed public key (%s)', (_label, publicKeyHex) => {
+    ])('throws ConfigInvalidEnv on a malformed public key (%s)', (_label, publicKeyHex) => {
         try {
             const verifier = new Ed25519Verifier(publicKeyHex);
             expect.unreachable(`construction should throw, got ${typeof verifier}`);
         } catch (error) {
-            expect(isSeedcordError(error, 'SeedcordTypeError', SeedcordErrorCode.ConfigInvalidEnv)).toBe(true);
+            expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigInvalidEnv)).toBe(true);
         }
     });
 });

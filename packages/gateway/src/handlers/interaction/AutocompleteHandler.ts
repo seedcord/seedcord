@@ -105,7 +105,12 @@ export abstract class AutocompleteHandler<
             respond: (choices: readonly ApplicationCommandOptionChoiceData[]) => Promise<void>
         ) => Promisable<Ret>;
         const arm = Object.hasOwn(arms, name) ? (arms as Record<string, Arm>)[name] : undefined;
-        if (!arm) throw new SeedcordTypeError(SeedcordErrorCode.AutocompleteMatchArmMissing, [name]);
+        if (!arm)
+            throw new SeedcordTypeError(SeedcordErrorCode.MatchArmMissing, [
+                this.constructor.name,
+                'focused field',
+                name
+            ]);
         return await arm(value, respond);
     }
 

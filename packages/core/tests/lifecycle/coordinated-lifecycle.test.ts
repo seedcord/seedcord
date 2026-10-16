@@ -62,7 +62,7 @@ describe('CoordinatedStartup failure and guards', () => {
         });
 
         await startup.run();
-        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.LifecycleAddDuringRun)).toBe(true);
+        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.LifecycleChangeDuringRun)).toBe(true);
     });
 
     it('times out a never-resolving task', async () => {

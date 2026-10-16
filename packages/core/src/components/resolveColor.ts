@@ -34,7 +34,7 @@ export function resolveColor(color: BotColor): number {
         throw new SeedcordTypeError(SeedcordErrorCode.ColorUnresolvable, [JSON.stringify(color)]);
     }
     if (resolved < 0 || resolved > MAX_COLOR) {
-        throw new SeedcordRangeError(SeedcordErrorCode.ColorOutOfRange);
+        throw new SeedcordRangeError(SeedcordErrorCode.ColorOutOfRange, [resolved]);
     }
 
     return resolved;

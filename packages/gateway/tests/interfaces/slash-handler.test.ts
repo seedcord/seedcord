@@ -204,7 +204,7 @@ function slashInteraction(commandName: string): ChatInputCommandInteraction<'cac
 }
 
 describe('SlashHandler', () => {
-    it('throws SlashMatchArmMissing for a prototype-named route with no arm', async () => {
+    it('throws MatchArmMissing for a prototype-named route with no arm', async () => {
         class Mod extends SlashHandler<'kick' | 'warn'> {
             async execute(): Promise<void> {
                 await this.match({
@@ -215,7 +215,7 @@ describe('SlashHandler', () => {
         }
         const handler = new Mod(slashInteraction('constructor'), core, dispatch);
         await expect(handler.execute()).rejects.toMatchObject({
-            code: SeedcordErrorCode.SlashMatchArmMissing
+            code: SeedcordErrorCode.MatchArmMissing
         });
     });
 });

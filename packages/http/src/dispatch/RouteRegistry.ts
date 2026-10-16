@@ -1,6 +1,6 @@
 import { interactionRoutesOf } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { emptyRouteMaps } from './resolve';
 
@@ -27,7 +27,7 @@ export class RouteRegistry {
     /**
      * Writes every route the class declares. A class declaring none returns false.
      *
-     * @throws A **SeedcordError** when another class already holds one of them.
+     * @throws A **SeedcordTypeError** when another class already holds one of them.
      */
     public register(ctor: HandlerConstructor, from: string): boolean {
         // nothing is written until every route clears the check below
@@ -37,7 +37,7 @@ export class RouteRegistry {
             for (const key of keys) {
                 const existing = this.owners.get(`${kind}:${key}`);
                 if (existing && existing.ctor !== ctor) {
-                    throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
+                    throw new SeedcordTypeError(SeedcordErrorCode.InteractionDuplicateRoute, [
                         `${kind}:${key}`,
                         `${existing.ctor.name} (${existing.from})`,
                         `${ctor.name} (${from})`

@@ -1,6 +1,6 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { assert, describe, expect, it, vi } from 'vitest';
 
 import { resolveEmojis } from '#src/miscellaneous/resolveEmojis';
 
@@ -63,12 +63,14 @@ describe('resolveEmojis', () => {
         expect(get.mock.calls.map((call) => call[0])).toEqual([Routes.guildEmojis('g1')]);
     });
 
-    it('throws listing every emoji it could not resolve', async () => {
+    it('throws one aggregate holding every emoji it could not resolve', async () => {
         const caught = await failureOf({ Missing: 'nope', Gone: 'gone', Confirm: 'confirm' });
 
-        expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.ConfigEmojiUnresolved)).toBe(true);
-        expect(String(caught)).toContain('"nope" for "Missing"');
-        expect(String(caught)).toContain('"gone" for "Gone"');
+        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.ConfigEmojiUnresolved));
+        expect(caught.errors).toMatchObject([
+            { code: SeedcordErrorCode.ConfigEmojiNotFound, message: expect.stringContaining('Missing') as string },
+            { code: SeedcordErrorCode.ConfigEmojiNotFound, message: expect.stringContaining('Gone') as string }
+        ]);
     });
 
     it('reads the app emoji list once and reports each emoji when that read fails', async () => {
@@ -76,11 +78,14 @@ describe('resolveEmojis', () => {
 
         const caught = await failureOf({ Confirm: 'confirm', Spin: 'spin' }, fixture);
 
-        expect(caught).toHaveProperty('message', expect.stringContaining('Could not resolve 2 configured emojis'));
-        expect(String(caught)).toContain(
-            '"confirm" for "Confirm" is an application emoji, and those could not be read (Missing Access)'
-        );
-        expect(String(caught)).toContain('"spin" for "Spin"');
+        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.ConfigEmojiUnresolved));
+        expect(caught.errors).toMatchObject([
+            {
+                code: SeedcordErrorCode.ConfigEmojiSourceUnreadable,
+                message: expect.stringContaining('Missing Access') as string
+            },
+            { code: SeedcordErrorCode.ConfigEmojiSourceUnreadable, message: expect.stringContaining('Spin') as string }
+        ]);
         expect(fixture.get).toHaveBeenCalledOnce();
     });
 
@@ -89,28 +94,35 @@ describe('resolveEmojis', () => {
 
         const caught = await failureOf({ Wave: ['wave', 'g1'], Nod: ['nod', 'g1'] }, fixture);
 
-        expect(String(caught)).toContain(
-            '"wave" for "Wave" targets guild g1, which could not be read (Missing Access)'
-        );
-        expect(String(caught)).toContain('"nod" for "Nod" targets guild g1');
+        assert(isSeedcordError(caught, 'SeedcordAggregateError', SeedcordErrorCode.ConfigEmojiUnresolved));
+        expect(caught.errors).toMatchObject([
+            {
+                code: SeedcordErrorCode.ConfigEmojiSourceUnreadable,
+                message: expect.stringContaining('guild g1') as string
+            },
+            { code: SeedcordErrorCode.ConfigEmojiSourceUnreadable, message: expect.stringContaining('Nod') as string }
+        ]);
         expect(fixture.get).toHaveBeenCalledOnce();
     });
 
-    it('reports a configured value that is neither a name nor a tuple', async () => {
+    it('throws a type error for a configured value that is neither a name nor a tuple', async () => {
         const caught = await failureOf({ Bad: 42 });
 
-        expect(String(caught)).toContain('"Bad" has an invalid value');
+        expect(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.ConfigEmojiInvalid)).toBe(true);
     });
 
     it('reports a tuple with an empty slot as an invalid value', async () => {
         const caught = await failureOf({ Hole: ['wave', ,] });
 
-        expect(String(caught)).toContain('"Hole" has an invalid value');
+        expect(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.ConfigEmojiInvalid)).toBe(true);
     });
 
-    it('reports an emoji whose payload carries no id', async () => {
+    it('reports an emoji whose payload carries no id as not found', async () => {
         const caught = await failureOf({ Wave: ['wave', 'g1'] }, restWith({ g1: [apiEmoji('wave', '')] }));
 
-        expect(String(caught)).toContain('was not found in guild g1');
+        expect(caught).toMatchObject({
+            code: SeedcordErrorCode.ConfigEmojiNotFound,
+            message: expect.stringContaining('guild g1') as string
+        });
     });
 });

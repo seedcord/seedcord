@@ -1,6 +1,6 @@
 import { DiscordAPIError, REST } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { Routes } from 'discord-api-types/v10';
 
 import type { ReplyFile } from '@seedcord/types';
@@ -28,8 +28,7 @@ export class WebhookSender {
 
     constructor(url: string) {
         const match = /\/webhooks\/(\d+)\/([\w$-]+)$/.exec(url);
-        if (!match?.[1] || !match[2])
-            throw new SeedcordTypeError(SeedcordErrorCode.ConfigWebhookUrlInvalid, ['The url']);
+        if (!match?.[1] || !match[2]) throw new SeedcordError(SeedcordErrorCode.ConfigWebhookUrlInvalid, ['The url']);
         this.route = Routes.webhook(match[1], match[2]);
     }
 

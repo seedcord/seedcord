@@ -70,7 +70,10 @@ export function RegisterInteractionMiddleware<
     return function <TCtor extends AnyMiddlewareCtor>(ctor: AssertMiddlewareKinds<Kinds[number], TCtor>): void {
         const priority = Number(options.priority ?? 0);
         if (!Number.isFinite(priority))
-            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorInvalidMiddlewarePriority);
+            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorInvalidMiddlewarePriority, [
+                ctor.name,
+                String(options.priority)
+            ]);
         if (options.kinds?.length === 0)
             throw new SeedcordTypeError(SeedcordErrorCode.DecoratorEmptyMiddlewareFilter, ['kinds']);
 

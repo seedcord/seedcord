@@ -102,7 +102,7 @@ describe('the runtime check on bun', () => {
 
     it('tells the developer to upgrade bun', () => {
         expect(onRuntime({ bun: '1.4.1' })).toThrow(
-            /requires Bun >=1\.4\.2 but this process runs 1\.4\.1\. Upgrade Bun/
+            /requires Bun >=1\.4\.2, but this process runs 1\.4\.1\. Upgrade Bun/
         );
     });
 

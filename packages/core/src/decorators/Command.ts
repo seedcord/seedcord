@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { CommandMetadataKey } from '#src/metadataKeys';
 
@@ -75,7 +75,7 @@ export function RegisterCommand(scope: CommandScope = 'config', guilds: GuildTar
     return (ctor: CommandCtor): void => {
         const existingMeta = Reflect.getOwnMetadata(CommandMetadataKey, ctor) as CommandMeta | undefined;
         if (existingMeta) {
-            throw new SeedcordError(SeedcordErrorCode.DecoratorCommandAlreadyRegistered, [
+            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorCommandAlreadyRegistered, [
                 ctor.name,
                 decoratorCall(existingMeta.scope),
                 decoratorCall(scope)
@@ -83,11 +83,11 @@ export function RegisterCommand(scope: CommandScope = 'config', guilds: GuildTar
         }
 
         if (scope === 'global' && guilds.length > 0) {
-            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorCommandGlobalWithGuilds);
+            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorCommandGlobalWithGuilds, [ctor.name]);
         }
 
         if (scope === 'guild' && (!Array.isArray(guilds) || guilds.length === 0)) {
-            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorCommandGuildWithoutGuilds);
+            throw new SeedcordTypeError(SeedcordErrorCode.DecoratorCommandGuildWithoutGuilds, [ctor.name]);
         }
 
         const meta: CommandMeta = scope === 'guild' ? { scope, guilds } : { scope };

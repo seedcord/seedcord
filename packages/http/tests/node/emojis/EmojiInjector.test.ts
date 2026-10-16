@@ -47,12 +47,12 @@ describe('EmojiInjector', () => {
         expect(String(emojis.Confirm)).toBe('<:confirm:111>');
     });
 
-    it('throws listing every emoji it could not resolve', async () => {
+    it('throws for the one emoji it could not resolve', async () => {
         const { core } = coreWith({ Missing: 'nope', Confirm: 'confirm' });
 
         const caught = await new EmojiInjector(core).init().catch((error: unknown) => error);
 
-        expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.ConfigEmojiUnresolved)).toBe(true);
+        expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.ConfigEmojiNotFound)).toBe(true);
         expect(String(caught)).toContain('nope');
     });
 

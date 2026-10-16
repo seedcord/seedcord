@@ -117,7 +117,7 @@ describe('SlashHandler options and match', () => {
         await expect(new Mod(event, coreMock().core, dispatch).run()).resolves.toBe('kick:bye');
     });
 
-    it('throws SlashMatchArmMissing for a route with no arm', async () => {
+    it('throws MatchArmMissing for a route with no arm', async () => {
         class Ban extends SlashHandler<'hbBan'> {
             async execute(): Promise<void> {
                 await this.match({ hbBan: () => undefined });
@@ -126,11 +126,11 @@ describe('SlashHandler options and match', () => {
         const event = slashEvent({ name: 'hbGhost', options: [] });
 
         await expect(new Ban(event, coreMock().core, dispatch).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.SlashMatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
         );
     });
 
-    it('throws SlashMatchArmMissing for a prototype-named route with no arm', async () => {
+    it('throws MatchArmMissing for a prototype-named route with no arm', async () => {
         class Ban extends SlashHandler<'hbBan'> {
             async execute(): Promise<void> {
                 await this.match({ hbBan: () => undefined });
@@ -139,7 +139,7 @@ describe('SlashHandler options and match', () => {
         const event = slashEvent({ name: 'constructor', options: [] });
 
         await expect(new Ban(event, coreMock().core, dispatch).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.SlashMatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
         );
     });
 });
@@ -188,7 +188,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
         expect(route).toBe('hbSearch');
     });
 
-    it('throws AutocompleteMatchArmMissing for a focused field with no arm', async () => {
+    it('throws MatchArmMissing for a focused field with no arm', async () => {
         class Search extends AutocompleteHandler<'hbSearch'> {
             async execute(): Promise<void> {
                 await this.match({
@@ -203,11 +203,11 @@ describe('AutocompleteHandler focused, match, options, route', () => {
         });
 
         await expect(new Search(event, coreMock().core, dispatch).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.AutocompleteMatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
         );
     });
 
-    it('throws AutocompleteMatchArmMissing for a prototype-named focused field', async () => {
+    it('throws MatchArmMissing for a prototype-named focused field', async () => {
         class Search extends AutocompleteHandler<'hbSearch'> {
             async execute(): Promise<void> {
                 await this.match({
@@ -222,7 +222,7 @@ describe('AutocompleteHandler focused, match, options, route', () => {
         });
 
         await expect(new Search(event, coreMock().core, dispatch).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.AutocompleteMatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
         );
     });
 

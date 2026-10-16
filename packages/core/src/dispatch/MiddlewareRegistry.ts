@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { interactionMiddlewareMetaOf } from '#decorators/middleware';
 
@@ -59,7 +59,7 @@ export class MiddlewareRegistry<Ctor extends AnyMiddlewareCtor, Key extends stri
      * Adds a decorated middleware class and returns what it registered with. Returns `undefined` for an
      * undecorated class or one already registered.
      *
-     * @throws A **SeedcordError** If another class with the same name is registered.
+     * @throws A **SeedcordTypeError** If another class with the same name is registered.
      */
     public register(ctor: Ctor): MiddlewareRegistration<Key> | undefined {
         const registration = this.registrationOf(ctor);
@@ -68,7 +68,7 @@ export class MiddlewareRegistry<Ctor extends AnyMiddlewareCtor, Key extends stri
         // a double import or an hmr re-scan registers the same class twice
         if (this.entries.some((entry) => entry.ctor === ctor)) return undefined;
         if (this.entries.some((entry) => entry.ctor.name === ctor.name)) {
-            throw new SeedcordError(SeedcordErrorCode.DuplicateMiddleware, [ctor.name]);
+            throw new SeedcordTypeError(SeedcordErrorCode.DuplicateMiddleware, [ctor.name]);
         }
 
         this.entries.push({

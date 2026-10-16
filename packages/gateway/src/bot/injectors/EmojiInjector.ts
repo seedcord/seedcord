@@ -1,7 +1,7 @@
 import { ResolvedEmoji } from '@seedcord/core';
 import { accessorStore, clearStore, guardedAccessor, isEmojiTuple } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 
 import type { Core } from '#interfaces/Core';
@@ -60,21 +60,19 @@ export class EmojiInjector {
         const configEmojis = this.core.config.bot.emojis;
         await this.core.bot.client.application?.emojis.fetch();
 
-        const failures: string[] = [];
+        const problems: Error[] = [];
         const fetchedGuilds = new Set<string>();
         for (const [key, value] of Object.entries(configEmojis)) {
             if (isEmojiTuple(value)) {
-                await this.resolveTuple(key, value, failures, fetchedGuilds);
+                await this.resolveTuple(key, value, problems, fetchedGuilds);
             } else if (typeof value === 'string') {
-                this.resolveString(key, value, failures);
+                this.resolveString(key, value, problems);
             } else {
-                failures.push(`  - "${key}" has an invalid value (expected a name or [name, guildId])`);
+                problems.push(new SeedcordTypeError(SeedcordErrorCode.ConfigEmojiInvalid, [key]));
             }
         }
 
-        if (failures.length > 0) {
-            throw new SeedcordError(SeedcordErrorCode.ConfigEmojiUnresolved, [failures.length, failures.join('\n')]);
-        }
+        throwSingleOrAggregate(problems, SeedcordErrorCode.ConfigEmojiUnresolved);
 
         this.logger.utils.summary('Loaded emojis', { emojis: Object.keys(emojiStorage).length });
     }
@@ -82,15 +80,20 @@ export class EmojiInjector {
     private async resolveTuple(
         key: string,
         value: readonly [string, string],
-        failures: string[],
+        problems: Error[],
         fetchedGuilds: Set<string>
     ): Promise<void> {
         const [emojiName, guildId] = value;
 
         const guild = this.core.bot.client.guilds.cache.get(guildId);
         if (!guild) {
-            failures.push(
-                `  - "${emojiName}" for "${key}" targets guild ${guildId}, which is not available (check the Guilds intent)`
+            problems.push(
+                new SeedcordError(SeedcordErrorCode.ConfigEmojiSourceUnreadable, [
+                    key,
+                    emojiName,
+                    `guild ${guildId}`,
+                    'discord.js has no cached guild with that id. Check that the bot is in it, and that clientOptions.intents includes GatewayIntentBits.Guilds'
+                ])
             );
             return;
         }
@@ -101,17 +104,21 @@ export class EmojiInjector {
         }
         const guildEmoji = guild.emojis.cache.find((e) => e.name === emojiName);
         if (!guildEmoji) {
-            failures.push(`  - "${emojiName}" for "${key}" was not found in guild ${guildId}`);
+            problems.push(
+                new SeedcordError(SeedcordErrorCode.ConfigEmojiNotFound, [key, emojiName, `guild ${guildId}`])
+            );
             return;
         }
 
         emojiStorage[key] = new GatewayEmoji(guildEmoji);
     }
 
-    private resolveString(key: string, emojiName: string, failures: string[]): void {
+    private resolveString(key: string, emojiName: string, problems: Error[]): void {
         const appEmoji = this.core.bot.client.application?.emojis.cache.find((e) => e.name === emojiName);
         if (!appEmoji) {
-            failures.push(`  - "${emojiName}" for "${key}" was not found among the application emojis`);
+            problems.push(
+                new SeedcordError(SeedcordErrorCode.ConfigEmojiNotFound, [key, emojiName, 'the application'])
+            );
             return;
         }
 

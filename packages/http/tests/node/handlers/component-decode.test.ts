@@ -108,7 +108,7 @@ describe('button decode', () => {
         await expect(new Review(buttonEvent(wire), core, dispatch).run()).resolves.toBe('rejected 42');
     });
 
-    it('throws CustomIdMatchArmMissing when the minted route has no arm', async () => {
+    it('throws MatchArmMissing when the minted route has no arm', async () => {
         @ButtonRoute(ApproveId, RejectId)
         class Review extends ButtonHandler<[typeof ApproveId, typeof RejectId]> {
             async execute(): Promise<void> {
@@ -123,7 +123,7 @@ describe('button decode', () => {
 
         const wire = RejectId.encode({ userId: '42' });
         await expect(new Review(buttonEvent(wire), core, dispatch).execute()).rejects.toSatisfy((e: unknown) =>
-            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.CustomIdMatchArmMissing)
+            isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
         );
     });
 
@@ -173,7 +173,7 @@ describe('button decode', () => {
         expect(noticeNameFrom(() => new Approve(buttonEvent(wire), core, dispatch).execute())).toBe('InvalidCustomId');
     });
 
-    it('throws CustomIdMatchArmMissing for a prototype-named prefix with no arm', async () => {
+    it('throws MatchArmMissing for a prototype-named prefix with no arm', async () => {
         const Ctor = new CustomId('constructor').snowflake('userId');
         @ButtonRoute(Ctor)
         class Weird extends ButtonHandler<[typeof Ctor]> {
@@ -184,7 +184,7 @@ describe('button decode', () => {
         }
 
         await expect(new Weird(buttonEvent(Ctor.encode({ userId: '1' })), core, dispatch).execute()).rejects.toSatisfy(
-            (e: unknown) => isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.CustomIdMatchArmMissing)
+            (e: unknown) => isSeedcordError(e, 'SeedcordTypeError', SeedcordErrorCode.MatchArmMissing)
         );
     });
 
@@ -202,7 +202,7 @@ describe('button decode', () => {
         } catch (error) {
             caught = error;
         }
-        expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CustomIdHandlerRouteMissing)).toBe(true);
+        expect(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.CustomIdHandlerRouteMissing)).toBe(true);
     });
 });
 

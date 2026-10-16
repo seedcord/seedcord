@@ -19,7 +19,7 @@ import {
 import { InFlight } from '@seedcord/core/node/internal';
 import { prefixOf } from '@seedcord/custom-id';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath, hasKeys } from '@seedcord/utils';
 import { asError } from '@seedcord/utils/internal';
@@ -316,7 +316,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 const existing = this.maps[kind].get(route);
                 // a different class on the same route would silently shadow (last write wins)
                 if (existing && existing !== handlerClass) {
-                    throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
+                    throw new SeedcordTypeError(SeedcordErrorCode.InteractionDuplicateRoute, [
                         `${kind}:${route}`,
                         // a stale hmr artifact list can leave a class in a route map after its entry here is gone
                         `${existing.name} (${this.handlerFiles.get(existing) ?? 'unknown file'})`,
