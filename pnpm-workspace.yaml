@@ -45,6 +45,7 @@ catalogs:
     '@tailwindcss/postcss': ^4.3.3
     '@types/node': ^26.1.2
     '@types/pg': ^8.23.1
+    cf: 1.0.0-beta.17
     chalk: ^6.0.0
     cli-spinners: ^3.4.0
     cross-env: ^10.1.0
@@ -87,7 +88,6 @@ catalogs:
     typescript-eslint: ^8.65.0
   peer:
     '@cloudflare/vite-plugin': 2.0.0-beta.v.0
-    cf: 1.0.0-beta.17
     discord.js: ^14.27.0
     envapt: ^8.2.2
     kysely: ^0.29.4

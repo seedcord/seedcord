@@ -41,12 +41,10 @@ async function loadPlugin(viteRoot: string, importPlugin: ImportCloudflare): Pro
         return cloudflare;
     } catch (error: unknown) {
         if (isPackageMissing(error, CLOUDFLARE_PLUGIN)) {
-            const why = `${paint.bold('seedcord dev')} and ${paint.bold('seedcord build')} run an edge bot through them.`;
-            throw new SeedcordError(
-                SeedcordErrorCode.CliDependencyMissing,
-                [[CLOUDFLARE_PLUGIN, 'cf'], viteRoot, why],
-                { cause: error }
-            );
+            const why = `${paint.bold('seedcord dev')} and ${paint.bold('seedcord build')} run an edge bot through it.`;
+            throw new SeedcordError(SeedcordErrorCode.CliDependencyMissing, [[CLOUDFLARE_PLUGIN], viteRoot, why], {
+                cause: error
+            });
         }
         throw new SeedcordError(SeedcordErrorCode.CoreImportFailed, [CLOUDFLARE_PLUGIN, asError(error).message], {
             cause: error
@@ -84,7 +82,7 @@ export class CloudflareWorker {
     // node resolves the cf/config import in cloudflare.config.ts from the bot's own node_modules
     public explain(error: unknown): unknown {
         if (!isPackageMissing(error, 'cf')) return error;
-        const why = `${paint.bold('cloudflare.config.ts')} imports ${paint.bold('cf/config')}.`;
+        const why = `${paint.path('cloudflare.config.ts')} imports ${paint.bold('cf/config')}.`;
         return new SeedcordError(SeedcordErrorCode.CliDependencyMissing, [['cf'], this.viteRoot, why], {
             cause: error
         });

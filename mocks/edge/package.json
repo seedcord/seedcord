@@ -36,7 +36,7 @@
         "@cloudflare/vite-plugin": "catalog:peer",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
-        "cf": "catalog:peer",
+        "cf": "catalog:deps",
         "seedcord": "workspace:^"
     }
 }

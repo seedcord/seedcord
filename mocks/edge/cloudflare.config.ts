@@ -1,6 +1,6 @@
 import { bindings, defineConfig } from 'cf/config';
 
-// local env files never replace a text binding's value, so ENV follows the vite mode.
+// a text binding beats any value in .dev.vars or .env
 // cf workers types calls this without a mode
 export default defineConfig(({ mode = 'production' }) => ({
     worker: {

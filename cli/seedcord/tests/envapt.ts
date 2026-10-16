@@ -10,7 +10,7 @@ export function withEnv(vars: Record<string, string>): void {
     onTestFinished(() => Envapter.useSource(new PortableSource(process.env)));
 }
 
-// sets the shell's environment keys the way cli.ts sees them at startup
+// stubs the shell's environment keys that cli.ts reads at startup
 export function withShellEnv(vars: { ENVIRONMENT?: string; ENV?: string; NODE_ENV?: string }): void {
     vi.stubEnv('ENVIRONMENT', vars.ENVIRONMENT);
     vi.stubEnv('ENV', vars.ENV);

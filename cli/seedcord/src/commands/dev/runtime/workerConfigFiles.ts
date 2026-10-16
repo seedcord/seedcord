@@ -17,7 +17,7 @@ export class WorkerConfigFiles {
         // chokidar reports a mac temp dir by its resolved path
         this.config = realpathSync(cloudflareConfig);
         this.dir = dirname(this.config);
-        // the cloudflare plugin reads the two .dev.vars files and vite reads the four .env files
+        // the cloudflare plugin reads all six
         this.localVars = new Set([
             '.dev.vars',
             `.dev.vars.${mode}`,

@@ -114,7 +114,7 @@ function* portProblems(
 ): Generator<SeedcordTypeError | SeedcordRangeError> {
     if (port === undefined) return;
     if (target.kind === 'server') {
-        const why = `Only an edge bot reads it. A node bot listens on the ${paint.bold('port')} it passes to ${paint.bold('new Seedcord({ ... })')}.`;
+        const why = `Only an edge bot reads it. An http bot on node listens on the ${paint.bold('port')} it passes to ${paint.bold('new Seedcord({ ... })')}.`;
         yield unusedField('port', configFile, why);
     } else if (typeof port !== 'number' || !Number.isSafeInteger(port)) {
         yield invalidField('port', PORT_RANGE);

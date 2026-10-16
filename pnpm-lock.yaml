@@ -190,6 +190,9 @@ catalogs:
     '@types/pg':
       specifier: ^8.23.1
       version: 8.23.1
+    cf:
+      specifier: 1.0.0-beta.17
+      version: 1.0.0-beta.17
     chalk:
       specifier: ^6.0.0
       version: 6.0.1
@@ -309,9 +312,6 @@ catalogs:
     '@cloudflare/vite-plugin':
       specifier: 2.0.0-beta.v.0
       version: 2.0.0-beta.v.0
-    cf:
-      specifier: 1.0.0-beta.17
-      version: 1.0.0-beta.17
     discord.js:
       specifier: ^14.27.0
       version: 14.27.0
@@ -991,7 +991,7 @@ importers:
         specifier: catalog:react
         version: 19.3.0
       cf:
-        specifier: catalog:peer
+        specifier: catalog:deps
         version: 1.0.0-beta.17(@types/node@26.1.2)
       discord.js:
         specifier: catalog:peer
@@ -1040,7 +1040,7 @@ importers:
         specifier: workspace:^
         version: link:../../tooling/tsconfig
       cf:
-        specifier: catalog:peer
+        specifier: catalog:deps
         version: 1.0.0-beta.17(@types/node@26.1.2)
       seedcord:
         specifier: workspace:^

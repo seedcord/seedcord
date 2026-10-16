@@ -1,6 +1,7 @@
 import { join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { Envapter, PortableSource } from 'envapt';
 import { assert, describe, expect, it } from 'vitest';
 
@@ -38,10 +39,12 @@ describe('EdgeBuild', () => {
         const missing = notFound('@cloudflare/vite-plugin', '/bot/node_modules/seedcord/dist/cli.mjs');
         const build = new EdgeBuild(project, target, { importCloudflare: () => Promise.reject(missing) });
 
-        await expect(build.bundle(NO_IDS)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliDependencyMissing,
-            message: expect.stringContaining('edge-bot') as string
-        });
+        const caught: unknown = await build.bundle(NO_IDS).catch((error: unknown) => error);
+
+        assert(isSeedcordError(caught));
+        expect(caught.code).toBe(SeedcordErrorCode.CliDependencyMissing);
+        expect(stripVTControlCharacters(caught.message)).toContain('Add @cloudflare/vite-plugin to');
+        expect(caught.message).toContain('edge-bot');
     });
 
     it('throws CoreImportFailed when the plugin loads but one of its own imports is missing', async () => {
@@ -75,10 +78,12 @@ describe('EdgeBuild', () => {
         const cloudflarePlugin = { cloudflare: () => [plugin] } as unknown as typeof CloudflareVitePlugin;
         const build = new EdgeBuild(project, target, { importCloudflare: () => Promise.resolve(cloudflarePlugin) });
 
-        await expect(build.bundle(NO_IDS)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliDependencyMissing,
-            message: expect.stringContaining('edge-bot') as string
-        });
+        const caught: unknown = await build.bundle(NO_IDS).catch((error: unknown) => error);
+
+        assert(isSeedcordError(caught));
+        expect(caught.code).toBe(SeedcordErrorCode.CliDependencyMissing);
+        expect(stripVTControlCharacters(caught.message)).toContain('Add cf to');
+        expect(caught.message).toContain('edge-bot');
     });
 
     it('throws ConfigMissingEnv when DISCORD_BOT_TOKEN is unset', async () => {

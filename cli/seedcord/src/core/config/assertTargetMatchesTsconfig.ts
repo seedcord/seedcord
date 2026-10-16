@@ -10,11 +10,7 @@ import type { Project } from '#core/project/Project';
 async function hasWorkerdCondition(tsconfig: string, configDir: string): Promise<boolean> {
     const { exitCode, stdout, stderr } = await runProjectTsc(configDir, ['-p', tsconfig, '--showConfig']);
     if (exitCode !== 0) {
-        throw new SeedcordError(SeedcordErrorCode.CliConfigFileUnreadable, [
-            'TypeScript',
-            tsconfig,
-            (stdout + stderr).trim()
-        ]);
+        throw new SeedcordError(SeedcordErrorCode.CliConfigFileUnreadable, [tsconfig, (stdout + stderr).trim()]);
     }
 
     const shown: unknown = JSON.parse(stdout);

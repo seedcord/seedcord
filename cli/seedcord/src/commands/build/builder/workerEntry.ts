@@ -10,7 +10,7 @@ import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { BakedIds } from '@seedcord/core/internal';
 import type { Plugin } from 'vite';
 
-export const WORKER_ENTRY_ID = 'virtual:seedcord/worker';
+const WORKER_ENTRY_ID = 'virtual:seedcord/worker';
 
 type EntryCustomizer = NonNullable<NonNullable<Parameters<CloudflarePlugin>[0]>['config']>;
 
