@@ -113,7 +113,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         });
 
         this.dev?.on('seedcord:read-deployed', ({ applicationId }) => {
-            this.dev?.send('seedcord:deployed', { deployed: lastDeployOf(this.state, applicationId) });
+            this.dev?.send('seedcord:last-deploy', { deployed: lastDeployOf(this.state, applicationId) });
         });
 
         this.dev?.on('seedcord:commands-deployed', (deployed) => {

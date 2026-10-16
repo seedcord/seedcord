@@ -61,7 +61,7 @@ export class DiscordSession {
         return guildSummaries(this.rest, targets.ids, targets.knownNames);
     }
 
-    // throws on the first scope it cannot read, since a deploy replaces each one
+    // throws on the first scope it cannot read
     public async readTargets(scopes: readonly ScopeId[]): Promise<DeployTargets> {
         const [deployed, guilds] = await Promise.all([
             readCommands(scopes, this.reads()),

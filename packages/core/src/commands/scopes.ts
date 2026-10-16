@@ -38,7 +38,6 @@ export function skippedNote(labels: readonly string[]): string {
     return `Skipped ${allOf.format(labels)}. ${pluralize(labels.length, 'Its', 'Their')} commands match the last deploy.`;
 }
 
-// one item can belong to several guilds
 export function groupByScope<ItemT>(
     items: Iterable<ItemT>,
     scopesOf: (item: ItemT) => readonly ScopeId[]

@@ -5,6 +5,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Routes } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
+import { PROCEED } from '#commands/commands/confirm';
 import { DeployPresenter } from '#commands/commands/deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from '#commands/commands/deploy/DeployRunner';
 import { StepPrinter } from '#core/output/StepPrinter';
@@ -29,8 +30,9 @@ async function deploy(
 ): Promise<string> {
     const stdout = pipedTerminal();
     const printer = new StepPrinter({ command: 'commands', labels: DEPLOY_STEPS, verbose, stdout, stderr: stdout });
-    const presenter = new DeployPresenter(printer, yes ? undefined : confirm, verbose);
-    await new DeployRunner({ projectLoader: project, openDiscord: () => rest, logger: silentLogger }).run(presenter);
+    const presenter = new DeployPresenter(printer, yes ? PROCEED : confirm, verbose);
+    const runner = new DeployRunner({ projectLoader: project, openDiscord: () => rest, logger: silentLogger });
+    await runner.run(presenter, { yes });
     return stdout.text();
 }
 
@@ -222,7 +224,7 @@ describe('DeployRunner', () => {
             logger: silentLogger
         });
 
-        await expect(runner.run(new DeployPresenter(printer, undefined, false))).rejects.toBe(missingToken);
+        await expect(runner.run(new DeployPresenter(printer, PROCEED, false))).rejects.toBe(missingToken);
         expect(stdout.text()).toMatch(new RegExp(`${stripVTControlCharacters(paint.cross)} read discord`, 'u'));
     });
 

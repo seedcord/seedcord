@@ -159,8 +159,8 @@ export class CommandsCommand extends BaseCommand {
         { yes = false, force = false }: DeployFlags
     ): Promise<void> {
         if (!yes && !isInteractive()) throw new SeedcordTypeError(SeedcordErrorCode.CliDeployNeedsYes);
-        const confirm: Confirm | undefined = yes ? undefined : (message) => this.prompter.confirm({ message });
-        await this.deployRunner.run(new DeployPresenter(printer, confirm, isVerbose(command)), { force });
+        const confirm: Confirm = yes ? PROCEED : (message) => this.prompter.confirm({ message });
+        await this.deployRunner.run(new DeployPresenter(printer, confirm, isVerbose(command)), { force, yes });
     }
 
     private list(printer: StepPrinter<ListStep>, command: CommandUnknownOpts, scope?: ListScope): Promise<void> {

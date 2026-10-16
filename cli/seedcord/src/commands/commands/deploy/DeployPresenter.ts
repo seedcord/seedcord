@@ -32,10 +32,9 @@ function deployedNote(scopes: CommandScopes): string {
 }
 
 export class DeployPresenter extends StepsPresenter<DeployStep> {
-    // --yes passes no confirm
     constructor(
         output: PresenterOutput<DeployStep>,
-        private readonly confirm: Confirm | undefined,
+        private readonly confirm: Confirm,
         private readonly verbose: boolean
     ) {
         super(output);
@@ -59,18 +58,12 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
         );
     }
 
-    public async approve(plans: readonly ScopePlan[]): Promise<boolean> {
-        if (!this.confirm) return true;
-        return this.ask(
-            this.confirm,
-            `Deploy to ${plural(plans.length, 'scope')}? Discord replaces the commands in each.`
-        );
+    public approve(plans: readonly ScopePlan[]): Promise<boolean> {
+        return this.ask(`Deploy to ${plural(plans.length, 'scope')}? Discord replaces the commands in each.`);
     }
 
-    public async deployAnyway(): Promise<boolean> {
-        if (this.confirm) return this.ask(this.confirm, 'Deploy them anyway?');
-        this.nothingToDeploy();
-        return false;
+    public deployAnyway(): Promise<boolean> {
+        return this.ask('Deploy them anyway?');
     }
 
     public deploy(task: () => Promise<unknown>, scopes: CommandScopes): Promise<unknown> {
@@ -85,8 +78,8 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
         );
     }
 
-    private async ask(confirm: Confirm, message: string): Promise<boolean> {
-        const yes = await unlessCancelled(this.output, () => confirm(message));
+    private async ask(message: string): Promise<boolean> {
+        const yes = await unlessCancelled(this.output, () => this.confirm(message));
         if (yes === false) this.output.line(paint.mute('Nothing deployed.'));
         return yes === true;
     }

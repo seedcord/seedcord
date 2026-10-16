@@ -1,4 +1,4 @@
-import { GLOBAL_ID, globalFirst, scopeHashes, scopesDiscordLacks, splitByHash } from '@seedcord/core/internal';
+import { GLOBAL_ID, globalFirst, planDeploy } from '@seedcord/core/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
@@ -14,13 +14,13 @@ import type { DeployTargets } from '#commands/commands/DiscordSession';
 import type { RunnerDeps } from '#commands/commands/runnerDeps';
 import type { DeployPresenter, ScopePlan } from './DeployPresenter';
 import type { CommandScopes, ScopeId } from '@seedcord/core/internal';
-import type { DeployedHashes } from '@seedcord/types/internal';
 
 export const DEPLOY_STEPS = [...LOAD_STEPS, 'read discord', 'deploy'] as const;
 export type DeployStep = (typeof DEPLOY_STEPS)[number];
 
 interface DeployOptions {
     readonly force?: boolean | undefined;
+    readonly yes?: boolean | undefined;
 }
 
 export class DeployRunner {
@@ -30,7 +30,7 @@ export class DeployRunner {
         return new DeployRunner(defaultRunnerDeps());
     }
 
-    public async run(presenter: DeployPresenter, { force = false }: DeployOptions = {}): Promise<void> {
+    public async run(presenter: DeployPresenter, { force = false, yes = false }: DeployOptions = {}): Promise<void> {
         const { target, instance, configFile, scopes } = await loadCodeScopes(presenter, this.deps, process.cwd());
         if (!scopes) throw new SeedcordError(SeedcordErrorCode.CliDeployNoCommandsFolder, [instance]);
 
@@ -41,20 +41,19 @@ export class DeployRunner {
         presenter.detail('app', paint.mute(session.appId));
 
         const state = StateFolder.besideConfig(configFile, this.deps.logger);
-        const hashes = await scopeHashes(scopes);
         const last = force ? undefined : lastDeployOf(state, session.appId);
-        const { changed, skipped } = skipUnchanged(scopes, hashes, last, targets);
-        presenter.skipped(skipped.map((scope) => titleOf(scope, targets)));
+        const plan = await planDeploy(scopes, last?.scopes, () => Promise.resolve(targets.deployed));
+        presenter.skipped(plan.skipped.map((scope) => titleOf(scope, targets)));
 
-        const plans = plansFor(changed, targets);
+        const plans = plansFor(plan.toPut, targets);
         const approved =
             plans.length > 0
-                ? await askToDeploy(presenter, plans, changed)
-                : await forceSkipped(presenter, skipped, scopes);
+                ? await askToDeploy(presenter, plans, plan.toPut)
+                : await askToForce(presenter, plan.skipped, scopes, yes);
         if (!approved) return;
 
         await presenter.deploy(() => session.deploy(approved, this.deps.logger), approved);
-        state.write(deployedCommandsFile, { applicationId: session.appId, scopes: hashes });
+        state.write(deployedCommandsFile, { applicationId: session.appId, scopes: plan.hashes });
         // discord's docs count only new commands as creates. we read that as an existing command keeping its id
         if (target === 'edge' && plans.some(({ diff }) => diff.added.length > 0)) presenter.edgeHint();
     }
@@ -69,32 +68,17 @@ async function askToDeploy(
     return (await presenter.approve(plans)) ? changed : undefined;
 }
 
-async function forceSkipped(
+async function askToForce(
     presenter: DeployPresenter,
     skipped: readonly ScopeId[],
-    scopes: CommandScopes
+    scopes: CommandScopes,
+    yes: boolean
 ): Promise<CommandScopes | undefined> {
-    if (skipped.length === 0) {
+    if (skipped.length === 0 || yes) {
         presenter.nothingToDeploy();
         return undefined;
     }
     return (await presenter.deployAnyway()) ? scopes : undefined;
-}
-
-function skipUnchanged(
-    scopes: CommandScopes,
-    hashes: DeployedHashes['scopes'],
-    last: DeployedHashes | undefined,
-    { deployed }: DeployTargets
-): { changed: CommandScopes; skipped: ScopeId[] } {
-    const { changed, unchanged } = splitByHash(scopes, hashes, last?.scopes);
-    const lacking = scopesDiscordLacks(unchanged, deployed);
-    return {
-        changed: new Map([...changed, ...lacking]),
-        skipped: globalFirst(unchanged)
-            .filter(([scope]) => !lacking.has(scope))
-            .map(([scope]) => scope)
-    };
 }
 
 function titleOf(scope: ScopeId, { guildNames }: DeployTargets): string {

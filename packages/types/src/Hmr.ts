@@ -45,8 +45,7 @@ export interface SeedcordCliEvents {
     'seedcord:refresh-commands': { shouldRefresh: boolean };
     // eslint-disable-next-line no-magic-numbers -- chalk's ColorSupportLevel for the CLI's terminal, copied to keep chalk out of types
     'seedcord:start': { colorLevel: 0 | 1 | 2 | 3 };
-    // the answer to seedcord:read-deployed
-    'seedcord:deployed': { deployed: DeployedHashes | undefined };
+    'seedcord:last-deploy': { deployed: DeployedHashes | undefined };
 }
 
 /**

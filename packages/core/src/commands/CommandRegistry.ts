@@ -17,9 +17,9 @@ import { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
 import { resolveDeployTarget } from '#src/commands/deployTarget';
 import { isCommandClass } from '#src/commands/isCommandClass';
 import { LastDeploy } from '#src/commands/LastDeploy';
+import { planDeploy } from '#src/commands/planDeploy';
 import { putCommands } from '#src/commands/putCommands';
 import { readCommands } from '#src/commands/readCommands';
-import { scopeHashes, scopesDiscordLacks, splitByHash } from '#src/commands/scopeHashes';
 import { GLOBAL_ID, scopeIdsOf, skippedNote } from '#src/commands/scopes';
 import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 import { CommandMetadataKey } from '#src/metadataKeys';
@@ -238,30 +238,23 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     /** @internal */
     public async setCommands(signal?: AbortSignal): Promise<DeployResult> {
-        const scopes = this.commandBodies();
-        const hashes = await scopeHashes(scopes);
         // read here because gateway assigns core.rest after this registry is constructed
         const { rest, applicationId } = this.core;
         const last = await this.lastDeploy.read(applicationId, signal);
-        const { changed, unchanged } = splitByHash(scopes, hashes, last?.scopes);
-        const putOptions = {
+        const plan = await planDeploy(this.commandBodies(), last?.scopes, (unchanged) =>
+            readCommands(unchanged, { rest, applicationId, signal })
+        );
+        const put = await putCommands(plan.toPut, {
             rest,
             applicationId,
             logger: this.logger,
             signal,
             onDeployed: (scope: ScopeId, commands: readonly CommandBody[]) => this.reportDeployed(scope, commands)
-        };
-
-        const [put, read] = await Promise.all([
-            putCommands(changed, putOptions),
-            readCommands(unchanged.keys(), { rest, applicationId, signal })
-        ]);
-        const lacking = scopesDiscordLacks(unchanged, read);
-        const redeployed = await putCommands(lacking, putOptions);
-        this.reportSkipped(unchanged, lacking);
-        // a redeployed scope replaces what the read found there
-        const result: DeployResult = new Map([...read, ...put, ...redeployed]);
-        this.lastDeploy.save({ applicationId, scopes: hashes });
+        });
+        this.reportSkipped(plan.skipped);
+        // Use newly deployed commands for scopes we put, replacing the previously read commands
+        const result: DeployResult = new Map([...plan.onDiscord, ...put]);
+        this.lastDeploy.save({ applicationId, scopes: plan.hashes });
 
         this.injector.inject(result, this.allCommands());
         this.core.bus[PublishDefault]('commandsDeployed', deployedPayload(result));
@@ -276,8 +269,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         return new Map(deployable.map(([scope, commands]) => [scope, commands.map((c) => c.toJSON())]));
     }
 
-    private reportSkipped(unchanged: CommandScopes, lacking: CommandScopes): void {
-        const skipped = [...unchanged.keys()].filter((scope) => !lacking.has(scope));
+    private reportSkipped(skipped: readonly ScopeId[]): void {
         if (skipped.length === 0) return;
         this.logger.info(skippedNote(skipped.map((scope) => (scope === GLOBAL_ID ? 'global' : paint.sky.bold(scope)))));
     }

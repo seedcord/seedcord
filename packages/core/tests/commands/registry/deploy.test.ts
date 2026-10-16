@@ -7,13 +7,10 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { setDevChannel } from '#hmr/devChannel';
 import { Commands } from '#src/commands/CommandInjector';
 import { CommandRegistry } from '#src/commands/CommandRegistry';
-import { scopeHashes } from '#src/commands/scopeHashes';
-import { GLOBAL_ID } from '#src/commands/scopes';
 import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { CommandInfo } from '#src/commands/CommandInjector';
-import type { CommandBody } from '#src/commands/putCommands';
 import type { CommandBuilder } from '#src/commands/types';
 import type { DeployedHashes } from '@seedcord/types/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
@@ -45,12 +42,13 @@ function registryWith(put: Mock, get?: Mock): CommandRegistry {
     return new CommandRegistry(coreWith(put, get));
 }
 
-// what a first deploy of the fixture puts, as seedcord dev would cache it
+// what a first deploy of the fixture sends seedcord dev to save
 async function deployedOnce(): Promise<DeployedHashes> {
-    const put = vi.fn().mockResolvedValue(BARE);
-    await registryWith(put).deploy(new AbortController().signal, {});
-    const { body } = put.mock.calls[0]?.[1] as { body: CommandBody[] };
-    return { applicationId: APP, scopes: await scopeHashes(new Map([[GLOBAL_ID, body]])) };
+    const sent = cliWith(undefined);
+    await registryWith(vi.fn().mockResolvedValue(BARE)).deploy(new AbortController().signal, {});
+    const [, saved] = sent.find(([event]) => event === 'seedcord:commands-deployed') ?? [];
+    // justified: the registry sends DeployedHashes on seedcord:commands-deployed
+    return saved as DeployedHashes;
 }
 
 // seedcord dev, answering the registry's read with the last deploy
@@ -60,7 +58,7 @@ function cliWith(deployed: DeployedHashes | undefined): [string, unknown][] {
     setDevChannel({
         send: (event, data) => {
             sent.push([event, data]);
-            if (event === 'seedcord:read-deployed') handlers.get('seedcord:deployed')?.({ deployed });
+            if (event === 'seedcord:read-deployed') handlers.get('seedcord:last-deploy')?.({ deployed });
         },
         // justified: the fake keeps every handler under one signature
         on: (event, handler) => handlers.set(event, handler as (data: unknown) => void)

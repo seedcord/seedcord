@@ -17,7 +17,6 @@ export const deployedCommandsFile: StateFile<DeployedHashes | undefined> = {
     serialize: (deployed) => deployed
 };
 
-// a deploy for another application says nothing about this one
 export function lastDeployOf(state: Pick<StateFolder, 'read'>, applicationId: string): DeployedHashes | undefined {
     const deployed = state.read(deployedCommandsFile);
     return deployed?.applicationId === applicationId ? deployed : undefined;

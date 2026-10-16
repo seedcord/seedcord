@@ -27,7 +27,7 @@ function askSeedcordDev(applicationId: string): Promise<DeployedHashes | undefin
     if (!cli) return Promise.resolve(undefined);
     const { promise, resolve } = Promise.withResolvers<DeployedHashes | undefined>();
     const timer = setTimeout(() => resolve(undefined), ANSWER_TIMEOUT_MS);
-    cli.on('seedcord:deployed', ({ deployed }) => {
+    cli.on('seedcord:last-deploy', ({ deployed }) => {
         clearTimeout(timer);
         resolve(deployed);
     });

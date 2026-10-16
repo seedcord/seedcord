@@ -182,7 +182,7 @@ describe('HmrPlugin', () => {
     describe('the last deploy', () => {
         const deployed = { applicationId: 'app-1', scopes: { global: 'a1b2', '111': 'c3d4' } };
 
-        // .seedcord sits beside the config file
+        // .seedcord goes in the config file's folder
         function besideConfig(): ConfiguredPlugin {
             const dir = mkdtempSync(join(tmpdir(), 'seedcord-hmr-state-'));
             onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
@@ -195,7 +195,7 @@ describe('HmrPlugin', () => {
             listeners.get('seedcord:commands-deployed')?.(deployed);
             listeners.get('seedcord:read-deployed')?.({ applicationId: 'app-1' });
 
-            expect(sent).toHaveBeenCalledWith('seedcord:deployed', { deployed });
+            expect(sent).toHaveBeenCalledWith('seedcord:last-deploy', { deployed });
         });
 
         it('answers nothing for a deploy saved for another application', () => {
@@ -204,7 +204,7 @@ describe('HmrPlugin', () => {
             listeners.get('seedcord:commands-deployed')?.(deployed);
             listeners.get('seedcord:read-deployed')?.({ applicationId: 'app-2' });
 
-            expect(sent).toHaveBeenCalledWith('seedcord:deployed', { deployed: undefined });
+            expect(sent).toHaveBeenCalledWith('seedcord:last-deploy', { deployed: undefined });
         });
     });
 
