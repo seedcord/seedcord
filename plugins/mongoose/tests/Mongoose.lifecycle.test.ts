@@ -187,7 +187,7 @@ describe('Mongoose lifecycle', () => {
         const plugin = build();
 
         expect(() => plugin.services).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginMongooseServicesNotReady })
+            expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
         );
     });
 
@@ -209,12 +209,12 @@ describe('Mongoose lifecycle', () => {
         expect(plugin.services).toEqual({});
     });
 
-    it('translates a connect failure into PluginMongooseConnectionFailed', async () => {
+    it('translates a connect failure into PluginConnectionFailed', async () => {
         vi.mocked(mongoose.connect).mockRejectedValueOnce(new Error('refused'));
         const plugin = build();
 
         await expect(plugin.init()).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginMongooseConnectionFailed })
+            expect.objectContaining({ code: SeedcordErrorCode.PluginConnectionFailed })
         );
     });
 
@@ -291,7 +291,7 @@ describe('Mongoose lifecycle', () => {
         await plugin.dispose();
 
         expect(() => plugin.services).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginMongooseServicesNotReady })
+            expect.objectContaining({ code: SeedcordErrorCode.PluginServicesNotReady })
         );
     });
 
@@ -301,13 +301,13 @@ describe('Mongoose lifecycle', () => {
         await expect(plugin.dispose()).resolves.toBeUndefined();
     });
 
-    it('translates a disconnect failure into PluginMongooseDisconnectFailed', async () => {
+    it('translates a disconnect failure into PluginDisconnectFailed', async () => {
         const plugin = build();
         await plugin.init();
         vi.mocked(plugin.connection.disconnect).mockRejectedValueOnce(new Error('still busy'));
 
         await expect(plugin.dispose()).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginMongooseDisconnectFailed })
+            expect.objectContaining({ code: SeedcordErrorCode.PluginDisconnectFailed })
         );
     });
 });

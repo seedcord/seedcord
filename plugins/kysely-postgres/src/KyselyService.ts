@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import { KyselyServiceMetadataKey, KyselyTableMetadataKey } from './decorators/RegisterKyselyService';
 
@@ -45,7 +45,10 @@ export abstract class KyselyService<TTable extends LiteralUnion<KyselyTable, str
 
         const key = Reflect.getMetadata(KyselyServiceMetadataKey, ctor) as string | undefined;
         if (!key) {
-            throw new SeedcordError(SeedcordErrorCode.PluginKyselyServiceDecoratorMissing, [ctor.name]);
+            throw new SeedcordTypeError(SeedcordErrorCode.PluginServiceDecoratorMissing, [
+                '@RegisterKyselyService',
+                ctor.name
+            ]);
         }
 
         const table = Reflect.getMetadata(KyselyTableMetadataKey, ctor) as TTable | undefined;

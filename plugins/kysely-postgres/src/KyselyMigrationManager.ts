@@ -237,7 +237,7 @@ export class KyselyMigrationManager {
         for (const { name, file } of files) {
             const first = firstFileFor.get(name);
             if (first !== undefined) {
-                throw new SeedcordError(SeedcordErrorCode.PluginKyselyDuplicateMigrationName, [name, first, file]);
+                throw new SeedcordTypeError(SeedcordErrorCode.PluginKyselyDuplicateMigrationName, [name, first, file]);
             }
             firstFileFor.set(name, file);
         }

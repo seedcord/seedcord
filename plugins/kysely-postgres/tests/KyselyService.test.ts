@@ -20,7 +20,7 @@ Reflect.defineMetadata(KyselyServiceMetadataKey, 'users', MissingTable);
 describe('KyselyService constructor guards', () => {
     it('throws when the class has no decorator', () => {
         expect(() => new Undecorated(kysely, core)).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.PluginKyselyServiceDecoratorMissing })
+            expect.objectContaining({ code: SeedcordErrorCode.PluginServiceDecoratorMissing })
         );
     });
 

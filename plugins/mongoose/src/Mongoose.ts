@@ -43,7 +43,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
      */
     public get services(): MongooseServices {
         if (!this.servicesReady) {
-            throw new SeedcordError(SeedcordErrorCode.PluginMongooseServicesNotReady);
+            throw new SeedcordError(SeedcordErrorCode.PluginServicesNotReady, [this.constructor.name]);
         }
         return this.serviceRegistry.map;
     }
@@ -114,7 +114,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
                 return conn;
             })
             .catch((err) => {
-                throw new SeedcordError(SeedcordErrorCode.PluginMongooseConnectionFailed, [this.options.name], {
+                throw new SeedcordError(SeedcordErrorCode.PluginConnectionFailed, ['MongoDB', this.options.name], {
                     cause: err
                 });
             });
@@ -136,7 +136,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             .catch((err: unknown) => {
                 const error = Error.isError(err) ? err : new Error(String(err));
                 this.logger.error(`Could not disconnect from MongoDB: ${error.message}`);
-                throw new SeedcordError(SeedcordErrorCode.PluginMongooseDisconnectFailed, { cause: err });
+                throw new SeedcordError(SeedcordErrorCode.PluginDisconnectFailed, ['MongoDB'], { cause: err });
             });
     }
 

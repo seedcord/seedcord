@@ -57,7 +57,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
      */
     public get services(): KyselyServices {
         if (!this.servicesReady) {
-            throw new SeedcordError(SeedcordErrorCode.PluginKyselyServicesNotReady);
+            throw new SeedcordError(SeedcordErrorCode.PluginServicesNotReady, [this.constructor.name]);
         }
         return this.serviceRegistry.map;
     }
@@ -156,9 +156,13 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
             const dbLabel = this.databaseName ?? 'unknown';
             this.logger.info(`Connected to Postgres database ${paint.sky.bold(dbLabel)}`);
         } catch (err) {
-            throw new SeedcordError(SeedcordErrorCode.PluginKyselyConnectionFailed, [this.databaseName ?? undefined], {
-                cause: err
-            });
+            throw new SeedcordError(
+                SeedcordErrorCode.PluginConnectionFailed,
+                ['Postgres', this.databaseName ?? undefined],
+                {
+                    cause: err
+                }
+            );
         }
     }
 
@@ -182,7 +186,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         await pool.end().catch((err: unknown) => {
             const error = Error.isError(err) ? err : new Error(String(err));
             this.logger.error(`Could not close pg pool: ${error.message}`);
-            throw new SeedcordError(SeedcordErrorCode.PluginKyselyDisconnectFailed, { cause: err });
+            throw new SeedcordError(SeedcordErrorCode.PluginDisconnectFailed, ['Postgres'], { cause: err });
         });
         this.logger.info(paint.coral.bold('Disconnected from Postgres'));
     }
