@@ -18,6 +18,8 @@ import {
 } from 'vitest';
 
 import { HmrPlugin } from '#commands/dev/runtime/HmrPlugin';
+import { StateFolder } from '#core/state/StateFolder';
+import { silentLogger } from '#tests/silentLogger';
 
 import type { DevEvent } from '#commands/dev/runtime/events';
 import type { EnvironmentModuleNode, HotUpdateOptions, ViteDevServer } from 'vite';
@@ -95,8 +97,11 @@ interface ConfiguredPlugin {
     events: DevEvent[];
 }
 
-function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0]): ConfiguredPlugin {
-    const plugin = new HmrPlugin(config, 'ssr');
+// the last-deploy tests below write to their own folder
+const STATE = new StateFolder(process.cwd(), silentLogger);
+
+function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0], state = STATE): ConfiguredPlugin {
+    const plugin = new HmrPlugin(config, state, 'ssr');
     const listeners = new Map<string, (data: unknown) => void>();
     // justified: spy on the private `hot` getter
     const hotHost = plugin as unknown as { hot: { send: Mock; on: Mock } };
@@ -142,7 +147,7 @@ describe('HmrPlugin', () => {
             vi.spyOn(Logger.prototype, level).mockImplementation(() => undefined);
         }
         trace = vi.spyOn(Logger.prototype, 'trace').mockImplementation(() => undefined);
-        hmrPlugin = new HmrPlugin(mockConfig, 'ssr');
+        hmrPlugin = new HmrPlugin(mockConfig, STATE, 'ssr');
     });
 
     afterEach(() => {
@@ -150,7 +155,7 @@ describe('HmrPlugin', () => {
     });
 
     it('carries the config rollback flag onto the hmr payload', () => {
-        const plugin = new HmrPlugin({ ...mockConfig, hmr: { rollback: false } }, 'ssr');
+        const plugin = new HmrPlugin({ ...mockConfig, hmr: { rollback: false } }, STATE, 'ssr');
         const hotSend = vi.fn();
         // justified: spy on the private `hot` getter
         const hotHost = plugin as unknown as { hot: { send: typeof hotSend; on: ReturnType<typeof vi.fn> } };
@@ -182,15 +187,14 @@ describe('HmrPlugin', () => {
     describe('the last deploy', () => {
         const deployed = { applicationId: 'app-1', scopes: { global: 'a1b2', '111': 'c3d4' } };
 
-        // .seedcord goes in the config file's folder
-        function besideConfig(): ConfiguredPlugin {
+        function withState(): ConfiguredPlugin {
             const dir = mkdtempSync(join(tmpdir(), 'seedcord-hmr-state-'));
             onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
-            return configuredPlugin({ ...mockConfig, configFile: join(dir, 'seedcord.config.ts') });
+            return configuredPlugin(mockConfig, new StateFolder(dir, silentLogger));
         }
 
         it('answers a read with the deploy the framework reported for that application', () => {
-            const { listeners, sent } = besideConfig();
+            const { listeners, sent } = withState();
 
             listeners.get('seedcord:commands-deployed')?.(deployed);
             listeners.get('seedcord:read-deployed')?.({ applicationId: 'app-1' });
@@ -199,7 +203,7 @@ describe('HmrPlugin', () => {
         });
 
         it('answers undefined for a deploy saved for another application', () => {
-            const { listeners, sent } = besideConfig();
+            const { listeners, sent } = withState();
 
             listeners.get('seedcord:commands-deployed')?.(deployed);
             listeners.get('seedcord:read-deployed')?.({ applicationId: 'app-2' });

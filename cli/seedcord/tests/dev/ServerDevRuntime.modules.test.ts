@@ -7,7 +7,7 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
-import { devConfigFor } from './devConfigFor';
+import { devContextFor } from './devConfigFor';
 
 // the entry loads ban.ts the way traverseDirectory loads a command file
 async function writeProject(dir: string): Promise<void> {
@@ -33,7 +33,7 @@ async function startedRuntime(): Promise<{ runtime: ServerDevRuntime; ban: strin
 
     const runtime = new ServerDevRuntime();
     onTestFinished(() => runtime.stop());
-    await runtime.start({ config: devConfigFor(dir, 'index.ts') });
+    await runtime.start(devContextFor(dir, 'index.ts'));
     const { module } = await runtime.loadEntry();
 
     return { runtime, ban: join(dir, 'src', 'commands', 'ban.ts'), entry: module };

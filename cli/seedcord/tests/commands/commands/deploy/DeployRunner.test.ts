@@ -13,7 +13,7 @@ import { APP_ID, Config, fakeDiscord, fakeProject, Ping, pipedTerminal, slash } 
 import { silentLogger } from '#tests/silentLogger';
 
 import type { Confirm } from '#commands/commands/confirm';
-import type { ProjectOpener } from '#tests/commands/commands/fakeBot';
+import type { FakeProject } from '#tests/commands/commands/fakeBot';
 import type { REST } from '@discordjs/rest';
 
 interface DeployOptions {
@@ -24,14 +24,19 @@ interface DeployOptions {
 }
 
 async function deploy(
-    project: ProjectOpener,
+    project: FakeProject,
     rest: REST,
     { verbose = false, answer = true, confirm = () => Promise.resolve(answer), yes = false }: DeployOptions = {}
 ): Promise<string> {
     const stdout = pipedTerminal();
     const printer = new StepPrinter({ command: 'commands', labels: DEPLOY_STEPS, verbose, stdout, stderr: stdout });
     const presenter = new DeployPresenter(printer, yes ? PROCEED : confirm, verbose);
-    const runner = new DeployRunner({ projectLoader: project, openDiscord: () => rest, logger: silentLogger });
+    const runner = new DeployRunner({
+        projectLoader: project,
+        openDiscord: () => rest,
+        logger: silentLogger,
+        state: project.state
+    });
     await runner.run(presenter, { yes });
     return stdout.text();
 }
@@ -103,7 +108,7 @@ describe('DeployRunner', () => {
 
         expect(puts).toHaveLength(2);
         expect(output).toContain(
-            '  The global commands and the commands in Alpha match the last deploy. Left them alone.\n'
+            '  Skipped the global commands and the commands in Alpha because they match the last deploy.\n'
         );
         expect(output.trimEnd().split('\n').at(-1)).toBe('  Nothing to deploy.');
     });
@@ -115,7 +120,7 @@ describe('DeployRunner', () => {
 
         const output = await deploy(project, rest, { yes: true });
 
-        expect(output).toContain('  The commands in Alpha match the last deploy. Left them alone.\n');
+        expect(output).toContain('  Skipped the commands in Alpha because they match the last deploy.\n');
     });
 
     it('asks once whether to deploy the skipped scopes anyway when every scope is skipped', async () => {
@@ -152,7 +157,7 @@ describe('DeployRunner', () => {
         const output = await deploy(project, rest);
 
         expect(puts.map(({ route }) => route)).toEqual([Routes.applicationGuildCommands(APP_ID, '111')]);
-        expect(output).toContain('  The global commands match the last deploy. Left them alone.\n');
+        expect(output).toContain('  Skipped the global commands because they match the last deploy.\n');
     });
 
     it('asks again after a declined deploy', async () => {
@@ -228,12 +233,14 @@ describe('DeployRunner', () => {
             stderr: stdout
         });
         const missingToken = new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, ['DISCORD_BOT_TOKEN']);
+        const project = await fakeProject();
         const runner = new DeployRunner({
-            projectLoader: await fakeProject(),
+            projectLoader: project,
             openDiscord: () => {
                 throw missingToken;
             },
-            logger: silentLogger
+            logger: silentLogger,
+            state: project.state
         });
 
         await expect(runner.run(new DeployPresenter(printer, PROCEED, false))).rejects.toBe(missingToken);

@@ -85,7 +85,7 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
         resources: AsyncDisposableStack,
         workerConfig?: WorkerConfigFiles
     ): HmrPlugin {
-        const hmr = new HmrPlugin(context.config, environment, workerConfig);
+        const hmr = new HmrPlugin(context.config, context.state, environment, workerConfig);
         hmr.on('event', (event) => this.emit(context, event));
         // a restart builds a new runtime in the same process
         resources.defer(() => hmr.close());

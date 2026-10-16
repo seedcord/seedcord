@@ -9,9 +9,9 @@ import { resolveFromRoot } from '@seedcord/utils/node/internal';
 import { minimatch } from 'minimatch';
 
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
-import { StateFolder } from '#core/state/StateFolder';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
+import type { StateFolder } from '#core/state/StateFolder';
 import type { DevEvent } from './events';
 import type { WorkerConfigFiles } from './workerConfigFiles';
 import type { HmrEventType, HmrUpdateEvent } from '@seedcord/types';
@@ -38,7 +38,6 @@ const TYPE_COLOR = {
 
 export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly logger: Logger;
-    private readonly state: StateFolder;
     private readonly lastUpdate = new Map<string, number>();
     private server: ViteDevServer | null = null;
     private readonly restartPatterns: Set<string>;
@@ -54,12 +53,12 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     constructor(
         private readonly config: ResolvedSeedcordConfig,
+        private readonly state: StateFolder,
         private readonly botEnvironment: string,
         private readonly workerConfig?: WorkerConfigFiles
     ) {
         super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
-        this.state = StateFolder.besideConfig(config.configFile, this.logger);
         this.restartPatterns = new Set((config.hmr?.restart ?? []).map((pattern) => this.fromRoot(pattern)));
     }
 

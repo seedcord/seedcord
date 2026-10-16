@@ -242,7 +242,7 @@ describe('KyselyPostgres Plugin Integration', () => {
 
     it('registers the migrations dir as a restart pattern', () => {
         const send = vi.fn();
-        setDevChannel({ send, on: vi.fn() });
+        setDevChannel({ send, on: vi.fn(), off: vi.fn() });
 
         plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/test',

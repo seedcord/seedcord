@@ -5,7 +5,7 @@ import { wrapHot } from '#hmr/wrapHot';
 import type { SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 
 function TypesWireSoWrongPayloadOrDirection(): void {
-    const channel = wrapHot<SeedcordFrameworkEvents, SeedcordCliEvents>({ send: vi.fn(), on: vi.fn() });
+    const channel = wrapHot<SeedcordFrameworkEvents, SeedcordCliEvents>({ send: vi.fn(), on: vi.fn(), off: vi.fn() });
 
     channel.send('seedcord:register-critical-files', { patterns: ['x'] });
     // @ts-expect-error wrong payload field type
@@ -20,7 +20,7 @@ void TypesWireSoWrongPayloadOrDirection;
 describe('wrapHot', () => {
     it('delegates send to the raw hot with the event and payload', () => {
         const send = vi.fn();
-        const channel = wrapHot<SeedcordFrameworkEvents, SeedcordCliEvents>({ send, on: vi.fn() });
+        const channel = wrapHot<SeedcordFrameworkEvents, SeedcordCliEvents>({ send, on: vi.fn(), off: vi.fn() });
 
         channel.send('seedcord:register-critical-files', { patterns: ['migrations/*'] });
 
@@ -32,7 +32,7 @@ describe('wrapHot', () => {
         const on = vi.fn((_event: string, cb: (data: unknown) => void) => {
             registered = cb;
         });
-        const channel = wrapHot<SeedcordFrameworkEvents, SeedcordCliEvents>({ send: vi.fn(), on });
+        const channel = wrapHot<SeedcordFrameworkEvents, SeedcordCliEvents>({ send: vi.fn(), on, off: vi.fn() });
 
         const received: string[] = [];
         channel.on('seedcord:hmr', (payload) => received.push(payload.file));
@@ -40,5 +40,20 @@ describe('wrapHot', () => {
         expect(on).toHaveBeenCalledWith('seedcord:hmr', expect.any(Function));
         registered?.({ file: 'x.ts', type: 'update' });
         expect(received).toEqual(['x.ts']);
+    });
+
+    it('removes from the raw hot the same callback on() registered', () => {
+        const listeners = new Set<(data: unknown) => void>();
+        const channel = wrapHot<SeedcordFrameworkEvents, SeedcordCliEvents>({
+            send: vi.fn(),
+            on: (_event, cb) => listeners.add(cb),
+            off: (_event, cb) => listeners.delete(cb)
+        });
+        const onHmr = (): void => undefined;
+
+        channel.on('seedcord:hmr', onHmr);
+        channel.off('seedcord:hmr', onHmr);
+
+        expect(listeners.size).toBe(0);
     });
 });

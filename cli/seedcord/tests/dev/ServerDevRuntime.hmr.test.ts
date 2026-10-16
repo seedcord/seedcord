@@ -6,7 +6,7 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
-import { devConfigFor } from './devConfigFor';
+import { devContextFor } from './devConfigFor';
 
 import type { DevEvent } from '#commands/dev/runtime/events';
 
@@ -35,7 +35,7 @@ describe('dev runtime hot reload', () => {
 
         const runtime = new ServerDevRuntime();
         runtimes.push(runtime);
-        await runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        await runtime.start(devContextFor(dir, 'index.ts'));
 
         const { module } = await runtime.loadEntry();
         // justified: ENTRY above declares read
@@ -62,7 +62,7 @@ describe('dev runtime hot reload', () => {
 
         const runtime = new ServerDevRuntime();
         runtimes.push(runtime);
-        await runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        await runtime.start(devContextFor(dir, 'index.ts'));
 
         const { module } = await runtime.loadEntry();
         // justified: ENTRY above declares read
@@ -90,8 +90,9 @@ describe('dev runtime hot reload', () => {
 
         const runtime = new ServerDevRuntime();
         runtimes.push(runtime);
-        const config = { ...devConfigFor(dir, 'index.ts'), hmr: { restart, rollback: true } };
-        await runtime.start({ config, onEvent: (event) => events.push(event) });
+        const context = devContextFor(dir, 'index.ts');
+        const config = { ...context.config, hmr: { restart, rollback: true } };
+        await runtime.start({ ...context, config, onEvent: (event) => events.push(event) });
         return { src, runtime, events };
     }
 

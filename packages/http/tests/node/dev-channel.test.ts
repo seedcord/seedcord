@@ -15,7 +15,7 @@ describe('http dev channel', () => {
 
     it('reports the bound port once the server is listening', async () => {
         const sent: [string, unknown][] = [];
-        setDevChannel({ send: (event, data) => sent.push([event, data]), on: () => undefined });
+        setDevChannel({ send: (event, data) => sent.push([event, data]), on: () => undefined, off: () => undefined });
 
         await bindSignedEnv();
         await using host = new Seedcord(serverConfig({ interactions: { path: HANDLERS_DIR } }));

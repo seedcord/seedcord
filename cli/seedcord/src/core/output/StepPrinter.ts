@@ -59,13 +59,14 @@ export class StepPrinter<Label extends string> implements Steps<Label> {
         note?: (result: Result) => string
     ): Promise<Result> {
         const startedAt = performance.now();
+        let spinner: Spinner | undefined;
         const held = holdOutput(this.stdout, this.stderr, this.verbose, (line) => {
             if (spinner) spinner.printAbove(`  ${line}`);
             else held.writeToTerminal(`  ${line}\n`);
         });
-        const spinner = this.stdout.isTTY
-            ? Spinner.start(held.writeToTerminal, (frame) => this.row(paint.sky(frame), label, startedAt))
-            : undefined;
+        if (this.stdout.isTTY) {
+            spinner = Spinner.start(held.writeToTerminal, (frame) => this.row(paint.sky(frame), label, startedAt));
+        }
 
         const finish = (mark: string, extra?: string): void => {
             spinner?.stop();

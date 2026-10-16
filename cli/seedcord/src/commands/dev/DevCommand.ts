@@ -29,8 +29,8 @@ export class DevCommand extends BaseCommand {
             .action(async () => {
                 profileStdout();
                 const store = new DevStore();
-                const runner = DevRunner.create(store);
                 const stateFolder = new StateFolder(process.cwd(), this.logger);
+                const runner = DevRunner.create(store, stateFolder);
 
                 // ink intercepts Ctrl-C under raw mode. this fires only when stdin is not raw.
                 const onSignal = (): void => {

@@ -96,6 +96,7 @@ describe('EdgeDevRuntime lifecycle', () => {
                 open: () => Promise.resolve({ config, [Symbol.asyncDispose]: () => Promise.resolve() })
             } as unknown as Pick<ProjectLoader, 'open'>,
             store,
+            state,
             codegen: CodegenRunner.create(quietSteps, silentLogger),
             codegenLogger: silentLogger,
             // justified: tunnel mode off routes nothing

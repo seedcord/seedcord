@@ -8,7 +8,7 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
-import { devConfigFor } from './devConfigFor';
+import { devContextFor } from './devConfigFor';
 import { fakeBot } from './fakes';
 
 import type { StartedRuntime } from '#commands/dev/runtime/BaseDevRuntime';
@@ -50,7 +50,7 @@ describe('dev runtime with root set to src', () => {
         const runtime = new ServerDevRuntime();
         runtimes.push(runtime);
 
-        await runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        await runtime.start(devContextFor(dir, 'index.ts'));
         const { module } = await runtime.loadEntry();
 
         expect(module).toMatchObject({ texts: ['hello'] });
@@ -62,7 +62,7 @@ describe('dev runtime with root set to src', () => {
         await writeProject(dir);
 
         const runtime = new ServerDevRuntime();
-        await runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        await runtime.start(devContextFor(dir, 'index.ts'));
         await runtime.stop();
 
         await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
@@ -76,7 +76,7 @@ describe('dev runtime with root set to src', () => {
         await writeProject(dir);
 
         const runtime = new ServerDevRuntime();
-        const starting = runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        const starting = runtime.start(devContextFor(dir, 'index.ts'));
         await runtime.stop();
         await starting;
 
@@ -91,7 +91,7 @@ describe('dev runtime with root set to src', () => {
         await writeProject(dir);
 
         const runtime = new ServerDevRuntime();
-        await runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        await runtime.start(devContextFor(dir, 'index.ts'));
         const first = runtime.stop();
         await runtime.stop();
 
@@ -108,7 +108,7 @@ describe('dev runtime with root set to src', () => {
         const shutdown = vi.fn(() => Promise.resolve());
 
         const runtime = new ServerDevRuntime();
-        await runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        await runtime.start(devContextFor(dir, 'index.ts'));
         // justified: the lifecycle reads only start, the startup abort and the shutdown run
         await runtime.startBot(fakeBot({ [HostShutdown]: { run: shutdown } }) as unknown as SeedcordInstance);
         await runtime.stop();
@@ -133,7 +133,7 @@ describe('dev runtime with root set to src', () => {
         }
 
         const runtime = new FailsAfterOpening();
-        await expect(runtime.start({ config: devConfigFor(dir, 'index.ts') })).rejects.toThrow('setup failed');
+        await expect(runtime.start(devContextFor(dir, 'index.ts'))).rejects.toThrow('setup failed');
 
         await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreDirectoryRootUnknown
@@ -153,7 +153,8 @@ describe('dev runtime with root set to src', () => {
             const bot = fakeBot();
 
             const runtime = new ServerDevRuntime();
-            await runtime.start({ config: { ...devConfigFor(dir, 'index.ts'), tunnel } });
+            const context = devContextFor(dir, 'index.ts');
+            await runtime.start({ ...context, config: { ...context.config, tunnel } });
             // justified: the lifecycle reads only start, the startup abort and the shutdown run
             await runtime.startBot(bot as unknown as SeedcordInstance);
             await runtime.stop();
@@ -170,7 +171,7 @@ describe('dev runtime with root set to src', () => {
         const failingBot = fakeBot({ [HostShutdown]: { run: () => Promise.reject(new Error('shutdown failed')) } });
 
         const runtime = new ServerDevRuntime();
-        await runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        await runtime.start(devContextFor(dir, 'index.ts'));
         // justified: the lifecycle reads only start, the startup abort and the shutdown run
         await runtime.startBot(failingBot as unknown as SeedcordInstance);
 

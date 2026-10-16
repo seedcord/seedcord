@@ -2,7 +2,7 @@ import { unlessAborted } from '@seedcord/utils/internal';
 
 import { getDevChannel } from '#hmr/devChannel';
 
-import type { DeployedHashes } from '@seedcord/types/internal';
+import type { DeployedHashes, SeedcordCliEvents } from '@seedcord/types/internal';
 
 // seedcord dev answers from one small file
 // something has really gone wrong if this times out
@@ -26,11 +26,14 @@ function askSeedcordDev(applicationId: string): Promise<DeployedHashes | undefin
     const cli = getDevChannel();
     if (!cli) return Promise.resolve(undefined);
     const { promise, resolve } = Promise.withResolvers<DeployedHashes | undefined>();
-    const timer = setTimeout(() => resolve(undefined), ANSWER_TIMEOUT_MS);
-    cli.on('seedcord:last-deploy', ({ deployed }) => {
+    const settle = (deployed: DeployedHashes | undefined): void => {
         clearTimeout(timer);
+        cli.off('seedcord:last-deploy', onAnswer);
         resolve(deployed);
-    });
+    };
+    const onAnswer = ({ deployed }: SeedcordCliEvents['seedcord:last-deploy']): void => settle(deployed);
+    const timer = setTimeout(() => settle(undefined), ANSWER_TIMEOUT_MS);
+    cli.on('seedcord:last-deploy', onAnswer);
     cli.send('seedcord:read-deployed', { applicationId });
     return promise;
 }

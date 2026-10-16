@@ -1,4 +1,4 @@
-import { groupByScope, resolveDeployTarget, scopeIdsOf } from '@seedcord/core/internal';
+import { resolveDeployTarget, scopeIdsOf } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 
 import { plural } from '#core/format';
@@ -10,7 +10,7 @@ import type { RunnerDeps } from '#commands/commands/runnerDeps';
 import type { ResolvedTarget } from '#core/config/schema';
 import type { FoundCommand } from '#core/modules/CommandScanner';
 import type { Steps } from '#core/output/Steps';
-import type { CommandScopes } from '@seedcord/core/internal';
+import type { CommandBody, CommandScopes, ScopeId } from '@seedcord/core/internal';
 
 export const LOAD_STEPS = ['read config', 'load bot', 'scan'] as const;
 type LoadStep = (typeof LOAD_STEPS)[number];
@@ -18,19 +18,22 @@ type LoadStep = (typeof LOAD_STEPS)[number];
 interface CodeScopes {
     target: ResolvedTarget['kind'];
     instance: string;
-    configFile: string;
     // undefined when the bot sets commands.path to null
     scopes: CommandScopes | undefined;
 }
 
 type LoadDeps = Pick<RunnerDeps, 'projectLoader'>;
 
-// global is left out when no command in code targets it
 export function scopesInCode(found: readonly FoundCommand[], configuredGuilds: readonly string[]): CommandScopes {
-    const grouped = groupByScope(found, ({ meta, className }) =>
-        scopeIdsOf(resolveDeployTarget(meta, configuredGuilds, className))
-    );
-    return new Map(grouped.entries().map(([scope, commands]) => [scope, commands.map(({ json }) => json)]));
+    const scopes = new Map<ScopeId, CommandBody[]>();
+    for (const { json, meta, className } of found) {
+        for (const scope of scopeIdsOf(resolveDeployTarget(meta, configuredGuilds, className))) {
+            const inScope = scopes.get(scope);
+            if (inScope) inScope.push(json);
+            else scopes.set(scope, [json]);
+        }
+    }
+    return scopes;
 }
 
 export async function loadCodeScopes(
@@ -41,7 +44,7 @@ export async function loadCodeScopes(
     await using project = await steps.step('read config', () => projectLoader.open(projectDir));
     const { config, modules } = project;
     printResolvedConfig(steps, config);
-    const loaded = { target: config.target.kind, instance: config.instance, configFile: config.configFile };
+    const loaded = { target: config.target.kind, instance: config.instance };
 
     const instance = await steps.step('load bot', () => importInstance(modules, config.instance));
     const { commands } = instance.config.bot;

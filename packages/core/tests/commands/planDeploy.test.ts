@@ -18,7 +18,7 @@ function onDiscord(commands: readonly CommandBody[]): Map<string, APIApplication
     return new Map(commands.map((c) => [c.name, { name: c.name, type: c.type ?? 1 } as APIApplicationCommand]));
 }
 
-// discord holds whatever the code held, for every scope asked
+// discord has the same commands as the code
 function discordMatching(scopes: CommandScopes): (unchanged: ScopeId[]) => Promise<DeployResult> {
     return (unchanged) =>
         Promise.resolve(new Map(unchanged.map((scope) => [scope, onDiscord(scopes.get(scope) ?? [])])));

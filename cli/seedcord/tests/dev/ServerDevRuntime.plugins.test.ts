@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
-import { devConfigFor } from './devConfigFor';
+import { devContextFor } from './devConfigFor';
 
 // stands in for @seedcord/core, whose Plugin stamps a module-level symbol that attach reads back
 const CORE_ENTRY = `const slot = Symbol('slot');
@@ -82,7 +82,7 @@ async function withRuntime(
     await writeProject(project.path, from);
     const runtime = new ServerDevRuntime();
     try {
-        await runtime.start({ config: devConfigFor(project.path, 'bot.ts') });
+        await runtime.start(devContextFor(project.path, 'bot.ts'));
         await run(runtime);
     } finally {
         await runtime.stop();

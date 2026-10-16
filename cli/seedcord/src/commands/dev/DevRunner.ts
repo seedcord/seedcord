@@ -15,6 +15,7 @@ import { createTunnelCoordinator } from './tunnel/createTunnelCoordinator';
 import { TunnelRouter } from './tunnel/TunnelRouter';
 
 import type { ResolvedSeedcordConfig, ResolvedTarget, ResolvedTunnel } from '#core/config/schema';
+import type { StateFolder } from '#core/state/StateFolder';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DevSessionDeps } from './DevSession';
 import type { DevRuntime } from './runtime/DevRuntime';
@@ -39,7 +40,7 @@ export class DevRunner {
 
     constructor(private readonly deps: DevRunnerDeps) {}
 
-    public static create(store: DevStore): DevRunner {
+    public static create(store: DevStore, state: StateFolder): DevRunner {
         const codegenLogger = cliLogger('Codegen');
         const tunnelLogger = cliLogger('Tunnel');
         const makeCoordinator = (tunnel: ResolvedTunnel): TunnelCoordinator | undefined =>
@@ -48,6 +49,7 @@ export class DevRunner {
         return new DevRunner({
             projectLoader: new ProjectLoader(openModuleLoader),
             store,
+            state,
             codegen: CodegenRunner.create(quietSteps, codegenLogger),
             codegenLogger,
             tunnel: new TunnelRouter(makeCoordinator, tunnelLogger),

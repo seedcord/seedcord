@@ -51,15 +51,32 @@ function registryWith(put: Mock, get?: Mock): CommandRegistry {
 
 // what a first deploy of the fixture sends seedcord dev to save
 async function deployedOnce(): Promise<DeployedHashes> {
-    const sent = cliWith(undefined);
+    const { sent } = cliWith(undefined);
     await registryWith(vi.fn().mockResolvedValue(BARE)).deploy(new AbortController().signal, {});
     const [, saved] = sent.find(([event]) => event === 'seedcord:commands-deployed') ?? [];
     // justified: the registry sends DeployedHashes on seedcord:commands-deployed
     return saved as DeployedHashes;
 }
 
+// discord, where guild 111 is called `name`
+function guildNamed(name: string): Mock {
+    return vi.fn((route: string) => Promise.resolve(route === Routes.guild('111') ? { id: '111', name } : BARE));
+}
+
+function captureLogs(messages: string[]): Disposable {
+    return LoggerChannelRegistry.instance.installSink({
+        kind: 'capture',
+        onLog: (record) => messages.push(stripVTControlCharacters(record.message))
+    });
+}
+
+interface FakeCli {
+    sent: [string, unknown][];
+    listening: () => string[];
+}
+
 // seedcord dev, answering the registry's read with the last deploy
-function cliWith(deployed: DeployedHashes | undefined): [string, unknown][] {
+function cliWith(deployed: DeployedHashes | undefined): FakeCli {
     const sent: [string, unknown][] = [];
     const handlers = new Map<string, (data: unknown) => void>();
     setDevChannel({
@@ -68,21 +85,25 @@ function cliWith(deployed: DeployedHashes | undefined): [string, unknown][] {
             if (event === 'seedcord:read-deployed') handlers.get('seedcord:last-deploy')?.({ deployed });
         },
         // justified: the fake keeps every handler under one signature
-        on: (event, handler) => handlers.set(event, handler as (data: unknown) => void)
+        on: (event, handler) => handlers.set(event, handler as (data: unknown) => void),
+        off: (event) => handlers.delete(event)
     });
     onTestFinished(() => setDevChannel(undefined));
-    return sent;
+    return { sent, listening: () => [...handlers.keys()] };
 }
 
 // a dev channel where nothing answers the read
-function silentCli(onRead: () => void): void {
+function silentCli(onRead: () => void): Pick<FakeCli, 'listening'> {
+    const listening = new Set<string>();
     setDevChannel({
         send: (event) => {
             if (event === 'seedcord:read-deployed') onRead();
         },
-        on: () => undefined
+        on: (event) => listening.add(event),
+        off: (event) => listening.delete(event)
     });
     onTestFinished(() => setDevChannel(undefined));
+    return { listening: () => [...listening] };
 }
 
 describe('CommandRegistry.deploy', () => {
@@ -155,7 +176,7 @@ describe('CommandRegistry.deploy', () => {
 
     it('asks seedcord dev for the last deploy of its application, then sends what it deployed', async () => {
         const deployed = await deployedOnce();
-        const sent = cliWith(undefined);
+        const { sent } = cliWith(undefined);
 
         await registryWith(vi.fn().mockResolvedValue(BARE)).deploy(new AbortController().signal, {});
 
@@ -170,7 +191,7 @@ describe('CommandRegistry.deploy', () => {
         onTestFinished(() => {
             vi.useRealTimers();
         });
-        silentCli(() => {
+        const cli = silentCli(() => {
             queueMicrotask(() => {
                 vi.runOnlyPendingTimers();
             });
@@ -180,6 +201,15 @@ describe('CommandRegistry.deploy', () => {
         await registryWith(put).deploy(new AbortController().signal, {});
 
         expect(put.mock.calls.map(([route]: unknown[]) => route)).toEqual([Routes.applicationCommands(APP)]);
+        expect(cli.listening()).not.toContain('seedcord:last-deploy');
+    });
+
+    it('stops listening for seedcord dev once it answers', async () => {
+        const cli = cliWith(undefined);
+
+        await registryWith(vi.fn().mockResolvedValue(BARE)).deploy(new AbortController().signal, {});
+
+        expect(cli.listening()).not.toContain('seedcord:last-deploy');
     });
 
     it('rejects when the deploy is aborted while it waits for seedcord dev', async () => {
@@ -191,23 +221,31 @@ describe('CommandRegistry.deploy', () => {
         await expect(deploying).rejects.toThrow(expect.objectContaining({ name: 'AbortError' }));
     });
 
-    it('logs a guild by its name, which it reads from discord once', async () => {
-        const get = vi.fn((route: string) =>
-            Promise.resolve(route === Routes.guild('111') ? { id: '111', name: 'Alpha' } : BARE)
-        );
+    it('logs a guild by its name under seedcord dev, which it reads from discord once', async () => {
+        cliWith(undefined);
+        const get = guildNamed('Alpha');
         const registry = new CommandRegistry(coreWith(vi.fn().mockResolvedValue(BARE), get, ['111']));
         const messages: string[] = [];
-        using _capture = LoggerChannelRegistry.instance.installSink({
-            kind: 'capture',
-            onLog: (record) => messages.push(stripVTControlCharacters(record.message))
-        });
+        using _capture = captureLogs(messages);
 
         await registry.deploy(new AbortController().signal, {});
         await registry.setCommands();
 
         expect(messages).toContainEqual(expect.stringContaining('Deployed 1 command to Alpha'));
-        expect(messages).toContain('The commands in Alpha match the last deploy. Left them alone.');
+        expect(messages).toContain('Skipped the commands in Alpha because they match the last deploy.');
         expect(get.mock.calls.filter(([route]) => route === Routes.guild('111'))).toHaveLength(1);
+    });
+
+    it('logs a guild by its id outside seedcord dev, and reads no guild', async () => {
+        const get = guildNamed('Alpha');
+        const registry = new CommandRegistry(coreWith(vi.fn().mockResolvedValue(BARE), get, ['111']));
+        const messages: string[] = [];
+        using _capture = captureLogs(messages);
+
+        await registry.deploy(new AbortController().signal, {});
+
+        expect(messages).toContainEqual(expect.stringContaining('Deployed 1 command to 111'));
+        expect(get).not.toHaveBeenCalledWith(Routes.guild('111'));
     });
 
     it('skips the put on a refresh that changed no command', async () => {

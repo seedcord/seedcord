@@ -26,14 +26,16 @@ export async function readCommandsAt(
         return indexById((await rest.get(route, { signal })) as RESTGetAPIApplicationCommandsResult);
     } catch (error) {
         if (signal?.aborted) throw error;
-        const where = scope === GLOBAL_ID ? 'globally' : `to guild ${paint.sky(scope)}`;
+        const reason = asError(error).message;
         throw new SeedcordError(
             SeedcordErrorCode.CoreDiscordReadFailed,
-            [
-                `the commands deployed ${where}`,
-                asError(error).message,
-                `Check ${paint.bold('DISCORD_BOT_TOKEN')}. For a guild, also check that the bot is in it.`
-            ],
+            scope === GLOBAL_ID
+                ? ['the commands deployed globally', reason]
+                : [
+                      `the commands deployed to guild ${paint.sky(scope)}`,
+                      reason,
+                      `Check that ${paint.bold('DISCORD_BOT_TOKEN')} is still valid and that the bot is in that guild.`
+                  ],
             { cause: error }
         );
     }

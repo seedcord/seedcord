@@ -46,16 +46,7 @@ export { putCommands, type CommandBody, type CommandScopes } from '#src/commands
 export { readCommands, readCommandsAt } from '#src/commands/readCommands';
 export { planDeploy } from '#src/commands/planDeploy';
 export { guildSummaries, type GuildSummary } from '#src/commands/guildSummaries';
-export {
-    commandRoute,
-    commandsRoute,
-    GLOBAL_ID,
-    globalFirst,
-    groupByScope,
-    scopeIdsOf,
-    skippedNote,
-    type ScopeId
-} from '#src/commands/scopes';
+export { commandsRoute, GLOBAL_ID, globalFirst, scopeIdsOf, skippedNote, type ScopeId } from '#src/commands/scopes';
 export {
     commandKey,
     commandRefOf,

@@ -7,6 +7,7 @@ import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { DevSession } from '#commands/dev/DevSession';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
+import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
 
@@ -34,7 +35,13 @@ function config(): ResolvedSeedcordConfig {
 const UNCHANGED = { outputPath: 'seedcord-gen.d.ts', changed: false };
 
 function sessionDeps(store = new DevStore(), onEvent: DevEventHandler = () => undefined): DevSessionDeps {
-    return { store, onEvent, codegen: { writeFrom: () => Promise.resolve(UNCHANGED) }, codegenLogger: silentLogger };
+    return {
+        store,
+        onEvent,
+        codegen: { writeFrom: () => Promise.resolve(UNCHANGED) },
+        codegenLogger: silentLogger,
+        state: new StateFolder(process.cwd(), silentLogger)
+    };
 }
 
 // start() spawns tsc --watch before it reaches the throw, so every case has to stop the session

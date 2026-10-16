@@ -57,4 +57,5 @@ export interface SeedcordCliEvents {
 export interface DevChannel<TSend, TRecv> {
     send<Key extends keyof TSend & string>(event: Key, data: TSend[Key]): void;
     on<Key extends keyof TRecv & string>(event: Key, cb: (data: TRecv[Key]) => void): void;
+    off<Key extends keyof TRecv & string>(event: Key, cb: (data: TRecv[Key]) => void): void;
 }

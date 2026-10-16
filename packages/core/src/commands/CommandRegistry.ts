@@ -5,7 +5,6 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath } from '@seedcord/utils';
-import { pluralize } from '@seedcord/utils/internal';
 import { traverseDirectory } from '@seedcord/utils/node';
 import { resolveFolder } from '@seedcord/utils/node/internal';
 import { Envapter } from 'envapt';
@@ -14,14 +13,14 @@ import { getDevChannel } from '#hmr/devChannel';
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
 import { CommandInjector } from '#src/commands/CommandInjector';
 import { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
+import { DeployReporter } from '#src/commands/DeployReporter';
 import { resolveDeployTarget } from '#src/commands/deployTarget';
-import { guildSummaries } from '#src/commands/guildSummaries';
 import { isCommandClass } from '#src/commands/isCommandClass';
 import { LastDeploy } from '#src/commands/LastDeploy';
 import { planDeploy } from '#src/commands/planDeploy';
 import { putCommands } from '#src/commands/putCommands';
 import { readCommands } from '#src/commands/readCommands';
-import { GLOBAL_ID, scopeIdsOf, skippedNote } from '#src/commands/scopes';
+import { GLOBAL_ID, scopeIdsOf } from '#src/commands/scopes';
 import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 import { CommandMetadataKey } from '#src/metadataKeys';
 import { PublishDefault } from '#subscribers/publishDefault';
@@ -77,7 +76,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private readonly pendingEvents = new Map<string, HmrUpdateEvent>();
     private readonly injector = new CommandInjector();
     private readonly lastDeploy = new LastDeploy();
-    private readonly guildNames = new Map<string, string>();
+    private readonly reporter = new DeployReporter(this.logger);
 
     private readonly dir: string;
     private readonly configuredGuilds: readonly string[];
@@ -246,16 +245,16 @@ export class CommandRegistry implements Initializeable, HmrAware {
         const plan = await planDeploy(this.commandBodies(), last?.scopes, (unchanged) =>
             readCommands(unchanged, { rest, applicationId, signal })
         );
-        await this.readGuildNames([...plan.toPut.keys(), ...plan.skipped]);
+        await this.reporter.readGuildNames(rest, [...plan.toPut.keys(), ...plan.skipped]);
         const put = await putCommands(plan.toPut, {
             rest,
             applicationId,
             logger: this.logger,
             signal,
-            onDeployed: (scope: ScopeId, commands: readonly CommandBody[]) => this.reportDeployed(scope, commands)
+            onDeployed: (scope: ScopeId, commands: readonly CommandBody[]) => this.reporter.deployed(scope, commands)
         });
-        this.reportSkipped(plan.skipped);
-        // Use newly deployed commands for scopes we put, replacing the previously read commands
+
+        this.reporter.skipped(plan.skipped);
         const result: DeployResult = new Map([...plan.onDiscord, ...put]);
         this.lastDeploy.save({ applicationId, scopes: plan.hashes });
 
@@ -270,32 +269,6 @@ export class CommandRegistry implements Initializeable, HmrAware {
             .entries()
             .filter(([scope, commands]) => scope !== GLOBAL_ID || commands.length > 0);
         return new Map(deployable.map(([scope, commands]) => [scope, commands.map((c) => c.toJSON())]));
-    }
-
-    private async readGuildNames(scopes: readonly ScopeId[]): Promise<void> {
-        const unread = scopes.filter((scope) => scope !== GLOBAL_ID && !this.guildNames.has(scope));
-        for (const { id, name } of await guildSummaries(this.core.rest, unread)) this.guildNames.set(id, name);
-    }
-
-    private guildLabel(guildId: string): string {
-        return paint.sky.bold(this.guildNames.get(guildId) ?? guildId);
-    }
-
-    private reportSkipped(skipped: readonly ScopeId[]): void {
-        if (skipped.length === 0) return;
-        this.logger.info(skippedNote(skipped, (guildId) => this.guildLabel(guildId)));
-    }
-
-    private reportDeployed(scope: ScopeId, commands: readonly CommandBody[]): void {
-        const { utils } = this.logger;
-        const count = paint.iris.bold(commands.length);
-        const tag = pluralize(commands.length, 'command');
-        const title =
-            scope === GLOBAL_ID
-                ? `Deployed ${count} global ${tag}`
-                : `Deployed ${count} ${tag} to ${this.guildLabel(scope)}`;
-
-        utils.block(title, utils.wrap(commands.map((command) => command.name)), 'info');
     }
 
     private allCommands(): CommandBuilder[] {

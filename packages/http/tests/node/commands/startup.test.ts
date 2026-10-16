@@ -87,7 +87,8 @@ describe('command deploy during http startup', () => {
                     handlers.get('seedcord:last-deploy')?.({ deployed: saved });
             },
             // justified: the fake keeps every handler under one signature
-            on: (event, handler) => handlers.set(event, handler as (data: unknown) => void)
+            on: (event, handler) => handlers.set(event, handler as (data: unknown) => void),
+            off: (event) => handlers.delete(event)
         });
         onTestFinished(() => setDevChannel(undefined));
         {

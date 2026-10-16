@@ -5,7 +5,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 
-import { devConfigFor } from './devConfigFor';
+import { devContextFor } from './devConfigFor';
 
 const SCRATCH_ROOT = join(import.meta.dirname, '.build-fixture');
 
@@ -49,7 +49,7 @@ describe('dev runtime against a project that declares tsconfig paths', () => {
         const runtime = new ServerDevRuntime();
         runtimes.push(runtime);
 
-        await runtime.start({ config: devConfigFor(dir, 'index.ts') });
+        await runtime.start(devContextFor(dir, 'index.ts'));
         const { module } = await runtime.loadEntry();
 
         expect(module).toMatchObject({ value: 'aliased' });

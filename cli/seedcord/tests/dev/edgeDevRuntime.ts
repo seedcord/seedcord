@@ -10,8 +10,10 @@ import { onTestFinished } from 'vitest';
 
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { toSeedcordInstance } from '#core/modules/importInstance';
+import { StateFolder } from '#core/state/StateFolder';
 import { copyEdgeBot } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES, FAKE_TOKEN } from '#tests/commands/build/smoke';
+import { silentLogger } from '#tests/silentLogger';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import type { DevEventHandler } from '#commands/dev/runtime/events';
@@ -190,7 +192,7 @@ export async function startedRuntime(projectDir: string, onEvent?: DevEventHandl
     };
     await using cleanup = new AsyncDisposableStack();
     cleanup.defer(() => runtime.stop());
-    await runtime.start({ config, onEvent: recordPort });
+    await runtime.start({ config, state: new StateFolder(projectDir, silentLogger), onEvent: recordPort });
     const { module } = await runtime.loadEntry();
     const instance = toSeedcordInstance(await resolveDefaultExport(module), config.instance);
     const port = (): number => {

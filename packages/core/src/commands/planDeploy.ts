@@ -42,15 +42,14 @@ function sameCommandNames(
     return new Set(inCode.map(commandKey)).symmetricDifference(onDiscord).size === 0;
 }
 
-// readDiscord gets the scopes whose hash matches the last deploy
 export async function planDeploy(
     scopes: CommandScopes,
     last: ScopeHashes | undefined,
-    readDiscord: (unchanged: ScopeId[]) => Promise<DeployResult>
+    readUnchanged: (scopes: ScopeId[]) => Promise<DeployResult>
 ): Promise<DeployPlan> {
     const hashes = await scopeHashes(scopes);
     const unchanged = globalFirst(scopes).filter(([scope]) => hashes[scope] === last?.[scope]);
-    const onDiscord = await readDiscord(unchanged.map(([scope]) => scope));
+    const onDiscord = await readUnchanged(unchanged.map(([scope]) => scope));
     const skipped = new Set(
         unchanged
             .filter(([scope, commands]) => sameCommandNames(commands, onDiscord.get(scope)))

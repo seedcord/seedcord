@@ -4,6 +4,7 @@ import type { DevChannel } from '@seedcord/types/internal';
 interface RawHot {
     send(event: string, data?: unknown): void;
     on(event: string, cb: (data: unknown) => void): void;
+    off(event: string, cb: (data: unknown) => void): void;
 }
 
 /** @internal */
@@ -11,6 +12,8 @@ export function wrapHot<TSend, TRecv>(hot: RawHot): DevChannel<TSend, TRecv> {
     return {
         send: (event, data) => hot.send(event, data),
         // justified: RawHot types every payload as unknown, and the wire contract guarantees it matches TRecv[Key]
-        on: (event, cb) => hot.on(event, cb as (data: unknown) => void)
+        on: (event, cb) => hot.on(event, cb as (data: unknown) => void),
+        // justified: the same cast as on()
+        off: (event, cb) => hot.off(event, cb as (data: unknown) => void)
     };
 }

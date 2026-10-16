@@ -18,20 +18,23 @@ import type { CommandScopes, ScopeId } from '@seedcord/core/internal';
 export const DEPLOY_STEPS = [...LOAD_STEPS, 'read discord', 'deploy'] as const;
 export type DeployStep = (typeof DEPLOY_STEPS)[number];
 
-interface DeployOptions {
+export interface DeployOptions {
     readonly force?: boolean | undefined;
     readonly yes?: boolean | undefined;
 }
 
+type DeployDeps = RunnerDeps & { readonly state: StateFolder };
+
 export class DeployRunner {
-    constructor(private readonly deps: RunnerDeps) {}
+    constructor(private readonly deps: DeployDeps) {}
 
     public static create(): DeployRunner {
-        return new DeployRunner(defaultRunnerDeps());
+        const deps = defaultRunnerDeps();
+        return new DeployRunner({ ...deps, state: new StateFolder(process.cwd(), deps.logger) });
     }
 
     public async run(presenter: DeployPresenter, { force = false, yes = false }: DeployOptions = {}): Promise<void> {
-        const { target, instance, configFile, scopes } = await loadCodeScopes(presenter, this.deps, process.cwd());
+        const { target, instance, scopes } = await loadCodeScopes(presenter, this.deps, process.cwd());
         if (!scopes) throw new SeedcordError(SeedcordErrorCode.CliDeployNoCommandsFolder, [instance]);
 
         const { session, targets } = await presenter.step('read discord', async () => {
@@ -40,7 +43,7 @@ export class DeployRunner {
         });
         presenter.detail('app', paint.mute(session.appId));
 
-        const state = StateFolder.besideConfig(configFile, this.deps.logger);
+        const { state } = this.deps;
         const last = force ? undefined : lastDeployOf(state, session.appId);
         const plan = await planDeploy(scopes, last?.scopes, () => Promise.resolve(targets.deployed));
         presenter.skipped(plan.skipped, (guildId) => guildLabel(guildId, targets));

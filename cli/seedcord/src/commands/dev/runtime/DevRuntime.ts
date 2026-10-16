@@ -1,10 +1,12 @@
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
+import type { StateFolder } from '#core/state/StateFolder';
 import type { DevEventHandler } from './events';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 export interface DevRuntimeContext {
     readonly config: ResolvedSeedcordConfig;
+    readonly state: StateFolder;
     readonly onEvent?: DevEventHandler;
 }
 

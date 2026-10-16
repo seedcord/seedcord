@@ -13,6 +13,7 @@ import { TscRunner } from './TscRunner';
 
 import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
+import type { StateFolder } from '#core/state/StateFolder';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { DevEventHandler } from './runtime/events';
@@ -25,6 +26,7 @@ export interface DevSessionDeps {
     readonly store: DevStore;
     readonly codegen: Pick<CodegenRunner, 'writeFrom'>;
     readonly codegenLogger: ILogger;
+    readonly state: StateFolder;
     readonly onEvent: DevEventHandler;
 }
 
@@ -49,6 +51,7 @@ export class DevSession {
     private async startRuntime(): Promise<void> {
         await this.runtime.start({
             config: this.config,
+            state: this.deps.state,
             onEvent: (event) => {
                 this.deps.store.apply(event);
                 this.deps.onEvent(event);

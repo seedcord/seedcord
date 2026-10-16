@@ -25,7 +25,7 @@ import { guildTargetsOf } from './scope';
 
 import type { StepPrinter } from '#core/output/StepPrinter';
 import type { Confirm } from './confirm';
-import type { DeployStep } from './deploy/DeployRunner';
+import type { DeployOptions, DeployStep } from './deploy/DeployRunner';
 import type { ListScope, ListStep } from './list/ListRunner';
 import type { RemoveMode } from './remove/RemoveMode';
 import type { WizardQuestions } from './remove/RemoveWizard';
@@ -40,11 +40,6 @@ interface CommandsDeps {
 }
 
 type RemoveFlags = GuildFlags & { readonly yes?: boolean | undefined };
-
-interface DeployFlags {
-    readonly yes?: boolean | undefined;
-    readonly force?: boolean | undefined;
-}
 
 type WizardStep = (typeof WIZARD_STEPS)[number];
 type MenuAction = 'deploy' | 'list' | 'clean' | 'purge';
@@ -156,7 +151,7 @@ export class CommandsCommand extends BaseCommand {
     private async deploy(
         printer: StepPrinter<DeployStep>,
         command: CommandUnknownOpts,
-        { yes = false, force = false }: DeployFlags
+        { yes = false, force = false }: DeployOptions
     ): Promise<void> {
         if (!yes && !isInteractive()) throw new SeedcordTypeError(SeedcordErrorCode.CliDeployNeedsYes);
         const confirm: Confirm = yes ? PROCEED : (message) => this.prompter.confirm({ message });

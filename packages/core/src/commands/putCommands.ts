@@ -6,7 +6,7 @@ import { unlessAborted } from '@seedcord/utils/internal';
 import { indexById } from '#src/commands/linkCommands';
 import { commandsRoute, GLOBAL_ID, globalFirst } from '#src/commands/scopes';
 
-import type { ScopeId, ScopeMap } from '#src/commands/scopes';
+import type { ScopeId } from '#src/commands/scopes';
 import type { DeployResult } from '#src/commands/types';
 import type { RateLimitData, REST } from '@discordjs/rest';
 import type { ILogger } from '@seedcord/types';
@@ -15,7 +15,7 @@ import type { APIApplicationCommand, RESTPostAPIApplicationCommandsJSONBody } fr
 export type CommandBody = RESTPostAPIApplicationCommandsJSONBody;
 
 // a scope left out keeps what discord has. an empty list clears it
-export type CommandScopes = ScopeMap<readonly CommandBody[]>;
+export type CommandScopes = ReadonlyMap<ScopeId, readonly CommandBody[]>;
 
 interface PutCommandsOptions {
     readonly rest: Pick<REST, 'put' | 'on' | 'off'>;

@@ -1,5 +1,4 @@
 import {
-    commandRoute,
     commandsRoute,
     GLOBAL_ID,
     guildSummaries,
@@ -8,6 +7,7 @@ import {
     readCommandsAt
 } from '@seedcord/core/internal';
 import { asError } from '@seedcord/utils/internal';
+import { Routes } from 'discord-api-types/v10';
 
 import { applicationOf } from '#core/discord/applicationOf';
 import { readBotGuilds } from '#core/discord/readBotGuilds';
@@ -17,6 +17,12 @@ import type { GuildScope, GuildTargets, Scope, ScopedCommands } from './scope';
 import type { CommandScopes, DeployResult, GuildSummary, ScopeId } from '@seedcord/core/internal';
 import type { ILogger } from '@seedcord/types';
 import type { APIApplicationCommand, Snowflake } from 'discord-api-types/v10';
+
+function commandRoute(applicationId: Snowflake, scope: ScopeId, commandId: Snowflake): `/${string}` {
+    return scope === GLOBAL_ID
+        ? Routes.applicationCommand(applicationId, commandId)
+        : Routes.applicationGuildCommand(applicationId, scope, commandId);
+}
 
 export interface Scan {
     global: APIApplicationCommand[];
