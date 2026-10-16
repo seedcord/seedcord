@@ -5,7 +5,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath } from '@seedcord/utils';
-import { pluralize, unlessAborted } from '@seedcord/utils/internal';
+import { pluralize } from '@seedcord/utils/internal';
 import { traverseDirectory } from '@seedcord/utils/node';
 import { resolveFolder } from '@seedcord/utils/node/internal';
 import { Envapter } from 'envapt';
@@ -16,6 +16,7 @@ import { CommandInjector } from '#src/commands/CommandInjector';
 import { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
 import { resolveDeployTarget } from '#src/commands/deployTarget';
 import { isCommandClass } from '#src/commands/isCommandClass';
+import { LastDeploy } from '#src/commands/LastDeploy';
 import { putCommands } from '#src/commands/putCommands';
 import { readCommands } from '#src/commands/readCommands';
 import { scopeHashes, scopesDiscordLacks, splitByHash } from '#src/commands/scopeHashes';
@@ -35,7 +36,6 @@ import type { CommandBuilder, DeployResult } from '#src/commands/types';
 import type { Initializeable } from '#src/plugin/Plugin';
 import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
-import type { DeployedHashes, DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 type CommandArtifact = DeployTarget & { name: string };
@@ -46,19 +46,9 @@ interface RouteWarnings {
     warnUnhandledContextMenuRoutes(leaves: ContextMenuLeaves): void;
 }
 
-type CliChannel = DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>;
-
 interface DeployHooks {
     routes?: RouteWarnings | undefined;
     check?: (commands: CommandBuilder[]) => void;
-}
-
-// seedcord dev answers with the last deploy for this application, or nothing
-function askCliForLastDeploy(cli: CliChannel, applicationId: string): Promise<DeployedHashes | undefined> {
-    const { promise, resolve } = Promise.withResolvers<DeployedHashes | undefined>();
-    cli.on('seedcord:deployed', ({ deployed }) => resolve(deployed));
-    cli.send('seedcord:read-deployed', { applicationId });
-    return promise;
 }
 
 // discord's global command bucket allows 2 PUTs a minute
@@ -85,8 +75,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private readonly hmrHandler?: HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>;
     private readonly pendingEvents = new Map<string, HmrUpdateEvent>();
     private readonly injector = new CommandInjector();
-    private deployed?: DeployedHashes | undefined;
-    private savedDeploy?: Promise<DeployedHashes | undefined>;
+    private readonly lastDeploy = new LastDeploy();
 
     private readonly dir: string;
     private readonly configuredGuilds: readonly string[];
@@ -253,7 +242,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         const hashes = await scopeHashes(scopes);
         // read here because gateway assigns core.rest after this registry is constructed
         const { rest, applicationId } = this.core;
-        const last = await this.lastDeploy(applicationId, signal);
+        const last = await this.lastDeploy.read(applicationId, signal);
         const { changed, unchanged } = splitByHash(scopes, hashes, last?.scopes);
         const putOptions = {
             rest,
@@ -272,20 +261,11 @@ export class CommandRegistry implements Initializeable, HmrAware {
         this.reportSkipped(unchanged, lacking);
         // a redeployed scope replaces what the read found there
         const result: DeployResult = new Map([...read, ...put, ...redeployed]);
-        this.deployed = { applicationId, scopes: hashes };
-        getDevChannel()?.send('seedcord:commands-deployed', this.deployed);
+        this.lastDeploy.save({ applicationId, scopes: hashes });
 
         this.injector.inject(result, this.allCommands());
         this.core.bus[PublishDefault]('commandsDeployed', deployedPayload(result));
         return result;
-    }
-
-    private lastDeploy(applicationId: string, signal: AbortSignal | undefined): Promise<DeployedHashes | undefined> {
-        if (this.deployed) return Promise.resolve(this.deployed);
-        const cli = getDevChannel();
-        if (!cli) return Promise.resolve(undefined);
-        this.savedDeploy ??= askCliForLastDeploy(cli, applicationId);
-        return unlessAborted(this.savedDeploy, signal);
     }
 
     private commandBodies(): CommandScopes {

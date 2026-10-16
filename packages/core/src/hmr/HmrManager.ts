@@ -7,10 +7,9 @@ import { Envapter } from 'envapt';
 import { getDevChannel, setDevChannel } from './devChannel';
 import { wrapHot } from './wrapHot';
 
+import type { CliChannel } from './devChannel';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
-import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
-
-type CliChannel = DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>;
+import type { SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 
 // the only raw `import.meta.hot` read in the framework
 export function connectDevChannel(): CliChannel | undefined {

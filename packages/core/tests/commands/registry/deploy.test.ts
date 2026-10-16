@@ -69,6 +69,17 @@ function cliWith(deployed: DeployedHashes | undefined): [string, unknown][] {
     return sent;
 }
 
+// a dev channel where nothing answers the read
+function silentCli(onRead: () => void): void {
+    setDevChannel({
+        send: (event) => {
+            if (event === 'seedcord:read-deployed') onRead();
+        },
+        on: () => undefined
+    });
+    onTestFinished(() => setDevChannel(undefined));
+}
+
 describe('CommandRegistry.deploy', () => {
     it('checks the deployed routes against the handlers', async () => {
         const put = vi.fn().mockResolvedValue([{ id: '1', name: 'bare', type: ApplicationCommandType.ChatInput }]);
@@ -147,6 +158,32 @@ describe('CommandRegistry.deploy', () => {
             ['seedcord:read-deployed', { applicationId: APP }],
             ['seedcord:commands-deployed', deployed]
         ]);
+    });
+
+    it('deploys every scope when seedcord dev never answers', async () => {
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        onTestFinished(() => {
+            vi.useRealTimers();
+        });
+        silentCli(() => {
+            queueMicrotask(() => {
+                vi.runOnlyPendingTimers();
+            });
+        });
+        const put = vi.fn().mockResolvedValue(BARE);
+
+        await registryWith(put).deploy(new AbortController().signal, {});
+
+        expect(put.mock.calls.map(([route]: unknown[]) => route)).toEqual([Routes.applicationCommands(APP)]);
+    });
+
+    it('rejects when the deploy is aborted while it waits for seedcord dev', async () => {
+        const controller = new AbortController();
+        silentCli(() => controller.abort());
+
+        const deploying = registryWith(vi.fn()).deploy(controller.signal, {});
+
+        await expect(deploying).rejects.toThrow(expect.objectContaining({ name: 'AbortError' }));
     });
 
     it('skips the put on a refresh that changed no command', async () => {
