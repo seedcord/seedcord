@@ -184,8 +184,6 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
 
         this.logger.debug(paint.mute('Closing Postgres pool.'));
         await pool.end().catch((err: unknown) => {
-            const error = Error.isError(err) ? err : new Error(String(err));
-            this.logger.error(`Could not close pg pool: ${error.message}`);
             throw new SeedcordError(SeedcordErrorCode.PluginDisconnectFailed, ['Postgres'], { cause: err });
         });
         this.logger.info(paint.coral.bold('Disconnected from Postgres'));

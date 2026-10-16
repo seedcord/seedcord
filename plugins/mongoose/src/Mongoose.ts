@@ -134,8 +134,6 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             .disconnect()
             .then(() => this.logger.info(paint.coral.bold('Disconnected from MongoDB')))
             .catch((err: unknown) => {
-                const error = Error.isError(err) ? err : new Error(String(err));
-                this.logger.error(`Could not disconnect from MongoDB: ${error.message}`);
                 throw new SeedcordError(SeedcordErrorCode.PluginDisconnectFailed, ['MongoDB'], { cause: err });
             });
     }

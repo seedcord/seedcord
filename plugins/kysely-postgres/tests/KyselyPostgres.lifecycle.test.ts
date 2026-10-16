@@ -1,4 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { KyselyPostgres } from '#src/KyselyPostgres';
@@ -134,7 +135,7 @@ describe('KyselyPostgres lifecycle', () => {
         });
 
         await expect(plugin.init()).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.CoreDirectoryUnreadable })
+            expect.objectContaining({ code: SeedcordErrorCode.CorePathUnreadable })
         );
 
         // the bootstrapper's admin pool is the first close, the plugin's own pool is the second
@@ -151,7 +152,7 @@ describe('KyselyPostgres lifecycle', () => {
         poolEnd.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('still busy'));
 
         await expect(plugin.init()).rejects.toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.CoreDirectoryUnreadable })
+            expect.objectContaining({ code: SeedcordErrorCode.CorePathUnreadable })
         );
     });
 
@@ -229,5 +230,17 @@ describe('KyselyPostgres lifecycle', () => {
         await expect(plugin.dispose()).rejects.toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginDisconnectFailed })
         );
+    });
+
+    it('reports a pool close failure once, through the thrown error', async () => {
+        const plugin = build();
+        await plugin.init();
+        poolEnd.mockRejectedValueOnce(new Error('still busy'));
+        const logged = vi.spyOn(Logger.prototype, 'error');
+
+        await plugin.dispose().catch(() => undefined);
+
+        expect(logged).not.toHaveBeenCalled();
+        logged.mockRestore();
     });
 });
