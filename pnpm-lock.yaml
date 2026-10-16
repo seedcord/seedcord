@@ -1036,12 +1036,12 @@ importers:
       '@seedcord/tsconfig':
         specifier: workspace:^
         version: link:../../tooling/tsconfig
+      cf:
+        specifier: catalog:peer
+        version: 1.0.0-beta.17(@types/node@26.1.2)
       seedcord:
         specifier: workspace:^
         version: link:../../cli/seedcord
-      wrangler:
-        specifier: catalog:peer
-        version: 4.150.0(@types/node@26.1.2)
 
   mocks/gateway:
     dependencies:

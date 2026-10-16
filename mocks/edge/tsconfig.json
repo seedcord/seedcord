@@ -6,6 +6,12 @@
         "outDir": "./dist",
         "customConditions": ["workerd"]
     },
-    "include": ["src/**/*.ts", "eslint.config.ts", "seedcord.config.ts", "worker-configuration.d.ts"],
+    "include": [
+        "src/**/*.ts",
+        "eslint.config.ts",
+        "seedcord.config.ts",
+        "cloudflare.config.ts",
+        ".cloudflare/types/index.d.ts"
+    ],
     "exclude": ["node_modules", "dist"]
 }

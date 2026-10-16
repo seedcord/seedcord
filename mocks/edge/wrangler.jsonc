@@ -1,6 +1,0 @@
-{
-    "$schema": "node_modules/wrangler/config-schema.json",
-    "name": "seedcord-mock-edge",
-    "compatibility_date": "2026-08-04",
-    "kv_namespaces": [{ "binding": "PINGS" }]
-}

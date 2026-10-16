@@ -24,6 +24,7 @@ certs/
 dist/
 *.bun-build
 .wrangler/
+.cloudflare/
 .seedcord/
 
 # Ignore IDE specific files
