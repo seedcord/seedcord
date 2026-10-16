@@ -66,7 +66,7 @@ export function edgeBuildRunner(discord = fakeDiscord()): BuildRunner {
     });
 }
 
-// replaces the fixture's cloudflare.config.ts, keeping its name, date and token
+// writes cloudflare.config.ts with the fixture's name, date and secrets, plus the fields passed in
 export async function writeCloudflareConfig(
     projectDir: string,
     { env, ...worker }: Partial<WorkerConfig>
@@ -75,7 +75,7 @@ export async function writeCloudflareConfig(
         name: 'edge-bot',
         compatibilityDate: '2026-08-04',
         ...worker,
-        env: { DISCORD_BOT_TOKEN: bindings.secret(), ...env }
+        env: { DISCORD_BOT_TOKEN: bindings.secret(), DISCORD_PUBLIC_KEY: bindings.secret(), ...env }
     };
     // the binding helpers return plain objects
     await writeFile(

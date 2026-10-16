@@ -2,6 +2,7 @@ import { appendFile, mkdir, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { bindings, exports } from 'cf/config';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
@@ -10,6 +11,7 @@ import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { quietSteps } from '#core/output/quietSteps';
 import { deployedCommandsFile } from '#core/state/deployedCommands';
 import { StateFolder } from '#core/state/StateFolder';
+import { writeCloudflareConfig } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES } from '#tests/commands/build/smoke';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
@@ -20,7 +22,6 @@ import {
     edgeProject,
     editFile,
     fakeDiscordApi,
-    liveVars,
     messagesOf,
     startedRuntime,
     WAVE_COMMAND
@@ -32,13 +33,15 @@ import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/schema';
 
 describe('EdgeDevRuntime lifecycle', () => {
-    it("gives codegen's node copy the secrets from .dev.vars", async () => {
-        await using project = await edgeProject({ ...liveVars, API_TOKEN: ' from-dev-vars ' });
+    it("gives codegen's node copy the values from .env", async () => {
+        await using project = await edgeProject();
         const { projectDir } = project;
+        await writeFile(join(projectDir, '.env'), 'API_TOKEN=from-dot-env\n');
+        // workerd runs this line too, with no API_TOKEN since cloudflare.config.ts does not declare it
         await editFile(join(projectDir, 'src/bot.ts'), (text) =>
             text.replace(
                 "import type { CoreBase } from '@seedcord/http';",
-                "import type { CoreBase } from '@seedcord/http';\n\nReflect.set(globalThis, 'apiToken', env.API_TOKEN.trim());"
+                "import type { CoreBase } from '@seedcord/http';\n\nReflect.set(globalThis, 'apiToken', env.API_TOKEN);"
             )
         );
         onTestFinished(() => {
@@ -47,7 +50,7 @@ describe('EdgeDevRuntime lifecycle', () => {
 
         await using _started = await startedRuntime(projectDir);
 
-        expect(Reflect.get(globalThis, 'apiToken')).toBe('from-dev-vars');
+        expect(Reflect.get(globalThis, 'apiToken')).toBe('from-dot-env');
     }, 120_000);
 
     it('reports each slow startup step before the endpoint listens', async () => {
@@ -173,12 +176,10 @@ describe('EdgeDevRuntime lifecycle', () => {
             join(projectDir, 'src/bot.ts'),
             "\nimport { DurableObject } from 'cloudflare:workers';\nexport class Counter extends DurableObject {}\n"
         );
-        await editFile(join(projectDir, 'wrangler.jsonc'), (text) =>
-            text.replace(
-                '"compatibility_date"',
-                '"durable_objects": { "bindings": [{ "name": "COUNTER", "class_name": "Counter" }] },\n    "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Counter"] }],\n    "compatibility_date"'
-            )
-        );
+        await writeCloudflareConfig(projectDir, {
+            env: { COUNTER: bindings.durableObject({ worker: 'edge-bot', exportName: 'Counter' }) },
+            exports: { Counter: exports.durableObject({ storage: 'sqlite' }) }
+        });
         await using started = await startedRuntime(projectDir);
         const { runtime, instance } = started;
         await runtime.startBot(instance);

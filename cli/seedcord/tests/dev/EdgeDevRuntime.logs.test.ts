@@ -59,7 +59,7 @@ describe('EdgeDevRuntime logs', () => {
         expect(hmrLines().filter((line) => line.includes('logs/'))).toEqual([]);
     }, 120_000);
 
-    it.each(['dist', '.seedcord', '.wrangler'])(
+    it.each(['dist', '.seedcord', '.cloudflare'])(
         'leaves %s out of hot reload',
         async (folder) => {
             await asDevelopment();

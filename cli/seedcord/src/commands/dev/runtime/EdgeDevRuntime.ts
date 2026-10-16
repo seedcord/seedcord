@@ -11,13 +11,7 @@ import { createServer, createServerModuleRunner } from 'vite';
 
 import { WORKER_ENTRY_ID, workerEntry } from '#commands/build/builder/workerEntry';
 import { listenHostFor } from '#commands/dev/tunnel/listenHost';
-import {
-    importCloudflare,
-    importWrangler,
-    loadCloudflare,
-    readWranglerDev,
-    WORKER_ENVIRONMENT
-} from '#core/modules/cloudflarePlugin';
+import { importCloudflare, loadCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { edgeStandIns } from '#core/modules/edgeStandIns';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
@@ -95,14 +89,12 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const files = new ProjectFiles(config.root, config.build.outDir, dirname(config.configFile));
         installCliLogSinks(resources);
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
-        const environment = Envapter.get('CLOUDFLARE_ENV');
-        const [folders, cloudflare, { vars }] = await Promise.all([
+        const [folders, cloudflare] = await Promise.all([
             files.foldersIncludingEmpty(),
-            loadCloudflare(viteRoot, importCloudflare),
-            readWranglerDev(this.target.cloudflareConfig, environment, importWrangler)
+            loadCloudflare(viteRoot, importCloudflare)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
-        const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, environment);
+        const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, Envapter.get('CLOUDFLARE_ENV'));
         const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, workerConfig);
         const server = await createServer(
             mergeViteConfig(edgeViteConfig(config, viteRoot, process.cwd()), {
@@ -121,13 +113,12 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                         },
                         mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
                     }),
-                    inNodeOnly(edgeStandIns(vars)),
+                    inNodeOnly(edgeStandIns()),
                     // cloudflare() loads the worker entry during createServer. the entry's export list comes from this copy
                     nodeCopy(modulesReady.resolve),
                     hmr.plugin,
                     cloudflare({
-                        configPath: this.target.cloudflareConfig,
-                        config: { main: WORKER_ENTRY_ID },
+                        config: { entrypoint: WORKER_ENTRY_ID },
                         viteEnvironment: { name: WORKER_ENVIRONMENT },
                         inspectorPort: false
                     })

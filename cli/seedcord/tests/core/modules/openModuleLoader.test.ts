@@ -215,6 +215,20 @@ describe('openModuleLoader for an edge bot', () => {
         expect(module.probe).toBe('from the shell');
     });
 
+    it('loads cloudflare:workers with the values in .env', async () => {
+        const root = await edgeProject();
+        await writeFile(join(root, '.env'), 'SEEDCORD_PROBE=from .env\n', 'utf8');
+        const entry = await writeModule(
+            root,
+            `import { env } from 'cloudflare:workers';\nexport const probe = env.SEEDCORD_PROBE;\n`
+        );
+
+        await using modules = await openModuleLoader(root, edgeTarget(root));
+        const module = await modules.importModule<{ probe: string }>(entry);
+
+        expect(module.probe).toBe('from .env');
+    });
+
     it('loads classes that extend the cloudflare:workers base classes', async () => {
         const root = await edgeProject();
         const entry = await writeModule(

@@ -240,7 +240,7 @@ export enum SeedcordErrorCode {
     CliBundleFailed = 3114,
     /** `build.outDir` is `root` or a folder that contains it. */
     CliConfigOutDirDeletesRoot = 3115,
-    /** The project is missing a dev dependency the CLI runs, like `typescript` or `wrangler`. */
+    /** The project is missing a dev dependency the CLI runs, like `typescript` or `@cloudflare/vite-plugin`. */
     CliDependencyMissing = 3116,
     /** `build.outDir` already has other files in it. */
     CliBuildOutDirNotEmpty = 3117,
@@ -254,7 +254,7 @@ export enum SeedcordErrorCode {
     CliEdgeWithoutWorkerdCondition = 3121,
     /** A bot with no `cloudflare.config.ts` sets the `workerd` condition in its tsconfig. */
     CliWorkerdConditionWithoutCloudflareConfig = 3122,
-    /** TypeScript or wrangler could not read the project's tsconfig or wrangler config. */
+    /** TypeScript could not read the project's tsconfig. */
     CliConfigFileUnreadable = 3123,
     /** The CLI could not start the TypeScript compiler. */
     CliTypescriptNotStarted = 3124,
