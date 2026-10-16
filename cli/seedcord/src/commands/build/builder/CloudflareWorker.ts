@@ -5,7 +5,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 
-import { importCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
+import { importCloudflare, isPackageMissing, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 
 import { bundleFailed } from './output';
 import { workerEntryConfig } from './workerEntry';
@@ -22,18 +22,6 @@ export interface BuiltWorker {
 }
 
 const CLOUDFLARE_PLUGIN = '@cloudflare/vite-plugin';
-
-// the importer's path at the end of node's message can hold the name too
-function isPackageMissing(error: unknown, name: string): boolean {
-    const notFound = Error.isError(error) && 'code' in error && error.code === 'ERR_MODULE_NOT_FOUND';
-    return notFound && error.message.startsWith(`Cannot find package '${name}'`);
-}
-
-// @cloudflare/config loads cloudflare.config.ts through node's module.registerHooks and throws on bun.
-// delete this once bun ships registerHooks and cloudflare stops throwing on it
-export function assertNotBun(): void {
-    if ('Bun' in globalThis) throw new SeedcordError(SeedcordErrorCode.CliEdgeOnBun);
-}
 
 async function loadPlugin(viteRoot: string, importPlugin: ImportCloudflare): Promise<CloudflarePlugin> {
     try {
@@ -53,38 +41,25 @@ async function loadPlugin(viteRoot: string, importPlugin: ImportCloudflare): Pro
 }
 
 export class CloudflareWorker {
-    private readonly viteRoot: string;
-
     private constructor(
         private readonly cloudflare: CloudflarePlugin,
-        private readonly cloudflareConfig: string
-    ) {
-        this.viteRoot = dirname(cloudflareConfig);
-    }
+        private readonly viteRoot: string
+    ) {}
 
     public static async load(
         cloudflareConfig: string,
         importPlugin: ImportCloudflare = importCloudflare
     ): Promise<CloudflareWorker> {
-        assertNotBun();
-        return new CloudflareWorker(await loadPlugin(dirname(cloudflareConfig), importPlugin), cloudflareConfig);
+        const viteRoot = dirname(cloudflareConfig);
+        return new CloudflareWorker(await loadPlugin(viteRoot, importPlugin), viteRoot);
     }
 
     public plugins(options: Pick<PluginOptions, 'persistState'> = {}): Plugin[] {
         return this.cloudflare({
-            config: workerEntryConfig(this.cloudflareConfig),
+            config: workerEntryConfig,
             viteEnvironment: { name: WORKER_ENVIRONMENT },
             inspectorPort: false,
             ...options
-        });
-    }
-
-    // node resolves the cf/config import in cloudflare.config.ts from the bot's own node_modules
-    public explain(error: unknown): unknown {
-        if (!isPackageMissing(error, 'cf')) return error;
-        const why = `${paint.path('cloudflare.config.ts')} imports ${paint.bold('cf/config')}.`;
-        return new SeedcordError(SeedcordErrorCode.CliDependencyMissing, [['cf'], this.viteRoot, why], {
-            cause: error
         });
     }
 

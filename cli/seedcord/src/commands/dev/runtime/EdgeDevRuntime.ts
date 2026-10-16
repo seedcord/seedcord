@@ -15,7 +15,6 @@ import { reportWorkerExports, WORKER_ENVIRONMENT } from '#core/modules/cloudflar
 import { edgeStandIns } from '#core/modules/edgeStandIns';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
-import { WorkerEnv } from '#core/modules/workerEnv';
 import { functionExportsOf } from '#core/modules/workerExports';
 import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
 
@@ -47,15 +46,12 @@ function inNodeOnly(plugin: Plugin): Plugin {
 }
 
 // codegen reads a node copy of the bot out of the ssr environment
-function nodeCopy(
-    bindEnv: (modules: RunnerModuleLoader) => Promise<void>,
-    onReady: (modules: RunnerModuleLoader) => void
-): Plugin {
+function nodeCopy(onReady: (modules: RunnerModuleLoader) => void): Plugin {
     return {
         name: 'seedcord:node-copy',
         async configureServer(server) {
             const modules = new RunnerModuleLoader(createServerModuleRunner(server.environments.ssr, { hmr: false }));
-            await bindEnv(modules);
+            await modules.bindEdgeEnv();
             onReady(modules);
         }
     };
@@ -100,8 +96,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
         const { mode } = config;
-        const workerEnv = new WorkerEnv(viteRoot, mode);
-        const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, mode);
+        const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, this.target.env.files);
         const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, workerConfig);
         const server = await createServer(
             mergeViteConfig(edgeViteConfig(config, viteRoot, process.cwd()), {
@@ -122,19 +117,14 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                         },
                         mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
                     }),
-                    inNodeOnly(edgeStandIns(workerEnv)),
+                    inNodeOnly(edgeStandIns(this.target.env)),
                     // cloudflare() loads the worker entry during createServer. the entry's export list comes from this copy
-                    nodeCopy(
-                        (modules) => modules.bindEdgeEnv(workerEnv, this.target.cloudflareConfig),
-                        modulesReady.resolve
-                    ),
+                    nodeCopy(modulesReady.resolve),
                     hmr.plugin,
                     cloudflare.plugins()
                 ]
             })
-        ).catch((error: unknown) => {
-            throw cloudflare.explain(error);
-        });
+        );
         resources.defer(() => server.close());
         await loadWorkerEntry(server.middlewares, config.instance);
         const modules = await modulesReady.promise;

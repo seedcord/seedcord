@@ -15,7 +15,7 @@ import { viteKey } from '#core/project/ProjectFiles';
 
 import { assertNodeCompat } from './assertNodeCompat';
 import { bootWorker } from './bootWorker';
-import { assertNotBun, CloudflareWorker } from './CloudflareWorker';
+import { CloudflareWorker } from './CloudflareWorker';
 import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { readDiscord } from './readDiscord';
@@ -89,7 +89,6 @@ export class EdgeBuild extends TargetBuild {
     }
 
     public check(): void {
-        assertNotBun();
         const { config, configDir } = this.project;
         if (isInside(config.root, configDir)) {
             throw new SeedcordError(SeedcordErrorCode.CliEdgeRootHoldsConfig, [config.configFile, config.root]);
@@ -111,7 +110,6 @@ export class EdgeBuild extends TargetBuild {
         const { config, files, modules } = this.project;
         const { viteRoot, target } = this;
         const [folders, cloudflare] = await Promise.all([files.foldersIncludingEmpty(), this.worker()]);
-        const failBundle = (error: unknown): never => bundleFailed(cloudflare.explain(error));
 
         let chunks: Rolldown.OutputChunk[] | undefined;
         const builder = await createBuilder({
@@ -137,10 +135,10 @@ export class EdgeBuild extends TargetBuild {
             ],
             resolve: { tsconfigPaths: true },
             environments: workerEnvironment()
-        }).catch(failBundle);
-        await builder.buildApp().catch(failBundle);
+        }).catch(bundleFailed);
+        await builder.buildApp().catch(bundleFailed);
         chunks ??= bundleFailed(`the ${WORKER_ENVIRONMENT} environment wrote no bundle`);
-        const built = await cloudflare.built().catch(failBundle);
+        const built = await cloudflare.built().catch(bundleFailed);
         assertNodeCompat(built, target.cloudflareConfig);
 
         return bundleStats(chunks, files, join(built.bundleDir, ENTRY_FILE_NAME));

@@ -75,6 +75,7 @@
     },
     "dependencies": {
         "@cloudflare/build-output-utils": "0.9.2",
+        "@cloudflare/config": "0.26.0",
         "@commander-js/extra-typings": "^15.0.0",
         "@discordjs/rest": "catalog:deps",
         "@leeoniya/ufuzzy": "catalog:deps",

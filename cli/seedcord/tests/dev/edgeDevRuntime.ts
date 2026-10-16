@@ -10,6 +10,7 @@ import { onTestFinished } from 'vitest';
 
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { toSeedcordInstance } from '#core/modules/importInstance';
+import { WorkerEnv } from '#core/modules/workerEnv';
 import { StateFolder } from '#core/state/StateFolder';
 import { viteMode } from '#core/viteMode';
 import { copyEdgeBot } from '#tests/commands/build/edgeBot';
@@ -26,21 +27,27 @@ import type { AddressInfo } from 'node:net';
 // a port probed up front can go to another worker before the runtime binds it
 const ANY_PORT = 0;
 
-function edgeTarget(projectDir: string, port: number): ResolvedEdgeTarget {
-    return { kind: 'edge', cloudflareConfig: join(projectDir, 'cloudflare.config.ts'), port };
+async function edgeTarget(projectDir: string, port: number): Promise<ResolvedEdgeTarget> {
+    const cloudflareConfig = join(projectDir, 'cloudflare.config.ts');
+    const env = await WorkerEnv.load(cloudflareConfig, viteMode('development'));
+    return { kind: 'edge', cloudflareConfig, env, port };
 }
 
-export function edgeConfig(projectDir: string, port = ANY_PORT): ResolvedSeedcordConfig {
+function configWith(projectDir: string, target: ResolvedEdgeTarget): ResolvedSeedcordConfig {
     // justified: the runtime reads only these fields
     return {
         configFile: join(projectDir, 'seedcord.config.ts'),
         root: join(projectDir, 'src'),
         instance: join(projectDir, 'src/bot.ts'),
-        target: edgeTarget(projectDir, port),
+        target,
         build: {},
         mode: viteMode('development'),
         tunnel: { mode: 'quick' }
     } as ResolvedSeedcordConfig;
+}
+
+export async function edgeConfig(projectDir: string, port = ANY_PORT): Promise<ResolvedSeedcordConfig> {
+    return configWith(projectDir, await edgeTarget(projectDir, port));
 }
 
 export const liveVars = { DISCORD_BOT_TOKEN: FAKE_TOKEN, DISCORD_PUBLIC_KEY: 'ab'.repeat(ED25519_KEY_BYTES) };
@@ -186,8 +193,9 @@ export async function startedRuntime(
     onEvent?: DevEventHandler,
     devPort = ANY_PORT
 ): Promise<StartedRuntime> {
-    const config = edgeConfig(projectDir, devPort);
-    const runtime = new EdgeDevRuntime(edgeTarget(projectDir, devPort));
+    const target = await edgeTarget(projectDir, devPort);
+    const config = configWith(projectDir, target);
+    const runtime = new EdgeDevRuntime(target);
     let listening: number | undefined;
     const recordPort: DevEventHandler = (event) => {
         if (event.type === 'server-listening') listening = event.port;

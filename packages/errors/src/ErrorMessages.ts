@@ -295,18 +295,16 @@ const messages = {
         `${paint.bold(name)} in ${paint.path(file)} carries ${paint.bold('@RegisterCommand')}, but its component is not a slash command or a context menu. Extend ${paint.bold("BuilderComponent<'command'>")} or ${paint.bold("BuilderComponent<'context_menu'>")}.`,
     [SeedcordErrorCode.CliCommandsNotDeleted]: () =>
         'Some commands could not be deleted. The warnings above give the reason for each one.',
-    [SeedcordErrorCode.CliWorkerEnvNotRead]: () =>
-        `The node copy of your edge bot read ${paint.bold('env')} before seedcord read ${paint.path('cloudflare.config.ts')}. This is a bug in seedcord. Report it in seedcord's GitHub issues.`,
     [SeedcordErrorCode.CliEdgeOnBun]: () =>
-        `${paint.bold('seedcord build')} and ${paint.bold('seedcord dev')} load ${paint.path('cloudflare.config.ts')} through Cloudflare's config loader, which throws on Bun. Run the CLI on Node by leaving out ${paint.bold('--bun')}, as in ${paint.bold('bun run dev')}.`,
+        `seedcord loads ${paint.path('cloudflare.config.ts')} through Cloudflare's config loader, which throws on Bun. Run the CLI on Node by leaving out ${paint.bold('--bun')}, as in ${paint.bold('bun run dev')}.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>
         `${paint.path(cloudflareConfig)} makes this an edge bot, but ${paint.path(tsconfig)} leaves out ${paint.bold('"customConditions": ["workerd"]')}. Add it to compilerOptions for an edge bot, or set ${paint.bold('build.tsconfig')} to the tsconfig that holds it. For a node bot, move ${paint.path(cloudflareConfig)} out of this folder.`,
     [SeedcordErrorCode.CliWorkerdConditionWithoutCloudflareConfig]: (tsconfig: string, configDir: string) =>
         `${paint.path(tsconfig)} sets the ${paint.bold('workerd')} condition, which only an edge bot uses, but ${paint.path(configDir)} has no ${paint.path('cloudflare.config.ts')}. Add one for an edge bot. For a node bot, remove ${paint.bold('"workerd"')} from customConditions.`,
-    [SeedcordErrorCode.CliConfigFileUnreadable]: (file: string, output: string) =>
-        `TypeScript could not read ${paint.path(file)}. Fix the problem it reports:\n${output}`,
+    [SeedcordErrorCode.CliConfigFileUnreadable]: (tool: string, file: string, output: string) =>
+        `${tool} could not read ${paint.path(file)}. Fix the problem it reports:\n${output}`,
     [SeedcordErrorCode.CliConfigFieldUnused]: (field: string, file: string, why: string) =>
         `${paint.path(file)} sets ${paint.bold(field)}. ${why} Remove ${paint.bold(field)} from ${paint.path(file)}.`,
     [SeedcordErrorCode.CliEdgeCompatDateTooOld]: (cloudflareConfig: string, date: string, firstDate: string) =>

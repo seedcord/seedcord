@@ -169,7 +169,7 @@ export class ProjectLoader {
         const mode = viteMode(this.defaultMode);
         const configPath = locateConfig(projectDir);
         const configDir = dirname(configPath);
-        const target = detectTarget(configDir);
+        const target = await detectTarget(configDir, mode);
         await using onFailure = new AsyncDisposableStack();
         const modules = onFailure.use(await this.openModules(configDir, target, mode));
         const project = new Project(await this.readConfig(modules, configPath, target, mode), modules);

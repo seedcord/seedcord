@@ -13,19 +13,11 @@ export class WorkerConfigFiles {
     private readonly dir: string;
     private readonly localVars: Set<string>;
 
-    constructor(cloudflareConfig: string, mode: string) {
+    constructor(cloudflareConfig: string, envFiles: readonly string[]) {
         // chokidar reports a mac temp dir by its resolved path
         this.config = realpathSync(cloudflareConfig);
         this.dir = dirname(this.config);
-        // the cloudflare plugin reads all six
-        this.localVars = new Set([
-            '.dev.vars',
-            `.dev.vars.${mode}`,
-            '.env',
-            '.env.local',
-            `.env.${mode}`,
-            `.env.${mode}.local`
-        ]);
+        this.localVars = new Set(envFiles);
     }
 
     public readonly includes = (path: string): boolean =>

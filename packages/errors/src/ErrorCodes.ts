@@ -254,7 +254,7 @@ export enum SeedcordErrorCode {
     CliEdgeWithoutWorkerdCondition = 3121,
     /** A bot with no `cloudflare.config.ts` sets the `workerd` condition in its tsconfig. */
     CliWorkerdConditionWithoutCloudflareConfig = 3122,
-    /** TypeScript could not read the project's tsconfig. */
+    /** TypeScript could not read the project's tsconfig, or Cloudflare's config loader could not read `cloudflare.config.ts`. */
     CliConfigFileUnreadable = 3123,
     /** The CLI could not start the TypeScript compiler. */
     CliTypescriptNotStarted = 3124,
@@ -280,10 +280,8 @@ export enum SeedcordErrorCode {
     CliCommandNotACommand = 3134,
     /** `seedcord commands clean` or `purge` could not delete some of the commands it picked. */
     CliCommandsNotDeleted = 3135,
-    /** `seedcord build` or `seedcord dev` ran on Bun for an edge bot. */
+    /** The CLI ran on Bun for an edge bot. */
     CliEdgeOnBun = 3136,
-    /** Something read an edge bot's worker env before seedcord read `cloudflare.config.ts`, which is a bug in seedcord. */
-    CliWorkerEnvNotRead = 3137,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

@@ -1,6 +1,4 @@
 import { BAKED_IDS_KEY } from '@seedcord/core/internal';
-import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { assertNever } from '@seedcord/utils';
 
 import { builtFilesSource } from './builtFiles';
@@ -14,16 +12,8 @@ const WORKER_ENTRY_ID = 'virtual:seedcord/worker';
 
 type EntryCustomizer = NonNullable<NonNullable<Parameters<CloudflarePlugin>[0]>['config']>;
 
-// the plugin passes cloudflare.config.ts parsed. the fields this returns replace the file's
-export function workerEntryConfig(cloudflareConfig: string): EntryCustomizer {
-    return ({ entrypoint }) => {
-        if (entrypoint !== undefined) {
-            const why = `seedcord sets it to the default export of ${paint.bold('instance')} in your seedcord config.`;
-            throw new SeedcordTypeError(SeedcordErrorCode.CliConfigFieldUnused, ['entrypoint', cloudflareConfig, why]);
-        }
-        return { entrypoint: WORKER_ENTRY_ID };
-    };
-}
+// the fields this returns replace the ones in cloudflare.config.ts
+export const workerEntryConfig: EntryCustomizer = () => ({ entrypoint: WORKER_ENTRY_ID });
 
 const BIND_ENV_ID = 'virtual:seedcord/bind-env';
 const BUILT_FILES_ID = 'virtual:seedcord/built-files';

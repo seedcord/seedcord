@@ -5,6 +5,12 @@ export type ImportCloudflare = () => Promise<typeof CloudflareVitePlugin>;
 
 export const WORKER_ENVIRONMENT = 'worker';
 
+// the importer's path at the end of node's message can hold the name too
+export function isPackageMissing(error: unknown, name: string): boolean {
+    const notFound = Error.isError(error) && 'code' in error && error.code === 'ERR_MODULE_NOT_FOUND';
+    return notFound && error.message.startsWith(`Cannot find package '${name}'`);
+}
+
 let pluginLoads = 0;
 let plugin: Promise<typeof CloudflareVitePlugin> | undefined;
 let pluginHoldsExports = false;

@@ -1,5 +1,4 @@
 import { realpathSync } from 'node:fs';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -7,15 +6,15 @@ import { LoggerChannelRegistry } from '@seedcord/logger';
 import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { WorkerConfigFiles } from '#commands/dev/runtime/workerConfigFiles';
+import { WorkerEnv } from '#core/modules/workerEnv';
+import { edgeFolder } from '#tests/edgeFolder';
 
 import type { LogRecord } from '@seedcord/types';
 
-async function cloudflareConfigIn(): Promise<string> {
-    const dir = await mkdtemp(join(tmpdir(), 'seedcord-config-'));
-    onTestFinished(() => rm(dir, { recursive: true, force: true }));
-    const config = join(dir, 'cloudflare.config.ts');
-    await writeFile(config, 'export default {};\n');
-    return config;
+async function configFiles(mode = 'development'): Promise<{ files: WorkerConfigFiles; config: string }> {
+    const { cloudflareConfig } = await edgeFolder();
+    const { files } = await WorkerEnv.load(cloudflareConfig, mode);
+    return { files: new WorkerConfigFiles(cloudflareConfig, files), config: cloudflareConfig };
 }
 
 describe('WorkerConfigFiles', () => {
@@ -37,14 +36,13 @@ describe('WorkerConfigFiles', () => {
         ['.dev.vars.staging', 'staging', true],
         ['.env.development', 'staging', false]
     ] as const)('includes %s in mode %s: %s', async (name, mode, expected) => {
-        const config = await cloudflareConfigIn();
-        const files = new WorkerConfigFiles(config, mode);
+        const { files, config } = await configFiles(mode);
 
         expect(files.includes(join(dirname(realpathSync(config)), name))).toBe(expected);
     });
 
     it('leaves a .env in another folder out', async () => {
-        const files = new WorkerConfigFiles(await cloudflareConfigIn(), 'development');
+        const { files } = await configFiles();
 
         expect(files.includes(join(tmpdir(), 'elsewhere', '.env'))).toBe(false);
     });
@@ -53,7 +51,8 @@ describe('WorkerConfigFiles', () => {
         const records: LogRecord[] = [];
         const handle = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => records.push(r) });
         onTestFinished(() => handle.dispose());
-        const watcher = new WorkerConfigFiles(await cloudflareConfigIn(), 'development').watch(() => undefined);
+        const { files } = await configFiles();
+        const watcher = files.watch(() => undefined);
         onTestFinished(() => watcher.close());
 
         watcher.emit('error', new Error('EMFILE: too many open files'));

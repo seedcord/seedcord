@@ -36,7 +36,7 @@ import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/sc
 
 // the API_TOKEN that codegen's node copy of bot.ts reads from cloudflare:workers
 async function nodeCopyApiToken(projectDir: string): Promise<unknown> {
-    // workerd runs this line too, with no API_TOKEN since cloudflare.config.ts does not declare it
+    await writeCloudflareConfig(projectDir, { env: { API_TOKEN: bindings.secret() } });
     await editFile(join(projectDir, 'src/bot.ts'), (text) =>
         text.replace(
             "import type { CoreBase } from '@seedcord/http';",
@@ -68,18 +68,6 @@ describe('EdgeDevRuntime lifecycle', () => {
         await writeFile(join(project.projectDir, '.dev.vars.staging'), `${staging.join('\n')}\n`);
 
         await expect(nodeCopyApiToken(project.projectDir)).resolves.toBe('from-staging');
-    }, 120_000);
-
-    it('throws CliEdgeOnBun on bun', async () => {
-        vi.stubGlobal('Bun', {});
-        onTestFinished(() => {
-            vi.unstubAllGlobals();
-        });
-        await using project = await edgeProject();
-
-        await expect(startedRuntime(project.projectDir)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliEdgeOnBun
-        });
     }, 120_000);
 
     it('reports each slow startup step before the endpoint listens', async () => {
@@ -114,7 +102,7 @@ describe('EdgeDevRuntime lifecycle', () => {
         const logs = captureLogs();
         // justified: the runner reads only these fields on top of the runtime's
         const config = {
-            ...edgeConfig(projectDir),
+            ...(await edgeConfig(projectDir)),
             tunnel: { mode: 'off' },
             typecheck: { enabled: false },
             idleAnimation: false
