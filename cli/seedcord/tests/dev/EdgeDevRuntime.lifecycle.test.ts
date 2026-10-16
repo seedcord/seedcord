@@ -150,7 +150,7 @@ describe('EdgeDevRuntime lifecycle', () => {
 
     it('starts a fresh worker for the next session after a stop', async () => {
         await using project = await edgeProject();
-        const { projectDir, port } = project;
+        const { projectDir } = project;
         await using first = await startedRuntime(projectDir);
         await first.runtime.startBot(first.instance);
         await first.runtime.stop();
@@ -158,13 +158,13 @@ describe('EdgeDevRuntime lifecycle', () => {
         await using second = await startedRuntime(projectDir);
         await second.runtime.startBot(second.instance);
 
-        const unsigned = await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
+        const unsigned = await fetch(`http://localhost:${second.port()}/`, { method: 'POST', body: '{}' });
         expect(unsigned.status).toBe(401);
     }, 120_000);
 
     it('exports the durable object classes bot.ts exports', async () => {
         await using project = await edgeProject();
-        const { projectDir, port } = project;
+        const { projectDir } = project;
         await appendFile(
             join(projectDir, 'src/bot.ts'),
             "\nimport { DurableObject } from 'cloudflare:workers';\nexport class Counter extends DurableObject {}\n"
@@ -179,7 +179,7 @@ describe('EdgeDevRuntime lifecycle', () => {
         const { runtime, instance } = started;
         await runtime.startBot(instance);
 
-        const unsigned = await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
+        const unsigned = await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body: '{}' });
         expect(unsigned.status).toBe(401);
     }, 120_000);
 });

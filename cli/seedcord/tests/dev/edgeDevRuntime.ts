@@ -1,7 +1,6 @@
 import { once } from 'node:events';
 import { readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer as createHttpServer } from 'node:http';
-import { createServer as createNetServer } from 'node:net';
 import { join } from 'node:path';
 
 import { LoggerChannelRegistry } from '@seedcord/logger';
@@ -104,14 +103,6 @@ export async function editFile(path: string, edit: (text: string) => string): Pr
     await writeFile(path, edit(await readFile(path, 'utf8')));
 }
 
-async function freePort(): Promise<number> {
-    await using probe = createNetServer().listen(0);
-    await once(probe, 'listening');
-    // justified: address() is AddressInfo once a TCP server is listening
-    const { port } = probe.address() as AddressInfo;
-    return port;
-}
-
 async function setDevPort(projectDir: string, port: number): Promise<void> {
     await editFile(join(projectDir, 'wrangler.jsonc'), (text) =>
         text.replace('"compatibility_date"', `"dev": { "port": ${String(port)} },\n    "compatibility_date"`)
@@ -126,19 +117,19 @@ export async function writeDevVars(projectDir: string, vars: Record<string, stri
 
 interface EdgeProject extends AsyncDisposable {
     readonly projectDir: string;
-    readonly port: number;
 }
 
-// two edge dev runs on 8787 at once fail with EADDRINUSE
-export async function edgeProject(vars: Record<string, string> = liveVars): Promise<EdgeProject> {
+// a port probed up front can go to another worker before the runtime binds it
+const ANY_PORT = 0;
+
+export async function edgeProject(vars: Record<string, string> = liveVars, port = ANY_PORT): Promise<EdgeProject> {
     await using cleanup = new AsyncDisposableStack();
     const { projectDir, remove } = await copyEdgeBot();
     cleanup.defer(remove);
     await writeDevVars(projectDir, vars);
-    const port = await freePort();
     await setDevPort(projectDir, port);
     const owned = cleanup.move();
-    return { projectDir, port, [Symbol.asyncDispose]: () => owned.disposeAsync() };
+    return { projectDir, [Symbol.asyncDispose]: () => owned.disposeAsync() };
 }
 
 // the worker's records reach the CLI's logger the way a node bot's records do
@@ -185,16 +176,27 @@ export const messagesOf = (records: LogRecord[]): string[] => records.map((recor
 interface StartedRuntime extends AsyncDisposable {
     readonly runtime: EdgeDevRuntime;
     readonly instance: SeedcordInstance;
+    // the endpoint's port, once startBot has finished
+    port(): number;
 }
 
 export async function startedRuntime(projectDir: string, onEvent?: DevEventHandler): Promise<StartedRuntime> {
     const config = edgeConfig(projectDir);
     const runtime = new EdgeDevRuntime({ kind: 'edge', wranglerConfig: join(projectDir, 'wrangler.jsonc') });
+    let listening: number | undefined;
+    const recordPort: DevEventHandler = (event) => {
+        if (event.type === 'server-listening') listening = event.port;
+        onEvent?.(event);
+    };
     await using cleanup = new AsyncDisposableStack();
     cleanup.defer(() => runtime.stop());
-    await runtime.start(onEvent ? { config, onEvent } : { config });
+    await runtime.start({ config, onEvent: recordPort });
     const { module } = await runtime.loadEntry();
     const instance = toSeedcordInstance(await resolveDefaultExport(module), config.instance);
+    const port = (): number => {
+        if (listening === undefined) throw new Error('The endpoint is not listening yet. Await startBot first.');
+        return listening;
+    };
     const owned = cleanup.move();
-    return { runtime, instance, [Symbol.asyncDispose]: () => owned.disposeAsync() };
+    return { runtime, instance, port, [Symbol.asyncDispose]: () => owned.disposeAsync() };
 }

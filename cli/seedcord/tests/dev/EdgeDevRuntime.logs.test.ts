@@ -23,13 +23,13 @@ describe('EdgeDevRuntime logs', () => {
         // a development env logs at debug, in the worker and in the CLI
         await asDevelopment();
         await using project = await edgeProject({ ...liveVars, ENVIRONMENT: 'development' });
-        const { projectDir, port } = project;
+        const { projectDir } = project;
         const logs = captureLogs();
         await using started = await startedRuntime(projectDir);
         const { runtime, instance } = started;
         await runtime.startBot(instance);
 
-        await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
+        await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body: '{}' });
 
         await vi.waitFor(() => {
             expect(messagesOf(logs).map((message) => stripVTControlCharacters(message))).toContain('POST unsigned 401');

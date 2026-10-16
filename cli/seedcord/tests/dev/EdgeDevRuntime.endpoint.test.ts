@@ -14,6 +14,7 @@ import {
     captureLogs,
     edgeProject,
     editFile,
+    liveVars,
     messagesOf,
     startedRuntime,
     WAVE_INTERACTION,
@@ -23,6 +24,7 @@ import {
 
 import type { DevEvent } from '#commands/dev/runtime/events';
 import type { IncomingMessage } from 'node:http';
+import type { AddressInfo } from 'node:net';
 
 describe('EdgeDevRuntime endpoint', () => {
     describe('on one started bot', () => {
@@ -33,21 +35,19 @@ describe('EdgeDevRuntime endpoint', () => {
         beforeAll(async () => {
             await using cleanup = new AsyncDisposableStack();
             const project = cleanup.use(await edgeProject());
-            port = project.port;
-            const { runtime, instance } = cleanup.use(
-                await startedRuntime(project.projectDir, (event) => events.push(event))
-            );
+            const started = cleanup.use(await startedRuntime(project.projectDir, (event) => events.push(event)));
             eventsBeforeBot.push(...events);
-            await runtime.startBot(instance);
+            await started.runtime.startBot(started.instance);
+            port = started.port();
             const owned = cleanup.move();
             return () => owned.disposeAsync();
         }, 120_000);
 
-        it("reports the wrangler config's dev.port once the worker has started", async () => {
+        it('reports the port the system picked for dev.port 0 once the worker has started', async () => {
             const unsigned = await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
 
+            expect(port).toBeGreaterThan(0);
             expect(eventsBeforeBot).not.toContainEqual({ type: 'server-listening', port });
-            expect(events).toContainEqual({ type: 'server-listening', port });
             // the bot answers an unsigned interaction with 401
             expect(unsigned.status).toBe(401);
         });
@@ -73,35 +73,19 @@ describe('EdgeDevRuntime endpoint', () => {
         });
     });
 
-    it('reports the port the system picked for dev.port 0', async () => {
-        await using project = await edgeProject();
-        const { projectDir, port } = project;
-        await editFile(join(projectDir, 'wrangler.jsonc'), (text) =>
-            text.replace(`"port": ${String(port)}`, '"port": 0')
-        );
-        const events: DevEvent[] = [];
-        await using started = await startedRuntime(projectDir, (event) => events.push(event));
-        const { runtime, instance } = started;
-        await runtime.startBot(instance);
-
-        const listening = events.find((event) => event.type === 'server-listening');
-        expect(listening?.port).toBeGreaterThan(0);
-        const unsigned = await fetch(`http://localhost:${String(listening?.port)}/`, { method: 'POST', body: '{}' });
-        expect(unsigned.status).toBe(401);
-    }, 120_000);
-
     it('throws PortInUse when something already listens on dev.port', async () => {
-        await using project = await edgeProject();
-        const { projectDir, port } = project;
-        await using holder = createNetServer().listen(port, '127.0.0.1');
+        await using holder = createNetServer().listen(0, '127.0.0.1');
         await once(holder, 'listening');
+        // justified: address() is AddressInfo once a TCP server is listening
+        const { port } = holder.address() as AddressInfo;
+        await using project = await edgeProject(liveVars, port);
 
-        await expect(startedRuntime(projectDir)).rejects.toHaveProperty('code', SeedcordErrorCode.PortInUse);
+        await expect(startedRuntime(project.projectDir)).rejects.toHaveProperty('code', SeedcordErrorCode.PortInUse);
     }, 120_000);
 
     it('runs the saved version of a handler in the worker', async () => {
         await using project = await edgeProject();
-        const { projectDir, port } = project;
+        const { projectDir } = project;
         const { publicKey, sign } = await writeSigningEnv(projectDir);
         await writeDevVars(projectDir, { DISCORD_BOT_TOKEN: FAKE_TOKEN, DISCORD_PUBLIC_KEY: publicKey });
         const handler = join(projectDir, 'src/handlers/Wave.ts');
@@ -112,7 +96,7 @@ describe('EdgeDevRuntime endpoint', () => {
         await runtime.startBot(instance);
         const wave = async (): Promise<void> => {
             const body = WAVE_INTERACTION;
-            await fetch(`http://localhost:${port}/`, { method: 'POST', body, headers: await sign(body) });
+            await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body, headers: await sign(body) });
         };
 
         await writeFile(handler, waveHandler('waved v2'));
@@ -148,7 +132,7 @@ describe('EdgeDevRuntime endpoint', () => {
         'reports a restart is required when %s changes, and keeps the bot answering',
         async (file) => {
             await using project = await edgeProject();
-            const { projectDir, port } = project;
+            const { projectDir } = project;
             const events: DevEvent[] = [];
             await using started = await startedRuntime(projectDir, (event) => events.push(event));
             const { runtime, instance } = started;
@@ -159,7 +143,7 @@ describe('EdgeDevRuntime endpoint', () => {
             await vi.waitFor(() => {
                 expect(events).toContainEqual({ type: 'restart-required' });
             });
-            const unsigned = await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
+            const unsigned = await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body: '{}' });
             expect(unsigned.status).toBe(401);
         },
         120_000
