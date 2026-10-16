@@ -1,8 +1,7 @@
-import { Spinner } from '@seedcord/cli-prompts';
+import { StepRow } from '@seedcord/cli-prompts';
 import { paint } from '@seedcord/errors';
 import { WORDMARK } from '@seedcord/errors/internal';
 
-import { formatDuration } from '#core/format';
 import { version } from '#core/version';
 
 import { holdOutput } from './holdOutput';
@@ -11,7 +10,6 @@ import { renderError } from './renderError';
 import { widthOf } from './terminal';
 import { wrapLines } from './wrapLines';
 
-import type { HeldOutput } from './holdOutput';
 import type { Steps } from './Steps';
 import type { Terminal } from './terminal';
 import type { LinePrefix } from './wrapLines';
@@ -24,8 +22,6 @@ interface StepPrinterOptions<Label extends string> {
     stderr?: Terminal;
 }
 
-// six characters fit any time formatDuration writes under 1000s
-const TIME_WIDTH = 6;
 const DETAIL_KEY_WIDTH = 10;
 
 export class StepPrinter<Label extends string> implements Steps<Label> {
@@ -58,27 +54,21 @@ export class StepPrinter<Label extends string> implements Steps<Label> {
         task: () => Promise<Result>,
         note?: (result: Result) => string
     ): Promise<Result> {
-        const startedAt = performance.now();
-        let spinner: Spinner | undefined;
-        const held = holdOutput(this.stdout, this.stderr, this.verbose, (line) => {
-            if (spinner) spinner.printAbove(`  ${line}`);
-            else held.writeToTerminal(`  ${line}\n`);
+        const row = new StepRow({
+            write: (text) => held.writeToTerminal(text),
+            label,
+            labelWidth: this.labelWidth,
+            animate: Boolean(this.stdout.isTTY)
         });
-        if (this.stdout.isTTY) {
-            spinner = Spinner.start(held.writeToTerminal, (frame) => this.row(paint.sky(frame), label, startedAt));
-        }
-
-        const finish = (mark: string, extra?: string): void => {
-            spinner?.stop();
-            this.printFinished(held, this.row(mark, label, startedAt, extra));
-        };
+        const held = holdOutput(this.stdout, this.stderr, this.verbose, (line) => row.printAbove(line));
+        row.start();
 
         try {
             const result = await task();
-            finish(paint.mint(paint.check), note?.(result));
+            row.done(held.release(), note?.(result));
             return result;
         } catch (error: unknown) {
-            finish(paint.coral(paint.cross));
+            row.failed(held.release());
             throw error;
         }
     }
@@ -102,17 +92,5 @@ export class StepPrinter<Label extends string> implements Steps<Label> {
 
     public fail(error: unknown): void {
         this.stderr.write(`\n${renderError(error, { verbose: this.verbose, width: widthOf(this.stderr) })}\n`);
-    }
-
-    private row(mark: string, label: Label, startedAt: number, note?: string): string {
-        const time = paint.mute(formatDuration(performance.now() - startedAt).padStart(TIME_WIDTH));
-        const tail = note ? `  ${note}` : '';
-        return `  ${mark} ${label.padEnd(this.labelWidth)}  ${time}${tail}`;
-    }
-
-    private printFinished(held: HeldOutput, row: string): void {
-        const heldLines = held.release();
-        this.stdout.write(`${row}\n`);
-        for (const line of heldLines) this.stdout.write(`      ${paint.mute('│')} ${line}\n`);
     }
 }

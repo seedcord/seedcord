@@ -1,3 +1,3 @@
 export { Prompter } from './Prompter';
-export { Spinner } from './Spinner';
+export { StepRow } from './StepRow';
 export { unlessCancelled } from './unlessCancelled';

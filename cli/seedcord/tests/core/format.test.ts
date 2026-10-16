@@ -1,17 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatBytes, formatDuration, plural } from '#core/format';
-
-describe('formatDuration', () => {
-    it('shows milliseconds under a second and seconds from there', () => {
-        expect(formatDuration(12.4)).toBe('12ms');
-        expect(formatDuration(2400)).toBe('2.4s');
-    });
-
-    it('switches to seconds when the milliseconds round up to 1000', () => {
-        expect(formatDuration(999.6)).toBe('1.0s');
-    });
-});
+import { formatBytes, plural } from '#core/format';
 
 describe('formatBytes', () => {
     it('picks the unit that keeps the number short', () => {
