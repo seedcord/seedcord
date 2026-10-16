@@ -333,6 +333,8 @@ export enum SeedcordErrorCode {
     CliPurgeNoTargets = 3158,
     /** A class carrying `@RegisterCommand` builds a component that is not a command or a context menu. */
     CliCommandNotACommand = 3159,
+    /** `seedcord commands clean` or `purge` could not delete some of the commands it selected. */
+    CliCommandsNotDeleted = 3160,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

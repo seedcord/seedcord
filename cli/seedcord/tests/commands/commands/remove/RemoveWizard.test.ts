@@ -1,6 +1,6 @@
 import { stripVTControlCharacters } from 'node:util';
 
-import { paint } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
@@ -146,14 +146,14 @@ describe('RemoveWizard with the clean questions', () => {
         expect(await terminal.screen()).toContain(line);
     });
 
-    it('warns about a command it could not delete', async () => {
+    it('warns about a command it could not delete, then throws CliCommandsNotDeleted', async () => {
         using terminal = new PromptTerminal();
         const { done } = wizard(terminal, {
             '/applications/app-1/guilds/g1/commands/11': new Error('Unknown Command')
         });
 
         await terminal.press(KEY.enter, KEY.tab, KEY.down, KEY.tab, KEY.enter, 'y', KEY.enter);
-        await done;
+        await expect(done).rejects.toMatchObject({ code: SeedcordErrorCode.CliCommandsNotDeleted });
 
         const screen = await terminal.screen();
         const warning = stripVTControlCharacters(levelMark('warn'));

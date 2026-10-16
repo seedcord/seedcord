@@ -1,3 +1,6 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+
 import { DiscordSession } from '#commands/commands/DiscordSession';
 import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
 import { commandCount } from '#commands/commands/scope';
@@ -77,6 +80,7 @@ export class RemoveRunner {
             result,
             selected.some(({ scope }) => scope.kind === 'global')
         );
+        if (result.failed.length > 0) throw new SeedcordError(SeedcordErrorCode.CliCommandsNotDeleted);
     }
 
     // the wizard's guild list and the run share one session
