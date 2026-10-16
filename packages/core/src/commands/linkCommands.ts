@@ -34,14 +34,20 @@ export interface LinkedCommands {
 const MULTI_GUILD = Symbol('seedcord:commands:multi-guild');
 type DeployedId = Snowflake | typeof MULTI_GUILD;
 
-// Discord keeps command names unique per type
-function keyOf({ type, name }: CommandRef): string {
-    return `${type}:${name}`;
+interface CommandLike {
+    name: string;
+    type?: ApplicationCommandType | undefined;
 }
 
-export function commandRefOf({ name, type }: { name: string; type?: ApplicationCommandType | undefined }): CommandRef {
+export function commandRefOf({ name, type }: CommandLike): CommandRef {
     // discord reads a missing type as a slash command
     return { name, type: type ?? ApplicationCommandType.ChatInput };
+}
+
+// Discord keeps command names unique per type
+export function commandKey(command: CommandLike): string {
+    const { type, name } = commandRefOf(command);
+    return `${type}:${name}`;
 }
 
 export function indexById(commands: readonly APIApplicationCommand[]): Map<string, APIApplicationCommand> {
@@ -54,21 +60,21 @@ function isSlash(json: CommandJson): json is RESTPostAPIChatInputApplicationComm
 
 // a guild command in N guilds appears once per guild
 function uniqueRefs(refs: readonly CommandRef[]): CommandRef[] {
-    return [...new Map(refs.map((ref) => [keyOf(ref), ref])).values()];
+    return [...new Map(refs.map((ref) => [commandKey(ref), ref])).values()];
 }
 
 function deployedIds({ global, guilds }: DeployResult): Map<string, DeployedId> {
     const ids = new Map<string, DeployedId>();
     for (const collection of guilds.values()) {
         for (const command of collection.values()) {
-            const key = keyOf(command);
+            const key = commandKey(command);
             const existing = ids.get(key);
             // Discord gives a guild command its own id in each guild
             if (existing === undefined) ids.set(key, command.id);
             else if (existing !== command.id) ids.set(key, MULTI_GUILD);
         }
     }
-    for (const command of global.values()) ids.set(keyOf(command), command.id);
+    for (const command of global.values()) ids.set(commandKey(command), command.id);
     return ids;
 }
 
@@ -103,7 +109,7 @@ class CommandLinker {
                 user: this.menus(leaves.user, ApplicationCommandType.User),
                 message: this.menus(leaves.message, ApplicationCommandType.Message)
             },
-            multiGuild: inCode.filter((ref) => this.ids.get(keyOf(ref)) === MULTI_GUILD),
+            multiGuild: inCode.filter((ref) => this.ids.get(commandKey(ref)) === MULTI_GUILD),
             notInCode: this.notInCode(inCode)
         };
     }
@@ -131,15 +137,15 @@ class CommandLinker {
     }
 
     private idOf(ref: CommandRef): Snowflake | undefined {
-        const id = this.ids.get(keyOf(ref));
+        const id = this.ids.get(commandKey(ref));
         return id === MULTI_GUILD ? undefined : id;
     }
 
     private notInCode(inCode: readonly CommandRef[]): CommandRef[] {
-        const inCodeKeys = new Set(inCode.map(keyOf));
+        const inCodeKeys = new Set(inCode.map(commandKey));
         const extra = new Map<string, CommandRef>();
         for (const command of allDeployed(this.deploy)) {
-            const key = keyOf(command);
+            const key = commandKey(command);
             if (!inCodeKeys.has(key)) extra.set(key, commandRefOf(command));
         }
         return [...extra.values()];

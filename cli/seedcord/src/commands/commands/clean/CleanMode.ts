@@ -1,7 +1,7 @@
+import { commandKey } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { commandKey } from '#commands/commands/commandKey';
 import { RemoveMode } from '#commands/commands/remove/RemoveMode';
 import { commandCount } from '#commands/commands/scope';
 import { plural } from '#core/format';

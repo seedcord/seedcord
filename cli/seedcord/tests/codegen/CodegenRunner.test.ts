@@ -303,7 +303,8 @@ describe('CodegenRunner', () => {
         expect((caught as Error).message).toContain(missing);
     });
 
-    it('throws CliCommandsDirUnreadable for a nested unreadable subdir', async () => {
+    // root reads a 0o000 folder anyway
+    it.skipIf(process.getuid?.() === 0)('throws CliCommandsDirUnreadable for a nested unreadable subdir', async () => {
         const root = await tempDir('codegen-');
         const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');

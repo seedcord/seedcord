@@ -1,4 +1,4 @@
-import { commandKey } from '#commands/commands/commandKey';
+import { commandKey } from '@seedcord/core/internal';
 
 import type { CommandBody } from '@seedcord/core/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
