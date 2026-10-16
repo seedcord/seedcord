@@ -23,7 +23,7 @@
 
 ## About
 
-`seedcord` is the CLI a bot project runs during development and at build time. It reads `seedcord.config.ts` and gives you a dev server with hot reload, a production build, the codegen that types your commands, and a cleanup tool for stale guild commands.
+`seedcord` is the CLI a bot project runs during development and at build time. It reads `seedcord.config.ts` and gives you a dev server with hot reload, a production build, the codegen that types your commands, and a way to deploy those commands to Discord.
 
 Until v1.0.0, minor versions can break.
 
@@ -44,13 +44,25 @@ pnpm add -D seedcord
 | `seedcord dev` | runs the bot from the config file, reloading changed modules in place |
 | `seedcord build` | type checks the bot and bundles it into `outDir` with Vite. An edge bot builds into a Cloudflare worker |
 | `seedcord codegen` | writes the typed augmentations for your commands and config |
-| `seedcord commands` | inspects and cleans commands already deployed to Discord |
+| `seedcord commands` | deploys, lists and cleans up your commands on Discord |
 
 <!-- prettier-ignore-end -->
 
 `codegen --check` verifies the committed augmentations match your source. Run it in CI.
 
-`commands --clean` reports guild commands that duplicate a global one. It runs as a dry run until you pass `--apply`.
+`commands` reads `DISCORD_BOT_TOKEN` from your environment or `.env`:
+
+```sh
+seedcord commands                    # pick what to do from a menu
+seedcord commands deploy             # deploy the commands in your code
+seedcord commands list               # show the commands Discord has
+seedcord commands list --all-guilds  # include every guild the bot is in
+seedcord commands list --json        # print them as JSON
+seedcord commands clean              # find guild commands that copy a global one
+seedcord commands clean --apply      # delete them
+```
+
+`deploy` shows what it'll add and remove, then asks before it changes anything. In CI it doesn't ask.
 
 On the http transport, `dev` also opens a cloudflared tunnel and points Discord's interactions URL at it.
 
@@ -82,4 +94,4 @@ pnpm add -D @cloudflare/vite-plugin wrangler
 
 `seedcord build` bundles the worker into `outDir`, then starts it once in workerd to check that it loads. Run `wrangler deploy` from the project folder to deploy it.
 
-Before it bundles, the build reads the public key, command ids and emoji ids from Discord with `DISCORD_BOT_TOKEN` from your environment or `.env`, and writes them into the worker. Every command in your code has to be deployed already, or the build stops and lists the ones that aren't.
+Before it bundles, the build reads the public key, command ids and emoji ids from Discord with `DISCORD_BOT_TOKEN` from your environment or `.env`, and writes them into the worker. Every command in your code has to be deployed already, or the build stops and lists the ones that aren't. Run `seedcord commands deploy` first.
