@@ -1,6 +1,5 @@
 import { bindings, defineConfig } from 'cf/config';
 
-// a text binding beats any value in .dev.vars or .env
 // cf workers types calls this without a mode
 export default defineConfig(({ mode = 'production' }) => ({
     worker: {
@@ -11,7 +10,7 @@ export default defineConfig(({ mode = 'production' }) => ({
             DISCORD_BOT_TOKEN: bindings.secret(),
             UNKNOWN_EXCEPTION_WEBHOOK_URL: bindings.secret(),
             HANDLED_EXCEPTION_WEBHOOK_URL: bindings.secret(),
-            ENV: bindings.text(mode)
+            ENV: bindings.text(mode) // a text binding beats any value in .dev.vars or .env
         }
     }
 }));

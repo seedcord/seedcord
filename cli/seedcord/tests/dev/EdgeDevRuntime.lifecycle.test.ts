@@ -34,7 +34,6 @@ import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
 import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/schema';
 
-// the API_TOKEN that codegen's node copy of bot.ts reads from cloudflare:workers
 async function nodeCopyApiToken(projectDir: string, viteMode = 'development'): Promise<unknown> {
     await writeCloudflareConfig(projectDir, { env: { API_TOKEN: bindings.secret() } });
     await editFile(join(projectDir, 'src/bot.ts'), (text) =>
