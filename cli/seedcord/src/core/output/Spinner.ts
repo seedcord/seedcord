@@ -25,6 +25,11 @@ export class Spinner {
         return spinner;
     }
 
+    public printAbove(line: string): void {
+        this.write(`${CLEAR_LINE}${line}\n`);
+        this.draw();
+    }
+
     public stop(): void {
         clearInterval(this.timer);
         process.off('SIGINT', this.restoreOnInterrupt);

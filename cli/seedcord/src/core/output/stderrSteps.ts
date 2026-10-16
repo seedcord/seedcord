@@ -7,7 +7,8 @@ import type { Terminal } from './terminal';
 export function stderrSteps(stdout: Terminal = process.stdout, stderr: Terminal = process.stderr): Steps<string> {
     return {
         async step(_label, task) {
-            const held = holdOutput(stdout, stderr, false);
+            const writeStderr = stderr.write.bind(stderr);
+            const held = holdOutput(stdout, stderr, false, (line) => writeStderr(`${line}\n`));
             try {
                 return await task();
             } finally {

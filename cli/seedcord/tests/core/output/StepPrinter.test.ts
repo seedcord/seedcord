@@ -105,17 +105,35 @@ describe('StepPrinter', () => {
         expect(stdout.text()).toMatch(/│ .*connecting to the database/);
     });
 
-    it('prints a log from inside a step as its level mark and the message', async () => {
+    it('prints a warning from inside a step while the step still runs', async () => {
         const registry = LoggerChannelRegistry.instance;
         registry.reset();
         registry.configure({ level: 'trace', sinks: [new ConsoleSink()] });
+        let shownDuringStep = '';
+
+        await printer().step('config', () => {
+            new Logger('Bot').warn('cache is stale');
+            shownDuringStep = stdout.text();
+            return Promise.resolve();
+        });
+
+        expect(shownDuringStep).toBe(`  ${WARN_MARK} cache is stale\n`);
+        expect(stdout.text()).not.toContain('│');
+    });
+
+    it('clears the spinner line before it prints a warning on a terminal', async () => {
+        const registry = LoggerChannelRegistry.instance;
+        registry.reset();
+        registry.configure({ level: 'trace', sinks: [new ConsoleSink()] });
+        let raw = '';
+        stdout = { ...pipedTerminal(), isTTY: true, write: (chunk) => (raw += String(chunk)).length > 0 };
 
         await printer().step('config', () => {
             new Logger('Bot').warn('cache is stale');
             return Promise.resolve();
         });
 
-        expect(stdout.text().split('\n')[1]).toBe(`      │ ${WARN_MARK} cache is stale`);
+        expect(raw).toContain(`\r\u001B[2K  ${levelMark('warn')} cache is stale\n`);
     });
 
     it('shows logger output below info under a step only with --verbose', async () => {
