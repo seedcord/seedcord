@@ -1,3 +1,5 @@
+import { paint } from '@seedcord/errors';
+
 import { LOAD_STEPS, loadCodeScopes } from '#commands/commands/codeScopes';
 import { DiscordSession } from '#commands/commands/DiscordSession';
 import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
@@ -60,7 +62,7 @@ export class ListRunner {
             const guilds = await session.guildsOf({ kind: 'named', ids: [...ids], knownNames });
             return { session, scan: await session.readScopes(guilds) };
         });
-        steps.detail('app', session.appId);
+        steps.detail('app', paint.mute(session.appId));
         return listingOf(scan);
     }
 }

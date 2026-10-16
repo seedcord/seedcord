@@ -1,4 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { LOAD_STEPS, loadCodeScopes } from '#commands/commands/codeScopes';
@@ -30,7 +30,7 @@ export class DeployRunner {
             const session = await DiscordSession.open(this.deps.openDiscord());
             return { session, targets: await session.readTargets([...scopes.guilds.keys()]) };
         });
-        presenter.detail('app', session.appId);
+        presenter.detail('app', paint.mute(session.appId));
 
         const plans = plansFor(scopes, targets);
         if (plans.length === 0) {

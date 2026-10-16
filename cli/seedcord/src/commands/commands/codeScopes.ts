@@ -64,7 +64,7 @@ export async function loadCodeScopes(
 
     const { path, guilds = [] } = commands;
     steps.detail('commands', paint.path(project.fromRoot(path)));
-    if (guilds.length > 0) steps.detail('guilds', guilds.join(', '));
+    if (guilds.length > 0) steps.detail('guilds', guilds.map((id) => paint.mute(id)).join(', '));
 
     const found = await steps.step(
         'scan',
