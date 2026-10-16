@@ -305,10 +305,10 @@ const messages = {
         `${tool} could not read ${paint.path(file)}. Fix the problem it reports:\n${output}`,
     [SeedcordErrorCode.CliConfigEntryOnEdge]: (configFile: string, cloudflareConfig: string) =>
         `${paint.path(cloudflareConfig)} makes this an edge bot. An edge bot has no ${paint.bold('entry')} because Cloudflare calls the default export of ${paint.bold('instance')}. Remove ${paint.bold('entry')} from ${paint.path(configFile)}.`,
-    [SeedcordErrorCode.CliEdgeCompatDateTooOld]: (wranglerConfig: string, date: string, firstDate: string) =>
-        `A seedcord edge bot needs Cloudflare's Node compat. ${paint.path(wranglerConfig)} sets ${paint.bold('compatibility_date')} to ${date}, but Cloudflare turns Node compat on by default only from ${firstDate}. Set the date to ${firstDate} or later, or add ${paint.bold('"nodejs_compat"')} to ${paint.bold('compatibility_flags')}.`,
-    [SeedcordErrorCode.CliEdgeNodeCompatOff]: (wranglerConfig: string) =>
-        `A seedcord edge bot needs Cloudflare's Node compat, but ${paint.path(wranglerConfig)} turns it off with ${paint.bold('"no_nodejs_compat"')}. Remove that flag from ${paint.bold('compatibility_flags')}.`,
+    [SeedcordErrorCode.CliEdgeCompatDateTooOld]: (cloudflareConfig: string, date: string, firstDate: string) =>
+        `A seedcord edge bot needs Cloudflare's Node compat. ${paint.path(cloudflareConfig)} sets ${paint.bold('compatibilityDate')} to ${date}, but Cloudflare turns Node compat on by default only from ${firstDate}. Set the date to ${firstDate} or later, or add ${paint.bold("'nodejs_compat'")} to ${paint.bold('compatibilityFlags')}.`,
+    [SeedcordErrorCode.CliEdgeNodeCompatOff]: (cloudflareConfig: string) =>
+        `A seedcord edge bot needs Cloudflare's Node compat, but ${paint.path(cloudflareConfig)} turns it off with ${paint.bold("'no_nodejs_compat'")}. Remove that flag from ${paint.bold('compatibilityFlags')}.`,
     [SeedcordErrorCode.CliEdgeBootFailed]: (reason: string) =>
         `The build could not start the worker in workerd, the runtime Cloudflare runs it on.\n${reason}`,
     [SeedcordErrorCode.CliEdgeRootHoldsConfig]: (configFile: string, root: string) =>

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -13,24 +13,24 @@ interface CompatSettings {
     flags: string[];
 }
 
-// the plugin writes wrangler.jsonc and wrangler.toml out as this one json shape
-function readCompatSettings(outDir: string): CompatSettings {
-    const generated: unknown = JSON.parse(readFileSync(join(outDir, 'wrangler.json'), 'utf8'));
-    const date = isPlainObject(generated) ? generated.compatibility_date : undefined;
-    const flags = isPlainObject(generated) ? generated.compatibility_flags : undefined;
+// cloudflare's build output spec puts worker.config.json beside the worker's bundle folder
+function readCompatSettings(bundleDir: string): CompatSettings {
+    const generated: unknown = JSON.parse(readFileSync(join(dirname(bundleDir), 'worker.config.json'), 'utf8'));
+    const date = isPlainObject(generated) ? generated.compatibilityDate : undefined;
+    const flags = isPlainObject(generated) ? generated.compatibilityFlags : undefined;
     return { date: typeof date === 'string' ? date : undefined, flags: isStringArray(flags) ? flags : [] };
 }
 
-export function assertNodeCompat(outDir: string, wranglerConfig: string): void {
-    const { date, flags } = readCompatSettings(outDir);
+export function assertNodeCompat(bundleDir: string, cloudflareConfig: string): void {
+    const { date, flags } = readCompatSettings(bundleDir);
 
     if (flags.includes('no_nodejs_compat')) {
-        throw new SeedcordError(SeedcordErrorCode.CliEdgeNodeCompatOff, [wranglerConfig]);
+        throw new SeedcordError(SeedcordErrorCode.CliEdgeNodeCompatOff, [cloudflareConfig]);
     }
     // YYYY-MM-DD dates order the same as strings
     if (date !== undefined && date < NODE_COMPAT_DEFAULT_FROM && !flags.includes('nodejs_compat')) {
         throw new SeedcordError(SeedcordErrorCode.CliEdgeCompatDateTooOld, [
-            wranglerConfig,
+            cloudflareConfig,
             date,
             NODE_COMPAT_DEFAULT_FROM
         ]);

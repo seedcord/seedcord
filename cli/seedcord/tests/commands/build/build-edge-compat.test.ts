@@ -1,14 +1,15 @@
-import { writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { copyEdgeBotForTest, edgeBuildRunner } from './edgeBot';
+import { copyEdgeBotForTest, edgeBuildRunner, writeCloudflareConfig } from './edgeBot';
 
-async function edgeBotWith(wrangler: Record<string, unknown>): Promise<string> {
+import type { WorkerConfig } from 'cf/config';
+
+async function edgeBotWith(worker: Partial<WorkerConfig>): Promise<string> {
     const projectDir = await copyEdgeBotForTest();
-    await writeFile(join(projectDir, 'wrangler.jsonc'), JSON.stringify({ name: 'edge-bot', ...wrangler }));
+    await writeCloudflareConfig(projectDir, worker);
     return projectDir;
 }
 
@@ -18,18 +19,18 @@ function build(projectDir: string): Promise<unknown> {
 
 describe('seedcord build checks that an edge bot keeps Node compat on', () => {
     it('throws CliEdgeCompatDateTooOld for a date before 2026-08-04 without nodejs_compat', async () => {
-        const projectDir = await edgeBotWith({ compatibility_date: '2026-08-03' });
+        const projectDir = await edgeBotWith({ compatibilityDate: '2026-08-03' });
 
         await expect(build(projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliEdgeCompatDateTooOld,
-            message: expect.stringContaining(join(basename(projectDir), 'wrangler.jsonc')) as string
+            message: expect.stringContaining(join(basename(projectDir), 'cloudflare.config.ts')) as string
         });
     }, 120_000);
 
     it('builds an older date that turns on nodejs_compat', async () => {
         const projectDir = await edgeBotWith({
-            compatibility_date: '2026-08-03',
-            compatibility_flags: ['nodejs_compat']
+            compatibilityDate: '2026-08-03',
+            compatibilityFlags: ['nodejs_compat']
         });
 
         await expect(build(projectDir)).resolves.toBeDefined();
@@ -38,8 +39,8 @@ describe('seedcord build checks that an edge bot keeps Node compat on', () => {
     // workerd loads no node: modules for nodejs_compat_v2 alone
     it('throws CliEdgeCompatDateTooOld for an older date with only nodejs_compat_v2', async () => {
         const projectDir = await edgeBotWith({
-            compatibility_date: '2026-08-03',
-            compatibility_flags: ['nodejs_compat_v2']
+            compatibilityDate: '2026-08-03',
+            compatibilityFlags: ['nodejs_compat_v2']
         });
 
         await expect(build(projectDir)).rejects.toMatchObject({ code: SeedcordErrorCode.CliEdgeCompatDateTooOld });
@@ -47,13 +48,13 @@ describe('seedcord build checks that an edge bot keeps Node compat on', () => {
 
     it('throws CliEdgeNodeCompatOff for no_nodejs_compat', async () => {
         const projectDir = await edgeBotWith({
-            compatibility_date: '2026-08-04',
-            compatibility_flags: ['no_nodejs_compat']
+            compatibilityDate: '2026-08-04',
+            compatibilityFlags: ['no_nodejs_compat']
         });
 
         await expect(build(projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliEdgeNodeCompatOff,
-            message: expect.stringContaining(join(basename(projectDir), 'wrangler.jsonc')) as string
+            message: expect.stringContaining(join(basename(projectDir), 'cloudflare.config.ts')) as string
         });
     }, 120_000);
 });

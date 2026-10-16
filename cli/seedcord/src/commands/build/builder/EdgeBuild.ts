@@ -1,4 +1,4 @@
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 import { warnLinks } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -39,22 +39,30 @@ interface EdgeBuildDeps {
 
 const DEFAULT_DEPS: EdgeBuildDeps = { importCloudflare, openDiscord: restFromEnv };
 
-function captureChunks(onChunks: (chunks: Rolldown.OutputChunk[]) => void): Plugin {
+interface WorkerOutput {
+    chunks: Rolldown.OutputChunk[];
+    outDir: string;
+}
+
+// @cloudflare/vite-plugin sets the worker's outDir in configResolved, after every config merge
+function captureOutput(onOutput: (output: WorkerOutput) => void): Plugin {
     return {
-        name: 'seedcord:capture-chunks',
+        name: 'seedcord:capture-output',
         applyToEnvironment: (environment) => environment.name === WORKER_ENVIRONMENT,
         generateBundle(_options, bundle) {
-            onChunks(Object.values(bundle).filter((file) => file.type === 'chunk'));
+            const { root, build } = this.environment.config;
+            onOutput({
+                chunks: Object.values(bundle).filter((file) => file.type === 'chunk'),
+                outDir: resolve(root, build.outDir)
+            });
         }
     };
 }
 
-function workerEnvironment(outDir: string): Record<string, EnvironmentOptions> {
+function workerEnvironment(): Record<string, EnvironmentOptions> {
     return {
         [WORKER_ENVIRONMENT]: {
             build: {
-                outDir,
-                emptyOutDir: true,
                 sourcemap: true,
                 minify: false,
                 rolldownOptions: {
@@ -73,8 +81,7 @@ function workerEnvironment(outDir: string): Record<string, EnvironmentOptions> {
 
 export class EdgeBuild extends TargetBuild {
     public readonly kind = 'edge';
-    // the plugin writes .wrangler/deploy/config.json under vite's root
-    // wrangler deploy reads it from beside the wrangler config
+    // cf deploy --prebuilt reads .cloudflare/output from here
     private readonly viteRoot: string;
     private readonly deps: EdgeBuildDeps;
     private readonly logger = cliLogger('Build');
@@ -111,10 +118,9 @@ export class EdgeBuild extends TargetBuild {
     public async bundle(ids: BakedIds): Promise<BundleStats> {
         const { config, files, modules } = this.project;
         const { viteRoot, target } = this;
-        const { outDir } = config.build;
         const folders = await files.foldersIncludingEmpty();
 
-        let chunks: Rolldown.OutputChunk[] = [];
+        let output: WorkerOutput | undefined;
         const builder = await createBuilder({
             root: viteRoot,
             configFile: false,
@@ -130,30 +136,31 @@ export class EdgeBuild extends TargetBuild {
                     mode: { kind: 'build', ids }
                 }),
                 pinModulePaths(files),
-                captureChunks((captured) => {
-                    chunks = captured;
+                captureOutput((captured) => {
+                    output = captured;
                 }),
                 await this.workerPlugins()
             ],
             resolve: { tsconfigPaths: true },
-            environments: workerEnvironment(outDir)
+            environments: workerEnvironment()
         }).catch(bundleFailed);
         await builder.buildApp().catch(bundleFailed);
-        assertNodeCompat(outDir, target.cloudflareConfig);
+        output ??= bundleFailed(`the ${WORKER_ENVIRONMENT} environment wrote no bundle`);
+        assertNodeCompat(output.outDir, target.cloudflareConfig);
 
-        return bundleStats(chunks, files, join(outDir, ENTRY_FILE_NAME));
+        return bundleStats(output.chunks, files, join(output.outDir, ENTRY_FILE_NAME));
     }
 
     public override async boot(): Promise<void> {
         await bootWorker({
             root: this.viteRoot,
             plugins: [await this.workerPlugins()],
-            environments: workerEnvironment(this.project.config.build.outDir)
+            environments: workerEnvironment()
         });
     }
 
     public nextCommands(): NextCommand[] {
-        return [['deploy', 'wrangler deploy']];
+        return [['deploy', 'cf deploy --prebuilt']];
     }
 
     private async commandsInCode(commands: CommandsConfig): Promise<CommandsInCode | undefined> {
@@ -167,8 +174,7 @@ export class EdgeBuild extends TargetBuild {
         this.cloudflare ??= loadCloudflare(this.viteRoot, this.deps.importCloudflare);
         const cloudflare = await this.cloudflare;
         return cloudflare({
-            configPath: this.target.cloudflareConfig,
-            config: { main: WORKER_ENTRY_ID },
+            config: { entrypoint: WORKER_ENTRY_ID },
             viteEnvironment: { name: WORKER_ENVIRONMENT },
             inspectorPort: false,
             persistState: false

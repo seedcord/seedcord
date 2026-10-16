@@ -1,18 +1,29 @@
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { bindings, exports } from 'cf/config';
 import { preview } from 'vite';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { copyEdgeBot, copyEdgeBotForTest, edgeBuildRunner, fakeDiscord, writeSigningEnv } from './edgeBot';
+import { WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
+
+import {
+    copyEdgeBot,
+    copyEdgeBotForTest,
+    edgeBuildRunner,
+    fakeDiscord,
+    writeCloudflareConfig,
+    writeSigningEnv
+} from './edgeBot';
 
 import type { BuildResult } from '#commands/build/BuildRunner';
 import type { SignRequest } from './edgeBot';
 
-const WRANGLER = join(import.meta.dirname, '../../../node_modules/wrangler/bin/wrangler.js');
+const CF = join(import.meta.dirname, '../../../node_modules/cf/bin/cf');
 const PING = '{"type":1}';
 
 const HELLO_COMMAND = `import { BuilderComponent, RegisterCommand } from '@seedcord/http';
@@ -46,14 +57,18 @@ describe('seedcord build on an edge bot', () => {
             modules: 2,
             textFiles: 1,
             bytes: expect.any(Number) as number,
-            entry: join(projectDir, 'dist/index.mjs')
+            entry: expect.stringMatching(/index\.mjs$/) as string
         });
+        expect(existsSync(result.bundle.entry)).toBe(true);
     });
 
-    it('writes a worker that wrangler deploys from the project folder', () => {
-        const { status } = spawnSync(process.execPath, [WRANGLER, 'deploy', '--dry-run'], { cwd: projectDir });
+    it('writes a worker that cf deploys from the project folder without building it again', () => {
+        const { status, stderr } = spawnSync(process.execPath, [CF, 'deploy', '--prebuilt', '--dry-run'], {
+            cwd: projectDir,
+            encoding: 'utf8'
+        });
 
-        expect(status).toBe(0);
+        expect(status, stderr).toBe(0);
     }, 60_000);
 
     it('answers a PING signed with the key discord returned at build time', async () => {
@@ -61,10 +76,7 @@ describe('seedcord build on an edge bot', () => {
             root: projectDir,
             configFile: false,
             logLevel: 'silent',
-            plugins: [
-                cloudflare({ configPath: join(projectDir, 'wrangler.jsonc'), viteEnvironment: { name: 'worker' } })
-            ],
-            environments: { worker: { build: { outDir: join(projectDir, 'dist') } } },
+            plugins: [cloudflare({ viteEnvironment: { name: WORKER_ENVIRONMENT } })],
             preview: { port: 0 }
         });
         try {
@@ -94,13 +106,10 @@ describe('seedcord build on an edge bot with files it never loads', () => {
     it('passes a named export of the instance file through to the worker', async () => {
         const projectDir = await copyEdgeBotForTest();
         await appendFile(join(projectDir, 'src/bot.ts'), '\nexport class Counter {}\n');
-        const wrangler = {
-            name: 'edge-bot',
-            compatibility_date: '2026-08-04',
-            durable_objects: { bindings: [{ name: 'COUNTER', class_name: 'Counter' }] },
-            migrations: [{ tag: 'v1', new_sqlite_classes: ['Counter'] }]
-        };
-        await writeFile(join(projectDir, 'wrangler.jsonc'), JSON.stringify(wrangler));
+        await writeCloudflareConfig(projectDir, {
+            env: { COUNTER: bindings.durableObject({ worker: 'edge-bot', exportName: 'Counter' }) },
+            exports: { Counter: exports.durableObject({ storage: 'sqlite' }) }
+        });
 
         await expect(edgeBuildRunner().run(projectDir)).resolves.toBeDefined();
     }, 120_000);
