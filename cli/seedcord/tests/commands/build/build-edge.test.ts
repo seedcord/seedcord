@@ -95,6 +95,41 @@ describe('seedcord build on an edge bot', () => {
     }, 60_000);
 });
 
+describe('a built edge worker', () => {
+    it('reports a handler it fails to load by its path under the bot root', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        // node's build step loads the handler too, so only workerd throws
+        await writeFile(
+            join(projectDir, 'src/handlers/Broken.ts'),
+            "if (navigator.userAgent === 'Cloudflare-Workers') throw new Error('Broken.ts threw in workerd');\n"
+        );
+        const signing = await writeSigningEnv(projectDir);
+        await edgeBuildRunner(fakeDiscord(signing.publicKey)).run(projectDir);
+        const server = await preview({
+            root: projectDir,
+            configFile: false,
+            logLevel: 'silent',
+            plugins: [cloudflare({ viteEnvironment: { name: WORKER_ENVIRONMENT } })],
+            preview: { port: 0 }
+        });
+        let body: string;
+        try {
+            // vite preview answers a worker that threw with the error's text
+            const response = await fetch(server.resolvedUrls?.local[0] ?? '', {
+                method: 'POST',
+                headers: await signing.sign(PING),
+                body: PING
+            });
+            body = await response.text();
+        } finally {
+            await server.close();
+        }
+
+        expect(body).toContain('handlers/Broken.js threw while seedcord imported it');
+        expect(body).not.toContain('../');
+    }, 120_000);
+});
+
 describe('seedcord build on an edge bot with files it never loads', () => {
     it('builds a file under root that sets a timer at load, since nothing imports it', async () => {
         const projectDir = await copyEdgeBotForTest();
