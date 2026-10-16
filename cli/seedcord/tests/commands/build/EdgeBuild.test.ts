@@ -9,7 +9,9 @@ import { ProjectLoader } from '#core/config/ProjectLoader';
 import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 
+import type * as CloudflareVitePlugin from '@cloudflare/vite-plugin';
 import type { BakedIds } from '@seedcord/core/internal';
+import type { Plugin } from 'vite';
 
 const EDGE_BOT = join(import.meta.dirname, '../../fixtures/edge-bot');
 
@@ -53,6 +55,29 @@ describe('EdgeBuild', () => {
         await expect(build.bundle(NO_IDS)).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreImportFailed,
             message: expect.stringContaining('miniflare') as string
+        });
+    });
+
+    it('throws CliDependencyMissing when cloudflare.config.ts imports cf and the project lacks it', async () => {
+        await using project = await new ProjectLoader(openModuleLoader).open(EDGE_BOT);
+        const { target } = project.config;
+        assert(target.kind === 'edge');
+
+        // the plugin loads cloudflare.config.ts in its config hook
+        const missing = notFound('cf', target.cloudflareConfig);
+        const plugin: Plugin = {
+            name: 'loads-cloudflare-config',
+            config: () => {
+                throw missing;
+            }
+        };
+        // justified: EdgeBuild calls only cloudflare() on the module
+        const cloudflarePlugin = { cloudflare: () => [plugin] } as unknown as typeof CloudflareVitePlugin;
+        const build = new EdgeBuild(project, target, { importCloudflare: () => Promise.resolve(cloudflarePlugin) });
+
+        await expect(build.bundle(NO_IDS)).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliDependencyMissing,
+            message: expect.stringContaining('edge-bot') as string
         });
     });
 

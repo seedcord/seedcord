@@ -20,6 +20,13 @@ function isPackageMissing(error: unknown, name: string): boolean {
     return notFound && error.message.startsWith(`Cannot find package '${name}'`);
 }
 
+// node resolves the cf/config import in cloudflare.config.ts from the bot's own node_modules
+export function explainMissingCf(error: unknown, viteRoot: string): unknown {
+    if (!isPackageMissing(error, 'cf')) return error;
+    const why = `${paint.bold('cloudflare.config.ts')} imports ${paint.bold('cf/config')}.`;
+    return new SeedcordError(SeedcordErrorCode.CliDependencyMissing, [['cf'], viteRoot, why], { cause: error });
+}
+
 // @cloudflare/config loads cloudflare.config.ts through node's module.registerHooks and throws on bun.
 // delete this once bun ships registerHooks and cloudflare stops throwing on it
 export function assertNotBun(): void {

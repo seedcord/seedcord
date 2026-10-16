@@ -8,7 +8,13 @@ import { createBuilder } from 'vite';
 
 import { cliLogger } from '#core/cliLogger';
 import { restFromEnv } from '#core/discord/restFromEnv';
-import { assertNotBun, importCloudflare, loadCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
+import {
+    assertNotBun,
+    explainMissingCf,
+    importCloudflare,
+    loadCloudflare,
+    WORKER_ENVIRONMENT
+} from '#core/modules/cloudflarePlugin';
 import { CommandScanner } from '#core/modules/CommandScanner';
 import { functionExportsOf } from '#core/modules/workerExports';
 import { viteKey } from '#core/project/ProjectFiles';
@@ -147,13 +153,15 @@ export class EdgeBuild extends TargetBuild {
             ],
             resolve: { tsconfigPaths: true },
             environments: workerEnvironment()
-        }).catch(bundleFailed);
-        await builder.buildApp().catch(bundleFailed);
+        }).catch(this.failBundle);
+        await builder.buildApp().catch(this.failBundle);
         output ??= bundleFailed(`the ${WORKER_ENVIRONMENT} environment wrote no bundle`);
         assertNodeCompat(output.outDir, target.cloudflareConfig);
 
         return bundleStats(output.chunks, files, join(output.outDir, ENTRY_FILE_NAME));
     }
+
+    private readonly failBundle = (error: unknown): never => bundleFailed(explainMissingCf(error, this.viteRoot));
 
     public override async boot(): Promise<void> {
         await bootWorker({
