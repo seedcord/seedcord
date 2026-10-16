@@ -44,7 +44,7 @@ export { COMMAND_DEPLOY_TIMEOUT_MS, CommandRegistry } from '#src/commands/Comman
 export { resolveDeployTarget } from '#src/commands/deployTarget';
 export { putCommands, type CommandBody, type CommandScopes } from '#src/commands/putCommands';
 export { readCommands, readCommandsAt } from '#src/commands/readCommands';
-export { diffScope, type ScopeDiff } from '#src/commands/diffScope';
+export { scopeHashes, scopesDiscordLacks, splitByHash } from '#src/commands/scopeHashes';
 export {
     commandRoute,
     commandsRoute,
@@ -52,6 +52,7 @@ export {
     globalFirst,
     groupByScope,
     scopeIdsOf,
+    skippedNote,
     type ScopeId,
     type ScopeMap
 } from '#src/commands/scopes';

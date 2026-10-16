@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { dirname, relative, resolve, sep } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 
 import { wrapHot } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
@@ -59,7 +59,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     ) {
         super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
-        this.state = new StateFolder(dirname(config.configFile), this.logger);
+        this.state = StateFolder.besideConfig(config.configFile, this.logger);
         this.restartPatterns = new Set((config.hmr?.restart ?? []).map((pattern) => this.fromRoot(pattern)));
     }
 

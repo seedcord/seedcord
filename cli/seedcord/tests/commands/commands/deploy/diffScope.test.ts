@@ -1,7 +1,7 @@
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
-import { diffScope } from '#src/commands/diffScope';
+import { diffScope } from '#commands/commands/deploy/diffScope';
 
 import type { APIApplicationCommand, RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 

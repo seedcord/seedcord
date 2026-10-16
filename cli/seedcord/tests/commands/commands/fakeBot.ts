@@ -16,6 +16,7 @@ import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Terminal } from '#core/output/terminal';
 import type { REST } from '@discordjs/rest';
+import type { CommandBody } from '@seedcord/core/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 export const APP_ID = 'app-1';
@@ -64,6 +65,10 @@ export function slash(name: string): APIApplicationCommand {
         default_member_permissions: null,
         version: '1'
     };
+}
+
+function deployedFrom(command: CommandBody): APIApplicationCommand {
+    return { ...slash(command.name), type: command.type ?? ApplicationCommandType.ChatInput };
 }
 
 export async function fakeProject({
@@ -134,10 +139,11 @@ export function fakeDiscord(onDiscord: Record<string, unknown> = {}): FakeDiscor
             const answer = answers[route];
             return reply(answersFromQuery(answer) ? answer(options?.query) : answer);
         }),
-        put: vi.fn(async (route: string, { body }: { body: { name: string }[] }) => {
+        put: vi.fn(async (route: string, { body }: { body: CommandBody[] }) => {
             await reply(answers[route]);
             puts.push({ route, names: body.map((command) => command.name) });
-            return [];
+            answers[route] = body.map(deployedFrom);
+            return answers[route];
         }),
         delete: vi.fn(async (route: string) => {
             await reply(answers[route]);

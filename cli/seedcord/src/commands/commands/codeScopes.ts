@@ -18,6 +18,7 @@ type LoadStep = (typeof LOAD_STEPS)[number];
 interface CodeScopes {
     target: ResolvedTarget['kind'];
     instance: string;
+    configFile: string;
     // undefined when the bot sets commands.path to null
     scopes: CommandScopes | undefined;
 }
@@ -40,7 +41,7 @@ export async function loadCodeScopes(
     await using project = await steps.step('read config', () => projectLoader.open(projectDir));
     const { config, modules } = project;
     printResolvedConfig(steps, config);
-    const loaded = { target: config.target.kind, instance: config.instance };
+    const loaded = { target: config.target.kind, instance: config.instance, configFile: config.configFile };
 
     const instance = await steps.step('load bot', () => importInstance(modules, config.instance));
     const { commands } = instance.config.bot;

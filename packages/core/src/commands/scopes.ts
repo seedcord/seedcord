@@ -1,3 +1,4 @@
+import { pluralize } from '@seedcord/utils/internal';
 import { Routes } from 'discord-api-types/v10';
 
 import type { DeployTarget } from '#src/commands/deployTarget';
@@ -5,6 +6,8 @@ import type { Snowflake } from 'discord-api-types/v10';
 import type { LiteralUnion } from 'type-fest';
 
 export const GLOBAL_ID = 'global';
+
+const allOf = new Intl.ListFormat('en', { type: 'conjunction' });
 
 // discord's guild ids are all digits
 export type ScopeId = LiteralUnion<typeof GLOBAL_ID, Snowflake>;
@@ -29,6 +32,10 @@ export function globalFirst<ValueT>(scopes: Iterable<readonly [ScopeId, ValueT]>
 
 export function scopeIdsOf(target: DeployTarget): readonly ScopeId[] {
     return target.scope === 'global' ? [GLOBAL_ID] : target.guilds;
+}
+
+export function skippedNote(labels: readonly string[]): string {
+    return `Skipped ${allOf.format(labels)}. ${pluralize(labels.length, 'Its', 'Their')} commands match the last deploy.`;
 }
 
 // one item can belong to several guilds

@@ -1,4 +1,4 @@
-import { GLOBAL_ID } from '@seedcord/core/internal';
+import { GLOBAL_ID, skippedNote } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 
 import { commandLabel, printSections } from '#commands/commands/commandRows';
@@ -10,7 +10,8 @@ import type { CommandRow, CommandSection } from '#commands/commands/commandRows'
 import type { Confirm } from '#commands/commands/confirm';
 import type { PresenterOutput } from '#commands/commands/StepsPresenter';
 import type { DeployStep } from './DeployRunner';
-import type { CommandBody, CommandScopes, ScopeDiff } from '@seedcord/core/internal';
+import type { ScopeDiff } from './diffScope';
+import type { CommandBody, CommandScopes } from '@seedcord/core/internal';
 
 export interface ScopePlan {
     title: string;
@@ -31,12 +32,19 @@ function deployedNote(scopes: CommandScopes): string {
 }
 
 export class DeployPresenter extends StepsPresenter<DeployStep> {
+    // --yes passes no confirm
     constructor(
         output: PresenterOutput<DeployStep>,
-        private readonly confirm: Confirm,
+        private readonly confirm: Confirm | undefined,
         private readonly verbose: boolean
     ) {
         super(output);
+    }
+
+    public skipped(titles: readonly string[]): void {
+        if (titles.length === 0) return;
+        this.output.line();
+        this.output.line(skippedNote(titles));
     }
 
     public nothingToDeploy(): void {
@@ -52,10 +60,17 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
     }
 
     public async approve(plans: readonly ScopePlan[]): Promise<boolean> {
-        const message = `Deploy to ${plural(plans.length, 'scope')}? Discord replaces the commands in each.`;
-        const yes = await unlessCancelled(this.output, () => this.confirm(message));
-        if (yes === false) this.output.line(paint.mute('Nothing deployed.'));
-        return yes === true;
+        if (!this.confirm) return true;
+        return this.ask(
+            this.confirm,
+            `Deploy to ${plural(plans.length, 'scope')}? Discord replaces the commands in each.`
+        );
+    }
+
+    public async deployAnyway(): Promise<boolean> {
+        if (this.confirm) return this.ask(this.confirm, 'Deploy them anyway?');
+        this.nothingToDeploy();
+        return false;
     }
 
     public deploy(task: () => Promise<unknown>, scopes: CommandScopes): Promise<unknown> {
@@ -68,6 +83,12 @@ export class DeployPresenter extends StepsPresenter<DeployStep> {
         this.output.line(
             paint.mute(`Run ${paint.bold('seedcord build')} and deploy the worker again to pick them up.`)
         );
+    }
+
+    private async ask(confirm: Confirm, message: string): Promise<boolean> {
+        const yes = await unlessCancelled(this.output, () => confirm(message));
+        if (yes === false) this.output.line(paint.mute('Nothing deployed.'));
+        return yes === true;
     }
 
     private section({ title, inCode, diff }: ScopePlan): CommandSection {

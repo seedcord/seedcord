@@ -41,6 +41,11 @@ interface CommandsDeps {
 
 type RemoveFlags = GuildFlags & { readonly yes?: boolean | undefined };
 
+interface DeployFlags {
+    readonly yes?: boolean | undefined;
+    readonly force?: boolean | undefined;
+}
+
 type WizardStep = (typeof WIZARD_STEPS)[number];
 type MenuAction = 'deploy' | 'list' | 'clean' | 'purge';
 
@@ -83,8 +88,9 @@ export class CommandsCommand extends BaseCommand {
             .command('deploy')
             .description('Deploy the commands in your code to Discord')
             .option('--yes', 'Deploy without asking first')
+            .option('--force', 'Also deploy the scopes that match the last deploy')
             .action((options, command) =>
-                this.runSteps(command, DEPLOY_STEPS, (printer) => this.deploy(printer, command, options.yes ?? false))
+                this.runSteps(command, DEPLOY_STEPS, (printer) => this.deploy(printer, command, options))
             );
 
         commands
@@ -125,7 +131,7 @@ export class CommandsCommand extends BaseCommand {
 
         await this.runSteps(command, MENU_STEPS, async (printer) => {
             const actions: Record<MenuAction, () => Promise<void>> = {
-                deploy: () => this.deploy(printer, command, false),
+                deploy: () => this.deploy(printer, command, {}),
                 list: () => this.list(printer, command),
                 clean: () => this.wizard(printer, command).run(askClean),
                 purge: () => this.wizard(printer, command).run(askPurge)
@@ -147,10 +153,14 @@ export class CommandsCommand extends BaseCommand {
         });
     }
 
-    private async deploy(printer: StepPrinter<DeployStep>, command: CommandUnknownOpts, yes: boolean): Promise<void> {
+    private async deploy(
+        printer: StepPrinter<DeployStep>,
+        command: CommandUnknownOpts,
+        { yes = false, force = false }: DeployFlags
+    ): Promise<void> {
         if (!yes && !isInteractive()) throw new SeedcordTypeError(SeedcordErrorCode.CliDeployNeedsYes);
-        const confirm: Confirm = yes ? PROCEED : (message) => this.prompter.confirm({ message });
-        await this.deployRunner.run(new DeployPresenter(printer, confirm, isVerbose(command)));
+        const confirm: Confirm | undefined = yes ? undefined : (message) => this.prompter.confirm({ message });
+        await this.deployRunner.run(new DeployPresenter(printer, confirm, isVerbose(command)), { force });
     }
 
     private list(printer: StepPrinter<ListStep>, command: CommandUnknownOpts, scope?: ListScope): Promise<void> {

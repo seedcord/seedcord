@@ -19,7 +19,7 @@ import { isCommandClass } from '#src/commands/isCommandClass';
 import { putCommands } from '#src/commands/putCommands';
 import { readCommands } from '#src/commands/readCommands';
 import { scopeHashes, scopesDiscordLacks, splitByHash } from '#src/commands/scopeHashes';
-import { GLOBAL_ID, scopeIdsOf } from '#src/commands/scopes';
+import { GLOBAL_ID, scopeIdsOf, skippedNote } from '#src/commands/scopes';
 import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 import { CommandMetadataKey } from '#src/metadataKeys';
 import { PublishDefault } from '#subscribers/publishDefault';
@@ -299,9 +299,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private reportSkipped(unchanged: CommandScopes, lacking: CommandScopes): void {
         const skipped = [...unchanged.keys()].filter((scope) => !lacking.has(scope));
         if (skipped.length === 0) return;
-        const labels = skipped.map((scope) => (scope === GLOBAL_ID ? 'global' : paint.sky.bold(scope)));
-        const list = new Intl.ListFormat('en', { type: 'conjunction' }).format(labels);
-        this.logger.info(`Skipped deploying ${list}. Their commands match the last deploy.`);
+        this.logger.info(skippedNote(skipped.map((scope) => (scope === GLOBAL_ID ? 'global' : paint.sky.bold(scope)))));
     }
 
     private reportDeployed(scope: ScopeId, commands: readonly CommandBody[]): void {

@@ -1,5 +1,5 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { paint } from '@seedcord/errors';
 
@@ -32,6 +32,10 @@ export class StateFolder {
         private readonly logger: ILogger
     ) {
         this.dir = join(projectDir, STATE_FOLDER);
+    }
+
+    public static besideConfig(configFile: string, logger: ILogger): StateFolder {
+        return new StateFolder(dirname(configFile), logger);
     }
 
     public read<ValueT>(file: StateFile<ValueT>): ValueT {

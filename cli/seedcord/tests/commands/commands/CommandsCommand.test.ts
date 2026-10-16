@@ -315,6 +315,23 @@ describe('seedcord commands deploy, off a terminal', () => {
             { route: Routes.applicationGuildCommands(APP_ID, '111'), names: ['config'] }
         ]);
     });
+
+    it('deploys the scopes that match the last deploy again with --force', async () => {
+        using _output = captureOutput();
+        const project = await fakeProject();
+        await run(['deploy', '--yes'], { project, onDiscord: EMPTY_DISCORD });
+        const unchanged = {
+            [Routes.applicationCommands(APP_ID)]: [slash('ping')],
+            [Routes.applicationGuildCommands(APP_ID, '111')]: [slash('config')]
+        };
+
+        const { puts } = await run(['deploy', '--yes', '--force'], { project, onDiscord: unchanged });
+
+        expect(puts.map(({ route }) => route)).toEqual([
+            Routes.applicationCommands(APP_ID),
+            Routes.applicationGuildCommands(APP_ID, '111')
+        ]);
+    });
 });
 
 describe('seedcord commands list --json', () => {

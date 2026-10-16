@@ -5,7 +5,6 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Routes } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
-import { PROCEED } from '#commands/commands/confirm';
 import { DeployPresenter } from '#commands/commands/deploy/DeployPresenter';
 import { DEPLOY_STEPS, DeployRunner } from '#commands/commands/deploy/DeployRunner';
 import { StepPrinter } from '#core/output/StepPrinter';
@@ -20,16 +19,17 @@ interface DeployOptions {
     verbose?: boolean;
     answer?: boolean;
     confirm?: Confirm;
+    yes?: boolean;
 }
 
 async function deploy(
     project: ProjectOpener,
     rest: REST,
-    { verbose = false, answer = true, confirm = () => Promise.resolve(answer) }: DeployOptions = {}
+    { verbose = false, answer = true, confirm = () => Promise.resolve(answer), yes = false }: DeployOptions = {}
 ): Promise<string> {
     const stdout = pipedTerminal();
     const printer = new StepPrinter({ command: 'commands', labels: DEPLOY_STEPS, verbose, stdout, stderr: stdout });
-    const presenter = new DeployPresenter(printer, confirm, verbose);
+    const presenter = new DeployPresenter(printer, yes ? undefined : confirm, verbose);
     await new DeployRunner({ projectLoader: project, openDiscord: () => rest, logger: silentLogger }).run(presenter);
     return stdout.text();
 }
@@ -90,6 +90,69 @@ describe('DeployRunner', () => {
 
         expect(puts.map(({ route }) => route)).toEqual([Routes.applicationGuildCommands(APP_ID, '111')]);
         expect(output).not.toContain('/ban');
+    });
+
+    it('skips every scope on a second deploy that changed nothing', async () => {
+        const project = await fakeProject();
+        const { rest, puts } = fakeDiscord();
+        await deploy(project, rest);
+
+        const output = await deploy(project, rest, { yes: true });
+
+        expect(puts).toHaveLength(2);
+        expect(output).toContain('  Skipped global and Alpha. Their commands match the last deploy.\n');
+        expect(output.trimEnd().split('\n').at(-1)).toBe('  Nothing to deploy.');
+    });
+
+    it('asks once whether to deploy the skipped scopes anyway when every scope is skipped', async () => {
+        const project = await fakeProject();
+        const { rest, puts } = fakeDiscord();
+        await deploy(project, rest);
+        const confirm = vi.fn((_message: string) => Promise.resolve(true));
+
+        await deploy(project, rest, { confirm });
+
+        expect(confirm.mock.calls).toEqual([['Deploy them anyway?']]);
+        expect(puts.slice(2).map(({ route }) => route)).toEqual([
+            Routes.applicationCommands(APP_ID),
+            Routes.applicationGuildCommands(APP_ID, '111')
+        ]);
+    });
+
+    it('deploys nothing when the skipped scopes are declined', async () => {
+        const project = await fakeProject();
+        const { rest, puts } = fakeDiscord();
+        await deploy(project, rest);
+
+        const output = await deploy(project, rest, { answer: false });
+
+        expect(puts).toHaveLength(2);
+        expect(output.trimEnd().split('\n').at(-1)).toBe('  Nothing deployed.');
+    });
+
+    it('deploys an unchanged scope again when discord no longer has its commands', async () => {
+        const project = await fakeProject();
+        await deploy(project, fakeDiscord().rest);
+        const { rest, puts } = fakeDiscord({ [Routes.applicationCommands(APP_ID)]: [slash('ping')] });
+
+        const output = await deploy(project, rest);
+
+        expect(puts.map(({ route }) => route)).toEqual([Routes.applicationGuildCommands(APP_ID, '111')]);
+        expect(output).toContain('  Skipped global. Its commands match the last deploy.\n');
+    });
+
+    it('asks again after a declined deploy', async () => {
+        const project = await fakeProject();
+        const { rest } = fakeDiscord({
+            [Routes.applicationCommands(APP_ID)]: [slash('ping')],
+            [Routes.applicationGuildCommands(APP_ID, '111')]: [slash('config')]
+        });
+        await deploy(project, rest, { answer: false });
+        const confirm = vi.fn((_message: string) => Promise.resolve(true));
+
+        await deploy(project, rest, { confirm });
+
+        expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Deploy to 2 scopes?'));
     });
 
     it('says there is nothing to deploy and asks nothing when the code has no commands', async () => {
@@ -159,7 +222,7 @@ describe('DeployRunner', () => {
             logger: silentLogger
         });
 
-        await expect(runner.run(new DeployPresenter(printer, PROCEED, false))).rejects.toBe(missingToken);
+        await expect(runner.run(new DeployPresenter(printer, undefined, false))).rejects.toBe(missingToken);
         expect(stdout.text()).toMatch(new RegExp(`${stripVTControlCharacters(paint.cross)} read discord`, 'u'));
     });
 
