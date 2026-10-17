@@ -3,8 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { Envapter, Environment } from 'envapt';
-import { assert, describe, it, expect, onTestFinished } from 'vitest';
+import { assert, describe, it, expect, onTestFinished, vi } from 'vitest';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
@@ -81,20 +80,28 @@ describe('ProjectLoader', () => {
     });
 
     it.each([
-        [new ShellMode(), Environment.Production],
-        [new ShellMode({ key: 'ENV', value: 'staging' }), Environment.Staging]
-    ])("sets envapt's environment to the mode the bot loads in", async (shell, environment) => {
-        const before = Envapter.environment;
-        onTestFinished(() => {
-            Envapter.environment = before;
-        });
+        [new ShellMode(), 'production'],
+        [new ShellMode({ key: 'ENV', value: 'staging' }), 'staging']
+    ])('gives envapt the .env file of the mode the bot loads in', async (shell, mode) => {
         const projectDir = tempProject();
         writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
+        for (const name of ['test', 'staging', 'production']) {
+            writeFileSync(join(projectDir, `.env.${name}`), `PROBE=${name}\n`);
+        }
+        const cwd = process.cwd();
+        process.chdir(projectDir);
+        onTestFinished(() => process.chdir(cwd));
+        // envapt reads the folder it loads in, under vitest's NODE_ENV=test
+        vi.resetModules();
+        const [{ ProjectLoader: FreshLoader }, { Envapter }] = await Promise.all([
+            import('#core/config/ProjectLoader'),
+            import('envapt')
+        ]);
         const { open } = stubModulesExporting(MINIMAL);
 
-        await using _project = await new ProjectLoader(open, shell, 'production').open(projectDir);
+        await using _project = await new FreshLoader(open, shell, 'production').open(projectDir);
 
-        expect(Envapter.environment).toBe(environment);
+        expect(Envapter.get('PROBE')).toBe(mode);
     });
 });
 
