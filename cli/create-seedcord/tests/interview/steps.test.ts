@@ -27,7 +27,7 @@ describe('directoryStep', () => {
         expect(() => directoryStep.flag.parse('bots/My Bot')).toThrow();
     });
 
-    it.each(['$', '`', '"', '!'])('refuses a %s anywhere in the path, and says which', (character) => {
+    it.each(['$', '`', '"', '!', '%'])('refuses a %s anywhere in the path, and says which', (character) => {
         expect(() => directoryStep.flag.parse(`my${character}bots/bot`)).toThrow(character);
     });
 

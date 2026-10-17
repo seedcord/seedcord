@@ -15,7 +15,7 @@ const FORMAT = 'lowercase, digits, and . _ -';
 const MAX_NAME = 64;
 
 // shells read these even inside the double quotes summary.ts prints the path in
-const QUOTE_BREAKING = /[$`"!]/;
+const QUOTE_BREAKING = /[$`"!%]/;
 
 function parseDirectory(raw: string): string {
     const value = raw.trim();
