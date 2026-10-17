@@ -1,12 +1,10 @@
 import { join } from 'node:path';
 
 import { warnLinks } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
-import { isInside } from '@seedcord/utils/node/internal';
 import { createBuilder } from 'vite';
 
 import { cliLogger } from '#core/cliLogger';
+import { rethrowWithPluginName } from '#core/config/vitePlugins';
 import { restFromEnv } from '#core/discord/restFromEnv';
 import { importCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { CommandScanner } from '#core/modules/CommandScanner';
@@ -85,13 +83,6 @@ export class EdgeBuild extends TargetBuild {
         this.deps = { ...DEFAULT_DEPS, ...deps };
     }
 
-    public check(): void {
-        const { config, configDir } = this.project;
-        if (isInside(config.root, configDir)) {
-            throw new SeedcordError(SeedcordErrorCode.CliEdgeRootHoldsConfig, [config.configFile, config.root]);
-        }
-    }
-
     public async readDiscord(bot: BotConfig): Promise<BakedIds> {
         const read = await readDiscord({
             rest: this.deps.openDiscord(),
@@ -104,9 +95,26 @@ export class EdgeBuild extends TargetBuild {
     }
 
     public async bundle(ids: BakedIds): Promise<BundleStats> {
-        const { config, files, modules } = this.project;
-        const { viteRoot, cloudflareConfig } = this.target;
+        const { config, files } = this.project;
         const [folders, cloudflare] = await Promise.all([files.foldersIncludingEmpty(), this.worker()]);
+
+        const captured = await this.bundleWorker(ids, folders, cloudflare)
+            .catch(rethrowWithPluginName(config))
+            .catch(bundleFailed);
+        const chunks = captured ?? bundleFailed(`the ${WORKER_ENVIRONMENT} environment didn't write a bundle`);
+        const built = await cloudflare.built().catch(bundleFailed);
+        assertNodeCompat(built, this.target.cloudflareConfig);
+
+        return bundleStats(chunks, files, join(built.bundleDir, ENTRY_FILE_NAME));
+    }
+
+    private async bundleWorker(
+        ids: BakedIds,
+        folders: string[],
+        cloudflare: CloudflareWorker
+    ): Promise<Rolldown.OutputChunk[] | undefined> {
+        const { config, files, modules } = this.project;
+        const { viteRoot } = this.target;
 
         let chunks: Rolldown.OutputChunk[] | undefined;
         const builder = await createBuilder({
@@ -134,13 +142,9 @@ export class EdgeBuild extends TargetBuild {
             ],
             resolve: { tsconfigPaths: true },
             environments: workerEnvironment()
-        }).catch(bundleFailed);
-        await builder.buildApp().catch(bundleFailed);
-        chunks ??= bundleFailed(`the ${WORKER_ENVIRONMENT} environment wrote no bundle`);
-        const built = await cloudflare.built().catch(bundleFailed);
-        assertNodeCompat(built, cloudflareConfig);
-
-        return bundleStats(chunks, files, join(built.bundleDir, ENTRY_FILE_NAME));
+        });
+        await builder.buildApp();
+        return chunks;
     }
 
     public override async boot(): Promise<void> {

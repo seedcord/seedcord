@@ -11,6 +11,7 @@ import { createServerModuleRunner } from 'vite';
 import { CloudflareWorker } from '#commands/build/builder/CloudflareWorker';
 import { workerEntry } from '#commands/build/builder/workerEntry';
 import { listenHostFor } from '#commands/dev/tunnel/listenHost';
+import { rethrowWithPluginName } from '#core/config/vitePlugins';
 import { reportWorkerExports, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { edgeStandIns } from '#core/modules/edgeStandIns';
 import { openViteServer } from '#core/modules/openViteServer';
@@ -130,7 +131,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                     ...config.vitePlugins
                 ]
             })
-        );
+        ).catch(rethrowWithPluginName(config));
         await loadWorkerEntry(server.middlewares, config.instance);
         const modules = await modulesReady.promise;
         const endpoint = await listenForInteractions(server.middlewares, {

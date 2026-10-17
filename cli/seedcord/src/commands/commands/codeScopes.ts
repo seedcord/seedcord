@@ -1,6 +1,7 @@
 import { resolveDeployTarget, scopeIdsOf } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 
+import { openProjectWithSteps } from '#core/config/openProjectWithSteps';
 import { plural } from '#core/format';
 import { CommandScanner } from '#core/modules/CommandScanner';
 import { importInstance } from '#core/modules/importInstance';
@@ -12,7 +13,7 @@ import type { FoundCommand } from '#core/modules/CommandScanner';
 import type { Steps } from '#core/output/Steps';
 import type { CommandBody, CommandScopes, ScopeId } from '@seedcord/core/internal';
 
-export const LOAD_STEPS = ['read config', 'load bot', 'scan'] as const;
+export const LOAD_STEPS = ['read config', 'load plugins', 'load bot', 'scan'] as const;
 type LoadStep = (typeof LOAD_STEPS)[number];
 
 interface CodeScopes {
@@ -41,7 +42,7 @@ export async function loadCodeScopes(
     { projectLoader }: LoadDeps,
     projectDir: string
 ): Promise<CodeScopes> {
-    await using project = await steps.step('read config', () => projectLoader.open(projectDir));
+    await using project = await openProjectWithSteps(steps, projectLoader, { projectDir });
     const { config, modules } = project;
     printResolvedConfig(steps, config);
     const loaded = { target: config.target.kind, instance: config.instance };

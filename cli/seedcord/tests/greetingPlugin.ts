@@ -15,12 +15,12 @@ export function greetingPlugin(): Plugin {
     };
 }
 
-// a seedcord.config.ts with the given fields and greetingPlugin
-export function configWithGreetingPlugin(fields: string): string {
+// vitePlugins is source text, like '[greetingPlugin()]'
+export function configWithGreetingPlugin(fields: string, vitePlugins = '[greetingPlugin()]'): string {
     return [
         `import { greetingPlugin } from ${JSON.stringify(import.meta.filename)};`,
         '',
-        `export default { ${fields}, vitePlugins: [greetingPlugin()] };`,
+        `export default { ${fields}, vitePlugins: ${vitePlugins} };`,
         ''
     ].join('\n');
 }

@@ -1,13 +1,10 @@
-import { existsSync } from 'node:fs';
 import { extname, join } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
 import { build } from 'vite';
 
+import { rethrowWithPluginName } from '#core/config/vitePlugins';
 import { viteKey } from '#core/project/ProjectFiles';
 
-import { assertOutDirSafe } from './assertOutDirSafe';
 import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { serverCommands } from './serverCommands';
@@ -44,12 +41,6 @@ export class ServerBuild extends TargetBuild {
         private readonly target: ResolvedServerTarget
     ) {
         super(project);
-    }
-
-    public check(): void {
-        const { entry, outDir } = this.target;
-        if (!existsSync(entry)) throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [entry]);
-        assertOutDirSafe(outDir, this.project.config.root);
     }
 
     public nextCommands(bundle: BundleStats): NextCommand[] {
@@ -98,7 +89,9 @@ export class ServerBuild extends TargetBuild {
                 }
             },
             ssr: { target: 'node', external: true }
-        }).catch(bundleFailed);
+        })
+            .catch(rethrowWithPluginName(config))
+            .catch(bundleFailed);
 
         return bundleStats(outputChunks(result), files, join(outDir, ENTRY_FILE_NAME));
     }

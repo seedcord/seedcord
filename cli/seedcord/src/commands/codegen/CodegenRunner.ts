@@ -7,6 +7,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { HostAugmentTarget, HostPluginKeys, type SeedcordInstance } from '@seedcord/types/internal';
 import { posixRelative } from '@seedcord/utils/node/internal';
 
+import { openProjectWithSteps } from '#core/config/openProjectWithSteps';
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { plural } from '#core/format';
 import { CommandScanner } from '#core/modules/CommandScanner';
@@ -18,6 +19,7 @@ import { startupShell } from '#core/viteMode';
 import { AugmentationBuilder } from './AugmentationBuilder';
 import { renderAugmentation } from './renderAugmentation';
 
+import type { ProjectOpener } from '#core/config/openProjectWithSteps';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Steps } from '#core/output/Steps';
@@ -34,7 +36,14 @@ export interface LoadedBot {
     readonly modules: ModuleLoader;
 }
 
-export const CODEGEN_STEPS = ['read config', 'load bot', 'scan commands', 'write types', 'compare types'] as const;
+export const CODEGEN_STEPS = [
+    'read config',
+    'load plugins',
+    'load bot',
+    'scan commands',
+    'write types',
+    'compare types'
+] as const;
 type CodegenStep = (typeof CODEGEN_STEPS)[number];
 
 interface CodegenResult {
@@ -44,7 +53,7 @@ interface CodegenResult {
 
 interface CodegenRunnerDeps {
     readonly steps: Steps<CodegenStep>;
-    readonly projectLoader: Pick<ProjectLoader, 'open'>;
+    readonly projectLoader: ProjectOpener;
     readonly generator: AugmentationBuilder;
     readonly logger: ILogger;
 }
@@ -70,7 +79,7 @@ export class CodegenRunner {
     public async run(check: boolean): Promise<CodegenResult> {
         const { steps, projectLoader } = this.deps;
 
-        await using project = await steps.step('read config', () => projectLoader.open());
+        await using project = await openProjectWithSteps(steps, projectLoader);
         const { config, modules } = project;
         printResolvedConfig(steps, config);
         const instance = await steps.step('load bot', () => importInstance(modules, config.instance));

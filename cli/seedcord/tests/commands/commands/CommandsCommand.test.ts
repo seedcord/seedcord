@@ -341,10 +341,11 @@ describe('seedcord commands list --json', () => {
         const inner = await fakeProject();
         const project: FakeProject = {
             state: inner.state,
-            open: (dir) => {
+            readConfig: (dir) => {
                 process.stdout.write('loading the bot\n');
-                return inner.open(dir);
-            }
+                return inner.readConfig(dir);
+            },
+            openProject: (config) => inner.openProject(config)
         };
 
         await run(['list', '--json'], { project });

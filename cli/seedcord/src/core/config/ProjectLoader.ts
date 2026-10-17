@@ -13,6 +13,7 @@ import { assertTargetMatchesTsconfig } from './assertTargetMatchesTsconfig';
 import { ConfigValidator } from './ConfigValidator';
 import { detectTarget } from './detectTarget';
 import { locateConfig } from './locateConfig';
+import { resolveVitePlugins, rethrowWithPluginName } from './vitePlugins';
 
 import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
 import type { DefaultMode, ShellMode } from '#core/viteMode';
@@ -52,7 +53,6 @@ export class ProjectLoader {
         private readonly defaultMode: DefaultMode = 'development'
     ) {}
 
-    // dev loads the bot through its own vite server
     public async readConfig(projectDir = process.cwd()): Promise<ResolvedSeedcordConfig> {
         const mode = this.shell.viteMode(this.defaultMode);
         Envapter.environment = mode;
@@ -66,12 +66,11 @@ export class ProjectLoader {
         return project.config;
     }
 
-    public async open(projectDir = process.cwd()): Promise<Project> {
-        const config = await this.readConfig(projectDir);
-        // readConfig's checks go first because opening this runs cloudflare.config.ts on an edge bot
+    // starts the config's vite plugins. on an edge bot it also runs cloudflare.config.ts
+    public async openProject(config: ResolvedSeedcordConfig): Promise<Project> {
         const botModules = await this.openModules(dirname(config.configFile), config.target, config.viteMode, {
             vitePlugins: config.vitePlugins
-        });
+        }).catch(rethrowWithPluginName(config));
         return new Project(config, botModules);
     }
 
@@ -103,7 +102,7 @@ export class ProjectLoader {
             viteMode: mode,
             tunnel: resolveTunnel(config.tunnel),
             hmr: config.hmr,
-            vitePlugins: config.vitePlugins ?? []
+            vitePlugins: await resolveVitePlugins(config.vitePlugins ?? [])
         } satisfies ResolvedSeedcordConfig;
     }
 

@@ -11,7 +11,7 @@ import { APP_ID, fakeDiscord, fakeProject, pipedTerminal, slash } from '#tests/c
 import { silentLogger } from '#tests/silentLogger';
 
 import type { ListScope } from '#commands/commands/list/ListRunner';
-import type { ProjectOpener } from '#tests/commands/commands/fakeBot';
+import type { ProjectOpener } from '#core/config/openProjectWithSteps';
 import type { REST } from '@discordjs/rest';
 
 interface ListOptions {

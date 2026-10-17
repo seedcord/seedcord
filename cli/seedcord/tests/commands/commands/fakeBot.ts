@@ -13,7 +13,7 @@ import { Project } from '#core/project/Project';
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
 
-import type { ProjectLoader } from '#core/config/ProjectLoader';
+import type { ProjectOpener } from '#core/config/openProjectWithSteps';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { Terminal } from '#core/output/terminal';
@@ -47,8 +47,6 @@ interface BotOptions {
     guilds?: string[];
     edge?: boolean;
 }
-
-export type ProjectOpener = Pick<ProjectLoader, 'open'>;
 
 // a test that reuses a project reuses its last deploy
 export type FakeProject = ProjectOpener & { readonly state: StateFolder };
@@ -98,22 +96,30 @@ export async function fakeProject({
         default: { [SeedcordBrand]: true, config: { bot: { commands: { path: commandsPath, guilds } } } }
     });
 
-    // justified: the commands runners read only these paths off the config
-    const config = {
+    const config: ResolvedSeedcordConfig = {
         root,
         instance,
         configFile: resolve(root, 'seedcord.config.ts'),
         target: edge
-            ? { kind: 'edge', cloudflareConfig: resolve(root, 'cloudflare.config.ts') }
+            ? { kind: 'edge', cloudflareConfig: resolve(root, 'cloudflare.config.ts'), viteRoot: root, port: 0 }
             : { kind: 'server', entry: resolve(root, 'index.ts'), outDir: resolve(root, 'dist') },
-        build: {}
-    } as ResolvedSeedcordConfig;
+        build: {},
+        typecheck: { enabled: false },
+        idleAnimation: false,
+        tunnel: { mode: 'off' },
+        viteMode: 'development',
+        vitePlugins: []
+    };
     // justified: the commands runners read only importModule off the loader
     const modules = {
         importModule: (path: string) => Promise.resolve(byPath.get(path) ?? {}),
         [Symbol.asyncDispose]: () => Promise.resolve()
     } as ModuleLoader & AsyncDisposable;
-    return { open: () => Promise.resolve(new Project(config, modules)), state: new StateFolder(root, silentLogger) };
+    return {
+        readConfig: () => Promise.resolve(config),
+        openProject: (opened) => Promise.resolve(new Project(opened, modules)),
+        state: new StateFolder(root, silentLogger)
+    };
 }
 
 // a function answers a GET from its query

@@ -2,10 +2,11 @@ import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
+import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
+import { resolveVitePlugins } from '#core/config/vitePlugins';
 import { GREETING, GREETING_PROBE, greetingPlugin } from '#tests/greetingPlugin';
 
 import { devContextFor } from './devConfigFor';
@@ -71,6 +72,30 @@ describe('dev runtime vitePlugins', () => {
         const { module } = await runtime.loadEntry();
 
         expect(module).toMatchObject({ default: GREETING });
+    }, 60_000);
+
+    it('throws CliVitePluginThrew for a plugin that throws while the dev server starts', async () => {
+        const temp = await mkdtempDisposable(join(tmpdir(), 'dev-vite-plugins-'));
+        onTestFinished(() => temp.remove());
+        await writeProject(temp.path);
+        const vitePlugins = await resolveVitePlugins([
+            {
+                name: 'breaks-on-start',
+                configureServer: () => {
+                    throw new Error('bad option');
+                }
+            }
+        ]);
+        const context = devContextFor(temp.path, 'index.ts');
+        const runtime = new ServerDevRuntime();
+        onTestFinished(() => runtime.stop());
+
+        const caught: unknown = await runtime
+            .start({ ...context, config: { ...context.config, vitePlugins } })
+            .catch((error: unknown) => error);
+
+        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CliVitePluginThrew));
+        expect(caught.message).toContain('breaks-on-start');
     }, 60_000);
 });
 

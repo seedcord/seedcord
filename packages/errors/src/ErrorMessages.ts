@@ -299,6 +299,8 @@ const messages = {
         `seedcord loads ${paint.path('cloudflare.config.ts')} through Cloudflare's config loader, which throws on Bun. Run the CLI on Node by leaving out ${paint.bold('--bun')}, as in ${paint.bold('bun run dev')}.`,
     [SeedcordErrorCode.CliEdgeNoWorker]: (cloudflareConfig: string) =>
         `${paint.path(cloudflareConfig)} sets no ${paint.bold('worker')}. Add a ${paint.bold('worker')} with your worker's ${paint.bold('name')} and ${paint.bold('compatibilityDate')}.`,
+    [SeedcordErrorCode.CliVitePluginThrew]: (plugin: string, hook: string, configFile: string, reason: string) =>
+        `The Vite plugin ${paint.sky(plugin)} from ${paint.bold('vitePlugins')} in ${paint.path(configFile)} threw in its ${paint.bold(hook)} hook. ${reason} Check the options you pass it, or take it out of ${paint.bold('vitePlugins')} to see whether the error goes away.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>

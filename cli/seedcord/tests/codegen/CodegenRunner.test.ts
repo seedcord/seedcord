@@ -14,6 +14,7 @@ import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { quietSteps } from '#core/output/quietSteps';
 import { Project } from '#core/project/Project';
 
+import type { ProjectOpener } from '#core/config/openProjectWithSteps';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
@@ -46,15 +47,26 @@ function silentLogger(overrides: Partial<ILogger> = {}): ILogger {
     };
 }
 
-// justified: codegen reads only these paths off the config
 function configAt(root: string, instance: string): ResolvedSeedcordConfig {
     return {
         root,
         instance,
         configFile: resolve(root, 'seedcord.config.ts'),
         target: { kind: 'server', entry: resolve(root, 'index.ts'), outDir: resolve(root, 'dist') },
-        build: {}
-    } as ResolvedSeedcordConfig;
+        build: {},
+        typecheck: { enabled: false },
+        idleAnimation: false,
+        tunnel: { mode: 'off' },
+        viteMode: 'development',
+        vitePlugins: []
+    };
+}
+
+function projectOpener(config: ResolvedSeedcordConfig, modules: ModuleLoader & AsyncDisposable): ProjectOpener {
+    return {
+        readConfig: () => Promise.resolve(config),
+        openProject: (read) => Promise.resolve(new Project(read, modules))
+    };
 }
 
 function runnerWith(
@@ -64,7 +76,7 @@ function runnerWith(
 ): CodegenRunner {
     // justified: codegen reads only importModule off the loader
     const modules = { importModule, [Symbol.asyncDispose]: () => Promise.resolve() } as ModuleLoader & AsyncDisposable;
-    const projectLoader = { open: () => Promise.resolve(new Project(config, modules)) };
+    const projectLoader = projectOpener(config, modules);
 
     return new CodegenRunner({ steps: quietSteps, projectLoader, generator: new AugmentationBuilder(logger), logger });
 }
@@ -163,7 +175,8 @@ describe('CodegenRunner writeFrom', () => {
         const root = await tempDir('codegen-');
         const cmdDir = await tempDir('cmds-');
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
-        const projectLoader = { open: () => Promise.reject(new Error('dev already loaded the bot')) };
+        const notOpened = (): Promise<never> => Promise.reject(new Error('dev already loaded the bot'));
+        const projectLoader: ProjectOpener = { readConfig: notOpened, openProject: notOpened };
         const logger = silentLogger();
         const runner = new CodegenRunner({
             steps: quietSteps,
@@ -209,7 +222,7 @@ describe('CodegenRunner', () => {
         const logger = silentLogger();
         const runner = new CodegenRunner({
             steps: quietSteps,
-            projectLoader: { open: () => Promise.resolve(new Project(configAt(root, instancePath), modules)) },
+            projectLoader: projectOpener(configAt(root, instancePath), modules),
             generator: new AugmentationBuilder(logger),
             logger
         });

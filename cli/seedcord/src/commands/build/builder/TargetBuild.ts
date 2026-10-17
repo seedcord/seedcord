@@ -9,9 +9,6 @@ export abstract class TargetBuild implements AsyncDisposable {
 
     constructor(public readonly project: Project) {}
 
-    // runs inside the read config step, before the bot loads
-    public abstract check(): void;
-
     public boot?(): Promise<void>;
 
     public abstract nextCommands(bundle: BundleStats): NextCommand[];

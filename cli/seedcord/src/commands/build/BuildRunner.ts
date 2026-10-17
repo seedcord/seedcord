@@ -1,5 +1,6 @@
 import { paint } from '@seedcord/errors';
 
+import { openProjectWithSteps } from '#core/config/openProjectWithSteps';
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
@@ -7,6 +8,7 @@ import { printResolvedConfig } from '#core/output/printResolvedConfig';
 import { startupShell } from '#core/viteMode';
 
 import { assertFoldersUnderRoot } from './builder/assertFoldersUnderRoot';
+import { checkBuildTarget } from './builder/checkBuildTarget';
 import { targetBuildFor } from './builder/targetBuildFor';
 import { TypeChecker } from './builder/TypeChecker';
 
@@ -17,7 +19,15 @@ import type { NextCommand } from './builder/TargetBuild';
 import type { Build } from './builder/targetBuildFor';
 import type { BotConfig } from '@seedcord/types';
 
-export const BUILD_STEPS = ['read config', 'load bot', 'type check', 'read discord', 'bundle', 'boot'] as const;
+export const BUILD_STEPS = [
+    'read config',
+    'load plugins',
+    'load bot',
+    'type check',
+    'read discord',
+    'bundle',
+    'boot'
+] as const;
 export type BuildStep = (typeof BUILD_STEPS)[number];
 
 export interface BuildResult {
@@ -51,7 +61,11 @@ export class BuildRunner {
     public async run(projectDir = process.cwd()): Promise<BuildResult> {
         const { steps, typeChecker } = this.deps;
 
-        await using build = await steps.step('read config', () => this.open(projectDir));
+        const opened = await openProjectWithSteps(steps, this.deps.projectLoader, {
+            projectDir,
+            check: checkBuildTarget
+        });
+        await using build = this.deps.buildFor(opened);
         const { project } = build;
         const { config, modules } = project;
         printResolvedConfig(steps, config);
@@ -79,15 +93,5 @@ export class BuildRunner {
 
         const ids = await steps.step('read discord', () => build.readDiscord(bot));
         return steps.step('bundle', () => build.bundle(ids));
-    }
-
-    private async open(projectDir: string): Promise<Build> {
-        await using onFailure = new AsyncDisposableStack();
-        const project = onFailure.use(await this.deps.projectLoader.open(projectDir));
-        const build = this.deps.buildFor(project);
-        build.check();
-
-        onFailure.move();
-        return build;
     }
 }

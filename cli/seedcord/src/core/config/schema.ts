@@ -147,22 +147,25 @@ export type ResolvedTarget = ResolvedServerTarget | ResolvedEdgeTarget;
 
 export type ResolvedTypecheck = { enabled: false } | { enabled: true; tsconfig?: string };
 
+// one plugin, with the promises, arrays and false entries of PluginOption resolved
+export type VitePlugin = Exclude<Awaited<PluginOption>, false | null | undefined | readonly unknown[]>;
+
 export interface ResolvedSeedcordBuildConfig {
     tsconfig?: string;
 }
 
 // every path in here is absolute
 export interface ResolvedSeedcordConfig extends Required<
-    TypedOmit<SeedcordConfig, 'build' | 'hmr' | 'tunnel' | 'port'>
+    TypedOmit<SeedcordConfig, 'build' | 'hmr' | 'tunnel' | 'port' | 'vitePlugins'>
 > {
     tunnel: ResolvedTunnel;
+    vitePlugins: VitePlugin[];
     configFile: string;
     target: ResolvedTarget;
     build: ResolvedSeedcordBuildConfig;
     typecheck: ResolvedTypecheck;
     viteMode: string;
-    // restart globs pass through unresolved
-    hmr?: SeedcordHmrConfig | undefined;
+    hmr?: SeedcordHmrConfig | undefined; // restart globs pass through unresolved
 }
 
 /**

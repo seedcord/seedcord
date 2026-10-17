@@ -6,7 +6,7 @@ import { loadCodeScopes } from '#commands/commands/codeScopes';
 import { quietSteps } from '#core/output/quietSteps';
 import { fakeProject } from '#tests/commands/commands/fakeBot';
 
-import type { ProjectOpener } from '#tests/commands/commands/fakeBot';
+import type { ProjectOpener } from '#core/config/openProjectWithSteps';
 
 class Help extends BuilderComponent<'command'> {
     public constructor() {

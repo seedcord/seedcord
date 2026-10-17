@@ -1,14 +1,15 @@
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { posixRelative } from '@seedcord/utils/node/internal';
 import { bindings, exports } from 'cf/config';
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { DevRunner } from '#commands/dev/DevRunner';
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
+import { resolveVitePlugins } from '#core/config/vitePlugins';
 import { quietSteps } from '#core/output/quietSteps';
 import { deployedCommandsFile } from '#core/state/deployedCommands';
 import { StateFolder } from '#core/state/StateFolder';
@@ -225,6 +226,25 @@ describe('EdgeDevRuntime lifecycle', () => {
         const nodeCopy = await runtime.importModule<{ default: string }>(join(projectDir, 'src/handlers/greeting.ts'));
 
         expect(nodeCopy.default).toBe(GREETING);
+    }, 60_000);
+
+    it('throws CliVitePluginThrew for a plugin that throws while edge dev starts', async () => {
+        await using project = await edgeProject();
+        const vitePlugins = await resolveVitePlugins([
+            {
+                name: 'breaks-on-start',
+                configResolved: () => {
+                    throw new Error('bad option');
+                }
+            }
+        ]);
+
+        const caught: unknown = await startedRuntime(project.projectDir, undefined, { vitePlugins }).catch(
+            (error: unknown) => error
+        );
+
+        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CliVitePluginThrew));
+        expect(caught.message).toContain('breaks-on-start');
     }, 60_000);
 
     it('throws CliStartFailed when the worker answers a GET with something other than 405', async () => {

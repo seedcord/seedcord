@@ -284,6 +284,8 @@ export enum SeedcordErrorCode {
     CliEdgeOnBun = 3136,
     /** An edge bot's `cloudflare.config.ts` sets no `worker`. */
     CliEdgeNoWorker = 3137,
+    /** A Vite plugin from `vitePlugins` threw in one of its hooks. */
+    CliVitePluginThrew = 3138,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,
