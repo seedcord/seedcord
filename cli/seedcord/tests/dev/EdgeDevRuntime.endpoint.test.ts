@@ -24,6 +24,32 @@ import {
 import type { DevEvent } from '#commands/dev/runtime/events';
 import type { IncomingMessage } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import type { Plugin } from 'vite';
+
+const WAVE_WITH_WORD = `import { SlashHandler, SlashRoute } from '@seedcord/http';
+
+import { word } from '../word';
+
+@SlashRoute('wave')
+export class WaveHandler extends SlashHandler<'wave'> {
+    public execute(): Promise<void> {
+        console.log(word);
+        return Promise.resolve();
+    }
+}
+`;
+
+const BROKEN_WORD = 'word.ts is broken';
+
+const throwsCircularOnBrokenWord: Plugin = {
+    name: 'throws-circular-on-broken-word',
+    transform(code, id) {
+        if (!id.endsWith('/word.ts') || !code.includes('broken')) return undefined;
+        const error = new Error(BROKEN_WORD);
+        Reflect.set(error, 'self', error);
+        throw error;
+    }
+};
 
 describe('EdgeDevRuntime endpoint', () => {
     describe('on one started bot', () => {
@@ -109,6 +135,30 @@ describe('EdgeDevRuntime endpoint', () => {
                 expect(messagesOf(logs)).toContainEqual(expect.stringContaining('waved v2'));
             },
             { timeout: 20_000, interval: 500 }
+        );
+    }, 120_000);
+
+    // cloudflare/workers-sdk#16339
+    it('logs the error a plugin throws with a circular field when a handler reload fails', async () => {
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        const word = join(projectDir, 'src/word.ts');
+        await writeFile(word, "export const word = 'fine';\n");
+        await writeFile(join(projectDir, 'src/handlers/Wave.ts'), WAVE_WITH_WORD);
+        const logs = captureLogs();
+        await using started = await startedRuntime(projectDir, undefined, {
+            vitePlugins: [throwsCircularOnBrokenWord]
+        });
+        await started.runtime.startBot(started.instance);
+
+        await writeFile(word, "export const word = 'broken';\n");
+
+        await vi.waitFor(
+            () => {
+                const failed = logs.find((record) => record.message.startsWith('Failed to reload'));
+                expect(failed?.args?.[0]).toMatchObject({ message: BROKEN_WORD });
+            },
+            { timeout: 20_000, interval: 250 }
         );
     }, 120_000);
 

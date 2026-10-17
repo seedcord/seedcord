@@ -5,6 +5,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { displayPath, SeedcordError } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
+import { filterCirculars } from '@seedcord/utils';
 import chalk from 'chalk';
 import { createServerModuleRunner } from 'vite';
 
@@ -36,7 +37,7 @@ import type {
     SeedcordFrameworkEvents,
     SeedcordInstance
 } from '@seedcord/types/internal';
-import type { Plugin, ViteDevServer } from 'vite';
+import type { DevEnvironment, Plugin, ViteDevServer } from 'vite';
 
 interface EdgeStarted extends StartedRuntime {
     readonly server: ViteDevServer;
@@ -60,10 +61,7 @@ function nodeCopy(onReady: (modules: RunnerModuleLoader) => void): Plugin {
     };
 }
 
-function workerChannel(
-    server: ViteDevServer,
-    instance: string
-): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> {
+function workerEnvironment(server: ViteDevServer, instance: string): DevEnvironment {
     const worker = server.environments[WORKER_ENVIRONMENT];
     if (!worker) {
         throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
@@ -71,7 +69,31 @@ function workerChannel(
             `@cloudflare/vite-plugin did not create its "${WORKER_ENVIRONMENT}" environment`
         ]);
     }
-    return wrapHot<SeedcordCliEvents, SeedcordFrameworkEvents>(worker.hot);
+    return worker;
+}
+
+function workerChannel(
+    server: ViteDevServer,
+    instance: string
+): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> {
+    return wrapHot<SeedcordCliEvents, SeedcordFrameworkEvents>(workerEnvironment(server, instance).hot);
+}
+
+// cloudflare/workers-sdk#16339, remove once it's fixed
+// the plugin's Response.json throws on an error with a circular field
+function invokeErrorsAsJson(instance: string): Plugin {
+    return {
+        name: 'seedcord:invoke-errors-as-json',
+        configureServer(server) {
+            const { hot } = workerEnvironment(server, instance);
+            const handleInvoke = hot.handleInvoke.bind(hot);
+            hot.handleInvoke = async (payload) => {
+                const result = await handleInvoke(payload);
+                if (!('error' in result)) return result;
+                return { error: filterCirculars<unknown>(result.error, { mode: 'json' }) };
+            };
+        }
+    };
 }
 
 // ServerHost installs these for a server bot. the edge Seedcord never does
@@ -127,6 +149,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                     // cloudflare() loads the worker entry during createServer. the entry's export list comes from this copy
                     nodeCopy(modulesReady.resolve),
                     hmr.plugin,
+                    invokeErrorsAsJson(config.instance),
                     cloudflare.plugins(),
                     ...config.vitePlugins
                 ]
