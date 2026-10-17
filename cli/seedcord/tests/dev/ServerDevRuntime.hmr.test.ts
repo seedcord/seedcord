@@ -1,5 +1,5 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { afterAll, describe, expect, it, vi } from 'vitest';
@@ -137,6 +137,22 @@ describe('dev runtime hot reload', () => {
         await runtime.importModule(join(src, 'schema', 'user.ts'));
 
         await writeFile(join(src, 'field.ts'), "export const field = 'after';\n");
+
+        await expectRestartRequired(events);
+    }, 60_000);
+
+    it('asks for a restart when the config is saved', async () => {
+        const { src, events } = await startedProject({ 'index.ts': 'export const ready = true;\n' });
+
+        await writeFile(join(dirname(src), 'seedcord.config.ts'), 'export default { idleAnimation: false };\n');
+
+        await expectRestartRequired(events);
+    }, 60_000);
+
+    it('asks for a restart when the .env beside the config is saved', async () => {
+        const { src, events } = await startedProject({ 'index.ts': 'export const ready = true;\n' });
+
+        await writeFile(join(dirname(src), '.env'), 'GREETING=after\n');
 
         await expectRestartRequired(events);
     }, 60_000);

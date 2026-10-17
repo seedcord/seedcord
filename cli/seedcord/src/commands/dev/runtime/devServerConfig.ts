@@ -47,7 +47,10 @@ function devViteConfig(
 }
 
 export function serverViteConfig(config: DevConfigPaths, cwd: string): InlineConfig {
-    return mergeViteConfig(devViteConfig(NODE_CONDITIONS, config, cwd), { root: config.root, logLevel: 'error' });
+    return mergeViteConfig(devViteConfig(NODE_CONDITIONS, config, cwd), {
+        root: dirname(config.configFile),
+        logLevel: 'error'
+    });
 }
 
 export function edgeViteConfig(config: DevConfigPaths, viteRoot: string, cwd: string): InlineConfig {

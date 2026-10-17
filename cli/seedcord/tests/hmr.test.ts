@@ -166,7 +166,7 @@ describe('HmrPlugin', () => {
         expect(hotSend).toHaveBeenCalledWith(HMR_EVENT_NAME, expect.objectContaining({ file, rollback: false }));
     });
 
-    it('asks for a restart when the config file above the vite root changes', () => {
+    it('asks for a restart when the config file changes', () => {
         const configFile = join(projectRoot, 'seedcord.config.ts');
         const { watcher, events } = configuredPlugin({ ...mockConfig, root: srcRoot, configFile });
 

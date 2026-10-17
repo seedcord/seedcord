@@ -56,6 +56,22 @@ describe('dev runtime with root set to src', () => {
         expect(module).toMatchObject({ texts: ['hello'] });
     }, 60_000);
 
+    it('reads VITE_ values from the .env beside the config', async () => {
+        await mkdir(SCRATCH_ROOT, { recursive: true });
+        const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
+        await writeProject(dir);
+        await writeFile(join(dir, '.env'), 'VITE_GREETING=hi from the project\n');
+        await writeFile(join(dir, 'src', 'env.ts'), 'export const greeting = import.meta.env.VITE_GREETING;\n');
+
+        const runtime = new ServerDevRuntime();
+        runtimes.push(runtime);
+
+        await runtime.start(devContextFor(dir, 'env.ts'));
+        const { module } = await runtime.loadEntry();
+
+        expect(module).toMatchObject({ greeting: 'hi from the project' });
+    }, 60_000);
+
     it('forgets root once the bot stops', async () => {
         await mkdir(SCRATCH_ROOT, { recursive: true });
         const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));

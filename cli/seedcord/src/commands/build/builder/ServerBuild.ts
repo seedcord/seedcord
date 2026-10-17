@@ -5,6 +5,8 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { build } from 'vite';
 
+import { viteKey } from '#core/project/ProjectFiles';
+
 import { assertOutDirSafe } from './assertOutDirSafe';
 import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
@@ -55,19 +57,27 @@ export class ServerBuild extends TargetBuild {
     }
 
     public async bundle(): Promise<BundleStats> {
-        const { config, files } = this.project;
+        const { config, configDir, files } = this.project;
         const { entry, outDir } = this.target;
         const { root } = config;
         const folders = await files.foldersIncludingEmpty();
 
         const result = await build({
-            root,
+            root: configDir,
             mode: config.viteMode,
             configFile: false,
             // vite copies <root>/public into outDir otherwise
             publicDir: false,
             logLevel: 'warn',
-            plugins: [serverEntry({ files, entry, folders }), pinModulePaths(files)],
+            plugins: [
+                serverEntry({
+                    files,
+                    folders,
+                    entryKey: viteKey(configDir, entry),
+                    rootKey: viteKey(configDir, root)
+                }),
+                pinModulePaths(files)
+            ],
             resolve: { tsconfigPaths: true },
             build: {
                 ssr: true,

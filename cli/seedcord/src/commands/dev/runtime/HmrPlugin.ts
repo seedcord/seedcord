@@ -99,9 +99,6 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         // vite calls hotUpdate for files only
         server.watcher.on('addDir', (dir) => this.handleDirEvent(resolve(dir), 'createDir'));
         server.watcher.on('unlinkDir', (dir) => this.handleDirEvent(resolve(dir), 'deleteDir'));
-
-        // vite watches config.root only
-        server.watcher.add(this.config.configFile);
         server.watcher.on('change', (file) => this.handleChange(resolve(file)));
 
         this.dev?.on('seedcord:commands-update-prompt', (data) => {
