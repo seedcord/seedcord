@@ -17,11 +17,19 @@ const TOGGLE_LABELS: Record<string, string> = {
     MessageContent: 'Message Content Intent'
 };
 
+const PLAIN_WORD = /^[\w@%+=:,./-]+$/;
+
+// sh, powershell and cmd all read a double-quoted `#` or space as part of one word
+function shellWord(value: string): string {
+    return PLAIN_WORD.test(value) ? value : `"${value}"`;
+}
+
 export function nextSteps(answers: ScaffoldAnswers, run: { agent: AgentName; installed: boolean }): string[] {
     const install = run.installed ? [] : [paint.bold(`${run.agent} install`)];
     const fill = answers.token === null ? [paint.mute('add DISCORD_BOT_TOKEN to .env')] : [];
 
-    return [paint.bold(`cd ${answers.directory}`), ...install, ...fill, paint.bold(`${runPrefix(run.agent)} dev`)];
+    const cd = paint.bold(`cd ${shellWord(answers.directory)}`);
+    return [cd, ...install, ...fill, paint.bold(`${runPrefix(run.agent)} dev`)];
 }
 
 function secretFlag(value: string | null, flag: string, placeholder: string): string {
@@ -44,9 +52,9 @@ export function dashboardToggles(capabilities: string[]): string[] {
 export function reproducingCommand(answers: ScaffoldAnswers, agent: AgentName): string {
     const flags = [
         `--transport ${answers.transport}`,
-        ...(answers.capabilities === undefined ? [] : [`--capabilities ${answers.capabilities.join(',')}`]),
+        ...(answers.capabilities === undefined ? [] : [`--capabilities ${shellWord(answers.capabilities.join(','))}`]),
         secretFlag(answers.token, 'token', 'YOUR_TOKEN'),
-        `--color ${answers.botColor}`,
+        `--color ${shellWord(answers.botColor)}`,
         switchFlag(answers.install, 'install'),
         switchFlag(answers.git, 'git')
     ];
@@ -54,5 +62,5 @@ export function reproducingCommand(answers: ScaffoldAnswers, agent: AgentName): 
     // npm alone forwards flags to the package through a double dash
     const separator = agent === 'npm' ? '-- ' : '';
 
-    return `${agent} create seedcord@${version} ${answers.directory} ${separator}${flags.join(' ')}`;
+    return `${agent} create seedcord@${version} ${shellWord(answers.directory)} ${separator}${flags.join(' ')}`;
 }

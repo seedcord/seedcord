@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { stripVTControlCharacters } from 'node:util';
 
 import { describe, expect, it } from 'vitest';
@@ -7,6 +8,13 @@ import { version } from '#cli/version';
 import { STEPS } from '#interview/steps';
 
 import type { ScaffoldAnswers } from '#template/context';
+
+function shellWordsAfter(program: string, line: string): string[] {
+    expect(line.startsWith(`${program} `)).toBe(true);
+
+    const echo = String.raw`printf '%s\n' ${line.slice(program.length + 1)}`;
+    return execFileSync('sh', ['-c', echo], { encoding: 'utf8' }).trimEnd().split('\n');
+}
 
 function nextSteps(...args: Parameters<typeof paintedSteps>): string[] {
     return paintedSteps(...args).map((step) => stripVTControlCharacters(step));
@@ -34,6 +42,12 @@ const HTTP: ScaffoldAnswers = {
 describe('nextSteps', () => {
     it('opens with the directory to change into', () => {
         expect(nextSteps(GATEWAY, { agent: 'pnpm', installed: true })[0]).toBe('cd my-bot');
+    });
+
+    it('keeps a spaced directory whole when a shell reads the cd line', () => {
+        const [cd = ''] = nextSteps({ ...GATEWAY, directory: 'my bots/bot' }, { agent: 'pnpm', installed: true });
+
+        expect(shellWordsAfter('cd', cd)).toEqual(['my bots/bot']);
     });
 
     it('uses the running package manager for the dev script', () => {
@@ -136,6 +150,15 @@ describe('reproducingCommand', () => {
 
         expect(command).toContain('--no-token');
         expect(command).not.toContain('YOUR_TOKEN');
+    });
+
+    it('keeps a hex color and a spaced directory whole when a shell reads the line', () => {
+        const command = reproducingCommand({ ...HTTP, directory: 'my bots/bot', botColor: '#fe565a' }, 'pnpm');
+        const words = shellWordsAfter('pnpm create', command);
+
+        expect(words).toContain('my bots/bot');
+        expect(words[words.indexOf('--color') + 1]).toBe('#fe565a');
+        expect(words.at(-1)).toBe('--git');
     });
 
     it('leaves capabilities out on http', () => {
