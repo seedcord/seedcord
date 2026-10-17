@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { MOCK_PACKAGE_FULL_NAME } from './utils/constants';
 import { getEngine } from './utils/test-helpers';

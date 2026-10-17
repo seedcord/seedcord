@@ -1,6 +1,6 @@
 import { DocKind } from '@seedcord/docs-engine/client';
 import { renderHook, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import type { useCommandPaletteSearch as UseSearch } from '#components/search/command-palette/useCommandPaletteSearch';
 import type { SearchIndexEntry, SearchPackage } from '#lib/search/types';

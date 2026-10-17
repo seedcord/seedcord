@@ -43,15 +43,15 @@ RIGHT (vertical):
 
 Tests sit in `<package>/tests/`, mirroring `src/`. Never `src/**/*.test.ts`. A test for `packages/rate-limiter/src/MemoryRateLimiter.ts` is `packages/rate-limiter/tests/memory-rate-limiter.test.ts`.
 
-Vitest is the runner. `pnpm -C <pkg> test` runs the suite once. `pnpm -C <pkg> test:watch` watches and reruns on change, which is the loop you want during a TDD cycle.
+Vitest is the runner. `vp -C <pkg> test` runs the suite once. `vp -C <pkg> test:watch` watches and reruns on change, which is the loop you want during a TDD cycle.
 
 Run `lint:fix` and `tc` before you run tests. A test file that does not type-check has not run yet.
 
 ```sh
-pnpm -C <pkg> lint:fix
-pnpm -C <pkg> tc
-pnpm -C <pkg> test:watch   # during the loop
-pnpm -C <pkg> test         # once before you commit
+vp -C <pkg> lint:fix
+vp -C <pkg> tc
+vp -C <pkg> test:watch   # during the loop
+vp -C <pkg> test         # once before you commit
 ```
 
 Tests reach the framework through public exports (`@seedcord/types`, the package `@src` alias) and may use a pragmatic fixture cast (`as unknown as T`) with a one-line justification comment. No `as any` in tests. The ESLint rule rewrites `any` to `unknown`, which surfaces a real type error if the cast was wrong.
@@ -114,7 +114,7 @@ Once the tests pass, look for [refactor candidates](refactoring.md):
 
 Do not refactor while RED. Get to GREEN first.
 
-For a published package, add a changeset (`pnpm cs`) once the slice is done.
+For a published package, add a changeset (`vp run cs`) once the slice is done.
 
 ## Checklist per cycle
 

@@ -1,6 +1,6 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vite-plus/test';
 
 import { Cooldown } from '#gates/catalog/Cooldown';
 import { runGates } from '#gates/runGates';

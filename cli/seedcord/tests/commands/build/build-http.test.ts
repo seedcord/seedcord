@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { BuildRunner } from '#commands/build/BuildRunner';
 import { quietSteps } from '#core/output/quietSteps';

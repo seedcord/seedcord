@@ -1,4 +1,4 @@
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import type { OptionLens, SlashOptions } from '#src/internal.index';
 

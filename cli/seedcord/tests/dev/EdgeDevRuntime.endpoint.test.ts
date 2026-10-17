@@ -5,7 +5,7 @@ import { createServer as createNetServer } from 'node:net';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vite-plus/test';
 
 import { writeSigningEnv } from '#tests/commands/build/edgeBot';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';

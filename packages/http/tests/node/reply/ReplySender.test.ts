@@ -4,7 +4,7 @@ import { DispatchContext } from '@seedcord/core';
 import { AckTrace } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MessageFlags } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { ReplySender } from '#reply/ReplySender';
 import { stubBus } from '#tests/helpers/fixtures';

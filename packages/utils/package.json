@@ -1,29 +1,34 @@
 {
     "name": "@seedcord/utils",
-    "type": "module",
     "version": "0.8.17",
-    "engines": {
-        "node": ">=24.11",
-        "bun": ">=1.4.2"
-    },
     "description": "Type helpers and small functions used across seedcord",
     "keywords": [
         "discord-bot",
         "seedcord",
-        "utilities",
-        "typescript"
+        "typescript",
+        "utilities"
     ],
+    "homepage": "https://seedcord.org",
+    "bugs": "https://github.com/seedcord/seedcord/issues",
+    "license": "Apache-2.0",
+    "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "packages/utils"
     },
-    "homepage": "https://seedcord.org",
-    "bugs": "https://github.com/seedcord/seedcord/issues",
-    "license": "Apache-2.0",
-    "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
     "funding": "https://github.com/sponsors/materwelonDhruv",
+    "files": [
+        "dist",
+        "package.json",
+        "README.md",
+        "LICENSE"
+    ],
+    "type": "module",
     "types": "./dist/index.d.mts",
+    "imports": {
+        "#src/*": "./src/*"
+    },
     "exports": {
         ".": {
             "import": {
@@ -50,26 +55,21 @@
             }
         }
     },
-    "files": [
-        "dist",
-        "package.json",
-        "README.md",
-        "LICENSE"
-    ],
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    },
     "scripts": {
-        "build": "tsdown",
+        "build": "vp pack",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
+        "fmt": "vp fmt --write '**/*.{ts,tsx,json,md}' --no-error-on-unmatched-pattern",
+        "fmt:check": "vp fmt --check '**/*.{ts,tsx,json,md}' --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev",
-        "coverage": "vitest run --coverage"
-    },
-    "peerDependencies": {
-        "typescript": "catalog:consumerTypes"
+        "test": "vp test run",
+        "test:watch": "vp test dev",
+        "coverage": "vp test run --coverage"
     },
     "dependencies": {
         "@seedcord/errors": "workspace:^",
@@ -84,10 +84,14 @@
         "@seedcord/vitest-config": "workspace:^",
         "discord.js": "catalog:peer",
         "tsx": "catalog:deps",
-        "type-fest": "catalog:deps"
+        "type-fest": "catalog:deps",
+        "vitest": "catalog:test"
     },
-    "publishConfig": {
-        "access": "public",
-        "provenance": true
+    "peerDependencies": {
+        "typescript": "catalog:consumerTypes"
+    },
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": ">=24.11"
     }
 }

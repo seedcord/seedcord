@@ -1,6 +1,6 @@
 import { ESLint } from 'eslint';
 import tseslint from 'typescript-eslint';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import createConfig, { type SeedcordConfigOptions } from '#src/index';
 

@@ -48,8 +48,8 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
             },
             {
                 type: 'add',
-                path: '{{ dir }}/{{ folder dir name }}/tsdown.config.ts',
-                templateFile: 'templates/tsdown.config.ts.hbs'
+                path: '{{ dir }}/{{ folder dir name }}/vite.config.ts',
+                templateFile: 'templates/vite.config.ts.hbs'
             },
             {
                 type: 'add',

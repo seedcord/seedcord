@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 import { stripAnsi } from '@seedcord/utils';
 import { Envapter } from 'envapt';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { LoggerChannelRegistry } from '#src/LoggerChannelRegistry';
 import { formatBody, formatPretty, installNodeDefaults, WinstonConsoleSink, WinstonFileSink } from '#src/node';

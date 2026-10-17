@@ -1,9 +1,9 @@
 {
     "name": "@seedcord/fixture-base",
     "version": "0.0.0",
-    "type": "module",
     "private": false,
     "description": "Mock package the docs mock extends from, so a test can cross a package boundary.",
+    "type": "module",
     "exports": {
         ".": {
             "import": {

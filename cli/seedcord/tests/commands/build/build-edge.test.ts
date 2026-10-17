@@ -7,7 +7,7 @@ import { cloudflare } from '@cloudflare/vite-plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { bindings, exports } from 'cf/config';
 import { preview } from 'vite';
-import { afterAll, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 

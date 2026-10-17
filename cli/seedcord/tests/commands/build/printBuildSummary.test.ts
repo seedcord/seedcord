@@ -1,6 +1,6 @@
 import { stripVTControlCharacters } from 'node:util';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { BUILD_STEPS } from '#commands/build/BuildRunner';
 import { printBuildSummary } from '#commands/build/printBuildSummary';

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { DocKind } from '#model/kinds';
 import { AnchorStrategy } from '#routing/AnchorStrategy';

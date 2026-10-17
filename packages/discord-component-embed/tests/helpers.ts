@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect } from 'vite-plus/test';
 
 import { ComponentEmbedError, Container, TextDisplay, h } from '#src/index';
 

@@ -1,6 +1,6 @@
 import { InteractionKind } from '@seedcord/core';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 

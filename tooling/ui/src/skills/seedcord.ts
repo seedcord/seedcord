@@ -24,7 +24,7 @@ Fetch ${GUIDE}/llms.txt. It holds every rule that stops you inventing seedcord, 
 
 ## 2. Scaffold the project
 
-Run \`pnpm create seedcord\`. It asks where the project goes, which transport, and your bot token. Then it installs, formats, runs codegen, and makes a git commit.
+Run \`vp create seedcord\`. It asks where the project goes, which transport, and your bot token. Then it installs, formats, runs codegen, and makes a git commit.
 
 ## 3. Write a command
 

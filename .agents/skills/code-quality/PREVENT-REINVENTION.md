@@ -67,7 +67,7 @@ If the helper would be reused across apps (`docs` + `guide` + `home`), it belong
 Before creating any file, look at sibling packages. The conventions are consistent across `packages/seedcord`, `packages/gateway`, `packages/core`, `packages/utils`, `packages/types`, `packages/docs-engine`, `packages/docs-generator`:
 
 - Tests live in `<package>/tests/` mirroring `src/`. Do not put tests in `src/**/*.test.ts`.
-- Vitest is the runner (`vitest run` / `vitest dev`). Coverage runs via `vitest run --coverage`.
+- Vitest is the runner (`vp test run` / `vp test dev`). Coverage runs via `vp test run --coverage`.
 - Lint and tc scripts cover both `src/**` and `tests/**`.
 - ESLint configs at the package root as `eslint.config.ts` (flat config), composed from `@seedcord/eslint-config`.
 - TypeScript configs extend `@seedcord/tsconfig` and never cross package source-path boundaries (no `paths` or `include` reaching into another package's `src`).
@@ -78,9 +78,9 @@ If you find yourself adding a test in `src/`, putting setup in a non-conventiona
 
 ### 6. Was this asked for?
 
-If you're tempted to add a tsup `external` block, a custom prettier plugin, a "performance" optimization, a config tweak, a feature flag, a backward-compat shim, an abstraction, or anything else that wasn't in the task description: **don't.** Scope discipline is non-negotiable.
+If you're tempted to add a tsdown `deps.neverBundle` block, a "performance" optimization, a config tweak, a feature flag, a backward-compat shim, an abstraction, or anything else that wasn't in the task description: **don't.** Scope discipline is non-negotiable.
 
-If you genuinely think the addition is needed, surface it as a question to the user _before_ implementing. "I'm about to add X to tsup.config because Y. Does that match what you want?" is cheap. Adding it silently and getting reviewed at PR time is expensive, because the diff buries the question in 200 lines of legitimate changes and the user can't tell what's their requirement and what's your improvisation.
+If you genuinely think the addition is needed, surface it as a question to the user _before_ implementing. "I'm about to add X to vite.config because Y. Does that match what you want?" is cheap. Adding it silently and getting reviewed at PR time is expensive, because the diff buries the question in 200 lines of legitimate changes and the user can't tell what's their requirement and what's your improvisation.
 
 ### 7. Are you using a new npm package?
 
@@ -187,11 +187,11 @@ If no existing surface fits and there is no clean shared extension path, stop an
     - CLI command / Ink component for the CLI: `@seedcord/cli`
     - Doc-extraction or doc-rendering logic: `@seedcord/docs-generator` / `@seedcord/docs-engine`
 2. **Add the export** to the relevant `src/index.ts` (and `internal.index.ts` if it's an internal-only surface). Update the package.json `exports` field and the tsup config entry if the package uses tsup.
-3. **Rebuild the package** (`pnpm -C packages/<name> build`) so consumers see the new export.
+3. **Rebuild the package** (`vp -C packages/<name> build`) so consumers see the new export.
 4. **Use it from the call site.** Inline duplication of the new helper defeats the point.
 5. **Document the rationale inline** only if the addition exists for a non-obvious reason (a specific Discord.js quirk, a runtime constraint, a license requirement). Otherwise the name is the documentation.
 
-If the change is published-package-affecting, also add a `changeset` (`pnpm cs`) so the version bump and changelog land with the code.
+If the change is published-package-affecting, also add a `changeset` (`vp run cs`) so the version bump and changelog land with the code.
 
 ---
 
@@ -208,6 +208,6 @@ Before opening a PR, ask:
 7. For every version pin I left untouched citing "compatibility," did I cite the upstream peer-dep range?
 8. Did I delete the comments that just restate the code below them?
 9. If the change is public-API-affecting, did I add a `changeset`?
-10. Does `pnpm -C <pkg> lint:fix && pnpm -C <pkg> tc && pnpm -C <pkg> test` exit cleanly?
+10. Does `vp -C <pkg> lint:fix && vp -C <pkg> tc && vp -C <pkg> test` exit cleanly?
 
 If any answer is "no" or "I didn't check," the PR is not ready.

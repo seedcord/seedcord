@@ -4,7 +4,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { setDevChannel } from '#hmr/devChannel';
 import { Commands } from '#src/commands/CommandInjector';
@@ -16,7 +16,7 @@ import type { CommandInfo } from '#src/commands/CommandInjector';
 import type { CommandBuilder } from '#src/commands/types';
 import type { DeployedHashes } from '@seedcord/types/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 // justified: SlashRegistry is empty in tests
 const mentions = Commands as Record<string, CommandInfo>;

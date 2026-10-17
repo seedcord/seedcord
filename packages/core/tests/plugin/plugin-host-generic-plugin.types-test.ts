@@ -1,5 +1,5 @@
 // compile-only. tc fails on any unused @ts-expect-error below.
-import { expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vite-plus/test';
 
 import { Plugin } from '#src/plugin/Plugin';
 

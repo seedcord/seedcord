@@ -1,5 +1,5 @@
 import { Envapter, PortableSource } from 'envapt';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { createTunnelCoordinator, missingCloudflaredHint } from '#commands/dev/tunnel/createTunnelCoordinator';
 import { TunnelCoordinator } from '#commands/dev/tunnel/TunnelCoordinator';

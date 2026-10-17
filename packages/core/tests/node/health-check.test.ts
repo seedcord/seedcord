@@ -1,7 +1,7 @@
 import { request as httpRequest } from 'node:http';
 import { createServer } from 'node:net';
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { HealthCheck } from '#node/HealthCheck';
 

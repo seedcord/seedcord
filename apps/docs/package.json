@@ -1,23 +1,29 @@
 {
     "name": "@seedcord/docs",
     "version": "0.1.18",
-    "type": "module",
-    "engines": {
-        "node": ">=24.11"
-    },
     "private": true,
+    "type": "module",
+    "imports": {
+        "#tests/*": "./tests/*",
+        "#src/*": "./src/*",
+        "#components/*": "./src/components/*",
+        "#ui/*": "./src/components/ui/*",
+        "#lib/*": "./src/lib/*",
+        "#store/*": "./src/store/*",
+        "#styles/*": "./src/app/*"
+    },
     "scripts": {
         "dev": "next dev",
         "build": "next build",
         "check:links": "tsx check-links.ts",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
+        "fmt": "vp fmt --write '**/*.{ts,tsx,json,md}' --no-error-on-unmatched-pattern",
+        "fmt:check": "vp fmt --check '**/*.{ts,tsx,json,md}' --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev",
-        "coverage": "vitest run --coverage"
+        "test": "vp test run",
+        "test:watch": "vp test dev",
+        "coverage": "vp test run --coverage"
     },
     "dependencies": {
         "@seedcord/docs-engine": "workspace:^",
@@ -64,5 +70,8 @@
         "typescript": "catalog:peer",
         "vitest": "catalog:test",
         "wrangler": "catalog:peer"
+    },
+    "engines": {
+        "node": ">=24.11"
     }
 }

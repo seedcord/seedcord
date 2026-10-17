@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 // resetModules gives the second import its own class objects, like a second installed copy
 async function loadTwoCopies(): Promise<[typeof import('#src/internal.index'), typeof import('#src/index')]> {

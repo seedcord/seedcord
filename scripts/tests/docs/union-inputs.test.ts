@@ -1,5 +1,5 @@
 import { buildIndex } from '@seedcord/docs-engine';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { buildUnionInputs, type EmittedEntry } from '#src/docs/union-inputs';
 

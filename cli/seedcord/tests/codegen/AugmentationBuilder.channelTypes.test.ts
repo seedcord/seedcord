@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, ChannelType } from 'discord.js';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { silentLogger } from '#tests/silentLogger';

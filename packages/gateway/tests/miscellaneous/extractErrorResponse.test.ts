@@ -1,6 +1,6 @@
 import { DispatchContext, Fault } from '@seedcord/core';
 import { PublishDefault } from '@seedcord/core/internal';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { extractErrorResponse } from '#miscellaneous/extractErrorResponse';
 import { cardJson } from '#tests/utils/cardText';

@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ApplicationCommandType } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { linkCommands } from '#src/commands/linkCommands';
 import { deploy, deployed, guildBucket, ping, userMenu, withSubcommand } from '#tests/commands/fixtures';

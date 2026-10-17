@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo "Commit-msg hook triggered."
+
+vp exec commitlint --edit "$1"

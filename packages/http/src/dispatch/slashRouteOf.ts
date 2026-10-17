@@ -7,7 +7,8 @@ import type {
 } from 'discord-api-types/v10';
 
 export type SlashLikeData = (
-    APIChatInputApplicationCommandInteraction | APIApplicationCommandAutocompleteInteraction
+    | APIChatInputApplicationCommandInteraction
+    | APIApplicationCommandAutocompleteInteraction
 )['data'];
 
 // the raw-payload port of the gateway's slashRouteOf

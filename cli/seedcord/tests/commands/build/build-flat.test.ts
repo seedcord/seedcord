@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { quickBuildRunner } from './quickBuildRunner';
 import { smoke } from './smoke';

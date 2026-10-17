@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 // Each getDocsEngine call returns a fresh engine. This reproduces the OG route handler, where React
 // cache() does not dedupe the engine the way it does inside a page render. loadEntityModel only finds

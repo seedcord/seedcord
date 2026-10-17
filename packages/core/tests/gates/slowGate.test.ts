@@ -1,6 +1,6 @@
 import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
 
 import { slowGateMonitor } from '#gates/slowGate';
 

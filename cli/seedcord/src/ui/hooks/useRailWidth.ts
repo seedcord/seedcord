@@ -30,7 +30,7 @@ export function useRailWidth(
         }
 
         needsMeasureRef.current = false;
-        // eslint-disable-next-line @eslint-react/set-state-in-effect -- rail width comes from measuring the rendered element, set once per run
+
         setRailWidth(measured);
     }, [rows, columns, phase, railRef]);
 

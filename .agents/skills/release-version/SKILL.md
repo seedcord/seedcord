@@ -10,17 +10,17 @@ description: Release seedcord's packages through changesets pre mode. Cut a prer
 - `next` is the prerelease line. Its publishes go to the `next` dist-tag as `X.Y.Z-next.N`.
 - `main` is stable. Its publishes go to `latest` as a clean `X.Y.Z`.
 - seedcord is a monorepo, so one release versions and publishes every package that has a pending changeset at once, under the `@seedcord` scope (plus the unscoped `seedcord`).
-- Publishing is CI-only. `.github/workflows/publish.yml` runs after the `checks` workflow finishes green on `main` or `next`, through a `workflow_run` trigger, then hands off to `changesets/action`, which runs `pnpm run release` and publishes. You version locally with `pnpm cs:version`. CI never versions and never opens a release PR, and a push with changesets still pending skips the publish. A `docs-publish` job then syncs docs to R2 and calls `docs-deploy`, which renders every docs page, uploads them to R2, and deploys the docs Worker. On `main`, a `github-release` job also creates one `release-YYYY.MM.DD` tag and one GitHub release for the whole publish. It creates them with the `RELEASE_TOKEN` repository secret, a fine-grained token of the maintainer's with Contents and Workflows read and write, so the release shows that account as its author. A prerelease gets neither.
+- Publishing is CI-only. `.github/workflows/publish.yml` runs after the `checks` workflow finishes green on `main` or `next`, through a `workflow_run` trigger, then hands off to `changesets/action`, which runs `vp run release` and publishes. You version locally with `vp run cs:version`. CI never versions and never opens a release PR, and a push with changesets still pending skips the publish. A `docs-publish` job then syncs docs to R2 and calls `docs-deploy`, which renders every docs page, uploads them to R2, and deploys the docs Worker. On `main`, a `github-release` job also creates one `release-YYYY.MM.DD` tag and one GitHub release for the whole publish. It creates them with the `RELEASE_TOKEN` repository secret, a fine-grained token of the maintainer's with Contents and Workflows read and write, so the release shows that account as its author. A prerelease gets neither.
 - The gate `.github/actions/check-eligibility` skips the publish on any branch while a changeset is pending, and on `next` unless `.changeset/pre.json` exists and is in `pre` mode. Exiting pre mode on `next` makes the gate skip the publish, so a clean version can never reach the `next` tag.
 - npm's OIDC trusted publishing is bound to `publish.yml` by its filename. Renaming the workflow breaks publishing.
 - A published version is permanent on npm. Only the dist-tag can move.
 
 ## Before any flow, check what will bump
 
-`pnpm cs:status` writes `.changeset/status.json`. Two seedcord quirks:
+`vp run cs:status` writes `.changeset/status.json`. Two seedcord quirks:
 
 - It reads only git-tracked changeset files, so `git add .changeset` first or a new `.md` is invisible to it.
-- On the `next` line, run `pnpm cs:status --since next` so the baseline is the prerelease tip. The config `baseBranch` is `main`, so the default compares against stable.
+- On the `next` line, run `vp run cs:status --since next` so the baseline is the prerelease tip. The config `baseBranch` is `main`, so the default compares against stable.
 
 ## Pushing to `main` and `next`
 
@@ -32,8 +32,8 @@ The publish ends on the `next` dist-tag as `X.Y.Z-next.N`. The changesets must a
 
 ```sh
 git switch next && git pull
-pnpm cs:version                 # bump every pending package to X.Y.Z-next.N and tidy the changelogs
-pnpm install                         # rewrite internal ranges into the lockfile
+vp run cs:version                 # bump every pending package to X.Y.Z-next.N and tidy the changelogs
+vp install                         # rewrite internal ranges into the lockfile
 git add .changeset                   # pre mode moves each used changeset into .changeset/pre/, which -a would skip
 git commit -am "chore(release): version packages"
 git push origin next                 # no changesets pending, so publish.yml publishes directly
@@ -51,10 +51,10 @@ Run on `main` so the clean version reaches `latest`. Exiting pre mode and versio
 
 ```sh
 git switch main && git pull
-git merge next                       # resolve any changelog or pre.json conflicts
-pnpm changeset pre exit              # set pre.json to exit mode, then review the changesets in .changeset/pre/
-pnpm cs:version                 # write the clean X.Y.Z and delete the superseded prerelease sections
-pnpm install                         # update the lockfile
+git merge next                    # resolve any changelog or pre.json conflicts
+vp run cs:pre:exit                # set pre.json to exit mode, then review the changesets in .changeset/pre/
+vp run cs:version                 # write the clean X.Y.Z and delete the superseded prerelease sections
+vp install                        # update the lockfile
 git add .changeset
 git commit -am "chore(release): version packages"
 git push origin main
@@ -73,7 +73,7 @@ Bring the clean version back and re-enter pre mode for the next cycle.
 ```sh
 git switch next && git pull
 git merge main                       # brings the clean versions and changelogs
-pnpm changeset pre enter next        # re-enter pre mode
+vp run cs:pre:enter                  # re-enter pre mode
 git add .changeset/pre.json          # pre enter writes a new file, -a would skip it
 git commit -m "chore: re-enter pre mode"
 git push origin next
@@ -101,7 +101,7 @@ npm dist-tag ls seedcord
 ## Don't
 
 - Don't run `changeset pre exit` or `cs:version` on `next` to make a stable release. Graduate on `main` (Flow 2). The gate refuses a non-pre publish on `next`.
-- Don't run `pnpm changeset version` directly. Node cannot load the TypeScript changelog module without `--import tsx`, and the changelogs skip the tidy pass.
+- Don't run `changeset version` directly. Node cannot load the TypeScript changelog module without `--import tsx`, and the changelogs skip the tidy pass.
 - Don't run `npm publish` or `pnpm publish` by hand, except for a new package's first release. CI publishes through changesets.
 - Don't push `main` while it is in pre mode. Exit pre mode first.
 - Don't let a new changeset land between versioning and the publish. The gate skips the publish while one is pending, and the next versioning run bumps past the skipped version.

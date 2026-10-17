@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { quickBuildRunner } from './quickBuildRunner';
 import { smoke } from './smoke';

@@ -3,7 +3,7 @@ import { join, relative } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { bindings, exports } from 'cf/config';
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { DevRunner } from '#commands/dev/DevRunner';

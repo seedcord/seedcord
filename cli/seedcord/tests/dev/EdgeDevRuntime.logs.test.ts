@@ -4,7 +4,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import chalk from 'chalk';
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import {
     asDevelopment,

@@ -2,7 +2,7 @@ import { mkdtempDisposable } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { ApiDocsGenerator } from '#src/ApiDocsGenerator';
 

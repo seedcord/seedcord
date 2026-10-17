@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { vi } from 'vitest';
+import { vi } from 'vite-plus/test';
 
 // the default reporters require these at boot
 process.env.UNKNOWN_EXCEPTION_WEBHOOK_URL ??= 'https://discord.com/api/webhooks/1/aaa';

@@ -1,6 +1,6 @@
 /** @jsxImportSource react */
 import { Component, forwardRef, lazy, memo, useState } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Container, TextDisplay, toComponentEmbed } from '#src/index';
 

@@ -11,12 +11,12 @@ RUN addgroup -g 1001 -S nodejs && \
 
 COPY ../../package.json pnpm-lock.yaml ./
 
-RUN pnpm install --frozen-lockfile --prod
+RUN vp install --frozen-lockfile --prod
 
 # Development stage
 FROM base AS development
 
-RUN pnpm install --frozen-lockfile
+RUN vp install --frozen-lockfile
 
 COPY ../.. .
 
@@ -30,8 +30,8 @@ CMD ["pnpm", "dev"]
 # Build stage
 FROM base AS build
 COPY ../.. .
-RUN pnpm install --frozen-lockfile && \
-    pnpm run build
+RUN vp install --frozen-lockfile && \
+    vp run build
 
 # Production stage
 FROM base AS production

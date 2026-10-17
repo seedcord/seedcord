@@ -30,7 +30,7 @@ An app-local `src/components/` folder holds pieces specific to that app. A patte
 - **`.filter().map()` becomes one `.reduce()`.** `array.includes()` inside a loop becomes a `Set` built once outside it.
 - No barrel imports inside the same app when the direct file sits one folder away.
 
-`pnpm react-doctor` catches many of these. Make sure to run it yourself.
+`vp run react-doctor` catches many of these. Make sure to run it yourself.
 
 ---
 

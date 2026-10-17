@@ -1,19 +1,33 @@
 {
     "name": "@seedcord/docs-generator",
     "version": "0.2.4",
-    "engines": {
-        "node": ">=24.11",
-        "bun": ">=1.4.2"
-    },
     "private": true,
     "description": "Internal tooling to generate seedcord API model JSON files",
-    "type": "module",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "tooling/docs-generator"
     },
+    "files": [
+        "dist",
+        "src",
+        "package.json",
+        "README.md",
+        "LICENSE"
+    ],
+    "type": "module",
     "types": "./dist/index.d.mts",
+    "typesVersions": {
+        "*": {
+            "*": [
+                "./dist/index.d.ts",
+                "./src/index.ts"
+            ]
+        }
+    },
+    "imports": {
+        "#src/*": "./src/*"
+    },
     "exports": {
         ".": {
             "import": {
@@ -34,33 +48,18 @@
             }
         }
     },
-    "typesVersions": {
-        "*": {
-            "*": [
-                "./dist/index.d.ts",
-                "./src/index.ts"
-            ]
-        }
-    },
     "scripts": {
-        "build": "tsdown",
+        "build": "vp pack",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
+        "fmt": "vp fmt --write '**/*.{ts,tsx,json,md}' --no-error-on-unmatched-pattern",
+        "fmt:check": "vp fmt --check '**/*.{ts,tsx,json,md}' --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev",
-        "coverage": "vitest run --coverage"
+        "test": "vp test run",
+        "test:watch": "vp test dev",
+        "coverage": "vp test run --coverage"
     },
-    "files": [
-        "dist",
-        "src",
-        "package.json",
-        "README.md",
-        "LICENSE"
-    ],
     "dependencies": {
         "@microsoft/api-extractor": "7.59.3",
         "typescript": "catalog:peer",
@@ -70,6 +69,11 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsdown-config": "workspace:^",
-        "@seedcord/vitest-config": "workspace:^"
+        "@seedcord/vitest-config": "workspace:^",
+        "vitest": "catalog:test"
+    },
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": ">=24.11"
     }
 }

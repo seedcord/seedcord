@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { MAX_RAIL } from '#ui/components/primitives/Sidebar';
 import { COMPACT_ROWS, FULL_ROWS, RAIL_COLUMNS, tierFor } from '#ui/tier';

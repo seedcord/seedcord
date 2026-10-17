@@ -1,7 +1,7 @@
 import { DiscordAPIError, RateLimitError } from '@discordjs/rest';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { InteractionsEndpoint } from '#commands/dev/tunnel/InteractionsEndpoint';
 

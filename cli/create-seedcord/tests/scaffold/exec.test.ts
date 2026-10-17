@@ -1,6 +1,6 @@
 import process from 'node:process';
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { createExecRunner, spawnSpec } from '#scaffold/exec';
 

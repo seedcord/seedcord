@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { setBotRoot } from '@seedcord/utils/node/internal';
-import { afterEach, beforeEach, describe, expect, it, type Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type Mock } from 'vite-plus/test';
 
 import { KyselyPostgres } from '#src/KyselyPostgres';
 

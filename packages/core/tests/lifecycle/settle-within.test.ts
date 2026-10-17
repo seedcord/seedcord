@@ -1,5 +1,5 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { settleWithin, withTimeout } from '#src/lifecycle/withTimeout';
 

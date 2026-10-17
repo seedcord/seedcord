@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import type { FormatContext } from '#lib/docs/types';
 import type { DocComment, DocCommentBlockTag, VersionedDocsEngine } from '@seedcord/docs-engine';

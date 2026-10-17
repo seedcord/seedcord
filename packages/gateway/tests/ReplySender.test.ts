@@ -2,7 +2,7 @@ import { TextDisplayBuilder } from '@discordjs/builders';
 import { AckTrace } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MessageFlags } from 'discord.js';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { message, mockInteraction, senderFor } from './utils/senderMock';
 

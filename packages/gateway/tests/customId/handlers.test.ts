@@ -1,6 +1,6 @@
 import { DispatchContext, Notice, CustomId, ButtonRoute, ModalRoute, UserMenuRoute } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { ButtonHandler, ModalHandler, UserMenuHandler } from '#handlers/interaction/components';
 

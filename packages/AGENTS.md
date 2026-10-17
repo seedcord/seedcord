@@ -49,7 +49,7 @@ Translate a third-party throw into a seedcord error before it reaches a consumer
 
 ## Changesets
 
-Every change to a published package needs one. Run `pnpm cs`.
+Every change to a published package needs one. Run `vp run cs`.
 
 A changeset is one or two plain sentences naming the user-visible change. Skip the sub-changes that rode along, since the changelog reader has the diff. Mark a breaking change with a bold `**BREAKING:**` prefix line.
 

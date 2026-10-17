@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { assert, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { DevSession } from '#commands/dev/DevSession';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';

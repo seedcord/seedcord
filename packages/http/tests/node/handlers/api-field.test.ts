@@ -1,6 +1,6 @@
 import { API } from '@discordjs/core/http-only';
 import { DispatchContext } from '@seedcord/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';

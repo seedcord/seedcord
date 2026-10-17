@@ -1,4 +1,4 @@
-import { assertType, expectTypeOf } from 'vitest';
+import { assertType, expectTypeOf } from 'vite-plus/test';
 
 import { SeedcordErrorCode, isSeedcordError } from '#src/index';
 import { SeedcordError, SeedcordTypeError } from '#src/internal.index';

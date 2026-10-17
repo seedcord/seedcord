@@ -1,6 +1,6 @@
 import { DispatchContext } from '@seedcord/core';
 import { ComponentType, InteractionResponseType, MessageFlags } from 'discord-api-types/v10';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { ReplySender } from '#reply/ReplySender';
 import { ButtonRoute } from '#src/index';

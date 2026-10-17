@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createViteServer } from 'vitest/node';
+import { afterAll, beforeAll, describe, expect, it } from 'vite-plus/test';
+import { createViteServer } from 'vite-plus/test/node';
 
 import { createVitestConfig } from '#src/index';
 

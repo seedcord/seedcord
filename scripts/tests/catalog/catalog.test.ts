@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { CatalogRule } from '#src/catalog/CatalogRule';
 import { DependencyIndex, distinctPackages } from '#src/catalog/DependencyIndex';

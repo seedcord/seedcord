@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { afterEach, assert, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, assert, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { cloudflareConfigSource, linkPackages } from '#tests/edgeFolder';

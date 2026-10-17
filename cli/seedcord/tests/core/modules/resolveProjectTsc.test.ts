@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempDisposableSync, realpathSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { resolveProjectTsc } from '#core/modules/resolveProjectTsc';
 

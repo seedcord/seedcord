@@ -3,7 +3,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
 import { Events } from 'discord.js';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vite-plus/test';
 
 import { Plugin } from '#src/Plugin';
 import { Seedcord } from '#src/Seedcord';

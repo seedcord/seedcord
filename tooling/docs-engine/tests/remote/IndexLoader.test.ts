@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { IndexFetchError } from '#remote/errors';
 import { validateIndex } from '#remote/index-json';

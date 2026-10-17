@@ -1,7 +1,7 @@
 import { REST } from '@discordjs/rest';
 import { Logger } from '@seedcord/logger';
 import { ComponentType } from 'discord-api-types/v10';
-import { afterAll, afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
 
 import { PublishDefault } from '#src/subscribers/publishDefault';
 import { WebhookLog } from '#subscribers/bases/WebhookLog';

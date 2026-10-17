@@ -1,33 +1,28 @@
 {
     "name": "seedcord",
-    "type": "module",
     "version": "0.21.5",
-    "engines": {
-        "node": ">=24.11",
-        "bun": ">=1.4.2"
-    },
     "description": "The seedcord CLI. Dev server, build, and codegen for a typed Discord bot.",
     "keywords": [
+        "cli",
+        "codegen",
         "discord",
         "discord-bot",
-        "seedcord",
-        "cli",
         "hmr",
-        "codegen"
+        "seedcord"
     ],
-    "bin": {
-        "seedcord": "./bin/seedcord.mjs"
-    },
+    "homepage": "https://seedcord.org",
+    "bugs": "https://github.com/seedcord/seedcord/issues",
+    "license": "Apache-2.0",
+    "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "cli/seedcord"
     },
-    "homepage": "https://seedcord.org",
-    "bugs": "https://github.com/seedcord/seedcord/issues",
-    "license": "Apache-2.0",
-    "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
     "funding": "https://github.com/sponsors/materwelonDhruv",
+    "bin": {
+        "seedcord": "./bin/seedcord.mjs"
+    },
     "files": [
         "bin",
         "dist",
@@ -35,7 +30,17 @@
         "README.md",
         "LICENSE"
     ],
+    "type": "module",
     "types": "./dist/index.d.mts",
+    "imports": {
+        "#src/*": "./src/*",
+        "#tests/*": "./tests/*",
+        "#ui/*": "./src/ui/*",
+        "#core/*": "./src/core/*",
+        "#commands/*": "./src/commands/*",
+        "#utils/*": "./src/utils/*",
+        "#api/*": "./src/api/*"
+    },
     "exports": {
         ".": {
             "workerd": {
@@ -48,30 +53,24 @@
             }
         }
     },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    },
     "scripts": {
         "dev": "tsx src/cli.ts",
         "preview": "tsx playground/preview.tsx",
         "preview:prompts": "tsx playground/prompts.ts",
-        "build": "tsdown",
+        "build": "vp pack",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' 'bin/**/*.mjs' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' 'bin/**/*.mjs' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md}' 'bin/**/*.mjs' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' 'bin/**/*.mjs' --cache --no-error-on-unmatched-pattern",
+        "fmt": "vp fmt --write '**/*.{ts,tsx,json,md}' 'bin/**/*.mjs' --no-error-on-unmatched-pattern",
+        "fmt:check": "vp fmt --check '**/*.{ts,tsx,json,md}' 'bin/**/*.mjs' --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev",
-        "coverage": "vitest run --coverage"
-    },
-    "peerDependencies": {
-        "@cloudflare/vite-plugin": "catalog:peer",
-        "envapt": "catalog:peer",
-        "typescript": "catalog:consumerTypes"
-    },
-    "peerDependenciesMeta": {
-        "@cloudflare/vite-plugin": {
-            "optional": true
-        }
+        "test": "vp test run",
+        "test:watch": "vp test dev",
+        "coverage": "vp test run --coverage"
     },
     "dependencies": {
         "@cloudflare/build-output-utils": "0.9.2",
@@ -114,10 +113,21 @@
         "eslint-plugin-react-hooks": "catalog:eslint",
         "ink-testing-library": "^4.0.0",
         "tsx": "catalog:deps",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:peer",
+        "vitest": "catalog:test"
     },
-    "publishConfig": {
-        "access": "public",
-        "provenance": true
+    "peerDependencies": {
+        "@cloudflare/vite-plugin": "catalog:peer",
+        "envapt": "catalog:peer",
+        "typescript": "catalog:consumerTypes"
+    },
+    "peerDependenciesMeta": {
+        "@cloudflare/vite-plugin": {
+            "optional": true
+        }
+    },
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": ">=24.11"
     }
 }

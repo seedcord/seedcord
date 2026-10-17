@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { INITIAL_CURSOR } from '#ui/filterCursor';
 import { acceptsSessionKeys, dispatchHotkey } from '#ui/hotkeys';
