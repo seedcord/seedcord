@@ -2,7 +2,7 @@ import { pathToFileURL } from 'node:url';
 
 import { paint } from '@seedcord/errors';
 import { formatFilePath } from '@seedcord/utils';
-import { isInside, resolveFolder } from '@seedcord/utils/node/internal';
+import { isInside, resolveFolder, vitePluginThrew } from '@seedcord/utils/node/internal';
 
 import type { Logger } from '@seedcord/logger';
 import type { HmrUpdateEvent } from '@seedcord/types';
@@ -194,7 +194,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
 
             return names;
         } catch (error) {
-            logger.error(`Failed to reload file: ${file}`, error);
+            logger.error(`Failed to reload file: ${file}`, vitePluginThrew(error) ?? error);
             return null;
         }
     }

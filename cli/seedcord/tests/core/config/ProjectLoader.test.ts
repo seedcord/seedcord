@@ -326,7 +326,31 @@ describe('ProjectLoader vitePlugins', () => {
         }
     );
 
-    it('throws CliVitePluginThrew with the plugin and hook when a plugin throws as Vite starts', async () => {
+    it('throws CoreVitePluginThrew with the file it was loading when a plugin throws in transform', async () => {
+        const projectDir = tempProject();
+        mkdirSync(join(projectDir, 'src'));
+        writeFileSync(
+            join(projectDir, 'seedcord.config.ts'),
+            `export default {
+    root: './src',
+    instance: './bot.ts',
+    entry: './index.ts',
+    vitePlugins: [{ name: 'breaks-in-transform', transform: (_code, id) => { if (id.endsWith('/word.ts')) throw new Error('bad yaml on line 3'); } }]
+};
+`
+        );
+        writeFileSync(join(projectDir, 'src/word.ts'), "export const word = 'ok';\n");
+        writeFileSync(join(projectDir, 'src/reexport.ts'), "export { word } from './word';\n");
+
+        await using project = await openProject(new ProjectLoader(openModuleLoader, new ShellMode()), projectDir);
+
+        await expect(project.modules.importModule(join(projectDir, 'src/reexport.ts'))).rejects.toMatchObject({
+            code: SeedcordErrorCode.CoreVitePluginThrew,
+            message: expect.stringMatching(/breaks-in-transform[\s\S]*word\.ts/) as string
+        });
+    });
+
+    it('throws CoreVitePluginThrew with the plugin and hook when a plugin throws as Vite starts', async () => {
         const projectDir = tempProject();
         writeFileSync(
             join(projectDir, 'seedcord.config.ts'),
@@ -343,7 +367,7 @@ describe('ProjectLoader vitePlugins', () => {
             projectDir
         ).catch((error: unknown) => error);
 
-        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CliVitePluginThrew));
+        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
         expect(caught.message).toContain('breaks-on-start');
         expect(caught.message).toContain('config');
         expect(caught.message).toContain('bad option');

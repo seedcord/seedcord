@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { asError } from '@seedcord/utils/internal';
+import { importFailed } from '@seedcord/utils/node/internal';
 
 import { BIND_ENV_ID } from './edgeStandIns';
 
@@ -40,9 +40,7 @@ export class RunnerModuleLoader implements ModuleLoader {
             ]);
             if (loaded) return loaded.module;
         } catch (error: unknown) {
-            throw new SeedcordError(SeedcordErrorCode.CoreImportFailed, [shownAs, asError(error).message], {
-                cause: error
-            });
+            throw importFailed(shownAs, error);
         } finally {
             clearTimeout(timer);
         }

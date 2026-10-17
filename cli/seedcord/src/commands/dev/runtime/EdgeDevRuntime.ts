@@ -12,7 +12,7 @@ import { createServerModuleRunner } from 'vite';
 import { CloudflareWorker } from '#commands/build/builder/CloudflareWorker';
 import { workerEntry } from '#commands/build/builder/workerEntry';
 import { listenHostFor } from '#commands/dev/tunnel/listenHost';
-import { rethrowWithPluginName } from '#core/config/vitePlugins';
+import { rethrowWithPluginName, vitePluginNames } from '#core/config/vitePlugins';
 import { reportWorkerExports, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { edgeStandIns } from '#core/modules/edgeStandIns';
 import { openViteServer } from '#core/modules/openViteServer';
@@ -143,7 +143,12 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                             this.emit(context, { type: 'progress', status: 'Starting workerd…' });
                             return names;
                         },
-                        mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
+                        mode: {
+                            kind: 'dev',
+                            root: config.root,
+                            cwd: process.cwd(),
+                            vitePlugins: vitePluginNames(config)
+                        }
                     }),
                     inNodeOnly(edgeStandIns(() => Promise.resolve(workerEnv))),
                     // cloudflare() loads the worker entry during createServer. the entry's export list comes from this copy

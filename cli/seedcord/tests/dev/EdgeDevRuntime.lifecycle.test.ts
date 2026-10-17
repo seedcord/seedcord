@@ -228,7 +228,7 @@ describe('EdgeDevRuntime lifecycle', () => {
         expect(nodeCopy.default).toBe(GREETING);
     }, 60_000);
 
-    it('throws CliVitePluginThrew for a plugin that throws while edge dev starts', async () => {
+    it('throws CoreVitePluginThrew for a plugin that throws while edge dev starts', async () => {
         await using project = await edgeProject();
         const vitePlugins = await resolveVitePlugins([
             {
@@ -243,8 +243,31 @@ describe('EdgeDevRuntime lifecycle', () => {
             (error: unknown) => error
         );
 
-        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CliVitePluginThrew));
+        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
         expect(caught.message).toContain('breaks-on-start');
+    }, 60_000);
+
+    it('throws CoreVitePluginThrew with the file it was loading when a handler import fails in the worker', async () => {
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        await writeFile(join(projectDir, 'src/word.ts'), "export const word = 'ok';\n");
+        await writeFile(join(projectDir, 'src/handlers/Word.ts'), "export { word } from '../word';\n");
+        const vitePlugins = await resolveVitePlugins([
+            {
+                name: 'breaks-in-transform',
+                transform: (_code, id) => {
+                    if (id.endsWith('/word.ts')) throw new Error('bad yaml on line 3');
+                    return undefined;
+                }
+            }
+        ]);
+        await using started = await startedRuntime(projectDir, undefined, { vitePlugins });
+
+        // the worker's error crosses the dev channel as a plain Error that keeps its code
+        await expect(started.runtime.startBot(started.instance)).rejects.toMatchObject({
+            code: SeedcordErrorCode.CoreVitePluginThrew,
+            message: expect.stringMatching(/breaks-in-transform[\s\S]*word\.ts/) as string
+        });
     }, 60_000);
 
     it('throws CliStartFailed when the worker answers a GET with something other than 405', async () => {

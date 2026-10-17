@@ -1,9 +1,10 @@
 import { BAKED_IDS_KEY } from '@seedcord/core/internal';
 import { assertNever } from '@seedcord/utils';
-import { workerdPath } from '@seedcord/utils/node/internal';
+import { VITE_PLUGINS_KEY, workerdPath } from '@seedcord/utils/node/internal';
 
 import { builtFilesSource } from './builtFiles';
 
+import type { VitePluginNames } from '#core/config/vitePlugins';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { PluginConfig } from '@cloudflare/vite-plugin';
 import type { BakedIds } from '@seedcord/core/internal';
@@ -19,6 +20,7 @@ export const workerEntryConfig: EntryCustomizer = () => ({ entrypoint: WORKER_EN
 const BIND_ENV_ID = 'virtual:seedcord/bind-env';
 const BUILT_FILES_ID = 'virtual:seedcord/built-files';
 const BAKED_IDS_ID = 'virtual:seedcord/baked-ids';
+const VITE_PLUGINS_ID = 'virtual:seedcord/vite-plugins';
 
 // workerd has no filesystem behind this path
 const WORKER_ROOT = '/bot';
@@ -37,7 +39,8 @@ function cwdSource(cwd: string): string {
 }
 
 // a dev worker reads its ids from Discord at startup. a build bakes them in
-type EntryMode = { kind: 'build'; ids: BakedIds } | { kind: 'dev'; root: string; cwd: string };
+type EntryMode =
+    { kind: 'build'; ids: BakedIds } | { kind: 'dev'; root: string; cwd: string; vitePlugins: VitePluginNames };
 
 interface WorkerEntryOptions {
     files: ProjectFiles;
@@ -49,9 +52,17 @@ interface WorkerEntryOptions {
 }
 
 // an object literal would turn a "__proto__" key into the prototype
+function slotSource(key: string, value: unknown): string {
+    const json = JSON.stringify(JSON.stringify(value));
+    return `globalThis[Symbol.for(${JSON.stringify(key)})] = JSON.parse(${json});\n`;
+}
+
 function bakedIdsSource(ids: BakedIds): string {
-    const json = JSON.stringify(JSON.stringify(ids));
-    return `globalThis[Symbol.for(${JSON.stringify(BAKED_IDS_KEY)})] = JSON.parse(${json});\n`;
+    return slotSource(BAKED_IDS_KEY, ids);
+}
+
+function vitePluginsSource(vitePlugins: VitePluginNames): string {
+    return slotSource(VITE_PLUGINS_KEY, vitePlugins);
 }
 
 interface ModeSetup {
@@ -64,7 +75,12 @@ interface ModeSetup {
 function modeSetup(mode: EntryMode): ModeSetup {
     switch (mode.kind) {
         case 'dev': {
-            return { root: workerdPath(mode.root), cwd: workerdPath(mode.cwd), sourcePaths: true, modules: [] };
+            return {
+                root: workerdPath(mode.root),
+                cwd: workerdPath(mode.cwd),
+                sourcePaths: true,
+                modules: [[VITE_PLUGINS_ID, vitePluginsSource(mode.vitePlugins)]]
+            };
         }
         case 'build': {
             return {

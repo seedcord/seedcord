@@ -32,7 +32,7 @@ describe('seedcord build with vitePlugins', () => {
             "configResolved: (config) => { command = config.command; }, buildStart: () => { if (command === 'build') throw new Error('bad build option'); }"
         ]
     ])(
-        'throws CliVitePluginThrew for a plugin that throws in %s while bundling',
+        'throws CoreVitePluginThrew for a plugin that throws in %s while bundling',
         async (hook, hooks) => {
             const projectDir = await copyFixture(GATEWAY_BOT);
             await writeFile(
@@ -52,14 +52,14 @@ export default {
                 .run(projectDir)
                 .catch((error: unknown) => error);
 
-            assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CliVitePluginThrew));
+            assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
             expect(caught.message).toContain('breaks-the-build');
             expect(caught.message).toContain(hook);
         },
         120_000
     );
 
-    it('throws CliVitePluginThrew for a plugin that throws while an edge bot bundles', async () => {
+    it('throws CoreVitePluginThrew for a plugin that throws while an edge bot bundles', async () => {
         const projectDir = await copyEdgeBotForTest();
         await writeFile(
             join(projectDir, 'seedcord.config.ts'),
@@ -83,7 +83,7 @@ export default {
             .run(projectDir)
             .catch((error: unknown) => error);
 
-        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CliVitePluginThrew));
+        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
         expect(caught.message).toContain('breaks-the-worker');
     }, 120_000);
 

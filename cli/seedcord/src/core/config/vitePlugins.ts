@@ -3,6 +3,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { asError, isPlainObject } from '@seedcord/utils/internal';
 
 import type { ResolvedSeedcordConfig, VitePlugin } from './schema';
+import type { setVitePlugins } from '@seedcord/utils/node/internal';
 import type { Plugin, PluginOption, Rolldown } from 'vite';
 
 // vite sets plugin and hook only on errors from the hooks that load modules
@@ -96,6 +97,13 @@ function errorsIn(error: unknown): unknown[] {
     return [error, ...errors];
 }
 
+export type VitePluginNames = NonNullable<Parameters<typeof setVitePlugins>[0]>;
+
+// the bot checks a failed import against these names
+export function vitePluginNames({ configFile, vitePlugins }: PluginSource): VitePluginNames {
+    return { configFile, names: vitePlugins.map((plugin) => plugin.name) };
+}
+
 export function rethrowWithPluginName({ configFile, vitePlugins }: PluginSource): (error: unknown) => never {
     const names = new Set(vitePlugins.map((plugin) => plugin.name));
     return (error) => {
@@ -104,8 +112,8 @@ export function rethrowWithPluginName({ configFile, vitePlugins }: PluginSource)
             .find(({ plugin }) => names.has(plugin));
         if (!failure) throw error;
         throw new SeedcordError(
-            SeedcordErrorCode.CliVitePluginThrew,
-            [failure.plugin, failure.hook, configFile, failure.message],
+            SeedcordErrorCode.CoreVitePluginThrew,
+            [failure.plugin, { hook: failure.hook }, configFile, failure.message],
             { cause: failure }
         );
     };

@@ -2,8 +2,9 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { setBotRoot } from '@seedcord/utils/node/internal';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { setBotRoot, setVitePlugins } from '@seedcord/utils/node/internal';
+import { describe, it, expect, beforeEach, afterEach, onTestFinished, vi } from 'vitest';
 
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
 
@@ -288,5 +289,29 @@ describe('HmrModuleHandler', () => {
 
         expect(unregisterHandler).toHaveBeenCalledWith(FixtureHandler, undefined);
         expect(registerHandler).not.toHaveBeenCalled();
+    });
+
+    it('logs CoreVitePluginThrew when a plugin from vitePlugins throws during a reload', async () => {
+        setVitePlugins({ configFile: join(dir, 'seedcord.config.ts'), names: ['yaml'] });
+        onTestFinished(() => setVitePlugins(undefined));
+        const { logger, spies } = fakeLogger();
+        const withSpies = new HmrModuleHandler<TestHandler>({
+            handlersDir,
+            isHandler,
+            registerHandler,
+            unregisterHandler,
+            logger
+        });
+        const file = join(handlersDir, 'Shop.mjs');
+        // the fields vite sets on an error from a plugin's load or transform hook
+        const fields = JSON.stringify({ plugin: 'yaml', id: join(dir, 'shop.yaml') });
+        writeFileSync(file, `throw Object.assign(new Error('bad yaml on line 3'), ${fields});\n`);
+
+        await withSpies.handle({ file, type: 'update' });
+
+        expect(spies.error.mock.calls[0]?.[1]).toMatchObject({
+            code: SeedcordErrorCode.CoreVitePluginThrew,
+            message: expect.stringMatching(/yaml[\s\S]*shop\.yaml/) as string
+        });
     });
 });

@@ -100,6 +100,6 @@ describe('openProjectWithSteps', () => {
         );
 
         expect(steps.labels).toEqual(['read config', 'load plugins']);
-        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CliVitePluginThrew));
+        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
     });
 });

@@ -112,12 +112,12 @@ describe('resolveVitePlugins', () => {
 describe('rethrowWithPluginName', () => {
     const yaml = { name: 'yaml' };
 
-    it("throws CliVitePluginThrew for an error from one of the user's plugins", () => {
+    it("throws CoreVitePluginThrew for an error from one of the user's plugins", () => {
         const failed = Object.assign(new Error('bad option'), { plugin: 'yaml', hook: 'config' });
 
         const caught = caughtFromRethrow(failed, [yaml]);
 
-        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CliVitePluginThrew));
+        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
         expect(caught.message).toContain('yaml');
         expect(caught.message).toContain('config');
         expect(caught.message).toContain('bad option');
@@ -130,7 +130,7 @@ describe('rethrowWithPluginName', () => {
 
         const caught = caughtFromRethrow(bundleError, [yaml]);
 
-        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CliVitePluginThrew));
+        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
         expect(caught.message).toContain('transform');
     });
 

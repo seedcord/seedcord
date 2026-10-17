@@ -156,7 +156,7 @@ describe('EdgeDevRuntime endpoint', () => {
         await vi.waitFor(
             () => {
                 const failed = logs.find((record) => record.message.startsWith('Failed to reload'));
-                expect(failed?.args?.[0]).toMatchObject({ message: BROKEN_WORD });
+                expect(failed?.args?.[0]).toMatchObject({ message: expect.stringContaining(BROKEN_WORD) as string });
             },
             { timeout: 20_000, interval: 250 }
         );

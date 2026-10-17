@@ -21,6 +21,13 @@ function counted(count: number, one: string, many: string): string {
 
 const quoted = (value: string): string => paint.sky(JSON.stringify(value));
 
+// the CLI's startup wrapper sets hook. vite sets the file when a plugin throws while loading a module
+type VitePluginPlace = { hook: string } | { file: string };
+
+function placeText(place: VitePluginPlace): string {
+    return 'hook' in place ? `in its ${paint.bold(place.hook)} hook` : `while loading ${paint.path(place.file)}`;
+}
+
 // the edge worker sets chalk's color level after this module loads
 const token = (): string => paint.bold('DISCORD_BOT_TOKEN');
 
@@ -80,6 +87,13 @@ const messages = {
         `${paint.sky(controllerName)} was constructed without a ${pathKind} path. This is a bug in seedcord.`,
     [SeedcordErrorCode.CoreImportFailed]: (file: string, reason: string) =>
         `Could not import ${paint.path(file)}. ${sentence(reason)}`,
+    [SeedcordErrorCode.CoreVitePluginThrew]: (
+        plugin: string,
+        place: VitePluginPlace,
+        configFile: string,
+        reason: string
+    ) =>
+        `The Vite plugin ${paint.sky(plugin)} from ${paint.bold('vitePlugins')} in ${paint.path(configFile)} threw ${placeText(place)}. ${sentence(reason)} Check the options you pass it, or take it out of ${paint.bold('vitePlugins')} to see whether the error goes away.`,
     [SeedcordErrorCode.CorePathUnreadable]: (path: string, reason: string) =>
         `Could not read ${paint.path(path)}. ${sentence(reason)} Check that it exists and that this process can read it.`,
     [SeedcordErrorCode.CorePathOutsideRoot]: (path: string, root: string) =>
@@ -299,8 +313,6 @@ const messages = {
         `seedcord loads ${paint.path('cloudflare.config.ts')} through Cloudflare's config loader, which throws on Bun. Run the CLI on Node by leaving out ${paint.bold('--bun')}, as in ${paint.bold('bun run dev')}.`,
     [SeedcordErrorCode.CliEdgeNoWorker]: (cloudflareConfig: string) =>
         `${paint.path(cloudflareConfig)} sets no ${paint.bold('worker')}. Add a ${paint.bold('worker')} with your worker's ${paint.bold('name')} and ${paint.bold('compatibilityDate')}.`,
-    [SeedcordErrorCode.CliVitePluginThrew]: (plugin: string, hook: string, configFile: string, reason: string) =>
-        `The Vite plugin ${paint.sky(plugin)} from ${paint.bold('vitePlugins')} in ${paint.path(configFile)} threw in its ${paint.bold(hook)} hook. ${reason} Check the options you pass it, or take it out of ${paint.bold('vitePlugins')} to see whether the error goes away.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>

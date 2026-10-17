@@ -6,6 +6,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { readTextFiles, setBotRoot, traverseDirectory } from '#src/node/directory';
+import { setVitePlugins } from '#src/node/importFailed';
 
 const FIXTURES = path.join(import.meta.dirname, 'fixtures');
 const scratch = await mkdtemp(path.join(os.tmpdir(), 'seedcord-traverse-'));
@@ -67,6 +68,41 @@ describe('traverseDirectory', () => {
         expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathUnreadable });
         expect(Error.isError(error) ? error.message : '').toMatch(/not-a-real-dir/);
         expect(Error.isError(error) ? error.cause : undefined).toBeInstanceOf(Error);
+    });
+});
+
+describe('a Vite plugin that throws while a module loads', () => {
+    const configFile = path.join(scratch, 'seedcord.config.ts');
+    beforeEach(() => setVitePlugins({ configFile, names: ['yaml'] }));
+    afterEach(() => setVitePlugins(undefined));
+
+    // the fields vite sets on an error from a plugin's load or transform hook
+    async function folderThrowing(name: string, plugin: string): Promise<string> {
+        const dir = path.join(scratch, name);
+        await mkdir(dir, { recursive: true });
+        const fields = JSON.stringify({ plugin, id: path.join(dir, 'shop.yaml') });
+        await writeFile(
+            path.join(dir, 'Shop.ts'),
+            `throw Object.assign(new Error('bad yaml on line 3'), ${fields});\n`
+        );
+        return dir;
+    }
+
+    it('throws CoreVitePluginThrew with the plugin and the file it was loading', async () => {
+        const error = await rejection(traverseDirectory(await folderThrowing('from-yaml', 'yaml')));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreVitePluginThrew });
+        const message = Error.isError(error) ? error.message : '';
+        expect(message).toContain('yaml');
+        expect(message).toContain('shop.yaml');
+        expect(message).toContain('seedcord.config.ts');
+        expect(message).toContain('bad yaml on line 3');
+    });
+
+    it("keeps CoreImportFailed for an error from one of Vite's own plugins", async () => {
+        const error = await rejection(traverseDirectory(await folderThrowing('from-vite', 'vite:oxc')));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreImportFailed });
     });
 });
 

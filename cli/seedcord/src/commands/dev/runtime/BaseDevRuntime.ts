@@ -1,6 +1,8 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { setBotRoot } from '@seedcord/utils/node/internal';
+import { setBotRoot, setVitePlugins } from '@seedcord/utils/node/internal';
+
+import { vitePluginNames } from '#core/config/vitePlugins';
 
 import { HmrPlugin } from './HmrPlugin';
 
@@ -38,6 +40,8 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
         try {
             setBotRoot(context.config.root);
             resources.defer(() => setBotRoot(undefined));
+            setVitePlugins(vitePluginNames(context.config));
+            resources.defer(() => setVitePlugins(undefined));
             return await this.open(context, resources);
         } catch (error: unknown) {
             await resources.disposeAsync();

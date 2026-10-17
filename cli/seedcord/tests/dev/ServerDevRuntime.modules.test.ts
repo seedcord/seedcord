@@ -74,7 +74,7 @@ describe('dev runtime vitePlugins', () => {
         expect(module).toMatchObject({ default: GREETING });
     }, 60_000);
 
-    it('throws CliVitePluginThrew for a plugin that throws while the dev server starts', async () => {
+    it('throws CoreVitePluginThrew for a plugin that throws while the dev server starts', async () => {
         const temp = await mkdtempDisposable(join(tmpdir(), 'dev-vite-plugins-'));
         onTestFinished(() => temp.remove());
         await writeProject(temp.path);
@@ -94,8 +94,36 @@ describe('dev runtime vitePlugins', () => {
             .start({ ...context, config: { ...context.config, vitePlugins } })
             .catch((error: unknown) => error);
 
-        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CliVitePluginThrew));
+        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
         expect(caught.message).toContain('breaks-on-start');
+    }, 60_000);
+
+    it('throws CoreVitePluginThrew with the file it was loading for a plugin that throws in transform', async () => {
+        const temp = await mkdtempDisposable(join(tmpdir(), 'dev-vite-plugins-'));
+        onTestFinished(() => temp.remove());
+        await writeProject(temp.path);
+        await writeFile(join(temp.path, 'src', 'word.ts'), "export const word = 'ok';\n");
+        await writeFile(join(temp.path, 'src', 'reexport.ts'), "export { word } from './word';\n");
+        const vitePlugins = await resolveVitePlugins([
+            {
+                name: 'breaks-in-transform',
+                transform: (_code, id) => {
+                    if (id.endsWith('/word.ts')) throw new Error('bad yaml on line 3');
+                    return undefined;
+                }
+            }
+        ]);
+        const context = devContextFor(temp.path, 'reexport.ts');
+        const runtime = new ServerDevRuntime();
+        onTestFinished(() => runtime.stop());
+        await runtime.start({ ...context, config: { ...context.config, vitePlugins } });
+
+        const caught: unknown = await runtime.loadEntry().catch((error: unknown) => error);
+
+        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
+        expect(caught.message).toContain('breaks-in-transform');
+        expect(caught.message).toContain('word.ts');
+        expect(caught.message).toContain('bad yaml on line 3');
     }, 60_000);
 });
 

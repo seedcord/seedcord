@@ -96,6 +96,8 @@ export enum SeedcordErrorCode {
     CoreDiscordReadFailed = 1227,
     /** Two routes, commands, middleware classes, migrations, or customId fields have the same name. */
     CoreDuplicateName = 1228,
+    /** A Vite plugin from `vitePlugins` threw while Vite started or while it loaded a file. */
+    CoreVitePluginThrew = 1229,
 
     /** A command class carries `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,
@@ -284,8 +286,6 @@ export enum SeedcordErrorCode {
     CliEdgeOnBun = 3136,
     /** An edge bot's `cloudflare.config.ts` sets no `worker`. */
     CliEdgeNoWorker = 3137,
-    /** A Vite plugin from `vitePlugins` threw in one of its hooks. */
-    CliVitePluginThrew = 3138,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

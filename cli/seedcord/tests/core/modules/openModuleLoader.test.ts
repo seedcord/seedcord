@@ -19,7 +19,7 @@ afterEach(() => {
 });
 
 const SERVER: BuildTarget = { kind: 'server' };
-const BOT_CODE: BotCode = { vitePlugins: [] };
+const BOT_CODE: BotCode = { configFile: '/bot/seedcord.config.ts', vitePlugins: [] };
 
 async function edgeTarget(root: string): Promise<BuildTarget> {
     const cloudflareConfig = join(root, 'cloudflare.config.ts');

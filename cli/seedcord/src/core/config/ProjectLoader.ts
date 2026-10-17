@@ -68,9 +68,12 @@ export class ProjectLoader {
 
     // starts the config's vite plugins. on an edge bot it also runs cloudflare.config.ts
     public async openProject(config: ResolvedSeedcordConfig): Promise<Project> {
-        const botModules = await this.openModules(dirname(config.configFile), config.target, config.viteMode, {
-            vitePlugins: config.vitePlugins
-        }).catch(rethrowWithPluginName(config));
+        const botModules = await this.openModules(
+            dirname(config.configFile),
+            config.target,
+            config.viteMode,
+            config
+        ).catch(rethrowWithPluginName(config));
         return new Project(config, botModules);
     }
 

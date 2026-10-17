@@ -2,4 +2,4 @@
 '@seedcord/errors': minor
 ---
 
-Added `CliVitePluginThrew` for a Vite plugin in `vitePlugins` that throws in one of its hooks.
+Added `CoreVitePluginThrew` for a Vite plugin in `vitePlugins` that throws while Vite starts or while it loads a file.

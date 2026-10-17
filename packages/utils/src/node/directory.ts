@@ -7,6 +7,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { asError } from '#src/misc/asError';
 
+import { importFailed } from './importFailed';
 import { isInside, resolveFromRoot } from './paths';
 
 import type * as fs from 'node:fs';
@@ -219,9 +220,7 @@ export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFi
         try {
             imported = await load();
         } catch (err) {
-            throw new SeedcordError(SeedcordErrorCode.CoreImportFailed, [relativePath, asError(err).message], {
-                cause: err
-            });
+            throw importFailed(relativePath, err);
         }
         yield { fullPath, relativePath, imported };
     }
