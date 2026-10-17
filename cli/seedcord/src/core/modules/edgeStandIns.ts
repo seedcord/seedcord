@@ -27,7 +27,8 @@ export function withExports(_exports, fn) { return fn(); }
 export function withEnvAndExports(_env, _exports, fn) { return fn(); }
 `;
 
-export function edgeStandIns(workerEnv: WorkerEnv): Plugin {
+// loadEnv runs cloudflare.config.ts. a config that imports neither module never calls it
+export function edgeStandIns(loadEnv: () => Promise<WorkerEnv>): Plugin {
     return {
         name: 'seedcord:edge-stand-ins',
         resolveId(id) {
@@ -35,10 +36,11 @@ export function edgeStandIns(workerEnv: WorkerEnv): Plugin {
             if (id === 'cloudflare:workers') return CLOUDFLARE_WORKERS_ID;
             return undefined;
         },
-        load(id) {
-            if (id === RESOLVED_BIND_ENV_ID) return bindEnv(JSON.stringify(workerEnv.values()));
-            if (id === CLOUDFLARE_WORKERS_ID) return cloudflareWorkers(JSON.stringify(workerEnv.values()));
-            return undefined;
+        async load(id) {
+            if (id !== RESOLVED_BIND_ENV_ID && id !== CLOUDFLARE_WORKERS_ID) return undefined;
+            const workerEnv = await loadEnv();
+            const values = JSON.stringify(workerEnv.values());
+            return id === RESOLVED_BIND_ENV_ID ? bindEnv(values) : cloudflareWorkers(values);
         }
     };
 }

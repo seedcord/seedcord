@@ -118,7 +118,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                         },
                         mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
                     }),
-                    inNodeOnly(edgeStandIns(workerEnv)),
+                    inNodeOnly(edgeStandIns(() => Promise.resolve(workerEnv))),
                     // cloudflare() loads the worker entry during createServer. the entry's export list comes from this copy
                     nodeCopy(modulesReady.resolve),
                     hmr.plugin,

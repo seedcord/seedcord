@@ -8,6 +8,7 @@ import { assert, describe, it, expect, onTestFinished, vi } from 'vitest';
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { ShellMode } from '#core/viteMode';
+import { copyEdgeBotForTest } from '#tests/commands/build/edgeBot';
 import { cloudflareConfigSource } from '#tests/edgeFolder';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -232,6 +233,22 @@ describe('ProjectLoader entry on an edge bot', () => {
         const { target } = await load();
 
         expect(target).toMatchObject({ kind: 'edge', port: 9000 });
+    });
+
+    it('gives a config that imports cloudflare:workers the worker env', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        writeFileSync(
+            join(projectDir, CLOUDFLARE_CONFIG),
+            cloudflareConfigSource("DISCORD_BOT_TOKEN: bindings.secret(), DEV_PORT: bindings.text('4321')")
+        );
+        writeFileSync(
+            join(projectDir, 'seedcord.config.ts'),
+            "import { env } from 'cloudflare:workers';\n\nexport default { root: './src', instance: './bot.ts', port: Number(env.DEV_PORT) };\n"
+        );
+
+        await using project = await new ProjectLoader(openModuleLoader, new ShellMode()).open(projectDir);
+
+        expect(project.config.target).toMatchObject({ kind: 'edge', port: 4321 });
     });
 
     it.each([-1, 65_536, 80.5, '8787'])('throws CliConfigInvalidField for a port of %j', async (port) => {

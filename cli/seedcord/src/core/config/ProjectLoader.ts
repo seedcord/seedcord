@@ -16,7 +16,7 @@ import { locateConfig } from './locateConfig';
 
 import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
 import type { DefaultMode, ShellMode } from '#core/viteMode';
-import type { BuildTarget, ServerTarget } from './detectTarget';
+import type { BuildTarget } from './detectTarget';
 import type {
     ResolvedSeedcordBuildConfig,
     ResolvedSeedcordConfig,
@@ -31,8 +31,6 @@ import type {
 
 // the node http Seedcord's default port
 const EDGE_DEV_PORT = 3000;
-
-const SERVER_TARGET: ServerTarget = { kind: 'server' };
 
 function resolveTunnel(value: boolean | string | undefined): ResolvedTunnel {
     if (value === false) return { mode: 'off' };
@@ -60,13 +58,14 @@ export class ProjectLoader {
         const configPath = locateConfig(projectDir);
         const configDir = dirname(configPath);
         const target = detectTarget(configDir);
-        await using nodeLoader = new AsyncDisposableStack();
-        const nodeModules = nodeLoader.use(await this.openModules(configDir, SERVER_TARGET, mode));
-        const project = new Project(await this.readConfig(nodeModules, configPath, target, mode), nodeModules);
+        await using configLoader = new AsyncDisposableStack();
+        const configModules = configLoader.use(await this.openModules(configDir, target, mode, 'config'));
+        const project = new Project(await this.readConfig(configModules, configPath, target, mode), configModules);
         await assertNoHashPaths(project);
         await assertTargetMatchesTsconfig(project);
+        // a server bot runs its code under the same node conditions
         if (target.kind === 'server') {
-            nodeLoader.move();
+            configLoader.move();
             return project;
         }
 

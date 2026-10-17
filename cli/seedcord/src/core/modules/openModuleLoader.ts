@@ -7,7 +7,7 @@ import { mergeViteConfig, NODE_CONDITIONS, WORKERD_CONDITIONS, userCodeConfig } 
 import { WorkerEnv } from './workerEnv';
 
 import type { BuildTarget } from '#core/config/detectTarget';
-import type { ModuleLoader } from './ModuleLoader';
+import type { LoaderUse, ModuleLoader } from './ModuleLoader';
 import type { ViteDevServer } from 'vite';
 import type { ModuleRunner } from 'vite/module-runner';
 
@@ -25,13 +25,22 @@ class ViteModuleLoader extends RunnerModuleLoader implements AsyncDisposable {
     }
 }
 
+function lazyWorkerEnv(cloudflareConfig: string, mode: string): () => Promise<WorkerEnv> {
+    let loading: Promise<WorkerEnv> | undefined;
+    return () => (loading ??= WorkerEnv.load(cloudflareConfig, mode));
+}
+
 export async function openModuleLoader(
     projectDir: string,
     target: BuildTarget,
-    mode: string
+    mode: string,
+    use: LoaderUse = 'bot'
 ): Promise<ModuleLoader & AsyncDisposable> {
-    const isEdge = target.kind === 'edge';
-    const config = mergeViteConfig(userCodeConfig(isEdge ? WORKERD_CONDITIONS : NODE_CONDITIONS), {
+    const runsWorkerCode = target.kind === 'edge' && use === 'bot';
+    const workerEnv = target.kind === 'edge' ? lazyWorkerEnv(target.cloudflareConfig, mode) : undefined;
+    // read up front because the runner reports anything a load hook throws as CoreImportFailed
+    if (runsWorkerCode) await workerEnv?.();
+    const config = mergeViteConfig(userCodeConfig(runsWorkerCode ? WORKERD_CONDITIONS : NODE_CONDITIONS), {
         root: projectDir,
         mode,
         configFile: false,
@@ -42,7 +51,7 @@ export async function openModuleLoader(
         // the ssr runner never reads the client dep cache in node_modules/.vite
         optimizeDeps: { noDiscovery: true, include: [] },
         ssr: { noExternal: seedcordDependents(projectDir) },
-        plugins: isEdge ? [edgeStandIns(await WorkerEnv.load(target.cloudflareConfig, mode))] : []
+        plugins: workerEnv ? [edgeStandIns(workerEnv)] : []
     });
     await using onFailure = new AsyncDisposableStack();
     const server = await createServer(config);
@@ -51,7 +60,7 @@ export async function openModuleLoader(
     onFailure.defer(() => runner.close());
 
     const loader = new ViteModuleLoader(server, runner);
-    if (isEdge) await loader.bindEdgeEnv();
+    if (runsWorkerCode) await loader.bindEdgeEnv();
 
     onFailure.move();
     return loader;
