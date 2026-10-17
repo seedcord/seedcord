@@ -13,13 +13,12 @@ import { LogStore } from '#ui/stores/LogStore';
 
 import { DevRunner } from './DevRunner';
 
-import type { ShellMode } from '#core/viteMode';
 import type { Command } from '@commander-js/extra-typings';
 
 export class DevCommand extends BaseCommand {
     private readonly logger = cliLogger('Dev');
 
-    constructor(private readonly shell: ShellMode) {
+    constructor() {
         super('dev', 'Run the bot from the config file');
     }
 
@@ -31,7 +30,7 @@ export class DevCommand extends BaseCommand {
                 profileStdout();
                 const store = new DevStore();
                 const stateFolder = new StateFolder(process.cwd(), this.logger);
-                const runner = DevRunner.create(store, stateFolder, this.shell);
+                const runner = DevRunner.create(store, stateFolder);
 
                 // ink intercepts Ctrl-C under raw mode. this fires only when stdin is not raw.
                 const onSignal = (): void => {

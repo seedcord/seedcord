@@ -7,8 +7,9 @@ import { Envapter, Environment } from 'envapt';
 import { assert, describe, it, expect, onTestFinished } from 'vitest';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
+import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { ShellMode } from '#core/viteMode';
-import { cloudflareConfigSource, linkPackages } from '#tests/edgeFolder';
+import { cloudflareConfigSource } from '#tests/edgeFolder';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { OpenModules } from '#core/modules/ModuleLoader';
@@ -55,9 +56,8 @@ const MINIMAL = { instance: './bot.ts', entry: './index.ts' };
 const EDGE_MINIMAL = { instance: './bot.ts' };
 const CLOUDFLARE_CONFIG = 'cloudflare.config.ts';
 
-async function writeEdgeConfig(projectDir: string): Promise<void> {
+function writeEdgeConfig(projectDir: string): void {
     writeFileSync(join(projectDir, CLOUDFLARE_CONFIG), cloudflareConfigSource());
-    await linkPackages(projectDir, ['cf']);
 }
 
 function writeTsconfig(projectDir: string, compilerOptions: Record<string, unknown>, name = 'tsconfig.json'): void {
@@ -109,7 +109,7 @@ describe('ProjectLoader target', () => {
 
     it('targets edge when a cloudflare.config.ts and a tsconfig with the workerd condition are in the config folder', async () => {
         const { projectDir, load } = projectWith(EDGE_MINIMAL);
-        await writeEdgeConfig(projectDir);
+        writeEdgeConfig(projectDir);
         writeTsconfig(projectDir, { customConditions: ['workerd'] });
 
         const { target } = await load();
@@ -119,7 +119,7 @@ describe('ProjectLoader target', () => {
 
     it('reads the workerd condition through the tsconfig extends chain', async () => {
         const { projectDir, load } = projectWith(EDGE_MINIMAL);
-        await writeEdgeConfig(projectDir);
+        writeEdgeConfig(projectDir);
         writeFileSync(
             join(projectDir, 'base.json'),
             JSON.stringify({ compilerOptions: { customConditions: ['workerd'] } })
@@ -136,18 +136,20 @@ describe('ProjectLoader target', () => {
 
     it('throws CliEdgeWithoutWorkerdCondition for a cloudflare.config.ts whose tsconfig lacks the condition', async () => {
         const { projectDir, load } = projectWith(EDGE_MINIMAL);
-        await writeEdgeConfig(projectDir);
+        writeEdgeConfig(projectDir);
         writeTsconfig(projectDir, {});
 
         await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliEdgeWithoutWorkerdCondition });
     });
 
+    // only the real loader runs cloudflare.config.ts
     it('points at a stray cloudflare.config.ts in a node bot without cf', async () => {
-        const { projectDir, load } = projectWith(MINIMAL);
+        const projectDir = tempProject();
+        writeFileSync(join(projectDir, 'seedcord.config.ts'), `export default ${JSON.stringify(MINIMAL)};\n`);
         writeFileSync(join(projectDir, CLOUDFLARE_CONFIG), cloudflareConfigSource());
         writeTsconfig(projectDir, {});
 
-        await expect(load()).rejects.toMatchObject({
+        await expect(new ProjectLoader(openModuleLoader, new ShellMode()).open(projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigFieldUnused,
             message: expect.stringContaining(join(projectDir, CLOUDFLARE_CONFIG)) as string
         });
@@ -155,7 +157,7 @@ describe('ProjectLoader target', () => {
 
     it('throws CliTsconfigNotFound for a cloudflare.config.ts with no tsconfig', async () => {
         const { projectDir, load } = projectWith(EDGE_MINIMAL);
-        await writeEdgeConfig(projectDir);
+        writeEdgeConfig(projectDir);
 
         await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliTsconfigNotFound });
     });
@@ -180,7 +182,7 @@ describe('ProjectLoader target', () => {
 
     it('reads the tsconfig that build.tsconfig points at', async () => {
         const { projectDir, load } = projectWith({ ...EDGE_MINIMAL, build: { tsconfig: './tsconfig.build.json' } });
-        await writeEdgeConfig(projectDir);
+        writeEdgeConfig(projectDir);
         writeTsconfig(projectDir, {});
         writeTsconfig(projectDir, { customConditions: ['workerd'] }, 'tsconfig.build.json');
 
@@ -198,15 +200,15 @@ describe('ProjectLoader target', () => {
 });
 
 describe('ProjectLoader entry on an edge bot', () => {
-    async function edgeProjectWith(config: unknown): Promise<ReturnType<typeof projectWith>> {
+    function edgeProjectWith(config: unknown): ReturnType<typeof projectWith> {
         const project = projectWith(config);
-        await writeEdgeConfig(project.projectDir);
+        writeEdgeConfig(project.projectDir);
         writeTsconfig(project.projectDir, { customConditions: ['workerd'] });
         return project;
     }
 
     it('loads a config without entry', async () => {
-        const { projectDir, load } = await edgeProjectWith(EDGE_MINIMAL);
+        const { projectDir, load } = edgeProjectWith(EDGE_MINIMAL);
 
         const { target } = await load();
 
@@ -218,7 +220,7 @@ describe('ProjectLoader entry on an edge bot', () => {
     });
 
     it('reads the dev port from port', async () => {
-        const { load } = await edgeProjectWith({ ...EDGE_MINIMAL, port: 9000 });
+        const { load } = edgeProjectWith({ ...EDGE_MINIMAL, port: 9000 });
 
         const { target } = await load();
 
@@ -226,7 +228,7 @@ describe('ProjectLoader entry on an edge bot', () => {
     });
 
     it.each([-1, 65_536, 80.5, '8787'])('throws CliConfigInvalidField for a port of %j', async (port) => {
-        const { load } = await edgeProjectWith({ ...EDGE_MINIMAL, port });
+        const { load } = edgeProjectWith({ ...EDGE_MINIMAL, port });
 
         await expect(load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
@@ -235,7 +237,7 @@ describe('ProjectLoader entry on an edge bot', () => {
     });
 
     it('throws CliConfigFieldUnused for an edge config that sets build.outDir', async () => {
-        const { projectDir, load } = await edgeProjectWith({ ...EDGE_MINIMAL, build: { outDir: './out' } });
+        const { projectDir, load } = edgeProjectWith({ ...EDGE_MINIMAL, build: { outDir: './out' } });
 
         await expect(load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigFieldUnused,
@@ -244,7 +246,7 @@ describe('ProjectLoader entry on an edge bot', () => {
     });
 
     it('throws CliConfigFieldUnused for an edge config that sets entry', async () => {
-        const { projectDir, load } = await edgeProjectWith(MINIMAL);
+        const { projectDir, load } = edgeProjectWith(MINIMAL);
 
         await expect(load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigFieldUnused,

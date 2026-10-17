@@ -11,7 +11,6 @@ import { CommandsCommand } from '#commands/commands/CommandsCommand';
 import { DeployRunner } from '#commands/commands/deploy/DeployRunner';
 import { ListRunner } from '#commands/commands/list/ListRunner';
 import { RemoveRunner } from '#commands/commands/remove/RemoveRunner';
-import { ShellMode } from '#core/viteMode';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { APP_ID, botGuilds, fakeDiscord, fakeProject, slash } from '#tests/commands/commands/fakeBot';
 import { silentLogger } from '#tests/silentLogger';
@@ -55,9 +54,9 @@ function captureOutput(): CapturedOutput {
     };
 }
 
-async function runCommands(deps: ConstructorParameters<typeof CommandsCommand>[1], ...args: string[]): Promise<void> {
+async function runCommands(deps: ConstructorParameters<typeof CommandsCommand>[0], ...args: string[]): Promise<void> {
     const program = new Command().exitOverride();
-    new CommandsCommand(new ShellMode(), deps).register(program);
+    new CommandsCommand(deps).register(program);
     await program.parseAsync(['commands', ...args], { from: 'user' });
 }
 

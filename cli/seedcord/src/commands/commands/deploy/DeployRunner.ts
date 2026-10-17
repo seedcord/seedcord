@@ -12,7 +12,6 @@ import { diffScope } from './diffScope';
 
 import type { DeployTargets } from '#commands/commands/DiscordSession';
 import type { RunnerDeps } from '#commands/commands/runnerDeps';
-import type { ShellMode } from '#core/viteMode';
 import type { DeployPresenter, ScopePlan } from './DeployPresenter';
 import type { CommandScopes, ScopeId } from '@seedcord/core/internal';
 
@@ -29,8 +28,8 @@ type DeployDeps = RunnerDeps & { readonly state: StateFolder };
 export class DeployRunner {
     constructor(private readonly deps: DeployDeps) {}
 
-    public static create(shell: ShellMode): DeployRunner {
-        const deps = defaultRunnerDeps(shell);
+    public static create(): DeployRunner {
+        const deps = defaultRunnerDeps();
         return new DeployRunner({ ...deps, state: new StateFolder(process.cwd(), deps.logger) });
     }
 

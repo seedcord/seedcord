@@ -8,7 +8,6 @@ import { defaultRunnerDeps } from '#commands/commands/runnerDeps';
 import type { Scan } from '#commands/commands/DiscordSession';
 import type { RunnerDeps } from '#commands/commands/runnerDeps';
 import type { Steps } from '#core/output/Steps';
-import type { ShellMode } from '#core/viteMode';
 import type { ListPresenter } from './ListPresenter';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
@@ -44,8 +43,8 @@ function listingOf({ global, guilds }: Scan): Listing {
 export class ListRunner {
     constructor(private readonly deps: RunnerDeps) {}
 
-    public static create(shell: ShellMode): ListRunner {
-        return new ListRunner(defaultRunnerDeps(shell));
+    public static create(): ListRunner {
+        return new ListRunner(defaultRunnerDeps());
     }
 
     public async run(presenter: ListPresenter, scope?: ListScope): Promise<void> {

@@ -2,4 +2,4 @@
 'seedcord': minor
 ---
 
-`seedcord build` now stops an edge build when `cloudflare.config.ts` leaves Cloudflare's Node compat off, and says which setting to change. It also starts the built worker once in workerd. A worker that fails to load, like one that sets a timer at global scope, stops the build with workerd's error.
+`seedcord build` now starts the built edge worker once in workerd, and stops with workerd's error when it fails to load. It also stops when `cloudflare.config.ts` turns Node compat off.

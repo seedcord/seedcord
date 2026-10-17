@@ -5,6 +5,7 @@ import { cliLogger } from '#core/cliLogger';
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { quietSteps } from '#core/output/quietSteps';
+import { startupShell } from '#core/viteMode';
 import { resetChannelColors } from '#ui/channelColor';
 import { profileMark } from '#ui/profile';
 
@@ -16,7 +17,6 @@ import { TunnelRouter } from './tunnel/TunnelRouter';
 
 import type { ResolvedSeedcordConfig, ResolvedTarget, ResolvedTunnel } from '#core/config/schema';
 import type { StateFolder } from '#core/state/StateFolder';
-import type { ShellMode } from '#core/viteMode';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DevSessionDeps } from './DevSession';
 import type { DevRuntime } from './runtime/DevRuntime';
@@ -41,17 +41,17 @@ export class DevRunner {
 
     constructor(private readonly deps: DevRunnerDeps) {}
 
-    public static create(store: DevStore, state: StateFolder, shell: ShellMode): DevRunner {
+    public static create(store: DevStore, state: StateFolder): DevRunner {
         const codegenLogger = cliLogger('Codegen');
         const tunnelLogger = cliLogger('Tunnel');
         const makeCoordinator = (tunnel: ResolvedTunnel): TunnelCoordinator | undefined =>
             createTunnelCoordinator(tunnelLogger, (status) => store.setTunnel(status), tunnel);
 
         return new DevRunner({
-            projectLoader: new ProjectLoader(openModuleLoader, shell),
+            projectLoader: new ProjectLoader(openModuleLoader, startupShell),
             store,
             state,
-            codegen: CodegenRunner.create(quietSteps, codegenLogger, shell),
+            codegen: CodegenRunner.create(quietSteps, codegenLogger),
             codegenLogger,
             tunnel: new TunnelRouter(makeCoordinator, tunnelLogger),
             runtime: (target) => (target.kind === 'edge' ? new EdgeDevRuntime(target) : new ServerDevRuntime())

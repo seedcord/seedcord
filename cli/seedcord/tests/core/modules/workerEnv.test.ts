@@ -28,6 +28,14 @@ describe('WorkerEnv', () => {
         expect(workerEnv.values()).toEqual({ LIMITS: { max: 3 } });
     });
 
+    it('throws CliEdgeNoWorker for a cloudflare.config.ts that sets no worker', async () => {
+        const { cloudflareConfig } = await edgeFolder('export default {};\n');
+
+        await expect(WorkerEnv.load(cloudflareConfig, 'development')).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliEdgeNoWorker
+        });
+    });
+
     it.each([
         ['throws', "throw new Error('boom in config');\n"],
         ['does not parse', "export default { worker: { name: 'x',\n"]

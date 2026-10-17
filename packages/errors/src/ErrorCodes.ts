@@ -282,6 +282,8 @@ export enum SeedcordErrorCode {
     CliCommandsNotDeleted = 3135,
     /** The CLI ran on Bun for an edge bot. */
     CliEdgeOnBun = 3136,
+    /** An edge bot's `cloudflare.config.ts` sets no `worker`. */
+    CliEdgeNoWorker = 3137,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

@@ -22,7 +22,6 @@ export type DefaultMode = 'development' | 'production';
 export class ShellMode {
     constructor(private readonly variable?: ShellVar) {}
 
-    // vite writes NODE_ENV into process.env once a command starts it
     public static read(): ShellMode {
         for (const key of ENVIRONMENT_KEYS) {
             const value = process.env[key];
@@ -39,3 +38,6 @@ export class ShellMode {
         throw new SeedcordError(SeedcordErrorCode.ConfigInvalidEnv, [this.variable.key, MODE_LIST, why]);
     }
 }
+
+// vite writes NODE_ENV into process.env once a command starts it. the CLI loads this file before any command runs
+export const startupShell = ShellMode.read();

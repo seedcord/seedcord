@@ -5,7 +5,7 @@ import type { TypedOmit } from '@seedcord/types';
  * Build options every bot takes. An edge bot takes only these, because `@cloudflare/vite-plugin`
  * writes its worker to `.cloudflare/output`.
  */
-export interface SeedcordEdgeBuildConfig {
+export interface SeedcordBaseBuildConfig {
     /**
      * The tsconfig that `seedcord build` type checks the project with.
      *
@@ -17,7 +17,7 @@ export interface SeedcordEdgeBuildConfig {
 /**
  * Build options for a bot that runs on node or bun.
  */
-export interface SeedcordBuildConfig extends SeedcordEdgeBuildConfig {
+export interface SeedcordBuildConfig extends SeedcordBaseBuildConfig {
     /**
      * Directory where build artifacts should be emitted.
      *
@@ -105,7 +105,7 @@ export interface SeedcordConfig {
     /**
      * Optional build configuration overrides.
      */
-    build?: SeedcordEdgeBuildConfig;
+    build?: SeedcordBaseBuildConfig;
     /**
      * Optional HMR configuration.
      */

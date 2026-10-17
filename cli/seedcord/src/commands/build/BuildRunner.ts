@@ -4,6 +4,7 @@ import { ProjectLoader } from '#core/config/ProjectLoader';
 import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { printResolvedConfig } from '#core/output/printResolvedConfig';
+import { startupShell } from '#core/viteMode';
 
 import { assertFoldersUnderRoot } from './builder/assertFoldersUnderRoot';
 import { targetBuildFor } from './builder/targetBuildFor';
@@ -11,7 +12,6 @@ import { TypeChecker } from './builder/TypeChecker';
 
 import type { Steps } from '#core/output/Steps';
 import type { Project } from '#core/project/Project';
-import type { ShellMode } from '#core/viteMode';
 import type { BundleStats } from './builder/output';
 import type { NextCommand } from './builder/TargetBuild';
 import type { Build } from './builder/targetBuildFor';
@@ -35,11 +35,11 @@ interface BuildRunnerDeps {
 export class BuildRunner {
     constructor(private readonly deps: BuildRunnerDeps) {}
 
-    public static productionProjectLoader(shell: ShellMode): ProjectLoader {
+    public static productionProjectLoader(shell = startupShell): ProjectLoader {
         return new ProjectLoader(openModuleLoader, shell, 'production');
     }
 
-    public static create(steps: Steps<BuildStep>, shell: ShellMode): BuildRunner {
+    public static create(steps: Steps<BuildStep>, shell = startupShell): BuildRunner {
         return new BuildRunner({
             steps,
             projectLoader: BuildRunner.productionProjectLoader(shell),

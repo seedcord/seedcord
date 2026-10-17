@@ -23,7 +23,6 @@ import { RemoveWizard, WIZARD_STEPS } from './remove/RemoveWizard';
 import { guildTargetsOf } from './scope';
 
 import type { StepPrinter } from '#core/output/StepPrinter';
-import type { ShellMode } from '#core/viteMode';
 import type { Confirm } from './confirm';
 import type { DeployOptions, DeployStep } from './deploy/DeployRunner';
 import type { ListScope, ListStep } from './list/ListRunner';
@@ -60,15 +59,12 @@ export class CommandsCommand extends BaseCommand {
     private readonly removeRunner: RemoveRunner;
     private readonly prompter: Prompter;
 
-    constructor(
-        shell: ShellMode,
-        {
-            deployRunner = DeployRunner.create(shell),
-            listRunner = ListRunner.create(shell),
-            removeRunner = RemoveRunner.create(),
-            prompter = new Prompter()
-        }: Partial<CommandsDeps> = {}
-    ) {
+    constructor({
+        deployRunner = DeployRunner.create(),
+        listRunner = ListRunner.create(),
+        removeRunner = RemoveRunner.create(),
+        prompter = new Prompter()
+    }: Partial<CommandsDeps> = {}) {
         super('commands', 'Manage the commands registered on Discord');
         this.deployRunner = deployRunner;
         this.listRunner = listRunner;

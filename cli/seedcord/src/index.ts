@@ -1,9 +1,9 @@
 export {
     defineConfig,
     SEEDCORD_CONFIG_FILENAMES,
+    type SeedcordBaseBuildConfig,
     type SeedcordBuildConfig,
     type SeedcordConfig,
-    type SeedcordEdgeBuildConfig,
     type SeedcordHmrConfig,
     type SeedcordServerConfig
 } from '#core/config/schema';

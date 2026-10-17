@@ -26,15 +26,20 @@ describe('ShellMode', () => {
         expect(shell.viteMode('development')).toBe('development');
     });
 
-    it.each([
-        [{ ENVIRONMENT: 'staging' }, 'staging'],
-        [{ ENV: 'production' }, 'production'],
-        [{ NODE_ENV: 'test' }, 'test'],
-        [{ MODE: 'staging' }, 'staging'],
-        [{ ENVIRONMENT: 'Development' }, 'development'],
-        [{ ENV: 'staging', MODE: 'production' }, 'staging']
-    ])('reads the mode from the shell %j in the order envapt does', (vars, mode) => {
-        expect(readShell(vars).viteMode('production')).toBe(mode);
+    it.each<ShellVars>([
+        { ENVIRONMENT: 'staging' },
+        { MODE: 'staging' },
+        { ENVIRONMENT: 'Development' },
+        { ENVIRONMENT: 'staging', ENV: 'production' },
+        { ENV: 'staging', NODE_ENV: 'production' },
+        { NODE_ENV: 'staging', MODE: 'production' },
+        { ENVIRONMENT: 'test', MODE: 'staging' }
+    ])('picks the same mode as envapt for the shell %j', async (vars) => {
+        const shell = readShell(vars);
+        vi.resetModules();
+        const { Envapter, Environment } = await import('envapt');
+
+        expect(shell.viteMode('production')).toBe(Environment[Envapter.environment].toLowerCase());
     });
 
     it("throws ConfigInvalidEnv for a name outside envapt's four", () => {
