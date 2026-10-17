@@ -16,14 +16,18 @@ const GATEWAY: ScaffoldAnswers = {
     transport: 'gateway',
     capabilities: ['reactions'],
     token: 'aaa.bbb.ccc',
-    botColor: 'Blurple'
+    botColor: 'Blurple',
+    install: true,
+    git: true
 };
 
 const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'http',
     token: 'aaa.bbb.ccc',
-    botColor: 'Blurple'
+    botColor: 'Blurple',
+    install: true,
+    git: true
 };
 
 async function render(answers: ScaffoldAnswers): Promise<Map<string, string>> {

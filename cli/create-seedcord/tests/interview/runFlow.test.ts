@@ -1,18 +1,28 @@
+import { Prompter } from '@seedcord/cli-prompts';
 import { describe, expect, it } from 'vitest';
 
 import { runFlow } from '#interview/runFlow';
 
+import type { FlowMode } from '#interview/runFlow';
 import type { Answers, Step } from '#interview/types';
 
 function stubStep<Key extends keyof Answers>(key: Key, value: Answers[Key], asked: (keyof Answers)[]): Step<Key> {
     return {
         key,
-        flag: { name: String(key), description: 'a stub', parse: (raw) => raw as Answers[Key] },
+        label: String(key),
+        // runFlow reads only the flag's name
+        flag: { name: String(key), description: 'a stub' } as Step<Key>['flag'],
         ask: () => {
             asked.push(key);
             return Promise.resolve(value);
-        }
+        },
+        shown: (answer) => `shown ${String(answer)}`
     };
+}
+
+// the stub steps never prompt
+function interactive(rows: string[] = []): FlowMode {
+    return { interactive: true, prompter: new Prompter(), onAnswer: (label, shown) => rows.push(`${label}: ${shown}`) };
 }
 
 describe('runFlow', () => {
@@ -21,11 +31,23 @@ describe('runFlow', () => {
         const answers = await runFlow(
             [stubStep('directory', 'my-bot', asked), stubStep('transport', 'gateway', asked)],
             {},
-            { interactive: true }
+            interactive()
         );
 
         expect(asked).toEqual(['directory', 'transport']);
         expect(answers).toEqual({ directory: 'my-bot', transport: 'gateway' });
+    });
+
+    it('hands each asked answer to onAnswer, and leaves out what a flag supplied', async () => {
+        const rows: string[] = [];
+
+        await runFlow(
+            [stubStep('directory', 'my-bot', []), stubStep('transport', 'gateway', [])],
+            { directory: 'from-flag' },
+            interactive(rows)
+        );
+
+        expect(rows).toEqual(['transport: shown gateway']);
     });
 
     it('leaves a step unasked when its flag already supplied the answer', async () => {
@@ -33,9 +55,7 @@ describe('runFlow', () => {
         const answers = await runFlow(
             [stubStep('directory', 'prompted', asked)],
             { directory: 'from-flag' },
-            {
-                interactive: true
-            }
+            interactive()
         );
 
         expect(asked).toEqual([]);
@@ -49,7 +69,7 @@ describe('runFlow', () => {
             skip: (answers) => answers.transport === 'http'
         };
 
-        const answers = await runFlow([stubStep('transport', 'http', asked), capabilities], {}, { interactive: true });
+        const answers = await runFlow([stubStep('transport', 'http', asked), capabilities], {}, interactive());
 
         expect(asked).toEqual(['transport']);
         expect(answers.capabilities).toBeUndefined();
@@ -57,7 +77,7 @@ describe('runFlow', () => {
 
     it('leaves a step unasked when its --no- flag answered null', async () => {
         const asked: (keyof Answers)[] = [];
-        const answers = await runFlow([stubStep('token', 'prompted', asked)], { token: null }, { interactive: true });
+        const answers = await runFlow([stubStep('token', 'prompted', asked)], { token: null }, interactive());
 
         expect(asked).toEqual([]);
         expect(answers.token).toBeNull();

@@ -1,10 +1,11 @@
-import { basename } from 'node:path';
+import { basename, resolve } from 'node:path';
 
-import { text } from '@clack/prompts';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
-import { requireAnswer } from './requireAnswer';
+import { claimTarget } from '#scaffold/target';
+
+import { validatorFor } from './validatorFor';
 
 import type { Step } from '#interview/types';
 
@@ -44,23 +45,15 @@ function parseDirectory(raw: string): string {
 
 export const directoryStep: Step<'directory'> = {
     key: 'directory',
+    label: 'folder',
     flag: { name: 'dir', description: 'where the project goes', parse: parseDirectory },
-    ask: async (_answers, streams) =>
+    ask: async (_answers, prompter) =>
         parseDirectory(
-            requireAnswer(
-                await text({
-                    ...streams,
-                    message: `Where should the project go? ${paint.mute(FORMAT)}`,
-                    placeholder: 'my-bot',
-                    validate: (value) => {
-                        try {
-                            parseDirectory(value ?? '');
-                            return undefined;
-                        } catch (error) {
-                            return Error.isError(error) ? error.message : 'Enter a directory name.';
-                        }
-                    }
-                })
-            )
-        )
+            await prompter.text({
+                message: `Where should the project go? ${paint.mute(FORMAT)}`,
+                placeholder: 'my-bot',
+                validate: validatorFor((value) => claimTarget(resolve(parseDirectory(value))))
+            })
+        ),
+    shown: (directory) => directory
 };

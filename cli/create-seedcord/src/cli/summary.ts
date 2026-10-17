@@ -29,6 +29,10 @@ function secretFlag(value: string | null, flag: string, placeholder: string): st
     return value === null ? `--${noFlagName(flag)}` : `--${flag} ${placeholder}`;
 }
 
+function switchFlag(value: boolean, flag: string): string {
+    return value ? `--${flag}` : `--${noFlagName(flag)}`;
+}
+
 export function dashboardToggles(capabilities: string[]): string[] {
     const privileged = privilegedFor(capabilities);
     if (privileged.length === 0) return [];
@@ -47,7 +51,9 @@ export function reproducingCommand(answers: ScaffoldAnswers, agent: AgentName): 
         `--transport ${answers.transport}`,
         ...(answers.capabilities === undefined ? [] : [`--capabilities ${answers.capabilities.join(',')}`]),
         secretFlag(answers.token, 'token', 'YOUR_TOKEN'),
-        `--color ${answers.botColor}`
+        `--color ${answers.botColor}`,
+        switchFlag(answers.install, 'install'),
+        switchFlag(answers.git, 'git')
     ];
 
     // npm alone forwards flags to the package through a double dash

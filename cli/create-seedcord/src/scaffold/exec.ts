@@ -22,8 +22,8 @@ const INDENTED = /^\s/;
 const LINE_BREAK = /[\r\n]+/;
 
 const PIPED_COLUMNS = 100;
-// clack indents captured output by three
-const GUTTER = 3;
+// CreateOutput.warn indents captured output by four
+const GUTTER = 4;
 
 function lineWidth(): number {
     return (process.stdout.columns > 0 ? process.stdout.columns : PIPED_COLUMNS) - GUTTER;

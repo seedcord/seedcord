@@ -9,14 +9,18 @@ const GATEWAY: ScaffoldAnswers = {
     transport: 'gateway',
     capabilities: ['reactions'],
     token: 'aaa.bbb.ccc',
-    botColor: 'Blurple'
+    botColor: 'Blurple',
+    install: true,
+    git: true
 };
 
 const HTTP: ScaffoldAnswers = {
     directory: 'edge/my-bot',
     transport: 'http',
     token: 'aaa.bbb.ccc',
-    botColor: '#ff8800'
+    botColor: '#ff8800',
+    install: true,
+    git: true
 };
 
 const EXTRAS = { developerUsername: 'dhruv', agent: 'pnpm' } as const;

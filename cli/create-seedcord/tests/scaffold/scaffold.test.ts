@@ -26,14 +26,18 @@ const GATEWAY: ScaffoldAnswers = {
     transport: 'gateway',
     capabilities: ['guild-messages'],
     token: 'aaa.bbb.ccc',
-    botColor: 'Blurple'
+    botColor: 'Blurple',
+    install: true,
+    git: true
 };
 
 const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'http',
     token: 'aaa.bbb.ccc',
-    botColor: 'Blurple'
+    botColor: 'Blurple',
+    install: true,
+    git: true
 };
 
 interface Recorded {
@@ -73,10 +77,10 @@ function stepRecorder(): { steps: StepUi; seen: string[] } {
     return {
         seen,
         steps: {
-            run: async (labels, work) => {
-                seen.push(labels.running);
+            run: async (label, work) => {
+                seen.push(label);
                 const result = await work();
-                seen.push(`done: ${labels.done}`);
+                seen.push(`done: ${label}`);
                 return result;
             },
             skip: (label) => {
@@ -92,8 +96,6 @@ function baseInput(target: string, steps: StepUi = stepRecorder().steps): Parame
         templatesRoot: TEMPLATES,
         answers: GATEWAY,
         agent: 'pnpm',
-        install: true,
-        git: true,
         steps
     };
 }
@@ -178,7 +180,7 @@ describe('scaffold', () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder();
 
-        await scaffold({ ...baseInput(target), install: false }, runner);
+        await scaffold({ ...baseInput(target), answers: { ...GATEWAY, install: false } }, runner);
 
         expect(calls.map((call) => call.command)).toEqual(['git', 'git', 'git']);
     });
@@ -191,16 +193,16 @@ describe('scaffold', () => {
         await scaffold(baseInput(target, steps), runner);
 
         expect(seen).toEqual([
-            'Writing files',
-            'done: Files written',
-            'Installing dependencies',
-            'done: Dependencies installed',
-            'Formatting',
-            'done: Code formatted',
-            'Generating types',
-            'done: Types generated',
-            'Setting up git',
-            'done: Committed'
+            'files',
+            'done: files',
+            'install',
+            'done: install',
+            'format',
+            'done: format',
+            'types',
+            'done: types',
+            'git',
+            'done: git'
         ]);
     });
 
@@ -269,11 +271,11 @@ describe('scaffold', () => {
         const { runner } = recorder();
         const { steps, seen } = stepRecorder();
 
-        await scaffold({ ...baseInput(target, steps), install: false }, runner);
+        await scaffold({ ...baseInput(target, steps), answers: { ...GATEWAY, install: false } }, runner);
 
-        expect(seen).toContain('skipped: Dependencies installed');
-        expect(seen).toContain('skipped: Code formatted');
-        expect(seen).toContain('skipped: Types generated');
+        expect(seen).toContain('skipped: install');
+        expect(seen).toContain('skipped: format');
+        expect(seen).toContain('skipped: types');
     });
 
     it('marks git skipped when git is off', async () => {
@@ -281,16 +283,16 @@ describe('scaffold', () => {
         const { runner } = recorder();
         const { steps, seen } = stepRecorder();
 
-        await scaffold({ ...baseInput(target, steps), git: false }, runner);
+        await scaffold({ ...baseInput(target, steps), answers: { ...GATEWAY, git: false } }, runner);
 
-        expect(seen).toContain('skipped: Committed');
+        expect(seen).toContain('skipped: git');
     });
 
     it('skips git when git is off', async () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder();
 
-        await scaffold({ ...baseInput(target), git: false }, runner);
+        await scaffold({ ...baseInput(target), answers: { ...GATEWAY, git: false } }, runner);
 
         expect(calls.every((call) => call.command !== 'git')).toBe(true);
     });

@@ -1,11 +1,8 @@
-import { autocomplete } from '@clack/prompts';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
-import { requireAnswer } from './requireAnswer';
-
 import type { Answers, Step } from '#interview/types';
-import type { Option } from '@clack/prompts';
+import type { Choice } from '@seedcord/cli-prompts';
 import type { ColorName } from '@seedcord/types';
 
 export const COLOR_NAMES = [
@@ -44,8 +41,6 @@ export const COLOR_NAMES = [
 
 export type ColorChoice = (typeof COLOR_NAMES)[number];
 
-const VISIBLE_COLORS = 8;
-
 // the framework's resolveColor takes six hex digits with the hash optional
 function normalizeHex(raw: string): `#${string}` | null {
     const digits = raw.trim().replace(/^#/, '');
@@ -68,31 +63,25 @@ function parseColor(raw: string): Answers['botColor'] {
     return match;
 }
 
-// a typed hex shows up as its own option
-function colorOptions(this: { userInput: string }): Option<string>[] {
-    const typed = this.userInput.trim();
-    const hex = normalizeHex(typed);
-    const named = COLOR_NAMES.filter((name) => name.toLowerCase().includes(typed.toLowerCase())).map((name) => ({
-        value: name
-    }));
+const COLOR_CHOICES = COLOR_NAMES.map((name) => ({ value: name, label: name }));
 
-    return hex ? [{ value: hex, hint: 'hex' }, ...named] : named;
+function typedHex(typed: string): Choice<string> | undefined {
+    const hex = normalizeHex(typed);
+    return hex ? { value: hex, label: hex, hint: 'hex' } : undefined;
 }
 
 export const botColorStep: Step<'botColor'> = {
     key: 'botColor',
+    label: 'color',
     flag: { name: 'color', description: 'a color name or a six-digit hex', parse: parseColor },
-    ask: async (_answers, streams) =>
+    ask: async (_answers, prompter) =>
         parseColor(
-            requireAnswer(
-                await autocomplete<string>({
-                    ...streams,
-                    message: 'Pick an accent color, or type a hex',
-                    options: colorOptions,
-                    initialValue: 'Blurple',
-                    placeholder: 'Blurple',
-                    maxItems: VISIBLE_COLORS
-                })
-            )
-        )
+            await prompter.autocomplete({
+                message: 'Pick an accent color, or type a hex',
+                placeholder: 'Blurple',
+                choices: COLOR_CHOICES,
+                typedChoice: typedHex
+            })
+        ),
+    shown: (color) => color
 };

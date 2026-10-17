@@ -17,16 +17,7 @@ function thrownBy(run: () => unknown): unknown {
 
 describe('parseInput', () => {
     it('reads every step flag into its answer', () => {
-        const { supplied } = parseInput([
-            '--dir',
-            'my-bot',
-            '--transport',
-            'http',
-            '--token',
-            TOKEN,
-            '--color',
-            'Blurple'
-        ]);
+        const supplied = parseInput(['--dir', 'my-bot', '--transport', 'http', '--token', TOKEN, '--color', 'Blurple']);
 
         expect(supplied).toEqual({
             directory: 'my-bot',
@@ -37,7 +28,7 @@ describe('parseInput', () => {
     });
 
     it('takes the directory from a bare argument', () => {
-        expect(parseInput(['my-bot']).supplied.directory).toBe('my-bot');
+        expect(parseInput(['my-bot']).directory).toBe('my-bot');
     });
 
     it('rejects a directory given as both an argument and a flag', () => {
@@ -47,23 +38,29 @@ describe('parseInput', () => {
     });
 
     it('accepts the same directory twice', () => {
-        expect(parseInput(['my-bot', '--dir', 'my-bot']).supplied.directory).toBe('my-bot');
+        expect(parseInput(['my-bot', '--dir', 'my-bot']).directory).toBe('my-bot');
     });
 
-    it('installs and runs git unless told otherwise', () => {
-        const { install, git } = parseInput([]);
+    it('leaves install and git for the interview to ask', () => {
+        const supplied = parseInput([]);
 
-        expect(install).toBe(true);
-        expect(git).toBe(true);
+        expect(supplied.install).toBeUndefined();
+        expect(supplied.git).toBeUndefined();
     });
 
-    it('turns each step off through its own flag', () => {
-        expect(parseInput(['--no-install']).install).toBe(false);
-        expect(parseInput(['--no-git']).git).toBe(false);
+    it('answers install and git yes or no through their switches', () => {
+        expect(parseInput(['--install', '--no-git'])).toEqual({ install: true, git: false });
+        expect(parseInput(['--no-install', '--git'])).toEqual({ install: false, git: true });
+    });
+
+    it('rejects --install passed alongside --no-install', () => {
+        const thrown = thrownBy(() => parseInput(['--install', '--no-install']));
+
+        expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateBadUsage)).toBe(true);
     });
 
     it('reads --no-token as a token you add to .env later', () => {
-        expect(parseInput(['--no-token']).supplied.token).toBeNull();
+        expect(parseInput(['--no-token']).token).toBeNull();
     });
 
     it('rejects a token passed alongside --no-token', () => {

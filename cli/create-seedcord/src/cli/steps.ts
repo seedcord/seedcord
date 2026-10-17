@@ -1,41 +1,15 @@
-import { S_STEP_SUBMIT, log, spinner } from '@clack/prompts';
-import { paint } from '@seedcord/errors';
+export const STEP_LABELS = ['files', 'install', 'format', 'types', 'git'] as const;
 
-export interface StepLabels {
-    running: string;
-    done: string;
-}
+export type StepLabel = (typeof STEP_LABELS)[number];
 
 export interface StepUi {
-    run: <Ret>(labels: StepLabels, work: () => Promise<Ret>) => Promise<Ret>;
-    skip: (label: string) => void;
-}
-
-export function clackSteps(): StepUi {
-    return {
-        run: async (labels, work) => {
-            // clack fixes the indicator at construction
-            const spin = spinner({ indicator: 'timer' });
-            spin.start(labels.running);
-
-            try {
-                const result = await work();
-                spin.stop(labels.done);
-                return result;
-            } catch (error) {
-                spin.error(`${labels.running} failed`);
-                throw error;
-            }
-        },
-        skip: (label) => {
-            log.message(paint.mute(`${label} (skipped)`), { symbol: paint.mute(S_STEP_SUBMIT) });
-        }
-    };
+    run: <Ret>(label: StepLabel, work: () => Promise<Ret>) => Promise<Ret>;
+    skip: (label: StepLabel) => void;
 }
 
 export function silentSteps(): StepUi {
     return {
-        run: async (_labels, work) => work(),
+        run: async (_label, work) => work(),
         skip: () => undefined
     };
 }

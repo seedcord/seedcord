@@ -1,12 +1,18 @@
-import { select } from '@clack/prompts';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
-
-import { requireAnswer } from './requireAnswer';
 
 import type { Answers, Step } from '#interview/types';
 
 const TRANSPORTS: Answers['transport'][] = ['http', 'gateway'];
+
+const TRANSPORT_CHOICES = [
+    { value: 'http', label: 'Http', hint: 'Discord posts interactions to your URL' },
+    {
+        value: 'gateway',
+        label: 'Gateway',
+        hint: 'keeps a connection to Discord open. messages, reactions, joins, voice activity, and so on arrive on top of interactions'
+    }
+] as const;
 
 function parseTransport(raw: string): Answers['transport'] {
     const value = raw.trim().toLowerCase();
@@ -23,24 +29,12 @@ function parseTransport(raw: string): Answers['transport'] {
 
 export const transportStep: Step<'transport'> = {
     key: 'transport',
+    label: 'transport',
     flag: { name: 'transport', description: 'http or gateway', parse: parseTransport },
-    ask: async (_answers, streams) =>
-        requireAnswer(
-            await select<Answers['transport']>({
-                ...streams,
-                message: 'How should Discord reach your bot?',
-                options: [
-                    {
-                        value: 'http',
-                        label: 'Http',
-                        hint: 'Discord posts interactions to your URL'
-                    },
-                    {
-                        value: 'gateway',
-                        label: 'Gateway',
-                        hint: 'keeps a connection to Discord open. messages, reactions, joins, voice activity, and so on arrive on top of interactions'
-                    }
-                ]
-            })
-        )
+    ask: (_answers, prompter) =>
+        prompter.select<Answers['transport']>({
+            message: 'How should Discord reach your bot?',
+            choices: TRANSPORT_CHOICES
+        }),
+    shown: (transport) => TRANSPORT_CHOICES.find((choice) => choice.value === transport)?.label ?? transport
 };

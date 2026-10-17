@@ -12,7 +12,7 @@ describe('CAPABILITIES', () => {
         expect(CAPABILITIES.flatMap((c) => c.intents)).not.toContain('Guilds');
     });
 
-    it('keeps the marker out of the hints, which clack draws only under the cursor', () => {
+    it('keeps the privileged marker out of the hints, since the label already shows it', () => {
         expect(CAPABILITIES.filter((c) => c.hint.includes('privileged'))).toEqual([]);
     });
 });

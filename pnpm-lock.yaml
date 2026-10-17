@@ -854,9 +854,9 @@ importers:
 
   cli/create-seedcord:
     devDependencies:
-      '@clack/prompts':
-        specifier: ^1.7.0
-        version: 1.7.0
+      '@seedcord/cli-prompts':
+        specifier: workspace:^
+        version: link:../../tooling/cli-prompts
       '@seedcord/errors':
         specifier: workspace:^
         version: link:../../packages/errors

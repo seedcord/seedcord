@@ -35,6 +35,17 @@ describe('Prompter.password', () => {
         await expect(answer).resolves.toBe('');
     });
 
+    it('counts a paste of only spaces as empty', async () => {
+        using terminal = new PromptTerminal();
+        const answer = terminal.prompter.password(SKIPPABLE_TOKEN);
+
+        await terminal.press('   ', KEY.enter);
+        await settled(async () => expect(await terminal.screen()).toContain(SKIP_WARNING));
+        await terminal.press(KEY.enter);
+
+        await expect(answer).resolves.toBe('');
+    });
+
     it('warns again when you type and clear the field before the next enter', async () => {
         using terminal = new PromptTerminal();
         const answer = terminal.prompter.password(SKIPPABLE_TOKEN);

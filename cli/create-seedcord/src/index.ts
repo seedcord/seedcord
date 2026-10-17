@@ -1,16 +1,16 @@
 import { resolve } from 'node:path';
 import process from 'node:process';
 
-import { cancel, intro, isCI, isTTY, log, note, outro } from '@clack/prompts';
+import { Prompter, unlessCancelled } from '@seedcord/cli-prompts';
 import { paint } from '@seedcord/errors';
 
-import { banner } from '#cli/banner';
 import { helpText } from '#cli/help';
 import { inviteUrl } from '#cli/invite';
+import { messageOf } from '#cli/messageOf';
+import { CreateOutput } from '#cli/output';
 import { runningAgent } from '#cli/packageManager';
 import { parseInput, wantsHelp, wantsVersion } from '#cli/parseInput';
-import { reportFailure } from '#cli/reportFailure';
-import { clackSteps, silentSteps } from '#cli/steps';
+import { STEP_LABELS, silentSteps } from '#cli/steps';
 import { dashboardToggles, nextSteps, reproducingCommand } from '#cli/summary';
 import { version } from '#cli/version';
 import { runFlow } from '#interview/runFlow';
@@ -20,22 +20,35 @@ import { execRunner } from '#scaffold/exec';
 import { scaffold } from '#scaffold/scaffold';
 import { requireScaffoldAnswers } from '#template/context';
 
+import type { FlowMode } from '#interview/runFlow';
 import type { ScaffoldAnswers } from '#template/context';
 import type { AgentName } from 'package-manager-detector';
 
 // dist/index.mjs and src/index.ts are both one level under the package root
 const TEMPLATES = resolve(import.meta.dirname, '../templates');
 
-// a pty reporting zero columns makes clack wrap every line into an unbounded string
+// a pty can report zero columns
 function hasUsableWidth(): boolean {
     return process.stdout.columns > 0;
 }
 
 function isInteractive(): boolean {
-    return Boolean(process.stdin.isTTY) && isTTY(process.stdout) && hasUsableWidth() && !isCI();
+    return (
+        process.stdin.isTTY &&
+        process.stdout.isTTY &&
+        hasUsableWidth() &&
+        // some CI fakes a TTY
+        !process.env.CI
+    );
 }
 
-async function main(): Promise<void> {
+function flowMode(interactive: boolean, output: CreateOutput): FlowMode {
+    if (!interactive) return { interactive: false };
+
+    return { interactive: true, prompter: new Prompter(), onAnswer: (label, shown) => output.answer(label, shown) };
+}
+
+async function main(output: CreateOutput): Promise<void> {
     const argv = process.argv.slice(2);
 
     if (wantsHelp(argv)) {
@@ -49,12 +62,13 @@ async function main(): Promise<void> {
     }
 
     const interactive = isInteractive();
-    if (interactive) intro(banner());
+    if (interactive) output.header();
 
-    const input = parseInput(argv);
-    const answers = requireScaffoldAnswers(await runFlow(STEPS, input.supplied, { interactive }));
+    const answers = requireScaffoldAnswers(await runFlow(STEPS, parseInput(argv), flowMode(interactive, output)));
     const target = resolve(process.cwd(), answers.directory);
     const agent = runningAgent();
+
+    if (interactive) output.line();
 
     const result = await scaffold(
         {
@@ -62,65 +76,54 @@ async function main(): Promise<void> {
             templatesRoot: TEMPLATES,
             answers,
             agent,
-            install: input.install,
-            git: input.git,
-            steps: interactive ? clackSteps() : silentSteps()
+            steps: interactive ? output.steps() : silentSteps()
         },
         execRunner
     );
 
-    for (const notice of result.notices) log.warn(notice);
+    for (const notice of result.notices) output.warn(notice);
 
-    await reportOutcome(answers, agent, result.installed, interactive);
+    if (interactive) await reportOutcome(output, answers, agent, result.installed);
 
     // a wrapper chaining `&& cd my-bot && pnpm dev` has to stop here
     if (result.failed) process.exitCode = 1;
 }
 
-// a gutter on the wrapped rows would end up in whatever gets pasted
-function copyable(label: string, value: string): void {
-    log.message(paint.mute(label));
-    log.message(value, { withGuide: false, spacing: 0 });
-}
-
 async function reportOutcome(
+    output: CreateOutput,
     answers: ScaffoldAnswers,
     agent: AgentName,
-    installed: boolean,
-    interactive: boolean
+    installed: boolean
 ): Promise<void> {
-    if (!interactive) return;
-
     const toggles = dashboardToggles(answers.capabilities ?? []);
-    if (toggles.length > 0) note(toggles.join('\n'), 'Dashboard toggles');
+    if (toggles.length > 0) output.note('Dashboard toggles', toggles);
 
     if (answers.transport === 'http' && !(await probeCloudflared())) {
-        log.warn(missingNotice(process.platform));
+        output.warn(missingNotice(process.platform));
     }
 
-    note(
-        nextSteps(answers, { agent, installed })
-            .map((step) => paint.mint(step))
-            .join('\n'),
-        'Next steps'
+    output.note(
+        'Next steps',
+        nextSteps(answers, { agent, installed }).map((step) => paint.mint(step))
     );
 
     const invite = inviteUrl(answers.token);
-    if (invite !== null) copyable('Add the bot to a server', paint.sky(invite));
+    if (invite !== null) output.copyable('Add the bot to a server', paint.sky(invite));
 
-    copyable('Run this setup again', paint.mute(reproducingCommand(answers, agent)));
+    output.copyable('Run this setup again', paint.mute(reproducingCommand(answers, agent)));
 
-    outro(paint.sky('https://seedcord.org/guide'));
+    output.line();
+    output.line(paint.sky('https://seedcord.org/guide'));
+    output.line();
 }
 
+const output = new CreateOutput([...STEPS.map((step) => step.label), ...STEP_LABELS]);
+
 try {
-    await main();
+    await unlessCancelled(output, () => main(output));
 } catch (error) {
-    const failure = reportFailure(error);
+    output.fail(messageOf(error));
 
-    if (failure.message !== null) log.error(failure.message);
-    cancel(failure.closing);
-
-    // process.exit would cut the two lines above short when stdout is a pipe
-    process.exitCode = failure.code;
+    // process.exit would cut the lines above short when stdout is a pipe
+    process.exitCode = 1;
 }

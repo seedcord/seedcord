@@ -41,7 +41,7 @@ function textMachine(
         initial: { line: LineEditor.empty() },
         press: ({ line }, keyPress) => ({ line: editLine(line, keyPress) }),
         submit: ({ line, error: shown }) => {
-            if (line.text === '' && emptyWarning !== undefined) {
+            if (line.text.trim() === '' && emptyWarning !== undefined) {
                 return shown === emptyWarning ? { answer: '' } : { stay: { line, error: emptyWarning } };
             }
             const error = validate?.(line.text);

@@ -11,14 +11,18 @@ const GATEWAY: ScaffoldAnswers = {
     transport: 'gateway',
     capabilities: ['guild-messages'],
     token: 'aaa.bbb.ccc',
-    botColor: 'Blurple'
+    botColor: 'Blurple',
+    install: true,
+    git: true
 };
 
 const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'http',
     token: 'aaa.bbb.ccc',
-    botColor: 'Blurple'
+    botColor: 'Blurple',
+    install: true,
+    git: true
 };
 
 describe('nextSteps', () => {
@@ -111,8 +115,15 @@ describe('reproducingCommand', () => {
         const flagged = STEPS.filter((step) => step.flag.name !== 'dir' && step.skip?.(HTTP) !== true);
 
         for (const step of flagged) {
-            expect(command).toContain(`--${step.flag.name} `);
+            expect(command).toMatch(new RegExp(`--(no-)?${step.flag.name}( |$)`));
         }
+    });
+
+    it('carries a no to install or git as its --no- switch', () => {
+        const command = reproducingCommand({ ...HTTP, install: false, git: false }, 'pnpm');
+
+        expect(command).toContain('--no-install');
+        expect(command).toContain('--no-git');
     });
 
     it('adds --no-token to the rerun command when you skipped the token', () => {

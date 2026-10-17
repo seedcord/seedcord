@@ -41,7 +41,7 @@ describe('a flag answering a skipped question', () => {
         const thrown = await runFlow(
             [capabilitiesStep],
             { transport: 'http', capabilities: ['reactions'] },
-            { interactive: true }
+            { interactive: false }
         ).catch((error: unknown) => error);
 
         expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateFlagNotApplicable)).toBe(true);
