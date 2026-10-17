@@ -8,12 +8,15 @@ import { STEPS } from '#interview/steps';
 
 import type { Answers } from '#interview/types';
 
-const OPTIONS = Object.fromEntries(
-    STEPS.flatMap(({ flag }) => [
+export const VERBOSE_FLAG = 'verbose';
+
+const OPTIONS = Object.fromEntries([
+    ...STEPS.flatMap(({ flag }) => [
         [flag.name, { type: 'parse' in flag ? 'string' : 'boolean' }] as const,
         ...(flag.noFlag === undefined ? [] : [[noFlagName(flag.name), { type: 'boolean' }] as const])
-    ])
-);
+    ]),
+    [VERBOSE_FLAG, { type: 'boolean' }] as const
+]);
 
 const HELP_FLAGS = new Set(['--help', '-h']);
 const VERSION_FLAGS = new Set(['--version', '-v']);
@@ -25,6 +28,10 @@ export function wantsHelp(argv: string[]): boolean {
 
 export function wantsVersion(argv: string[]): boolean {
     return argv.some((argument) => VERSION_FLAGS.has(argument));
+}
+
+export function wantsVerbose(argv: string[]): boolean {
+    return argv.includes(`--${VERBOSE_FLAG}`);
 }
 
 function readArgv(argv: string[]): { values: Record<string, unknown>; positionals: string[] } {

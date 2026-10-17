@@ -9,14 +9,14 @@ import { inviteUrl } from '#cli/invite';
 import { messageOf } from '#cli/messageOf';
 import { CreateOutput } from '#cli/output';
 import { runningAgent } from '#cli/packageManager';
-import { parseInput, wantsHelp, wantsVersion } from '#cli/parseInput';
-import { STEP_LABELS, silentSteps } from '#cli/steps';
+import { parseInput, wantsHelp, wantsVerbose, wantsVersion } from '#cli/parseInput';
+import { STEP_LABELS } from '#cli/steps';
 import { dashboardToggles, nextSteps, reproducingCommand } from '#cli/summary';
 import { version } from '#cli/version';
 import { runFlow } from '#interview/runFlow';
 import { STEPS } from '#interview/steps';
 import { missingNotice, probeCloudflared } from '#scaffold/cloudflared';
-import { execRunner } from '#scaffold/exec';
+import { createExecRunner } from '#scaffold/exec';
 import { scaffold } from '#scaffold/scaffold';
 import { requireScaffoldAnswers } from '#template/context';
 
@@ -76,9 +76,9 @@ async function main(output: CreateOutput): Promise<void> {
             templatesRoot: TEMPLATES,
             answers,
             agent,
-            steps: interactive ? output.steps() : silentSteps()
+            steps: interactive ? output.stepRows() : output.plainSteps()
         },
-        execRunner
+        createExecRunner({ verbose: wantsVerbose(argv), color: Boolean(process.stdout.isTTY) })
     );
 
     for (const notice of result.notices) output.warn(notice);

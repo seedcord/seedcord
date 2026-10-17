@@ -2,12 +2,19 @@ import { StepRow } from '@seedcord/cli-prompts';
 import { paint } from '@seedcord/errors';
 
 import { banner } from '#cli/banner';
+import { messageOf } from '#cli/messageOf';
+import { CommandFailed } from '#scaffold/exec';
 
 import type { StepUi } from '#cli/steps';
 
 const SUMMARY_LABELS = ['intents', 'next', 'invite', 'again', 'guide'] as const;
 
 type SummaryLabel = (typeof SUMMARY_LABELS)[number];
+
+function underFailedRow(error: unknown): string[] {
+    if (error instanceof CommandFailed) return [paint.mute(error.command), ...error.output];
+    return messageOf(error).split('\n');
+}
 
 interface Stdout {
     write: (text: string) => unknown;
@@ -33,7 +40,7 @@ export class CreateOutput {
         this.line(`${paint.mint(paint.check)} ${label.padEnd(this.labelWidth)}  ${shown}`);
     }
 
-    public steps(): StepUi {
+    public stepRows(): StepUi {
         return {
             run: async (label, work) => {
                 const row = new StepRow({
@@ -48,11 +55,25 @@ export class CreateOutput {
                     row.done([]);
                     return result;
                 } catch (error: unknown) {
-                    row.failed([]);
+                    row.failed(underFailedRow(error));
                     throw error;
                 }
             },
             skip: (label) => this.line(paint.mute(`- ${label.padEnd(this.labelWidth)}  skipped`))
+        };
+    }
+
+    public plainSteps(): StepUi {
+        return {
+            run: async (_label, work) => {
+                try {
+                    return await work();
+                } catch (error: unknown) {
+                    this.warn(messageOf(error));
+                    throw error;
+                }
+            },
+            skip: () => undefined
         };
     }
 

@@ -1,7 +1,7 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { parseInput, wantsHelp, wantsVersion } from '#cli/parseInput';
+import { parseInput, wantsHelp, wantsVerbose, wantsVersion } from '#cli/parseInput';
 
 const TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;
 
@@ -106,6 +106,17 @@ describe('wantsHelp', () => {
 
     it('is false for a run that asked for none', () => {
         expect(wantsHelp(['my-bot', '--no-git'])).toBe(false);
+    });
+});
+
+describe('wantsVerbose', () => {
+    it('reads the flag alongside the answers', () => {
+        expect(wantsVerbose(['my-bot', '--transport', 'http', '--verbose'])).toBe(true);
+        expect(parseInput(['my-bot', '--verbose'])).toEqual({ directory: 'my-bot' });
+    });
+
+    it('is false for a run that asked for none', () => {
+        expect(wantsVerbose(['my-bot'])).toBe(false);
     });
 });
 

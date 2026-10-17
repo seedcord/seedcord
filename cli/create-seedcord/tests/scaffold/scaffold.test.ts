@@ -79,9 +79,14 @@ function stepRecorder(): { steps: StepUi; seen: string[] } {
         steps: {
             run: async (label, work) => {
                 seen.push(label);
-                const result = await work();
-                seen.push(`done: ${label}`);
-                return result;
+                try {
+                    const result = await work();
+                    seen.push(`done: ${label}`);
+                    return result;
+                } catch (error) {
+                    seen.push(`failed: ${label}`);
+                    throw error;
+                }
             },
             skip: (label) => {
                 seen.push(`skipped: ${label}`);
@@ -206,25 +211,29 @@ describe('scaffold', () => {
         ]);
     });
 
-    it('keeps the project and reports why when git fails', async () => {
+    it('keeps the project and says it is uncommitted when git fails', async () => {
         const target = await scratchTarget();
         const { runner } = recorder('commit');
+        const { steps, seen } = stepRecorder();
 
-        const result = await scaffold(baseInput(target), runner);
+        const result = await scaffold(baseInput(target, steps), runner);
 
-        expect(result.notices.join('\n')).toContain('commit blew up');
+        expect(seen).toContain('failed: git');
+        expect(result.notices).toEqual(['The project is complete and uncommitted.']);
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
     it('keeps going to git and the summary when the install fails', async () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder('-D');
+        const { steps, seen } = stepRecorder();
 
-        const result = await scaffold(baseInput(target), runner);
+        const result = await scaffold(baseInput(target, steps), runner);
 
         expect(result.installed).toBe(false);
         expect(result.failed).toBe(true);
-        expect(result.notices.join('\n')).toContain('-D blew up');
+        expect(seen).toContain('failed: install');
+        expect(result.notices.join('\n')).not.toContain('-D blew up');
         expect(calls.map((call) => call.command)).toContain('git');
     });
 
@@ -258,11 +267,14 @@ describe('scaffold', () => {
         const target = await scratchTarget();
         // the dev install lists prettier too
         const { runner, calls } = recorder('prettier --write');
+        const { steps, seen } = stepRecorder();
 
-        const result = await scaffold(baseInput(target), runner);
+        const result = await scaffold(baseInput(target, steps), runner);
 
         expect(result.installed).toBe(true);
-        expect(result.notices.join('\n')).toContain('prettier --write blew up');
+        expect(result.failed).toBe(true);
+        expect(seen).toContain('failed: format');
+        expect(result.notices).toEqual([]);
         expect(calls.map((call) => call.args.join(' ')).some((args) => args.includes('codegen'))).toBe(true);
     });
 

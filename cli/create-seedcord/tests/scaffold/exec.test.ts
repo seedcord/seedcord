@@ -2,7 +2,11 @@ import process from 'node:process';
 
 import { describe, expect, it } from 'vitest';
 
-import { execRunner, spawnSpec } from '#scaffold/exec';
+import { createExecRunner, spawnSpec } from '#scaffold/exec';
+
+import type { CommandRunner } from '#scaffold/scaffold';
+
+const execRunner = createExecRunner({ verbose: false, color: false });
 
 function noise(prefix: string, count: number): string {
     return `for (let i = 0; i < ${count}; i++) console.log('${prefix} ' + i);`;
@@ -13,8 +17,12 @@ function indented(count: number): string {
 }
 
 async function failureOf(...statements: string[]): Promise<string> {
+    return failureFrom(execRunner, ...statements);
+}
+
+async function failureFrom(run: CommandRunner, ...statements: string[]): Promise<string> {
     try {
-        await execRunner(process.execPath, ['-e', `${statements.join(' ')} process.exit(1);`], process.cwd());
+        await run(process.execPath, ['-e', `${statements.join(' ')} process.exit(1);`], process.cwd());
     } catch (error) {
         return Error.isError(error) ? error.message : String(error);
     }
@@ -28,6 +36,12 @@ async function capturedBy(...statements: string[]): Promise<string> {
 
     return message.split('\n').slice(1).join('\n');
 }
+
+const STACK = [
+    `console.error('Error: codegen could not load a command');`,
+    `console.error('    at load (/bot/src/commands/ping.ts:3:9)');`,
+    `console.error('    at main (/bot/node_modules/seedcord/dist/cli.mjs:9:1)');`
+];
 
 describe('spawnSpec', () => {
     it('keeps a commit message whole on windows', () => {
@@ -133,5 +147,43 @@ describe('execRunner', () => {
 
     it('reports the exit code when the command printed nothing', async () => {
         expect(await failureOf('')).toContain('exited with 1');
+    });
+
+    it('leaves stack frames out of the failure', async () => {
+        const captured = await capturedBy(...STACK);
+
+        expect(captured).toContain('could not load a command');
+        expect(captured).not.toContain('at load');
+    });
+
+    it('keeps stack frames with verbose on', async () => {
+        const verbose = createExecRunner({ verbose: true, color: false });
+
+        expect(await failureFrom(verbose, ...STACK)).toContain('at load (/bot/src/commands/ping.ts:3:9)');
+    });
+
+    it('asks the command for color when told to', async () => {
+        const colored = createExecRunner({ verbose: false, color: true });
+        const printColor = `console.log('color ' + process.env.FORCE_COLOR);`;
+
+        expect(await failureFrom(colored, printColor)).toContain('color 1');
+        expect(await failureOf(printColor)).toContain('color undefined');
+    });
+
+    it('keeps colored detail under a bare error header', async () => {
+        const captured = await capturedBy(
+            noise('Progress: resolved', 20),
+            `console.error('Error: ');`,
+            `console.error('ERR_PNPM_FETCH_404');`,
+            String.raw`console.error('\u001B[2m  ╰─▶ GET https://registry.npmjs.org/nope: Not Found\u001B[22m');`
+        );
+
+        expect(captured).toContain('Not Found');
+    });
+
+    it('keeps a long line whole for the terminal to wrap', async () => {
+        const long = `npm error ${'x'.repeat(300)}`;
+
+        expect(await capturedBy(`console.log('${long}');`)).toContain(long);
     });
 });

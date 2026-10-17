@@ -1,7 +1,6 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import { messageOf } from '#cli/messageOf';
 import { addCommand, execCommand } from '#cli/packageManager';
 import { gitPlanFrom, probeGit } from '#scaffold/git';
 import { claimTarget } from '#scaffold/target';
@@ -60,12 +59,13 @@ async function writeTree(target: string, files: { path: string; contents: string
 }
 
 // a throw here would cut the summary in index.ts short
-async function runStep(steps: StepUi, label: StepLabel, work: () => Promise<unknown>): Promise<string | null> {
+async function succeeded(steps: StepUi, label: StepLabel, work: () => Promise<unknown>): Promise<boolean> {
     try {
         await steps.run(label, work);
-        return null;
-    } catch (error: unknown) {
-        return messageOf(error);
+        return true;
+    } catch {
+        // StepUi already printed the failure
+        return false;
     }
 }
 
@@ -75,15 +75,13 @@ async function gitNoticeFor(input: ScaffoldInput, run: CommandRunner, plan: GitP
         return plan.notice;
     }
 
-    const reason = await runStep(input.steps, 'git', async () => {
+    const committed = await succeeded(input.steps, 'git', async () => {
         await run('git', ['init'], input.target);
         await run('git', ['add', '.'], input.target);
         await run('git', ['commit', '-m', 'chore: create seedcord bot'], input.target);
     });
 
-    if (reason === null) return plan.notice;
-
-    return `${reason} The project is complete and uncommitted.`;
+    return committed ? plan.notice : 'The project is complete and uncommitted.';
 }
 
 interface InstallOutcome {
@@ -111,24 +109,23 @@ async function runInstallSteps(input: ScaffoldInput, run: CommandRunner, isGatew
         if (warning !== null) warnings.push(warning);
     };
 
-    const install = await runStep(steps, 'install', async () => {
+    const installed = await succeeded(steps, 'install', async () => {
         collect(await run(deps.command, deps.args, target));
         collect(await run(dev.command, dev.args, target));
     });
 
     // npx and bun x fetch a missing binary from the registry
-    if (install !== null) {
+    if (!installed) {
         steps.skip('format');
         steps.skip('types');
 
-        return { installed: false, notices: [install, ...warnings], failed: true };
+        return { installed: false, notices: warnings, failed: true };
     }
 
-    const formatted = await runStep(steps, 'format', () => run(format.command, format.args, target));
-    const generated = await runStep(steps, 'types', () => run(codegen.command, codegen.args, target));
-    const failures = [formatted, generated].filter((reason) => reason !== null);
+    const formatted = await succeeded(steps, 'format', () => run(format.command, format.args, target));
+    const generated = await succeeded(steps, 'types', () => run(codegen.command, codegen.args, target));
 
-    return { installed: true, notices: [...warnings, ...failures], failed: failures.length > 0 };
+    return { installed: true, notices: warnings, failed: !formatted || !generated };
 }
 
 // scaffold deletes this directory when writing fails; every step after it keeps the tree

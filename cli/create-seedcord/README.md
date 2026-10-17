@@ -50,7 +50,7 @@ npm create seedcord my-bot -- --transport gateway --capabilities reactions
 pnpm create seedcord my-bot --transport gateway --capabilities reactions
 ```
 
-`--install` and `--git` answer yes to those two questions, and `--no-install` and `--no-git` answer no. `--no-token` leaves the token empty without asking. `-v` prints the version and `-h` prints the flag list.
+`--install` and `--git` answer yes to those two questions, and `--no-install` and `--no-git` answer no. `--no-token` leaves the token empty without asking. `--verbose` keeps the stack frames in a failed step's output. `-v` prints the version and `-h` prints the flag list.
 
 With no terminal to ask on, it reads the flags alone and installs and commits unless told otherwise. It prints the flag that would supply any other answer you left out.
 

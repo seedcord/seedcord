@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import process from 'node:process';
+import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -21,32 +22,34 @@ const INDENTED = /^\s/;
 // pnpm redraws its progress with carriage returns
 const LINE_BREAK = /[\r\n]+/;
 
-const PIPED_COLUMNS = 100;
-// CreateOutput.warn indents captured output by four
-const GUTTER = 4;
+const STACK_FRAME = /^\s+at\s/;
 
-function lineWidth(): number {
-    return (process.stdout.columns > 0 ? process.stdout.columns : PIPED_COLUMNS) - GUTTER;
+// far past any real error line
+const MAX_LINE_LENGTH = 4096;
+
+interface CapturedLine {
+    readonly text: string;
+    readonly plain: string;
 }
 
 // pnpm indents the cause under a bare `Error: CODE` header
-function blockFrom(header: string, rest: string[]): string[] {
-    const detail: string[] = [];
+function blockFrom(header: CapturedLine, rest: CapturedLine[]): CapturedLine[] {
+    const detail: CapturedLine[] = [];
     for (const line of rest) {
-        if (!INDENTED.test(line)) break;
+        if (!INDENTED.test(line.plain)) break;
         detail.push(line);
     }
 
     return [header, ...detail];
 }
 
-function failureLines(captured: string[]): string[] {
-    const blocks: string[] = [];
+function failureLines(captured: CapturedLine[]): CapturedLine[] {
+    const blocks: CapturedLine[] = [];
     let consumedThrough = -1;
 
     for (const [index, line] of captured.entries()) {
         // a block above may already include this line
-        if (index <= consumedThrough || !NAMES_THE_CAUSE.test(line)) continue;
+        if (index <= consumedThrough || !NAMES_THE_CAUSE.test(line.plain)) continue;
 
         const block = blockFrom(line, captured.slice(index + 1));
         blocks.push(...block);
@@ -55,6 +58,15 @@ function failureLines(captured: string[]): string[] {
 
     // every package manager prints the cause last
     return (blocks.length > 0 ? blocks : captured).slice(-KEPT_LINES);
+}
+
+export class CommandFailed extends SeedcordError<SeedcordErrorCode.CreateStepFailed> {
+    constructor(
+        public readonly command: string,
+        public readonly output: readonly string[]
+    ) {
+        super(SeedcordErrorCode.CreateStepFailed, [command, output.join('\n')]);
+    }
 }
 
 interface SpawnSpec {
@@ -74,22 +86,32 @@ export function spawnSpec(command: string, args: string[], platform: NodeJS.Plat
     return { command: [command, ...args].join(' '), args: [], shell };
 }
 
-export async function execRunner(...[command, args, cwd]: Parameters<CommandRunner>): Promise<string | null> {
+interface ExecOptions {
+    readonly verbose: boolean;
+    readonly color: boolean;
+}
+
+export function createExecRunner(options: ExecOptions): CommandRunner {
+    return (command, args, cwd) => run(command, args, cwd, options);
+}
+
+function run(command: string, args: string[], cwd: string, { verbose, color }: ExecOptions): Promise<string | null> {
     const spoken = [command, ...args].join(' ');
-    const width = lineWidth();
     const spec = spawnSpec(command, args, process.platform);
+    const env = color ? { ...process.env, FORCE_COLOR: '1' } : process.env;
 
     return new Promise<string | null>((resolve, reject) => {
-        const child = spawn(spec.command, spec.args, { cwd, shell: spec.shell });
-        const captured: string[] = [];
+        const child = spawn(spec.command, spec.args, { cwd, shell: spec.shell, env });
+        const captured: CapturedLine[] = [];
 
         const take = (chunk: Buffer): void => {
             for (const line of chunk.toString('utf8').split(LINE_BREAK)) {
                 // one uncut chunk grew past node's max string length
-                const text = line.trimEnd().slice(0, width);
-                if (text.trim() === '') continue;
+                const text = line.trimEnd().slice(0, MAX_LINE_LENGTH);
+                const plain = stripVTControlCharacters(text);
+                if (plain.trim() === '' || (!verbose && STACK_FRAME.test(plain))) continue;
 
-                captured.push(text);
+                captured.push({ text, plain });
             }
         };
 
@@ -97,7 +119,7 @@ export async function execRunner(...[command, args, cwd]: Parameters<CommandRunn
         child.stderr.on('data', take);
 
         child.on('error', (error) => {
-            reject(new SeedcordError(SeedcordErrorCode.CreateStepFailed, [spoken, error.message]));
+            reject(new CommandFailed(spoken, [error.message]));
         });
 
         child.on('close', (code) => {
@@ -106,13 +128,13 @@ export async function execRunner(...[command, args, cwd]: Parameters<CommandRunn
                 return;
             }
 
-            const shown = failureLines(captured).join('\n');
-            if (captured.some((line) => BLOCKED_BUILD.test(line))) {
-                resolve(shown);
+            const shown = failureLines(captured).map((line) => line.text);
+            if (captured.some((line) => BLOCKED_BUILD.test(line.plain))) {
+                resolve(shown.join('\n'));
                 return;
             }
 
-            reject(new SeedcordError(SeedcordErrorCode.CreateStepFailed, [spoken, shown || `exited with ${code}`]));
+            reject(new CommandFailed(spoken, shown.length > 0 ? shown : [`exited with ${code}`]));
         });
     });
 }
