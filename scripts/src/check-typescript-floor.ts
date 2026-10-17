@@ -18,7 +18,7 @@ function pnpm(...args: string[]): void {
     execFileSync('pnpm', args, { cwd: root, stdio: 'inherit' });
 }
 
-// wrangler's runtime types and @types/node declare the same globals
+// cloudflare's runtime types and @types/node declare the same globals
 const builtTypes = workspace.published().map((one) => `${path.relative(root, one.dir)}/dist/`);
 
 const typesFloor = lowestTypescript(workspaceYaml, 'consumerTypes');

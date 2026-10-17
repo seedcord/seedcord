@@ -1,5 +1,3 @@
-import { dirname } from 'node:path';
-
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
@@ -9,6 +7,7 @@ import { importCloudflare, isPackageMissing, WORKER_ENVIRONMENT } from '#core/mo
 import { bundleFailed } from './output';
 import { workerEntryConfig } from './workerEntry';
 
+import type { EdgeTarget } from '#core/config/detectTarget';
 import type { CloudflarePlugin, ImportCloudflare } from '#core/modules/cloudflarePlugin';
 import type { ResolvedOutputWorkerConfig } from '@cloudflare/build-output-utils';
 import type { PluginConfig } from '@cloudflare/vite-plugin';
@@ -45,10 +44,9 @@ export class CloudflareWorker {
     ) {}
 
     public static async load(
-        cloudflareConfig: string,
+        { viteRoot }: EdgeTarget,
         importPlugin: ImportCloudflare = importCloudflare
     ): Promise<CloudflareWorker> {
-        const viteRoot = dirname(cloudflareConfig);
         return new CloudflareWorker(await loadPlugin(viteRoot, importPlugin), viteRoot);
     }
 

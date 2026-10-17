@@ -62,6 +62,7 @@ export class ServerBuild extends TargetBuild {
 
         const result = await build({
             root,
+            mode: config.viteMode,
             configFile: false,
             // vite copies <root>/public into outDir otherwise
             publicDir: false,

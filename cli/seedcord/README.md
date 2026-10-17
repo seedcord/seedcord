@@ -84,7 +84,7 @@ export default defineConfig({
 });
 ```
 
-`ENVIRONMENT`, `ENV`, `NODE_ENV` or `MODE` in your shell sets the Vite mode, as in `ENV=staging pnpm build`. The CLI loads the `.env.<mode>` files for it. A value in a `.env` file doesn't count, because `.env` usually holds your dev environment. With none of them set, `seedcord build` runs in `production` and the other commands in `development`. The mode has to be one of envapt's four environments: `development`, `staging`, `production` or `test`. Any other value throws `ConfigInvalidEnv`.
+`ENVIRONMENT`, `ENV`, `NODE_ENV` or `MODE` in your shell sets the Vite mode, as in `ENV=staging pnpm build`. The CLI loads the `.env.<mode>` files for it. It reads these variables from your shell only, because `.env` usually holds your dev environment. With none of them set, `seedcord build` runs in `production` and the other commands in `development`. The mode has to be one of envapt's four environments: `development`, `staging`, `production` or `test`. Any other value throws `ConfigInvalidEnv`.
 
 ## Edge bots
 
@@ -112,7 +112,7 @@ export default defineConfig({
 });
 ```
 
-`bindings.secret()` declares `DISCORD_BOT_TOKEN` without a value, so the token never sits in the file. Its value comes from your local env files in dev and from the secrets you upload when you deploy.
+`bindings.secret()` declares `DISCORD_BOT_TOKEN` without a value, so the token stays out of the file. Its value comes from your local env files in dev and from the secrets you upload when you deploy.
 
 `seedcord dev` runs the bot in workerd through `@cloudflare/vite-plugin`. It listens on `port` from `seedcord.config.ts`, or on 3000 if you leave it out. The worker gets its secrets from `.dev.vars`, or from the `.env` files and your shell when there's no `.dev.vars`. A saved handler reloads in place. After you change `cloudflare.config.ts`, a `.dev.vars` file or a `.env` file, press `r` to restart.
 

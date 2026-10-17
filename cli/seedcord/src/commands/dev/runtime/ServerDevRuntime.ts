@@ -19,7 +19,10 @@ export class ServerDevRuntime extends BaseDevRuntime {
     protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<StartedRuntime> {
         const hmr = this.openHmr(context, 'ssr', resources);
         const server = await createServer(
-            mergeViteConfig(serverViteConfig(context.config, process.cwd()), { plugins: [hmr.plugin] })
+            mergeViteConfig(serverViteConfig(context.config, process.cwd()), {
+                mode: context.config.viteMode,
+                plugins: [hmr.plugin]
+            })
         );
         resources.defer(() => server.close());
         const modules = new RunnerModuleLoader(createServerModuleRunner(server.environments.ssr));

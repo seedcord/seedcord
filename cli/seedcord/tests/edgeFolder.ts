@@ -26,7 +26,7 @@ export async function linkPackages(dir: string, names: readonly string[]): Promi
     for (const name of names) await symlink(join(CLI_NODE_MODULES, name), join(dir, 'node_modules', name));
 }
 
-// node resolves packages here only through the links this writes
+// the folder is in the os temp dir, where node finds a package only through the links linkPackages writes
 export async function edgeFolder(
     config = cloudflareConfigSource(),
     links: readonly string[] = ['cf']

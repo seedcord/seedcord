@@ -26,7 +26,7 @@ import type { AddressInfo } from 'node:net';
 const ANY_PORT = 0;
 
 function edgeTarget(projectDir: string, port: number): ResolvedEdgeTarget {
-    return { kind: 'edge', cloudflareConfig: join(projectDir, 'cloudflare.config.ts'), port };
+    return { kind: 'edge', cloudflareConfig: join(projectDir, 'cloudflare.config.ts'), viteRoot: projectDir, port };
 }
 
 function configWith(projectDir: string, target: ResolvedEdgeTarget, viteMode: string): ResolvedSeedcordConfig {

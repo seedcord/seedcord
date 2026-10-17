@@ -23,7 +23,7 @@ async function edgeTarget(root: string): Promise<BuildTarget> {
     const cloudflareConfig = join(root, 'cloudflare.config.ts');
     await writeFile(cloudflareConfig, cloudflareConfigSource('SEEDCORD_PROBE: bindings.secret()'));
     await linkPackages(root, ['cf']);
-    return { kind: 'edge', cloudflareConfig };
+    return { kind: 'edge', cloudflareConfig, viteRoot: root };
 }
 
 // a package whose default export reports which build its conditions picked

@@ -9,7 +9,7 @@ import { BIND_ENV_ID } from './edgeStandIns';
 import type { ModuleLoader } from './ModuleLoader';
 import type { ModuleRunner } from 'vite/module-runner';
 
-// a cold import of the edge test bot takes about 135ms
+// this is way longer than any real import. the edge test bot's cold import takes about 135ms
 const IMPORT_DEADLINE_MS = 30_000;
 
 export class RunnerModuleLoader implements ModuleLoader {

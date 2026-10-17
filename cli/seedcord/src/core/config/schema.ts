@@ -2,8 +2,8 @@ import type { EdgeTarget, ServerTarget } from './detectTarget';
 import type { TypedOmit } from '@seedcord/types';
 
 /**
- * Build options for a bot that runs on Cloudflare Workers. `@cloudflare/vite-plugin` sets the
- * worker's output folder to `.cloudflare/output`.
+ * Build options every bot takes. An edge bot takes only these, because `@cloudflare/vite-plugin`
+ * writes its worker to `.cloudflare/output`.
  */
 export interface SeedcordEdgeBuildConfig {
     /**

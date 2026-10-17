@@ -1,4 +1,4 @@
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { warnLinks } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -72,8 +72,6 @@ function workerEnvironment(): Record<string, EnvironmentOptions> {
 
 export class EdgeBuild extends TargetBuild {
     public readonly kind = 'edge';
-    // cf deploy --prebuilt reads .cloudflare/output from here
-    private readonly viteRoot: string;
     private readonly deps: EdgeBuildDeps;
     private readonly logger = cliLogger('Build');
     private cloudflare?: Promise<CloudflareWorker>;
@@ -84,7 +82,6 @@ export class EdgeBuild extends TargetBuild {
         deps: Partial<EdgeBuildDeps> = {}
     ) {
         super(project);
-        this.viteRoot = dirname(target.cloudflareConfig);
         this.deps = { ...DEFAULT_DEPS, ...deps };
     }
 
@@ -108,11 +105,12 @@ export class EdgeBuild extends TargetBuild {
 
     public async bundle(ids: BakedIds): Promise<BundleStats> {
         const { config, files, modules } = this.project;
-        const { viteRoot, target } = this;
+        const { viteRoot, cloudflareConfig } = this.target;
         const [folders, cloudflare] = await Promise.all([files.foldersIncludingEmpty(), this.worker()]);
 
         let chunks: Rolldown.OutputChunk[] | undefined;
         const builder = await createBuilder({
+            // cf deploy --prebuilt reads .cloudflare/output from here
             root: viteRoot,
             mode: config.viteMode,
             configFile: false,
@@ -139,7 +137,7 @@ export class EdgeBuild extends TargetBuild {
         await builder.buildApp().catch(bundleFailed);
         chunks ??= bundleFailed(`the ${WORKER_ENVIRONMENT} environment wrote no bundle`);
         const built = await cloudflare.built().catch(bundleFailed);
-        assertNodeCompat(built, target.cloudflareConfig);
+        assertNodeCompat(built, cloudflareConfig);
 
         return bundleStats(chunks, files, join(built.bundleDir, ENTRY_FILE_NAME));
     }
@@ -147,7 +145,7 @@ export class EdgeBuild extends TargetBuild {
     public override async boot(): Promise<void> {
         const cloudflare = await this.worker();
         await bootWorker({
-            root: this.viteRoot,
+            root: this.target.viteRoot,
             mode: this.project.config.viteMode,
             plugins: [cloudflare.plugins({ persistState: false })],
             environments: workerEnvironment()
@@ -166,7 +164,7 @@ export class EdgeBuild extends TargetBuild {
     }
 
     private worker(): Promise<CloudflareWorker> {
-        this.cloudflare ??= CloudflareWorker.load(this.target.cloudflareConfig, this.deps.importCloudflare);
+        this.cloudflare ??= CloudflareWorker.load(this.target, this.deps.importCloudflare);
         return this.cloudflare;
     }
 }

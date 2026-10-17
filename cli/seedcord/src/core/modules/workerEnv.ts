@@ -47,9 +47,12 @@ async function loadWorker(cloudflareConfig: string, mode: string): Promise<Parse
         throw unreadable(cloudflareConfig, problems.join('\n'));
     }
     const { worker } = result.data;
-    if (worker === undefined) throw unreadable(cloudflareConfig, 'It must define a Worker using the worker property.');
+    if (worker === undefined) {
+        const problem = 'It must define a Worker using the worker property.';
+        throw new SeedcordError(SeedcordErrorCode.CliConfigFileUnreadable, ['seedcord', cloudflareConfig, problem]);
+    }
     if (worker.entrypoint !== undefined) {
-        const why = `seedcord sets it to the default export of ${paint.bold('instance')} in your seedcord config.`;
+        const why = `seedcord builds the worker's entry from ${paint.bold('instance')} in your seedcord config.`;
         throw new SeedcordTypeError(SeedcordErrorCode.CliConfigFieldUnused, ['entrypoint', cloudflareConfig, why]);
     }
     return worker;

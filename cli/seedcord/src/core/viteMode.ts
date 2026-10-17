@@ -18,7 +18,7 @@ interface ShellVar {
 
 export type DefaultMode = 'development' | 'production';
 
-// only the shell sets the mode. a bot's .env usually holds its dev environment
+// the .env files are left out because a bot's .env usually sets its dev environment
 export class ShellMode {
     constructor(private readonly variable?: ShellVar) {}
 

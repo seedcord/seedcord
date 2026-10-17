@@ -87,13 +87,13 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
 
     protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<EdgeStarted> {
         const { config } = context;
-        const viteRoot = dirname(this.target.cloudflareConfig);
+        const { viteRoot } = this.target;
         const files = new ProjectFiles(config.root, dirname(config.configFile));
         installCliLogSinks(resources);
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
         const [folders, cloudflare, workerEnv] = await Promise.all([
             files.foldersIncludingEmpty(),
-            CloudflareWorker.load(this.target.cloudflareConfig),
+            CloudflareWorker.load(this.target),
             WorkerEnv.load(this.target.cloudflareConfig, config.viteMode)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();

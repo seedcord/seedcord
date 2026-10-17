@@ -39,6 +39,23 @@ async function startedRuntime(): Promise<{ runtime: ServerDevRuntime; ban: strin
     return { runtime, ban: join(dir, 'src', 'commands', 'ban.ts'), entry: module };
 }
 
+describe('dev runtime mode', () => {
+    it('runs the bot in the mode the shell sets', async () => {
+        const temp = await mkdtempDisposable(join(tmpdir(), 'dev-mode-'));
+        onTestFinished(() => temp.remove());
+        await writeProject(temp.path);
+        await writeFile(join(temp.path, 'src', 'mode.ts'), 'export const mode = import.meta.env.MODE;\n');
+        const context = devContextFor(temp.path, 'mode.ts');
+        const runtime = new ServerDevRuntime();
+        onTestFinished(() => runtime.stop());
+
+        await runtime.start({ ...context, config: { ...context.config, viteMode: 'staging' } });
+        const { module } = await runtime.loadEntry();
+
+        expect(module).toMatchObject({ mode: 'staging' });
+    }, 60_000);
+});
+
 describe('dev runtime importModule', () => {
     it('returns the module the running bot already imported', async () => {
         const { runtime, ban, entry } = await startedRuntime();
