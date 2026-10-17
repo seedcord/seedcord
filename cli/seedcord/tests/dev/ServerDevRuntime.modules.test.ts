@@ -6,6 +6,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
+import { GREETING, GREETING_PROBE, greetingPlugin } from '#tests/greetingPlugin';
 
 import { devContextFor } from './devConfigFor';
 
@@ -53,6 +54,23 @@ describe('dev runtime mode', () => {
         const { module } = await runtime.loadEntry();
 
         expect(module).toMatchObject({ mode: 'staging' });
+    }, 60_000);
+});
+
+describe('dev runtime vitePlugins', () => {
+    it("runs them on the bot's code", async () => {
+        const temp = await mkdtempDisposable(join(tmpdir(), 'dev-vite-plugins-'));
+        onTestFinished(() => temp.remove());
+        await writeProject(temp.path);
+        await writeFile(join(temp.path, 'src', 'greeting.ts'), GREETING_PROBE);
+        const context = devContextFor(temp.path, 'greeting.ts');
+        const runtime = new ServerDevRuntime();
+        onTestFinished(() => runtime.stop());
+
+        await runtime.start({ ...context, config: { ...context.config, vitePlugins: [greetingPlugin()] } });
+        const { module } = await runtime.loadEntry();
+
+        expect(module).toMatchObject({ default: GREETING });
     }, 60_000);
 });
 

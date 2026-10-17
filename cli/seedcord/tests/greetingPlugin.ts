@@ -1,0 +1,26 @@
+import type { Plugin } from 'vite';
+
+export const GREETING = 'hi from a plugin';
+
+const ID = 'virtual:greeting';
+
+// a bot file that loads only when vitePlugins serve virtual:greeting
+export const GREETING_PROBE = `export { default } from '${ID}';\n`;
+
+export function greetingPlugin(): Plugin {
+    return {
+        name: 'greeting',
+        resolveId: (id) => (id === ID ? `\0${ID}` : undefined),
+        load: (id) => (id === `\0${ID}` ? `export default ${JSON.stringify(GREETING)};` : undefined)
+    };
+}
+
+// a seedcord.config.ts with the given fields and greetingPlugin
+export function configWithGreetingPlugin(fields: string): string {
+    return [
+        `import { greetingPlugin } from ${JSON.stringify(import.meta.filename)};`,
+        '',
+        `export default { ${fields}, vitePlugins: [greetingPlugin()] };`,
+        ''
+    ].join('\n');
+}

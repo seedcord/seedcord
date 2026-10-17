@@ -15,6 +15,7 @@ import { StateFolder } from '#core/state/StateFolder';
 import { ShellMode } from '#core/viteMode';
 import { writeCloudflareConfig } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES } from '#tests/commands/build/smoke';
+import { GREETING, GREETING_PROBE, greetingPlugin } from '#tests/greetingPlugin';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
 
@@ -216,6 +217,20 @@ describe('EdgeDevRuntime lifecycle', () => {
 
         const unsigned = await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body: '{}' });
         expect(unsigned.status).toBe(401);
+    }, 60_000);
+
+    it("runs vitePlugins on the worker's code and on codegen's node copy", async () => {
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        // the worker loads this folder on start
+        await writeFile(join(projectDir, 'src/handlers/greeting.ts'), GREETING_PROBE);
+        await using started = await startedRuntime(projectDir, undefined, { vitePlugins: [greetingPlugin()] });
+        const { runtime, instance } = started;
+
+        await runtime.startBot(instance);
+        const nodeCopy = await runtime.importModule<{ default: string }>(join(projectDir, 'src/handlers/greeting.ts'));
+
+        expect(nodeCopy.default).toBe(GREETING);
     }, 60_000);
 
     it('throws CliStartFailed when the worker answers a GET with something other than 405', async () => {

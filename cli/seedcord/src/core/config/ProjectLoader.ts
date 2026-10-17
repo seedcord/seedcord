@@ -58,19 +58,14 @@ export class ProjectLoader {
         const configPath = locateConfig(projectDir);
         const configDir = dirname(configPath);
         const target = detectTarget(configDir);
-        await using configLoader = new AsyncDisposableStack();
-        const configModules = configLoader.use(await this.openModules(configDir, target, mode, 'config'));
+        await using configModules = await this.openModules(configDir, target, mode, 'config');
         const project = new Project(await this.readConfig(configModules, configPath, target, mode), configModules);
         await assertNoHashPaths(project);
         await assertTargetMatchesTsconfig(project);
-        // a server bot runs its code under the same node conditions
-        if (target.kind === 'server') {
-            configLoader.move();
-            return project;
-        }
 
-        // the checks above go first because opening this runs cloudflare.config.ts
-        return new Project(project.config, await this.openModules(configDir, target, mode));
+        // the checks above go first because opening this runs cloudflare.config.ts on an edge bot
+        const botModules = await this.openModules(configDir, target, mode, { vitePlugins: project.config.vitePlugins });
+        return new Project(project.config, botModules);
     }
 
     private async readConfig(
@@ -100,7 +95,8 @@ export class ProjectLoader {
             idleAnimation: config.idleAnimation ?? true,
             viteMode: mode,
             tunnel: resolveTunnel(config.tunnel),
-            hmr: config.hmr
+            hmr: config.hmr,
+            vitePlugins: config.vitePlugins ?? []
         } satisfies ResolvedSeedcordConfig;
     }
 

@@ -129,7 +129,8 @@ export class EdgeBuild extends TargetBuild {
                 captureChunks((captured) => {
                     chunks = captured;
                 }),
-                cloudflare.plugins({ persistState: false })
+                cloudflare.plugins({ persistState: false }),
+                ...config.vitePlugins
             ],
             resolve: { tsconfigPaths: true },
             environments: workerEnvironment()

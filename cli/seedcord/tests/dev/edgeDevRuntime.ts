@@ -21,6 +21,7 @@ import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/sc
 import type { LogRecord } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { AddressInfo } from 'node:net';
+import type { PluginOption } from 'vite';
 
 // a port probed up front can go to another worker before the runtime binds it
 const ANY_PORT = 0;
@@ -29,17 +30,24 @@ function edgeTarget(projectDir: string, port: number): ResolvedEdgeTarget {
     return { kind: 'edge', cloudflareConfig: join(projectDir, 'cloudflare.config.ts'), viteRoot: projectDir, port };
 }
 
-function configWith(projectDir: string, target: ResolvedEdgeTarget, viteMode: string): ResolvedSeedcordConfig {
-    // justified: the runtime reads only these fields
+function configWith(
+    projectDir: string,
+    target: ResolvedEdgeTarget,
+    viteMode: string,
+    vitePlugins: PluginOption[] = []
+): ResolvedSeedcordConfig {
     return {
         configFile: join(projectDir, 'seedcord.config.ts'),
         root: join(projectDir, 'src'),
         instance: join(projectDir, 'src/bot.ts'),
         target,
         build: {},
+        typecheck: { enabled: false },
+        idleAnimation: true,
         viteMode,
-        tunnel: { mode: 'quick' }
-    } as ResolvedSeedcordConfig;
+        tunnel: { mode: 'quick' },
+        vitePlugins
+    };
 }
 
 export function edgeConfig(projectDir: string, port = ANY_PORT): ResolvedSeedcordConfig {
@@ -187,10 +195,10 @@ interface StartedRuntime extends AsyncDisposable {
 export async function startedRuntime(
     projectDir: string,
     onEvent?: DevEventHandler,
-    { devPort = ANY_PORT, viteMode = 'development' } = {}
+    { devPort = ANY_PORT, viteMode = 'development', vitePlugins = [] as PluginOption[] } = {}
 ): Promise<StartedRuntime> {
     const target = edgeTarget(projectDir, devPort);
-    const config = configWith(projectDir, target, viteMode);
+    const config = configWith(projectDir, target, viteMode, vitePlugins);
     const runtime = new EdgeDevRuntime(target);
     let listening: number | undefined;
     const recordPort: DevEventHandler = (event) => {

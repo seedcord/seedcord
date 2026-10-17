@@ -77,6 +77,9 @@ export class ConfigValidator {
         yield* tunnelProblems(raw.tunnel);
         yield* this.buildProblems(raw.build);
         yield* hmrProblems(raw.hmr);
+        if (raw.vitePlugins !== undefined && !Array.isArray(raw.vitePlugins)) {
+            yield invalidField('vitePlugins', 'an array of Vite plugins');
+        }
     }
 
     private unusedField(field: string, why: string): SeedcordTypeError {

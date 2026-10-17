@@ -7,14 +7,18 @@ import type { DevRuntimeContext } from '#commands/dev/runtime/DevRuntime';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
 export function devConfigFor(root: string, instance: string): ResolvedSeedcordConfig {
-    // justified: the runtime and its hmr plugin read only these five fields
     return {
         configFile: join(root, 'seedcord.config.ts'),
         root: join(root, 'src'),
-        target: { kind: 'server', entry: join(root, 'src', instance) },
+        target: { kind: 'server', entry: join(root, 'src', instance), outDir: join(root, 'dist') },
         instance: join(root, 'src', instance),
-        tunnel: { mode: 'quick' }
-    } as ResolvedSeedcordConfig;
+        tunnel: { mode: 'quick' },
+        build: {},
+        typecheck: { enabled: false },
+        idleAnimation: true,
+        viteMode: 'development',
+        vitePlugins: []
+    };
 }
 
 export function devContextFor(root: string, instance: string): DevRuntimeContext {

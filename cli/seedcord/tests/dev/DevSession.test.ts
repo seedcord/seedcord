@@ -30,7 +30,8 @@ function config(): ResolvedSeedcordConfig {
         typecheck: { enabled: false },
         idleAnimation: true,
         build: {},
-        viteMode: 'development'
+        viteMode: 'development',
+        vitePlugins: []
     };
 }
 

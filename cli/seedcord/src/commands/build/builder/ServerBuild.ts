@@ -76,7 +76,8 @@ export class ServerBuild extends TargetBuild {
                     entryKey: viteKey(configDir, entry),
                     rootKey: viteKey(configDir, root)
                 }),
-                pinModulePaths(files)
+                pinModulePaths(files),
+                ...config.vitePlugins
             ],
             resolve: { tsconfigPaths: true },
             build: {

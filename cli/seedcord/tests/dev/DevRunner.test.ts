@@ -9,6 +9,7 @@ import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
 
+import { devConfigFor } from './devConfigFor';
 import { fakeBot, fakeRuntime } from './fakes';
 
 import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
@@ -371,17 +372,10 @@ function untilError(store: DevStore): Promise<Error> {
 describe('DevRunner run', () => {
     it('opens the project once and shows a session that fails to start as an error', async () => {
         const projectDir = process.cwd();
-        const instancePath = join(projectDir, 'src', 'bot.ts');
         const projectLoader = {
             open: vi.fn(() =>
                 Promise.resolve({
-                    config: {
-                        instance: instancePath,
-                        root: join(projectDir, 'src'),
-                        configFile: join(projectDir, 'seedcord.config.ts'),
-                        entry: instancePath,
-                        build: { outDir: join(projectDir, 'dist') }
-                    },
+                    config: devConfigFor(projectDir, 'bot.ts'),
                     [Symbol.asyncDispose]: () => Promise.resolve()
                 })
             )

@@ -23,7 +23,7 @@ export class ServerDevRuntime extends BaseDevRuntime {
             resources,
             mergeViteConfig(serverViteConfig(context.config, process.cwd()), {
                 mode: context.config.viteMode,
-                plugins: [hmr.plugin]
+                plugins: [hmr.plugin, ...context.config.vitePlugins]
             })
         );
         const modules = new RunnerModuleLoader(createServerModuleRunner(server.environments.ssr));

@@ -126,7 +126,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                     // cloudflare() loads the worker entry during createServer. the entry's export list comes from this copy
                     nodeCopy(modulesReady.resolve),
                     hmr.plugin,
-                    cloudflare.plugins()
+                    cloudflare.plugins(),
+                    ...config.vitePlugins
                 ]
             })
         );

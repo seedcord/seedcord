@@ -135,7 +135,8 @@ describe('HmrPlugin', () => {
         idleAnimation: true,
         tunnel: { mode: 'quick' } as const,
         build: {},
-        viteMode: 'development'
+        viteMode: 'development',
+        vitePlugins: []
     };
 
     const srcRoot = join(projectRoot, 'src');
