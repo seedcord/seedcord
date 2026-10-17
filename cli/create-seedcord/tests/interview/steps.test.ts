@@ -27,6 +27,14 @@ describe('directoryStep', () => {
         expect(() => directoryStep.flag.parse('bots/My Bot')).toThrow();
     });
 
+    it.each(['$', '`', '"', '!'])('refuses a %s anywhere in the path, and says which', (character) => {
+        expect(() => directoryStep.flag.parse(`my${character}bots/bot`)).toThrow(character);
+    });
+
+    it('takes a parent folder with a space or a capital letter', () => {
+        expect(directoryStep.flag.parse('My Bots/bot')).toBe('My Bots/bot');
+    });
+
     it('takes the punctuation npm allows', () => {
         expect(directoryStep.flag.parse('my-bot_2.0')).toBe('my-bot_2.0');
     });

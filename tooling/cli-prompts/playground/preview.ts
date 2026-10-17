@@ -72,7 +72,8 @@ async function main(): Promise<void> {
     write('');
     try {
         const answer = await scenario(new Prompter());
-        write(`  ${paint.mute('answer')}  ${paint.sky(JSON.stringify(answer))}`);
+        const shown = name === 'password' ? `(${String(answer).length} characters)` : JSON.stringify(answer);
+        write(`  ${paint.mute('answer')}  ${paint.sky(shown)}`);
     } catch (error) {
         if (!isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.CliCancelled)) throw error;
         write(`  ${paint.mute('cancelled')}`);

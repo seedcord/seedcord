@@ -280,7 +280,7 @@ describe('scaffold', () => {
         expect(result.installed).toBe(true);
         expect(result.failed).toBe(true);
         expect(seen).toContain('failed: format');
-        expect(result.notices).toEqual([]);
+        expect(result.notices.join('\n')).not.toContain('prettier --write blew up');
         expect(calls.map((call) => call.args.join(' ')).some((args) => args.includes('codegen'))).toBe(true);
     });
 

@@ -20,6 +20,7 @@ const TOGGLE_LABELS: Record<string, string> = {
 const PLAIN_WORD = /^[\w@%+=:./-]+$/;
 
 // sh, powershell and cmd all read a double-quoted `#`, space or comma as part of one word
+// parseDirectory refuses the characters that aren't safe on all major shells
 function shellWord(value: string): string {
     return PLAIN_WORD.test(value) ? value : `"${value}"`;
 }

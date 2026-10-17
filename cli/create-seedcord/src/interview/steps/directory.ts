@@ -14,12 +14,23 @@ const FORMAT = 'lowercase, digits, and . _ -';
 
 const MAX_NAME = 64;
 
+// shells read these even inside the double quotes summary.ts prints the path in
+const QUOTE_BREAKING = /[$`"!]/;
+
 function parseDirectory(raw: string): string {
     const value = raw.trim();
     if (value === '') {
         throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [
             'dir',
             'A project directory cannot be empty.'
+        ]);
+    }
+
+    const breaking = QUOTE_BREAKING.exec(value)?.[0];
+    if (breaking !== undefined) {
+        throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [
+            'dir',
+            `Pick a path without ${breaking}. A shell reads it even inside the quotes of the commands printed at the end.`
         ]);
     }
 
