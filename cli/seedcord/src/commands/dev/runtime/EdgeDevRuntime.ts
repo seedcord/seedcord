@@ -15,6 +15,7 @@ import { reportWorkerExports, WORKER_ENVIRONMENT } from '#core/modules/cloudflar
 import { edgeStandIns } from '#core/modules/edgeStandIns';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
+import { WorkerEnv } from '#core/modules/workerEnv';
 import { functionExportsOf } from '#core/modules/workerExports';
 import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
 
@@ -90,12 +91,13 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const files = new ProjectFiles(config.root, dirname(config.configFile));
         installCliLogSinks(resources);
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
-        const [folders, cloudflare] = await Promise.all([
+        const [folders, cloudflare, workerEnv] = await Promise.all([
             files.foldersIncludingEmpty(),
-            CloudflareWorker.load(this.target.cloudflareConfig)
+            CloudflareWorker.load(this.target.cloudflareConfig),
+            WorkerEnv.load(this.target.cloudflareConfig, config.viteMode)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
-        const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, this.target.env.files);
+        const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, workerEnv.files);
         const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, workerConfig);
         const server = await createServer(
             mergeViteConfig(edgeViteConfig(config, viteRoot, process.cwd()), {
@@ -116,7 +118,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                         },
                         mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
                     }),
-                    inNodeOnly(edgeStandIns(this.target.env)),
+                    inNodeOnly(edgeStandIns(workerEnv)),
                     // cloudflare() loads the worker entry during createServer. the entry's export list comes from this copy
                     nodeCopy(modulesReady.resolve),
                     hmr.plugin,

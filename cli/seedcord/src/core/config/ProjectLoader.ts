@@ -16,7 +16,7 @@ import { locateConfig } from './locateConfig';
 
 import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
 import type { DefaultMode, ShellMode } from '#core/viteMode';
-import type { BuildTarget } from './detectTarget';
+import type { BuildTarget, ServerTarget } from './detectTarget';
 import type {
     ResolvedSeedcordBuildConfig,
     ResolvedSeedcordConfig,
@@ -31,6 +31,8 @@ import type {
 
 // the node http Seedcord's default port
 const EDGE_DEV_PORT = 3000;
+
+const SERVER_TARGET: ServerTarget = { kind: 'server' };
 
 function resolveTunnel(value: boolean | string | undefined): ResolvedTunnel {
     if (value === false) return { mode: 'off' };
@@ -57,15 +59,19 @@ export class ProjectLoader {
         Envapter.environment = mode;
         const configPath = locateConfig(projectDir);
         const configDir = dirname(configPath);
-        const target = await detectTarget(configDir, mode);
-        await using onFailure = new AsyncDisposableStack();
-        const modules = onFailure.use(await this.openModules(configDir, target, mode));
-        const project = new Project(await this.readConfig(modules, configPath, target, mode), modules);
+        const target = detectTarget(configDir);
+        await using nodeLoader = new AsyncDisposableStack();
+        const nodeModules = nodeLoader.use(await this.openModules(configDir, SERVER_TARGET, mode));
+        const project = new Project(await this.readConfig(nodeModules, configPath, target, mode), nodeModules);
         await assertNoHashPaths(project);
         await assertTargetMatchesTsconfig(project);
+        if (target.kind === 'server') {
+            nodeLoader.move();
+            return project;
+        }
 
-        onFailure.move();
-        return project;
+        // the checks above go first because opening this runs cloudflare.config.ts
+        return new Project(project.config, await this.openModules(configDir, target, mode));
     }
 
     private async readConfig(

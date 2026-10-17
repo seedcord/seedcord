@@ -100,7 +100,7 @@ describe('EdgeDevRuntime lifecycle', () => {
         const logs = captureLogs();
         // justified: the runner reads only these fields on top of the runtime's
         const config = {
-            ...(await edgeConfig(projectDir)),
+            ...edgeConfig(projectDir),
             tunnel: { mode: 'off' },
             typecheck: { enabled: false },
             idleAnimation: false

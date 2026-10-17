@@ -7,7 +7,6 @@ import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { afterEach, assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { openModuleLoader } from '#core/modules/openModuleLoader';
-import { WorkerEnv } from '#core/modules/workerEnv';
 import { cloudflareConfigSource, linkPackages } from '#tests/edgeFolder';
 import { holdViteHmrPort } from '#tests/viteHmrPort';
 
@@ -24,7 +23,7 @@ async function edgeTarget(root: string): Promise<BuildTarget> {
     const cloudflareConfig = join(root, 'cloudflare.config.ts');
     await writeFile(cloudflareConfig, cloudflareConfigSource('SEEDCORD_PROBE: bindings.secret()'));
     await linkPackages(root, ['cf']);
-    return { kind: 'edge', cloudflareConfig, env: await WorkerEnv.load(cloudflareConfig, 'development') };
+    return { kind: 'edge', cloudflareConfig };
 }
 
 // a package whose default export reports which build its conditions picked

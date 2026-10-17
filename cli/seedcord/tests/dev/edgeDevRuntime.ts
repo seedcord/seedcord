@@ -10,7 +10,6 @@ import { onTestFinished } from 'vitest';
 
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { toSeedcordInstance } from '#core/modules/importInstance';
-import { WorkerEnv } from '#core/modules/workerEnv';
 import { StateFolder } from '#core/state/StateFolder';
 import { copyEdgeBot } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES, FAKE_TOKEN } from '#tests/commands/build/smoke';
@@ -26,10 +25,8 @@ import type { AddressInfo } from 'node:net';
 // a port probed up front can go to another worker before the runtime binds it
 const ANY_PORT = 0;
 
-async function edgeTarget(projectDir: string, port: number, viteMode: string): Promise<ResolvedEdgeTarget> {
-    const cloudflareConfig = join(projectDir, 'cloudflare.config.ts');
-    const env = await WorkerEnv.load(cloudflareConfig, viteMode);
-    return { kind: 'edge', cloudflareConfig, env, port };
+function edgeTarget(projectDir: string, port: number): ResolvedEdgeTarget {
+    return { kind: 'edge', cloudflareConfig: join(projectDir, 'cloudflare.config.ts'), port };
 }
 
 function configWith(projectDir: string, target: ResolvedEdgeTarget, viteMode: string): ResolvedSeedcordConfig {
@@ -45,8 +42,8 @@ function configWith(projectDir: string, target: ResolvedEdgeTarget, viteMode: st
     } as ResolvedSeedcordConfig;
 }
 
-export async function edgeConfig(projectDir: string, port = ANY_PORT): Promise<ResolvedSeedcordConfig> {
-    return configWith(projectDir, await edgeTarget(projectDir, port, 'development'), 'development');
+export function edgeConfig(projectDir: string, port = ANY_PORT): ResolvedSeedcordConfig {
+    return configWith(projectDir, edgeTarget(projectDir, port), 'development');
 }
 
 export const liveVars = { DISCORD_BOT_TOKEN: FAKE_TOKEN, DISCORD_PUBLIC_KEY: 'ab'.repeat(ED25519_KEY_BYTES) };
@@ -192,7 +189,7 @@ export async function startedRuntime(
     onEvent?: DevEventHandler,
     { devPort = ANY_PORT, viteMode = 'development' } = {}
 ): Promise<StartedRuntime> {
-    const target = await edgeTarget(projectDir, devPort, viteMode);
+    const target = edgeTarget(projectDir, devPort);
     const config = configWith(projectDir, target, viteMode);
     const runtime = new EdgeDevRuntime(target);
     let listening: number | undefined;

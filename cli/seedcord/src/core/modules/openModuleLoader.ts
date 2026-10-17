@@ -4,6 +4,7 @@ import { edgeStandIns } from './edgeStandIns';
 import { RunnerModuleLoader } from './RunnerModuleLoader';
 import { seedcordDependents } from './seedcordDependents';
 import { mergeViteConfig, NODE_CONDITIONS, WORKERD_CONDITIONS, userCodeConfig } from './userCodeConfig';
+import { WorkerEnv } from './workerEnv';
 
 import type { BuildTarget } from '#core/config/detectTarget';
 import type { ModuleLoader } from './ModuleLoader';
@@ -41,7 +42,7 @@ export async function openModuleLoader(
         // the ssr runner never reads the client dep cache in node_modules/.vite
         optimizeDeps: { noDiscovery: true, include: [] },
         ssr: { noExternal: seedcordDependents(projectDir) },
-        plugins: isEdge ? [edgeStandIns(target.env)] : []
+        plugins: isEdge ? [edgeStandIns(await WorkerEnv.load(target.cloudflareConfig, mode))] : []
     });
     await using onFailure = new AsyncDisposableStack();
     const server = await createServer(config);

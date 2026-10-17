@@ -142,6 +142,17 @@ describe('ProjectLoader target', () => {
         await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliEdgeWithoutWorkerdCondition });
     });
 
+    it('points at a stray cloudflare.config.ts in a node bot without cf', async () => {
+        const { projectDir, load } = projectWith(MINIMAL);
+        writeFileSync(join(projectDir, CLOUDFLARE_CONFIG), cloudflareConfigSource());
+        writeTsconfig(projectDir, {});
+
+        await expect(load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigFieldUnused,
+            message: expect.stringContaining(join(projectDir, CLOUDFLARE_CONFIG)) as string
+        });
+    });
+
     it('throws CliTsconfigNotFound for a cloudflare.config.ts with no tsconfig', async () => {
         const { projectDir, load } = projectWith(EDGE_MINIMAL);
         await writeEdgeConfig(projectDir);

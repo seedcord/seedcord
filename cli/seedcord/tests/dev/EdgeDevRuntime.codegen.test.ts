@@ -23,7 +23,7 @@ describe('EdgeDevRuntime codegen', () => {
         await writeFile(join(projectDir, 'src/commands/Wave.ts'), WAVE_COMMAND);
         await using started = await startedRuntime(projectDir);
         const { runtime, instance } = started;
-        const config = await edgeConfig(projectDir);
+        const config = edgeConfig(projectDir);
 
         const { outputPath } = await CodegenRunner.create(quietSteps, silentLogger, new ShellMode()).writeFrom({
             config,
@@ -50,7 +50,7 @@ describe('EdgeDevRuntime codegen', () => {
         await using started = await startedRuntime(projectDir);
         const { runtime, instance } = started;
         const codegen = CodegenRunner.create(quietSteps, silentLogger, new ShellMode());
-        const bot = { config: await edgeConfig(projectDir), instance, modules: runtime };
+        const bot = { config: edgeConfig(projectDir), instance, modules: runtime };
         await codegen.writeFrom(bot);
 
         await writeFile(names, "export const WAVE = 'salute';\n");
