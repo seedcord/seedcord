@@ -1,6 +1,6 @@
 import { paint } from '@seedcord/errors';
 import { Box, Text } from 'ink';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { question } from './rows';
 import { usePrompt } from './usePrompt';
@@ -11,6 +11,7 @@ import type { ReactElement } from 'react';
 
 export interface ConfirmPrompt {
     readonly message: string;
+    readonly initial?: boolean;
 }
 
 interface ConfirmProps extends ConfirmPrompt {
@@ -21,24 +22,27 @@ function isArrow(key: Key): boolean {
     return key.upArrow || key.downArrow || key.leftArrow || key.rightArrow;
 }
 
-const CONFIRM_MACHINE: PromptMachine<boolean, boolean> = {
-    initial: false,
-    press: (yes, { input, key }) => {
-        const letter = input.toLowerCase();
-        if (letter === 'y') return true;
-        if (letter === 'n') return false;
-        if (isArrow(key)) return !yes;
-        return yes;
-    },
-    submit: (yes) => ({ answer: yes })
-};
+function confirmMachine(initial: boolean): PromptMachine<boolean, boolean> {
+    return {
+        initial,
+        press: (yes, { input, key }) => {
+            const letter = input.toLowerCase();
+            if (letter === 'y') return true;
+            if (letter === 'n') return false;
+            if (isArrow(key)) return !yes;
+            return yes;
+        },
+        submit: (yes) => ({ answer: yes })
+    };
+}
 
 function option(label: string, picked: boolean): string {
     return picked ? paint.sky.underline(label) : paint.mute(label);
 }
 
-export function Confirm({ message, onEnd }: ConfirmProps): ReactElement {
-    const yes = usePrompt(CONFIRM_MACHINE, onEnd);
+export function Confirm({ message, initial = false, onEnd }: ConfirmProps): ReactElement {
+    const machine = useMemo(() => confirmMachine(initial), [initial]);
+    const yes = usePrompt(machine, onEnd);
 
     return (
         <Box paddingLeft={2}>

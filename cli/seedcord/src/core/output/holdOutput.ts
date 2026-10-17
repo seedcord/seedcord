@@ -7,7 +7,6 @@ import type { Terminal } from './terminal';
 import type { LogLevel, LogRecord } from '@seedcord/types';
 
 export interface HeldOutput {
-    readonly writeToTerminal: (text: string) => void;
     readonly release: () => string[];
 }
 
@@ -52,9 +51,6 @@ export function holdOutput(
     );
 
     return {
-        writeToTerminal: (text) => {
-            writeStdout(text);
-        },
         release: () => {
             stdout.write = writeStdout;
             stderr.write = writeStderr;

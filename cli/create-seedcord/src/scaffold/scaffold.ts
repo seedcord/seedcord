@@ -23,11 +23,14 @@ export interface ScaffoldInput {
     steps: StepUi;
 }
 
-export interface ScaffoldResult {
-    installed: boolean;
-    notices: string[];
-    failed: boolean;
-}
+export type ScaffoldResult =
+    | { created: false }
+    | {
+          created: true;
+          installed: boolean;
+          notices: string[];
+          failed: boolean;
+      };
 
 const DEV_PACKAGES = [
     '@seedcord/eslint-config',
@@ -129,26 +132,19 @@ async function runInstallSteps(input: ScaffoldInput, run: CommandRunner, isGatew
 }
 
 // scaffold deletes this directory when writing fails; every step after it keeps the tree
-async function writeProject(input: ScaffoldInput, plan: GitPlan, existed: boolean): Promise<TemplateContext> {
-    const context = buildContext(input.answers, {
-        developerUsername: plan.developerUsername,
-        agent: input.agent
+async function writeProject(input: ScaffoldInput, context: TemplateContext, existed: boolean): Promise<boolean> {
+    const written = await succeeded(input.steps, 'files', async () => {
+        await mkdir(input.target, { recursive: true });
+        await writeTree(input.target, await renderTemplates(input.templatesRoot, context));
     });
 
-    try {
-        await input.steps.run('files', async () => {
-            await mkdir(input.target, { recursive: true });
-            await writeTree(input.target, await renderTemplates(input.templatesRoot, context));
-        });
-
-        return context;
-    } catch (error) {
+    if (!written) {
         await rm(input.target, { recursive: true, force: true });
         // claimTarget refuses a non-empty target
         if (existed) await mkdir(input.target, { recursive: true });
-
-        throw error;
     }
+
+    return written;
 }
 
 export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promise<ScaffoldResult> {
@@ -159,7 +155,8 @@ export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promis
     await mkdir(parent, { recursive: true });
 
     const plan = gitPlanFrom(await probeGit(parent), input.answers.git);
-    const context = await writeProject(input, plan, existed);
+    const context = buildContext(input.answers, { developerUsername: plan.developerUsername, agent: input.agent });
+    if (!(await writeProject(input, context, existed))) return { created: false };
 
     const outcome = input.answers.install
         ? await runInstallSteps(input, run, context.isGateway)
@@ -168,6 +165,7 @@ export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promis
     const gitNotice = await gitNoticeFor(input, run, plan);
 
     return {
+        created: true,
         installed: outcome.installed,
         notices: gitNotice === null ? outcome.notices : [...outcome.notices, gitNotice],
         failed: outcome.failed

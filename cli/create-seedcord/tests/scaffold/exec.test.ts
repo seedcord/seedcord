@@ -1,12 +1,16 @@
 import process from 'node:process';
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createExecRunner, spawnSpec } from '#scaffold/exec';
 
 import type { CommandRunner } from '#scaffold/scaffold';
 
 const execRunner = createExecRunner({ verbose: false, color: false });
+
+afterEach(() => {
+    vi.unstubAllEnvs();
+});
 
 function noise(prefix: string, count: number): string {
     return `for (let i = 0; i < ${count}; i++) console.log('${prefix} ' + i);`;
@@ -163,6 +167,7 @@ describe('execRunner', () => {
     });
 
     it('asks the command for color when told to', async () => {
+        vi.stubEnv('FORCE_COLOR', undefined);
         const colored = createExecRunner({ verbose: false, color: true });
         const printColor = `console.log('color ' + process.env.FORCE_COLOR);`;
 

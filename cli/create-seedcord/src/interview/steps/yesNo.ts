@@ -1,14 +1,4 @@
 import type { Step } from '#interview/types';
-import type { Prompter } from '@seedcord/cli-prompts';
-
-const YES_NO = [
-    { value: 'yes', label: 'Yes' },
-    { value: 'no', label: 'No' }
-] as const;
-
-async function askYesNo(prompter: Prompter, message: string): Promise<boolean> {
-    return (await prompter.select({ message, choices: YES_NO })) === 'yes';
-}
 
 function yesOrNo(answer: boolean): string {
     return answer ? 'yes' : 'no';
@@ -19,7 +9,7 @@ export const installStep: Step<'install'> = {
     label: 'install',
     flag: { name: 'install', description: 'install dependencies', noFlag: 'skip installing dependencies' },
     answerWithoutTerminal: true,
-    ask: (_answers, prompter) => askYesNo(prompter, 'Install dependencies now?'),
+    ask: (_answers, prompter) => prompter.confirm({ message: 'Install dependencies now?', initial: true }),
     shown: yesOrNo
 };
 
@@ -32,6 +22,6 @@ export const gitStep: Step<'git'> = {
         noFlag: 'skip git init and the first commit'
     },
     answerWithoutTerminal: true,
-    ask: (_answers, prompter) => askYesNo(prompter, 'Set up git with a first commit?'),
+    ask: (_answers, prompter) => prompter.confirm({ message: 'Set up git with a first commit?', initial: true }),
     shown: yesOrNo
 };

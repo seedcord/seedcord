@@ -42,23 +42,13 @@ export class CreateOutput {
 
     public stepRows(): StepUi {
         return {
-            run: async (label, work) => {
-                const row = new StepRow({
+            run: (label, work) =>
+                new StepRow({
                     write: (text) => this.stdout.write(text),
                     label,
                     labelWidth: this.labelWidth,
                     animate: Boolean(this.stdout.isTTY)
-                }).start();
-
-                try {
-                    const result = await work();
-                    row.done([]);
-                    return result;
-                } catch (error: unknown) {
-                    row.failed(underFailedRow(error));
-                    throw error;
-                }
-            },
+                }).run(work, { done: () => ({ lines: [] }), linesUnderFailure: underFailedRow }),
             skip: (label) => this.line(paint.mute(`- ${label.padEnd(this.labelWidth)}  skipped`))
         };
     }
@@ -92,7 +82,12 @@ export class CreateOutput {
     }
 
     public fail(message: string): void {
-        this.stderr.write(`\n  ${paint.coral('⬢')} ${message}\n  ${paint.mute('Nothing was created.')}\n`);
+        this.stderr.write(`\n  ${paint.coral('⬢')} ${message}\n`);
+        this.nothingCreated();
+    }
+
+    public nothingCreated(): void {
+        this.stderr.write(`  ${paint.mute('Nothing was created.')}\n`);
     }
 
     public line(text = ''): void {

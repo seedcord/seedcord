@@ -81,6 +81,12 @@ async function main(output: CreateOutput): Promise<void> {
         createExecRunner({ verbose: wantsVerbose(argv), color: Boolean(process.stdout.isTTY) })
     );
 
+    if (!result.created) {
+        output.nothingCreated();
+        process.exitCode = 1;
+        return;
+    }
+
     for (const notice of result.notices) output.warn(notice);
 
     if (interactive) await reportOutcome(output, answers, agent, result.installed);

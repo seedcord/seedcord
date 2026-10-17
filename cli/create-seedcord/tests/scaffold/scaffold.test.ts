@@ -7,8 +7,14 @@ import { describe, expect, it, onTestFinished } from 'vitest';
 import { scaffold } from '#scaffold/scaffold';
 
 import type { StepUi } from '#cli/steps';
-import type { CommandRunner } from '#scaffold/scaffold';
+import type { CommandRunner, ScaffoldResult } from '#scaffold/scaffold';
 import type { ScaffoldAnswers } from '#template/context';
+
+async function scaffolded(...args: Parameters<typeof scaffold>): Promise<Extract<ScaffoldResult, { created: true }>> {
+    const result = await scaffold(...args);
+    if (!result.created) throw new Error('scaffold wrote nothing');
+    return result;
+}
 
 const TEMPLATES = resolve(import.meta.dirname, '../../templates');
 
@@ -216,7 +222,7 @@ describe('scaffold', () => {
         const { runner } = recorder('commit');
         const { steps, seen } = stepRecorder();
 
-        const result = await scaffold(baseInput(target, steps), runner);
+        const result = await scaffolded(baseInput(target, steps), runner);
 
         expect(seen).toContain('failed: git');
         expect(result.notices).toEqual(['The project is complete and uncommitted.']);
@@ -228,7 +234,7 @@ describe('scaffold', () => {
         const { runner, calls } = recorder('-D');
         const { steps, seen } = stepRecorder();
 
-        const result = await scaffold(baseInput(target, steps), runner);
+        const result = await scaffolded(baseInput(target, steps), runner);
 
         expect(result.installed).toBe(false);
         expect(result.failed).toBe(true);
@@ -252,7 +258,7 @@ describe('scaffold', () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder(undefined, '-D');
 
-        const result = await scaffold(baseInput(target), runner);
+        const result = await scaffolded(baseInput(target), runner);
 
         expect(result.installed).toBe(true);
         expect(result.failed).toBe(false);
@@ -269,7 +275,7 @@ describe('scaffold', () => {
         const { runner, calls } = recorder('prettier --write');
         const { steps, seen } = stepRecorder();
 
-        const result = await scaffold(baseInput(target, steps), runner);
+        const result = await scaffolded(baseInput(target, steps), runner);
 
         expect(result.installed).toBe(true);
         expect(result.failed).toBe(true);
@@ -334,7 +340,7 @@ describe('scaffold cleanup', () => {
         const target = await scratchTarget();
         const { runner } = recorder('add');
 
-        const result = await scaffold(baseInput(target), runner);
+        const result = await scaffolded(baseInput(target), runner);
 
         expect(result.installed).toBe(false);
         await expect(readdir(target)).resolves.toContain('package.json');
@@ -345,19 +351,24 @@ describe('scaffold cleanup', () => {
         await mkdir(target, { recursive: true });
         const { runner } = recorder('add');
 
-        const result = await scaffold(baseInput(target), runner);
+        const result = await scaffolded(baseInput(target), runner);
 
         expect(result.installed).toBe(false);
         await expect(readdir(target)).resolves.toContain('package.json');
     });
 
-    it('removes the directory it created when writing fails', async () => {
+    it('removes the directory it created and reports nothing created when writing fails', async () => {
         const target = await scratchTarget();
         const { runner } = recorder();
+        const { steps, seen } = stepRecorder();
 
-        await expect(
-            scaffold({ ...baseInput(target), templatesRoot: join(target, 'missing-templates') }, runner)
-        ).rejects.toThrow();
+        const result = await scaffold(
+            { ...baseInput(target, steps), templatesRoot: join(target, 'missing-templates') },
+            runner
+        );
+
+        expect(result).toEqual({ created: false });
+        expect(seen).toContain('failed: files');
         await expect(readdir(target)).rejects.toThrow();
     });
 
@@ -368,7 +379,7 @@ describe('scaffold cleanup', () => {
 
         await expect(
             scaffold({ ...baseInput(target), templatesRoot: join(target, 'missing-templates') }, runner)
-        ).rejects.toThrow();
+        ).resolves.toEqual({ created: false });
         // claimTarget only accepts an empty target
         await expect(readdir(target)).resolves.toEqual([]);
     });

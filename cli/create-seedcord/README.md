@@ -35,7 +35,7 @@ npm create seedcord my-bot
 yarn create seedcord my-bot
 ```
 
-It asks where the project goes, how Discord reaches your bot, what the bot should react to, your bot token, an accent color, and whether to install dependencies and set up git. Then it writes the project, installs dependencies, formats, generates your command types, and makes the first commit. If a step after the write fails, you get a warning and the summary still prints.
+It asks where the project goes, how Discord reaches your bot, what the bot should react to, your bot token, an accent color, and whether to install dependencies and set up git. Then it writes the project. A yes to install also installs dependencies, formats, and generates your command types. A yes to git makes the first commit. If a step after the write fails, its output shows under that step and the summary still prints.
 
 If you don't have the token yet, press Enter twice on its prompt to skip it. Fill it into `.env` before you start the bot.
 

@@ -10,6 +10,16 @@ interface StepRowOptions {
     readonly animate: boolean;
 }
 
+interface StepEnd {
+    readonly lines: readonly string[];
+    readonly note?: string | undefined;
+}
+
+interface StepEnding<Result> {
+    readonly done: (result: Result) => StepEnd;
+    readonly linesUnderFailure: (error: unknown) => readonly string[];
+}
+
 // six characters fit any time formatDuration writes under 1000s
 const TIME_WIDTH = 6;
 
@@ -19,12 +29,27 @@ export class StepRow {
 
     constructor(private readonly options: StepRowOptions) {}
 
-    public start(): this {
-        this.startedAt = performance.now();
-        if (this.options.animate) {
-            this.spinner = Spinner.start(this.options.write, (frame) => this.line(paint.sky(frame)));
+    public async run<Result>(task: () => Promise<Result>, ending: StepEnding<Result>): Promise<Result> {
+        this.start();
+
+        let result: Result;
+        try {
+            result = await task();
+        } catch (error: unknown) {
+            this.finish(paint.coral(paint.cross), ending.linesUnderFailure(error));
+            throw error;
         }
-        return this;
+
+        let end: StepEnd;
+        try {
+            end = ending.done(result);
+        } catch (error: unknown) {
+            this.spinner?.stop();
+            throw error;
+        }
+
+        this.finish(paint.mint(paint.check), end.lines, end.note);
+        return result;
     }
 
     public printAbove(line: string): void {
@@ -32,12 +57,11 @@ export class StepRow {
         else this.options.write(`  ${line}\n`);
     }
 
-    public done(lines: readonly string[], note?: string): void {
-        this.finish(paint.mint(paint.check), lines, note);
-    }
-
-    public failed(lines: readonly string[]): void {
-        this.finish(paint.coral(paint.cross), lines);
+    private start(): void {
+        this.startedAt = performance.now();
+        if (this.options.animate) {
+            this.spinner = Spinner.start(this.options.write, (frame) => this.line(paint.sky(frame)));
+        }
     }
 
     private finish(mark: string, lines: readonly string[], note?: string): void {

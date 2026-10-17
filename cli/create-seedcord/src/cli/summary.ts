@@ -17,9 +17,9 @@ const TOGGLE_LABELS: Record<string, string> = {
     MessageContent: 'Message Content Intent'
 };
 
-const PLAIN_WORD = /^[\w@%+=:,./-]+$/;
+const PLAIN_WORD = /^[\w@%+=:./-]+$/;
 
-// sh, powershell and cmd all read a double-quoted `#` or space as part of one word
+// sh, powershell and cmd all read a double-quoted `#`, space or comma as part of one word
 function shellWord(value: string): string {
     return PLAIN_WORD.test(value) ? value : `"${value}"`;
 }

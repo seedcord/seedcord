@@ -14,6 +14,15 @@ describe('Prompter.confirm', () => {
         await expect(answer).resolves.toBe(false);
     });
 
+    it('starts on yes when asked to', async () => {
+        using terminal = new PromptTerminal();
+        const answer = terminal.prompter.confirm({ message: 'Install dependencies now?', initial: true });
+
+        await terminal.press(KEY.enter);
+
+        await expect(answer).resolves.toBe(true);
+    });
+
     it.each([
         ['← flips to yes', [KEY.left], true],
         ['↓ flips to yes', [KEY.down], true],

@@ -54,23 +54,15 @@ export class StepPrinter<Label extends string> implements Steps<Label> {
         task: () => Promise<Result>,
         note?: (result: Result) => string
     ): Promise<Result> {
-        const row = new StepRow({
-            write: (text) => held.writeToTerminal(text),
-            label,
-            labelWidth: this.labelWidth,
-            animate: Boolean(this.stdout.isTTY)
-        });
+        // bound before holdOutput swaps stdout.write for its own
+        const write = this.stdout.write.bind(this.stdout);
+        const row = new StepRow({ write, label, labelWidth: this.labelWidth, animate: Boolean(this.stdout.isTTY) });
         const held = holdOutput(this.stdout, this.stderr, this.verbose, (line) => row.printAbove(line));
-        row.start();
 
-        try {
-            const result = await task();
-            row.done(held.release(), note?.(result));
-            return result;
-        } catch (error: unknown) {
-            row.failed(held.release());
-            throw error;
-        }
+        return row.run(task, {
+            done: (result) => ({ lines: held.release(), note: note?.(result) }),
+            linesUnderFailure: () => held.release()
+        });
     }
 
     public detail(key: string, value: string): void {

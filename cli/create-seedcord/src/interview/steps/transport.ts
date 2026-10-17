@@ -10,7 +10,7 @@ const TRANSPORT_CHOICES = [
     {
         value: 'gateway',
         label: 'Gateway',
-        hint: 'keeps a connection to Discord open. messages, reactions, joins, voice activity, and so on arrive on top of interactions'
+        hint: 'keeps a connection to Discord open for messages, reactions, joins, and voice activity too'
     }
 ] as const;
 
