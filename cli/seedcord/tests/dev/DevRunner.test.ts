@@ -1,3 +1,5 @@
+import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
@@ -5,7 +7,10 @@ import { afterEach, describe, expect, it, onTestFinished, vi, type Mock } from '
 
 import { DevRunner } from '#commands/dev/DevRunner';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
+import { ProjectLoader } from '#core/config/ProjectLoader';
+import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { StateFolder } from '#core/state/StateFolder';
+import { ShellMode } from '#core/viteMode';
 import { silentLogger } from '#tests/silentLogger';
 import { DevStore } from '#ui/stores/DevStore';
 
@@ -15,7 +20,6 @@ import { fakeBot, fakeRuntime } from './fakes';
 import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import type { DevRuntime } from '#commands/dev/runtime/DevRuntime';
 import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
-import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ILogger } from '@seedcord/types';
 
 const readyBot = fakeBot();
@@ -51,10 +55,9 @@ function makeRunner(
     codegenLogger: ILogger = silentLogger,
     runtime: () => DevRuntime = readyRuntime
 ): DevRunner {
-    const project = { config: devConfig, [Symbol.asyncDispose]: () => Promise.resolve() };
     return new DevRunner({
         // justified: the session reads only these config fields
-        projectLoader: { open: () => Promise.resolve(project) } as unknown as Pick<ProjectLoader, 'open'>,
+        projectLoader: { readConfig: () => Promise.resolve(devConfig) } as unknown as Pick<ProjectLoader, 'readConfig'>,
         store: new DevStore(),
         state: STATE,
         codegen,
@@ -141,27 +144,26 @@ interface SlowConfigRun {
     readonly store: DevStore;
     readonly running: Promise<void>;
     readonly start: Mock<() => Promise<void>>;
-    readonly openConfig: Mock;
+    readonly readConfig: Mock;
     readonly configRequested: Promise<undefined>;
     readonly finishLoad: () => void;
 }
 
-// no session exists until finishLoad releases projectLoader.open
+// no session exists until finishLoad releases projectLoader.readConfig
 function runWithSlowConfig(): SlowConfigRun {
     const start = vi.fn(() => Promise.resolve());
     const bot = { ...readyBot, start };
     const { promise: configRequested, resolve: markRequested } = Promise.withResolvers<undefined>();
     const { promise: configLoaded, resolve: release } = Promise.withResolvers<undefined>();
-    const project = { config: devConfig, [Symbol.asyncDispose]: () => Promise.resolve() };
     const store = new DevStore();
-    const openConfig = vi.fn(async () => {
+    const readConfig = vi.fn(async () => {
         markRequested(undefined);
         await configLoaded;
-        return project;
+        return devConfig;
     });
     const runner = new DevRunner({
         // justified: the session reads only these config fields
-        projectLoader: { open: openConfig } as unknown as Pick<ProjectLoader, 'open'>,
+        projectLoader: { readConfig } as unknown as Pick<ProjectLoader, 'readConfig'>,
         store,
         state: STATE,
         codegen: fakeCodegen(),
@@ -170,7 +172,7 @@ function runWithSlowConfig(): SlowConfigRun {
         runtime: () => ({ ...readyRuntime(), loadEntry: () => Promise.resolve({ module: { default: bot } }) })
     });
     const running = runner.run();
-    return { runner, store, running, start, openConfig, configRequested, finishLoad: () => release(undefined) };
+    return { runner, store, running, start, readConfig, configRequested, finishLoad: () => release(undefined) };
 }
 
 describe('DevRunner keys before a session exists', () => {
@@ -202,7 +204,7 @@ describe('DevRunner keys before a session exists', () => {
     });
 
     it('reads the config again after r during the config load', async () => {
-        const { runner, running, start, openConfig, configRequested, finishLoad } = runWithSlowConfig();
+        const { runner, running, start, readConfig, configRequested, finishLoad } = runWithSlowConfig();
         onTestFinished(async () => {
             await runner.quit();
             await running;
@@ -213,7 +215,7 @@ describe('DevRunner keys before a session exists', () => {
         finishLoad();
 
         await vi.waitFor(() => expect(start).toHaveBeenCalledOnce());
-        expect(openConfig).toHaveBeenCalledTimes(2);
+        expect(readConfig).toHaveBeenCalledTimes(2);
     });
 });
 
@@ -357,6 +359,24 @@ describe('DevRunner codegen', () => {
     });
 });
 
+const BUILD_STARTS = 'seedcordTestBuildStarts';
+
+// vite calls buildStart once per server it opens
+const COUNTING_CONFIG = `export default {
+    root: './src',
+    instance: './bot.ts',
+    entry: './index.ts',
+    vitePlugins: [
+        {
+            name: 'count-build-starts',
+            buildStart: () => {
+                globalThis.${BUILD_STARTS} = (globalThis.${BUILD_STARTS} ?? 0) + 1;
+            }
+        }
+    ]
+};
+`;
+
 function untilError(store: DevStore): Promise<Error> {
     return new Promise((resolve) => {
         const check = (): void => {
@@ -370,20 +390,11 @@ function untilError(store: DevStore): Promise<Error> {
 }
 
 describe('DevRunner run', () => {
-    it('opens the project once and shows a session that fails to start as an error', async () => {
-        const projectDir = process.cwd();
-        const projectLoader = {
-            open: vi.fn(() =>
-                Promise.resolve({
-                    config: devConfigFor(projectDir, 'bot.ts'),
-                    [Symbol.asyncDispose]: () => Promise.resolve()
-                })
-            )
-        };
+    it('reads the config once and shows a session that fails to start as an error', async () => {
+        const projectLoader = { readConfig: vi.fn(() => Promise.resolve(devConfigFor(process.cwd(), 'bot.ts'))) };
         const store = new DevStore();
         const runner = new DevRunner({
-            // justified: the session reads only these config fields
-            projectLoader: projectLoader as unknown as Pick<ProjectLoader, 'open'>,
+            projectLoader,
             store,
             state: STATE,
             codegen: fakeCodegen(),
@@ -398,6 +409,39 @@ describe('DevRunner run', () => {
         await running;
 
         expect(error.message).toMatch(/Cannot find the entry file|Failed to load url/);
-        expect(projectLoader.open).toHaveBeenCalledOnce();
+        expect(projectLoader.readConfig).toHaveBeenCalledOnce();
     });
+
+    it("starts the config's Vite plugins once per session", async () => {
+        const temp = await mkdtempDisposable(join(tmpdir(), 'dev-runner-plugins-'));
+        onTestFinished(() => temp.remove());
+        await mkdir(join(temp.path, 'src'));
+        await writeFile(
+            join(temp.path, 'package.json'),
+            JSON.stringify({ name: 'dev-runner-plugins', type: 'module' })
+        );
+        await writeFile(join(temp.path, 'seedcord.config.ts'), COUNTING_CONFIG);
+        onTestFinished(() => {
+            Reflect.deleteProperty(globalThis, BUILD_STARTS);
+        });
+        const loader = new ProjectLoader(openModuleLoader, new ShellMode());
+        const store = new DevStore();
+        const runner = new DevRunner({
+            projectLoader: { readConfig: () => loader.readConfig(temp.path) },
+            store,
+            state: STATE,
+            codegen: fakeCodegen(),
+            codegenLogger: silentLogger,
+            tunnel: fakeTunnel(),
+            runtime: () => new ServerDevRuntime()
+        });
+
+        const running = runner.run();
+        // the session opens its vite server, then parks on the missing bot
+        await untilError(store);
+        await runner.quit();
+        await running;
+
+        expect(Reflect.get(globalThis, BUILD_STARTS)).toBe(1);
+    }, 60_000);
 });

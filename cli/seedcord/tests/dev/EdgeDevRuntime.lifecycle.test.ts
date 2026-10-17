@@ -33,7 +33,6 @@ import {
 
 import type { DevEvent } from '#commands/dev/runtime/events';
 import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
-import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/schema';
 
 // node lists a ProcessWrap for each child process until it closes
@@ -107,20 +106,15 @@ describe('EdgeDevRuntime lifecycle', () => {
         await mkdir(join(projectDir, 'src/commands'));
         await writeFile(join(projectDir, 'src/commands/Wave.ts'), WAVE_COMMAND);
         const logs = captureLogs();
-        // justified: the runner reads only these fields on top of the runtime's
-        const config = {
+        const config: ResolvedSeedcordConfig = {
             ...edgeConfig(projectDir),
             tunnel: { mode: 'off' },
-            typecheck: { enabled: false },
             idleAnimation: false
-        } as ResolvedSeedcordConfig;
+        };
         const store = new DevStore();
         const state = new StateFolder(projectDir, silentLogger);
         const runner = new DevRunner({
-            // justified: the runner reads config and disposes the project
-            projectLoader: {
-                open: () => Promise.resolve({ config, [Symbol.asyncDispose]: () => Promise.resolve() })
-            } as unknown as Pick<ProjectLoader, 'open'>,
+            projectLoader: { readConfig: () => Promise.resolve(config) },
             store,
             state,
             codegen: CodegenRunner.create(quietSteps, silentLogger, new ShellMode()),

@@ -52,23 +52,30 @@ export class ProjectLoader {
         private readonly defaultMode: DefaultMode = 'development'
     ) {}
 
-    public async open(projectDir = process.cwd()): Promise<Project> {
+    // dev loads the bot through its own vite server
+    public async readConfig(projectDir = process.cwd()): Promise<ResolvedSeedcordConfig> {
         const mode = this.shell.viteMode(this.defaultMode);
         Envapter.environment = mode;
         const configPath = locateConfig(projectDir);
         const configDir = dirname(configPath);
         const target = detectTarget(configDir);
         await using configModules = await this.openModules(configDir, target, mode, 'config');
-        const project = new Project(await this.readConfig(configModules, configPath, target, mode), configModules);
+        const project = new Project(await this.resolveConfig(configModules, configPath, target, mode), configModules);
         await assertNoHashPaths(project);
         await assertTargetMatchesTsconfig(project);
-
-        // the checks above go first because opening this runs cloudflare.config.ts on an edge bot
-        const botModules = await this.openModules(configDir, target, mode, { vitePlugins: project.config.vitePlugins });
-        return new Project(project.config, botModules);
+        return project.config;
     }
 
-    private async readConfig(
+    public async open(projectDir = process.cwd()): Promise<Project> {
+        const config = await this.readConfig(projectDir);
+        // readConfig's checks go first because opening this runs cloudflare.config.ts on an edge bot
+        const botModules = await this.openModules(dirname(config.configFile), config.target, config.viteMode, {
+            vitePlugins: config.vitePlugins
+        });
+        return new Project(config, botModules);
+    }
+
+    private async resolveConfig(
         modules: ModuleLoader,
         configPath: string,
         target: BuildTarget,

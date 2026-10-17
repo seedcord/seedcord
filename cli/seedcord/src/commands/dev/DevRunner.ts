@@ -15,7 +15,7 @@ import { ServerDevRuntime } from './runtime/ServerDevRuntime';
 import { createTunnelCoordinator } from './tunnel/createTunnelCoordinator';
 import { TunnelRouter } from './tunnel/TunnelRouter';
 
-import type { ResolvedSeedcordConfig, ResolvedTarget, ResolvedTunnel } from '#core/config/schema';
+import type { ResolvedTarget, ResolvedTunnel } from '#core/config/schema';
 import type { StateFolder } from '#core/state/StateFolder';
 import type { DevStore } from '#ui/stores/DevStore';
 import type { DevSessionDeps } from './DevSession';
@@ -25,7 +25,7 @@ import type { TunnelCoordinator } from './tunnel/TunnelCoordinator';
 const TUNNEL_TEARDOWN_MS = 3000;
 
 export interface DevRunnerDeps extends Omit<DevSessionDeps, 'onEvent'> {
-    readonly projectLoader: Pick<ProjectLoader, 'open'>;
+    readonly projectLoader: Pick<ProjectLoader, 'readConfig'>;
     readonly tunnel: TunnelRouter;
     readonly runtime: (target: ResolvedTarget) => DevRuntime;
 }
@@ -103,7 +103,7 @@ export class DevRunner {
         store.setPhase('starting');
         store.setBusy(true);
         const restarts = this.restarts;
-        const config = await this.readConfig();
+        const config = await this.deps.projectLoader.readConfig();
         // a key pressed during the config load had no session to stop
         if (this.next !== 'session' || this.restarts !== restarts) return;
         profileMark('config');
@@ -120,11 +120,6 @@ export class DevRunner {
             await this.currentSession.stop();
             this.currentSession = null;
         }
-    }
-
-    private async readConfig(): Promise<ResolvedSeedcordConfig> {
-        await using project = await this.deps.projectLoader.open();
-        return project.config;
     }
 
     // every caller drops this promise, so run() awaits it
