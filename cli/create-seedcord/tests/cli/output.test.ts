@@ -4,6 +4,9 @@ import { describe, expect, it } from 'vitest';
 
 import { CreateOutput } from '#cli/output';
 
+// the selector after ✔ takes no column on screen
+const TEXT_STYLE = String.fromCodePoint(0xfe_0e);
+
 function captured(): { stdout: { write: (text: string) => boolean; isTTY: false }; text: () => string } {
     let written = '';
     return {
@@ -14,7 +17,7 @@ function captured(): { stdout: { write: (text: string) => boolean; isTTY: false 
             },
             isTTY: false
         },
-        text: () => stripVTControlCharacters(written)
+        text: () => stripVTControlCharacters(written).replaceAll(TEXT_STYLE, '')
     };
 }
 
@@ -31,6 +34,21 @@ describe('CreateOutput', () => {
 
         expect(answerRow.indexOf('folder')).toBe(stepRow.indexOf('files'));
         expect(answerRow.indexOf('my-bot')).toBe(afterLabels);
+    });
+
+    it('starts every line of a summary row in the answer column', () => {
+        const { stdout, text } = captured();
+        const output = new CreateOutput(['folder', 'transport'], stdout);
+
+        output.answer('folder', 'my-bot');
+        output.row('next', ['cd my-bot', 'pnpm run dev']);
+
+        const [answerRow = '', first = '', second = ''] = text().trimEnd().split('\n');
+        const column = answerRow.indexOf('my-bot');
+
+        expect(first.indexOf('next')).toBe(answerRow.indexOf('folder'));
+        expect(first.indexOf('cd my-bot')).toBe(column);
+        expect(second.indexOf('pnpm run dev')).toBe(column);
     });
 
     it('indents every line of a warning under its first', () => {

@@ -1,10 +1,16 @@
+import { stripVTControlCharacters } from 'node:util';
+
 import { describe, expect, it } from 'vitest';
 
-import { dashboardToggles, nextSteps, reproducingCommand } from '#cli/summary';
+import { dashboardToggles, nextSteps as paintedSteps, reproducingCommand } from '#cli/summary';
 import { version } from '#cli/version';
 import { STEPS } from '#interview/steps';
 
 import type { ScaffoldAnswers } from '#template/context';
+
+function nextSteps(...args: Parameters<typeof paintedSteps>): string[] {
+    return paintedSteps(...args).map((step) => stripVTControlCharacters(step));
+}
 
 const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',
@@ -50,12 +56,11 @@ describe('nextSteps', () => {
         expect(nextSteps(HTTP, { agent: 'pnpm', installed: true }).join('\n')).not.toContain('.env');
     });
 
-    it('prints a step to add the token to .env before the dev script when you skipped it', () => {
+    it('lists a step to add the token to .env before the dev script when you skipped it', () => {
         const steps = nextSteps({ ...HTTP, token: null }, { agent: 'pnpm', installed: true });
-        const env = steps.findIndex((step) => step.includes('.env'));
 
-        expect(steps[env]).toContain('DISCORD_BOT_TOKEN');
-        expect(env).toBeLessThan(steps.indexOf('pnpm run dev'));
+        expect(steps).toContain('add DISCORD_BOT_TOKEN to .env');
+        expect(steps.indexOf('add DISCORD_BOT_TOKEN to .env')).toBeLessThan(steps.indexOf('pnpm run dev'));
     });
 });
 

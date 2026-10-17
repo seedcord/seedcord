@@ -18,11 +18,10 @@ const TOGGLE_LABELS: Record<string, string> = {
 };
 
 export function nextSteps(answers: ScaffoldAnswers, run: { agent: AgentName; installed: boolean }): string[] {
-    const prefix = runPrefix(run.agent);
-    const install = run.installed ? [] : [`${run.agent} install`];
-    const fill = answers.token === null ? ['fill in DISCORD_BOT_TOKEN in .env'] : [];
+    const install = run.installed ? [] : [paint.bold(`${run.agent} install`)];
+    const fill = answers.token === null ? [paint.mute('add DISCORD_BOT_TOKEN to .env')] : [];
 
-    return [`cd ${answers.directory}`, ...install, ...fill, `${prefix} dev`];
+    return [paint.bold(`cd ${answers.directory}`), ...install, ...fill, paint.bold(`${runPrefix(run.agent)} dev`)];
 }
 
 function secretFlag(value: string | null, flag: string, placeholder: string): string {
@@ -37,12 +36,8 @@ export function dashboardToggles(capabilities: string[]): string[] {
     const privileged = privilegedFor(capabilities);
     if (privileged.length === 0) return [];
 
-    return [
-        'Turn these on for your app under Bot, at',
-        paint.sky(PORTAL),
-        '',
-        ...privileged.map((intent) => `  ${paint.amber(TOGGLE_LABELS[intent] ?? intent)}`)
-    ];
+    const toggles = privileged.map((intent) => TOGGLE_LABELS[intent] ?? intent).join(', ');
+    return [paint.amber(toggles), paint.mute(`turn on under Bot in ${PORTAL}`)];
 }
 
 // the token stays out because this line reaches scroll-back and screenshots

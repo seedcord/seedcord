@@ -5,6 +5,10 @@ import { banner } from '#cli/banner';
 
 import type { StepUi } from '#cli/steps';
 
+const SUMMARY_LABELS = ['intents', 'next', 'invite', 'again', 'guide'] as const;
+
+type SummaryLabel = (typeof SUMMARY_LABELS)[number];
+
 interface Stdout {
     write: (text: string) => unknown;
     isTTY?: boolean;
@@ -18,7 +22,7 @@ export class CreateOutput {
         private readonly stdout: Stdout = process.stdout,
         private readonly stderr: Stdout = process.stderr
     ) {
-        this.labelWidth = Math.max(...labels.map((label) => label.length));
+        this.labelWidth = Math.max(...[...labels, ...SUMMARY_LABELS].map((label) => label.length));
     }
 
     public header(): void {
@@ -58,17 +62,12 @@ export class CreateOutput {
         for (const line of rest) this.line(`  ${line}`);
     }
 
-    public note(title: string, lines: readonly string[]): void {
-        this.line();
-        this.line(paint.bold(title));
-        for (const line of lines) this.line(line === '' ? '' : `  ${line}`);
-    }
-
-    // an indent would end up in whatever gets pasted
-    public copyable(label: string, value: string): void {
-        this.line();
-        this.line(paint.mute(label));
-        this.stdout.write(`${value}\n`);
+    public row(label: SummaryLabel, lines: readonly string[]): void {
+        const blank = ' '.repeat(this.labelWidth);
+        for (const [index, line] of lines.entries()) {
+            const head = index === 0 ? paint.mute(label.padEnd(this.labelWidth)) : blank;
+            this.line(`  ${head}  ${line}`);
+        }
     }
 
     public fail(message: string): void {

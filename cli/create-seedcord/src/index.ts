@@ -95,25 +95,26 @@ async function reportOutcome(
     agent: AgentName,
     installed: boolean
 ): Promise<void> {
-    const toggles = dashboardToggles(answers.capabilities ?? []);
-    if (toggles.length > 0) output.note('Dashboard toggles', toggles);
-
     if (answers.transport === 'http' && !(await probeCloudflared())) {
         output.warn(missingNotice(process.platform));
     }
 
-    output.note(
-        'Next steps',
-        nextSteps(answers, { agent, installed }).map((step) => paint.mint(step))
-    );
-
-    const invite = inviteUrl(answers.token);
-    if (invite !== null) output.copyable('Add the bot to a server', paint.sky(invite));
-
-    output.copyable('Run this setup again', paint.mute(reproducingCommand(answers, agent)));
+    const toggles = dashboardToggles(answers.capabilities ?? []);
+    if (toggles.length > 0) {
+        output.line();
+        output.row('intents', toggles);
+    }
 
     output.line();
-    output.line(paint.sky('https://seedcord.org/guide'));
+    output.row('next', nextSteps(answers, { agent, installed }));
+    output.line();
+
+    const invite = inviteUrl(answers.token);
+    if (invite !== null) output.row('invite', [paint.sky(invite)]);
+
+    // powershell and cmd split a command wrapped with a trailing `\`
+    output.row('again', [paint.bold(reproducingCommand(answers, agent))]);
+    output.row('guide', [paint.sky('https://seedcord.org/guide')]);
     output.line();
 }
 
