@@ -126,16 +126,17 @@ function json<ObjType, Marker extends string>(
     marker: Marker,
     logger?: ILogger
 ): JsonifyWithCirculars<ObjType, Marker> | UnserializableValue {
-    const seen = new WeakSet<object>();
+    const path: unknown[] = [];
     let json: string | undefined;
 
     try {
-        json = JSON.stringify(value, (_k: string, v: unknown) => {
+        // stringify calls the replacer with `this` set to the object that holds the key
+        json = JSON.stringify(value, function (this: unknown, _k: string, v: unknown) {
             if (typeof v === 'bigint') return v.toString();
+            while (path.length > 0 && path.at(-1) !== this) path.pop();
             if (typeof v === 'object' && v !== null) {
-                const obj = v;
-                if (seen.has(obj)) return marker;
-                seen.add(obj);
+                if (path.includes(v)) return marker;
+                path.push(v);
             }
             return v;
         });
