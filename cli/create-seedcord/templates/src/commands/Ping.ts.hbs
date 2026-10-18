@@ -1,6 +1,6 @@
 import { BuilderComponent, RegisterCommand } from '{{ transportPackage }}';
 
-@RegisterCommand('global')
+@RegisterCommand()
 export class Ping extends BuilderComponent<'command'> {
     constructor() {
         super('command');

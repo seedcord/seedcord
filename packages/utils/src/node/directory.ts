@@ -143,7 +143,7 @@ interface BuiltFileLoaders {
     // seedcord dev runs the source files themselves
     sourcePaths?: boolean;
     // relative to root. only a server build writes it
-    configDir?: string;
+    configFile?: string;
 }
 
 // seedcord build writes a BuiltFileLoaders object here from the entry it generates
@@ -163,17 +163,13 @@ function builtFiles(): BuiltFileLoaders | undefined {
     return Reflect.get(globalThis, Symbol.for(BUILT_FILES_KEY)) as BuiltFileLoaders | undefined;
 }
 
-// false for a bun binary under /$bunfs or a dist copied out of the project
-function isProjectFolder(dir: string): boolean {
-    return existsSync(path.join(dir, 'package.json'));
-}
-
 export function builtConfigDir(): string | undefined {
     const built = builtFiles();
-    if (built?.configDir === undefined) return undefined;
+    if (built?.configFile === undefined) return undefined;
 
-    const configDir = path.resolve(built.root, built.configDir);
-    return isProjectFolder(configDir) ? configDir : undefined;
+    const configFile = path.resolve(built.root, built.configFile);
+    // a bun binary's root is under /$bunfs
+    return existsSync(configFile) ? path.dirname(configFile) : undefined;
 }
 
 export function setBotRoot(root: string | undefined): void {

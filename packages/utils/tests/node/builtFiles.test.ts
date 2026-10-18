@@ -15,7 +15,7 @@ interface BuiltFileLoaders {
     modules: Record<string, () => Promise<Record<string, unknown>>>;
     text: Record<string, () => Promise<string>>;
     sourcePaths?: boolean;
-    configDir?: string;
+    configFile?: string;
 }
 
 // not on disk. path.resolve adds the drive letter on windows
@@ -57,17 +57,17 @@ async function rejection(iterable: AsyncIterable<unknown>): Promise<unknown> {
 }
 
 describe('builtConfigDir', () => {
-    it("returns the folder holding seedcord.config.ts when the project's package.json sits there", () => {
+    it('returns the folder holding seedcord.config.ts', () => {
         using project = mkdtempDisposableSync(path.join(tmpdir(), 'seedcord-built-'));
-        writeFileSync(path.join(project.path, 'package.json'), '{}');
-        using _built = register({ root: path.join(project.path, 'dist'), configDir: '..' });
+        writeFileSync(path.join(project.path, 'seedcord.config.ts'), '');
+        using _built = register({ root: path.join(project.path, 'dist'), configFile: '../seedcord.config.ts' });
 
         expect(builtConfigDir()).toBe(project.path);
     });
 
     it('returns nothing for a build copied away from its project', () => {
         using elsewhere = mkdtempDisposableSync(path.join(tmpdir(), 'seedcord-built-'));
-        using _built = register({ root: path.join(elsewhere.path, 'app'), configDir: '..' });
+        using _built = register({ root: path.join(elsewhere.path, 'app'), configFile: '../seedcord.config.ts' });
 
         expect(builtConfigDir()).toBeUndefined();
     });

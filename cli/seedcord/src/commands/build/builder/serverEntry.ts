@@ -11,7 +11,7 @@ interface EntryOptions {
     folders: string[];
     entryKey: string;
     rootKey: string;
-    configDir: string;
+    configFile: string;
 }
 
 export function isServerEntry(moduleId: string | null | undefined): boolean {

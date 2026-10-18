@@ -10,7 +10,7 @@ interface BuiltFilesOptions {
     rootExpression: string;
     rootKey: string;
     sourcePaths: boolean;
-    configDir?: string;
+    configFile?: string;
 }
 
 export function builtFilesSource({
@@ -19,7 +19,7 @@ export function builtFilesSource({
     rootExpression,
     rootKey,
     sourcePaths,
-    configDir
+    configFile
 }: BuiltFilesOptions): string {
     const excludes = files.globExcludes();
     const modules = [...moduleGlobs('.'), ...excludes];
@@ -34,7 +34,7 @@ export function builtFilesSource({
         `    modules: import.meta.glob(${JSON.stringify(modules)}, ${JSON.stringify(moduleOptions)}),`,
         `    text: import.meta.glob(${JSON.stringify(text)}, ${JSON.stringify(textOptions)}),`,
         `    sourcePaths: ${String(sourcePaths)},`,
-        ...(configDir === undefined ? [] : [`    configDir: ${JSON.stringify(configDir)},`]),
+        ...(configFile === undefined ? [] : [`    configFile: ${JSON.stringify(configFile)},`]),
         '};',
         ''
     ].join('\n');

@@ -44,7 +44,7 @@ async function listWhenWritten(dir: string, timeoutMs = 2000): Promise<string[]>
 const plain = (value: string): string => stripAnsi(value);
 
 // the slot the entry of a built bot fills before anything imports seedcord
-function asBuiltBot(slot: { root: string; configDir: string }): Disposable {
+function asBuiltBot(slot: { root: string; configFile: string }): Disposable {
     const key = Symbol.for(BUILT_FILES_KEY);
     Reflect.set(globalThis, key, { ...slot, folders: [], modules: {}, text: {} });
     return { [Symbol.dispose]: () => Reflect.deleteProperty(globalThis, key) };
@@ -171,8 +171,8 @@ describe('winston sinks', () => {
 
     it('writes a relative file name beside seedcord.config.ts in a built bot', async () => {
         using project = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
-        writeFileSync(join(project.path, 'package.json'), '{}');
-        using _builtBot = asBuiltBot({ root: join(project.path, 'dist'), configDir: '..' });
+        writeFileSync(join(project.path, 'seedcord.config.ts'), '');
+        using _builtBot = asBuiltBot({ root: join(project.path, 'dist'), configFile: '../seedcord.config.ts' });
         using sink = new WinstonFileSink({ filename: 'logs/out.log', format: 'json' });
 
         sink.onLog(record({ message: 'beside the config' }));
