@@ -13,6 +13,7 @@ import { assertNoHashPaths } from './assertNoHashPaths';
 import { assertTargetMatchesTsconfig } from './assertTargetMatchesTsconfig';
 import { ConfigValidator } from './ConfigValidator';
 import { detectTarget } from './detectTarget';
+import { LoadedConfig } from './LoadedConfig';
 import { locateConfig } from './locateConfig';
 import { flattenVitePlugins, isVitePlugin, rethrowVitePluginError, wrapVitePlugins } from './vitePlugins';
 
@@ -59,28 +60,37 @@ export class ProjectLoader {
         private readonly defaultMode: DefaultMode = 'development'
     ) {}
 
-    public async readConfig(projectDir = process.cwd()): Promise<ResolvedSeedcordConfig> {
+    public async readConfig(
+        projectDir = process.cwd(),
+        check?: (config: ResolvedSeedcordConfig) => void
+    ): Promise<LoadedConfig> {
         const mode = this.shell.viteMode(this.defaultMode);
         Envapter.environment = mode;
         const configPath = locateConfig(projectDir);
         const configDir = dirname(configPath);
         const target = detectTarget(configDir);
-        await using configModules = await this.openModules(configDir, target, mode, 'config');
+        await using stack = new AsyncDisposableStack();
+        const configModules = stack.use(await this.openModules(configDir, target, mode, 'config'));
         const project = new Project(await this.resolveConfig(configModules, configPath, target, mode), configModules);
         await assertNoHashPaths(project);
         await assertTargetMatchesTsconfig(project);
-        return project.config;
+        check?.(project.config);
+        if (project.config.vitePlugins.length === 0) return new LoadedConfig(project.config);
+        return new LoadedConfig(project.config, stack.move());
     }
 
     // starts the config's vite plugins. on an edge bot it also runs cloudflare.config.ts
-    public async openProject(config: ResolvedSeedcordConfig): Promise<Project> {
+    public async openProject(loaded: LoadedConfig): Promise<Project> {
+        await using stack = new AsyncDisposableStack();
+        stack.use(loaded);
+        const { config } = loaded;
         const botModules = await this.openModules(
             dirname(config.configFile),
             config.target,
             config.viteMode,
             config
         ).catch(rethrowVitePluginError);
-        return new Project(config, botModules);
+        return new Project(config, botModules, stack.move());
     }
 
     private async resolveConfig(

@@ -103,7 +103,8 @@ export class DevRunner {
         store.setPhase('starting');
         store.setBusy(true);
         const restarts = this.restarts;
-        const config = await this.deps.projectLoader.readConfig();
+        await using loaded = await this.deps.projectLoader.readConfig();
+        const { config } = loaded;
         // a key pressed during the config load had no session to stop
         if (this.next !== 'session' || this.restarts !== restarts) return;
         profileMark('config');

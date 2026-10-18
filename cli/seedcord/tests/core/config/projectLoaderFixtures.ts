@@ -25,7 +25,7 @@ export function tempProject(): string {
     return realpathSync(projectDir.path);
 }
 
-interface StubModules {
+export interface StubModules {
     open: OpenModules;
     // one row per loader the ProjectLoader opened, in order
     loaders: { loads: 'config' | 'bot'; closed: boolean }[];
@@ -53,8 +53,10 @@ export function projectWith(config: unknown): { projectDir: string; load: () => 
     writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
     const { open } = stubModulesExporting(config);
 
-    const load = async (): Promise<ResolvedSeedcordConfig> =>
-        new ProjectLoader(open, new ShellMode()).readConfig(projectDir);
+    const load = async (): Promise<ResolvedSeedcordConfig> => {
+        await using loaded = await new ProjectLoader(open, new ShellMode()).readConfig(projectDir);
+        return loaded.config;
+    };
 
     return { projectDir, load };
 }

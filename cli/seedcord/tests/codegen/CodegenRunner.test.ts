@@ -11,6 +11,7 @@ import { assert, describe, expect, it, onTestFinished } from 'vitest';
 
 import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
+import { LoadedConfig } from '#core/config/LoadedConfig';
 import { quietSteps } from '#core/output/quietSteps';
 import { Project } from '#core/project/Project';
 
@@ -64,8 +65,8 @@ function configAt(root: string, instance: string): ResolvedSeedcordConfig {
 
 function projectOpener(config: ResolvedSeedcordConfig, modules: ModuleLoader & AsyncDisposable): ProjectOpener {
     return {
-        readConfig: () => Promise.resolve(config),
-        openProject: (read) => Promise.resolve(new Project(read, modules))
+        readConfig: () => Promise.resolve(new LoadedConfig(config)),
+        openProject: (loaded) => Promise.resolve(new Project(loaded.config, modules))
     };
 }
 

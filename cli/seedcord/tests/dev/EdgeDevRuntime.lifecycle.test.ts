@@ -9,6 +9,7 @@ import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { DevRunner } from '#commands/dev/DevRunner';
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
+import { LoadedConfig } from '#core/config/LoadedConfig';
 import { wrapVitePlugins } from '#core/config/vitePlugins';
 import { quietSteps } from '#core/output/quietSteps';
 import { deployedCommandsFile } from '#core/state/deployedCommands';
@@ -115,7 +116,7 @@ describe('EdgeDevRuntime lifecycle', () => {
         const store = new DevStore();
         const state = new StateFolder(projectDir, silentLogger);
         const runner = new DevRunner({
-            projectLoader: { readConfig: () => Promise.resolve(config) },
+            projectLoader: { readConfig: () => Promise.resolve(new LoadedConfig(config)) },
             store,
             state,
             codegen: CodegenRunner.create(quietSteps, silentLogger, new ShellMode()),

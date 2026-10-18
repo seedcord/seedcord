@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, onTestFinished, vi, type Mock } from '
 
 import { DevRunner } from '#commands/dev/DevRunner';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
+import { LoadedConfig } from '#core/config/LoadedConfig';
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { StateFolder } from '#core/state/StateFolder';
@@ -35,6 +36,11 @@ const devConfig = {
 
 const STATE = new StateFolder(devConfig.root, silentLogger);
 
+// the shape readConfig returns, around the partial config above
+function loadedDevConfig(): { config: typeof devConfig } & AsyncDisposable {
+    return { config: devConfig, [Symbol.asyncDispose]: () => Promise.resolve() };
+}
+
 function readyRuntime(): DevRuntime {
     return fakeRuntime({ default: readyBot });
 }
@@ -57,7 +63,10 @@ function makeRunner(
 ): DevRunner {
     return new DevRunner({
         // justified: the session reads only these config fields
-        projectLoader: { readConfig: () => Promise.resolve(devConfig) } as unknown as Pick<ProjectLoader, 'readConfig'>,
+        projectLoader: { readConfig: () => Promise.resolve(loadedDevConfig()) } as unknown as Pick<
+            ProjectLoader,
+            'readConfig'
+        >,
         store: new DevStore(),
         state: STATE,
         codegen,
@@ -159,7 +168,7 @@ function runWithSlowConfig(): SlowConfigRun {
     const readConfig = vi.fn(async () => {
         markRequested(undefined);
         await configLoaded;
-        return devConfig;
+        return loadedDevConfig();
     });
     const runner = new DevRunner({
         // justified: the session reads only these config fields
@@ -391,7 +400,9 @@ function untilError(store: DevStore): Promise<Error> {
 
 describe('DevRunner run', () => {
     it('reads the config once and shows a session that fails to start as an error', async () => {
-        const projectLoader = { readConfig: vi.fn(() => Promise.resolve(devConfigFor(process.cwd(), 'bot.ts'))) };
+        const projectLoader = {
+            readConfig: vi.fn(() => Promise.resolve(new LoadedConfig(devConfigFor(process.cwd(), 'bot.ts'))))
+        };
         const store = new DevStore();
         const runner = new DevRunner({
             projectLoader,

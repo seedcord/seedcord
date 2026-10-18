@@ -19,10 +19,9 @@ export async function openProjectWithSteps(
     { projectDir, check }: OpenOptions = {}
 ): Promise<Project> {
     const read = await steps.step('read config', async () => {
-        const config = await loader.readConfig(projectDir);
-        check?.(config);
-        if (config.vitePlugins.length > 0) return { config, project: undefined };
-        return { config, project: await loader.openProject(config) };
+        const loaded = await loader.readConfig(projectDir, check);
+        if (loaded.config.vitePlugins.length > 0) return { loaded, project: undefined };
+        return { loaded, project: await loader.openProject(loaded) };
     });
-    return read.project ?? (await steps.step('load plugins', () => loader.openProject(read.config)));
+    return read.project ?? (await steps.step('load plugins', () => loader.openProject(read.loaded)));
 }

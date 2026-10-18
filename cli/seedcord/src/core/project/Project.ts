@@ -16,7 +16,8 @@ export class Project implements AsyncDisposable {
 
     constructor(
         public readonly config: ResolvedSeedcordConfig,
-        private readonly loader: ModuleLoader & AsyncDisposable
+        private readonly loader: ModuleLoader & AsyncDisposable,
+        private readonly configLoader?: AsyncDisposable
     ) {
         this.configDir = dirname(config.configFile);
         const { target } = config;
@@ -48,6 +49,10 @@ export class Project implements AsyncDisposable {
     }
 
     public async [Symbol.asyncDispose](): Promise<void> {
-        await this.loader[Symbol.asyncDispose]();
+        try {
+            await this.loader[Symbol.asyncDispose]();
+        } finally {
+            await this.configLoader?.[Symbol.asyncDispose]();
+        }
     }
 }

@@ -9,6 +9,7 @@ import { SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { onTestFinished, vi } from 'vitest';
 
+import { LoadedConfig } from '#core/config/LoadedConfig';
 import { Project } from '#core/project/Project';
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
@@ -116,8 +117,8 @@ export async function fakeProject({
         [Symbol.asyncDispose]: () => Promise.resolve()
     } as ModuleLoader & AsyncDisposable;
     return {
-        readConfig: () => Promise.resolve(config),
-        openProject: (opened) => Promise.resolve(new Project(opened, modules)),
+        readConfig: () => Promise.resolve(new LoadedConfig(config)),
+        openProject: (loaded) => Promise.resolve(new Project(loaded.config, modules)),
         state: new StateFolder(root, silentLogger)
     };
 }
