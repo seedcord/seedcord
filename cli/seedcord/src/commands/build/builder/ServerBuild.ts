@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { extname, join } from 'node:path';
+import { extname, join, relative } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -73,7 +73,8 @@ export class ServerBuild extends TargetBuild {
                     files,
                     folders,
                     entryKey: viteKey(configDir, entry),
-                    rootKey: viteKey(configDir, root)
+                    rootKey: viteKey(configDir, root),
+                    envDir: relative(outDir, configDir)
                 }),
                 pinModulePaths(files),
                 ...config.vitePlugins

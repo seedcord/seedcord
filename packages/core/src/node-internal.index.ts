@@ -8,3 +8,4 @@ export * from '#node/HealthCheck';
 export { HealthResponder } from '#node/HealthResponder';
 export { settleWithin } from '#src/lifecycle/withTimeout';
 export { shutdownOf } from '#node/ServerHost';
+export { setEnvaptBaseDir } from '#node/envaptBaseDir';

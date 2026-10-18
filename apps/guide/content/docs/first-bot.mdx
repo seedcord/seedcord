@@ -69,7 +69,7 @@ my-bot/
 - **`seedcord.config.ts`** configures the CLI. Your bot's own settings go in `bot.ts`, which is the file below.
 - **`src/seedcord-gen.d.ts`** carries the types generated from your config and your commands. `seedcord codegen` writes it and you commit it.
 - **`tsconfig.json`** type-checks the project. **`tsconfig.build.json`** compiles `src` into `dist`.
-- **`.env`** holds your token. `bot.ts` sets `Envapter.baseDir` to the project root, which is where [envapt](https://envapt.materwelon.dev) then looks for the file.
+- **`.env`** holds your token and the ids of your test servers. seedcord sets [envapt](https://envapt.materwelon.dev)'s `baseDir` to the folder that holds `seedcord.config.ts`. A built bot reads the file from there, whichever folder you start it in.
 - **`src/events/`** holds `Ready.ts`. Picking any of the message capabilities swaps that for `Mentioned.ts`, which answers when someone mentions your bot.
 
 <Callout type="transport" only="http">
@@ -86,9 +86,7 @@ import { resolve } from 'node:path';
 
 import { Seedcord } from '@seedcord/gateway';
 import { GatewayIntentBits } from 'discord.js';
-import { Envapter } from 'envapt';
-
-Envapter.baseDir = resolve(import.meta.dirname, '..');
+import { Converters, Envapter } from 'envapt';
 
 export const seedcord = new Seedcord({
     bot: {
@@ -100,7 +98,12 @@ export const seedcord = new Seedcord({
             path: resolve(import.meta.dirname, './handlers')
         },
         commands: {
-            path: resolve(import.meta.dirname, './commands')
+            path: resolve(import.meta.dirname, './commands'),
+            guilds: Envapter.getUsing(
+                'TESTING_GUILD_IDS',
+                Converters.array(),
+                []
+            )
         },
         events: {
             path: resolve(import.meta.dirname, './events')

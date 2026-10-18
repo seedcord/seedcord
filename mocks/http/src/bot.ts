@@ -1,12 +1,7 @@
-import { resolve } from 'node:path';
-
 import { Seedcord } from '@seedcord/http';
-import { Envapter } from 'envapt';
 
 import { PingCounter } from './plugins/PingCounter';
 import { Uptime } from './plugins/Uptime';
-
-Envapter.baseDir = resolve(import.meta.dirname, '..');
 
 export const seedcord = new Seedcord({
     bot: {

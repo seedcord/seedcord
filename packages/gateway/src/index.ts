@@ -1,4 +1,6 @@
 import 'reflect-metadata';
+// has to run before logger-bootstrap reads the environment
+import './env-bootstrap';
 import './logger-bootstrap';
 import './subscriptions';
 

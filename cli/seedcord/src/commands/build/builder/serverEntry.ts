@@ -11,15 +11,16 @@ interface EntryOptions {
     folders: string[];
     entryKey: string;
     rootKey: string;
+    envDir: string;
 }
 
 export function isServerEntry(moduleId: string | null | undefined): boolean {
     return moduleId === RESOLVED_ENTRY_ID;
 }
 
-function entrySource({ files, folders, entryKey, rootKey }: EntryOptions): string {
+function entrySource({ entryKey, ...builtFiles }: EntryOptions): string {
     return [
-        builtFilesSource({ files, folders, rootExpression: 'import.meta.dirname', rootKey, sourcePaths: false }),
+        builtFilesSource({ ...builtFiles, rootExpression: 'import.meta.dirname', sourcePaths: false }),
         `await import(${JSON.stringify(entryKey)});`,
         ''
     ].join('\n');

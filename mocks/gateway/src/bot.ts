@@ -1,12 +1,8 @@
-import { resolve } from 'node:path';
-
 import { Seedcord } from '@seedcord/gateway';
 import { Mongoose } from '@seedcord/plugin-mongoose';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import { Converters, Envapter } from 'envapt';
 import { Envapt } from 'envapt/legacy';
-
-Envapter.baseDir = resolve(import.meta.dirname, '..');
 
 export class Vars extends Envapter {
     @Envapt('MONGO_URI', { fallback: 'mongodb://localhost:27017/' })

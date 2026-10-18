@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { generateKeyPairSync } from 'node:crypto';
+import { tmpdir } from 'node:os';
 
 type Kind = 'http' | 'gateway';
 
@@ -22,6 +23,8 @@ function publicKeyHex(): string {
 
 export async function smoke(kind: Kind, command: string, args: string[] = []): Promise<string> {
     const child = spawn(command, args, {
+        // a built bot has to start from any folder
+        cwd: tmpdir(),
         env: { ...process.env, DISCORD_BOT_TOKEN: FAKE_TOKEN, DISCORD_PUBLIC_KEY: publicKeyHex() },
         stdio: ['ignore', 'pipe', 'pipe']
     });

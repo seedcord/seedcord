@@ -61,6 +61,10 @@ describe('seedcord build on an http bot', () => {
         expect(output).toContain('fixture:literal import.meta.dirname stays text');
     });
 
+    it('reads the .env files beside seedcord.config.ts', () => {
+        expect(output).toContain('fixture:env beside the config');
+    });
+
     it('bundles a source folder named logs', () => {
         expect(output).toContain('fixture:text a source folder named logs');
     });

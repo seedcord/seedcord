@@ -141,6 +141,8 @@ interface BuiltFileLoaders {
     text: Record<string, TextLoader>;
     // seedcord dev runs the source files themselves
     sourcePaths?: boolean;
+    // relative to root, and only a server build writes it
+    envDir?: string;
 }
 
 // seedcord build writes a BuiltFileLoaders object here from the entry it generates
@@ -158,6 +160,11 @@ const builtSources = new WeakMap<BuiltFileLoaders, BuiltFiles>();
 
 function builtFiles(): BuiltFileLoaders | undefined {
     return Reflect.get(globalThis, Symbol.for(BUILT_FILES_KEY)) as BuiltFileLoaders | undefined;
+}
+
+export function builtEnvDir(): string | undefined {
+    const built = builtFiles();
+    return built?.envDir === undefined ? undefined : path.resolve(built.root, built.envDir);
 }
 
 export function setBotRoot(root: string | undefined): void {
