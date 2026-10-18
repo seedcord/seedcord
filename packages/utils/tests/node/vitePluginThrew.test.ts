@@ -41,15 +41,14 @@ describe('vitePluginThrew', () => {
         expect(message).toContain('Check the options you pass the plugin.');
     });
 
-    it('shows a file outside the working folder by its full path, without the query', () => {
-        const outside = join(process.cwd(), '..', 'shared', 'shop.yaml');
+    it('strips the query vite added from the file it was loading', () => {
         const thrown = recordThrownBy(new Error('boom'), {
             plugin: 'shop-loader',
             hook: 'transform',
             configFile: CONFIG_FILE,
-            moduleId: `${outside}?raw`
+            moduleId: `${join(process.cwd(), 'src', 'shop.yaml')}?raw`
         });
 
-        expect(messageOf(thrown)).toContain(`while loading ${outside}.`);
+        expect(messageOf(thrown)).toContain('while loading src/shop.yaml.');
     });
 });

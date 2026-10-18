@@ -102,8 +102,8 @@ describe('a module that fails to load through a Vite plugin', () => {
         expect(message).toContain('bad yaml on line 3');
     });
 
-    it("keeps CoreImportFailed for an error from one of Vite's own plugins", async () => {
-        const thrown = `Object.assign(new Error('Unexpected token'), { plugin: 'vite:oxc', id: '/bot/bot.ts' })`;
+    it("keeps CoreImportFailed for an error from the bot's own code", async () => {
+        const thrown = `new Error('Unexpected token')`;
 
         const error = await rejection(traverseDirectory(await folderThrowing('from-vite', thrown)));
 

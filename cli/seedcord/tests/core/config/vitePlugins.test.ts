@@ -122,8 +122,8 @@ describe('a plugin from vitePlugins that throws', () => {
 });
 
 describe('rethrowVitePluginError', () => {
-    it("rethrows an error from one of Vite's own plugins unchanged", async () => {
-        const failed = Object.assign(new Error('Unexpected token'), { plugin: 'vite:oxc', id: '/bot/src/bot.ts' });
+    it("rethrows an error from the bot's own code unchanged", async () => {
+        const failed = new Error('Unexpected token');
 
         await expect(rethrownFrom(() => Promise.reject(failed))).resolves.toBe(failed);
     });

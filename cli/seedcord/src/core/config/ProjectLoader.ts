@@ -69,8 +69,8 @@ export class ProjectLoader {
         await assertNoHashPaths(project);
         await assertTargetMatchesTsconfig(project);
         check?.(project.config);
-        if (project.config.vitePlugins.length === 0) return new LoadedConfig(project.config);
-        return new LoadedConfig(project.config, stack.move());
+        const loaded = new LoadedConfig(project.config);
+        return loaded.hasVitePlugins ? new LoadedConfig(project.config, stack.move()) : loaded;
     }
 
     // starts the config's vite plugins. on an edge bot it also runs cloudflare.config.ts
@@ -95,7 +95,7 @@ export class ProjectLoader {
     ): Promise<ResolvedSeedcordConfig> {
         const loadedModule = await modules.importModule(configPath);
         const config: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
-        const vitePlugins = await readVitePlugins(config);
+        const vitePlugins = await readVitePlugins(config, configPath);
         const validator: ConfigValidator = new ConfigValidator(target, configPath);
         validator.validate(config, vitePlugins.problems);
 

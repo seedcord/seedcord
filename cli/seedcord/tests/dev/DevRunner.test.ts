@@ -25,20 +25,12 @@ import type { ILogger } from '@seedcord/types';
 
 const readyBot = fakeBot();
 
-const devConfig = {
-    root: process.cwd(),
-    configFile: join(process.cwd(), 'seedcord.config.ts'),
-    instance: join(process.cwd(), 'package.json'),
-    target: { kind: 'server', entry: join(process.cwd(), 'package.json') },
-    typecheck: { enabled: false },
-    idleAnimation: true
-};
+const devConfig = devConfigFor(process.cwd(), 'bot.ts');
 
 const STATE = new StateFolder(devConfig.root, silentLogger);
 
-// the shape readConfig returns, around the partial config above
-function loadedDevConfig(): { config: typeof devConfig } & AsyncDisposable {
-    return { config: devConfig, [Symbol.asyncDispose]: () => Promise.resolve() };
+function loadedDevConfig(): LoadedConfig {
+    return new LoadedConfig(devConfig);
 }
 
 function readyRuntime(): DevRuntime {
@@ -62,11 +54,7 @@ function makeRunner(
     runtime: () => DevRuntime = readyRuntime
 ): DevRunner {
     return new DevRunner({
-        // justified: the session reads only these config fields
-        projectLoader: { readConfig: () => Promise.resolve(loadedDevConfig()) } as unknown as Pick<
-            ProjectLoader,
-            'readConfig'
-        >,
+        projectLoader: { readConfig: () => Promise.resolve(loadedDevConfig()) },
         store: new DevStore(),
         state: STATE,
         codegen,
@@ -171,8 +159,7 @@ function runWithSlowConfig(): SlowConfigRun {
         return loadedDevConfig();
     });
     const runner = new DevRunner({
-        // justified: the session reads only these config fields
-        projectLoader: { readConfig } as unknown as Pick<ProjectLoader, 'readConfig'>,
+        projectLoader: { readConfig },
         store,
         state: STATE,
         codegen: fakeCodegen(),

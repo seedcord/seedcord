@@ -61,7 +61,6 @@ export class ConfigValidator {
         private readonly configFile: string
     ) {}
 
-    // vitePluginProblems come from readVitePlugins
     public validate(raw: unknown, vitePluginProblems: readonly VitePluginProblem[]): asserts raw is SeedcordConfig {
         if (!isPlainObject(raw)) throw new SeedcordTypeError(SeedcordErrorCode.CliConfigInvalidExport);
         throwSingleOrAggregate([...this.problems(raw), ...vitePluginProblems], SeedcordErrorCode.CliProblems);

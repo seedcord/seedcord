@@ -7,6 +7,10 @@ export class LoadedConfig implements AsyncDisposable {
         private readonly configLoader?: AsyncDisposable
     ) {}
 
+    public get hasVitePlugins(): boolean {
+        return this.config.vitePlugins.length > 0;
+    }
+
     public async [Symbol.asyncDispose](): Promise<void> {
         await this.configLoader?.[Symbol.asyncDispose]();
     }

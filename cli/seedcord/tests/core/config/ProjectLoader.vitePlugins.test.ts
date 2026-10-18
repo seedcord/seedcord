@@ -49,7 +49,7 @@ describe('ProjectLoader vitePlugins', () => {
         }
     );
 
-    it('throws CoreImportFailed with the path and the reason for an entry whose promise rejects', async () => {
+    it('throws CoreVitePluginThrew with the entry and the reason for an entry whose promise rejects', async () => {
         const missing = new Error("Cannot find package 'yaml-plugin'");
         const rejected = Promise.reject(missing);
         // node flags a rejection nothing has handled before readConfig awaits it
@@ -58,9 +58,11 @@ describe('ProjectLoader vitePlugins', () => {
 
         const caught: unknown = await load().catch((error: unknown) => error);
 
-        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreImportFailed));
-        expect(caught.message).toContain('vitePlugins[1]');
-        expect(caught.message).toContain("Cannot find package 'yaml-plugin'");
+        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
+        const message = stripVTControlCharacters(caught.message);
+        expect(message).toContain('vitePlugins[1]');
+        expect(message).toContain('while seedcord read the config');
+        expect(message).toContain("Cannot find package 'yaml-plugin'");
         expect(caught.cause).toBe(missing);
     });
 

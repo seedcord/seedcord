@@ -45,7 +45,7 @@ Treat those files as the rules. Do not substitute your own taste where they alre
     - For example, if any justified casts are easy ways out of properly narrowing types
     - Any types that have been hacked on instead of derived properly
     - Code that's adding a new feature or fix as a patch rather than fix the underlying root cause, or sometimes a design flaw
-    - More things are the skill mentions
+    - More things that the skill mentions
 3. Comments per code-commenting-guidelines, and all prose (comments, README, changesets, CLI output text, error messages) per writing-voice and guide-voice. Apply them at their strictest.
     - Any comments that could be removed by using better naming, refactoring, or code structure.
 4. Tests per the tdd skill. Specifically hunt for:

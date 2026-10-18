@@ -72,7 +72,7 @@ type VitePluginEntry = { field: string; value: unknown } | { field: string; reje
 
 export type VitePluginProblem = SeedcordError | SeedcordTypeError;
 
-export interface VitePluginsRead {
+interface VitePluginsRead {
     plugins: Plugin[];
     problems: VitePluginProblem[];
 }
@@ -106,7 +106,7 @@ function invalidField(field: string, expected: string): SeedcordTypeError {
     return new SeedcordTypeError(SeedcordErrorCode.CliConfigInvalidField, [field, expected]);
 }
 
-export async function readVitePlugins(config: unknown): Promise<VitePluginsRead> {
+export async function readVitePlugins(config: unknown, configFile: string): Promise<VitePluginsRead> {
     const options = isPlainObject(config) ? config.vitePlugins : undefined;
     if (options === undefined) return { plugins: [], problems: [] };
     if (!Array.isArray(options))
@@ -117,7 +117,9 @@ export async function readVitePlugins(config: unknown): Promise<VitePluginsRead>
         if ('rejected' in entry) {
             const reason = asError(entry.rejected).message;
             read.problems.push(
-                new SeedcordError(SeedcordErrorCode.CoreImportFailed, [entry.field, reason], { cause: entry.rejected })
+                new SeedcordError(SeedcordErrorCode.CoreVitePluginThrew, [entry.field, {}, configFile, reason], {
+                    cause: entry.rejected
+                })
             );
         } else if (isVitePlugin(entry.value)) read.plugins.push(entry.value);
         else read.problems.push(invalidField(entry.field, pluginExpected(entry.value)));

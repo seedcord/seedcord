@@ -21,13 +21,14 @@ function counted(count: number, one: string, many: string): string {
 
 const quoted = (value: string): string => paint.sky(JSON.stringify(value));
 
-// only load and transform run on a module
 export interface VitePluginPlace {
-    hook: string;
+    hook?: string | undefined;
+    // only load and transform run on a module
     loading?: { kind: 'file'; path: string } | { kind: 'virtual'; id: string } | undefined;
 }
 
 function placeText({ hook, loading }: VitePluginPlace): string {
+    if (hook === undefined) return 'while seedcord read the config';
     const inHook = `in its ${paint.bold(hook)} hook`;
     if (loading === undefined) return inHook;
     const shown = loading.kind === 'file' ? paint.path(loading.path) : paint.bold(loading.id);

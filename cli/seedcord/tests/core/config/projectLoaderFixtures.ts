@@ -37,6 +37,7 @@ export function stubModulesExporting(config: unknown): StubModules {
         const loader: StubModules['loaders'][number] = { loads: use === 'config' ? 'config' : 'bot', closed: false };
         loaders.push(loader);
         return Promise.resolve({
+            // justified: the only module a ProjectLoader imports through this stub is the config
             importModule: <TModule = unknown>(): Promise<TModule> => Promise.resolve({ default: config } as TModule),
             [Symbol.asyncDispose]: () => {
                 loader.closed = true;
