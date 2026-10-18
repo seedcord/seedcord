@@ -5,9 +5,10 @@ import { createServer as createNetServer } from 'node:net';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { bindings, exports } from 'cf/config';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { writeSigningEnv } from '#tests/commands/build/edgeBot';
+import { writeCloudflareConfig, writeSigningEnv } from '#tests/commands/build/edgeBot';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
 
 import {
@@ -35,6 +36,31 @@ export class WaveHandler extends SlashHandler<'wave'> {
     public execute(): Promise<void> {
         console.log(word);
         return Promise.resolve();
+    }
+}
+`;
+
+const COUNTER_CLASS = `import { DurableObject } from 'cloudflare:workers';
+
+export class Counter extends DurableObject {
+    hello(): string {
+        return 'hi';
+    }
+}
+`;
+
+const WAVE_CALLING_COUNTER = `import { SlashHandler, SlashRoute } from '@seedcord/http';
+import { env } from 'cloudflare:workers';
+
+interface CounterEnv {
+    COUNTER: { getByName(name: string): { hello(): Promise<string> } };
+}
+
+@SlashRoute('wave')
+export class WaveHandler extends SlashHandler<'wave'> {
+    public async execute(): Promise<void> {
+        const counter = (env as unknown as CounterEnv).COUNTER.getByName('one');
+        console.log(\`counter says \${await counter.hello()}\`);
     }
 }
 `;
@@ -162,7 +188,7 @@ describe('EdgeDevRuntime endpoint', () => {
         );
     }, 120_000);
 
-    it('asks for a restart when a file bot.ts imports is saved', async () => {
+    it('asks for a restart when a file that bot.ts imports is saved, and keeps the bot answering', async () => {
         await using project = await edgeProject();
         const { projectDir } = project;
         const greeting = join(projectDir, 'src/greeting.ts');
@@ -178,6 +204,60 @@ describe('EdgeDevRuntime endpoint', () => {
         await vi.waitFor(() => {
             expect(events).toContainEqual({ type: 'restart-required' });
         });
+        const unsigned = await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body: '{}' });
+        expect(unsigned.status).toBe(401);
+    }, 120_000);
+
+    it('keeps the bot answering after bot.ts itself is saved', async () => {
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        const events: DevEvent[] = [];
+        await using started = await startedRuntime(projectDir, (event) => events.push(event));
+        const { runtime, instance } = started;
+        await runtime.startBot(instance);
+
+        await appendFile(join(projectDir, 'src/bot.ts'), '\n// saved again\n');
+
+        await vi.waitFor(() => {
+            expect(events).toContainEqual({ type: 'restart-required' });
+        });
+        const unsigned = await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body: '{}' });
+        expect(unsigned.status).toBe(401);
+    }, 120_000);
+
+    it('keeps a durable object from bot.ts answering after a file that bot.ts imports is saved', async () => {
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        const { publicKey, sign } = await writeSigningEnv(projectDir);
+        await writeDevVars(projectDir, { DISCORD_BOT_TOKEN: FAKE_TOKEN, DISCORD_PUBLIC_KEY: publicKey });
+        const greeting = join(projectDir, 'src/greeting.ts');
+        await writeFile(greeting, "export const greeting = 'before';\n");
+        await appendFile(join(projectDir, 'src/bot.ts'), `\nimport './greeting';\n${COUNTER_CLASS}`);
+        await writeCloudflareConfig(projectDir, {
+            env: { COUNTER: bindings.durableObject({ worker: 'edge-bot', exportName: 'Counter' }) },
+            exports: { Counter: exports.durableObject({ storage: 'sqlite' }) }
+        });
+        await writeFile(join(projectDir, 'src/handlers/Wave.ts'), WAVE_CALLING_COUNTER);
+        const logs = captureLogs();
+        const events: DevEvent[] = [];
+        await using started = await startedRuntime(projectDir, (event) => events.push(event));
+        await started.runtime.startBot(started.instance);
+        // the replay guard rejects a body it already saw with the same timestamp
+        const wave = async (id: string): Promise<void> => {
+            const body = JSON.stringify({ ...JSON.parse(WAVE_INTERACTION), id });
+            await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body, headers: await sign(body) });
+        };
+        const counterReplies = (): number => messagesOf(logs).filter((message) => message === 'counter says hi').length;
+        await wave('1');
+        await vi.waitFor(() => expect(counterReplies()).toBe(1));
+
+        await writeFile(greeting, "export const greeting = 'after';\n");
+        await vi.waitFor(() => {
+            expect(events).toContainEqual({ type: 'restart-required' });
+        });
+        await wave('2');
+
+        await vi.waitFor(() => expect(counterReplies()).toBe(2), { timeout: 10_000 });
     }, 120_000);
 
     describe('on one started bot in mode staging', () => {
