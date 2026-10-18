@@ -89,7 +89,7 @@ Passing epoch ms straight into `<t:...>` renders a date tens of thousands of yea
 | function | what it does |
 | --- | --- |
 | `assertNever(value)` | exhaustiveness guard for a `switch` default. Adding a union variant without a case fails to compile |
-| `formatFilePath(path, opts?)` | a path rewritten relative to the working directory, `./src/Bot.ts`. Returns it unchanged outside that directory or on a runtime with no `process` |
+| `formatFilePath(path, opts?)` | a path rewritten relative to the working directory with forward slashes, `./src/Bot.ts`. Returns the full path outside that directory or on a runtime with no `process` |
 | `fyShuffle(items)` | Fisher-Yates shuffle. Returns a new array and leaves the original alone |
 
 <!-- prettier-ignore-end -->

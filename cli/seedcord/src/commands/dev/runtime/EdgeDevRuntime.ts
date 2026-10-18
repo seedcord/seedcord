@@ -12,8 +12,8 @@ import { CloudflareWorker } from '#commands/build/builder/CloudflareWorker';
 import { workerEntry } from '#commands/build/builder/workerEntry';
 import { listenHostFor } from '#commands/dev/tunnel/listenHost';
 import { reportWorkerExports, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
-import { createServerOn } from '#core/modules/createServerOn';
 import { edgeStandIns } from '#core/modules/edgeStandIns';
+import { openViteServer } from '#core/modules/openViteServer';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 import { WorkerEnv } from '#core/modules/workerEnv';
@@ -100,7 +100,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
         const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, workerEnv.files);
         const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, workerConfig);
-        const server = await createServerOn(
+        const server = await openViteServer(
             resources,
             mergeViteConfig(edgeViteConfig(config, viteRoot, process.cwd()), {
                 mode: config.viteMode,

@@ -2,7 +2,7 @@ import { HostListenHost } from '@seedcord/types/internal';
 import { createServerModuleRunner } from 'vite';
 
 import { listenHostFor } from '#commands/dev/tunnel/listenHost';
-import { createServerOn } from '#core/modules/createServerOn';
+import { openViteServer } from '#core/modules/openViteServer';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 
@@ -19,7 +19,7 @@ export class ServerDevRuntime extends BaseDevRuntime {
 
     protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<StartedRuntime> {
         const hmr = this.openHmr(context, 'ssr', resources);
-        const server = await createServerOn(
+        const server = await openViteServer(
             resources,
             mergeViteConfig(serverViteConfig(context.config, process.cwd()), {
                 mode: context.config.viteMode,

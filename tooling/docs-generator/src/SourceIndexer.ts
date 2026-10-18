@@ -3,7 +3,7 @@ import path from 'node:path';
 import * as ts from 'typescript';
 
 import { RuntimeBuild } from './RuntimeBuild';
-import { posixRelative, toPosix } from './utils';
+import { posixRelative, toPosixPath } from './utils';
 
 import type { PackageSourceIndex, ReexportEntry, SourceEntry, SourceScan } from './types';
 
@@ -46,7 +46,7 @@ export class SourceIndexer {
         this.program = createProgram(options.packageDir);
         this.checker = this.program.getTypeChecker();
         this.entry = options.entry ?? 'src/index.ts';
-        this.srcDir = `${toPosix(path.dirname(this.entryPath(this.entry)))}/`;
+        this.srcDir = `${toPosixPath(path.dirname(this.entryPath(this.entry)))}/`;
     }
 
     static scan(options: SourceIndexOptions): SourceScan {
@@ -132,7 +132,7 @@ export class SourceIndexer {
     }
 
     private isOwnSource(sourceFile: ts.SourceFile): boolean {
-        return toPosix(sourceFile.fileName).startsWith(this.srcDir);
+        return toPosixPath(sourceFile.fileName).startsWith(this.srcDir);
     }
 
     // The body-bearing declaration of an overloaded callable is the implementation, which API

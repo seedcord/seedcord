@@ -36,15 +36,16 @@ import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
 import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/schema';
 
-// pgrep exits 1 when nothing matches
 function workerdChildren(): string[] {
     try {
         return execFileSync('pgrep', ['-P', String(process.pid), 'workerd'])
             .toString()
             .trim()
             .split('\n');
-    } catch {
-        return [];
+    } catch (error) {
+        // pgrep exits 1 when nothing matches
+        if (Error.isError(error) && 'status' in error && error.status === 1) return [];
+        throw error;
     }
 }
 

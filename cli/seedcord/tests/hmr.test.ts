@@ -175,6 +175,16 @@ describe('HmrPlugin', () => {
         expect(events).toContainEqual({ type: 'restart-required' });
     });
 
+    // on windows chokidar reports C:\bot\package.json and vite reports C:/bot/package.json
+    it('asks once for a restart when chokidar and vite spell the saved path differently', () => {
+        const { plugin, watcher, events } = configuredPlugin({ ...mockConfig, root: srcRoot });
+
+        watcher.emit('change', `${srcRoot}//package.json`);
+        viteHotUpdate(plugin, 'update', join(srcRoot, 'package.json'));
+
+        expect(events.filter((event) => event.type === 'restart-required')).toHaveLength(1);
+    });
+
     it('relays the bound port the framework reports', () => {
         const { listeners, events } = configuredPlugin(mockConfig);
 

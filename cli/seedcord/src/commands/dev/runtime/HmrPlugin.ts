@@ -94,15 +94,15 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private configureServer(server: ViteDevServer): void {
         this.server = server;
         this.workerConfigWatcher = this.workerConfig?.watch((file) => {
-            this.reportChangeNeedingRestart(file);
+            this.reportChangeNeedingRestart(resolve(file));
         });
         // vite calls hotUpdate for files only
-        server.watcher.on('addDir', (dir) => this.handleDirEvent(dir, 'createDir'));
-        server.watcher.on('unlinkDir', (dir) => this.handleDirEvent(dir, 'deleteDir'));
+        server.watcher.on('addDir', (dir) => this.handleDirEvent(resolve(dir), 'createDir'));
+        server.watcher.on('unlinkDir', (dir) => this.handleDirEvent(resolve(dir), 'deleteDir'));
 
         // vite watches config.root only
         server.watcher.add(this.config.configFile);
-        server.watcher.on('change', (file) => this.handleChange(file));
+        server.watcher.on('change', (file) => this.handleChange(resolve(file)));
 
         this.dev?.on('seedcord:commands-update-prompt', (data) => {
             this.emit('event', { type: 'command-update-prompt', files: data.files });
@@ -170,10 +170,10 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     // vite passes file paths with forward slashes on windows
     private hotUpdate(environment: DevEnvironment, ctx: HotUpdateOptions): EnvironmentModuleNode[] {
         const { type, modules } = ctx;
-        if (environment.name !== this.botEnvironment || this.isDebounced(ctx.file, type)) return [];
+        const file = resolve(ctx.file);
+        if (environment.name !== this.botEnvironment || this.isDebounced(file, type)) return [];
 
         const viteFiles = affectedFiles(ctx.file, modules);
-        const file = resolve(ctx.file);
         const affectedModules = viteFiles.map((affected) => resolve(affected));
         if (affectedModules.some((affected) => this.isCriticalFile(affected))) {
             this.reportRestartRequired(file);
