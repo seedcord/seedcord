@@ -6,12 +6,13 @@ import { displayPath, SeedcordError } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import chalk from 'chalk';
-import { createServer, createServerModuleRunner } from 'vite';
+import { createServerModuleRunner } from 'vite';
 
 import { CloudflareWorker } from '#commands/build/builder/CloudflareWorker';
 import { workerEntry } from '#commands/build/builder/workerEntry';
 import { listenHostFor } from '#commands/dev/tunnel/listenHost';
 import { reportWorkerExports, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
+import { createServerOn } from '#core/modules/createServerOn';
 import { edgeStandIns } from '#core/modules/edgeStandIns';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
@@ -99,7 +100,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
         const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, workerEnv.files);
         const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, workerConfig);
-        const server = await createServer(
+        const server = await createServerOn(
+            resources,
             mergeViteConfig(edgeViteConfig(config, viteRoot, process.cwd()), {
                 mode: config.viteMode,
                 plugins: [
@@ -128,7 +130,6 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                 ]
             })
         );
-        resources.defer(() => server.close());
         await loadWorkerEntry(server.middlewares, config.instance);
         const modules = await modulesReady.promise;
         const endpoint = await listenForInteractions(server.middlewares, {

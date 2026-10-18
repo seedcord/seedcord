@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import { once } from 'node:events';
 import { createInterface } from 'node:readline';
 
 import { Logger } from '@seedcord/logger';
@@ -65,19 +66,20 @@ export class TscRunner {
         });
     }
 
-    public stop(): void {
+    // windows can't delete tsc's cwd until tsc exits
+    public async stop(): Promise<void> {
         const child = this.process;
         if (!child) return;
 
         this.logger.debug('Stopping tsc...');
+        const exited = once(child, 'exit');
         child.kill('SIGTERM');
 
         // justified: tsc --watch can ignore SIGTERM when stdin is detached (Windows/some Node builds), so escalate to SIGKILL after a grace window. unref so the timer never holds the event loop open.
         const killTimer = setTimeout(() => child.kill('SIGKILL'), TSC_GRACEFUL_EXIT_MS);
         killTimer.unref();
-        child.once('exit', () => {
-            clearTimeout(killTimer);
-        });
+        await exited;
+        clearTimeout(killTimer);
         // start()'s 'exit' listener is what nulls the handle, so it stays set until then and blocks a second tsc spawning over the dying one
     }
 }

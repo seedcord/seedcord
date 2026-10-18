@@ -129,9 +129,10 @@ export class DevSession {
 
     private async runStop(): Promise<void> {
         this.stopping.abort();
-        this.tscRunner?.stop();
+        const tscStopped = this.tscRunner?.stop();
         await this.typeWriteSettled();
         await this.runtime.stop();
+        await tscStopped;
     }
 
     // the pending type write imports through this runtime

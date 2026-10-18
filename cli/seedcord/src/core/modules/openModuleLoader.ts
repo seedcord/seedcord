@@ -1,5 +1,6 @@
-import { createServer, createServerModuleRunner } from 'vite';
+import { createServerModuleRunner } from 'vite';
 
+import { createServerOn } from './createServerOn';
 import { edgeStandIns } from './edgeStandIns';
 import { RunnerModuleLoader } from './RunnerModuleLoader';
 import { seedcordDependents } from './seedcordDependents';
@@ -54,8 +55,7 @@ export async function openModuleLoader(
         plugins: workerEnv ? [edgeStandIns(workerEnv)] : []
     });
     await using onFailure = new AsyncDisposableStack();
-    const server = await createServer(config);
-    onFailure.defer(() => server.close());
+    const server = await createServerOn(onFailure, config);
     const runner = createServerModuleRunner(server.environments.ssr, { hmr: false });
     onFailure.defer(() => runner.close());
 

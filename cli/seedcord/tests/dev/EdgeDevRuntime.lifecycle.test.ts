@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -34,6 +35,18 @@ import type { DevEvent } from '#commands/dev/runtime/events';
 import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
 import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/schema';
+
+// pgrep exits 1 when nothing matches
+function workerdChildren(): string[] {
+    try {
+        return execFileSync('pgrep', ['-P', String(process.pid), 'workerd'])
+            .toString()
+            .trim()
+            .split('\n');
+    } catch {
+        return [];
+    }
+}
 
 async function nodeCopyApiToken(projectDir: string, viteMode = 'development'): Promise<unknown> {
     await writeCloudflareConfig(projectDir, { env: { API_TOKEN: bindings.secret() } });
@@ -160,6 +173,24 @@ describe('EdgeDevRuntime lifecycle', () => {
 
         await expect(startedRuntime(projectDir)).rejects.toThrow('bot.ts threw in workerd');
     }, 60_000);
+
+    // windows has no pgrep. there, rm in the test above throws EBUSY if workerd still runs
+    it.skipIf(process.platform === 'win32')(
+        'stops workerd when the bot throws while workerd loads it',
+        async () => {
+            await using project = await edgeProject();
+            const { projectDir } = project;
+            await appendFile(
+                join(projectDir, 'src/bot.ts'),
+                "\nif (navigator.userAgent === 'Cloudflare-Workers') throw new Error('bot.ts threw in workerd');\n"
+            );
+
+            await expect(startedRuntime(projectDir)).rejects.toThrow('bot.ts threw in workerd');
+
+            await vi.waitFor(() => expect(workerdChildren()).toEqual([]), { timeout: 10_000 });
+        },
+        60_000
+    );
 
     it('settles a start that is still running when the session stops', async () => {
         await using project = await edgeProject();
