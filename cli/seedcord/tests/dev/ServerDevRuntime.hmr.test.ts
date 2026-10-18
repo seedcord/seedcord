@@ -156,4 +156,17 @@ describe('dev runtime hot reload', () => {
 
         await expectRestartRequired(events);
     }, 60_000);
+
+    it.each(['.env', '.env.development.local'])(
+        'keeps importing modules after %s is saved',
+        async (envFile) => {
+            const { src, runtime, events } = await startedProject({ 'index.ts': 'export const ready = true;\n' });
+
+            await writeFile(join(dirname(src), envFile), 'GREETING=after\n');
+            await expectRestartRequired(events);
+
+            await expect(runtime.importModule(join(src, 'index.ts'))).resolves.toMatchObject({ ready: true });
+        },
+        20_000
+    );
 });

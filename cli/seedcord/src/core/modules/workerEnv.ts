@@ -8,6 +8,7 @@ import { asError } from '@seedcord/utils/internal';
 import { loadEnv } from 'vite';
 
 import { isPackageMissing } from './cloudflarePlugin';
+import { viteEnvFiles } from './viteEnvFiles';
 
 import type { ParsedInputWorkerConfig } from '@cloudflare/config';
 
@@ -69,7 +70,7 @@ export class WorkerEnv {
     ) {
         this.envDir = dirname(cloudflareConfig);
         this.devVarsFiles = [`.dev.vars.${mode}`, '.dev.vars'];
-        this.files = [...this.devVarsFiles, '.env', '.env.local', `.env.${mode}`, `.env.${mode}.local`];
+        this.files = [...this.devVarsFiles, ...viteEnvFiles(mode)];
     }
 
     public static async load(cloudflareConfig: string, mode: string): Promise<WorkerEnv> {

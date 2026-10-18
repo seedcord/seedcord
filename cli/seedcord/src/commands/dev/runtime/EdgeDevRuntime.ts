@@ -1,4 +1,4 @@
-import { dirname } from 'node:path';
+import { basename, dirname } from 'node:path';
 
 import { fromWireError, wrapHot } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -26,7 +26,7 @@ import { BaseDevRuntime } from './BaseDevRuntime';
 import { edgeViteConfig } from './devServerConfig';
 import { listenForInteractions } from './listenForInteractions';
 import { loadWorkerEntry } from './loadWorkerEntry';
-import { WorkerConfigFiles } from './workerConfigFiles';
+import { ViteRestartFiles } from './ViteRestartFiles';
 
 import type { ResolvedEdgeTarget } from '#core/config/schema';
 import type { StartedRuntime } from './BaseDevRuntime';
@@ -121,8 +121,12 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             WorkerEnv.load(this.target.cloudflareConfig, config.viteMode)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
-        const workerConfig = new WorkerConfigFiles(this.target.cloudflareConfig, workerEnv.files);
-        const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, workerConfig);
+        const { cloudflareConfig } = this.target;
+        const restartFiles = new ViteRestartFiles(dirname(cloudflareConfig), [
+            basename(cloudflareConfig),
+            ...workerEnv.files
+        ]);
+        const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, restartFiles);
         const server = await openViteServer(
             resources,
             mergeViteConfig(edgeViteConfig(config, viteRoot, process.cwd()), {

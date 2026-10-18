@@ -7,7 +7,7 @@ import { HmrPlugin } from './HmrPlugin';
 import type { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
 import type { DevEvent } from './events';
-import type { WorkerConfigFiles } from './workerConfigFiles';
+import type { ViteRestartFiles } from './ViteRestartFiles';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 export interface StartedRuntime {
@@ -83,9 +83,9 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
         context: DevRuntimeContext,
         environment: string,
         resources: AsyncDisposableStack,
-        workerConfig?: WorkerConfigFiles
+        restartFiles: ViteRestartFiles
     ): HmrPlugin {
-        const hmr = new HmrPlugin(context.config, context.state, environment, workerConfig);
+        const hmr = new HmrPlugin(context.config, context.state, environment, restartFiles);
         hmr.on('event', (event) => this.emit(context, event));
         // a restart builds a new runtime in the same process
         resources.defer(() => hmr.close());

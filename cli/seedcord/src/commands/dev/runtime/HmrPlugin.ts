@@ -14,7 +14,7 @@ import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { StateFolder } from '#core/state/StateFolder';
 import type { DevEvent } from './events';
-import type { WorkerConfigFiles } from './workerConfigFiles';
+import type { ViteRestartFiles } from './ViteRestartFiles';
 import type { HmrEventType, HmrUpdateEvent } from '@seedcord/types';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { FSWatcher } from 'node:fs';
@@ -42,7 +42,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly lastUpdate = new Map<string, number>();
     private server: ViteDevServer | null = null;
     private readonly restartPatterns: Set<string>;
-    private workerConfigWatcher?: FSWatcher | undefined;
+    private restartFilesWatcher?: FSWatcher | undefined;
 
     private get hot(): NormalizedHotChannel | undefined {
         return this.server?.environments[this.botEnvironment]?.hot;
@@ -56,7 +56,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         private readonly config: ResolvedSeedcordConfig,
         private readonly state: StateFolder,
         private readonly botEnvironment: string,
-        private readonly workerConfig?: WorkerConfigFiles
+        private readonly restartFiles: ViteRestartFiles
     ) {
         super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
@@ -65,11 +65,12 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     public get plugin(): Plugin {
         const onHotUpdate = this.hotUpdate.bind(this);
-        const { workerConfig } = this;
+        const { restartFiles } = this;
         return {
             name: 'seedcord:hmr',
-            // the cloudflare plugin restarts vite on its own when vite's watcher reports one of these
-            config: () => (workerConfig ? { server: { watch: { ignored: [workerConfig.includes] } } } : undefined),
+            // vite restarts itself when its watcher reports an env file. the cloudflare plugin does the same for its config.
+            // either restart leaves the bot's module runner on the closed server
+            config: () => ({ server: { watch: { ignored: [restartFiles.includes] } } }),
             configureServer: this.configureServer.bind(this),
             hotUpdate(ctx) {
                 return onHotUpdate(this.environment, ctx);
@@ -82,7 +83,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 
     public close(): void {
-        this.workerConfigWatcher?.close();
+        this.restartFilesWatcher?.close();
         this.removeAllListeners('event');
     }
 
@@ -93,7 +94,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     private configureServer(server: ViteDevServer): void {
         this.server = server;
-        this.workerConfigWatcher = this.workerConfig?.watch((file) => {
+        this.restartFilesWatcher = this.restartFiles.watch((file) => {
             this.reportChangeNeedingRestart(resolve(file));
         });
         // vite calls hotUpdate for files only

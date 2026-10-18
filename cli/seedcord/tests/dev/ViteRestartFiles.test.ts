@@ -1,23 +1,25 @@
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { describe, expect, it, onTestFinished } from 'vitest';
 
-import { WorkerConfigFiles } from '#commands/dev/runtime/workerConfigFiles';
+import { ViteRestartFiles } from '#commands/dev/runtime/ViteRestartFiles';
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { watchedPath } from '#core/project/watchedPath';
 import { edgeFolder } from '#tests/edgeFolder';
 
 import type { LogRecord } from '@seedcord/types';
 
-async function configFiles(mode = 'development'): Promise<{ files: WorkerConfigFiles; config: string }> {
+// the files edge dev passes
+async function configFiles(mode = 'development'): Promise<{ files: ViteRestartFiles; config: string }> {
     const { cloudflareConfig } = await edgeFolder();
     const { files } = await WorkerEnv.load(cloudflareConfig, mode);
-    return { files: new WorkerConfigFiles(cloudflareConfig, files), config: cloudflareConfig };
+    const restartFiles = new ViteRestartFiles(dirname(cloudflareConfig), [basename(cloudflareConfig), ...files]);
+    return { files: restartFiles, config: cloudflareConfig };
 }
 
-describe('WorkerConfigFiles', () => {
+describe('ViteRestartFiles', () => {
     it.each([
         ['cloudflare.config.ts', 'development', true],
         ['.dev.vars', 'development', true],
