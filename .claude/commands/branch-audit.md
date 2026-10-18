@@ -42,6 +42,10 @@ Treat those files as the rules. Do not substitute your own taste where they alre
 
 1. Adversarial: bugs, wrong behavior, edge cases that break, claims in code, comments, docs, or changesets that are false. Try to break it. Where you can, prove a behavior claim by running the package's tests or a small script (`pnpm -C <pkg> exec vitest run <file>`, node one-liners), rather than reasoning about it.
 2. Code quality per the code-quality skill.
+    - For example, if any justified casts are easy ways out of properly narrowing types
+    - Any types that have been hacked on instead of derived properly
+    - Code that's adding a new feature or fix as a patch rather than fix the underlying root cause, or sometimes a design flaw
+    - More things are the skill mentions
 3. Comments per code-commenting-guidelines, and all prose (comments, README, changesets, CLI output text, error messages) per writing-voice and guide-voice. Apply them at their strictest.
     - Any comments that could be removed by using better naming, refactoring, or code structure.
 4. Tests per the tdd skill. Specifically hunt for:
