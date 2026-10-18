@@ -45,4 +45,19 @@ describe('TscRunner', () => {
         await vi.waitFor(() => expect(messages).toContain(SPLIT_LINE.join('')));
         expect(messages).not.toContain(SPLIT_LINE[0].trimEnd());
     });
+
+    it('stops when tsc failed to spawn', async () => {
+        const messages: string[] = [];
+        const sink = LoggerChannelRegistry.instance.installSink({
+            kind: 'capture',
+            onLog: (record: LogRecord) => messages.push(record.message)
+        });
+        onTestFinished(() => sink.dispose());
+        const runner = new TscRunner(undefined, join(tmpdir(), 'seedcord-tsc-missing'));
+
+        runner.start();
+        await vi.waitFor(() => expect(messages).toContainEqual(expect.stringContaining('Failed to start tsc')));
+
+        await expect(runner.stop()).resolves.toBeUndefined();
+    }, 5000);
 });

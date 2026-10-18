@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -36,17 +35,9 @@ import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
 import type { ProjectLoader } from '#core/config/ProjectLoader';
 import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/schema';
 
-function workerdChildren(): string[] {
-    try {
-        return execFileSync('pgrep', ['-P', String(process.pid), 'workerd'])
-            .toString()
-            .trim()
-            .split('\n');
-    } catch (error) {
-        // pgrep exits 1 when nothing matches
-        if (Error.isError(error) && 'status' in error && error.status === 1) return [];
-        throw error;
-    }
+// node lists a ProcessWrap for each child process until it closes
+function runningChildren(): number {
+    return process.getActiveResourcesInfo().filter((resource) => resource === 'ProcessWrap').length;
 }
 
 async function nodeCopyApiToken(projectDir: string, viteMode = 'development'): Promise<unknown> {
@@ -175,23 +166,19 @@ describe('EdgeDevRuntime lifecycle', () => {
         await expect(startedRuntime(projectDir)).rejects.toThrow('bot.ts threw in workerd');
     }, 60_000);
 
-    // windows has no pgrep. there, rm in the test above throws EBUSY if workerd still runs
-    it.skipIf(process.platform === 'win32')(
-        'stops workerd when the bot throws while workerd loads it',
-        async () => {
-            await using project = await edgeProject();
-            const { projectDir } = project;
-            await appendFile(
-                join(projectDir, 'src/bot.ts'),
-                "\nif (navigator.userAgent === 'Cloudflare-Workers') throw new Error('bot.ts threw in workerd');\n"
-            );
+    it('stops workerd when the bot throws while workerd loads it', async () => {
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        await appendFile(
+            join(projectDir, 'src/bot.ts'),
+            "\nif (navigator.userAgent === 'Cloudflare-Workers') throw new Error('bot.ts threw in workerd');\n"
+        );
+        const before = runningChildren();
 
-            await expect(startedRuntime(projectDir)).rejects.toThrow('bot.ts threw in workerd');
+        await expect(startedRuntime(projectDir)).rejects.toThrow('bot.ts threw in workerd');
 
-            await vi.waitFor(() => expect(workerdChildren()).toEqual([]), { timeout: 10_000 });
-        },
-        60_000
-    );
+        await vi.waitFor(() => expect(runningChildren()).toBe(before), { timeout: 10_000 });
+    }, 60_000);
 
     it('settles a start that is still running when the session stops', async () => {
         await using project = await edgeProject();

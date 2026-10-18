@@ -29,6 +29,11 @@ describe('formatFilePath', () => {
         expect(formatFilePath(cwd)).toBe('./');
     });
 
+    it('keeps an empty prefix for the working directory itself', () => {
+        expect(formatFilePath(cwd, { prefix: '' })).toBe('');
+        expect(formatFilePath(join(cwd, 'Bot.ts'), { onlyDir: true, prefix: '' })).toBe('');
+    });
+
     it('strips a backslash-separated filename with onlyDir', () => {
         expect(formatFilePath(String.raw`C:\repo\src\Bot.ts`, { onlyDir: true })).toBe('C:/repo/src');
     });
