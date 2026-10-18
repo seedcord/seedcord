@@ -21,17 +21,17 @@ describe('the testing guilds step', () => {
         expect(supplied.testingGuilds).toEqual([GUILD, OTHER_GUILD]);
     });
 
-    it('reads the empty --testing-guilds that the re-run command prints as every server', () => {
+    it('reads an empty --testing-guilds as a global deploy', () => {
         expect(parseInput(['my-bot', '--testing-guilds', '']).testingGuilds).toEqual([]);
     });
 
-    it('deploys everywhere when there is no terminal to ask on', async () => {
+    it('deploys globally when there is no terminal to ask on', async () => {
         const answers = await runFlow([testingGuildsStep], {}, { interactive: false });
 
         expect(answers.testingGuilds).toEqual([]);
     });
 
-    it('deploys everywhere when Enter skips the question', async () => {
+    it('deploys globally when Enter skips the question', async () => {
         expect(await testingGuildsStep.ask({}, new TypesNothing())).toEqual([]);
     });
 });

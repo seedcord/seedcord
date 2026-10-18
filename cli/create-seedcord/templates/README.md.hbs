@@ -49,7 +49,7 @@ Run `codegen` after you add a command or change its options. It writes the types
 | `DISCORD_BOT_TOKEN` | yes |
 | `UNKNOWN_EXCEPTION_WEBHOOK_URL` | no |
 | `HANDLED_EXCEPTION_WEBHOOK_URL` | no |
-| `TESTING_GUILD_IDS` | no, empty deploys your commands to every server |
+| `TESTING_GUILD_IDS` | no, empty deploys your commands globally |
 {{#unless isEdge}}
 | `ENV` | no, defaults to `development` |
 {{/unless}}
@@ -67,7 +67,7 @@ Cloudflare refuses to deploy a new worker until every declared secret has a valu
 {{ pm.run }} build && {{ pm.exec }} cf deploy --prebuilt --secrets-file .env.production
 ```
 
-After that, `{{ pm.run }} deploy` is enough. An empty value works for a key the worker doesn't use, like `TESTING_GUILD_IDS`, since a deployed worker never deploys commands.
+After that, `{{ pm.run }} deploy` is enough. `TESTING_GUILD_IDS` can stay empty there, since a deployed worker never deploys commands.
 {{/if}}
 
 ## Where things go

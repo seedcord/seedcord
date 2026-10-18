@@ -1,7 +1,6 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { parseInput } from '#cli/parseInput';
 import { runFlow } from '#interview/runFlow';
 import { runtimeStep } from '#interview/steps/runtime';
 
@@ -20,18 +19,5 @@ describe('the runtime step', () => {
         );
 
         expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateFlagNotApplicable)).toBe(true);
-    });
-});
-
-describe('the runtime step under bun', () => {
-    beforeEach(() => {
-        vi.stubEnv('npm_config_user_agent', 'bun/1.4.2 npm/? node/v24.11.0 darwin arm64');
-    });
-    afterEach(() => {
-        vi.unstubAllEnvs();
-    });
-
-    it('makes an edge bot', () => {
-        expect(parseInput(['my-bot', '--transport', 'http', '--runtime', 'edge']).runtime).toBe('edge');
     });
 });

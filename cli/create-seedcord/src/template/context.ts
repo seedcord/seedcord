@@ -7,15 +7,20 @@ import ownPackage from '#package' with { type: 'json' };
 
 import { execPrefix, runPrefix } from '#cli/packageManager';
 import { intentsFor, partialsFor } from '#interview/capabilities';
+import { STEPS } from '#interview/steps';
 
 import type { Answers } from '#interview/types';
 import type { AgentName } from 'package-manager-detector';
 
-type SharedAnswers = Pick<Answers, 'directory' | 'token' | 'testingGuilds' | 'botColor' | 'install' | 'git'>;
+type SharedAnswers = Omit<Answers, 'transport' | 'runtime' | 'capabilities'>;
 
 export type ScaffoldAnswers =
     | (SharedAnswers & Pick<Answers, 'capabilities'> & { transport: 'gateway' })
     | (SharedAnswers & Pick<Answers, 'runtime'> & { transport: 'http' });
+
+export function capabilitiesOf(answers: ScaffoldAnswers): string[] {
+    return answers.transport === 'gateway' ? answers.capabilities : [];
+}
 
 // the three that make messageCreate fire
 const MESSAGE_CAPABILITIES = new Set(['guild-messages', 'message-text', 'direct-messages']);
@@ -40,7 +45,8 @@ export interface TemplateContext {
 function required<Key extends keyof Answers>(answers: Partial<Answers>, key: Key): Answers[Key] {
     const answer = answers[key];
     if (answer === undefined) {
-        throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [key, 'No answer was collected.']);
+        const flag = STEPS.find((step) => step.key === key)?.flag.name ?? key;
+        throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [flag, 'No answer was collected.']);
     }
 
     return answer;
@@ -68,7 +74,7 @@ export function buildContext(
 ): TemplateContext {
     const isGateway = answers.transport === 'gateway';
     const isEdge = answers.transport === 'http' && answers.runtime === 'edge';
-    const capabilities = answers.transport === 'gateway' ? answers.capabilities : [];
+    const capabilities = capabilitiesOf(answers);
 
     return {
         projectName: basename(answers.directory),

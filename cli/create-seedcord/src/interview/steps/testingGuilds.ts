@@ -29,16 +29,16 @@ export const testingGuildsStep: Step<'testingGuilds'> = {
     label: 'test servers',
     flag: {
         name: 'testing-guilds',
-        description: 'comma separated server ids your commands deploy to while you build',
+        description: 'comma-separated server ids your commands deploy to while you build',
         parse: parseTestingGuilds
     },
     answerWithoutTerminal: [],
     ask: async (_answers, prompter) =>
         parseTestingGuilds(
             await prompter.text({
-                message: `Server ids to test your commands in ${paint.mute('or press Enter to deploy them everywhere')}`,
+                message: `Server ids to test your commands in ${paint.mute('or press Enter to deploy them globally')}`,
                 validate: validatorFor(parseTestingGuilds)
             })
         ),
-    shown: (ids) => (ids.length === 0 ? paint.mute('every server') : ids.join(', '))
+    shown: (ids) => (ids.length === 0 ? paint.mute('global') : ids.join(', '))
 };

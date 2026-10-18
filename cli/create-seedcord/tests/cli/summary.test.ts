@@ -3,6 +3,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { describe, expect, it } from 'vitest';
 
+import { parseInput } from '#cli/parseInput';
 import { dashboardToggles, nextSteps as paintedSteps, reproducingCommand } from '#cli/summary';
 import { version } from '#cli/version';
 import { STEPS } from '#interview/steps';
@@ -104,6 +105,14 @@ describe('dashboardToggles', () => {
 });
 
 describe('reproducingCommand', () => {
+    it('reads back with no test servers through a shell that drops empty arguments', () => {
+        const command = reproducingCommand({ ...HTTP, token: null }, 'pnpm');
+        // windows powershell 5.1 passes no empty argument to a native program
+        const [, ...args] = shellWordsAfter('pnpm create', command).filter((word) => word !== '');
+
+        expect(parseInput(args)).toMatchObject({ testingGuilds: [], runtime: 'server', token: null });
+    });
+
     it('keeps the secret out of the line', () => {
         const command = reproducingCommand(GATEWAY, 'pnpm');
 
@@ -137,7 +146,7 @@ describe('reproducingCommand', () => {
         const flagged = STEPS.filter((step) => step.flag.name !== 'dir' && step.skip?.(HTTP) !== true);
 
         for (const step of flagged) {
-            expect(command).toMatch(new RegExp(`--(no-)?${step.flag.name}( |$)`));
+            expect(command).toMatch(new RegExp(`--(no-)?${step.flag.name}( |=|$)`));
         }
     });
 

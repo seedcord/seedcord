@@ -122,7 +122,7 @@ async function runInstallSteps(
         if (warning !== null) warnings.push(warning);
     };
 
-    // cf has to exist before bun runs an edge bot's postinstall on the next add
+    // cf goes in the first add, since bun runs the project's postinstall after every one
     const installed = await succeeded(steps, 'install', async () => {
         collect(await run(dev.command, dev.args, target));
         collect(await run(deps.command, deps.args, target));

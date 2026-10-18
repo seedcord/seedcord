@@ -6,7 +6,7 @@ import type { AgentName, ResolvedCommand } from 'package-manager-detector';
 // pnpm below 6.30 and bun before mid-2024 set no user agent
 const FALLBACK: AgentName = 'npm';
 
-// resolveCommand answers for one script or binary, and the templates need the part in front of it
+// the templates need the part of a resolved command in front of this placeholder
 const PROBE = 'dev';
 
 export function runningAgent(): AgentName {

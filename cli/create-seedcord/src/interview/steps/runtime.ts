@@ -2,11 +2,12 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import type { Answers, Step } from '#interview/types';
+import type { Choice } from '@seedcord/cli-prompts';
 
 const RUNTIME_CHOICES = [
     { value: 'server', label: 'Node or Bun', hint: 'a process you run on any host' },
     { value: 'edge', label: 'Cloudflare Workers', hint: "a worker on Cloudflare's network" }
-] as const satisfies readonly { value: Answers['runtime']; label: string; hint: string }[];
+] as const satisfies readonly Choice<Answers['runtime']>[];
 
 const RUNTIMES = RUNTIME_CHOICES.map(({ value }) => value);
 

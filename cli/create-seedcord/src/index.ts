@@ -20,7 +20,7 @@ import { STEPS } from '#interview/steps';
 import { missingNotice, probeCloudflared } from '#scaffold/cloudflared';
 import { createExecRunner } from '#scaffold/exec';
 import { scaffold } from '#scaffold/scaffold';
-import { requireScaffoldAnswers } from '#template/context';
+import { capabilitiesOf, requireScaffoldAnswers } from '#template/context';
 
 import type { FlowMode } from '#interview/runFlow';
 import type { ScaffoldAnswers } from '#template/context';
@@ -107,7 +107,7 @@ async function reportOutcome(
         output.warn(missingNotice(process.platform));
     }
 
-    const toggles = dashboardToggles(answers.transport === 'gateway' ? answers.capabilities : []);
+    const toggles = dashboardToggles(capabilitiesOf(answers));
     if (toggles.length > 0) {
         output.line();
         output.row('intents', toggles);

@@ -52,7 +52,7 @@ pnpm create seedcord my-bot --transport gateway --capabilities reactions
 
 `--install` and `--git` answer yes to those two questions, and `--no-install` and `--no-git` answer no. `--no-token` leaves the token empty without asking. `--verbose` keeps the stack frames in a failed step's output. `-v` prints the version and `-h` prints the flag list.
 
-With no terminal to ask on, it reads the flags alone and installs and commits unless told otherwise. It prints the flag that would supply any other answer you left out.
+With no terminal to ask on, it reads the flags alone and installs and commits unless told otherwise. An http bot runs on your own server unless you pass `--runtime edge`, and its commands deploy globally unless you pass `--testing-guilds`. It prints the flag that would supply any other answer you left out.
 
 ## What you get
 
