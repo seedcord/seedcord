@@ -8,7 +8,7 @@ import { createBuilder } from 'vite';
 
 import { cliLogger } from '#core/cliLogger';
 import { restFromEnv } from '#core/discord/restFromEnv';
-import { importCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
+import { importCloudflare, importCloudflareCopy, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { CommandScanner } from '#core/modules/CommandScanner';
 import { functionExportsOf } from '#core/modules/workerExports';
 import { viteKey } from '#core/project/ProjectFiles';
@@ -155,7 +155,7 @@ export class EdgeBuild extends TargetBuild {
     }
 
     public override async boot(): Promise<void> {
-        const cloudflare = await this.worker();
+        const cloudflare = await CloudflareWorker.load(this.target, importCloudflareCopy);
         await bootWorker({
             root: this.target.viteRoot,
             mode: this.project.config.viteMode,

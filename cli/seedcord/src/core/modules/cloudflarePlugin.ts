@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import type * as CloudflareVitePlugin from '@cloudflare/vite-plugin';
 
 export type CloudflarePlugin = typeof CloudflareVitePlugin.cloudflare;
@@ -35,4 +37,13 @@ export function importCloudflare(): Promise<typeof CloudflareVitePlugin> {
         if (plugin === loading) plugin = undefined;
     });
     return loading;
+}
+
+// cloudflare/workers-sdk#16346, remove once it's fixed
+// after a worker fails to start, every later preview through the same copy throws ERR_DISPOSED
+// a UUID because pluginLoads restarts at 0 in each test file
+export function importCloudflareCopy(): Promise<typeof CloudflareVitePlugin> {
+    const url = `${import.meta.resolve('@cloudflare/vite-plugin')}?copy=${randomUUID()}`;
+    // justified: the URL resolves to the module the type import reads
+    return import(url) as Promise<typeof CloudflareVitePlugin>;
 }
