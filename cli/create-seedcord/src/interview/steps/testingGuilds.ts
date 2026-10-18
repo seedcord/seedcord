@@ -1,11 +1,11 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 
+import { isSnowflake } from '#cli/snowflake';
+
 import { validatorFor } from './validatorFor';
 
 import type { Step } from '#interview/types';
-
-const GUILD_ID = /^\d{17,20}$/;
 
 function parseTestingGuilds(raw: string): string[] {
     const ids = raw
@@ -13,7 +13,7 @@ function parseTestingGuilds(raw: string): string[] {
         .map((id) => id.trim())
         .filter((id) => id !== '');
 
-    const bad = ids.find((id) => !GUILD_ID.test(id));
+    const bad = ids.find((id) => !isSnowflake(id));
     if (bad !== undefined) {
         throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [
             'testing-guilds',

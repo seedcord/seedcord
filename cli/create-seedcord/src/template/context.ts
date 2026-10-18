@@ -5,16 +5,17 @@ import { SeedcordTypeError } from '@seedcord/errors/internal';
 
 import ownPackage from '#package' with { type: 'json' };
 
-import { runPrefix } from '#cli/packageManager';
+import { execPrefix, runPrefix } from '#cli/packageManager';
 import { intentsFor, partialsFor } from '#interview/capabilities';
 
 import type { Answers } from '#interview/types';
 import type { AgentName } from 'package-manager-detector';
 
-const REQUIRED = ['directory', 'transport', 'token', 'testingGuilds', 'botColor', 'install', 'git'] as const;
+type SharedAnswers = Pick<Answers, 'directory' | 'token' | 'testingGuilds' | 'botColor' | 'install' | 'git'>;
 
-// runFlow leaves capabilities unset on http and runtime unset on gateway
-export type ScaffoldAnswers = Partial<Answers> & Pick<Answers, (typeof REQUIRED)[number]>;
+export type ScaffoldAnswers =
+    | (SharedAnswers & Pick<Answers, 'capabilities'> & { transport: 'gateway' })
+    | (SharedAnswers & Pick<Answers, 'runtime'> & { transport: 'http' });
 
 // the three that make messageCreate fire
 const MESSAGE_CAPABILITIES = new Set(['guild-messages', 'message-text', 'direct-messages']);
@@ -31,19 +32,34 @@ export interface TemplateContext {
     testingGuildIds: string;
     botColor: string;
     developerUsername: string;
-    pm: { run: string; isBun: boolean; isPnpm: boolean };
+    cliOnBun: boolean;
+    pm: { run: string; exec: string; isPnpm: boolean };
     engines: { node: string; bun: string };
+}
+
+function required<Key extends keyof Answers>(answers: Partial<Answers>, key: Key): Answers[Key] {
+    const answer = answers[key];
+    if (answer === undefined) {
+        throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [key, 'No answer was collected.']);
+    }
+
+    return answer;
 }
 
 // runFlow either fills these or throws
 export function requireScaffoldAnswers(answers: Partial<Answers>): ScaffoldAnswers {
-    for (const key of REQUIRED) {
-        if (answers[key] === undefined) {
-            throw new SeedcordTypeError(SeedcordErrorCode.CreateInvalidAnswer, [key, 'No answer was collected.']);
-        }
-    }
+    const shared: SharedAnswers = {
+        directory: required(answers, 'directory'),
+        token: required(answers, 'token'),
+        testingGuilds: required(answers, 'testingGuilds'),
+        botColor: required(answers, 'botColor'),
+        install: required(answers, 'install'),
+        git: required(answers, 'git')
+    };
 
-    return answers as ScaffoldAnswers;
+    return required(answers, 'transport') === 'gateway'
+        ? { ...shared, transport: 'gateway', capabilities: required(answers, 'capabilities') }
+        : { ...shared, transport: 'http', runtime: required(answers, 'runtime') };
 }
 
 export function buildContext(
@@ -51,12 +67,13 @@ export function buildContext(
     extras: { developerUsername: string; agent: AgentName }
 ): TemplateContext {
     const isGateway = answers.transport === 'gateway';
-    const capabilities = isGateway ? (answers.capabilities ?? []) : [];
+    const isEdge = answers.transport === 'http' && answers.runtime === 'edge';
+    const capabilities = answers.transport === 'gateway' ? answers.capabilities : [];
 
     return {
         projectName: basename(answers.directory),
         isGateway,
-        isEdge: answers.runtime === 'edge',
+        isEdge,
         transportPackage: isGateway ? '@seedcord/gateway' : '@seedcord/http',
         intents: isGateway ? intentsFor(capabilities) : [],
         partials: isGateway ? partialsFor(capabilities) : [],
@@ -65,7 +82,9 @@ export function buildContext(
         testingGuildIds: answers.testingGuilds.join(','),
         botColor: answers.botColor,
         developerUsername: extras.developerUsername,
-        pm: { run: runPrefix(extras.agent), isBun: extras.agent === 'bun', isPnpm: extras.agent === 'pnpm' },
+        // cloudflare's config loader throws on bun
+        cliOnBun: extras.agent === 'bun' && !isEdge,
+        pm: { run: runPrefix(extras.agent), exec: execPrefix(extras.agent), isPnpm: extras.agent === 'pnpm' },
         engines: ownPackage.engines
     };
 }

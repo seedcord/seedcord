@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { addCommand, execCommand, runPrefix, runningAgent } from '#cli/packageManager';
+import { addCommand, execCommand, execPrefix, runPrefix, runningAgent } from '#cli/packageManager';
 
 afterEach(() => {
     vi.unstubAllEnvs();
@@ -32,6 +32,15 @@ describe('runPrefix', () => {
         expect(runPrefix('pnpm')).toBe('pnpm run');
         expect(runPrefix('yarn')).toBe('yarn run');
         expect(runPrefix('bun')).toBe('bun run');
+    });
+});
+
+describe('execPrefix', () => {
+    it('runs a binary from the project install', () => {
+        expect(execPrefix('npm')).toBe('npx');
+        expect(execPrefix('pnpm')).toBe('pnpm exec');
+        expect(execPrefix('yarn')).toBe('yarn exec');
+        expect(execPrefix('bun')).toBe('bun x');
     });
 });
 

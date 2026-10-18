@@ -35,7 +35,7 @@ npm create seedcord my-bot
 yarn create seedcord my-bot
 ```
 
-It asks where the project goes, how Discord reaches your bot, what the bot should react to, your bot token, an accent color, and whether to install dependencies and set up git. Then it writes the project. A yes to install also installs dependencies, formats, and generates your command types. A yes to git makes the first commit. If a step after the write fails, its output shows under that step and the summary still prints.
+It asks where the project goes, how Discord reaches your bot, where an http bot runs, what the bot should react to, your bot token, the servers to test your commands in, an accent color, and whether to install dependencies and set up git. Then it writes the project. A yes to install also installs dependencies, formats, and generates your command types. A yes to git makes the first commit. If a step after the write fails, its output shows under that step and the summary still prints.
 
 If you don't have the token yet, press Enter twice on its prompt to skip it. Fill it into `.env` before you start the bot.
 
@@ -59,3 +59,5 @@ With no terminal to ask on, it reads the flags alone and installs and commits un
 A TypeScript project holding one slash command, its handler, a sample event handler (if you picked `gateway`), `seedcord.config.ts`, eslint, prettier, and a `.env` listing every key the framework reads.
 
 `pnpm dev` starts it with hot reload. On the http transport it also opens a cloudflared tunnel and sets it up, and Discord posts interactions to that URL.
+
+An http bot on Cloudflare Workers (`--runtime edge`) also gets a `cloudflare.config.ts` declaring the keys the worker reads, and a `deploy` script that builds the worker and uploads it with `cf`.

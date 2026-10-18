@@ -116,16 +116,16 @@ async function runInstallSteps(
     const dev = addCommand(agent, devPackages(context), true);
     const format = execCommand(agent, ['prettier', '--write', '.']);
     const codegen = execCommand(agent, ['seedcord', 'codegen']);
-    const bindingTypes = execCommand(agent, ['cf', 'workers', 'types']);
 
     const warnings: string[] = [];
     const collect = (warning: string | null): void => {
         if (warning !== null) warnings.push(warning);
     };
 
+    // cf has to exist before bun runs an edge bot's postinstall on the next add
     const installed = await succeeded(steps, 'install', async () => {
-        collect(await run(deps.command, deps.args, target));
         collect(await run(dev.command, dev.args, target));
+        collect(await run(deps.command, deps.args, target));
     });
 
     // npx and bun x fetch a missing binary from the registry
@@ -139,8 +139,11 @@ async function runInstallSteps(
     const formatted = await succeeded(steps, 'format', () => run(format.command, format.args, target));
     const generated = await succeeded(steps, 'types', async () => {
         await run(codegen.command, codegen.args, target);
-        // pnpm add skips the project's own postinstall
-        if (context.isEdge) await run(bindingTypes.command, bindingTypes.args, target);
+        if (!context.isEdge) return;
+
+        // pnpm and npm skip the project's postinstall on an add
+        const bindingTypes = execCommand(agent, ['cf', 'workers', 'types']);
+        await run(bindingTypes.command, bindingTypes.args, target);
     });
 
     return { installed: true, notices: warnings, failed: !formatted || !generated };

@@ -6,18 +6,26 @@ import type { AgentName, ResolvedCommand } from 'package-manager-detector';
 // pnpm below 6.30 and bun before mid-2024 set no user agent
 const FALLBACK: AgentName = 'npm';
 
-// resolveCommand answers per script, and the README needs the part in front of one
-const PROBE_SCRIPT = 'dev';
+// resolveCommand answers for one script or binary, and the templates need the part in front of it
+const PROBE = 'dev';
 
 export function runningAgent(): AgentName {
     return getUserAgent() ?? FALLBACK;
 }
 
-export function runPrefix(agent: AgentName): string {
-    const resolved = resolveCommand(agent, 'run', [PROBE_SCRIPT]);
-    if (!resolved) return `${agent} run`;
+function prefixOf(agent: AgentName, intent: 'run' | 'execute-local', fallback: string): string {
+    const resolved = resolveCommand(agent, intent, [PROBE]);
+    if (!resolved) return fallback;
 
     return [resolved.command, ...resolved.args.slice(0, -1)].join(' ');
+}
+
+export function runPrefix(agent: AgentName): string {
+    return prefixOf(agent, 'run', `${agent} run`);
+}
+
+export function execPrefix(agent: AgentName): string {
+    return prefixOf(agent, 'execute-local', `${agent} exec`);
 }
 
 export function addCommand(agent: AgentName, packages: string[], dev: boolean): ResolvedCommand {

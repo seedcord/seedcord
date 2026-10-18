@@ -1,13 +1,18 @@
+import { Prompter } from '@seedcord/cli-prompts';
 import { describe, expect, it } from 'vitest';
 
 import { parseInput } from '#cli/parseInput';
 import { runFlow } from '#interview/runFlow';
 import { testingGuildsStep } from '#interview/steps/testingGuilds';
 
-import type { Prompter } from '@seedcord/cli-prompts';
-
 const GUILD = '613425648685547541';
 const OTHER_GUILD = '1100000000000000000';
+
+class TypesNothing extends Prompter {
+    public override text(): Promise<string> {
+        return Promise.resolve('');
+    }
+}
 
 describe('the testing guilds step', () => {
     it('reads a comma separated list of guild ids from --testing-guilds', () => {
@@ -27,9 +32,6 @@ describe('the testing guilds step', () => {
     });
 
     it('deploys everywhere when Enter skips the question', async () => {
-        // the step only calls text
-        const prompter = { text: () => Promise.resolve('') } as unknown as Prompter;
-
-        expect(await testingGuildsStep.ask({}, prompter)).toEqual([]);
+        expect(await testingGuildsStep.ask({}, new TypesNothing())).toEqual([]);
     });
 });

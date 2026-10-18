@@ -4,6 +4,8 @@ import process from 'node:process';
 import { Prompter, unlessCancelled } from '@seedcord/cli-prompts';
 import { paint } from '@seedcord/errors';
 
+import ownPackage from '#package' with { type: 'json' };
+
 import { helpText } from '#cli/help';
 import { inviteUrl } from '#cli/invite';
 import { messageOf } from '#cli/messageOf';
@@ -105,7 +107,7 @@ async function reportOutcome(
         output.warn(missingNotice(process.platform));
     }
 
-    const toggles = dashboardToggles(answers.capabilities ?? []);
+    const toggles = dashboardToggles(answers.transport === 'gateway' ? answers.capabilities : []);
     if (toggles.length > 0) {
         output.line();
         output.row('intents', toggles);
@@ -122,7 +124,11 @@ async function reportOutcome(
     output.row('again', [paint.bold(reproducingCommand(answers, agent))]);
     output.row('guide', [paint.sky('https://seedcord.org/guide')]);
     output.line();
-    output.line(paint.mute('A star on GitHub helps more people find seedcord: https://github.com/seedcord/seedcord'));
+    output.line(
+        paint.mute(
+            `A star on GitHub helps more people find seedcord: ${ownPackage.repository.url.replace(/\.git$/, '')}`
+        )
+    );
     output.line();
 }
 

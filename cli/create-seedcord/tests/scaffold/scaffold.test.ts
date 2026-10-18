@@ -85,6 +85,14 @@ function recorder(failOn?: string, warnOn?: string): { runner: CommandRunner; ca
     return { runner, calls };
 }
 
+function installs(calls: readonly Recorded[]): { runtime: string[]; dev: string[] } {
+    const adds = calls.filter(({ args }) => args[0] === 'add');
+    return {
+        runtime: adds.find(({ args }) => !args.includes('-D'))?.args ?? [],
+        dev: adds.find(({ args }) => args.includes('-D'))?.args ?? []
+    };
+}
+
 async function scratchTarget(): Promise<string> {
     const scratch = await mkdtempDisposable(join(tmpdir(), 'create-seedcord-scaffold-'));
     onTestFinished(() => scratch.remove());
@@ -168,11 +176,20 @@ describe('scaffold', () => {
 
         await scaffold(baseInput(target), runner);
 
-        const [deps, dev] = calls;
-        expect(deps?.args).toContain('@seedcord/gateway');
-        expect(deps?.args).toContain('discord.js');
-        expect(dev?.args).toContain('-D');
-        expect(dev?.args).toContain('@types/node');
+        const { runtime, dev } = installs(calls);
+        expect(runtime).toContain('@seedcord/gateway');
+        expect(runtime).toContain('discord.js');
+        expect(dev).toContain('@types/node');
+    });
+
+    it('installs the dev packages before the runtime ones', async () => {
+        const target = await scratchTarget();
+        const { runner, calls } = recorder();
+
+        await scaffold({ ...baseInput(target), answers: EDGE }, runner);
+
+        expect(calls[0]?.args).toContain('-D');
+        expect(calls[1]?.args).not.toContain('-D');
     });
 
     it.each([
@@ -189,10 +206,12 @@ describe('scaffold', () => {
         const manifest = JSON.parse(await readFile(join(target, 'package.json'), 'utf8')) as {
             scripts: Record<string, string>;
         };
-        const installed = [...(calls[0]?.args ?? []), ...(calls[1]?.args ?? [])];
+        const { runtime, dev } = installs(calls);
+        const installed = [...runtime, ...dev];
+        const commands = Object.values(manifest.scripts).flatMap((script) => script.split('&&'));
 
-        for (const command of Object.values(manifest.scripts)) {
-            const binary = command.split(' ')[0] ?? '';
+        for (const command of commands) {
+            const binary = command.trim().split(' ')[0] ?? '';
             if (BUILT_IN.has(binary) || binary === input.agent) continue;
 
             const pkg = PACKAGE_OF[binary];
@@ -209,7 +228,7 @@ describe('scaffold', () => {
 
             await scaffold({ ...baseInput(target), answers: EDGE }, runner);
 
-            const pinned = calls[1]?.args.find((arg) => arg.startsWith(`${name}@`));
+            const pinned = installs(calls).dev.find((arg) => arg.startsWith(`${name}@`));
             expect(pinned).toBe(`${name}@${await seedcordTestedVersion(name)}`);
         }
     );
@@ -220,7 +239,7 @@ describe('scaffold', () => {
 
         await scaffold(baseInput(target), runner);
 
-        expect(calls[1]?.args).toContain('typescript@~6.0');
+        expect(installs(calls).dev).toContain('typescript@~6.0');
     });
 
     it('swaps the transport package on http', async () => {
@@ -229,8 +248,9 @@ describe('scaffold', () => {
 
         await scaffold({ ...baseInput(target), answers: HTTP }, runner);
 
-        expect(calls[0]?.args).toContain('@seedcord/http');
-        expect(calls[0]?.args).not.toContain('discord.js');
+        const { runtime } = installs(calls);
+        expect(runtime).toContain('@seedcord/http');
+        expect(runtime).not.toContain('discord.js');
     });
 
     it('skips install, format, and codegen when install is off', async () => {
