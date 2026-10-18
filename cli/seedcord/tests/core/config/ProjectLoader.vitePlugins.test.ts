@@ -133,9 +133,10 @@ describe('ProjectLoader vitePlugins', () => {
         ).catch((error: unknown) => error);
 
         assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
-        expect(caught.message).toContain('breaks-on-start');
-        expect(caught.message).toContain('config');
-        expect(caught.message).toContain('bad option');
+        const message = stripVTControlCharacters(caught.message);
+        expect(message).toContain('breaks-on-start');
+        expect(message).toContain('its config hook');
+        expect(message).toContain('bad option');
     });
 
     it("runs them on an edge bot's code", async () => {
