@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -162,9 +163,17 @@ function builtFiles(): BuiltFileLoaders | undefined {
     return Reflect.get(globalThis, Symbol.for(BUILT_FILES_KEY)) as BuiltFileLoaders | undefined;
 }
 
+// false for a bun binary under /$bunfs or a dist copied out of the project
+function isProjectFolder(dir: string): boolean {
+    return existsSync(path.join(dir, 'package.json'));
+}
+
 export function builtConfigDir(): string | undefined {
     const built = builtFiles();
-    return built?.configDir === undefined ? undefined : path.resolve(built.root, built.configDir);
+    if (built?.configDir === undefined) return undefined;
+
+    const configDir = path.resolve(built.root, built.configDir);
+    return isProjectFolder(configDir) ? configDir : undefined;
 }
 
 export function setBotRoot(root: string | undefined): void {

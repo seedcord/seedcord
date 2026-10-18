@@ -69,7 +69,7 @@ my-bot/
 - **`seedcord.config.ts`** configures the CLI. Your bot's own settings go in `bot.ts`, which is the file below.
 - **`src/seedcord-gen.d.ts`** carries the types generated from your config and your commands. `seedcord codegen` writes it and you commit it.
 - **`tsconfig.json`** type-checks the project. **`tsconfig.build.json`** compiles `src` into `dist`.
-- **`.env`** holds your token and the ids of your test servers. seedcord sets [envapt](https://envapt.materwelon.dev)'s `baseDir` to the folder that holds `seedcord.config.ts`. A built bot reads the file from there, whichever folder you start it in.
+- **`.env`** holds your token and the ids of your test servers, and [envapt](https://envapt.materwelon.dev) reads it. `seedcord dev` runs in the project folder, and a built bot reads `.env` from there whichever folder you start it in.
 - **`src/events/`** holds `Ready.ts`. Picking any of the message capabilities swaps that for `Mentioned.ts`, which answers when someone mentions your bot.
 
 <Callout type="transport" only="http">

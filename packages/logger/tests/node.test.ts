@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
-import { existsSync, mkdtempDisposableSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempDisposableSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -171,12 +171,23 @@ describe('winston sinks', () => {
 
     it('writes a relative file name beside seedcord.config.ts in a built bot', async () => {
         using project = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
+        writeFileSync(join(project.path, 'package.json'), '{}');
         using _builtBot = asBuiltBot({ root: join(project.path, 'dist'), configDir: '..' });
         using sink = new WinstonFileSink({ filename: 'logs/out.log', format: 'json' });
 
         sink.onLog(record({ message: 'beside the config' }));
 
         expect(await readWhenWritten(join(project.path, 'logs/out.log'))).toContain('beside the config');
+    });
+
+    it('writes a relative file name in the working folder outside a built bot', async () => {
+        using cwd = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
+        using _cwd = vi.spyOn(process, 'cwd').mockReturnValue(cwd.path);
+        using sink = new WinstonFileSink({ filename: 'logs/out.log', format: 'json' });
+
+        sink.onLog(record({ message: 'in the working folder' }));
+
+        expect(await readWhenWritten(join(cwd.path, 'logs/out.log'))).toContain('in the working folder');
     });
 
     it('expands {timestamp} in the file name', async () => {
