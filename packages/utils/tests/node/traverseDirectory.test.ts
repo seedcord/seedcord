@@ -1,6 +1,7 @@
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -72,7 +73,7 @@ describe('traverseDirectory', () => {
 });
 
 describe('a module that fails to load through a Vite plugin', () => {
-    const IMPORT_FAILED = path.join(import.meta.dirname, '../../src/node/importFailed.ts');
+    const IMPORT_FAILED = pathToFileURL(path.join(import.meta.dirname, '../../src/node/importFailed.ts')).href;
 
     async function folderThrowing(name: string, thrown: string): Promise<string> {
         const dir = path.join(scratch, name);

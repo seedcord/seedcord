@@ -96,7 +96,7 @@ export enum SeedcordErrorCode {
     CoreDiscordReadFailed = 1227,
     /** Two routes, commands, middleware classes, migrations, or customId fields have the same name. */
     CoreDuplicateName = 1228,
-    /** A Vite plugin from `vitePlugins` threw while Vite started or while it loaded a file. */
+    /** A Vite plugin from `vitePlugins` threw while Vite started or loaded a file, or its promise rejected while seedcord read the config. */
     CoreVitePluginThrew = 1229,
 
     /** A command class carries `@RegisterCommand` twice. */

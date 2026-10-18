@@ -1,3 +1,5 @@
+import { pathToFileURL } from 'node:url';
+
 import type { Plugin } from 'vite';
 
 export const GREETING = 'hi from a plugin';
@@ -18,7 +20,7 @@ export function greetingPlugin(): Plugin {
 // vitePlugins is source text, like '[greetingPlugin()]'
 export function configWithGreetingPlugin(fields: string, vitePlugins = '[greetingPlugin()]'): string {
     return [
-        `import { greetingPlugin } from ${JSON.stringify(import.meta.filename)};`,
+        `import { greetingPlugin } from ${JSON.stringify(pathToFileURL(import.meta.filename).href)};`,
         '',
         `export default { ${fields}, vitePlugins: ${vitePlugins} };`,
         ''
