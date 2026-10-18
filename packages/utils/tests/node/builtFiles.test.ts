@@ -4,6 +4,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, vi } from 'vitest';
 
 import { BUILT_FILES_KEY, readTextFiles, traverseDirectory } from '#src/node/directory';
+import { posixRelative } from '#src/node/paths';
 import { clearBuiltFiles } from '#tests/builtFilesSlot';
 
 interface BuiltFileLoaders {
@@ -14,8 +15,12 @@ interface BuiltFileLoaders {
     sourcePaths?: boolean;
 }
 
-// not on disk
-const ROOT = '/bot';
+// not on disk. path.resolve adds the drive letter on windows
+const ROOT = path.resolve('/bot');
+
+function at(relative: string): string {
+    return path.join(ROOT, relative);
+}
 
 // writes the slot the way seedcord build's generated entry does
 function register({
@@ -59,9 +64,9 @@ describe('traverseDirectory in a built bot', () => {
             }
         });
 
-        await expect(walk('/bot/handlers')).resolves.toEqual([
-            ['/bot/handlers/Roll.js', 'Roll'],
-            ['/bot/handlers/mod/Ban.js', 'Ban']
+        await expect(walk(at('handlers'))).resolves.toEqual([
+            [at('handlers/Roll.js'), 'Roll'],
+            [at('handlers/mod/Ban.js'), 'Ban']
         ]);
     });
 
@@ -72,7 +77,7 @@ describe('traverseDirectory in a built bot', () => {
             sourcePaths: true
         });
 
-        await expect(walk('/bot/handlers')).resolves.toEqual([['/bot/handlers/Roll.ts', 'Roll']]);
+        await expect(walk(at('handlers'))).resolves.toEqual([[at('handlers/Roll.ts'), 'Roll']]);
     });
 
     it('skips registered type declarations, the same as the disk walk', async () => {
@@ -81,7 +86,7 @@ describe('traverseDirectory in a built bot', () => {
             modules: { '/handlers/types.d.ts': stub('types'), '/handlers/A.ts': stub('A') }
         });
 
-        await expect(walk('/bot/handlers')).resolves.toEqual([['/bot/handlers/A.js', 'A']]);
+        await expect(walk(at('handlers'))).resolves.toEqual([[at('handlers/A.js'), 'A']]);
     });
 
     it('loads nothing past the file the caller stopped at', async () => {
@@ -91,7 +96,7 @@ describe('traverseDirectory in a built bot', () => {
             modules: { '/handlers/A.ts': stub('A'), '/handlers/B.ts': later }
         });
 
-        for await (const { imported } of traverseDirectory('/bot/handlers')) {
+        for await (const { imported } of traverseDirectory(at('handlers'))) {
             if (imported.name === 'A') break;
         }
 
@@ -101,25 +106,30 @@ describe('traverseDirectory in a built bot', () => {
     it('resolves a relative folder against root', async () => {
         using _built = register({ folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
 
-        await expect(walk('./handlers')).resolves.toEqual([['/bot/handlers/Roll.js', 'Roll']]);
+        await expect(walk('./handlers')).resolves.toEqual([[at('handlers/Roll.js'), 'Roll']]);
     });
 
     it('treats a folder whose name starts with two dots as inside root', async () => {
         using _built = register({ folders: ['/..cache'], modules: { '/..cache/Warm.ts': stub('Warm') } });
 
-        await expect(walk('/bot/..cache')).resolves.toEqual([['/bot/..cache/Warm.js', 'Warm']]);
+        await expect(walk(at('..cache'))).resolves.toEqual([[at('..cache/Warm.js'), 'Warm']]);
     });
 
     it('visits every module when the folder is root itself', async () => {
         using _built = register({ modules: { '/index.ts': stub('index') } });
 
-        await expect(walk('/bot')).resolves.toEqual([['/bot/index.js', 'index']]);
+        await expect(walk(ROOT)).resolves.toEqual([[at('index.js'), 'index']]);
     });
 
     it('visits every module when root is the filesystem root', async () => {
-        using _built = register({ root: '/', folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
+        const fsRoot = path.resolve('/');
+        using _built = register({
+            root: fsRoot,
+            folders: ['/handlers'],
+            modules: { '/handlers/Roll.ts': stub('Roll') }
+        });
 
-        await expect(walk('/')).resolves.toEqual([['/handlers/Roll.js', 'Roll']]);
+        await expect(walk(fsRoot)).resolves.toEqual([[path.join(fsRoot, 'handlers/Roll.js'), 'Roll']]);
     });
 
     it('yields nothing for an empty folder the build registered', async () => {
@@ -128,13 +138,13 @@ describe('traverseDirectory in a built bot', () => {
             modules: { '/handlers/Roll.ts': stub('Roll') }
         });
 
-        await expect(walk('/bot/subscribers')).resolves.toEqual([]);
+        await expect(walk(at('subscribers'))).resolves.toEqual([]);
     });
 
     it('reports a folder the build never registered as missing from the build', async () => {
         using _built = register({ folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
 
-        const error = await rejection(traverseDirectory('/bot/handlerz'));
+        const error = await rejection(traverseDirectory(at('handlerz')));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryNotBuilt });
         expect(Error.isError(error) ? error.message : '').toMatch(/handlerz/);
@@ -144,7 +154,7 @@ describe('traverseDirectory in a built bot', () => {
         const broken = (): Promise<Record<string, unknown>> => Promise.reject(new Error('boom'));
         using _built = register({ folders: ['/handlers'], modules: { '/handlers/Broken.ts': broken } });
 
-        const error = await rejection(traverseDirectory('/bot/handlers'));
+        const error = await rejection(traverseDirectory(at('handlers')));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreImportFailed });
         expect(Error.isError(error) ? error.message : '').toMatch(/Broken\.js/);
@@ -173,11 +183,11 @@ describe('readTextFiles in a built bot', () => {
         });
 
         const seen: [string, string][] = [];
-        for await (const { fullPath, text } of readTextFiles('/bot/locales')) seen.push([fullPath, text]);
+        for await (const { fullPath, text } of readTextFiles(at('locales'))) seen.push([fullPath, text]);
 
         expect(seen).toEqual([
-            ['/bot/locales/en.json', '{"hi":"hello"}'],
-            ['/bot/locales/fr.json', '{"hi":"salut"}']
+            [at('locales/en.json'), '{"hi":"hello"}'],
+            [at('locales/fr.json'), '{"hi":"salut"}']
         ]);
     });
 
@@ -195,20 +205,20 @@ describe('readTextFiles in a built bot', () => {
         });
 
         const seen: string[] = [];
-        for await (const { fullPath } of readTextFiles('/bot/locales')) seen.push(fullPath);
+        for await (const { fullPath } of readTextFiles(at('locales'))) seen.push(fullPath);
 
-        expect(seen).toEqual(['/bot/locales/en.json']);
+        expect(seen).toEqual([at('locales/en.json')]);
     });
 
     it('reports the file whose text failed to load by its relative path, keeping the original as the cause', async () => {
         const broken = (): Promise<string> => Promise.reject(new Error('boom'));
         using _built = register({ folders: ['/locales'], text: { '/locales/en.json': broken } });
 
-        const error = await rejection(readTextFiles('/bot/locales'));
+        const error = await rejection(readTextFiles(at('locales')));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathUnreadable });
         expect(Error.isError(error) ? error.message : '').toContain(
-            path.relative(process.cwd(), '/bot/locales/en.json')
+            posixRelative(process.cwd(), at('locales/en.json'))
         );
         expect(Error.isError(error) ? error.cause : undefined).toMatchObject({ message: 'boom' });
     });

@@ -4,7 +4,7 @@ import { Extractor, ExtractorConfig, ExtractorLogLevel, type IConfigFile } from 
 
 import { RuntimeBuild } from './RuntimeBuild';
 import { writeSharedModel } from './shared-model';
-import { pathExists } from './utils';
+import { pathExists, posixRelative } from './utils';
 import { readPackageManifest, resolveDocEntryPoints, unscopedName } from './workspace';
 
 import type { ApiDocsPaths } from './ApiDocsPaths';
@@ -125,7 +125,7 @@ export async function extractPackageApiModel(
         return {
             subpath: entry.subpath,
             ...(entry.condition && { condition: entry.condition }),
-            entryPoint: path.relative(packageDir, entry.declaration),
+            entryPoint: posixRelative(packageDir, entry.declaration),
             ...(entry.sourceEntry && { sourceEntry: entry.sourceEntry }),
             outputPath: run.succeeded ? apiJsonPath : null,
             warnings: run.warnings,

@@ -1,9 +1,8 @@
-import { sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { paint } from '@seedcord/errors';
 import { formatFilePath } from '@seedcord/utils';
-import { resolveFolder } from '@seedcord/utils/node/internal';
+import { isInside, resolveFolder } from '@seedcord/utils/node/internal';
 
 import type { Logger } from '@seedcord/logger';
 import type { HmrUpdateEvent } from '@seedcord/types';
@@ -89,9 +88,8 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
     private inScope(file: string): boolean {
         const { handlersDir, middlewaresDir } = this.options;
 
-        // the trailing separator keeps commands-extra out of commands
-        if (file.startsWith(resolveFolder(handlersDir) + sep)) return true;
-        return middlewaresDir ? file.startsWith(resolveFolder(middlewaresDir) + sep) : false;
+        if (isInside(resolveFolder(handlersDir), file)) return true;
+        return middlewaresDir ? isInside(resolveFolder(middlewaresDir), file) : false;
     }
 
     // one line per save, since one edit can reload every module that imports the file

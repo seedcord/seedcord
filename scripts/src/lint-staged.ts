@@ -1,6 +1,8 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
+import { posixRelative } from '#src/lib/paths';
+
 interface ConfigHit {
     configPath: string;
     rootDir: string;
@@ -76,12 +78,12 @@ export function runEslint(files: readonly string[]): string[] {
 
     for (const [configPath, info] of groupByConfig(linted, 'eslint.config.ts')) {
         const { rootDir } = info;
-        const scopedFiles = rootDir === undefined ? info.files : info.files.map((file) => path.relative(rootDir, file));
+        const scopedFiles = rootDir === undefined ? info.files : info.files.map((file) => posixRelative(rootDir, file));
         const fileList = quoteFiles(scopedFiles);
         if (!fileList) continue;
 
         const scopedConfigPath =
-            rootDir !== undefined && configPath !== 'DEFAULT' ? path.relative(rootDir, configPath) : configPath;
+            rootDir !== undefined && configPath !== 'DEFAULT' ? posixRelative(rootDir, configPath) : configPath;
         const configFlag = scopedConfigPath === 'DEFAULT' ? '' : `--config ${quote(scopedConfigPath)}`;
         const command = ['eslint --no-warn-ignored --max-warnings=0 --fix --cache', configFlag, fileList]
             .filter(Boolean)

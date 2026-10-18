@@ -1,6 +1,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { posixRelative } from './utils';
+
 const currentFile = fileURLToPath(import.meta.url);
 const srcDir = path.dirname(currentFile);
 
@@ -63,11 +65,11 @@ export class ApiDocsPaths {
     }
 
     toRepoRelative(filePath: string): string {
-        return path.relative(this.repoRoot, filePath).split(path.sep).join('/');
+        return posixRelative(this.repoRoot, filePath);
     }
 
     toPackageRelative(filePath: string): string {
-        return path.relative(this.packageRoot, filePath).split(path.sep).join('/');
+        return posixRelative(this.packageRoot, filePath);
     }
 }
 

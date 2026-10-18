@@ -1,5 +1,7 @@
 import chalk from 'chalk';
 
+import { displayPath } from './displayPath';
+
 import type { ColorSupportLevel } from 'chalk';
 
 // @seedcord/ui carries the same three for the web
@@ -8,19 +10,6 @@ export const BRAND = {
     rind: '#6fab49',
     pith: '#f8f6e8'
 } as const;
-
-// the edge build of this package can't import node:path
-function relativeToCwd(rawPath: string): string {
-    if (typeof process === 'undefined' || typeof process.cwd !== 'function') return rawPath;
-
-    const path = rawPath.length > 1 ? rawPath.replace(/[/\\]+$/, '') : rawPath;
-    const cwd = process.cwd();
-    // a bare dot reads as a full stop
-    if (path === cwd) return './';
-
-    const underCwd = path.startsWith(`${cwd}/`) || path.startsWith(`${cwd}\\`);
-    return underCwd ? path.slice(cwd.length + 1) : path;
-}
 
 // chalk turns color on only for a chromium user agent outside node
 export function setColorLevel(level: ColorSupportLevel): void {
@@ -36,7 +25,7 @@ export const paint = {
     get sky() {
         return chalk.hex(SKY);
     },
-    path: (path: string) => chalk.hex(SKY)(relativeToCwd(path)),
+    path: (path: string) => chalk.hex(SKY)(displayPath(path)),
     // a count
     get iris() {
         return chalk.hex('#e29bff');

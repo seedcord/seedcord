@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 
 import { formatFilePath } from '#src/misc/formatFilePath';
+import { toPosixPath } from '#src/node/paths';
 
 describe('formatFilePath', () => {
     const cwd = process.cwd();
@@ -16,12 +17,12 @@ describe('formatFilePath', () => {
         expect(formatFilePath(join(cwd, 'src', 'Bot.ts'), { prefix: '' })).toBe('src/Bot.ts');
     });
 
-    it('returns a path outside the working directory unchanged', () => {
+    it('returns a path outside the working directory in full', () => {
         expect(formatFilePath('/elsewhere/src/Bot.ts')).toBe('/elsewhere/src/Bot.ts');
     });
 
-    it('returns a sibling path sharing the cwd prefix unchanged', () => {
-        expect(formatFilePath(`${cwd}-extra/src/Bot.ts`)).toBe(`${cwd}-extra/src/Bot.ts`);
+    it('returns a sibling path that shares the cwd prefix in full', () => {
+        expect(formatFilePath(`${cwd}-extra/src/Bot.ts`)).toBe(toPosixPath(`${cwd}-extra/src/Bot.ts`));
     });
 
     it('formats the working directory itself to the bare prefix', () => {
@@ -29,6 +30,18 @@ describe('formatFilePath', () => {
     });
 
     it('strips a backslash-separated filename with onlyDir', () => {
-        expect(formatFilePath(String.raw`C:\repo\src\Bot.ts`, { onlyDir: true })).toBe(String.raw`C:\repo\src`);
+        expect(formatFilePath(String.raw`C:\repo\src\Bot.ts`, { onlyDir: true })).toBe('C:/repo/src');
+    });
+});
+
+describe('formatFilePath on Windows', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('shows a path inside the working directory with forward slashes', () => {
+        vi.spyOn(process, 'cwd').mockReturnValue(String.raw`C:\repo`);
+
+        expect(formatFilePath(String.raw`C:\repo\src\Bot.ts`)).toBe('./src/Bot.ts');
     });
 });

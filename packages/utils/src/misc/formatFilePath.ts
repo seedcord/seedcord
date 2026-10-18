@@ -1,3 +1,5 @@
+import { displayPath } from '@seedcord/errors/internal';
+
 /**
  * Options for formatting file paths.
  */
@@ -17,9 +19,9 @@ export interface FormatFileOptions {
 }
 
 /**
- * Formats a file path relative to the current working directory.
+ * Formats a file path relative to the current working directory, with forward slashes on every OS.
  *
- * A path outside the working directory, or any path on a runtime without `process`, is returned unchanged.
+ * It returns the full path when the path is outside the working directory or the runtime has no `process`.
  *
  * @example
  * ```ts
@@ -33,12 +35,5 @@ export function formatFilePath(filePath: string, options: FormatFileOptions = {}
     const { onlyDir = false, prefix = './' } = options;
 
     const target = onlyDir ? filePath.replace(/[/\\][^/\\]*$/u, '') : filePath;
-    // guarded global read keeps this off node:path, on workerd there is no cwd to relativize against
-    const cwd = typeof process !== 'undefined' && typeof process.cwd === 'function' ? process.cwd() : '';
-    // the boundary check keeps a sibling dir sharing the prefix (repo-extra vs repo) out
-    const boundary = target[cwd.length];
-    if (cwd && target.startsWith(cwd) && (boundary === undefined || boundary === '/' || boundary === '\\')) {
-        return `${prefix}${target.slice(cwd.length).replace(/^[/\\]+/u, '')}`;
-    }
-    return target;
+    return displayPath(target, { prefix });
 }

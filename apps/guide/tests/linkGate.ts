@@ -45,8 +45,12 @@ function routeOf(file: string): string {
     return route === '' ? '/' : route;
 }
 
+async function urlPathsUnder(dir: string): Promise<string[]> {
+    return (await readdir(dir, { recursive: true })).map((file) => file.split(path.sep).join('/'));
+}
+
 async function readGuidePages(): Promise<Map<string, string>> {
-    const files = (await readdir(CONTENT_DIR, { recursive: true })).filter((file) => file.endsWith('.mdx'));
+    const files = (await urlPathsUnder(CONTENT_DIR)).filter((file) => file.endsWith('.mdx'));
     const pages = await Promise.all(
         files.map(async (file) => [routeOf(file), await readFile(path.join(CONTENT_DIR, file), 'utf8')] as const)
     );
@@ -201,7 +205,7 @@ async function readSymbols(): Promise<Record<string, MemberAnchorsBySymbol>> {
 export async function loadGuideSite(): Promise<GuideSite> {
     const [pages, publicFiles, symbols] = await Promise.all([
         readGuidePages(),
-        readdir(PUBLIC_DIR, { recursive: true }),
+        urlPathsUnder(PUBLIC_DIR),
         readSymbols()
     ]);
 

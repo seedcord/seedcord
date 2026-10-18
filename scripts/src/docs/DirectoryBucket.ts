@@ -19,7 +19,8 @@ export class DirectoryBucket implements SiteBucket {
 
     async folders(prefix: string): Promise<string[]> {
         try {
-            const entries = await readdir(path.join(this.root, prefix), { withFileTypes: true });
+            // windows reports ENOENT for a file whose path ends in a separator. resolve drops it
+            const entries = await readdir(path.resolve(this.root, prefix), { withFileTypes: true });
             return entries.filter((entry) => entry.isDirectory()).map((entry) => `${prefix}${entry.name}/`);
         } catch (error) {
             if (isMissing(error)) return [];

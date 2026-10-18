@@ -1,15 +1,16 @@
-import { relative, resolve } from 'node:path';
+import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
 import { ApiDocsGenerator } from '#src/ApiDocsGenerator';
+import { posixRelative } from '#src/utils';
 
 const REPO_ROOT = resolve(__dirname, '../../..');
 
 async function discover(): Promise<string[]> {
     const generator = new ApiDocsGenerator({ logger: { log: () => undefined } });
     const dirs = await generator.discoverPackages();
-    return dirs.map((dir) => relative(REPO_ROOT, dir));
+    return dirs.map((dir) => posixRelative(REPO_ROOT, dir));
 }
 
 describe('workspace discovery', () => {

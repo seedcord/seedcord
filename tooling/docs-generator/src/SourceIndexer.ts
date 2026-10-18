@@ -3,6 +3,7 @@ import path from 'node:path';
 import * as ts from 'typescript';
 
 import { RuntimeBuild } from './RuntimeBuild';
+import { posixRelative, toPosix } from './utils';
 
 import type { PackageSourceIndex, ReexportEntry, SourceEntry, SourceScan } from './types';
 
@@ -24,8 +25,6 @@ interface SourceIndexOptions {
 }
 
 type TypeContainer = ts.ClassDeclaration | ts.InterfaceDeclaration | ts.EnumDeclaration;
-
-const toPosix = (filePath: string): string => filePath.split(path.sep).join('/');
 
 const joinName = (prefix: string, name: string): string => (prefix ? `${prefix}.${name}` : name);
 
@@ -125,7 +124,7 @@ export class SourceIndexer {
         if (decls.some((decl) => this.isOwnSource(decl.getSourceFile()))) return undefined;
         const ownSegment = path.basename(this.options.packageDir);
         for (const decl of decls) {
-            const rel = toPosix(path.relative(this.options.repoRoot, decl.getSourceFile().fileName));
+            const rel = posixRelative(this.options.repoRoot, decl.getSourceFile().fileName);
             const segment = /^packages\/([^/]+)\//.exec(rel)?.[1];
             if (segment && segment !== ownSegment) return this.options.packageNames?.[segment];
         }
@@ -150,7 +149,7 @@ export class SourceIndexer {
         const pos = sourceFile.getLineAndCharacterOfPosition(target.getStart(sourceFile));
         const line = pos.line + 1;
         const column = pos.character + 1;
-        const file = toPosix(path.relative(this.options.repoRoot, sourceFile.fileName));
+        const file = posixRelative(this.options.repoRoot, sourceFile.fileName);
         const entryValue: SourceEntry = { file, line, column };
         const { githubBase, ref } = this.options;
         if (githubBase) entryValue.url = `${githubBase}/blob/${ref}/${file}#L${line}C${column}`;

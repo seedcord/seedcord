@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { posixRelative } from '#src/lib/paths';
 import { ChangelogFile } from '#src/release/ChangelogFile';
 
 import type { PublishedPackage } from '#src/lib/published-packages';
@@ -24,7 +25,7 @@ export async function resolvePackages(
             version: entry.version,
             ...(oldVersion !== undefined && { oldVersion }),
             ...(commandOnly && { commandOnly }),
-            directory: path.relative(workspace.rootDir, pkg.dir),
+            directory: posixRelative(workspace.rootDir, pkg.dir),
             changelog: changelog.contents
         });
     }
