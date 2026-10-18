@@ -66,7 +66,8 @@
     "peerDependencies": {
         "@cloudflare/vite-plugin": "catalog:peer",
         "envapt": "catalog:peer",
-        "typescript": "catalog:consumerTypes"
+        "typescript": "catalog:consumerTypes",
+        "vite": "catalog:peer"
     },
     "peerDependenciesMeta": {
         "@cloudflare/vite-plugin": {
@@ -94,7 +95,6 @@
         "minimatch": "^10.2.6",
         "react": "catalog:react",
         "reflect-metadata": "catalog:deps",
-        "vite": "catalog:deps",
         "wrap-ansi": "^10.0.0"
     },
     "devDependencies": {
@@ -114,7 +114,8 @@
         "eslint-plugin-react-hooks": "catalog:eslint",
         "ink-testing-library": "^4.0.0",
         "tsx": "catalog:deps",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:peer",
+        "vite": "catalog:peer"
     },
     "publishConfig": {
         "access": "public",

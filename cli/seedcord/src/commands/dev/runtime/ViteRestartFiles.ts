@@ -4,8 +4,10 @@ import { basename, dirname, join, resolve } from 'node:path';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 
+import { viteEnvFiles } from '#core/modules/viteEnvFiles';
 import { watchedPath } from '#core/project/watchedPath';
 
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { FSWatcher } from 'node:fs';
 
 const logger = new Logger('HMR', { channel: 'hmr' });
@@ -17,6 +19,17 @@ export class ViteRestartFiles {
     constructor(dir: string, names: readonly string[]) {
         this.dir = watchedPath(dir);
         this.names = new Set(names);
+    }
+
+    public static forConfig(
+        { configFile, viteMode }: Pick<ResolvedSeedcordConfig, 'configFile' | 'viteMode'>,
+        targetFiles: readonly string[]
+    ): ViteRestartFiles {
+        return new ViteRestartFiles(dirname(configFile), [
+            basename(configFile),
+            ...viteEnvFiles(viteMode),
+            ...targetFiles
+        ]);
     }
 
     // chokidar passes forward slashes to vite's ignored matchers on windows

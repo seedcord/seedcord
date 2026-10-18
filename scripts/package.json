@@ -43,7 +43,7 @@
         "jsonc-parser": "^3.3.1",
         "string-argv": "^0.3.2",
         "typescript": "catalog:peer",
-        "vite": "catalog:deps",
+        "vite": "catalog:peer",
         "vitest": "catalog:test"
     }
 }

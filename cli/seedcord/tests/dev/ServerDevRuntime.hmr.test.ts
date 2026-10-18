@@ -100,6 +100,18 @@ describe('dev runtime hot reload', () => {
         await vi.waitFor(() => expect(events).toContainEqual({ type: 'restart-required' }), { timeout: 10_000 });
     }
 
+    // chokidar 3 to 5 emit ready before they watch nested folders when one of their paths is missing.
+    // vite passes it every env file for the mode, existing or not
+    async function saveUntilRestartRequired(file: string, text: string, events: DevEvent[]): Promise<void> {
+        await vi.waitFor(
+            async () => {
+                await writeFile(file, text);
+                expect(events).toContainEqual({ type: 'restart-required' });
+            },
+            { timeout: 10_000, interval: 200 }
+        );
+    }
+
     it('asks for a restart when a file the entry imports is saved', async () => {
         const { src, runtime, events } = await startedProject({
             'index.ts': "export { greeting } from './plugin';\n",
@@ -141,21 +153,38 @@ describe('dev runtime hot reload', () => {
         await expectRestartRequired(events);
     }, 60_000);
 
-    it('asks for a restart when the config is saved', async () => {
-        const { src, events } = await startedProject({ 'index.ts': 'export const ready = true;\n' });
+    it('asks for a restart when a file that no module imports matches hmr.restart', async () => {
+        const { src, events } = await startedProject(
+            { 'index.ts': 'export const ready = true;\n', 'schema/user.prisma': 'model User {}\n' },
+            ['schema/**']
+        );
 
-        await writeFile(join(dirname(src), 'seedcord.config.ts'), 'export default { idleAnimation: false };\n');
-
-        await expectRestartRequired(events);
+        await saveUntilRestartRequired(join(src, 'schema', 'user.prisma'), 'model User { id Int }\n', events);
     }, 60_000);
 
-    it('asks for a restart when the .env beside the config is saved', async () => {
-        const { src, events } = await startedProject({ 'index.ts': 'export const ready = true;\n' });
+    it('asks for a restart when an hmr.restart match outside root is saved', async () => {
+        const { src, events } = await startedProject({ 'index.ts': 'export const ready = true;\n' }, ['../prisma/**']);
+        const prisma = join(dirname(src), 'prisma');
+        await mkdir(prisma, { recursive: true });
+        await writeFile(join(prisma, 'schema.prisma'), 'model User {}\n');
 
-        await writeFile(join(dirname(src), '.env'), 'GREETING=after\n');
-
-        await expectRestartRequired(events);
+        await saveUntilRestartRequired(join(prisma, 'schema.prisma'), 'model User { id Int }\n', events);
     }, 60_000);
+
+    it.each([
+        ['seedcord.config.ts', 'export default { idleAnimation: false };\n'],
+        ['.env', 'GREETING=after\n'],
+        ['package.json', '{ "name": "hmr-fixture", "type": "module", "version": "1.0.1" }\n'],
+        ['tsconfig.json', '{}\n']
+    ])(
+        'asks for a restart when %s beside the config is saved',
+        async (file, text) => {
+            const { src, events } = await startedProject({ 'index.ts': 'export const ready = true;\n' });
+
+            await saveUntilRestartRequired(join(dirname(src), file), text, events);
+        },
+        60_000
+    );
 
     it.each(['.env', '.env.development.local'])(
         'keeps importing modules after %s is saved',

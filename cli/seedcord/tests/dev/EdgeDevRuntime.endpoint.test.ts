@@ -208,6 +208,39 @@ describe('EdgeDevRuntime endpoint', () => {
         expect(unsigned.status).toBe(401);
     }, 120_000);
 
+    it('reloads a handler saved after a file that bot.ts imports', async () => {
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        const { publicKey, sign } = await writeSigningEnv(projectDir);
+        await writeDevVars(projectDir, { DISCORD_BOT_TOKEN: FAKE_TOKEN, DISCORD_PUBLIC_KEY: publicKey });
+        const greeting = join(projectDir, 'src/greeting.ts');
+        const wave = join(projectDir, 'src/handlers/Wave.ts');
+        await writeFile(greeting, "export const greeting = 'before';\n");
+        await writeFile(wave, waveHandler('waved before'));
+        await editFile(join(projectDir, 'src/bot.ts'), (text) => `import './greeting';\n${text}`);
+        const logs = captureLogs();
+        const events: DevEvent[] = [];
+        await using started = await startedRuntime(projectDir, (event) => events.push(event));
+        await started.runtime.startBot(started.instance);
+        await writeFile(greeting, "export const greeting = 'after';\n");
+        await vi.waitFor(() => {
+            expect(events).toContainEqual({ type: 'restart-required' });
+        });
+
+        await writeFile(wave, waveHandler('waved after'));
+
+        let interaction = 0;
+        await vi.waitFor(
+            async () => {
+                interaction++;
+                const body = JSON.stringify({ ...JSON.parse(WAVE_INTERACTION), id: String(interaction) });
+                await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body, headers: await sign(body) });
+                expect(messagesOf(logs)).toContain('waved after');
+            },
+            { timeout: 20_000, interval: 500 }
+        );
+    }, 120_000);
+
     it('keeps the bot answering after bot.ts itself is saved', async () => {
         await using project = await edgeProject();
         const { projectDir } = project;

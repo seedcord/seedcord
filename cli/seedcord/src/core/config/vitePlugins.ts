@@ -57,15 +57,20 @@ function withThrownByOnErrors(plugin: Plugin, configFile: string): Plugin {
     const hooks = WRAPPED_HOOKS.filter((hook) => hook in plugin);
     if (hooks.length === 0) return plugin;
 
-    const prototype = Object.getPrototypeOf(plugin) as object | null;
-    // justified: a copy with the same prototype and own properties is the same kind of plugin
-    const copy = Object.create(prototype, Object.getOwnPropertyDescriptors(plugin)) as Plugin;
+    const descriptors: PropertyDescriptorMap = Object.getOwnPropertyDescriptors(plugin);
     for (const hook of hooks) {
         const record: RecordThrow = (caught, args) =>
             recordThrownBy(caught, { plugin: plugin.name, hook, configFile, moduleId: moduleIdOf(hook, args) });
-        Reflect.set(copy, hook, wrapHook(Reflect.get(plugin, hook), record));
+        descriptors[hook] = {
+            value: wrapHook(Reflect.get(plugin, hook), record),
+            writable: true,
+            enumerable: true,
+            configurable: true
+        };
     }
-    return copy;
+    const prototype = Object.getPrototypeOf(plugin) as object | null;
+    // justified: a copy with the same prototype and own properties is the same kind of plugin
+    return Object.create(prototype, descriptors) as Plugin;
 }
 
 type VitePluginEntry = { field: string; value: unknown } | { field: string; rejected: unknown };

@@ -32,7 +32,7 @@ Until v1.0.0, minor versions can break.
 `pnpm create seedcord` adds it to a new project. To add it to an existing one:
 
 ```sh
-pnpm add -D seedcord
+pnpm add -D seedcord vite
 ```
 
 ## Commands

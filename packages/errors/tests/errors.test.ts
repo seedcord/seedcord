@@ -1,3 +1,5 @@
+import { stripVTControlCharacters } from 'node:util';
+
 import { describe, expect, it } from 'vitest';
 
 import { SeedcordErrorCode, isSeedcordError } from '#src/index';
@@ -32,6 +34,42 @@ describe('Seedcord error constructors', () => {
         expect(typeError).toBeInstanceOf(TypeError);
         expect(rangeError).toBeInstanceOf(RangeError);
         expect(rangeError.message).toContain('foo.ts');
+    });
+});
+
+describe('a reason that ends in a code frame', () => {
+    const FRAME = 'YAMLException: bad indent\n\n 1 | reply: [broken\n-----^';
+
+    it('starts the fix on its own line and leaves the frame as it was', () => {
+        const error = new SeedcordError(SeedcordErrorCode.CoreVitePluginThrew, [
+            'yaml',
+            { hook: 'transform', loading: { kind: 'file', path: '/bot/src/ping.yaml' } },
+            '/bot/seedcord.config.ts',
+            FRAME
+        ]);
+
+        expect(error.message).toContain(`${FRAME}\nFix`);
+    });
+
+    it('ends a one-line reason with a period before the next sentence', () => {
+        const error = new SeedcordError(SeedcordErrorCode.CorePathUnreadable, ['/bot/src', 'EACCES']);
+
+        expect(error.message).toContain('EACCES. Check that it exists');
+    });
+});
+
+describe('a vitePlugins entry that rejected while seedcord read the config', () => {
+    it('says the entry rejected and points the fix at the import', () => {
+        const error = new SeedcordError(SeedcordErrorCode.CoreVitePluginThrew, [
+            'vitePlugins[0]',
+            {},
+            '/bot/seedcord.config.ts',
+            "Cannot find module 'yaml-plugin'"
+        ]);
+        const message = stripVTControlCharacters(error.message);
+
+        expect(message).toMatch(/^vitePlugins\[0\] in .* rejected while seedcord read the config\./);
+        expect(message).toContain('Check that the package is installed and that its import resolves.');
     });
 });
 

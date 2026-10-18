@@ -1,5 +1,3 @@
-import { dirname } from 'node:path';
-
 import { HostListenHost } from '@seedcord/types/internal';
 import { createServerModuleRunner } from 'vite';
 
@@ -8,12 +6,10 @@ import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { openViteServer } from '#core/modules/openViteServer';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
-import { viteEnvFiles } from '#core/modules/viteEnvFiles';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
 import { serverViteConfig } from './devServerConfig';
 import { InstanceLifecycle } from './InstanceLifecycle';
-import { ViteRestartFiles } from './ViteRestartFiles';
 
 import type { StartedRuntime } from './BaseDevRuntime';
 import type { DevRuntimeContext } from './DevRuntime';
@@ -23,13 +19,11 @@ export class ServerDevRuntime extends BaseDevRuntime {
     private readonly lifecycle = new InstanceLifecycle();
 
     protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<StartedRuntime> {
-        const { configFile, viteMode } = context.config;
-        const restartFiles = new ViteRestartFiles(dirname(configFile), viteEnvFiles(viteMode));
-        const hmr = this.openHmr(context, 'ssr', resources, restartFiles);
+        const hmr = this.openHmr(context, 'ssr', resources);
         const server = await openViteServer(
             resources,
             mergeViteConfig(serverViteConfig(context.config, process.cwd()), {
-                mode: viteMode,
+                mode: context.config.viteMode,
                 plugins: [hmr.plugin, ...context.config.vitePlugins]
             })
         ).catch(rethrowVitePluginError);

@@ -100,7 +100,6 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         // vite calls hotUpdate for files only
         server.watcher.on('addDir', (dir) => this.handleDirEvent(resolve(dir), 'createDir'));
         server.watcher.on('unlinkDir', (dir) => this.handleDirEvent(resolve(dir), 'deleteDir'));
-        server.watcher.on('change', (file) => this.handleChange(resolve(file)));
 
         this.dev?.on('seedcord:commands-update-prompt', (data) => {
             this.emit('event', { type: 'command-update-prompt', files: data.files });
@@ -132,11 +131,6 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
         this.lastUpdate.set(key, Date.now());
         return false;
-    }
-
-    // hotUpdate covers a critical file inside the root
-    private handleChange(file: string): void {
-        if (this.isCriticalFile(file)) this.reportChangeNeedingRestart(file);
     }
 
     private reportRestartRequired(file: string): void {
@@ -190,15 +184,13 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 
     private isCriticalFile(file: string): boolean {
-        const { root, configFile, instance, target } = this.config;
+        const { root, instance, target } = this.config;
         const relPath = posixRelative(root, file);
 
         return (
             [...this.restartPatterns].some((pattern) => minimatch(relPath, pattern)) ||
-            file === configFile ||
             file.endsWith('package.json') ||
             file.endsWith('tsconfig.json') ||
-            file.endsWith('.env') ||
             (target.kind === 'server' && file === resolve(root, target.entry)) ||
             file === resolve(root, instance)
         );

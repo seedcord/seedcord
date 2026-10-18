@@ -3,7 +3,13 @@ import { paint } from './palette';
 
 // a reason from a caught error may or may not end in a period
 function sentence(text: string): string {
+    // a multi-line reason usually ends in a code frame
+    if (text.includes('\n')) return text;
     return /[.!?]$/.test(text) ? text : `${text}.`;
+}
+
+function reasonThen(reason: string, next: string): string {
+    return `${sentence(reason)}${reason.includes('\n') ? '\n' : ' '}${next}`;
 }
 
 // @seedcord/utils depends on this package, so its pluralize is out of reach here
@@ -27,8 +33,7 @@ export interface VitePluginPlace {
     loading?: { kind: 'file'; path: string } | { kind: 'virtual'; id: string } | undefined;
 }
 
-function placeText({ hook, loading }: VitePluginPlace): string {
-    if (hook === undefined) return 'while seedcord read the config';
+function placeText(hook: string, loading: VitePluginPlace['loading']): string {
     const inHook = `in its ${paint.bold(hook)} hook`;
     if (loading === undefined) return inHook;
     const shown = loading.kind === 'file' ? paint.path(loading.path) : paint.bold(loading.id);
@@ -58,7 +63,7 @@ const messages = {
         reason: string,
         fix: string
     ) =>
-        `Could not read the emojis in ${where} to resolve ${paint.sky(key)} (${paint.bold(name)}). ${sentence(reason)} ${fix}`,
+        `Could not read the emojis in ${where} to resolve ${paint.sky(key)} (${paint.bold(name)}). ${reasonThen(reason, fix)}`,
     [SeedcordErrorCode.ConfigWebhookNotFound]: (envKey: string) =>
         `Discord has no webhook at the URL in ${paint.bold(envKey)}. Someone deleted it, or the id or token in the URL is wrong. Create a webhook and copy its URL.`,
     [SeedcordErrorCode.ConfigMissingEnv]: (name: string) =>
@@ -105,9 +110,11 @@ const messages = {
         configFile: string,
         reason: string
     ) =>
-        `The Vite plugin ${paint.sky(plugin)} from ${paint.bold('vitePlugins')} in ${paint.path(configFile)} threw ${placeText(place)}. ${sentence(reason)} ${vitePluginFix(place)}`,
+        place.hook === undefined
+            ? `${paint.sky(plugin)} in ${paint.path(configFile)} rejected while seedcord read the config. ${reasonThen(reason, 'Check that the package is installed and that its import resolves.')}`
+            : `The Vite plugin ${paint.sky(plugin)} from ${paint.bold('vitePlugins')} in ${paint.path(configFile)} threw ${placeText(place.hook, place.loading)}. ${reasonThen(reason, vitePluginFix(place))}`,
     [SeedcordErrorCode.CorePathUnreadable]: (path: string, reason: string) =>
-        `Could not read ${paint.path(path)}. ${sentence(reason)} Check that it exists and that this process can read it.`,
+        `Could not read ${paint.path(path)}. ${reasonThen(reason, 'Check that it exists and that this process can read it.')}`,
     [SeedcordErrorCode.CorePathOutsideRoot]: (path: string, root: string) =>
         `${paint.path(path)} is outside ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move it under ${paint.bold('root')}, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds it.`,
     [SeedcordErrorCode.CoreDirectoryRootUnknown]: (dir: string) =>

@@ -194,7 +194,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
 
             return names;
         } catch (error) {
-            logger.error(`Failed to reload file: ${file}`, vitePluginThrew(error) ?? error);
+            logger.error(`Failed to reload file: ${formatFilePath(file)}`, vitePluginThrew(error) ?? error);
             return null;
         }
     }

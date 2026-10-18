@@ -71,6 +71,21 @@ describe('a plugin from vitePlugins that throws', () => {
         expect(messageOf(caught)).toContain(`its ${hook} hook while loading src/shop.yaml`);
     });
 
+    it('reports the plugin that threw when the plugin object is frozen', async () => {
+        const plugin = onlyPlugin(
+            Object.freeze({
+                name: 'frozen-loader',
+                load: () => {
+                    throw new Error('bad yaml');
+                }
+            })
+        );
+
+        const caught = await rethrownFrom(() => callHook(plugin.load, ['/bot/src/shop.yaml']));
+
+        expect(messageOf(caught)).toContain('frozen-loader');
+    });
+
     it('wraps a thrown value that is not an Error', async () => {
         const plugin = onlyPlugin({
             name: 'shop-loader',

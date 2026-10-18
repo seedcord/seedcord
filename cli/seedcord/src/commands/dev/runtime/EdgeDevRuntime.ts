@@ -26,7 +26,6 @@ import { BaseDevRuntime } from './BaseDevRuntime';
 import { edgeViteConfig } from './devServerConfig';
 import { listenForInteractions } from './listenForInteractions';
 import { loadWorkerEntry } from './loadWorkerEntry';
-import { ViteRestartFiles } from './ViteRestartFiles';
 
 import type { ResolvedEdgeTarget } from '#core/config/schema';
 import type { StartedRuntime } from './BaseDevRuntime';
@@ -121,12 +120,12 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             WorkerEnv.load(this.target.cloudflareConfig, config.viteMode)
         ]);
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
-        const { cloudflareConfig } = this.target;
-        const restartFiles = new ViteRestartFiles(dirname(cloudflareConfig), [
-            basename(cloudflareConfig),
+        // vite reruns the entry's load hook after any update that reaches the entry. bot.ts throws when it runs a second time
+        let functionExports: Promise<string[]> | undefined;
+        const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, [
+            basename(this.target.cloudflareConfig),
             ...workerEnv.files
         ]);
-        const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, restartFiles);
         const server = await openViteServer(
             resources,
             mergeViteConfig(edgeViteConfig(config, viteRoot, process.cwd()), {
@@ -137,16 +136,8 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                         folders,
                         instanceKey: viteKey(viteRoot, config.instance),
                         rootKey: viteKey(viteRoot, config.root),
-                        functionExports: async () => {
-                            this.emit(context, {
-                                type: 'progress',
-                                status: `Importing ${displayPath(config.instance)}…`
-                            });
-                            const names = await functionExportsOf(await modulesReady.promise, config.instance);
-                            reportWorkerExports(names);
-                            this.emit(context, { type: 'progress', status: 'Starting workerd…' });
-                            return names;
-                        },
+                        functionExports: () =>
+                            (functionExports ??= this.readFunctionExports(context, modulesReady.promise)),
                         mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
                     }),
                     inNodeOnly(edgeStandIns(() => Promise.resolve(workerEnv))),
@@ -170,6 +161,18 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         // close() waits on open keep-alive sockets
         resources.defer(() => endpoint.server.closeAllConnections());
         return { context, server, modules, hmr, port: endpoint.port, resources };
+    }
+
+    private async readFunctionExports(
+        context: DevRuntimeContext,
+        modulesReady: Promise<RunnerModuleLoader>
+    ): Promise<string[]> {
+        const { instance } = context.config;
+        this.emit(context, { type: 'progress', status: `Importing ${displayPath(instance)}…` });
+        const names = await functionExportsOf(await modulesReady, instance);
+        reportWorkerExports(names);
+        this.emit(context, { type: 'progress', status: 'Starting workerd…' });
+        return names;
     }
 
     // workerd runs its own copy of the bot

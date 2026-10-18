@@ -244,9 +244,6 @@ catalogs:
     type-fest:
       specifier: ^5.8.0
       version: 5.10.0
-    vite:
-      specifier: ^8.3.4
-      version: 8.3.4
     yaml:
       specifier: ^2.9.1
       version: 2.9.1
@@ -330,6 +327,9 @@ catalogs:
     typescript:
       specifier: ^6.0.3
       version: 6.0.3
+    vite:
+      specifier: ^8.3.4
+      version: 8.3.4
     wrangler:
       specifier: ^4.150.0
       version: 4.150.0
@@ -956,9 +956,6 @@ importers:
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
-      vite:
-        specifier: catalog:deps
-        version: 8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0)
       wrap-ansi:
         specifier: ^10.0.0
         version: 10.0.2
@@ -1014,6 +1011,9 @@ importers:
       typescript:
         specifier: catalog:peer
         version: 6.0.3
+      vite:
+        specifier: catalog:peer
+        version: 8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0)
 
   mocks/edge:
     dependencies:
@@ -1169,7 +1169,7 @@ importers:
         specifier: catalog:deps
         version: 5.10.0
       vite:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0)
 
   packages/custom-id:
@@ -1703,7 +1703,7 @@ importers:
         specifier: catalog:peer
         version: 6.0.3
       vite:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
       vitest:
         specifier: catalog:test
