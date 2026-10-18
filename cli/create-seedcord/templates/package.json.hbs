@@ -9,12 +9,23 @@
     "scripts": {
         "dev": "seedcord dev",
         "build": "seedcord build",
+{{#if isEdge}}
+        "deploy": "seedcord build && cf deploy --prebuilt",
+{{else}}
         "start": "node --enable-source-maps dist/index.mjs",
+{{/if}}
         "codegen": "seedcord codegen",
+{{#if isEdge}}
+        "types": "cf workers types",
+{{/if}}
+        "commands": "seedcord commands",
+        "commands:deploy": "seedcord commands deploy",
+        "tc": "tsc --noEmit",
         "lint": "eslint \"src/**/*.ts\" --cache",
         "lint:fix": "eslint \"src/**/*.ts\" --fix --cache",
         "fmt": "prettier --write \"src/**/*.{ts,json,md}\" --cache",
         "fmt:check": "prettier --check \"src/**/*.{ts,json,md}\" --cache",
-        "tc": "tsc --noEmit"
+        "check": "{{ pm.run }} tc && {{ pm.run }} lint && {{ pm.run }} fmt:check"{{#if isEdge}},
+        "postinstall": "cf workers types"{{/if}}
     }
 }

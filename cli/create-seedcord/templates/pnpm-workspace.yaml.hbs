@@ -1,4 +1,7 @@
 {{#if pm.isPnpm}}
 allowBuilds:
     unrs-resolver: false
+{{#if isEdge}}
+    workerd: true
+{{/if}}
 {{/if}}

@@ -10,7 +10,7 @@ Rules for an AI coding agent working in this repo.
 
 The API reference is at <https://seedcord.org/docs>, one page per symbol.
 
-This project runs on the {{#if isGateway}}gateway{{else}}http{{/if}} transport and imports everything from `{{ transportPackage }}`. A page marks anything that differs between the two.
+This project runs on the {{#if isGateway}}gateway{{else}}http{{/if}} transport{{#if isEdge}} on Cloudflare Workers{{/if}} and imports everything from `{{ transportPackage }}`. A page marks anything that differs between the two.
 
 ## How a command works here
 

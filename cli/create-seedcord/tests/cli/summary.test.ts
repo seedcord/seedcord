@@ -25,6 +25,7 @@ const GATEWAY: ScaffoldAnswers = {
     transport: 'gateway',
     capabilities: ['guild-messages'],
     token: 'aaa.bbb.ccc',
+    testingGuilds: [],
     botColor: 'Blurple',
     install: true,
     git: true
@@ -33,7 +34,9 @@ const GATEWAY: ScaffoldAnswers = {
 const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'http',
+    runtime: 'server',
     token: 'aaa.bbb.ccc',
+    testingGuilds: [],
     botColor: 'Blurple',
     install: true,
     git: true

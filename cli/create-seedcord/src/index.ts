@@ -122,6 +122,8 @@ async function reportOutcome(
     output.row('again', [paint.bold(reproducingCommand(answers, agent))]);
     output.row('guide', [paint.sky('https://seedcord.org/guide')]);
     output.line();
+    output.line(paint.mute('A star on GitHub helps more people find seedcord: https://github.com/seedcord/seedcord'));
+    output.line();
 }
 
 const output = new CreateOutput([...STEPS.map((step) => step.label), ...STEP_LABELS]);

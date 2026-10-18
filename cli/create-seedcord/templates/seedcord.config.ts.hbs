@@ -3,7 +3,9 @@ import { defineConfig } from 'seedcord';
 export default defineConfig({
     root: './src',
     instance: './bot.ts',
+{{#unless isEdge}}
     entry: './index.ts',
+{{/unless}}
     // set false to hold the running arc and live dot still, which cuts idle redraws by ~80%
     idleAnimation: true,
     hmr: {

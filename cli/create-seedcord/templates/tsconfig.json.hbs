@@ -4,12 +4,22 @@
     "compilerOptions": {
         "rootDir": "./",
         "outDir": "./dist",
+{{#if isEdge}}
+        "customConditions": ["workerd"],
+{{/if}}
         "paths": {
             "#src/*": ["./src/*"],
             "#components/*": ["./src/components/*"],
             "#plugins/*": ["./src/plugins/*"]
         }
     },
-    "include": ["src/**/*.ts", "eslint.config.ts", "prettier.config.ts", "seedcord.config.ts"],
+    "include": [
+        "src/**/*.ts",
+        "eslint.config.ts",
+        "prettier.config.ts",
+        "seedcord.config.ts"{{#if isEdge}},
+        "cloudflare.config.ts",
+        ".cloudflare/types/index.d.ts"{{/if}}
+    ],
     "exclude": ["node_modules", "dist"]
 }

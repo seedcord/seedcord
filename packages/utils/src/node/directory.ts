@@ -142,7 +142,7 @@ interface BuiltFileLoaders {
     text: Record<string, TextLoader>;
     // seedcord dev runs the source files themselves
     sourcePaths?: boolean;
-    // relative to root. only a server build writes it
+    // a server build writes it relative to root
     configFile?: string;
 }
 

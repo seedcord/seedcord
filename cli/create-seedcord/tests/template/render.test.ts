@@ -16,6 +16,7 @@ const GATEWAY: ScaffoldAnswers = {
     transport: 'gateway',
     capabilities: ['reactions'],
     token: 'aaa.bbb.ccc',
+    testingGuilds: [],
     botColor: 'Blurple',
     install: true,
     git: true
@@ -24,11 +25,15 @@ const GATEWAY: ScaffoldAnswers = {
 const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'http',
+    runtime: 'server',
     token: 'aaa.bbb.ccc',
+    testingGuilds: [],
     botColor: 'Blurple',
     install: true,
     git: true
 };
+
+const EDGE: ScaffoldAnswers = { ...HTTP, runtime: 'edge' };
 
 async function render(answers: ScaffoldAnswers): Promise<Map<string, string>> {
     const files = await renderTemplates(TEMPLATES, buildContext(answers, EXTRAS));
@@ -42,6 +47,11 @@ async function renderOne(answers: ScaffoldAnswers, path: string): Promise<string
     if (contents === undefined) throw new Error(`${path} was never rendered`);
 
     return contents;
+}
+
+async function scriptsOf(answers: ScaffoldAnswers): Promise<Record<string, string | undefined>> {
+    const manifest = JSON.parse(await renderOne(answers, 'package.json')) as { scripts: Record<string, string> };
+    return manifest.scripts;
 }
 
 describe('renderTemplates', () => {
@@ -216,10 +226,76 @@ describe('the rendered http config', () => {
         expect(bot).not.toContain('clientOptions');
     });
 
+    it('writes the test servers you gave into .env', async () => {
+        const env = await renderOne({ ...HTTP, testingGuilds: ['613425648685547541', '1100000000000000000'] }, '.env');
+
+        expect(env).toMatch(/^TESTING_GUILD_IDS=613425648685547541,1100000000000000000$/m);
+    });
+
     it('writes an empty DISCORD_BOT_TOKEN when you skipped the token', async () => {
         const env = await renderOne({ ...HTTP, token: null }, '.env');
 
         expect(env).toMatch(/^DISCORD_BOT_TOKEN=$/m);
+    });
+});
+
+describe('the rendered edge project', () => {
+    it('writes a cloudflare.config.ts and no entry file', async () => {
+        const files = await render(EDGE);
+
+        expect(files.has('cloudflare.config.ts')).toBe(true);
+        expect(files.has('src/index.ts')).toBe(false);
+    });
+
+    it('writes no cloudflare.config.ts for a server bot', async () => {
+        const files = await render(HTTP);
+
+        expect(files.has('cloudflare.config.ts')).toBe(false);
+    });
+
+    it('leaves entry out of seedcord.config.ts, which the cli refuses on edge', async () => {
+        expect(await renderOne(EDGE, 'seedcord.config.ts')).not.toMatch(/\bentry\b/);
+        expect(await renderOne(HTTP, 'seedcord.config.ts')).toContain("entry: './index.ts'");
+    });
+
+    it("type-checks against the worker's build and the types cf writes", async () => {
+        const tsconfig = JSON.parse(await renderOne(EDGE, 'tsconfig.json')) as {
+            compilerOptions: { customConditions?: string[] };
+            include: string[];
+        };
+
+        expect(tsconfig.compilerOptions.customConditions).toEqual(['workerd']);
+        expect(tsconfig.include).toContain('cloudflare.config.ts');
+        expect(tsconfig.include).toContain('.cloudflare/types/index.d.ts');
+    });
+
+    it("lets pnpm run workerd's install script", async () => {
+        expect(await renderOne(EDGE, 'pnpm-workspace.yaml')).toBe(
+            'allowBuilds:\n    unrs-resolver: false\n    workerd: true\n'
+        );
+    });
+
+    it('deploys through cf and has nothing to start', async () => {
+        const scripts = await scriptsOf(EDGE);
+
+        expect(scripts.deploy).toBe('seedcord build && cf deploy --prebuilt');
+        expect(scripts.types).toBe('cf workers types');
+        expect(scripts.postinstall).toBe('cf workers types');
+        expect(scripts.start).toBeUndefined();
+    });
+});
+
+describe('the rendered scripts', () => {
+    it.each([
+        ['gateway', GATEWAY],
+        ['http', HTTP],
+        ['edge', EDGE]
+    ])('give the %s bot scripts to list and deploy its commands and to run every check', async (_kind, answers) => {
+        const scripts = await scriptsOf(answers);
+
+        expect(scripts.commands).toBe('seedcord commands');
+        expect(scripts['commands:deploy']).toBe('seedcord commands deploy');
+        expect(scripts.check).toBe('pnpm run tc && pnpm run lint && pnpm run fmt:check');
     });
 });
 

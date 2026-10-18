@@ -2,18 +2,9 @@ import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { parseInput, wantsHelp, wantsVerbose, wantsVersion } from '#cli/parseInput';
+import { thrownBy } from '#tests/thrownBy';
 
 const TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;
-
-function thrownBy(run: () => unknown): unknown {
-    try {
-        run();
-    } catch (error) {
-        return error;
-    }
-
-    return undefined;
-}
 
 describe('parseInput', () => {
     it('reads every step flag into its answer', () => {
@@ -25,6 +16,10 @@ describe('parseInput', () => {
             token: TOKEN,
             botColor: 'Blurple'
         });
+    });
+
+    it('reads where an http bot runs from --runtime', () => {
+        expect(parseInput(['my-bot', '--transport', 'http', '--runtime', 'edge']).runtime).toBe('edge');
     });
 
     it('takes the directory from a bare argument', () => {

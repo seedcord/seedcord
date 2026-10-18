@@ -5,8 +5,14 @@ dist/
 *.tsbuildinfo
 .eslintcache
 .seedcord/
+{{#if isEdge}}
+.cloudflare/
+{{/if}}
 
 .env*
 !.env.example
+{{#if isEdge}}
+.dev.vars*
+{{/if}}
 
 .DS_Store

@@ -5,25 +5,20 @@ import { runFlow } from '#interview/runFlow';
 import { botColorStep } from '#interview/steps/botColor';
 import { capabilitiesStep } from '#interview/steps/capabilities';
 import { directoryStep } from '#interview/steps/directory';
+import { runtimeStep } from '#interview/steps/runtime';
+import { testingGuildsStep } from '#interview/steps/testingGuilds';
 import { tokenStep } from '#interview/steps/token';
 import { transportStep } from '#interview/steps/transport';
-
-function thrownBy(run: () => unknown): unknown {
-    try {
-        run();
-    } catch (error) {
-        return error;
-    }
-
-    return undefined;
-}
+import { thrownBy } from '#tests/thrownBy';
 
 describe('a rejected flag value', () => {
     const rejects: [flag: string, run: () => unknown, reason: string][] = [
         ['dir', () => directoryStep.flag.parse('   '), 'cannot be empty'],
         ['transport', () => transportStep.flag.parse('websocket'), 'websocket'],
+        ['runtime', () => runtimeStep.flag.parse('lambda'), 'lambda'],
         ['capabilities', () => capabilitiesStep.flag.parse('telepathy'), 'telepathy'],
         ['token', () => tokenStep.flag.parse('aaa.bbb'), 'Bot page'],
+        ['testing-guilds', () => testingGuildsStep.flag.parse('my-server'), 'my-server'],
         ['color', () => botColorStep.flag.parse('chartreuse'), 'chartreuse']
     ];
 

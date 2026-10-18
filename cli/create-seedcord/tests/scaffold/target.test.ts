@@ -6,21 +6,12 @@ import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { claimTarget } from '#scaffold/target';
+import { thrownBy } from '#tests/thrownBy';
 
 async function scratch(): Promise<string> {
     const dir = await mkdtempDisposable(join(tmpdir(), 'create-seedcord-'));
     onTestFinished(() => dir.remove());
     return dir.path;
-}
-
-function thrownBy(run: () => unknown): unknown {
-    try {
-        run();
-    } catch (error) {
-        return error;
-    }
-
-    return undefined;
 }
 
 describe('claimTarget', () => {

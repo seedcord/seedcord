@@ -53,8 +53,10 @@ export function dashboardToggles(capabilities: string[]): string[] {
 export function reproducingCommand(answers: ScaffoldAnswers, agent: AgentName): string {
     const flags = [
         `--transport ${answers.transport}`,
+        ...(answers.runtime === undefined ? [] : [`--runtime ${answers.runtime}`]),
         ...(answers.capabilities === undefined ? [] : [`--capabilities ${shellWord(answers.capabilities.join(','))}`]),
         secretFlag(answers.token, 'token', 'YOUR_TOKEN'),
+        `--testing-guilds ${shellWord(answers.testingGuilds.join(','))}`,
         `--color ${shellWord(answers.botColor)}`,
         switchFlag(answers.install, 'install'),
         switchFlag(answers.git, 'git')

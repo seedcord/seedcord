@@ -4,10 +4,10 @@ import type { ColorName } from '@seedcord/types';
 export interface Answers {
     directory: string;
     transport: 'gateway' | 'http';
-    // capability ids the intent map resolves into intents and partials
+    runtime: 'server' | 'edge';
     capabilities: string[];
-    // null leaves the key empty in .env for the user to fill in
     token: string | null;
+    testingGuilds: string[];
     botColor: ColorName | `#${string}`;
     install: boolean;
     git: boolean;

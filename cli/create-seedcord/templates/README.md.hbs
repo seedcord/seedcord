@@ -1,6 +1,6 @@
 # {{ projectName }}
 
-A Discord bot built with [seedcord](https://seedcord.org){{#if isGateway}} on the gateway transport{{else}} on the http transport{{/if}}.
+A Discord bot built with [seedcord](https://seedcord.org){{#if isGateway}} on the gateway transport{{else}} on the http transport{{#if isEdge}}, running on Cloudflare Workers{{/if}}{{/if}}.
 
 ## Running it
 
@@ -17,11 +17,22 @@ That starts the dev server with hot reload{{#unless isGateway}} and opens a tunn
 | script | what it does |
 | --- | --- |
 | `{{ pm.run }} dev` | dev server with hot reload |
+{{#if isEdge}}
+| `{{ pm.run }} build` | build the worker into `.cloudflare/output/` |
+| `{{ pm.run }} deploy` | build, then upload the worker with `cf deploy` |
+{{else}}
 | `{{ pm.run }} build` | compile to `dist/` |
 | `{{ pm.run }} start` | run the compiled build |
+{{/if}}
 | `{{ pm.run }} codegen` | regenerate `src/seedcord-gen.d.ts` |
-| `{{ pm.run }} lint` | eslint |
+{{#if isEdge}}
+| `{{ pm.run }} types` | regenerate the binding types in `.cloudflare/types/` |
+{{/if}}
+| `{{ pm.run }} commands` | list, deploy, or clean up your commands on Discord |
+| `{{ pm.run }} commands:deploy` | send your commands to Discord |
 | `{{ pm.run }} tc` | type-check |
+| `{{ pm.run }} lint` | eslint |
+| `{{ pm.run }} check` | type-check, lint, and check formatting |
 
 <!-- prettier-ignore-end -->
 
@@ -38,11 +49,18 @@ Run `codegen` after you add a command or change its options. It writes the types
 | `DISCORD_BOT_TOKEN` | yes |
 | `UNKNOWN_EXCEPTION_WEBHOOK_URL` | no |
 | `HANDLED_EXCEPTION_WEBHOOK_URL` | no |
+| `TESTING_GUILD_IDS` | no, empty deploys your commands to every server |
+{{#unless isEdge}}
 | `ENV` | no, defaults to `development` |
+{{/unless}}
 
 <!-- prettier-ignore-end -->
 
 The two webhook keys take Discord webhook URLs. Set them to get error reports posted to a channel.
+{{#if isEdge}}
+
+A worker gets only the keys that `cloudflare.config.ts` declares. Add a line there for each new one your bot reads. `{{ pm.run }} dev` takes their values from `.env`. Cloudflare refuses to deploy a worker while one of its declared secrets has no value, so the first deploy of a new worker needs `cf deploy --prebuilt --secrets-file` with a value for each one.
+{{/if}}
 
 ## Where things go
 

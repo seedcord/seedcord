@@ -24,7 +24,8 @@ const PACKAGE_OF: Record<string, string> = {
     eslint: 'eslint',
     prettier: 'prettier',
     seedcord: 'seedcord',
-    tsc: 'typescript'
+    tsc: 'typescript',
+    cf: 'cf'
 };
 
 const GATEWAY: ScaffoldAnswers = {
@@ -32,6 +33,7 @@ const GATEWAY: ScaffoldAnswers = {
     transport: 'gateway',
     capabilities: ['guild-messages'],
     token: 'aaa.bbb.ccc',
+    testingGuilds: [],
     botColor: 'Blurple',
     install: true,
     git: true
@@ -40,11 +42,23 @@ const GATEWAY: ScaffoldAnswers = {
 const HTTP: ScaffoldAnswers = {
     directory: 'my-bot',
     transport: 'http',
+    runtime: 'server',
     token: 'aaa.bbb.ccc',
+    testingGuilds: [],
     botColor: 'Blurple',
     install: true,
     git: true
 };
+
+const EDGE: ScaffoldAnswers = { ...HTTP, runtime: 'edge' };
+
+const SEEDCORD_CLI = resolve(import.meta.dirname, '../../../seedcord');
+
+async function seedcordTestedVersion(name: string): Promise<string> {
+    const manifest = await readFile(join(SEEDCORD_CLI, 'node_modules', name, 'package.json'), 'utf8');
+    // justified: a package manifest carries its version
+    return (JSON.parse(manifest) as { version: string }).version;
+}
 
 interface Recorded {
     command: string;
@@ -134,6 +148,20 @@ describe('scaffold', () => {
         expect(order).toEqual(['pnpm add', 'pnpm add', 'pnpm exec', 'pnpm exec', 'git init', 'git add', 'git commit']);
     });
 
+    it('writes the binding types of an edge bot in the types step', async () => {
+        const target = await scratchTarget();
+        const { runner, calls } = recorder();
+
+        await scaffold({ ...baseInput(target), answers: EDGE }, runner);
+
+        const spoken = calls.map((call) => `${call.command} ${call.args.join(' ')}`);
+        expect(spoken.slice(2, 5)).toEqual([
+            'pnpm exec prettier --write .',
+            'pnpm exec seedcord codegen',
+            'pnpm exec cf workers types'
+        ]);
+    });
+
     it('installs the gateway packages and the shared dev ones', async () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder();
@@ -147,11 +175,16 @@ describe('scaffold', () => {
         expect(dev?.args).toContain('@types/node');
     });
 
-    it('installs every tool the generated scripts call', async () => {
+    it.each([
+        ['gateway', GATEWAY],
+        ['http', HTTP],
+        ['edge', EDGE]
+    ])('installs every tool the scripts call, for a %s bot', async (_kind, answers) => {
         const target = await scratchTarget();
         const { runner, calls } = recorder();
+        const input = { ...baseInput(target), answers };
 
-        await scaffold(baseInput(target), runner);
+        await scaffold(input, runner);
 
         const manifest = JSON.parse(await readFile(join(target, 'package.json'), 'utf8')) as {
             scripts: Record<string, string>;
@@ -160,13 +193,26 @@ describe('scaffold', () => {
 
         for (const command of Object.values(manifest.scripts)) {
             const binary = command.split(' ')[0] ?? '';
-            if (BUILT_IN.has(binary)) continue;
+            if (BUILT_IN.has(binary) || binary === input.agent) continue;
 
             const pkg = PACKAGE_OF[binary];
             expect(pkg, `${binary} maps to no package`).toBeDefined();
             expect(installed.some((arg) => arg === pkg || arg.startsWith(`${pkg}@`))).toBe(true);
         }
     });
+
+    it.each(['cf', '@cloudflare/vite-plugin'])(
+        'installs the %s version that seedcord tests its edge build on',
+        async (name) => {
+            const target = await scratchTarget();
+            const { runner, calls } = recorder();
+
+            await scaffold({ ...baseInput(target), answers: EDGE }, runner);
+
+            const pinned = calls[1]?.args.find((arg) => arg.startsWith(`${name}@`));
+            expect(pinned).toBe(`${name}@${await seedcordTestedVersion(name)}`);
+        }
+    );
 
     it('pins typescript to the last major typescript-eslint supports', async () => {
         const target = await scratchTarget();

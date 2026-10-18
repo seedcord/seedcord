@@ -1,0 +1,35 @@
+import { describe, expect, it } from 'vitest';
+
+import { parseInput } from '#cli/parseInput';
+import { runFlow } from '#interview/runFlow';
+import { testingGuildsStep } from '#interview/steps/testingGuilds';
+
+import type { Prompter } from '@seedcord/cli-prompts';
+
+const GUILD = '613425648685547541';
+const OTHER_GUILD = '1100000000000000000';
+
+describe('the testing guilds step', () => {
+    it('reads a comma separated list of guild ids from --testing-guilds', () => {
+        const supplied = parseInput(['my-bot', '--testing-guilds', `${GUILD}, ${OTHER_GUILD}`]);
+
+        expect(supplied.testingGuilds).toEqual([GUILD, OTHER_GUILD]);
+    });
+
+    it('reads the empty --testing-guilds that the re-run command prints as every server', () => {
+        expect(parseInput(['my-bot', '--testing-guilds', '']).testingGuilds).toEqual([]);
+    });
+
+    it('deploys everywhere when there is no terminal to ask on', async () => {
+        const answers = await runFlow([testingGuildsStep], {}, { interactive: false });
+
+        expect(answers.testingGuilds).toEqual([]);
+    });
+
+    it('deploys everywhere when Enter skips the question', async () => {
+        // the step only calls text
+        const prompter = { text: () => Promise.resolve('') } as unknown as Prompter;
+
+        expect(await testingGuildsStep.ask({}, prompter)).toEqual([]);
+    });
+});

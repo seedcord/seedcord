@@ -9,6 +9,7 @@ const GATEWAY: ScaffoldAnswers = {
     transport: 'gateway',
     capabilities: ['reactions'],
     token: 'aaa.bbb.ccc',
+    testingGuilds: [],
     botColor: 'Blurple',
     install: true,
     git: true
@@ -17,7 +18,9 @@ const GATEWAY: ScaffoldAnswers = {
 const HTTP: ScaffoldAnswers = {
     directory: 'edge/my-bot',
     transport: 'http',
+    runtime: 'server',
     token: 'aaa.bbb.ccc',
+    testingGuilds: [],
     botColor: '#ff8800',
     install: true,
     git: true
