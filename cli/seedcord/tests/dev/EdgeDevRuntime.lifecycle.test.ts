@@ -230,14 +230,17 @@ describe('EdgeDevRuntime lifecycle', () => {
 
     it('throws CoreVitePluginThrew for a plugin that throws while edge dev starts', async () => {
         await using project = await edgeProject();
-        const vitePlugins = await resolveVitePlugins([
-            {
-                name: 'breaks-on-start',
-                configResolved: () => {
-                    throw new Error('bad option');
+        const vitePlugins = await resolveVitePlugins(
+            [
+                {
+                    name: 'breaks-on-start',
+                    configResolved: () => {
+                        throw new Error('bad option');
+                    }
                 }
-            }
-        ]);
+            ],
+            join(project.projectDir, 'seedcord.config.ts')
+        );
 
         const caught: unknown = await startedRuntime(project.projectDir, undefined, { vitePlugins }).catch(
             (error: unknown) => error
@@ -252,15 +255,18 @@ describe('EdgeDevRuntime lifecycle', () => {
         const { projectDir } = project;
         await writeFile(join(projectDir, 'src/word.ts'), "export const word = 'ok';\n");
         await writeFile(join(projectDir, 'src/handlers/Word.ts'), "export { word } from '../word';\n");
-        const vitePlugins = await resolveVitePlugins([
-            {
-                name: 'breaks-in-transform',
-                transform: (_code, id) => {
-                    if (id.endsWith('/word.ts')) throw new Error('bad yaml on line 3');
-                    return undefined;
+        const vitePlugins = await resolveVitePlugins(
+            [
+                {
+                    name: 'breaks-in-transform',
+                    transform: (_code, id) => {
+                        if (id.endsWith('/word.ts')) throw new Error('bad yaml on line 3');
+                        return undefined;
+                    }
                 }
-            }
-        ]);
+            ],
+            join(projectDir, 'seedcord.config.ts')
+        );
         await using started = await startedRuntime(projectDir, undefined, { vitePlugins });
 
         // the worker's error crosses the dev channel as a plain Error that keeps its code

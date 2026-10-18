@@ -1,7 +1,4 @@
-import { setVitePlugins } from '@seedcord/utils/node/internal';
 import { createServerModuleRunner } from 'vite';
-
-import { vitePluginNames } from '#core/config/vitePlugins';
 
 import { edgeStandIns } from './edgeStandIns';
 import { openViteServer } from './openViteServer';
@@ -18,14 +15,12 @@ import type { ModuleRunner } from 'vite/module-runner';
 class ViteModuleLoader extends RunnerModuleLoader implements AsyncDisposable {
     constructor(
         private readonly server: ViteDevServer,
-        runner: ModuleRunner,
-        private readonly runsVitePlugins: boolean
+        runner: ModuleRunner
     ) {
         super(runner);
     }
 
     public async [Symbol.asyncDispose](): Promise<void> {
-        if (this.runsVitePlugins) setVitePlugins(undefined);
         await this.runner.close();
         await this.server.close();
     }
@@ -65,12 +60,7 @@ export async function openModuleLoader(
     const runner = createServerModuleRunner(server.environments.ssr, { hmr: false });
     onFailure.defer(() => runner.close());
 
-    const runsVitePlugins = use !== 'config';
-    if (runsVitePlugins) {
-        setVitePlugins(vitePluginNames(use));
-        onFailure.defer(() => setVitePlugins(undefined));
-    }
-    const loader = new ViteModuleLoader(server, runner, runsVitePlugins);
+    const loader = new ViteModuleLoader(server, runner);
     if (runsWorkerCode) await loader.bindEdgeEnv();
 
     onFailure.move();

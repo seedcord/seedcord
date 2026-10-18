@@ -1,6 +1,7 @@
 import { mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
@@ -78,15 +79,18 @@ describe('dev runtime vitePlugins', () => {
         const temp = await mkdtempDisposable(join(tmpdir(), 'dev-vite-plugins-'));
         onTestFinished(() => temp.remove());
         await writeProject(temp.path);
-        const vitePlugins = await resolveVitePlugins([
-            {
-                name: 'breaks-on-start',
-                configureServer: () => {
-                    throw new Error('bad option');
-                }
-            }
-        ]);
         const context = devContextFor(temp.path, 'index.ts');
+        const vitePlugins = await resolveVitePlugins(
+            [
+                {
+                    name: 'breaks-on-start',
+                    configureServer: () => {
+                        throw new Error('bad option');
+                    }
+                }
+            ],
+            context.config.configFile
+        );
         const runtime = new ServerDevRuntime();
         onTestFinished(() => runtime.stop());
 
@@ -98,33 +102,42 @@ describe('dev runtime vitePlugins', () => {
         expect(caught.message).toContain('breaks-on-start');
     }, 60_000);
 
-    it('throws CoreVitePluginThrew with the file it was loading for a plugin that throws in transform', async () => {
-        const temp = await mkdtempDisposable(join(tmpdir(), 'dev-vite-plugins-'));
-        onTestFinished(() => temp.remove());
-        await writeProject(temp.path);
-        await writeFile(join(temp.path, 'src', 'word.ts'), "export const word = 'ok';\n");
-        await writeFile(join(temp.path, 'src', 'reexport.ts'), "export { word } from './word';\n");
-        const vitePlugins = await resolveVitePlugins([
-            {
-                name: 'breaks-in-transform',
-                transform: (_code, id) => {
-                    if (id.endsWith('/word.ts')) throw new Error('bad yaml on line 3');
-                    return undefined;
-                }
-            }
-        ]);
-        const context = devContextFor(temp.path, 'reexport.ts');
-        const runtime = new ServerDevRuntime();
-        onTestFinished(() => runtime.stop());
-        await runtime.start({ ...context, config: { ...context.config, vitePlugins } });
+    it.each(['load', 'transform'] as const)(
+        'throws CoreVitePluginThrew with the file it was loading for a plugin that throws in %s',
+        async (hook) => {
+            const temp = await mkdtempDisposable(join(tmpdir(), 'dev-vite-plugins-'));
+            onTestFinished(() => temp.remove());
+            await writeProject(temp.path);
+            await writeFile(join(temp.path, 'src', 'word.ts'), "export const word = 'ok';\n");
+            await writeFile(join(temp.path, 'src', 'reexport.ts'), "export { word } from './word';\n");
+            const throwOnWord = (id: string): undefined => {
+                if (id.endsWith('/word.ts')) throw new Error('bad yaml on line 3');
+                return undefined;
+            };
+            const context = devContextFor(temp.path, 'reexport.ts');
+            const vitePlugins = await resolveVitePlugins(
+                [
+                    hook === 'load'
+                        ? { name: 'breaks-the-word', load: throwOnWord }
+                        : { name: 'breaks-the-word', transform: (_code, id) => throwOnWord(id) }
+                ],
+                context.config.configFile
+            );
+            const runtime = new ServerDevRuntime();
+            onTestFinished(() => runtime.stop());
+            await runtime.start({ ...context, config: { ...context.config, vitePlugins } });
 
-        const caught: unknown = await runtime.loadEntry().catch((error: unknown) => error);
+            const caught: unknown = await runtime.loadEntry().catch((error: unknown) => error);
 
-        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
-        expect(caught.message).toContain('breaks-in-transform');
-        expect(caught.message).toContain('word.ts');
-        expect(caught.message).toContain('bad yaml on line 3');
-    }, 60_000);
+            assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
+            const message = stripVTControlCharacters(caught.message);
+            expect(message).toContain('breaks-the-word');
+            expect(message).toContain(`its ${hook} hook`);
+            expect(message).toContain('src/word.ts');
+            expect(message).toContain('bad yaml on line 3');
+        },
+        60_000
+    );
 });
 
 describe('dev runtime importModule', () => {

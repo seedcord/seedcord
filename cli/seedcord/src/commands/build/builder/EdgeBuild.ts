@@ -4,7 +4,7 @@ import { warnLinks } from '@seedcord/core/internal';
 import { createBuilder } from 'vite';
 
 import { cliLogger } from '#core/cliLogger';
-import { rethrowWithPluginName } from '#core/config/vitePlugins';
+import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { restFromEnv } from '#core/discord/restFromEnv';
 import { importCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { CommandScanner } from '#core/modules/CommandScanner';
@@ -95,11 +95,11 @@ export class EdgeBuild extends TargetBuild {
     }
 
     public async bundle(ids: BakedIds): Promise<BundleStats> {
-        const { config, files } = this.project;
+        const { files } = this.project;
         const [folders, cloudflare] = await Promise.all([files.foldersIncludingEmpty(), this.worker()]);
 
         const captured = await this.bundleWorker(ids, folders, cloudflare)
-            .catch(rethrowWithPluginName(config))
+            .catch(rethrowVitePluginError)
             .catch(bundleFailed);
         const chunks = captured ?? bundleFailed(`the ${WORKER_ENVIRONMENT} environment didn't write a bundle`);
         const built = await cloudflare.built().catch(bundleFailed);

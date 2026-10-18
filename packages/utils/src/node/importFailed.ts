@@ -4,50 +4,60 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { asError } from '#src/misc/asError';
+import { isPlainObject } from '#src/objects/isPlainObject';
 
-interface VitePlugins {
-    configFile: string;
-    names: readonly string[];
-}
-
-interface PluginFailure {
+interface ThrownBy {
     plugin: string;
-    id: string;
+    hook: string;
+    configFile: string;
+    // the module id, for a hook that runs on a module
+    id?: string | undefined;
 }
 
-// edge dev's worker entry writes this slot too
-export const VITE_PLUGINS_KEY = 'seedcord:utils:vite-plugins';
+// rolldown and the edge worker's JSON copy both keep an error's own string-keyed fields
+const THROWN_BY_KEY = 'seedcord:utils:thrown-by';
 
-// a global because dev loads the bot with its own copy of this module
-const VITE_PLUGINS_SLOT = Symbol.for(VITE_PLUGINS_KEY);
-
-export function setVitePlugins(plugins: VitePlugins | undefined): void {
-    if (plugins === undefined) Reflect.deleteProperty(globalThis, VITE_PLUGINS_SLOT);
-    else Reflect.set(globalThis, VITE_PLUGINS_SLOT, plugins);
+export function recordThrownBy(caught: unknown, thrownBy: ThrownBy): Error {
+    const error = asError(caught);
+    // Reflect.set leaves a frozen error as it was
+    Reflect.set(error, THROWN_BY_KEY, thrownBy);
+    return error;
 }
 
-function vitePlugins(): VitePlugins | undefined {
-    return Reflect.get(globalThis, VITE_PLUGINS_SLOT) as VitePlugins | undefined;
-}
-
-// vite sets these on an error from a plugin's load or transform hook
-function pluginFailure(error: unknown): PluginFailure | undefined {
+function thrownByOf(error: unknown): ThrownBy | undefined {
     if (!Error.isError(error)) return undefined;
-    const plugin: unknown = Reflect.get(error, 'plugin');
-    const id: unknown = Reflect.get(error, 'id');
-    return typeof plugin === 'string' && typeof id === 'string' ? { plugin, id } : undefined;
+    const thrownBy: unknown = Reflect.get(error, THROWN_BY_KEY);
+    if (!isPlainObject(thrownBy)) return undefined;
+    const { plugin, hook, configFile, id } = thrownBy;
+    if (typeof plugin !== 'string' || typeof hook !== 'string' || typeof configFile !== 'string') return undefined;
+    return { plugin, hook, configFile, id: typeof id === 'string' ? id : undefined };
+}
+
+// a vite id can end in a query. a virtual one starts with \0
+function shownId(id: string): string {
+    if (id.startsWith('\0')) return id.slice(1);
+    return path.relative(process.cwd(), id.split('?')[0] ?? id);
+}
+
+// rolldown's build error lists one error per failed hook
+function errorsIn(error: unknown): unknown[] {
+    const collected: unknown = Error.isError(error) ? Reflect.get(error, 'errors') : undefined;
+    const errors: readonly unknown[] = Array.isArray(collected) ? collected : [];
+    return [error, ...errors];
 }
 
 export function vitePluginThrew(error: unknown): SeedcordError | undefined {
-    const plugins = vitePlugins();
-    const failure = pluginFailure(error);
-    if (!plugins || !failure || !plugins.names.includes(failure.plugin)) return undefined;
-    const loading = path.relative(process.cwd(), failure.id.split('?')[0] ?? failure.id);
-    return new SeedcordError(
-        SeedcordErrorCode.CoreVitePluginThrew,
-        [failure.plugin, { file: loading }, plugins.configFile, asError(error).message],
-        { cause: error }
-    );
+    for (const candidate of errorsIn(error)) {
+        const thrownBy = thrownByOf(candidate);
+        if (!thrownBy) continue;
+        const place = { hook: thrownBy.hook, file: thrownBy.id === undefined ? undefined : shownId(thrownBy.id) };
+        return new SeedcordError(
+            SeedcordErrorCode.CoreVitePluginThrew,
+            [thrownBy.plugin, place, thrownBy.configFile, asError(candidate).message],
+            { cause: candidate }
+        );
+    }
+    return undefined;
 }
 
 export function importFailed(file: string, error: unknown): SeedcordError {

@@ -2,7 +2,7 @@ import { extname, join } from 'node:path';
 
 import { build } from 'vite';
 
-import { rethrowWithPluginName } from '#core/config/vitePlugins';
+import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { viteKey } from '#core/project/ProjectFiles';
 
 import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
@@ -90,7 +90,7 @@ export class ServerBuild extends TargetBuild {
             },
             ssr: { target: 'node', external: true }
         })
-            .catch(rethrowWithPluginName(config))
+            .catch(rethrowVitePluginError)
             .catch(bundleFailed);
 
         return bundleStats(outputChunks(result), files, join(outDir, ENTRY_FILE_NAME));

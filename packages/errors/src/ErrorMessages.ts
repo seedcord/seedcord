@@ -21,11 +21,20 @@ function counted(count: number, one: string, many: string): string {
 
 const quoted = (value: string): string => paint.sky(JSON.stringify(value));
 
-// the CLI's startup wrapper sets hook. vite sets the file when a plugin throws while loading a module
-type VitePluginPlace = { hook: string } | { file: string };
+// only load and transform run on a file
+interface VitePluginPlace {
+    hook: string;
+    file?: string | undefined;
+}
 
-function placeText(place: VitePluginPlace): string {
-    return 'hook' in place ? `in its ${paint.bold(place.hook)} hook` : `while loading ${paint.path(place.file)}`;
+function placeText({ hook, file }: VitePluginPlace): string {
+    const inHook = `in its ${paint.bold(hook)} hook`;
+    return file === undefined ? inHook : `${inHook} while loading ${paint.path(file)}`;
+}
+
+function vitePluginFix({ file }: VitePluginPlace): string {
+    if (file === undefined) return 'Check the options you pass it.';
+    return `Fix ${paint.path(file)}, or check the options you pass the plugin if that file looks right.`;
 }
 
 // the edge worker sets chalk's color level after this module loads
@@ -93,7 +102,7 @@ const messages = {
         configFile: string,
         reason: string
     ) =>
-        `The Vite plugin ${paint.sky(plugin)} from ${paint.bold('vitePlugins')} in ${paint.path(configFile)} threw ${placeText(place)}. ${sentence(reason)} Check the options you pass it, or take it out of ${paint.bold('vitePlugins')} to see whether the error goes away.`,
+        `The Vite plugin ${paint.sky(plugin)} from ${paint.bold('vitePlugins')} in ${paint.path(configFile)} threw ${placeText(place)}. ${sentence(reason)} ${vitePluginFix(place)}`,
     [SeedcordErrorCode.CorePathUnreadable]: (path: string, reason: string) =>
         `Could not read ${paint.path(path)}. ${sentence(reason)} Check that it exists and that this process can read it.`,
     [SeedcordErrorCode.CorePathOutsideRoot]: (path: string, root: string) =>

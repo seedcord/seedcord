@@ -13,7 +13,7 @@ import { assertTargetMatchesTsconfig } from './assertTargetMatchesTsconfig';
 import { ConfigValidator } from './ConfigValidator';
 import { detectTarget } from './detectTarget';
 import { locateConfig } from './locateConfig';
-import { resolveVitePlugins, rethrowWithPluginName } from './vitePlugins';
+import { resolveVitePlugins, rethrowVitePluginError } from './vitePlugins';
 
 import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
 import type { DefaultMode, ShellMode } from '#core/viteMode';
@@ -73,7 +73,7 @@ export class ProjectLoader {
             config.target,
             config.viteMode,
             config
-        ).catch(rethrowWithPluginName(config));
+        ).catch(rethrowVitePluginError);
         return new Project(config, botModules);
     }
 
@@ -105,7 +105,7 @@ export class ProjectLoader {
             viteMode: mode,
             tunnel: resolveTunnel(config.tunnel),
             hmr: config.hmr,
-            vitePlugins: await resolveVitePlugins(config.vitePlugins ?? [])
+            vitePlugins: await resolveVitePlugins(config.vitePlugins ?? [], configPath)
         } satisfies ResolvedSeedcordConfig;
     }
 

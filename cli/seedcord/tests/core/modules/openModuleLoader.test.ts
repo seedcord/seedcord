@@ -11,7 +11,7 @@ import { cloudflareConfigSource, linkPackages } from '#tests/edgeFolder';
 import { holdViteHmrPort } from '#tests/viteHmrPort';
 
 import type { BuildTarget } from '#core/config/detectTarget';
-import type { BotCode } from '#core/modules/ModuleLoader';
+import type { LoaderUse } from '#core/modules/ModuleLoader';
 
 afterEach(() => {
     vi.restoreAllMocks();
@@ -19,7 +19,7 @@ afterEach(() => {
 });
 
 const SERVER: BuildTarget = { kind: 'server' };
-const BOT_CODE: BotCode = { configFile: '/bot/seedcord.config.ts', vitePlugins: [] };
+const BOT_CODE: LoaderUse = { vitePlugins: [] };
 
 async function edgeTarget(root: string): Promise<BuildTarget> {
     const cloudflareConfig = join(root, 'cloudflare.config.ts');
