@@ -286,6 +286,8 @@ export enum SeedcordErrorCode {
     CliEdgeOnBun = 3136,
     /** An edge bot's `cloudflare.config.ts` sets no `worker`. */
     CliEdgeNoWorker = 3137,
+    /** The running `seedcord` is a different install from the project's own. */
+    CliNotProjectInstall = 3138,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

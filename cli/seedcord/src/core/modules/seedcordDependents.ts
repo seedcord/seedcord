@@ -1,7 +1,9 @@
-import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { isPlainObject } from '@seedcord/utils/internal';
+
+import { installedManifest } from './installedManifest';
 
 const PROJECT_FIELDS = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
 const PACKAGE_FIELDS = ['dependencies', 'peerDependencies'] as const;
@@ -14,22 +16,6 @@ function dependencyNames(manifestPath: string, fields: readonly string[]): strin
         const deps = manifest[field];
         return isPlainObject(deps) ? Object.keys(deps) : [];
     });
-}
-
-// bun doesn't have findPackageJSON
-function installedManifest(name: string, fromManifest: string): string | undefined {
-    let dir = dirname(fromManifest);
-    let checked: string;
-    do {
-        const candidate = join(dir, 'node_modules', name, 'package.json');
-        // pnpm stores a package's dependencies beside its real folder
-        if (existsSync(candidate)) return realpathSync(candidate);
-
-        checked = dir;
-        dir = dirname(dir);
-    } while (dir !== checked);
-
-    return undefined;
 }
 
 function isSeedcordPackage(name: string): boolean {
@@ -52,7 +38,7 @@ function installedGraph(projectDir: string): {
         for (const name of dependencyNames(manifestPath, fields)) {
             if (isSeedcordPackage(name)) listsSeedcord.add(manifestPath);
 
-            const depManifest = installedManifest(name, manifestPath);
+            const depManifest = installedManifest(name, dirname(manifestPath));
             if (depManifest === undefined) continue;
             children.set(name, depManifest);
             collect(depManifest, PACKAGE_FIELDS);

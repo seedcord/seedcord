@@ -332,6 +332,8 @@ const messages = {
         `seedcord loads ${paint.path('cloudflare.config.ts')} through Cloudflare's config loader, which throws on Bun. Run the CLI on Node by leaving out ${paint.bold('--bun')}, as in ${paint.bold('bun run dev')}.`,
     [SeedcordErrorCode.CliEdgeNoWorker]: (cloudflareConfig: string) =>
         `${paint.path(cloudflareConfig)} sets no ${paint.bold('worker')}. Add a ${paint.bold('worker')} with your worker's ${paint.bold('name')} and ${paint.bold('compatibilityDate')}.`,
+    [SeedcordErrorCode.CliNotProjectInstall]: (cliDir: string, projectInstall: string) =>
+        `This ${paint.bold('seedcord')} runs from ${paint.path(cliDir)}, but the project installs its own at ${paint.path(projectInstall)}. The CLI and the bot must load the same seedcord packages. Run the command through a script in the project's ${paint.path('package.json')}.`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>
