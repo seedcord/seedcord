@@ -1,6 +1,6 @@
 export {
     BUILT_FILES_KEY,
-    builtEnvDir,
+    builtConfigDir,
     builtModulePath,
     moduleGlobs,
     resolveFolder,

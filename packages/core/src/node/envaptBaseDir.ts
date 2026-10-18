@@ -1,7 +1,7 @@
-import { builtEnvDir } from '@seedcord/utils/node/internal';
+import { builtConfigDir } from '@seedcord/utils/node/internal';
 import { Envapter } from 'envapt';
 
 export function setEnvaptBaseDir(): void {
-    const envDir = builtEnvDir();
-    if (envDir !== undefined) Envapter.baseDir = envDir;
+    const configDir = builtConfigDir();
+    if (configDir !== undefined) Envapter.baseDir = configDir;
 }
