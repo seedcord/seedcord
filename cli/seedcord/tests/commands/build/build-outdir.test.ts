@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { BUILT_FILES_KEY } from '@seedcord/utils/node/internal';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
 
 import { quickBuildRunner } from './quickBuildRunner';
 
@@ -66,5 +66,24 @@ describe('seedcord build checks outDir before it empties it', () => {
             code: SeedcordErrorCode.CliBuildOutDirNotEmpty
         });
         expect(existsSync(join(projectDir, 'out/notes.txt'))).toBe(true);
+    });
+});
+
+describe('seedcord build checks the server entry', () => {
+    const STARTED = 'seedcordTestPluginStarted';
+
+    it('throws CliEntryNotFound before any plugin from vitePlugins starts', async () => {
+        onTestFinished(() => {
+            Reflect.deleteProperty(globalThis, STARTED);
+        });
+        await writeFile(
+            join(projectDir, 'seedcord.config.ts'),
+            `export default { root: './src', instance: './bot.ts', entry: './missing.ts', vitePlugins: [{ name: 'marks-start', config: () => { globalThis.${STARTED} = true; } }] };\n`
+        );
+
+        await expect(quickBuildRunner().run(projectDir)).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliEntryNotFound
+        });
+        expect(Reflect.get(globalThis, STARTED)).toBeUndefined();
     });
 });

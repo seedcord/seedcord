@@ -1,17 +1,21 @@
+import { existsSync } from 'node:fs';
 import { extname, join } from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { build } from 'vite';
 
 import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { viteKey } from '#core/project/ProjectFiles';
 
+import { assertOutDirSafe } from './assertOutDirSafe';
 import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { serverCommands } from './serverCommands';
 import { ENTRY_ID, isServerEntry, serverEntry } from './serverEntry';
 import { TargetBuild } from './TargetBuild';
 
-import type { ResolvedServerTarget } from '#core/config/schema';
+import type { ResolvedSeedcordConfig, ResolvedServerTarget } from '#core/config/schema';
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './output';
 import type { NextCommand } from './TargetBuild';
@@ -41,6 +45,11 @@ export class ServerBuild extends TargetBuild {
         private readonly target: ResolvedServerTarget
     ) {
         super(project);
+    }
+
+    public static check({ root }: ResolvedSeedcordConfig, { entry, outDir }: ResolvedServerTarget): void {
+        if (!existsSync(entry)) throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [entry]);
+        assertOutDirSafe(outDir, root);
     }
 
     public nextCommands(bundle: BundleStats): NextCommand[] {

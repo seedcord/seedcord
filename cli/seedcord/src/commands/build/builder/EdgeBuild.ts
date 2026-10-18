@@ -1,6 +1,9 @@
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { warnLinks } from '@seedcord/core/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { isInside } from '@seedcord/utils/node/internal';
 import { createBuilder } from 'vite';
 
 import { cliLogger } from '#core/cliLogger';
@@ -21,6 +24,7 @@ import { TargetBuild } from './TargetBuild';
 import { workerEntry } from './workerEntry';
 
 import type { EdgeTarget } from '#core/config/detectTarget';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ImportCloudflare } from '#core/modules/cloudflarePlugin';
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './output';
@@ -81,6 +85,12 @@ export class EdgeBuild extends TargetBuild {
     ) {
         super(project);
         this.deps = { ...DEFAULT_DEPS, ...deps };
+    }
+
+    public static check({ root, configFile }: ResolvedSeedcordConfig): void {
+        if (isInside(root, dirname(configFile))) {
+            throw new SeedcordError(SeedcordErrorCode.CliEdgeRootHoldsConfig, [configFile, root]);
+        }
     }
 
     public async readDiscord(bot: BotConfig): Promise<BakedIds> {

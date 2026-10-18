@@ -8,8 +8,7 @@ import { printResolvedConfig } from '#core/output/printResolvedConfig';
 import { startupShell } from '#core/viteMode';
 
 import { assertFoldersUnderRoot } from './builder/assertFoldersUnderRoot';
-import { checkBuildTarget } from './builder/checkBuildTarget';
-import { targetBuildFor } from './builder/targetBuildFor';
+import { checkBuildTarget, targetBuildFor } from './builder/targetBuildFor';
 import { TypeChecker } from './builder/TypeChecker';
 
 import type { Steps } from '#core/output/Steps';
