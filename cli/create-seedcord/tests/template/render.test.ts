@@ -278,6 +278,14 @@ describe('the rendered edge project', () => {
         expect(tsconfig.include).toContain('.cloudflare/types/index.d.ts');
     });
 
+    it.each([GATEWAY, HTTP, EDGE])("types import.meta.env and keeps node's types", async (answers) => {
+        const tsconfig = JSON.parse(await renderOne(answers, 'tsconfig.json')) as {
+            compilerOptions: { types?: string[] };
+        };
+
+        expect(tsconfig.compilerOptions.types).toEqual(['node', 'vite/client']);
+    });
+
     it("lets pnpm run workerd's install script", async () => {
         expect(await renderOne(EDGE, 'pnpm-workspace.yaml')).toBe(
             'allowBuilds:\n    unrs-resolver: false\n    workerd: true\n'

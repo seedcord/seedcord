@@ -60,6 +60,20 @@ async function seedcordTestedVersion(name: string): Promise<string> {
     return (JSON.parse(manifest) as { version: string }).version;
 }
 
+// pnpm swaps catalog:peer for the real range only when it publishes
+async function seedcordPeerRange(name: string): Promise<string> {
+    const workspace = await readFile(join(SEEDCORD_CLI, '../../pnpm-workspace.yaml'), 'utf8');
+    const lines = workspace.split('\n');
+    const catalog = lines.slice(lines.indexOf('  peer:') + 1);
+    const entries = catalog.slice(
+        0,
+        catalog.findIndex((line) => !line.startsWith('    '))
+    );
+    const entry = entries.find((line) => line.trim().replaceAll("'", '').startsWith(`${name}: `));
+    if (entry === undefined) throw new Error(`${name} is missing from the peer catalog`);
+    return entry.split(': ')[1] ?? '';
+}
+
 interface Recorded {
     command: string;
     args: string[];
@@ -232,6 +246,15 @@ describe('scaffold', () => {
             expect(pinned).toBe(`${name}@${await seedcordTestedVersion(name)}`);
         }
     );
+
+    it.each([GATEWAY, HTTP, EDGE])('installs vite at the range seedcord takes as a peer', async (answers) => {
+        const target = await scratchTarget();
+        const { runner, calls } = recorder();
+
+        await scaffold({ ...baseInput(target), answers }, runner);
+
+        expect(installs(calls).dev).toContain(`vite@${await seedcordPeerRange('vite')}`);
+    });
 
     it('pins typescript to the last major typescript-eslint supports', async () => {
         const target = await scratchTarget();

@@ -44,7 +44,9 @@ const DEV_PACKAGES = [
     'prettier',
     'seedcord',
     // typescript-eslint 8 caps typescript below 6.1
-    'typescript@~6.0'
+    'typescript@~6.0',
+    // seedcord's peer range
+    'vite@^8.3.4'
 ];
 // both are betas, pinned to the versions seedcord's own edge tests run on
 const EDGE_DEV_PACKAGES = ['cf@1.0.0-beta.17', '@cloudflare/vite-plugin@2.0.0-beta.v.0'];
