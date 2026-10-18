@@ -5,7 +5,6 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { build } from 'vite';
 
-import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { viteKey } from '#core/project/ProjectFiles';
 
 import { assertOutDirSafe } from './assertOutDirSafe';
@@ -98,9 +97,7 @@ export class ServerBuild extends TargetBuild {
                 }
             },
             ssr: { target: 'node', external: true }
-        })
-            .catch(rethrowVitePluginError)
-            .catch(bundleFailed);
+        }).catch(bundleFailed);
 
         return bundleStats(outputChunks(result), files, join(outDir, ENTRY_FILE_NAME));
     }

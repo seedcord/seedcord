@@ -2,11 +2,9 @@ import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordRangeError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 
-import { isVitePlugin } from './vitePlugins';
-
 import type { BuildTarget } from './detectTarget';
 import type { SeedcordConfig } from './schema';
-import type { VitePluginEntry } from './vitePlugins';
+import type { VitePluginProblem } from './vitePlugins';
 
 type ConfigProblem = SeedcordTypeError | SeedcordRangeError;
 
@@ -49,18 +47,6 @@ function* hmrProblems(value: unknown): Generator<SeedcordTypeError> {
     yield* typecheckProblems(value.typecheck);
 }
 
-function pluginExpected(value: unknown): string {
-    if (typeof value !== 'function') return 'a Vite plugin object with a name';
-    if (value.name === '') return 'a Vite plugin, which you get by calling this function';
-    return `a Vite plugin, like ${paint.bold(`${value.name}()`)} with the parentheses`;
-}
-
-function* vitePluginProblems(entries: readonly VitePluginEntry[]): Generator<SeedcordTypeError> {
-    for (const { field, value } of entries) {
-        if (!isVitePlugin(value)) yield invalidField(field, pluginExpected(value));
-    }
-}
-
 function* tunnelProblems(value: unknown): Generator<SeedcordTypeError> {
     if (value === undefined || typeof value === 'boolean') return;
     // discord only accepts an https interactions endpoint
@@ -75,12 +61,10 @@ export class ConfigValidator {
         private readonly configFile: string
     ) {}
 
-    public validate(raw: unknown, flattenedVitePlugins: readonly VitePluginEntry[]): asserts raw is SeedcordConfig {
+    // vitePluginProblems come from readVitePlugins
+    public validate(raw: unknown, vitePluginProblems: readonly VitePluginProblem[]): asserts raw is SeedcordConfig {
         if (!isPlainObject(raw)) throw new SeedcordTypeError(SeedcordErrorCode.CliConfigInvalidExport);
-        throwSingleOrAggregate(
-            [...this.problems(raw), ...vitePluginProblems(flattenedVitePlugins)],
-            SeedcordErrorCode.CliProblems
-        );
+        throwSingleOrAggregate([...this.problems(raw), ...vitePluginProblems], SeedcordErrorCode.CliProblems);
     }
 
     private *problems(raw: Record<string, unknown>): Generator<ConfigProblem> {
@@ -95,9 +79,6 @@ export class ConfigValidator {
         yield* tunnelProblems(raw.tunnel);
         yield* this.buildProblems(raw.build);
         yield* hmrProblems(raw.hmr);
-        if (raw.vitePlugins !== undefined && !Array.isArray(raw.vitePlugins)) {
-            yield invalidField('vitePlugins', 'an array of Vite plugins');
-        }
     }
 
     private unusedField(field: string, why: string): SeedcordTypeError {

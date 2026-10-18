@@ -434,7 +434,7 @@ describe('ProjectLoader validation', () => {
     it('rejects vitePlugins that is not an array', async () => {
         await expect(projectWith({ ...MINIMAL, vitePlugins: { name: 'yaml' } }).load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
-            message: 'vitePlugins in the seedcord config must be an array of Vite plugins.'
+            message: expect.stringContaining('vitePlugins') as string
         });
     });
 

@@ -1,4 +1,6 @@
-import { isPlainObject } from '@seedcord/utils/internal';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { asError, isPlainObject } from '@seedcord/utils/internal';
 import { recordThrownBy, vitePluginThrew } from '@seedcord/utils/node/internal';
 
 import type { Plugin } from 'vite';
@@ -60,23 +62,28 @@ function withThrownByOnErrors(plugin: Plugin, configFile: string): Plugin {
     const copy = Object.create(prototype, Object.getOwnPropertyDescriptors(plugin)) as Plugin;
     for (const hook of hooks) {
         const record: RecordThrow = (caught, args) =>
-            recordThrownBy(caught, { plugin: plugin.name, hook, configFile, id: moduleIdOf(hook, args) });
+            recordThrownBy(caught, { plugin: plugin.name, hook, configFile, moduleId: moduleIdOf(hook, args) });
         Reflect.set(copy, hook, wrapHook(Reflect.get(plugin, hook), record));
     }
     return copy;
 }
 
-export interface VitePluginEntry {
-    // the path to it in the config, like vitePlugins[1][0]
-    field: string;
-    value: unknown;
+type VitePluginEntry = { field: string; value: unknown } | { field: string; rejected: unknown };
+
+export type VitePluginProblem = SeedcordError | SeedcordTypeError;
+
+export interface VitePluginsRead {
+    plugins: Plugin[];
+    problems: VitePluginProblem[];
 }
 
 async function flattenAt(options: readonly unknown[], field: string): Promise<VitePluginEntry[]> {
+    const settled = await Promise.allSettled(options);
     const nested = await Promise.all(
-        options.map(async (option, index) => {
+        settled.map(async (result, index): Promise<VitePluginEntry[]> => {
             const at = `${field}[${String(index)}]`;
-            const value: unknown = await option;
+            if (result.status === 'rejected') return [{ field: at, rejected: result.reason }];
+            const value: unknown = result.value;
             if (!value) return [];
             if (Array.isArray(value)) return flattenAt(value, at);
             return [{ field: at, value }];
@@ -85,12 +92,37 @@ async function flattenAt(options: readonly unknown[], field: string): Promise<Vi
     return nested.flat();
 }
 
-export function flattenVitePlugins(options: readonly unknown[]): Promise<VitePluginEntry[]> {
-    return flattenAt(options, 'vitePlugins');
+function isVitePlugin(value: unknown): value is Plugin {
+    return typeof value === 'object' && value !== null && typeof Reflect.get(value, 'name') === 'string';
 }
 
-export function isVitePlugin(value: unknown): value is Plugin {
-    return typeof value === 'object' && value !== null && typeof Reflect.get(value, 'name') === 'string';
+function pluginExpected(value: unknown): string {
+    if (typeof value !== 'function') return 'a Vite plugin object with a name';
+    if (value.name === '') return 'a Vite plugin, which you get by calling this function';
+    return `a Vite plugin, like ${paint.bold(`${value.name}()`)} with the parentheses`;
+}
+
+function invalidField(field: string, expected: string): SeedcordTypeError {
+    return new SeedcordTypeError(SeedcordErrorCode.CliConfigInvalidField, [field, expected]);
+}
+
+export async function readVitePlugins(config: unknown): Promise<VitePluginsRead> {
+    const options = isPlainObject(config) ? config.vitePlugins : undefined;
+    if (options === undefined) return { plugins: [], problems: [] };
+    if (!Array.isArray(options))
+        return { plugins: [], problems: [invalidField('vitePlugins', 'an array of Vite plugins')] };
+
+    const read: VitePluginsRead = { plugins: [], problems: [] };
+    for (const entry of await flattenAt(options, 'vitePlugins')) {
+        if ('rejected' in entry) {
+            const reason = asError(entry.rejected).message;
+            read.problems.push(
+                new SeedcordError(SeedcordErrorCode.CoreImportFailed, [entry.field, reason], { cause: entry.rejected })
+            );
+        } else if (isVitePlugin(entry.value)) read.plugins.push(entry.value);
+        else read.problems.push(invalidField(entry.field, pluginExpected(entry.value)));
+    }
+    return read;
 }
 
 export function wrapVitePlugins(plugins: readonly Plugin[], configFile: string): Plugin[] {

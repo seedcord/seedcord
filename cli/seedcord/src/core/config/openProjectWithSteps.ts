@@ -9,7 +9,6 @@ export type ProjectOpener = Pick<ProjectLoader, 'readConfig' | 'openProject'>;
 
 interface OpenOptions {
     projectDir?: string | undefined;
-    // runs inside read config, before any plugin starts
     check?: ((config: ResolvedSeedcordConfig) => void) | undefined;
 }
 

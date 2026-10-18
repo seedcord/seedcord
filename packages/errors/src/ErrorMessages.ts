@@ -21,20 +21,22 @@ function counted(count: number, one: string, many: string): string {
 
 const quoted = (value: string): string => paint.sky(JSON.stringify(value));
 
-// only load and transform run on a file
-interface VitePluginPlace {
+// only load and transform run on a module
+export interface VitePluginPlace {
     hook: string;
-    file?: string | undefined;
+    loading?: { kind: 'file'; path: string } | { kind: 'virtual'; id: string } | undefined;
 }
 
-function placeText({ hook, file }: VitePluginPlace): string {
+function placeText({ hook, loading }: VitePluginPlace): string {
     const inHook = `in its ${paint.bold(hook)} hook`;
-    return file === undefined ? inHook : `${inHook} while loading ${paint.path(file)}`;
+    if (loading === undefined) return inHook;
+    const shown = loading.kind === 'file' ? paint.path(loading.path) : paint.bold(loading.id);
+    return `${inHook} while loading ${shown}`;
 }
 
-function vitePluginFix({ file }: VitePluginPlace): string {
-    if (file === undefined) return 'Check the options you pass it.';
-    return `Fix ${paint.path(file)}, or check the options you pass the plugin if that file looks right.`;
+function vitePluginFix({ loading }: VitePluginPlace): string {
+    if (loading?.kind !== 'file') return 'Check the options you pass the plugin.';
+    return `Fix ${paint.path(loading.path)}, or check the options you pass the plugin if that file looks right.`;
 }
 
 // the edge worker sets chalk's color level after this module loads

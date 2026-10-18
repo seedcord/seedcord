@@ -49,6 +49,21 @@ describe('ProjectLoader vitePlugins', () => {
         }
     );
 
+    it('throws CoreImportFailed with the path and the reason for an entry whose promise rejects', async () => {
+        const missing = new Error("Cannot find package 'yaml-plugin'");
+        const rejected = Promise.reject(missing);
+        // node flags a rejection nothing has handled before readConfig awaits it
+        rejected.catch(() => undefined);
+        const { load } = projectWith({ ...MINIMAL, vitePlugins: [{ name: 'json' }, rejected] });
+
+        const caught: unknown = await load().catch((error: unknown) => error);
+
+        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreImportFailed));
+        expect(caught.message).toContain('vitePlugins[1]');
+        expect(caught.message).toContain("Cannot find package 'yaml-plugin'");
+        expect(caught.cause).toBe(missing);
+    });
+
     it('reports a bad plugin together with the other problems in the config', async () => {
         const { load } = projectWith({ ...MINIMAL, idleAnimation: 'yes', vitePlugins: ['yaml'] });
 

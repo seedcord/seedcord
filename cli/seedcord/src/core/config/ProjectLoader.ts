@@ -2,7 +2,6 @@ import { dirname, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
-import { isPlainObject } from '@seedcord/utils/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 import { Envapter } from 'envapt';
 
@@ -15,7 +14,7 @@ import { ConfigValidator } from './ConfigValidator';
 import { detectTarget } from './detectTarget';
 import { LoadedConfig } from './LoadedConfig';
 import { locateConfig } from './locateConfig';
-import { flattenVitePlugins, isVitePlugin, rethrowVitePluginError, wrapVitePlugins } from './vitePlugins';
+import { readVitePlugins, rethrowVitePluginError, wrapVitePlugins } from './vitePlugins';
 
 import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
 import type { DefaultMode, ShellMode } from '#core/viteMode';
@@ -39,11 +38,6 @@ function resolveTunnel(value: boolean | string | undefined): ResolvedTunnel {
     if (value === false) return { mode: 'off' };
     if (typeof value === 'string') return { mode: 'url', url: value };
     return { mode: 'quick' };
-}
-
-// ConfigValidator reports a vitePlugins that isn't an array
-function vitePluginOptionsOf(config: unknown): unknown[] {
-    return isPlainObject(config) && Array.isArray(config.vitePlugins) ? config.vitePlugins : [];
 }
 
 function resolveTypecheck(value: SeedcordHmrConfig['typecheck'], root: string): ResolvedTypecheck {
@@ -101,10 +95,9 @@ export class ProjectLoader {
     ): Promise<ResolvedSeedcordConfig> {
         const loadedModule = await modules.importModule(configPath);
         const config: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
-        const pluginEntries = await flattenVitePlugins(vitePluginOptionsOf(config));
+        const vitePlugins = await readVitePlugins(config);
         const validator: ConfigValidator = new ConfigValidator(target, configPath);
-        validator.validate(config, pluginEntries);
-        const vitePlugins = pluginEntries.map(({ value }) => value).filter(isVitePlugin);
+        validator.validate(config, vitePlugins.problems);
 
         const configDir = dirname(configPath);
         const root = resolve(configDir, config.root ?? '.');
@@ -123,7 +116,7 @@ export class ProjectLoader {
             viteMode: mode,
             tunnel: resolveTunnel(config.tunnel),
             hmr: config.hmr,
-            vitePlugins: wrapVitePlugins(vitePlugins, configPath)
+            vitePlugins: wrapVitePlugins(vitePlugins.plugins, configPath)
         } satisfies ResolvedSeedcordConfig;
     }
 

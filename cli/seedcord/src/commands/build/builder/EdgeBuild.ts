@@ -7,7 +7,6 @@ import { isInside } from '@seedcord/utils/node/internal';
 import { createBuilder } from 'vite';
 
 import { cliLogger } from '#core/cliLogger';
-import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { restFromEnv } from '#core/discord/restFromEnv';
 import { importCloudflare, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { CommandScanner } from '#core/modules/CommandScanner';
@@ -108,9 +107,7 @@ export class EdgeBuild extends TargetBuild {
         const { files } = this.project;
         const [folders, cloudflare] = await Promise.all([files.foldersIncludingEmpty(), this.worker()]);
 
-        const captured = await this.bundleWorker(ids, folders, cloudflare)
-            .catch(rethrowVitePluginError)
-            .catch(bundleFailed);
+        const captured = await this.bundleWorker(ids, folders, cloudflare).catch(bundleFailed);
         const chunks = captured ?? bundleFailed(`the ${WORKER_ENVIRONMENT} environment didn't write a bundle`);
         const built = await cloudflare.built().catch(bundleFailed);
         assertNodeCompat(built, this.target.cloudflareConfig);

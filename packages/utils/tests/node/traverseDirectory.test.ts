@@ -89,7 +89,7 @@ describe('a module that fails to load through a Vite plugin', () => {
             plugin: 'shop-loader',
             hook: 'load',
             configFile: '/bot/seedcord.config.ts',
-            id: '/bot/shop.yaml'
+            moduleId: '/bot/shop.yaml'
         };
         const thrown = `recordThrownBy(new Error('bad yaml on line 3'), ${JSON.stringify(thrownBy)})`;
 
