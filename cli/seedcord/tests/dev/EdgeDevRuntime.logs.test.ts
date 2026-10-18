@@ -5,113 +5,112 @@ import { stripVTControlCharacters } from 'node:util';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { posixRelative } from '@seedcord/utils/node/internal';
 import chalk from 'chalk';
-import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import {
     asDevelopment,
     captureLogs,
+    developmentMode,
     edgeProject,
     editFile,
     fakeDiscordApi,
     liveVars,
+    logCapture,
     messagesOf,
     startedRuntime,
     waveHandler
 } from './edgeDevRuntime';
 
-describe('EdgeDevRuntime logs', () => {
-    it("logs each request the endpoint passes to the bot, like a node bot's engine does", async () => {
+import type { LogRecord } from '@seedcord/types';
+
+describe('EdgeDevRuntime logs from one started bot', () => {
+    let records: LogRecord[];
+    let port: () => number;
+    let wavePath: string;
+
+    beforeAll(async () => {
+        await using setup = new AsyncDisposableStack();
         // a development env logs at debug, in the worker and in the CLI
-        await asDevelopment();
-        await using project = await edgeProject({ ...liveVars, ENVIRONMENT: 'development' });
-        const { projectDir } = project;
-        const logs = captureLogs();
-        await using started = await startedRuntime(projectDir);
-        const { runtime, instance } = started;
-        await runtime.startBot(instance);
-
-        await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body: '{}' });
-
-        await vi.waitFor(() => {
-            expect(messagesOf(logs).map((message) => stripVTControlCharacters(message))).toContain('POST unsigned 401');
-        });
+        setup.use(await developmentMode());
+        const { projectDir } = setup.use(await edgeProject({ ...liveVars, ENVIRONMENT: 'development' }));
+        await appendFile(join(projectDir, 'src/bot.ts'), "\nconsole.log('counter ready');\n");
+        wavePath = join(projectDir, 'src/handlers/Wave.ts');
+        await writeFile(wavePath, waveHandler('waved'));
+        ({ records } = setup.use(logCapture()));
+        const started = setup.use(await startedRuntime(projectDir));
+        await started.runtime.startBot(started.instance);
+        port = () => started.port();
+        const owned = setup.move();
+        return () => owned.disposeAsync();
     }, 120_000);
 
-    it('leaves the folder the log file goes to out of hot reload', async () => {
-        await asDevelopment();
-        await using project = await edgeProject();
-        const { projectDir } = project;
+    it("reports the worker's logs", () => {
+        expect(messagesOf(records)).toContain('Coordinated startup completed successfully');
+    });
+
+    it("reports a console.log from the bot's own code under the Console label", () => {
+        expect(records).toContainEqual(expect.objectContaining({ label: 'Console', message: 'counter ready' }));
+    });
+
+    it("writes the worker's file paths relative to the CLI's cwd", () => {
+        const loaded = JSON.stringify(records.filter((record) => record.message.startsWith('Loaded handlers')));
+
+        expect(loaded).toContain(posixRelative(process.cwd(), wavePath));
+        expect(loaded).not.toContain('../');
+    });
+
+    it("logs each request the endpoint passes to the bot, like a node bot's engine does", async () => {
+        await fetch(`http://localhost:${port()}/`, { method: 'POST', body: '{}' });
+
+        await vi.waitFor(() => {
+            expect(messagesOf(records).map((message) => stripVTControlCharacters(message))).toContain(
+                'POST unsigned 401'
+            );
+        });
+    });
+});
+
+describe('EdgeDevRuntime hot reload', () => {
+    let projectDir: string;
+    let records: LogRecord[];
+
+    beforeAll(async () => {
+        await using setup = new AsyncDisposableStack();
+        setup.use(await developmentMode());
+        const project = setup.use(await edgeProject());
+        projectDir = project.projectDir;
         // the log file goes under the cwd. a bot runs seedcord dev from its project folder
         const cwd = process.cwd();
         process.chdir(projectDir);
-        using _restoreCwd = { [Symbol.dispose]: () => process.chdir(cwd) };
-        const logs = captureLogs();
-        await using started = await startedRuntime(projectDir);
-        const { runtime, instance } = started;
-        await runtime.startBot(instance);
-        const hmrLines = (): string[] =>
-            logs.filter((record) => record.label === 'HMR').map((record) => stripVTControlCharacters(record.message));
-
-        await mkdir(join(projectDir, 'logs'), { recursive: true });
-        await appendFile(join(projectDir, 'logs/combined.log'), 'a line\n');
-        await writeFile(join(projectDir, 'src/handlers/Touched.ts'), 'export const touched = 1;\n');
-
-        await vi.waitFor(() => expect(hmrLines()).toContainEqual(expect.stringContaining('src/handlers/Touched.ts')));
-        expect(hmrLines().filter((line) => line.includes('logs/'))).toEqual([]);
+        setup.defer(() => process.chdir(cwd));
+        ({ records } = setup.use(logCapture()));
+        const started = setup.use(await startedRuntime(projectDir));
+        await started.runtime.startBot(started.instance);
+        const owned = setup.move();
+        return () => owned.disposeAsync();
     }, 120_000);
 
-    it.each(['dist', '.seedcord', '.cloudflare'])(
-        'leaves %s out of hot reload',
-        async (folder) => {
-            await asDevelopment();
-            await using project = await edgeProject();
-            const { projectDir } = project;
-            const logs = captureLogs();
-            await using started = await startedRuntime(projectDir);
-            const { runtime, instance } = started;
-            await runtime.startBot(instance);
-            const hmrLines = (): string[] =>
-                logs
-                    .filter((record) => record.label === 'HMR')
-                    .map((record) => stripVTControlCharacters(record.message));
+    const hmrLines = (): string[] =>
+        records.filter((record) => record.label === 'HMR').map((record) => stripVTControlCharacters(record.message));
 
-            await mkdir(join(projectDir, folder), { recursive: true });
-            await writeFile(join(projectDir, folder, 'written.js'), 'export const written = 1;\n');
-            await writeFile(join(projectDir, 'src/handlers/Touched.ts'), 'export const touched = 1;\n');
+    it.each([
+        ['the folder the log file goes to', 'logs', 'combined.log'],
+        ['dist', 'dist', 'written.js'],
+        ['.seedcord', '.seedcord', 'written.js'],
+        ['.cloudflare', '.cloudflare', 'written.js']
+    ])('leaves %s out of hot reload', async (_shown, folder, file) => {
+        const handler = `src/handlers/Touched${folder.replaceAll(/\W/g, '')}.ts`;
 
-            await vi.waitFor(() =>
-                expect(hmrLines()).toContainEqual(expect.stringContaining('src/handlers/Touched.ts'))
-            );
-            expect(hmrLines().filter((line) => line.includes(`${folder}/`))).toEqual([]);
-        },
-        120_000
-    );
+        await mkdir(join(projectDir, folder), { recursive: true });
+        await appendFile(join(projectDir, folder, file), 'export const written = 1;\n');
+        await writeFile(join(projectDir, handler), 'export const touched = 1;\n');
 
-    it("reports the worker's logs", async () => {
-        await using project = await edgeProject();
-        const { projectDir } = project;
-        const logs = captureLogs();
-        await using started = await startedRuntime(projectDir);
-        const { runtime, instance } = started;
+        await vi.waitFor(() => expect(hmrLines()).toContainEqual(expect.stringContaining(handler)));
+        expect(hmrLines().filter((line) => line.includes(`${folder}/`))).toEqual([]);
+    });
+});
 
-        await runtime.startBot(instance);
-
-        expect(logs.map((record) => record.message)).toContain('Coordinated startup completed successfully');
-    }, 120_000);
-
-    it("reports a console.log from the bot's own code under the Console label", async () => {
-        await using project = await edgeProject();
-        const { projectDir } = project;
-        await appendFile(join(projectDir, 'src/bot.ts'), "\nconsole.log('counter ready');\n");
-        const logs = captureLogs();
-        await using started = await startedRuntime(projectDir);
-        const { runtime, instance } = started;
-
-        await runtime.startBot(instance);
-
-        expect(logs).toContainEqual(expect.objectContaining({ label: 'Console', message: 'counter ready' }));
-    }, 120_000);
-
+describe('EdgeDevRuntime logs', () => {
     it("colors the worker's logs at the CLI's color level", async () => {
         await using project = await edgeProject();
         const { projectDir } = project;
@@ -134,22 +133,6 @@ describe('EdgeDevRuntime logs', () => {
         expect(messagesOf(logs).find((message) => message.startsWith('Running as'))).toContain(
             '\u001B[38;2;143;199;255m'
         );
-    }, 120_000);
-
-    it("writes the worker's file paths relative to the CLI's cwd", async () => {
-        await asDevelopment();
-        await using project = await edgeProject();
-        const { projectDir } = project;
-        await writeFile(join(projectDir, 'src/handlers/Wave.ts'), waveHandler('waved'));
-        const records = captureLogs();
-        await using started = await startedRuntime(projectDir);
-        const { runtime, instance } = started;
-
-        await runtime.startBot(instance);
-
-        const loaded = JSON.stringify(records.filter((record) => record.message.startsWith('Loaded handlers')));
-        expect(loaded).toContain(posixRelative(process.cwd(), join(projectDir, 'src/handlers/Wave.ts')));
-        expect(loaded).not.toContain('../');
     }, 120_000);
 
     it("writes the worker's logs to the session's log file after a server session reset the logger", async () => {

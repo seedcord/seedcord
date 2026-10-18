@@ -180,26 +180,36 @@ describe('EdgeDevRuntime endpoint', () => {
         });
     }, 120_000);
 
-    it.each(['.dev.vars', '.env', '.env.staging', 'cloudflare.config.ts'])(
-        'reports a restart is required when %s changes in mode staging, and keeps the bot answering',
-        async (file) => {
-            await using project = await edgeProject();
-            const { projectDir } = project;
-            const events: DevEvent[] = [];
-            await using started = await startedRuntime(projectDir, (event) => events.push(event), {
-                viteMode: 'staging'
-            });
-            const { runtime, instance } = started;
-            await runtime.startBot(instance);
+    describe('on one started bot in mode staging', () => {
+        const events: DevEvent[] = [];
+        let projectDir: string;
+        let port = 0;
 
-            await appendFile(join(projectDir, file), file === 'cloudflare.config.ts' ? '\n' : 'EXTRA=1\n');
+        beforeAll(async () => {
+            await using cleanup = new AsyncDisposableStack();
+            ({ projectDir } = cleanup.use(await edgeProject()));
+            const started = cleanup.use(
+                await startedRuntime(projectDir, (event) => events.push(event), { viteMode: 'staging' })
+            );
+            await started.runtime.startBot(started.instance);
+            port = started.port();
+            const owned = cleanup.move();
+            return () => owned.disposeAsync();
+        }, 120_000);
 
-            await vi.waitFor(() => {
-                expect(events).toContainEqual({ type: 'restart-required' });
-            });
-            const unsigned = await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body: '{}' });
-            expect(unsigned.status).toBe(401);
-        },
-        120_000
-    );
+        it.each(['.dev.vars', '.env', '.env.staging', 'cloudflare.config.ts'])(
+            'reports a restart is required when %s changes, and keeps the bot answering',
+            async (file) => {
+                events.length = 0;
+
+                await appendFile(join(projectDir, file), file === 'cloudflare.config.ts' ? '\n' : 'EXTRA=1\n');
+
+                await vi.waitFor(() => {
+                    expect(events).toContainEqual({ type: 'restart-required' });
+                });
+                const unsigned = await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
+                expect(unsigned.status).toBe(401);
+            }
+        );
+    });
 });

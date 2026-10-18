@@ -144,15 +144,24 @@ export async function edgeProject(vars: Record<string, string> = liveVars): Prom
     return { projectDir, [Symbol.asyncDispose]: () => owned.disposeAsync() };
 }
 
+interface LogCapture extends Disposable {
+    readonly records: LogRecord[];
+}
+
 // the worker's records reach the CLI's logger the way a node bot's records do
-export function captureLogs(): LogRecord[] {
+export function logCapture(): LogCapture {
     const records: LogRecord[] = [];
     const handle = LoggerChannelRegistry.instance.installSink({
         kind: 'capture',
         onLog: (record) => records.push(record)
     });
-    onTestFinished(() => handle.dispose());
-    return records;
+    return { records, [Symbol.dispose]: () => handle.dispose() };
+}
+
+export function captureLogs(): LogRecord[] {
+    const capture = logCapture();
+    onTestFinished(() => capture[Symbol.dispose]());
+    return capture.records;
 }
 
 const LOGS_DIR = join(process.cwd(), 'logs');
@@ -161,9 +170,14 @@ async function logFiles(): Promise<string[]> {
     return readdir(LOGS_DIR).catch(() => []);
 }
 
+interface DevelopmentMode extends AsyncDisposable {
+    // the text of every log file written after developmentMode() ran
+    createdLogs(): Promise<string>;
+}
+
 // node defaults log at trace and add a combined file only in development
 // keep every caller in one test file. parallel files would delete each other's logs here
-export async function asDevelopment(): Promise<() => Promise<string>> {
+export async function developmentMode(): Promise<DevelopmentMode> {
     const environment = Envapter.environment;
     Envapter.environment = Environment.Development;
     const before = new Set(await logFiles());
@@ -171,16 +185,24 @@ export async function asDevelopment(): Promise<() => Promise<string>> {
         const files = await logFiles();
         return files.filter((file) => !before.has(file));
     };
-    onTestFinished(async () => {
-        Envapter.environment = environment;
-        installNodeDefaults();
-        for (const file of await created()) await rm(join(LOGS_DIR, file));
-    });
-    return async () => {
-        const files = await created();
-        const texts = await Promise.all(files.map((file) => readFile(join(LOGS_DIR, file), 'utf8')));
-        return texts.join('');
+    return {
+        createdLogs: async () => {
+            const files = await created();
+            const texts = await Promise.all(files.map((file) => readFile(join(LOGS_DIR, file), 'utf8')));
+            return texts.join('');
+        },
+        [Symbol.asyncDispose]: async () => {
+            Envapter.environment = environment;
+            installNodeDefaults();
+            for (const file of await created()) await rm(join(LOGS_DIR, file));
+        }
     };
+}
+
+export async function asDevelopment(): Promise<() => Promise<string>> {
+    const mode = await developmentMode();
+    onTestFinished(() => mode[Symbol.asyncDispose]());
+    return () => mode.createdLogs();
 }
 
 export const messagesOf = (records: LogRecord[]): string[] => records.map((record) => record.message);
