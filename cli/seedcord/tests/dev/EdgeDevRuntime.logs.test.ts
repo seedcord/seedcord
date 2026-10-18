@@ -1,8 +1,9 @@
 import { appendFile, mkdir, writeFile } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import { LoggerChannelRegistry } from '@seedcord/logger';
+import { posixRelative } from '@seedcord/utils/node/internal';
 import chalk from 'chalk';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
@@ -147,7 +148,7 @@ describe('EdgeDevRuntime logs', () => {
         await runtime.startBot(instance);
 
         const loaded = JSON.stringify(records.filter((record) => record.message.startsWith('Loaded handlers')));
-        expect(loaded).toContain(relative(process.cwd(), join(projectDir, 'src/handlers/Wave.ts')));
+        expect(loaded).toContain(posixRelative(process.cwd(), join(projectDir, 'src/handlers/Wave.ts')));
         expect(loaded).not.toContain('../');
     }, 120_000);
 

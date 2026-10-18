@@ -1,11 +1,12 @@
 import { existsSync } from 'node:fs';
-import { relative, resolve, sep } from 'node:path';
+import { resolve } from 'node:path';
 
 import { wrapHot } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
+import { displayPath } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
-import { resolveFromRoot } from '@seedcord/utils/node/internal';
+import { posixRelative, resolveFromRoot, workerdPath } from '@seedcord/utils/node/internal';
 import { minimatch } from 'minimatch';
 
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
@@ -141,8 +142,9 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 
     private reportRestartRequired(file: string): void {
-        const relPath = relative(process.cwd(), file);
-        this.logger.warn(`${paint.coral('Critical file changed:')} ${paint.sky.bold(relPath)}. Restart required.`);
+        this.logger.warn(
+            `${paint.coral('Critical file changed:')} ${paint.sky.bold(displayPath(file))}. Restart required.`
+        );
         this.emit('event', { type: 'restart-required' });
     }
 
@@ -152,23 +154,34 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 
     private send(event: Omit<HmrUpdateEvent, 'rollback'>): void {
-        const relPath = relative(process.cwd(), event.file);
-        this.logger.trace(`${TYPE_COLOR[event.type](event.type.toUpperCase())} ${paint.mute(relPath)}`);
-        this.dev?.send('seedcord:hmr', { ...event, rollback: this.config.hmr?.rollback ?? true });
+        this.logger.trace(`${TYPE_COLOR[event.type](event.type.toUpperCase())} ${paint.mute(displayPath(event.file))}`);
+        this.dev?.send('seedcord:hmr', {
+            ...event,
+            file: this.botPath(event.file),
+            ...(event.affectedModules && { affectedModules: event.affectedModules.map((path) => this.botPath(path)) }),
+            rollback: this.config.hmr?.rollback ?? true
+        });
     }
 
-    private hotUpdate(environment: DevEnvironment, ctx: HotUpdateOptions): EnvironmentModuleNode[] {
-        const { type, file, modules } = ctx;
-        if (environment.name !== this.botEnvironment || this.isDebounced(file, type)) return [];
+    private botPath(hostPath: string): string {
+        return this.config.target.kind === 'edge' ? workerdPath(hostPath) : hostPath;
+    }
 
-        const affectedModules = affectedFiles(file, modules);
+    // vite passes file paths with forward slashes on windows
+    private hotUpdate(environment: DevEnvironment, ctx: HotUpdateOptions): EnvironmentModuleNode[] {
+        const { type, modules } = ctx;
+        if (environment.name !== this.botEnvironment || this.isDebounced(ctx.file, type)) return [];
+
+        const viteFiles = affectedFiles(ctx.file, modules);
+        const file = resolve(ctx.file);
+        const affectedModules = viteFiles.map((affected) => resolve(affected));
         if (affectedModules.some((affected) => this.isCriticalFile(affected))) {
             this.reportRestartRequired(file);
             return [];
         }
 
         const { moduleGraph } = environment;
-        for (const target of affectedModules) {
+        for (const target of viteFiles) {
             for (const mod of moduleGraph.getModulesByFile(target) ?? []) moduleGraph.invalidateModule(mod);
         }
 
@@ -180,7 +193,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     private isCriticalFile(file: string): boolean {
         const { root, configFile, instance, target } = this.config;
-        const relPath = relative(root, file);
+        const relPath = posixRelative(root, file);
 
         return (
             [...this.restartPatterns].some((pattern) => minimatch(relPath, pattern)) ||
@@ -196,7 +209,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     // minimatch reads a windows separator as an escape
     private fromRoot(pattern: string): string {
         const { root } = this.config;
-        return relative(root, resolveFromRoot(root, pattern)).split(sep).join('/');
+        return posixRelative(root, resolveFromRoot(root, pattern));
     }
 }
 

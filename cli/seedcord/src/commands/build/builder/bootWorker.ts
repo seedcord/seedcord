@@ -59,12 +59,15 @@ function failedProbe({ reason, cause }: ProbeFailure, errors: string[]): Seedcor
 
 export async function bootWorker(config: InlineConfig): Promise<void> {
     const errors: string[] = [];
+    // on windows, preview() rejects with workerd's startup error
     const server = await preview({
         ...config,
         configFile: false,
         customLogger: errorCollector(errors),
         plugins: [...(config.plugins ?? []), answerErrorsQuietly()],
         preview: { port: 0 }
+    }).catch((error: unknown) => {
+        throw bootFailed(errors, asError(error).message, error);
     });
 
     let loaded = false;

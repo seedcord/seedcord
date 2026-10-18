@@ -1,12 +1,11 @@
-import { realpathSync } from 'node:fs';
-import { dirname, relative, resolve, sep } from 'node:path';
+import { dirname, resolve } from 'node:path';
 
-import { moduleGlobs } from '@seedcord/utils/node/internal';
-import { normalizePath } from 'vite';
+import { isInside, moduleGlobs, posixRelative } from '@seedcord/utils/node/internal';
 
 import { WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
 import { seedcordDependents } from '#core/modules/seedcordDependents';
 import { mergeViteConfig, NODE_CONDITIONS, userCodeConfig, WORKERD_CONDITIONS } from '#core/modules/userCodeConfig';
+import { watchedPath } from '#core/project/watchedPath';
 import { STATE_FOLDER } from '#core/state/StateFolder';
 
 import { workerLogger } from './workerLogger';
@@ -19,10 +18,9 @@ type DevConfigPaths = Pick<ResolvedSeedcordConfig, 'root' | 'configFile'>;
 // a **/logs/** glob would also swallow a source directory named logs
 // WinstonFileSink writes logs/ under the cwd
 function logsIgnore(cwd: string): (path: string) => boolean {
-    // chokidar reports the resolved path, and a mac temp dir arrives through a symlink
-    const logs = resolve(realpathSync(cwd), 'logs');
+    const logs = resolve(watchedPath(cwd), 'logs');
 
-    return (path) => path === logs || path.startsWith(logs + sep);
+    return (path) => isInside(logs, path);
 }
 
 // vite writes resolved options back into the config object it receives
@@ -62,7 +60,7 @@ export function edgeViteConfig(config: DevConfigPaths, viteRoot: string, cwd: st
         environments: {
             [WORKER_ENVIRONMENT]: {
                 // a glob reads a windows separator as an escape
-                optimizeDeps: { entries: moduleGlobs(normalizePath(relative(viteRoot, config.root)) || '.') }
+                optimizeDeps: { entries: moduleGlobs(posixRelative(viteRoot, config.root) || '.') }
             }
         }
     });

@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
+import { toPosixPath } from '@seedcord/utils/node/internal';
 import { assert, describe, it, expect, onTestFinished, vi } from 'vitest';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
@@ -159,7 +160,7 @@ describe('ProjectLoader target', () => {
 
         await expect(new ProjectLoader(openModuleLoader, new ShellMode()).open(projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigFieldUnused,
-            message: expect.stringContaining(join(projectDir, CLOUDFLARE_CONFIG)) as string
+            message: expect.stringContaining(toPosixPath(join(projectDir, CLOUDFLARE_CONFIG))) as string
         });
     });
 
@@ -175,7 +176,7 @@ describe('ProjectLoader target', () => {
 
         await expect(load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigFieldUnused,
-            message: expect.stringContaining(join(projectDir, 'seedcord.config.ts')) as string
+            message: expect.stringContaining(toPosixPath(join(projectDir, 'seedcord.config.ts'))) as string
         });
     });
 
@@ -265,7 +266,7 @@ describe('ProjectLoader entry on an edge bot', () => {
 
         await expect(load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigFieldUnused,
-            message: expect.stringContaining(join(projectDir, 'seedcord.config.ts')) as string
+            message: expect.stringContaining(toPosixPath(join(projectDir, 'seedcord.config.ts'))) as string
         });
     });
 
@@ -274,7 +275,7 @@ describe('ProjectLoader entry on an edge bot', () => {
 
         await expect(load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigFieldUnused,
-            message: expect.stringContaining(join(projectDir, 'seedcord.config.ts')) as string
+            message: expect.stringContaining(toPosixPath(join(projectDir, 'seedcord.config.ts'))) as string
         });
     });
 });
@@ -287,7 +288,7 @@ describe('ProjectLoader paths with a #', () => {
 
         await expect(load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliPathHasHash,
-            message: expect.stringContaining(join('handlers', 'a#b.ts')) as string
+            message: expect.stringContaining('handlers/a#b.ts') as string
         });
     });
 

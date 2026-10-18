@@ -1,12 +1,14 @@
-import { appendFileSync, mkdirSync, mkdtempDisposableSync, realpathSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, mkdtempDisposableSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { posixRelative } from '@seedcord/utils/node/internal';
 import { createServer } from 'vite';
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
+import { watchedPath } from '#core/project/watchedPath';
 
 import type { ViteDevServer } from 'vite';
 
@@ -41,13 +43,12 @@ function project(): string {
 
 interface WatchedProject {
     watcher: ViteDevServer['watcher'];
-    // chokidar reports the resolved path, and a mac temp dir arrives through a symlink
     real: string;
     touchUntilReported: (file: string) => Promise<void>;
 }
 
 async function watchProject(root: string): Promise<WatchedProject> {
-    const real = realpathSync(root);
+    const real = watchedPath(root);
     const reported = new Set<string>();
 
     server = await createServer(
@@ -56,7 +57,7 @@ async function watchProject(root: string): Promise<WatchedProject> {
                 {
                     name: 'record',
                     hotUpdate: ({ file }: { file: string }) => {
-                        reported.add(file.replace(real, ''));
+                        reported.add(`/${posixRelative(real, file)}`);
                         return [];
                     }
                 }

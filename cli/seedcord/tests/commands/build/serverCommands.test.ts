@@ -46,20 +46,24 @@ describe('serverCommands', () => {
     });
 
     it('keeps a $ and a quote literal in a posix shell', async () => {
-        const commands = await commandsFor({ name: 'my-bot' }, "it's $cache");
+        const commands = await onPlatform('linux', () => commandsFor({ name: 'my-bot' }, "it's $cache"));
 
         expect(commands.get('run')).toMatch(/it'\\''s \$cache\/index\.mjs'$/);
     });
 
     it('keeps a $ and a quote literal in powershell on windows', async () => {
-        const platform = Object.getOwnPropertyDescriptor(process, 'platform');
-        Object.defineProperty(process, 'platform', { value: 'win32' });
-        try {
-            const commands = await commandsFor({ name: 'my-bot' }, "it's $cache");
+        const commands = await onPlatform('win32', () => commandsFor({ name: 'my-bot' }, "it's $cache"));
 
-            expect(commands.get('run')).toMatch(/it''s \$cache\/index\.mjs'$/);
-        } finally {
-            if (platform) Object.defineProperty(process, 'platform', platform);
-        }
+        expect(commands.get('run')).toMatch(/it''s \$cache\/index\.mjs'$/);
     });
 });
+
+async function onPlatform<TResult>(platform: NodeJS.Platform, run: () => Promise<TResult>): Promise<TResult> {
+    const original = Object.getOwnPropertyDescriptor(process, 'platform');
+    Object.defineProperty(process, 'platform', { value: platform });
+    try {
+        return await run();
+    } finally {
+        if (original) Object.defineProperty(process, 'platform', original);
+    }
+}

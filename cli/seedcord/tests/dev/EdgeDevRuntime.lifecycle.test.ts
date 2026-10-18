@@ -1,7 +1,8 @@
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { posixRelative } from '@seedcord/utils/node/internal';
 import { bindings, exports } from 'cf/config';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
@@ -80,7 +81,9 @@ describe('EdgeDevRuntime lifecycle', () => {
         const types = events.map((event) => event.type);
         const steps = events.flatMap((event) => (event.type === 'progress' ? [event.status] : []));
         expect(types.lastIndexOf('progress')).toBeLessThan(types.indexOf('server-listening'));
-        expect(steps).toContainEqual(expect.stringContaining(relative(process.cwd(), join(projectDir, 'src/bot.ts'))));
+        expect(steps).toContainEqual(
+            expect.stringContaining(posixRelative(process.cwd(), join(projectDir, 'src/bot.ts')))
+        );
     }, 120_000);
 
     it('runs the startup sequence once in a seedcord dev session', async () => {

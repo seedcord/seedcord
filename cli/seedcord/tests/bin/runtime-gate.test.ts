@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 import { describe, expect, it } from 'vitest';
@@ -15,7 +16,7 @@ async function runBinOn(versions: { node: string; bun?: string }): Promise<{ cod
                 `Object.defineProperty(process.versions, ${JSON.stringify(key)}, { value: ${JSON.stringify(value)}, configurable: true });`
         ),
         `process.argv = [process.argv[0], 'seedcord', '--version'];`,
-        `await import(${JSON.stringify(BIN)});`
+        `await import(${JSON.stringify(pathToFileURL(BIN).href)});`
     ].join('\n');
 
     return run(process.execPath, ['--input-type=module', '-e', script]).then(

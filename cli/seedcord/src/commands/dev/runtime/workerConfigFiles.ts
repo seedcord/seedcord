@@ -1,8 +1,10 @@
-import { realpathSync, watch } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { watch } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
 
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
+
+import { watchedPath } from '#core/project/watchedPath';
 
 import type { FSWatcher } from 'node:fs';
 
@@ -14,14 +16,16 @@ export class WorkerConfigFiles {
     private readonly localVars: Set<string>;
 
     constructor(cloudflareConfig: string, envFiles: readonly string[]) {
-        // chokidar reports a mac temp dir by its resolved path
-        this.config = realpathSync(cloudflareConfig);
+        this.config = watchedPath(cloudflareConfig);
         this.dir = dirname(this.config);
         this.localVars = new Set(envFiles);
     }
 
-    public readonly includes = (path: string): boolean =>
-        path === this.config || (dirname(path) === this.dir && this.localVars.has(basename(path)));
+    // chokidar passes forward slashes to vite's ignored matchers on windows
+    public readonly includes = (path: string): boolean => {
+        const file = resolve(path);
+        return file === this.config || (dirname(file) === this.dir && this.localVars.has(basename(file)));
+    };
 
     // fs.watch on a file stops once an atomic save replaces it
     public watch(onChange: (file: string) => void): FSWatcher {

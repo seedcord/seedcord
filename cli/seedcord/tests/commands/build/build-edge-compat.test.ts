@@ -1,4 +1,4 @@
-import { basename, join } from 'node:path';
+import { basename } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
@@ -23,7 +23,7 @@ describe('seedcord build checks that an edge bot keeps Node compat on', () => {
 
         await expect(build(projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliEdgeCompatDateTooOld,
-            message: expect.stringContaining(join(basename(projectDir), 'cloudflare.config.ts')) as string
+            message: expect.stringContaining(`${basename(projectDir)}/cloudflare.config.ts`) as string
         });
     }, 120_000);
 
@@ -54,7 +54,7 @@ describe('seedcord build checks that an edge bot keeps Node compat on', () => {
 
         await expect(build(projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliEdgeNodeCompatOff,
-            message: expect.stringContaining(join(basename(projectDir), 'cloudflare.config.ts')) as string
+            message: expect.stringContaining(`${basename(projectDir)}/cloudflare.config.ts`) as string
         });
     }, 120_000);
 });

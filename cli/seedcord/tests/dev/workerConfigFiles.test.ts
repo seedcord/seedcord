@@ -1,4 +1,3 @@
-import { realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
@@ -7,6 +6,7 @@ import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { WorkerConfigFiles } from '#commands/dev/runtime/workerConfigFiles';
 import { WorkerEnv } from '#core/modules/workerEnv';
+import { watchedPath } from '#core/project/watchedPath';
 import { edgeFolder } from '#tests/edgeFolder';
 
 import type { LogRecord } from '@seedcord/types';
@@ -38,7 +38,13 @@ describe('WorkerConfigFiles', () => {
     ] as const)('includes %s in mode %s: %s', async (name, mode, expected) => {
         const { files, config } = await configFiles(mode);
 
-        expect(files.includes(join(dirname(realpathSync(config)), name))).toBe(expected);
+        expect(files.includes(join(dirname(watchedPath(config)), name))).toBe(expected);
+    });
+
+    it('includes cloudflare.config.ts written with forward slashes', async () => {
+        const { files, config } = await configFiles();
+
+        expect(files.includes(watchedPath(config).replaceAll('\\', '/'))).toBe(true);
     });
 
     it('leaves a .env in another folder out', async () => {

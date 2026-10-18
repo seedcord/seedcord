@@ -37,11 +37,11 @@ describe('findCloudflared', () => {
                 pathVar: String.raw`C:\tools`,
                 pathExt: '.COM;.EXE;.CMD',
                 delimiter: ';',
-                exists: (candidate) => candidate.endsWith('.EXE')
+                exists: (candidate) => candidate === String.raw`C:\tools\cloudflared.EXE`
             })
         );
 
-        expect(found).toMatch(/cloudflared\.EXE$/);
+        expect(found).toBe(String.raw`C:\tools\cloudflared.EXE`);
     });
 });
 

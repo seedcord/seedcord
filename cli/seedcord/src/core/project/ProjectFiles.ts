@@ -1,10 +1,10 @@
 import { readdir } from 'node:fs/promises';
-import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
-import { isInside } from '@seedcord/utils/node/internal';
+import { isInside, posixRelative } from '@seedcord/utils/node/internal';
 
 // the bot writes its log files to logs/ in the folder it starts in
 const PROJECT_FOLDERS = ['logs'];
@@ -25,7 +25,7 @@ function isSkippedName(name: string): boolean {
 
 // the shape vite gives import.meta.glob keys and root imports, root-relative with a leading slash
 export function viteKey(root: string, path: string): string {
-    return `/${relative(root, path).split(sep).join('/')}`;
+    return `/${posixRelative(root, path)}`;
 }
 
 interface ProjectEntry {

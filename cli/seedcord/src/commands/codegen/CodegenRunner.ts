@@ -1,10 +1,11 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, relative, resolve, sep } from 'node:path';
+import { dirname, resolve } from 'node:path';
 
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { HostAugmentTarget, HostPluginKeys, type SeedcordInstance } from '@seedcord/types/internal';
+import { posixRelative } from '@seedcord/utils/node/internal';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { plural } from '#core/format';
@@ -50,7 +51,7 @@ interface CodegenRunnerDeps {
 
 // extensionless resolves under moduleResolution bundler, which a seedcord project sets
 function botSpecifier(root: string, instance: string): string {
-    const posix = relative(root, instance).split(sep).join('/').replace(ENTRY_EXTENSION, '');
+    const posix = posixRelative(root, instance).replace(ENTRY_EXTENSION, '');
     return posix.startsWith('.') ? posix : `./${posix}`;
 }
 

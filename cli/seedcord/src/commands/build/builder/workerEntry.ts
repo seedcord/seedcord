@@ -1,5 +1,6 @@
 import { BAKED_IDS_KEY } from '@seedcord/core/internal';
 import { assertNever } from '@seedcord/utils';
+import { workerdPath } from '@seedcord/utils/node/internal';
 
 import { builtFilesSource } from './builtFiles';
 
@@ -63,7 +64,7 @@ interface ModeSetup {
 function modeSetup(mode: EntryMode): ModeSetup {
     switch (mode.kind) {
         case 'dev': {
-            return { root: mode.root, cwd: mode.cwd, sourcePaths: true, modules: [] };
+            return { root: workerdPath(mode.root), cwd: workerdPath(mode.cwd), sourcePaths: true, modules: [] };
         }
         case 'build': {
             return {

@@ -303,22 +303,25 @@ describe('CodegenRunner', () => {
         expect((caught as Error).message).toContain(missing);
     });
 
-    // root reads a 0o000 folder anyway
-    it.skipIf(process.getuid?.() === 0)('throws CorePathUnreadable for a nested unreadable subdir', async () => {
-        const root = await tempDir('codegen-');
-        const cmdDir = await tempDir('cmds-');
-        await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
-        const locked = join(cmdDir, 'locked');
-        await mkdir(locked);
-        await writeFile(join(locked, 'x.ts'), 'export {};', 'utf8');
-        await chmod(locked, 0o000);
-        onTestFinished(() => chmod(locked, 0o755));
+    // root reads a 0o000 folder anyway. windows ignores the mode
+    it.skipIf(process.getuid?.() === 0 || process.platform === 'win32')(
+        'throws CorePathUnreadable for a nested unreadable subdir',
+        async () => {
+            const root = await tempDir('codegen-');
+            const cmdDir = await tempDir('cmds-');
+            await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
+            const locked = join(cmdDir, 'locked');
+            await mkdir(locked);
+            await writeFile(join(locked, 'x.ts'), 'export {};', 'utf8');
+            await chmod(locked, 0o000);
+            onTestFinished(() => chmod(locked, 0o755));
 
-        const run = scanRunner(root, cmdDir, () => ({ BanCommand }), silentLogger()).run(false);
+            const run = scanRunner(root, cmdDir, () => ({ BanCommand }), silentLogger()).run(false);
 
-        await expect(run).rejects.toMatchObject({ code: SeedcordErrorCode.CorePathUnreadable });
-        await expect(run).rejects.toThrow(locked);
-    });
+            await expect(run).rejects.toMatchObject({ code: SeedcordErrorCode.CorePathUnreadable });
+            await expect(run).rejects.toThrow(locked);
+        }
+    );
 
     it('throws CliCommandNotACommand for a registered class whose component is not a command', async () => {
         const root = await tempDir('codegen-');

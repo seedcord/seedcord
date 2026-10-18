@@ -12,8 +12,11 @@ import type { ViteDevServer } from 'vite';
 
 const LOADER_PACKAGE = '@seedcord/fixture-loader';
 
-const LOADER_ENTRY = `export async function loadFile(absolutePath) {
-    return import(absolutePath);
+// traverseDirectory imports through a file url too
+const LOADER_ENTRY = `import { pathToFileURL } from 'node:url';
+
+export async function loadFile(absolutePath) {
+    return import(pathToFileURL(absolutePath).href);
 }
 `;
 

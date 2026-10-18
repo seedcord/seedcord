@@ -1,8 +1,8 @@
-import { dirname, relative } from 'node:path';
+import { dirname } from 'node:path';
 
 import { fromWireError, wrapHot } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { displayPath, SeedcordError } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import chalk from 'chalk';
@@ -109,8 +109,10 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                         instanceKey: viteKey(viteRoot, config.instance),
                         rootKey: viteKey(viteRoot, config.root),
                         functionExports: async () => {
-                            const instance = relative(process.cwd(), config.instance);
-                            this.emit(context, { type: 'progress', status: `Importing ${instance}…` });
+                            this.emit(context, {
+                                type: 'progress',
+                                status: `Importing ${displayPath(config.instance)}…`
+                            });
                             const names = await functionExportsOf(await modulesReady.promise, config.instance);
                             reportWorkerExports(names);
                             this.emit(context, { type: 'progress', status: 'Starting workerd…' });

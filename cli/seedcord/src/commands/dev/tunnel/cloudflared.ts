@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
+import { delimiter, posix, win32 } from 'node:path';
 
 import { Envapter } from 'envapt';
 
@@ -26,6 +26,7 @@ export function systemLookup(): PathLookup {
 
 export function findCloudflared(lookup: PathLookup): string | undefined {
     const suffixes = lookup.platform === 'win32' ? (lookup.pathExt?.split(';') ?? ['.EXE']) : [''];
+    const { join } = lookup.platform === 'win32' ? win32 : posix;
 
     for (const dir of lookup.pathVar?.split(lookup.delimiter) ?? []) {
         for (const suffix of suffixes) {
