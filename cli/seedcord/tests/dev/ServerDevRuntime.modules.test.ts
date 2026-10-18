@@ -7,7 +7,7 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
-import { resolveVitePlugins } from '#core/config/vitePlugins';
+import { wrapVitePlugins } from '#core/config/vitePlugins';
 import { GREETING, GREETING_PROBE, greetingPlugin } from '#tests/greetingPlugin';
 
 import { devContextFor } from './devConfigFor';
@@ -80,7 +80,7 @@ describe('dev runtime vitePlugins', () => {
         onTestFinished(() => temp.remove());
         await writeProject(temp.path);
         const context = devContextFor(temp.path, 'index.ts');
-        const vitePlugins = await resolveVitePlugins(
+        const vitePlugins = wrapVitePlugins(
             [
                 {
                     name: 'breaks-on-start',
@@ -115,7 +115,7 @@ describe('dev runtime vitePlugins', () => {
                 return undefined;
             };
             const context = devContextFor(temp.path, 'reexport.ts');
-            const vitePlugins = await resolveVitePlugins(
+            const vitePlugins = wrapVitePlugins(
                 [
                     hook === 'load'
                         ? { name: 'breaks-the-word', load: throwOnWord }

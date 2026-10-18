@@ -4,6 +4,7 @@ import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 
 import type { BuildTarget } from './detectTarget';
 import type { SeedcordConfig } from './schema';
+import type { VitePluginEntry } from './vitePlugins';
 
 type ConfigProblem = SeedcordTypeError | SeedcordRangeError;
 
@@ -46,6 +47,19 @@ function* hmrProblems(value: unknown): Generator<SeedcordTypeError> {
     yield* typecheckProblems(value.typecheck);
 }
 
+function pluginExpected(value: unknown): string {
+    if (typeof value !== 'function') return 'a Vite plugin object with a name';
+    if (value.name === '') return 'a Vite plugin, which you get by calling this function';
+    return `a Vite plugin, like ${paint.bold(`${value.name}()`)} with the parentheses`;
+}
+
+function* vitePluginProblems(entries: readonly VitePluginEntry[]): Generator<SeedcordTypeError> {
+    for (const { field, value } of entries) {
+        const named = typeof value === 'object' && value !== null && typeof Reflect.get(value, 'name') === 'string';
+        if (!named) yield invalidField(field, pluginExpected(value));
+    }
+}
+
 function* tunnelProblems(value: unknown): Generator<SeedcordTypeError> {
     if (value === undefined || typeof value === 'boolean') return;
     // discord only accepts an https interactions endpoint
@@ -60,9 +74,12 @@ export class ConfigValidator {
         private readonly configFile: string
     ) {}
 
-    public validate(raw: unknown): asserts raw is SeedcordConfig {
+    public validate(raw: unknown, flattenedVitePlugins: readonly VitePluginEntry[]): asserts raw is SeedcordConfig {
         if (!isPlainObject(raw)) throw new SeedcordTypeError(SeedcordErrorCode.CliConfigInvalidExport);
-        throwSingleOrAggregate([...this.problems(raw)], SeedcordErrorCode.CliProblems);
+        throwSingleOrAggregate(
+            [...this.problems(raw), ...vitePluginProblems(flattenedVitePlugins)],
+            SeedcordErrorCode.CliProblems
+        );
     }
 
     private *problems(raw: Record<string, unknown>): Generator<ConfigProblem> {

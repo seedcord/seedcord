@@ -9,7 +9,7 @@ import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { DevRunner } from '#commands/dev/DevRunner';
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
-import { resolveVitePlugins } from '#core/config/vitePlugins';
+import { wrapVitePlugins } from '#core/config/vitePlugins';
 import { quietSteps } from '#core/output/quietSteps';
 import { deployedCommandsFile } from '#core/state/deployedCommands';
 import { StateFolder } from '#core/state/StateFolder';
@@ -230,7 +230,7 @@ describe('EdgeDevRuntime lifecycle', () => {
 
     it('throws CoreVitePluginThrew for a plugin that throws while edge dev starts', async () => {
         await using project = await edgeProject();
-        const vitePlugins = await resolveVitePlugins(
+        const vitePlugins = wrapVitePlugins(
             [
                 {
                     name: 'breaks-on-start',
@@ -255,7 +255,7 @@ describe('EdgeDevRuntime lifecycle', () => {
         const { projectDir } = project;
         await writeFile(join(projectDir, 'src/word.ts'), "export const word = 'ok';\n");
         await writeFile(join(projectDir, 'src/handlers/Word.ts'), "export { word } from '../word';\n");
-        const vitePlugins = await resolveVitePlugins(
+        const vitePlugins = wrapVitePlugins(
             [
                 {
                     name: 'breaks-in-transform',

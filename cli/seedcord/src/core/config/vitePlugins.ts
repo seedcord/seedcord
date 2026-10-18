@@ -1,7 +1,7 @@
 import { isPlainObject } from '@seedcord/utils/internal';
 import { recordThrownBy, vitePluginThrew } from '@seedcord/utils/node/internal';
 
-import type { Plugin, PluginOption } from 'vite';
+import type { Plugin } from 'vite';
 
 // a throw from one of these reaches a startup or an import
 const WRAPPED_HOOKS = [
@@ -66,16 +66,29 @@ function withThrownByOnErrors(plugin: Plugin, configFile: string): Plugin {
     return copy;
 }
 
-async function flatten(option: PluginOption): Promise<Plugin[]> {
-    const value = await option;
-    if (!value) return [];
-    if (!Array.isArray(value)) return [value];
-    const nested = await Promise.all(value.map(flatten));
+export interface VitePluginEntry {
+    // the path to it in the config, like vitePlugins[1][0]
+    field: string;
+    value: unknown;
+}
+
+export async function flattenVitePlugins(
+    options: readonly unknown[],
+    field = 'vitePlugins'
+): Promise<VitePluginEntry[]> {
+    const nested = await Promise.all(
+        options.map(async (option, index) => {
+            const at = `${field}[${String(index)}]`;
+            const value: unknown = await option;
+            if (!value) return [];
+            if (Array.isArray(value)) return flattenVitePlugins(value, at);
+            return [{ field: at, value }];
+        })
+    );
     return nested.flat();
 }
 
-export async function resolveVitePlugins(options: PluginOption[], configFile: string): Promise<Plugin[]> {
-    const plugins = await flatten(options);
+export function wrapVitePlugins(plugins: readonly Plugin[], configFile: string): Plugin[] {
     return plugins.map((plugin) => withThrownByOnErrors(plugin, configFile));
 }
 

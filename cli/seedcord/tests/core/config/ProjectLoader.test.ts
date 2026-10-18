@@ -1,5 +1,4 @@
-import { mkdirSync, mkdtempDisposableSync, realpathSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
@@ -11,59 +10,12 @@ import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { ShellMode } from '#core/viteMode';
 import { copyEdgeBotForTest } from '#tests/commands/build/edgeBot';
 import { cloudflareConfigSource } from '#tests/edgeFolder';
-import { configWithGreetingPlugin, GREETING, GREETING_PROBE } from '#tests/greetingPlugin';
+
+import { MINIMAL, openProject, projectWith, stubModulesExporting, tempProject } from './projectLoaderFixtures';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { OpenModules } from '#core/modules/ModuleLoader';
-import type { Project } from '#core/project/Project';
 
-// openProjectWithSteps without the steps
-async function openProject(loader: ProjectLoader, projectDir: string): Promise<Project> {
-    return loader.openProject(await loader.readConfig(projectDir));
-}
-
-function tempProject(): string {
-    const projectDir = mkdtempDisposableSync(join(tmpdir(), 'seedcord-config-'));
-    onTestFinished(() => projectDir.remove());
-    // the loader resolves against the real path of a mac temp dir
-    return realpathSync(projectDir.path);
-}
-
-interface StubModules {
-    open: OpenModules;
-    // one row per loader the ProjectLoader opened, in order
-    loaders: { loads: 'config' | 'bot'; closed: boolean }[];
-}
-
-function stubModulesExporting(config: unknown): StubModules {
-    const loaders: StubModules['loaders'] = [];
-    const open: OpenModules = (_projectDir, _target, _mode, use) => {
-        const loader: StubModules['loaders'][number] = { loads: use === 'config' ? 'config' : 'bot', closed: false };
-        loaders.push(loader);
-        return Promise.resolve({
-            importModule: <TModule = unknown>(): Promise<TModule> => Promise.resolve({ default: config } as TModule),
-            [Symbol.asyncDispose]: () => {
-                loader.closed = true;
-                return Promise.resolve();
-            }
-        });
-    };
-
-    return { open, loaders };
-}
-
-function projectWith(config: unknown): { projectDir: string; load: () => Promise<ResolvedSeedcordConfig> } {
-    const projectDir = tempProject();
-    writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
-    const { open } = stubModulesExporting(config);
-
-    const load = async (): Promise<ResolvedSeedcordConfig> =>
-        new ProjectLoader(open, new ShellMode()).readConfig(projectDir);
-
-    return { projectDir, load };
-}
-
-const MINIMAL = { instance: './bot.ts', entry: './index.ts' };
 const EDGE_MINIMAL = { instance: './bot.ts' };
 const CLOUDFLARE_CONFIG = 'cloudflare.config.ts';
 
@@ -289,102 +241,6 @@ describe('ProjectLoader entry on an edge bot', () => {
             code: SeedcordErrorCode.CliConfigFieldUnused,
             message: expect.stringContaining(toPosixPath(join(projectDir, 'seedcord.config.ts'))) as string
         });
-    });
-});
-
-describe('ProjectLoader vitePlugins', () => {
-    it("runs them on a server bot's code", async () => {
-        const projectDir = tempProject();
-        mkdirSync(join(projectDir, 'src'));
-        writeFileSync(
-            join(projectDir, 'seedcord.config.ts'),
-            configWithGreetingPlugin("root: './src', instance: './bot.ts', entry: './index.ts'")
-        );
-        writeFileSync(join(projectDir, 'src/probe.ts'), GREETING_PROBE);
-
-        await using project = await openProject(new ProjectLoader(openModuleLoader, new ShellMode()), projectDir);
-        const probe = await project.modules.importModule<{ default: string }>(join(projectDir, 'src/probe.ts'));
-
-        expect(probe.default).toBe(GREETING);
-    });
-
-    it.each(['[Promise.resolve(greetingPlugin())]', '[[false, [greetingPlugin()]], null]'])(
-        'runs a plugin written as %s',
-        async (vitePlugins) => {
-            const projectDir = tempProject();
-            mkdirSync(join(projectDir, 'src'));
-            writeFileSync(
-                join(projectDir, 'seedcord.config.ts'),
-                configWithGreetingPlugin("root: './src', instance: './bot.ts', entry: './index.ts'", vitePlugins)
-            );
-            writeFileSync(join(projectDir, 'src/probe.ts'), GREETING_PROBE);
-
-            await using project = await openProject(new ProjectLoader(openModuleLoader, new ShellMode()), projectDir);
-            const probe = await project.modules.importModule<{ default: string }>(join(projectDir, 'src/probe.ts'));
-
-            expect(probe.default).toBe(GREETING);
-        }
-    );
-
-    it('throws CoreVitePluginThrew with the file it was loading when a plugin throws in transform', async () => {
-        const projectDir = tempProject();
-        mkdirSync(join(projectDir, 'src'));
-        writeFileSync(
-            join(projectDir, 'seedcord.config.ts'),
-            `export default {
-    root: './src',
-    instance: './bot.ts',
-    entry: './index.ts',
-    vitePlugins: [{ name: 'breaks-in-transform', transform: (_code, id) => { if (id.endsWith('/word.ts')) throw new Error('bad yaml on line 3'); } }]
-};
-`
-        );
-        writeFileSync(join(projectDir, 'src/word.ts'), "export const word = 'ok';\n");
-        writeFileSync(join(projectDir, 'src/reexport.ts'), "export { word } from './word';\n");
-
-        await using project = await openProject(new ProjectLoader(openModuleLoader, new ShellMode()), projectDir);
-
-        await expect(project.modules.importModule(join(projectDir, 'src/reexport.ts'))).rejects.toMatchObject({
-            code: SeedcordErrorCode.CoreVitePluginThrew,
-            message: expect.stringMatching(/breaks-in-transform[\s\S]*word\.ts/) as string
-        });
-    });
-
-    it('throws CoreVitePluginThrew with the plugin and hook when a plugin throws as Vite starts', async () => {
-        const projectDir = tempProject();
-        writeFileSync(
-            join(projectDir, 'seedcord.config.ts'),
-            `export default {
-    instance: './bot.ts',
-    entry: './index.ts',
-    vitePlugins: [{ name: 'breaks-on-start', config: () => { throw new Error('bad option'); } }]
-};
-`
-        );
-
-        const caught: unknown = await openProject(
-            new ProjectLoader(openModuleLoader, new ShellMode()),
-            projectDir
-        ).catch((error: unknown) => error);
-
-        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
-        expect(caught.message).toContain('breaks-on-start');
-        expect(caught.message).toContain('config');
-        expect(caught.message).toContain('bad option');
-    });
-
-    it("runs them on an edge bot's code", async () => {
-        const projectDir = await copyEdgeBotForTest();
-        writeFileSync(
-            join(projectDir, 'seedcord.config.ts'),
-            configWithGreetingPlugin("root: './src', instance: './bot.ts'")
-        );
-        writeFileSync(join(projectDir, 'src/probe.ts'), GREETING_PROBE);
-
-        await using project = await openProject(new ProjectLoader(openModuleLoader, new ShellMode()), projectDir);
-        const probe = await project.modules.importModule<{ default: string }>(join(projectDir, 'src/probe.ts'));
-
-        expect(probe.default).toBe(GREETING);
     });
 });
 
