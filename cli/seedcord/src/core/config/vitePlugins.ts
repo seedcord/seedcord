@@ -72,20 +72,25 @@ export interface VitePluginEntry {
     value: unknown;
 }
 
-export async function flattenVitePlugins(
-    options: readonly unknown[],
-    field = 'vitePlugins'
-): Promise<VitePluginEntry[]> {
+async function flattenAt(options: readonly unknown[], field: string): Promise<VitePluginEntry[]> {
     const nested = await Promise.all(
         options.map(async (option, index) => {
             const at = `${field}[${String(index)}]`;
             const value: unknown = await option;
             if (!value) return [];
-            if (Array.isArray(value)) return flattenVitePlugins(value, at);
+            if (Array.isArray(value)) return flattenAt(value, at);
             return [{ field: at, value }];
         })
     );
     return nested.flat();
+}
+
+export function flattenVitePlugins(options: readonly unknown[]): Promise<VitePluginEntry[]> {
+    return flattenAt(options, 'vitePlugins');
+}
+
+export function isVitePlugin(value: unknown): value is Plugin {
+    return typeof value === 'object' && value !== null && typeof Reflect.get(value, 'name') === 'string';
 }
 
 export function wrapVitePlugins(plugins: readonly Plugin[], configFile: string): Plugin[] {

@@ -14,7 +14,7 @@ import { assertTargetMatchesTsconfig } from './assertTargetMatchesTsconfig';
 import { ConfigValidator } from './ConfigValidator';
 import { detectTarget } from './detectTarget';
 import { locateConfig } from './locateConfig';
-import { flattenVitePlugins, rethrowVitePluginError, wrapVitePlugins } from './vitePlugins';
+import { flattenVitePlugins, isVitePlugin, rethrowVitePluginError, wrapVitePlugins } from './vitePlugins';
 
 import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
 import type { DefaultMode, ShellMode } from '#core/viteMode';
@@ -30,7 +30,6 @@ import type {
     SeedcordHmrConfig,
     SeedcordServerConfig
 } from './schema';
-import type { Plugin } from 'vite';
 
 // the node http Seedcord's default port
 const EDGE_DEV_PORT = 3000;
@@ -95,8 +94,7 @@ export class ProjectLoader {
         const pluginEntries = await flattenVitePlugins(vitePluginOptionsOf(config));
         const validator: ConfigValidator = new ConfigValidator(target, configPath);
         validator.validate(config, pluginEntries);
-        // justified: validate rejects every entry that isn't a plugin object with a name
-        const vitePlugins = pluginEntries.map(({ value }) => value as Plugin);
+        const vitePlugins = pluginEntries.map(({ value }) => value).filter(isVitePlugin);
 
         const configDir = dirname(configPath);
         const root = resolve(configDir, config.root ?? '.');

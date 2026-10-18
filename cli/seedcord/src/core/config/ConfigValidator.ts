@@ -2,6 +2,8 @@ import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordRangeError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 
+import { isVitePlugin } from './vitePlugins';
+
 import type { BuildTarget } from './detectTarget';
 import type { SeedcordConfig } from './schema';
 import type { VitePluginEntry } from './vitePlugins';
@@ -55,8 +57,7 @@ function pluginExpected(value: unknown): string {
 
 function* vitePluginProblems(entries: readonly VitePluginEntry[]): Generator<SeedcordTypeError> {
     for (const { field, value } of entries) {
-        const named = typeof value === 'object' && value !== null && typeof Reflect.get(value, 'name') === 'string';
-        if (!named) yield invalidField(field, pluginExpected(value));
+        if (!isVitePlugin(value)) yield invalidField(field, pluginExpected(value));
     }
 }
 
