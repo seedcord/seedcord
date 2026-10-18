@@ -1,7 +1,6 @@
 import { isPlainObject } from '@seedcord/utils/internal';
 import { recordThrownBy, vitePluginThrew } from '@seedcord/utils/node/internal';
 
-import type { VitePlugin } from './schema';
 import type { Plugin, PluginOption } from 'vite';
 
 // a throw from one of these reaches a startup or an import
@@ -52,13 +51,13 @@ function wrapHook(hook: unknown, record: RecordThrow): unknown {
     return hook;
 }
 
-function withThrownByOnErrors(plugin: VitePlugin, configFile: string): VitePlugin {
+function withThrownByOnErrors(plugin: Plugin, configFile: string): Plugin {
     const hooks = WRAPPED_HOOKS.filter((hook) => hook in plugin);
     if (hooks.length === 0) return plugin;
 
     const prototype = Object.getPrototypeOf(plugin) as object | null;
     // justified: a copy with the same prototype and own properties is the same kind of plugin
-    const copy = Object.create(prototype, Object.getOwnPropertyDescriptors(plugin)) as VitePlugin;
+    const copy = Object.create(prototype, Object.getOwnPropertyDescriptors(plugin)) as Plugin;
     for (const hook of hooks) {
         const record: RecordThrow = (caught, args) =>
             recordThrownBy(caught, { plugin: plugin.name, hook, configFile, id: moduleIdOf(hook, args) });
@@ -67,7 +66,7 @@ function withThrownByOnErrors(plugin: VitePlugin, configFile: string): VitePlugi
     return copy;
 }
 
-async function flatten(option: PluginOption): Promise<VitePlugin[]> {
+async function flatten(option: PluginOption): Promise<Plugin[]> {
     const value = await option;
     if (!value) return [];
     if (!Array.isArray(value)) return [value];
@@ -75,7 +74,7 @@ async function flatten(option: PluginOption): Promise<VitePlugin[]> {
     return nested.flat();
 }
 
-export async function resolveVitePlugins(options: PluginOption[], configFile: string): Promise<VitePlugin[]> {
+export async function resolveVitePlugins(options: PluginOption[], configFile: string): Promise<Plugin[]> {
     const plugins = await flatten(options);
     return plugins.map((plugin) => withThrownByOnErrors(plugin, configFile));
 }

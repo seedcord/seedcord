@@ -3,7 +3,7 @@ import type { Project } from '#core/project/Project';
 import type { ProjectLoader } from './ProjectLoader';
 import type { ResolvedSeedcordConfig } from './schema';
 
-export type OpenStep = 'read config' | 'load plugins';
+type OpenStep = 'read config' | 'load plugins';
 
 export type ProjectOpener = Pick<ProjectLoader, 'readConfig' | 'openProject'>;
 

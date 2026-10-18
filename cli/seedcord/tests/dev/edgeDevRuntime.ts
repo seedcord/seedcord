@@ -17,10 +17,11 @@ import { silentLogger } from '#tests/silentLogger';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import type { DevEventHandler } from '#commands/dev/runtime/events';
-import type { ResolvedEdgeTarget, ResolvedSeedcordConfig, VitePlugin } from '#core/config/schema';
+import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/schema';
 import type { LogRecord } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { AddressInfo } from 'node:net';
+import type { Plugin } from 'vite';
 
 // a port probed up front can go to another worker before the runtime binds it
 const ANY_PORT = 0;
@@ -33,7 +34,7 @@ function configWith(
     projectDir: string,
     target: ResolvedEdgeTarget,
     viteMode: string,
-    vitePlugins: VitePlugin[] = []
+    vitePlugins: Plugin[] = []
 ): ResolvedSeedcordConfig {
     return {
         configFile: join(projectDir, 'seedcord.config.ts'),
@@ -194,7 +195,7 @@ interface StartedRuntime extends AsyncDisposable {
 export async function startedRuntime(
     projectDir: string,
     onEvent?: DevEventHandler,
-    { devPort = ANY_PORT, viteMode = 'development', vitePlugins = [] as VitePlugin[] } = {}
+    { devPort = ANY_PORT, viteMode = 'development', vitePlugins = [] as Plugin[] } = {}
 ): Promise<StartedRuntime> {
     const target = edgeTarget(projectDir, devPort);
     const config = configWith(projectDir, target, viteMode, vitePlugins);

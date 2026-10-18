@@ -11,13 +11,13 @@ import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { ShellMode } from '#core/viteMode';
 import { configWithGreetingPlugin, GREETING, GREETING_PROBE } from '#tests/greetingPlugin';
 
-import type { OpenStep } from '#core/config/openProjectWithSteps';
-import type { Steps } from '#core/output/Steps';
-
 const SERVER_FIELDS = "root: './src', instance: './bot.ts', entry: './index.ts'";
 const STARTED = 'seedcordTestPluginStarted';
 
-interface RecordedSteps extends Steps<OpenStep> {
+type OpenSteps = Parameters<typeof openProjectWithSteps>[0];
+type OpenStep = Parameters<OpenSteps['step']>[0];
+
+interface RecordedSteps extends OpenSteps {
     readonly labels: OpenStep[];
 }
 

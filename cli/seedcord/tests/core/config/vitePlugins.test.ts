@@ -5,15 +5,14 @@ import { assert, describe, expect, it } from 'vitest';
 
 import { resolveVitePlugins, rethrowVitePluginError } from '#core/config/vitePlugins';
 
-import type { VitePlugin } from '#core/config/schema';
 import type { Plugin } from 'vite';
 
 const CONFIG_FILE = '/bot/seedcord.config.ts';
 
-async function onlyPlugin(plugin: VitePlugin): Promise<Plugin> {
+async function onlyPlugin(plugin: Plugin): Promise<Plugin> {
     const [resolved] = await resolveVitePlugins([plugin], CONFIG_FILE);
-    // justified: every plugin these tests pass carries JS hooks
-    return resolved as Plugin;
+    assert(resolved);
+    return resolved;
 }
 
 // calls the hook the way vite does, with a context as this

@@ -1,6 +1,6 @@
 import type { EdgeTarget, ServerTarget } from './detectTarget';
 import type { TypedOmit } from '@seedcord/types';
-import type { PluginOption } from 'vite';
+import type { Plugin, PluginOption } from 'vite';
 
 /**
  * Build options every bot takes. An edge bot takes only these, because `@cloudflare/vite-plugin`
@@ -147,9 +147,6 @@ export type ResolvedTarget = ResolvedServerTarget | ResolvedEdgeTarget;
 
 export type ResolvedTypecheck = { enabled: false } | { enabled: true; tsconfig?: string };
 
-// one plugin, with the promises, arrays and false entries of PluginOption resolved
-export type VitePlugin = Exclude<Awaited<PluginOption>, false | null | undefined | readonly unknown[]>;
-
 export interface ResolvedSeedcordBuildConfig {
     tsconfig?: string;
 }
@@ -159,13 +156,14 @@ export interface ResolvedSeedcordConfig extends Required<
     TypedOmit<SeedcordConfig, 'build' | 'hmr' | 'tunnel' | 'port' | 'vitePlugins'>
 > {
     tunnel: ResolvedTunnel;
-    vitePlugins: VitePlugin[];
+    vitePlugins: Plugin[];
     configFile: string;
     target: ResolvedTarget;
     build: ResolvedSeedcordBuildConfig;
     typecheck: ResolvedTypecheck;
     viteMode: string;
-    hmr?: SeedcordHmrConfig | undefined; // restart globs pass through unresolved
+    // restart globs pass through unresolved
+    hmr?: SeedcordHmrConfig | undefined;
 }
 
 /**
