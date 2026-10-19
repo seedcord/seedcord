@@ -26,10 +26,10 @@ const ENTRY = [
 ].join('\n');
 
 const HANDLERS_ENTRY = [
-    "import { traverseDirectory } from '@seedcord/utils';",
+    "import { importFiles } from '@seedcord/utils';",
     '',
     'export const names: unknown[] = [];',
-    "for await (const { imported } of traverseDirectory('./handlers')) names.push(imported.name);",
+    "for await (const { imported } of importFiles('./handlers')) names.push(imported.name);",
     ''
 ].join('\n');
 

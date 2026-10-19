@@ -36,12 +36,12 @@ interface ReadFile extends FoundFile {
  *
  * @example
  * ```ts
- * for await (const { relativePath, imported } of traverseDirectory('./commands')) {
+ * for await (const { relativePath, imported } of importFiles('./commands')) {
  *     for (const exported of Object.values(imported)) register(exported, relativePath);
  * }
  * ```
  */
-export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFile> {
+export async function* importFiles(dir: string): AsyncGenerator<ImportedFile> {
     for (const [fullPath, load] of await fileSource().modules(dir)) {
         const relativePath = displayPath(fullPath);
         let imported: Record<string, unknown>;
@@ -56,8 +56,8 @@ export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFi
 
 /**
  * Reads every file under a directory, recursively and sorted by path, yielding its bytes. Text and binary files both work.
- * It skips the code files {@link traverseDirectory} imports, .map files, dotfiles, dot-folders and node_modules.
- * In a built bot the files come from the build output. A relative `dir` resolves against `root`, the same as {@link traverseDirectory}.
+ * It skips the code files {@link importFiles} imports, .map files, dotfiles, dot-folders and node_modules.
+ * In a built bot the files come from the build output. A relative `dir` resolves against `root`, the same as {@link importFiles}.
  * Under `seedcord dev` and in a built bot, `dir` has to be one of the folders `files` in seedcord.config.ts lists, or a subfolder of one.
  *
  * @throws **SeedcordError** when the directory or a file in it cannot be read.

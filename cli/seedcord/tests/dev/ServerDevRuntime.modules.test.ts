@@ -12,7 +12,7 @@ import { vitePluginsOf } from '#tests/vitePluginsOf';
 
 import { devContextFor } from './devConfigFor';
 
-// the entry loads ban.ts the way traverseDirectory loads a command file
+// the entry loads ban.ts the way importFiles loads a command file
 async function writeProject(dir: string): Promise<void> {
     await mkdir(join(dir, 'src', 'commands'), { recursive: true });
     await writeFile(join(dir, 'package.json'), JSON.stringify({ name: 'dev-fixture', type: 'module' }));

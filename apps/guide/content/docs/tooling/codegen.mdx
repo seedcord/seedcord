@@ -31,7 +31,7 @@ export class SearchCommand extends BuilderComponent<'command'> {
 
 An option's name and its required flag are arguments to method calls. Those calls run when something constructs the class. TypeScript reads the source of that chain without running it, so the name `query` only exists once the chain has run.
 
-`seedcord codegen` records those names for you. It imports every TypeScript and JavaScript file under your commands folder through [`traverseDirectory`](ref:utils/traverseDirectory), constructs each decorated class it finds, reads the JSON that class's builder produced, and writes what it found to `seedcord-gen.d.ts`.
+`seedcord codegen` records those names for you. It imports every TypeScript and JavaScript file under your commands folder through [`importFiles`](ref:utils/importFiles), constructs each decorated class it finds, reads the JSON that class's builder produced, and writes what it found to `seedcord-gen.d.ts`.
 
 <Shell run="codegen" />
 

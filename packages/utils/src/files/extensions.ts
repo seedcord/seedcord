@@ -26,7 +26,7 @@ export function isSkippedUnder(dir: string, file: string): boolean {
     return path.relative(dir, file).split(path.sep).some(isSkippedName);
 }
 
-// whether traverseDirectory(dir) imports the file
+// whether importFiles(dir) imports the file
 export function isModuleUnder(dir: string, file: string): boolean {
     return isInside(dir, file) && isModulePath(file) && !isSkippedUnder(dir, file);
 }

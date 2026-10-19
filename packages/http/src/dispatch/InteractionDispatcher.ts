@@ -8,7 +8,7 @@ import {
 } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
-import { formatFilePath, traverseDirectory } from '@seedcord/utils';
+import { formatFilePath, importFiles } from '@seedcord/utils';
 import { Envapter } from 'envapt';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
@@ -81,7 +81,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private async loadHandlers(dir: string): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of traverseDirectory(dir)) {
+        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
             for (const value of Object.values(imported)) {
                 if (!this.isHandler(value)) continue;
                 this.registerHandler(value, relativePath);
@@ -91,7 +91,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private async loadMiddlewares(dir: string): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of traverseDirectory(dir)) {
+        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
             for (const value of Object.values(imported)) {
                 if (!this.isMiddleware(value)) continue;
                 this.registerMiddleware(value, relativePath);

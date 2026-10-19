@@ -7,11 +7,11 @@ import { stripVTControlCharacters } from 'node:util';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { readFiles, traverseDirectory } from '#src/files/readers';
+import { readFiles, importFiles } from '#src/files/readers';
 import { setDevFiles } from '#src/files/slots';
 
 const FIXTURES = path.join(import.meta.dirname, 'fixtures');
-const scratch = await mkdtemp(path.join(os.tmpdir(), 'seedcord-traverse-'));
+const scratch = await mkdtemp(path.join(os.tmpdir(), 'seedcord-import-files-'));
 
 async function rejection(walk: AsyncIterable<unknown>): Promise<unknown> {
     try {
@@ -26,11 +26,11 @@ afterAll(async () => {
     await rm(scratch, { recursive: true, force: true });
 });
 
-describe('traverseDirectory', () => {
+describe('importFiles', () => {
     it('visits every ts file under the directory, sorted by path', async () => {
         const seen: string[] = [];
 
-        for await (const { fullPath } of traverseDirectory(path.join(FIXTURES, 'walk'))) {
+        for await (const { fullPath } of importFiles(path.join(FIXTURES, 'walk'))) {
             seen.push(path.relative(FIXTURES, fullPath));
         }
 
@@ -49,7 +49,7 @@ describe('traverseDirectory', () => {
         await writeFile(path.join(dir, '.drafts', 'Draft.ts'), 'export {};\n');
         const seen: string[] = [];
 
-        for await (const { fullPath } of traverseDirectory(dir)) seen.push(path.relative(dir, fullPath));
+        for await (const { fullPath } of importFiles(dir)) seen.push(path.relative(dir, fullPath));
 
         expect(seen).toEqual(['Visible.ts']);
     });
@@ -61,13 +61,13 @@ describe('traverseDirectory', () => {
         await Promise.all(files.map((file) => writeFile(path.join(dir, file), 'export {};\n')));
         const seen: string[] = [];
 
-        for await (const { fullPath } of traverseDirectory(dir)) seen.push(path.relative(dir, fullPath));
+        for await (const { fullPath } of importFiles(dir)) seen.push(path.relative(dir, fullPath));
 
         expect(seen).toEqual(['A.ts', 'B.tsx', 'C.mts', 'D.js', 'E.jsx', 'F.mjs']);
     });
 
     it('reports the file whose module failed to import, keeping the original as the cause', async () => {
-        const error = await rejection(traverseDirectory(path.join(FIXTURES, 'broken')));
+        const error = await rejection(importFiles(path.join(FIXTURES, 'broken')));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreImportFailed });
         expect(Error.isError(error) ? error.message : '').toMatch(/Broken\.ts/);
@@ -77,7 +77,7 @@ describe('traverseDirectory', () => {
     it('reports the directory it could not read, keeping the original as the cause', async () => {
         const missing = path.join(FIXTURES, 'not-a-real-dir');
 
-        const error = await rejection(traverseDirectory(missing));
+        const error = await rejection(importFiles(missing));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathUnreadable });
         expect(Error.isError(error) ? error.message : '').toMatch(/not-a-real-dir/);
@@ -107,7 +107,7 @@ describe('a module that fails to load through a Vite plugin', () => {
         };
         const thrown = `recordThrownBy(new Error('bad yaml on line 3'), ${JSON.stringify(thrownBy)})`;
 
-        const error = await rejection(traverseDirectory(await folderThrowing('from-plugin', thrown)));
+        const error = await rejection(importFiles(await folderThrowing('from-plugin', thrown)));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreVitePluginThrew });
         const message = stripVTControlCharacters(Error.isError(error) ? error.message : '');
@@ -119,7 +119,7 @@ describe('a module that fails to load through a Vite plugin', () => {
     it("keeps CoreImportFailed for an error from the bot's own code", async () => {
         const thrown = `new Error('Unexpected token')`;
 
-        const error = await rejection(traverseDirectory(await folderThrowing('from-vite', thrown)));
+        const error = await rejection(importFiles(await folderThrowing('from-vite', thrown)));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreImportFailed });
     });
@@ -131,10 +131,10 @@ describe('a folder on disk under seedcord dev', () => {
         return () => dev[Symbol.dispose]();
     });
 
-    it('resolves against root for traverseDirectory', async () => {
+    it('resolves against root for importFiles', async () => {
         const seen: string[] = [];
 
-        for await (const { fullPath } of traverseDirectory('./walk/b')) seen.push(fullPath);
+        for await (const { fullPath } of importFiles('./walk/b')) seen.push(fullPath);
 
         expect(seen).toEqual([path.join(FIXTURES, 'walk', 'b', 'bGood.ts')]);
     });
@@ -153,8 +153,8 @@ describe('a folder on disk under seedcord dev', () => {
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryNotListed });
     });
 
-    it('throws CorePathOutsideRoot when traverseDirectory walks a folder outside root', async () => {
-        const error = await rejection(traverseDirectory(path.join(scratch, 'extensions')));
+    it('throws CorePathOutsideRoot when importFiles walks a folder outside root', async () => {
+        const error = await rejection(importFiles(path.join(scratch, 'extensions')));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathOutsideRoot });
     });
@@ -193,8 +193,8 @@ describe('a folder seedcord build skips, under seedcord dev', () => {
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectorySkipped });
     });
 
-    it('throws CoreDirectorySkipped for traverseDirectory on a dot-folder', async () => {
-        const error = await rejection(traverseDirectory('./.drafts'));
+    it('throws CoreDirectorySkipped for importFiles on a dot-folder', async () => {
+        const error = await rejection(importFiles('./.drafts'));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectorySkipped });
     });
@@ -209,8 +209,8 @@ describe('a folder seedcord build skips, under seedcord dev', () => {
 });
 
 describe('a relative folder with no root', () => {
-    it('throws for traverseDirectory with the path it was given', async () => {
-        const error = await rejection(traverseDirectory('./walk'));
+    it('throws for importFiles with the path it was given', async () => {
+        const error = await rejection(importFiles('./walk'));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryRootUnknown });
         expect(Error.isError(error) ? error.message : '').toContain('./walk');

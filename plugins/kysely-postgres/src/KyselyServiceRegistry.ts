@@ -1,5 +1,5 @@
 import { paint } from '@seedcord/errors';
-import { traverseDirectory } from '@seedcord/utils';
+import { importFiles } from '@seedcord/utils';
 
 import { KyselyServiceMetadataKey } from './decorators/RegisterKyselyService';
 import { KyselyService } from './KyselyService';
@@ -35,7 +35,7 @@ export class KyselyServiceRegistry {
     public async loadFromDirectory(dir: string): Promise<void> {
         this.logger.debug(paint.mute(dir));
 
-        for await (const { fullPath, relativePath, imported } of traverseDirectory(dir)) {
+        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
             for (const Service of Object.values(imported)) {
                 if (!this.isServiceClass(Service)) continue;
 

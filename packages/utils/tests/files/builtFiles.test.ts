@@ -7,7 +7,7 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { encodeFile } from '#src/files/encodedFile';
 import { toPosixPath } from '#src/files/paths';
-import { readFiles, traverseDirectory } from '#src/files/readers';
+import { readFiles, importFiles } from '#src/files/readers';
 import { BOT_FILES_KEY, BUILT_FILES_READY_KEY, builtConfigDir, setBuiltFilesHook, setDevFiles } from '#src/files/slots';
 import { clearBuiltFiles } from '#tests/builtFilesSlot';
 
@@ -54,7 +54,7 @@ function stub(name: string): () => Promise<Record<string, unknown>> {
 
 async function walk(dir: string): Promise<[string, unknown][]> {
     const seen: [string, unknown][] = [];
-    for await (const { fullPath, imported } of traverseDirectory(dir)) seen.push([fullPath, imported.name]);
+    for await (const { fullPath, imported } of importFiles(dir)) seen.push([fullPath, imported.name]);
     return seen;
 }
 
@@ -118,11 +118,11 @@ describe('setBuiltFilesHook', () => {
     });
 });
 
-describe('traverseDirectory in a built bot', () => {
+describe('importFiles in a built bot', () => {
     it('reports a file outside the working directory by its full path', async () => {
         using _built = register({ folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
         const shown: string[] = [];
-        for await (const { relativePath } of traverseDirectory(at('handlers'))) shown.push(relativePath);
+        for await (const { relativePath } of importFiles(at('handlers'))) shown.push(relativePath);
 
         expect(shown).toEqual([toPosixPath(at('handlers/Roll.js'))]);
     });
@@ -185,7 +185,7 @@ describe('traverseDirectory in a built bot', () => {
             modules: { '/handlers/A.ts': stub('A'), '/handlers/B.ts': later }
         });
 
-        for await (const { imported } of traverseDirectory(at('handlers'))) {
+        for await (const { imported } of importFiles(at('handlers'))) {
             if (imported.name === 'A') break;
         }
 
@@ -201,7 +201,7 @@ describe('traverseDirectory in a built bot', () => {
     it('treats a folder whose name starts with two dots as a dot-folder inside root', async () => {
         using _built = register({ folders: ['/handlers'] });
 
-        const error = await rejection(traverseDirectory(at('..cache')));
+        const error = await rejection(importFiles(at('..cache')));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectorySkipped });
     });
@@ -235,7 +235,7 @@ describe('traverseDirectory in a built bot', () => {
     it('reports a folder the build never registered as missing from the build', async () => {
         using _built = register({ folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
 
-        const error = await rejection(traverseDirectory(at('handlerz')));
+        const error = await rejection(importFiles(at('handlerz')));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryNotBuilt });
         expect(Error.isError(error) ? error.message : '').toMatch(/handlerz/);
@@ -245,7 +245,7 @@ describe('traverseDirectory in a built bot', () => {
         const broken = (): Promise<Record<string, unknown>> => Promise.reject(new Error('boom'));
         using _built = register({ folders: ['/handlers'], modules: { '/handlers/Broken.ts': broken } });
 
-        const error = await rejection(traverseDirectory(at('handlers')));
+        const error = await rejection(importFiles(at('handlers')));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreImportFailed });
         expect(Error.isError(error) ? error.message : '').toMatch(/Broken\.js/);
@@ -255,7 +255,7 @@ describe('traverseDirectory in a built bot', () => {
     it('throws with the folder and the root when the folder sits outside root', async () => {
         using _built = register({ folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
 
-        const error = await rejection(traverseDirectory('/elsewhere/handlers'));
+        const error = await rejection(importFiles('/elsewhere/handlers'));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathOutsideRoot });
         expect(Error.isError(error) ? error.message : '').toMatch(/\/elsewhere\/handlers[\s\S]*\/bot/);

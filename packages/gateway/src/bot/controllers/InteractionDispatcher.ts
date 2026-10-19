@@ -21,7 +21,7 @@ import { prefixOf } from '@seedcord/custom-id';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
+import { formatFilePath, hasKeys, importFiles } from '@seedcord/utils';
 import { asError } from '@seedcord/utils/internal';
 import { Events } from 'discord.js';
 import { Envapter } from 'envapt';
@@ -258,7 +258,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private async loadHandlers(dir: string): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of traverseDirectory(dir)) {
+        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
             for (const val of Object.values(imported)) {
                 if (!this.isHandlerClass(val)) continue;
                 this.registerHandler(val, relativePath);
@@ -268,7 +268,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private async loadMiddlewares(dir: string): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of traverseDirectory(dir)) {
+        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
             for (const val of Object.values(imported)) {
                 if (!this.isMiddlewareClass(val)) continue;
 

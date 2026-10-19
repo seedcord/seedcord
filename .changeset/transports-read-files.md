@@ -3,4 +3,4 @@
 '@seedcord/http': minor
 ---
 
-Added `readFiles` and `traverseDirectory` to `@seedcord/gateway` and `@seedcord/http`.
+Added `readFiles` and `importFiles` to `@seedcord/gateway` and `@seedcord/http`.

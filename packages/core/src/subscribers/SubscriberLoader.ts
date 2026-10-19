@@ -1,5 +1,5 @@
 import { paint } from '@seedcord/errors';
-import { traverseDirectory } from '@seedcord/utils';
+import { importFiles } from '@seedcord/utils';
 import { Envapter } from 'envapt';
 
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
@@ -70,7 +70,7 @@ export class SubscriberLoader implements Initializeable, HmrAware {
     }
 
     private async load(dir: string): Promise<void> {
-        for await (const { fullPath, relativePath, imported } of traverseDirectory(dir)) {
+        for await (const { fullPath, relativePath, imported } of importFiles(dir)) {
             for (const value of Object.values(imported)) {
                 if (!this.isSubscriber(value)) continue;
 
