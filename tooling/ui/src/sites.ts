@@ -20,6 +20,12 @@ export class SiteAddress {
     }
 }
 
+// a path on the current site, like /blog/. a // url points at another host
+export const isSitePath = (url: string): boolean => url.startsWith('/') && !url.startsWith('//');
+
+export const absoluteUrl = (url: string, onSite: (path: string) => string): string =>
+    isSitePath(url) ? onSite(url) : url;
+
 const ORIGIN = 'https://seedcord.org';
 
 export const HOME = new SiteAddress(ORIGIN);

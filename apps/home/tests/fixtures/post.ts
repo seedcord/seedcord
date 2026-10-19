@@ -1,4 +1,4 @@
-import type { PostSummary } from '#lib/blog/post';
+import type { PostSummary } from '#lib/blog/summary';
 
 export const POST: PostSummary = {
     slug: 'typed-custom-ids',
@@ -15,7 +15,7 @@ export const POST: PostSummary = {
         }
     ],
     created: '2026-10-19',
-    edited: '2026-10-20',
+    edited: '2026-10-19',
     unlisted: false,
     minutes: 6,
     cover: undefined,

@@ -1,60 +1,23 @@
+import { FENCE_ATTR, languageOf, visitFences } from '@seedcord/ui/fence';
 import { parseCodeBlockAttributes } from 'fumadocs-core/mdx-plugins/codeblock-utils';
+
+import type { Properties, Root } from 'hast';
+import type { VFile } from 'vfile';
 
 // the markdown twin strips these back out
 export const FENCE_MODES = ['twoslash', 'hovers'];
 
-// a name outside this list stays in the meta untouched
+// rehypeFenceTitle from @seedcord/ui runs before this plugin and writes the title
 const FENCE_NAMES = ['title', 'output', ...FENCE_MODES];
-
-export const LANGUAGE_PREFIX = 'language-';
-
-// mdxComponents reads these back off the code element
-export const FENCE_ATTR = {
-    title: 'data-title',
-    output: 'data-output',
-    twoslash: 'data-twoslash',
-    hovers: 'data-hovers'
-} as const;
 
 const TWOSLASH_LANGS = new Set(['ts', 'tsx', 'typescript']);
 
-interface Element {
-    type: string;
-    tagName?: string;
-    properties?: Record<string, unknown>;
-    data?: { meta?: string };
-    children?: Element[];
-}
-
-interface Reporter {
-    fail(reason: string, place: Element): never;
-}
-
-function codeElements(node: Element): Element[] {
-    if (node.type === 'element' && node.tagName === 'code') return [node];
-
-    return (node.children ?? []).flatMap(codeElements);
-}
-
-function languageOf(code: Element): string {
-    const names = code.properties?.className;
-    const list = Array.isArray(names) ? names : [names];
-
-    for (const name of list) {
-        if (typeof name === 'string' && name.startsWith(LANGUAGE_PREFIX)) return name.slice(LANGUAGE_PREFIX.length);
-    }
-
-    return '';
-}
-
-// remark-rehype writes the fence meta to data.meta
 export function rehypeFenceMeta() {
-    return (tree: Element, file: Reporter): void => {
-        for (const code of codeElements(tree)) {
-            const { attributes } = parseCodeBlockAttributes(code.data?.meta ?? '', FENCE_NAMES);
-            const added: Record<string, unknown> = {};
+    return (tree: Root, file: VFile): void => {
+        visitFences(tree, (code, meta) => {
+            const { attributes } = parseCodeBlockAttributes(meta, FENCE_NAMES);
+            const added: Properties = {};
 
-            if (typeof attributes.title === 'string') added[FENCE_ATTR.title] = attributes.title;
             if ('output' in attributes) added[FENCE_ATTR.output] = '';
             if ('twoslash' in attributes) {
                 const lang = languageOf(code);
@@ -69,6 +32,6 @@ export function rehypeFenceMeta() {
             }
 
             code.properties = { ...code.properties, ...added };
-        }
+        });
     };
 }

@@ -4,7 +4,7 @@ import { POST_SLUG, PostFolder } from '#tests/mdxPipeline';
 
 const KB = 1024;
 
-describe('an image in a post', () => {
+describe('the files of a post', () => {
     it("sets src to the image route url and the size to the image's pixels", async () => {
         using post = new PostFolder().webp('shot.webp');
 
@@ -50,6 +50,23 @@ describe('an image in a post', () => {
 
         await expect(post.compile('![the dev tui](./shot.webp)')).rejects.toThrow('next to index.mdx');
     });
+
+    it('fails the build on a reference-style image', async () => {
+        using post = new PostFolder().webp('shot.webp');
+
+        await expect(post.compile('![the dev tui][shot]\n\n[shot]: ./shot.webp')).rejects.toThrow(
+            'Write it inline as ![the dev tui](./shot.webp)'
+        );
+    });
+
+    it.each(['typed custom-ids', 'c#-tips', 'Typed-Ids'])(
+        'fails the build on a post folder named %s',
+        async (folder) => {
+            using post = new PostFolder(folder);
+
+            await expect(post.compile('A post.')).rejects.toThrow('Rename the folder');
+        }
+    );
 
     it.each(['../other-post/shot.webp', './img/shot.webp', '/shot.webp', 'https://cdn.seedcord.org/shot.webp'])(
         'fails the build on %s, a path outside the post folder',

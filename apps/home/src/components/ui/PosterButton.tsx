@@ -1,8 +1,7 @@
 import { cn } from '@seedcord/ui';
-import Link from 'next/link';
 
-import { linkTarget } from './linkTarget';
 import { pressable } from './press';
+import { SiteLink } from './SiteLink';
 
 import type { ReactNode } from 'react';
 
@@ -26,7 +25,9 @@ interface PosterButtonProps {
     href: string;
     variant?: PosterButtonVariant;
     ariaLabel?: string;
+    current?: boolean;
     className?: string;
+    wrapperClassName?: string;
     children: ReactNode;
 }
 
@@ -34,22 +35,24 @@ export function PosterButton({
     href,
     variant = 'solid',
     ariaLabel,
+    current = false,
     className,
+    wrapperClassName,
     children
 }: PosterButtonProps): ReactNode {
     const { socket, button } = VARIANTS[variant];
     return (
-        <span className={cn('relative inline-flex')}>
+        <span className={cn('relative inline-flex', wrapperClassName)}>
             {socket ? (
                 <span
                     aria-hidden
                     className={cn('pointer-events-none absolute inset-0 translate-2 rounded-sm', socket)}
                 />
             ) : null}
-            <Link
+            <SiteLink
                 href={href}
                 aria-label={ariaLabel}
-                {...linkTarget(href)}
+                aria-current={current ? 'page' : undefined}
                 className={cn(
                     'relative inline-flex items-center justify-center gap-2 rounded-sm font-semibold',
                     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--rind)',
@@ -59,7 +62,7 @@ export function PosterButton({
                 )}
             >
                 {children}
-            </Link>
+            </SiteLink>
         </span>
     );
 }

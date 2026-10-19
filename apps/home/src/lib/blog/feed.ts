@@ -3,12 +3,11 @@ import { escapeHtml } from '@seedcord/ui/escapeHtml';
 import { canonicalUrl } from '#lib/site';
 
 import { BLOG_PATH, FEED_PATH } from './paths';
-import { newestChange, postDate } from './post';
+import { newestChange, postDate } from './summary';
 import { BLOG_DESCRIPTION, BLOG_NAME } from './seo';
 
-import type { PostSummary } from './post';
+import type { PostSummary } from './summary';
 
-// RSS 2.0 dates are RFC 822
 const rfc822 = (date: string): string => postDate(date).toUTCString();
 
 function item(post: PostSummary): string {

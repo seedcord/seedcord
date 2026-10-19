@@ -2,10 +2,9 @@ import GithubSlugger from 'github-slugger';
 import { Marked, TextRenderer } from 'marked';
 
 import { sanitizeHtml } from '#lib/sanitizeHtml';
-import { highlightToHtml } from '@seedcord/ui/shiki';
+import { highlightFenceToHtml } from '@seedcord/ui/shiki';
 
 import type { Tokens } from 'marked';
-import type { BundledLanguage } from 'shiki';
 
 // GitHub removes inline html tags from a heading before it slugs the heading
 class VisibleText extends TextRenderer {
@@ -41,10 +40,9 @@ function readmeMarked(folderUrl: string | undefined): Marked {
                 return;
             }
             if (token.type !== 'code') return;
-            // the cast narrows token past marked's union. shiki validates the language string at runtime regardless.
+            // marked types token as a union of every token kind. the type check above makes this a code token
             const { text, lang } = token as Tokens.Code;
-            // an untagged fence gets an empty lang from marked
-            const html = await highlightToHtml(text, lang === '' ? undefined : (lang as BundledLanguage | undefined));
+            const html = await highlightFenceToHtml(text, lang ?? '');
             if (html) Object.assign(token, { type: 'html', text: html });
         },
         renderer: {

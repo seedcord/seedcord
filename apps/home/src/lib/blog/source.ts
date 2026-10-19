@@ -14,7 +14,7 @@ const posts = defineDocs({
     }
 });
 
-// page.url drops the trailing slash. Post.summary in posts.ts builds the url with postPath
+// page.url has no trailing slash. build post urls with postPath
 export const blog = loader({ baseUrl: BLOG_PATH, source: posts.toFumadocsSource() });
 
 export type BlogPost = (typeof blog)['$inferPage'];

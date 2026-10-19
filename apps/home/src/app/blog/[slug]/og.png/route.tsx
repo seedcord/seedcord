@@ -2,30 +2,21 @@ import { SiteAddress } from '@seedcord/ui';
 import { OgPageCard } from '@seedcord/ui/OgCard';
 import { loadOgFonts, OG_SIZE } from '@seedcord/ui/og';
 import { BRAND } from '@seedcord/ui/palette';
-import { notFound } from 'next/navigation';
 import { ImageResponse } from 'takumi-js/response';
 
-import { slugOf, summarize } from '#lib/blog/post';
-import { BLOG_PATH, OG_PILL, ogMeta } from '#lib/blog/seo';
-import { blog } from '#lib/blog/source';
+import { BLOG_PATH } from '#lib/blog/paths';
+import { postFromParams, postParams } from '#lib/blog/posts';
+import { OG_PILL, ogMeta } from '#lib/blog/seo';
 import { canonicalUrl } from '#lib/site';
+
+import type { PostParams } from '#lib/blog/posts';
 
 export const dynamic = 'force-static';
 export const dynamicParams = false;
+export const generateStaticParams = postParams;
 
-interface CardParams {
-    params: Promise<{ slug: string }>;
-}
-
-export function generateStaticParams(): { slug: string }[] {
-    return blog.getPages().map((page) => ({ slug: slugOf(page) }));
-}
-
-export async function GET(_request: Request, { params }: CardParams): Promise<ImageResponse> {
-    const page = blog.getPage([(await params).slug]);
-    if (!page) notFound();
-
-    const post = await summarize(page);
+export async function GET(_request: Request, route: PostParams): Promise<ImageResponse> {
+    const post = await (await postFromParams(route)).summary();
     return new ImageResponse(
         <OgPageCard
             pill={OG_PILL}

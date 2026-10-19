@@ -29,7 +29,7 @@ async function compilePost(source: string, file: string): Promise<string> {
 // the collection runs remarkLLMs with TWIN_OPTIONS to build each post's index.md
 export async function markdownCopy(source: string): Promise<string> {
     const options = await postOptions();
-    const file = await compile(new VFile({ value: source, path: path.join(tmpdir(), 'index.mdx') }), {
+    const file = await compile(new VFile({ value: source, path: path.join(tmpdir(), POST_SLUG, 'index.mdx') }), {
         ...options,
         remarkPlugins: [...(options.remarkPlugins ?? []), [remarkLLMs, { ...TWIN_OPTIONS, _data: true }]]
     });
@@ -39,10 +39,12 @@ export async function markdownCopy(source: string): Promise<string> {
 
 export class PostFolder implements Disposable {
     private readonly root = mkdtempSync(path.join(tmpdir(), 'seedcord-blog-'));
-    readonly dir = path.join(this.root, POST_SLUG);
-    readonly file = path.join(this.dir, 'index.mdx');
+    readonly dir: string;
+    readonly file: string;
 
-    constructor() {
+    constructor(slug = POST_SLUG) {
+        this.dir = path.join(this.root, slug);
+        this.file = path.join(this.dir, 'index.mdx');
         mkdirSync(this.dir);
     }
 

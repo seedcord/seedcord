@@ -3,15 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { linkKind } from '#lib/links';
 
 describe('linkKind', () => {
-    it('treats a page of this app as a page', () => {
-        expect(linkKind('/blog/')).toBe('page');
+    it.each(['/blog/', '/blog/sample/#a-heading'])('treats %s as a home page', (href) => {
+        expect(linkKind(href)).toBe('home-page');
     });
 
     // home has no basePath, so next/link would route these as pages of this app
-    it.each(['/guide/start', '/docs', '/blog/rss.xml', 'https://seedcord.org/guide'])(
+    it.each(['/guide/start', '/docs', '/blog/rss.xml', '/blog/rss.xml?v=2', 'https://seedcord.org/guide'])(
         'treats %s as another part of the site',
         (href) => {
-            expect(linkKind(href)).toBe('site');
+            expect(linkKind(href)).toBe('same-site');
         }
     );
 

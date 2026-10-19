@@ -1,6 +1,6 @@
-import { lastChanged, newestChange, postDate } from '#lib/blog/post';
+import { lastChanged, newestChange, postDate } from '#lib/blog/summary';
 import { listedPosts } from '#lib/blog/posts';
-import { BLOG_PATH } from '#lib/blog/seo';
+import { BLOG_PATH } from '#lib/blog/paths';
 import { canonicalUrl } from '#lib/site';
 
 import type { MetadataRoute } from 'next';

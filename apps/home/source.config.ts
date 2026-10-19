@@ -1,17 +1,17 @@
+import { rehypeFenceTitle } from '@seedcord/ui/fence';
 import { remarkHeadingRange } from '@seedcord/ui/remarkHeadingRange';
 import { defineConfig } from 'fumadocs-mdx/config';
 
-import { rehypeFenceTitle } from './src/lib/blog/fenceTitle';
-import { remarkPostImages } from './src/lib/blog/postImages';
+import { remarkPostFiles } from './src/lib/blog/postFiles';
 
 export default defineConfig({
     mdxOptions: {
         // CodeCard in mdxComponents.tsx highlights every fence
         rehypeCodeOptions: false,
         remarkStructureOptions: false,
-        // remarkPostImages sizes the images itself
+        // remarkPostFiles sizes the images itself
         remarkImageOptions: false,
-        remarkPlugins: [[remarkHeadingRange, { site: 'A post' }], remarkPostImages],
+        remarkPlugins: [[remarkHeadingRange, { subject: 'A post' }], remarkPostFiles],
         rehypePlugins: [rehypeFenceTitle]
     }
 });

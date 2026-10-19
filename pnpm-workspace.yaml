@@ -44,6 +44,8 @@ catalogs:
     '@leeoniya/ufuzzy': ^1.0.19
     '@mdx-js/mdx': ^3.1.1
     '@tailwindcss/postcss': ^4.3.3
+    '@types/hast': ^3.0.5
+    '@types/mdast': ^4.0.4
     '@types/mdx': ^2.0.14
     '@types/node': ^26.1.2
     '@types/pg': ^8.23.1
@@ -57,18 +59,19 @@ catalogs:
     ink: ^8.0.0
     lodash.merge: ^4.6.2
     lucide-react: ^1.51.0
+    mdast-util-to-hast: ^13.2.1
     mdast-util-to-markdown: ^2.1.3
     motion: ^14.0.0
     next: ^16.3.8
     prettier: ^3.9.6
     prettier-plugin-tailwindcss: ^0.8.1
     reflect-metadata: ^0.2.2
-    shiki: ^4.5.0
     takumi-js: 2.14.0
     tailwindcss: ^4.3.3
     tsdown: ^0.23.0
     tsx: ^4.23.15
     type-fest: ^5.8.0
+    unist-util-visit: ^5.1.0
     vfile: ^6.0.3
     yaml: ^2.9.1
   eslint:

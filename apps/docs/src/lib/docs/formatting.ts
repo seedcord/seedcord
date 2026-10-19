@@ -13,6 +13,7 @@ import {
 
 import { sanitizeHtml } from '#lib/sanitizeHtml';
 import {
+    highlightFenceToHtml,
     highlightMemberToHtml,
     highlightSignatureToHtml,
     highlightToHtml,
@@ -110,10 +111,9 @@ export async function formatSignature(
 }
 
 export async function highlightCode(code: string, lang = 'ts'): Promise<CodeRepresentation> {
-    const language = (lang || 'ts') as 'ts';
     return {
         text: code,
-        html: await safeHighlight((c) => highlightToHtml(c, language), code)
+        html: await safeHighlight((c) => highlightFenceToHtml(c, lang), code)
     };
 }
 

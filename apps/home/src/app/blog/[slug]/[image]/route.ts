@@ -1,10 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { notFound } from 'next/navigation';
-
-import { postFolder, slugOf } from '#lib/blog/post';
-import { blog } from '#lib/blog/source';
+import { allPosts, postFromParams } from '#lib/blog/posts';
 
 export const dynamic = 'force-static';
 export const dynamicParams = false;
@@ -13,22 +10,17 @@ interface ImageParams {
     params: Promise<{ slug: string; image: string }>;
 }
 
-const isWebp = (name: string): boolean => name.endsWith('.webp');
-
 export function generateStaticParams(): { slug: string; image: string }[] {
-    return blog
-        .getPages()
-        .flatMap((page) =>
-            readdirSync(postFolder(page)).flatMap((image) => (isWebp(image) ? [{ slug: slugOf(page), image }] : []))
-        );
+    return allPosts().flatMap((post) =>
+        readdirSync(post.folder)
+            .filter((image) => image.endsWith('.webp'))
+            .map((image) => ({ slug: post.slug, image }))
+    );
 }
 
-export async function GET(_request: Request, { params }: ImageParams): Promise<Response> {
-    const { slug, image } = await params;
-    const page = blog.getPage([slug]);
-    if (!page || !isWebp(image) || path.basename(image) !== image) notFound();
+export async function GET(_request: Request, route: ImageParams): Promise<Response> {
+    const post = await postFromParams(route);
+    const { image } = await route.params;
 
-    return new Response(readFileSync(path.join(postFolder(page), image)), {
-        headers: { 'content-type': 'image/webp' }
-    });
+    return new Response(readFileSync(path.join(post.folder, image)), { headers: { 'content-type': 'image/webp' } });
 }

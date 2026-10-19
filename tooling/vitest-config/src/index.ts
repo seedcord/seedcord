@@ -7,6 +7,8 @@ import { configDefaults, defineConfig, mergeConfig } from 'vitest/config';
 import type { ViteUserConfig } from 'vitest/config';
 
 const base = defineConfig({
+    // oxc reads the Next apps' jsx: preserve as the classic runtime
+    oxc: { jsx: { runtime: 'automatic' } },
     test: {
         // isolating every file cost about 40% of the suite's CPU
         isolate: false,

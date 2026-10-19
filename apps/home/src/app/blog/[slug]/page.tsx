@@ -3,36 +3,31 @@ import { PreviewCard } from '@seedcord/ui/LinkPreview';
 import { ComponentEmbed } from 'discord-component-embed/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 
 import { mdxComponents } from '#components/blog/mdxComponents';
 import { Byline, PostDates } from '#components/blog/PostMeta';
 import { Footer } from '#components/home/Footer';
 import { Nav } from '#components/home/Nav';
-import { linkTarget } from '#components/ui/linkTarget';
+import { SiteLink } from '#components/ui/SiteLink';
 import { PosterButton } from '#components/ui/PosterButton';
-import { slugOf, summarize } from '#lib/blog/post';
+import { BLOG_PATH } from '#lib/blog/paths';
+import { postFromParams, postParams } from '#lib/blog/posts';
 import { postJsonLd, postMetadata } from '#lib/blog/seo';
-import { blog } from '#lib/blog/source';
 import { postPreview } from '#lib/linkPreview';
 
-import type { PostSummary } from '#lib/blog/post';
-import type { BlogPost } from '#lib/blog/source';
+import type { PostSummary } from '#lib/blog/summary';
+import type { PostParams } from '#lib/blog/posts';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
-interface PostParams {
-    params: Promise<{ slug: string }>;
-}
-
-// the dev server crashes on a slug generateStaticParams never listed
+// without this, next dev crashes on a slug that generateStaticParams did not return
 export const dynamicParams = false;
 
 function PostHeader({ post }: { post: PostSummary }): ReactNode {
     return (
         <header className={cn('border-b-[3px] border-(--seed-dark)')}>
             <div className={cn('mx-auto flex max-w-3xl flex-col items-start gap-6 px-5 pt-12 pb-10 lg:pt-16')}>
-                <PosterButton href="/blog" variant="ink">
+                <PosterButton href={BLOG_PATH} variant="ink">
                     ← blog
                 </PosterButton>
                 <h1
@@ -58,20 +53,16 @@ function PostHeader({ post }: { post: PostSummary }): ReactNode {
     );
 }
 
-function pageFor(slug: string): BlogPost {
-    const page = blog.getPage([slug]);
-    if (!page) notFound();
-    return page;
+export const generateStaticParams = postParams;
+
+export async function generateMetadata(route: PostParams): Promise<Metadata> {
+    return postMetadata(await (await postFromParams(route)).summary());
 }
 
-export async function generateMetadata({ params }: PostParams): Promise<Metadata> {
-    return postMetadata(await summarize(pageFor((await params).slug)));
-}
-
-export default async function PostPage({ params }: PostParams): Promise<ReactNode> {
-    const page = pageFor((await params).slug);
-    const post = await summarize(page);
-    const Body = page.data.body;
+export default async function PostPage(route: PostParams): Promise<ReactNode> {
+    const page = await postFromParams(route);
+    const post = await page.summary();
+    const Body = page.body;
 
     return (
         <>
@@ -82,7 +73,7 @@ export default async function PostPage({ params }: PostParams): Promise<ReactNod
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: serializeJsonLd(postJsonLd(post)) }}
             />
-            <Nav current="Blog" />
+            <Nav onBlog />
             <main id="main-content">
                 <article>
                     <PostHeader post={post} />
@@ -93,7 +84,7 @@ export default async function PostPage({ params }: PostParams): Promise<ReactNod
                                 width={post.cover.width}
                                 height={post.cover.height}
                                 alt={post.cover.alt}
-                                priority
+                                preload
                                 className={cn('rule blk-rind mb-4 h-auto w-full rounded-sm')}
                             />
                         ) : null}
@@ -104,24 +95,16 @@ export default async function PostPage({ params }: PostParams): Promise<ReactNod
                             'mx-auto flex max-w-3xl flex-wrap justify-between gap-4 px-5 pb-16 text-sm font-semibold'
                         )}
                     >
-                        <Link href="/blog" className={cn('hover:text-(--flesh-deep)')}>
+                        <Link href={BLOG_PATH} className={cn('hover:text-(--flesh-deep)')}>
                             ← all posts
                         </Link>
-                        <Link
-                            href={post.editUrl}
-                            {...linkTarget(post.editUrl)}
-                            className={cn('hover:text-(--flesh-deep)')}
-                        >
+                        <SiteLink href={post.editUrl} className={cn('hover:text-(--flesh-deep)')}>
                             Edit this post on GitHub
-                        </Link>
+                        </SiteLink>
                     </footer>
                 </article>
             </main>
             <Footer />
         </>
     );
-}
-
-export function generateStaticParams(): { slug: string }[] {
-    return blog.getPages().map((page) => ({ slug: slugOf(page) }));
 }

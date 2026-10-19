@@ -1,26 +1,23 @@
-import { cn, CopyAnchorButton, tw } from '@seedcord/ui';
-import { isHighlightable } from '@seedcord/ui/shiki';
+import { cn, tw } from '@seedcord/ui';
+import { AnchoredHeading } from '@seedcord/ui/AnchoredHeading';
+import { readFenceElement } from '@seedcord/ui/fence';
+import { isShellLanguage } from '@seedcord/ui/shiki';
 import Image from 'next/image';
-import Link from 'next/link';
 
 import { CodeCard } from '#components/code/CodeCard';
 import { Code } from '#components/ui/Code';
-import { linkTarget } from '#components/ui/linkTarget';
-import { FENCE_TITLE } from '#lib/blog/fenceTitle';
+import { SiteLink } from '#components/ui/SiteLink';
 import { CODE_MARK_LIGHT } from '#lib/code/marks';
 
 import type { HighlightLanguage } from '@seedcord/ui/shiki';
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 
-const LANGUAGE_PREFIX = 'language-';
-const SHELLS = new Set(['bash', 'sh', 'shell', 'zsh']);
-
 const MEDIA = tw`rule blk-rind my-3`;
 
-function captionFor(lang: string | undefined): string {
-    if (lang === undefined) return 'text';
-    return SHELLS.has(lang) ? 'terminal' : lang;
+function captionFor(tag: string | undefined): string {
+    if (tag === undefined) return 'text';
+    return isShellLanguage(tag) ? 'terminal' : tag;
 }
 
 interface Fenced {
@@ -29,25 +26,11 @@ interface Fenced {
     title: string;
 }
 
-// mdx renders a fence as <pre><code className="language-x">
 function readFence(children: ReactNode): Fenced | null {
-    if (typeof children !== 'object' || children === null || !('props' in children)) return null;
+    const fence = readFenceElement(children);
+    if (!fence) return null;
 
-    const props = children.props as Record<string, unknown>;
-    if (typeof props.children !== 'string') return null;
-
-    const className = typeof props.className === 'string' ? props.className : '';
-    const named = className
-        .split(/\s+/)
-        .find((name) => name.startsWith(LANGUAGE_PREFIX))
-        ?.slice(LANGUAGE_PREFIX.length);
-    const title = props[FENCE_TITLE];
-
-    return {
-        code: props.children,
-        lang: named && isHighlightable(named) ? named : 'txt',
-        title: typeof title === 'string' ? title : captionFor(named)
-    };
+    return { code: fence.code, lang: fence.language ?? 'txt', title: fence.title ?? captionFor(fence.tag) };
 }
 
 function Fence({ children }: { children?: ReactNode }): ReactNode {
@@ -59,24 +42,23 @@ function Fence({ children }: { children?: ReactNode }): ReactNode {
 
 function PostLink({ href = '', children }: Pick<ComponentProps<'a'>, 'href' | 'children'>): ReactNode {
     return (
-        <Link
+        <SiteLink
             href={href}
-            {...linkTarget(href)}
             className={cn(
                 'font-semibold text-(--flesh-deep) underline decoration-2 underline-offset-2 hover:text-(--seed-dark)'
             )}
         >
             {children}
-        </Link>
+        </SiteLink>
     );
 }
 
-// remarkPostImages in postImages.ts sets all four on every image
+// remarkPostFiles in postFiles.ts sets src, width and height on every image. mdx passes them as strings
 interface PostImageProps {
     src: string;
     alt: string;
-    width: number | string;
-    height: number | string;
+    width: string;
+    height: string;
 }
 
 function PostImage({ src, alt, width, height }: PostImageProps): ReactElement {
@@ -86,7 +68,6 @@ function PostImage({ src, alt, width, height }: PostImageProps): ReactElement {
             alt={alt}
             width={Number(width)}
             height={Number(height)}
-            loading="lazy"
             className={cn(MEDIA, 'h-auto w-full rounded-sm bg-(--seed-dark)')}
         />
     );
@@ -99,30 +80,18 @@ const HEADINGS = {
 } as const;
 
 function headingFor(tag: keyof typeof HEADINGS): (props: ComponentProps<'h2'>) => ReactElement {
-    // a labelled control inside a heading becomes part of the heading's accessible name
-    return function Heading({ id, children, ...props }: ComponentProps<'h2'>): ReactElement {
-        const Tag = tag;
-
+    return function Heading(props: ComponentProps<'h2'>): ReactElement {
         return (
-            <div className={cn('group flex items-center gap-1', HEADINGS[tag].className)}>
-                <Tag
-                    {...props}
-                    id={id}
-                    className={cn('font-display scroll-mt-24 font-semibold tracking-tight text-(--seed-dark)')}
-                >
-                    {children}
-                </Tag>
-                {id === undefined ? null : (
-                    <CopyAnchorButton
-                        anchorId={id}
-                        label={typeof children === 'string' ? children : id}
-                        iconSize={HEADINGS[tag].anchorSize}
-                        className={cn(
-                            'shrink-0 text-(--seed-dark)/40 transition-opacity hover:text-(--flesh-deep) md:opacity-0 md:group-hover:opacity-100 md:group-has-focus-visible:opacity-100 md:data-[copied=true]:opacity-100'
-                        )}
-                    />
+            <AnchoredHeading
+                {...props}
+                as={tag}
+                wrapperClassName={cn('flex items-center gap-1', HEADINGS[tag].className)}
+                className={cn('font-display scroll-mt-24 font-semibold tracking-tight text-(--seed-dark)')}
+                anchorSize={HEADINGS[tag].anchorSize}
+                anchorClassName={cn(
+                    'shrink-0 text-(--seed-dark)/40 transition-opacity hover:text-(--flesh-deep) md:opacity-0 md:group-hover:opacity-100 md:group-has-focus-visible:opacity-100 md:data-[copied=true]:opacity-100'
                 )}
-            </div>
+            />
         );
     };
 }

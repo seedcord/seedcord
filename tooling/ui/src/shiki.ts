@@ -9,15 +9,18 @@ import { createOnigurumaEngine } from 'shiki/engine/oniguruma';
 
 import { seedcordBrandDark, seedcordBrandLight } from './brandTheme';
 
-import type { BundledLanguage, DecorationItem, PlainTextLanguage, ShikiTransformer } from 'shiki';
+import type { DecorationItem, ShikiTransformer } from 'shiki';
 
 const THEMES = {
     light: 'seedcord-light',
     dark: 'seedcord-dark'
 } as const satisfies Record<'light' | 'dark', string>;
 
+// shiki registers the bash grammar under all four names
+const SHELLS = ['bash', 'sh', 'shell', 'zsh'] as const;
+
 // shiki registers each grammar under its full name and its short alias. txt needs no grammar, shiki special-cases it
-const HIGHLIGHTABLE = new Set([
+const HIGHLIGHTABLE = [
     'ts',
     'typescript',
     'tsx',
@@ -25,19 +28,21 @@ const HIGHLIGHTABLE = new Set([
     'javascript',
     'jsx',
     'json',
-    'bash',
-    'sh',
-    'shell',
-    'zsh',
+    ...SHELLS,
     'txt',
     'text',
     'plaintext'
-]);
+] as const;
 
-export type HighlightLanguage = BundledLanguage | PlainTextLanguage;
+export type HighlightLanguage = (typeof HIGHLIGHTABLE)[number];
+
+const HIGHLIGHTABLE_SET: ReadonlySet<string> = new Set(HIGHLIGHTABLE);
+const SHELL_SET: ReadonlySet<string> = new Set(SHELLS);
+
+export const isShellLanguage = (lang: string): boolean => SHELL_SET.has(lang);
 
 export function isHighlightable(lang: string): lang is HighlightLanguage {
-    return HIGHLIGHTABLE.has(lang);
+    return HIGHLIGHTABLE_SET.has(lang);
 }
 
 export interface CodeLink {
@@ -76,9 +81,9 @@ function toDecorations(links: readonly CodeLink[]): DecorationItem[] {
     }));
 }
 
+const DARK_THEME = { theme: THEMES.dark } as const;
 // each token carries `color: light-dark(light, dark)`. shiki.css has the pre-2024 fallback
 const BOTH_THEMES = { themes: THEMES, defaultColor: 'light-dark()' } as const;
-const DARK_THEME = { theme: THEMES.dark } as const;
 
 interface RenderOptions {
     links?: readonly CodeLink[];
@@ -112,6 +117,16 @@ interface HighlightOptions {
 
 export async function highlightToHtml(
     code: string,
+    lang: HighlightLanguage,
+    options: HighlightOptions & { throwOnFailure: true }
+): Promise<string>;
+export async function highlightToHtml(
+    code: string,
+    lang?: HighlightLanguage,
+    options?: HighlightOptions
+): Promise<string | null>;
+export async function highlightToHtml(
+    code: string,
     lang: HighlightLanguage = 'ts',
     { links = [], transformers = [], throwOnFailure = false, onlyDark = false }: HighlightOptions = {}
 ): Promise<string | null> {
@@ -123,6 +138,13 @@ export async function highlightToHtml(
         if (throwOnFailure) throw error;
         return null;
     }
+}
+
+export async function highlightFenceToHtml(code: string, tag: string): Promise<string | null> {
+    if (!code) return '';
+
+    const lang = tag === '' ? 'ts' : tag;
+    return isHighlightable(lang) ? highlightToHtml(code, lang) : null;
 }
 
 // shiki reads `extends` inside `<T extends X>` as a keyword only with a statement in front of it

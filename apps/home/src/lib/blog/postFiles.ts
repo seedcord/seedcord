@@ -7,6 +7,7 @@ import { visit } from 'unist-util-visit';
 import { postFolderName, postPath } from './paths';
 
 import type { Root } from 'mdast';
+// adds hProperties to the mdast node data type
 import type {} from 'mdast-util-to-hast';
 import type { VFile } from 'vfile';
 
@@ -46,8 +47,30 @@ export function readPostImage(src: string, postFile: string): PostImage | string
     return { src: `${postPath(postFolderName(postFile))}${name}`, width: size.width, height: size.height };
 }
 
-export function remarkPostImages() {
+const isUrlSlug = (folder: string): boolean => folder.split('-').every((word) => /^[a-z0-9]+$/.test(word));
+
+export function remarkPostFiles() {
     return (tree: Root, file: VFile): void => {
+        const folder = postFolderName(file.path);
+        if (!isUrlSlug(folder)) {
+            file.fail(
+                `The post folder "${folder}" becomes the url. Rename the folder to lowercase words joined by hyphens.`
+            );
+        }
+
+        const definitions = new Map<string, string>();
+        visit(tree, 'definition', (definition) => {
+            definitions.set(definition.identifier, definition.url);
+        });
+        visit(tree, 'imageReference', (reference) => {
+            const alt = reference.alt ?? 'what it shows';
+            const url = definitions.get(reference.identifier) ?? './name.webp';
+            file.fail(
+                `${reference.label ?? reference.identifier} is a reference-style image. Write it inline as ![${alt}](${url}).`,
+                reference
+            );
+        });
+
         visit(tree, 'image', (image) => {
             if (!image.alt?.trim())
                 file.fail(`${image.url} has no alt text. Write it as ![what it shows](${image.url}).`, image);

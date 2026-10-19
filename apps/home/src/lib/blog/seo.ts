@@ -5,9 +5,9 @@ import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 import { canonicalUrl, DEFAULT_OG_IMAGE, SITE_NAME } from '#lib/site';
 
 import { BLOG_PATH, FEED_PATH, ogImagePath, twinPath } from './paths';
-import { formatPostDate, lastChanged } from './post';
+import { formatPostDate, lastChanged } from './summary';
 
-import type { PostAuthor, PostSummary } from './post';
+import type { PostAuthor, PostSummary } from './summary';
 import type { Metadata } from 'next';
 
 export const BLOG_NAME = `${SITE_NAME} blog`;
@@ -25,28 +25,28 @@ const postId = (post: Pick<PostSummary, 'url'>): string => `${canonicalUrl(post.
 
 const FEED = { 'application/rss+xml': [{ url: canonicalUrl(FEED_PATH), title: BLOG_NAME }] };
 
-export function blogMetadata(): Metadata {
-    const url = canonicalUrl(BLOG_PATH);
-    return {
-        title: BLOG_TITLE,
+const BLOG_URL = canonicalUrl(BLOG_PATH);
+const BLOG_ID = `${BLOG_URL}#blog`;
+
+export const BLOG_METADATA: Metadata = {
+    title: BLOG_TITLE,
+    description: BLOG_DESCRIPTION,
+    alternates: { canonical: BLOG_URL, types: FEED },
+    openGraph: {
+        type: 'website',
+        siteName: SITE_NAME,
+        url: BLOG_URL,
+        title: BLOG_NAME,
         description: BLOG_DESCRIPTION,
-        alternates: { canonical: url, types: FEED },
-        openGraph: {
-            type: 'website',
-            siteName: SITE_NAME,
-            url,
-            title: BLOG_NAME,
-            description: BLOG_DESCRIPTION,
-            images: [DEFAULT_OG_IMAGE]
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title: BLOG_NAME,
-            description: BLOG_DESCRIPTION,
-            images: [DEFAULT_OG_IMAGE]
-        }
-    };
-}
+        images: [DEFAULT_OG_IMAGE]
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: BLOG_NAME,
+        description: BLOG_DESCRIPTION,
+        images: [DEFAULT_OG_IMAGE]
+    }
+};
 
 export function postMetadata(post: PostSummary): Metadata {
     const url = canonicalUrl(post.url);
@@ -100,13 +100,13 @@ export function postJsonLd(post: PostSummary): Record<string, unknown> {
                 author: post.authors.map(person),
                 publisher: { '@id': ORG_ID },
                 about: { '@id': SOFTWARE_ID },
-                isPartOf: { '@id': `${canonicalUrl(BLOG_PATH)}#blog` }
+                isPartOf: { '@id': BLOG_ID }
             },
             {
                 '@type': 'BreadcrumbList',
                 itemListElement: [
                     { '@type': 'ListItem', position: 1, name: SITE_NAME, item: canonicalUrl('/') },
-                    { '@type': 'ListItem', position: 2, name: BLOG_TITLE, item: canonicalUrl(BLOG_PATH) },
+                    { '@type': 'ListItem', position: 2, name: BLOG_TITLE, item: BLOG_URL },
                     { '@type': 'ListItem', position: 3, name: post.title, item: url }
                 ]
             }
@@ -115,14 +115,13 @@ export function postJsonLd(post: PostSummary): Record<string, unknown> {
 }
 
 export function blogJsonLd(posts: readonly PostSummary[]): Record<string, unknown> {
-    const url = canonicalUrl(BLOG_PATH);
     return {
         '@context': 'https://schema.org',
         '@type': 'Blog',
-        '@id': `${url}#blog`,
+        '@id': BLOG_ID,
         name: BLOG_NAME,
         description: BLOG_DESCRIPTION,
-        url,
+        url: BLOG_URL,
         publisher: { '@id': ORG_ID },
         blogPost: posts.map((post) => ({
             '@type': 'BlogPosting',

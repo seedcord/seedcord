@@ -1,3 +1,4 @@
+import { rehypeFenceTitle } from '@seedcord/ui/fence';
 import { remarkHeadingRange } from '@seedcord/ui/remarkHeadingRange';
 import { defineConfig } from 'fumadocs-mdx/config';
 
@@ -24,11 +25,11 @@ export default defineConfig({
             }
         },
         remarkPlugins: [
-            [remarkHeadingRange, { site: 'The guide' }],
+            [remarkHeadingRange, { subject: 'The guide' }],
             remarkNoMappedJsx,
             remarkRefLinks,
             remarkPageLinks
         ],
-        rehypePlugins: [rehypeFenceMeta]
+        rehypePlugins: [rehypeFenceTitle, rehypeFenceMeta]
     }
 });

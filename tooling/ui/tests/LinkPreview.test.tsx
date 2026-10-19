@@ -57,7 +57,7 @@ describe('PreviewCard', () => {
                 links={[{ emoji: PREVIEW_EMOJI.home, label: 'Home', url: 'https://seedcord.org' }]}
             />
         );
-        // justified: a section is the card's first child once it contains the breadcrumb
+        // justified: JSON.parse is untyped. toComponentEmbedJson writes this shape for a card with a thumbnail
         const { component } = JSON.parse(json) as {
             component: { components: { type: number; components?: { content: string }[] }[] };
         };

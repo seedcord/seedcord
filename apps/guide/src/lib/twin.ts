@@ -1,3 +1,4 @@
+import { absoluteUrl } from '@seedcord/ui';
 import { parseCodeBlockAttributes } from 'fumadocs-core/mdx-plugins/codeblock-utils';
 import { defaultHandlers } from 'mdast-util-to-markdown';
 
@@ -12,17 +13,6 @@ import type { Verb } from '#lib/packageManager';
 import type { LLMsOptions } from 'fumadocs-core/mdx-plugins/remark-llms';
 import type { MdxJsxFlowElement, MdxJsxTextElement } from 'mdast-util-mdx';
 import type { Nodes } from 'mdast';
-
-export interface TwinDocument {
-    title: string;
-    description?: string | undefined;
-    body: string;
-}
-
-export function twinDocument({ title, description, body }: TwinDocument): string {
-    const head = description === undefined ? `# ${title}` : `# ${title}\n\n${description}`;
-    return `${head}\n\n${body.replace(/^\n+/, '')}`;
-}
 
 type JsxNode = MdxJsxFlowElement | MdxJsxTextElement;
 
@@ -61,10 +51,6 @@ function shellCommand(node: JsxNode): string {
     return lead.trimEnd();
 }
 
-function isGuidePath(url: string): boolean {
-    return url.startsWith('/') && !url.startsWith('//');
-}
-
 function isJsx(node: Nodes): node is JsxNode {
     return node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement';
 }
@@ -73,8 +59,7 @@ export const TWIN_OPTIONS: LLMsOptions = {
     headingIds: false,
     handlers: {
         link(node, parent, state, info) {
-            const url = isGuidePath(node.url) ? canonicalUrl(node.url) : node.url;
-            return defaultHandlers.link({ ...node, url }, parent, state, info);
+            return defaultHandlers.link({ ...node, url: absoluteUrl(node.url, canonicalUrl) }, parent, state, info);
         }
     },
     stringify(node, _parent, state, info) {

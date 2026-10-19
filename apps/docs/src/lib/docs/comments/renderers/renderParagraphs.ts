@@ -3,23 +3,21 @@ import { marked } from 'marked';
 import { markdownFence } from '#lib/docs/comments/fence';
 import { resolveInlineHref } from '#lib/docs/comments/resolvers';
 import { sanitizeHtml } from '#lib/sanitizeHtml';
-import { highlightToHtml, highlightInlineToHtml } from '@seedcord/ui/shiki';
+import { highlightFenceToHtml, highlightInlineToHtml } from '@seedcord/ui/shiki';
 
 import { decorateProseLinks } from './decorateProseLinks';
 
 import type { FormatContext, CommentParagraph, CommentDisplayPart } from '#lib/docs/types';
 import type { DocComment } from '@seedcord/docs-engine';
 import type { Tokens } from 'marked';
-import type { BundledLanguage } from 'shiki';
 
 marked.use({
     async: true,
     walkTokens: async (token) => {
         if (token.type === 'code') {
-            // the cast narrows token past marked's union, and shiki validates the language string itself at runtime
+            // marked types token as a union of every token kind. the type check above makes this a code token
             const { text, lang } = token as Tokens.Code;
-            // marked leaves lang empty on an untagged fence
-            const html = await highlightToHtml(text, lang === '' ? undefined : (lang as BundledLanguage | undefined));
+            const html = await highlightFenceToHtml(text, lang ?? '');
             if (html) {
                 Object.assign(token, { type: 'html', text: html });
             }

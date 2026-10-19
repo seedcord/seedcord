@@ -33,6 +33,7 @@
         "react": "catalog:react",
         "react-dom": "catalog:react",
         "takumi-js": "catalog:deps",
+        "unist-util-visit": "catalog:deps",
         "zod": "^4.6.5"
     },
     "devDependencies": {
@@ -41,6 +42,8 @@
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/vitest-config": "workspace:^",
         "@tailwindcss/postcss": "catalog:deps",
+        "@types/hast": "catalog:deps",
+        "@types/mdast": "catalog:deps",
         "@types/mdx": "catalog:deps",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
@@ -49,6 +52,7 @@
         "eslint-plugin-better-tailwindcss": "catalog:eslint",
         "eslint-plugin-react-compiler": "catalog:eslint",
         "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
+        "mdast-util-to-hast": "catalog:deps",
         "mdast-util-to-markdown": "catalog:deps",
         "prettier": "catalog:deps",
         "prettier-plugin-tailwindcss": "catalog:deps",

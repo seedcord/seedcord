@@ -1,4 +1,4 @@
-import { escapeHtml } from './cleaners';
+import { escapeHtml } from '@seedcord/ui/escapeHtml';
 
 import type { CommentParagraph, FormatContext } from '#lib/docs/types';
 import type { VersionedDocsEngine } from '@seedcord/docs-engine';

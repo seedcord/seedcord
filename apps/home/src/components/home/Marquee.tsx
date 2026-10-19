@@ -20,7 +20,7 @@ function Track({ items }: { items: readonly string[] }): ReactNode {
 
 export function FeatureMarquee({ items }: { items: readonly string[] }): ReactNode {
     return (
-        // on the hero, this border left a light seam at fractional heights
+        // a border-b on the hero shows a light seam at fractional heights
         <div className={cn('overflow-hidden border-t-[3px] border-(--seed-dark) bg-(--seed-dark) text-(--pith)')}>
             <div className={cn('marquee-anim font-mono-code flex w-max py-2.5 text-sm font-semibold')}>
                 <Track items={items} />

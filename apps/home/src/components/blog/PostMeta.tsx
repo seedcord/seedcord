@@ -1,31 +1,25 @@
 import { cn } from '@seedcord/ui';
 import Image from 'next/image';
 
-import { linkTarget } from '#components/ui/linkTarget';
-import { formatPostDate, joinListParts } from '#lib/blog/post';
+import { SiteLink } from '#components/ui/SiteLink';
+import { formatPostDate, listSeparators } from '#lib/blog/summary';
 
-import type { PostAuthor, PostSummary } from '#lib/blog/post';
+import type { PostAuthor, PostSummary } from '#lib/blog/summary';
+import { Fragment } from 'react';
 import type { ReactNode } from 'react';
 
 const AVATAR_PX = 28;
 
-function AuthorName({ author }: { author: PostAuthor | undefined }): ReactNode {
-    if (author === undefined) return null;
-
-    return (
-        <a
-            href={author.url}
-            {...linkTarget(author.url)}
-            className={cn('font-semibold text-(--seed-dark) hover:text-(--flesh-deep)')}
-        >
-            {author.name}
-        </a>
-    );
+interface BylineProps {
+    authors: readonly PostAuthor[];
+    className?: string;
 }
 
-export function Byline({ authors }: { authors: readonly PostAuthor[] }): ReactNode {
+export function Byline({ authors, className }: BylineProps): ReactNode {
+    const separators = listSeparators(authors.map((author) => author.name));
+
     return (
-        <span className={cn('flex items-center gap-2.5')}>
+        <span className={cn('flex items-center gap-2.5', className)}>
             <span aria-hidden className={cn('flex shrink-0 -space-x-2')}>
                 {authors.map((author) => (
                     <Image
@@ -41,19 +35,23 @@ export function Byline({ authors }: { authors: readonly PostAuthor[] }): ReactNo
                 ))}
             </span>
             <span>
-                {joinListParts(authors.length).map((part, at, parts) =>
-                    part.type === 'element' ? (
-                        <AuthorName key={part.value} author={authors[Number(part.value)]} />
-                    ) : (
-                        <span key={`after-${parts[at - 1]?.value ?? ''}`}>{part.value}</span>
-                    )
-                )}
+                {authors.map((author, at) => (
+                    <Fragment key={author.handle}>
+                        <SiteLink
+                            href={author.url}
+                            className={cn('font-semibold text-(--seed-dark) hover:text-(--flesh-deep)')}
+                        >
+                            {author.name}
+                        </SiteLink>
+                        {separators[at]}
+                    </Fragment>
+                ))}
             </span>
         </span>
     );
 }
 
-type MetaProps = Pick<PostSummary, 'created' | 'edited' | 'minutes'>;
+type MetaProps = Pick<PostSummary, 'created' | 'edited' | 'minutes'> & { className?: string };
 
 const DOT = (
     <span aria-hidden className={cn('hidden sm:inline')}>
@@ -61,9 +59,9 @@ const DOT = (
     </span>
 );
 
-export function PostDates({ created, edited, minutes }: MetaProps): ReactNode {
+export function PostDates({ created, edited, minutes, className }: MetaProps): ReactNode {
     return (
-        <span className={cn('flex flex-wrap gap-x-2 gap-y-1 text-sm font-medium')}>
+        <span className={cn('flex flex-wrap gap-x-2 gap-y-1 text-sm font-medium', className)}>
             <time dateTime={created} className={cn('whitespace-nowrap')}>
                 {formatPostDate(created)}
             </time>

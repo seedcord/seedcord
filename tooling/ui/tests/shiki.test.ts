@@ -214,10 +214,12 @@ describe('the wrapped fragment helpers', () => {
 });
 
 describe('isHighlightable', () => {
-    it.each(['ts', 'typescript', 'tsx', 'js', 'javascript', 'jsx', 'json', 'bash', 'sh', 'shell', 'zsh'])(
-        'accepts %s',
-        (lang) => {
-            expect(isHighlightable(lang)).toBe(true);
+    it.each(['ts', 'typescript', 'tsx', 'js', 'javascript', 'jsx', 'json', 'bash', 'sh', 'shell', 'zsh', 'txt'])(
+        'accepts %s, and the highlighter has its grammar',
+        async (lang) => {
+            if (!isHighlightable(lang)) throw new Error(`${lang} is not highlightable`);
+
+            await expect(highlightToHtml('x', lang, { throwOnFailure: true })).resolves.toContain('<pre');
         }
     );
 

@@ -2,8 +2,8 @@ import { cn } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import Link from 'next/link';
 
-import { linkTarget } from '#components/ui/linkTarget';
-import { BLOG_PATH } from '#lib/blog/seo';
+import { SiteLink } from '#components/ui/SiteLink';
+import { BLOG_PATH } from '#lib/blog/paths';
 import {
     AUTHOR_GITHUB_URL,
     AUTHOR_URL,
@@ -59,14 +59,13 @@ function LinkColumn({ column }: { column: (typeof COLUMNS)[number] }): ReactNode
             </span>
             <div className={cn('flex flex-wrap gap-x-4 gap-y-1.5 lg:contents')}>
                 {column.links.map((l) => (
-                    <Link
+                    <SiteLink
                         key={l.label}
                         href={l.href}
-                        {...linkTarget(l.href)}
                         className={cn('text-sm font-medium text-(--seed-dark) transition-colors hover:text-(--flesh)')}
                     >
                         {l.label}
-                    </Link>
+                    </SiteLink>
                 ))}
             </div>
         </nav>
@@ -102,21 +101,19 @@ export function Footer(): ReactNode {
                 <div className={cn('mx-auto max-w-(--shell-max) px-5 py-6')}>
                     <p className={cn('font-mono-code text-xs text-(--seed-dark)/70')}>
                         Built by{' '}
-                        <Link
+                        <SiteLink
                             href={AUTHOR_URL}
-                            {...linkTarget(AUTHOR_URL)}
                             className={cn('font-semibold text-(--seed-dark) transition-colors hover:text-(--flesh)')}
                         >
                             materwelonDhruv
-                        </Link>
+                        </SiteLink>
                         {' · '}
-                        <Link
+                        <SiteLink
                             href={AUTHOR_GITHUB_URL}
-                            {...linkTarget(AUTHOR_GITHUB_URL)}
                             className={cn('text-(--seed-dark) transition-colors hover:text-(--flesh)')}
                         >
                             GitHub
-                        </Link>
+                        </SiteLink>
                     </p>
                 </div>
             </div>

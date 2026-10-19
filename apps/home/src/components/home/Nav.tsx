@@ -5,51 +5,37 @@ import Link from 'next/link';
 import { GithubStars } from '#components/GithubStars';
 import { NpmVersion } from '#components/NpmVersion';
 import { PosterButton } from '#components/ui/PosterButton';
-import { linkTarget } from '#components/ui/linkTarget';
 import { pressable } from '#components/ui/press';
-import { BLOG_PATH } from '#lib/blog/seo';
+import { SiteLink } from '#components/ui/SiteLink';
+import { BLOG_PATH } from '#lib/blog/paths';
 import { DOCS_URL, GUIDE_URL, REPO_URL } from '#lib/site';
 
 import type { ReactNode } from 'react';
 
-const BLOG = { label: 'Blog', href: BLOG_PATH } as const;
 const SITES = [
     { label: 'Guide', href: GUIDE_URL },
     { label: 'Docs', href: DOCS_URL }
 ] as const;
 
-type NavLabel = typeof BLOG.label | (typeof SITES)[number]['label'];
-
-interface NavLinkProps {
-    label: NavLabel;
-    href: string;
-    current: NavLabel | undefined;
-    className?: string;
-}
-
-function NavLink({ label, href, current, className }: NavLinkProps): ReactNode {
+function NavLink({ label, href }: (typeof SITES)[number]): ReactNode {
     return (
-        <Link
+        <SiteLink
             href={href}
-            {...linkTarget(href)}
-            aria-current={label === current ? 'page' : undefined}
             className={cn(
                 'font-mono-code rounded-sm px-3 py-1.5 text-sm font-medium text-(--seed-dark) hover:bg-(--seed-dark) hover:text-(--pith)',
-                'aria-[current=page]:bg-(--seed-dark) aria-[current=page]:text-(--pith) aria-[current=page]:hover:bg-(--flesh-deep)',
-                pressable,
-                className
+                pressable
             )}
         >
             {label}
-        </Link>
+        </SiteLink>
     );
 }
 
 interface NavProps {
-    current?: NavLabel;
+    onBlog?: boolean;
 }
 
-export function Nav({ current }: NavProps): ReactNode {
+export function Nav({ onBlog = false }: NavProps): ReactNode {
     return (
         <header className={cn('sticky top-0 z-50 border-b-[3px] border-(--seed-dark) bg-(--pith)')}>
             <div className={cn('mx-auto flex h-16 max-w-(--shell-max) items-center gap-2 px-5')}>
@@ -59,15 +45,18 @@ export function Nav({ current }: NavProps): ReactNode {
                         seedcord
                     </span>
                 </Link>
-                <NavLink
-                    {...BLOG}
-                    current={current}
-                    className={cn('order-3 bg-(--seed-dark) text-(--pith) hover:bg-(--flesh-deep) sm:order-1')}
-                />
+                <PosterButton
+                    href={BLOG_PATH}
+                    variant="ink"
+                    current={onBlog}
+                    wrapperClassName={cn('order-3 sm:order-1')}
+                >
+                    Blog
+                </PosterButton>
                 <span aria-hidden className={cn('order-2 flex-1')} />
                 <nav aria-label="Documentation" className={cn('order-3 hidden items-center gap-1 sm:flex')}>
                     {SITES.map((site) => (
-                        <NavLink key={site.label} {...site} current={current} />
+                        <NavLink key={site.label} {...site} />
                     ))}
                 </nav>
                 <span className={cn('order-4 flex items-center gap-2')}>
