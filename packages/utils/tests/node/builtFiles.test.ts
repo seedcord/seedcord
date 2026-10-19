@@ -109,10 +109,26 @@ describe('traverseDirectory in a built bot', () => {
         await expect(walk(at('handlers'))).resolves.toEqual([[at('handlers/Roll.ts'), 'Roll']]);
     });
 
+    it('reports a module of any code extension by the js file it built to', async () => {
+        using _built = register({
+            folders: ['/handlers'],
+            modules: { '/handlers/Coin.mts': stub('Coin'), '/handlers/Dice.tsx': stub('Dice') }
+        });
+
+        await expect(walk(at('handlers'))).resolves.toEqual([
+            [at('handlers/Coin.js'), 'Coin'],
+            [at('handlers/Dice.js'), 'Dice']
+        ]);
+    });
+
     it('skips registered type declarations, the same as the disk walk', async () => {
         using _built = register({
             folders: ['/handlers'],
-            modules: { '/handlers/types.d.ts': stub('types'), '/handlers/A.ts': stub('A') }
+            modules: {
+                '/handlers/types.d.ts': stub('types'),
+                '/handlers/types.d.mts': stub('types'),
+                '/handlers/A.ts': stub('A')
+            }
         });
 
         await expect(walk(at('handlers'))).resolves.toEqual([[at('handlers/A.js'), 'A']]);

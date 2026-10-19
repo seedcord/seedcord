@@ -1,5 +1,6 @@
-import { extname, join, relative } from 'node:path';
+import { join, relative } from 'node:path';
 
+import { builtExtension } from '@seedcord/utils/node/internal';
 import { createBuilder } from 'vite';
 
 import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
@@ -24,12 +25,9 @@ function outputChunks(result: Awaited<ReturnType<ViteBuilder['build']>>): Rolldo
     return outputs.flatMap(({ output }) => output.filter((file) => file.type === 'chunk'));
 }
 
-// Echo.ts builds to Echo.js and Echo.json to Echo.json.js
 function outputName(moduleId: string | null | undefined): string {
     if (isServerEntry(moduleId)) return ENTRY_FILE_NAME;
-    const extension = extname(moduleId?.split('?')[0] ?? '');
-    if (extension === '' || extension === '.ts' || extension === '.js') return '[name].js';
-    return `[name]${extension}.js`;
+    return `[name]${builtExtension(moduleId?.split('?')[0] ?? '')}`;
 }
 
 export abstract class ServerBuild<Target extends ResolvedServerTarget = ResolvedServerTarget> extends TargetBuild {

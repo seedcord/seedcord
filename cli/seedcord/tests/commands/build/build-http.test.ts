@@ -25,7 +25,7 @@ describe('seedcord build on an http bot', () => {
 
     it('reports what it bundled for the summary', () => {
         expect(result.bundle).toEqual({
-            modules: 7,
+            modules: 9,
             textFiles: 4,
             bytes: expect.any(Number) as number,
             entry: join(HTTP_BOT, 'dist/index.mjs')
@@ -55,6 +55,12 @@ describe('seedcord build on an http bot', () => {
 
     it('loads a .js handler the way dev does', () => {
         expect(output).toContain('fixture:js-handler-loaded');
+    });
+
+    it('loads .tsx and .mts handlers as code and builds them to .js files', () => {
+        expect(output).toContain('fixture:mts-handler-loaded');
+        expect(readFileSync(join(HTTP_BOT, 'dist/handlers/Dice.js'), 'utf8')).toContain('fixture:tsx-handler-loaded');
+        expect(readFileSync(join(HTTP_BOT, 'dist/handlers/Coin.js'), 'utf8')).toContain('fixture:mts-handler-loaded');
     });
 
     it('leaves import.meta inside a string as written', () => {

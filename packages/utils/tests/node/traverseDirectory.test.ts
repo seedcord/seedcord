@@ -54,6 +54,18 @@ describe('traverseDirectory', () => {
         expect(seen).toEqual(['Visible.ts']);
     });
 
+    it('imports every code extension and skips type declarations and commonjs', async () => {
+        const dir = path.join(scratch, 'extensions');
+        await mkdir(dir, { recursive: true });
+        const files = ['A.ts', 'B.tsx', 'C.mts', 'D.js', 'E.jsx', 'F.mjs', 'G.cjs', 'H.cts', 'I.d.ts', 'J.d.mts'];
+        await Promise.all(files.map((file) => writeFile(path.join(dir, file), 'export {};\n')));
+        const seen: string[] = [];
+
+        for await (const { fullPath } of traverseDirectory(dir)) seen.push(path.relative(dir, fullPath));
+
+        expect(seen).toEqual(['A.ts', 'B.tsx', 'C.mts', 'D.js', 'E.jsx', 'F.mjs']);
+    });
+
     it('reports the file whose module failed to import, keeping the original as the cause', async () => {
         const error = await rejection(traverseDirectory(path.join(FIXTURES, 'broken')));
 
@@ -153,6 +165,18 @@ describe('readTextFiles', () => {
             [path.join('text', 'en.json'), '{ "hi": "hello" }\n'],
             [path.join('text', 'nested', 'faq.md'), '# faq\n']
         ]);
+    });
+
+    it('skips every code extension', async () => {
+        const dir = path.join(scratch, 'text-beside-code');
+        await mkdir(dir, { recursive: true });
+        const files = ['en.json', 'B.tsx', 'C.mts', 'E.jsx', 'F.mjs', 'J.d.mts'];
+        await Promise.all(files.map((file) => writeFile(path.join(dir, file), '{}\n')));
+        const seen: string[] = [];
+
+        for await (const { fullPath } of readTextFiles(dir)) seen.push(path.relative(dir, fullPath));
+
+        expect(seen).toEqual(['en.json']);
     });
 
     it('reports the directory it could not read, keeping the original as the cause', async () => {

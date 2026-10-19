@@ -24,8 +24,8 @@ interface TextFile extends FoundFile {
 }
 
 /**
- * Imports every .ts and .js file under a directory, recursively and sorted by path, yielding each module in turn.
- * It skips dotfiles and dot-folders. A `break` stops the walk before the next import.
+ * Imports every .ts, .tsx, .mts, .js, .jsx or .mjs file under a directory, recursively and sorted by path, yielding each module in turn.
+ * It skips type declarations, dotfiles and dot-folders. A `break` stops the walk before the next import.
  * A relative `dir` resolves against `root` from seedcord.config.ts, whichever file calls this.
  *
  * @throws A **SeedcordError** when the directory cannot be read or a file throws while importing, when `dir` is relative and the bot did not start through `seedcord dev` or its built output, or in a built bot when the directory is outside `root` or was missing when it was built.
@@ -52,7 +52,7 @@ export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFi
 
 /**
  * Reads every file under a directory, recursively and sorted by path, yielding its text.
- * It skips every .ts, .js, or .map file. Dotfiles and dot-folders are skipped too.
+ * It skips the code files {@link traverseDirectory} imports, .map files, dotfiles and dot-folders.
  * In a built bot the files come from the build output. A relative `dir` resolves against `root`, the same as {@link traverseDirectory}.
  *
  * @throws A **SeedcordError** when the directory or a file in it cannot be read, when `dir` is relative and the bot did not start through `seedcord dev` or its built output, or in a built bot when the directory is outside `root` or was missing when it was built.

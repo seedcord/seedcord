@@ -9,13 +9,17 @@ export function isTsOrJsFile(entry: fs.Dirent): boolean {
     return entry.isFile() && isModulePath(entry.name);
 }
 
-const MODULE_EXTENSIONS = ['.ts', '.js'];
-const DECLARATION_EXTENSION = '.d.ts';
+const MODULE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs'];
+const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts', '.d.cts'];
 const NOT_TEXT_EXTENSIONS = [...MODULE_EXTENSIONS, '.map'];
+
+function endsWithAny(name: string, extensions: string[]): boolean {
+    return extensions.some((extension) => name.endsWith(extension));
+}
 
 export function isModulePath(file: string): boolean {
     const name = path.basename(file);
-    return MODULE_EXTENSIONS.some((extension) => name.endsWith(extension)) && !name.endsWith(DECLARATION_EXTENSION);
+    return endsWithAny(name, MODULE_EXTENSIONS) && !endsWithAny(name, DECLARATION_EXTENSIONS);
 }
 
 export function isHidden(dir: string, file: string): boolean {
@@ -27,13 +31,13 @@ export function isHidden(dir: string, file: string): boolean {
 
 export function isTextPath(dir: string, file: string): boolean {
     const name = path.basename(file);
-    return !isHidden(dir, file) && !NOT_TEXT_EXTENSIONS.some((extension) => name.endsWith(extension));
+    return !isHidden(dir, file) && !endsWithAny(name, NOT_TEXT_EXTENSIONS);
 }
 
 export function moduleGlobs(base: string): string[] {
     return [
         ...MODULE_EXTENSIONS.map((extension) => `${base}/**/*${extension}`),
-        `!${base}/**/*${DECLARATION_EXTENSION}`
+        ...DECLARATION_EXTENSIONS.map((extension) => `!${base}/**/*${extension}`)
     ];
 }
 
@@ -41,7 +45,11 @@ export function textGlobs(base: string): string[] {
     return [`${base}/**/*`, ...NOT_TEXT_EXTENSIONS.map((extension) => `!${base}/**/*${extension}`)];
 }
 
+export function builtExtension(file: string): string {
+    return isModulePath(file) ? '.js' : `${path.extname(file)}.js`;
+}
+
 // a built bot reports each module by the path of the file it became
 export function builtModulePath(key: string): string {
-    return key.replace(/\.ts$/, '.js');
+    return key.slice(0, key.length - path.extname(key).length) + builtExtension(key);
 }

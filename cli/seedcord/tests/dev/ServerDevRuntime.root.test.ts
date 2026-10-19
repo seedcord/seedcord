@@ -25,6 +25,14 @@ const ENTRY = [
     ''
 ].join('\n');
 
+const HANDLERS_ENTRY = [
+    "import { traverseDirectory } from '@seedcord/utils/node';",
+    '',
+    'export const names: unknown[] = [];',
+    "for await (const { imported } of traverseDirectory('./handlers')) names.push(imported.name);",
+    ''
+].join('\n');
+
 async function writeProject(dir: string): Promise<void> {
     await mkdir(join(dir, 'src', 'locales'), { recursive: true });
 
@@ -54,6 +62,24 @@ describe('dev runtime with root set to src', () => {
         const { module } = await runtime.loadEntry();
 
         expect(module).toMatchObject({ texts: ['hello'] });
+    }, 60_000);
+
+    it('imports .tsx and .mts files from a folder the bot walks', async () => {
+        await mkdir(SCRATCH_ROOT, { recursive: true });
+        const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
+        await writeProject(dir);
+        await mkdir(join(dir, 'src', 'handlers'));
+        await writeFile(join(dir, 'src', 'handlers', 'Dice.tsx'), "export const name = 'Dice';\n");
+        await writeFile(join(dir, 'src', 'handlers', 'Coin.mts'), "export const name = 'Coin';\n");
+        await writeFile(join(dir, 'src', 'walk.ts'), HANDLERS_ENTRY);
+
+        const runtime = new ServerDevRuntime();
+        runtimes.push(runtime);
+
+        await runtime.start(devContextFor(dir, 'walk.ts'));
+        const { module } = await runtime.loadEntry();
+
+        expect(module).toMatchObject({ names: ['Coin', 'Dice'] });
     }, 60_000);
 
     it('reads VITE_ values from the .env beside the config', async () => {

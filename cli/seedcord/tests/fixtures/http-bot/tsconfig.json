@@ -7,5 +7,5 @@
             "#lib/*": ["./src/lib/*"]
         }
     },
-    "include": ["src/**/*.ts"]
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.mts"]
 }
