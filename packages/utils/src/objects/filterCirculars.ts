@@ -184,7 +184,8 @@ function decycle<ObjType, Marker extends string = '[Circular]'>(
         seen.add(obj);
 
         try {
-            if (obj instanceof Date) return obj.toISOString();
+            // JSON.stringify writes an invalid date as null. toISOString would throw and lose every other key
+            if (obj instanceof Date) return Number.isNaN(obj.getTime()) ? null : obj.toISOString();
             if (obj instanceof RegExp) return obj.toString();
 
             if (Array.isArray(obj)) {
@@ -202,7 +203,14 @@ function decycle<ObjType, Marker extends string = '[Circular]'>(
             const out: Record<string, unknown> = {};
             for (const [k, v] of Object.entries(obj)) {
                 if (typeof v === 'function') continue;
-                out[k] = recur(v);
+                // a parsed payload can carry an own "__proto__" key. assigning it would replace the
+                // prototype and drop the key, so every key is written as an own data property instead
+                Object.defineProperty(out, k, {
+                    value: recur(v),
+                    enumerable: true,
+                    writable: true,
+                    configurable: true
+                });
             }
 
             return out;

@@ -7,6 +7,7 @@ const ZERO_WIDTH_RANGES: readonly (readonly [number, number])[] = [
     [0x1a_b0, 0x1a_ff],
     [0x1d_c0, 0x1d_ff],
     [0x20_d0, 0x20_ff],
+    [0xfe_0e, 0xfe_0f],
     [0xfe_20, 0xfe_2f]
 ];
 
@@ -27,6 +28,10 @@ const WIDE_RANGES: readonly (readonly [number, number])[] = [
 ];
 /* eslint-enable no-magic-numbers */
 
+// default emoji presentation covers flags, stars, and the rest of the wide emoji set
+const EMOJI_PRESENTATION = /\p{Emoji_Presentation}/u;
+const EMOJI_VARIATION = '\uFE0F';
+
 function inRanges(cp: number, ranges: readonly (readonly [number, number])[]): boolean {
     return ranges.some(([lo, hi]) => cp >= lo && cp <= hi);
 }
@@ -34,6 +39,8 @@ function inRanges(cp: number, ranges: readonly (readonly [number, number])[]): b
 function segmentWidth(segment: string): number {
     const cp = segment.codePointAt(0) ?? 0;
     if (inRanges(cp, ZERO_WIDTH_RANGES)) return 0;
+    // a flag or a symbol with the emoji variation selector draws two columns even outside WIDE_RANGES
+    if (EMOJI_PRESENTATION.test(segment) || segment.includes(EMOJI_VARIATION)) return 2;
     // East Asian Wide and Fullwidth code points take two monospace columns
     return inRanges(cp, WIDE_RANGES) ? 2 : 1;
 }

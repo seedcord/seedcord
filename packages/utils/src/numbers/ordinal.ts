@@ -8,7 +8,8 @@
  */
 export function ordinal(n: number): string {
     const s = ['th', 'st', 'nd', 'rd'];
-    const v = n % 100;
+    // magnitude decides the suffix, so -1 reads as -1st rather than -1th
+    const v = Math.abs(n) % 100;
     const index = (v - 20) % 10;
     const suffix = s[index] ?? s[v] ?? s[0];
     if (!suffix) return `${n}th`;

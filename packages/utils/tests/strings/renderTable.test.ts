@@ -41,6 +41,24 @@ describe('renderTable display width', () => {
         const widths = new Set(frameWidths(table));
         expect(widths.size).toBe(1);
     });
+
+    it('keeps borders aligned when a cell holds a flag', () => {
+        const table = renderTable([['a'], ['🇺🇸']]);
+        const widths = new Set(frameWidths(table));
+        expect(widths.size).toBe(1);
+    });
+
+    it('counts a flag as two columns', () => {
+        expect(renderTable([['Flag'], ['🇺🇸']])).toBe('╭──────╮\n│ Flag │\n├──────┤\n│ 🇺🇸   │\n╰──────╯\n');
+    });
+
+    it('counts an emoji variation sequence as two columns', () => {
+        expect(renderTable([['Mood'], ['❤️']])).toBe('╭──────╮\n│ Mood │\n├──────┤\n│ ❤️   │\n╰──────╯\n');
+    });
+
+    it('counts a keycap sequence as two columns', () => {
+        expect(renderTable([['Key'], ['1️⃣']])).toBe('╭─────╮\n│ Key │\n├─────┤\n│ 1️⃣  │\n╰─────╯\n');
+    });
 });
 
 describe('renderTable newline neutralization', () => {

@@ -67,6 +67,15 @@ describe('MemoryRateLimiter', () => {
         expect(second.limited).toBe(true);
     });
 
+    it('treats a NaN limit as 1 instead of never limiting', async () => {
+        const limiter = new MemoryRateLimiter();
+
+        const first = await limiter.charge('user', { windowMs: 1000, limit: Number.NaN });
+        const second = await limiter.charge('user', { windowMs: 1000, limit: Number.NaN });
+        expect(first).toMatchObject({ limited: false, remaining: 0 });
+        expect(second).toMatchObject({ limited: true, remaining: 0 });
+    });
+
     it('evicts a fully expired key on the first access after the sweep gap, with no timer', async () => {
         const limiter = new MemoryRateLimiter();
 

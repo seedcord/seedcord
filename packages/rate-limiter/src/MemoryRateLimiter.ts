@@ -13,6 +13,13 @@ function openResult(remaining: number): RateLimitResult {
     return { limited: false, resetAt: 0 as EpochMs, remaining, retryAfterMs: 0 };
 }
 
+// 0 or a negative limit never means "block everything". a NaN limit would never limit and would
+// report NaN remaining, so it falls back to the default too.
+function limitOf(window: RateLimitWindow): number {
+    const limit = window.limit ?? 1;
+    return Number.isNaN(limit) ? 1 : Math.max(1, limit);
+}
+
 /**
  * The in-memory {@link IRateLimiter} with an exact sliding window per key. The gateway default behind
  * `core.rateLimiter`.
@@ -37,8 +44,7 @@ export class MemoryRateLimiter implements Store<'charge'> {
     public charge(key: string, window: RateLimitWindow): Promise<RateLimitResult> {
         const now = Date.now();
         this.maybeSweep(now);
-        // 0 or a negative limit never means "block everything"
-        const limit = Math.max(1, window.limit ?? 1);
+        const limit = limitOf(window);
         const live = this.live(key, now);
 
         if (live.length >= limit) {
@@ -54,7 +60,7 @@ export class MemoryRateLimiter implements Store<'charge'> {
     public peek(key: string, window: RateLimitWindow): Promise<RateLimitResult> {
         const now = Date.now();
         this.maybeSweep(now);
-        const limit = Math.max(1, window.limit ?? 1);
+        const limit = limitOf(window);
         // a read, the filtered list is never written back
         const live = this.live(key, now);
 

@@ -4,6 +4,9 @@ import type { EventKey, EventMap, WaitForOptions } from './types';
 
 type BroadListener = (...args: readonly unknown[]) => void;
 
+// setTimeout turns a delay above a signed 32-bit integer into 1ms, so a longer wait is chained
+const MAX_TIMER_MS = 2_147_483_647;
+
 interface Registration {
     readonly call: BroadListener;
     // off() matches by original, so off(userListener) removes a once registration whose call is the wrapper
@@ -172,7 +175,7 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
                 reject(new WaitForError('aborted'));
             };
 
-            // eslint-disable-next-line prefer-const -- an already-aborted signal runs cleanup before the timer is set
+            // an already-aborted signal runs cleanup before the timer is set
             let timer: ReturnType<typeof setTimeout> | undefined;
 
             const cleanup = (): void => {
@@ -194,10 +197,23 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
             if (options?.timeoutMs === undefined) return;
 
             const timeoutMs = options.timeoutMs;
-            timer = setTimeout(() => {
-                cleanup();
-                reject(new WaitForError('timeout', timeoutMs));
-            }, timeoutMs);
+            // a non-finite delay has no deadline, so it waits like an omitted timeout
+            if (!Number.isFinite(timeoutMs)) return;
+
+            const scheduleTimeout = (remainingMs: number): void => {
+                timer = setTimeout(
+                    () => {
+                        if (remainingMs > MAX_TIMER_MS) {
+                            scheduleTimeout(remainingMs - MAX_TIMER_MS);
+                            return;
+                        }
+                        cleanup();
+                        reject(new WaitForError('timeout', timeoutMs));
+                    },
+                    Math.min(remainingMs, MAX_TIMER_MS)
+                );
+            };
+            scheduleTimeout(timeoutMs);
         });
     }
 

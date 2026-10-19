@@ -91,4 +91,25 @@ describe('TypedEventEmitter.waitFor', () => {
         await expect(pending).rejects.toBe(boom);
         expect(ee.listenerCount('ping')).toBe(0);
     });
+
+    it.each([2 ** 31, Number.POSITIVE_INFINITY])('keeps waiting for a %s ms timeout', async (timeoutMs) => {
+        const ee = new TypedEventEmitter<Events>();
+        const pending = ee.waitFor('ping', { timeoutMs });
+        let settled = false;
+        void pending.then(
+            () => {
+                settled = true;
+            },
+            () => {
+                settled = true;
+            }
+        );
+
+        // Node turns a delay above a signed 32-bit int into 1ms, so this would settle before the tick
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        expect(settled).toBe(false);
+
+        ee.emit('ping', 1);
+        await expect(pending).resolves.toEqual([1]);
+    });
 });
