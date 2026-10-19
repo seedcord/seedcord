@@ -29,7 +29,12 @@ interface ReadFile extends FoundFile {
  * It skips type declarations, dotfiles, dot-folders and node_modules. A `break` stops the walk before the next import.
  * A relative `dir` resolves against `root` from seedcord.config.ts, whichever file calls this.
  *
- * @throws A **SeedcordError** when the directory cannot be read or a file throws while importing, when `dir` is relative and the bot did not start through `seedcord dev` or its built output, or under `seedcord dev` and in a built bot when the directory is outside `root` or has a dot-folder or node_modules in its path. A built bot also throws when the directory was missing when it was built.
+ * @throws A **SeedcordError** when:
+ *
+ * - the directory cannot be read, or a file throws while importing
+ * - `dir` is relative and the bot did not start through `seedcord dev` or its built output
+ * - under `seedcord dev` or in a built bot, the directory is outside `root` or has a dot-folder or node_modules in its path
+ * - in a built bot, the directory was missing when it was built
  *
  * @example
  * ```ts
@@ -57,7 +62,12 @@ export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFi
  * In a built bot the files come from the build output. A relative `dir` resolves against `root`, the same as {@link traverseDirectory}.
  * Under `seedcord dev` and in a built bot, `dir` has to be one of the folders `files` in seedcord.config.ts lists, or a subfolder of one.
  *
- * @throws A **SeedcordError** when the directory or a file in it cannot be read, when `dir` is relative and the bot did not start through `seedcord dev` or its built output, when `dir` is outside `root`, outside every folder in `files`, or has a dot-folder or node_modules in its path, or in a built bot when the directory was missing when it was built.
+ * @throws A **SeedcordError** when:
+ *
+ * - the directory or a file in it cannot be read
+ * - `dir` is relative and the bot did not start through `seedcord dev` or its built output
+ * - under `seedcord dev` or in a built bot, `dir` is outside `root`, outside every folder in `files`, or has a dot-folder or node_modules in its path
+ * - in a built bot, the directory was missing when it was built
  *
  * @example
  * ```ts

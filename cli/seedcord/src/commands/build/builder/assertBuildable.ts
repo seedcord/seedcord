@@ -1,6 +1,6 @@
 import { statSync } from 'node:fs';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { builtModulePath } from '@seedcord/utils/internal';
 
@@ -14,7 +14,8 @@ function listedFolderProblem(folder: string, files: ProjectFiles): ListedFolderP
     const stats = statSync(folder, { throwIfNoEntry: false });
     if (!stats) return 'missing';
     if (!stats.isDirectory()) return 'file';
-    return files.isBundled(folder) ? undefined : 'skipped';
+    if (!files.isBundled(folder)) return 'skipped';
+    return files.holdsSkipped(folder) ? 'holdsSkipped' : undefined;
 }
 
 function* listedFolderProblems({ config, files }: Project): Generator<SeedcordError> {
@@ -38,7 +39,7 @@ async function builtNameClashes(files: ProjectFiles): Promise<SeedcordError[]> {
                 new SeedcordError(SeedcordErrorCode.CoreDuplicateName, [
                     'built file',
                     built,
-                    sources,
+                    sources.map((source) => paint.path(source)),
                     'Every code extension builds to a .js file.'
                 ])
         );

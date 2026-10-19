@@ -23,7 +23,8 @@ function vitePluginFix({ loading }: VitePluginPlace): string {
 const listedFolderProblems = {
     missing: `which does not exist. Create it, or take it out of ${paint.bold('files')}.`,
     file: `which is a file. ${paint.bold('files')} takes folders. List the folder that holds it.`,
-    skipped: `which ${paint.bold('seedcord build')} skips. The build skips dot-folders, node_modules, outDir and the logs folder beside seedcord.config.ts, with everything in them. Move the files to another folder under root.`
+    skipped: `which ${paint.bold('seedcord build')} skips. The build skips dot-folders, node_modules, outDir and the logs folder beside seedcord.config.ts, with everything in them. Move the files to another folder under root.`,
+    holdsSkipped: `which holds outDir, the logs folder, or project files like package.json. ${paint.bold('seedcord build')} leaves those out of the bot. List the folders inside it that hold the bot's files.`
 };
 
 // the edge worker sets chalk's color level after this module loads
@@ -146,7 +147,7 @@ const messages = {
         sources: readonly string[] = [],
         note?: string
     ) =>
-        `${sources.length > 0 ? `${allOf.format(sources)} both define the ${kind} ${quoted(name)}.` : `The ${kind} ${quoted(name)} is defined twice.`}${note ? ` ${note}` : ''} Rename one.`,
+        `${sources.length > 0 ? `${allOf.format(sources)} define the ${kind} ${quoted(name)}.` : `The ${kind} ${quoted(name)} is defined twice.`}${note ? ` ${note}` : ''} Rename one.`,
 
     [SeedcordErrorCode.DecoratorCommandAlreadyRegistered]: (
         commandName: string,

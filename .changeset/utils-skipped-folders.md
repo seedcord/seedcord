@@ -2,4 +2,4 @@
 '@seedcord/utils': patch
 ---
 
-Under `seedcord dev`, `readFiles` and `traverseDirectory` now throw `CoreDirectorySkipped` for a folder like `./locales/.cache`, because `seedcord build` leaves it out of the bot. `readFiles('./locales')` also skips a `node_modules` inside it now, the same as the build.
+Fixed `seedcord dev` reading folders that `seedcord build` leaves out of the bot. `readFiles` and `traverseDirectory` now throw `CoreDirectorySkipped` for a folder like `./locales/.cache`, and both skip a `node_modules` inside the folder they read.

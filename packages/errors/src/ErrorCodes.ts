@@ -94,7 +94,7 @@ export enum SeedcordErrorCode {
     CoreWebhookUrlInvalid = 1226,
     /** Reading from Discord with `DISCORD_BOT_TOKEN` failed, like the application, its public key, or its commands. */
     CoreDiscordReadFailed = 1227,
-    /** Two routes, commands, migrations, or customId fields have the same name. */
+    /** Two routes, commands, migrations, or customId fields have the same name, or two code files build to the same file. */
     CoreDuplicateName = 1228,
     /** A Vite plugin from `vitePlugins` threw while Vite started or loaded a file, or failed when seedcord called `vitePlugins`. */
     CoreVitePluginThrew = 1229,

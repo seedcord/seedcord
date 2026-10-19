@@ -297,26 +297,6 @@ describe('readFiles in a built bot', () => {
         expect(seen).toEqual([png]);
     });
 
-    it('skips the same files the disk walk skips', async () => {
-        const file = storedText('{}');
-        using _built = register({
-            folders: ['/locales', '/locales/.cache'],
-            listed: ['/locales'],
-            listedFiles: {
-                '/locales/Skipped.ts': file,
-                '/locales/.hidden': file,
-                '/locales/en.json.map': file,
-                '/locales/.cache/cached.json': file,
-                '/locales/en.json': file
-            }
-        });
-
-        const seen: string[] = [];
-        for await (const { fullPath } of readFiles(at('locales'))) seen.push(fullPath);
-
-        expect(seen).toEqual([at('locales/en.json')]);
-    });
-
     it('reports the file that failed to load by its path, keeping the original as the cause', async () => {
         const broken = (): Promise<EncodedFile> => Promise.reject(new Error('boom'));
         using _built = register({

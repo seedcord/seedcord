@@ -49,7 +49,8 @@ describe('seedcord build with files in the config', () => {
         ['does not exist', { files: ['./locales'] }, 'does not exist'],
         ['is a file', { files: ['./bot.ts'] }, 'is a file'],
         ['is a dot-folder', { files: ['./.data'], write: ['src/.data/x.json'] }, 'build skips'],
-        ['is the project logs folder', { root: '.', files: ['./logs'], write: ['logs/x.json'] }, 'build skips']
+        ['is the project logs folder', { root: '.', files: ['./logs'], write: ['logs/x.json'] }, 'build skips'],
+        ['holds the project files', { root: '.', files: ['.'] }, 'package.json']
     ])('throws CliListedFolderUnusable for a listed folder that %s', async (_, shape, says) => {
         await using bot = await project(shape);
 

@@ -89,8 +89,12 @@ describe('seedcord build on an http bot', () => {
         expect(output).toContain('fixture:text a source folder named logs');
     });
 
-    it('stores a listed text file as plain text in the build', () => {
-        expect(builtFilesContaining('hello from the markdown twin')).not.toEqual([]);
+    it('writes a listed text file as plain text, named by its path under root', () => {
+        const written = readdirSync(join(HTTP_BOT, 'dist'), { recursive: true, encoding: 'utf8' });
+        const greeting = readFileSync(join(HTTP_BOT, 'dist/_virtual/files/locales/greeting.md.js'), 'utf8');
+
+        expect(written.filter((path) => path.includes('"') || path.includes(HTTP_BOT.slice(1)))).toEqual([]);
+        expect(greeting).toContain('hello from the markdown twin');
     });
 
     it('bundles no text from a folder outside files', () => {

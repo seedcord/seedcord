@@ -36,6 +36,7 @@ You have to write `instance` and `entry`. Every other key has a default.
 | `entry` | required | the file that starts the bot, and the one the build copies |
 | `root` | the config's own folder | the folder `instance` and `entry` resolve against |
 | `tunnel` | `true` | `true` opens a cloudflared quick tunnel to your http bot, and `false` turns it off. An https string is a URL you already serve. A gateway bot ignores it |
+| `files` | omitted | folders whose non-code files `seedcord build` bundles for [`readFiles`](ref:utils/readFiles), like `['./locales']`. Each one resolves against `root` |
 | `idleAnimation` | `true` | whether the dev terminal animates while nothing happens |
 | `build` | `{}` | `outDir` (default `dist`) and `tsconfig` for `seedcord build`, resolved against the config's folder |
 | `hmr` | omitted | `restart` globs, `rollback`, and `typecheck` for `seedcord dev` |

@@ -12,6 +12,7 @@ export { importFailed, recordThrownBy, vitePluginThrew } from './files/importFai
 export { isInside, posixRelative, resolveFromRoot, toPosixPath, workerdPath } from './files/paths';
 export { BOT_FILES_KEY, BUILT_FILES_READY_KEY, builtConfigDir, setBuiltFilesHook, setDevFiles } from './files/slots';
 export { resolveFolder } from './files/sources';
+export { withoutQuery } from './files/withoutQuery';
 export * from './misc/asError';
 export * from './misc/isPortInUse';
 export * from './misc/unlessAborted';

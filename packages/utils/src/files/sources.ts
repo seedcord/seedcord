@@ -162,7 +162,7 @@ class BuiltFiles extends FileSource {
     }
 
     protected filesIn(folder: string): Promise<Loaders<BytesLoader>> {
-        return Promise.resolve(this.under(this.fileLoaders, folder).filter(([file]) => isNonCodeFile(folder, file)));
+        return Promise.resolve(this.under(this.fileLoaders, folder));
     }
 
     private under<Loader>(loaders: Map<string, Loader>, folder: string): Loaders<Loader> {

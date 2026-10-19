@@ -1,20 +1,21 @@
 import { join, relative } from 'node:path';
 
-import { builtExtension } from '@seedcord/utils/internal';
+import { builtExtension, withoutQuery } from '@seedcord/utils/internal';
 import { createBuilder } from 'vite';
 
 import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
 import { viteKey } from '#core/project/ProjectFiles';
 
 import { assertOutDirSafe } from './assertOutDirSafe';
+import { isListedFileId, listedFileOf } from './builtFiles';
 import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { ENTRY_ID, isServerEntry, serverEntry } from './serverEntry';
 import { TargetBuild } from './TargetBuild';
-import { withoutQuery } from './withoutQuery';
 
 import type { ResolvedSeedcordConfig, ResolvedServerTarget } from '#core/config/schema';
 import type { Project } from '#core/project/Project';
+import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { BundleStats } from './output';
 import type { BuildEnvironmentOptions, PluginOption, Rolldown, ViteBuilder } from 'vite';
 
@@ -26,8 +27,9 @@ function outputChunks(result: Awaited<ReturnType<ViteBuilder['build']>>): Rolldo
     return outputs.flatMap(({ output }) => output.filter((file) => file.type === 'chunk'));
 }
 
-function outputName(moduleId: string | null | undefined): string {
+function outputName(moduleId: string | null | undefined, files: ProjectFiles): string {
     if (isServerEntry(moduleId)) return ENTRY_FILE_NAME;
+    if (moduleId && isListedFileId(moduleId)) return `_virtual/files${files.keyOf(listedFileOf(moduleId))}.js`;
     return `[name]${builtExtension(withoutQuery(moduleId ?? ''))}`;
 }
 
@@ -70,7 +72,7 @@ export abstract class ServerBuild<Target extends ResolvedServerTarget = Resolved
                     format: 'esm',
                     preserveModules: true,
                     preserveModulesRoot: root,
-                    entryFileNames: (chunk) => outputName(chunk.facadeModuleId)
+                    entryFileNames: (chunk) => outputName(chunk.facadeModuleId, files)
                 }
             }
         });

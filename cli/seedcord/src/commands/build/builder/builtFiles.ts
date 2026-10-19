@@ -1,8 +1,6 @@
 import { readFile } from 'node:fs/promises';
 
-import { BOT_FILES_KEY, BUILT_FILES_READY_KEY, encodeFile } from '@seedcord/utils/internal';
-
-import { withoutQuery } from './withoutQuery';
+import { BOT_FILES_KEY, BUILT_FILES_READY_KEY, encodeFile, withoutQuery } from '@seedcord/utils/internal';
 
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { Plugin } from 'vite';
@@ -23,7 +21,7 @@ export function isListedFileId(moduleId: string): boolean {
     return moduleId.startsWith(LISTED_FILE_PREFIX);
 }
 
-function listedFileOf(moduleId: string): string {
+export function listedFileOf(moduleId: string): string {
     return JSON.parse(moduleId.slice(LISTED_FILE_PREFIX.length)) as string;
 }
 
@@ -34,7 +32,7 @@ export function loadListedFiles(): Plugin {
         enforce: 'pre',
         async resolveId(source, importer) {
             if (!source.endsWith(LISTED_FILE_QUERY)) return undefined;
-            // with the query still on, cloudflare's .txt and .bin rules skip it too
+            // cloudflare's plugin turns a .txt or .bin import into a text or data module unless the query is still on
             const resolved = await this.resolve(source, importer, { skipSelf: true });
             return resolved && listedFileId(withoutQuery(resolved.id));
         },

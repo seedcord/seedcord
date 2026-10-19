@@ -1,9 +1,8 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { asError, vitePluginThrew } from '@seedcord/utils/internal';
+import { asError, vitePluginThrew, withoutQuery } from '@seedcord/utils/internal';
 
 import { isListedFileId } from './builtFiles';
-import { withoutQuery } from './withoutQuery';
 
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { Rolldown } from 'vite';

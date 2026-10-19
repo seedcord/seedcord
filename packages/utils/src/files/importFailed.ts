@@ -4,6 +4,8 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '#src/misc/asError';
 import { isPlainObject } from '#src/objects/isPlainObject';
 
+import { withoutQuery } from './withoutQuery';
+
 import type { VitePluginPlace } from '@seedcord/errors/internal';
 
 interface ThrownBy {
@@ -39,7 +41,7 @@ function thrownByOf(error: unknown): ThrownBy | undefined {
 // vite starts a virtual module's id with \0 and can add a query to a file's
 function loadedModule(moduleId: string): LoadedModule {
     if (moduleId.startsWith('\0')) return { kind: 'virtual', id: moduleId.slice(1) };
-    return { kind: 'file', path: moduleId.replace(/\?.*$/, '') };
+    return { kind: 'file', path: withoutQuery(moduleId) };
 }
 
 // rolldown's build error lists one error per failed hook

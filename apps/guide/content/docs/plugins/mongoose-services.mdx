@@ -51,7 +51,7 @@ declare module '@seedcord/plugin-mongoose' {
 
 ## You never construct a service
 
-The constructor takes the plugin, the core, and a model. The plugin only has all three once it has connected, so it builds your services itself during startup. It imports every `.ts`, `.tsx`, `.mts`, `.js`, `.jsx` and `.mjs` file under the `dir` you gave the [mongoose plugin](/plugins/mongoose), including subfolders. For each exported class that extends `MongooseService` and carries the decorator, it builds the model from `schema` and constructs the class. That constructor call adds the instance to the plugin's [`services`](ref:plugin-mongoose/Mongoose.services) map under its key.
+The constructor takes the plugin, the core, and a model. The plugin only has all three once it has connected, so it builds your services itself during startup. It imports every TypeScript and JavaScript file under the `dir` you gave the [mongoose plugin](/plugins/mongoose), including subfolders. For each exported class that extends `MongooseService` and carries the decorator, it builds the model from `schema` and constructs the class. That constructor call adds the instance to the plugin's [`services`](ref:plugin-mongoose/Mongoose.services) map under its key.
 
 <Callout type="warning">
 

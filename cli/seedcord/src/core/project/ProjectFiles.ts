@@ -74,6 +74,12 @@ export class ProjectFiles {
         return !isSkippedUnder(this.root, path);
     }
 
+    // seedcord dev reads these inside a listed folder, while the build leaves them out
+    public holdsSkipped(folder: string): boolean {
+        if (this.rootIsConfigDir() && folder === this.root) return true;
+        return this.skippedFolders.some((skipped) => isInside(folder, skipped));
+    }
+
     public async modulePaths(): Promise<string[]> {
         const entries = await this.entries();
         return entries.filter(({ path, isFolder }) => !isFolder && isModulePath(path)).map(({ path }) => path);
