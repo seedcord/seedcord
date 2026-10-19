@@ -72,7 +72,7 @@ describe('seedcord build checks outDir before it empties it', () => {
 describe('seedcord build checks the server entry', () => {
     const STARTED = 'seedcordTestPluginStarted';
 
-    it('throws CliEntryNotFound before any plugin from vitePlugins starts', async () => {
+    it('throws CliFileNotFound before any plugin from vitePlugins starts', async () => {
         onTestFinished(() => {
             Reflect.deleteProperty(globalThis, STARTED);
         });
@@ -82,7 +82,7 @@ describe('seedcord build checks the server entry', () => {
         );
 
         await expect(quickBuildRunner().run(projectDir)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliEntryNotFound
+            code: SeedcordErrorCode.CliFileNotFound
         });
         expect(Reflect.get(globalThis, STARTED)).toBeUndefined();
     });

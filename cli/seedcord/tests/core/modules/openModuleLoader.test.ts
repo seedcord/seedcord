@@ -132,13 +132,13 @@ describe('openModuleLoader', () => {
         expect(module.default).toEqual({ instance: './bot.ts' });
     });
 
-    it('throws CliEntryNotFound for a file that does not exist', async () => {
+    it('throws CliFileNotFound for a file that does not exist', async () => {
         const root = await project();
 
         await using modules = await openModuleLoader(root, SERVER, 'development', BOT_CODE);
 
         await expect(modules.importModule(join(root, 'src', 'missing.ts'))).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliEntryNotFound
+            code: SeedcordErrorCode.CliFileNotFound
         });
     });
 

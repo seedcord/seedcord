@@ -217,7 +217,7 @@ export enum SeedcordErrorCode {
     /** No seedcord config file exists in the folder the CLI searched. */
     CliConfigNotFound = 3102,
     /** The entry file does not exist. */
-    CliEntryNotFound = 3103,
+    CliFileNotFound = 3103,
     /** The instance file's default export is not a constructed `Seedcord`. */
     CliInstanceInvalid = 3104,
     /** The bot threw during startup. */

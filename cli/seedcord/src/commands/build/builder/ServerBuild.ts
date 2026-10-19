@@ -49,7 +49,7 @@ export class ServerBuild extends TargetBuild {
 
     public static check({ root }: ResolvedSeedcordConfig, { start, outDir }: ResolvedServerTarget): void {
         if (start !== undefined && !existsSync(start))
-            throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [start]);
+            throw new SeedcordError(SeedcordErrorCode.CliFileNotFound, [start]);
         assertOutDirSafe(outDir, root);
     }
 
