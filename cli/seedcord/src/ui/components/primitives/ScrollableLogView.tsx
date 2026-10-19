@@ -11,7 +11,7 @@ import { LogStore } from '#ui/stores/LogStore';
 
 import type { LogRow } from '#ui/logRows';
 import type { LogEntry } from '#ui/stores/LogStore';
-import type { LogLevel } from '@seedcord/types';
+import type { LogLevel, TypedOmit } from '@seedcord/types';
 import type { ReactElement } from 'react';
 
 const MIN_LOG_LINES = 5; // fits an error head plus a few stack frames
@@ -76,7 +76,7 @@ function HeadLine({ log, text, labelWidth }: LineProps): ReactElement {
     );
 }
 
-function HeadTail({ text, labelWidth }: Omit<LineProps, 'log'>): ReactElement {
+function HeadTail({ text, labelWidth }: TypedOmit<LineProps, 'log'>): ReactElement {
     return (
         <Text wrap="truncate">
             {' '.repeat(messageColumn(labelWidth) - 2)}

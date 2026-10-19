@@ -21,10 +21,11 @@ import type { DevStore } from '#ui/stores/DevStore';
 import type { DevSessionDeps } from './DevSession';
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { TunnelCoordinator } from './tunnel/TunnelCoordinator';
+import type { TypedOmit } from '@seedcord/types';
 
 const TUNNEL_TEARDOWN_MS = 3000;
 
-export interface DevRunnerDeps extends Omit<DevSessionDeps, 'onEvent'> {
+export interface DevRunnerDeps extends TypedOmit<DevSessionDeps, 'onEvent'> {
     readonly projectLoader: Pick<ProjectLoader, 'readConfig'>;
     readonly tunnel: TunnelRouter;
     readonly runtime: (target: ResolvedTarget) => DevRuntime;

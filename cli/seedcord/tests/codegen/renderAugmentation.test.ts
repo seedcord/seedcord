@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { renderAugmentation } from '#commands/codegen/renderAugmentation';
 
 import type { RouteOptions, SlashTables } from '#commands/codegen/AugmentationBuilder';
+import type { TypedOmit } from '@seedcord/types';
 
 const AUGMENT_TARGET = '@seedcord/gateway';
 
@@ -21,7 +22,9 @@ function renderSlash(tables: Record<string, RouteOptions>): string {
     return renderWithTarget({ slash: guildRows(tables), userContextMenus: {}, messageContextMenus: {}, emojis: {} });
 }
 
-type FlatRegistry = Omit<Parameters<typeof renderAugmentation>[0], 'slash'> & { slash: Record<string, RouteOptions> };
+type FlatRegistry = TypedOmit<Parameters<typeof renderAugmentation>[0], 'slash'> & {
+    slash: Record<string, RouteOptions>;
+};
 
 function renderSlashWith(registry: FlatRegistry, plugins?: Parameters<typeof renderAugmentation>[2]): string {
     return renderAugmentation({ ...registry, slash: guildRows(registry.slash) }, AUGMENT_TARGET, plugins);
