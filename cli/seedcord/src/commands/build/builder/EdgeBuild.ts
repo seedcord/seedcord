@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { warnLinks } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { isInside } from '@seedcord/utils/internal';
+import { BotLayout, isInside } from '@seedcord/utils/internal';
 import { createBuilder } from 'vite';
 
 import { cliLogger } from '#core/cliLogger';
@@ -12,7 +12,6 @@ import { BOT_ENVIRONMENT, LOOK_FOR_BUILD_PLUGIN } from '#core/modules/botEnviron
 import { importCloudflare, importCloudflareCopy } from '#core/modules/cloudflarePlugin';
 import { CommandScanner } from '#core/modules/CommandScanner';
 import { functionExportsOf } from '#core/modules/workerExports';
-import { viteKey } from '#core/project/ProjectFiles';
 
 import { assertNodeCompat } from './assertNodeCompat';
 import { bootWorker } from './bootWorker';
@@ -117,7 +116,7 @@ export class EdgeBuild extends TargetBuild {
         const built = await cloudflare.built().catch(bundleFailed);
         assertNodeCompat(built, this.target.cloudflareConfig);
 
-        return bundleStats(chunks, files, join(built.bundleDir, ENTRY_FILE_NAME));
+        return bundleStats(chunks, files.layout, join(built.bundleDir, ENTRY_FILE_NAME));
     }
 
     private async bundleWorker(
@@ -138,14 +137,14 @@ export class EdgeBuild extends TargetBuild {
             logLevel: 'warn',
             plugins: [
                 workerEntry({
-                    files,
+                    layout: files.layout,
                     folders,
-                    instanceKey: viteKey(viteRoot, config.instance),
+                    instanceKey: BotLayout.keyUnder(viteRoot, config.instance),
                     functionExports: () => functionExportsOf(modules, config.instance),
-                    rootKey: viteKey(viteRoot, config.root),
+                    rootKey: BotLayout.keyUnder(viteRoot, config.root),
                     mode: { kind: 'build', ids }
                 }),
-                pinModulePaths(files),
+                pinModulePaths(files.layout),
                 captureChunks((captured) => {
                     chunks = captured;
                 }),
@@ -175,7 +174,7 @@ export class EdgeBuild extends TargetBuild {
 
     private async commandsInCode(commands: CommandsConfig): Promise<CommandsInCode | undefined> {
         if (commands.path === null) return undefined;
-        const scanner = new CommandScanner(this.project.modules, this.project.config.root);
+        const scanner = new CommandScanner(this.project.modules, this.project.files);
         const found = await scanner.scan(commands.path);
         return { found, configuredGuilds: commands.guilds ?? [] };
     }

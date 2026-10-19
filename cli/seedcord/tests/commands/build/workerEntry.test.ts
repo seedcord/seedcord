@@ -1,21 +1,16 @@
 import { runInNewContext } from 'node:vm';
 
 import { BAKED_IDS_KEY } from '@seedcord/core/internal';
+import { BotLayout } from '@seedcord/utils/internal';
 import { describe, expect, it } from 'vitest';
 
 import { workerEntry } from '#commands/build/builder/workerEntry';
-import { ProjectFiles } from '#core/project/ProjectFiles';
 
 import type { BakedIds } from '@seedcord/core/internal';
 
 function bakedIdsRun(ids: BakedIds): BakedIds {
     const [plugin] = workerEntry({
-        files: new ProjectFiles({
-            root: '/bot',
-            configFile: '/seedcord.config.ts',
-            files: [],
-            target: { kind: 'edge', cloudflareConfig: '/cloudflare.config.ts', viteRoot: '/', port: 0 }
-        }),
+        layout: BotLayout.openAt('/bot'),
         folders: [],
         instanceKey: '/bot.ts',
         functionExports: () => Promise.resolve([]),

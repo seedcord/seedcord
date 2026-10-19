@@ -4,10 +4,10 @@ import { workerdPath } from '@seedcord/utils/internal';
 
 import { builtFilesSource, loadListedFiles, PLACEHOLDER_ROOT } from './builtFiles';
 
-import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { EntryPlugins } from './builtFiles';
 import type { PluginConfig } from '@cloudflare/vite-plugin';
 import type { BakedIds } from '@seedcord/core/internal';
+import type { BotLayout } from '@seedcord/utils/internal';
 import type { Plugin } from 'vite';
 
 const WORKER_ENTRY_ID = 'virtual:seedcord/worker';
@@ -38,7 +38,7 @@ function cwdSource(cwd: string): string {
 type EntryMode = { kind: 'build'; ids: BakedIds } | { kind: 'dev'; root: string; cwd: string };
 
 interface WorkerEntryOptions {
-    files: ProjectFiles;
+    layout: BotLayout;
     folders: string[];
     instanceKey: string;
     rootKey: string;
@@ -79,7 +79,7 @@ function modeSetup(mode: EntryMode): ModeSetup {
 }
 
 // the entry imports these in order, ahead of the instance file
-function setupSources({ files, folders, rootKey, mode }: WorkerEntryOptions): Map<string, string> {
+function setupSources({ layout, folders, rootKey, mode }: WorkerEntryOptions): Map<string, string> {
     const { root, cwd, sourcePaths, modules } = modeSetup(mode);
     const rootExpression = JSON.stringify(root);
     return new Map([
@@ -87,7 +87,7 @@ function setupSources({ files, folders, rootKey, mode }: WorkerEntryOptions): Ma
         ...modules,
         // the instance file may read env while it loads
         [BIND_ENV_ID, BIND_ENV],
-        [BUILT_FILES_ID, builtFilesSource({ files, folders, rootExpression, rootKey, sourcePaths })]
+        [BUILT_FILES_ID, builtFilesSource({ layout, folders, rootExpression, rootKey, sourcePaths })]
     ]);
 }
 

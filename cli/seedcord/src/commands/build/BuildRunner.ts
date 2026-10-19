@@ -7,7 +7,7 @@ import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { printResolvedConfig } from '#core/output/printResolvedConfig';
 import { startupShell } from '#core/viteMode';
 
-import { assertFoldersUnderRoot } from './builder/assertFoldersUnderRoot';
+import { assertFoldersBundled } from './builder/assertFoldersBundled';
 import { checkBuildTarget, targetBuildFor } from './builder/targetBuildFor';
 import { TypeChecker } from './builder/TypeChecker';
 
@@ -72,7 +72,7 @@ export class BuildRunner {
 
         const instance = await steps.step('load bot', async () => {
             const loaded = await importInstance(modules, config.instance);
-            assertFoldersUnderRoot(loaded.config, project);
+            assertFoldersBundled(loaded.config, project);
             return loaded;
         });
         await steps.step(

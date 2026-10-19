@@ -1,7 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { viteKey } from '#core/project/ProjectFiles';
+import { BotLayout } from '@seedcord/utils/internal';
 
 import { ENTRY_FILE_NAME } from './output';
 import { ServerBuild } from './ServerBuild';
@@ -20,7 +20,7 @@ export class ExportBuild extends ServerBuild {
 
     public bundle(): Promise<BundleStats> {
         const { config, configDir } = this.project;
-        return this.bundleJs(exportInstance(viteKey(configDir, config.instance)));
+        return this.bundleJs(exportInstance(BotLayout.keyUnder(configDir, config.instance)));
     }
 
     public override async writeTypes(): Promise<void> {

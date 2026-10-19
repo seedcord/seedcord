@@ -13,6 +13,7 @@ import { fakeBot } from './fakes';
 
 import type { StartedRuntime } from '#commands/dev/runtime/BaseDevRuntime';
 import type { DevRuntimeContext } from '#commands/dev/runtime/DevRuntime';
+import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
 const SCRATCH_ROOT = join(import.meta.dirname, '.root-fixture');
@@ -188,9 +189,10 @@ describe('dev runtime with root set to src', () => {
         class FailsAfterOpening extends ServerDevRuntime {
             protected override async open(
                 context: DevRuntimeContext,
-                resources: AsyncDisposableStack
+                resources: AsyncDisposableStack,
+                files: ProjectFiles
             ): Promise<StartedRuntime> {
-                await super.open(context, resources);
+                await super.open(context, resources, files);
                 throw new Error('setup failed');
             }
         }

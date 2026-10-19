@@ -31,6 +31,10 @@ async function tempDir(prefix: string): Promise<string> {
     return dir.path;
 }
 
+async function commandsUnder(root: string): Promise<string> {
+    return mkdir(join(root, 'commands')).then(() => join(root, 'commands'));
+}
+
 class BanCommand extends BuilderComponent<'command'> {
     public constructor() {
         super('command');
@@ -180,7 +184,7 @@ describe('CodegenRunner plugin capabilities', () => {
 describe('CodegenRunner writeFrom', () => {
     it('scans with the loader it is given and never opens the project', async () => {
         const root = await tempDir('codegen-');
-        const cmdDir = await tempDir('cmds-');
+        const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
         const notOpened = (): Promise<never> => Promise.reject(new Error('dev already loaded the bot'));
         const projectLoader: ProjectOpener = { readConfig: notOpened, openProject: notOpened };
@@ -209,7 +213,7 @@ describe('CodegenRunner writeFrom', () => {
 describe('CodegenRunner', () => {
     it('keeps the project open until the command scan finishes', async () => {
         const root = await tempDir('codegen-');
-        const cmdDir = await tempDir('cmds-');
+        const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
         const instancePath = resolve(root, 'bot.ts');
         let closed = false;
@@ -279,7 +283,7 @@ describe('CodegenRunner', () => {
 
     it('scans command classes and skips non-command exports', async () => {
         const root = await tempDir('codegen-');
-        const cmdDir = await tempDir('cmds-');
+        const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
 
         class NotACommand {
@@ -297,7 +301,7 @@ describe('CodegenRunner', () => {
 
     it('scans a command once when a barrel re-exports it, instead of throwing a duplicate route', async () => {
         const root = await tempDir('codegen-');
-        const cmdDir = await tempDir('cmds-');
+        const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
         await writeFile(join(cmdDir, 'index.ts'), 'export {};', 'utf8');
 
@@ -328,7 +332,7 @@ describe('CodegenRunner', () => {
         'throws CorePathUnreadable for a nested unreadable subdir',
         async () => {
             const root = await tempDir('codegen-');
-            const cmdDir = await tempDir('cmds-');
+            const cmdDir = await commandsUnder(root);
             await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
             const locked = join(cmdDir, 'locked');
             await mkdir(locked);
@@ -345,7 +349,7 @@ describe('CodegenRunner', () => {
 
     it('throws CliCommandNotACommand for a registered class whose component is not a command', async () => {
         const root = await tempDir('codegen-');
-        const cmdDir = await tempDir('cmds-');
+        const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'confirm.ts'), 'export {};', 'utf8');
 
         class ConfirmButton extends BuilderComponent<'button'> {
@@ -401,7 +405,7 @@ describe('CodegenRunner', () => {
 
     it('--check leaves a current registry untouched', async () => {
         const root = await tempDir('codegen-');
-        const cmdDir = await tempDir('cmds-');
+        const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
 
         const exports = (): Record<string, unknown> => ({ BanCommand });
@@ -438,7 +442,7 @@ describe('CodegenRunner', () => {
 
     it('emits context-menu commands into the user and message registries alongside slash routes', async () => {
         const root = await tempDir('codegen-');
-        const cmdDir = await tempDir('cmds-');
+        const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'commands.ts'), 'export {};', 'utf8');
 
         class ViewProfile extends BuilderComponent<'context_menu'> {
@@ -471,7 +475,7 @@ describe('CodegenRunner', () => {
 
     it('throws and names the command when a registered command constructor throws', async () => {
         const root = await tempDir('codegen-');
-        const cmdDir = await tempDir('cmds-');
+        const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'broken.ts'), 'export {};', 'utf8');
 
         class BrokenCommand extends BuilderComponent<'command'> {
@@ -497,7 +501,7 @@ describe('CodegenRunner', () => {
 
     it('reports every command whose constructor throws at once', async () => {
         const root = await tempDir('codegen-');
-        const cmdDir = await tempDir('cmds-');
+        const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
         await writeFile(join(cmdDir, 'roll.ts'), 'export {};', 'utf8');
 
@@ -537,7 +541,7 @@ describe('CodegenRunner', () => {
 
     it('reports the constructor problems found before a file that fails to import', async () => {
         const root = await tempDir('codegen-');
-        const cmdDir = await tempDir('cmds-');
+        const cmdDir = await commandsUnder(root);
         for (const file of ['a-ban.ts', 'b-roll.ts', 'c-broken.ts'])
             await writeFile(join(cmdDir, file), 'export {};', 'utf8');
 
@@ -576,7 +580,7 @@ describe('CodegenRunner', () => {
 
     it('skips a BuilderComponent subclass carrying no @RegisterCommand', async () => {
         const root = await tempDir('codegen-');
-        const cmdDir = await tempDir('cmds-');
+        const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'base.ts'), 'export {};', 'utf8');
 
         class Undecorated extends BuilderComponent<'command'> {
@@ -594,7 +598,7 @@ describe('CodegenRunner', () => {
 
     it('skips an undecorated export whose constructor throws', async () => {
         const root = await tempDir('codegen-');
-        const cmdDir = await tempDir('cmds-');
+        const cmdDir = await commandsUnder(root);
         await writeFile(join(cmdDir, 'helpers.ts'), 'export {};', 'utf8');
 
         // the scan constructs with no arguments

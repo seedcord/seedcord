@@ -136,7 +136,7 @@ describe('HmrModuleHandler', () => {
     });
 
     it('reloads a handler file when the handlers dir is relative to root', async () => {
-        using _dev = setDevFiles({ root: dir, listed: [] });
+        using _dev = setDevFiles({ root: dir, listed: [], skippedFolders: [], projectFiles: [] });
         const relative = new HmrModuleHandler<TestHandler>({
             handlersDir: './commands',
             isHandler,

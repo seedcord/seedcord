@@ -1,18 +1,11 @@
 export { encodeFile } from './files/encodedFile';
-export {
-    builtExtension,
-    builtModulePath,
-    isModulePath,
-    isModuleUnder,
-    isSkippedUnder,
-    moduleGlobs,
-    nonCodeGlobs,
-    SKIPPED_GLOBS
-} from './files/extensions';
+export { BotLayout } from './files/BotLayout';
+export type { BotLayoutData } from './files/BotLayout';
+export type { BuiltSlot } from './files/slots';
 export { importFailed, recordThrownBy, vitePluginThrew } from './files/importFailed';
-export { isInside, posixRelative, resolveFromRoot, toPosixPath, workerdPath } from './files/paths';
+export { isInside, posixRelative, toPosixPath, workerdPath } from './files/paths';
 export { BOT_FILES_KEY, BUILT_FILES_READY_KEY, builtConfigDir, setBuiltFilesHook, setDevFiles } from './files/slots';
-export { resolveFolder } from './files/sources';
+export { botLayout } from './files/sources';
 export { withoutQuery } from './files/withoutQuery';
 export * from './misc/asError';
 export * from './misc/isPortInUse';

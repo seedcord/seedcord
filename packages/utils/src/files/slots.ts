@@ -1,18 +1,13 @@
 import { existsSync } from 'node:fs';
 import * as path from 'node:path';
 
+import type { BotLayoutData } from './BotLayout';
 import type { EncodedFile } from './encodedFile';
 
 export type ModuleLoader = () => Promise<Record<string, unknown>>;
 type EncodedFileLoader = () => Promise<EncodedFile>;
 
-export interface BotFolders {
-    root: string;
-    // the folders from files in seedcord.config.ts, root-relative like '/locales'
-    listed: string[];
-}
-
-export interface BuiltSlot extends BotFolders {
+export interface BuiltSlot extends BotLayoutData {
     kind: 'built';
     // every folder under root, empty ones included
     folders: string[];
@@ -25,7 +20,7 @@ export interface BuiltSlot extends BotFolders {
 }
 
 // server dev reads the files off disk
-interface DevSlot extends BotFolders {
+interface DevSlot extends BotLayoutData {
     kind: 'dev';
 }
 
@@ -60,8 +55,8 @@ export function builtConfigDir(): string | undefined {
     return existsSync(configFile) ? path.dirname(configFile) : undefined;
 }
 
-export function setDevFiles(folders: BotFolders): Disposable {
+export function setDevFiles(layout: BotLayoutData): Disposable {
     const key = Symbol.for(BOT_FILES_KEY);
-    Reflect.set(globalThis, key, { kind: 'dev', ...folders } satisfies DevSlot);
+    Reflect.set(globalThis, key, { kind: 'dev', ...layout } satisfies DevSlot);
     return { [Symbol.dispose]: () => Reflect.deleteProperty(globalThis, key) };
 }

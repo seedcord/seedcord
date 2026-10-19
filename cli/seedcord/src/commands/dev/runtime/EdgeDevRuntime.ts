@@ -5,6 +5,7 @@ import { displayPath } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { filterCirculars } from '@seedcord/utils';
+import { BotLayout } from '@seedcord/utils/internal';
 import chalk from 'chalk';
 
 import { CloudflareWorker } from '#commands/build/builder/CloudflareWorker';
@@ -18,7 +19,6 @@ import { openViteServer } from '#core/modules/openViteServer';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { functionExportsOf } from '#core/modules/workerExports';
-import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
 import { devWatchOptions, edgeViteConfig } from './devServerConfig';
@@ -27,6 +27,7 @@ import { loadWorkerEntry } from './loadWorkerEntry';
 
 import type { ResolvedEdgeTarget } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
+import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { StartedRuntime } from './BaseDevRuntime';
 import type { DevRuntimeContext } from './DevRuntime';
 import type {
@@ -76,10 +77,13 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         super();
     }
 
-    protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<EdgeStarted> {
+    protected async open(
+        context: DevRuntimeContext,
+        resources: AsyncDisposableStack,
+        files: ProjectFiles
+    ): Promise<EdgeStarted> {
         const { config } = context;
         const { viteRoot } = this.target;
-        const files = new ProjectFiles(config);
         installCliLogSinks(resources);
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
         const [folders, cloudflare, workerEnv] = await Promise.all([
@@ -88,7 +92,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             WorkerEnv.load(this.target.cloudflareConfig, config.viteMode)
         ]);
         const nodeCopy = await openModuleLoader(dirname(config.configFile), this.target, config.viteMode, config, {
-            watch: devWatchOptions(process.cwd()),
+            watch: devWatchOptions(files.layout, process.cwd()),
             workerEnv
         }).catch(rethrowVitePluginError);
         resources.use(nodeCopy);
@@ -100,14 +104,14 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         ]);
         const server = await openViteServer(
             resources,
-            mergeViteConfig(edgeViteConfig(config, viteRoot, process.cwd()), {
+            mergeViteConfig(edgeViteConfig(config, files.layout, viteRoot, process.cwd()), {
                 mode: config.viteMode,
                 plugins: [
                     workerEntry({
-                        files,
+                        layout: files.layout,
                         folders,
-                        instanceKey: viteKey(viteRoot, config.instance),
-                        rootKey: viteKey(viteRoot, config.root),
+                        instanceKey: BotLayout.keyUnder(viteRoot, config.instance),
+                        rootKey: BotLayout.keyUnder(viteRoot, config.root),
                         functionExports: () => (functionExports ??= this.readFunctionExports(context, nodeCopy)),
                         mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
                     }),

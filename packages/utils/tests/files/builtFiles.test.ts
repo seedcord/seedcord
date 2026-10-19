@@ -27,11 +27,23 @@ function register({
     root = ROOT,
     folders = [],
     listed = [],
+    skippedFolders = [],
+    projectFiles = [],
     modules = {},
     listedFiles = {},
     ...rest
 }: Partial<TypedOmit<BuiltSlot, 'kind'>>): Disposable {
-    const slot: BuiltSlot = { kind: 'built', root, folders, listed, modules, listedFiles, ...rest };
+    const slot: BuiltSlot = {
+        kind: 'built',
+        root,
+        folders,
+        listed,
+        skippedFolders,
+        projectFiles,
+        modules,
+        listedFiles,
+        ...rest
+    };
     Reflect.set(globalThis, Symbol.for(BOT_FILES_KEY), slot);
     return { [Symbol.dispose]: clearBuiltFiles };
 }
@@ -106,7 +118,7 @@ describe('setBuiltFilesHook', () => {
     });
 
     it('treats the root seedcord dev sets as no built files', () => {
-        using _dev = setDevFiles({ root: ROOT, listed: [] });
+        using _dev = setDevFiles({ root: ROOT, listed: [], skippedFolders: [], projectFiles: [] });
         // setBuiltFilesHook keeps the hook it could not run yet
         onTestFinished(clearBuiltFiles);
         const hook = vi.fn();

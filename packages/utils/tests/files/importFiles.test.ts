@@ -127,7 +127,7 @@ describe('a module that fails to load through a Vite plugin', () => {
 
 describe('a folder on disk under seedcord dev', () => {
     beforeEach(() => {
-        const dev = setDevFiles({ root: FIXTURES, listed: ['/text'] });
+        const dev = setDevFiles({ root: FIXTURES, listed: ['/text'], skippedFolders: [], projectFiles: [] });
         return () => dev[Symbol.dispose]();
     });
 
@@ -169,6 +169,48 @@ describe('a folder on disk under seedcord dev', () => {
     });
 });
 
+describe('the folders and files the build leaves out, under seedcord dev', () => {
+    const root = path.join(scratch, 'project');
+
+    beforeAll(async () => {
+        await mkdir(path.join(root, 'dist'), { recursive: true });
+        await mkdir(path.join(root, 'logs'), { recursive: true });
+        await mkdir(path.join(root, 'handlers'), { recursive: true });
+        await writeFile(path.join(root, 'seedcord.config.ts'), 'export {};\n');
+        await writeFile(path.join(root, 'package.json'), '{}\n');
+        await writeFile(path.join(root, 'dist', 'index.js'), 'export {};\n');
+        await writeFile(path.join(root, 'logs', 'today.log'), 'line\n');
+        await writeFile(path.join(root, 'handlers', 'Ping.ts'), 'export {};\n');
+        await writeFile(path.join(root, 'en.json'), '{}\n');
+    });
+
+    beforeEach(() => {
+        const dev = setDevFiles({
+            root,
+            listed: ['/'],
+            skippedFolders: ['/dist', '/logs'],
+            projectFiles: ['/seedcord.config.ts', '/package.json']
+        });
+        return () => dev[Symbol.dispose]();
+    });
+
+    it('skips them when importFiles walks root', async () => {
+        const seen: string[] = [];
+
+        for await (const { fullPath } of importFiles('.')) seen.push(path.relative(root, fullPath));
+
+        expect(seen).toEqual([path.join('handlers', 'Ping.ts')]);
+    });
+
+    it('skips them when readFiles reads root', async () => {
+        const seen: string[] = [];
+
+        for await (const { fullPath } of readFiles('.')) seen.push(path.relative(root, fullPath));
+
+        expect(seen).toEqual(['en.json']);
+    });
+});
+
 describe('a folder seedcord build skips, under seedcord dev', () => {
     const root = path.join(scratch, 'skipped');
 
@@ -183,7 +225,7 @@ describe('a folder seedcord build skips, under seedcord dev', () => {
     });
 
     beforeEach(() => {
-        const dev = setDevFiles({ root, listed: ['/locales'] });
+        const dev = setDevFiles({ root, listed: ['/locales'], skippedFolders: [], projectFiles: [] });
         return () => dev[Symbol.dispose]();
     });
 

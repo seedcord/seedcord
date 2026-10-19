@@ -2,7 +2,7 @@ import { statSync } from 'node:fs';
 
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { builtModulePath } from '@seedcord/utils/internal';
+import { BotLayout } from '@seedcord/utils/internal';
 
 import type { Project } from '#core/project/Project';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
@@ -10,17 +10,17 @@ import type { SeedcordErrorArguments } from '@seedcord/errors/internal';
 
 type ListedFolderProblem = SeedcordErrorArguments<SeedcordErrorCode.CliListedFolderUnusable>[1];
 
-function listedFolderProblem(folder: string, files: ProjectFiles): ListedFolderProblem | undefined {
+function listedFolderProblem(folder: string, layout: BotLayout): ListedFolderProblem | undefined {
     const stats = statSync(folder, { throwIfNoEntry: false });
     if (!stats) return 'missing';
     if (!stats.isDirectory()) return 'file';
-    if (!files.isBundled(folder)) return 'skipped';
-    return files.holdsSkipped(folder) ? 'holdsSkipped' : undefined;
+    if (layout.isSkipped(folder)) return 'skipped';
+    return layout.holdsSkipped(folder) ? 'holdsSkipped' : undefined;
 }
 
 function* listedFolderProblems({ config, files }: Project): Generator<SeedcordError> {
     for (const folder of config.files) {
-        const problem = listedFolderProblem(folder, files);
+        const problem = listedFolderProblem(folder, files.layout);
         if (problem) yield new SeedcordError(SeedcordErrorCode.CliListedFolderUnusable, [folder, problem]);
     }
 }
@@ -29,8 +29,8 @@ function* listedFolderProblems({ config, files }: Project): Generator<SeedcordEr
 async function builtNameClashes(files: ProjectFiles): Promise<SeedcordError[]> {
     const modulePaths = await files.modulePaths();
     const byBuiltName = Map.groupBy(
-        modulePaths.map((path) => files.keyOf(path)),
-        builtModulePath
+        modulePaths.map((path) => files.layout.keyOf(path)),
+        (key) => BotLayout.builtPath(key)
     );
     return [...byBuiltName]
         .filter(([, sources]) => sources.length > 1)

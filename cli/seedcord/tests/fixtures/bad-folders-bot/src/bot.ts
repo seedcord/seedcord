@@ -7,5 +7,5 @@ export default new Seedcord({
         interactions: { path: resolve(import.meta.dirname, '../handlers') },
         commands: { path: '../commands' }
     },
-    subscribers: { path: null }
+    subscribers: { path: './.drafts/subscribers' }
 });

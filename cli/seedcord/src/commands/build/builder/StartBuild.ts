@@ -2,8 +2,7 @@ import { existsSync } from 'node:fs';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-
-import { viteKey } from '#core/project/ProjectFiles';
+import { BotLayout } from '@seedcord/utils/internal';
 
 import { ServerBuild } from './ServerBuild';
 import { serverCommands } from './serverCommands';
@@ -32,6 +31,6 @@ export class StartBuild extends ServerBuild<StartTarget> {
     }
 
     public bundle(): Promise<BundleStats> {
-        return this.bundleJs(runStartFile(viteKey(this.project.configDir, this.target.start)));
+        return this.bundleJs(runStartFile(BotLayout.keyUnder(this.project.configDir, this.target.start)));
     }
 }

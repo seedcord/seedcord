@@ -1,9 +1,8 @@
-import { builtModulePath } from '@seedcord/utils/internal';
+import { BotLayout } from '@seedcord/utils/internal';
 import { Visitor } from 'vite';
 
 import { BOT_FILES_SLOT } from './builtFiles';
 
-import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { Plugin } from 'vite';
 
 type PathKey = 'dirname' | 'filename' | 'url';
@@ -37,20 +36,20 @@ const FILE_URL_IMPORT = `import { pathToFileURL as ${FILE_URL} } from 'node:url'
 
 // bun --compile gives every module the entry's import.meta
 // an edge bot's files have no path on disk
-export function pinModulePaths(files: ProjectFiles): Plugin {
+export function pinModulePaths(layout: BotLayout): Plugin {
     const builtRoot = `${BOT_FILES_SLOT}.root`;
 
     return {
         name: 'seedcord:pin-module-paths',
         transform(code, id) {
             // an id with a query, like ?raw, loads something other than the file's code
-            if (!files.holds(id) || id.includes('?')) return undefined;
+            if (!layout.holds(id) || id.includes('?')) return undefined;
             if (!code.includes('import.meta.')) return undefined;
 
             const rewrites = importMetaPaths(this.parse(code));
             if (rewrites.length === 0) return undefined;
 
-            const file = builtModulePath(files.keyOf(id));
+            const file = BotLayout.builtPath(layout.keyOf(id));
             const filename = `(${builtRoot} + ${JSON.stringify(file)})`;
             const values: Record<PathKey, string> = {
                 dirname: `(${builtRoot} + ${JSON.stringify(file.slice(0, file.lastIndexOf('/')))})`,

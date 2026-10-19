@@ -6,7 +6,7 @@ import { paint } from '@seedcord/errors';
 import { displayPath } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
-import { posixRelative, resolveFromRoot, workerdPath } from '@seedcord/utils/internal';
+import { posixRelative, workerdPath } from '@seedcord/utils/internal';
 import { minimatch } from 'minimatch';
 
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
@@ -198,7 +198,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     // minimatch reads a windows separator as an escape
     private fromRoot(pattern: string): string {
         const { root } = this.config;
-        return posixRelative(root, resolveFromRoot(root, pattern));
+        return posixRelative(root, resolve(root, pattern));
     }
 }
 

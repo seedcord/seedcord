@@ -13,6 +13,7 @@ import { LoggerChannelRegistry } from '#src/LoggerChannelRegistry';
 import { formatBody, formatPretty, installNodeDefaults, WinstonConsoleSink, WinstonFileSink } from '#src/node';
 
 import type { ILogSink, LogRecord } from '@seedcord/types';
+import type { BuiltSlot } from '@seedcord/utils/internal';
 
 function record(overrides: Partial<LogRecord>): LogRecord {
     return { level: 'info', message: '', label: 'Bot', channel: 'default', timestamp: Date.now(), ...overrides };
@@ -44,9 +45,20 @@ async function listWhenWritten(dir: string, timeoutMs = 2000): Promise<string[]>
 const plain = (value: string): string => stripAnsi(value);
 
 // the slot the entry of a built bot fills before anything imports seedcord
-function asBuiltBot(slot: { root: string; configFile: string }): Disposable {
+function asBuiltBot({ root, configFile }: { root: string; configFile: string }): Disposable {
     const key = Symbol.for(BOT_FILES_KEY);
-    Reflect.set(globalThis, key, { kind: 'built', ...slot, listed: [], folders: [], modules: {}, listedFiles: {} });
+    const slot: BuiltSlot = {
+        kind: 'built',
+        root,
+        configFile,
+        listed: [],
+        skippedFolders: [],
+        projectFiles: [],
+        folders: [],
+        modules: {},
+        listedFiles: {}
+    };
+    Reflect.set(globalThis, key, slot);
     return { [Symbol.dispose]: () => Reflect.deleteProperty(globalThis, key) };
 }
 

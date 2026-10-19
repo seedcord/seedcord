@@ -18,14 +18,16 @@ beforeEach(async () => {
     return () => tmp.remove();
 });
 
-// justified: the type checker reads only configFile and build
 function projectFor(tsconfig?: string): Project {
-    const config = {
+    const read: Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target' | 'build'> = {
         root: projectDir,
         configFile: join(projectDir, 'seedcord.config.ts'),
+        files: [],
         target: { kind: 'server', start: join(projectDir, 'index.ts'), outDir: join(projectDir, 'dist') },
         build: tsconfig === undefined ? {} : { tsconfig }
-    } as ResolvedSeedcordConfig;
+    };
+    // justified: the type checker and Project read only the fields above
+    const config = read as ResolvedSeedcordConfig;
     const loader = {
         importModule: () => Promise.reject(new Error('the type checker loads no modules')),
         [Symbol.asyncDispose]: () => Promise.resolve()

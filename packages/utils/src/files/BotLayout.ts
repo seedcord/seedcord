@@ -1,0 +1,165 @@
+import * as path from 'node:path';
+
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+
+import { isInside, posixRelative } from './paths';
+
+// every path here is root-relative with a leading slash, like '/locales'
+export interface BotLayoutData {
+    root: string;
+    // the folders from files in seedcord.config.ts
+    listed: string[];
+    // outDir and the logs folder
+    skippedFolders: string[];
+    // seedcord.config.ts, package.json, lockfiles and tsconfigs
+    projectFiles: string[];
+}
+
+const MODULE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs'];
+const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts'];
+const CODE_AND_MAP_EXTENSIONS = [...MODULE_EXTENSIONS, '.map'];
+const SKIPPED_NAME_GLOBS = ['!**/node_modules/**', '!**/.*', '!**/.*/**'];
+
+function endsWithAny(file: string, extensions: string[]): boolean {
+    const name = path.basename(file);
+    return extensions.some((extension) => name.endsWith(extension));
+}
+
+function isModulePath(file: string): boolean {
+    return endsWithAny(file, MODULE_EXTENSIONS) && !endsWithAny(file, DECLARATION_EXTENSIONS);
+}
+
+function isSkippedName(name: string): boolean {
+    return name.startsWith('.') || name === 'node_modules';
+}
+
+// the CLI writes this into the slot for seedcord dev and the built bot
+export class BotLayout {
+    public readonly root: string;
+    private readonly listed: string[];
+    private readonly skippedFolders: string[];
+    private readonly projectFiles: string[];
+
+    public constructor(private readonly data: BotLayoutData) {
+        this.root = path.resolve(data.root);
+        this.listed = data.listed.map((key) => this.pathOf(key));
+        this.skippedFolders = data.skippedFolders.map((key) => this.pathOf(key));
+        this.projectFiles = data.projectFiles.map((key) => this.pathOf(key));
+    }
+
+    // a script that reads an absolute folder without a config gets every file in it
+    public static openAt(folder: string): BotLayout {
+        return new BotLayout({ root: folder, listed: ['/'], skippedFolders: [], projectFiles: [] });
+    }
+
+    // the extension vite gives a file once it builds it
+    public static builtExtension(file: string): string {
+        return isModulePath(file) ? '.js' : `${path.extname(file)}.js`;
+    }
+
+    // a built bot reports each module by the path of the file it became
+    public static builtPath(key: string): string {
+        return key.slice(0, key.length - path.extname(key).length) + BotLayout.builtExtension(key);
+    }
+
+    // the shape vite gives import.meta.glob keys and root imports, relative to base with a leading slash
+    public static keyUnder(base: string, file: string): string {
+        return `/${posixRelative(base, file)}`;
+    }
+
+    public resolve(dir: string): string {
+        return path.resolve(this.root, dir);
+    }
+
+    public keyOf(file: string): string {
+        return BotLayout.keyUnder(this.root, file);
+    }
+
+    // vite also passes virtual ids like \0seedcord:entry here
+    public holds(file: string): boolean {
+        return path.isAbsolute(file) && isInside(this.root, file);
+    }
+
+    public isSkipped(file: string): boolean {
+        if (this.skippedFolders.some((folder) => isInside(folder, file))) return true;
+        if (this.isProjectFile(file)) return true;
+        return path.relative(this.root, file).split(path.sep).some(isSkippedName);
+    }
+
+    public isProjectFile(file: string): boolean {
+        return this.projectFiles.includes(file);
+    }
+
+    public bundleProblem(folder: string, readBy?: 'readFiles'): SeedcordError | undefined {
+        if (!this.holds(folder))
+            return new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, this.root, readBy]);
+        if (this.isSkipped(folder)) return new SeedcordError(SeedcordErrorCode.CoreDirectorySkipped, [folder]);
+        return undefined;
+    }
+
+    public assertBundled(folder: string, readBy?: 'readFiles'): void {
+        const problem = this.bundleProblem(folder, readBy);
+        if (problem) throw problem;
+    }
+
+    public isListed(folder: string): boolean {
+        return this.listed.some((listed) => isInside(listed, folder));
+    }
+
+    public isModule(file: string): boolean {
+        return this.holds(file) && isModulePath(file) && !this.isSkipped(file);
+    }
+
+    public isListedFile(file: string): boolean {
+        return this.isListed(file) && !endsWithAny(file, CODE_AND_MAP_EXTENSIONS) && !this.isSkipped(file);
+    }
+
+    // whether importFiles(dir) imports the file
+    public isModuleUnder(dir: string, file: string): boolean {
+        return isInside(this.resolve(dir), file) && this.isModule(file);
+    }
+
+    // any file under dir that seedcord build keeps, code or not
+    public isBotFileUnder(dir: string, file: string): boolean {
+        return isInside(this.resolve(dir), file) && !this.isSkipped(file);
+    }
+
+    public holdsSkipped(folder: string): boolean {
+        return [...this.skippedFolders, ...this.projectFiles].some((skipped) => isInside(folder, skipped));
+    }
+
+    // base is the folder import.meta.glob resolves the patterns against, relative to root
+    public moduleGlobs(base = '.'): string[] {
+        return [
+            ...MODULE_EXTENSIONS.map((extension) => `${base}/**/*${extension}`),
+            ...DECLARATION_EXTENSIONS.map((extension) => `!${base}/**/*${extension}`),
+            ...this.globExcludes(base)
+        ];
+    }
+
+    public listedFileGlobs(base = '.'): string[] {
+        const folders = this.data.listed.map((key) => (key === '/' ? base : `${base}${key}`));
+        return [
+            ...folders.flatMap((folder) => [
+                `${folder}/**/*`,
+                ...CODE_AND_MAP_EXTENSIONS.map((extension) => `!${folder}/**/*${extension}`)
+            ]),
+            ...this.globExcludes(base)
+        ];
+    }
+
+    public toJSON(): BotLayoutData {
+        return this.data;
+    }
+
+    private globExcludes(base: string): string[] {
+        const folders = this.data.skippedFolders.map((key) => `!${base}${key}/**`);
+        const files = this.data.projectFiles.map((key) => `!${base}${key}`);
+        return [...SKIPPED_NAME_GLOBS, ...folders, ...files];
+    }
+
+    private pathOf(key: string): string {
+        return path.join(this.root, key);
+    }
+}

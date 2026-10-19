@@ -14,6 +14,7 @@ import { CommandScanner } from '#core/modules/CommandScanner';
 import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { printResolvedConfig } from '#core/output/printResolvedConfig';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { startupShell } from '#core/viteMode';
 
 import { AugmentationBuilder } from './AugmentationBuilder';
@@ -97,7 +98,10 @@ export class CodegenRunner {
         const commandsPath = instance.config.bot.commands.path;
         const commands = await steps.step(
             'scan commands',
-            () => (commandsPath ? new CommandScanner(modules, config.root).scan(commandsPath) : Promise.resolve([])),
+            () =>
+                commandsPath
+                    ? new CommandScanner(modules, new ProjectFiles(config)).scan(commandsPath)
+                    : Promise.resolve([]),
             (found) => paint.mute(plural(found.length, 'command'))
         );
 

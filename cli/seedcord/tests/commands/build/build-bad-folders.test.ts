@@ -15,7 +15,8 @@ describe('seedcord build on a bot with several bad folders', () => {
             code: SeedcordErrorCode.CliProblems,
             errors: [
                 expect.objectContaining({ code: SeedcordErrorCode.CorePathOutsideRoot }),
-                expect.objectContaining({ code: SeedcordErrorCode.CorePathOutsideRoot })
+                expect.objectContaining({ code: SeedcordErrorCode.CorePathOutsideRoot }),
+                expect.objectContaining({ code: SeedcordErrorCode.CoreDirectorySkipped })
             ]
         });
     }, 120_000);

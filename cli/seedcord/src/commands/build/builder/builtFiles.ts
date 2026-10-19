@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 
 import { BOT_FILES_KEY, BUILT_FILES_READY_KEY, encodeFile, withoutQuery } from '@seedcord/utils/internal';
 
-import type { ProjectFiles } from '#core/project/ProjectFiles';
+import type { BotLayout } from '@seedcord/utils/internal';
 import type { Plugin } from 'vite';
 
 export const BOT_FILES_SLOT = `globalThis[Symbol.for(${JSON.stringify(BOT_FILES_KEY)})]`;
@@ -48,7 +48,7 @@ export function loadListedFiles(): Plugin {
 export type EntryPlugins = [entry: Plugin, listedFiles: Plugin];
 
 interface BuiltFilesOptions {
-    files: ProjectFiles;
+    layout: BotLayout;
     folders: string[];
     rootExpression: string;
     rootKey: string;
@@ -57,7 +57,7 @@ interface BuiltFilesOptions {
 }
 
 export function builtFilesSource({
-    files,
+    layout,
     folders,
     rootExpression,
     rootKey,
@@ -66,15 +66,18 @@ export function builtFilesSource({
 }: BuiltFilesOptions): string {
     const moduleOptions = { base: rootKey };
     const fileOptions = { ...moduleOptions, query: LISTED_FILE_QUERY, import: 'default' };
+    const { listed, skippedFolders, projectFiles } = layout.toJSON();
 
     return [
         `${BOT_FILES_SLOT} = {`,
         "    kind: 'built',",
         `    root: ${rootExpression},`,
-        `    listed: ${JSON.stringify(files.listedKeys())},`,
+        `    listed: ${JSON.stringify(listed)},`,
+        `    skippedFolders: ${JSON.stringify(skippedFolders)},`,
+        `    projectFiles: ${JSON.stringify(projectFiles)},`,
         `    folders: ${JSON.stringify(folders)},`,
-        `    modules: import.meta.glob(${JSON.stringify(files.moduleGlobs())}, ${JSON.stringify(moduleOptions)}),`,
-        `    listedFiles: import.meta.glob(${JSON.stringify(files.listedFileGlobs())}, ${JSON.stringify(fileOptions)}),`,
+        `    modules: import.meta.glob(${JSON.stringify(layout.moduleGlobs())}, ${JSON.stringify(moduleOptions)}),`,
+        `    listedFiles: import.meta.glob(${JSON.stringify(layout.listedFileGlobs())}, ${JSON.stringify(fileOptions)}),`,
         `    sourcePaths: ${String(sourcePaths)},`,
         ...(configFile === undefined ? [] : [`    configFile: ${JSON.stringify(configFile)},`]),
         '};',

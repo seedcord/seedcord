@@ -1,15 +1,13 @@
 import 'reflect-metadata';
 
-import { readdir } from 'node:fs/promises';
-import { join } from 'node:path';
-
 import { CommandMetadataKey, isCommandClass } from '@seedcord/core/internal';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { asError, isModuleUnder, isSkippedUnder, resolveFromRoot } from '@seedcord/utils/internal';
+import { asError } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
+import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { CommandCtor, CommandMeta } from '@seedcord/core/internal';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
@@ -60,14 +58,14 @@ function construct({ sourceFile, Command }: CommandClassFile): FoundCommand | Se
 export class CommandScanner {
     constructor(
         private readonly modules: ModuleLoader,
-        private readonly root: string
+        private readonly files: ProjectFiles
     ) {}
 
     public async scan(commandsPath: string): Promise<FoundCommand[]> {
         const commands: FoundCommand[] = [];
         const problems: unknown[] = [];
         try {
-            for await (const commandClass of this.walk(resolveFromRoot(this.root, commandsPath), new Set())) {
+            for await (const commandClass of this.commandClasses(this.files.layout.resolve(commandsPath))) {
                 const built = construct(commandClass);
                 if (isSeedcordError(built)) problems.push(built);
                 else commands.push(built);
@@ -81,31 +79,16 @@ export class CommandScanner {
         return commands;
     }
 
-    private async *walk(dir: string, seen: Set<unknown>): AsyncGenerator<CommandClassFile> {
-        let entries;
-        try {
-            entries = await readdir(dir, { withFileTypes: true });
-        } catch (error: unknown) {
-            // skipping a folder would delete its commands on the next deploy
-            throw new SeedcordError(SeedcordErrorCode.CorePathUnreadable, [dir, asError(error).message], {
-                cause: error
-            });
-        }
-
-        // readdir order differs between filesystems
-        for (const entry of entries.toSorted((a, b) => a.name.localeCompare(b.name))) {
-            const fullPath = join(dir, entry.name);
-            if (entry.isDirectory()) {
-                if (!isSkippedUnder(dir, fullPath)) yield* this.walk(fullPath, seen);
-            } else if (entry.isFile() && isModuleUnder(dir, fullPath)) {
-                const imported = await this.modules.importModule<Record<string, unknown>>(fullPath);
-                for (const exported of Object.values(imported)) {
-                    // a barrel re-exports the same class object
-                    if (seen.has(exported)) continue;
-                    seen.add(exported);
-                    // the commands directory holds helpers and constants too
-                    if (isCommandClass(exported)) yield { sourceFile: fullPath, Command: exported };
-                }
+    private async *commandClasses(folder: string): AsyncGenerator<CommandClassFile> {
+        const seen = new Set<unknown>();
+        for (const file of await this.files.modulePaths(folder)) {
+            const imported = await this.modules.importModule<Record<string, unknown>>(file);
+            for (const exported of Object.values(imported)) {
+                // a barrel re-exports the same class object
+                if (seen.has(exported)) continue;
+                seen.add(exported);
+                // the commands directory holds helpers and constants too
+                if (isCommandClass(exported)) yield { sourceFile: file, Command: exported };
             }
         }
     }

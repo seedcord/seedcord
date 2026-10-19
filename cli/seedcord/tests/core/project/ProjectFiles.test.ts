@@ -1,8 +1,9 @@
-import { chmod, mkdir, mkdtempDisposable } from 'node:fs/promises';
+import { chmod, mkdir, mkdtempDisposable, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { createServer } from 'vite';
 import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { ProjectFiles } from '#core/project/ProjectFiles';
@@ -21,6 +22,60 @@ function filesUnder(root: string): ProjectFiles {
         target: { kind: 'server', start: undefined, outDir: join(root, 'dist') }
     });
 }
+
+// import.meta.glob's output lists each match as a "./key": entry, relative to base
+async function globKeys(root: string, globs: string[]): Promise<string[]> {
+    await writeFile(
+        join(root, '.probe.ts'),
+        `export default import.meta.glob(${JSON.stringify(globs)}, { base: '/' });\n`
+    );
+    const server = await createServer({ root, configFile: false, logLevel: 'silent', server: { watch: null } });
+    onTestFinished(() => server.close());
+    const transformed = await server.transformRequest('/.probe.ts');
+    const keys = [...(transformed?.code ?? '').matchAll(/"\.?(\/[^"]+)":/g)].map(([, key]) => key ?? '');
+    expect(keys).not.toEqual([]);
+    return keys.toSorted();
+}
+
+describe('the build globs', () => {
+    it('match the files the layout says belong to the bot', async () => {
+        const root = await projectRoot();
+        const tree = [
+            'handlers/Ping.ts',
+            'handlers/Dice.tsx',
+            'handlers/types.d.ts',
+            'handlers/.drafts/Draft.ts',
+            'node_modules/pkg/index.js',
+            'dist/index.mjs',
+            'logs/today.log',
+            'src/dist/shape.ts',
+            'seedcord.config.ts',
+            'package.json',
+            'locales/en.json',
+            'locales/theme.ts',
+            'locales/.cache/stale.json',
+            'locales/node_modules/pkg/data.json'
+        ];
+        for (const file of tree) {
+            await mkdir(join(root, file, '..'), { recursive: true });
+            await writeFile(join(root, file), '{}\n');
+        }
+        const files = new ProjectFiles({
+            root,
+            configFile: join(root, 'seedcord.config.ts'),
+            files: [join(root, 'locales')],
+            target: { kind: 'server', start: undefined, outDir: join(root, 'dist') }
+        });
+        const { layout } = files;
+        const listed = tree.map((file) => join(root, file)).filter((file) => layout.isListedFile(file));
+        const modules = await files.modulePaths();
+
+        await expect(globKeys(root, layout.moduleGlobs())).resolves.toEqual(modules.map((file) => layout.keyOf(file)));
+        await expect(globKeys(root, layout.listedFileGlobs())).resolves.toEqual(
+            listed.map((file) => layout.keyOf(file)).toSorted()
+        );
+    });
+});
 
 describe('ProjectFiles', () => {
     // the bot and its plugins run between the load checks and the bundle

@@ -1,6 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { isInside } from '@seedcord/utils/internal';
+import { throwSingleOrAggregate } from '@seedcord/errors/internal';
 
 import type { Project } from '#core/project/Project';
 import type { EventsConfig } from '@seedcord/gateway';
@@ -22,17 +21,11 @@ function configuredFolders({ bot, subscribers }: Config): string[] {
     });
 }
 
-function* folderProblems(config: Config, project: Project): Generator<SeedcordError> {
-    const { root } = project.config;
-    for (const folder of configuredFolders(config)) {
-        const resolved = project.fromRoot(folder);
-        if (!isInside(root, resolved)) {
-            yield new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [resolved, root]);
-        }
-    }
-}
-
 // plugin folders get only the runtime check in @seedcord/utils
-export function assertFoldersUnderRoot(config: Config, project: Project): void {
-    throwSingleOrAggregate([...folderProblems(config, project)], SeedcordErrorCode.CliProblems);
+export function assertFoldersBundled(config: Config, { files: { layout } }: Project): void {
+    const problems = configuredFolders(config).map((folder) => layout.bundleProblem(layout.resolve(folder)));
+    throwSingleOrAggregate(
+        problems.filter((problem) => problem !== undefined),
+        SeedcordErrorCode.CliProblems
+    );
 }

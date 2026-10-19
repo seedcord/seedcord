@@ -27,7 +27,11 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
 
     public abstract startBot(instance: SeedcordInstance): Promise<string | undefined>;
     // every resource it creates goes on the stack it receives
-    protected abstract open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<TStarted>;
+    protected abstract open(
+        context: DevRuntimeContext,
+        resources: AsyncDisposableStack,
+        files: ProjectFiles
+    ): Promise<TStarted>;
     protected abstract stopInstance(): Promise<void>;
 
     public async start(context: DevRuntimeContext): Promise<void> {
@@ -39,9 +43,9 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
     private async openWithCleanup(context: DevRuntimeContext): Promise<TStarted> {
         const resources = new AsyncDisposableStack();
         try {
-            const { config } = context;
-            resources.use(setDevFiles({ root: config.root, listed: new ProjectFiles(config).listedKeys() }));
-            return await this.open(context, resources);
+            const files = new ProjectFiles(context.config);
+            resources.use(setDevFiles(files.layout.toJSON()));
+            return await this.open(context, resources, files);
         } catch (error: unknown) {
             await resources.disposeAsync();
             throw error;

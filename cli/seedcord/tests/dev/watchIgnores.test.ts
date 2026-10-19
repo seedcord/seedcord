@@ -8,8 +8,10 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { watchedPath } from '#core/project/watchedPath';
 
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ViteDevServer } from 'vite';
 
 const TEST_TIMEOUT_MS = 20_000;
@@ -17,7 +19,9 @@ const TEST_TIMEOUT_MS = 20_000;
 const WATCH_TIMEOUT_MS = 10_000;
 
 const SOURCE_FILE = '/src/logs/format.ts';
+const DIST_SOURCE_FILE = '/src/dist/shape.ts';
 const LOG_FILE = '/logs/combined.log';
+const BUILT_FILE = '/build/index.mjs';
 
 let server: ViteDevServer | undefined;
 
@@ -32,11 +36,12 @@ function project(): string {
     onTestFinished(() => scratch.remove());
     const root = scratch.path;
 
-    mkdirSync(join(root, 'logs'), { recursive: true });
-    mkdirSync(join(root, 'src', 'logs'), { recursive: true });
+    for (const folder of ['logs', 'build', 'src/logs', 'src/dist']) mkdirSync(join(root, folder), { recursive: true });
     writeFileSync(join(root, 'bot.ts'), 'export const bot = 1;\n');
     writeFileSync(join(root, LOG_FILE), 'first line\n');
+    writeFileSync(join(root, BUILT_FILE), 'export {};\n');
     writeFileSync(join(root, SOURCE_FILE), 'export const format = 1;\n');
+    writeFileSync(join(root, DIST_SOURCE_FILE), 'export const shape = 1;\n');
 
     return root;
 }
@@ -51,8 +56,15 @@ async function watchProject(root: string): Promise<WatchedProject> {
     const real = watchedPath(root);
     const reported = new Set<string>();
 
+    const config: Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target'> = {
+        root,
+        configFile: join(root, 'seedcord.config.ts'),
+        files: [],
+        target: { kind: 'server', start: undefined, outDir: join(root, 'build') }
+    };
+    const { layout } = new ProjectFiles(config);
     server = await createServer(
-        mergeViteConfig(serverViteConfig({ root, configFile: join(root, 'seedcord.config.ts') }, root), {
+        mergeViteConfig(serverViteConfig(config, layout, root), {
             plugins: [
                 {
                     name: 'record',
@@ -96,13 +108,24 @@ describe('dev server watch ignores', () => {
         TEST_TIMEOUT_MS
     );
 
-    // the logs ignore is root-relative
-    it(
-        'still reports a source file under src/logs',
-        async () => {
+    it.each([SOURCE_FILE, DIST_SOURCE_FILE])(
+        'still reports a source file at %s',
+        async (file) => {
             const { touchUntilReported } = await watchProject(project());
 
-            await expect(touchUntilReported(SOURCE_FILE)).resolves.toBeUndefined();
+            await expect(touchUntilReported(file)).resolves.toBeUndefined();
+        },
+        TEST_TIMEOUT_MS
+    );
+
+    it(
+        'never watches outDir',
+        async () => {
+            const { watcher, real, touchUntilReported } = await watchProject(project());
+
+            await touchUntilReported(SOURCE_FILE);
+
+            expect(watcher.getWatched()[join(real, 'build')]).toBeUndefined();
         },
         TEST_TIMEOUT_MS
     );

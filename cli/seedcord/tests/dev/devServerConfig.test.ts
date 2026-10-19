@@ -2,6 +2,7 @@ import { mkdtempDisposableSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { BotLayout } from '@seedcord/utils/internal';
 import { createLogger, createServer } from 'vite';
 import { describe, expect, it, onTestFinished } from 'vitest';
 
@@ -20,10 +21,15 @@ function project(): string {
 
 describe('dev vite config', () => {
     it.each([
-        ['a server', (root: string): InlineConfig => serverViteConfig({ root, configFile: join(root, 'x.ts') }, root)],
+        [
+            'a server',
+            (root: string): InlineConfig =>
+                serverViteConfig({ root, configFile: join(root, 'x.ts') }, BotLayout.openAt(root), root)
+        ],
         [
             'an edge',
-            (root: string): InlineConfig => edgeViteConfig({ root, configFile: join(root, 'x.ts') }, root, root)
+            (root: string): InlineConfig =>
+                edgeViteConfig({ root, configFile: join(root, 'x.ts') }, BotLayout.openAt(root), root, root)
         ]
     ])('opens no hmr websocket for %s bot while another process holds its port', async (_kind, config) => {
         await holdViteHmrPort();

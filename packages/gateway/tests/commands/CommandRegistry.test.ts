@@ -1,10 +1,10 @@
 import { Commands } from '@seedcord/core';
-import { GLOBAL_ID } from '@seedcord/core/internal';
+import { GLOBAL_ID, setDevChannel } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostStartup, HostVersion } from '@seedcord/types/internal';
 import { setDevFiles } from '@seedcord/utils/internal';
 import { ApplicationCommandType, Collection, Events, GatewayIntentBits } from 'discord.js';
-import { type Mock, describe, expect, afterEach, vi } from 'vitest';
+import { type Mock, describe, expect, afterEach, onTestFinished, vi } from 'vitest';
 
 import { commandRegistryOf } from '#bot/Bot';
 import { Plugin } from '#src/Plugin';
@@ -329,7 +329,7 @@ describe('CommandRegistry Integration', () => {
     it('holds an edited command for the refresh prompt when the commands path is relative to root', async ({
         testEnv
     }) => {
-        using _dev = setDevFiles({ root: testEnv.rootDir, listed: [] });
+        using _dev = setDevFiles({ root: testEnv.rootDir, listed: [], skippedFolders: [], projectFiles: [] });
         const command = (name: string): string => `
             import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
 
@@ -351,5 +351,20 @@ describe('CommandRegistry Integration', () => {
         expect(registryOf(seedcord).scopedCommands.get(GLOBAL_ID)?.[0]?.name).toBe('ping');
         await registryOf(seedcord).refresh();
         expect(registryOf(seedcord).scopedCommands.get(GLOBAL_ID)?.[0]?.name).toBe('pong');
+    });
+
+    it('sends no refresh prompt for a file saved in a dot-folder, which startup skips', async ({ testEnv }) => {
+        using _dev = setDevFiles({ root: testEnv.rootDir, listed: [], skippedFolders: [], projectFiles: [] });
+        const sent: string[] = [];
+        setDevChannel({ send: (event) => sent.push(event), on: () => undefined, off: () => undefined });
+        onTestFinished(() => setDevChannel(undefined));
+        await testEnv.createFile('commands/PingCommand.ts', 'export {};\n');
+
+        await using seedcord = new Seedcord(testConfig({ commands: './commands' }));
+        await registryOf(seedcord).init();
+        const draft = await testEnv.createFile('commands/.drafts/KickCommand.ts', 'export {};\n');
+        await registryOf(seedcord).onHmr({ file: draft, type: 'create' });
+
+        expect(sent).not.toContain('seedcord:commands-update-prompt');
     });
 });

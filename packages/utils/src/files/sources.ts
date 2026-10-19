@@ -5,14 +5,13 @@ import { pathToFileURL } from 'node:url';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { isInside, resolveFromRoot } from '#src/files/paths';
 import { asError } from '#src/misc/asError';
 
+import { BotLayout } from './BotLayout';
 import { decodeFile } from './encodedFile';
-import { builtModulePath, isModulePath, isModuleUnder, isNonCodeFile, isSkippedUnder } from './extensions';
 import { botFilesSlot } from './slots';
 
-import type { BotFolders, BuiltSlot, ModuleLoader } from './slots';
+import type { BuiltSlot, ModuleLoader } from './slots';
 import type { Buffer } from 'node:buffer';
 import type * as fs from 'node:fs';
 
@@ -23,43 +22,33 @@ interface FolderAccess {
     resolve(dir: string): string;
     resolveBundled(dir: string): string;
     resolveListed(dir: string): string;
+    layoutAt(folder: string): BotLayout;
 }
 
 class BotFolderAccess implements FolderAccess {
-    private readonly root: string;
-    private readonly listed: string[];
-
-    public constructor({ root, listed }: BotFolders) {
-        this.root = path.resolve(root);
-        this.listed = listed.map((folder) => path.join(this.root, folder));
-    }
+    public constructor(private readonly layout: BotLayout) {}
 
     public resolve(dir: string): string {
-        return resolveFromRoot(this.root, dir);
+        return this.layout.resolve(dir);
     }
 
     public resolveBundled(dir: string): string {
         const folder = this.resolve(dir);
-        this.assertBundled(folder);
+        this.layout.assertBundled(folder);
         return folder;
     }
 
     public resolveListed(dir: string): string {
         const folder = this.resolve(dir);
-        this.assertBundled(folder, 'readFiles');
-        if (!this.listed.some((listed) => isInside(listed, folder))) {
+        this.layout.assertBundled(folder, 'readFiles');
+        if (!this.layout.isListed(folder)) {
             throw new SeedcordError(SeedcordErrorCode.CoreDirectoryNotListed, [folder]);
         }
         return folder;
     }
 
-    private assertBundled(folder: string, readBy?: 'readFiles'): void {
-        if (!isInside(this.root, folder)) {
-            throw new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, this.root, readBy]);
-        }
-        if (isSkippedUnder(this.root, folder)) {
-            throw new SeedcordError(SeedcordErrorCode.CoreDirectorySkipped, [folder]);
-        }
+    public layoutAt(): BotLayout {
+        return this.layout;
     }
 }
 
@@ -77,31 +66,37 @@ class OpenFolderAccess implements FolderAccess {
     public resolveListed(dir: string): string {
         return this.resolve(dir);
     }
+
+    public layoutAt(folder: string): BotLayout {
+        return BotLayout.openAt(folder);
+    }
 }
 
 abstract class FileSource {
     public constructor(private readonly access: FolderAccess) {}
 
-    public resolve(dir: string): string {
-        return this.access.resolve(dir);
+    public layoutFor(dir: string): BotLayout {
+        return this.access.layoutAt(this.access.resolve(dir));
     }
 
     public modules(dir: string): Promise<Loaders<ModuleLoader>> {
-        return this.modulesIn(this.access.resolveBundled(dir));
+        const folder = this.access.resolveBundled(dir);
+        return this.modulesIn(folder, this.access.layoutAt(folder));
     }
 
     public files(dir: string): Promise<Loaders<BytesLoader>> {
-        return this.filesIn(this.access.resolveListed(dir));
+        const folder = this.access.resolveListed(dir);
+        return this.filesIn(folder, this.access.layoutAt(folder));
     }
 
-    protected abstract modulesIn(folder: string): Promise<Loaders<ModuleLoader>>;
-    protected abstract filesIn(folder: string): Promise<Loaders<BytesLoader>>;
+    protected abstract modulesIn(folder: string, layout: BotLayout): Promise<Loaders<ModuleLoader>>;
+    protected abstract filesIn(folder: string, layout: BotLayout): Promise<Loaders<BytesLoader>>;
 }
 
 class DiskFiles extends FileSource {
-    protected async modulesIn(folder: string): Promise<Loaders<ModuleLoader>> {
+    protected async modulesIn(folder: string, layout: BotLayout): Promise<Loaders<ModuleLoader>> {
         const all = await DiskFiles.filesUnder(folder);
-        const files = all.filter((file) => isModuleUnder(folder, file));
+        const files = all.filter((file) => layout.isModule(file));
         // node reads a raw windows path's drive letter as a url protocol
         return files.map((file) => [
             file,
@@ -109,9 +104,9 @@ class DiskFiles extends FileSource {
         ]);
     }
 
-    protected async filesIn(folder: string): Promise<Loaders<BytesLoader>> {
+    protected async filesIn(folder: string, layout: BotLayout): Promise<Loaders<BytesLoader>> {
         const all = await DiskFiles.filesUnder(folder);
-        const files = all.filter((file) => isNonCodeFile(folder, file));
+        const files = all.filter((file) => layout.isListedFile(file));
         return files.map((file) => [file, () => readFile(file)]);
     }
 
@@ -139,14 +134,15 @@ class BuiltFiles extends FileSource {
     private readonly fileLoaders: Map<string, BytesLoader>;
 
     public constructor(slot: BuiltSlot) {
-        super(new BotFolderAccess(slot));
-        const { root, folders, modules, listedFiles, sourcePaths = false } = slot;
-        this.root = path.resolve(root);
+        const layout = new BotLayout(slot);
+        super(new BotFolderAccess(layout));
+        const { folders, modules, listedFiles, sourcePaths = false } = slot;
+        this.root = layout.root;
         this.folders = new Set([this.root, ...folders.map((folder) => path.join(this.root, folder))]);
-        const pathOf = sourcePaths ? (key: string): string => key : builtModulePath;
+        const pathOf = (key: string): string => (sourcePaths ? key : BotLayout.builtPath(key));
         this.moduleLoaders = new Map(
             Object.entries(modules)
-                .filter(([key]) => isModulePath(key))
+                .filter(([key]) => layout.isModule(path.join(this.root, key)))
                 .map(([key, load]) => [path.join(this.root, pathOf(key)), load])
         );
         this.fileLoaders = new Map(
@@ -186,9 +182,10 @@ function builtFilesOf(slot: BuiltSlot): BuiltFiles {
 export function fileSource(): FileSource {
     const slot = botFilesSlot();
     if (slot?.kind === 'built') return builtFilesOf(slot);
-    return new DiskFiles(slot ? new BotFolderAccess(slot) : new OpenFolderAccess());
+    return new DiskFiles(slot ? new BotFolderAccess(new BotLayout(slot)) : new OpenFolderAccess());
 }
 
-export function resolveFolder(dir: string): string {
-    return fileSource().resolve(dir);
+// the slot's layout under seedcord dev and in a built bot. a script without one gets a layout rooted at dir
+export function botLayout(dir: string): BotLayout {
+    return fileSource().layoutFor(dir);
 }

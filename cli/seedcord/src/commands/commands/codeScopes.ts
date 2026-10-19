@@ -52,12 +52,12 @@ export async function loadCodeScopes(
     if (commands.path === null) return { ...loaded, scopes: undefined };
 
     const { path, guilds = [] } = commands;
-    steps.detail('commands', paint.path(project.fromRoot(path)));
+    steps.detail('commands', paint.path(project.files.layout.resolve(path)));
     if (guilds.length > 0) steps.detail('guilds', guilds.map((id) => paint.mute(id)).join(', '));
 
     const found = await steps.step(
         'scan',
-        () => new CommandScanner(modules, config.root).scan(path),
+        () => new CommandScanner(modules, project.files).scan(path),
         (commands) => plural(commands.length, 'command')
     );
     return { ...loaded, scopes: scopesInCode(found, guilds) };
