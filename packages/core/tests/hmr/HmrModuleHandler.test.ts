@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { setBotRoot } from '@seedcord/utils/node/internal';
+import { setDevFiles } from '@seedcord/utils/node/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
@@ -56,7 +56,7 @@ describe('HmrModuleHandler', () => {
     });
 
     afterEach(() => {
-        setBotRoot(undefined);
+        setDevFiles(undefined);
         rmSync(dir, { recursive: true, force: true });
     });
 
@@ -124,7 +124,7 @@ describe('HmrModuleHandler', () => {
     });
 
     it('reloads a handler file when the handlers dir is relative to root', async () => {
-        setBotRoot(dir);
+        setDevFiles({ root: dir, files: [] });
         const relative = new HmrModuleHandler<TestHandler>({
             handlersDir: './commands',
             isHandler,

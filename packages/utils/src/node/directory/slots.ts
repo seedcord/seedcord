@@ -4,14 +4,19 @@ import * as path from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { resolveFromRoot } from '#src/node/paths';
+import { isInside, resolveFromRoot } from '#src/node/paths';
 
 export type ModuleLoader = () => Promise<Record<string, unknown>>;
 export type TextLoader = () => Promise<string>;
 
-export interface BuiltFileLoaders {
-    kind: 'built';
+export interface BotFolders {
     root: string;
+    // the folders from files in seedcord.config.ts, root-relative like '/locales'
+    files: string[];
+}
+
+export interface BuiltFileLoaders extends BotFolders {
+    kind: 'built';
     // every folder under root, empty ones included
     folders: string[];
     modules: Record<string, ModuleLoader>;
@@ -23,12 +28,11 @@ export interface BuiltFileLoaders {
 }
 
 // server dev reads the files off disk
-interface DiskRoot {
+interface DiskFiles extends BotFolders {
     kind: 'disk';
-    root: string;
 }
 
-type BotFiles = BuiltFileLoaders | DiskRoot;
+type BotFiles = BuiltFileLoaders | DiskFiles;
 
 // dev writes this from the CLI's copy of this module. the generated entry writes it without importing seedcord
 export const BOT_FILES_KEY = 'seedcord:utils:bot-files';
@@ -59,10 +63,10 @@ export function builtConfigDir(): string | undefined {
     return existsSync(configFile) ? path.dirname(configFile) : undefined;
 }
 
-export function setBotRoot(root: string | undefined): void {
+export function setDevFiles(folders: BotFolders | undefined): void {
     const key = Symbol.for(BOT_FILES_KEY);
-    if (root === undefined) Reflect.deleteProperty(globalThis, key);
-    else Reflect.set(globalThis, key, { kind: 'disk', root } satisfies DiskRoot);
+    if (folders === undefined) Reflect.deleteProperty(globalThis, key);
+    else Reflect.set(globalThis, key, { kind: 'disk', ...folders } satisfies DiskFiles);
 }
 
 export function resolveFolder(dir: string): string {
@@ -71,4 +75,16 @@ export function resolveFolder(dir: string): string {
     const root = botFiles()?.root;
     if (!root) throw new SeedcordError(SeedcordErrorCode.CoreDirectoryRootUnknown, [dir]);
     return resolveFromRoot(root, dir);
+}
+
+// a plain script or test has no config to list folders
+export function assertListedFolder(folder: string): void {
+    const bot = botFiles();
+    if (!bot) return;
+
+    const root = path.resolve(bot.root);
+    if (!isInside(root, folder)) throw new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, root]);
+    if (!bot.files.some((listed) => isInside(path.join(root, listed), folder))) {
+        throw new SeedcordError(SeedcordErrorCode.CoreDirectoryNotListed, [folder]);
+    }
 }

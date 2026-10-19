@@ -33,6 +33,11 @@ const HANDLERS_ENTRY = [
     ''
 ].join('\n');
 
+function contextListing(dir: string, files: string[]): DevRuntimeContext {
+    const context = devContextFor(dir, 'index.ts');
+    return { ...context, config: { ...context.config, files } };
+}
+
 async function writeProject(dir: string): Promise<void> {
     await mkdir(join(dir, 'src', 'locales'), { recursive: true });
 
@@ -58,10 +63,26 @@ describe('dev runtime with root set to src', () => {
         const runtime = new ServerDevRuntime();
         runtimes.push(runtime);
 
-        await runtime.start(devContextFor(dir, 'index.ts'));
+        await runtime.start(contextListing(dir, [join(dir, 'src', 'locales')]));
         const { module } = await runtime.loadEntry();
 
         expect(module).toMatchObject({ texts: ['hello'] });
+    }, 60_000);
+
+    it('throws CoreDirectoryNotListed for a text folder that files leaves out', async () => {
+        await mkdir(SCRATCH_ROOT, { recursive: true });
+        const dir = await mkdtemp(join(SCRATCH_ROOT, 'dev-'));
+        await writeProject(dir);
+
+        const runtime = new ServerDevRuntime();
+        runtimes.push(runtime);
+
+        await runtime.start(contextListing(dir, []));
+
+        await expect(runtime.loadEntry()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CoreImportFailed,
+            cause: { code: SeedcordErrorCode.CoreDirectoryNotListed }
+        });
     }, 60_000);
 
     it('imports .tsx and .mts files from a folder the bot walks', async () => {

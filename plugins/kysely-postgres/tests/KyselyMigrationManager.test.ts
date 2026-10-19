@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { setBotRoot } from '@seedcord/utils/node/internal';
+import { setDevFiles } from '@seedcord/utils/node/internal';
 import { afterEach, beforeEach, describe, expect, it, type Mock } from 'vitest';
 
 import { KyselyPostgres } from '#src/KyselyPostgres';
@@ -21,12 +21,12 @@ describe('KyselyMigrationManager', () => {
         testEnv = new TestEnvironment('kysely-migrations-test-');
         await testEnv.setup();
         await testEnv.createFile('services/.keep', '');
-        setBotRoot(testEnv.rootDir);
+        setDevFiles({ root: testEnv.rootDir, files: [] });
     });
 
     afterEach(async () => {
         poolQuery.mockResolvedValue({ rows: [] });
-        setBotRoot(undefined);
+        setDevFiles(undefined);
         await testEnv.teardown();
     });
 

@@ -10,8 +10,8 @@ import {
     BOT_FILES_KEY,
     BUILT_FILES_READY_KEY,
     builtConfigDir,
-    setBotRoot,
-    setBuiltFilesHook
+    setBuiltFilesHook,
+    setDevFiles
 } from '#src/node/directory/slots';
 import { toPosixPath } from '#src/node/paths';
 import { clearBuiltFiles } from '#tests/builtFilesSlot';
@@ -30,11 +30,12 @@ function at(relative: string): string {
 function register({
     root = ROOT,
     folders = [],
+    files = [],
     modules = {},
     text = {},
     ...rest
 }: Partial<TypedOmit<BuiltFileLoaders, 'kind'>>): Disposable {
-    const built: BuiltFileLoaders = { kind: 'built', root, folders, modules, text, ...rest };
+    const built: BuiltFileLoaders = { kind: 'built', root, folders, files, modules, text, ...rest };
     Reflect.set(globalThis, Symbol.for(BOT_FILES_KEY), built);
     return { [Symbol.dispose]: clearBuiltFiles };
 }
@@ -104,7 +105,7 @@ describe('setBuiltFilesHook', () => {
     });
 
     it('treats the root seedcord dev sets as no built files', () => {
-        setBotRoot(ROOT);
+        setDevFiles({ root: ROOT, files: [] });
         onTestFinished(clearBuiltFiles);
         const hook = vi.fn();
 
@@ -261,6 +262,7 @@ describe('readTextFiles in a built bot', () => {
     it('reads the registered text under the folder with its own extension', async () => {
         using _built = register({
             folders: ['/locales', '/tags'],
+            files: ['/locales', '/tags'],
             text: {
                 '/locales/fr.json': () => Promise.resolve('{"hi":"salut"}'),
                 '/tags/faq.md': () => Promise.resolve('# faq'),
@@ -281,6 +283,7 @@ describe('readTextFiles in a built bot', () => {
         const text = (): Promise<string> => Promise.resolve('{}');
         using _built = register({
             folders: ['/locales', '/locales/.cache'],
+            files: ['/locales'],
             text: {
                 '/locales/Skipped.ts': text,
                 '/locales/.hidden': text,
@@ -298,7 +301,7 @@ describe('readTextFiles in a built bot', () => {
 
     it('reports the file whose text failed to load by its path, keeping the original as the cause', async () => {
         const broken = (): Promise<string> => Promise.reject(new Error('boom'));
-        using _built = register({ folders: ['/locales'], text: { '/locales/en.json': broken } });
+        using _built = register({ folders: ['/locales'], files: ['/locales'], text: { '/locales/en.json': broken } });
 
         const error = await rejection(readTextFiles(at('locales')));
 
@@ -308,10 +311,36 @@ describe('readTextFiles in a built bot', () => {
     });
 
     it('throws with the folder and the root when the folder sits outside root', async () => {
-        using _built = register({ folders: ['/locales'], text: { '/locales/en.json': () => Promise.resolve('{}') } });
+        using _built = register({
+            folders: ['/locales'],
+            files: ['/locales'],
+            text: { '/locales/en.json': () => Promise.resolve('{}') }
+        });
 
         const error = await rejection(readTextFiles('/elsewhere/locales'));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathOutsideRoot });
+    });
+
+    it('reads a subfolder of a listed folder', async () => {
+        using _built = register({
+            folders: ['/locales', '/locales/en'],
+            files: ['/locales'],
+            text: { '/locales/en/hi.json': () => Promise.resolve('{}') }
+        });
+
+        const seen: string[] = [];
+        for await (const { fullPath } of readTextFiles(at('locales/en'))) seen.push(fullPath);
+
+        expect(seen).toEqual([at('locales/en/hi.json')]);
+    });
+
+    it('throws CoreDirectoryNotListed with the folder for a folder files leaves out', async () => {
+        using _built = register({ folders: ['/locales', '/tags'], files: ['/locales'] });
+
+        const error = await rejection(readTextFiles(at('tags')));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryNotListed });
+        expect(Error.isError(error) ? error.message : '').toContain(toPosixPath(at('tags')));
     });
 });

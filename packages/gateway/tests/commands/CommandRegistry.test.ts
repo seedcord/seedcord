@@ -2,7 +2,7 @@ import { Commands } from '@seedcord/core';
 import { GLOBAL_ID } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostStartup, HostVersion } from '@seedcord/types/internal';
-import { setBotRoot } from '@seedcord/utils/node/internal';
+import { setDevFiles } from '@seedcord/utils/node/internal';
 import { ApplicationCommandType, Collection, Events, GatewayIntentBits } from 'discord.js';
 import { type Mock, describe, expect, afterEach, vi } from 'vitest';
 
@@ -31,7 +31,7 @@ function rejectWhenAborted(signal: AbortSignal): Promise<never> {
 
 describe('CommandRegistry Integration', () => {
     afterEach(() => {
-        setBotRoot(undefined);
+        setDevFiles(undefined);
         vi.clearAllMocks();
     });
 
@@ -330,7 +330,7 @@ describe('CommandRegistry Integration', () => {
     it('holds an edited command for the refresh prompt when the commands path is relative to root', async ({
         testEnv
     }) => {
-        setBotRoot(testEnv.rootDir);
+        setDevFiles({ root: testEnv.rootDir, files: [] });
         const command = (name: string): string => `
             import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
 

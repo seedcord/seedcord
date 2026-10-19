@@ -61,6 +61,10 @@ export class ProjectFiles {
         return viteKey(this.root, path);
     }
 
+    public listedKeys(): string[] {
+        return this.listedFolders.map((folder) => this.keyOf(folder));
+    }
+
     public async foldersIncludingEmpty(): Promise<string[]> {
         const entries = await this.entries();
         return entries

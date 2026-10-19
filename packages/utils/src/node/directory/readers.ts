@@ -4,7 +4,7 @@ import { displayPath, SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '#src/misc/asError';
 import { importFailed } from '#src/node/importFailed';
 
-import { resolveFolder } from './slots';
+import { assertListedFolder, resolveFolder } from './slots';
 import { fileSource } from './sources';
 
 interface FoundFile {
@@ -54,8 +54,9 @@ export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFi
  * Reads every file under a directory, recursively and sorted by path, yielding its text.
  * It skips the code files {@link traverseDirectory} imports, .map files, dotfiles and dot-folders.
  * In a built bot the files come from the build output. A relative `dir` resolves against `root`, the same as {@link traverseDirectory}.
+ * Under `seedcord dev` and in a built bot, `dir` has to be one of the folders `files` in seedcord.config.ts lists, or a subfolder of one.
  *
- * @throws A **SeedcordError** when the directory or a file in it cannot be read, when `dir` is relative and the bot did not start through `seedcord dev` or its built output, or in a built bot when the directory is outside `root` or was missing when it was built.
+ * @throws A **SeedcordError** when the directory or a file in it cannot be read, when `dir` is relative and the bot did not start through `seedcord dev` or its built output, when `dir` is outside `root` or outside every folder in `files`, or in a built bot when the directory was missing when it was built.
  *
  * @example
  * ```ts
@@ -65,7 +66,9 @@ export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFi
  * ```
  */
 export async function* readTextFiles(dir: string): AsyncGenerator<TextFile> {
-    for (const [fullPath, load] of await fileSource().texts(resolveFolder(dir))) {
+    const folder = resolveFolder(dir);
+    assertListedFolder(folder);
+    for (const [fullPath, load] of await fileSource().texts(folder)) {
         const relativePath = displayPath(fullPath);
         let text: string;
         try {

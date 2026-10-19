@@ -4,14 +4,18 @@ import { BAKED_IDS_KEY } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vitest';
 
 import { workerEntry } from '#commands/build/builder/workerEntry';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 
-import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { BakedIds } from '@seedcord/core/internal';
 
 function bakedIdsRun(ids: BakedIds): BakedIds {
     const plugin = workerEntry({
-        // justified: the baked ids module reads nothing off the project files
-        files: { globExcludes: () => [] } as unknown as ProjectFiles,
+        files: new ProjectFiles({
+            root: '/bot',
+            configFile: '/seedcord.config.ts',
+            files: [],
+            target: { kind: 'edge', cloudflareConfig: '/cloudflare.config.ts', viteRoot: '/', port: 0 }
+        }),
         folders: [],
         instanceKey: '/bot.ts',
         functionExports: () => Promise.resolve([]),

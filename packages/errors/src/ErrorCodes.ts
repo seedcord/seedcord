@@ -98,6 +98,8 @@ export enum SeedcordErrorCode {
     CoreDuplicateName = 1228,
     /** A Vite plugin from `vitePlugins` threw while Vite started or loaded a file, or failed when seedcord called `vitePlugins`. */
     CoreVitePluginThrew = 1229,
+    /** `readTextFiles` read a folder that `files` in `seedcord.config.ts` leaves out. */
+    CoreDirectoryNotListed = 1230,
 
     /** A command class carries `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,

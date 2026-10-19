@@ -1,8 +1,9 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { setBotRoot } from '@seedcord/utils/node/internal';
+import { setDevFiles } from '@seedcord/utils/node/internal';
 
 import { instanceModule } from '#core/modules/importInstance';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 
 import { HmrPlugin } from './HmrPlugin';
 import { ViteRestartFiles } from './ViteRestartFiles';
@@ -38,8 +39,9 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
     private async openWithCleanup(context: DevRuntimeContext): Promise<TStarted> {
         const resources = new AsyncDisposableStack();
         try {
-            setBotRoot(context.config.root);
-            resources.defer(() => setBotRoot(undefined));
+            const { config } = context;
+            setDevFiles({ root: config.root, files: new ProjectFiles(config).listedKeys() });
+            resources.defer(() => setDevFiles(undefined));
             return await this.open(context, resources);
         } catch (error: unknown) {
             await resources.disposeAsync();

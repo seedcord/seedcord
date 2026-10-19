@@ -4,8 +4,8 @@ export {
     BUILT_FILES_READY_KEY,
     builtConfigDir,
     resolveFolder,
-    setBotRoot,
-    setBuiltFilesHook
+    setBuiltFilesHook,
+    setDevFiles
 } from './node/directory/slots';
 export { importFailed, recordThrownBy, vitePluginThrew } from './node/importFailed';
 export { isPortInUse } from './node/listen';

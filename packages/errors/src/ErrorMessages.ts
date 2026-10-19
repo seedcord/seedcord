@@ -121,6 +121,8 @@ const messages = {
         `${paint.path(dir)} is relative to ${paint.bold('root')}, but this process has no ${paint.bold('root')} to resolve it against. ${paint.bold('seedcord dev')} and a built bot set ${paint.bold('root')} from seedcord.config.ts. Start the bot one of those ways, or pass an absolute path like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}.`,
     [SeedcordErrorCode.CoreDirectoryNotBuilt]: (dir: string, root: string) =>
         `${paint.path(dir)} was not a folder under ${paint.bold('root')} (${paint.path(root)}) when ${paint.bold('seedcord build')} ran, so the build holds none of its files. Create the folder, then build again.`,
+    [SeedcordErrorCode.CoreDirectoryNotListed]: (dir: string) =>
+        `${paint.bold('readTextFiles')} read ${paint.path(dir)}, which no folder in ${paint.bold('files')} in seedcord.config.ts holds. ${paint.bold('seedcord build')} ships non-code files from only those folders. Add it to ${paint.bold('files')}, like ${paint.sky("files: ['./locales']")}.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.bold(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>

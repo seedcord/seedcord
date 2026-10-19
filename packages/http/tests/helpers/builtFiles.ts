@@ -21,6 +21,7 @@ export function registerBuiltFiles(
         kind: 'built',
         root: BUILT_ROOT,
         folders: [...new Set([...foldersOf(Object.keys(modules)), ...emptyFolders])],
+        files: [],
         modules: Object.fromEntries(
             Object.entries(modules).map(([key, exported]) => [key, () => Promise.resolve(exported)])
         ),

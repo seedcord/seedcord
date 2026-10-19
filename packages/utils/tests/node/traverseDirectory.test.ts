@@ -8,7 +8,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { readTextFiles, traverseDirectory } from '#src/node/directory/readers';
-import { setBotRoot } from '#src/node/directory/slots';
+import { setDevFiles } from '#src/node/directory/slots';
 
 const FIXTURES = path.join(import.meta.dirname, 'fixtures');
 const scratch = await mkdtemp(path.join(os.tmpdir(), 'seedcord-traverse-'));
@@ -125,9 +125,9 @@ describe('a module that fails to load through a Vite plugin', () => {
     });
 });
 
-describe('a relative folder on disk', () => {
-    beforeEach(() => setBotRoot(FIXTURES));
-    afterEach(() => setBotRoot(undefined));
+describe('a folder on disk under seedcord dev', () => {
+    beforeEach(() => setDevFiles({ root: FIXTURES, files: ['/text'] }));
+    afterEach(() => setDevFiles(undefined));
 
     it('resolves against root for traverseDirectory', async () => {
         const seen: string[] = [];
@@ -135,6 +135,26 @@ describe('a relative folder on disk', () => {
         for await (const { fullPath } of traverseDirectory('./walk/b')) seen.push(fullPath);
 
         expect(seen).toEqual([path.join(FIXTURES, 'walk', 'b', 'bGood.ts')]);
+    });
+
+    it('reads a subfolder of a folder that files lists', async () => {
+        const seen: string[] = [];
+
+        for await (const { fullPath } of readTextFiles('./text/nested')) seen.push(fullPath);
+
+        expect(seen).toEqual([path.join(FIXTURES, 'text', 'nested', 'faq.md')]);
+    });
+
+    it('throws CoreDirectoryNotListed for a folder files leaves out', async () => {
+        const error = await rejection(readTextFiles('./walk'));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryNotListed });
+    });
+
+    it('throws CorePathOutsideRoot for a folder outside root', async () => {
+        const error = await rejection(readTextFiles(scratch));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathOutsideRoot });
     });
 });
 

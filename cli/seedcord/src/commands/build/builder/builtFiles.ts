@@ -33,6 +33,7 @@ export function builtFilesSource({
         "    kind: 'built',",
         `    root: ${rootExpression},`,
         `    folders: ${JSON.stringify(folders)},`,
+        `    files: ${JSON.stringify(files.listedKeys())},`,
         `    modules: import.meta.glob(${JSON.stringify(modules)}, ${JSON.stringify(moduleOptions)}),`,
         `    text: import.meta.glob(${JSON.stringify(text)}, ${JSON.stringify(textOptions)}),`,
         `    sourcePaths: ${String(sourcePaths)},`,
