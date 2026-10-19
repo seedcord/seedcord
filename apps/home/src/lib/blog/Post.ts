@@ -15,7 +15,6 @@ import type { BlogPost } from './source';
 import type { PostAuthor, PostSummary } from './summary';
 
 const GITHUB = 'https://github.com';
-const AVATAR_PX = 96;
 // pull requests merge into next
 const CONTENT_SOURCE = `${REPO_URL}/edit/next/apps/home/content/blog`;
 
@@ -38,7 +37,7 @@ export class Post {
         return postFolderName(this.file);
     }
 
-    get images(): string[] {
+    images(): string[] {
         return postImageNames(this.file);
     }
 
@@ -81,13 +80,7 @@ export class Post {
         return this.page.data.authors.map((handle) => {
             const author: Author = AUTHORS_BY_HANDLE[handle];
             const github = `${GITHUB}/${handle}`;
-            return {
-                handle,
-                name: author.name,
-                url: author.site ?? github,
-                github,
-                avatar: `${github}.png?size=${AVATAR_PX}`
-            };
+            return { handle, name: author.name, url: author.site ?? github, github };
         });
     }
 }

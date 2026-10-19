@@ -2,9 +2,9 @@ import { escapeHtml } from '@seedcord/ui/escapeHtml';
 
 import { canonicalUrl } from '#lib/site';
 
+import { BLOG_DESCRIPTION, BLOG_NAME } from './about';
 import { BLOG_PATH, FEED_PATH } from './paths';
 import { newestChange, postDate } from './summary';
-import { BLOG_DESCRIPTION, BLOG_NAME } from './seo';
 
 import type { PostSummary } from './summary';
 

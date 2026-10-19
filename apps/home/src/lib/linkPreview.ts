@@ -1,9 +1,8 @@
 import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/LinkPreview';
-import { toEpochSeconds } from '@seedcord/utils';
 
+import { BLOG_DESCRIPTION, BLOG_NAME } from '#lib/blog/about';
 import { joinList } from '#lib/blog/summary';
 import { BLOG_PATH, twinPath } from '#lib/blog/paths';
-import { BLOG_DESCRIPTION, BLOG_NAME } from '#lib/blog/seo';
 import { canonicalUrl, CDN_URL, DOCS_URL, GUIDE_URL, REPO_URL, SITE_NAME, SITE_URL } from '#lib/site';
 
 import type { PostSummary } from '#lib/blog/summary';
@@ -47,12 +46,10 @@ export const BLOG_PREVIEW: PreviewCardProps = {
 
 const bylineOf = (post: PostSummary): string => `**${joinList(post.authors.map((author) => author.name))}**`;
 
-// discord shows the date in each reader's timezone. noon UTC falls on the same day from UTC-12 to UTC+11
-const noonUtc = (date: string): number => new Date(`${date}T12:00:00Z`).getTime();
+const MS_PER_SECOND = 1000;
 
-// justified: toEpochSeconds takes the EpochMs brand, and getTime() returns epoch milliseconds
-const discordDate = (date: string): string =>
-    `<t:${toEpochSeconds(noonUtc(date) as Parameters<typeof toEpochSeconds>[0])}:D>`;
+// discord shows the date in each reader's timezone. noon UTC falls on the same day from UTC-12 to UTC+11
+const discordDate = (date: string): string => `<t:${Date.parse(`${date}T12:00:00Z`) / MS_PER_SECOND}:D>`;
 
 export function postPreview(post: PostSummary): PreviewCardProps {
     return {

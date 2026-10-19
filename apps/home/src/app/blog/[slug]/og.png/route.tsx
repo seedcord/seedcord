@@ -5,8 +5,8 @@ import { BRAND } from '@seedcord/ui/palette';
 import { ImageResponse } from 'takumi-js/response';
 
 import { BLOG_PATH } from '#lib/blog/paths';
-import { postFromParams, postParams } from '#lib/blog/posts';
-import { OG_PILL, ogMeta } from '#lib/blog/seo';
+import { OG_PILL, ogMeta } from '#lib/blog/ogCard';
+import { postParams, summaryFromParams } from '#lib/blog/posts';
 import { canonicalUrl } from '#lib/site';
 
 import type { PostParams } from '#lib/blog/posts';
@@ -16,7 +16,7 @@ export const dynamicParams = false;
 export const generateStaticParams = postParams;
 
 export async function GET(_request: Request, route: PostParams): Promise<ImageResponse> {
-    const post = await (await postFromParams(route)).summary();
+    const post = await summaryFromParams(route);
     return new ImageResponse(
         <OgPageCard
             pill={OG_PILL}

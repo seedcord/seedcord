@@ -56,6 +56,6 @@ export function seedcordJsonLd(site: SiteIdentity): string {
 }
 
 // escape < so the JSON can't break out of the script tag
-export function serializeJsonLd(value: Record<string, unknown>): string {
+export function serializeJsonLd(value: object): string {
     return JSON.stringify(value).replaceAll('<', String.raw`\u003c`);
 }

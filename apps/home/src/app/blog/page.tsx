@@ -10,9 +10,10 @@ import { Footer } from '#components/home/Footer';
 import { Nav } from '#components/home/Nav';
 import { SECTION_HEADING_LG, Section } from '#components/home/Section';
 import { PosterButton } from '#components/ui/PosterButton';
+import { BLOG_DESCRIPTION } from '#lib/blog/about';
 import { listedPosts } from '#lib/blog/posts';
 import { FEED_PATH } from '#lib/blog/paths';
-import { BLOG_DESCRIPTION, BLOG_METADATA, blogJsonLd } from '#lib/blog/seo';
+import { BLOG_METADATA, blogJsonLd } from '#lib/blog/seo';
 import { BLOG_PREVIEW } from '#lib/linkPreview';
 
 import type { PostSummary } from '#lib/blog/summary';

@@ -23,7 +23,6 @@
     "dependencies": {
         "@fumari/image-size": "^0.1.1",
         "@seedcord/ui": "workspace:^",
-        "@seedcord/utils": "workspace:^",
         "discord-component-embed": "workspace:^",
         "fumadocs-core": "catalog:deps",
         "fumadocs-mdx": "catalog:deps",
@@ -56,6 +55,7 @@
         "mdast-util-to-markdown": "catalog:deps",
         "prettier": "catalog:deps",
         "prettier-plugin-tailwindcss": "catalog:deps",
+        "schema-dts": "^2.1.0",
         "tailwindcss": "catalog:deps",
         "typescript": "catalog:peer",
         "vfile": "catalog:deps",

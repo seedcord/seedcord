@@ -4,11 +4,14 @@ import Image from 'next/image';
 import { SiteLink } from '#components/ui/SiteLink';
 import { formatPostDate, listSeparators } from '#lib/blog/summary';
 
-import type { PostAuthor, PostSummary } from '#lib/blog/summary';
 import { Fragment } from 'react';
+
+import type { PostAuthor, PostSummary } from '#lib/blog/summary';
 import type { ReactNode } from 'react';
 
 const AVATAR_PX = 28;
+// twice the drawn size, for high-density screens
+const avatarUrl = (github: string): string => `${github}.png?size=${AVATAR_PX * 2}`;
 
 interface BylineProps {
     authors: readonly PostAuthor[];
@@ -24,7 +27,7 @@ export function Byline({ authors, className }: BylineProps): ReactNode {
                 {authors.map((author) => (
                     <Image
                         key={author.handle}
-                        src={author.avatar}
+                        src={avatarUrl(author.github)}
                         alt=""
                         width={AVATAR_PX}
                         height={AVATAR_PX}

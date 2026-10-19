@@ -23,3 +23,7 @@ export async function postFromParams({ params }: PostParams): Promise<Post> {
     if (!page) notFound();
     return new Post(page);
 }
+
+export async function summaryFromParams(route: PostParams): Promise<PostSummary> {
+    return (await postFromParams(route)).summary();
+}

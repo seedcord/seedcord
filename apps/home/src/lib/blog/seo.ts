@@ -4,22 +4,14 @@ import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 
 import { canonicalUrl, DEFAULT_OG_IMAGE, SITE_NAME } from '#lib/site';
 
+import { BLOG_DESCRIPTION, BLOG_NAME, BLOG_TITLE } from './about';
+import { OG_PILL, ogMeta } from './ogCard';
 import { BLOG_PATH, FEED_PATH, ogImagePath, twinPath } from './paths';
-import { formatPostDate, lastChanged } from './summary';
+import { lastChanged } from './summary';
 
 import type { PostAuthor, PostSummary } from './summary';
 import type { Metadata } from 'next';
-
-export const BLOG_NAME = `${SITE_NAME} blog`;
-const BLOG_TITLE = 'Blog';
-export const BLOG_DESCRIPTION =
-    'Releases, deep dives, and notes from building seedcord, the TypeScript framework for Discord bots.';
-
-export const OG_PILL = 'blog';
-
-export function ogMeta(post: Pick<PostSummary, 'created' | 'minutes'>): string[] {
-    return [formatPostDate(post.created), `${post.minutes} min read`];
-}
+import type { Blog, Graph, Person, WithContext } from 'schema-dts';
 
 const postId = (post: Pick<PostSummary, 'url'>): string => `${canonicalUrl(post.url)}#post`;
 
@@ -78,11 +70,11 @@ export function postMetadata(post: PostSummary): Metadata {
     };
 }
 
-function person({ name, url, github }: PostAuthor): Record<string, unknown> {
+function person({ name, url, github }: PostAuthor): Person {
     return { '@type': 'Person', name, url, sameAs: url === github ? [] : [github] };
 }
 
-export function postJsonLd(post: PostSummary): Record<string, unknown> {
+export function postJsonLd(post: PostSummary): Graph {
     const url = canonicalUrl(post.url);
     return {
         '@context': 'https://schema.org',
@@ -115,7 +107,7 @@ export function postJsonLd(post: PostSummary): Record<string, unknown> {
     };
 }
 
-export function blogJsonLd(posts: readonly PostSummary[]): Record<string, unknown> {
+export function blogJsonLd(posts: readonly PostSummary[]): WithContext<Blog> {
     return {
         '@context': 'https://schema.org',
         '@type': 'Blog',

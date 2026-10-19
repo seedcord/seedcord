@@ -10,8 +10,7 @@ export const POST: PostSummary = {
             handle: 'materwelonDhruv',
             name: 'Dhruv',
             url: 'https://materwelon.dev',
-            github: 'https://github.com/materwelonDhruv',
-            avatar: 'https://github.com/materwelonDhruv.png?size=96'
+            github: 'https://github.com/materwelonDhruv'
         }
     ],
     created: '2026-10-18',

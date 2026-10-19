@@ -6,7 +6,6 @@ export interface PostAuthor {
     name: string;
     url: string;
     github: string;
-    avatar: string;
 }
 
 type Frontmatter = BlogPost['data'];

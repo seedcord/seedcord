@@ -811,9 +811,6 @@ importers:
       '@seedcord/ui':
         specifier: workspace:^
         version: link:../../tooling/ui
-      '@seedcord/utils':
-        specifier: workspace:^
-        version: link:../../packages/utils
       discord-component-embed:
         specifier: workspace:^
         version: link:../../packages/discord-component-embed
@@ -905,6 +902,9 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: catalog:deps
         version: 0.8.1(prettier@3.9.9)
+      schema-dts:
+        specifier: ^2.1.0
+        version: 2.1.0
       tailwindcss:
         specifier: catalog:deps
         version: 4.3.3
@@ -9202,6 +9202,13 @@ packages:
   scheduler@0.28.0:
     resolution: {integrity: sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw==}
 
+  schema-dts-lib@1.1.0:
+    resolution: {integrity: sha512-Nx00FDPHDimSENMznVpADeYUJDsqlMiO9wcs2S+giggNTm5+ruNkM4m9z9qCk6xUJT+ThDM3NxxpwfHfFk1G+Q==}
+    engines: {node: '>=14.0.0'}
+
+  schema-dts@2.1.0:
+    resolution: {integrity: sha512-Y/NvOvuJUZwrm+EmNqJF3M+bRufERJs1h5GJPLilUuK5D5b53ttU+XZgIjEFaAVRToh+ib+cQawFmxKC5Jt9ow==}
+
   scroll-into-view-if-needed@3.1.0:
     resolution: {integrity: sha512-49oNpRjWRvnU8NyGVmUaYG4jtTkNonFZI86MmGRDqBphEK2EXT9gdEUoQPZhuBM8yWHxCWbobltqYO5M4XrUvQ==}
 
@@ -12327,8 +12334,7 @@ snapshots:
   '@oxlint/binding-win32-x64-msvc@1.76.0':
     optional: true
 
-  '@pkgjs/parseargs@0.11.0':
-    optional: true
+  '@pkgjs/parseargs@0.11.0': {}
 
   '@pkgr/core@0.3.6': {}
 
@@ -17863,6 +17869,12 @@ snapshots:
   scheduler@0.27.0: {}
 
   scheduler@0.28.0: {}
+
+  schema-dts-lib@1.1.0: {}
+
+  schema-dts@2.1.0:
+    dependencies:
+      schema-dts-lib: 1.1.0
 
   scroll-into-view-if-needed@3.1.0:
     dependencies:

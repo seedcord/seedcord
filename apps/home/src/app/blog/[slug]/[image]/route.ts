@@ -11,7 +11,7 @@ interface ImageParams {
 }
 
 export function generateStaticParams(): { slug: string; image: string }[] {
-    return allPosts().flatMap((post) => post.images.map((image) => ({ slug: post.slug, image })));
+    return allPosts().flatMap((post) => post.images().map((image) => ({ slug: post.slug, image })));
 }
 
 export async function GET(_request: Request, route: ImageParams): Promise<Response> {

@@ -10,7 +10,7 @@ import { Footer } from '#components/home/Footer';
 import { Nav } from '#components/home/Nav';
 import { SiteLink } from '#components/ui/SiteLink';
 import { BLOG_PATH } from '#lib/blog/paths';
-import { postFromParams, postParams } from '#lib/blog/posts';
+import { postFromParams, postParams, summaryFromParams } from '#lib/blog/posts';
 import { postJsonLd, postMetadata } from '#lib/blog/seo';
 import { postPreview } from '#lib/linkPreview';
 
@@ -52,7 +52,7 @@ function PostHeader({ post }: { post: PostSummary }): ReactNode {
 export const generateStaticParams = postParams;
 
 export async function generateMetadata(route: PostParams): Promise<Metadata> {
-    return postMetadata(await (await postFromParams(route)).summary());
+    return postMetadata(await summaryFromParams(route));
 }
 
 export default async function PostPage(route: PostParams): Promise<ReactNode> {
