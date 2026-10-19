@@ -114,7 +114,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                     hmr.plugin,
                     invokeErrorsAsJson(),
                     cloudflare.plugins(),
-                    ...config.vitePlugins
+                    config.vitePlugins.create()
                 ]
             })
         ).catch(rethrowVitePluginError);

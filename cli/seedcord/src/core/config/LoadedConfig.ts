@@ -8,7 +8,7 @@ export class LoadedConfig implements AsyncDisposable {
     ) {}
 
     public get hasVitePlugins(): boolean {
-        return this.config.vitePlugins.length > 0;
+        return this.config.vitePlugins.isDeclared;
     }
 
     public async [Symbol.asyncDispose](): Promise<void> {

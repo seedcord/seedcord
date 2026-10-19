@@ -44,12 +44,12 @@ export async function openModuleLoader(
     devCopy?: EdgeDevCopy
 ): Promise<RunnerModuleLoader & AsyncDisposable> {
     const runsWorkerCode = target.kind === 'edge' && use !== 'config';
-    const vitePlugins = use === 'config' ? [] : use.vitePlugins;
     const workerEnv =
         target.kind === 'edge' ? lazyWorkerEnv(target.cloudflareConfig, mode, devCopy?.workerEnv) : undefined;
     // read up front because the runner reports anything a load hook throws as CoreImportFailed
     if (runsWorkerCode) await workerEnv?.();
     const conditions = runsWorkerCode ? WORKERD_CONDITIONS : NODE_CONDITIONS;
+    const userPlugins = use === 'config' ? [] : use.vitePlugins.create();
     const config = mergeViteConfig(userCodeConfig(conditions, projectDir), {
         root: projectDir,
         mode,
@@ -60,7 +60,7 @@ export async function openModuleLoader(
         server: { middlewareMode: true, hmr: false, ws: false, watch: devCopy?.watch ?? null },
         // keeps vite from writing a dep cache into the project's node_modules/.vite
         optimizeDeps: { noDiscovery: true, include: [] },
-        plugins: [...(workerEnv ? [edgeStandIns(workerEnv)] : []), ...vitePlugins]
+        plugins: [...(workerEnv ? [edgeStandIns(workerEnv)] : []), userPlugins]
     });
     await using onFailure = new AsyncDisposableStack();
     const server = await openViteServer(onFailure, config);

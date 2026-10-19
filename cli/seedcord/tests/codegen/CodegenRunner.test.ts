@@ -14,6 +14,7 @@ import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { LoadedConfig } from '#core/config/LoadedConfig';
 import { quietSteps } from '#core/output/quietSteps';
 import { Project } from '#core/project/Project';
+import { vitePluginsOf } from '#tests/vitePluginsOf';
 
 import type { ProjectOpener } from '#core/config/openProjectWithSteps';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -59,7 +60,7 @@ function configAt(root: string, instance: string): ResolvedSeedcordConfig {
         idleAnimation: false,
         tunnel: { mode: 'off' },
         viteMode: 'development',
-        vitePlugins: []
+        vitePlugins: vitePluginsOf()
     };
 }
 

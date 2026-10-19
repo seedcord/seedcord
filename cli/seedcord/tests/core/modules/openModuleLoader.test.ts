@@ -10,6 +10,7 @@ import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { cloudflareConfigSource, linkPackages } from '#tests/edgeFolder';
 import { holdViteHmrPort } from '#tests/viteHmrPort';
+import { vitePluginsOf } from '#tests/vitePluginsOf';
 
 import type { BuildTarget } from '#core/config/detectTarget';
 import type { LoaderUse } from '#core/modules/ModuleLoader';
@@ -20,7 +21,7 @@ afterEach(() => {
 });
 
 const SERVER: BuildTarget = { kind: 'server' };
-const BOT_CODE: LoaderUse = { vitePlugins: [] };
+const BOT_CODE: LoaderUse = { vitePlugins: vitePluginsOf() };
 
 async function edgeTarget(root: string): Promise<BuildTarget> {
     const cloudflareConfig = join(root, 'cloudflare.config.ts');

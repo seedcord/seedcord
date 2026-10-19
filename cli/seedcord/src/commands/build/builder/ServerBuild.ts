@@ -78,7 +78,7 @@ export class ServerBuild extends TargetBuild {
                     configFile: relative(outDir, config.configFile)
                 }),
                 pinModulePaths(files),
-                ...config.vitePlugins
+                config.vitePlugins.create()
             ],
             resolve: { tsconfigPaths: true },
             environments: {

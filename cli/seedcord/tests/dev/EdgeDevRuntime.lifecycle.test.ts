@@ -10,7 +10,6 @@ import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { DevRunner } from '#commands/dev/DevRunner';
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { LoadedConfig } from '#core/config/LoadedConfig';
-import { wrapVitePlugins } from '#core/config/vitePlugins';
 import { quietSteps } from '#core/output/quietSteps';
 import { deployedCommandsFile } from '#core/state/deployedCommands';
 import { StateFolder } from '#core/state/StateFolder';
@@ -19,6 +18,7 @@ import { writeCloudflareConfig } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES } from '#tests/commands/build/smoke';
 import { GREETING, GREETING_PROBE, greetingPlugin } from '#tests/greetingPlugin';
 import { silentLogger } from '#tests/silentLogger';
+import { vitePluginsOf } from '#tests/vitePluginsOf';
 import { DevStore } from '#ui/stores/DevStore';
 
 import {
@@ -220,7 +220,8 @@ describe('EdgeDevRuntime lifecycle', () => {
         const { projectDir } = project;
         // the worker loads this folder on start
         await writeFile(join(projectDir, 'src/handlers/greeting.ts'), GREETING_PROBE);
-        await using started = await startedRuntime(projectDir, undefined, { vitePlugins: [greetingPlugin()] });
+        const vitePlugins = vitePluginsOf(() => [greetingPlugin()]);
+        await using started = await startedRuntime(projectDir, undefined, { vitePlugins });
         const { runtime, instance } = started;
 
         await runtime.startBot(instance);
@@ -229,10 +230,24 @@ describe('EdgeDevRuntime lifecycle', () => {
         expect(nodeCopy.default).toBe(GREETING);
     }, 60_000);
 
+    it('gives the node copy and the worker their own plugin objects from vitePlugins', async () => {
+        await using project = await edgeProject();
+        const created: { servers: number }[] = [];
+        const vitePlugins = vitePluginsOf(() => {
+            const plugin = { servers: 0 };
+            created.push(plugin);
+            return [{ name: 'counts-servers', configureServer: () => void plugin.servers++ }];
+        });
+
+        await using _started = await startedRuntime(project.projectDir, undefined, { vitePlugins });
+
+        expect(created).toEqual([{ servers: 1 }, { servers: 1 }]);
+    }, 60_000);
+
     it('throws CoreVitePluginThrew for a plugin that throws while edge dev starts', async () => {
         await using project = await edgeProject();
-        const vitePlugins = wrapVitePlugins(
-            [
+        const vitePlugins = vitePluginsOf(
+            () => [
                 {
                     name: 'breaks-on-start',
                     configResolved: () => {
@@ -256,11 +271,11 @@ describe('EdgeDevRuntime lifecycle', () => {
         const { projectDir } = project;
         await writeFile(join(projectDir, 'src/word.ts'), "export const word = 'ok';\n");
         await writeFile(join(projectDir, 'src/handlers/Word.ts'), "export { word } from '../word';\n");
-        const vitePlugins = wrapVitePlugins(
-            [
+        const vitePlugins = vitePluginsOf(
+            () => [
                 {
                     name: 'breaks-in-transform',
-                    transform: (_code, id) => {
+                    transform: (_code: string, id: string) => {
                         if (id.endsWith('/word.ts')) throw new Error('bad yaml on line 3');
                         return undefined;
                     }

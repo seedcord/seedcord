@@ -7,8 +7,8 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
-import { wrapVitePlugins } from '#core/config/vitePlugins';
 import { GREETING, GREETING_PROBE, greetingPlugin } from '#tests/greetingPlugin';
+import { vitePluginsOf } from '#tests/vitePluginsOf';
 
 import { devContextFor } from './devConfigFor';
 
@@ -69,7 +69,8 @@ describe('dev runtime vitePlugins', () => {
         const runtime = new ServerDevRuntime();
         onTestFinished(() => runtime.stop());
 
-        await runtime.start({ ...context, config: { ...context.config, vitePlugins: [greetingPlugin()] } });
+        const vitePlugins = vitePluginsOf(() => [greetingPlugin()]);
+        await runtime.start({ ...context, config: { ...context.config, vitePlugins } });
         const { module } = await runtime.loadEntry();
 
         expect(module).toMatchObject({ default: GREETING });
@@ -80,8 +81,8 @@ describe('dev runtime vitePlugins', () => {
         onTestFinished(() => temp.remove());
         await writeProject(temp.path);
         const context = devContextFor(temp.path, 'index.ts');
-        const vitePlugins = wrapVitePlugins(
-            [
+        const vitePlugins = vitePluginsOf(
+            () => [
                 {
                     name: 'breaks-on-start',
                     configureServer: () => {
@@ -115,11 +116,11 @@ describe('dev runtime vitePlugins', () => {
                 return undefined;
             };
             const context = devContextFor(temp.path, 'reexport.ts');
-            const vitePlugins = wrapVitePlugins(
-                [
+            const vitePlugins = vitePluginsOf(
+                () => [
                     hook === 'load'
                         ? { name: 'breaks-the-word', load: throwOnWord }
-                        : { name: 'breaks-the-word', transform: (_code, id) => throwOnWord(id) }
+                        : { name: 'breaks-the-word', transform: (_code: string, id: string) => throwOnWord(id) }
                 ],
                 context.config.configFile
             );

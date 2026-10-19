@@ -10,6 +10,7 @@ import { DevSession } from '#commands/dev/DevSession';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
+import { vitePluginsOf } from '#tests/vitePluginsOf';
 import { DevStore } from '#ui/stores/DevStore';
 
 import { devConfigFor } from './devConfigFor';
@@ -31,7 +32,7 @@ function config(): ResolvedSeedcordConfig {
         idleAnimation: true,
         build: {},
         viteMode: 'development',
-        vitePlugins: []
+        vitePlugins: vitePluginsOf()
     };
 }
 

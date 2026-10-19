@@ -13,6 +13,7 @@ import { LoadedConfig } from '#core/config/LoadedConfig';
 import { Project } from '#core/project/Project';
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
+import { vitePluginsOf } from '#tests/vitePluginsOf';
 
 import type { ProjectOpener } from '#core/config/openProjectWithSteps';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -109,7 +110,7 @@ export async function fakeProject({
         idleAnimation: false,
         tunnel: { mode: 'off' },
         viteMode: 'development',
-        vitePlugins: []
+        vitePlugins: vitePluginsOf()
     };
     // justified: the commands runners read only importModule off the loader
     const modules = {

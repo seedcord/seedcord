@@ -2,6 +2,7 @@ import { join } from 'node:path';
 
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
+import { vitePluginsOf } from '#tests/vitePluginsOf';
 
 import type { DevRuntimeContext } from '#commands/dev/runtime/DevRuntime';
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -17,7 +18,7 @@ export function devConfigFor(root: string, instance: string): ResolvedSeedcordCo
         typecheck: { enabled: false },
         idleAnimation: true,
         viteMode: 'development',
-        vitePlugins: []
+        vitePlugins: vitePluginsOf()
     };
 }
 

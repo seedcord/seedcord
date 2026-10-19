@@ -1,5 +1,5 @@
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
 import { asError, isPlainObject } from '@seedcord/utils/internal';
 import { recordThrownBy, vitePluginThrew } from '@seedcord/utils/node/internal';
 
@@ -21,7 +21,7 @@ type WrappedHook = (typeof WRAPPED_HOOKS)[number];
 type HookFunction = (...args: unknown[]) => unknown;
 type RecordThrow = (caught: unknown, args: unknown[]) => Error;
 
-function isHookFunction(value: unknown): value is HookFunction {
+function isFunction(value: unknown): value is HookFunction {
     return typeof value === 'function';
 }
 
@@ -47,9 +47,8 @@ function rethrowing(hook: HookFunction, record: RecordThrow): HookFunction {
 
 // a hook is a function, or an object holding one in handler
 function wrapHook(hook: unknown, record: RecordThrow): unknown {
-    if (isHookFunction(hook)) return rethrowing(hook, record);
-    if (isPlainObject(hook) && isHookFunction(hook.handler))
-        return { ...hook, handler: rethrowing(hook.handler, record) };
+    if (isFunction(hook)) return rethrowing(hook, record);
+    if (isPlainObject(hook) && isFunction(hook.handler)) return { ...hook, handler: rethrowing(hook.handler, record) };
     return hook;
 }
 
@@ -76,6 +75,8 @@ function withThrownByOnErrors(plugin: Plugin, configFile: string): Plugin {
 type VitePluginEntry = { field: string; value: unknown } | { field: string; rejected: unknown };
 
 export type VitePluginProblem = SeedcordError | SeedcordTypeError;
+
+type PluginsFactory = () => unknown;
 
 interface VitePluginsRead {
     plugins: Plugin[];
@@ -111,29 +112,69 @@ function invalidField(field: string, expected: string): SeedcordTypeError {
     return new SeedcordTypeError(SeedcordErrorCode.CliConfigInvalidField, [field, expected]);
 }
 
-export async function readVitePlugins(config: unknown, configFile: string): Promise<VitePluginsRead> {
-    const options = isPlainObject(config) ? config.vitePlugins : undefined;
-    if (options === undefined) return { plugins: [], problems: [] };
-    if (!Array.isArray(options))
-        return { plugins: [], problems: [invalidField('vitePlugins', 'an array of Vite plugins')] };
+function threwWhileRead(field: string, thrown: unknown, configFile: string): SeedcordError {
+    const reason = asError(thrown).message;
+    return new SeedcordError(SeedcordErrorCode.CoreVitePluginThrew, [field, {}, configFile, reason], { cause: thrown });
+}
 
+async function readPlugins(factory: PluginsFactory, configFile: string): Promise<VitePluginsRead> {
     const read: VitePluginsRead = { plugins: [], problems: [] };
+    let options: unknown;
+    try {
+        options = await factory();
+    } catch (thrown) {
+        read.problems.push(threwWhileRead('vitePlugins', thrown, configFile));
+        return read;
+    }
+    if (!Array.isArray(options)) {
+        read.problems.push(invalidField('vitePlugins', 'a function that returns an array of Vite plugins'));
+        return read;
+    }
+
     for (const entry of await flattenAt(options, 'vitePlugins')) {
-        if ('rejected' in entry) {
-            const reason = asError(entry.rejected).message;
-            read.problems.push(
-                new SeedcordError(SeedcordErrorCode.CoreVitePluginThrew, [entry.field, {}, configFile, reason], {
-                    cause: entry.rejected
-                })
-            );
-        } else if (isVitePlugin(entry.value)) read.plugins.push(entry.value);
+        if ('rejected' in entry) read.problems.push(threwWhileRead(entry.field, entry.rejected, configFile));
+        else if (isVitePlugin(entry.value)) read.plugins.push(entry.value);
         else read.problems.push(invalidField(entry.field, pluginExpected(entry.value)));
     }
     return read;
 }
 
-export function wrapVitePlugins(plugins: readonly Plugin[], configFile: string): Plugin[] {
-    return plugins.map((plugin) => withThrownByOnErrors(plugin, configFile));
+export class VitePlugins {
+    public constructor(
+        private readonly factory: PluginsFactory | undefined,
+        private readonly configFile: string
+    ) {}
+
+    public get isDeclared(): boolean {
+        return this.factory !== undefined;
+    }
+
+    // call this once per vite server or build. vite runs configureServer on a plugin object for every server it joins
+    public async create(): Promise<Plugin[]> {
+        if (this.factory === undefined) return [];
+        const { plugins, problems } = await readPlugins(this.factory, this.configFile);
+        throwSingleOrAggregate(problems, SeedcordErrorCode.CliProblems);
+        return plugins.map((plugin) => withThrownByOnErrors(plugin, this.configFile));
+    }
+}
+
+interface VitePluginsChecked {
+    vitePlugins: VitePlugins;
+    problems: VitePluginProblem[];
+}
+
+export async function readVitePlugins(config: unknown, configFile: string): Promise<VitePluginsChecked> {
+    const factory = isPlainObject(config) ? config.vitePlugins : undefined;
+    if (factory === undefined) return { vitePlugins: new VitePlugins(undefined, configFile), problems: [] };
+    if (!isFunction(factory)) {
+        const expected = `a function that returns your Vite plugins, like ${paint.bold('() => [yaml()]')}`;
+        return {
+            vitePlugins: new VitePlugins(undefined, configFile),
+            problems: [invalidField('vitePlugins', expected)]
+        };
+    }
+    const { problems } = await readPlugins(factory, configFile);
+    return { vitePlugins: new VitePlugins(factory, configFile), problems };
 }
 
 export function rethrowVitePluginError(error: unknown): never {

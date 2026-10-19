@@ -14,6 +14,7 @@ import { StateFolder } from '#core/state/StateFolder';
 import { copyEdgeBot } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES, FAKE_TOKEN } from '#tests/commands/build/smoke';
 import { silentLogger } from '#tests/silentLogger';
+import { vitePluginsOf } from '#tests/vitePluginsOf';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import type { DevEventHandler } from '#commands/dev/runtime/events';
@@ -21,7 +22,6 @@ import type { ResolvedEdgeTarget, ResolvedSeedcordConfig } from '#core/config/sc
 import type { LogRecord } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { AddressInfo } from 'node:net';
-import type { Plugin } from 'vite';
 
 // a port probed up front can go to another worker before the runtime binds it
 const ANY_PORT = 0;
@@ -34,7 +34,7 @@ function configWith(
     projectDir: string,
     target: ResolvedEdgeTarget,
     viteMode: string,
-    vitePlugins: Plugin[] = []
+    vitePlugins = vitePluginsOf()
 ): ResolvedSeedcordConfig {
     return {
         configFile: join(projectDir, 'seedcord.config.ts'),
@@ -217,7 +217,7 @@ interface StartedRuntime extends AsyncDisposable {
 export async function startedRuntime(
     projectDir: string,
     onEvent?: DevEventHandler,
-    { devPort = ANY_PORT, viteMode = 'development', vitePlugins = [] as Plugin[] } = {}
+    { devPort = ANY_PORT, viteMode = 'development', vitePlugins = vitePluginsOf() } = {}
 ): Promise<StartedRuntime> {
     const target = edgeTarget(projectDir, devPort);
     const config = configWith(projectDir, target, viteMode, vitePlugins);

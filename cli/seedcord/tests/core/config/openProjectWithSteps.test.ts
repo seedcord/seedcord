@@ -69,7 +69,7 @@ describe('openProjectWithSteps', () => {
 
     it('runs the check before any plugin starts', async () => {
         const projectDir = projectWithConfig(
-            `export default { ${SERVER_FIELDS}, vitePlugins: [{ name: 'marks-start', config: () => { globalThis.${STARTED} = true; } }] };\n`
+            `export default { ${SERVER_FIELDS}, vitePlugins: () => [{ name: 'marks-start', config: () => { globalThis.${STARTED} = true; } }] };\n`
         );
         onTestFinished(() => {
             Reflect.deleteProperty(globalThis, STARTED);
@@ -91,7 +91,7 @@ describe('openProjectWithSteps', () => {
 
     it('fails the load plugins step when a plugin throws as Vite starts', async () => {
         const projectDir = projectWithConfig(
-            `export default { ${SERVER_FIELDS}, vitePlugins: [{ name: 'breaks-on-start', config: () => { throw new Error('bad option'); } }] };\n`
+            `export default { ${SERVER_FIELDS}, vitePlugins: () => [{ name: 'breaks-on-start', config: () => { throw new Error('bad option'); } }] };\n`
         );
         const steps = recordingSteps();
 

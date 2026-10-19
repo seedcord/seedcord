@@ -43,7 +43,7 @@ export default {
     root: './src',
     instance: './bot.ts',
     entry: './index.ts',
-    vitePlugins: [{ name: 'breaks-the-build', ${hooks} }]
+    vitePlugins: () => [{ name: 'breaks-the-build', ${hooks} }]
 };
 `
             );
@@ -68,7 +68,7 @@ export default {
 export default {
     root: './src',
     instance: './bot.ts',
-    vitePlugins: [
+    vitePlugins: () => [
         {
             name: 'breaks-the-worker',
             configResolved: (config) => { command = config.command; },

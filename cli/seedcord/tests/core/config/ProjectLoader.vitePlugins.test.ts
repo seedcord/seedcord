@@ -18,7 +18,7 @@ import type { StubModules } from './projectLoaderFixtures';
 
 describe('ProjectLoader vitePlugins', () => {
     it('throws CliConfigInvalidField that says to call a plugin factory left uncalled', async () => {
-        const { load } = projectWith({ ...MINIMAL, vitePlugins: [{ name: 'json' }, function yaml() {}] });
+        const { load } = projectWith({ ...MINIMAL, vitePlugins: () => [{ name: 'json' }, function yaml() {}] });
 
         const caught: unknown = await load().catch((error: unknown) => error);
 
@@ -29,7 +29,7 @@ describe('ProjectLoader vitePlugins', () => {
     });
 
     it('finds an uncalled factory that a promise inside a nested array resolves to', async () => {
-        const { load } = projectWith({ ...MINIMAL, vitePlugins: [false, [Promise.resolve(function yaml() {})]] });
+        const { load } = projectWith({ ...MINIMAL, vitePlugins: () => [false, [Promise.resolve(function yaml() {})]] });
 
         await expect(load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
@@ -40,7 +40,7 @@ describe('ProjectLoader vitePlugins', () => {
     it.each([['yaml'], [{ transform: () => undefined }]])(
         'throws CliConfigInvalidField for the entry %o that has no plugin name',
         async (entry) => {
-            const { load } = projectWith({ ...MINIMAL, vitePlugins: [entry] });
+            const { load } = projectWith({ ...MINIMAL, vitePlugins: () => [entry] });
 
             await expect(load()).rejects.toMatchObject({
                 code: SeedcordErrorCode.CliConfigInvalidField,
@@ -54,7 +54,7 @@ describe('ProjectLoader vitePlugins', () => {
         const rejected = Promise.reject(missing);
         // node flags a rejection nothing has handled before readConfig awaits it
         rejected.catch(() => undefined);
-        const { load } = projectWith({ ...MINIMAL, vitePlugins: [{ name: 'json' }, rejected] });
+        const { load } = projectWith({ ...MINIMAL, vitePlugins: () => [{ name: 'json' }, rejected] });
 
         const caught: unknown = await load().catch((error: unknown) => error);
 
@@ -67,7 +67,7 @@ describe('ProjectLoader vitePlugins', () => {
     });
 
     it('reports a bad plugin together with the other problems in the config', async () => {
-        const { load } = projectWith({ ...MINIMAL, idleAnimation: 'yes', vitePlugins: ['yaml'] });
+        const { load } = projectWith({ ...MINIMAL, idleAnimation: 'yes', vitePlugins: () => ['yaml'] });
 
         const caught: unknown = await load().catch((error: unknown) => error);
 
@@ -114,7 +114,7 @@ describe('ProjectLoader vitePlugins', () => {
         );
         writeFileSync(
             join(projectDir, 'seedcord.config.ts'),
-            `import { lazy } from './plugins/lazy';\n\nexport default { root: './src', instance: './bot.ts', entry: './index.ts', vitePlugins: [lazy()] };\n`
+            `import { lazy } from './plugins/lazy';\n\nexport default { root: './src', instance: './bot.ts', entry: './index.ts', vitePlugins: () => [lazy()] };\n`
         );
         writeFileSync(join(projectDir, 'src/probe.ts'), 'export default undefined;\n');
 
@@ -150,7 +150,7 @@ describe('ProjectLoader vitePlugins', () => {
         );
         writeFileSync(
             join(projectDir, 'seedcord.config.ts'),
-            `import lazy from 'lazy-plugin';\n\nexport default { root: './src', instance: './bot.ts', entry: './index.ts', vitePlugins: [lazy()] };\n`
+            `import lazy from 'lazy-plugin';\n\nexport default { root: './src', instance: './bot.ts', entry: './index.ts', vitePlugins: () => [lazy()] };\n`
         );
         writeFileSync(join(projectDir, 'src/probe.ts'), 'export default undefined;\n');
 
@@ -187,7 +187,7 @@ describe('ProjectLoader vitePlugins', () => {
     root: './src',
     instance: './bot.ts',
     entry: './index.ts',
-    vitePlugins: [{ name: 'breaks-in-transform', transform: (_code, id) => { if (id.endsWith('/word.ts')) throw new Error('bad yaml on line 3'); } }]
+    vitePlugins: () => [{ name: 'breaks-in-transform', transform: (_code, id) => { if (id.endsWith('/word.ts')) throw new Error('bad yaml on line 3'); } }]
 };
 `
         );
@@ -209,7 +209,7 @@ describe('ProjectLoader vitePlugins', () => {
             `export default {
     instance: './bot.ts',
     entry: './index.ts',
-    vitePlugins: [{ name: 'breaks-on-start', config: () => { throw new Error('bad option'); } }]
+    vitePlugins: () => [{ name: 'breaks-on-start', config: () => { throw new Error('bad option'); } }]
 };
 `
         );
@@ -253,7 +253,7 @@ describe('the loader that ran seedcord.config.ts', () => {
         return { ...stub, open, dir, loader: new ProjectLoader(open, new ShellMode()) };
     }
 
-    const WITH_PLUGIN = { ...MINIMAL, vitePlugins: [{ name: 'lazy' }] };
+    const WITH_PLUGIN = { ...MINIMAL, vitePlugins: () => [{ name: 'lazy' }] };
 
     it('closes before readConfig returns for a config with no vitePlugins', async () => {
         const { loader, dir, loaders } = stubProject(MINIMAL);

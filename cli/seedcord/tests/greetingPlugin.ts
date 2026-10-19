@@ -19,12 +19,12 @@ export function greetingPlugin(): Plugin {
     };
 }
 
-// vitePlugins is source text, like '[greetingPlugin()]'
-export function configWithGreetingPlugin(fields: string, vitePlugins = '[greetingPlugin()]'): string {
+// plugins is the source text of the array vitePlugins returns, like '[greetingPlugin()]'
+export function configWithGreetingPlugin(fields: string, plugins = '[greetingPlugin()]'): string {
     return [
         `import { greetingPlugin } from ${JSON.stringify(pathToFileURL(import.meta.filename).href)};`,
         '',
-        `export default { ${fields}, vitePlugins: ${vitePlugins} };`,
+        `export default { ${fields}, vitePlugins: () => ${plugins} };`,
         ''
     ].join('\n');
 }

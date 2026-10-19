@@ -21,6 +21,7 @@ import { HmrPlugin } from '#commands/dev/runtime/HmrPlugin';
 import { ViteRestartFiles } from '#commands/dev/runtime/ViteRestartFiles';
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
+import { vitePluginsOf } from '#tests/vitePluginsOf';
 
 import type { DevEvent } from '#commands/dev/runtime/events';
 import type { EnvironmentModuleNode, HotUpdateOptions, ViteDevServer } from 'vite';
@@ -140,7 +141,7 @@ describe('HmrPlugin', () => {
         tunnel: { mode: 'quick' } as const,
         build: {},
         viteMode: 'development',
-        vitePlugins: []
+        vitePlugins: vitePluginsOf()
     };
 
     const srcRoot = join(projectRoot, 'src');

@@ -10,6 +10,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { writeCloudflareConfig, writeSigningEnv } from '#tests/commands/build/edgeBot';
 import { FAKE_TOKEN } from '#tests/commands/build/smoke';
+import { vitePluginsOf } from '#tests/vitePluginsOf';
 
 import {
     captureLogs,
@@ -173,7 +174,7 @@ describe('EdgeDevRuntime endpoint', () => {
         await writeFile(join(projectDir, 'src/handlers/Wave.ts'), WAVE_WITH_WORD);
         const logs = captureLogs();
         await using started = await startedRuntime(projectDir, undefined, {
-            vitePlugins: [throwsCircularOnBrokenWord]
+            vitePlugins: vitePluginsOf(() => [throwsCircularOnBrokenWord])
         });
         await started.runtime.startBot(started.instance);
 

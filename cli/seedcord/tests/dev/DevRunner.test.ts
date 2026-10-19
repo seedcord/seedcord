@@ -362,7 +362,7 @@ const COUNTING_CONFIG = `export default {
     root: './src',
     instance: './bot.ts',
     entry: './index.ts',
-    vitePlugins: [
+    vitePlugins: () => [
         {
             name: 'count-build-starts',
             buildStart: () => {

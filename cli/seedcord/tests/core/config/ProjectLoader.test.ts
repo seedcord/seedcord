@@ -435,10 +435,10 @@ describe('ProjectLoader validation', () => {
         });
     });
 
-    it('rejects vitePlugins that is not an array', async () => {
-        await expect(projectWith({ ...MINIMAL, vitePlugins: { name: 'yaml' } }).load()).rejects.toMatchObject({
+    it('rejects vitePlugins written as an array', async () => {
+        await expect(projectWith({ ...MINIMAL, vitePlugins: [{ name: 'yaml' }] }).load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
-            message: expect.stringContaining('vitePlugins') as string
+            message: expect.stringContaining('() => [yaml()]') as string
         });
     });
 

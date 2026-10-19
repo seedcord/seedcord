@@ -78,7 +78,7 @@ describe('seedcord build checks the server entry', () => {
         });
         await writeFile(
             join(projectDir, 'seedcord.config.ts'),
-            `export default { root: './src', instance: './bot.ts', entry: './missing.ts', vitePlugins: [{ name: 'marks-start', config: () => { globalThis.${STARTED} = true; } }] };\n`
+            `export default { root: './src', instance: './bot.ts', entry: './missing.ts', vitePlugins: () => [{ name: 'marks-start', config: () => { globalThis.${STARTED} = true; } }] };\n`
         );
 
         await expect(quickBuildRunner().run(projectDir)).rejects.toMatchObject({
