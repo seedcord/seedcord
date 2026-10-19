@@ -2,7 +2,7 @@ import { mkdir, mkdtempDisposable, readdir, readFile, writeFile } from 'node:fs/
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { scaffold } from '#scaffold/scaffold';
 

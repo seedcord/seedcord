@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { and, or } from '#gates/combinators';
 import { defineEffectGate, defineGate } from '#gates/Gate';

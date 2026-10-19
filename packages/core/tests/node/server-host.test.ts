@@ -3,7 +3,7 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
-import { describe, it, expect, expectTypeOf, afterEach, vi } from 'vitest';
+import { describe, it, expect, expectTypeOf, afterEach, vi } from 'vite-plus/test';
 
 import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import { ServerHost } from '#node/ServerHost';

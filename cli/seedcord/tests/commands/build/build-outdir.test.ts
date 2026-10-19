@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { BUILT_FILES_KEY } from '@seedcord/utils/node/internal';
-import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { quickBuildRunner } from './quickBuildRunner';
 

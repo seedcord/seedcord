@@ -1,5 +1,5 @@
 import { CustomId, InteractionKind } from '@seedcord/core';
-import { afterEach, describe, expect, vi } from 'vitest';
+import { afterEach, describe, expect, vi } from 'vite-plus/test';
 
 import { interactionsOf } from '#bot/Bot';
 import { seedcordPath } from '#tests/utils/source-path';

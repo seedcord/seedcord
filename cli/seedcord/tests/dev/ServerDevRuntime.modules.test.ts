@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { assert, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
 import { wrapVitePlugins } from '#core/config/vitePlugins';

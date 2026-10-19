@@ -2,7 +2,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { renderError } from '#core/output/renderError';
 

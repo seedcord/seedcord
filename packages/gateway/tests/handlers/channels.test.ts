@@ -1,6 +1,6 @@
 import { DispatchContext } from '@seedcord/core';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { EventHandler } from '#handlers/event/EventHandler';
 import { EventMiddleware } from '#handlers/event/EventMiddleware';

@@ -1,4 +1,4 @@
-import { describe, it, expect, onTestFinished, vi } from 'vitest';
+import { describe, it, expect, onTestFinished, vi } from 'vite-plus/test';
 
 import { DevStore } from '#ui/stores/DevStore';
 

@@ -6,7 +6,7 @@
  * `publish.yml` normally passes this from the changesets action. A failed publish skips the
  * downstream docs sync even when npm accepted every version. This fills that gap.
  *
- * Run `pnpm docs:extract` first, since this reads the generated manifest.
+ * Run `vp run docs:extract` first, since this reads the generated manifest.
  */
 import path from 'node:path';
 

@@ -13,7 +13,8 @@ export const messageColumn = (labelWidth: number): number =>
 
 // one row per rendered line, which the viewport math uses
 export type LogRow =
-    { kind: 'entry'; key: string; entry: LogEntry; text: string; first: boolean } | { kind: 'rule'; key: string };
+    | { kind: 'entry'; key: string; entry: LogEntry; text: string; first: boolean }
+    | { kind: 'rule'; key: string };
 
 function isBlockLine(entry: LogEntry | undefined): boolean {
     return entry !== undefined && entry.level !== 'error';

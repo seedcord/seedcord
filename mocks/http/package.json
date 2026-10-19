@@ -1,11 +1,6 @@
 {
     "name": "@seedcord/mock-http",
-    "type": "module",
     "version": "0.0.14",
-    "engines": {
-        "node": ">=24.11",
-        "bun": ">=1.4.2"
-    },
     "private": true,
     "description": "Http-transport mock bot for demonstration and testing",
     "repository": {
@@ -13,21 +8,19 @@
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "mocks/http"
     },
+    "type": "module",
     "scripts": {
         "dev": "seedcord dev",
         "build": "seedcord build",
-        "start": "pnpm build && node --enable-source-maps dist/index.mjs",
+        "start": "vp run build && node --enable-source-maps dist/index.mjs",
         "codegen": "seedcord codegen",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md}' --cache --no-error-on-unmatched-pattern",
+        "fmt": "vp fmt --write '**/*.{ts,tsx,json,md}' --no-error-on-unmatched-pattern",
+        "fmt:check": "vp fmt --check '**/*.{ts,tsx,json,md}' --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit",
         "tc:watch": "tsc --noEmit --watch"
-    },
-    "peerDependencies": {
-        "typescript": "catalog:peer"
     },
     "dependencies": {
         "@discordjs/builders": "catalog:deps",
@@ -39,5 +32,12 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "seedcord": "workspace:^"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": ">=24.11"
     }
 }

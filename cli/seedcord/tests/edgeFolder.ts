@@ -2,7 +2,7 @@ import { mkdir, mkdtempDisposable, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { onTestFinished } from 'vitest';
+import { onTestFinished } from 'vite-plus/test';
 
 const CLI_NODE_MODULES = join(import.meta.dirname, '../node_modules');
 

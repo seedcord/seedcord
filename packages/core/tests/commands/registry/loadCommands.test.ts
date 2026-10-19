@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { CommandRegistry } from '#src/commands/CommandRegistry';
 import { GLOBAL_ID } from '#src/commands/scopes';

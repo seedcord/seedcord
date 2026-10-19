@@ -93,41 +93,41 @@ When someone asks how seedcord does something, answer for gateway and for http. 
 - **No dead code.** Before adding `export`, confirm something outside the file names the symbol. A symbol that exists only for a test belongs in the test folder.
 - **Grep every consuming surface before deleting anything.** That includes markdown and generated output. Show no callers or name the replacement.
 - **Commit subjects are one lowercase line with no scope and no body.** Write `feat:`, never `feat(http):`. A breaking change marks the bare type, `feat!:`. A PR title follows the same rule, because a squash merge turns it into the commit.
-- **Move files with `git mv`.** Add dependencies with `pnpm add` so the lockfile updates.
+- **Move files with `git mv`.** Add dependencies with `vp add` so the lockfile updates.
 
 ---
 
 ## Commands and gates
 
-Run from the repo root. `pnpm -C <package> <script>` targets one package.
+Run from the repo root. `vp -C <package> run <script>` targets one package.
 
 ```sh
-pnpm -C <pkg> lint:fix   # always lint:fix, never plain lint
-pnpm -C <pkg> tc
-pnpm -C <pkg> test       # after lint and tc pass
+vp -C <pkg> run lint:fix   # always lint:fix, never plain lint
+vp -C <pkg> run tc
+vp -C <pkg> test           # after lint and tc pass
 ```
 
 Rebuild a shared package before you check its dependents:
 
 ```sh
-pnpm -C packages/<name> build
-pnpm -C packages/<dependent> tc
+vp -C packages/<name> run build
+vp -C packages/<dependent> run tc
 ```
 
 Two whole-workspace gates exist and they differ:
 
-- `pnpm prePush` runs the checks through `turbo --affected`, against `next`.
-- `pnpm prePush:all` runs every check across every package. A green `prePush` covers less than a green `prePush:all`, so run `prePush:all` before a release and at the end of a long branch.
+- `vp run prePush` runs the checks through `turbo --affected`, against `next`.
+- `vp run prePush:all` runs every check across every package. A green `prePush` covers less than a green `prePush:all`, so run `prePush:all` before a release and at the end of a long branch.
 
 Both start with `build`, which builds everything except the three sites in `apps/`, and `codegen:check`, then `check:catalog`, the script and markdown lint, `tc`, `lint`, `fmt:check`, and `test`. The root `package.json` has the exact chain.
 
-`pnpm knip` (dead code) and `pnpm react-doctor` (React patterns) are real gates. **No hook and no CI job runs them.** Run them by hand when the change warrants it.
+`vp run knip` (dead code) and `vp run react-doctor` (React patterns) are real gates. **No hook and no CI job runs them.** Run them by hand when the change warrants it.
 
 Zero lint errors, zero lint warnings, zero from `tc`, every test passing. Fix the cause. Never comment out a test, weaken an assertion, or add a broad `eslint-disable` to get past a failure. Disable a rule inline with a reason, `// eslint-disable-next-line <rule> -- <why>`, never file-wide.
 
-Watch warnings. `lint-staged` passes `--max-warnings=0`, so a warn-severity rule blocks your commit. Plain `pnpm lint` lets it through.
+Watch warnings. `vp staged` passes `--max-warnings=0`, so a warn-severity rule blocks your commit. Plain `vp run lint` lets it through.
 
-Regenerate docs with `pnpm docs:extract` after changing the public surface.
+Regenerate docs with `vp run docs:extract` after changing the public surface.
 
 ---
 
@@ -160,3 +160,26 @@ The three Next.js apps have their own rules in [`apps/AGENTS.md`](apps/AGENTS.md
 ## Ask before acting outside the repo
 
 Anything that leaves this machine needs an explicit request first: opening a PR, filing or commenting on an issue, publishing a package, and deploying. Prepare the work, show it, and wait.
+
+---
+
+## Using Vite+, the Unified Toolchain for the Web
+
+This project is using Vite+, a unified toolchain built on top of Vite, Rolldown, Vitest, tsdown, Oxlint, Oxfmt, and Vite Task. Vite+ wraps runtime management, package management, and frontend tooling in a single global CLI called `vp`. Vite+ is distinct from Vite, and it invokes Vite through `vp dev` and `vp build`. Run `vp help` to print a list of commands and `vp <command> --help` for information about a specific command.
+
+Docs are local at `node_modules/vite-plus/docs` or online at <https://viteplus.dev/guide/>.
+
+### Built-in Commands vs Scripts
+
+`vp <name>` runs a built-in command. `vp run <name>` runs a `package.json` script or a `vite.config.ts` task. Scripts cannot overwrite built-ins, so `vp dev` and `vp run dev` may do different things. Check `package.json` and `vite.config.ts` first, and run `vp run <name>` when the project defines a script or task with that name.
+
+### Tool Versions
+
+Run `vp toolchain` to show versions and relationships in the active Vite+ release. Add a tool name to select part of the graph. For example, run `vp toolchain vite`. Use `--global` to ignore the local `vite-plus` package. Use `vp why <package>` to show the package-manager dependency graph.
+
+### Review Checklist
+
+- [ ] Run `vp install` after pulling remote changes and before getting started.
+- [ ] Run `vp check` and `vp test` to format, lint, type check and test changes.
+- [ ] Check if there are `vite.config.ts` tasks or `package.json` scripts necessary for validation, run via `vp run <script>`.
+- [ ] If setup, runtime, or package-manager behavior looks wrong, run `vp env doctor` and include its output when asking for help.

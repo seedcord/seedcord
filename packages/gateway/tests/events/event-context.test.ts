@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, vi } from 'vite-plus/test';
 
 import { eventsOf } from '#bot/Bot';
 import { seedcordPath } from '#tests/utils/source-path';

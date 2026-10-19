@@ -11,7 +11,7 @@ import {
 } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
 import { MessageFlags, PermissionFlagsBits } from 'discord-api-types/v10';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { restClients } from '#tests/helpers/restClients';

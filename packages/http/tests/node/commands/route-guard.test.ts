@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import { InteractionKind } from '@seedcord/core';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 import { InteractionDispatcher } from '#src/dispatch/InteractionDispatcher';

@@ -1,6 +1,6 @@
 import { Collection } from '@discordjs/collection';
 import { DispatchContext, CustomId } from '@seedcord/core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import {
     ChannelMenuHandler,

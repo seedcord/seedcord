@@ -1,5 +1,5 @@
 import { loader } from 'fumadocs-core/source';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { llmsIndex, pageLinks, twinLinks } from '#lib/agents';
 

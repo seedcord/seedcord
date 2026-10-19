@@ -2,7 +2,7 @@ import { mkdtempDisposableSync, realpathSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { onTestFinished } from 'vitest';
+import { onTestFinished } from 'vite-plus/test';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { ShellMode } from '#core/viteMode';

@@ -3,7 +3,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { Envapter, PortableSource } from 'envapt';
-import { assert, describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vite-plus/test';
 
 import { EdgeBuild } from '#commands/build/builder/EdgeBuild';
 import { openProjectWithSteps } from '#core/config/openProjectWithSteps';

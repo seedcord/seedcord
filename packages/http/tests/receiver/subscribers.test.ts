@@ -3,7 +3,7 @@ import { PublishDefault, SubscriberLoader } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { BUILT_ROOT, registerBuiltFiles } from '#tests/helpers/builtFiles';
 

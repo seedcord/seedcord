@@ -7,7 +7,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { onTestFinished, vi } from 'vitest';
+import { onTestFinished, vi } from 'vite-plus/test';
 
 import { LoadedConfig } from '#core/config/LoadedConfig';
 import { Project } from '#core/project/Project';

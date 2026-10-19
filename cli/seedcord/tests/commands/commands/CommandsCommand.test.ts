@@ -5,7 +5,7 @@ import { KEY, PromptTerminal } from '@seedcord/cli-prompts/testing';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { CommandsCommand } from '#commands/commands/CommandsCommand';
 import { DeployRunner } from '#commands/commands/deploy/DeployRunner';
@@ -17,7 +17,7 @@ import { silentLogger } from '#tests/silentLogger';
 
 import type { FakeProject } from '#tests/commands/commands/fakeBot';
 import type { Prompter } from '@seedcord/cli-prompts';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 const GUILD_PAGE = 200;
 

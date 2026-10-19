@@ -1,4 +1,4 @@
-import { assert, describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vite-plus/test';
 
 import { SeedcordErrorCode, isSeedcordError } from '#src/index';
 import { SeedcordError, throwSingleOrAggregate } from '#src/internal.index';

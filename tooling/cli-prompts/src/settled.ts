@@ -1,4 +1,4 @@
-import { expect, vi } from 'vitest';
+import { expect, vi } from 'vite-plus/test';
 
 // a single macrotask tick clears ink's layout effect on an idle machine and races once the whole workspace
 // runs its suites at once

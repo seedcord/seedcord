@@ -3,7 +3,7 @@ import { EventEmitter } from 'node:events';
 import { RESTEvents } from '@discordjs/rest';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { putCommands } from '#src/commands/putCommands';
 import { GLOBAL_ID } from '#src/commands/scopes';
@@ -13,7 +13,7 @@ import type { ScopeId } from '#src/commands/scopes';
 import type { DeployResult } from '#src/commands/types';
 import type { RateLimitData, REST } from '@discordjs/rest';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 const APP = 'app-1';
 const PING = { name: 'ping', description: 'Replies with Pong!' };

@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { CloudflaredTunnel } from '#commands/dev/tunnel/CloudflaredTunnel';
 

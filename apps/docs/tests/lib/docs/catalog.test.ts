@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import type { NavigationCategory, PackageCatalogEntry, PackageVersionCatalog } from '#lib/docs/types';
 import type { PackageIndexEntry } from '@seedcord/docs-engine';

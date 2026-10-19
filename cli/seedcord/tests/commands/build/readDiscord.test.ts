@@ -1,7 +1,7 @@
 import { BuilderComponent } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { readDiscord } from '#commands/build/builder/readDiscord';
 

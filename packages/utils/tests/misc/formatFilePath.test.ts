@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { afterEach, describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vite-plus/test';
 
 import { formatFilePath } from '#src/misc/formatFilePath';
 import { toPosixPath } from '#src/node/paths';

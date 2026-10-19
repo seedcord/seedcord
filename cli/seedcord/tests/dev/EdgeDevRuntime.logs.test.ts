@@ -5,7 +5,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { posixRelative } from '@seedcord/utils/node/internal';
 import chalk from 'chalk';
-import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import {
     asDevelopment,

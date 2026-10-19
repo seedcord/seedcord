@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { HostShutdown, HostStartup } from '@seedcord/types/internal';
-import { afterEach, describe, expect, it, onTestFinished, vi, type Mock } from 'vitest';
+import { afterEach, describe, expect, it, onTestFinished, vi, type Mock } from 'vite-plus/test';
 
 import { DevRunner } from '#commands/dev/DevRunner';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';

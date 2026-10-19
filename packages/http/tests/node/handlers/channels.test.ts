@@ -1,6 +1,6 @@
 import { DispatchContext } from '@seedcord/core';
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';

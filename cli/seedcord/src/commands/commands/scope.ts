@@ -4,7 +4,8 @@ import type { GuildSummary } from '@seedcord/core/internal';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 export type Scope =
-    { readonly kind: 'global'; readonly id: typeof GLOBAL_ID } | ({ readonly kind: 'guild' } & GuildSummary);
+    | { readonly kind: 'global'; readonly id: typeof GLOBAL_ID }
+    | ({ readonly kind: 'guild' } & GuildSummary);
 
 export type GuildScope = Extract<Scope, { kind: 'guild' }>;
 

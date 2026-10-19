@@ -7,7 +7,7 @@ function isMissing(error: unknown): boolean {
     return Error.isError(error) && 'code' in error && error.code === 'ENOENT';
 }
 
-// the docs bucket's layout on disk, for `pnpm docs:preview`
+// the docs bucket's layout on disk, for `vp run docs:preview`
 export class DirectoryBucket implements SiteBucket {
     constructor(private readonly root: string) {}
 

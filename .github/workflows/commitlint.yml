@@ -23,20 +23,17 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
-
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: $/.github/actions/setup
         with:
-          node-version: 26
-          cache: pnpm
+          install: false
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --filter .
+        run: vp install --frozen-lockfile --filter .
 
       - name: Lint last commit
         if: github.event_name == 'push'
-        run: pnpm exec commitlint --last --verbose
+        run: vp exec commitlint --last --verbose
 
       - name: Lint PR commit range
         if: github.event_name == 'pull_request'
-        run: pnpm exec commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose
+        run: vp exec commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose

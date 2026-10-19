@@ -2,7 +2,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vite-plus/test';
 
 import { ViteRestartFiles } from '#commands/dev/runtime/ViteRestartFiles';
 import { WorkerEnv } from '#core/modules/workerEnv';

@@ -1,5 +1,5 @@
 import { ApplicationCommandType } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { planDeploy } from '#src/commands/planDeploy';
 import { GLOBAL_ID } from '#src/commands/scopes';

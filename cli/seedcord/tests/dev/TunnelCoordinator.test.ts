@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { TunnelCoordinator } from '#commands/dev/tunnel/TunnelCoordinator';
 import { silentLogger } from '#tests/silentLogger';

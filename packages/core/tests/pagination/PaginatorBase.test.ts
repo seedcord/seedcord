@@ -1,5 +1,5 @@
 import { ComponentType } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { PaginatorBase } from '#pagination/PaginatorBase';
 import { ArraySourceBase } from '#pagination/sources';

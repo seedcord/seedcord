@@ -5,7 +5,7 @@
 Integration-style. Test through the real interface, not mocks of internal parts.
 
 ```typescript
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vite-plus/test';
 
 import { CooldownManager } from '../src/CooldownManager';
 

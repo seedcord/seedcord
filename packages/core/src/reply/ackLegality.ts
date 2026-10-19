@@ -6,7 +6,15 @@ import type { AckTrace } from './AckTrace';
 export type AckState = 'unacked' | 'deferred-reply' | 'deferred-update' | 'replied';
 
 export type ReplyMethod =
-    'reply' | 'defer' | 'deferUpdate' | 'update' | 'followUp' | 'edit' | 'delete' | 'send' | 'showModal';
+    | 'reply'
+    | 'defer'
+    | 'deferUpdate'
+    | 'update'
+    | 'followUp'
+    | 'edit'
+    | 'delete'
+    | 'send'
+    | 'showModal';
 
 interface Illegal {
     // spliced into the message after "was called when"

@@ -3,7 +3,7 @@ import { createServer } from 'node:net';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostListenHost } from '@seedcord/types/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Seedcord } from '#src/node/Seedcord';
 import { bindSignedEnv, serverConfig } from '#tests/helpers/nodeHost';

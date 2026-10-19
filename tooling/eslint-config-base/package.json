@@ -1,19 +1,15 @@
 {
     "name": "@seedcord/eslint-config-base",
-    "type": "module",
     "version": "0.0.1",
-    "engines": {
-        "node": ">=24.11",
-        "bun": ">=1.4.2"
-    },
     "private": true,
     "description": "Internal ESLint config content, bundled into @seedcord/eslint-config",
-    "types": "./dist/index.d.mts",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "tooling/eslint-config-base"
     },
+    "type": "module",
+    "types": "./dist/index.d.mts",
     "exports": {
         ".": {
             "import": {
@@ -26,22 +22,46 @@
                 "types": "./dist/prettier.d.mts",
                 "default": "./dist/prettier.mjs"
             }
+        },
+        "./oxfmt": {
+            "import": {
+                "types": "./dist/oxfmt.d.mts",
+                "default": "./dist/oxfmt.mjs"
+            }
         }
     },
     "scripts": {
-        "build": "tsdown",
+        "build": "vp pack",
         "clean": "rm -rf dist",
         "lint": "eslint '**/*.ts' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.ts' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,json,md}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,json,md}' --cache --no-error-on-unmatched-pattern",
+        "fmt": "vp fmt --write '**/*.{ts,json,md}' --no-error-on-unmatched-pattern",
+        "fmt:check": "vp fmt --check '**/*.{ts,json,md}' --no-error-on-unmatched-pattern",
         "tc": "tsgo --noEmit"
+    },
+    "dependencies": {
+        "@types/eslint-plugin-security": "catalog:eslint",
+        "@typescript-eslint/parser": "catalog:eslint",
+        "eslint-config-prettier": "catalog:eslint",
+        "eslint-import-resolver-typescript": "catalog:eslint",
+        "eslint-plugin-import-x": "catalog:eslint",
+        "eslint-plugin-security": "catalog:eslint",
+        "eslint-plugin-tsdoc": "catalog:eslint",
+        "eslint-plugin-unicorn": "catalog:eslint",
+        "lodash.merge": "catalog:deps",
+        "prettier": "catalog:deps",
+        "typescript-eslint": "catalog:eslint"
+    },
+    "devDependencies": {
+        "@seedcord/tsconfig": "workspace:^",
+        "@types/lodash.merge": "^4.6.9",
+        "eslint": "catalog:eslint"
     },
     "peerDependencies": {
         "eslint": "^9.22.0 || ^10.4.0",
         "eslint-plugin-better-tailwindcss": "catalog:eslint",
-        "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
         "eslint-plugin-mdx": "catalog:eslint",
+        "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
         "prettier-plugin-tailwindcss": "catalog:deps",
         "tailwindcss": "catalog:deps",
         "typescript": "catalog:peer"
@@ -63,22 +83,8 @@
             "optional": true
         }
     },
-    "dependencies": {
-        "@types/eslint-plugin-security": "catalog:eslint",
-        "@typescript-eslint/parser": "catalog:eslint",
-        "eslint-config-prettier": "catalog:eslint",
-        "eslint-import-resolver-typescript": "catalog:eslint",
-        "eslint-plugin-import-x": "catalog:eslint",
-        "eslint-plugin-security": "catalog:eslint",
-        "eslint-plugin-tsdoc": "catalog:eslint",
-        "eslint-plugin-unicorn": "catalog:eslint",
-        "lodash.merge": "catalog:deps",
-        "prettier": "catalog:deps",
-        "typescript-eslint": "catalog:eslint"
-    },
-    "devDependencies": {
-        "@seedcord/tsconfig": "workspace:^",
-        "@types/lodash.merge": "^4.6.9",
-        "eslint": "catalog:eslint"
+    "engines": {
+        "bun": ">=1.4.2",
+        "node": ">=24.11"
     }
 }

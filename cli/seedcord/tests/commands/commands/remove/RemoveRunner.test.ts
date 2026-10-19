@@ -2,7 +2,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { CleanMode } from '#commands/commands/clean/CleanMode';
 import { PurgeMode } from '#commands/commands/purge/PurgeMode';
@@ -12,7 +12,7 @@ import { APP_ID, fakeDiscord, slash } from '#tests/commands/commands/fakeBot';
 
 import type { RemoveMode } from '#commands/commands/remove/RemoveMode';
 import type { GuildTargets } from '#commands/commands/scope';
-import type { Mock } from 'vitest';
+import type { Mock } from 'vite-plus/test';
 
 const ALPHA: GuildTargets = { kind: 'named', ids: ['111'] };
 

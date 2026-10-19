@@ -1,7 +1,7 @@
 import { DispatchContext, Notice } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Events } from 'discord.js';
-import { describe, expect, expectTypeOf, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vite-plus/test';
 
 import { RegisterEvent } from '#bDecorators/Events';
 import { EventHandler } from '#handlers/event';

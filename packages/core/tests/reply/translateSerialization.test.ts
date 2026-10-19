@@ -1,6 +1,6 @@
 import { ContainerBuilder, FileBuilder, SectionBuilder, TextDisplayBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { translateSerializationError } from '#reply/translateSerialization';
 

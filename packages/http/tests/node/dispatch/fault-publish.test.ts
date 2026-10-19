@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { InteractionKind, Notice } from '@seedcord/core';
 import { interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { dispatchInteraction } from '#src/dispatch/dispatchInteraction';

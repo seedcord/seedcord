@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { posixRelative } from '@seedcord/utils/node/internal';
 import { bindings, exports } from 'cf/config';
-import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { assert, describe, expect, it, onTestFinished, vi } from 'vite-plus/test';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { DevRunner } from '#commands/dev/DevRunner';

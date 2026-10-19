@@ -1,6 +1,6 @@
 import { CustomId, InteractionKind } from '@seedcord/core';
 import { storeInteractionRoute } from '@seedcord/core/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 import { resolve } from '#src/dispatch/resolve';

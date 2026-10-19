@@ -1,6 +1,6 @@
 import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { ButtonStyle, ComponentType } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Controls } from '#pagination/Controls';
 import { PAGE_MAX, pageCursor } from '#pagination/cursor';

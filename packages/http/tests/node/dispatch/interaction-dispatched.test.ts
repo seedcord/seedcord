@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { defineGate, Fault, InteractionKind, RegisterInteractionMiddleware, Silence } from '@seedcord/core';
 import { GatedMetadataKey, interactionMiddleware, MiddlewareRegistry } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';

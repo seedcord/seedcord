@@ -2,7 +2,7 @@ import { Fault, Notice, Silence } from '@seedcord/core';
 import { outcomeFor, queuedMsFor } from '@seedcord/core/internal';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { timestampFromSnowflake } from '@seedcord/utils';
-import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import { afterEach, describe, expect, it, vi, type MockInstance } from 'vite-plus/test';
 
 import { reportDispatch } from '#src/dispatch/dispatchReport';
 import { InteractionKind } from '#src/metadataKeys';

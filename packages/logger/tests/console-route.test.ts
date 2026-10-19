@@ -1,5 +1,5 @@
 import { stripAnsi } from '@seedcord/utils';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { consoleRecord, routeConsole, traceError } from '#src/consoleRoute';
 import { formatBody } from '#src/node';

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { KEY, PromptTerminal } from '#src/PromptTerminal';
 import { PROMPT_MARKS } from '#src/rows';

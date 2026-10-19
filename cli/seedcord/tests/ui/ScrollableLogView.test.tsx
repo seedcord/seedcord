@@ -1,6 +1,6 @@
 import { render } from 'ink-testing-library';
 import React from 'react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vite-plus/test';
 
 import { NO_ROOM, ScrollableLogView } from '#ui/components/primitives/ScrollableLogView';
 import { expandRows, messageColumn, wrapRows } from '#ui/logRows';

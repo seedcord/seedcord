@@ -3,7 +3,7 @@ import { join, resolve } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { toPosixPath } from '@seedcord/utils/node/internal';
-import { assert, describe, it, expect, onTestFinished, vi } from 'vitest';
+import { assert, describe, it, expect, onTestFinished, vi } from 'vite-plus/test';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';
 import { openModuleLoader } from '#core/modules/openModuleLoader';

@@ -1,7 +1,7 @@
 import { runInNewContext } from 'node:vm';
 
 import { BAKED_IDS_KEY } from '@seedcord/core/internal';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { workerEntry } from '#commands/build/builder/workerEntry';
 

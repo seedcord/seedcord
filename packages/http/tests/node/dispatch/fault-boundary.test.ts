@@ -2,7 +2,7 @@ import { DiscordAPIError } from '@discordjs/rest';
 import { Fault, InteractionKind, Notice, Silence } from '@seedcord/core';
 import { Logger } from '@seedcord/logger';
 import { MessageFlags } from 'discord-api-types/v10';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';

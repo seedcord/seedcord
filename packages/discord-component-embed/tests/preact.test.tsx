@@ -1,7 +1,7 @@
 /** @jsxImportSource preact */
 // no preact/compat import here. loading it patches isReactComponent onto core preact's Component
 import { Component, createContext } from 'preact';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { Container, LinkButton, Section, TextDisplay, toComponentEmbed } from '#src/index';
 

@@ -4,7 +4,7 @@ import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { Seedcord } from '#src/edge/Seedcord';

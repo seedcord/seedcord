@@ -1,6 +1,6 @@
 import { settled, stableFrame } from '@seedcord/cli-prompts/testing';
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vite-plus/test';
 
 import { NO_FILTER_ROOM } from '#ui/components/primitives/FilterPanel';
 import { NO_ROOM } from '#ui/components/primitives/ScrollableLogView';

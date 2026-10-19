@@ -3,7 +3,8 @@
  * `refused` and `failed`.
  */
 export type DispatchResult =
-    { readonly outcome: 'handled' } | { readonly outcome: 'refused' | 'failed'; readonly caught: unknown };
+    | { readonly outcome: 'handled' }
+    | { readonly outcome: 'refused' | 'failed'; readonly caught: unknown };
 
 /**
  * One event handler's result. `handler` is its class name.

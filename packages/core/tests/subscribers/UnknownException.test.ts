@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { AckTrace } from '@seedcord/core/internal';
 import { ComponentType } from 'discord-api-types/v10';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vite-plus/test';
 
 import { UnknownException } from '#subscribers/default/UnknownException';
 

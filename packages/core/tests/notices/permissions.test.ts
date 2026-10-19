@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vite-plus/test';
 
 import { MissingPermissions, MissingRole } from '#notices/index';
 import { cardJson } from '#tests/utils/cardText';

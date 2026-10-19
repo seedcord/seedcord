@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { MOCK_PACKAGE_NAME, TEMP_DIR } from './utils';
 import { entryPointMembers, findMember, readApiPackage, readApiPackageRaw } from './utils/test-helpers';

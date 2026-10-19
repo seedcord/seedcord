@@ -18,7 +18,7 @@ export function useMeasuredBox(ref: RefObject<DOMElement | null>): MeasuredBox {
     useLayoutEffect(() => {
         if (!ref.current) return;
         const { width, height } = measureElement(ref.current);
-        // eslint-disable-next-line @eslint-react/set-state-in-effect -- Ink measures only after render, and the equality bail stops the update chain
+
         setBox((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
     });
 

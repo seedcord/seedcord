@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vite-plus/test';
 
 import { IndexFetchError, PackageVersionNotFoundError, ProjectFetchError } from '#remote/errors';
 import { IndexLoader } from '#remote/IndexLoader';
