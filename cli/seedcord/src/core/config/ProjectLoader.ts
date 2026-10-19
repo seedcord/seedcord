@@ -1,6 +1,7 @@
 import { dirname, resolve } from 'node:path';
 
 import { Project } from '#core/project/Project';
+import { realPath } from '#core/project/realPath';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { assertNoHashPaths } from './assertNoHashPaths';
@@ -13,6 +14,7 @@ import { locateConfig } from './locateConfig';
 import { rethrowVitePluginError, VitePlugins } from './vitePlugins';
 
 import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
+import type { RealPath } from '#core/project/realPath';
 import type { DefaultMode, ShellMode } from '#core/viteMode';
 import type { CheckedConfig } from './ConfigValidator';
 import type { BuildTarget } from './detectTarget';
@@ -42,7 +44,11 @@ function resolveTypecheck(value: SeedcordHmrConfig['typecheck'], root: string): 
     if (value === undefined || value === false) return { enabled: false };
     if (value === true || value.tsconfig === undefined) return { enabled: true };
 
-    return { enabled: true, tsconfig: resolve(root, value.tsconfig) };
+    return { enabled: true, tsconfig: realPathUnder(root, value.tsconfig) };
+}
+
+function realPathUnder(base: string, path: string): RealPath {
+    return realPath(resolve(base, path));
 }
 
 export class ProjectLoader {
@@ -53,8 +59,8 @@ export class ProjectLoader {
     ) {}
 
     public async readConfig(projectDir = process.cwd(), check?: ProjectCheck): Promise<LoadedConfig> {
-        const configPath = locateConfig(projectDir);
-        const configDir = dirname(configPath);
+        const configPath = realPath(locateConfig(projectDir));
+        const configDir = realPath(dirname(configPath));
         const mode = this.shell.applyMode(this.defaultMode, configDir);
         const target = detectTarget(configDir);
         await using stack = new AsyncDisposableStack();
@@ -85,7 +91,7 @@ export class ProjectLoader {
 
     private async resolveConfig(
         modules: ModuleLoader,
-        configPath: string,
+        configPath: RealPath,
         target: BuildTarget,
         mode: string
     ): Promise<ResolvedSeedcordConfig> {
@@ -95,15 +101,15 @@ export class ProjectLoader {
         const { config } = checked;
 
         const configDir = dirname(configPath);
-        const root = resolve(configDir, config.root ?? '.');
-        const instance = resolve(root, config.instance);
+        const root = realPathUnder(configDir, config.root ?? '.');
+        const instance = realPathUnder(root, config.instance);
         const build = this.resolveBuildOptions(configDir, config.build);
         const typecheck = resolveTypecheck(config.hmr?.typecheck, root);
 
         return {
             instance,
             root,
-            files: (config.files ?? []).map((folder) => resolve(root, folder)),
+            files: (config.files ?? []).map((folder) => realPathUnder(root, folder)),
             configFile: configPath,
             target: this.resolveTarget(root, configDir, checked),
             build,
@@ -125,8 +131,8 @@ export class ProjectLoader {
         } = checked;
         return {
             ...target,
-            start: build?.start === undefined ? undefined : resolve(root, build.start),
-            outDir: resolve(configDir, build?.outDir ?? 'dist')
+            start: build?.start === undefined ? undefined : realPathUnder(root, build.start),
+            outDir: realPathUnder(configDir, build?.outDir ?? 'dist')
         };
     }
 
@@ -134,6 +140,6 @@ export class ProjectLoader {
         configDir: string,
         build: SeedcordBuildConfig | undefined
     ): ResolvedSeedcordBuildConfig {
-        return build?.tsconfig ? { tsconfig: resolve(configDir, build.tsconfig) } : {};
+        return build?.tsconfig ? { tsconfig: realPathUnder(configDir, build.tsconfig) } : {};
     }
 }

@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { TypeChecker } from '#commands/build/builder/TypeChecker';
 import { Project } from '#core/project/Project';
+import { realPath } from '#core/project/realPath';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
@@ -20,11 +21,15 @@ beforeEach(async () => {
 
 function projectFor(tsconfig?: string): Project {
     const read: Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target' | 'build'> = {
-        root: projectDir,
-        configFile: join(projectDir, 'seedcord.config.ts'),
+        root: realPath(projectDir),
+        configFile: realPath(join(projectDir, 'seedcord.config.ts')),
         files: [],
-        target: { kind: 'server', start: join(projectDir, 'index.ts'), outDir: join(projectDir, 'dist') },
-        build: tsconfig === undefined ? {} : { tsconfig }
+        target: {
+            kind: 'server',
+            start: realPath(join(projectDir, 'index.ts')),
+            outDir: realPath(join(projectDir, 'dist'))
+        },
+        build: tsconfig === undefined ? {} : { tsconfig: realPath(tsconfig) }
     };
     // justified: the type checker and Project read only the fields above
     const config = read as ResolvedSeedcordConfig;

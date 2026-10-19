@@ -1,3 +1,4 @@
+import type { RealPath } from '#core/project/realPath';
 import type { EdgeTarget, ServerTarget } from './detectTarget';
 import type { VitePlugins } from './vitePlugins';
 import type { TypedOmit } from '@seedcord/types';
@@ -150,23 +151,25 @@ export type ResolvedTunnel = { mode: 'off' } | { mode: 'quick' } | { mode: 'url'
 
 export type ResolvedEdgeTarget = EdgeTarget & { port: number };
 
-export type ResolvedServerTarget = ServerTarget & { start: string | undefined; outDir: string };
+export type ResolvedServerTarget = ServerTarget & { start: RealPath | undefined; outDir: RealPath };
 
 export type ResolvedTarget = ResolvedServerTarget | ResolvedEdgeTarget;
 
-export type ResolvedTypecheck = { enabled: false } | { enabled: true; tsconfig?: string };
+export type ResolvedTypecheck = { enabled: false } | { enabled: true; tsconfig?: RealPath };
 
 export interface ResolvedSeedcordBuildConfig {
-    tsconfig?: string;
+    tsconfig?: RealPath;
 }
 
-// every path in here is absolute
 export interface ResolvedSeedcordConfig extends Required<
-    TypedOmit<SeedcordConfig, 'build' | 'hmr' | 'tunnel' | 'port' | 'vitePlugins'>
+    TypedOmit<SeedcordConfig, 'build' | 'hmr' | 'tunnel' | 'port' | 'vitePlugins' | 'root' | 'instance' | 'files'>
 > {
+    root: RealPath;
+    instance: RealPath;
+    files: RealPath[];
     tunnel: ResolvedTunnel;
     vitePlugins: VitePlugins;
-    configFile: string;
+    configFile: RealPath;
     target: ResolvedTarget;
     build: ResolvedSeedcordBuildConfig;
     typecheck: ResolvedTypecheck;

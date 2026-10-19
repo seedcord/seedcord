@@ -8,6 +8,7 @@ import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { DevSession } from '#commands/dev/DevSession';
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
+import { realPath } from '#core/project/realPath';
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
@@ -23,10 +24,14 @@ import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
 function config(): ResolvedSeedcordConfig {
     return {
-        root: process.cwd(),
-        configFile: `${process.cwd()}/seedcord.config.ts`,
-        target: { kind: 'server', start: `${process.cwd()}/package.json`, outDir: 'dist' },
-        instance: `${process.cwd()}/package.json`,
+        root: realPath(process.cwd()),
+        configFile: realPath(join(process.cwd(), 'seedcord.config.ts')),
+        target: {
+            kind: 'server',
+            start: realPath(join(process.cwd(), 'package.json')),
+            outDir: realPath(join(process.cwd(), 'dist'))
+        },
+        instance: realPath(join(process.cwd(), 'package.json')),
         tunnel: { mode: 'quick' },
         typecheck: { enabled: false },
         idleAnimation: true,

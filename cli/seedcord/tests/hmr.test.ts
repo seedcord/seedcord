@@ -19,17 +19,19 @@ import {
 
 import { HmrPlugin } from '#commands/dev/runtime/HmrPlugin';
 import { ViteRestartFiles } from '#commands/dev/runtime/ViteRestartFiles';
+import { realPath } from '#core/project/realPath';
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
 
 import type { DevEvent } from '#commands/dev/runtime/events';
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { EnvironmentModuleNode, HotUpdateOptions, ViteDevServer } from 'vite';
 
 const HMR_EVENT_NAME = 'seedcord:hmr';
 
 // the plugin turns a save of a missing file into a delete
-const projectRoot = mkdtempSync(join(tmpdir(), 'seedcord-hmr-'));
+const projectRoot = realPath(mkdtempSync(join(tmpdir(), 'seedcord-hmr-')));
 for (const saved of [
     'src/commands/ping.ts',
     'src/commands/Click.ts',
@@ -131,11 +133,15 @@ function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0], st
 
 describe('HmrPlugin', () => {
     let hmrPlugin: HmrPlugin;
-    const mockConfig = {
+    const mockConfig: ResolvedSeedcordConfig = {
         root: projectRoot,
-        configFile: join(projectRoot, 'seedcord.config.ts'),
-        target: { kind: 'server', start: 'src/index.ts', outDir: 'dist' } as const,
-        instance: 'src/Seedcord.ts',
+        configFile: realPath(join(projectRoot, 'seedcord.config.ts')),
+        target: {
+            kind: 'server',
+            start: realPath(join(projectRoot, 'src/index.ts')),
+            outDir: realPath(join(projectRoot, 'dist'))
+        },
+        instance: realPath(join(projectRoot, 'src/Seedcord.ts')),
         typecheck: { enabled: false } as const,
         idleAnimation: true,
         tunnel: { mode: 'quick' } as const,
@@ -145,7 +151,7 @@ describe('HmrPlugin', () => {
         vitePlugins: vitePluginsOf()
     };
 
-    const srcRoot = join(projectRoot, 'src');
+    const srcRoot = realPath(join(projectRoot, 'src'));
     let trace: MockInstance<Logger['trace']>;
 
     beforeEach(() => {
@@ -222,7 +228,7 @@ describe('HmrPlugin', () => {
     );
 
     it('asks for a restart on a lockfile save beside the config of a bot rooted at ./src', () => {
-        const config = { ...mockConfig, root: srcRoot, configFile: join(projectRoot, 'seedcord.config.ts') };
+        const config = { ...mockConfig, root: srcRoot };
         const lockfile = join(projectRoot, 'pnpm-lock.yaml');
         writeFileSync(lockfile, '');
         const { plugin, events } = configuredPlugin(config);

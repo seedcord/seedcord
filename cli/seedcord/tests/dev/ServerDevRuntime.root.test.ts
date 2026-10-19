@@ -7,6 +7,7 @@ import { readFiles } from '@seedcord/utils';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
+import { realPath } from '#core/project/realPath';
 
 import { devContextFor } from './devConfigFor';
 import { fakeBot } from './fakes';
@@ -35,7 +36,7 @@ const HANDLERS_ENTRY = [
 
 function contextListing(dir: string, files: string[]): DevRuntimeContext {
     const context = devContextFor(dir, 'index.ts');
-    return { ...context, config: { ...context.config, files } };
+    return { ...context, config: { ...context.config, files: files.map((folder) => realPath(folder)) } };
 }
 
 async function writeProject(dir: string): Promise<void> {

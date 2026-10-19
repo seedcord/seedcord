@@ -5,19 +5,21 @@ import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 
 import { viteEnvFiles } from '#core/modules/viteEnvFiles';
-import { watchedPath } from '#core/project/watchedPath';
+import { realPath } from '#core/project/realPath';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
+import type { RealPath } from '#core/project/realPath';
 import type { FSWatcher } from 'node:fs';
 
 const logger = new Logger('HMR', { channel: 'hmr' });
 
 export class ViteRestartFiles {
-    private readonly dir: string;
     private readonly names: Set<string>;
 
-    constructor(dir: string, names: readonly string[]) {
-        this.dir = watchedPath(dir);
+    constructor(
+        private readonly dir: RealPath,
+        names: readonly string[]
+    ) {
         this.names = new Set(names);
     }
 
@@ -25,7 +27,7 @@ export class ViteRestartFiles {
         { configFile, viteMode }: Pick<ResolvedSeedcordConfig, 'configFile' | 'viteMode'>,
         targetFiles: readonly string[]
     ): ViteRestartFiles {
-        return new ViteRestartFiles(dirname(configFile), [
+        return new ViteRestartFiles(realPath(dirname(configFile)), [
             basename(configFile),
             ...viteEnvFiles(viteMode),
             ...targetFiles

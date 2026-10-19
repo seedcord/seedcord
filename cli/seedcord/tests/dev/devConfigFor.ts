@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 
+import { realPath } from '#core/project/realPath';
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
@@ -9,10 +10,14 @@ import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
 export function devConfigFor(root: string, instance: string): ResolvedSeedcordConfig {
     return {
-        configFile: join(root, 'seedcord.config.ts'),
-        root: join(root, 'src'),
-        target: { kind: 'server', start: join(root, 'src', instance), outDir: join(root, 'dist') },
-        instance: join(root, 'src', instance),
+        configFile: realPath(join(root, 'seedcord.config.ts')),
+        root: realPath(join(root, 'src')),
+        target: {
+            kind: 'server',
+            start: realPath(join(root, 'src', instance)),
+            outDir: realPath(join(root, 'dist'))
+        },
+        instance: realPath(join(root, 'src', instance)),
         tunnel: { mode: 'quick' },
         build: {},
         files: [],

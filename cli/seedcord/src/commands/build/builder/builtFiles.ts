@@ -66,7 +66,7 @@ export function builtFilesSource({
 }: BuiltFilesOptions): string {
     const moduleOptions = { base: rootKey };
     const fileOptions = { ...moduleOptions, query: LISTED_FILE_QUERY, import: 'default' };
-    const { listed, skippedFolders, projectFiles } = layout.bundledData();
+    const { listed, skippedFolders, configDir } = layout.bundledData();
 
     return [
         `${BOT_FILES_SLOT} = {`,
@@ -74,7 +74,7 @@ export function builtFilesSource({
         `    root: ${rootExpression},`,
         `    listed: ${JSON.stringify(listed)},`,
         `    skippedFolders: ${JSON.stringify(skippedFolders)},`,
-        `    projectFiles: ${JSON.stringify(projectFiles)},`,
+        ...(configDir === undefined ? [] : [`    configDir: ${JSON.stringify(configDir)},`]),
         `    folders: ${JSON.stringify(folders)},`,
         `    modules: import.meta.glob(${JSON.stringify(layout.moduleGlobs())}, ${JSON.stringify(moduleOptions)}),`,
         `    listedFiles: import.meta.glob(${JSON.stringify(layout.listedFileGlobs())}, ${JSON.stringify(fileOptions)}),`,

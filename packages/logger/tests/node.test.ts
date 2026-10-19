@@ -50,7 +50,6 @@ function asBuiltBot({ root, configFile }: { root: string; configFile: string }):
         configFile,
         listed: [],
         skippedFolders: [],
-        projectFiles: [],
         folders: [],
         modules: {},
         listedFiles: {}
@@ -196,7 +195,6 @@ describe('winston sinks', () => {
             root: join(project.path, 'src'),
             listed: [],
             skippedFolders: [],
-            projectFiles: [],
             configFile: '../seedcord.config.ts'
         });
         using sink = new WinstonFileSink({ format: 'json' });

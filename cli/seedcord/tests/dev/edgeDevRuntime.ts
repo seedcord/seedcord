@@ -11,6 +11,7 @@ import { onTestFinished } from 'vitest';
 
 import { EdgeDevRuntime } from '#commands/dev/runtime/EdgeDevRuntime';
 import { toSeedcordInstance } from '#core/modules/importInstance';
+import { realPath } from '#core/project/realPath';
 import { StateFolder } from '#core/state/StateFolder';
 import { copyEdgeBot } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES, FAKE_TOKEN } from '#tests/commands/build/smoke';
@@ -28,7 +29,12 @@ import type { AddressInfo } from 'node:net';
 const ANY_PORT = 0;
 
 function edgeTarget(projectDir: string, port: number): ResolvedEdgeTarget {
-    return { kind: 'edge', cloudflareConfig: join(projectDir, 'cloudflare.config.ts'), viteRoot: projectDir, port };
+    return {
+        kind: 'edge',
+        cloudflareConfig: realPath(join(projectDir, 'cloudflare.config.ts')),
+        viteRoot: realPath(projectDir),
+        port
+    };
 }
 
 function configWith(
@@ -39,12 +45,12 @@ function configWith(
     files: string[] = []
 ): ResolvedSeedcordConfig {
     return {
-        configFile: join(projectDir, 'seedcord.config.ts'),
-        root: join(projectDir, 'src'),
-        instance: join(projectDir, 'src/bot.ts'),
+        configFile: realPath(join(projectDir, 'seedcord.config.ts')),
+        root: realPath(join(projectDir, 'src')),
+        instance: realPath(join(projectDir, 'src/bot.ts')),
         target,
         build: {},
-        files,
+        files: files.map((folder) => realPath(folder)),
         typecheck: { enabled: false },
         idleAnimation: true,
         viteMode,

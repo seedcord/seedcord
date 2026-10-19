@@ -18,6 +18,7 @@ import type { DevEvent } from './events';
 import type { ViteRestartFiles } from './ViteRestartFiles';
 import type { HmrEventType, HmrUpdateEvent, TypedOmit } from '@seedcord/types';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
+import type { BotLayout } from '@seedcord/utils/internal';
 import type { FSWatcher } from 'node:fs';
 import type {
     DevEnvironment,
@@ -40,7 +41,7 @@ const TYPE_COLOR = {
 
 export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly logger: Logger;
-    private readonly files: ProjectFiles;
+    private readonly layout: BotLayout;
     private readonly lastUpdate = new Map<string, number>();
     private server: ViteDevServer | null = null;
     private readonly restartPatterns: Set<string>;
@@ -61,7 +62,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         private readonly restartFiles: ViteRestartFiles
     ) {
         super();
-        this.files = ProjectFiles.of(config);
+        this.layout = ProjectFiles.of(config).layout;
         this.logger = new Logger('HMR', { channel: 'hmr' });
         this.restartPatterns = new Set((config.hmr?.restart ?? []).map((pattern) => this.fromRoot(pattern)));
     }
@@ -192,7 +193,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
         return (
             [...this.restartPatterns].some((pattern) => minimatch(relPath, pattern)) ||
-            this.files.isProjectFile(file) ||
+            this.layout.isProjectFile(file) ||
             file === resolve(root, instance)
         );
     }

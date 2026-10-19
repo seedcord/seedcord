@@ -9,6 +9,7 @@ import { afterEach, assert, describe, expect, it, onTestFinished, vi } from 'vit
 import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { WorkerEnv } from '#core/modules/workerEnv';
+import { realPath } from '#core/project/realPath';
 import { cloudflareConfigSource, linkPackages } from '#tests/edgeFolder';
 import { holdViteHmrPort } from '#tests/viteHmrPort';
 import { vitePluginsOf } from '#tests/vitePluginsOf';
@@ -28,7 +29,7 @@ async function edgeTarget(root: string): Promise<BuildTarget> {
     const cloudflareConfig = join(root, 'cloudflare.config.ts');
     await writeFile(cloudflareConfig, cloudflareConfigSource('SEEDCORD_PROBE: bindings.secret()'));
     await linkPackages(root, ['cf']);
-    return { kind: 'edge', cloudflareConfig, viteRoot: root };
+    return { kind: 'edge', cloudflareConfig: realPath(cloudflareConfig), viteRoot: realPath(root) };
 }
 
 // a package whose default export reports which build its conditions picked

@@ -8,7 +8,7 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
-import { watchedPath } from '#core/project/watchedPath';
+import { realPath } from '#core/project/realPath';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { ViteDevServer } from 'vite';
@@ -33,7 +33,7 @@ afterEach(async () => {
 function project(): string {
     const scratch = mkdtempDisposableSync(join(tmpdir(), 'seedcord-watch-'));
     onTestFinished(() => scratch.remove());
-    const root = scratch.path;
+    const root = realPath(scratch.path);
 
     for (const folder of ['logs', 'build', 'src/logs', 'src/dist']) mkdirSync(join(root, folder), { recursive: true });
     writeFileSync(join(root, 'bot.ts'), 'export const bot = 1;\n');
@@ -47,19 +47,17 @@ function project(): string {
 
 interface WatchedProject {
     watcher: ViteDevServer['watcher'];
-    real: string;
     touchUntilReported: (file: string) => Promise<void>;
 }
 
 async function watchProject(root: string, botRoot = root): Promise<WatchedProject> {
-    const real = watchedPath(root);
     const reported = new Set<string>();
 
     const config: Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target'> = {
-        root: botRoot,
-        configFile: join(root, 'seedcord.config.ts'),
+        root: realPath(botRoot),
+        configFile: realPath(join(root, 'seedcord.config.ts')),
         files: [],
-        target: { kind: 'server', start: undefined, outDir: join(root, 'build') }
+        target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'build')) }
     };
     server = await createServer(
         mergeViteConfig(serverViteConfig(config), {
@@ -67,7 +65,7 @@ async function watchProject(root: string, botRoot = root): Promise<WatchedProjec
                 {
                     name: 'record',
                     hotUpdate: ({ file }: { file: string }) => {
-                        reported.add(`/${posixRelative(real, file)}`);
+                        reported.add(`/${posixRelative(root, file)}`);
                         return [];
                     }
                 }
@@ -76,7 +74,7 @@ async function watchProject(root: string, botRoot = root): Promise<WatchedProjec
     );
     // chokidar's ready can fire before a plugin hook can listen for it
     const { watcher } = server;
-    await vi.waitFor(() => expect(watcher.getWatched()[join(real, 'src', 'logs')]).toContain('format.ts'), {
+    await vi.waitFor(() => expect(watcher.getWatched()[join(root, 'src', 'logs')]).toContain('format.ts'), {
         timeout: WATCH_TIMEOUT_MS
     });
 
@@ -90,7 +88,7 @@ async function watchProject(root: string, botRoot = root): Promise<WatchedProjec
             { timeout: WATCH_TIMEOUT_MS }
         );
 
-    return { watcher, real, touchUntilReported };
+    return { watcher, touchUntilReported };
 }
 
 describe('dev server watch ignores', () => {
@@ -101,11 +99,11 @@ describe('dev server watch ignores', () => {
         'never watches the logs folder beside the config of a bot rooted at %s',
         async (_, botRoot) => {
             const dir = project();
-            const { watcher, real, touchUntilReported } = await watchProject(dir, botRoot(dir));
+            const { watcher, touchUntilReported } = await watchProject(dir, botRoot(dir));
 
             await touchUntilReported(SOURCE_FILE);
 
-            expect(watcher.getWatched()[join(real, 'logs')]).toBeUndefined();
+            expect(watcher.getWatched()[join(dir, 'logs')]).toBeUndefined();
         },
         TEST_TIMEOUT_MS
     );
@@ -123,11 +121,12 @@ describe('dev server watch ignores', () => {
     it(
         'never watches outDir',
         async () => {
-            const { watcher, real, touchUntilReported } = await watchProject(project());
+            const dir = project();
+            const { watcher, touchUntilReported } = await watchProject(dir);
 
             await touchUntilReported(SOURCE_FILE);
 
-            expect(watcher.getWatched()[join(real, 'build')]).toBeUndefined();
+            expect(watcher.getWatched()[join(dir, 'build')]).toBeUndefined();
         },
         TEST_TIMEOUT_MS
     );

@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
@@ -41,6 +41,24 @@ describe('ProjectLoader', () => {
             outDir: resolve(projectDir, 'dist')
         });
         expect(resolved.build.tsconfig).toBeUndefined();
+    });
+
+    it('resolves every path under a symlinked root to the folder the link points at', async () => {
+        const projectDir = tempProject();
+        writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
+        const source = join(projectDir, 'source');
+        mkdirSync(source);
+        symlinkSync(source, join(projectDir, 'src'), 'dir');
+        const { open } = stubModulesExporting({ ...MINIMAL, root: './src', files: ['./locales'] });
+
+        await using loaded = await new ProjectLoader(open, new ShellMode()).readConfig(projectDir);
+
+        expect(loaded.config).toMatchObject({
+            root: source,
+            instance: join(source, 'bot.ts'),
+            files: [join(source, 'locales')],
+            target: { start: join(source, 'index.ts') }
+        });
     });
 
     it.each([

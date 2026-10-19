@@ -1,37 +1,12 @@
-import { readdirSync } from 'node:fs';
-import { basename, dirname, join, relative } from 'node:path';
+import { basename, dirname, relative } from 'node:path';
 
 import { logsFolderIn } from '@seedcord/logger/internal';
-import { BotLayout, isInside } from '@seedcord/utils/internal';
-import { minimatch } from 'minimatch';
-
-import { watchedPath } from './watchedPath';
+import { BotLayout } from '@seedcord/utils/internal';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { BotEntry } from '@seedcord/utils/internal';
 
-const PROJECT_FILES = [
-    'seedcord.config.*',
-    'tsconfig*.json',
-    'package.json',
-    'pnpm-lock.yaml',
-    'package-lock.json',
-    'yarn.lock',
-    'bun.lock',
-    'bun.lockb'
-];
-
 type ProjectPaths = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target'>;
-
-function isProjectFileIn(configDir: string, file: string): boolean {
-    return dirname(file) === configDir && PROJECT_FILES.some((pattern) => minimatch(basename(file), pattern));
-}
-
-function projectFilesIn(configDir: string): string[] {
-    return readdirSync(configDir)
-        .map((name) => join(configDir, name))
-        .filter((file) => isProjectFileIn(configDir, file));
-}
 
 function layoutOf({ root, configFile, files, target }: ProjectPaths): BotLayout {
     const configDir = dirname(configFile);
@@ -42,7 +17,7 @@ function layoutOf({ root, configFile, files, target }: ProjectPaths): BotLayout 
         root,
         listed: keysOf(files),
         skippedFolders: keysOf([...outDir, logsFolderIn(configDir)]),
-        projectFiles: keysOf(projectFilesIn(configDir))
+        configDir: BotLayout.keyUnder(root, configDir)
     });
 }
 
@@ -50,24 +25,9 @@ const filesOfConfig = new WeakMap<ProjectPaths, ProjectFiles>();
 
 export class ProjectFiles {
     public readonly layout: BotLayout;
-    private readonly configDir: string;
-    private realFolders?: (readonly [real: string, folder: string])[];
 
     private constructor(paths: ProjectPaths) {
         this.layout = layoutOf(paths);
-        this.configDir = dirname(paths.configFile);
-    }
-
-    // maps a path chokidar or vite reported back onto the layout's own spelling of root and the config folder
-    public layoutPath(watched: string): string {
-        this.realFolders ??= [this.layout.root, this.configDir].map((folder) => [watchedPath(folder), folder] as const);
-        const match = this.realFolders.find(([real]) => isInside(real, watched));
-        return match ? join(match[1], relative(match[0], watched)) : watched;
-    }
-
-    // matches one created after dev started too
-    public isProjectFile(watched: string): boolean {
-        return isProjectFileIn(this.configDir, this.layoutPath(watched));
     }
 
     // dev, build and codegen share one layout per config

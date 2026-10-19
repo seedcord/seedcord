@@ -28,12 +28,11 @@ function register({
     folders = [],
     listed = [],
     skippedFolders = [],
-    projectFiles = [],
     modules = {},
     listedFiles = {},
     ...rest
 }: Partial<TypedOmit<BuiltSlot, 'kind'>>): Disposable {
-    return setBuiltFiles({ root, folders, listed, skippedFolders, projectFiles, modules, listedFiles, ...rest });
+    return setBuiltFiles({ root, folders, listed, skippedFolders, modules, listedFiles, ...rest });
 }
 
 // a text file the way the build stores it
@@ -110,7 +109,6 @@ describe('setBuiltFilesHook', () => {
             root: ROOT,
             listed: [],
             skippedFolders: [],
-            projectFiles: [],
             configFile: 'seedcord.config.ts'
         });
         // setBuiltFilesHook keeps the hook it could not run yet

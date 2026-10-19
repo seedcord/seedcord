@@ -116,6 +116,7 @@
         "eslint-plugin-react-hooks": "catalog:eslint",
         "ink-testing-library": "^4.0.0",
         "tsx": "catalog:deps",
+        "type-fest": "catalog:deps",
         "typescript": "catalog:peer",
         "vite": "catalog:peer"
     },

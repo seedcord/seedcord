@@ -25,7 +25,6 @@ describe('KyselyMigrationManager', () => {
             root: testEnv.rootDir,
             listed: [],
             skippedFolders: [],
-            projectFiles: [],
             configFile: 'seedcord.config.ts'
         });
         return () => dev[Symbol.dispose]();

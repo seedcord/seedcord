@@ -6,16 +6,20 @@ import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { ViteRestartFiles } from '#commands/dev/runtime/ViteRestartFiles';
 import { WorkerEnv } from '#core/modules/workerEnv';
-import { watchedPath } from '#core/project/watchedPath';
+import { realPath } from '#core/project/realPath';
 import { edgeFolder } from '#tests/edgeFolder';
 
 import type { LogRecord } from '@seedcord/types';
 
 // the files edge dev passes
 async function configFiles(mode = 'development'): Promise<{ files: ViteRestartFiles; config: string }> {
-    const { cloudflareConfig } = await edgeFolder();
+    const folder = await edgeFolder();
+    const cloudflareConfig = realPath(folder.cloudflareConfig);
     const { files } = await WorkerEnv.load(cloudflareConfig, mode);
-    const restartFiles = new ViteRestartFiles(dirname(cloudflareConfig), [basename(cloudflareConfig), ...files]);
+    const restartFiles = new ViteRestartFiles(realPath(dirname(cloudflareConfig)), [
+        basename(cloudflareConfig),
+        ...files
+    ]);
     return { files: restartFiles, config: cloudflareConfig };
 }
 
@@ -40,13 +44,13 @@ describe('ViteRestartFiles', () => {
     ] as const)('includes %s in mode %s: %s', async (name, mode, expected) => {
         const { files, config } = await configFiles(mode);
 
-        expect(files.includes(join(dirname(watchedPath(config)), name))).toBe(expected);
+        expect(files.includes(join(dirname(config), name))).toBe(expected);
     });
 
     it('includes cloudflare.config.ts written with forward slashes', async () => {
         const { files, config } = await configFiles();
 
-        expect(files.includes(watchedPath(config).replaceAll('\\', '/'))).toBe(true);
+        expect(files.includes(config.replaceAll('\\', '/'))).toBe(true);
     });
 
     it('leaves a .env in another folder out', async () => {

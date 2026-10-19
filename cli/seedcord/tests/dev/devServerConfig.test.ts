@@ -7,6 +7,7 @@ import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { edgeViteConfig, serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
+import { realPath } from '#core/project/realPath';
 import { holdViteHmrPort } from '#tests/viteHmrPort';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -14,10 +15,10 @@ import type { InlineConfig } from 'vite';
 
 function configAt(root: string): Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target'> {
     return {
-        root,
-        configFile: join(root, 'x.ts'),
+        root: realPath(root),
+        configFile: realPath(join(root, 'x.ts')),
         files: [],
-        target: { kind: 'server', start: undefined, outDir: join(root, 'dist') }
+        target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'dist')) }
     };
 }
 

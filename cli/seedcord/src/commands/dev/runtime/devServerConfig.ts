@@ -19,12 +19,10 @@ type DevConfigPaths = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'file
 const OUTSIDE_ROOT_IGNORES = ['**/node_modules/**', '**/dist/**', '**/.git/**', `**/${STATE_FOLDER}/**`];
 
 export function devWatchOptions(config: DevConfigPaths): NonNullable<ServerOptions['watch']> {
-    const files = ProjectFiles.of(config);
-    const { layout } = files;
-    const ignored = (watched: string): boolean => {
+    const { layout } = ProjectFiles.of(config);
+    const ignored = (file: string): boolean => {
         // HmrPlugin asks for a restart when one changes
-        if (files.isProjectFile(watched)) return false;
-        const file = files.layoutPath(watched);
+        if (layout.isProjectFile(file)) return false;
         if (layout.isSkipped(file)) return true;
         const posix = toPosixPath(file);
         return !layout.holds(file) && OUTSIDE_ROOT_IGNORES.some((pattern) => minimatch(posix, pattern, { dot: true }));

@@ -7,19 +7,22 @@ import { createServer } from 'vite';
 import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { ProjectFiles } from '#core/project/ProjectFiles';
+import { realPath } from '#core/project/realPath';
 
-async function projectRoot(): Promise<string> {
+import type { RealPath } from '#core/project/realPath';
+
+async function projectRoot(): Promise<RealPath> {
     const tmp = await mkdtempDisposable(join(tmpdir(), 'seedcord-files-'));
     onTestFinished(() => tmp.remove());
-    return tmp.path;
+    return realPath(tmp.path);
 }
 
-function filesUnder(root: string): ProjectFiles {
+function filesUnder(root: RealPath): ProjectFiles {
     return ProjectFiles.of({
         root,
-        configFile: join(root, 'seedcord.config.ts'),
+        configFile: realPath(join(root, 'seedcord.config.ts')),
         files: [],
-        target: { kind: 'server', start: undefined, outDir: join(root, 'dist') }
+        target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'dist')) }
     });
 }
 
@@ -51,6 +54,9 @@ describe('the build globs', () => {
             'src/dist/shape.ts',
             'seedcord.config.ts',
             'package.json',
+            'tsconfig.build.json',
+            'bun.lock',
+            'locales/package.json',
             'locales/en.json',
             'locales/theme.ts',
             'locales/.cache/stale.json',
@@ -62,9 +68,9 @@ describe('the build globs', () => {
         }
         const files = ProjectFiles.of({
             root,
-            configFile: join(root, 'seedcord.config.ts'),
-            files: [join(root, 'locales')],
-            target: { kind: 'server', start: undefined, outDir: join(root, 'dist') }
+            configFile: realPath(join(root, 'seedcord.config.ts')),
+            files: [realPath(join(root, 'locales'))],
+            target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'dist')) }
         });
         const { layout } = files;
         const listed = tree.map((file) => join(root, file)).filter((file) => layout.isListedFile(file));
@@ -87,6 +93,15 @@ describe('ProjectFiles', () => {
         await mkdir(join(root, 'made-on-load'));
 
         await expect(files.foldersIncludingEmpty()).resolves.toContain('/made-on-load');
+    });
+
+    it('skips a project file written beside the config after the layout was read', async () => {
+        const root = await projectRoot();
+        const { layout } = filesUnder(root);
+
+        await writeFile(join(root, 'tsconfig.json'), '{}\n');
+
+        expect(layout.isSkipped(join(root, 'tsconfig.json'))).toBe(true);
     });
 
     // root reads a folder whatever its mode.

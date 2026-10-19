@@ -8,6 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { botEnvironment } from '#core/modules/botEnvironment';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
+import { realPath } from '#core/project/realPath';
 
 import type { ViteDevServer } from 'vite';
 
@@ -91,10 +92,10 @@ describe('dev runtime module resolution', () => {
         server = await createServer(
             mergeViteConfig(
                 serverViteConfig({
-                    root: join(root, 'src'),
-                    configFile: join(root, 'seedcord.config.ts'),
+                    root: realPath(join(root, 'src')),
+                    configFile: realPath(join(root, 'seedcord.config.ts')),
                     files: [],
-                    target: { kind: 'server', start: undefined, outDir: join(root, 'dist') }
+                    target: { kind: 'server', start: undefined, outDir: realPath(join(root, 'dist')) }
                 }),
                 { server: { hmr: false, watch: null } }
             )

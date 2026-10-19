@@ -333,7 +333,6 @@ describe('CommandRegistry Integration', () => {
             root: testEnv.rootDir,
             listed: [],
             skippedFolders: [],
-            projectFiles: [],
             configFile: 'seedcord.config.ts'
         });
         const command = (name: string): string => `
@@ -364,7 +363,6 @@ describe('CommandRegistry Integration', () => {
             root: testEnv.rootDir,
             listed: [],
             skippedFolders: [],
-            projectFiles: [],
             configFile: 'seedcord.config.ts'
         });
         const sent: string[] = [];
