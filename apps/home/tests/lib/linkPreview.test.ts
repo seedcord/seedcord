@@ -3,9 +3,22 @@ import { describe, expect, it } from 'vitest';
 import { postPreview } from '#lib/linkPreview';
 import { POST } from '#tests/fixtures/post';
 
+const dayIn = (timeZone: string, seconds: number): string =>
+    new Date(seconds * 1000).toLocaleDateString('en-CA', { timeZone });
+
 describe('postPreview', () => {
-    it('shows the author, a discord date in seconds, and the read time', () => {
-        expect(postPreview(POST).subtext).toEqual(['**Dhruv**', `<t:${Date.UTC(2026, 9, 19) / 1000}:D>`, '6 min read']);
+    it('shows the author, a discord date, and the read time', () => {
+        const [byline, date, minutes] = postPreview(POST).subtext ?? [];
+
+        expect([byline, minutes]).toEqual(['**Dhruv**', '6 min read']);
+        expect(date).toMatch(/^<t:\d+:D>$/);
+    });
+
+    // discord shows <t:…:D> in each reader's own timezone
+    it.each(['America/Los_Angeles', 'Pacific/Noumea'])('shows the post date to a reader in %s', (timeZone) => {
+        const seconds = Number(/<t:(\d+):D>/.exec(postPreview(POST).subtext?.[1] ?? '')?.[1]);
+
+        expect(dayIn(timeZone, seconds)).toBe(POST.created);
     });
 
     it('joins several authors into one list', () => {
