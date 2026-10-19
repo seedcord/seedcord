@@ -1,4 +1,4 @@
-import { readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { imageSize } from '@fumari/image-size';
@@ -26,7 +26,7 @@ export function readPostImage(src: string, postFile: string): PostImage | string
     const name = path.posix.basename(src);
     if (!name.endsWith(WEBP)) {
         const webp = `${name.slice(0, name.length - path.posix.extname(name).length)}${WEBP}`;
-        return `${src} is not a webp. Every post image has to be a webp. Convert it with \`cwebp ${name} -o ${webp}\`.`;
+        return `${src} is not a webp. Every post image has to be a webp. Convert it with \`cwebp -q 80 ${name} -o ${webp}\`.`;
     }
 
     if (path.posix.normalize(src) !== name) {
@@ -48,6 +48,17 @@ export function readPostImage(src: string, postFile: string): PostImage | string
 }
 
 const isUrlSlug = (folder: string): boolean => folder.split('-').every((word) => /^[a-z0-9]+$/.test(word));
+
+// the image route publishes every webp in the folder, including ones the post never shows
+export function postImageNames(postFile: string): string[] {
+    return readdirSync(path.dirname(postFile))
+        .filter((name) => name.endsWith(WEBP))
+        .map((name) => {
+            const read = readPostImage(`./${name}`, postFile);
+            if (typeof read === 'string') throw new Error(read);
+            return name;
+        });
+}
 
 export function remarkPostFiles() {
     return (tree: Root, file: VFile): void => {
@@ -79,7 +90,10 @@ export function remarkPostFiles() {
             if (typeof read === 'string') file.fail(read, image);
 
             image.url = read.src;
-            image.data = { ...image.data, hProperties: { ...image.data?.hProperties, ...read } };
+            image.data = {
+                ...image.data,
+                hProperties: { ...image.data?.hProperties, width: read.width, height: read.height }
+            };
         });
     };
 }

@@ -23,10 +23,16 @@ describe('post frontmatter', () => {
         expect(result.error?.message).toContain('authors.ts');
     });
 
-    it('rejects an edited date before the created date', () => {
-        const result = parse({ ...VALID, edited: '2026-10-18' });
+    it('rejects an author listed twice', () => {
+        const result = parse({ ...VALID, authors: ['materwelonDhruv', 'materwelonDhruv'] });
 
-        expect(result.error?.message).toContain('edited (2026-10-18) is before created (2026-10-19)');
+        expect(result.error?.message).toContain('listed twice');
+    });
+
+    it.each(['2026-10-18', '2026-10-19'])('rejects an edited date of %s, on or before the created date', (edited) => {
+        const result = parse({ ...VALID, edited });
+
+        expect(result.error?.message).toContain(`edited (${edited}) is not after created (2026-10-19)`);
     });
 
     it('rejects a cover that is not webp', () => {
@@ -34,7 +40,7 @@ describe('post frontmatter', () => {
 
         const result = parse({ ...VALID, cover: { src: './cover.png', alt: 'the dev tui' } }, post.file);
 
-        expect(result.error?.message).toContain('cwebp cover.png -o cover.webp');
+        expect(result.error?.message).toContain('cwebp -q 80 cover.png -o cover.webp');
     });
 
     it('parses a webp cover into its url and size', () => {

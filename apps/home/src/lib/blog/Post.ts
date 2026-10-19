@@ -6,7 +6,8 @@ import { twinDocument } from '@seedcord/ui/twin';
 import { REPO_URL } from '#lib/site';
 
 import { AUTHORS_BY_HANDLE } from './authors';
-import { postPath } from './paths';
+import { postFolderName, postPath } from './paths';
+import { postImageNames } from './postFiles';
 import { formatPostDate, joinList } from './summary';
 
 import type { Author } from './authors';
@@ -14,6 +15,7 @@ import type { BlogPost } from './source';
 import type { PostAuthor, PostSummary } from './summary';
 
 const GITHUB = 'https://github.com';
+const AVATAR_PX = 96;
 // pull requests merge into next
 const CONTENT_SOURCE = `${REPO_URL}/edit/next/apps/home/content/blog`;
 
@@ -23,13 +25,21 @@ export class Post {
     constructor(private readonly page: BlogPost) {}
 
     // fumadocs-mdx sets absolutePath on every page it loads from disk
-    get folder(): string {
+    private get file(): string {
         if (this.page.absolutePath === undefined) throw new Error(`${this.page.path} has no file on disk.`);
-        return path.dirname(this.page.absolutePath);
+        return this.page.absolutePath;
+    }
+
+    get folder(): string {
+        return path.dirname(this.file);
     }
 
     get slug(): string {
-        return path.basename(this.folder);
+        return postFolderName(this.file);
+    }
+
+    get images(): string[] {
+        return postImageNames(this.file);
     }
 
     get body(): BlogPost['data']['body'] {
@@ -71,7 +81,13 @@ export class Post {
         return this.page.data.authors.map((handle) => {
             const author: Author = AUTHORS_BY_HANDLE[handle];
             const github = `${GITHUB}/${handle}`;
-            return { handle, name: author.name, url: author.site ?? github, github, avatar: `${github}.png?size=96` };
+            return {
+                handle,
+                name: author.name,
+                url: author.site ?? github,
+                github,
+                avatar: `${github}.png?size=${AVATAR_PX}`
+            };
         });
     }
 }

@@ -1,8 +1,8 @@
 import GithubSlugger from 'github-slugger';
 import { Marked, TextRenderer } from 'marked';
 
+import { highlightCodeToken } from '#lib/docs/highlightCodeToken';
 import { sanitizeHtml } from '#lib/sanitizeHtml';
-import { highlightFenceToHtml } from '@seedcord/ui/shiki';
 
 import type { Tokens } from 'marked';
 
@@ -39,11 +39,7 @@ function readmeMarked(folderUrl: string | undefined): Marked {
                 resolveAgainst(folderUrl, token as Tokens.Link | Tokens.Image);
                 return;
             }
-            if (token.type !== 'code') return;
-            // marked types token as a union of every token kind. the type check above makes this a code token
-            const { text, lang } = token as Tokens.Code;
-            const html = await highlightFenceToHtml(text, lang ?? '');
-            if (html) Object.assign(token, { type: 'html', text: html });
+            await highlightCodeToken(token);
         },
         renderer: {
             // marked leaves the id off a heading

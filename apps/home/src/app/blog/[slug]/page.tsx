@@ -9,7 +9,6 @@ import { Byline, PostDates } from '#components/blog/PostMeta';
 import { Footer } from '#components/home/Footer';
 import { Nav } from '#components/home/Nav';
 import { SiteLink } from '#components/ui/SiteLink';
-import { PosterButton } from '#components/ui/PosterButton';
 import { BLOG_PATH } from '#lib/blog/paths';
 import { postFromParams, postParams } from '#lib/blog/posts';
 import { postJsonLd, postMetadata } from '#lib/blog/seo';
@@ -27,9 +26,6 @@ function PostHeader({ post }: { post: PostSummary }): ReactNode {
     return (
         <header className={cn('border-b-[3px] border-(--seed-dark)')}>
             <div className={cn('mx-auto flex max-w-3xl flex-col items-start gap-6 px-5 pt-12 pb-10 lg:pt-16')}>
-                <PosterButton href={BLOG_PATH} variant="ink">
-                    ← blog
-                </PosterButton>
                 <h1
                     className={cn(
                         'font-display text-[clamp(2.4rem,5.6vw,4rem)] leading-[0.95] font-semibold tracking-tight text-(--seed-dark)'

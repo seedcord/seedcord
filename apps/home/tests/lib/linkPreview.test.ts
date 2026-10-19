@@ -14,7 +14,6 @@ describe('postPreview', () => {
         expect(date).toMatch(/^<t:\d+:D>$/);
     });
 
-    // discord shows <t:…:D> in each reader's own timezone
     it.each(['America/Los_Angeles', 'Pacific/Noumea'])('shows the post date to a reader in %s', (timeZone) => {
         const seconds = Number(/<t:(\d+):D>/.exec(postPreview(POST).subtext?.[1] ?? '')?.[1]);
 

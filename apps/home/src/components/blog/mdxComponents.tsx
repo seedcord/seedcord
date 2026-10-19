@@ -40,7 +40,7 @@ function Fence({ children }: { children?: ReactNode }): ReactNode {
     return <CodeCard code={fence.code} filename={fence.title} lang={fence.lang} copyable className={cn(MEDIA)} />;
 }
 
-function PostLink({ href = '', children }: Pick<ComponentProps<'a'>, 'href' | 'children'>): ReactNode {
+function PostLink({ href, children }: { href: string; children?: ReactNode }): ReactNode {
     return (
         <SiteLink
             href={href}

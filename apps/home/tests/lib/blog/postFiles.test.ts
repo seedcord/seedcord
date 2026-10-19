@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { postImageNames } from '#lib/blog/postFiles';
 import { POST_SLUG, PostFolder } from '#tests/mdxPipeline';
 
 const KB = 1024;
@@ -18,7 +19,7 @@ describe('the files of a post', () => {
     it('fails the build on a format other than webp', async () => {
         using post = new PostFolder().bytes('shot.png', 10);
 
-        await expect(post.compile('![the dev tui](./shot.png)')).rejects.toThrow('cwebp shot.png -o shot.webp');
+        await expect(post.compile('![the dev tui](./shot.png)')).rejects.toThrow('cwebp -q 80 shot.png -o shot.webp');
     });
 
     it('fails the build on a .webp file in another format', async () => {
@@ -57,6 +58,12 @@ describe('the files of a post', () => {
         await expect(post.compile('![the dev tui][shot]\n\n[shot]: ./shot.webp')).rejects.toThrow(
             'Write it inline as ![the dev tui](./shot.webp)'
         );
+    });
+
+    it('fails the build on a webp over 500 KB that the post never shows', () => {
+        using post = new PostFolder().webp('shot.webp').webp('unused.webp', 500 * KB + 1);
+
+        expect(() => postImageNames(post.file)).toThrow('./unused.webp is 501 KB');
     });
 
     it.each(['typed custom-ids', 'c#-tips', 'Typed-Ids'])(

@@ -2,8 +2,9 @@ import { marked } from 'marked';
 
 import { markdownFence } from '#lib/docs/comments/fence';
 import { resolveInlineHref } from '#lib/docs/comments/resolvers';
+import { highlightCodeToken } from '#lib/docs/highlightCodeToken';
 import { sanitizeHtml } from '#lib/sanitizeHtml';
-import { highlightFenceToHtml, highlightInlineToHtml } from '@seedcord/ui/shiki';
+import { highlightInlineToHtml } from '@seedcord/ui/shiki';
 
 import { decorateProseLinks } from './decorateProseLinks';
 
@@ -15,12 +16,7 @@ marked.use({
     async: true,
     walkTokens: async (token) => {
         if (token.type === 'code') {
-            // marked types token as a union of every token kind. the type check above makes this a code token
-            const { text, lang } = token as Tokens.Code;
-            const html = await highlightFenceToHtml(text, lang ?? '');
-            if (html) {
-                Object.assign(token, { type: 'html', text: html });
-            }
+            await highlightCodeToken(token);
         } else if (token.type === 'codespan') {
             const { text } = token as Tokens.Codespan;
             const html = await highlightInlineToHtml(text);

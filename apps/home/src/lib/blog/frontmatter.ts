@@ -30,19 +30,25 @@ export function postSchema({ path: postFile }: MacroSchemaContext) {
     return pageSchema
         .extend({
             description: z.string().min(1),
-            authors: z.array(authorHandle).min(1),
+            authors: z
+                .array(authorHandle)
+                .min(1)
+                .refine(
+                    (handles) => new Set(handles).size === handles.length,
+                    'An author is listed twice. List each once.'
+                ),
             created: isoDate,
             edited: isoDate.optional(),
             cover: cover.optional(),
             unlisted: z.boolean().default(false)
         })
         .superRefine(({ created, edited }, context) => {
-            if (edited === undefined || edited >= created) return;
+            if (edited === undefined || edited > created) return;
 
             context.addIssue({
                 code: 'custom',
                 path: ['edited'],
-                message: `edited (${edited}) is before created (${created}). Set edited to the date of your last change.`
+                message: `edited (${edited}) is not after created (${created}). Set edited to the date of your last change, or remove it.`
             });
         });
 }

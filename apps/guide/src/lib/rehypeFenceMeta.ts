@@ -1,14 +1,19 @@
-import { FENCE_ATTR, languageOf, visitFences } from '@seedcord/ui/fence';
+import { languageOf, visitFences } from '@seedcord/ui/fence';
 import { parseCodeBlockAttributes } from 'fumadocs-core/mdx-plugins/codeblock-utils';
 
 import type { Properties, Root } from 'hast';
 import type { VFile } from 'vfile';
 
+export const FENCE_ATTR = {
+    output: 'data-output',
+    twoslash: 'data-twoslash',
+    hovers: 'data-hovers'
+} as const;
+
 // the markdown twin strips these back out
 export const FENCE_MODES = ['twoslash', 'hovers'];
 
-// rehypeFenceTitle from @seedcord/ui runs before this plugin and writes the title
-const FENCE_NAMES = ['title', 'output', ...FENCE_MODES];
+const FENCE_NAMES = ['output', ...FENCE_MODES];
 
 const TWOSLASH_LANGS = new Set(['ts', 'tsx', 'typescript']);
 

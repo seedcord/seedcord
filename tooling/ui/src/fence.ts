@@ -11,13 +11,7 @@ import type {} from 'mdast-util-to-hast';
 import type { ReactNode } from 'react';
 
 const LANGUAGE_PREFIX = 'language-';
-
-export const FENCE_ATTR = {
-    title: 'data-title',
-    output: 'data-output',
-    twoslash: 'data-twoslash',
-    hovers: 'data-hovers'
-} as const;
+const TITLE_ATTR = 'data-title';
 
 export function visitFences(tree: Root, onFence: (code: Element, meta: string) => void): void {
     visit(tree, 'element', (node) => {
@@ -40,7 +34,7 @@ export function rehypeFenceTitle() {
     return (tree: Root): void => {
         visitFences(tree, (code, meta) => {
             const { title } = parseCodeBlockAttributes(meta, ['title']).attributes;
-            if (typeof title === 'string') code.properties = { ...code.properties, [FENCE_ATTR.title]: title };
+            if (typeof title === 'string') code.properties = { ...code.properties, [TITLE_ATTR]: title };
         });
     };
 }
@@ -62,7 +56,7 @@ export function readFenceElement(children: ReactNode): FenceElement | null {
 
     const className = typeof props.className === 'string' ? props.className : '';
     const tag = languageIn(className.split(/\s+/));
-    const title = props[FENCE_ATTR.title];
+    const title = props[TITLE_ATTR];
 
     return {
         code: props.children,

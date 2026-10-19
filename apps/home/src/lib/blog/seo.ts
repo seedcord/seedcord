@@ -52,16 +52,17 @@ export function postMetadata(post: PostSummary): Metadata {
     const url = canonicalUrl(post.url);
     const alt = ogPageCardAlt({ pill: OG_PILL, name: post.title, meta: ogMeta(post) });
     const images = [{ url: ogImagePath(post.slug), ...OG_SIZE, alt }];
+    // an unlisted post links nothing a crawler could index
+    const visibility = post.unlisted
+        ? { robots: { index: false, follow: false }, types: FEED }
+        : { robots: null, types: { ...FEED, 'text/markdown': canonicalUrl(twinPath(post.slug)) } };
 
     return {
         title: post.title,
         description: post.description,
-        ...(post.unlisted && { robots: { index: false, follow: false } }),
+        robots: visibility.robots,
         authors: post.authors.map(({ name, url: authorUrl }) => ({ name, url: authorUrl })),
-        alternates: {
-            canonical: url,
-            types: { ...FEED, 'text/markdown': canonicalUrl(twinPath(post.slug)) }
-        },
+        alternates: { canonical: url, types: visibility.types },
         openGraph: {
             type: 'article',
             siteName: SITE_NAME,

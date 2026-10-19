@@ -14,7 +14,7 @@ export const POST: PostSummary = {
             avatar: 'https://github.com/materwelonDhruv.png?size=96'
         }
     ],
-    created: '2026-10-19',
+    created: '2026-10-18',
     edited: '2026-10-19',
     unlisted: false,
     minutes: 6,

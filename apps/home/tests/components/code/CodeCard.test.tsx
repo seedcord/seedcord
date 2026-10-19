@@ -11,6 +11,6 @@ describe('CodeCard', () => {
             await CodeCard({ code: '\n    indented();\nflush();\n\n', filename: 'a.ts' })
         );
 
-        expect(textOf(html)).toContain('a.ts    indented();\nflush();');
+        expect(textOf(html)).toBe('a.ts    indented();\nflush();');
     });
 });

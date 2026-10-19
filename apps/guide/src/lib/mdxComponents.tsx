@@ -1,6 +1,6 @@
 import { Card, CodeBlock, GUIDE, cn, isSitePath, tw } from '@seedcord/ui';
 import { AnchoredHeading } from '@seedcord/ui/AnchoredHeading';
-import { FENCE_ATTR, readFenceElement } from '@seedcord/ui/fence';
+import { readFenceElement } from '@seedcord/ui/fence';
 import { highlightInlineToHtml } from '@seedcord/ui/shiki';
 import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
@@ -10,6 +10,7 @@ import { HoverHint } from '#components/HoverHint';
 import { Shell } from '#components/Shell';
 import { LINK, Ref } from '#components/Ref';
 import { TypeHover } from '#components/TypeHover';
+import { FENCE_ATTR } from '#lib/rehypeFenceMeta';
 import { twoslashBlock } from '#lib/twoslash';
 
 import type { FenceMode } from '#lib/twoslash';
