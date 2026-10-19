@@ -5,8 +5,6 @@ import type * as CloudflareVitePlugin from '@cloudflare/vite-plugin';
 export type CloudflarePlugin = typeof CloudflareVitePlugin.cloudflare;
 export type ImportCloudflare = () => Promise<typeof CloudflareVitePlugin>;
 
-export const WORKER_ENVIRONMENT = 'worker';
-
 // the importer's path at the end of node's message can hold the name too
 export function isPackageMissing(error: unknown, name: string): boolean {
     const notFound = Error.isError(error) && 'code' in error && error.code === 'ERR_MODULE_NOT_FOUND';

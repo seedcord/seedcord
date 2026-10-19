@@ -8,8 +8,9 @@ import { createBuilder } from 'vite';
 
 import { cliLogger } from '#core/cliLogger';
 import { restFromEnv } from '#core/discord/restFromEnv';
-import { importCloudflare, importCloudflareCopy, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
+import { importCloudflare, importCloudflareCopy } from '#core/modules/cloudflarePlugin';
 import { CommandScanner } from '#core/modules/CommandScanner';
+import { BOT_ENVIRONMENT } from '#core/modules/userCodeConfig';
 import { functionExportsOf } from '#core/modules/workerExports';
 import { viteKey } from '#core/project/ProjectFiles';
 
@@ -44,7 +45,7 @@ const DEFAULT_DEPS: EdgeBuildDeps = { importCloudflare, openDiscord: restFromEnv
 function captureChunks(onChunks: (chunks: Rolldown.OutputChunk[]) => void): Plugin {
     return {
         name: 'seedcord:capture-chunks',
-        applyToEnvironment: (environment) => environment.name === WORKER_ENVIRONMENT,
+        applyToEnvironment: (environment) => environment.name === BOT_ENVIRONMENT,
         generateBundle(_options, bundle) {
             onChunks(Object.values(bundle).filter((file) => file.type === 'chunk'));
         }
@@ -53,7 +54,7 @@ function captureChunks(onChunks: (chunks: Rolldown.OutputChunk[]) => void): Plug
 
 function workerEnvironment(): Record<string, EnvironmentOptions> {
     return {
-        [WORKER_ENVIRONMENT]: {
+        [BOT_ENVIRONMENT]: {
             build: {
                 sourcemap: true,
                 minify: false,
@@ -108,7 +109,7 @@ export class EdgeBuild extends TargetBuild {
         const [folders, cloudflare] = await Promise.all([files.foldersIncludingEmpty(), this.worker()]);
 
         const captured = await this.bundleWorker(ids, folders, cloudflare).catch(bundleFailed);
-        const chunks = captured ?? bundleFailed(`the ${WORKER_ENVIRONMENT} environment didn't write a bundle`);
+        const chunks = captured ?? bundleFailed(`the ${BOT_ENVIRONMENT} environment finished before writing a bundle`);
         const built = await cloudflare.built().catch(bundleFailed);
         assertNodeCompat(built, this.target.cloudflareConfig);
 

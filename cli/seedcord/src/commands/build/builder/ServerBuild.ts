@@ -3,8 +3,9 @@ import { extname, join, relative } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { build } from 'vite';
+import { createBuilder } from 'vite';
 
+import { BOT_ENVIRONMENT, environmentNamed } from '#core/modules/userCodeConfig';
 import { viteKey } from '#core/project/ProjectFiles';
 
 import { assertOutDirSafe } from './assertOutDirSafe';
@@ -18,11 +19,11 @@ import type { ResolvedSeedcordConfig, ResolvedServerTarget } from '#core/config/
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './output';
 import type { NextCommand } from './TargetBuild';
-import type { Rolldown } from 'vite';
+import type { Rolldown, ViteBuilder } from 'vite';
 
 const NODE_TARGET = 'node24';
 
-function outputChunks(result: Awaited<ReturnType<typeof build>>): Rolldown.OutputChunk[] {
+function outputChunks(result: Awaited<ReturnType<ViteBuilder['build']>>): Rolldown.OutputChunk[] {
     // vite returns a watcher only under build.watch
     const outputs = [result].flat().filter((output) => 'output' in output);
     return outputs.flatMap(({ output }) => output.filter((file) => file.type === 'chunk'));
@@ -61,7 +62,7 @@ export class ServerBuild extends TargetBuild {
         const { root } = config;
         const folders = await files.foldersIncludingEmpty();
 
-        const result = await build({
+        const builder = await createBuilder({
             root: configDir,
             mode: config.viteMode,
             configFile: false,
@@ -80,25 +81,30 @@ export class ServerBuild extends TargetBuild {
                 ...config.vitePlugins
             ],
             resolve: { tsconfigPaths: true },
-            build: {
-                ssr: true,
-                outDir,
-                emptyOutDir: true,
-                sourcemap: true,
-                minify: false,
-                target: NODE_TARGET,
-                rolldownOptions: {
-                    input: ENTRY_ID,
-                    output: {
-                        format: 'esm',
-                        preserveModules: true,
-                        preserveModulesRoot: root,
-                        entryFileNames: (chunk) => outputName(chunk.facadeModuleId)
+            environments: {
+                [BOT_ENVIRONMENT]: {
+                    resolve: { external: true },
+                    build: {
+                        outDir,
+                        emptyOutDir: true,
+                        sourcemap: true,
+                        minify: false,
+                        target: NODE_TARGET,
+                        rolldownOptions: {
+                            input: ENTRY_ID,
+                            output: {
+                                format: 'esm',
+                                preserveModules: true,
+                                preserveModulesRoot: root,
+                                entryFileNames: (chunk) => outputName(chunk.facadeModuleId)
+                            }
+                        }
                     }
                 }
-            },
-            ssr: { target: 'node', external: true }
+            }
         }).catch(bundleFailed);
+        const bot = environmentNamed(builder.environments, BOT_ENVIRONMENT, config.instance);
+        const result = await builder.build(bot).catch(bundleFailed);
 
         return bundleStats(outputChunks(result), files, join(outDir, ENTRY_FILE_NAME));
     }

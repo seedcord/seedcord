@@ -1,8 +1,7 @@
 import { basename, dirname } from 'node:path';
 
 import { fromWireError, wrapHot } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { displayPath, SeedcordError } from '@seedcord/errors/internal';
+import { displayPath } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { filterCirculars } from '@seedcord/utils';
@@ -13,17 +12,17 @@ import { CloudflareWorker } from '#commands/build/builder/CloudflareWorker';
 import { workerEntry } from '#commands/build/builder/workerEntry';
 import { listenHostFor } from '#commands/dev/tunnel/listenHost';
 import { rethrowVitePluginError } from '#core/config/vitePlugins';
-import { reportWorkerExports, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
+import { reportWorkerExports } from '#core/modules/cloudflarePlugin';
 import { edgeStandIns } from '#core/modules/edgeStandIns';
 import { openViteServer } from '#core/modules/openViteServer';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
-import { mergeViteConfig } from '#core/modules/userCodeConfig';
+import { BOT_ENVIRONMENT, environmentNamed, mergeViteConfig } from '#core/modules/userCodeConfig';
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { functionExportsOf } from '#core/modules/workerExports';
 import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
-import { edgeViteConfig } from './devServerConfig';
+import { CODEGEN_ENVIRONMENT, edgeViteConfig } from './devServerConfig';
 import { listenForInteractions } from './listenForInteractions';
 import { loadWorkerEntry } from './loadWorkerEntry';
 
@@ -36,7 +35,7 @@ import type {
     SeedcordFrameworkEvents,
     SeedcordInstance
 } from '@seedcord/types/internal';
-import type { DevEnvironment, Plugin, ViteDevServer } from 'vite';
+import type { Plugin, ViteDevServer } from 'vite';
 
 interface EdgeStarted extends StartedRuntime {
     readonly server: ViteDevServer;
@@ -45,37 +44,28 @@ interface EdgeStarted extends StartedRuntime {
 
 // workerd gives the worker environment its own cloudflare:workers and envapt binding
 function inNodeOnly(plugin: Plugin): Plugin {
-    return { ...plugin, applyToEnvironment: (environment) => environment.name === 'ssr' };
+    return { ...plugin, applyToEnvironment: (environment) => environment.name === CODEGEN_ENVIRONMENT };
 }
 
-// codegen reads a node copy of the bot out of the ssr environment
-function nodeCopy(onReady: (modules: RunnerModuleLoader) => void): Plugin {
+function nodeCopy(instance: string, onReady: (modules: RunnerModuleLoader) => void): Plugin {
     return {
         name: 'seedcord:node-copy',
         async configureServer(server) {
-            const modules = new RunnerModuleLoader(createServerModuleRunner(server.environments.ssr, { hmr: false }));
+            const copy = environmentNamed(server.environments, CODEGEN_ENVIRONMENT, instance);
+            const modules = new RunnerModuleLoader(createServerModuleRunner(copy, { hmr: false }));
             await modules.bindEdgeEnv();
             onReady(modules);
         }
     };
 }
 
-function workerEnvironment(server: ViteDevServer, instance: string): DevEnvironment {
-    const worker = server.environments[WORKER_ENVIRONMENT];
-    if (!worker) {
-        throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
-            instance,
-            `@cloudflare/vite-plugin did not create its "${WORKER_ENVIRONMENT}" environment`
-        ]);
-    }
-    return worker;
-}
-
 function workerChannel(
     server: ViteDevServer,
     instance: string
 ): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> {
-    return wrapHot<SeedcordCliEvents, SeedcordFrameworkEvents>(workerEnvironment(server, instance).hot);
+    return wrapHot<SeedcordCliEvents, SeedcordFrameworkEvents>(
+        environmentNamed(server.environments, BOT_ENVIRONMENT, instance).hot
+    );
 }
 
 // cloudflare/workers-sdk#16339, remove once it's fixed
@@ -84,7 +74,7 @@ function invokeErrorsAsJson(instance: string): Plugin {
     return {
         name: 'seedcord:invoke-errors-as-json',
         configureServer(server) {
-            const { hot } = workerEnvironment(server, instance);
+            const { hot } = environmentNamed(server.environments, BOT_ENVIRONMENT, instance);
             const handleInvoke = hot.handleInvoke.bind(hot);
             hot.handleInvoke = async (payload) => {
                 const result = await handleInvoke(payload);
@@ -122,7 +112,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
         // vite reruns the entry's load hook after any update that reaches the entry. bot.ts throws when it runs a second time
         let functionExports: Promise<string[]> | undefined;
-        const hmr = this.openHmr(context, WORKER_ENVIRONMENT, resources, [
+        const hmr = this.openHmr(context, BOT_ENVIRONMENT, resources, [
             basename(this.target.cloudflareConfig),
             ...workerEnv.files
         ]);
@@ -142,7 +132,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                     }),
                     inNodeOnly(edgeStandIns(() => Promise.resolve(workerEnv))),
                     // cloudflare() loads the worker entry during createServer. the entry's export list comes from this copy
-                    nodeCopy(modulesReady.resolve),
+                    nodeCopy(config.instance, modulesReady.resolve),
                     hmr.plugin,
                     invokeErrorsAsJson(config.instance),
                     cloudflare.plugins(),

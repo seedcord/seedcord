@@ -3,8 +3,14 @@ import { createServerModuleRunner } from 'vite';
 import { edgeStandIns } from './edgeStandIns';
 import { openViteServer } from './openViteServer';
 import { RunnerModuleLoader } from './RunnerModuleLoader';
-import { seedcordDependents } from './seedcordDependents';
-import { mergeViteConfig, NODE_CONDITIONS, WORKERD_CONDITIONS, userCodeConfig } from './userCodeConfig';
+import {
+    BOT_ENVIRONMENT,
+    environmentNamed,
+    mergeViteConfig,
+    NODE_CONDITIONS,
+    WORKERD_CONDITIONS,
+    userCodeConfig
+} from './userCodeConfig';
 import { WorkerEnv } from './workerEnv';
 
 import type { BuildTarget } from '#core/config/detectTarget';
@@ -42,7 +48,8 @@ export async function openModuleLoader(
     const workerEnv = target.kind === 'edge' ? lazyWorkerEnv(target.cloudflareConfig, mode) : undefined;
     // read up front because the runner reports anything a load hook throws as CoreImportFailed
     if (runsWorkerCode) await workerEnv?.();
-    const config = mergeViteConfig(userCodeConfig(runsWorkerCode ? WORKERD_CONDITIONS : NODE_CONDITIONS), {
+    const conditions = runsWorkerCode ? WORKERD_CONDITIONS : NODE_CONDITIONS;
+    const config = mergeViteConfig(userCodeConfig(BOT_ENVIRONMENT, conditions, projectDir), {
         root: projectDir,
         mode,
         configFile: false,
@@ -50,14 +57,14 @@ export async function openModuleLoader(
         clearScreen: false,
         // hmr: false still opens vite's websocket on 24678
         server: { middlewareMode: true, hmr: false, ws: false, watch: null },
-        // the ssr runner never reads the client dep cache in node_modules/.vite
+        // only a client environment reads the dep cache in node_modules/.vite
         optimizeDeps: { noDiscovery: true, include: [] },
-        ssr: { noExternal: seedcordDependents(projectDir) },
         plugins: [...(workerEnv ? [edgeStandIns(workerEnv)] : []), ...vitePlugins]
     });
     await using onFailure = new AsyncDisposableStack();
     const server = await openViteServer(onFailure, config);
-    const runner = createServerModuleRunner(server.environments.ssr, { hmr: false });
+    const bot = environmentNamed(server.environments, BOT_ENVIRONMENT, projectDir);
+    const runner = createServerModuleRunner(bot, { hmr: false });
     onFailure.defer(() => runner.close());
 
     const loader = new ViteModuleLoader(server, runner);

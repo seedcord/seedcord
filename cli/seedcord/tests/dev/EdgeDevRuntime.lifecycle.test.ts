@@ -220,7 +220,9 @@ describe('EdgeDevRuntime lifecycle', () => {
         const { projectDir } = project;
         // the worker loads this folder on start
         await writeFile(join(projectDir, 'src/handlers/greeting.ts'), GREETING_PROBE);
-        await using started = await startedRuntime(projectDir, undefined, { vitePlugins: [greetingPlugin()] });
+        await using started = await startedRuntime(projectDir, undefined, {
+            vitePlugins: [greetingPlugin(), greetingPlugin('codegen')]
+        });
         const { runtime, instance } = started;
 
         await runtime.startBot(instance);

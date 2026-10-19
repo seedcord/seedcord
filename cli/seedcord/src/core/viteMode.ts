@@ -30,7 +30,7 @@ export class ShellMode {
         return new ShellMode();
     }
 
-    // vite fills NODE_ENV with development on the first dev server it opens
+    // vite fills NODE_ENV with development when its first dev server opens
     public static pinNodeEnv(defaultMode: DefaultMode): void {
         // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- vite fills an empty NODE_ENV too
         process.env.NODE_ENV ||= defaultMode;
@@ -45,5 +45,5 @@ export class ShellMode {
     }
 }
 
-// vite writes NODE_ENV into process.env once a command starts it. the CLI loads this file before any command runs
+// the CLI loads this file before any command writes NODE_ENV
 export const startupShell = ShellMode.read();

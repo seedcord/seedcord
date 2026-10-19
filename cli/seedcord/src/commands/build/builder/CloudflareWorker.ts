@@ -2,7 +2,8 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 
-import { importCloudflare, isPackageMissing, WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
+import { importCloudflare, isPackageMissing } from '#core/modules/cloudflarePlugin';
+import { BOT_ENVIRONMENT } from '#core/modules/userCodeConfig';
 
 import { bundleFailed } from './output';
 import { workerEntryConfig } from './workerEntry';
@@ -53,7 +54,7 @@ export class CloudflareWorker {
     public plugins(options: Pick<PluginConfig, 'persistState'> = {}): Plugin[] {
         return this.cloudflare({
             config: workerEntryConfig,
-            viteEnvironment: { name: WORKER_ENVIRONMENT },
+            viteEnvironment: { name: BOT_ENVIRONMENT },
             inspectorPort: false,
             ...options
         });
@@ -65,7 +66,7 @@ export class CloudflareWorker {
         const { workers } = await readBuildOutput(this.viteRoot);
         const { config, bundleDir } = workers.default;
         return bundleDir === undefined
-            ? bundleFailed(`the ${WORKER_ENVIRONMENT} environment wrote no bundle folder`)
+            ? bundleFailed(`the build output of the ${BOT_ENVIRONMENT} environment leaves out its bundle folder`)
             : { config, bundleDir };
     }
 }

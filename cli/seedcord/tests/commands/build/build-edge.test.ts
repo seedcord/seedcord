@@ -9,7 +9,7 @@ import { bindings, exports } from 'cf/config';
 import { preview } from 'vite';
 import { afterAll, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 
-import { WORKER_ENVIRONMENT } from '#core/modules/cloudflarePlugin';
+import { BOT_ENVIRONMENT } from '#core/modules/userCodeConfig';
 
 import {
     copyEdgeBot,
@@ -77,7 +77,7 @@ describe('seedcord build on an edge bot', () => {
             root: projectDir,
             configFile: false,
             logLevel: 'silent',
-            plugins: [cloudflare({ viteEnvironment: { name: WORKER_ENVIRONMENT } })],
+            plugins: [cloudflare({ viteEnvironment: { name: BOT_ENVIRONMENT } })],
             preview: { port: 0 }
         });
         try {
@@ -109,7 +109,7 @@ describe('a built edge worker', () => {
             root: projectDir,
             configFile: false,
             logLevel: 'silent',
-            plugins: [cloudflare({ viteEnvironment: { name: WORKER_ENVIRONMENT } })],
+            plugins: [cloudflare({ viteEnvironment: { name: BOT_ENVIRONMENT } })],
             preview: { port: 0 }
         });
         let body: string;

@@ -9,9 +9,11 @@ const ID = 'virtual:greeting';
 // a bot file that loads only when vitePlugins serve virtual:greeting
 export const GREETING_PROBE = `export { default } from '${ID}';\n`;
 
-export function greetingPlugin(): Plugin {
+// a user plugin scopes itself to the bot by the environment's name
+export function greetingPlugin(environment = 'seedcord'): Plugin {
     return {
         name: 'greeting',
+        applyToEnvironment: ({ name }) => name === environment,
         resolveId: (id) => (id === ID ? `\0${ID}` : undefined),
         load: (id) => (id === `\0${ID}` ? `export default ${JSON.stringify(GREETING)};` : undefined)
     };
