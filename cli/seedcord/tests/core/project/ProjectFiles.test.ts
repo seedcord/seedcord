@@ -13,11 +13,20 @@ async function projectRoot(): Promise<string> {
     return tmp.path;
 }
 
+function filesUnder(root: string): ProjectFiles {
+    return new ProjectFiles({
+        root,
+        configFile: join(root, 'seedcord.config.ts'),
+        files: [],
+        target: { kind: 'server', start: undefined, outDir: join(root, 'dist') }
+    });
+}
+
 describe('ProjectFiles', () => {
     // the bot and its plugins run between the load checks and the bundle
     it('lists a folder created after the # check ran', async () => {
         const root = await projectRoot();
-        const files = new ProjectFiles(root, root, join(root, 'dist'));
+        const files = filesUnder(root);
 
         await files.pathsWithHash();
         await mkdir(join(root, 'made-on-load'));
@@ -36,7 +45,7 @@ describe('ProjectFiles', () => {
             await chmod(locked, 0o000);
             onTestFinished(() => chmod(locked, 0o700));
 
-            await expect(new ProjectFiles(root, root, join(root, 'dist')).pathsWithHash()).rejects.toMatchObject({
+            await expect(filesUnder(root).pathsWithHash()).rejects.toMatchObject({
                 code: SeedcordErrorCode.CorePathUnreadable,
                 message: expect.stringContaining('locked') as string
             });

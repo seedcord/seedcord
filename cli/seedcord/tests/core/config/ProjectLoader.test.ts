@@ -432,3 +432,38 @@ describe('ProjectLoader validation', () => {
         expect(target).toMatchObject({ outDir: projectDir });
     });
 });
+
+describe('ProjectLoader files', () => {
+    it('lists no folders when the config leaves files out', async () => {
+        const { files } = await projectWith(MINIMAL).load();
+
+        expect(files).toEqual([]);
+    });
+
+    it('resolves a relative folder against root and keeps an absolute one', async () => {
+        const projectDir = tempProject();
+        writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
+        const tags = join(projectDir, 'src', 'tags');
+        const { open } = stubModulesExporting({ ...MINIMAL, root: './src', files: ['./locales', tags] });
+
+        await using loaded = await new ProjectLoader(open, new ShellMode()).readConfig(projectDir);
+
+        expect(loaded.config.files).toEqual([join(projectDir, 'src', 'locales'), tags]);
+    });
+
+    it('throws CorePathOutsideRoot for a folder outside root', async () => {
+        const load = projectWith({ ...MINIMAL, root: './src', files: ['../shared'] }).load();
+
+        await expect(load).rejects.toMatchObject({
+            code: SeedcordErrorCode.CorePathOutsideRoot,
+            message: expect.stringContaining('shared') as string
+        });
+    });
+
+    it.each([['./locales'], [['./locales', 3]]])('rejects files set to %j', async (files) => {
+        await expect(projectWith({ ...MINIMAL, files }).load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigInvalidField,
+            message: expect.stringContaining('files in the seedcord config') as string
+        });
+    });
+});

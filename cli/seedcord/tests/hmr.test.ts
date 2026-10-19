@@ -140,6 +140,7 @@ describe('HmrPlugin', () => {
         idleAnimation: true,
         tunnel: { mode: 'quick' } as const,
         build: {},
+        files: [],
         viteMode: 'development',
         vitePlugins: vitePluginsOf()
     };

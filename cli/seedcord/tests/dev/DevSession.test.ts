@@ -31,6 +31,7 @@ function config(): ResolvedSeedcordConfig {
         typecheck: { enabled: false },
         idleAnimation: true,
         build: {},
+        files: [],
         viteMode: 'development',
         vitePlugins: vitePluginsOf()
     };

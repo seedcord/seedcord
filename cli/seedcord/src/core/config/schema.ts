@@ -86,6 +86,13 @@ export interface SeedcordConfig {
      */
     instance: string;
     /**
+     * Folders whose non-code files `seedcord build` ships for `readTextFiles` to read, like `['./locales']`.
+     * Each one includes its subfolders and resolves against `root`.
+     *
+     * @defaultValue `[]`
+     */
+    files?: string[];
+    /**
      * How `seedcord dev` exposes an http bot's interactions server. This has no effect on a gateway bot.
      *
      * `true` opens a cloudflared quick tunnel and writes the interactions endpoint on every run,

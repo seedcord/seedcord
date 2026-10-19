@@ -32,10 +32,10 @@ import type {
 // the node http Seedcord's default port
 const EDGE_DEV_PORT = 3000;
 
-function resolveStart(root: string, start: string): string {
-    const file = resolve(root, start);
-    if (!isInside(root, file)) throw new SeedcordTypeError(SeedcordErrorCode.CorePathOutsideRoot, [file, root]);
-    return file;
+function resolveUnderRoot(root: string, path: string): string {
+    const resolved = resolve(root, path);
+    if (!isInside(root, resolved)) throw new SeedcordTypeError(SeedcordErrorCode.CorePathOutsideRoot, [resolved, root]);
+    return resolved;
 }
 
 function resolveTunnel(value: boolean | string | undefined): ResolvedTunnel {
@@ -110,6 +110,7 @@ export class ProjectLoader {
         return {
             instance,
             root,
+            files: (config.files ?? []).map((folder) => resolveUnderRoot(root, folder)),
             configFile: configPath,
             target: this.resolveTarget(root, configDir, checked),
             build,
@@ -131,7 +132,7 @@ export class ProjectLoader {
         } = checked;
         return {
             ...target,
-            start: build?.start === undefined ? undefined : resolveStart(root, build.start),
+            start: build?.start === undefined ? undefined : resolveUnderRoot(root, build.start),
             outDir: resolve(configDir, build?.outDir ?? 'dist')
         };
     }

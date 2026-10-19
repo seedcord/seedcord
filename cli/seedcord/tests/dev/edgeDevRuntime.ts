@@ -42,6 +42,7 @@ function configWith(
         instance: join(projectDir, 'src/bot.ts'),
         target,
         build: {},
+        files: [],
         typecheck: { enabled: false },
         idleAnimation: true,
         viteMode,

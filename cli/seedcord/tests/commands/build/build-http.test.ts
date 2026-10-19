@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -14,6 +14,13 @@ import type { BuildResult } from '#commands/build/BuildRunner';
 
 const HTTP_BOT = join(import.meta.dirname, '../../fixtures/http-bot');
 
+function builtFilesContaining(text: string): string[] {
+    const dist = join(HTTP_BOT, 'dist');
+    return readdirSync(dist, { recursive: true, encoding: 'utf8' })
+        .map((file) => join(dist, file))
+        .filter((file) => statSync(file).isFile() && readFileSync(file, 'utf8').includes(text));
+}
+
 describe('seedcord build on an http bot', () => {
     let output = '';
     let result: BuildResult;
@@ -26,7 +33,7 @@ describe('seedcord build on an http bot', () => {
     it('reports what it bundled for the summary', () => {
         expect(result.bundle).toEqual({
             modules: 9,
-            textFiles: 4,
+            textFiles: 3,
             bytes: expect.any(Number) as number,
             entry: join(HTTP_BOT, 'dist/index.mjs')
         });
@@ -73,6 +80,10 @@ describe('seedcord build on an http bot', () => {
 
     it('bundles a source folder named logs', () => {
         expect(output).toContain('fixture:text a source folder named logs');
+    });
+
+    it('ships no text from a folder outside files', () => {
+        expect(builtFilesContaining('fixture:unlisted')).toEqual([]);
     });
 
     it.skipIf(!compilesBunBinaries())(

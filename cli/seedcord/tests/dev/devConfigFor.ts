@@ -15,6 +15,7 @@ export function devConfigFor(root: string, instance: string): ResolvedSeedcordCo
         instance: join(root, 'src', instance),
         tunnel: { mode: 'quick' },
         build: {},
+        files: [],
         typecheck: { enabled: false },
         idleAnimation: true,
         viteMode: 'development',

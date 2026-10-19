@@ -84,6 +84,9 @@ export class ConfigValidator {
             yield invalidField('instance', 'a string that points to the file that default exports your bot');
         yield* this.portProblems(raw.port);
         if (!isOptionalString(raw.root)) yield invalidField('root', 'a string');
+        if (raw.files !== undefined && !isStringArray(raw.files)) {
+            yield invalidField('files', `an array of folder paths, like ${paint.bold("['./locales']")}`);
+        }
         if (raw.idleAnimation !== undefined && typeof raw.idleAnimation !== 'boolean') {
             yield invalidField('idleAnimation', 'a boolean');
         }

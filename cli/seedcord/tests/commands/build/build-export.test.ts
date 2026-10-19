@@ -15,11 +15,9 @@ import { smoke } from './smoke';
 import type { BuildStep } from '#commands/build/BuildRunner';
 import type { Steps } from '#core/output/Steps';
 
-const EXPORT_CONFIG = `export default {
-    root: './src',
-    instance: './bot.ts'
-};
-`;
+function exportConfig(files: string[]): string {
+    return `export default ${JSON.stringify({ root: './src', instance: './bot.ts', files })};\n`;
+}
 
 const FETCH_SERVER = `import { createServer } from 'node:http';
 
@@ -73,8 +71,12 @@ const APP_TSC_FLAGS = [
     '--skipLibCheck'
 ];
 
-async function writeExportProject(projectDir: string, scripts: Record<string, string>): Promise<void> {
-    await writeFile(join(projectDir, 'seedcord.config.ts'), EXPORT_CONFIG);
+async function writeExportProject(
+    projectDir: string,
+    scripts: Record<string, string>,
+    files: string[] = []
+): Promise<void> {
+    await writeFile(join(projectDir, 'seedcord.config.ts'), exportConfig(files));
     for (const [name, script] of Object.entries(scripts)) await writeFile(join(projectDir, name), script);
 }
 
@@ -84,7 +86,7 @@ describe('seedcord build without build.start on an http bot', () => {
     beforeAll(async () => {
         await using cleanup = new AsyncDisposableStack();
         ({ path: projectDir } = cleanup.use(await fixtureCopy(HTTP_BOT)));
-        await writeExportProject(projectDir, { 'server.mjs': FETCH_SERVER });
+        await writeExportProject(projectDir, { 'server.mjs': FETCH_SERVER }, ['./locales', './logs']);
         const botFile = join(projectDir, 'src/bot.ts');
         const source = await readFile(botFile, 'utf8');
         await writeFile(botFile, source.replace('port: 0', 'port: false'));

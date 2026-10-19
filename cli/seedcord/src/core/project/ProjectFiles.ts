@@ -4,7 +4,9 @@ import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
-import { isInside, posixRelative } from '@seedcord/utils/node/internal';
+import { isInside, moduleGlobs, posixRelative, textGlobs } from '@seedcord/utils/node/internal';
+
+import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
 // the bot writes its log files to logs/ in the folder it starts in
 const PROJECT_FOLDERS = ['logs'];
@@ -33,16 +35,20 @@ interface ProjectEntry {
     isFolder: boolean;
 }
 
+type ProjectPaths = Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target'>;
+
 export class ProjectFiles {
+    private readonly root: string;
+    private readonly configDir: string;
+    private readonly listedFolders: string[];
     private readonly skippedFolders: string[];
 
-    constructor(
-        private readonly root: string,
-        private readonly configDir: string,
-        outDir?: string
-    ) {
+    constructor({ root, configFile, files, target }: ProjectPaths) {
+        this.root = root;
+        this.configDir = dirname(configFile);
+        this.listedFolders = files;
         const projectFolders = this.rootIsConfigDir() ? PROJECT_FOLDERS.map((name) => join(root, name)) : [];
-        this.skippedFolders = outDir === undefined ? projectFolders : [outDir, ...projectFolders];
+        this.skippedFolders = target.kind === 'server' ? [target.outDir, ...projectFolders] : projectFolders;
     }
 
     // vite also passes virtual ids like \0seedcord:entry here
@@ -72,7 +78,20 @@ export class ProjectFiles {
     }
 
     // the built files globs use root as their base
-    public globExcludes(): string[] {
+    public moduleGlobs(): string[] {
+        return [...moduleGlobs('.'), ...this.globExcludes()];
+    }
+
+    public textGlobs(): string[] {
+        return [...this.listedFolders.flatMap((folder) => textGlobs(this.globBase(folder))), ...this.globExcludes()];
+    }
+
+    private globBase(folder: string): string {
+        const relativePath = posixRelative(this.root, folder);
+        return relativePath === '' ? '.' : `./${relativePath}`;
+    }
+
+    private globExcludes(): string[] {
         const folders = this.skippedFolders.filter((folder) => this.holds(folder));
         const files = this.rootIsConfigDir() ? PROJECT_FILES : [];
         return [

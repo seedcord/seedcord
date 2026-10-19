@@ -107,6 +107,7 @@ export async function fakeProject({
             ? { kind: 'edge', cloudflareConfig: resolve(root, 'cloudflare.config.ts'), viteRoot: root, port: 0 }
             : { kind: 'server', start: resolve(root, 'index.ts'), outDir: resolve(root, 'dist') },
         build: {},
+        files: [],
         typecheck: { enabled: false },
         idleAnimation: false,
         tunnel: { mode: 'off' },

@@ -1,4 +1,4 @@
-import { BOT_FILES_KEY, BUILT_FILES_READY_KEY, moduleGlobs, textGlobs } from '@seedcord/utils/node/internal';
+import { BOT_FILES_KEY, BUILT_FILES_READY_KEY } from '@seedcord/utils/node/internal';
 
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 
@@ -23,9 +23,8 @@ export function builtFilesSource({
     sourcePaths,
     configFile
 }: BuiltFilesOptions): string {
-    const excludes = files.globExcludes();
-    const modules = [...moduleGlobs('.'), ...excludes];
-    const text = [...textGlobs('.'), ...excludes];
+    const modules = files.moduleGlobs();
+    const text = files.textGlobs();
     const moduleOptions = { base: rootKey };
     const textOptions = { ...moduleOptions, query: '?raw', import: 'default' };
 

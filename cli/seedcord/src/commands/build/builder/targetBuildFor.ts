@@ -1,3 +1,4 @@
+import { assertListedFoldersExist } from './assertListedFoldersExist';
 import { EdgeBuild } from './EdgeBuild';
 import { ExportBuild } from './ExportBuild';
 import { StartBuild, startsItself } from './StartBuild';
@@ -25,6 +26,7 @@ function buildKindFor(config: ResolvedSeedcordConfig): BuildKind {
 
 // runs before any plugin in vitePlugins starts
 export function checkBuildTarget(config: ResolvedSeedcordConfig): void {
+    assertListedFoldersExist(config.files);
     buildKindFor(config).check();
 }
 
