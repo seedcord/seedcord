@@ -1,0 +1,132 @@
+import { ORG_ID, SOFTWARE_ID } from '@seedcord/ui';
+import { OG_SIZE } from '@seedcord/ui/og';
+import { ogPageCardAlt } from '@seedcord/ui/OgCard';
+
+import { canonicalUrl, SITE_NAME } from '#lib/site';
+
+import { formatPostDate, lastChanged } from './post';
+
+import type { PostSummary } from './post';
+import type { Metadata } from 'next';
+
+export const BLOG_PATH = '/blog/';
+export const BLOG_NAME = `${SITE_NAME} blog`;
+const BLOG_TITLE = 'Blog';
+export const BLOG_DESCRIPTION =
+    'Releases, deep dives, and notes from building seedcord, the TypeScript framework for Discord bots.';
+export const FEED_PATH = '/blog/rss.xml';
+
+export const OG_PILL = 'blog';
+
+export function ogMeta(post: Pick<PostSummary, 'created' | 'minutes'>): string[] {
+    return [formatPostDate(post.created), `${post.minutes} min read`];
+}
+
+const ogImagePath = (slug: string): string => `/blog/${slug}/og.png`;
+export const twinPath = (slug: string): string => `/blog/${slug}/index.md`;
+
+const FEED = { 'application/rss+xml': [{ url: canonicalUrl(FEED_PATH), title: BLOG_NAME }] };
+
+export function blogMetadata(): Metadata {
+    const url = canonicalUrl(BLOG_PATH);
+    return {
+        title: BLOG_TITLE,
+        description: BLOG_DESCRIPTION,
+        alternates: { canonical: url, types: FEED },
+        openGraph: {
+            type: 'website',
+            siteName: SITE_NAME,
+            url,
+            title: BLOG_NAME,
+            description: BLOG_DESCRIPTION
+        },
+        twitter: { card: 'summary_large_image', title: BLOG_NAME, description: BLOG_DESCRIPTION }
+    };
+}
+
+export function postMetadata(post: PostSummary): Metadata {
+    const url = canonicalUrl(post.url);
+    const alt = ogPageCardAlt({ pill: OG_PILL, name: post.title, meta: ogMeta(post) });
+    const images = [{ url: ogImagePath(post.slug), ...OG_SIZE, alt }];
+
+    return {
+        title: post.title,
+        description: post.description,
+        ...(post.unlisted && { robots: { index: false, follow: false } }),
+        authors: post.authors.map(({ name, url: authorUrl }) => ({ name, url: authorUrl })),
+        alternates: {
+            canonical: url,
+            types: { ...FEED, 'text/markdown': canonicalUrl(twinPath(post.slug)) }
+        },
+        openGraph: {
+            type: 'article',
+            siteName: SITE_NAME,
+            url,
+            title: post.title,
+            description: post.description,
+            publishedTime: post.created,
+            modifiedTime: lastChanged(post),
+            authors: post.authors.map((author) => author.url),
+            images
+        },
+        twitter: { card: 'summary_large_image', title: post.title, description: post.description, images }
+    };
+}
+
+function person({ name, url, github }: PostSummary['authors'][number]): Record<string, unknown> {
+    return { '@type': 'Person', name, url, sameAs: url === github ? [] : [github] };
+}
+
+export function postJsonLd(post: PostSummary): Record<string, unknown> {
+    const url = canonicalUrl(post.url);
+    return {
+        '@context': 'https://schema.org',
+        '@graph': [
+            {
+                '@type': 'BlogPosting',
+                '@id': `${url}#post`,
+                headline: post.title,
+                description: post.description,
+                url,
+                mainEntityOfPage: url,
+                image: canonicalUrl(ogImagePath(post.slug)),
+                datePublished: post.created,
+                dateModified: lastChanged(post),
+                timeRequired: `PT${post.minutes}M`,
+                author: post.authors.map(person),
+                publisher: { '@id': ORG_ID },
+                about: { '@id': SOFTWARE_ID },
+                isPartOf: { '@id': `${canonicalUrl(BLOG_PATH)}#blog` }
+            },
+            {
+                '@type': 'BreadcrumbList',
+                itemListElement: [
+                    { '@type': 'ListItem', position: 1, name: SITE_NAME, item: canonicalUrl('/') },
+                    { '@type': 'ListItem', position: 2, name: BLOG_TITLE, item: canonicalUrl(BLOG_PATH) },
+                    { '@type': 'ListItem', position: 3, name: post.title, item: url }
+                ]
+            }
+        ]
+    };
+}
+
+export function blogJsonLd(posts: readonly PostSummary[]): Record<string, unknown> {
+    const url = canonicalUrl(BLOG_PATH);
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Blog',
+        '@id': `${url}#blog`,
+        name: BLOG_NAME,
+        description: BLOG_DESCRIPTION,
+        url,
+        publisher: { '@id': ORG_ID },
+        blogPost: posts.map((post) => ({
+            '@type': 'BlogPosting',
+            '@id': `${canonicalUrl(post.url)}#post`,
+            headline: post.title,
+            url: canonicalUrl(post.url),
+            datePublished: post.created,
+            author: post.authors.map(person)
+        }))
+    };
+}

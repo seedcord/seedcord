@@ -16,23 +16,32 @@
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
         "fmt": "prettier --write '**/*.{ts,tsx,json,md,css}' --cache --no-error-on-unmatched-pattern",
         "fmt:check": "prettier --check '**/*.{ts,tsx,json,md,css}' --cache --no-error-on-unmatched-pattern",
-        "tc": "tsgo --noEmit"
+        "tc": "fumadocs-mdx && tsgo --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev"
     },
     "dependencies": {
+        "@fumari/image-size": "^0.1.1",
         "@seedcord/ui": "workspace:^",
+        "@seedcord/utils": "workspace:^",
         "discord-component-embed": "workspace:^",
+        "fumadocs-core": "catalog:deps",
+        "fumadocs-mdx": "catalog:deps",
         "lucide-react": "catalog:deps",
         "motion": "catalog:deps",
         "next": "catalog:deps",
         "react": "catalog:react",
         "react-dom": "catalog:react",
-        "shiki": "catalog:deps",
-        "takumi-js": "catalog:deps"
+        "takumi-js": "catalog:deps",
+        "zod": "^4.6.5"
     },
     "devDependencies": {
+        "@mdx-js/mdx": "catalog:deps",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/vitest-config": "workspace:^",
         "@tailwindcss/postcss": "catalog:deps",
+        "@types/mdx": "catalog:deps",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
         "eslint": "^9.39.4",
@@ -40,10 +49,13 @@
         "eslint-plugin-better-tailwindcss": "catalog:eslint",
         "eslint-plugin-react-compiler": "catalog:eslint",
         "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
+        "mdast-util-to-markdown": "catalog:deps",
         "prettier": "catalog:deps",
         "prettier-plugin-tailwindcss": "catalog:deps",
         "tailwindcss": "catalog:deps",
         "typescript": "catalog:peer",
+        "vfile": "catalog:deps",
+        "vitest": "catalog:test",
         "wrangler": "catalog:peer"
     }
 }

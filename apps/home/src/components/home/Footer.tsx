@@ -2,6 +2,8 @@ import { cn } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import Link from 'next/link';
 
+import { linkTarget } from '#components/ui/linkTarget';
+import { BLOG_PATH } from '#lib/blog/seo';
 import {
     AUTHOR_GITHUB_URL,
     AUTHOR_URL,
@@ -34,6 +36,7 @@ const COLUMNS = [
     {
         title: 'Project',
         links: [
+            { label: 'Blog', href: BLOG_PATH },
             { label: 'Roadmap', href: ROADMAP_URL },
             { label: 'Releases', href: `${REPO_URL}/releases` },
             { label: 'License', href: `${REPO_URL}/blob/main/LICENSE` },
@@ -59,8 +62,7 @@ function LinkColumn({ column }: { column: (typeof COLUMNS)[number] }): ReactNode
                     <Link
                         key={l.label}
                         href={l.href}
-                        target="_blank"
-                        rel="noreferrer"
+                        {...linkTarget(l.href)}
                         className={cn('text-sm font-medium text-(--seed-dark) transition-colors hover:text-(--flesh)')}
                     >
                         {l.label}
@@ -102,8 +104,7 @@ export function Footer(): ReactNode {
                         Built by{' '}
                         <Link
                             href={AUTHOR_URL}
-                            target="_blank"
-                            rel="noreferrer"
+                            {...linkTarget(AUTHOR_URL)}
                             className={cn('font-semibold text-(--seed-dark) transition-colors hover:text-(--flesh)')}
                         >
                             materwelonDhruv
@@ -111,8 +112,7 @@ export function Footer(): ReactNode {
                         {' · '}
                         <Link
                             href={AUTHOR_GITHUB_URL}
-                            target="_blank"
-                            rel="noreferrer"
+                            {...linkTarget(AUTHOR_GITHUB_URL)}
                             className={cn('text-(--seed-dark) transition-colors hover:text-(--flesh)')}
                         >
                             GitHub

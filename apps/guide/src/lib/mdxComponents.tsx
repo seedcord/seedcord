@@ -13,7 +13,7 @@ import { twoslashBlock } from '#lib/twoslash';
 
 import type { FenceMode } from '#lib/twoslash';
 import type { MDXComponents } from 'mdx/types';
-import type { BundledLanguage } from 'shiki';
+import type { HighlightLanguage } from '@seedcord/ui/shiki';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
 
 interface FenceProps {
@@ -90,7 +90,7 @@ function GuideTable({ children, ...props }: ComponentProps<'table'>): ReactEleme
 
 interface Fenced {
     code: string;
-    lang: BundledLanguage;
+    lang: HighlightLanguage;
     title: string | undefined;
     output: boolean;
     mode: FenceMode;

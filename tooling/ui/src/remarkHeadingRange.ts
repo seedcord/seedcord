@@ -1,6 +1,6 @@
-// page.tsx renders the frontmatter title as the h1
+// the page renders the frontmatter title as the h1
 const SHALLOWEST = 2;
-// mdxComponents.tsx does not map anything deeper than h4
+// both sites' mdx components map nothing deeper than h4
 const DEEPEST = 4;
 
 interface Node {
@@ -28,12 +28,16 @@ interface Reporter {
     fail(reason: string, place: Node): never;
 }
 
-export function remarkHeadingRange() {
+interface HeadingRangeOptions {
+    site: string;
+}
+
+export function remarkHeadingRange({ site }: HeadingRangeOptions) {
     return (tree: Node, file: Reporter): void => {
         for (const heading of headingsIn(tree)) {
             if (heading.depth >= SHALLOWEST && heading.depth <= DEEPEST) continue;
 
-            file.fail(`this page writes an h${heading.depth}. The guide takes h2 through h4.`, heading);
+            file.fail(`this page has an h${heading.depth}. ${site} can use h2 through h4.`, heading);
         }
     };
 }

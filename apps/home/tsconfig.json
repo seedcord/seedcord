@@ -12,6 +12,7 @@
             }
         ],
         "paths": {
+            "#tests/*": ["./tests/*"],
             "#src/*": ["./src/*"],
             "#components/*": ["./src/components/*"],
             "#ui/*": ["./src/components/ui/*"],
@@ -26,9 +27,13 @@
         "src/**/*.ts",
         "src/**/*.tsx",
         "src/app/.well-known/**/*.ts",
+        "tests/**/*.ts",
+        "tests/**/*.tsx",
         "eslint.config.ts",
         "prettier.config.ts",
         "next.config.ts",
+        "vitest.config.ts",
+        "source.config.ts",
         ".next/types/**/*.ts",
         "worker.ts"
     ],

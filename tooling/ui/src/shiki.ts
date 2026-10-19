@@ -9,7 +9,7 @@ import { createOnigurumaEngine } from 'shiki/engine/oniguruma';
 
 import { seedcordBrandDark, seedcordBrandLight } from './brandTheme';
 
-import type { BundledLanguage, DecorationItem, ShikiTransformer } from 'shiki';
+import type { BundledLanguage, DecorationItem, PlainTextLanguage, ShikiTransformer } from 'shiki';
 
 const THEMES = {
     light: 'seedcord-light',
@@ -26,12 +26,17 @@ const HIGHLIGHTABLE = new Set([
     'jsx',
     'json',
     'bash',
+    'sh',
+    'shell',
+    'zsh',
     'txt',
     'text',
     'plaintext'
 ]);
 
-export function isHighlightable(lang: string): lang is BundledLanguage {
+export type HighlightLanguage = BundledLanguage | PlainTextLanguage;
+
+export function isHighlightable(lang: string): lang is HighlightLanguage {
     return HIGHLIGHTABLE.has(lang);
 }
 
@@ -72,20 +77,27 @@ function toDecorations(links: readonly CodeLink[]): DecorationItem[] {
 }
 
 // each token carries `color: light-dark(light, dark)`. shiki.css has the pre-2024 fallback
+const BOTH_THEMES = { themes: THEMES, defaultColor: 'light-dark()' } as const;
+const DARK_THEME = { theme: THEMES.dark } as const;
+
+interface RenderOptions {
+    links?: readonly CodeLink[];
+    lang?: HighlightLanguage;
+    transformers?: ShikiTransformer[];
+    grammarContextCode?: string;
+    colors?: typeof BOTH_THEMES | typeof DARK_THEME;
+}
+
 async function render(
     code: string,
-    links: readonly CodeLink[],
-    lang: BundledLanguage,
-    transformers: ShikiTransformer[] = [],
-    grammarContextCode?: string
+    { links = [], lang = 'ts', transformers = [], grammarContextCode, colors = BOTH_THEMES }: RenderOptions
 ): Promise<string> {
     const highlighter = await ensureHighlighter();
 
     return highlighter.codeToHtml(code, {
         lang,
         transformers,
-        themes: THEMES,
-        defaultColor: 'light-dark()',
+        ...colors,
         decorations: toDecorations(links),
         ...(!(grammarContextCode === undefined) && { grammarContextCode })
     });
@@ -95,17 +107,18 @@ interface HighlightOptions {
     links?: readonly CodeLink[] | undefined;
     transformers?: ShikiTransformer[] | undefined;
     throwOnFailure?: boolean | undefined;
+    onlyDark?: boolean | undefined;
 }
 
 export async function highlightToHtml(
     code: string,
-    lang: BundledLanguage = 'ts',
-    { links = [], transformers = [], throwOnFailure = false }: HighlightOptions = {}
+    lang: HighlightLanguage = 'ts',
+    { links = [], transformers = [], throwOnFailure = false, onlyDark = false }: HighlightOptions = {}
 ): Promise<string | null> {
     if (!code) return '';
 
     try {
-        return await render(code, links, lang, transformers);
+        return await render(code, { links, lang, transformers, colors: onlyDark ? DARK_THEME : BOTH_THEMES });
     } catch (error) {
         if (throwOnFailure) throw error;
         return null;
@@ -117,7 +130,7 @@ export async function highlightSignatureToHtml(code: string, links: readonly Cod
     if (!code) return '';
 
     try {
-        return await render(code, links, 'ts', [], 'function ');
+        return await render(code, { links, grammarContextCode: 'function ' });
     } catch {
         return null;
     }
@@ -128,7 +141,7 @@ export async function highlightMemberToHtml(code: string, links: readonly CodeLi
     if (!code) return '';
 
     try {
-        return await render(code, links, 'ts', [], 'class _ { ');
+        return await render(code, { links, grammarContextCode: 'class _ { ' });
     } catch {
         return null;
     }
@@ -139,21 +152,20 @@ export async function highlightTypeParamToHtml(code: string, links: readonly Cod
     if (!code) return '';
 
     try {
-        return await render(code, links, 'ts', [], 'type _<');
+        return await render(code, { links, grammarContextCode: 'type _<' });
     } catch {
         return null;
     }
 }
 
-export async function highlightInlineToHtml(code: string, lang: BundledLanguage = 'ts'): Promise<string | null> {
+export async function highlightInlineToHtml(code: string, lang: HighlightLanguage = 'ts'): Promise<string | null> {
     if (!code) return '';
 
     try {
         const highlighter = await ensureHighlighter();
         const tokens = highlighter.codeToHtml(code, {
             lang,
-            themes: THEMES,
-            defaultColor: 'light-dark()',
+            ...BOTH_THEMES,
             structure: 'inline'
         });
 

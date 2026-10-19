@@ -100,6 +100,10 @@ pnpm turbo build --filter=@seedcord/<site>...
 
 A guide build uses about 6 GB of memory. With 8 GB or less, build one site at a time.
 
+### Writing a blog post
+
+Each post is a folder in `apps/home/content/blog`. The [README](../apps/home/content/blog/README.md) there has the steps for writing one.
+
 ## Trying a change in a real bot
 
 `mocks/gateway` and `mocks/http` are working bots, one per transport. Copy a mock's `.env.example` to `.env` and fill it in. The example file lists every variable that mock reads. The [guide](https://seedcord.org/guide/discord-application) shows how to create an application and get its token.

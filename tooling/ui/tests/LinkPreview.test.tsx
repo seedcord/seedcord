@@ -18,6 +18,9 @@ const card = (body: string): ReactElement => (
     />
 );
 
+// discord's component type for a section
+const SECTION = 9;
+
 const paragraph = (n: number): string =>
     `Paragraph ${String(n)} explains how an empty object is assignable to a type with only an index signature.`;
 const fence = (n: number): string =>
@@ -41,6 +44,27 @@ describe('PreviewCard', () => {
         expect(body.endsWith('\n…')).toBe(true);
         expect(longSummaryWithCode.startsWith(body.slice(0, -'\n…'.length))).toBe(true);
         expect(body.match(/^```/gm)?.length ?? 0).toSatisfy((fences: number) => fences % 2 === 0);
+    });
+
+    it('puts the breadcrumb in the section beside the thumbnail', () => {
+        const json = toComponentEmbedJson(
+            <PreviewCard
+                accent={0}
+                breadcrumb={['blog']}
+                title="seedcord blog"
+                body="Posts."
+                thumbnail={{ url: 'https://cdn.seedcord.org/assets/logo.png', description: 'the seedcord mark' }}
+                links={[{ emoji: PREVIEW_EMOJI.home, label: 'Home', url: 'https://seedcord.org' }]}
+            />
+        );
+        // justified: a section is the card's first child once it contains the breadcrumb
+        const { component } = JSON.parse(json) as {
+            component: { components: { type: number; components?: { content: string }[] }[] };
+        };
+
+        const [first] = component.components;
+        expect(first?.type).toBe(SECTION);
+        expect(first?.components?.[0]?.content).toBe('-# blog');
     });
 
     it('keeps a body that fits as it is', () => {

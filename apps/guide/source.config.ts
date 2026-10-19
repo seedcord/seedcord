@@ -1,8 +1,8 @@
+import { remarkHeadingRange } from '@seedcord/ui/remarkHeadingRange';
 import { defineConfig } from 'fumadocs-mdx/config';
 
 import { cleanFence } from './src/lib/fence';
 import { rehypeFenceMeta } from './src/lib/rehypeFenceMeta';
-import { remarkHeadingRange } from './src/lib/remarkHeadingRange';
 import { remarkNoMappedJsx } from './src/lib/remarkNoMappedJsx';
 import { remarkPageLinks } from './src/lib/remarkPageLinks';
 import { remarkRefLinks } from './src/lib/remarkRefLinks';
@@ -23,7 +23,12 @@ export default defineConfig({
                 stringify: (node) => (node.type === 'code' ? cleanFence(node.value) : undefined)
             }
         },
-        remarkPlugins: [remarkHeadingRange, remarkNoMappedJsx, remarkRefLinks, remarkPageLinks],
+        remarkPlugins: [
+            [remarkHeadingRange, { site: 'The guide' }],
+            remarkNoMappedJsx,
+            remarkRefLinks,
+            remarkPageLinks
+        ],
         rehypePlugins: [rehypeFenceMeta]
     }
 });

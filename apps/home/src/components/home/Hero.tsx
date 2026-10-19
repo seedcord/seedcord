@@ -9,7 +9,7 @@ import type { ReactNode } from 'react';
 
 export function Hero(): ReactNode {
     return (
-        <section className={cn('relative overflow-hidden border-b-[3px] border-(--seed-dark) bg-(--pith)')}>
+        <section className={cn('relative overflow-hidden bg-(--pith)')}>
             <div
                 className={cn(
                     'mx-auto grid max-w-(--shell-max) items-center gap-8 px-5 py-12 lg:grid-cols-[1.05fr_0.95fr] lg:py-16'
@@ -18,15 +18,14 @@ export function Hero(): ReactNode {
                 <div className={cn('relative z-10')}>
                     <div
                         className={cn(
-                            'font-mono-code mb-6 inline-flex items-center gap-2 rounded-sm bg-(--seed-dark) px-2.5 py-1 text-xs font-semibold text-(--pith) sm:px-3 sm:py-1.5 sm:text-sm'
+                            'font-mono-code mb-6 hidden items-center gap-2 rounded-sm bg-(--seed-dark) px-3 py-1.5 text-sm font-semibold text-(--pith) sm:inline-flex'
                         )}
                     >
-                        typescript
-                        <span className={cn('hidden sm:inline')}> · gateway/http bot framework</span>
+                        typescript · gateway/http bot framework
                     </div>
                     <h1
                         className={cn(
-                            'font-display text-[clamp(2.9rem,7vw,5.75rem)] leading-[0.94] font-semibold tracking-tight text-(--seed-dark)'
+                            'font-display text-[clamp(2.9rem,7vw,5.75rem)] leading-[0.94] font-semibold tracking-tight text-balance text-(--seed-dark)'
                         )}
                     >
                         The whole Discord bot, <span className={cn('text-(--rind-deep)')}>typed</span>{' '}
@@ -35,6 +34,9 @@ export function Hero(): ReactNode {
                         </span>
                     </h1>
                     <p className={cn('mt-7 max-w-xl text-lg/snug font-medium text-(--seed-dark)/85 md:text-xl')}>
+                        <span className={cn('font-semibold text-(--seed-dark) sm:hidden')}>
+                            A TypeScript framework for Discord bots.{' '}
+                        </span>
                         A wrong route or option name is a compile error, before the bot ever connects. Every command,
                         button, and event goes to a class you write, with reusable checks, hot reload, and a lot more
                         built in.

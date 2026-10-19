@@ -9,6 +9,9 @@
 # next.js
 /.next/
 
+# fumadocs-mdx codegen
+/.source/
+
 # cloudflare
 /.wrangler/
 

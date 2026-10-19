@@ -1,0 +1,60 @@
+---
+title: A sample post
+description: Every block a post can use. Copy this folder to start a new post.
+authors: [materwelonDhruv]
+created: 2026-10-19
+edited: 2026-10-20
+unlisted: true
+cover:
+    src: ./cover.webp
+    alt: The seedcord dev TUI in a narrow terminal, with the bot status above the log
+---
+
+This post has one of every block a post can use. With `unlisted: true`, the build leaves it out of the blog list and the feed and marks the page `noindex`. Copy the folder, rename it to your post's url, remove `unlisted`, and replace the content.
+
+## A heading
+
+A paragraph with `inline code`, a [link to the guide](https://seedcord.org/guide), and some **bold text**. A second sentence to fill the line out a little further.
+
+### A smaller heading
+
+- the first item in a list
+- a second item with `code` in it
+- a third item
+
+1. a numbered step
+2. another step
+
+```ts title="src/handlers/SearchHandler.ts"
+import { SlashRoute, SlashHandler } from '@seedcord/gateway';
+
+@SlashRoute('search')
+export class SearchHandler extends SlashHandler<'search'> {
+    public async execute(): Promise<void> {
+        const category = this.options.getString('category');
+
+        await this.reply(`Searching ${category}`);
+    }
+}
+```
+
+```sh
+pnpm create seedcord
+```
+
+> A blockquote with a sentence in it.
+
+![A fault card in Discord, with the error code and a short message](./fault-card.webp)
+
+{/* prettier-ignore-start */}
+
+| column | another column |
+| --- | --- |
+| a cell | `code` |
+| another cell | more text |
+
+{/* prettier-ignore-end */}
+
+---
+
+That's the end of the sample.

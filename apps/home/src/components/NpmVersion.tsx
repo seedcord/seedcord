@@ -31,7 +31,7 @@ export function NpmVersion(): ReactNode {
             href={NPM_URL}
             variant="ink"
             ariaLabel={`seedcord v${version} on npm`}
-            className={cn('font-mono-code group px-3 py-1.5 text-sm whitespace-nowrap')}
+            className={cn('group whitespace-nowrap')}
         >
             <Icon icon={NpmIcon} size={20} className={cn('text-(--flesh) group-hover:text-(--pith) md:size-4')} />
             <span className={cn('sr-only md:not-sr-only')}>v{version}</span>

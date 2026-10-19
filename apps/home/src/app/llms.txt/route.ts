@@ -3,7 +3,11 @@ import path from 'node:path';
 
 import { agentRules, readmeFeatures } from '@seedcord/ui/agents';
 
-import { DOCS_URL, GUIDE_URL, REPO_URL, SITE_DESCRIPTION, SITE_URL } from '#lib/site';
+import { listedPosts } from '#lib/blog/posts';
+import { FEED_PATH, twinPath } from '#lib/blog/seo';
+import { canonicalUrl, DOCS_URL, GUIDE_URL, REPO_URL, SITE_DESCRIPTION, SITE_URL } from '#lib/site';
+
+import type { PostSummary } from '#lib/blog/post';
 
 export const dynamic = 'force-static';
 export const revalidate = false;
@@ -15,7 +19,11 @@ function bullets(lines: readonly string[]): string {
     return lines.map((line) => `- ${line}`).join('\n');
 }
 
-const BODY = `# seedcord
+function blogLinks(posts: readonly PostSummary[]): string {
+    return bullets(posts.map((post) => `[${post.title}](${canonicalUrl(twinPath(post.slug))}): ${post.description}`));
+}
+
+const body = (posts: readonly PostSummary[]): string => `# seedcord
 
 > ${SITE_DESCRIPTION}
 
@@ -32,10 +40,16 @@ ${bullets(readmeFeatures(readFileSync(README, 'utf8')))}
 - Site: ${SITE_URL}
 - Guide index: ${GUIDE_URL}/llms.txt
 - Docs index: ${DOCS_URL}/llms.txt
+- Blog feed: ${canonicalUrl(FEED_PATH)}
 - Source: ${REPO_URL}
 - License: Apache-2.0
+
+## Blog
+
+${blogLinks(posts)}
 `;
 
-export function GET(): Response {
-    return new Response(BODY, { headers: { 'content-type': 'text/plain; charset=utf-8' } });
+export async function GET(): Promise<Response> {
+    const posts = await listedPosts();
+    return new Response(body(posts), { headers: { 'content-type': 'text/plain; charset=utf-8' } });
 }

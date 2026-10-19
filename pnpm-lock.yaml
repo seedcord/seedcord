@@ -181,9 +181,15 @@ catalogs:
     '@leeoniya/ufuzzy':
       specifier: ^1.0.19
       version: 1.0.19
+    '@mdx-js/mdx':
+      specifier: ^3.1.1
+      version: 3.1.1
     '@tailwindcss/postcss':
       specifier: ^4.3.3
       version: 4.3.3
+    '@types/mdx':
+      specifier: ^2.0.14
+      version: 2.0.14
     '@types/node':
       specifier: ^26.1.2
       version: 26.1.2
@@ -202,6 +208,12 @@ catalogs:
     cross-env:
       specifier: ^10.1.0
       version: 10.1.0
+    fumadocs-core:
+      specifier: 16.15.18
+      version: 16.15.18
+    fumadocs-mdx:
+      specifier: 15.4.6
+      version: 15.4.6
     ink:
       specifier: ^8.0.0
       version: 8.0.0
@@ -211,6 +223,9 @@ catalogs:
     lucide-react:
       specifier: ^1.51.0
       version: 1.51.0
+    mdast-util-to-markdown:
+      specifier: ^2.1.3
+      version: 2.1.3
     motion:
       specifier: ^14.0.0
       version: 14.0.0
@@ -244,6 +259,9 @@ catalogs:
     type-fest:
       specifier: ^5.8.0
       version: 5.10.0
+    vfile:
+      specifier: ^6.0.3
+      version: 6.0.3
     yaml:
       specifier: ^2.9.1
       version: 2.9.1
@@ -607,10 +625,10 @@ importers:
         specifier: workspace:^
         version: link:../../packages/discord-component-embed
       fumadocs-core:
-        specifier: 16.15.18
+        specifier: catalog:deps
         version: 16.15.18(@mdx-js/mdx@3.1.1(supports-color@10.2.2))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(lucide-react@1.51.0(@types/react@19.3.0)(react@19.3.1))(next@16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@10.2.2)(zod@4.4.3)
       fumadocs-mdx:
-        specifier: 15.4.6
+        specifier: catalog:deps
         version: 15.4.6(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.15.18(@mdx-js/mdx@3.1.1(supports-color@10.2.2))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(lucide-react@1.51.0(@types/react@19.3.0)(react@19.3.1))(next@16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@10.2.2)(zod@4.4.3))(next@16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(rolldown@1.2.1)(supports-color@10.2.2)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0))
       lucide-react:
         specifier: catalog:deps
@@ -630,9 +648,6 @@ importers:
       react-dom:
         specifier: catalog:react
         version: 19.3.1(react@19.3.1)
-      shiki:
-        specifier: catalog:deps
-        version: 4.5.0
       takumi-js:
         specifier: catalog:deps
         version: 2.14.0(csstype@3.2.3)(react@19.3.1)
@@ -647,7 +662,7 @@ importers:
         specifier: catalog:deps
         version: 1.14.1
       '@mdx-js/mdx':
-        specifier: ^3.1.1
+        specifier: catalog:deps
         version: 3.1.1(supports-color@10.2.2)
       '@seedcord/core':
         specifier: workspace:^
@@ -692,7 +707,7 @@ importers:
         specifier: ^4.0.4
         version: 4.0.4
       '@types/mdx':
-        specifier: ^2.0.14
+        specifier: catalog:deps
         version: 2.0.14
       '@types/pg':
         specifier: catalog:deps
@@ -740,7 +755,7 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0(supports-color@10.2.2)
       mdast-util-to-markdown:
-        specifier: ^2.1.3
+        specifier: catalog:deps
         version: 2.1.3
       mongoose:
         specifier: catalog:peer
@@ -770,7 +785,7 @@ importers:
         specifier: ^11.0.5
         version: 11.0.5
       vfile:
-        specifier: ^6.0.3
+        specifier: catalog:deps
         version: 6.0.3
       vitest:
         specifier: catalog:test
@@ -781,12 +796,24 @@ importers:
 
   apps/home:
     dependencies:
+      '@fumari/image-size':
+        specifier: ^0.1.1
+        version: 0.1.1
       '@seedcord/ui':
         specifier: workspace:^
         version: link:../../tooling/ui
+      '@seedcord/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
       discord-component-embed:
         specifier: workspace:^
         version: link:../../packages/discord-component-embed
+      fumadocs-core:
+        specifier: catalog:deps
+        version: 16.15.18(@mdx-js/mdx@3.1.1(supports-color@10.2.2))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(lucide-react@1.51.0(@types/react@19.3.0)(react@19.3.1))(next@16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@10.2.2)(zod@4.6.5)
+      fumadocs-mdx:
+        specifier: catalog:deps
+        version: 15.4.6(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.15.18(@mdx-js/mdx@3.1.1(supports-color@10.2.2))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(lucide-react@1.51.0(@types/react@19.3.0)(react@19.3.1))(next@16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@10.2.2)(zod@4.6.5))(next@16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(rolldown@1.2.12)(supports-color@10.2.2)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
       lucide-react:
         specifier: catalog:deps
         version: 1.51.0(@types/react@19.3.0)(react@19.3.1)
@@ -802,22 +829,31 @@ importers:
       react-dom:
         specifier: catalog:react
         version: 19.3.1(react@19.3.1)
-      shiki:
-        specifier: catalog:deps
-        version: 4.5.0
       takumi-js:
         specifier: catalog:deps
         version: 2.14.0(csstype@3.2.3)(react@19.3.1)
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
+      '@mdx-js/mdx':
+        specifier: catalog:deps
+        version: 3.1.1(supports-color@10.2.2)
       '@seedcord/eslint-config':
         specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
         specifier: workspace:^
         version: link:../../tooling/tsconfig
+      '@seedcord/vitest-config':
+        specifier: workspace:^
+        version: link:../../tooling/vitest-config
       '@tailwindcss/postcss':
         specifier: catalog:deps
         version: 4.3.3
+      '@types/mdx':
+        specifier: catalog:deps
+        version: 2.0.14
       '@types/react':
         specifier: catalog:react
         version: 19.3.0
@@ -839,6 +875,9 @@ importers:
       eslint-plugin-tailwind-canonical-classes:
         specifier: catalog:eslint
         version: 1.4.1(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))
+      mdast-util-to-markdown:
+        specifier: catalog:deps
+        version: 2.1.3
       prettier:
         specifier: catalog:deps
         version: 3.9.9
@@ -851,6 +890,12 @@ importers:
       typescript:
         specifier: catalog:peer
         version: 6.0.3
+      vfile:
+        specifier: catalog:deps
+        version: 6.0.3
+      vitest:
+        specifier: catalog:test
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@30.1.1)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
       wrangler:
         specifier: catalog:peer
         version: 4.150.0(@types/node@26.1.2)
@@ -12243,8 +12288,7 @@ snapshots:
   '@oxlint/binding-win32-x64-msvc@1.76.0':
     optional: true
 
-  '@pkgjs/parseargs@0.11.0':
-    optional: true
+  '@pkgjs/parseargs@0.11.0': {}
 
   '@pkgr/core@0.3.6': {}
 
@@ -15330,6 +15374,41 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  fumadocs-core@16.15.18(@mdx-js/mdx@3.1.1(supports-color@10.2.2))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(lucide-react@1.51.0(@types/react@19.3.0)(react@19.3.1))(next@16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@10.2.2)(zod@4.6.5):
+    dependencies:
+      '@fumari/image-size': 0.1.1
+      estree-util-value-to-estree: 3.5.0
+      github-slugger: 2.0.0
+      hast-util-to-estree: 3.1.3(supports-color@10.2.2)
+      hast-util-to-jsx-runtime: 2.3.6(supports-color@10.2.2)
+      mdast-util-mdx: 3.0.0(supports-color@10.2.2)
+      mdast-util-to-markdown: 2.1.3
+      npm-to-yarn: 3.2.0
+      remark: 15.0.1(supports-color@10.2.2)
+      remark-gfm: 4.0.1(supports-color@10.2.2)
+      remark-rehype: 11.1.2
+      scroll-into-view-if-needed: 3.1.0
+      shiki: 4.5.0
+      tinyglobby: 0.2.17
+      unified: 11.0.5
+      unist-util-visit: 5.1.0
+      vfile: 6.0.3
+      yaml: 2.9.1
+      zbsearch: 4.0.0
+    optionalDependencies:
+      '@mdx-js/mdx': 3.1.1(supports-color@10.2.2)
+      '@types/estree-jsx': 1.0.5
+      '@types/hast': 3.0.5
+      '@types/mdast': 4.0.4
+      '@types/react': 19.3.0
+      lucide-react: 1.51.0(@types/react@19.3.0)(react@19.3.1)
+      next: 16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
+      zod: 4.6.5
+    transitivePeerDependencies:
+      - supports-color
+
   fumadocs-mdx@15.4.6(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.15.18(@mdx-js/mdx@3.1.1(supports-color@10.2.2))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(lucide-react@1.51.0(@types/react@19.3.0)(react@19.3.1))(next@16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@10.2.2)(zod@4.4.3))(next@16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(rolldown@1.2.1)(supports-color@10.2.2)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0)):
     dependencies:
       '@mdx-js/mdx': 3.1.1(supports-color@10.2.2)
@@ -15360,6 +15439,39 @@ snapshots:
       react: 19.3.1
       rolldown: 1.2.1
       vite: 8.3.4(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.0)
+    transitivePeerDependencies:
+      - supports-color
+
+  fumadocs-mdx@15.4.6(@types/mdast@4.0.4)(@types/mdx@2.0.14)(@types/react@19.3.0)(fumadocs-core@16.15.18(@mdx-js/mdx@3.1.1(supports-color@10.2.2))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(lucide-react@1.51.0(@types/react@19.3.0)(react@19.3.1))(next@16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@10.2.2)(zod@4.6.5))(next@16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(rolldown@1.2.12)(supports-color@10.2.2)(vite@8.3.4(@types/node@26.1.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)):
+    dependencies:
+      '@mdx-js/mdx': 3.1.1(supports-color@10.2.2)
+      '@standard-schema/spec': 1.1.0
+      chokidar: 5.0.0
+      esbuild: 0.28.2
+      estree-util-value-to-estree: 3.5.0
+      fumadocs-core: 16.15.18(@mdx-js/mdx@3.1.1(supports-color@10.2.2))(@types/estree-jsx@1.0.5)(@types/hast@3.0.5)(@types/mdast@4.0.4)(@types/react@19.3.0)(lucide-react@1.51.0(@types/react@19.3.0)(react@19.3.1))(next@16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(supports-color@10.2.2)(zod@4.6.5)
+      github-slugger: 2.0.0
+      magic-string: 1.4.2
+      mdast-util-mdx: 3.0.0(supports-color@10.2.2)
+      picocolors: 1.1.1
+      picomatch: 4.0.7
+      tinyexec: 1.3.1
+      tinyglobby: 0.2.17
+      unified: 11.0.5
+      unist-util-remove-position: 5.0.0
+      unist-util-visit: 5.1.0
+      vfile: 6.0.3
+      yaml: 2.9.1
+      yuku-analyzer: 0.10.2
+      zod: 4.6.5
+    optionalDependencies:
+      '@types/mdast': 4.0.4
+      '@types/mdx': 2.0.14
+      '@types/react': 19.3.0
+      next: 16.3.8(@babel/core@7.29.7(supports-color@10.2.2))(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      react: 19.3.1
+      rolldown: 1.2.12
+      vite: 8.3.4(@types/node@26.1.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
     transitivePeerDependencies:
       - supports-color
 

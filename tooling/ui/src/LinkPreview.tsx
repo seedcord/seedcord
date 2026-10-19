@@ -130,8 +130,12 @@ function cardWithBody(props: PreviewCardProps, body: string): ReactElement {
         bannerUrl
     } = props;
 
+    // discord lines a thumbnail up with the text inside its section
     const head = (
         <>
+            {breadcrumb ? (
+                <TextDisplay>{`-# ${withEmoji(breadcrumbEmoji, breadcrumb.join(PREVIEW_EMOJI.caret))}`}</TextDisplay>
+            ) : null}
             <TextDisplay>{`## ${withEmoji(titleEmoji, title)}\n${body}`}</TextDisplay>
             {extraText ? <TextDisplay>{extraText}</TextDisplay> : null}
         </>
@@ -139,9 +143,6 @@ function cardWithBody(props: PreviewCardProps, body: string): ReactElement {
 
     return (
         <Container accentColor={accent}>
-            {breadcrumb ? (
-                <TextDisplay>{`-# ${withEmoji(breadcrumbEmoji, breadcrumb.join(PREVIEW_EMOJI.caret))}`}</TextDisplay>
-            ) : null}
             {thumbnail ? (
                 <Section accessory={<Thumbnail url={thumbnail.url} description={thumbnail.description} />}>
                     {head}

@@ -1,8 +1,21 @@
 import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/LinkPreview';
+import { toEpochSeconds } from '@seedcord/utils';
 
-import { CDN_URL, DOCS_URL, GUIDE_URL, REPO_URL, SITE_NAME, SITE_URL } from '#lib/site';
+import { joinList, postDate } from '#lib/blog/post';
+import { BLOG_DESCRIPTION, BLOG_NAME, BLOG_PATH, twinPath } from '#lib/blog/seo';
+import { canonicalUrl, CDN_URL, DOCS_URL, GUIDE_URL, REPO_URL, SITE_NAME, SITE_URL } from '#lib/site';
 
-import type { PreviewCardProps } from '@seedcord/ui/LinkPreview';
+import type { PostSummary } from '#lib/blog/post';
+import type { PreviewCardProps, PreviewLink } from '@seedcord/ui/LinkPreview';
+
+const THUMBNAIL = { url: `${CDN_URL}/assets/logo.png`, description: 'the seedcord mark' };
+
+const SITE_LINKS: readonly PreviewLink[] = [
+    { emoji: PREVIEW_EMOJI.home, label: 'Home', url: SITE_URL },
+    { emoji: PREVIEW_EMOJI.guide, label: 'Guide', url: GUIDE_URL },
+    { emoji: PREVIEW_EMOJI.docs, label: 'Docs', url: DOCS_URL },
+    { emoji: PREVIEW_EMOJI.github, label: 'GitHub', url: REPO_URL }
+];
 
 export const HOME_PREVIEW: PreviewCardProps = {
     accent: SITE_ACCENT.home,
@@ -15,12 +28,39 @@ export const HOME_PREVIEW: PreviewCardProps = {
         '- Hot reload and a dev tunnel',
         '- Runs on the gateway or over HTTP'
     ].join('\n'),
-    thumbnail: { url: `${CDN_URL}/assets/logo.png`, description: 'the seedcord mark' },
+    thumbnail: THUMBNAIL,
     bannerUrl: `${CDN_URL}/assets/banner-2.webp`,
-    links: [
-        { emoji: PREVIEW_EMOJI.home, label: 'Home', url: SITE_URL },
-        { emoji: PREVIEW_EMOJI.guide, label: 'Guide', url: GUIDE_URL },
-        { emoji: PREVIEW_EMOJI.docs, label: 'Docs', url: DOCS_URL },
-        { emoji: PREVIEW_EMOJI.github, label: 'GitHub', url: REPO_URL }
-    ]
+    links: SITE_LINKS
 };
+
+const BLOG_LINK: PreviewLink = { emoji: PREVIEW_EMOJI.home, label: 'Blog', url: canonicalUrl(BLOG_PATH) };
+const BLOG_CRUMB = { accent: SITE_ACCENT.home, breadcrumb: ['blog'], breadcrumbEmoji: PREVIEW_EMOJI.home } as const;
+
+export const BLOG_PREVIEW: PreviewCardProps = {
+    ...BLOG_CRUMB,
+    title: BLOG_NAME,
+    body: BLOG_DESCRIPTION,
+    thumbnail: THUMBNAIL,
+    links: SITE_LINKS
+};
+
+const bylineOf = (post: PostSummary): string => `**${joinList(post.authors.map((author) => author.name))}**`;
+
+// discord shows the date in each reader's own locale
+const discordDate = (date: string): string =>
+    `<t:${toEpochSeconds(postDate(date).getTime() as Parameters<typeof toEpochSeconds>[0])}:D>`;
+
+export function postPreview(post: PostSummary): PreviewCardProps {
+    return {
+        ...BLOG_CRUMB,
+        title: post.title,
+        body: post.description,
+        subtext: [bylineOf(post), discordDate(post.created), `${post.minutes} min read`],
+        ...(post.cover && { bannerUrl: canonicalUrl(post.cover.src) }),
+        links: [
+            BLOG_LINK,
+            { emoji: PREVIEW_EMOJI.markdown, label: 'Markdown', url: canonicalUrl(twinPath(post.slug)) },
+            { emoji: PREVIEW_EMOJI.github, label: 'Edit on GitHub', url: post.editUrl }
+        ]
+    };
+}

@@ -1,5 +1,6 @@
 import { DOCS_URL, HOME_URL } from '@seedcord/ui';
 import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/LinkPreview';
+import { readingMinutes } from '@seedcord/ui/readingTime';
 
 import { editUrl } from '#lib/pageActions';
 import { isFrontPage, markdownUrl, shownTitle, SITE_DESCRIPTION } from '#lib/site';
@@ -12,20 +13,6 @@ const SITE_LINKS: readonly PreviewLink[] = [
     { emoji: PREVIEW_EMOJI.home, label: 'Home', url: HOME_URL },
     { emoji: PREVIEW_EMOJI.docs, label: 'Docs', url: DOCS_URL }
 ];
-
-// both rates are guesses
-const PROSE_WORDS_PER_MINUTE = 200;
-const CODE_WORDS_PER_MINUTE = 400;
-
-const FENCE = /```[\s\S]*?```/g;
-const wordsIn = (text: string): number => text.match(/\S+/g)?.length ?? 0;
-
-function readingMinutes(twinMarkdown: string): number {
-    const code = twinMarkdown.match(FENCE)?.join(' ') ?? '';
-    const prose = twinMarkdown.replace(FENCE, ' ');
-    const minutes = wordsIn(prose) / PROSE_WORDS_PER_MINUTE + wordsIn(code) / CODE_WORDS_PER_MINUTE;
-    return Math.max(1, Math.round(minutes));
-}
 
 interface GuidePreviewSource {
     page: GuidePage & { data: { description?: string | undefined } };

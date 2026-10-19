@@ -4,6 +4,7 @@ import { cn, useTimedToggle } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import { useEffect, useRef, useState } from 'react';
 
+import { opensInNewTab } from '#components/ui/linkTarget';
 import { DISCORD_URL, DOCS_URL, GUIDE_URL, NPM_URL, REPO_URL } from '#lib/site';
 
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
@@ -34,7 +35,8 @@ function isEditable(target: EventTarget | null): boolean {
 
 function runCommand(command: SlashCommandDef, onReply: (text: string) => void): void {
     if (command.href) {
-        window.open(command.href, '_blank', 'noreferrer');
+        if (opensInNewTab(command.href)) window.open(command.href, '_blank', 'noreferrer');
+        else window.location.assign(command.href);
         return;
     }
     const started = performance.now();

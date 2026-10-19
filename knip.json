@@ -47,8 +47,8 @@
             ]
         },
         "apps/home": {
-            "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
-            "project": ["src/**/*.{ts,tsx,css}"]
+            "entry": ["src/app/**/{page,layout,route,not-found,sitemap}.{ts,tsx}", "tests/**/*.test.{ts,tsx}"],
+            "project": ["src/**/*.{ts,tsx,css}", "tests/**/*.{ts,tsx}"]
         },
         "packages/core": {
             "entry": ["**/*.types-test.ts", "tests/**/fixtures/**"]

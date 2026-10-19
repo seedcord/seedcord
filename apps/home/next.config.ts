@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { HOME } from '@seedcord/ui/sites';
 import { staticExport } from '@seedcord/ui/staticExport';
+import { createMDX } from 'fumadocs-mdx/next';
 
 import type { NextConfig } from 'next';
 
@@ -17,4 +18,6 @@ const nextConfig = (phase: string): NextConfig => ({
     turbopack: {}
 });
 
-export default nextConfig;
+const config = (phase: string): NextConfig => createMDX()(nextConfig(phase));
+
+export default config;

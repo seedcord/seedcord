@@ -20,7 +20,7 @@ import type {
     TwoslashTypesCache
 } from '@shikijs/twoslash';
 import type { CodeRepresentation } from '@seedcord/ui';
-import type { BundledLanguage } from 'shiki';
+import type { HighlightLanguage } from '@seedcord/ui/shiki';
 import type { NodeHover, Range } from 'twoslash-protocol';
 
 type HoverWithRef = NodeHover & { ref?: SymbolRef };
@@ -234,7 +234,11 @@ const TRANSFORMER = {
 
 export type FenceMode = 'off' | keyof typeof TRANSFORMER;
 
-export async function twoslashBlock(code: string, lang: BundledLanguage, mode: FenceMode): Promise<CodeRepresentation> {
+export async function twoslashBlock(
+    code: string,
+    lang: HighlightLanguage,
+    mode: FenceMode
+): Promise<CodeRepresentation> {
     if (mode === 'off') return { text: code, html: await highlightToHtml(code, lang) };
 
     const text = cleanFence(code);

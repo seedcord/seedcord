@@ -48,6 +48,13 @@ describe('highlightToHtml', () => {
         expect(html).toMatch(/color:light-dark\(#[0-9a-fA-F]+, #[0-9a-fA-F]+\)/);
     });
 
+    it('renders only the dark colours for a block that is always dark', async () => {
+        const html = await highlightToHtml('const x = 1;', 'ts', { onlyDark: true });
+
+        expect(html).not.toContain('light-dark(');
+        expect(html).toContain('seedcord-dark');
+    });
+
     // the @supports fallback in shiki.css reads these
     it('keeps a per-theme custom property on each token', async () => {
         const html = await highlightToHtml('const x = 1;');
@@ -207,9 +214,12 @@ describe('the wrapped fragment helpers', () => {
 });
 
 describe('isHighlightable', () => {
-    it.each(['ts', 'typescript', 'tsx', 'js', 'javascript', 'jsx', 'json', 'bash'])('accepts %s', (lang) => {
-        expect(isHighlightable(lang)).toBe(true);
-    });
+    it.each(['ts', 'typescript', 'tsx', 'js', 'javascript', 'jsx', 'json', 'bash', 'sh', 'shell', 'zsh'])(
+        'accepts %s',
+        (lang) => {
+            expect(isHighlightable(lang)).toBe(true);
+        }
+    );
 
     it.each(['python', 'rust', 'go', 'css', ''])('rejects %s, which the highlighter never loaded', (lang) => {
         expect(isHighlightable(lang)).toBe(false);

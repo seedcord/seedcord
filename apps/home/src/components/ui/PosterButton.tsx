@@ -1,6 +1,7 @@
 import { cn } from '@seedcord/ui';
 import Link from 'next/link';
 
+import { linkTarget } from './linkTarget';
 import { pressable } from './press';
 
 import type { ReactNode } from 'react';
@@ -13,7 +14,10 @@ const VARIANTS = {
     outline: { socket: 'bg-(--seed-dark)', button: 'rule bg-(--pith) text-(--seed-dark)' },
     solidDark: { socket: 'bg-(--rind)', button: 'rule-pith bg-(--flesh-deep) text-(--pith)' },
     outlineDark: { socket: 'bg-(--rind)', button: 'rule-pith bg-(--pith) text-(--seed-dark)' },
-    ink: { socket: null, button: 'bg-(--seed-dark) text-(--pith) hover:bg-(--flesh-deep)' }
+    ink: {
+        socket: null,
+        button: 'font-mono-code bg-(--seed-dark) px-3 py-1.5 text-sm text-(--pith) hover:bg-(--flesh-deep)'
+    }
 } as const;
 
 type PosterButtonVariant = keyof typeof VARIANTS;
@@ -33,7 +37,6 @@ export function PosterButton({
     className,
     children
 }: PosterButtonProps): ReactNode {
-    const external = href.startsWith('http');
     const { socket, button } = VARIANTS[variant];
     return (
         <span className={cn('relative inline-flex')}>
@@ -46,7 +49,7 @@ export function PosterButton({
             <Link
                 href={href}
                 aria-label={ariaLabel}
-                {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
+                {...linkTarget(href)}
                 className={cn(
                     'relative inline-flex items-center justify-center gap-2 rounded-sm font-semibold',
                     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--rind)',

@@ -1,4 +1,5 @@
 import { DEFAULT_VERSION, parseEntityPathSegments } from '@seedcord/docs-engine';
+import { serializeJsonLd } from '@seedcord/ui';
 import { notFound } from 'next/navigation';
 
 import { EntityContent } from '#components/docs/entity/EntityContent';
@@ -66,13 +67,7 @@ async function PackageEntityPage({ params }: { params: Promise<PageParams> }): P
             <ComponentEmbed>
                 <PreviewCard {...symbolPreview(resolved, latestPath)} />
             </ComponentEmbed>
-            <script
-                type="application/ld+json"
-                // a raw < in the JSON would end the script tag
-                dangerouslySetInnerHTML={{
-                    __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c')
-                }}
-            />
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
             <EntityContent model={resolved.entity} />
         </>
     );

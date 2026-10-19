@@ -5,8 +5,8 @@ const SEEDCORD_DESCRIPTION =
     "seedcord is a TypeScript framework for making Discord bots, typed end to end. It works both over the gateway and with http interactions. You write your bot's features, and nothing else.";
 
 // Google merges nodes that share an @id across sites
-const ORG_ID = `${HOME_URL}/#organization`;
-const SOFTWARE_ID = `${HOME_URL}/#software`;
+export const ORG_ID = `${HOME_URL}/#organization`;
+export const SOFTWARE_ID = `${HOME_URL}/#software`;
 
 export interface SiteIdentity {
     name: string;
@@ -52,6 +52,10 @@ export function seedcordJsonLd(site: SiteIdentity): string {
         ]
     };
 
-    // escape < so the JSON can't break out of the script tag
-    return JSON.stringify(graph).replaceAll('<', String.raw`\u003c`);
+    return serializeJsonLd(graph);
+}
+
+// escape < so the JSON can't break out of the script tag
+export function serializeJsonLd(value: Record<string, unknown>): string {
+    return JSON.stringify(value).replaceAll('<', String.raw`\u003c`);
 }
