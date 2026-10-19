@@ -23,7 +23,7 @@ function projectFor(tsconfig?: string): Project {
     const config = {
         root: projectDir,
         configFile: join(projectDir, 'seedcord.config.ts'),
-        target: { kind: 'server', entry: join(projectDir, 'index.ts'), outDir: join(projectDir, 'dist') },
+        target: { kind: 'server', start: join(projectDir, 'index.ts'), outDir: join(projectDir, 'dist') },
         build: tsconfig === undefined ? {} : { tsconfig }
     } as ResolvedSeedcordConfig;
     const loader = {

@@ -184,14 +184,13 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     }
 
     private isCriticalFile(file: string): boolean {
-        const { root, instance, target } = this.config;
+        const { root, instance } = this.config;
         const relPath = posixRelative(root, file);
 
         return (
             [...this.restartPatterns].some((pattern) => minimatch(relPath, pattern)) ||
             file.endsWith('package.json') ||
             file.endsWith('tsconfig.json') ||
-            (target.kind === 'server' && file === resolve(root, target.entry)) ||
             file === resolve(root, instance)
         );
     }

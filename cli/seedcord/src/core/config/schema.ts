@@ -26,6 +26,11 @@ export interface SeedcordBuildConfig extends SeedcordBaseBuildConfig {
      * @defaultValue `./dist` relative to the config directory
      */
     outDir?: string;
+    /**
+     * The file that starts the bot, the one that calls `start()`. The build's `index.mjs` runs it.
+     * Without it, `index.mjs` default exports the bot for your own node server to import and start.
+     */
+    start?: string;
 }
 
 /**
@@ -125,10 +130,6 @@ export interface SeedcordConfig {
  */
 export interface SeedcordServerConfig extends SeedcordConfig {
     /**
-     * The file that starts the bot, the one that calls `start()`.
-     */
-    entry: string;
-    /**
      * Optional build configuration overrides.
      */
     build?: SeedcordBuildConfig;
@@ -142,7 +143,7 @@ export type ResolvedTunnel = { mode: 'off' } | { mode: 'quick' } | { mode: 'url'
 
 export type ResolvedEdgeTarget = EdgeTarget & { port: number };
 
-export type ResolvedServerTarget = ServerTarget & { entry: string; outDir: string };
+export type ResolvedServerTarget = ServerTarget & { start: string | undefined; outDir: string };
 
 export type ResolvedTarget = ResolvedServerTarget | ResolvedEdgeTarget;
 

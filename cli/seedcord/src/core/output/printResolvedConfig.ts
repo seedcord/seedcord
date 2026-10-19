@@ -12,6 +12,6 @@ export function printResolvedConfig(steps: Steps<string>, config: ResolvedSeedco
         steps.detail('cloudflare', paint.path(target.cloudflareConfig));
         return;
     }
-    steps.detail('entry', paint.path(target.entry));
+    if (target.start !== undefined) steps.detail('start', paint.path(target.start));
     steps.detail('outDir', paint.path(target.outDir));
 }

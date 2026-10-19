@@ -54,7 +54,7 @@ function configAt(root: string, instance: string): ResolvedSeedcordConfig {
         root,
         instance,
         configFile: resolve(root, 'seedcord.config.ts'),
-        target: { kind: 'server', entry: resolve(root, 'index.ts'), outDir: resolve(root, 'dist') },
+        target: { kind: 'server', start: resolve(root, 'index.ts'), outDir: resolve(root, 'dist') },
         build: {},
         typecheck: { enabled: false },
         idleAnimation: false,

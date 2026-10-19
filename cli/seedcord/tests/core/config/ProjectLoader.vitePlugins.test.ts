@@ -22,7 +22,7 @@ describe('ProjectLoader vitePlugins', () => {
         mkdirSync(join(projectDir, 'src'));
         writeFileSync(
             join(projectDir, 'seedcord.config.ts'),
-            configWithGreetingPlugin("root: './src', instance: './bot.ts', entry: './index.ts'")
+            configWithGreetingPlugin("root: './src', instance: './bot.ts', build: { start: './index.ts' }")
         );
         writeFileSync(join(projectDir, 'src/probe.ts'), GREETING_PROBE);
 
@@ -36,7 +36,7 @@ describe('ProjectLoader vitePlugins', () => {
         const projectDir = tempProject();
         writeFileSync(
             join(projectDir, 'seedcord.config.ts'),
-            `export default { instance: './bot.ts', entry: './index.ts', vitePlugins: () => { globalThis.vitePluginsCalls = (globalThis.vitePluginsCalls ?? 0) + 1; return []; } };\n`
+            `export default { instance: './bot.ts', build: { start: './index.ts' }, vitePlugins: () => { globalThis.vitePluginsCalls = (globalThis.vitePluginsCalls ?? 0) + 1; return []; } };\n`
         );
         onTestFinished(() => {
             Reflect.deleteProperty(globalThis, 'vitePluginsCalls');
@@ -68,7 +68,7 @@ describe('ProjectLoader vitePlugins', () => {
         );
         writeFileSync(
             join(projectDir, 'seedcord.config.ts'),
-            `import { lazy } from './plugins/lazy';\n\nexport default { root: './src', instance: './bot.ts', entry: './index.ts', vitePlugins: () => [lazy()] };\n`
+            `import { lazy } from './plugins/lazy';\n\nexport default { root: './src', instance: './bot.ts', build: { start: './index.ts' }, vitePlugins: () => [lazy()] };\n`
         );
         writeFileSync(join(projectDir, 'src/probe.ts'), 'export default undefined;\n');
 
@@ -104,7 +104,7 @@ describe('ProjectLoader vitePlugins', () => {
         );
         writeFileSync(
             join(projectDir, 'seedcord.config.ts'),
-            `import lazy from 'lazy-plugin';\n\nexport default { root: './src', instance: './bot.ts', entry: './index.ts', vitePlugins: () => [lazy()] };\n`
+            `import lazy from 'lazy-plugin';\n\nexport default { root: './src', instance: './bot.ts', build: { start: './index.ts' }, vitePlugins: () => [lazy()] };\n`
         );
         writeFileSync(join(projectDir, 'src/probe.ts'), 'export default undefined;\n');
 
@@ -121,7 +121,10 @@ describe('ProjectLoader vitePlugins', () => {
             mkdirSync(join(projectDir, 'src'));
             writeFileSync(
                 join(projectDir, 'seedcord.config.ts'),
-                configWithGreetingPlugin("root: './src', instance: './bot.ts', entry: './index.ts'", vitePlugins)
+                configWithGreetingPlugin(
+                    "root: './src', instance: './bot.ts', build: { start: './index.ts' }",
+                    vitePlugins
+                )
             );
             writeFileSync(join(projectDir, 'src/probe.ts'), GREETING_PROBE);
 
@@ -140,7 +143,7 @@ describe('ProjectLoader vitePlugins', () => {
             `export default {
     root: './src',
     instance: './bot.ts',
-    entry: './index.ts',
+    build: { start: './index.ts' },
     vitePlugins: () => [{ name: 'breaks-in-transform', transform: (_code, id) => { if (id.endsWith('/word.ts')) throw new Error('bad yaml on line 3'); } }]
 };
 `
@@ -162,7 +165,7 @@ describe('ProjectLoader vitePlugins', () => {
             join(projectDir, 'seedcord.config.ts'),
             `export default {
     instance: './bot.ts',
-    entry: './index.ts',
+    build: { start: './index.ts' },
     vitePlugins: () => [{ name: 'breaks-on-start', config: () => { throw new Error('bad option'); } }]
 };
 `

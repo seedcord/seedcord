@@ -17,6 +17,7 @@ export function printBuildSummary(printer: StepPrinter<BuildStep>, { bundle, nex
     printer.line();
     printer.line(`${counts.map((count) => paint.iris(count)).join(', ')} → ${paint.path(bundle.entry)}`);
     printer.line();
+    if (nextCommands.length === 0) return;
     for (const [label, command] of nextCommands) printer.line(commandLine(label, command));
     printer.line();
 }

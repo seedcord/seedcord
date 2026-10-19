@@ -4,6 +4,8 @@ import type { ProjectFiles } from '#core/project/ProjectFiles';
 
 export const BUILT_FILES_SLOT = `globalThis[Symbol.for(${JSON.stringify(BUILT_FILES_KEY)})]`;
 
+export const PLACEHOLDER_ROOT = '/bot';
+
 interface BuiltFilesOptions {
     files: ProjectFiles;
     folders: string[];

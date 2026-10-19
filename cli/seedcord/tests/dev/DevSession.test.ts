@@ -25,7 +25,7 @@ function config(): ResolvedSeedcordConfig {
     return {
         root: process.cwd(),
         configFile: `${process.cwd()}/seedcord.config.ts`,
-        target: { kind: 'server', entry: `${process.cwd()}/package.json`, outDir: 'dist' },
+        target: { kind: 'server', start: `${process.cwd()}/package.json`, outDir: 'dist' },
         instance: `${process.cwd()}/package.json`,
         tunnel: { mode: 'quick' },
         typecheck: { enabled: false },

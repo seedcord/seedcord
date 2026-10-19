@@ -3,7 +3,8 @@ import { SeedcordRangeError, SeedcordTypeError, throwSingleOrAggregate } from '@
 import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 
 import type { BuildTarget } from './detectTarget';
-import type { SeedcordConfig } from './schema';
+import type { SeedcordBaseBuildConfig, SeedcordBuildConfig, SeedcordConfig } from './schema';
+import type { TypedExclude } from '@seedcord/types';
 
 type ConfigProblem = SeedcordTypeError | SeedcordRangeError;
 
@@ -54,6 +55,19 @@ function* tunnelProblems(value: unknown): Generator<SeedcordTypeError> {
     }
 }
 
+type ServerOnlyBuildField = TypedExclude<keyof SeedcordBuildConfig, keyof SeedcordBaseBuildConfig>;
+
+function edgeStartWhy(cloudflareConfig: string): string {
+    return `${paint.path(cloudflareConfig)} makes this an edge bot, which starts when Cloudflare calls the default export of ${paint.bold('instance')}.`;
+}
+
+function serverOnlyBuildFields(cloudflareConfig: string): Record<ServerOnlyBuildField, string> {
+    return {
+        outDir: `An edge bot can't set it, because ${paint.bold('@cloudflare/vite-plugin')} writes the worker to ${paint.path('.cloudflare/output')}, where ${paint.bold('cf deploy --prebuilt')} reads it.`,
+        start: edgeStartWhy(cloudflareConfig)
+    };
+}
+
 export class ConfigValidator {
     constructor(
         private readonly target: BuildTarget,
@@ -68,7 +82,7 @@ export class ConfigValidator {
     private *problems(raw: Record<string, unknown>): Generator<ConfigProblem> {
         if (!isNonEmptyString(raw.instance))
             yield invalidField('instance', 'a string that points to the file that default exports your bot');
-        yield* this.entryProblems(raw.entry);
+        if (raw.entry !== undefined) yield this.unusedField('entry', this.entryWhy());
         yield* this.portProblems(raw.port);
         if (!isOptionalString(raw.root)) yield invalidField('root', 'a string');
         if (raw.idleAnimation !== undefined && typeof raw.idleAnimation !== 'boolean') {
@@ -89,14 +103,10 @@ export class ConfigValidator {
         return new SeedcordTypeError(SeedcordErrorCode.CliConfigFieldUnused, [field, this.configFile, why]);
     }
 
-    private *entryProblems(entry: unknown): Generator<SeedcordTypeError> {
+    private entryWhy(): string {
         const { target } = this;
-        if (target.kind === 'server') {
-            if (!isNonEmptyString(entry)) yield invalidField('entry', 'a string that points to your startup script');
-        } else if (entry !== undefined) {
-            const why = `${paint.path(target.cloudflareConfig)} makes this an edge bot, which has no entry because Cloudflare calls the default export of ${paint.bold('instance')}.`;
-            yield this.unusedField('entry', why);
-        }
+        if (target.kind === 'edge') return edgeStartWhy(target.cloudflareConfig);
+        return `The start file moved to ${paint.bold('build.start')}, like ${paint.bold("build: { start: './index.ts' }")}.`;
     }
 
     private *portProblems(port: unknown): Generator<ConfigProblem> {
@@ -117,12 +127,20 @@ export class ConfigValidator {
             yield invalidField('build', 'an object');
             return;
         }
-        if (this.target.kind === 'edge' && build.outDir !== undefined) {
-            const why = `An edge bot can't set it, because ${paint.bold('@cloudflare/vite-plugin')} writes the worker to ${paint.path('.cloudflare/output')}, where ${paint.bold('cf deploy --prebuilt')} reads it.`;
-            yield this.unusedField('build.outDir', why);
-        } else if (!isOptionalString(build.outDir)) {
-            yield invalidField('build.outDir', 'a string');
+        if (this.target.kind === 'edge') {
+            yield* this.edgeBuildProblems(build, this.target.cloudflareConfig);
+        } else {
+            if (!isOptionalString(build.outDir)) yield invalidField('build.outDir', 'a string');
+            if (build.start !== undefined && !isNonEmptyString(build.start)) {
+                yield invalidField('build.start', 'a string that points to your startup script');
+            }
         }
         if (!isOptionalString(build.tsconfig)) yield invalidField('build.tsconfig', 'a string');
+    }
+
+    private *edgeBuildProblems(build: Record<string, unknown>, cloudflareConfig: string): Generator<SeedcordTypeError> {
+        for (const [field, why] of Object.entries(serverOnlyBuildFields(cloudflareConfig))) {
+            if (build[field] !== undefined) yield this.unusedField(`build.${field}`, why);
+        }
     }
 }

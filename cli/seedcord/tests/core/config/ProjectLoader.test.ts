@@ -37,7 +37,7 @@ describe('ProjectLoader', () => {
         expect(resolved.instance).toBe(resolve(projectDir, 'src/bot.ts'));
         expect(resolved.target).toEqual({
             kind: 'server',
-            entry: resolve(projectDir, 'src/index.ts'),
+            start: resolve(projectDir, 'src/index.ts'),
             outDir: resolve(projectDir, 'dist')
         });
         expect(resolved.build.tsconfig).toBeUndefined();
@@ -79,7 +79,7 @@ describe('ProjectLoader target', () => {
 
         const { target } = await load();
 
-        expect(target).toMatchObject({ kind: 'server', entry: join(projectDir, 'index.ts') });
+        expect(target).toMatchObject({ kind: 'server', start: join(projectDir, 'index.ts') });
     });
 
     it('targets edge when a cloudflare.config.ts and a tsconfig with the workerd condition are in the config folder', async () => {
@@ -238,7 +238,16 @@ describe('ProjectLoader entry on an edge bot', () => {
         });
     });
 
-    it('throws CliConfigFieldUnused for an edge config that sets entry', async () => {
+    it('gives a top-level entry on an edge bot the reason edge has no start file', async () => {
+        const { projectDir, load } = edgeProjectWith({ ...EDGE_MINIMAL, entry: './index.ts' });
+
+        await expect(load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigFieldUnused,
+            message: expect.stringContaining(toPosixPath(join(projectDir, CLOUDFLARE_CONFIG))) as string
+        });
+    });
+
+    it('throws CliConfigFieldUnused for an edge config that sets build.start', async () => {
         const { projectDir, load } = edgeProjectWith(MINIMAL);
 
         await expect(load()).rejects.toMatchObject({
@@ -308,7 +317,7 @@ describe('ProjectLoader validation', () => {
     it('closes the module loader when the config is invalid', async () => {
         const projectDir = tempProject();
         writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
-        const modules = stubModulesExporting({ entry: './index.ts' });
+        const modules = stubModulesExporting({ build: { start: './index.ts' } });
 
         await expect(new ProjectLoader(modules.open, new ShellMode()).readConfig(projectDir)).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField
@@ -359,21 +368,36 @@ describe('ProjectLoader validation', () => {
     });
 
     it('throws when instance is missing', async () => {
-        await expect(projectWith({ entry: './index.ts' }).load()).rejects.toMatchObject({
+        await expect(projectWith({ build: { start: './index.ts' } }).load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
             message: expect.stringContaining('instance in the seedcord config') as string
         });
     });
 
-    it('throws when entry is missing', async () => {
-        await expect(projectWith({ instance: './bot.ts' }).load()).rejects.toMatchObject({
+    it('resolves an export build when build.start is unset', async () => {
+        const { projectDir, load } = projectWith({ instance: './bot.ts' });
+
+        const { target } = await load();
+
+        expect(target).toEqual({ kind: 'server', start: undefined, outDir: resolve(projectDir, 'dist') });
+    });
+
+    it('points a top-level entry at build.start', async () => {
+        await expect(projectWith({ instance: './bot.ts', entry: './index.ts' }).load()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigFieldUnused,
+            message: expect.stringContaining('build.start') as string
+        });
+    });
+
+    it('rejects a build.start that is not a path', async () => {
+        await expect(projectWith({ instance: './bot.ts', build: { start: '' } }).load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
-            message: expect.stringContaining('entry in the seedcord config') as string
+            message: expect.stringContaining('build.start in the seedcord config') as string
         });
     });
 
     it('reports every missing and invalid field at once', async () => {
-        const error: unknown = await projectWith({ entry: './index.ts', tunnel: 'yes', build: { outDir: 1 } })
+        const error: unknown = await projectWith({ tunnel: 'yes', build: { outDir: 1 } })
             .load()
             .catch((caught: unknown) => caught);
 

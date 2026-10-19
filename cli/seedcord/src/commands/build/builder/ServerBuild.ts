@@ -12,7 +12,7 @@ import { assertOutDirSafe } from './assertOutDirSafe';
 import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { serverCommands } from './serverCommands';
-import { ENTRY_ID, isServerEntry, serverEntry } from './serverEntry';
+import { ENTRY_ID, exportInstance, isServerEntry, runStartFile, serverEntry } from './serverEntry';
 import { TargetBuild } from './TargetBuild';
 
 import type { ResolvedSeedcordConfig, ResolvedServerTarget } from '#core/config/schema';
@@ -47,20 +47,30 @@ export class ServerBuild extends TargetBuild {
         super(project);
     }
 
-    public static check({ root }: ResolvedSeedcordConfig, { entry, outDir }: ResolvedServerTarget): void {
-        if (!existsSync(entry)) throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [entry]);
+    public static check({ root }: ResolvedSeedcordConfig, { start, outDir }: ResolvedServerTarget): void {
+        if (start !== undefined && !existsSync(start))
+            throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [start]);
         assertOutDirSafe(outDir, root);
     }
 
     public nextCommands(bundle: BundleStats): NextCommand[] {
-        return serverCommands(this.project.config.configFile, bundle.entry);
+        return this.target.start === undefined ? [] : serverCommands(this.project.config.configFile, bundle.entry);
     }
 
     public async bundle(): Promise<BundleStats> {
         const { config, configDir, files } = this.project;
-        const { entry, outDir } = this.target;
+        const { start, outDir } = this.target;
         const { root } = config;
-        const folders = await files.foldersIncludingEmpty();
+        const importBot =
+            start === undefined
+                ? exportInstance(viteKey(configDir, config.instance))
+                : runStartFile(viteKey(configDir, start));
+        const builtFiles = {
+            files,
+            folders: await files.foldersIncludingEmpty(),
+            rootKey: viteKey(configDir, root),
+            configFile: relative(outDir, config.configFile)
+        };
 
         const builder = await createBuilder({
             root: configDir,
@@ -69,17 +79,7 @@ export class ServerBuild extends TargetBuild {
             // vite copies <root>/public into outDir otherwise
             publicDir: false,
             logLevel: 'warn',
-            plugins: [
-                serverEntry({
-                    files,
-                    folders,
-                    entryKey: viteKey(configDir, entry),
-                    rootKey: viteKey(configDir, root),
-                    configFile: relative(outDir, config.configFile)
-                }),
-                pinModulePaths(files),
-                config.vitePlugins.create()
-            ],
+            plugins: [serverEntry(builtFiles, importBot), pinModulePaths(files), config.vitePlugins.create()],
             resolve: { tsconfigPaths: true },
             environments: {
                 [BOT_ENVIRONMENT]: {

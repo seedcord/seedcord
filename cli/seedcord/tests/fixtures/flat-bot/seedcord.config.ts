@@ -1,4 +1,4 @@
 export default {
     instance: './bot.ts',
-    entry: './index.ts'
+    build: { start: './index.ts' }
 };

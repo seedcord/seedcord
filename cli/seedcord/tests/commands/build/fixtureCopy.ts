@@ -6,6 +6,7 @@ import { onTestFinished } from 'vitest';
 
 export const FLAT_BOT = join(import.meta.dirname, '../../fixtures/flat-bot');
 export const GATEWAY_BOT = join(import.meta.dirname, '../../fixtures/gateway-bot');
+export const HTTP_BOT = join(import.meta.dirname, '../../fixtures/http-bot');
 
 // the fixture's imports resolve only from inside this package
 export async function copyFixture(fixture: string): Promise<string> {

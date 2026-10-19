@@ -11,7 +11,7 @@ import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { ShellMode } from '#core/viteMode';
 import { configWithGreetingPlugin, GREETING, GREETING_PROBE } from '#tests/greetingPlugin';
 
-const SERVER_FIELDS = "root: './src', instance: './bot.ts', entry: './index.ts'";
+const SERVER_FIELDS = "root: './src', instance: './bot.ts', build: { start: './index.ts' }";
 const STARTED = 'seedcordTestPluginStarted';
 
 type OpenSteps = Parameters<typeof openProjectWithSteps>[0];

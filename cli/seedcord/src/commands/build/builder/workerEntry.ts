@@ -2,7 +2,7 @@ import { BAKED_IDS_KEY } from '@seedcord/core/internal';
 import { assertNever } from '@seedcord/utils';
 import { workerdPath } from '@seedcord/utils/node/internal';
 
-import { builtFilesSource } from './builtFiles';
+import { builtFilesSource, PLACEHOLDER_ROOT } from './builtFiles';
 
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { PluginConfig } from '@cloudflare/vite-plugin';
@@ -19,9 +19,6 @@ export const workerEntryConfig: EntryCustomizer = () => ({ entrypoint: WORKER_EN
 const BIND_ENV_ID = 'virtual:seedcord/bind-env';
 const BUILT_FILES_ID = 'virtual:seedcord/built-files';
 const BAKED_IDS_ID = 'virtual:seedcord/baked-ids';
-
-// workerd has no filesystem behind this path
-const WORKER_ROOT = '/bot';
 
 // envapt's workerd build throws on a read until something binds a source
 const BIND_ENV = `import { env } from 'cloudflare:workers';
@@ -68,8 +65,8 @@ function modeSetup(mode: EntryMode): ModeSetup {
         }
         case 'build': {
             return {
-                root: WORKER_ROOT,
-                cwd: WORKER_ROOT,
+                root: PLACEHOLDER_ROOT,
+                cwd: PLACEHOLDER_ROOT,
                 sourcePaths: false,
                 modules: [[BAKED_IDS_ID, bakedIdsSource(mode.ids)]]
             };

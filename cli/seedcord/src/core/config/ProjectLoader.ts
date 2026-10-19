@@ -33,6 +33,12 @@ import type {
 // the node http Seedcord's default port
 const EDGE_DEV_PORT = 3000;
 
+function resolveStart(root: string, start: string): string {
+    const file = resolve(root, start);
+    if (!isInside(root, file)) throw new SeedcordTypeError(SeedcordErrorCode.CorePathOutsideRoot, [file, root]);
+    return file;
+}
+
 function resolveTunnel(value: boolean | string | undefined): ResolvedTunnel {
     if (value === false) return { mode: 'off' };
     if (typeof value === 'string') return { mode: 'url', url: value };
@@ -125,13 +131,13 @@ export class ProjectLoader {
     ): ResolvedTarget {
         if (target.kind === 'edge') return { ...target, port: config.port ?? EDGE_DEV_PORT };
 
-        // justified: ConfigValidator already required entry on a server target
-        const server = config as SeedcordServerConfig;
-        const entry = resolve(root, server.entry);
-        if (!isInside(root, entry)) {
-            throw new SeedcordTypeError(SeedcordErrorCode.CorePathOutsideRoot, [entry, root]);
-        }
-        return { ...target, entry, outDir: resolve(configDir, server.build?.outDir ?? 'dist') };
+        // justified: ConfigValidator checked the server build fields on a server target
+        const { build } = config as SeedcordServerConfig;
+        return {
+            ...target,
+            start: build?.start === undefined ? undefined : resolveStart(root, build.start),
+            outDir: resolve(configDir, build?.outDir ?? 'dist')
+        };
     }
 
     private resolveBuildOptions(

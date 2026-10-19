@@ -361,7 +361,7 @@ const BUILD_STARTS = 'seedcordTestBuildStarts';
 const COUNTING_CONFIG = `export default {
     root: './src',
     instance: './bot.ts',
-    entry: './index.ts',
+    build: { start: './index.ts' },
     vitePlugins: () => [
         {
             name: 'count-build-starts',
@@ -406,7 +406,7 @@ describe('DevRunner run', () => {
         await runner.quit();
         await running;
 
-        expect(error.message).toMatch(/Cannot find the entry file|Failed to load url/);
+        expect(error.message).toMatch(/Cannot find \S+bot\.ts|Failed to load url/);
         expect(projectLoader.readConfig).toHaveBeenCalledOnce();
     });
 

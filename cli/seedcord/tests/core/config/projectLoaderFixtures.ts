@@ -11,7 +11,7 @@ import type { ResolvedSeedcordConfig } from '#core/config/schema';
 import type { OpenModules } from '#core/modules/ModuleLoader';
 import type { Project } from '#core/project/Project';
 
-export const MINIMAL = { instance: './bot.ts', entry: './index.ts' };
+export const MINIMAL = { instance: './bot.ts', build: { start: './index.ts' } };
 
 // openProjectWithSteps without the steps
 export async function openProject(loader: ProjectLoader, projectDir: string): Promise<Project> {

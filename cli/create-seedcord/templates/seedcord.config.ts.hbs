@@ -4,7 +4,7 @@ export default defineConfig({
     root: './src',
     instance: './bot.ts',
 {{#unless isEdge}}
-    entry: './index.ts',
+    build: { start: './index.ts' },
 {{/unless}}
     // set false to hold the running arc and live dot still, which cuts idle redraws by ~80%
     idleAnimation: true,

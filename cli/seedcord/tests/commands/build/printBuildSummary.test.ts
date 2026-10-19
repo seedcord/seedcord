@@ -31,6 +31,10 @@ describe('printBuildSummary', () => {
         expect(summaryFor({ bundle, nextCommands: [] })).toContain('7 modules, 4 text files, 186.4 kB → ');
     });
 
+    it('ends on one blank line after the counts when there are no next commands', () => {
+        expect(summaryFor({ bundle, nextCommands: [] })).toMatch(/→ \S+\n\n$/);
+    });
+
     it('lines the next commands up under one label column', () => {
         const summary = summaryFor({
             bundle,
