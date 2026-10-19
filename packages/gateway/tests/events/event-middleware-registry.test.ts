@@ -1,4 +1,3 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterEach, describe, expect, vi } from 'vitest';
 
 import { eventsOf } from '#bot/Bot';
@@ -64,17 +63,6 @@ function deferred(): { promise: Promise<void>; resolve: () => void } {
     return { promise, resolve };
 }
 
-const AUDIT = `
-    import { RegisterEventMiddleware, EventMiddleware } from '${seedcordPath}';
-
-    @RegisterEventMiddleware()
-    export class Audit extends EventMiddleware {
-        public async execute() {
-            await Promise.resolve();
-        }
-    }
-`;
-
 describe('the event middleware registry', () => {
     afterEach(() => {
         vi.clearAllMocks();
@@ -112,27 +100,5 @@ describe('the event middleware registry', () => {
         await dispatching;
 
         expect(ran).toEqual(['Parks', 'Follows']);
-    });
-
-    it('throws when two event middleware classes share a name', async ({ testEnv }) => {
-        await testEnv.createFile(`${EVENTS_DIR}/Msg.ts`, HANDLER);
-        await testEnv.createFile(`${MIDDLEWARES_DIR}/First.ts`, AUDIT);
-        await testEnv.createFile(`${MIDDLEWARES_DIR}/Second.ts`, AUDIT);
-
-        await using seedcord = new Seedcord(
-            testConfig({
-                events: testEnv.resolvePath(EVENTS_DIR),
-                eventMiddlewares: testEnv.resolvePath(MIDDLEWARES_DIR)
-            })
-        );
-
-        const error: unknown = await dispatcherOf(seedcord)
-            .init()
-            .then(
-                () => null,
-                (caught: unknown) => caught
-            );
-
-        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
     });
 });

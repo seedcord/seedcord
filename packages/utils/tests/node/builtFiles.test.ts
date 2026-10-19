@@ -6,7 +6,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, vi } from 'vitest';
 
 import { BUILT_FILES_KEY, builtConfigDir, readTextFiles, traverseDirectory } from '#src/node/directory';
-import { posixRelative } from '#src/node/paths';
+import { toPosixPath } from '#src/node/paths';
 import { clearBuiltFiles } from '#tests/builtFilesSlot';
 
 interface BuiltFileLoaders {
@@ -74,6 +74,15 @@ describe('builtConfigDir', () => {
 });
 
 describe('traverseDirectory in a built bot', () => {
+    // a bundler leaves the root at the /bot placeholder
+    it('reports a file outside the working directory by its full path', async () => {
+        using _built = register({ folders: ['/handlers'], modules: { '/handlers/Roll.ts': stub('Roll') } });
+        const shown: string[] = [];
+        for await (const { relativePath } of traverseDirectory(at('handlers'))) shown.push(relativePath);
+
+        expect(shown).toEqual([toPosixPath(at('handlers/Roll.js'))]);
+    });
+
     it('visits the registered modules under the folder as built js files', async () => {
         using _built = register({
             folders: ['/handlers', '/handlers/mod', '/commands'],
@@ -230,16 +239,14 @@ describe('readTextFiles in a built bot', () => {
         expect(seen).toEqual([at('locales/en.json')]);
     });
 
-    it('reports the file whose text failed to load by its relative path, keeping the original as the cause', async () => {
+    it('reports the file whose text failed to load by its path, keeping the original as the cause', async () => {
         const broken = (): Promise<string> => Promise.reject(new Error('boom'));
         using _built = register({ folders: ['/locales'], text: { '/locales/en.json': broken } });
 
         const error = await rejection(readTextFiles(at('locales')));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathUnreadable });
-        expect(Error.isError(error) ? error.message : '').toContain(
-            posixRelative(process.cwd(), at('locales/en.json'))
-        );
+        expect(Error.isError(error) ? error.message : '').toContain(toPosixPath(at('locales/en.json')));
         expect(Error.isError(error) ? error.cause : undefined).toMatchObject({ message: 'boom' });
     });
 

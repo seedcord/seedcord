@@ -20,7 +20,8 @@ export class RunnerModuleLoader implements ModuleLoader {
 
     public async importModule<TModule = unknown>(path: string): Promise<TModule> {
         if (path.includes('#')) throw new SeedcordError(SeedcordErrorCode.CliPathHasHash, [path]);
-        if (!existsSync(path)) throw new SeedcordError(SeedcordErrorCode.CliFileNotFound, [path]);
+        if (!existsSync(path))
+            throw new SeedcordError(SeedcordErrorCode.CoreImportFailed, [path, 'The file does not exist.']);
         return this.load<TModule>(path, path);
     }
 

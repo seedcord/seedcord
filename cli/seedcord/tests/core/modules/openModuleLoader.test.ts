@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { afterEach, assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
+import { importInstance } from '#core/modules/importInstance';
 import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { cloudflareConfigSource, linkPackages } from '#tests/edgeFolder';
@@ -132,13 +133,24 @@ describe('openModuleLoader', () => {
         expect(module.default).toEqual({ instance: './bot.ts' });
     });
 
-    it('throws CliFileNotFound for a file that does not exist', async () => {
+    it('throws CoreImportFailed for a file that does not exist', async () => {
         const root = await project();
 
         await using modules = await openModuleLoader(root, SERVER, 'development', BOT_CODE);
 
         await expect(modules.importModule(join(root, 'src', 'missing.ts'))).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliFileNotFound
+            code: SeedcordErrorCode.CoreImportFailed
+        });
+    });
+
+    it('throws CliFileNotFound for an instance file that does not exist, pointing at instance', async () => {
+        const root = await project();
+
+        await using modules = await openModuleLoader(root, SERVER, 'development', BOT_CODE);
+
+        await expect(importInstance(modules, join(root, 'src', 'missing.ts'))).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliFileNotFound,
+            message: expect.stringContaining('Point instance in the seedcord config') as string
         });
     });
 

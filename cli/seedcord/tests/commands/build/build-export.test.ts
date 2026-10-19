@@ -42,6 +42,12 @@ const GATEWAY_SCRIPT = `import bot from './dist/index.mjs';
 await bot.start();
 `;
 
+const SEEDCORD_FIRST_SCRIPT = `import '@seedcord/gateway';
+
+const { default: bot } = await import('./dist/index.mjs');
+await bot.start();
+`;
+
 const TYPED_APP = `import bot from './dist/index.mjs';
 
 await bot.start();
@@ -112,7 +118,16 @@ describe('seedcord build without build.start', () => {
         expect(result.exitCode).toBe(0);
     }, 120_000);
 
-    it('gives a plain node script a gateway bot that loads its handlers and its .env', async () => {
+    it('reads the .env beside the config when the app imports seedcord before the bot', async () => {
+        const projectDir = await exportProject(GATEWAY_BOT, SEEDCORD_FIRST_SCRIPT);
+        await quickBuildRunner().run(projectDir);
+
+        const output = await smoke('gateway', process.execPath, [join(projectDir, 'server.mjs')]);
+
+        expect(output).toContain('fixture:env beside the config');
+    }, 120_000);
+
+    it('reads the .env beside the config when a plain node script imports the bot', async () => {
         const projectDir = await exportProject(GATEWAY_BOT, GATEWAY_SCRIPT);
         await quickBuildRunner().run(projectDir);
 

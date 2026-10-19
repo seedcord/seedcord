@@ -292,8 +292,8 @@ const messages = {
         `Searched ${paint.path(baseDir)} for ${oneOf.format(candidates)} and found none. Run the command from your bot's folder, or create a ${paint.sky('seedcord.config.ts')} there.`,
     [SeedcordErrorCode.CliConfigInvalidField]: (field: string, expected: string) =>
         `${paint.bold(field)} in the seedcord config must be ${expected}.`,
-    [SeedcordErrorCode.CliFileNotFound]: (path: string) =>
-        `Cannot find ${paint.path(path)}. Fix the ${paint.bold('instance')} or ${paint.bold('build.start')} path in the seedcord config.`,
+    [SeedcordErrorCode.CliFileNotFound]: (path: string, field: string) =>
+        `Cannot find ${paint.path(path)}. Point ${paint.bold(field)} in the seedcord config at a file that exists.`,
     [SeedcordErrorCode.CliInstanceInvalid]: (instancePath: string) =>
         `${paint.path(instancePath)} must default export the bot, a ${paint.bold('new Seedcord(...)')}, from ${paint.bold('@seedcord/gateway')} or ${paint.bold('@seedcord/http')}.`,
     [SeedcordErrorCode.CliStartFailed]: (instancePath: string, reason: string) =>

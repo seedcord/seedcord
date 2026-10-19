@@ -1,6 +1,7 @@
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { chmod, mkdir, mkdtempDisposable, readFile, stat, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 import { CommandMetadataKey } from '@seedcord/core/internal';
@@ -50,6 +51,9 @@ function silentLogger(overrides: Partial<ILogger> = {}): ILogger {
 }
 
 function configAt(root: string, instance: string): ResolvedSeedcordConfig {
+    mkdirSync(dirname(instance), { recursive: true });
+    writeFileSync(instance, '');
+    onTestFinished(() => rmSync(instance, { force: true }));
     return {
         root,
         instance,

@@ -254,56 +254,6 @@ describe('InteractionDispatcher Integration', () => {
         expect(message).toContain('PingTwo.ts');
     });
 
-    it('throws when two interaction middleware classes share a name instead of overwriting', async ({ testEnv }) => {
-        const middlewaresDir = 'interaction-mw';
-
-        await testEnv.createFile(
-            'interactions/Noop.ts',
-            `
-            import { SlashHandler, SlashRoute } from '${seedcordPath}';
-
-            @SlashRoute('noop')
-            export class Noop extends SlashHandler<'noop'> {
-                public async execute() {
-                    await Promise.resolve();
-                }
-            }
-            `
-        );
-
-        for (const file of ['RateLimitA', 'RateLimitB']) {
-            await testEnv.createFile(
-                `${middlewaresDir}/${file}.ts`,
-                `
-                import { RegisterInteractionMiddleware, InteractionMiddleware } from '${seedcordPath}';
-
-                @RegisterInteractionMiddleware()
-                export class RateLimit extends InteractionMiddleware {
-                    public async execute() {
-                        await Promise.resolve();
-                    }
-                }
-                `
-            );
-        }
-
-        const config = testConfig({
-            interactions: testEnv.resolvePath('interactions'),
-            interactionMiddlewares: testEnv.resolvePath(middlewaresDir)
-        });
-
-        await using seedcord = new Seedcord(config);
-        const controller = controllerOf(seedcord);
-
-        const error: unknown = await controller.init().then(
-            () => null,
-            (caught: unknown) => caught
-        );
-        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
-        const message = Error.isError(error) ? error.message : String(error);
-        expect(message).toContain('RateLimit');
-    });
-
     it('routes a thrown error from a handler through the boundary to a reply', async ({ testEnv }) => {
         const interactionsDir = 'interactions';
         await testEnv.createFile(

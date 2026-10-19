@@ -94,6 +94,7 @@ export async function fakeProject({
     }
 
     const instance = resolve(root, 'bot.ts');
+    await writeFile(instance, '');
     byPath.set(instance, {
         default: { [SeedcordBrand]: true, config: { bot: { commands: { path: commandsPath, guilds } } } }
     });

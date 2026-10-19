@@ -2,6 +2,8 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { setBotRoot } from '@seedcord/utils/node/internal';
 
+import { instanceModule } from '#core/modules/importInstance';
+
 import { HmrPlugin } from './HmrPlugin';
 import { ViteRestartFiles } from './ViteRestartFiles';
 
@@ -51,7 +53,7 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
 
     public async loadEntry(): Promise<DevRuntimeLoadResult> {
         const { context, modules } = this.require('loadEntry');
-        return { module: await modules.importModule(context.config.instance) };
+        return { module: await instanceModule(modules, context.config.instance) };
     }
 
     public refreshCommands(shouldRefresh: boolean): void {

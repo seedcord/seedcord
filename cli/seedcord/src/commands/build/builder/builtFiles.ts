@@ -1,4 +1,4 @@
-import { BUILT_FILES_KEY, moduleGlobs, textGlobs } from '@seedcord/utils/node/internal';
+import { BUILT_FILES_KEY, BUILT_FILES_READY_KEY, moduleGlobs, textGlobs } from '@seedcord/utils/node/internal';
 
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 
@@ -38,6 +38,7 @@ export function builtFilesSource({
         `    sourcePaths: ${String(sourcePaths)},`,
         ...(configFile === undefined ? [] : [`    configFile: ${JSON.stringify(configFile)},`]),
         '};',
+        `globalThis[Symbol.for(${JSON.stringify(BUILT_FILES_READY_KEY)})]?.();`,
         ''
     ].join('\n');
 }

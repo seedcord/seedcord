@@ -127,7 +127,7 @@ describe('ProjectLoader target', () => {
         await expect(
             openProject(new ProjectLoader(openModuleLoader, new ShellMode()), projectDir)
         ).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliConfigFieldUnused,
+            code: SeedcordErrorCode.CliEdgeWithoutWorkerdCondition,
             message: expect.stringContaining(toPosixPath(join(projectDir, CLOUDFLARE_CONFIG))) as string
         });
     });
@@ -137,15 +137,6 @@ describe('ProjectLoader target', () => {
         writeEdgeConfig(projectDir);
 
         await expect(load()).rejects.toMatchObject({ code: SeedcordErrorCode.CliTsconfigNotFound });
-    });
-
-    it('throws CliConfigFieldUnused for a server config that sets port', async () => {
-        const { projectDir, load } = projectWith({ ...MINIMAL, port: 9000 });
-
-        await expect(load()).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliConfigFieldUnused,
-            message: expect.stringContaining(toPosixPath(join(projectDir, 'seedcord.config.ts'))) as string
-        });
     });
 
     it('throws CliWorkerdConditionWithoutCloudflareConfig for the workerd condition with no cloudflare.config.ts', async () => {
@@ -176,7 +167,7 @@ describe('ProjectLoader target', () => {
     });
 });
 
-describe('ProjectLoader entry on an edge bot', () => {
+describe('ProjectLoader on an edge bot', () => {
     function edgeProjectWith(config: unknown): ReturnType<typeof projectWith> {
         const project = projectWith(config);
         writeEdgeConfig(project.projectDir);
@@ -184,7 +175,7 @@ describe('ProjectLoader entry on an edge bot', () => {
         return project;
     }
 
-    it('loads a config without entry', async () => {
+    it('serves dev on port 3000 by default', async () => {
         const { projectDir, load } = edgeProjectWith(EDGE_MINIMAL);
 
         const { target } = await load();
@@ -226,33 +217,6 @@ describe('ProjectLoader entry on an edge bot', () => {
         await expect(load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
             message: expect.stringContaining('port') as string
-        });
-    });
-
-    it('throws CliConfigFieldUnused for an edge config that sets build.outDir', async () => {
-        const { projectDir, load } = edgeProjectWith({ ...EDGE_MINIMAL, build: { outDir: './out' } });
-
-        await expect(load()).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliConfigFieldUnused,
-            message: expect.stringContaining(toPosixPath(join(projectDir, 'seedcord.config.ts'))) as string
-        });
-    });
-
-    it('gives a top-level entry on an edge bot the reason edge has no start file', async () => {
-        const { projectDir, load } = edgeProjectWith({ ...EDGE_MINIMAL, entry: './index.ts' });
-
-        await expect(load()).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliConfigFieldUnused,
-            message: expect.stringContaining(toPosixPath(join(projectDir, CLOUDFLARE_CONFIG))) as string
-        });
-    });
-
-    it('throws CliConfigFieldUnused for an edge config that sets build.start', async () => {
-        const { projectDir, load } = edgeProjectWith(MINIMAL);
-
-        await expect(load()).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliConfigFieldUnused,
-            message: expect.stringContaining(toPosixPath(join(projectDir, 'seedcord.config.ts'))) as string
         });
     });
 });
@@ -382,14 +346,7 @@ describe('ProjectLoader validation', () => {
         expect(target).toEqual({ kind: 'server', start: undefined, outDir: resolve(projectDir, 'dist') });
     });
 
-    it('points a top-level entry at build.start', async () => {
-        await expect(projectWith({ instance: './bot.ts', entry: './index.ts' }).load()).rejects.toMatchObject({
-            code: SeedcordErrorCode.CliConfigFieldUnused,
-            message: expect.stringContaining('build.start') as string
-        });
-    });
-
-    it('rejects a build.start that is not a path', async () => {
+    it('rejects an empty build.start', async () => {
         await expect(projectWith({ instance: './bot.ts', build: { start: '' } }).load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,
             message: expect.stringContaining('build.start in the seedcord config') as string

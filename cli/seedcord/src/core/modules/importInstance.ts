@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
@@ -13,7 +15,12 @@ export function toSeedcordInstance(candidate: unknown, instancePath: string): Se
     throw new SeedcordError(SeedcordErrorCode.CliInstanceInvalid, [instancePath]);
 }
 
+export async function instanceModule(modules: ModuleLoader, instancePath: string): Promise<unknown> {
+    if (!existsSync(instancePath))
+        throw new SeedcordError(SeedcordErrorCode.CliFileNotFound, [instancePath, 'instance']);
+    return modules.importModule(instancePath);
+}
+
 export async function importInstance(modules: ModuleLoader, instancePath: string): Promise<SeedcordInstance> {
-    const module = await modules.importModule(instancePath);
-    return toSeedcordInstance(await resolveDefaultExport(module), instancePath);
+    return toSeedcordInstance(await resolveDefaultExport(await instanceModule(modules, instancePath)), instancePath);
 }

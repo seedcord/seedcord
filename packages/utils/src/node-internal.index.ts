@@ -1,8 +1,10 @@
 export {
     BUILT_FILES_KEY,
+    BUILT_FILES_READY_KEY,
     builtConfigDir,
     builtModulePath,
     moduleGlobs,
+    onBuiltFiles,
     resolveFolder,
     setBotRoot,
     textGlobs

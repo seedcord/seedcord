@@ -72,7 +72,7 @@ export interface SeedcordHmrConfig {
 
 /**
  * The `seedcord.config.ts` of a bot that runs on Cloudflare Workers. A bot that runs on node or
- * bun uses {@link SeedcordServerConfig}, the same fields plus `entry`.
+ * bun uses {@link SeedcordServerConfig}. Its `build` also takes `outDir` and `start`.
  */
 export interface SeedcordConfig {
     /**

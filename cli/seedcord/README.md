@@ -91,7 +91,7 @@ export default defineConfig({
 A `cloudflare.config.ts` beside `seedcord.config.ts` makes the bot an edge bot, for Cloudflare Workers. An edge bot needs three things:
 
 - `"customConditions": ["workerd"]` in its tsconfig
-- a `root` in `seedcord.config.ts` that points at the bot's code, like `'./src'`, and no `entry`
+- a `root` in `seedcord.config.ts` that points at the bot's code, like `'./src'`
 - `@cloudflare/vite-plugin` 2 and `cf` as dev dependencies
 
 ```sh

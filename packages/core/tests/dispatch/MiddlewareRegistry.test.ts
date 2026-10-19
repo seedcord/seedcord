@@ -10,7 +10,7 @@ import type { MiddlewareKind } from '#src/metadataKeys';
 // the registry only reads metadata off the class
 type Probe = new () => { execute(): Promise<void> };
 
-// the object key names the class, since the duplicate check reads ctor.name
+// the object key sets the class's name
 function middleware(name: string, options: Parameters<typeof RegisterInteractionMiddleware>[0] = {}): Probe {
     const ctor = {
         [name]: class {
@@ -58,12 +58,14 @@ describe('MiddlewareRegistry', () => {
         );
     });
 
-    it('throws when two classes share a name', () => {
-        registry.register(middleware('Audit'));
+    // a minifier gives unrelated classes the same short name
+    it('chains two different classes that share a name', () => {
+        const first = middleware('o');
+        const second = middleware('o');
+        registry.register(first);
+        registry.register(second);
 
-        expect(() => registry.register(middleware('Audit'))).toThrow(
-            expect.objectContaining({ code: SeedcordErrorCode.CoreDuplicateName })
-        );
+        expect(registry.chainFor(InteractionKind.Slash)).toEqual([first, second]);
     });
 
     it('registers the same class twice without duplicating it', () => {

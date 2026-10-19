@@ -15,6 +15,7 @@ export function isServerEntry(moduleId: string | null | undefined): boolean {
     return moduleId === RESOLVED_ENTRY_ID;
 }
 
+// these two use await import because static imports run before the code that registers the built files
 export function runStartFile(startKey: string): string[] {
     return [`await import(${JSON.stringify(startKey)});`];
 }
@@ -23,7 +24,6 @@ export function exportInstance(instanceKey: string): string[] {
     return [`const { default: bot } = await import(${JSON.stringify(instanceKey)});`, 'export default bot;'];
 }
 
-// a static import would load the bot before the built files are registered
 export function serverEntry(builtFiles: EntryBuiltFiles, importBot: string[]): Plugin {
     const registerFiles = builtFilesSource({ ...builtFiles, rootExpression: ROOT_EXPRESSION, sourcePaths: false });
     const source = [registerFiles, ...importBot, ''].join('\n');

@@ -7,6 +7,7 @@ import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { Rolldown } from 'vite';
 
 export const ENTRY_FILE_NAME = 'index.mjs';
+export const ENTRY_DECLARATIONS_NAME = ENTRY_FILE_NAME.replace(/\.mjs$/, '.d.mts');
 
 export interface BundleStats {
     modules: number;

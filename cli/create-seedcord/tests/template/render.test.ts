@@ -262,8 +262,8 @@ describe('the rendered edge project', () => {
         expect(files.has('cloudflare.config.ts')).toBe(false);
     });
 
-    it('writes build.start for a node bot and leaves it out on edge, which the cli refuses', async () => {
-        expect(await renderOne(EDGE, 'seedcord.config.ts')).not.toMatch(/\bstart\b/);
+    it('writes build.start for a node bot and leaves it out on edge', async () => {
+        expect(await renderOne(EDGE, 'seedcord.config.ts')).not.toContain('start:');
         expect(await renderOne(HTTP, 'seedcord.config.ts')).toContain("build: { start: './index.ts' }");
     });
 
