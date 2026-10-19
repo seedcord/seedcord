@@ -6,7 +6,7 @@ import { createServer, createServerModuleRunner } from 'vite';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
-import { BOT_ENVIRONMENT, environmentNamed, mergeViteConfig } from '#core/modules/userCodeConfig';
+import { botEnvironment, mergeViteConfig } from '#core/modules/userCodeConfig';
 
 import type { ViteDevServer } from 'vite';
 
@@ -94,7 +94,7 @@ describe('dev runtime module resolution', () => {
             )
         );
 
-        const runner = createServerModuleRunner(environmentNamed(server.environments, BOT_ENVIRONMENT));
+        const runner = createServerModuleRunner(botEnvironment(server.environments));
         ({ run } = await runner.import<{ run: (path: string) => Promise<string[]> }>('/src/entry.ts'));
     }, 30_000);
 

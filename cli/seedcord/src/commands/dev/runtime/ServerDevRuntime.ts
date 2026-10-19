@@ -5,7 +5,7 @@ import { listenHostFor } from '#commands/dev/tunnel/listenHost';
 import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { openViteServer } from '#core/modules/openViteServer';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
-import { BOT_ENVIRONMENT, environmentNamed, mergeViteConfig } from '#core/modules/userCodeConfig';
+import { BOT_ENVIRONMENT, botEnvironment, mergeViteConfig } from '#core/modules/userCodeConfig';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
 import { serverViteConfig } from './devServerConfig';
@@ -27,8 +27,7 @@ export class ServerDevRuntime extends BaseDevRuntime {
                 plugins: [hmr.plugin, ...context.config.vitePlugins]
             })
         ).catch(rethrowVitePluginError);
-        const bot = environmentNamed(server.environments, BOT_ENVIRONMENT);
-        const modules = new RunnerModuleLoader(createServerModuleRunner(bot));
+        const modules = new RunnerModuleLoader(createServerModuleRunner(botEnvironment(server.environments)));
         return { context, modules, hmr, resources };
     }
 

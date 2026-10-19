@@ -14,10 +14,6 @@ interface ResolveConditions {
 
 // renaming this breaks user plugins that check for 'seedcord'
 export const BOT_ENVIRONMENT = 'seedcord';
-// edge dev's node copy of the bot, beside a worker in BOT_ENVIRONMENT
-export const CODEGEN_ENVIRONMENT = 'codegen';
-
-export type BotEnvironmentName = typeof BOT_ENVIRONMENT | typeof CODEGEN_ENVIRONMENT;
 
 export const NODE_CONDITIONS: ResolveConditions = { conditions: ['node', 'import'], externalConditions: ['node'] };
 
@@ -32,25 +28,24 @@ export function mergeViteConfig(base: InlineConfig, overrides: InlineConfig): In
 
 const SEEDCORD_DECLARES_IT = `seedcord adds it to the Vite config. Look in ${paint.bold('vitePlugins')} for a plugin whose ${paint.bold('config')} hook rewrites ${paint.bold('environments')}.`;
 
-export function environmentNamed<Environment>(
+export function botEnvironment<Environment>(
     environments: Record<string, Environment>,
-    name: BotEnvironmentName,
     fix = SEEDCORD_DECLARES_IT
 ): Environment {
-    const environment = environments[name];
+    const environment = environments[BOT_ENVIRONMENT];
     if (environment) return environment;
-    throw new SeedcordError(SeedcordErrorCode.CliViteEnvironmentMissing, [name, Object.keys(environments), fix]);
+    throw new SeedcordError(SeedcordErrorCode.CliViteEnvironmentMissing, [
+        BOT_ENVIRONMENT,
+        Object.keys(environments),
+        fix
+    ]);
 }
 
-export function userCodeConfig(
-    environment: BotEnvironmentName,
-    resolve: ResolveConditions,
-    configDir: string
-): UserConfig {
+export function userCodeConfig(resolve: ResolveConditions, configDir: string): UserConfig {
     return {
         resolve: { tsconfigPaths: true },
         environments: {
-            [environment]: {
+            [BOT_ENVIRONMENT]: {
                 resolve: {
                     ...resolve,
                     // the dev TUI and the step printer read the bot's logs from the CLI's own logger registry

@@ -5,7 +5,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { createBuilder } from 'vite';
 
-import { BOT_ENVIRONMENT, environmentNamed } from '#core/modules/userCodeConfig';
+import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/userCodeConfig';
 import { viteKey } from '#core/project/ProjectFiles';
 
 import { assertOutDirSafe } from './assertOutDirSafe';
@@ -103,8 +103,7 @@ export class ServerBuild extends TargetBuild {
                 }
             }
         }).catch(bundleFailed);
-        const bot = environmentNamed(builder.environments, BOT_ENVIRONMENT);
-        const result = await builder.build(bot).catch(bundleFailed);
+        const result = await builder.build(botEnvironment(builder.environments)).catch(bundleFailed);
 
         return bundleStats(outputChunks(result), files, join(outDir, ENTRY_FILE_NAME));
     }

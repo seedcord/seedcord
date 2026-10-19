@@ -7,27 +7,26 @@ import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { filterCirculars } from '@seedcord/utils';
 import chalk from 'chalk';
-import { createServerModuleRunner } from 'vite';
 
 import { CloudflareWorker } from '#commands/build/builder/CloudflareWorker';
 import { workerEntry } from '#commands/build/builder/workerEntry';
 import { listenHostFor } from '#commands/dev/tunnel/listenHost';
 import { rethrowVitePluginError } from '#core/config/vitePlugins';
 import { reportWorkerExports } from '#core/modules/cloudflarePlugin';
-import { edgeStandIns } from '#core/modules/edgeStandIns';
+import { openModuleLoader } from '#core/modules/openModuleLoader';
 import { openViteServer } from '#core/modules/openViteServer';
-import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
-import { BOT_ENVIRONMENT, CODEGEN_ENVIRONMENT, environmentNamed, mergeViteConfig } from '#core/modules/userCodeConfig';
+import { BOT_ENVIRONMENT, botEnvironment, mergeViteConfig } from '#core/modules/userCodeConfig';
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { functionExportsOf } from '#core/modules/workerExports';
 import { ProjectFiles, viteKey } from '#core/project/ProjectFiles';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
-import { edgeViteConfig } from './devServerConfig';
+import { devWatchOptions, edgeViteConfig } from './devServerConfig';
 import { listenForInteractions } from './listenForInteractions';
 import { loadWorkerEntry } from './loadWorkerEntry';
 
 import type { ResolvedEdgeTarget } from '#core/config/schema';
+import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { StartedRuntime } from './BaseDevRuntime';
 import type { DevRuntimeContext } from './DevRuntime';
 import type {
@@ -43,26 +42,9 @@ interface EdgeStarted extends StartedRuntime {
     readonly port: number;
 }
 
-// workerd gives the worker environment its own cloudflare:workers and envapt binding
-function inNodeOnly(plugin: Plugin): Plugin {
-    return { ...plugin, applyToEnvironment: (environment) => environment.name === CODEGEN_ENVIRONMENT };
-}
-
-function nodeCopy(onReady: (modules: RunnerModuleLoader) => void): Plugin {
-    return {
-        name: 'seedcord:node-copy',
-        async configureServer(server) {
-            const copy = environmentNamed(server.environments, CODEGEN_ENVIRONMENT);
-            const modules = new RunnerModuleLoader(createServerModuleRunner(copy, { hmr: false }));
-            await modules.bindEdgeEnv();
-            onReady(modules);
-        }
-    };
-}
-
 function workerEnvironment(server: ViteDevServer): DevEnvironment {
     const fix = `${paint.bold('@cloudflare/vite-plugin')} creates it. Install the version seedcord's peer dependency asks for.`;
-    return environmentNamed(server.environments, BOT_ENVIRONMENT, fix);
+    return botEnvironment(server.environments, fix);
 }
 
 function workerChannel(server: ViteDevServer): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> {
@@ -110,7 +92,14 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             CloudflareWorker.load(this.target),
             WorkerEnv.load(this.target.cloudflareConfig, config.viteMode)
         ]);
-        const modulesReady = Promise.withResolvers<RunnerModuleLoader>();
+        const nodeCopy = await openModuleLoader(
+            dirname(config.configFile),
+            this.target,
+            config.viteMode,
+            config,
+            devWatchOptions(process.cwd())
+        ).catch(rethrowVitePluginError);
+        resources.use(nodeCopy);
         // vite reruns the entry's load hook after any update that reaches the entry. bot.ts throws when it runs a second time
         let functionExports: Promise<string[]> | undefined;
         const hmr = this.openHmr(context, BOT_ENVIRONMENT, resources, [
@@ -127,13 +116,9 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
                         folders,
                         instanceKey: viteKey(viteRoot, config.instance),
                         rootKey: viteKey(viteRoot, config.root),
-                        functionExports: () =>
-                            (functionExports ??= this.readFunctionExports(context, modulesReady.promise)),
+                        functionExports: () => (functionExports ??= this.readFunctionExports(context, nodeCopy)),
                         mode: { kind: 'dev', root: config.root, cwd: process.cwd() }
                     }),
-                    inNodeOnly(edgeStandIns(() => Promise.resolve(workerEnv))),
-                    // cloudflare() loads the worker entry during createServer. the entry's export list comes from this copy
-                    nodeCopy(modulesReady.resolve),
                     hmr.plugin,
                     invokeErrorsAsJson(),
                     cloudflare.plugins(),
@@ -142,7 +127,6 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             })
         ).catch(rethrowVitePluginError);
         await loadWorkerEntry(server.middlewares, config.instance);
-        const modules = await modulesReady.promise;
         const endpoint = await listenForInteractions(server.middlewares, {
             port: this.target.port,
             host: listenHostFor(config.tunnel),
@@ -151,16 +135,13 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         resources.use(endpoint.server);
         // close() waits on open keep-alive sockets
         resources.defer(() => endpoint.server.closeAllConnections());
-        return { context, server, modules, hmr, port: endpoint.port, resources };
+        return { context, server, modules: nodeCopy, hmr, port: endpoint.port, resources };
     }
 
-    private async readFunctionExports(
-        context: DevRuntimeContext,
-        modulesReady: Promise<RunnerModuleLoader>
-    ): Promise<string[]> {
+    private async readFunctionExports(context: DevRuntimeContext, modules: ModuleLoader): Promise<string[]> {
         const { instance } = context.config;
         this.emit(context, { type: 'progress', status: `Importing ${displayPath(instance)}…` });
-        const names = await functionExportsOf(await modulesReady, instance);
+        const names = await functionExportsOf(modules, instance);
         reportWorkerExports(names);
         this.emit(context, { type: 'progress', status: 'Starting workerd…' });
         return names;

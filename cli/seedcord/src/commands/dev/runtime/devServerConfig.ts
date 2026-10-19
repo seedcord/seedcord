@@ -2,22 +2,14 @@ import { dirname, resolve } from 'node:path';
 
 import { isInside, moduleGlobs, posixRelative } from '@seedcord/utils/node/internal';
 
-import {
-    BOT_ENVIRONMENT,
-    CODEGEN_ENVIRONMENT,
-    mergeViteConfig,
-    NODE_CONDITIONS,
-    userCodeConfig,
-    WORKERD_CONDITIONS
-} from '#core/modules/userCodeConfig';
+import { BOT_ENVIRONMENT, mergeViteConfig, NODE_CONDITIONS, userCodeConfig } from '#core/modules/userCodeConfig';
 import { watchedPath } from '#core/project/watchedPath';
 import { STATE_FOLDER } from '#core/state/StateFolder';
 
 import { workerLogger } from './workerLogger';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
-import type { BotEnvironmentName } from '#core/modules/userCodeConfig';
-import type { InlineConfig } from 'vite';
+import type { InlineConfig, ServerOptions, UserConfig } from 'vite';
 
 type DevConfigPaths = Pick<ResolvedSeedcordConfig, 'root' | 'configFile'>;
 
@@ -29,14 +21,13 @@ function logsIgnore(cwd: string): (path: string) => boolean {
     return (path) => isInside(logs, path);
 }
 
+export function devWatchOptions(cwd: string): NonNullable<ServerOptions['watch']> {
+    return { ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', `**/${STATE_FOLDER}/**`, logsIgnore(cwd)] };
+}
+
 // vite writes resolved options back into the config object it receives
-function devViteConfig(
-    environment: BotEnvironmentName,
-    conditions: Parameters<typeof userCodeConfig>[1],
-    config: DevConfigPaths,
-    cwd: string
-): InlineConfig {
-    return mergeViteConfig(userCodeConfig(environment, conditions, dirname(config.configFile)), {
+function devViteConfig(base: UserConfig, cwd: string): InlineConfig {
+    return mergeViteConfig(base, {
         // vite searches its own root for a config file
         configFile: false,
         clearScreen: false,
@@ -44,22 +35,21 @@ function devViteConfig(
             middlewareMode: true,
             // no browser connects to vite's hmr socket on port 24678
             ws: false,
-            watch: {
-                ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', `**/${STATE_FOLDER}/**`, logsIgnore(cwd)]
-            }
+            watch: devWatchOptions(cwd)
         }
     });
 }
 
 export function serverViteConfig(config: DevConfigPaths, cwd: string): InlineConfig {
-    return mergeViteConfig(devViteConfig(BOT_ENVIRONMENT, NODE_CONDITIONS, config, cwd), {
-        root: dirname(config.configFile),
+    const configDir = dirname(config.configFile);
+    return mergeViteConfig(devViteConfig(userCodeConfig(NODE_CONDITIONS, configDir), cwd), {
+        root: configDir,
         logLevel: 'error'
     });
 }
 
 export function edgeViteConfig(config: DevConfigPaths, viteRoot: string, cwd: string): InlineConfig {
-    return mergeViteConfig(devViteConfig(CODEGEN_ENVIRONMENT, WORKERD_CONDITIONS, config, cwd), {
+    return mergeViteConfig(devViteConfig({ resolve: { tsconfigPaths: true }, appType: 'custom' }, cwd), {
         root: viteRoot,
         customLogger: workerLogger(),
         // discord's POST arrives under the tunnel's hostname. the endpoint blocks every other request
