@@ -38,7 +38,7 @@ import { defineConfig } from 'seedcord';
 export default defineConfig({
     root: './src',
     instance: './bot.ts',
-    entry: './index.ts',
+    build: { start: './index.ts' },
     hmr: {
         restart: ['config/**', 'constants.ts']
     }
@@ -65,7 +65,7 @@ import { defineConfig } from 'seedcord';
 export default defineConfig({
     root: './src',
     instance: './bot.ts',
-    entry: './index.ts',
+    build: { start: './index.ts' },
     hmr: {
         rollback: false
     }
@@ -82,7 +82,7 @@ import { defineConfig } from 'seedcord';
 export default defineConfig({
     root: './src',
     instance: './bot.ts',
-    entry: './index.ts',
+    build: { start: './index.ts' },
     hmr: {
         typecheck: true
     }
@@ -99,7 +99,7 @@ import { defineConfig } from 'seedcord';
 export default defineConfig({
     root: './src',
     instance: './bot.ts',
-    entry: './index.ts',
+    build: { start: './index.ts' },
     hmr: {
         typecheck: { tsconfig: './tsconfig.build.json' }
     }

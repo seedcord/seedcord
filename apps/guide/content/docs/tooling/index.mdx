@@ -13,10 +13,10 @@ import { defineConfig } from 'seedcord';
 export default defineConfig({
     root: './src',
     instance: './bot.ts',
-    entry: './index.ts',
     // false stops the dev terminal's idle animation
     idleAnimation: true,
     build: {
+        start: './index.ts',
         tsconfig: './tsconfig.build.json'
     },
     hmr: {
