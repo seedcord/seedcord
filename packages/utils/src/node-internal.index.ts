@@ -1,6 +1,6 @@
 export { builtExtension, builtModulePath, moduleGlobs, textGlobs } from './node/directory/extensions';
 export {
-    BUILT_FILES_KEY,
+    BOT_FILES_KEY,
     BUILT_FILES_READY_KEY,
     builtConfigDir,
     resolveFolder,

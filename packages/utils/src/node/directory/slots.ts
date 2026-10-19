@@ -10,6 +10,7 @@ export type ModuleLoader = () => Promise<Record<string, unknown>>;
 export type TextLoader = () => Promise<string>;
 
 export interface BuiltFileLoaders {
+    kind: 'built';
     root: string;
     // every folder under root, empty ones included
     folders: string[];
@@ -21,16 +22,26 @@ export interface BuiltFileLoaders {
     configFile?: string;
 }
 
-// seedcord build writes a BuiltFileLoaders object here from the entry it generates
-export const BUILT_FILES_KEY = 'seedcord:utils:built-files';
+// server dev reads the files off disk
+interface DiskRoot {
+    kind: 'disk';
+    root: string;
+}
+
+type BotFiles = BuiltFileLoaders | DiskRoot;
+
+// dev writes this from the CLI's copy of this module. the generated entry writes it without importing seedcord
+export const BOT_FILES_KEY = 'seedcord:utils:bot-files';
 // the generated entry calls the function here right after it writes the built files
 export const BUILT_FILES_READY_KEY = 'seedcord:utils:built-files-ready';
 
-// a global because dev loads the bot with its own copy of this module
-const ROOT_SLOT = Symbol.for('seedcord:utils:root');
+function botFiles(): BotFiles | undefined {
+    return Reflect.get(globalThis, Symbol.for(BOT_FILES_KEY)) as BotFiles | undefined;
+}
 
 export function builtFiles(): BuiltFileLoaders | undefined {
-    return Reflect.get(globalThis, Symbol.for(BUILT_FILES_KEY)) as BuiltFileLoaders | undefined;
+    const files = botFiles();
+    return files?.kind === 'built' ? files : undefined;
 }
 
 // an app can import seedcord before the built bot it embeds
@@ -49,19 +60,15 @@ export function builtConfigDir(): string | undefined {
 }
 
 export function setBotRoot(root: string | undefined): void {
-    if (root === undefined) Reflect.deleteProperty(globalThis, ROOT_SLOT);
-    else Reflect.set(globalThis, ROOT_SLOT, root);
-}
-
-function devRoot(): string | undefined {
-    const root: unknown = Reflect.get(globalThis, ROOT_SLOT);
-    return typeof root === 'string' ? root : undefined;
+    const key = Symbol.for(BOT_FILES_KEY);
+    if (root === undefined) Reflect.deleteProperty(globalThis, key);
+    else Reflect.set(globalThis, key, { kind: 'disk', root } satisfies DiskRoot);
 }
 
 export function resolveFolder(dir: string): string {
     if (path.isAbsolute(dir)) return path.resolve(dir);
 
-    const root = builtFiles()?.root ?? devRoot();
+    const root = botFiles()?.root;
     if (!root) throw new SeedcordError(SeedcordErrorCode.CoreDirectoryRootUnknown, [dir]);
     return resolveFromRoot(root, dir);
 }

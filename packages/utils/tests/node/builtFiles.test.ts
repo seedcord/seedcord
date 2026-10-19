@@ -3,21 +3,21 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { readTextFiles, traverseDirectory } from '#src/node/directory/readers';
-import { BUILT_FILES_KEY, builtConfigDir } from '#src/node/directory/slots';
+import {
+    BOT_FILES_KEY,
+    BUILT_FILES_READY_KEY,
+    builtConfigDir,
+    setBotRoot,
+    setBuiltFilesHook
+} from '#src/node/directory/slots';
 import { toPosixPath } from '#src/node/paths';
 import { clearBuiltFiles } from '#tests/builtFilesSlot';
 
-interface BuiltFileLoaders {
-    root: string;
-    folders: string[];
-    modules: Record<string, () => Promise<Record<string, unknown>>>;
-    text: Record<string, () => Promise<string>>;
-    sourcePaths?: boolean;
-    configFile?: string;
-}
+import type { BuiltFileLoaders } from '#src/node/directory/slots';
+import type { TypedOmit } from '@seedcord/types';
 
 // not on disk. path.resolve adds the drive letter on windows
 const ROOT = path.resolve('/bot');
@@ -33,9 +33,17 @@ function register({
     modules = {},
     text = {},
     ...rest
-}: Partial<BuiltFileLoaders>): Disposable {
-    Reflect.set(globalThis, Symbol.for(BUILT_FILES_KEY), { root, folders, modules, text, ...rest });
+}: Partial<TypedOmit<BuiltFileLoaders, 'kind'>>): Disposable {
+    const built: BuiltFileLoaders = { kind: 'built', root, folders, modules, text, ...rest };
+    Reflect.set(globalThis, Symbol.for(BOT_FILES_KEY), built);
     return { [Symbol.dispose]: clearBuiltFiles };
+}
+
+// the generated entry's last line
+function callReadyHook(): void {
+    // justified: setBuiltFilesHook is the only writer of this key
+    const hook = Reflect.get(globalThis, Symbol.for(BUILT_FILES_READY_KEY)) as (() => void) | undefined;
+    hook?.();
 }
 
 function stub(name: string): () => Promise<Record<string, unknown>> {
@@ -70,6 +78,39 @@ describe('builtConfigDir', () => {
         using elsewhere = mkdtempDisposableSync(path.join(tmpdir(), 'seedcord-built-'));
         using _built = register({ root: path.join(elsewhere.path, 'app'), configFile: '../seedcord.config.ts' });
 
+        expect(builtConfigDir()).toBeUndefined();
+    });
+});
+
+describe('setBuiltFilesHook', () => {
+    it('runs the hook right away when the built files are already written', () => {
+        using _built = register({});
+        const hook = vi.fn();
+
+        setBuiltFilesHook(hook);
+
+        expect(hook).toHaveBeenCalledOnce();
+    });
+
+    it('runs the hook once the generated entry writes the built files', () => {
+        const hook = vi.fn();
+        setBuiltFilesHook(hook);
+        expect(hook).not.toHaveBeenCalled();
+
+        using _built = register({});
+        callReadyHook();
+
+        expect(hook).toHaveBeenCalledOnce();
+    });
+
+    it('treats the root seedcord dev sets as no built files', () => {
+        setBotRoot(ROOT);
+        onTestFinished(clearBuiltFiles);
+        const hook = vi.fn();
+
+        setBuiltFilesHook(hook);
+
+        expect(hook).not.toHaveBeenCalled();
         expect(builtConfigDir()).toBeUndefined();
     });
 });

@@ -3,14 +3,14 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { BUILT_FILES_KEY, isInside } from '@seedcord/utils/node/internal';
+import { BOT_FILES_KEY, isInside } from '@seedcord/utils/node/internal';
 
 import { ENTRY_FILE_NAME } from './output';
 
 function holdsEarlierBuild(outDir: string): boolean {
     const entry = join(outDir, ENTRY_FILE_NAME);
     const entryIsFile = statSync(entry, { throwIfNoEntry: false })?.isFile() === true;
-    return entryIsFile && readFileSync(entry, 'utf8').includes(BUILT_FILES_KEY);
+    return entryIsFile && readFileSync(entry, 'utf8').includes(BOT_FILES_KEY);
 }
 
 function realPath(path: string): string {

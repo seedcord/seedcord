@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { stripAnsi } from '@seedcord/utils';
-import { BUILT_FILES_KEY } from '@seedcord/utils/node/internal';
+import { BOT_FILES_KEY } from '@seedcord/utils/node/internal';
 import { Envapter } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -45,8 +45,8 @@ const plain = (value: string): string => stripAnsi(value);
 
 // the slot the entry of a built bot fills before anything imports seedcord
 function asBuiltBot(slot: { root: string; configFile: string }): Disposable {
-    const key = Symbol.for(BUILT_FILES_KEY);
-    Reflect.set(globalThis, key, { ...slot, folders: [], modules: {}, text: {} });
+    const key = Symbol.for(BOT_FILES_KEY);
+    Reflect.set(globalThis, key, { kind: 'built', ...slot, folders: [], modules: {}, text: {} });
     return { [Symbol.dispose]: () => Reflect.deleteProperty(globalThis, key) };
 }
 

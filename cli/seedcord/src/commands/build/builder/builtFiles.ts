@@ -1,8 +1,8 @@
-import { BUILT_FILES_KEY, BUILT_FILES_READY_KEY, moduleGlobs, textGlobs } from '@seedcord/utils/node/internal';
+import { BOT_FILES_KEY, BUILT_FILES_READY_KEY, moduleGlobs, textGlobs } from '@seedcord/utils/node/internal';
 
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 
-export const BUILT_FILES_SLOT = `globalThis[Symbol.for(${JSON.stringify(BUILT_FILES_KEY)})]`;
+export const BOT_FILES_SLOT = `globalThis[Symbol.for(${JSON.stringify(BOT_FILES_KEY)})]`;
 
 export const PLACEHOLDER_ROOT = '/bot';
 
@@ -30,7 +30,8 @@ export function builtFilesSource({
     const textOptions = { ...moduleOptions, query: '?raw', import: 'default' };
 
     return [
-        `${BUILT_FILES_SLOT} = {`,
+        `${BOT_FILES_SLOT} = {`,
+        "    kind: 'built',",
         `    root: ${rootExpression},`,
         `    folders: ${JSON.stringify(folders)},`,
         `    modules: import.meta.glob(${JSON.stringify(modules)}, ${JSON.stringify(moduleOptions)}),`,

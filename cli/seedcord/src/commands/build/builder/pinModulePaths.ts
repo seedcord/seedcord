@@ -1,7 +1,7 @@
 import { builtModulePath } from '@seedcord/utils/node/internal';
 import { Visitor } from 'vite';
 
-import { BUILT_FILES_SLOT } from './builtFiles';
+import { BOT_FILES_SLOT } from './builtFiles';
 
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { Plugin } from 'vite';
@@ -38,7 +38,7 @@ const FILE_URL_IMPORT = `import { pathToFileURL as ${FILE_URL} } from 'node:url'
 // bun --compile gives every module the entry's import.meta
 // an edge bot's files have no path on disk
 export function pinModulePaths(files: ProjectFiles): Plugin {
-    const builtRoot = `${BUILT_FILES_SLOT}.root`;
+    const builtRoot = `${BOT_FILES_SLOT}.root`;
 
     return {
         name: 'seedcord:pin-module-paths',

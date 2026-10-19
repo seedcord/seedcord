@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { BUILT_FILES_KEY } from '@seedcord/utils/node/internal';
+import { BOT_FILES_KEY } from '@seedcord/utils/node/internal';
 import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
 
 import { quickBuildRunner } from './quickBuildRunner';
@@ -48,7 +48,7 @@ describe('seedcord build checks outDir before it empties it', () => {
     });
 
     it('throws for an outDir that links to root', async () => {
-        await writeFile(join(projectDir, 'src/index.mjs'), `// ${BUILT_FILES_KEY}\n`);
+        await writeFile(join(projectDir, 'src/index.mjs'), `// ${BOT_FILES_KEY}\n`);
         await symlink(join(projectDir, 'src'), join(projectDir, 'out'), 'junction');
 
         await expect(buildWithOutDir('./out')).resolves.toMatchObject({
