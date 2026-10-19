@@ -1,4 +1,5 @@
-export { builtExtension, builtModulePath, moduleGlobs, textGlobs } from './node/directory/extensions';
+export { encodeFile } from './node/directory/encodedFile';
+export { builtExtension, builtModulePath, moduleGlobs, nonCodeGlobs } from './node/directory/extensions';
 export {
     BOT_FILES_KEY,
     BUILT_FILES_READY_KEY,

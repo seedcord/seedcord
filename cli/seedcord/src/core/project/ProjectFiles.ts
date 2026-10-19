@@ -4,7 +4,7 @@ import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
-import { isInside, moduleGlobs, posixRelative, textGlobs } from '@seedcord/utils/node/internal';
+import { isInside, moduleGlobs, nonCodeGlobs, posixRelative } from '@seedcord/utils/node/internal';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
@@ -86,8 +86,8 @@ export class ProjectFiles {
         return [...moduleGlobs('.'), ...this.globExcludes()];
     }
 
-    public textGlobs(): string[] {
-        return [...this.listedFolders.flatMap((folder) => textGlobs(this.globBase(folder))), ...this.globExcludes()];
+    public listedFileGlobs(): string[] {
+        return [...this.listedFolders.flatMap((folder) => nonCodeGlobs(this.globBase(folder))), ...this.globExcludes()];
     }
 
     private globBase(folder: string): string {

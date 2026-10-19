@@ -86,7 +86,7 @@ describe('seedcord build without build.start on an http bot', () => {
     beforeAll(async () => {
         await using cleanup = new AsyncDisposableStack();
         ({ path: projectDir } = cleanup.use(await fixtureCopy(HTTP_BOT)));
-        await writeExportProject(projectDir, { 'server.mjs': FETCH_SERVER }, ['./locales', './logs']);
+        await writeExportProject(projectDir, { 'server.mjs': FETCH_SERVER }, ['./locales', './logs', './assets']);
         const botFile = join(projectDir, 'src/bot.ts');
         const source = await readFile(botFile, 'utf8');
         await writeFile(botFile, source.replace('port: 0', 'port: false'));

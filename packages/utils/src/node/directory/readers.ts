@@ -7,6 +7,8 @@ import { importFailed } from '#src/node/importFailed';
 import { assertListedFolder, resolveFolder } from './slots';
 import { fileSource } from './sources';
 
+import type { Buffer } from 'node:buffer';
+
 interface FoundFile {
     fullPath: string;
     /**
@@ -19,8 +21,8 @@ interface ImportedFile extends FoundFile {
     imported: Record<string, unknown>;
 }
 
-interface TextFile extends FoundFile {
-    text: string;
+interface ReadFile extends FoundFile {
+    bytes: Buffer;
 }
 
 /**
@@ -51,7 +53,7 @@ export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFi
 }
 
 /**
- * Reads every file under a directory, recursively and sorted by path, yielding its text.
+ * Reads every file under a directory, recursively and sorted by path, yielding its bytes. Text and binary files both work.
  * It skips the code files {@link traverseDirectory} imports, .map files, dotfiles and dot-folders.
  * In a built bot the files come from the build output. A relative `dir` resolves against `root`, the same as {@link traverseDirectory}.
  * Under `seedcord dev` and in a built bot, `dir` has to be one of the folders `files` in seedcord.config.ts lists, or a subfolder of one.
@@ -60,24 +62,24 @@ export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFi
  *
  * @example
  * ```ts
- * for await (const { fullPath, text } of readTextFiles('./locales')) {
- *     locales.set(path.basename(fullPath, '.json'), JSON.parse(text));
+ * for await (const { fullPath, bytes } of readFiles('./locales')) {
+ *     locales.set(path.basename(fullPath, '.json'), JSON.parse(bytes.toString()));
  * }
  * ```
  */
-export async function* readTextFiles(dir: string): AsyncGenerator<TextFile> {
+export async function* readFiles(dir: string): AsyncGenerator<ReadFile> {
     const folder = resolveFolder(dir);
     assertListedFolder(folder);
-    for (const [fullPath, load] of await fileSource().texts(folder)) {
+    for (const [fullPath, load] of await fileSource().files(folder)) {
         const relativePath = displayPath(fullPath);
-        let text: string;
+        let bytes: Buffer;
         try {
-            text = await load();
+            bytes = await load();
         } catch (err) {
             throw new SeedcordError(SeedcordErrorCode.CorePathUnreadable, [relativePath, asError(err).message], {
                 cause: err
             });
         }
-        yield { fullPath, relativePath, text };
+        yield { fullPath, relativePath, bytes };
     }
 }

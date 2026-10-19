@@ -11,7 +11,7 @@ export function isTsOrJsFile(entry: fs.Dirent): boolean {
 
 const MODULE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs'];
 const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts', '.d.cts'];
-const NOT_TEXT_EXTENSIONS = [...MODULE_EXTENSIONS, '.map'];
+const CODE_AND_MAP_EXTENSIONS = [...MODULE_EXTENSIONS, '.map'];
 
 function endsWithAny(name: string, extensions: string[]): boolean {
     return extensions.some((extension) => name.endsWith(extension));
@@ -29,9 +29,9 @@ export function isHidden(dir: string, file: string): boolean {
         .some((part) => part.startsWith('.'));
 }
 
-export function isTextPath(dir: string, file: string): boolean {
+export function isNonCodeFile(dir: string, file: string): boolean {
     const name = path.basename(file);
-    return !isHidden(dir, file) && !endsWithAny(name, NOT_TEXT_EXTENSIONS);
+    return !isHidden(dir, file) && !endsWithAny(name, CODE_AND_MAP_EXTENSIONS);
 }
 
 export function moduleGlobs(base: string): string[] {
@@ -41,8 +41,8 @@ export function moduleGlobs(base: string): string[] {
     ];
 }
 
-export function textGlobs(base: string): string[] {
-    return [`${base}/**/*`, ...NOT_TEXT_EXTENSIONS.map((extension) => `!${base}/**/*${extension}`)];
+export function nonCodeGlobs(base: string): string[] {
+    return [`${base}/**/*`, ...CODE_AND_MAP_EXTENSIONS.map((extension) => `!${base}/**/*${extension}`)];
 }
 
 export function builtExtension(file: string): string {

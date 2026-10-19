@@ -6,13 +6,15 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { isInside, resolveFromRoot } from '#src/node/paths';
 
+import type { EncodedFile } from './encodedFile';
+
 export type ModuleLoader = () => Promise<Record<string, unknown>>;
-export type TextLoader = () => Promise<string>;
+export type EncodedFileLoader = () => Promise<EncodedFile>;
 
 export interface BotFolders {
     root: string;
     // the folders from files in seedcord.config.ts, root-relative like '/locales'
-    files: string[];
+    listed: string[];
 }
 
 export interface BuiltFileLoaders extends BotFolders {
@@ -20,7 +22,8 @@ export interface BuiltFileLoaders extends BotFolders {
     // every folder under root, empty ones included
     folders: string[];
     modules: Record<string, ModuleLoader>;
-    text: Record<string, TextLoader>;
+    // the non-code files under the listed folders
+    files: Record<string, EncodedFileLoader>;
     // seedcord dev runs the source files themselves
     sourcePaths?: boolean;
     // relative to root. only a server build writes it
@@ -84,7 +87,7 @@ export function assertListedFolder(folder: string): void {
 
     const root = path.resolve(bot.root);
     if (!isInside(root, folder)) throw new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, root]);
-    if (!bot.files.some((listed) => isInside(path.join(root, listed), folder))) {
+    if (!bot.listed.some((listedFolder) => isInside(path.join(root, listedFolder), folder))) {
         throw new SeedcordError(SeedcordErrorCode.CoreDirectoryNotListed, [folder]);
     }
 }

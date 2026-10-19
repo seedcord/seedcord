@@ -56,7 +56,7 @@ describe('seedcord build on an edge bot', () => {
     it('reports the worker it bundled for the summary', () => {
         expect(result.bundle).toEqual({
             modules: 2,
-            textFiles: 1,
+            listedFiles: 1,
             bytes: expect.any(Number) as number,
             entry: expect.stringMatching(/index\.mjs$/) as string
         });
@@ -95,38 +95,66 @@ describe('seedcord build on an edge bot', () => {
     }, 60_000);
 });
 
+// the build's load bot step imports every handler in node too
+const READ_IN_WORKERD = `import { readFiles } from '@seedcord/utils/node';
+
+if (navigator.userAgent === 'Cloudflare-Workers') {
+    const read: string[] = [];
+    for await (const { fullPath, bytes } of readFiles('./locales')) {
+        read.push(\`\${fullPath.split('/').pop()}=\${bytes.toString('hex')}\`);
+    }
+    throw new Error(\`read \${read.join(' ')}\`);
+}
+`;
+
+// vite preview answers a worker that threw with the error's text
+async function postToPreview(projectDir: string, sign: SignRequest): Promise<string> {
+    const server = await preview({
+        root: projectDir,
+        configFile: false,
+        logLevel: 'silent',
+        plugins: [cloudflare({ viteEnvironment: { name: BOT_ENVIRONMENT } })],
+        preview: { port: 0 }
+    });
+    try {
+        const response = await fetch(server.resolvedUrls?.local[0] ?? '', {
+            method: 'POST',
+            headers: await sign(PING),
+            body: PING
+        });
+        return await response.text();
+    } finally {
+        await server.close();
+    }
+}
+
 describe('a built edge worker', () => {
     it('reports a handler it fails to load by its path under the bot root', async () => {
         const projectDir = await copyEdgeBotForTest();
-        // node's build step loads the handler too, so only workerd throws
         await writeFile(
             join(projectDir, 'src/handlers/Broken.ts'),
             "if (navigator.userAgent === 'Cloudflare-Workers') throw new Error('Broken.ts threw in workerd');\n"
         );
         const signing = await writeSigningEnv(projectDir);
         await edgeBuildRunner(fakeDiscord(signing.publicKey)).run(projectDir);
-        const server = await preview({
-            root: projectDir,
-            configFile: false,
-            logLevel: 'silent',
-            plugins: [cloudflare({ viteEnvironment: { name: BOT_ENVIRONMENT } })],
-            preview: { port: 0 }
-        });
-        let body: string;
-        try {
-            // vite preview answers a worker that threw with the error's text
-            const response = await fetch(server.resolvedUrls?.local[0] ?? '', {
-                method: 'POST',
-                headers: await signing.sign(PING),
-                body: PING
-            });
-            body = await response.text();
-        } finally {
-            await server.close();
-        }
+        const body = await postToPreview(projectDir, signing.sign);
 
         expect(body).toContain('Could not import handlers/Broken.js');
         expect(body).not.toContain('../');
+    }, 120_000);
+
+    it('reads text and binary files from a listed folder byte for byte', async () => {
+        const projectDir = await copyEdgeBotForTest();
+        const binary = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff]);
+        await writeFile(join(projectDir, 'src/locales/dot.png'), binary);
+        await writeFile(join(projectDir, 'src/handlers/Read.ts'), READ_IN_WORKERD);
+        const signing = await writeSigningEnv(projectDir);
+        await edgeBuildRunner(fakeDiscord(signing.publicKey)).run(projectDir);
+        const body = await postToPreview(projectDir, signing.sign);
+
+        const greeting = await readFile(join(projectDir, 'src/locales/greeting.txt'));
+        expect(body).toContain(`dot.png=${binary.toString('hex')}`);
+        expect(body).toContain(`greeting.txt=${greeting.toString('hex')}`);
     }, 120_000);
 });
 

@@ -3,6 +3,8 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 import { vitePluginThrew } from '@seedcord/utils/node/internal';
 
+import { isListedFileId } from './builtFiles';
+
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { Rolldown } from 'vite';
 
@@ -10,18 +12,18 @@ export const ENTRY_FILE_NAME = 'index.mjs';
 
 export interface BundleStats {
     modules: number;
-    textFiles: number;
+    listedFiles: number;
     bytes: number;
     entry: string;
 }
 
 export function bundleStats(chunks: Rolldown.OutputChunk[], files: ProjectFiles, entry: string): BundleStats {
     const projectIds = chunks.flatMap((chunk) => chunk.moduleIds).filter((id) => files.holds(id.split('?')[0] ?? ''));
-    const textFiles = projectIds.filter((id) => id.includes('?raw')).length;
+    const listedFiles = projectIds.filter(isListedFileId).length;
 
     return {
-        modules: projectIds.length - textFiles,
-        textFiles,
+        modules: projectIds.length - listedFiles,
+        listedFiles,
         bytes: chunks.reduce((total, chunk) => total + Buffer.byteLength(chunk.code), 0),
         entry
     };

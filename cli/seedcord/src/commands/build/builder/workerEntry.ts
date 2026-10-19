@@ -2,9 +2,10 @@ import { BAKED_IDS_KEY } from '@seedcord/core/internal';
 import { assertNever } from '@seedcord/utils';
 import { workerdPath } from '@seedcord/utils/node/internal';
 
-import { builtFilesSource, PLACEHOLDER_ROOT } from './builtFiles';
+import { builtFilesSource, loadListedFiles, PLACEHOLDER_ROOT } from './builtFiles';
 
 import type { ProjectFiles } from '#core/project/ProjectFiles';
+import type { EntryPlugins } from './builtFiles';
 import type { PluginConfig } from '@cloudflare/vite-plugin';
 import type { BakedIds } from '@seedcord/core/internal';
 import type { Plugin } from 'vite';
@@ -120,9 +121,9 @@ async function entrySource(
     return [...lines, ''].join('\n');
 }
 
-export function workerEntry(options: WorkerEntryOptions): Plugin {
+export function workerEntry(options: WorkerEntryOptions): EntryPlugins {
     const setup = setupSources(options);
-    return {
+    const entry: Plugin = {
         name: WORKER_ENTRY_ID,
         resolveId: (id) => (id === WORKER_ENTRY_ID || setup.has(id) ? `\0${id}` : undefined),
         load: (id) => {
@@ -130,4 +131,5 @@ export function workerEntry(options: WorkerEntryOptions): Plugin {
             return id.startsWith('\0') ? setup.get(id.slice(1)) : undefined;
         }
     };
+    return [entry, loadListedFiles()];
 }

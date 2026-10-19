@@ -20,12 +20,12 @@ export function registerBuiltFiles(
     Reflect.set(globalThis, Symbol.for(BOT_FILES_KEY), {
         kind: 'built',
         root: BUILT_ROOT,
+        listed: [],
         folders: [...new Set([...foldersOf(Object.keys(modules)), ...emptyFolders])],
-        files: [],
         modules: Object.fromEntries(
             Object.entries(modules).map(([key, exported]) => [key, () => Promise.resolve(exported)])
         ),
-        text: {}
+        files: {}
     });
     return { [Symbol.dispose]: clearBuiltFiles };
 }

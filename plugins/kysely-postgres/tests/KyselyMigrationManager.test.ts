@@ -21,7 +21,7 @@ describe('KyselyMigrationManager', () => {
         testEnv = new TestEnvironment('kysely-migrations-test-');
         await testEnv.setup();
         await testEnv.createFile('services/.keep', '');
-        setDevFiles({ root: testEnv.rootDir, files: [] });
+        setDevFiles({ root: testEnv.rootDir, listed: [] });
     });
 
     afterEach(async () => {

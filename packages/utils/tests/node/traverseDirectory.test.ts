@@ -7,7 +7,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { readTextFiles, traverseDirectory } from '#src/node/directory/readers';
+import { readFiles, traverseDirectory } from '#src/node/directory/readers';
 import { setDevFiles } from '#src/node/directory/slots';
 
 const FIXTURES = path.join(import.meta.dirname, 'fixtures');
@@ -126,7 +126,7 @@ describe('a module that fails to load through a Vite plugin', () => {
 });
 
 describe('a folder on disk under seedcord dev', () => {
-    beforeEach(() => setDevFiles({ root: FIXTURES, files: ['/text'] }));
+    beforeEach(() => setDevFiles({ root: FIXTURES, listed: ['/text'] }));
     afterEach(() => setDevFiles(undefined));
 
     it('resolves against root for traverseDirectory', async () => {
@@ -140,19 +140,19 @@ describe('a folder on disk under seedcord dev', () => {
     it('reads a subfolder of a folder that files lists', async () => {
         const seen: string[] = [];
 
-        for await (const { fullPath } of readTextFiles('./text/nested')) seen.push(fullPath);
+        for await (const { fullPath } of readFiles('./text/nested')) seen.push(fullPath);
 
         expect(seen).toEqual([path.join(FIXTURES, 'text', 'nested', 'faq.md')]);
     });
 
     it('throws CoreDirectoryNotListed for a folder files leaves out', async () => {
-        const error = await rejection(readTextFiles('./walk'));
+        const error = await rejection(readFiles('./walk'));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryNotListed });
     });
 
     it('throws CorePathOutsideRoot for a folder outside root', async () => {
-        const error = await rejection(readTextFiles(scratch));
+        const error = await rejection(readFiles(scratch));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathOutsideRoot });
     });
@@ -166,19 +166,19 @@ describe('a relative folder with no root', () => {
         expect(Error.isError(error) ? error.message : '').toContain('./walk');
     });
 
-    it('throws for readTextFiles', async () => {
-        const error = await rejection(readTextFiles('./text'));
+    it('throws for readFiles', async () => {
+        const error = await rejection(readFiles('./text'));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryRootUnknown });
     });
 });
 
-describe('readTextFiles', () => {
+describe('readFiles', () => {
     it('reads every file under the directory except code, type, source map, and hidden files or folders', async () => {
         const seen: [string, string][] = [];
 
-        for await (const { fullPath, text } of readTextFiles(path.join(FIXTURES, 'text'))) {
-            seen.push([path.relative(FIXTURES, fullPath), text]);
+        for await (const { fullPath, bytes } of readFiles(path.join(FIXTURES, 'text'))) {
+            seen.push([path.relative(FIXTURES, fullPath), bytes.toString()]);
         }
 
         expect(seen).toEqual([
@@ -194,13 +194,25 @@ describe('readTextFiles', () => {
         await Promise.all(files.map((file) => writeFile(path.join(dir, file), '{}\n')));
         const seen: string[] = [];
 
-        for await (const { fullPath } of readTextFiles(dir)) seen.push(path.relative(dir, fullPath));
+        for await (const { fullPath } of readFiles(dir)) seen.push(path.relative(dir, fullPath));
 
         expect(seen).toEqual(['en.json']);
     });
 
+    it('reads a binary file byte for byte', async () => {
+        const dir = path.join(scratch, 'binary');
+        await mkdir(dir, { recursive: true });
+        const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0xff]);
+        await writeFile(path.join(dir, 'dot.png'), png);
+        const seen: Buffer[] = [];
+
+        for await (const { bytes } of readFiles(dir)) seen.push(bytes);
+
+        expect(seen).toEqual([png]);
+    });
+
     it('reports the directory it could not read, keeping the original as the cause', async () => {
-        const error = await rejection(readTextFiles(path.join(FIXTURES, 'not-a-real-dir')));
+        const error = await rejection(readFiles(path.join(FIXTURES, 'not-a-real-dir')));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathUnreadable });
         expect(Error.isError(error) ? error.cause : undefined).toBeInstanceOf(Error);

@@ -5,7 +5,8 @@ import path from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
-import { readTextFiles, traverseDirectory } from '#src/node/directory/readers';
+import { encodeFile } from '#src/node/directory/encodedFile';
+import { readFiles, traverseDirectory } from '#src/node/directory/readers';
 import {
     BOT_FILES_KEY,
     BUILT_FILES_READY_KEY,
@@ -16,6 +17,7 @@ import {
 import { toPosixPath } from '#src/node/paths';
 import { clearBuiltFiles } from '#tests/builtFilesSlot';
 
+import type { EncodedFile } from '#src/node/directory/encodedFile';
 import type { BuiltFileLoaders } from '#src/node/directory/slots';
 import type { TypedOmit } from '@seedcord/types';
 
@@ -30,14 +32,19 @@ function at(relative: string): string {
 function register({
     root = ROOT,
     folders = [],
-    files = [],
+    listed = [],
     modules = {},
-    text = {},
+    files = {},
     ...rest
 }: Partial<TypedOmit<BuiltFileLoaders, 'kind'>>): Disposable {
-    const built: BuiltFileLoaders = { kind: 'built', root, folders, files, modules, text, ...rest };
-    Reflect.set(globalThis, Symbol.for(BOT_FILES_KEY), built);
+    const slot: BuiltFileLoaders = { kind: 'built', root, folders, listed, modules, files, ...rest };
+    Reflect.set(globalThis, Symbol.for(BOT_FILES_KEY), slot);
     return { [Symbol.dispose]: clearBuiltFiles };
+}
+
+// a text file the way the build stores it
+function storedText(text: string): () => Promise<EncodedFile> {
+    return () => Promise.resolve(encodeFile(Buffer.from(text)));
 }
 
 // the generated entry's last line
@@ -105,7 +112,7 @@ describe('setBuiltFilesHook', () => {
     });
 
     it('treats the root seedcord dev sets as no built files', () => {
-        setDevFiles({ root: ROOT, files: [] });
+        setDevFiles({ root: ROOT, listed: [] });
         onTestFinished(clearBuiltFiles);
         const hook = vi.fn();
 
@@ -258,20 +265,20 @@ describe('traverseDirectory in a built bot', () => {
     });
 });
 
-describe('readTextFiles in a built bot', () => {
-    it('reads the registered text under the folder with its own extension', async () => {
+describe('readFiles in a built bot', () => {
+    it('reads the registered files under the folder with their own extension', async () => {
         using _built = register({
             folders: ['/locales', '/tags'],
-            files: ['/locales', '/tags'],
-            text: {
-                '/locales/fr.json': () => Promise.resolve('{"hi":"salut"}'),
-                '/tags/faq.md': () => Promise.resolve('# faq'),
-                '/locales/en.json': () => Promise.resolve('{"hi":"hello"}')
+            listed: ['/locales', '/tags'],
+            files: {
+                '/locales/fr.json': storedText('{"hi":"salut"}'),
+                '/tags/faq.md': storedText('# faq'),
+                '/locales/en.json': storedText('{"hi":"hello"}')
             }
         });
 
         const seen: [string, string][] = [];
-        for await (const { fullPath, text } of readTextFiles(at('locales'))) seen.push([fullPath, text]);
+        for await (const { fullPath, bytes } of readFiles(at('locales'))) seen.push([fullPath, bytes.toString()]);
 
         expect(seen).toEqual([
             [at('locales/en.json'), '{"hi":"hello"}'],
@@ -279,31 +286,45 @@ describe('readTextFiles in a built bot', () => {
         ]);
     });
 
+    it('decodes a binary file the build stored as base64', async () => {
+        const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff]);
+        using _built = register({
+            folders: ['/assets'],
+            listed: ['/assets'],
+            files: { '/assets/dot.png': () => Promise.resolve(encodeFile(png)) }
+        });
+
+        const seen: Buffer[] = [];
+        for await (const { bytes } of readFiles(at('assets'))) seen.push(bytes);
+
+        expect(seen).toEqual([png]);
+    });
+
     it('skips the same files the disk walk skips', async () => {
-        const text = (): Promise<string> => Promise.resolve('{}');
+        const file = storedText('{}');
         using _built = register({
             folders: ['/locales', '/locales/.cache'],
-            files: ['/locales'],
-            text: {
-                '/locales/Skipped.ts': text,
-                '/locales/.hidden': text,
-                '/locales/en.json.map': text,
-                '/locales/.cache/cached.json': text,
-                '/locales/en.json': text
+            listed: ['/locales'],
+            files: {
+                '/locales/Skipped.ts': file,
+                '/locales/.hidden': file,
+                '/locales/en.json.map': file,
+                '/locales/.cache/cached.json': file,
+                '/locales/en.json': file
             }
         });
 
         const seen: string[] = [];
-        for await (const { fullPath } of readTextFiles(at('locales'))) seen.push(fullPath);
+        for await (const { fullPath } of readFiles(at('locales'))) seen.push(fullPath);
 
         expect(seen).toEqual([at('locales/en.json')]);
     });
 
-    it('reports the file whose text failed to load by its path, keeping the original as the cause', async () => {
-        const broken = (): Promise<string> => Promise.reject(new Error('boom'));
-        using _built = register({ folders: ['/locales'], files: ['/locales'], text: { '/locales/en.json': broken } });
+    it('reports the file that failed to load by its path, keeping the original as the cause', async () => {
+        const broken = (): Promise<EncodedFile> => Promise.reject(new Error('boom'));
+        using _built = register({ folders: ['/locales'], listed: ['/locales'], files: { '/locales/en.json': broken } });
 
-        const error = await rejection(readTextFiles(at('locales')));
+        const error = await rejection(readFiles(at('locales')));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathUnreadable });
         expect(Error.isError(error) ? error.message : '').toContain(toPosixPath(at('locales/en.json')));
@@ -313,11 +334,11 @@ describe('readTextFiles in a built bot', () => {
     it('throws with the folder and the root when the folder sits outside root', async () => {
         using _built = register({
             folders: ['/locales'],
-            files: ['/locales'],
-            text: { '/locales/en.json': () => Promise.resolve('{}') }
+            listed: ['/locales'],
+            files: { '/locales/en.json': storedText('{}') }
         });
 
-        const error = await rejection(readTextFiles('/elsewhere/locales'));
+        const error = await rejection(readFiles('/elsewhere/locales'));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathOutsideRoot });
     });
@@ -325,20 +346,20 @@ describe('readTextFiles in a built bot', () => {
     it('reads a subfolder of a listed folder', async () => {
         using _built = register({
             folders: ['/locales', '/locales/en'],
-            files: ['/locales'],
-            text: { '/locales/en/hi.json': () => Promise.resolve('{}') }
+            listed: ['/locales'],
+            files: { '/locales/en/hi.json': storedText('{}') }
         });
 
         const seen: string[] = [];
-        for await (const { fullPath } of readTextFiles(at('locales/en'))) seen.push(fullPath);
+        for await (const { fullPath } of readFiles(at('locales/en'))) seen.push(fullPath);
 
         expect(seen).toEqual([at('locales/en/hi.json')]);
     });
 
     it('throws CoreDirectoryNotListed with the folder for a folder files leaves out', async () => {
-        using _built = register({ folders: ['/locales', '/tags'], files: ['/locales'] });
+        using _built = register({ folders: ['/locales', '/tags'], listed: ['/locales'] });
 
-        const error = await rejection(readTextFiles(at('tags')));
+        const error = await rejection(readFiles(at('tags')));
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryNotListed });
         expect(Error.isError(error) ? error.message : '').toContain(toPosixPath(at('tags')));

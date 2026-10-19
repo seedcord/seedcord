@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostListenHost, HostShutdown } from '@seedcord/types/internal';
-import { readTextFiles } from '@seedcord/utils/node';
+import { readFiles } from '@seedcord/utils/node';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
@@ -18,10 +18,10 @@ import type { SeedcordInstance } from '@seedcord/types/internal';
 const SCRATCH_ROOT = join(import.meta.dirname, '.root-fixture');
 
 const ENTRY = [
-    "import { readTextFiles } from '@seedcord/utils/node';",
+    "import { readFiles } from '@seedcord/utils/node';",
     '',
     'export const texts: string[] = [];',
-    "for await (const { text } of readTextFiles('./locales')) texts.push(text);",
+    "for await (const { bytes } of readFiles('./locales')) texts.push(bytes.toString());",
     ''
 ].join('\n');
 
@@ -128,7 +128,7 @@ describe('dev runtime with root set to src', () => {
         await runtime.start(devContextFor(dir, 'index.ts'));
         await runtime.stop();
 
-        await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
+        await expect(readFiles('./locales').next()).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreDirectoryRootUnknown
         });
     }, 60_000);
@@ -143,7 +143,7 @@ describe('dev runtime with root set to src', () => {
         await runtime.stop();
         await starting;
 
-        await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
+        await expect(readFiles('./locales').next()).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreDirectoryRootUnknown
         });
     }, 60_000);
@@ -158,7 +158,7 @@ describe('dev runtime with root set to src', () => {
         const first = runtime.stop();
         await runtime.stop();
 
-        await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
+        await expect(readFiles('./locales').next()).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreDirectoryRootUnknown
         });
         await first;
@@ -198,7 +198,7 @@ describe('dev runtime with root set to src', () => {
         const runtime = new FailsAfterOpening();
         await expect(runtime.start(devContextFor(dir, 'index.ts'))).rejects.toThrow('setup failed');
 
-        await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
+        await expect(readFiles('./locales').next()).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreDirectoryRootUnknown
         });
     }, 60_000);
@@ -239,7 +239,7 @@ describe('dev runtime with root set to src', () => {
         await runtime.startBot(failingBot as unknown as SeedcordInstance);
 
         await expect(runtime.stop()).rejects.toThrow('shutdown failed');
-        await expect(readTextFiles('./locales').next()).rejects.toMatchObject({
+        await expect(readFiles('./locales').next()).rejects.toMatchObject({
             code: SeedcordErrorCode.CoreDirectoryRootUnknown
         });
     }, 60_000);

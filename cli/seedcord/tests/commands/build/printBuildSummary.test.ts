@@ -24,11 +24,11 @@ function summaryFor(result: BuildResult): string {
     return stripVTControlCharacters(written);
 }
 
-const bundle = { modules: 7, textFiles: 4, bytes: 186_400, entry: '/bot/dist/index.mjs' };
+const bundle = { modules: 7, listedFiles: 4, bytes: 186_400, entry: '/bot/dist/index.mjs' };
 
 describe('printBuildSummary', () => {
     it('counts what was bundled and points at the entry', () => {
-        expect(summaryFor({ bundle, nextCommands: [] })).toContain('7 modules, 4 text files, 186.4 kB → ');
+        expect(summaryFor({ bundle, nextCommands: [] })).toContain('7 modules, 4 listed files, 186.4 kB → ');
     });
 
     it('lines the next commands up under one label column', () => {

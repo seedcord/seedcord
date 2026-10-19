@@ -12,7 +12,11 @@ function commandLine(label: string, command: string): string {
 }
 
 export function printBuildSummary(printer: StepPrinter<BuildStep>, { bundle, nextCommands }: BuildResult): void {
-    const counts = [plural(bundle.modules, 'module'), plural(bundle.textFiles, 'text file'), formatBytes(bundle.bytes)];
+    const counts = [
+        plural(bundle.modules, 'module'),
+        plural(bundle.listedFiles, 'listed file'),
+        formatBytes(bundle.bytes)
+    ];
 
     printer.line();
     printer.line(`${counts.map((count) => paint.iris(count)).join(', ')} → ${paint.path(bundle.entry)}`);

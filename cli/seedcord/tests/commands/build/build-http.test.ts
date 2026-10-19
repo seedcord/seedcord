@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -33,7 +34,7 @@ describe('seedcord build on an http bot', () => {
     it('reports what it bundled for the summary', () => {
         expect(result.bundle).toEqual({
             modules: 9,
-            textFiles: 3,
+            listedFiles: 4,
             bytes: expect.any(Number) as number,
             entry: join(HTTP_BOT, 'dist/index.mjs')
         });
@@ -43,6 +44,12 @@ describe('seedcord build on an http bot', () => {
     it('loads its handlers and text files and answers an unsigned request', () => {
         expect(output).toContain('fixture:text hello from the text table');
         expect(output).toContain('fixture:text hello from the markdown twin');
+    });
+
+    it('reads a binary file from a listed folder byte for byte', () => {
+        const source = readFileSync(join(HTTP_BOT, 'src/assets/wordmark.webp'));
+
+        expect(output).toContain(`fixture:bytes wordmark.webp ${createHash('sha256').update(source).digest('hex')}`);
     });
 
     it('points import.meta.filename at the built file when a text file shares its name', () => {

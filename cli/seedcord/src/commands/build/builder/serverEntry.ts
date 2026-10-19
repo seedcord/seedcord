@@ -1,5 +1,6 @@
-import { builtFilesSource, PLACEHOLDER_ROOT } from './builtFiles';
+import { builtFilesSource, loadListedFiles, PLACEHOLDER_ROOT } from './builtFiles';
 
+import type { EntryPlugins } from './builtFiles';
 import type { TypedOmit } from '@seedcord/types';
 import type { Plugin } from 'vite';
 
@@ -24,12 +25,13 @@ export function exportInstance(instanceKey: string): string[] {
     return [`const { default: bot } = await import(${JSON.stringify(instanceKey)});`, 'export default bot;'];
 }
 
-export function serverEntry(builtFiles: EntryBuiltFiles, importBot: string[]): Plugin {
+export function serverEntry(builtFiles: EntryBuiltFiles, importBot: string[]): EntryPlugins {
     const registerFiles = builtFilesSource({ ...builtFiles, rootExpression: ROOT_EXPRESSION, sourcePaths: false });
     const source = [registerFiles, ...importBot, ''].join('\n');
-    return {
+    const entry: Plugin = {
         name: ENTRY_ID,
         resolveId: (id) => (id === ENTRY_ID ? RESOLVED_ENTRY_ID : undefined),
         load: (id) => (id === RESOLVED_ENTRY_ID ? source : undefined)
     };
+    return [entry, loadListedFiles()];
 }

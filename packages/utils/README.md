@@ -104,6 +104,6 @@ Passing epoch ms straight into `<t:...>` renders a date tens of thousands of yea
 | --- | --- |
 | `isTsOrJsFile(entry)` | whether a `Dirent` is a `.ts`, `.tsx`, `.mts`, `.js`, `.jsx` or `.mjs` file, skipping type declarations |
 | `traverseDirectory(dir)` | imports every one of those files under a directory, sorted by path, for a `for await` loop |
-| `readTextFiles(dir)` | reads every other file under a directory as text, sorted by path, for a `for await` loop |
+| `readFiles(dir)` | reads every other file under a directory as a `Buffer`, sorted by path, for a `for await` loop |
 
 <!-- prettier-ignore-end -->

@@ -8,17 +8,20 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '#src/misc/asError';
 import { isInside } from '#src/node/paths';
 
-import { builtModulePath, isHidden, isModulePath, isTextPath } from './extensions';
+import { decodeFile } from './encodedFile';
+import { builtModulePath, isHidden, isModulePath, isNonCodeFile } from './extensions';
 import { builtFiles } from './slots';
 
-import type { BuiltFileLoaders, ModuleLoader, TextLoader } from './slots';
+import type { BuiltFileLoaders, ModuleLoader } from './slots';
+import type { Buffer } from 'node:buffer';
 import type * as fs from 'node:fs';
 
+type BytesLoader = () => Promise<Buffer>;
 type Loaders<Loader> = [fullPath: string, load: Loader][];
 
 interface FileSource {
     modules(dir: string): Promise<Loaders<ModuleLoader>>;
-    texts(dir: string): Promise<Loaders<TextLoader>>;
+    files(dir: string): Promise<Loaders<BytesLoader>>;
 }
 
 class DiskFiles implements FileSource {
@@ -32,10 +35,10 @@ class DiskFiles implements FileSource {
         ]);
     }
 
-    public async texts(dir: string): Promise<Loaders<TextLoader>> {
+    public async files(dir: string): Promise<Loaders<BytesLoader>> {
         const all = await DiskFiles.filesUnder(dir);
-        const files = all.filter((file) => isTextPath(dir, file));
-        return files.map((file) => [file, () => readFile(file, 'utf8')]);
+        const files = all.filter((file) => isNonCodeFile(dir, file));
+        return files.map((file) => [file, () => readFile(file)]);
     }
 
     private static async filesUnder(dir: string): Promise<string[]> {
@@ -59,9 +62,9 @@ class BuiltFiles implements FileSource {
     private readonly root: string;
     private readonly folders: Set<string>;
     private readonly moduleLoaders: Map<string, ModuleLoader>;
-    private readonly textLoaders: Map<string, TextLoader>;
+    private readonly fileLoaders: Map<string, BytesLoader>;
 
-    public constructor({ root, folders, modules, text, sourcePaths = false }: BuiltFileLoaders) {
+    public constructor({ root, folders, modules, files, sourcePaths = false }: BuiltFileLoaders) {
         this.root = path.resolve(root);
         this.folders = new Set([this.root, ...folders.map((folder) => path.join(this.root, folder))]);
         const pathOf = sourcePaths ? (key: string): string => key : builtModulePath;
@@ -70,15 +73,20 @@ class BuiltFiles implements FileSource {
                 .filter(([key]) => isModulePath(key))
                 .map(([key, load]) => [path.join(this.root, pathOf(key)), load])
         );
-        this.textLoaders = new Map(Object.entries(text).map(([key, load]) => [path.join(this.root, key), load]));
+        this.fileLoaders = new Map(
+            Object.entries(files).map(([key, load]) => [
+                path.join(this.root, key),
+                async () => decodeFile(await load())
+            ])
+        );
     }
 
     public modules(dir: string): Promise<Loaders<ModuleLoader>> {
         return Promise.resolve(this.under(this.moduleLoaders, dir));
     }
 
-    public texts(dir: string): Promise<Loaders<TextLoader>> {
-        return Promise.resolve(this.under(this.textLoaders, dir).filter(([file]) => isTextPath(dir, file)));
+    public files(dir: string): Promise<Loaders<BytesLoader>> {
+        return Promise.resolve(this.under(this.fileLoaders, dir).filter(([file]) => isNonCodeFile(dir, file)));
     }
 
     private under<Loader>(loaders: Map<string, Loader>, dir: string): Loaders<Loader> {

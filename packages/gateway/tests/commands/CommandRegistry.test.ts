@@ -330,7 +330,7 @@ describe('CommandRegistry Integration', () => {
     it('holds an edited command for the refresh prompt when the commands path is relative to root', async ({
         testEnv
     }) => {
-        setDevFiles({ root: testEnv.rootDir, files: [] });
+        setDevFiles({ root: testEnv.rootDir, listed: [] });
         const command = (name: string): string => `
             import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
 

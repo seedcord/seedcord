@@ -9,7 +9,7 @@ import { ProjectFiles } from '#core/project/ProjectFiles';
 import type { BakedIds } from '@seedcord/core/internal';
 
 function bakedIdsRun(ids: BakedIds): BakedIds {
-    const plugin = workerEntry({
+    const [plugin] = workerEntry({
         files: new ProjectFiles({
             root: '/bot',
             configFile: '/seedcord.config.ts',
@@ -22,7 +22,7 @@ function bakedIdsRun(ids: BakedIds): BakedIds {
         rootKey: '/',
         mode: { kind: 'build', ids }
     });
-    // justified: the plugin's load hook is a plain function here
+    // justified: the entry plugin's load hook is a plain function here
     const load = plugin.load as (id: string) => string;
     const slot = `globalThis[Symbol.for(${JSON.stringify(BAKED_IDS_KEY)})]`;
     // justified: the module assigns a BakedIds object to that slot
