@@ -32,6 +32,9 @@ import type {
 // the node http Seedcord's default port
 const EDGE_DEV_PORT = 3000;
 
+// runs before any plugin in vitePlugins starts
+export type ProjectCheck = (project: Project) => void | Promise<void>;
+
 function resolveUnderRoot(root: string, path: string): string {
     const resolved = resolve(root, path);
     if (!isInside(root, resolved)) throw new SeedcordTypeError(SeedcordErrorCode.CorePathOutsideRoot, [resolved, root]);
@@ -58,10 +61,7 @@ export class ProjectLoader {
         private readonly defaultMode: DefaultMode = 'development'
     ) {}
 
-    public async readConfig(
-        projectDir = process.cwd(),
-        check?: (config: ResolvedSeedcordConfig) => void
-    ): Promise<LoadedConfig> {
+    public async readConfig(projectDir = process.cwd(), check?: ProjectCheck): Promise<LoadedConfig> {
         const configPath = locateConfig(projectDir);
         const configDir = dirname(configPath);
         const mode = this.shell.applyMode(this.defaultMode, configDir);
@@ -71,7 +71,7 @@ export class ProjectLoader {
         const project = new Project(await this.resolveConfig(configModules, configPath, target, mode), configModules);
         await assertNoHashPaths(project);
         await assertTargetMatchesTsconfig(project);
-        check?.(project.config);
+        await check?.(project);
         const loaded = new LoadedConfig(project.config);
         return loaded.hasVitePlugins ? new LoadedConfig(project.config, stack.move()) : loaded;
     }

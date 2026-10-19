@@ -86,7 +86,7 @@ export interface SeedcordConfig {
      */
     instance: string;
     /**
-     * Folders whose non-code files `seedcord build` ships for `readFiles` to read, like `['./locales']`.
+     * Folders whose non-code files `seedcord build` bundles for `readFiles` to read, like `['./locales']`.
      * Each one includes its subfolders and resolves against `root`.
      *
      * @defaultValue `[]`

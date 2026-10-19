@@ -153,6 +153,12 @@ describe('a folder on disk under seedcord dev', () => {
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectoryNotListed });
     });
 
+    it('throws CorePathOutsideRoot when traverseDirectory walks a folder outside root', async () => {
+        const error = await rejection(traverseDirectory(path.join(scratch, 'extensions')));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathOutsideRoot });
+    });
+
     it('throws CorePathOutsideRoot for a folder outside root', async () => {
         const error = await rejection(readFiles(scratch));
 

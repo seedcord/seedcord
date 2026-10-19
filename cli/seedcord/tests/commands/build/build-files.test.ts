@@ -7,32 +7,56 @@ import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { quickBuildRunner } from './quickBuildRunner';
 
-async function projectListing(files: string[]): Promise<string> {
+interface ProjectShape {
+    root?: string;
+    files?: string[];
+    // paths relative to the project folder
+    write?: string[];
+}
+
+async function project({ root = './src', files = [], write = [] }: ProjectShape): Promise<string> {
     const tmp = await mkdtempDisposable(join(tmpdir(), 'seedcord-files-'));
     onTestFinished(() => tmp.remove());
-    await mkdir(join(tmp.path, 'src'));
-    await writeFile(join(tmp.path, 'src/bot.ts'), '');
-    const config = { root: './src', instance: './bot.ts', files };
+    const rootDir = join(tmp.path, root);
+    await mkdir(rootDir, { recursive: true });
+    await writeFile(join(rootDir, 'bot.ts'), '');
+    for (const path of write) {
+        await mkdir(join(tmp.path, path, '..'), { recursive: true });
+        await writeFile(join(tmp.path, path), 'export {};\n');
+    }
+    const config = { root, instance: './bot.ts', files };
     await writeFile(join(tmp.path, 'seedcord.config.ts'), `export default ${JSON.stringify(config)};\n`);
     return tmp.path;
 }
 
-describe('seedcord build with files in the config', () => {
-    it('throws CorePathUnreadable for a listed folder that does not exist', async () => {
-        const projectDir = await projectListing(['./locales']);
+function buildOf(projectDir: string): Promise<unknown> {
+    return quickBuildRunner()
+        .run(projectDir)
+        .then(
+            () => null,
+            (caught: unknown) => caught
+        );
+}
 
-        await expect(quickBuildRunner().run(projectDir)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CorePathUnreadable,
-            message: expect.stringContaining('locales') as string
+describe('seedcord build with files in the config', () => {
+    it.each([
+        ['does not exist', { files: ['./locales'] }, 'does not exist'],
+        ['is a file', { files: ['./bot.ts'] }, 'is a file'],
+        ['is a dot-folder', { files: ['./.data'], write: ['src/.data/x.json'] }, 'build skips'],
+        ['is the project logs folder', { root: '.', files: ['./logs'], write: ['logs/x.json'] }, 'build skips']
+    ])('throws CliListedFolderUnusable for a listed folder that %s', async (_, shape, says) => {
+        const error = await buildOf(await project(shape));
+
+        expect(error).toMatchObject({
+            code: SeedcordErrorCode.CliListedFolderUnusable,
+            message: expect.stringContaining(says) as string
         });
     });
 
-    it('throws CorePathUnreadable for a listed file', async () => {
-        const projectDir = await projectListing(['./bot.ts']);
+    it('throws CoreDuplicateName for two handlers that build to one file', async () => {
+        const error = await buildOf(await project({ write: ['src/handlers/Roll.ts', 'src/handlers/Roll.tsx'] }));
 
-        await expect(quickBuildRunner().run(projectDir)).rejects.toMatchObject({
-            code: SeedcordErrorCode.CorePathUnreadable,
-            message: expect.stringContaining('not a directory') as string
-        });
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
+        expect(Error.isError(error) ? error.message : '').toMatch(/Roll\.ts[\s\S]*Roll\.tsx[\s\S]*Roll\.js/);
     });
 });

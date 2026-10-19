@@ -292,6 +292,8 @@ export enum SeedcordErrorCode {
     CliNotProjectInstall = 3138,
     /** Vite's environments leave out the one seedcord runs the bot in. */
     CliViteEnvironmentMissing = 3139,
+    /** A folder that `files` in `seedcord.config.ts` lists is missing, is a file, or is one `seedcord build` skips. */
+    CliListedFolderUnusable = 3140,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

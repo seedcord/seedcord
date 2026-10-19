@@ -19,38 +19,73 @@ import type * as fs from 'node:fs';
 type BytesLoader = () => Promise<Buffer>;
 type Loaders<Loader> = [fullPath: string, load: Loader][];
 
-function assertInsideRoot(root: string, folder: string): void {
-    if (!isInside(root, folder)) throw new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, root]);
+interface FolderAccess {
+    resolve(dir: string): string;
+    // resolve, then throw for a folder outside root
+    walkable(dir: string): string;
+    // walkable, then throw for a folder that files leaves out
+    readable(dir: string): string;
+}
+
+class BotFolderAccess implements FolderAccess {
+    private readonly root: string;
+    private readonly listed: string[];
+
+    public constructor({ root, listed }: BotFolders) {
+        this.root = path.resolve(root);
+        this.listed = listed.map((folder) => path.join(this.root, folder));
+    }
+
+    public resolve(dir: string): string {
+        return resolveFromRoot(this.root, dir);
+    }
+
+    public walkable(dir: string): string {
+        const folder = this.resolve(dir);
+        if (!isInside(this.root, folder)) {
+            throw new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, this.root]);
+        }
+        return folder;
+    }
+
+    public readable(dir: string): string {
+        const folder = this.walkable(dir);
+        if (!this.listed.some((listed) => isInside(listed, folder))) {
+            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryNotListed, [folder]);
+        }
+        return folder;
+    }
+}
+
+// a plain script or test has no config
+class OpenFolderAccess implements FolderAccess {
+    public resolve(dir: string): string {
+        if (!path.isAbsolute(dir)) throw new SeedcordError(SeedcordErrorCode.CoreDirectoryRootUnknown, [dir]);
+        return path.resolve(dir);
+    }
+
+    public walkable(dir: string): string {
+        return this.resolve(dir);
+    }
+
+    public readable(dir: string): string {
+        return this.resolve(dir);
+    }
 }
 
 abstract class FileSource {
-    // a plain script or test passes undefined
-    public constructor(private readonly bot: BotFolders | undefined) {}
+    public constructor(private readonly access: FolderAccess) {}
 
     public resolve(dir: string): string {
-        if (path.isAbsolute(dir)) return path.resolve(dir);
-        if (!this.bot) throw new SeedcordError(SeedcordErrorCode.CoreDirectoryRootUnknown, [dir]);
-        return resolveFromRoot(this.bot.root, dir);
+        return this.access.resolve(dir);
     }
 
     public modules(dir: string): Promise<Loaders<ModuleLoader>> {
-        return this.modulesIn(this.resolve(dir));
+        return this.modulesIn(this.access.walkable(dir));
     }
 
     public files(dir: string): Promise<Loaders<BytesLoader>> {
-        const folder = this.resolve(dir);
-        this.assertListed(folder);
-        return this.filesIn(folder);
-    }
-
-    private assertListed(folder: string): void {
-        if (!this.bot) return;
-
-        const root = path.resolve(this.bot.root);
-        assertInsideRoot(root, folder);
-        if (!this.bot.listed.some((listed) => isInside(path.join(root, listed), folder))) {
-            throw new SeedcordError(SeedcordErrorCode.CoreDirectoryNotListed, [folder]);
-        }
+        return this.filesIn(this.access.readable(dir));
     }
 
     protected abstract modulesIn(folder: string): Promise<Loaders<ModuleLoader>>;
@@ -98,7 +133,7 @@ class BuiltFiles extends FileSource {
     private readonly fileLoaders: Map<string, BytesLoader>;
 
     public constructor(slot: BuiltSlot) {
-        super(slot);
+        super(new BotFolderAccess(slot));
         const { root, folders, modules, listedFiles, sourcePaths = false } = slot;
         this.root = path.resolve(root);
         this.folders = new Set([this.root, ...folders.map((folder) => path.join(this.root, folder))]);
@@ -117,7 +152,6 @@ class BuiltFiles extends FileSource {
     }
 
     protected modulesIn(folder: string): Promise<Loaders<ModuleLoader>> {
-        assertInsideRoot(this.root, folder);
         return Promise.resolve(this.under(this.moduleLoaders, folder));
     }
 
@@ -145,7 +179,8 @@ function builtFilesOf(slot: BuiltSlot): BuiltFiles {
 
 export function fileSource(): FileSource {
     const slot = botFilesSlot();
-    return slot?.kind === 'built' ? builtFilesOf(slot) : new DiskFiles(slot);
+    if (slot?.kind === 'built') return builtFilesOf(slot);
+    return new DiskFiles(slot ? new BotFolderAccess(slot) : new OpenFolderAccess());
 }
 
 export function resolveFolder(dir: string): string {

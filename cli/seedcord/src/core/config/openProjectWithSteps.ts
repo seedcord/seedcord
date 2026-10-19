@@ -1,7 +1,6 @@
 import type { Steps } from '#core/output/Steps';
 import type { Project } from '#core/project/Project';
-import type { ProjectLoader } from './ProjectLoader';
-import type { ResolvedSeedcordConfig } from './schema';
+import type { ProjectLoader, ProjectCheck } from './ProjectLoader';
 
 type OpenStep = 'read config' | 'load plugins';
 
@@ -9,7 +8,7 @@ export type ProjectOpener = Pick<ProjectLoader, 'readConfig' | 'openProject'>;
 
 interface OpenOptions {
     projectDir?: string | undefined;
-    check?: ((config: ResolvedSeedcordConfig) => void) | undefined;
+    check?: ProjectCheck | undefined;
 }
 
 export async function openProjectWithSteps(

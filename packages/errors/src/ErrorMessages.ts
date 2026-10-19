@@ -45,6 +45,12 @@ function vitePluginFix({ loading }: VitePluginPlace): string {
     return `Fix ${paint.path(loading.path)}, or check the options you pass the plugin if that file looks right.`;
 }
 
+const listedFolderProblems = {
+    missing: `which does not exist. Create it, or take it out of ${paint.bold('files')}.`,
+    file: `which is a file. ${paint.bold('files')} takes folders. List the folder that holds it.`,
+    skipped: `which ${paint.bold('seedcord build')} skips, like every dot-folder, node_modules, outDir and the project's logs folder. Move the files to another folder under root.`
+};
+
 // the edge worker sets chalk's color level after this module loads
 const token = (): string => paint.bold('DISCORD_BOT_TOKEN');
 
@@ -122,7 +128,7 @@ const messages = {
     [SeedcordErrorCode.CoreDirectoryNotBuilt]: (dir: string, root: string) =>
         `${paint.path(dir)} was not a folder under ${paint.bold('root')} (${paint.path(root)}) when ${paint.bold('seedcord build')} ran, so the build holds none of its files. Create the folder, then build again.`,
     [SeedcordErrorCode.CoreDirectoryNotListed]: (dir: string) =>
-        `${paint.bold('readFiles')} read ${paint.path(dir)}, which no folder in ${paint.bold('files')} in seedcord.config.ts holds. ${paint.bold('seedcord build')} ships non-code files from only those folders. Add it to ${paint.bold('files')}, like ${paint.sky("files: ['./locales']")}.`,
+        `${paint.bold('readFiles')} read ${paint.path(dir)}, which no folder in ${paint.bold('files')} in seedcord.config.ts holds. ${paint.bold('seedcord build')} bundles non-code files from only those folders. Add it to ${paint.bold('files')}, like ${paint.sky("files: ['./locales']")}.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.bold(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>
@@ -338,6 +344,8 @@ const messages = {
         `This ${paint.bold('seedcord')} runs from ${paint.path(cliDir)}, but the project installs its own at ${paint.path(projectInstall)}. The CLI and the bot must load the same seedcord packages. Run the command through a script in the project's ${paint.path('package.json')}.`,
     [SeedcordErrorCode.CliViteEnvironmentMissing]: (name: string, created: readonly string[]) =>
         `seedcord runs the bot in Vite's ${paint.bold(name)} environment. Vite created only ${allOf.format(created.map((environment) => paint.bold(environment)))}. Look in ${paint.bold('vitePlugins')} for a plugin whose ${paint.bold('config')} hook rewrites ${paint.bold('environments')}.`,
+    [SeedcordErrorCode.CliListedFolderUnusable]: (folder: string, problem: keyof typeof listedFolderProblems) =>
+        `${paint.bold('files')} in seedcord.config.ts lists ${paint.path(folder)}, ${listedFolderProblems[problem]}`,
     [SeedcordErrorCode.CliCodegenOutOfDate]: (outputPath: string) =>
         `${paint.path(outputPath)} is out of date. Run ${paint.bold('seedcord codegen')} and commit it.`,
     [SeedcordErrorCode.CliEdgeWithoutWorkerdCondition]: (cloudflareConfig: string, tsconfig: string) =>

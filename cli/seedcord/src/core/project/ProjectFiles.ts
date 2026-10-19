@@ -1,10 +1,10 @@
 import { readdir } from 'node:fs/promises';
-import { basename, dirname, isAbsolute, join, relative } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
-import { isInside, moduleGlobs, nonCodeGlobs, posixRelative } from '@seedcord/utils/node/internal';
+import { isInside, isModulePath, moduleGlobs, nonCodeGlobs, posixRelative } from '@seedcord/utils/node/internal';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
 
@@ -63,6 +63,17 @@ export class ProjectFiles {
 
     public listedKeys(): string[] {
         return this.listedFolders.map((folder) => this.keyOf(folder));
+    }
+
+    // the same rule the walk below and globExcludes use
+    public isBundled(folder: string): boolean {
+        if (this.skippedFolders.some((skipped) => isInside(skipped, folder))) return false;
+        return !relative(this.root, folder).split(sep).some(isSkippedName);
+    }
+
+    public async modulePaths(): Promise<string[]> {
+        const entries = await this.entries();
+        return entries.filter(({ path, isFolder }) => !isFolder && isModulePath(path)).map(({ path }) => path);
     }
 
     public async foldersIncludingEmpty(): Promise<string[]> {
