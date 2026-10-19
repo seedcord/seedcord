@@ -4,7 +4,6 @@ import { displayPath, SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '#src/misc/asError';
 import { importFailed } from '#src/node/importFailed';
 
-import { assertListedFolder, resolveFolder } from './slots';
 import { fileSource } from './sources';
 
 import type { Buffer } from 'node:buffer';
@@ -40,7 +39,7 @@ interface ReadFile extends FoundFile {
  * ```
  */
 export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFile> {
-    for (const [fullPath, load] of await fileSource().modules(resolveFolder(dir))) {
+    for (const [fullPath, load] of await fileSource().modules(dir)) {
         const relativePath = displayPath(fullPath);
         let imported: Record<string, unknown>;
         try {
@@ -68,9 +67,7 @@ export async function* traverseDirectory(dir: string): AsyncGenerator<ImportedFi
  * ```
  */
 export async function* readFiles(dir: string): AsyncGenerator<ReadFile> {
-    const folder = resolveFolder(dir);
-    assertListedFolder(folder);
-    for (const [fullPath, load] of await fileSource().files(folder)) {
+    for (const [fullPath, load] of await fileSource().files(dir)) {
         const relativePath = displayPath(fullPath);
         let bytes: Buffer;
         try {

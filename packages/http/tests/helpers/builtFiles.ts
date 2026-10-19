@@ -25,7 +25,7 @@ export function registerBuiltFiles(
         modules: Object.fromEntries(
             Object.entries(modules).map(([key, exported]) => [key, () => Promise.resolve(exported)])
         ),
-        files: {}
+        listedFiles: {}
     });
     return { [Symbol.dispose]: clearBuiltFiles };
 }

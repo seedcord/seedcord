@@ -31,7 +31,6 @@ function rejectWhenAborted(signal: AbortSignal): Promise<never> {
 
 describe('CommandRegistry Integration', () => {
     afterEach(() => {
-        setDevFiles(undefined);
         vi.clearAllMocks();
     });
 
@@ -330,7 +329,7 @@ describe('CommandRegistry Integration', () => {
     it('holds an edited command for the refresh prompt when the commands path is relative to root', async ({
         testEnv
     }) => {
-        setDevFiles({ root: testEnv.rootDir, listed: [] });
+        using _dev = setDevFiles({ root: testEnv.rootDir, listed: [] });
         const command = (name: string): string => `
             import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
 

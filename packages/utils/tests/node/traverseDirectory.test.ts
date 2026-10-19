@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { readFiles, traverseDirectory } from '#src/node/directory/readers';
 import { setDevFiles } from '#src/node/directory/slots';
@@ -126,8 +126,10 @@ describe('a module that fails to load through a Vite plugin', () => {
 });
 
 describe('a folder on disk under seedcord dev', () => {
-    beforeEach(() => setDevFiles({ root: FIXTURES, listed: ['/text'] }));
-    afterEach(() => setDevFiles(undefined));
+    beforeEach(() => {
+        const dev = setDevFiles({ root: FIXTURES, listed: ['/text'] });
+        return () => dev[Symbol.dispose]();
+    });
 
     it('resolves against root for traverseDirectory', async () => {
         const seen: string[] = [];

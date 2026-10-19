@@ -40,8 +40,7 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
         const resources = new AsyncDisposableStack();
         try {
             const { config } = context;
-            setDevFiles({ root: config.root, listed: new ProjectFiles(config).listedKeys() });
-            resources.defer(() => setDevFiles(undefined));
+            resources.use(setDevFiles({ root: config.root, listed: new ProjectFiles(config).listedKeys() }));
             return await this.open(context, resources);
         } catch (error: unknown) {
             await resources.disposeAsync();

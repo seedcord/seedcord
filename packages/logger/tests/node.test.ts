@@ -46,7 +46,7 @@ const plain = (value: string): string => stripAnsi(value);
 // the slot the entry of a built bot fills before anything imports seedcord
 function asBuiltBot(slot: { root: string; configFile: string }): Disposable {
     const key = Symbol.for(BOT_FILES_KEY);
-    Reflect.set(globalThis, key, { kind: 'built', ...slot, listed: [], folders: [], modules: {}, files: {} });
+    Reflect.set(globalThis, key, { kind: 'built', ...slot, listed: [], folders: [], modules: {}, listedFiles: {} });
     return { [Symbol.dispose]: () => Reflect.deleteProperty(globalThis, key) };
 }
 

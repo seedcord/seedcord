@@ -56,7 +56,6 @@ describe('HmrModuleHandler', () => {
     });
 
     afterEach(() => {
-        setDevFiles(undefined);
         rmSync(dir, { recursive: true, force: true });
     });
 
@@ -124,7 +123,7 @@ describe('HmrModuleHandler', () => {
     });
 
     it('reloads a handler file when the handlers dir is relative to root', async () => {
-        setDevFiles({ root: dir, listed: [] });
+        using _dev = setDevFiles({ root: dir, listed: [] });
         const relative = new HmrModuleHandler<TestHandler>({
             handlersDir: './commands',
             isHandler,

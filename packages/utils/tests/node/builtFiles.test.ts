@@ -18,7 +18,7 @@ import { toPosixPath } from '#src/node/paths';
 import { clearBuiltFiles } from '#tests/builtFilesSlot';
 
 import type { EncodedFile } from '#src/node/directory/encodedFile';
-import type { BuiltFileLoaders } from '#src/node/directory/slots';
+import type { BuiltSlot } from '#src/node/directory/slots';
 import type { TypedOmit } from '@seedcord/types';
 
 // not on disk. path.resolve adds the drive letter on windows
@@ -34,10 +34,10 @@ function register({
     folders = [],
     listed = [],
     modules = {},
-    files = {},
+    listedFiles = {},
     ...rest
-}: Partial<TypedOmit<BuiltFileLoaders, 'kind'>>): Disposable {
-    const slot: BuiltFileLoaders = { kind: 'built', root, folders, listed, modules, files, ...rest };
+}: Partial<TypedOmit<BuiltSlot, 'kind'>>): Disposable {
+    const slot: BuiltSlot = { kind: 'built', root, folders, listed, modules, listedFiles, ...rest };
     Reflect.set(globalThis, Symbol.for(BOT_FILES_KEY), slot);
     return { [Symbol.dispose]: clearBuiltFiles };
 }
@@ -112,7 +112,8 @@ describe('setBuiltFilesHook', () => {
     });
 
     it('treats the root seedcord dev sets as no built files', () => {
-        setDevFiles({ root: ROOT, listed: [] });
+        using _dev = setDevFiles({ root: ROOT, listed: [] });
+        // setBuiltFilesHook keeps the hook it could not run yet
         onTestFinished(clearBuiltFiles);
         const hook = vi.fn();
 
@@ -270,7 +271,7 @@ describe('readFiles in a built bot', () => {
         using _built = register({
             folders: ['/locales', '/tags'],
             listed: ['/locales', '/tags'],
-            files: {
+            listedFiles: {
                 '/locales/fr.json': storedText('{"hi":"salut"}'),
                 '/tags/faq.md': storedText('# faq'),
                 '/locales/en.json': storedText('{"hi":"hello"}')
@@ -291,7 +292,7 @@ describe('readFiles in a built bot', () => {
         using _built = register({
             folders: ['/assets'],
             listed: ['/assets'],
-            files: { '/assets/dot.png': () => Promise.resolve(encodeFile(png)) }
+            listedFiles: { '/assets/dot.png': () => Promise.resolve(encodeFile(png)) }
         });
 
         const seen: Buffer[] = [];
@@ -305,7 +306,7 @@ describe('readFiles in a built bot', () => {
         using _built = register({
             folders: ['/locales', '/locales/.cache'],
             listed: ['/locales'],
-            files: {
+            listedFiles: {
                 '/locales/Skipped.ts': file,
                 '/locales/.hidden': file,
                 '/locales/en.json.map': file,
@@ -322,7 +323,11 @@ describe('readFiles in a built bot', () => {
 
     it('reports the file that failed to load by its path, keeping the original as the cause', async () => {
         const broken = (): Promise<EncodedFile> => Promise.reject(new Error('boom'));
-        using _built = register({ folders: ['/locales'], listed: ['/locales'], files: { '/locales/en.json': broken } });
+        using _built = register({
+            folders: ['/locales'],
+            listed: ['/locales'],
+            listedFiles: { '/locales/en.json': broken }
+        });
 
         const error = await rejection(readFiles(at('locales')));
 
@@ -335,7 +340,7 @@ describe('readFiles in a built bot', () => {
         using _built = register({
             folders: ['/locales'],
             listed: ['/locales'],
-            files: { '/locales/en.json': storedText('{}') }
+            listedFiles: { '/locales/en.json': storedText('{}') }
         });
 
         const error = await rejection(readFiles('/elsewhere/locales'));
@@ -347,7 +352,7 @@ describe('readFiles in a built bot', () => {
         using _built = register({
             folders: ['/locales', '/locales/en'],
             listed: ['/locales'],
-            files: { '/locales/en/hi.json': storedText('{}') }
+            listedFiles: { '/locales/en/hi.json': storedText('{}') }
         });
 
         const seen: string[] = [];

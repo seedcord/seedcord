@@ -60,7 +60,7 @@ export function builtFilesSource({
         `    listed: ${JSON.stringify(files.listedKeys())},`,
         `    folders: ${JSON.stringify(folders)},`,
         `    modules: import.meta.glob(${JSON.stringify(files.moduleGlobs())}, ${JSON.stringify(moduleOptions)}),`,
-        `    files: import.meta.glob(${JSON.stringify(files.listedFileGlobs())}, ${JSON.stringify(fileOptions)}),`,
+        `    listedFiles: import.meta.glob(${JSON.stringify(files.listedFileGlobs())}, ${JSON.stringify(fileOptions)}),`,
         `    sourcePaths: ${String(sourcePaths)},`,
         ...(configFile === undefined ? [] : [`    configFile: ${JSON.stringify(configFile)},`]),
         '};',
