@@ -1,4 +1,5 @@
 import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/LinkPreview';
+import { readTimeLabel } from '@seedcord/ui/readingTime';
 
 import { BLOG_DESCRIPTION, BLOG_NAME } from '#lib/blog/about';
 import { joinList } from '#lib/blog/summary';
@@ -56,11 +57,13 @@ export function postPreview(post: PostSummary): PreviewCardProps {
         ...BLOG_CRUMB,
         title: post.title,
         body: post.description,
-        subtext: [bylineOf(post), discordDate(post.created), `${post.minutes} min read`],
+        subtext: [bylineOf(post), discordDate(post.created), readTimeLabel(post.minutes)],
         ...(post.cover && { bannerUrl: canonicalUrl(post.cover.src) }),
         links: [
             BLOG_LINK,
-            { emoji: PREVIEW_EMOJI.markdown, label: 'Markdown', url: canonicalUrl(twinPath(post.slug)) },
+            ...(post.unlisted
+                ? []
+                : [{ emoji: PREVIEW_EMOJI.markdown, label: 'Markdown', url: canonicalUrl(twinPath(post.slug)) }]),
             { emoji: PREVIEW_EMOJI.github, label: 'Edit on GitHub', url: post.editUrl }
         ]
     };

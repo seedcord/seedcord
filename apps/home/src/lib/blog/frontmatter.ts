@@ -11,7 +11,7 @@ const authorHandle = z.custom<AuthorHandle>(
     (value) => typeof value === 'string' && Object.hasOwn(AUTHORS_BY_HANDLE, value),
     {
         error: (issue) =>
-            `${String(issue.input)} is not in src/lib/blog/authors.ts. Add your GitHub handle and name there.`
+            `${String(issue.input)} is not in apps/home/src/lib/blog/authors.ts. Add your GitHub handle and name there.`
     }
 );
 
@@ -20,10 +20,10 @@ const isoDate = z.iso.date({ error: (issue) => `${String(issue.input)} is not a 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types -- defineDocs infers the frontmatter type from the returned schema
 export function postSchema({ path: postFile }: MacroSchemaContext) {
     const cover = z.object({ src: z.string(), alt: z.string().min(1) }).transform(({ src, alt }, context) => {
-        const image = readPostImage(src, postFile);
-        if (typeof image !== 'string') return { ...image, alt };
+        const read = readPostImage(src, postFile);
+        if (read.ok) return { ...read.image, alt };
 
-        context.addIssue({ code: 'custom', path: ['src'], message: image });
+        context.addIssue({ code: 'custom', path: ['src'], message: read.reason });
         return z.NEVER;
     });
 
@@ -33,10 +33,15 @@ export function postSchema({ path: postFile }: MacroSchemaContext) {
             authors: z
                 .array(authorHandle)
                 .min(1)
-                .refine(
-                    (handles) => new Set(handles).size === handles.length,
-                    'An author is listed twice. List each once.'
-                ),
+                .superRefine((handles, context) => {
+                    const repeated = handles.find((handle, at) => handles.indexOf(handle) !== at);
+                    if (repeated === undefined) return;
+
+                    context.addIssue({
+                        code: 'custom',
+                        message: `${repeated} is listed twice under authors. List each author once.`
+                    });
+                }),
             created: isoDate,
             edited: isoDate.optional(),
             cover: cover.optional(),

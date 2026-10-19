@@ -6,7 +6,7 @@ import { SITE_URL } from '#lib/site';
 const SAME_SITE = new Set([new URL(HOME_URL).origin, new URL(SITE_URL).origin]);
 const OTHER_APPS = [GUIDE.path, DOCS.path];
 
-export type LinkKind = 'home-page' | 'same-site' | 'external';
+type LinkKind = 'home-page' | 'same-site' | 'external';
 
 const isUnder = (pathname: string, base: string): boolean => pathname === base || pathname.startsWith(`${base}/`);
 const isFile = (pathname: string): boolean => /\.[a-z0-9]+$/i.test(pathname);

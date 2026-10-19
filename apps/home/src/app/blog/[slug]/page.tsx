@@ -69,7 +69,7 @@ export default async function PostPage(route: PostParams): Promise<ReactNode> {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: serializeJsonLd(postJsonLd(post)) }}
             />
-            <Nav onBlog />
+            <Nav />
             <main id="main-content">
                 <article>
                     <PostHeader post={post} />

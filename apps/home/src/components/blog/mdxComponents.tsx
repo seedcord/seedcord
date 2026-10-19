@@ -88,9 +88,7 @@ function headingFor(tag: keyof typeof HEADINGS): (props: ComponentProps<'h2'>) =
                 wrapperClassName={cn('flex items-center gap-1', HEADINGS[tag].className)}
                 className={cn('font-display scroll-mt-24 font-semibold tracking-tight text-(--seed-dark)')}
                 anchorSize={HEADINGS[tag].anchorSize}
-                anchorClassName={cn(
-                    'shrink-0 text-(--seed-dark)/40 transition-opacity hover:text-(--flesh-deep) md:opacity-0 md:group-hover:opacity-100 md:group-has-focus-visible:opacity-100 md:data-[copied=true]:opacity-100'
-                )}
+                anchorClassName={cn('text-(--seed-dark)/40 hover:text-(--flesh-deep)')}
             />
         );
     };

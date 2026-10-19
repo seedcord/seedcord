@@ -2,8 +2,7 @@ import { highlightFenceToHtml } from '@seedcord/ui/shiki';
 
 import type { Token, Tokens } from 'marked';
 
-// marked's Token union includes Tokens.Generic, whose type is any string
-// that's why just checking the type isn't really enough
+// marked's Tokens.Generic accepts any type string
 const isCodeToken = (token: Token): token is Tokens.Code =>
     token.type === 'code' && 'text' in token && typeof token.text === 'string';
 

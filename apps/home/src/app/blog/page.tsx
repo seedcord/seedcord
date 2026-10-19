@@ -69,7 +69,7 @@ export default async function BlogPage(): Promise<ReactNode> {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: serializeJsonLd(blogJsonLd(posts)) }}
             />
-            <Nav onBlog />
+            <Nav onBlogIndex />
             <main id="main-content">
                 <Section ground="pith">
                     <div className={cn('grid grid-cols-[1fr_auto] gap-x-6')}>

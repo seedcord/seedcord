@@ -62,7 +62,7 @@ function ActionsCell({
                 label={label}
                 className={cn(
                     'size-8 transition-opacity duration-150',
-                    'lg:opacity-0 lg:group-hover/name:opacity-100 lg:data-[copied=true]:opacity-100'
+                    'lg:opacity-0 lg:group-hover/name:opacity-100 lg:group-has-focus-visible/name:opacity-100 lg:data-[copied=true]:opacity-100'
                 )}
             />
             {sourceUrl ? (

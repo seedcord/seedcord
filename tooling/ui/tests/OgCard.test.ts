@@ -11,7 +11,7 @@ describe('ogPageCardAlt', () => {
 
     it('adds the badges beside the pill', () => {
         expect(ogPageCardAlt({ pill: 'class', name: 'SlashHandler', meta: ['@seedcord/gateway', 'v0.6.0'] })).toBe(
-            'A seedcord card reading SlashHandler, labelled class, @seedcord/gateway v0.6.0'
+            'A seedcord card reading SlashHandler, labelled class, @seedcord/gateway, v0.6.0'
         );
     });
 });

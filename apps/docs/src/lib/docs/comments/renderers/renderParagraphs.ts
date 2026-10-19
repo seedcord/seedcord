@@ -15,9 +15,8 @@ import type { Tokens } from 'marked';
 marked.use({
     async: true,
     walkTokens: async (token) => {
-        if (token.type === 'code') {
-            await highlightCodeToken(token);
-        } else if (token.type === 'codespan') {
+        await highlightCodeToken(token);
+        if (token.type === 'codespan') {
             const { text } = token as Tokens.Codespan;
             const html = await highlightInlineToHtml(text);
             if (html) {

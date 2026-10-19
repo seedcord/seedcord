@@ -1,7 +1,10 @@
 import { CopyAnchorButton } from './CopyAnchorButton';
 import { cn } from './lib/cn';
+import { tw } from './lib/tw';
 
 import type { ComponentProps, ReactElement } from 'react';
+
+export const ANCHOR_REVEAL = tw`shrink-0 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-has-focus-visible:opacity-100 md:data-[copied=true]:opacity-100`;
 
 interface AnchoredHeadingProps extends ComponentProps<'h2'> {
     as: 'h2' | 'h3' | 'h4';
@@ -31,7 +34,7 @@ export function AnchoredHeading({
                     anchorId={id}
                     label={typeof children === 'string' ? children : id}
                     iconSize={anchorSize}
-                    className={anchorClassName}
+                    className={cn(ANCHOR_REVEAL, anchorClassName)}
                 />
             )}
         </div>

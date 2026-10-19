@@ -17,7 +17,10 @@ export function remarkHeadingRange({ subject }: HeadingRangeOptions) {
         visit(tree, 'heading', (heading) => {
             if (heading.depth >= SHALLOWEST && heading.depth <= DEEPEST) return;
 
-            file.fail(`This page has an h${heading.depth}. ${subject} can use h2 through h4.`, heading);
+            file.fail(
+                `This page has an h${heading.depth}. ${subject} can use h2 through h4. Change it to a heading from ## to ####.`,
+                heading
+            );
         });
     };
 }

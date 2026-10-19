@@ -71,7 +71,7 @@ describe('the files of a post', () => {
         async (folder) => {
             using post = new PostFolder(folder);
 
-            await expect(post.compile('A post.')).rejects.toThrow('Rename the folder');
+            await expect(post.compile('A post.')).rejects.toThrow('is not a valid post url');
         }
     );
 

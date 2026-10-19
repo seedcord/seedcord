@@ -26,7 +26,7 @@ describe('post frontmatter', () => {
     it('rejects an author listed twice', () => {
         const result = parse({ ...VALID, authors: ['materwelonDhruv', 'materwelonDhruv'] });
 
-        expect(result.error?.message).toContain('listed twice');
+        expect(result.error?.message).toContain('materwelonDhruv is listed twice');
     });
 
     it.each(['2026-10-18', '2026-10-19'])('rejects an edited date of %s, on or before the created date', (edited) => {

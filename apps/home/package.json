@@ -14,9 +14,9 @@
         "deploy:preview": "wrangler versions upload",
         "lint": "eslint '**/*.{ts,tsx}' --cache --no-error-on-unmatched-pattern",
         "lint:fix": "eslint '**/*.{ts,tsx}' --fix --cache --no-error-on-unmatched-pattern",
-        "fmt": "prettier --write '**/*.{ts,tsx,json,md,css}' --cache --no-error-on-unmatched-pattern",
-        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md,css}' --cache --no-error-on-unmatched-pattern",
-        "tc": "fumadocs-mdx && tsgo --noEmit",
+        "fmt": "prettier --write '**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' --cache --no-error-on-unmatched-pattern",
+        "fmt:check": "prettier --check '**/*.{ts,tsx,json,md,css}' 'content/**/*.mdx' --cache --no-error-on-unmatched-pattern",
+        "tc": "tsgo --noEmit",
         "test": "vitest run",
         "test:watch": "vitest dev"
     },

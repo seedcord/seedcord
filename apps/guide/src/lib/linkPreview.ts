@@ -1,6 +1,6 @@
 import { DOCS_URL, HOME_URL } from '@seedcord/ui';
 import { PREVIEW_EMOJI, SITE_ACCENT } from '@seedcord/ui/LinkPreview';
-import { readingMinutes } from '@seedcord/ui/readingTime';
+import { readingMinutes, readTimeLabel } from '@seedcord/ui/readingTime';
 
 import { editUrl } from '#lib/pageActions';
 import { isFrontPage, markdownUrl, shownTitle, SITE_DESCRIPTION } from '#lib/site';
@@ -29,7 +29,7 @@ export function guidePreview({ page, order, twinMarkdown }: GuidePreviewSource):
     if (here) breadcrumb.push(here.tab);
     if (here?.group !== undefined && here.group !== title) breadcrumb.push(here.group);
 
-    const subtext = [`${readingMinutes(twinMarkdown)} min read`];
+    const subtext = [readTimeLabel(readingMinutes(twinMarkdown))];
     if (here) subtext.unshift(`${tabPages.indexOf(here) + 1} of ${tabPages.length} in ${here.tab}`);
 
     const front = isFrontPage(page.url);

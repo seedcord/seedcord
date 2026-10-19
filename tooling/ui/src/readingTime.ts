@@ -11,3 +11,5 @@ export function readingMinutes(markdown: string): number {
     const minutes = wordsIn(prose) / PROSE_WORDS_PER_MINUTE + wordsIn(code) / CODE_WORDS_PER_MINUTE;
     return Math.max(1, Math.round(minutes));
 }
+
+export const readTimeLabel = (minutes: number): string => `${minutes} min read`;

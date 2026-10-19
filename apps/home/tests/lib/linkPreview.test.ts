@@ -8,10 +8,9 @@ const dayIn = (timeZone: string, seconds: number): string =>
 
 describe('postPreview', () => {
     it('shows the author, a discord date, and the read time', () => {
-        const [byline, date, minutes] = postPreview(POST).subtext ?? [];
+        const [byline, , minutes] = postPreview(POST).subtext ?? [];
 
         expect([byline, minutes]).toEqual(['**Dhruv**', '6 min read']);
-        expect(date).toMatch(/^<t:\d+:D>$/);
     });
 
     it.each(['America/Los_Angeles', 'Pacific/Noumea'])('shows the post date to a reader in %s', (timeZone) => {
@@ -20,12 +19,12 @@ describe('postPreview', () => {
         expect(dayIn(timeZone, seconds)).toBe(POST.created);
     });
 
-    it('joins several authors into one list', () => {
-        const [dhruv] = POST.authors;
-        if (dhruv === undefined) throw new Error('the fixture post has an author');
-        const authors = ['Alex', 'Sam'].map((name) => ({ ...dhruv, name }));
+    it('links the markdown copy of a listed post only', () => {
+        const labels = (unlisted: boolean): string[] =>
+            postPreview({ ...POST, unlisted }).links.map((link) => link.label);
 
-        expect(postPreview({ ...POST, authors: [dhruv, ...authors] }).subtext?.[0]).toBe('**Dhruv, Alex, and Sam**');
+        expect(labels(false)).toContain('Markdown');
+        expect(labels(true)).not.toContain('Markdown');
     });
 
     it('leaves the banner out when the post has no cover', () => {

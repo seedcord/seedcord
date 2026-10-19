@@ -1,4 +1,5 @@
 import { cn } from '@seedcord/ui';
+import { readTimeLabel } from '@seedcord/ui/readingTime';
 import Image from 'next/image';
 
 import { SiteLink } from '#components/ui/SiteLink';
@@ -77,7 +78,7 @@ export function PostDates({ created, edited, minutes, className }: MetaProps): R
                 </>
             )}
             {DOT}
-            <span className={cn('whitespace-nowrap')}>{minutes} min read</span>
+            <span className={cn('whitespace-nowrap')}>{readTimeLabel(minutes)}</span>
         </span>
     );
 }

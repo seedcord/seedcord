@@ -14,8 +14,10 @@ const LANGUAGE_PREFIX = 'language-';
 const TITLE_ATTR = 'data-title';
 
 export function visitFences(tree: Root, onFence: (code: Element, meta: string) => void): void {
-    visit(tree, 'element', (node) => {
-        if (node.tagName === 'code') onFence(node, node.data?.meta ?? '');
+    visit(tree, 'element', (node, _index, parent) => {
+        if (node.tagName === 'code' && parent?.type === 'element' && parent.tagName === 'pre') {
+            onFence(node, node.data?.meta ?? '');
+        }
     });
 }
 

@@ -32,10 +32,10 @@ function NavLink({ label, href }: (typeof SITES)[number]): ReactNode {
 }
 
 interface NavProps {
-    onBlog?: boolean;
+    onBlogIndex?: boolean;
 }
 
-export function Nav({ onBlog = false }: NavProps): ReactNode {
+export function Nav({ onBlogIndex = false }: NavProps): ReactNode {
     return (
         <header className={cn('sticky top-0 z-50 border-b-[3px] border-(--seed-dark) bg-(--pith)')}>
             <div className={cn('mx-auto flex h-16 max-w-(--shell-max) items-center gap-2 px-5')}>
@@ -45,20 +45,22 @@ export function Nav({ onBlog = false }: NavProps): ReactNode {
                         seedcord
                     </span>
                 </Link>
-                <PosterButton
-                    href={BLOG_PATH}
-                    variant="ink"
-                    current={onBlog}
-                    wrapperClassName={cn('order-3 sm:order-1')}
-                >
-                    Blog
-                </PosterButton>
-                <span aria-hidden className={cn('order-2 flex-1')} />
-                <nav aria-label="Documentation" className={cn('order-3 hidden items-center gap-1 sm:flex')}>
-                    {SITES.map((site) => (
-                        <NavLink key={site.label} {...site} />
-                    ))}
+                <nav aria-label="Primary" className={cn('contents')}>
+                    <PosterButton
+                        href={BLOG_PATH}
+                        variant="ink"
+                        current={onBlogIndex}
+                        wrapperClassName={cn('order-3 sm:order-1')}
+                    >
+                        Blog
+                    </PosterButton>
+                    <span className={cn('order-3 hidden items-center gap-1 sm:flex')}>
+                        {SITES.map((site) => (
+                            <NavLink key={site.label} {...site} />
+                        ))}
+                    </span>
                 </nav>
+                <span aria-hidden className={cn('order-2 flex-1')} />
                 <span className={cn('order-4 flex items-center gap-2')}>
                     <NpmVersion />
                     <PosterButton href={REPO_URL} variant="ink">

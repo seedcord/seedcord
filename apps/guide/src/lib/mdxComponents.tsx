@@ -133,8 +133,6 @@ const HEADINGS = {
     h4: { className: tw`mt-3 text-lg/snug`, anchorSize: ANCHOR_SIZE.h4, anchorDrop: ANCHOR_DROP.h4 }
 } as const;
 
-export const ANCHOR = tw`shrink-0 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-has-focus-visible:opacity-100 md:data-[copied=true]:opacity-100`;
-
 function headingFor(tag: keyof typeof HEADINGS): (props: ComponentProps<'h2'>) => ReactElement {
     return function Heading(props: ComponentProps<'h2'>): ReactElement {
         return (
@@ -144,7 +142,7 @@ function headingFor(tag: keyof typeof HEADINGS): (props: ComponentProps<'h2'>) =
                 wrapperClassName={HEADINGS[tag].className}
                 className={cn('font-display inline font-semibold text-(--text)')}
                 anchorSize={HEADINGS[tag].anchorSize}
-                anchorClassName={cn(ANCHOR, HEADINGS[tag].anchorDrop)}
+                anchorClassName={HEADINGS[tag].anchorDrop}
             />
         );
     };
