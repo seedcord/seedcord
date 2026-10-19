@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PostFolder } from './mdxPipeline';
+import { PostFolder } from '#tests/mdxPipeline';
 
 describe('a heading in a post', () => {
     it.each([

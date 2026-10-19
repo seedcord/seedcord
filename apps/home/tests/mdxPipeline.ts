@@ -4,23 +4,37 @@ import path from 'node:path';
 
 import { compile } from '@mdx-js/mdx';
 import { mdxPreset } from 'fumadocs-core/content/mdx/preset-bundler';
+import { remarkLLMs } from 'fumadocs-core/mdx-plugins/remark-llms';
 import { VFile } from 'vfile';
+
+import { TWIN_OPTIONS } from '#lib/blog/twinOptions';
 
 // eslint-disable-next-line no-restricted-imports -- fumadocs-mdx loads source.config.ts from the app root
 import config from '../source.config';
-
-type PresetOptions = Parameters<typeof mdxPreset>[0];
 
 const WEBP_4X3 = path.join(import.meta.dirname, 'fixtures/4x3.webp');
 
 export const POST_SLUG = 'test-post';
 
-export async function compilePost(source: string, file: string): Promise<string> {
+async function postOptions(): Promise<Awaited<ReturnType<typeof mdxPreset>>> {
     const authored = typeof config.mdxOptions === 'function' ? await config.mdxOptions() : config.mdxOptions;
-    // source.config.ts sets no preset, which leaves out 'minimal', the other arm of the declared type
-    const options = await mdxPreset(authored as PresetOptions);
+    if (authored?.preset === 'minimal') throw new Error('source.config.ts switched to the minimal preset');
+    return mdxPreset(authored);
+}
 
-    return String(await compile(new VFile({ value: source, path: file }), { ...options, jsx: true }));
+async function compilePost(source: string, file: string): Promise<string> {
+    return String(await compile(new VFile({ value: source, path: file }), { ...(await postOptions()), jsx: true }));
+}
+
+// the collection runs remarkLLMs with TWIN_OPTIONS to build each post's index.md
+export async function markdownCopy(source: string): Promise<string> {
+    const options = await postOptions();
+    const file = await compile(new VFile({ value: source, path: path.join(tmpdir(), 'index.mdx') }), {
+        ...options,
+        remarkPlugins: [...(options.remarkPlugins ?? []), [remarkLLMs, { ...TWIN_OPTIONS, _data: true }]]
+    });
+
+    return String(file.data.markdown);
 }
 
 export class PostFolder implements Disposable {

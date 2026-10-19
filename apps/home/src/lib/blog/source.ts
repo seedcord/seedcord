@@ -2,6 +2,7 @@ import { loader } from 'fumadocs-core/source';
 import { defineDocs } from 'fumadocs-mdx/macro';
 
 import { postSchema } from './frontmatter';
+import { BLOG_PATH } from './paths';
 import { TWIN_OPTIONS } from './twinOptions';
 
 const posts = defineDocs({
@@ -13,14 +14,7 @@ const posts = defineDocs({
     }
 });
 
-export const blog = loader({ baseUrl: '/blog', source: posts.toFumadocsSource() });
+// page.url drops the trailing slash. Post.summary in posts.ts builds the url with postPath
+export const blog = loader({ baseUrl: BLOG_PATH, source: posts.toFumadocsSource() });
 
 export type BlogPost = (typeof blog)['$inferPage'];
-
-// YYYY-MM-DD strings sort in date order
-export function listedPostsNewestFirst(): BlogPost[] {
-    return blog
-        .getPages()
-        .filter((page) => !page.data.unlisted)
-        .toSorted((a, b) => b.data.created.localeCompare(a.data.created));
-}

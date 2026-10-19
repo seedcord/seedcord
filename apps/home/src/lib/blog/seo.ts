@@ -2,19 +2,18 @@ import { ORG_ID, SOFTWARE_ID } from '@seedcord/ui';
 import { OG_SIZE } from '@seedcord/ui/og';
 import { ogPageCardAlt } from '@seedcord/ui/OgCard';
 
-import { canonicalUrl, SITE_NAME } from '#lib/site';
+import { canonicalUrl, DEFAULT_OG_IMAGE, SITE_NAME } from '#lib/site';
 
+import { BLOG_PATH, FEED_PATH, ogImagePath, twinPath } from './paths';
 import { formatPostDate, lastChanged } from './post';
 
-import type { PostSummary } from './post';
+import type { PostAuthor, PostSummary } from './post';
 import type { Metadata } from 'next';
 
-export const BLOG_PATH = '/blog/';
 export const BLOG_NAME = `${SITE_NAME} blog`;
 const BLOG_TITLE = 'Blog';
 export const BLOG_DESCRIPTION =
     'Releases, deep dives, and notes from building seedcord, the TypeScript framework for Discord bots.';
-export const FEED_PATH = '/blog/rss.xml';
 
 export const OG_PILL = 'blog';
 
@@ -22,8 +21,7 @@ export function ogMeta(post: Pick<PostSummary, 'created' | 'minutes'>): string[]
     return [formatPostDate(post.created), `${post.minutes} min read`];
 }
 
-const ogImagePath = (slug: string): string => `/blog/${slug}/og.png`;
-export const twinPath = (slug: string): string => `/blog/${slug}/index.md`;
+const postId = (post: Pick<PostSummary, 'url'>): string => `${canonicalUrl(post.url)}#post`;
 
 const FEED = { 'application/rss+xml': [{ url: canonicalUrl(FEED_PATH), title: BLOG_NAME }] };
 
@@ -38,9 +36,15 @@ export function blogMetadata(): Metadata {
             siteName: SITE_NAME,
             url,
             title: BLOG_NAME,
-            description: BLOG_DESCRIPTION
+            description: BLOG_DESCRIPTION,
+            images: [DEFAULT_OG_IMAGE]
         },
-        twitter: { card: 'summary_large_image', title: BLOG_NAME, description: BLOG_DESCRIPTION }
+        twitter: {
+            card: 'summary_large_image',
+            title: BLOG_NAME,
+            description: BLOG_DESCRIPTION,
+            images: [DEFAULT_OG_IMAGE]
+        }
     };
 }
 
@@ -73,7 +77,7 @@ export function postMetadata(post: PostSummary): Metadata {
     };
 }
 
-function person({ name, url, github }: PostSummary['authors'][number]): Record<string, unknown> {
+function person({ name, url, github }: PostAuthor): Record<string, unknown> {
     return { '@type': 'Person', name, url, sameAs: url === github ? [] : [github] };
 }
 
@@ -84,7 +88,7 @@ export function postJsonLd(post: PostSummary): Record<string, unknown> {
         '@graph': [
             {
                 '@type': 'BlogPosting',
-                '@id': `${url}#post`,
+                '@id': postId(post),
                 headline: post.title,
                 description: post.description,
                 url,
@@ -122,7 +126,7 @@ export function blogJsonLd(posts: readonly PostSummary[]): Record<string, unknow
         publisher: { '@id': ORG_ID },
         blogPost: posts.map((post) => ({
             '@type': 'BlogPosting',
-            '@id': `${canonicalUrl(post.url)}#post`,
+            '@id': postId(post),
             headline: post.title,
             url: canonicalUrl(post.url),
             datePublished: post.created,

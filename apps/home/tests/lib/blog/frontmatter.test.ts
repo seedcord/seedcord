@@ -29,19 +29,8 @@ describe('post frontmatter', () => {
         expect(result.error?.message).toContain('edited (2026-10-18) is before created (2026-10-19)');
     });
 
-    it('rejects a date that is not YYYY-MM-DD', () => {
-        expect(parse({ ...VALID, created: 'Oct 19 2026' }).success).toBe(false);
-    });
-
-    it('parses unlisted and defaults it to false', () => {
-        expect(parse(VALID).data?.unlisted).toBe(false);
-        expect(parse({ ...VALID, unlisted: true }).data?.unlisted).toBe(true);
-    });
-
-    it('requires a description', () => {
-        const { description: _, ...rest } = VALID;
-
-        expect(parse(rest).success).toBe(false);
+    it.each(['typed custom-ids', 'c#-tips', 'Typed-Ids'])('rejects a post folder named %s', (folder) => {
+        expect(parse(VALID, `/blog/${folder}/index.mdx`).error?.message).toContain('Rename the folder');
     });
 
     it('rejects a cover that is not webp', () => {

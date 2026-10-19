@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PostFolder } from './mdxPipeline';
+import { PostFolder } from '#tests/mdxPipeline';
 
 describe('a fence title', () => {
     it('is set on the code element as data-title', async () => {
