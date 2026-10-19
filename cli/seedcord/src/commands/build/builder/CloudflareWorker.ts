@@ -2,8 +2,8 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { asError } from '@seedcord/utils/internal';
 
+import { BOT_ENVIRONMENT, LOOK_FOR_BUILD_PLUGIN } from '#core/modules/botEnvironment';
 import { importCloudflare, isPackageMissing } from '#core/modules/cloudflarePlugin';
-import { BOT_ENVIRONMENT } from '#core/modules/userCodeConfig';
 
 import { bundleFailed } from './output';
 import { workerEntryConfig } from './workerEntry';
@@ -66,7 +66,9 @@ export class CloudflareWorker {
         const { workers } = await readBuildOutput(this.viteRoot);
         const { config, bundleDir } = workers.default;
         return bundleDir === undefined
-            ? bundleFailed(`${paint.bold('@cloudflare/build-output-utils')} read the worker's bundleDir as undefined`)
+            ? bundleFailed(
+                  `${paint.bold(CLOUDFLARE_PLUGIN)} wrote the worker to ${paint.path('.cloudflare/output')} without its ${paint.path('bundle')} folder. ${LOOK_FOR_BUILD_PLUGIN}`
+              )
             : { config, bundleDir };
     }
 }

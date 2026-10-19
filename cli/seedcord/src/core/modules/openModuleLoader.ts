@@ -1,9 +1,10 @@
 import { createServerModuleRunner } from 'vite';
 
+import { botEnvironment } from './botEnvironment';
 import { edgeStandIns } from './edgeStandIns';
 import { openViteServer } from './openViteServer';
 import { RunnerModuleLoader } from './RunnerModuleLoader';
-import { botEnvironment, mergeViteConfig, NODE_CONDITIONS, WORKERD_CONDITIONS, userCodeConfig } from './userCodeConfig';
+import { mergeViteConfig, NODE_CONDITIONS, WORKERD_CONDITIONS, userCodeConfig } from './userCodeConfig';
 import { WorkerEnv } from './workerEnv';
 
 import type { BuildTarget } from '#core/config/detectTarget';
@@ -25,8 +26,13 @@ class ViteModuleLoader extends RunnerModuleLoader implements AsyncDisposable {
     }
 }
 
-function lazyWorkerEnv(cloudflareConfig: string, mode: string): () => Promise<WorkerEnv> {
-    let loading: Promise<WorkerEnv> | undefined;
+interface EdgeDevCopy {
+    readonly watch: NonNullable<ServerOptions['watch']>;
+    readonly workerEnv: WorkerEnv;
+}
+
+function lazyWorkerEnv(cloudflareConfig: string, mode: string, loaded?: WorkerEnv): () => Promise<WorkerEnv> {
+    let loading = loaded && Promise.resolve(loaded);
     return () => (loading ??= WorkerEnv.load(cloudflareConfig, mode));
 }
 
@@ -35,11 +41,12 @@ export async function openModuleLoader(
     target: BuildTarget,
     mode: string,
     use: LoaderUse,
-    watch: ServerOptions['watch'] = null
+    devCopy?: EdgeDevCopy
 ): Promise<RunnerModuleLoader & AsyncDisposable> {
     const runsWorkerCode = target.kind === 'edge' && use !== 'config';
     const vitePlugins = use === 'config' ? [] : use.vitePlugins;
-    const workerEnv = target.kind === 'edge' ? lazyWorkerEnv(target.cloudflareConfig, mode) : undefined;
+    const workerEnv =
+        target.kind === 'edge' ? lazyWorkerEnv(target.cloudflareConfig, mode, devCopy?.workerEnv) : undefined;
     // read up front because the runner reports anything a load hook throws as CoreImportFailed
     if (runsWorkerCode) await workerEnv?.();
     const conditions = runsWorkerCode ? WORKERD_CONDITIONS : NODE_CONDITIONS;
@@ -50,7 +57,7 @@ export async function openModuleLoader(
         logLevel: 'error',
         clearScreen: false,
         // hmr: false still opens vite's websocket on 24678
-        server: { middlewareMode: true, hmr: false, ws: false, watch },
+        server: { middlewareMode: true, hmr: false, ws: false, watch: devCopy?.watch ?? null },
         // keeps vite from writing a dep cache into the project's node_modules/.vite
         optimizeDeps: { noDiscovery: true, include: [] },
         plugins: [...(workerEnv ? [edgeStandIns(workerEnv)] : []), ...vitePlugins]

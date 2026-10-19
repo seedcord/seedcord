@@ -10,10 +10,10 @@ const ID = 'virtual:greeting';
 export const GREETING_PROBE = `export { default } from '${ID}';\n`;
 
 // a user plugin scopes itself to the bot by the environment's name
-export function greetingPlugin(environment = 'seedcord'): Plugin {
+export function greetingPlugin(): Plugin {
     return {
         name: 'greeting',
-        applyToEnvironment: ({ name }) => name === environment,
+        applyToEnvironment: ({ name }) => name === 'seedcord',
         resolveId: (id) => (id === ID ? `\0${ID}` : undefined),
         load: (id) => (id === `\0${ID}` ? `export default ${JSON.stringify(GREETING)};` : undefined)
     };

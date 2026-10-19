@@ -9,7 +9,7 @@ import { bindings, exports } from 'cf/config';
 import { preview } from 'vite';
 import { afterAll, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 
-import { BOT_ENVIRONMENT } from '#core/modules/userCodeConfig';
+import { BOT_ENVIRONMENT } from '#core/modules/botEnvironment';
 
 import {
     copyEdgeBot,

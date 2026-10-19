@@ -20,7 +20,7 @@ interface ShellVar {
 export type DefaultMode = 'development' | 'production';
 
 // loadEnv copies NODE_ENV from the mode's .env files into VITE_USER_NODE_ENV. vite accepts only development there
-function envFilesAskForDevBuild(mode: string, configDir: string): boolean {
+function envFilesSetDevNodeEnv(mode: string, configDir: string): boolean {
     loadEnv(mode, configDir);
     return process.env.VITE_USER_NODE_ENV === 'development';
 }
@@ -42,11 +42,11 @@ export class ShellMode {
         Envapter.environment = mode;
         // vite fills NODE_ENV with development when its first dev server opens
         // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- vite fills an empty NODE_ENV too
-        process.env.NODE_ENV ||= envFilesAskForDevBuild(mode, configDir) ? 'development' : defaultMode;
+        process.env.NODE_ENV ||= envFilesSetDevNodeEnv(mode, configDir) ? 'development' : defaultMode;
         return mode;
     }
 
-    public viteMode(defaultMode: DefaultMode): string {
+    private viteMode(defaultMode: DefaultMode): string {
         if (this.variable === undefined) return defaultMode;
         const mode = this.variable.value.toLowerCase();
         if (MODES.includes(mode)) return mode;

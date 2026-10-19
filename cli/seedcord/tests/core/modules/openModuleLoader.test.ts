@@ -7,6 +7,7 @@ import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { afterEach, assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { openModuleLoader } from '#core/modules/openModuleLoader';
+import { WorkerEnv } from '#core/modules/workerEnv';
 import { cloudflareConfigSource, linkPackages } from '#tests/edgeFolder';
 import { holdViteHmrPort } from '#tests/viteHmrPort';
 
@@ -219,6 +220,23 @@ describe('openModuleLoader for an edge bot', () => {
         const module = await modules.importModule<{ probe: string }>(entry);
 
         expect(module.probe).toBe('from .env');
+    });
+
+    it('reads the env from the WorkerEnv it is given', async () => {
+        vi.stubEnv('SEEDCORD_PROBE', 'from the shell');
+        const root = await edgeProject();
+        const target = await edgeTarget(root);
+        const workerEnv = await WorkerEnv.load(join(root, 'cloudflare.config.ts'), 'development');
+        await writeFile(join(root, 'cloudflare.config.ts'), `throw new Error('loaded a second time');\n`, 'utf8');
+        const entry = await writeModule(
+            root,
+            `import { env } from 'cloudflare:workers';\nexport const probe = env.SEEDCORD_PROBE;\n`
+        );
+
+        await using modules = await openModuleLoader(root, target, 'development', BOT_CODE, { watch: {}, workerEnv });
+        const module = await modules.importModule<{ probe: string }>(entry);
+
+        expect(module.probe).toBe('from the shell');
     });
 
     it('loads classes that extend the cloudflare:workers base classes', async () => {

@@ -18,16 +18,23 @@ function readShell(vars: ShellVars): ShellMode {
     return ShellMode.read();
 }
 
+async function configDir(files: Record<string, string> = {}): Promise<string> {
+    const dir = await mkdtempDisposable(join(tmpdir(), 'seedcord-mode-'));
+    onTestFinished(() => dir.remove());
+    await Promise.all(Object.entries(files).map(([name, text]) => writeFile(join(dir.path, name), text)));
+    return dir.path;
+}
+
 afterEach(() => {
     vi.unstubAllEnvs();
 });
 
 describe('ShellMode', () => {
-    it('returns the default when the shell sets none of ENVIRONMENT, ENV, NODE_ENV and MODE', () => {
-        const shell = readShell({});
+    it('returns the default when the shell sets none of ENVIRONMENT, ENV, NODE_ENV and MODE', async () => {
+        const dir = await configDir();
 
-        expect(shell.viteMode('production')).toBe('production');
-        expect(shell.viteMode('development')).toBe('development');
+        expect(readShell({}).applyMode('production', dir)).toBe('production');
+        expect(readShell({}).applyMode('development', dir)).toBe('development');
     });
 
     it.each<ShellVars>([
@@ -43,13 +50,14 @@ describe('ShellMode', () => {
         vi.resetModules();
         const { Envapter, Environment } = await import('envapt');
 
-        expect(shell.viteMode('production')).toBe(Environment[Envapter.environment].toLowerCase());
+        expect(shell.applyMode('production', await configDir())).toBe(Environment[Envapter.environment].toLowerCase());
     });
 
-    it("throws ConfigInvalidEnv for a name outside envapt's four", () => {
+    it("throws ConfigInvalidEnv for a name outside envapt's four", async () => {
         const shell = readShell({ ENV: 'preview' });
+        const dir = await configDir();
 
-        expect(() => shell.viteMode('production')).toThrow(
+        expect(() => shell.applyMode('production', dir)).toThrow(
             expect.objectContaining({
                 code: SeedcordErrorCode.ConfigInvalidEnv,
                 message: expect.stringMatching(/preview.*development, staging, production, or test/su) as string
@@ -59,13 +67,6 @@ describe('ShellMode', () => {
 });
 
 describe('ShellMode.applyMode NODE_ENV', () => {
-    async function configDir(files: Record<string, string> = {}): Promise<string> {
-        const dir = await mkdtempDisposable(join(tmpdir(), 'seedcord-mode-'));
-        onTestFinished(() => dir.remove());
-        await Promise.all(Object.entries(files).map(([name, text]) => writeFile(join(dir.path, name), text)));
-        return dir.path;
-    }
-
     beforeEach(() => {
         vi.stubEnv('NODE_ENV', undefined);
         // vite's loadEnv copies NODE_ENV from .env files into this

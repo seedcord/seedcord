@@ -6,7 +6,8 @@ import { createServer, createServerModuleRunner } from 'vite';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
-import { botEnvironment, mergeViteConfig } from '#core/modules/userCodeConfig';
+import { botEnvironment } from '#core/modules/botEnvironment';
+import { mergeViteConfig } from '#core/modules/userCodeConfig';
 
 import type { ViteDevServer } from 'vite';
 

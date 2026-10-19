@@ -1,8 +1,7 @@
-import { paint, SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports -- the one typed caller of mergeConfig
 import { mergeConfig } from 'vite';
 
+import { BOT_ENVIRONMENT } from './botEnvironment';
 import { seedcordDependents } from './seedcordDependents';
 
 import type { InlineConfig, UserConfig } from 'vite';
@@ -11,9 +10,6 @@ interface ResolveConditions {
     conditions: string[];
     externalConditions: string[];
 }
-
-// renaming this breaks user plugins that check for 'seedcord'
-export const BOT_ENVIRONMENT = 'seedcord';
 
 export const NODE_CONDITIONS: ResolveConditions = { conditions: ['node', 'import'], externalConditions: ['node'] };
 
@@ -26,24 +22,12 @@ export function mergeViteConfig(base: InlineConfig, overrides: InlineConfig): In
     return mergeConfig(base, overrides) as InlineConfig;
 }
 
-const SEEDCORD_DECLARES_IT = `seedcord adds it to the Vite config. Look in ${paint.bold('vitePlugins')} for a plugin whose ${paint.bold('config')} hook rewrites ${paint.bold('environments')}.`;
-
-export function botEnvironment<Environment>(
-    environments: Record<string, Environment>,
-    fix = SEEDCORD_DECLARES_IT
-): Environment {
-    const environment = environments[BOT_ENVIRONMENT];
-    if (environment) return environment;
-    throw new SeedcordError(SeedcordErrorCode.CliViteEnvironmentMissing, [
-        BOT_ENVIRONMENT,
-        Object.keys(environments),
-        fix
-    ]);
+export function userCodeBase(): UserConfig {
+    return { resolve: { tsconfigPaths: true }, appType: 'custom' };
 }
 
-export function userCodeConfig(resolve: ResolveConditions, configDir: string): UserConfig {
-    return {
-        resolve: { tsconfigPaths: true },
+export function userCodeConfig(resolve: ResolveConditions, configDir: string): InlineConfig {
+    return mergeViteConfig(userCodeBase(), {
         environments: {
             [BOT_ENVIRONMENT]: {
                 resolve: {
@@ -59,7 +43,6 @@ export function userCodeConfig(resolve: ResolveConditions, configDir: string): U
                     ]
                 }
             }
-        },
-        appType: 'custom'
-    };
+        }
+    });
 }

@@ -2,7 +2,8 @@ import { dirname, resolve } from 'node:path';
 
 import { isInside, moduleGlobs, posixRelative } from '@seedcord/utils/node/internal';
 
-import { BOT_ENVIRONMENT, mergeViteConfig, NODE_CONDITIONS, userCodeConfig } from '#core/modules/userCodeConfig';
+import { BOT_ENVIRONMENT } from '#core/modules/botEnvironment';
+import { mergeViteConfig, NODE_CONDITIONS, userCodeBase, userCodeConfig } from '#core/modules/userCodeConfig';
 import { watchedPath } from '#core/project/watchedPath';
 import { STATE_FOLDER } from '#core/state/StateFolder';
 
@@ -49,7 +50,7 @@ export function serverViteConfig(config: DevConfigPaths, cwd: string): InlineCon
 }
 
 export function edgeViteConfig(config: DevConfigPaths, viteRoot: string, cwd: string): InlineConfig {
-    return mergeViteConfig(devViteConfig({ resolve: { tsconfigPaths: true }, appType: 'custom' }, cwd), {
+    return mergeViteConfig(devViteConfig(userCodeBase(), cwd), {
         root: viteRoot,
         customLogger: workerLogger(),
         // discord's POST arrives under the tunnel's hostname. the endpoint blocks every other request

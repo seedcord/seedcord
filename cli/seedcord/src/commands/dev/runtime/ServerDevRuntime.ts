@@ -3,9 +3,10 @@ import { createServerModuleRunner } from 'vite';
 
 import { listenHostFor } from '#commands/dev/tunnel/listenHost';
 import { rethrowVitePluginError } from '#core/config/vitePlugins';
+import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
 import { openViteServer } from '#core/modules/openViteServer';
 import { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
-import { BOT_ENVIRONMENT, botEnvironment, mergeViteConfig } from '#core/modules/userCodeConfig';
+import { mergeViteConfig } from '#core/modules/userCodeConfig';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
 import { serverViteConfig } from './devServerConfig';

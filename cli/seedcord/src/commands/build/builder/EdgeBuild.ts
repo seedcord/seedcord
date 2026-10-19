@@ -8,9 +8,9 @@ import { createBuilder } from 'vite';
 
 import { cliLogger } from '#core/cliLogger';
 import { restFromEnv } from '#core/discord/restFromEnv';
+import { BOT_ENVIRONMENT, LOOK_FOR_BUILD_PLUGIN } from '#core/modules/botEnvironment';
 import { importCloudflare, importCloudflareCopy } from '#core/modules/cloudflarePlugin';
 import { CommandScanner } from '#core/modules/CommandScanner';
-import { BOT_ENVIRONMENT } from '#core/modules/userCodeConfig';
 import { functionExportsOf } from '#core/modules/workerExports';
 import { viteKey } from '#core/project/ProjectFiles';
 
@@ -112,7 +112,7 @@ export class EdgeBuild extends TargetBuild {
         const chunks =
             captured ??
             bundleFailed(
-                `Vite ended the build before the ${paint.bold(BOT_ENVIRONMENT)} environment's generateBundle hook ran`
+                `Vite finished without building the ${paint.bold(BOT_ENVIRONMENT)} environment. ${LOOK_FOR_BUILD_PLUGIN}`
             );
         const built = await cloudflare.built().catch(bundleFailed);
         assertNodeCompat(built, this.target.cloudflareConfig);

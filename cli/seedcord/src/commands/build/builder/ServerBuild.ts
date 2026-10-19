@@ -5,7 +5,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { createBuilder } from 'vite';
 
-import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/userCodeConfig';
+import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
 import { viteKey } from '#core/project/ProjectFiles';
 
 import { assertOutDirSafe } from './assertOutDirSafe';
