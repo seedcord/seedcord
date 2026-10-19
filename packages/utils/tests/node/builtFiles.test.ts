@@ -5,7 +5,8 @@ import path from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, vi } from 'vitest';
 
-import { BUILT_FILES_KEY, builtConfigDir, readTextFiles, traverseDirectory } from '#src/node/directory';
+import { readTextFiles, traverseDirectory } from '#src/node/directory/readers';
+import { BUILT_FILES_KEY, builtConfigDir } from '#src/node/directory/slots';
 import { toPosixPath } from '#src/node/paths';
 import { clearBuiltFiles } from '#tests/builtFilesSlot';
 

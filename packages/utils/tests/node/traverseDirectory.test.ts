@@ -7,7 +7,8 @@ import { stripVTControlCharacters } from 'node:util';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { readTextFiles, setBotRoot, traverseDirectory } from '#src/node/directory';
+import { readTextFiles, traverseDirectory } from '#src/node/directory/readers';
+import { setBotRoot } from '#src/node/directory/slots';
 
 const FIXTURES = path.join(import.meta.dirname, 'fixtures');
 const scratch = await mkdtemp(path.join(os.tmpdir(), 'seedcord-traverse-'));
