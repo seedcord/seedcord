@@ -54,6 +54,8 @@ Treat those files as the rules. Do not substitute your own taste where they alre
     - tests that exist only to add to the count
     - tests that are purely tautological
     - tests that assert on constants or static hardcoded strings rather than behavior
+    - tests that are doing the same and heavy work multiple times when they could be consolidated or optimized
+        - check the test optimization guidelines
 5. Overengineering.
 6. YAGNI.
 7. Exports: every export added or changed, whether anything outside its file uses it, whether it belongs on the public surface, and whether the package.json exports map and README agree.
