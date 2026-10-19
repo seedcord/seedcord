@@ -14,7 +14,7 @@ import { quietSteps } from '#core/output/quietSteps';
 import { deployedCommandsFile } from '#core/state/deployedCommands';
 import { StateFolder } from '#core/state/StateFolder';
 import { ShellMode } from '#core/viteMode';
-import { writeCloudflareConfig } from '#tests/commands/build/edgeBot';
+import { READ_IN_WORKERD, writeCloudflareConfig } from '#tests/commands/build/edgeBot';
 import { ED25519_KEY_BYTES } from '#tests/commands/build/smoke';
 import { GREETING, GREETING_PROBE, greetingPlugin } from '#tests/greetingPlugin';
 import { silentLogger } from '#tests/silentLogger';
@@ -209,6 +209,23 @@ describe('EdgeDevRuntime lifecycle', () => {
         );
 
         await expect(startedRuntime(projectDir)).rejects.toThrow('bot.ts threw in workerd');
+    }, 60_000);
+
+    it('reads text, css and binary files from a listed folder inside workerd', async () => {
+        await using project = await edgeProject();
+        const { projectDir } = project;
+        const binary = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff]);
+        await writeFile(join(projectDir, 'src/locales/dot.png'), binary);
+        await writeFile(join(projectDir, 'src/locales/theme.css'), 'body { color: red; }\n');
+        await appendFile(join(projectDir, 'src/bot.ts'), READ_IN_WORKERD);
+
+        const caught: unknown = await startedRuntime(projectDir, undefined, {
+            files: [join(projectDir, 'src/locales')]
+        }).catch((error: unknown) => error);
+
+        const message = Error.isError(caught) ? caught.message : '';
+        expect(message).toContain(`dot.png=${binary.toString('hex')}`);
+        expect(message).toContain(`theme.css=${Buffer.from('body { color: red; }\n').toString('hex')}`);
     }, 60_000);
 
     it('stops workerd when the bot throws while workerd loads it', async () => {

@@ -45,6 +45,19 @@ export async function copyEdgeBotForTest(): Promise<string> {
     return projectDir;
 }
 
+// the thrown error carries what readFiles gave it out of workerd.
+// node loads the same module during the build and in dev's codegen copy
+export const READ_IN_WORKERD = `import { readFiles } from '@seedcord/utils/node';
+
+if (navigator.userAgent === 'Cloudflare-Workers') {
+    const read: string[] = [];
+    for await (const { fullPath, bytes } of readFiles('./locales')) {
+        read.push(\`\${fullPath.split('/').pop()}=\${bytes.toString('hex')}\`);
+    }
+    throw new Error(\`read \${read.join(' ')}\`);
+}
+`;
+
 const ANY_PUBLIC_KEY = 'ab'.repeat(ED25519_KEY_BYTES);
 
 // what discord returns to an edge build, with no command or emoji deployed

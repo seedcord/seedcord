@@ -18,12 +18,11 @@ export interface BundleStats {
 }
 
 export function bundleStats(chunks: Rolldown.OutputChunk[], files: ProjectFiles, entry: string): BundleStats {
-    const projectIds = chunks.flatMap((chunk) => chunk.moduleIds).filter((id) => files.holds(id.split('?')[0] ?? ''));
-    const listedFiles = projectIds.filter(isListedFileId).length;
+    const ids = chunks.flatMap((chunk) => chunk.moduleIds);
 
     return {
-        modules: projectIds.length - listedFiles,
-        listedFiles,
+        modules: ids.filter((id) => files.holds(id.split('?')[0] ?? '')).length,
+        listedFiles: ids.filter(isListedFileId).length,
         bytes: chunks.reduce((total, chunk) => total + Buffer.byteLength(chunk.code), 0),
         entry
     };

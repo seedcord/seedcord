@@ -10,27 +10,41 @@ export const BOT_FILES_SLOT = `globalThis[Symbol.for(${JSON.stringify(BOT_FILES_
 export const PLACEHOLDER_ROOT = '/bot';
 
 const LISTED_FILE_QUERY = '?seedcord-file';
+const LISTED_FILE_PREFIX = '\0seedcord-file:';
+
+// vite's css, json and asset plugins transform any id that ends in .css, .json or .png. this id ends in a quote
+function listedFileId(file: string): string {
+    return `${LISTED_FILE_PREFIX}${JSON.stringify(file)}`;
+}
 
 export function isListedFileId(moduleId: string): boolean {
-    return moduleId.endsWith(LISTED_FILE_QUERY);
+    return moduleId.startsWith(LISTED_FILE_PREFIX);
+}
+
+function listedFileOf(moduleId: string): string {
+    return JSON.parse(moduleId.slice(LISTED_FILE_PREFIX.length)) as string;
 }
 
 // turns each listed file into a module whose default export is an EncodedFile
 export function loadListedFiles(): Plugin {
     return {
         name: 'seedcord:listed-files',
-        // vite's asset plugin otherwise claims a .png or .ttf and returns its url
         enforce: 'pre',
+        async resolveId(source, importer) {
+            if (!source.endsWith(LISTED_FILE_QUERY)) return undefined;
+            // with the query still on, cloudflare's .txt and .bin rules skip it too
+            const resolved = await this.resolve(source, importer, { skipSelf: true });
+            return resolved && listedFileId(resolved.id.split('?')[0] ?? resolved.id);
+        },
         async load(id) {
             if (!isListedFileId(id)) return undefined;
-            const file = id.slice(0, -LISTED_FILE_QUERY.length);
+            const file = listedFileOf(id);
             this.addWatchFile(file);
             return `export default ${JSON.stringify(encodeFile(await readFile(file)))};\n`;
         }
     };
 }
 
-// an entry that registers the built files needs the plugin that loads them
 export type EntryPlugins = [entry: Plugin, listedFiles: Plugin];
 
 interface BuiltFilesOptions {

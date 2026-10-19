@@ -16,6 +16,7 @@ import {
     copyEdgeBotForTest,
     edgeBuildRunner,
     fakeDiscord,
+    READ_IN_WORKERD,
     writeCloudflareConfig,
     writeSigningEnv
 } from './edgeBot';
@@ -95,18 +96,6 @@ describe('seedcord build on an edge bot', () => {
     }, 60_000);
 });
 
-// the build's load bot step imports every handler in node too
-const READ_IN_WORKERD = `import { readFiles } from '@seedcord/utils/node';
-
-if (navigator.userAgent === 'Cloudflare-Workers') {
-    const read: string[] = [];
-    for await (const { fullPath, bytes } of readFiles('./locales')) {
-        read.push(\`\${fullPath.split('/').pop()}=\${bytes.toString('hex')}\`);
-    }
-    throw new Error(\`read \${read.join(' ')}\`);
-}
-`;
-
 // vite preview answers a worker that threw with the error's text
 async function postToPreview(projectDir: string, sign: SignRequest): Promise<string> {
     const server = await preview({
@@ -147,6 +136,7 @@ describe('a built edge worker', () => {
         const projectDir = await copyEdgeBotForTest();
         const binary = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff]);
         await writeFile(join(projectDir, 'src/locales/dot.png'), binary);
+        await writeFile(join(projectDir, 'src/locales/theme.css'), 'body { color: red; }\n');
         await writeFile(join(projectDir, 'src/handlers/Read.ts'), READ_IN_WORKERD);
         const signing = await writeSigningEnv(projectDir);
         await edgeBuildRunner(fakeDiscord(signing.publicKey)).run(projectDir);
@@ -155,6 +145,7 @@ describe('a built edge worker', () => {
         const greeting = await readFile(join(projectDir, 'src/locales/greeting.txt'));
         expect(body).toContain(`dot.png=${binary.toString('hex')}`);
         expect(body).toContain(`greeting.txt=${greeting.toString('hex')}`);
+        expect(body).toContain(`theme.css=${Buffer.from('body { color: red; }\n').toString('hex')}`);
     }, 120_000);
 });
 

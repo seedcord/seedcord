@@ -34,7 +34,7 @@ describe('seedcord build on an http bot', () => {
     it('reports what it bundled for the summary', () => {
         expect(result.bundle).toEqual({
             modules: 9,
-            listedFiles: 4,
+            listedFiles: 5,
             bytes: expect.any(Number) as number,
             entry: join(HTTP_BOT, 'dist/index.mjs')
         });
@@ -46,10 +46,10 @@ describe('seedcord build on an http bot', () => {
         expect(output).toContain('fixture:text hello from the markdown twin');
     });
 
-    it('reads a binary file from a listed folder byte for byte', () => {
-        const source = readFileSync(join(HTTP_BOT, 'src/assets/wordmark.webp'));
+    it.each(['wordmark.webp', 'theme.css'])('reads %s from a listed folder byte for byte', (name) => {
+        const source = readFileSync(join(HTTP_BOT, 'src/assets', name));
 
-        expect(output).toContain(`fixture:bytes wordmark.webp ${createHash('sha256').update(source).digest('hex')}`);
+        expect(output).toContain(`fixture:bytes ${name} ${createHash('sha256').update(source).digest('hex')}`);
     });
 
     it('points import.meta.filename at the built file when a text file shares its name', () => {

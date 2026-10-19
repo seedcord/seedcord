@@ -34,7 +34,8 @@ function configWith(
     projectDir: string,
     target: ResolvedEdgeTarget,
     viteMode: string,
-    vitePlugins = vitePluginsOf()
+    vitePlugins = vitePluginsOf(),
+    files: string[] = []
 ): ResolvedSeedcordConfig {
     return {
         configFile: join(projectDir, 'seedcord.config.ts'),
@@ -42,7 +43,7 @@ function configWith(
         instance: join(projectDir, 'src/bot.ts'),
         target,
         build: {},
-        files: [],
+        files,
         typecheck: { enabled: false },
         idleAnimation: true,
         viteMode,
@@ -218,10 +219,10 @@ interface StartedRuntime extends AsyncDisposable {
 export async function startedRuntime(
     projectDir: string,
     onEvent?: DevEventHandler,
-    { devPort = ANY_PORT, viteMode = 'development', vitePlugins = vitePluginsOf() } = {}
+    { devPort = ANY_PORT, viteMode = 'development', vitePlugins = vitePluginsOf(), files = [] as string[] } = {}
 ): Promise<StartedRuntime> {
     const target = edgeTarget(projectDir, devPort);
-    const config = configWith(projectDir, target, viteMode, vitePlugins);
+    const config = configWith(projectDir, target, viteMode, vitePlugins, files);
     const runtime = new EdgeDevRuntime(target);
     let listening: number | undefined;
     const recordPort: DevEventHandler = (event) => {
