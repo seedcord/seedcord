@@ -1,7 +1,7 @@
 import { appendFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { ShellMode } from '#core/viteMode';
 
@@ -16,6 +16,19 @@ describe('seedcord build mode on a node bot', () => {
         await quickBuildRunner(undefined, new ShellMode({ key: 'ENV', value: 'staging' })).run(projectDir);
 
         expect(await builtSource(join(projectDir, 'dist'))).toContain('fixture:mode staging');
+    }, 120_000);
+
+    it('ships import.meta.env.DEV as false by default', async () => {
+        vi.stubEnv('NODE_ENV', undefined);
+        onTestFinished(() => {
+            vi.unstubAllEnvs();
+        });
+        const projectDir = await copyFixture(FLAT_BOT);
+        await appendFile(join(projectDir, 'index.ts'), 'console.log(`fixture:dev ${import.meta.env.DEV}`);\n');
+
+        await quickBuildRunner().run(projectDir);
+
+        expect(await builtSource(join(projectDir, 'dist'))).toContain('fixture:dev false');
     }, 120_000);
 
     it('reads VITE_ values from the .env beside the config when root is a subfolder', async () => {

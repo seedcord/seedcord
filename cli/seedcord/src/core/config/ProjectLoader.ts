@@ -6,6 +6,7 @@ import { isInside } from '@seedcord/utils/node/internal';
 import { Envapter } from 'envapt';
 
 import { Project } from '#core/project/Project';
+import { ShellMode } from '#core/viteMode';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { assertNoHashPaths } from './assertNoHashPaths';
@@ -17,7 +18,7 @@ import { locateConfig } from './locateConfig';
 import { readVitePlugins, rethrowVitePluginError, wrapVitePlugins } from './vitePlugins';
 
 import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
-import type { DefaultMode, ShellMode } from '#core/viteMode';
+import type { DefaultMode } from '#core/viteMode';
 import type { BuildTarget } from './detectTarget';
 import type {
     ResolvedSeedcordBuildConfig,
@@ -60,6 +61,7 @@ export class ProjectLoader {
     ): Promise<LoadedConfig> {
         const mode = this.shell.viteMode(this.defaultMode);
         Envapter.environment = mode;
+        ShellMode.pinNodeEnv(this.defaultMode);
         const configPath = locateConfig(projectDir);
         const configDir = dirname(configPath);
         const target = detectTarget(configDir);

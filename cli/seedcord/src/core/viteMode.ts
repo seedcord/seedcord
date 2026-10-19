@@ -30,6 +30,12 @@ export class ShellMode {
         return new ShellMode();
     }
 
+    // vite fills NODE_ENV with development on the first dev server it opens
+    public static pinNodeEnv(defaultMode: DefaultMode): void {
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- vite fills an empty NODE_ENV too
+        process.env.NODE_ENV ||= defaultMode;
+    }
+
     public viteMode(defaultMode: DefaultMode): string {
         if (this.variable === undefined) return defaultMode;
         const mode = this.variable.value.toLowerCase();

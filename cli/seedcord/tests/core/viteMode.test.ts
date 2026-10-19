@@ -53,3 +53,21 @@ describe('ShellMode', () => {
         );
     });
 });
+
+describe('ShellMode.pinNodeEnv', () => {
+    it.each(['development', 'production'] as const)('sets NODE_ENV to %s by default', (defaultMode) => {
+        vi.stubEnv('NODE_ENV', undefined);
+
+        ShellMode.pinNodeEnv(defaultMode);
+
+        expect(process.env.NODE_ENV).toBe(defaultMode);
+    });
+
+    it('keeps the NODE_ENV the shell set', () => {
+        vi.stubEnv('NODE_ENV', 'development');
+
+        ShellMode.pinNodeEnv('production');
+
+        expect(process.env.NODE_ENV).toBe('development');
+    });
+});
