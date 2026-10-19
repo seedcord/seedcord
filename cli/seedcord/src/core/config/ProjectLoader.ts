@@ -13,7 +13,7 @@ import { ConfigValidator } from './ConfigValidator';
 import { detectTarget } from './detectTarget';
 import { LoadedConfig } from './LoadedConfig';
 import { locateConfig } from './locateConfig';
-import { readVitePlugins, rethrowVitePluginError } from './vitePlugins';
+import { rethrowVitePluginError, VitePlugins } from './vitePlugins';
 
 import type { ModuleLoader, OpenModules } from '#core/modules/ModuleLoader';
 import type { DefaultMode, ShellMode } from '#core/viteMode';
@@ -93,9 +93,8 @@ export class ProjectLoader {
     ): Promise<ResolvedSeedcordConfig> {
         const loadedModule = await modules.importModule(configPath);
         const config: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
-        const { vitePlugins, problems } = await readVitePlugins(config, configPath);
         const validator: ConfigValidator = new ConfigValidator(target, configPath);
-        validator.validate(config, problems);
+        validator.validate(config);
 
         const configDir = dirname(configPath);
         const root = resolve(configDir, config.root ?? '.');
@@ -114,7 +113,7 @@ export class ProjectLoader {
             viteMode: mode,
             tunnel: resolveTunnel(config.tunnel),
             hmr: config.hmr,
-            vitePlugins
+            vitePlugins: new VitePlugins(config.vitePlugins, configPath)
         } satisfies ResolvedSeedcordConfig;
     }
 

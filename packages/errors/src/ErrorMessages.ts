@@ -111,7 +111,7 @@ const messages = {
         reason: string
     ) =>
         place.hook === undefined
-            ? `${paint.sky(plugin)} in ${paint.path(configFile)} rejected while seedcord read the config. ${reasonThen(reason, 'Check that the package is installed and that its import resolves.')}`
+            ? `${paint.sky(plugin)} in ${paint.path(configFile)} failed when seedcord called ${paint.bold('vitePlugins')}. ${reasonThen(reason, 'Check that the package is installed and that its import resolves.')}`
             : `The Vite plugin ${paint.sky(plugin)} from ${paint.bold('vitePlugins')} in ${paint.path(configFile)} threw ${placeText(place.hook, place.loading)}. ${reasonThen(reason, vitePluginFix(place))}`,
     [SeedcordErrorCode.CorePathUnreadable]: (path: string, reason: string) =>
         `Could not read ${paint.path(path)}. ${reasonThen(reason, 'Check that it exists and that this process can read it.')}`,

@@ -166,4 +166,49 @@ describe('VitePlugins.create', () => {
 
         expect(resolved).toBe(native);
     });
+
+    it('throws CliConfigInvalidField that says to call a plugin factory left uncalled', async () => {
+        const caught: unknown = await vitePluginsOf(() => [{ name: 'json' }, function yaml() {}], CONFIG_FILE)
+            .create()
+            .catch((error: unknown) => error);
+
+        assert(isSeedcordError(caught, 'SeedcordTypeError', SeedcordErrorCode.CliConfigInvalidField));
+        const message = stripVTControlCharacters(caught.message);
+        expect(message).toContain('vitePlugins[1]');
+        expect(message).toContain('yaml()');
+    });
+
+    it('finds an uncalled factory that a promise inside a nested array resolves to', async () => {
+        const vitePlugins = vitePluginsOf(() => [false, [Promise.resolve(function yaml() {})]], CONFIG_FILE);
+
+        await expect(vitePlugins.create()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigInvalidField,
+            message: expect.stringMatching(/vitePlugins\[1\]\[0\][\s\S]*yaml\(\)/) as string
+        });
+    });
+
+    it.each([['yaml'], [{ transform: () => undefined }]])(
+        'throws CliConfigInvalidField for the entry %o that has no plugin name',
+        async (entry) => {
+            const vitePlugins = vitePluginsOf(() => [entry], CONFIG_FILE);
+
+            await expect(vitePlugins.create()).rejects.toMatchObject({
+                code: SeedcordErrorCode.CliConfigInvalidField,
+                message: expect.stringContaining('vitePlugins[0]') as string
+            });
+        }
+    );
+
+    it('throws CoreVitePluginThrew with the entry and the reason for an entry whose promise rejects', async () => {
+        const missing = new Error("Cannot find package 'yaml-plugin'");
+        const vitePlugins = vitePluginsOf(() => [{ name: 'json' }, Promise.reject(missing)], CONFIG_FILE);
+
+        const caught: unknown = await vitePlugins.create().catch((error: unknown) => error);
+
+        assert(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreVitePluginThrew));
+        const message = stripVTControlCharacters(caught.message);
+        expect(message).toContain('vitePlugins[1]');
+        expect(message).toContain("Cannot find package 'yaml-plugin'");
+        expect(caught.cause).toBe(missing);
+    });
 });

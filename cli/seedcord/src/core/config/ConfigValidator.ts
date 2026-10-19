@@ -4,7 +4,6 @@ import { isPlainObject, isStringArray } from '@seedcord/utils/internal';
 
 import type { BuildTarget } from './detectTarget';
 import type { SeedcordConfig } from './schema';
-import type { VitePluginProblem } from './vitePlugins';
 
 type ConfigProblem = SeedcordTypeError | SeedcordRangeError;
 
@@ -61,9 +60,9 @@ export class ConfigValidator {
         private readonly configFile: string
     ) {}
 
-    public validate(raw: unknown, vitePluginProblems: readonly VitePluginProblem[]): asserts raw is SeedcordConfig {
+    public validate(raw: unknown): asserts raw is SeedcordConfig {
         if (!isPlainObject(raw)) throw new SeedcordTypeError(SeedcordErrorCode.CliConfigInvalidExport);
-        throwSingleOrAggregate([...this.problems(raw), ...vitePluginProblems], SeedcordErrorCode.CliProblems);
+        throwSingleOrAggregate([...this.problems(raw)], SeedcordErrorCode.CliProblems);
     }
 
     private *problems(raw: Record<string, unknown>): Generator<ConfigProblem> {
@@ -78,6 +77,12 @@ export class ConfigValidator {
         yield* tunnelProblems(raw.tunnel);
         yield* this.buildProblems(raw.build);
         yield* hmrProblems(raw.hmr);
+        if (raw.vitePlugins !== undefined && typeof raw.vitePlugins !== 'function') {
+            yield invalidField(
+                'vitePlugins',
+                `a function that returns your Vite plugins, like ${paint.bold('() => [yaml()]')}`
+            );
+        }
     }
 
     private unusedField(field: string, why: string): SeedcordTypeError {

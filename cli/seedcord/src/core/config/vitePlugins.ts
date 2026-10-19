@@ -74,13 +74,11 @@ function withThrownByOnErrors(plugin: Plugin, configFile: string): Plugin {
 
 type VitePluginEntry = { field: string; value: unknown } | { field: string; rejected: unknown };
 
-export type VitePluginProblem = SeedcordError | SeedcordTypeError;
-
 type PluginsFactory = () => unknown;
 
 interface VitePluginsRead {
     plugins: Plugin[];
-    problems: VitePluginProblem[];
+    problems: (SeedcordError | SeedcordTypeError)[];
 }
 
 async function flattenAt(options: readonly unknown[], field: string): Promise<VitePluginEntry[]> {
@@ -156,25 +154,6 @@ export class VitePlugins {
         throwSingleOrAggregate(problems, SeedcordErrorCode.CliProblems);
         return plugins.map((plugin) => withThrownByOnErrors(plugin, this.configFile));
     }
-}
-
-interface VitePluginsChecked {
-    vitePlugins: VitePlugins;
-    problems: VitePluginProblem[];
-}
-
-export async function readVitePlugins(config: unknown, configFile: string): Promise<VitePluginsChecked> {
-    const factory = isPlainObject(config) ? config.vitePlugins : undefined;
-    if (factory === undefined) return { vitePlugins: new VitePlugins(undefined, configFile), problems: [] };
-    if (!isFunction(factory)) {
-        const expected = `a function that returns your Vite plugins, like ${paint.bold('() => [yaml()]')}`;
-        return {
-            vitePlugins: new VitePlugins(undefined, configFile),
-            problems: [invalidField('vitePlugins', expected)]
-        };
-    }
-    const { problems } = await readPlugins(factory, configFile);
-    return { vitePlugins: new VitePlugins(factory, configFile), problems };
 }
 
 export function rethrowVitePluginError(error: unknown): never {
