@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { extname, join, relative } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -19,9 +20,10 @@ import type { ResolvedSeedcordConfig, ResolvedServerTarget } from '#core/config/
 import type { Project } from '#core/project/Project';
 import type { BundleStats } from './output';
 import type { NextCommand } from './TargetBuild';
-import type { Rolldown, ViteBuilder } from 'vite';
+import type { BuildEnvironmentOptions, PluginOption, Rolldown, ViteBuilder } from 'vite';
 
 const NODE_TARGET = 'node24';
+const DECLARATIONS_NAME = 'types';
 
 function outputChunks(result: Awaited<ReturnType<ViteBuilder['build']>>): Rolldown.OutputChunk[] {
     // vite returns a watcher only under build.watch
@@ -58,13 +60,19 @@ export class ServerBuild extends TargetBuild {
     }
 
     public async bundle(): Promise<BundleStats> {
+        const { config, configDir } = this.project;
+        const { start } = this.target;
+        if (start !== undefined) return this.bundleJs(runStartFile(viteKey(configDir, start)));
+
+        const stats = await this.bundleJs(exportInstance(viteKey(configDir, config.instance)));
+        await this.writeDeclarations();
+        return stats;
+    }
+
+    private async bundleJs(importBot: string[]): Promise<BundleStats> {
         const { config, configDir, files } = this.project;
-        const { start, outDir } = this.target;
+        const { outDir } = this.target;
         const { root } = config;
-        const importBot =
-            start === undefined
-                ? exportInstance(viteKey(configDir, config.instance))
-                : runStartFile(viteKey(configDir, start));
         const builtFiles = {
             files,
             folders: await files.foldersIncludingEmpty(),
@@ -72,6 +80,48 @@ export class ServerBuild extends TargetBuild {
             configFile: relative(outDir, config.configFile)
         };
 
+        const result = await this.buildBot([serverEntry(builtFiles, importBot), pinModulePaths(files)], {
+            outDir,
+            emptyOutDir: true,
+            sourcemap: true,
+            minify: false,
+            target: NODE_TARGET,
+            rolldownOptions: {
+                input: ENTRY_ID,
+                output: {
+                    format: 'esm',
+                    preserveModules: true,
+                    preserveModulesRoot: root,
+                    entryFileNames: (chunk) => outputName(chunk.facadeModuleId)
+                }
+            }
+        });
+        return bundleStats(outputChunks(result), files, join(outDir, ENTRY_FILE_NAME));
+    }
+
+    private async writeDeclarations(): Promise<void> {
+        const { config } = this.project;
+        const { outDir } = this.target;
+        const tsconfig = this.project.tsconfig();
+        // a build with build.start never loads it or its native parser
+        const { dts } = await import('rolldown-plugin-dts');
+        await this.buildBot([dts({ emitDtsOnly: true, ...(tsconfig !== undefined && { tsconfig }) })], {
+            outDir,
+            emptyOutDir: false,
+            rolldownOptions: {
+                input: { [DECLARATIONS_NAME]: config.instance },
+                output: { format: 'esm', entryFileNames: '[name].mjs' }
+            }
+        });
+        // index.mjs exports only the default
+        await writeFile(join(outDir, 'index.d.mts'), `export { default } from './${DECLARATIONS_NAME}.mjs';\n`);
+    }
+
+    private async buildBot(
+        plugins: PluginOption[],
+        build: BuildEnvironmentOptions
+    ): Promise<Awaited<ReturnType<ViteBuilder['build']>>> {
+        const { config, configDir } = this.project;
         const builder = await createBuilder({
             root: configDir,
             mode: config.viteMode,
@@ -79,32 +129,12 @@ export class ServerBuild extends TargetBuild {
             // vite copies <root>/public into outDir otherwise
             publicDir: false,
             logLevel: 'warn',
-            plugins: [serverEntry(builtFiles, importBot), pinModulePaths(files), config.vitePlugins.create()],
+            plugins: [...plugins, config.vitePlugins.create()],
+            // vite's oxc transform would empty the declarations rolldown-plugin-dts emits. this list replaces vite's default of .js
+            oxc: { exclude: [/\.js$/, /\.d\.[cm]?ts$/] },
             resolve: { tsconfigPaths: true },
-            environments: {
-                [BOT_ENVIRONMENT]: {
-                    resolve: { external: true },
-                    build: {
-                        outDir,
-                        emptyOutDir: true,
-                        sourcemap: true,
-                        minify: false,
-                        target: NODE_TARGET,
-                        rolldownOptions: {
-                            input: ENTRY_ID,
-                            output: {
-                                format: 'esm',
-                                preserveModules: true,
-                                preserveModulesRoot: root,
-                                entryFileNames: (chunk) => outputName(chunk.facadeModuleId)
-                            }
-                        }
-                    }
-                }
-            }
+            environments: { [BOT_ENVIRONMENT]: { resolve: { external: true }, build } }
         }).catch(bundleFailed);
-        const result = await builder.build(botEnvironment(builder.environments)).catch(bundleFailed);
-
-        return bundleStats(outputChunks(result), files, join(outDir, ENTRY_FILE_NAME));
+        return builder.build(botEnvironment(builder.environments)).catch(bundleFailed);
     }
 }

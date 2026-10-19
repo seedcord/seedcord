@@ -21,3 +21,12 @@ describe('cloudflare pins', () => {
         }
     );
 });
+
+describe('rolldown pin', () => {
+    // rolldown-plugin-dts imports rolldown itself. the same range resolves it to vite's copy
+    it('matches the rolldown range vite depends on', () => {
+        const vite = dependencies(join(CLI_ROOT, 'node_modules/vite/package.json'));
+
+        expect(dependencies(join(CLI_ROOT, 'package.json')).rolldown).toBe(vite.rolldown);
+    });
+});

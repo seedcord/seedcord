@@ -95,6 +95,8 @@
         "minimatch": "^10.2.6",
         "react": "catalog:react",
         "reflect-metadata": "catalog:deps",
+        "rolldown": "~1.2.12",
+        "rolldown-plugin-dts": "0.28.8",
         "wrap-ansi": "^10.0.0"
     },
     "devDependencies": {

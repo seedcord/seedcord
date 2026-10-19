@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import { build } from 'vite';
 import { describe, expect, it } from 'vitest';
 
+import { runProjectTsc } from '#core/modules/runProjectTsc';
+
 import { copyFixture, GATEWAY_BOT, HTTP_BOT } from './fixtureCopy';
 import { quickBuildRunner } from './quickBuildRunner';
 import { smoke } from './smoke';
@@ -39,6 +41,26 @@ const GATEWAY_SCRIPT = `import bot from './dist/index.mjs';
 
 await bot.start();
 `;
+
+const TYPED_APP = `import bot from './dist/index.mjs';
+
+await bot.start();
+const response: Response = await bot.fetch(new Request('http://localhost/'));
+console.log(response.status);
+// @ts-expect-error the bot's type has no such member
+console.log(bot.notAMember);
+`;
+
+const APP_TSC_FLAGS = [
+    '--ignoreConfig',
+    '--noEmit',
+    '--strict',
+    '--module',
+    'nodenext',
+    '--target',
+    'es2022',
+    '--skipLibCheck'
+];
 
 async function exportProject(fixture: string, script: string): Promise<string> {
     const projectDir = await copyFixture(fixture);
@@ -78,6 +100,16 @@ describe('seedcord build without build.start', () => {
         const output = await smoke('http', process.execPath, [join(outDir, 'server.js')]);
 
         expect(output).toContain('fixture:text hello from the text table');
+    }, 120_000);
+
+    it('types the default export of dist/index.mjs for an app that imports it', async () => {
+        const projectDir = await builtHttpExport();
+        await writeFile(join(projectDir, 'app.mts'), TYPED_APP);
+
+        const result = await runProjectTsc(projectDir, [...APP_TSC_FLAGS, 'app.mts']);
+
+        expect(result.stdout + result.stderr).toBe('');
+        expect(result.exitCode).toBe(0);
     }, 120_000);
 
     it('gives a plain node script a gateway bot that loads its handlers and its .env', async () => {
