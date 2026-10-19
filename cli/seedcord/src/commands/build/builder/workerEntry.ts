@@ -1,6 +1,6 @@
 import { BAKED_IDS_KEY } from '@seedcord/core/internal';
 import { assertNever } from '@seedcord/utils';
-import { workerdPath } from '@seedcord/utils/node/internal';
+import { workerdPath } from '@seedcord/utils/internal';
 
 import { builtFilesSource, loadListedFiles, PLACEHOLDER_ROOT } from './builtFiles';
 

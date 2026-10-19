@@ -5,20 +5,14 @@ import path from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
-import { encodeFile } from '#src/node/directory/encodedFile';
-import { readFiles, traverseDirectory } from '#src/node/directory/readers';
-import {
-    BOT_FILES_KEY,
-    BUILT_FILES_READY_KEY,
-    builtConfigDir,
-    setBuiltFilesHook,
-    setDevFiles
-} from '#src/node/directory/slots';
-import { toPosixPath } from '#src/node/paths';
+import { encodeFile } from '#src/files/encodedFile';
+import { toPosixPath } from '#src/files/paths';
+import { readFiles, traverseDirectory } from '#src/files/readers';
+import { BOT_FILES_KEY, BUILT_FILES_READY_KEY, builtConfigDir, setBuiltFilesHook, setDevFiles } from '#src/files/slots';
 import { clearBuiltFiles } from '#tests/builtFilesSlot';
 
-import type { EncodedFile } from '#src/node/directory/encodedFile';
-import type { BuiltSlot } from '#src/node/directory/slots';
+import type { EncodedFile } from '#src/files/encodedFile';
+import type { BuiltSlot } from '#src/files/slots';
 import type { TypedOmit } from '@seedcord/types';
 
 // not on disk. path.resolve adds the drive letter on windows
@@ -204,10 +198,12 @@ describe('traverseDirectory in a built bot', () => {
         await expect(walk('./handlers')).resolves.toEqual([[at('handlers/Roll.js'), 'Roll']]);
     });
 
-    it('treats a folder whose name starts with two dots as inside root', async () => {
-        using _built = register({ folders: ['/..cache'], modules: { '/..cache/Warm.ts': stub('Warm') } });
+    it('treats a folder whose name starts with two dots as a dot-folder inside root', async () => {
+        using _built = register({ folders: ['/handlers'] });
 
-        await expect(walk(at('..cache'))).resolves.toEqual([[at('..cache/Warm.js'), 'Warm']]);
+        const error = await rejection(traverseDirectory(at('..cache')));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectorySkipped });
     });
 
     it('visits every module when the folder is root itself', async () => {
@@ -359,6 +355,14 @@ describe('readFiles in a built bot', () => {
         for await (const { fullPath } of readFiles(at('locales/en'))) seen.push(fullPath);
 
         expect(seen).toEqual([at('locales/en/hi.json')]);
+    });
+
+    it('throws CoreDirectorySkipped for a dot-folder inside a listed folder', async () => {
+        using _built = register({ folders: ['/locales'], listed: ['/locales'] });
+
+        const error = await rejection(readFiles(at('locales/.cache')));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectorySkipped });
     });
 
     it('throws CoreDirectoryNotListed with the folder for a folder files leaves out', async () => {

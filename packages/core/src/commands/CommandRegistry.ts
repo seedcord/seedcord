@@ -2,9 +2,8 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { formatFilePath } from '@seedcord/utils';
-import { traverseDirectory } from '@seedcord/utils/node';
-import { isInside, resolveFolder } from '@seedcord/utils/node/internal';
+import { formatFilePath, traverseDirectory } from '@seedcord/utils';
+import { isInside, resolveFolder } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 
 import { getDevChannel } from '#hmr/devChannel';

@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 
-import { BOT_FILES_KEY, BUILT_FILES_READY_KEY, encodeFile } from '@seedcord/utils/node/internal';
+import { BOT_FILES_KEY, BUILT_FILES_READY_KEY, encodeFile } from '@seedcord/utils/internal';
+
+import { withoutQuery } from './withoutQuery';
 
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { Plugin } from 'vite';
@@ -34,7 +36,7 @@ export function loadListedFiles(): Plugin {
             if (!source.endsWith(LISTED_FILE_QUERY)) return undefined;
             // with the query still on, cloudflare's .txt and .bin rules skip it too
             const resolved = await this.resolve(source, importer, { skipSelf: true });
-            return resolved && listedFileId(resolved.id.split('?')[0] ?? resolved.id);
+            return resolved && listedFileId(withoutQuery(resolved.id));
         },
         async load(id) {
             if (!isListedFileId(id)) return undefined;

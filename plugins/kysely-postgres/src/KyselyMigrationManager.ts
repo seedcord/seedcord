@@ -3,8 +3,7 @@ import { inspect } from 'node:util';
 
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
-import { keepDefined } from '@seedcord/utils';
-import { traverseDirectory } from '@seedcord/utils/node';
+import { keepDefined, traverseDirectory } from '@seedcord/utils';
 import { Migrator, NO_MIGRATIONS } from 'kysely/migration';
 
 import type { MigrationManagerContext, MigrationOptions, StepMigrationOptions } from './types/KyselyMigration';

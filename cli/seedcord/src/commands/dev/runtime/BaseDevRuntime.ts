@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { setDevFiles } from '@seedcord/utils/node/internal';
+import { setDevFiles } from '@seedcord/utils/internal';
 
 import { instanceModule } from '#core/modules/importInstance';
 import { ProjectFiles } from '#core/project/ProjectFiles';

@@ -2,7 +2,7 @@ import { appendFileSync, mkdirSync, mkdtempDisposableSync, writeFileSync } from 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { posixRelative } from '@seedcord/utils/node/internal';
+import { posixRelative } from '@seedcord/utils/internal';
 import { createServer } from 'vite';
 import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 

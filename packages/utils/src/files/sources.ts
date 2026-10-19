@@ -5,11 +5,11 @@ import { pathToFileURL } from 'node:url';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import { isInside, resolveFromRoot } from '#src/files/paths';
 import { asError } from '#src/misc/asError';
-import { isInside, resolveFromRoot } from '#src/node/paths';
 
 import { decodeFile } from './encodedFile';
-import { builtModulePath, isHidden, isModulePath, isNonCodeFile } from './extensions';
+import { builtModulePath, isModulePath, isNonCodeFile, isSkippedUnder } from './extensions';
 import { botFilesSlot } from './slots';
 
 import type { BotFolders, BuiltSlot, ModuleLoader } from './slots';
@@ -21,10 +21,8 @@ type Loaders<Loader> = [fullPath: string, load: Loader][];
 
 interface FolderAccess {
     resolve(dir: string): string;
-    // resolve, then throw for a folder outside root
-    walkable(dir: string): string;
-    // resolve, then throw for a folder outside root or outside every folder in files
-    readable(dir: string): string;
+    resolveBundled(dir: string): string;
+    resolveListed(dir: string): string;
 }
 
 class BotFolderAccess implements FolderAccess {
@@ -40,24 +38,28 @@ class BotFolderAccess implements FolderAccess {
         return resolveFromRoot(this.root, dir);
     }
 
-    public walkable(dir: string): string {
+    public resolveBundled(dir: string): string {
         const folder = this.resolve(dir);
-        this.assertInsideRoot(folder);
+        this.assertBundled(folder);
         return folder;
     }
 
-    public readable(dir: string): string {
+    public resolveListed(dir: string): string {
         const folder = this.resolve(dir);
-        this.assertInsideRoot(folder, 'readFiles');
+        this.assertBundled(folder, 'readFiles');
         if (!this.listed.some((listed) => isInside(listed, folder))) {
             throw new SeedcordError(SeedcordErrorCode.CoreDirectoryNotListed, [folder]);
         }
         return folder;
     }
 
-    private assertInsideRoot(folder: string, readBy?: 'readFiles'): void {
-        if (isInside(this.root, folder)) return;
-        throw new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, this.root, readBy]);
+    private assertBundled(folder: string, readBy?: 'readFiles'): void {
+        if (!isInside(this.root, folder)) {
+            throw new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, this.root, readBy]);
+        }
+        if (isSkippedUnder(this.root, folder)) {
+            throw new SeedcordError(SeedcordErrorCode.CoreDirectorySkipped, [folder]);
+        }
     }
 }
 
@@ -68,11 +70,11 @@ class OpenFolderAccess implements FolderAccess {
         return path.resolve(dir);
     }
 
-    public walkable(dir: string): string {
+    public resolveBundled(dir: string): string {
         return this.resolve(dir);
     }
 
-    public readable(dir: string): string {
+    public resolveListed(dir: string): string {
         return this.resolve(dir);
     }
 }
@@ -85,11 +87,11 @@ abstract class FileSource {
     }
 
     public modules(dir: string): Promise<Loaders<ModuleLoader>> {
-        return this.modulesIn(this.access.walkable(dir));
+        return this.modulesIn(this.access.resolveBundled(dir));
     }
 
     public files(dir: string): Promise<Loaders<BytesLoader>> {
-        return this.filesIn(this.access.readable(dir));
+        return this.filesIn(this.access.resolveListed(dir));
     }
 
     protected abstract modulesIn(folder: string): Promise<Loaders<ModuleLoader>>;
@@ -99,7 +101,7 @@ abstract class FileSource {
 class DiskFiles extends FileSource {
     protected async modulesIn(folder: string): Promise<Loaders<ModuleLoader>> {
         const all = await DiskFiles.filesUnder(folder);
-        const files = all.filter((file) => isModulePath(file) && !isHidden(folder, file));
+        const files = all.filter((file) => isModulePath(file) && !isSkippedUnder(folder, file));
         // node reads a raw windows path's drive letter as a url protocol
         return files.map((file) => [
             file,

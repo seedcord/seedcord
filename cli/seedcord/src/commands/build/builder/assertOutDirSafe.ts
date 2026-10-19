@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { BOT_FILES_KEY, isInside } from '@seedcord/utils/node/internal';
+import { BOT_FILES_KEY, isInside } from '@seedcord/utils/internal';
 
 import { ENTRY_FILE_NAME } from './output';
 

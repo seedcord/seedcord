@@ -94,7 +94,7 @@
             "entry": ["**/*.types-test.ts"]
         },
         "packages/utils": {
-            "ignore": ["tests/node/fixtures/**"],
+            "ignore": ["tests/files/fixtures/**"],
             "ignoreDependencies": ["tsx"]
         },
         "plugins/kysely-postgres": {

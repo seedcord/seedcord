@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostListenHost, HostShutdown } from '@seedcord/types/internal';
-import { readFiles } from '@seedcord/utils/node';
+import { readFiles } from '@seedcord/utils';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 
 import { ServerDevRuntime } from '#commands/dev/runtime/ServerDevRuntime';
@@ -18,7 +18,7 @@ import type { SeedcordInstance } from '@seedcord/types/internal';
 const SCRATCH_ROOT = join(import.meta.dirname, '.root-fixture');
 
 const ENTRY = [
-    "import { readFiles } from '@seedcord/utils/node';",
+    "import { readFiles } from '@seedcord/utils';",
     '',
     'export const texts: string[] = [];',
     "for await (const { bytes } of readFiles('./locales')) texts.push(bytes.toString());",
@@ -26,7 +26,7 @@ const ENTRY = [
 ].join('\n');
 
 const HANDLERS_ENTRY = [
-    "import { traverseDirectory } from '@seedcord/utils/node';",
+    "import { traverseDirectory } from '@seedcord/utils';",
     '',
     'export const names: unknown[] = [];',
     "for await (const { imported } of traverseDirectory('./handlers')) names.push(imported.name);",

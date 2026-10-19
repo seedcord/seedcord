@@ -1,6 +1,6 @@
 import * as path from 'node:path';
 
-import { builtConfigDir } from '@seedcord/utils/node/internal';
+import { builtConfigDir } from '@seedcord/utils/internal';
 import { createLogger, transports } from 'winston';
 
 import { ensureDir, fileFormat, NODE_LEVELS, preFormat, resolveFilename, toInfo } from './winston';

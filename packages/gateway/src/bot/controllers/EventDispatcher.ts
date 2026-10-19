@@ -15,9 +15,8 @@ import { InFlight } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { formatFilePath, hasKeys } from '@seedcord/utils';
+import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import { asError, isStringArray } from '@seedcord/utils/internal';
-import { traverseDirectory } from '@seedcord/utils/node';
 import { Envapter } from 'envapt';
 
 import { eventMiddlewareMetaOf } from '#bDecorators/Middlewares';

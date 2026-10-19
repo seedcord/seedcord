@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { basename, resolve } from 'node:path';
 
 import { HANDLERS_LOADED } from '#lib/markers';
-import { readFiles, traverseDirectory } from '@seedcord/utils/node';
+import { readFiles, traverseDirectory } from '@seedcord/http';
 
 for (const folder of ['../locales', '../logs']) {
     for await (const { bytes } of readFiles(resolve(import.meta.dirname, folder))) {

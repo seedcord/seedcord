@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import { LoggerChannelRegistry } from '@seedcord/logger';
-import { posixRelative } from '@seedcord/utils/node/internal';
+import { posixRelative } from '@seedcord/utils/internal';
 import chalk from 'chalk';
 import { beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 

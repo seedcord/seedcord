@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { BOT_FILES_KEY } from '@seedcord/utils/node/internal';
+import { BOT_FILES_KEY } from '@seedcord/utils/internal';
 import { beforeEach, describe, expect, it, onTestFinished } from 'vitest';
 
 import { quickBuildRunner } from './quickBuildRunner';

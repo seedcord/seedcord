@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { importFailed } from '@seedcord/utils/node/internal';
+import { importFailed } from '@seedcord/utils/internal';
 
 import { BIND_ENV_ID } from './edgeStandIns';
 

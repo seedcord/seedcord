@@ -1,7 +1,6 @@
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { asError, isPlainObject } from '@seedcord/utils/internal';
-import { recordThrownBy, vitePluginThrew } from '@seedcord/utils/node/internal';
+import { asError, isPlainObject, recordThrownBy, vitePluginThrew } from '@seedcord/utils/internal';
 
 import type { Plugin } from 'vite';
 

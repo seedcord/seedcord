@@ -2,7 +2,7 @@ import { dirname, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
-import { isInside } from '@seedcord/utils/node/internal';
+import { isInside } from '@seedcord/utils/internal';
 
 import { Project } from '#core/project/Project';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';

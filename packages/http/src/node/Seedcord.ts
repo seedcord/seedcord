@@ -9,7 +9,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { HostAugmentTarget, HostListenHost, HostVersion, SeedcordBrand } from '@seedcord/types/internal';
-import { isPortInUse } from '@seedcord/utils/node/internal';
+import { isPortInUse } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 
 import { HttpStartupTasks } from '#src/HttpStartupTasks';

@@ -100,6 +100,8 @@ export enum SeedcordErrorCode {
     CoreVitePluginThrew = 1229,
     /** `readFiles` read a folder that `files` in `seedcord.config.ts` leaves out. */
     CoreDirectoryNotListed = 1230,
+    /** `readFiles` or `traverseDirectory` read a folder with a dot-folder or `node_modules` in its path. */
+    CoreDirectorySkipped = 1231,
 
     /** A command class carries `@RegisterCommand` twice. */
     DecoratorCommandAlreadyRegistered = 1301,

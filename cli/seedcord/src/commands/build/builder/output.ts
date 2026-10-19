@@ -1,9 +1,9 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { asError } from '@seedcord/utils/internal';
-import { vitePluginThrew } from '@seedcord/utils/node/internal';
+import { asError, vitePluginThrew } from '@seedcord/utils/internal';
 
 import { isListedFileId } from './builtFiles';
+import { withoutQuery } from './withoutQuery';
 
 import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { Rolldown } from 'vite';
@@ -21,7 +21,7 @@ export function bundleStats(chunks: Rolldown.OutputChunk[], files: ProjectFiles,
     const ids = chunks.flatMap((chunk) => chunk.moduleIds);
 
     return {
-        modules: ids.filter((id) => files.holds(id.split('?')[0] ?? '')).length,
+        modules: ids.filter((id) => files.holds(withoutQuery(id))).length,
         listedFiles: ids.filter(isListedFileId).length,
         bytes: chunks.reduce((total, chunk) => total + Buffer.byteLength(chunk.code), 0),
         entry

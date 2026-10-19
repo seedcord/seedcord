@@ -5,7 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { HostAugmentTarget, HostPluginKeys, type SeedcordInstance } from '@seedcord/types/internal';
-import { posixRelative } from '@seedcord/utils/node/internal';
+import { posixRelative } from '@seedcord/utils/internal';
 
 import { openProjectWithSteps } from '#core/config/openProjectWithSteps';
 import { ProjectLoader } from '#core/config/ProjectLoader';

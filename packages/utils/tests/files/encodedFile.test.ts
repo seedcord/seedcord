@@ -2,13 +2,9 @@ import { randomBytes } from 'node:crypto';
 
 import { describe, expect, it } from 'vitest';
 
-import { decodeFile, encodeFile } from '#src/node/directory/encodedFile';
+import { decodeFile, encodeFile } from '#src/files/encodedFile';
 
 describe('encodeFile', () => {
-    it('keeps UTF-8 text as a plain string', () => {
-        expect(encodeFile(Buffer.from('# héllo\n'))).toEqual({ encoding: 'utf8', data: '# héllo\n' });
-    });
-
     it.each([
         ['UTF-8 text', Buffer.from('{ "hi": "salut" }\n')],
         ['text that starts with a byte order mark', Buffer.from('﻿en,fr\n')],

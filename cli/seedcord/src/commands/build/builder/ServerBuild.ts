@@ -1,6 +1,6 @@
 import { join, relative } from 'node:path';
 
-import { builtExtension } from '@seedcord/utils/node/internal';
+import { builtExtension } from '@seedcord/utils/internal';
 import { createBuilder } from 'vite';
 
 import { BOT_ENVIRONMENT, botEnvironment } from '#core/modules/botEnvironment';
@@ -11,6 +11,7 @@ import { bundleFailed, bundleStats, ENTRY_FILE_NAME } from './output';
 import { pinModulePaths } from './pinModulePaths';
 import { ENTRY_ID, isServerEntry, serverEntry } from './serverEntry';
 import { TargetBuild } from './TargetBuild';
+import { withoutQuery } from './withoutQuery';
 
 import type { ResolvedSeedcordConfig, ResolvedServerTarget } from '#core/config/schema';
 import type { Project } from '#core/project/Project';
@@ -27,7 +28,7 @@ function outputChunks(result: Awaited<ReturnType<ViteBuilder['build']>>): Rolldo
 
 function outputName(moduleId: string | null | undefined): string {
     if (isServerEntry(moduleId)) return ENTRY_FILE_NAME;
-    return `[name]${builtExtension(moduleId?.split('?')[0] ?? '')}`;
+    return `[name]${builtExtension(withoutQuery(moduleId ?? ''))}`;
 }
 
 export abstract class ServerBuild<Target extends ResolvedServerTarget = ResolvedServerTarget> extends TargetBuild {

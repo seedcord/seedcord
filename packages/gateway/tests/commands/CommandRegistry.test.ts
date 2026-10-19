@@ -2,7 +2,7 @@ import { Commands } from '@seedcord/core';
 import { GLOBAL_ID } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { HostStartup, HostVersion } from '@seedcord/types/internal';
-import { setDevFiles } from '@seedcord/utils/node/internal';
+import { setDevFiles } from '@seedcord/utils/internal';
 import { ApplicationCommandType, Collection, Events, GatewayIntentBits } from 'discord.js';
 import { type Mock, describe, expect, afterEach, vi } from 'vitest';
 

@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { isPlainObject } from '@seedcord/utils/internal';
-import { posixRelative } from '@seedcord/utils/node/internal';
+import { isPlainObject, posixRelative } from '@seedcord/utils/internal';
 
 import type { NextCommand } from './TargetBuild';
 

@@ -2,8 +2,8 @@ import { join } from 'node:path';
 
 import { afterEach, describe, it, expect, vi } from 'vitest';
 
+import { toPosixPath } from '#src/files/paths';
 import { formatFilePath } from '#src/misc/formatFilePath';
-import { toPosixPath } from '#src/node/paths';
 
 describe('formatFilePath', () => {
     const cwd = process.cwd();

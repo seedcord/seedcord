@@ -1,6 +1,6 @@
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { traverseDirectory } from '@seedcord/utils/node';
+import { traverseDirectory } from '@seedcord/utils';
 import mongoose from 'mongoose';
 
 import { ModelNameMetadataKey, ServiceMetadataKey } from './decorators/RegisterMongooseService';

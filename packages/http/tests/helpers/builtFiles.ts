@@ -1,4 +1,4 @@
-import { BOT_FILES_KEY } from '@seedcord/utils/node/internal';
+import { BOT_FILES_KEY } from '@seedcord/utils/internal';
 
 // the root seedcord build gives every edge worker
 export const BUILT_ROOT = '/bot';

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { setDevFiles } from '@seedcord/utils/node/internal';
+import { setDevFiles } from '@seedcord/utils/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
@@ -300,7 +300,7 @@ describe('HmrModuleHandler', () => {
             logger
         });
         const file = join(handlersDir, 'Shop.mjs');
-        const utils = import.meta.resolve('@seedcord/utils/node/internal');
+        const utils = import.meta.resolve('@seedcord/utils/internal');
         const thrownBy = { plugin: 'shop-loader', hook: 'load', configFile: join(dir, 'seedcord.config.ts') };
         writeFileSync(
             file,

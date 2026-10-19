@@ -1,5 +1,5 @@
 import { paint } from '@seedcord/errors';
-import { traverseDirectory } from '@seedcord/utils/node';
+import { traverseDirectory } from '@seedcord/utils';
 import { Envapter } from 'envapt';
 
 import { HmrModuleHandler } from '#hmr/HmrModuleHandler';

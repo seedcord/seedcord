@@ -6,9 +6,8 @@ import { join } from 'node:path';
 import { CommandMetadataKey, isCommandClass } from '@seedcord/core/internal';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { asError } from '@seedcord/utils/internal';
-import { isTsOrJsFile } from '@seedcord/utils/node';
-import { resolveFromRoot } from '@seedcord/utils/node/internal';
+import { isTsOrJsFile } from '@seedcord/utils';
+import { asError, resolveFromRoot } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import type { ModuleLoader } from '#core/modules/ModuleLoader';

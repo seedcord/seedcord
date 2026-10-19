@@ -58,7 +58,7 @@ Here's what each part of `Users.ts` does.
 
 ## You never construct a service
 
-The plugin builds your services itself, after it has connected and run your migrations, so `this.db` has a working connection by the time any method runs. It imports every `.ts` and `.js` file under the `dir` you gave the [kysely plugin](/plugins/kysely), including subfolders. For each exported class that extends `KyselyService` and carries the decorator, it constructs the class. That constructor call adds the instance to the plugin's `services` map under its key.
+The plugin builds your services itself, after it has connected and run your migrations, so `this.db` has a working connection by the time any method runs. It imports every `.ts`, `.tsx`, `.mts`, `.js`, `.jsx` and `.mjs` file under the `dir` you gave the [kysely plugin](/plugins/kysely), including subfolders. For each exported class that extends `KyselyService` and carries the decorator, it constructs the class. That constructor call adds the instance to the plugin's `services` map under its key.
 
 <Callout type="warning">
 

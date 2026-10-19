@@ -89,6 +89,10 @@ describe('seedcord build on an http bot', () => {
         expect(output).toContain('fixture:text a source folder named logs');
     });
 
+    it('stores a listed text file as plain text in the build', () => {
+        expect(builtFilesContaining('hello from the markdown twin')).not.toEqual([]);
+    });
+
     it('bundles no text from a folder outside files', () => {
         expect(builtFilesContaining('fixture:unlisted')).toEqual([]);
     });

@@ -1,4 +1,4 @@
-import { builtConfigDir, setBuiltFilesHook } from '@seedcord/utils/node/internal';
+import { builtConfigDir, setBuiltFilesHook } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 
 export function setEnvaptBaseDir(): void {

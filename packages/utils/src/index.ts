@@ -1,3 +1,5 @@
+export { isTsOrJsFile } from './files/extensions';
+export { readFiles, traverseDirectory } from './files/readers';
 export * from './misc';
 export * from './numbers';
 export * from './objects';

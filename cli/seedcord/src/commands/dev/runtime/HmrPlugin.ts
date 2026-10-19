@@ -6,7 +6,7 @@ import { paint } from '@seedcord/errors';
 import { displayPath } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
-import { posixRelative, resolveFromRoot, workerdPath } from '@seedcord/utils/node/internal';
+import { posixRelative, resolveFromRoot, workerdPath } from '@seedcord/utils/internal';
 import { minimatch } from 'minimatch';
 
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';

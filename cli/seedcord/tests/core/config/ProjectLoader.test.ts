@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { toPosixPath } from '@seedcord/utils/node/internal';
+import { toPosixPath } from '@seedcord/utils/internal';
 import { assert, describe, it, expect, onTestFinished, vi } from 'vitest';
 
 import { ProjectLoader } from '#core/config/ProjectLoader';

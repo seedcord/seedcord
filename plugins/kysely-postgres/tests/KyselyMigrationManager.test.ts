@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { setDevFiles } from '@seedcord/utils/node/internal';
+import { setDevFiles } from '@seedcord/utils/internal';
 import { afterEach, beforeEach, describe, expect, it, type Mock } from 'vitest';
 
 import { KyselyPostgres } from '#src/KyselyPostgres';

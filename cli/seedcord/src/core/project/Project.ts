@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { resolveFromRoot } from '@seedcord/utils/node/internal';
+import { resolveFromRoot } from '@seedcord/utils/internal';
 
 import { ProjectFiles } from './ProjectFiles';
 

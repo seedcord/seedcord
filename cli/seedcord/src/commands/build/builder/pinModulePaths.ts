@@ -1,4 +1,4 @@
-import { builtModulePath } from '@seedcord/utils/node/internal';
+import { builtModulePath } from '@seedcord/utils/internal';
 import { Visitor } from 'vite';
 
 import { BOT_FILES_SLOT } from './builtFiles';
@@ -43,7 +43,7 @@ export function pinModulePaths(files: ProjectFiles): Plugin {
     return {
         name: 'seedcord:pin-module-paths',
         transform(code, id) {
-            // a ?raw text module is file content
+            // an id with a query, like ?raw, loads something other than the file's code
             if (!files.holds(id) || id.includes('?')) return undefined;
             if (!code.includes('import.meta.')) return undefined;
 

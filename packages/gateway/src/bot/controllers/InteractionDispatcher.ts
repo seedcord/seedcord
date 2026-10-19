@@ -21,9 +21,8 @@ import { prefixOf } from '@seedcord/custom-id';
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { formatFilePath, hasKeys } from '@seedcord/utils';
+import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import { asError } from '@seedcord/utils/internal';
-import { traverseDirectory } from '@seedcord/utils/node';
 import { Events } from 'discord.js';
 import { Envapter } from 'envapt';
 

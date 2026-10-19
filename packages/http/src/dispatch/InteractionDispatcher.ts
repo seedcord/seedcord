@@ -8,8 +8,7 @@ import {
 } from '@seedcord/core/internal';
 import { paint } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
-import { formatFilePath } from '@seedcord/utils';
-import { traverseDirectory } from '@seedcord/utils/node';
+import { formatFilePath, traverseDirectory } from '@seedcord/utils';
 import { Envapter } from 'envapt';
 
 import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';

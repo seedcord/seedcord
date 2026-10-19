@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 import { warnLinks } from '@seedcord/core/internal';
 import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { isInside } from '@seedcord/utils/node/internal';
+import { isInside } from '@seedcord/utils/internal';
 import { createBuilder } from 'vite';
 
 import { cliLogger } from '#core/cliLogger';

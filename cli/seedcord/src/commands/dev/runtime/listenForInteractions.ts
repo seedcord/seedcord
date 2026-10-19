@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { isPortInUse } from '@seedcord/utils/node/internal';
+import { isPortInUse } from '@seedcord/utils/internal';
 
 import { cliLogger } from '#core/cliLogger';
 

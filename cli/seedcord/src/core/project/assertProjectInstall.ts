@@ -2,7 +2,7 @@ import { dirname } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { isInside } from '@seedcord/utils/node/internal';
+import { isInside } from '@seedcord/utils/internal';
 
 import { installedManifest } from '#core/modules/installedManifest';
 

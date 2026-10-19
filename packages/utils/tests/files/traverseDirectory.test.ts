@@ -5,10 +5,10 @@ import { pathToFileURL } from 'node:url';
 import { stripVTControlCharacters } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { readFiles, traverseDirectory } from '#src/node/directory/readers';
-import { setDevFiles } from '#src/node/directory/slots';
+import { readFiles, traverseDirectory } from '#src/files/readers';
+import { setDevFiles } from '#src/files/slots';
 
 const FIXTURES = path.join(import.meta.dirname, 'fixtures');
 const scratch = await mkdtemp(path.join(os.tmpdir(), 'seedcord-traverse-'));
@@ -86,7 +86,7 @@ describe('traverseDirectory', () => {
 });
 
 describe('a module that fails to load through a Vite plugin', () => {
-    const IMPORT_FAILED = pathToFileURL(path.join(import.meta.dirname, '../../src/node/importFailed.ts')).href;
+    const IMPORT_FAILED = pathToFileURL(path.join(import.meta.dirname, '../../src/files/importFailed.ts')).href;
 
     async function folderThrowing(name: string, thrown: string): Promise<string> {
         const dir = path.join(scratch, name);
@@ -164,8 +164,47 @@ describe('a folder on disk under seedcord dev', () => {
 
         expect(error).toMatchObject({
             code: SeedcordErrorCode.CorePathOutsideRoot,
-            message: expect.stringContaining('import') as string
+            message: expect.stringContaining("import them from the plugin's code") as string
         });
+    });
+});
+
+describe('a folder seedcord build skips, under seedcord dev', () => {
+    const root = path.join(scratch, 'skipped');
+
+    beforeAll(async () => {
+        await mkdir(path.join(root, 'locales', '.cache'), { recursive: true });
+        await mkdir(path.join(root, 'locales', 'node_modules', 'pkg'), { recursive: true });
+        await mkdir(path.join(root, '.drafts'), { recursive: true });
+        await writeFile(path.join(root, 'locales', 'en.json'), '{}\n');
+        await writeFile(path.join(root, 'locales', '.cache', 'en.json'), '{}\n');
+        await writeFile(path.join(root, 'locales', 'node_modules', 'pkg', 'index.json'), '{}\n');
+        await writeFile(path.join(root, '.drafts', 'Draft.ts'), 'export {};\n');
+    });
+
+    beforeEach(() => {
+        const dev = setDevFiles({ root, listed: ['/locales'] });
+        return () => dev[Symbol.dispose]();
+    });
+
+    it('throws CoreDirectorySkipped for readFiles on a dot-folder', async () => {
+        const error = await rejection(readFiles('./locales/.cache'));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectorySkipped });
+    });
+
+    it('throws CoreDirectorySkipped for traverseDirectory on a dot-folder', async () => {
+        const error = await rejection(traverseDirectory('./.drafts'));
+
+        expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDirectorySkipped });
+    });
+
+    it('skips node_modules inside a listed folder', async () => {
+        const seen: string[] = [];
+
+        for await (const { fullPath } of readFiles('./locales')) seen.push(path.relative(root, fullPath));
+
+        expect(seen).toEqual([path.join('locales', 'en.json')]);
     });
 });
 

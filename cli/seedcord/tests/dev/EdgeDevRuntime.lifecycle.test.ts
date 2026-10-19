@@ -2,7 +2,7 @@ import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { posixRelative } from '@seedcord/utils/node/internal';
+import { posixRelative } from '@seedcord/utils/internal';
 import { bindings, exports } from 'cf/config';
 import { assert, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 

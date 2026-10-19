@@ -216,10 +216,17 @@ interface StartedRuntime extends AsyncDisposable {
     port(): number;
 }
 
+interface RuntimeOptions {
+    devPort?: number;
+    viteMode?: string;
+    vitePlugins?: ReturnType<typeof vitePluginsOf>;
+    files?: string[];
+}
+
 export async function startedRuntime(
     projectDir: string,
     onEvent?: DevEventHandler,
-    { devPort = ANY_PORT, viteMode = 'development', vitePlugins = vitePluginsOf(), files = [] as string[] } = {}
+    { devPort = ANY_PORT, viteMode = 'development', vitePlugins = vitePluginsOf(), files = [] }: RuntimeOptions = {}
 ): Promise<StartedRuntime> {
     const target = edgeTarget(projectDir, devPort);
     const config = configWith(projectDir, target, viteMode, vitePlugins, files);

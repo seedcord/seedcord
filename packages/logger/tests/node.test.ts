@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { stripAnsi } from '@seedcord/utils';
-import { BOT_FILES_KEY } from '@seedcord/utils/node/internal';
+import { BOT_FILES_KEY } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 

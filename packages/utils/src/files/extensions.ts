@@ -22,16 +22,20 @@ export function isModulePath(file: string): boolean {
     return endsWithAny(name, MODULE_EXTENSIONS) && !endsWithAny(name, DECLARATION_EXTENSIONS);
 }
 
-export function isHidden(dir: string, file: string): boolean {
-    return path
-        .relative(dir, file)
-        .split(path.sep)
-        .some((part) => part.startsWith('.'));
+function isSkippedName(name: string): boolean {
+    return name.startsWith('.') || name === 'node_modules';
+}
+
+// isSkippedName as globs
+export const SKIPPED_GLOBS = ['!**/node_modules/**', '!**/.*', '!**/.*/**'];
+
+export function isSkippedUnder(dir: string, file: string): boolean {
+    return path.relative(dir, file).split(path.sep).some(isSkippedName);
 }
 
 export function isNonCodeFile(dir: string, file: string): boolean {
     const name = path.basename(file);
-    return !isHidden(dir, file) && !endsWithAny(name, CODE_AND_MAP_EXTENSIONS);
+    return !isSkippedUnder(dir, file) && !endsWithAny(name, CODE_AND_MAP_EXTENSIONS);
 }
 
 export function moduleGlobs(base: string): string[] {

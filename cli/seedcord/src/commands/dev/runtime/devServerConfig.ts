@@ -1,6 +1,6 @@
 import { dirname, resolve } from 'node:path';
 
-import { isInside, moduleGlobs, posixRelative } from '@seedcord/utils/node/internal';
+import { isInside, moduleGlobs, posixRelative } from '@seedcord/utils/internal';
 
 import { BOT_ENVIRONMENT } from '#core/modules/botEnvironment';
 import { mergeViteConfig, NODE_CONDITIONS, userCodeBase, userCodeConfig } from '#core/modules/userCodeConfig';

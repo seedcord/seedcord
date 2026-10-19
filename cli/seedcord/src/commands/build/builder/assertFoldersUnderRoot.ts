@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { isInside } from '@seedcord/utils/node/internal';
+import { isInside } from '@seedcord/utils/internal';
 
 import type { Project } from '#core/project/Project';
 import type { EventsConfig } from '@seedcord/gateway';

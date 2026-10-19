@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { workerdPath } from '#src/node/paths';
+import { workerdPath } from '#src/files/paths';
 
 describe('workerdPath', () => {
     it('makes a Windows path absolute for POSIX path functions', () => {

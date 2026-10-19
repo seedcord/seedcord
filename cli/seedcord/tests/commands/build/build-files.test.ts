@@ -3,8 +3,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { describe, expect, it, onTestFinished } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
+import { builtSource, fixtureCopy, HTTP_BOT } from './fixtureCopy';
 import { quickBuildRunner } from './quickBuildRunner';
 
 interface ProjectShape {
@@ -14,9 +15,13 @@ interface ProjectShape {
     write?: string[];
 }
 
-async function project({ root = './src', files = [], write = [] }: ProjectShape): Promise<string> {
-    const tmp = await mkdtempDisposable(join(tmpdir(), 'seedcord-files-'));
-    onTestFinished(() => tmp.remove());
+interface Project extends AsyncDisposable {
+    path: string;
+}
+
+async function project({ root = './src', files = [], write = [] }: ProjectShape): Promise<Project> {
+    await using stack = new AsyncDisposableStack();
+    const tmp = stack.use(await mkdtempDisposable(join(tmpdir(), 'seedcord-files-')));
     const rootDir = join(tmp.path, root);
     await mkdir(rootDir, { recursive: true });
     await writeFile(join(rootDir, 'bot.ts'), '');
@@ -26,7 +31,8 @@ async function project({ root = './src', files = [], write = [] }: ProjectShape)
     }
     const config = { root, instance: './bot.ts', files };
     await writeFile(join(tmp.path, 'seedcord.config.ts'), `export default ${JSON.stringify(config)};\n`);
-    return tmp.path;
+    const cleanup = stack.move();
+    return { path: tmp.path, [Symbol.asyncDispose]: () => cleanup.disposeAsync() };
 }
 
 function buildOf(projectDir: string): Promise<unknown> {
@@ -45,7 +51,9 @@ describe('seedcord build with files in the config', () => {
         ['is a dot-folder', { files: ['./.data'], write: ['src/.data/x.json'] }, 'build skips'],
         ['is the project logs folder', { root: '.', files: ['./logs'], write: ['logs/x.json'] }, 'build skips']
     ])('throws CliListedFolderUnusable for a listed folder that %s', async (_, shape, says) => {
-        const error = await buildOf(await project(shape));
+        await using bot = await project(shape);
+
+        const error = await buildOf(bot.path);
 
         expect(error).toMatchObject({
             code: SeedcordErrorCode.CliListedFolderUnusable,
@@ -54,9 +62,25 @@ describe('seedcord build with files in the config', () => {
     });
 
     it('throws CoreDuplicateName for two handlers that build to one file', async () => {
-        const error = await buildOf(await project({ write: ['src/handlers/Roll.ts', 'src/handlers/Roll.tsx'] }));
+        await using bot = await project({ write: ['src/handlers/Roll.ts', 'src/handlers/Roll.tsx'] });
+
+        const error = await buildOf(bot.path);
 
         expect(error).toMatchObject({ code: SeedcordErrorCode.CoreDuplicateName });
         expect(Error.isError(error) ? error.message : '').toMatch(/Roll\.ts[\s\S]*Roll\.tsx[\s\S]*Roll\.js/);
     });
+
+    it('leaves dot-folders and node_modules inside a listed folder out of the build', async () => {
+        await using bot = await fixtureCopy(HTTP_BOT);
+        for (const folder of ['.cache', 'node_modules/pkg']) {
+            await mkdir(join(bot.path, 'src/locales', folder), { recursive: true });
+            await writeFile(join(bot.path, 'src/locales', folder, 'stale.txt'), `fixture:skipped ${folder}\n`);
+        }
+
+        await quickBuildRunner().run(bot.path);
+        const built = await builtSource(join(bot.path, 'dist'));
+
+        expect(built).toContain('hello from the markdown twin');
+        expect(built).not.toContain('fixture:skipped');
+    }, 120_000);
 });

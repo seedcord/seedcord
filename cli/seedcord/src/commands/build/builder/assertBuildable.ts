@@ -2,12 +2,13 @@ import { statSync } from 'node:fs';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, throwSingleOrAggregate } from '@seedcord/errors/internal';
-import { builtModulePath } from '@seedcord/utils/node/internal';
+import { builtModulePath } from '@seedcord/utils/internal';
 
 import type { Project } from '#core/project/Project';
 import type { ProjectFiles } from '#core/project/ProjectFiles';
+import type { SeedcordErrorArguments } from '@seedcord/errors/internal';
 
-type ListedFolderProblem = 'missing' | 'file' | 'skipped';
+type ListedFolderProblem = SeedcordErrorArguments<SeedcordErrorCode.CliListedFolderUnusable>[1];
 
 function listedFolderProblem(folder: string, files: ProjectFiles): ListedFolderProblem | undefined {
     const stats = statSync(folder, { throwIfNoEntry: false });
@@ -33,7 +34,13 @@ async function builtNameClashes(files: ProjectFiles): Promise<SeedcordError[]> {
     return [...byBuiltName]
         .filter(([, sources]) => sources.length > 1)
         .map(
-            ([built, sources]) => new SeedcordError(SeedcordErrorCode.CoreDuplicateName, ['built file', built, sources])
+            ([built, sources]) =>
+                new SeedcordError(SeedcordErrorCode.CoreDuplicateName, [
+                    'built file',
+                    built,
+                    sources,
+                    'Every code extension builds to a .js file.'
+                ])
         );
 }
 

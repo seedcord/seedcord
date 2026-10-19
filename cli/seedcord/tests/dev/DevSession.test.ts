@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
-import { toPosixPath } from '@seedcord/utils/node/internal';
+import { toPosixPath } from '@seedcord/utils/internal';
 import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { DevSession } from '#commands/dev/DevSession';

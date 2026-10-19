@@ -3,7 +3,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import { describe, expect, it } from 'vitest';
 
-import { recordThrownBy, vitePluginThrew } from '#src/node/importFailed';
+import { recordThrownBy, vitePluginThrew } from '#src/files/importFailed';
 
 const CONFIG_FILE = join(process.cwd(), 'seedcord.config.ts');
 

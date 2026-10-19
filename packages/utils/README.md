@@ -94,9 +94,9 @@ Passing epoch ms straight into `<t:...>` renders a date tens of thousands of yea
 
 <!-- prettier-ignore-end -->
 
-## Node
+## Files
 
-`@seedcord/utils/node` is a separate entry as it reads the filesystem.
+These run on node, bun, and Cloudflare Workers with Node compat. A built bot reads its files from the build output.
 
 <!-- prettier-ignore-start -->
 
