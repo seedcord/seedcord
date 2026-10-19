@@ -8,7 +8,6 @@ import { instanceModule } from '#core/modules/importInstance';
 import { ProjectFiles } from '#core/project/ProjectFiles';
 
 import { HmrPlugin } from './HmrPlugin';
-import { ViteRestartFiles } from './ViteRestartFiles';
 
 import type { RunnerModuleLoader } from '#core/modules/RunnerModuleLoader';
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
@@ -91,8 +90,7 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
         resources: AsyncDisposableStack,
         targetRestartFiles: readonly string[] = []
     ): HmrPlugin {
-        const restartFiles = ViteRestartFiles.forConfig(context.config, targetRestartFiles);
-        const hmr = new HmrPlugin(context.config, context.state, environment, restartFiles);
+        const hmr = new HmrPlugin(context.config, context.state, environment, targetRestartFiles);
         hmr.on('event', (event) => this.emit(context, event));
         // a restart builds a new runtime in the same process
         resources.defer(() => hmr.close());

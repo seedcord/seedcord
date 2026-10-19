@@ -4,7 +4,7 @@ import { basename, dirname, join } from 'node:path';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { describe, expect, it, onTestFinished } from 'vitest';
 
-import { ViteRestartFiles } from '#commands/dev/runtime/ViteRestartFiles';
+import { RestartFiles } from '#commands/dev/runtime/RestartFiles';
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { realPath } from '#core/project/realPath';
 import { edgeFolder } from '#tests/edgeFolder';
@@ -12,18 +12,23 @@ import { edgeFolder } from '#tests/edgeFolder';
 import type { LogRecord } from '@seedcord/types';
 
 // the files edge dev passes
-async function configFiles(mode = 'development'): Promise<{ files: ViteRestartFiles; config: string }> {
+async function configFiles(mode = 'development'): Promise<{ files: RestartFiles; config: string }> {
     const folder = await edgeFolder();
     const cloudflareConfig = realPath(folder.cloudflareConfig);
+    const dir = realPath(dirname(cloudflareConfig));
     const { files } = await WorkerEnv.load(cloudflareConfig, mode);
-    const restartFiles = new ViteRestartFiles(realPath(dirname(cloudflareConfig)), [
-        basename(cloudflareConfig),
-        ...files
-    ]);
-    return { files: restartFiles, config: cloudflareConfig };
+    const config: ConstructorParameters<typeof RestartFiles>[0] = {
+        root: dir,
+        configFile: realPath(join(dir, 'seedcord.config.ts')),
+        files: [],
+        target: { kind: 'server', start: undefined, outDir: realPath(join(dir, 'dist')) },
+        instance: realPath(join(dir, 'bot.ts')),
+        viteMode: mode
+    };
+    return { files: new RestartFiles(config, [basename(cloudflareConfig), ...files]), config: cloudflareConfig };
 }
 
-describe('ViteRestartFiles', () => {
+describe('RestartFiles', () => {
     it.each([
         ['cloudflare.config.ts', 'development', true],
         ['.dev.vars', 'development', true],
@@ -41,22 +46,22 @@ describe('ViteRestartFiles', () => {
         ['.env.staging.local', 'staging', true],
         ['.dev.vars.staging', 'staging', true],
         ['.env.development', 'staging', false]
-    ] as const)('includes %s in mode %s: %s', async (name, mode, expected) => {
+    ] as const)('hides %s from vite in mode %s: %s', async (name, mode, expected) => {
         const { files, config } = await configFiles(mode);
 
-        expect(files.includes(join(dirname(config), name))).toBe(expected);
+        expect(files.hiddenFromVite(join(dirname(config), name))).toBe(expected);
     });
 
-    it('includes cloudflare.config.ts written with forward slashes', async () => {
+    it('hides cloudflare.config.ts written with forward slashes', async () => {
         const { files, config } = await configFiles();
 
-        expect(files.includes(config.replaceAll('\\', '/'))).toBe(true);
+        expect(files.hiddenFromVite(config.replaceAll('\\', '/'))).toBe(true);
     });
 
     it('leaves a .env in another folder out', async () => {
         const { files } = await configFiles();
 
-        expect(files.includes(join(tmpdir(), 'elsewhere', '.env'))).toBe(false);
+        expect(files.hiddenFromVite(join(tmpdir(), 'elsewhere', '.env'))).toBe(false);
     });
 
     it('logs a warning when the watcher fails', async () => {

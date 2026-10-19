@@ -18,7 +18,6 @@ import {
 } from 'vitest';
 
 import { HmrPlugin } from '#commands/dev/runtime/HmrPlugin';
-import { ViteRestartFiles } from '#commands/dev/runtime/ViteRestartFiles';
 import { realPath } from '#core/project/realPath';
 import { StateFolder } from '#core/state/StateFolder';
 import { silentLogger } from '#tests/silentLogger';
@@ -104,10 +103,8 @@ interface ConfiguredPlugin {
 // the last-deploy tests below write to their own folder
 const STATE = new StateFolder(process.cwd(), silentLogger);
 
-const NO_RESTART_FILES = new ViteRestartFiles(projectRoot, []);
-
 function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0], state = STATE): ConfiguredPlugin {
-    const plugin = new HmrPlugin(config, state, 'seedcord', NO_RESTART_FILES);
+    const plugin = new HmrPlugin(config, state, 'seedcord');
     onTestFinished(() => plugin.close());
     const listeners = new Map<string, (data: unknown) => void>();
     // justified: spy on the private `hot` getter
@@ -159,7 +156,7 @@ describe('HmrPlugin', () => {
             vi.spyOn(Logger.prototype, level).mockImplementation(() => undefined);
         }
         trace = vi.spyOn(Logger.prototype, 'trace').mockImplementation(() => undefined);
-        hmrPlugin = new HmrPlugin(mockConfig, STATE, 'seedcord', NO_RESTART_FILES);
+        hmrPlugin = new HmrPlugin(mockConfig, STATE, 'seedcord');
     });
 
     afterEach(() => {
@@ -167,7 +164,7 @@ describe('HmrPlugin', () => {
     });
 
     it('carries the config rollback flag onto the hmr payload', () => {
-        const plugin = new HmrPlugin({ ...mockConfig, hmr: { rollback: false } }, STATE, 'seedcord', NO_RESTART_FILES);
+        const plugin = new HmrPlugin({ ...mockConfig, hmr: { rollback: false } }, STATE, 'seedcord');
         const hotSend = vi.fn();
         // justified: spy on the private `hot` getter
         const hotHost = plugin as unknown as { hot: { send: typeof hotSend; on: ReturnType<typeof vi.fn> } };
