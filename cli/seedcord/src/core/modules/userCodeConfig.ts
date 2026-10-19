@@ -1,4 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports -- the one typed caller of mergeConfig
 import { mergeConfig } from 'vite';
@@ -14,6 +14,10 @@ interface ResolveConditions {
 
 // renaming this breaks user plugins that check for 'seedcord'
 export const BOT_ENVIRONMENT = 'seedcord';
+// edge dev's node copy of the bot, beside a worker in BOT_ENVIRONMENT
+export const CODEGEN_ENVIRONMENT = 'codegen';
+
+export type BotEnvironmentName = typeof BOT_ENVIRONMENT | typeof CODEGEN_ENVIRONMENT;
 
 export const NODE_CONDITIONS: ResolveConditions = { conditions: ['node', 'import'], externalConditions: ['node'] };
 
@@ -26,20 +30,23 @@ export function mergeViteConfig(base: InlineConfig, overrides: InlineConfig): In
     return mergeConfig(base, overrides) as InlineConfig;
 }
 
+const SEEDCORD_DECLARES_IT = `seedcord adds it to the Vite config. Look in ${paint.bold('vitePlugins')} for a plugin whose ${paint.bold('config')} hook rewrites ${paint.bold('environments')}.`;
+
 export function environmentNamed<Environment>(
     environments: Record<string, Environment>,
-    name: string,
-    botPath: string
+    name: BotEnvironmentName,
+    fix = SEEDCORD_DECLARES_IT
 ): Environment {
     const environment = environments[name];
     if (environment) return environment;
-    throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [
-        botPath,
-        `Vite created ${Object.keys(environments).join(', ')}, and seedcord runs the bot in "${name}"`
-    ]);
+    throw new SeedcordError(SeedcordErrorCode.CliViteEnvironmentMissing, [name, Object.keys(environments), fix]);
 }
 
-export function userCodeConfig(environment: string, resolve: ResolveConditions, configDir: string): UserConfig {
+export function userCodeConfig(
+    environment: BotEnvironmentName,
+    resolve: ResolveConditions,
+    configDir: string
+): UserConfig {
     return {
         resolve: { tsconfigPaths: true },
         environments: {

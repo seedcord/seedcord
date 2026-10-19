@@ -288,6 +288,8 @@ export enum SeedcordErrorCode {
     CliEdgeNoWorker = 3137,
     /** The running `seedcord` is a different install from the project's own. */
     CliNotProjectInstall = 3138,
+    /** Vite's environments leave out the one seedcord runs the bot in. */
+    CliViteEnvironmentMissing = 3139,
 
     /** A flag answers a question that the earlier answers skip. */
     CreateFlagNotApplicable = 3201,

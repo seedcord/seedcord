@@ -66,7 +66,7 @@ export class CloudflareWorker {
         const { workers } = await readBuildOutput(this.viteRoot);
         const { config, bundleDir } = workers.default;
         return bundleDir === undefined
-            ? bundleFailed(`the build output of the ${BOT_ENVIRONMENT} environment leaves out its bundle folder`)
+            ? bundleFailed(`${paint.bold('@cloudflare/build-output-utils')} read the worker's bundleDir as undefined`)
             : { config, bundleDir };
     }
 }

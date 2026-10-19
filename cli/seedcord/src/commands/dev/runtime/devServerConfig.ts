@@ -4,6 +4,7 @@ import { isInside, moduleGlobs, posixRelative } from '@seedcord/utils/node/inter
 
 import {
     BOT_ENVIRONMENT,
+    CODEGEN_ENVIRONMENT,
     mergeViteConfig,
     NODE_CONDITIONS,
     userCodeConfig,
@@ -15,12 +16,10 @@ import { STATE_FOLDER } from '#core/state/StateFolder';
 import { workerLogger } from './workerLogger';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
+import type { BotEnvironmentName } from '#core/modules/userCodeConfig';
 import type { InlineConfig } from 'vite';
 
 type DevConfigPaths = Pick<ResolvedSeedcordConfig, 'root' | 'configFile'>;
-
-// edge dev's node copy of the bot, since the worker uses BOT_ENVIRONMENT in the same server
-export const CODEGEN_ENVIRONMENT = 'codegen';
 
 // a **/logs/** glob would also swallow a source directory named logs
 // WinstonFileSink writes logs/ under the cwd
@@ -32,7 +31,7 @@ function logsIgnore(cwd: string): (path: string) => boolean {
 
 // vite writes resolved options back into the config object it receives
 function devViteConfig(
-    environment: string,
+    environment: BotEnvironmentName,
     conditions: Parameters<typeof userCodeConfig>[1],
     config: DevConfigPaths,
     cwd: string

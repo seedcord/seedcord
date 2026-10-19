@@ -94,7 +94,7 @@ describe('dev runtime module resolution', () => {
             )
         );
 
-        const runner = createServerModuleRunner(environmentNamed(server.environments, BOT_ENVIRONMENT, root));
+        const runner = createServerModuleRunner(environmentNamed(server.environments, BOT_ENVIRONMENT));
         ({ run } = await runner.import<{ run: (path: string) => Promise<string[]> }>('/src/entry.ts'));
     }, 30_000);
 

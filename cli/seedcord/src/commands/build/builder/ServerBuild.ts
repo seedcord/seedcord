@@ -103,7 +103,7 @@ export class ServerBuild extends TargetBuild {
                 }
             }
         }).catch(bundleFailed);
-        const bot = environmentNamed(builder.environments, BOT_ENVIRONMENT, config.instance);
+        const bot = environmentNamed(builder.environments, BOT_ENVIRONMENT);
         const result = await builder.build(bot).catch(bundleFailed);
 
         return bundleStats(outputChunks(result), files, join(outDir, ENTRY_FILE_NAME));

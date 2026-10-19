@@ -48,7 +48,7 @@ function watcherMock(): EventEmitter & { add: Mock } {
 }
 
 interface FakeEnvironment {
-    name: 'client' | 'ssr';
+    name: 'client' | 'seedcord';
     moduleGraph: { getModulesByFile: Mock; invalidateModule: Mock };
 }
 
@@ -74,20 +74,20 @@ function callHotUpdate(
     // the plugin reads only environment.name and environment.moduleGraph
     const context = { environment: env } as unknown as ThisParameterType<typeof hook>;
     // an empty graph stands in for the deprecated server.moduleGraph
-    const server = { moduleGraph: environment('ssr').moduleGraph } as unknown as ViteDevServer;
+    const server = { moduleGraph: environment('seedcord').moduleGraph } as unknown as ViteDevServer;
     void hook.call(context, { type, file, modules, server, timestamp: Date.now(), read: vi.fn() });
 }
 
-// vite runs the client environment's hook first, then ssr, where the bot's modules live
+// vite runs the client environment's hook first, then the bot's
 function viteHotUpdate(
     plugin: HmrPlugin,
     type: HotUpdateOptions['type'],
     file: string,
-    ssrModules: EnvironmentModuleNode[] = [],
-    ssr = environment('ssr')
+    botModules: EnvironmentModuleNode[] = [],
+    bot = environment('seedcord')
 ): void {
     callHotUpdate(plugin, environment('client'), type, file);
-    callHotUpdate(plugin, ssr, type, file, ssrModules);
+    callHotUpdate(plugin, bot, type, file, botModules);
 }
 
 interface ConfiguredPlugin {
@@ -104,7 +104,7 @@ const STATE = new StateFolder(process.cwd(), silentLogger);
 const NO_RESTART_FILES = new ViteRestartFiles(projectRoot, []);
 
 function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0], state = STATE): ConfiguredPlugin {
-    const plugin = new HmrPlugin(config, state, 'ssr', NO_RESTART_FILES);
+    const plugin = new HmrPlugin(config, state, 'seedcord', NO_RESTART_FILES);
     onTestFinished(() => plugin.close());
     const listeners = new Map<string, (data: unknown) => void>();
     // justified: spy on the private `hot` getter
@@ -121,7 +121,7 @@ function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0], st
     const watcher = watcherMock();
     const server = {
         watcher,
-        environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
+        environments: { seedcord: { hot: { send: vi.fn(), on: vi.fn() } } }
     } as unknown as ViteDevServer;
     (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
 
@@ -151,7 +151,7 @@ describe('HmrPlugin', () => {
             vi.spyOn(Logger.prototype, level).mockImplementation(() => undefined);
         }
         trace = vi.spyOn(Logger.prototype, 'trace').mockImplementation(() => undefined);
-        hmrPlugin = new HmrPlugin(mockConfig, STATE, 'ssr', NO_RESTART_FILES);
+        hmrPlugin = new HmrPlugin(mockConfig, STATE, 'seedcord', NO_RESTART_FILES);
     });
 
     afterEach(() => {
@@ -159,7 +159,7 @@ describe('HmrPlugin', () => {
     });
 
     it('carries the config rollback flag onto the hmr payload', () => {
-        const plugin = new HmrPlugin({ ...mockConfig, hmr: { rollback: false } }, STATE, 'ssr', NO_RESTART_FILES);
+        const plugin = new HmrPlugin({ ...mockConfig, hmr: { rollback: false } }, STATE, 'seedcord', NO_RESTART_FILES);
         const hotSend = vi.fn();
         // justified: spy on the private `hot` getter
         const hotHost = plugin as unknown as { hot: { send: typeof hotSend; on: ReturnType<typeof vi.fn> } };
@@ -249,7 +249,7 @@ describe('HmrPlugin', () => {
             serverMock = {
                 watcher,
                 environments: {
-                    ssr: {
+                    seedcord: {
                         hot: {
                             send: vi.fn(),
                             on: vi.fn()
@@ -305,7 +305,7 @@ describe('HmrPlugin', () => {
             vi.spyOn(hmrPlugin as any, 'hot', 'get').mockReturnValue({ send: hotSendMock, on: vi.fn() });
         });
 
-        it('sends one update carrying the importers from the ssr graph', () => {
+        it("sends one update carrying the importers from the bot's graph", () => {
             viteHotUpdate(hmrPlugin, 'update', file, [moduleNode(file, [moduleNode(importerFile)])]);
 
             expect(hotSendMock.mock.calls).toEqual([
@@ -343,7 +343,7 @@ describe('HmrPlugin', () => {
             const plain = moduleNode(file);
             const imported = moduleNode(file, [moduleNode(importerFile)]);
 
-            callHotUpdate(hmrPlugin, environment('ssr'), 'update', file, [plain, imported]);
+            callHotUpdate(hmrPlugin, environment('seedcord'), 'update', file, [plain, imported]);
 
             expect(hotSendMock).toHaveBeenCalledWith(
                 HMR_EVENT_NAME,
@@ -351,17 +351,17 @@ describe('HmrPlugin', () => {
             );
         });
 
-        it('invalidates the modules of every affected file in the ssr graph', () => {
+        it("invalidates the modules of every affected file in the bot's graph", () => {
             const fileNode = moduleNode(file, [moduleNode(importerFile)]);
             const importerNode = moduleNode(importerFile);
-            const ssr = environment('ssr');
-            ssr.moduleGraph.getModulesByFile.mockImplementation((target: string) =>
+            const bot = environment('seedcord');
+            bot.moduleGraph.getModulesByFile.mockImplementation((target: string) =>
                 target === file ? new Set([fileNode]) : new Set([importerNode])
             );
 
-            viteHotUpdate(hmrPlugin, 'update', file, [fileNode], ssr);
+            viteHotUpdate(hmrPlugin, 'update', file, [fileNode], bot);
 
-            expect(ssr.moduleGraph.invalidateModule.mock.calls).toEqual([[fileNode], [importerNode]]);
+            expect(bot.moduleGraph.invalidateModule.mock.calls).toEqual([[fileNode], [importerNode]]);
         });
 
         it('sends a save that lands right after a create', () => {

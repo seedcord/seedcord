@@ -44,9 +44,9 @@ describe('ProjectLoader', () => {
     });
 
     it.each([
-        [new ShellMode(), 'production'],
-        [new ShellMode({ key: 'ENV', value: 'staging' }), 'staging']
-    ])('gives envapt the .env file of the mode the bot loads in', async (shell, mode) => {
+        [undefined, 'production'],
+        [{ key: 'ENV', value: 'staging' } as const, 'staging']
+    ])('gives envapt the .env file of the mode the bot loads in', async (shellVar, mode) => {
         const projectDir = tempProject();
         writeFileSync(join(projectDir, 'seedcord.config.ts'), '');
         for (const name of ['test', 'staging', 'production']) {
@@ -57,13 +57,17 @@ describe('ProjectLoader', () => {
         onTestFinished(() => process.chdir(cwd));
         // envapt reads the folder it loads in, under vitest's NODE_ENV=test
         vi.resetModules();
-        const [{ ProjectLoader: FreshLoader }, { Envapter }] = await Promise.all([
+        const [{ ProjectLoader: FreshLoader }, { ShellMode: FreshShell }, { Envapter }] = await Promise.all([
             import('#core/config/ProjectLoader'),
+            import('#core/viteMode'),
             import('envapt')
         ]);
         const { open } = stubModulesExporting(MINIMAL);
 
-        await using _project = await openProject(new FreshLoader(open, shell, 'production'), projectDir);
+        await using _project = await openProject(
+            new FreshLoader(open, new FreshShell(shellVar), 'production'),
+            projectDir
+        );
 
         expect(Envapter.get('PROBE')).toBe(mode);
     });

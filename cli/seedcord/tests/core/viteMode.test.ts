@@ -1,5 +1,9 @@
+import { mkdtempDisposable, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { ShellMode } from '#core/viteMode';
 
@@ -54,19 +58,38 @@ describe('ShellMode', () => {
     });
 });
 
-describe('ShellMode.pinNodeEnv', () => {
-    it.each(['development', 'production'] as const)('sets NODE_ENV to %s by default', (defaultMode) => {
+describe('ShellMode.applyMode NODE_ENV', () => {
+    async function configDir(files: Record<string, string> = {}): Promise<string> {
+        const dir = await mkdtempDisposable(join(tmpdir(), 'seedcord-mode-'));
+        onTestFinished(() => dir.remove());
+        await Promise.all(Object.entries(files).map(([name, text]) => writeFile(join(dir.path, name), text)));
+        return dir.path;
+    }
+
+    beforeEach(() => {
         vi.stubEnv('NODE_ENV', undefined);
-
-        ShellMode.pinNodeEnv(defaultMode);
-
-        expect(process.env.NODE_ENV).toBe(defaultMode);
+        // vite's loadEnv copies NODE_ENV from .env files into this
+        vi.stubEnv('VITE_USER_NODE_ENV', undefined);
     });
 
-    it('keeps the NODE_ENV the shell set', () => {
+    it("sets NODE_ENV to the command's default", async () => {
+        new ShellMode().applyMode('production', await configDir());
+
+        expect(process.env.NODE_ENV).toBe('production');
+    });
+
+    it('keeps the NODE_ENV the shell set', async () => {
         vi.stubEnv('NODE_ENV', 'development');
 
-        ShellMode.pinNodeEnv('production');
+        new ShellMode().applyMode('production', await configDir());
+
+        expect(process.env.NODE_ENV).toBe('development');
+    });
+
+    it("takes NODE_ENV=development from the mode's .env file", async () => {
+        const dir = await configDir({ '.env.production': 'NODE_ENV=development\n' });
+
+        new ShellMode().applyMode('production', dir);
 
         expect(process.env.NODE_ENV).toBe('development');
     });

@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 
 import { warnLinks } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { paint, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { isInside } from '@seedcord/utils/node/internal';
 import { createBuilder } from 'vite';
@@ -109,7 +109,11 @@ export class EdgeBuild extends TargetBuild {
         const [folders, cloudflare] = await Promise.all([files.foldersIncludingEmpty(), this.worker()]);
 
         const captured = await this.bundleWorker(ids, folders, cloudflare).catch(bundleFailed);
-        const chunks = captured ?? bundleFailed(`the ${BOT_ENVIRONMENT} environment finished before writing a bundle`);
+        const chunks =
+            captured ??
+            bundleFailed(
+                `Vite ended the build before the ${paint.bold(BOT_ENVIRONMENT)} environment's generateBundle hook ran`
+            );
         const built = await cloudflare.built().catch(bundleFailed);
         assertNodeCompat(built, this.target.cloudflareConfig);
 

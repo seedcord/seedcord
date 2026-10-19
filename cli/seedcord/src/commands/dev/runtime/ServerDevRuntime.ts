@@ -27,7 +27,7 @@ export class ServerDevRuntime extends BaseDevRuntime {
                 plugins: [hmr.plugin, ...context.config.vitePlugins]
             })
         ).catch(rethrowVitePluginError);
-        const bot = environmentNamed(server.environments, BOT_ENVIRONMENT, context.config.instance);
+        const bot = environmentNamed(server.environments, BOT_ENVIRONMENT);
         const modules = new RunnerModuleLoader(createServerModuleRunner(bot));
         return { context, modules, hmr, resources };
     }

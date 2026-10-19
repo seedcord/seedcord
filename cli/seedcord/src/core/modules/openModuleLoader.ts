@@ -57,13 +57,13 @@ export async function openModuleLoader(
         clearScreen: false,
         // hmr: false still opens vite's websocket on 24678
         server: { middlewareMode: true, hmr: false, ws: false, watch: null },
-        // only a client environment reads the dep cache in node_modules/.vite
+        // keeps vite from writing a dep cache into the project's node_modules/.vite
         optimizeDeps: { noDiscovery: true, include: [] },
         plugins: [...(workerEnv ? [edgeStandIns(workerEnv)] : []), ...vitePlugins]
     });
     await using onFailure = new AsyncDisposableStack();
     const server = await openViteServer(onFailure, config);
-    const bot = environmentNamed(server.environments, BOT_ENVIRONMENT, projectDir);
+    const bot = environmentNamed(server.environments, BOT_ENVIRONMENT);
     const runner = createServerModuleRunner(bot, { hmr: false });
     onFailure.defer(() => runner.close());
 
