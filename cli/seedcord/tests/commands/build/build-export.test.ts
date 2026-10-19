@@ -2,13 +2,13 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { build } from 'vite';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import { targetBuildFor } from '#commands/build/builder/targetBuildFor';
 import { runProjectTsc } from '#core/modules/runProjectTsc';
 import { ShellMode } from '#core/viteMode';
 
-import { copyFixture, GATEWAY_BOT, HTTP_BOT } from './fixtureCopy';
+import { fixtureCopy, GATEWAY_BOT, HTTP_BOT } from './fixtureCopy';
 import { quickBuildRunner } from './quickBuildRunner';
 import { smoke } from './smoke';
 
@@ -73,33 +73,33 @@ const APP_TSC_FLAGS = [
     '--skipLibCheck'
 ];
 
-async function exportProject(fixture: string, script: string): Promise<string> {
-    const projectDir = await copyFixture(fixture);
-    await writeFile(join(projectDir, 'seedcord.config.ts'), EXPORT_CONFIG);
-    await writeFile(join(projectDir, 'server.mjs'), script);
-    return projectDir;
+async function exportCopy(fixture: string, scripts: Record<string, string>): ReturnType<typeof fixtureCopy> {
+    const copy = await fixtureCopy(fixture);
+    await writeFile(join(copy.path, 'seedcord.config.ts'), EXPORT_CONFIG);
+    for (const [name, script] of Object.entries(scripts)) await writeFile(join(copy.path, name), script);
+    return copy;
 }
 
-async function builtHttpExport(): Promise<string> {
-    const projectDir = await exportProject(HTTP_BOT, FETCH_SERVER);
-    const botFile = join(projectDir, 'src/bot.ts');
-    const source = await readFile(botFile, 'utf8');
-    await writeFile(botFile, source.replace('port: 0', 'port: false'));
-    await quickBuildRunner().run(projectDir);
-    return projectDir;
-}
+describe('seedcord build without build.start on an http bot', () => {
+    let projectDir = '';
 
-describe('seedcord build without build.start', () => {
-    it("serves an http bot through the fetch of a plain node server's own port", async () => {
-        const projectDir = await builtHttpExport();
+    beforeAll(async () => {
+        const copy = await exportCopy(HTTP_BOT, { 'server.mjs': FETCH_SERVER });
+        projectDir = copy.path;
+        const botFile = join(projectDir, 'src/bot.ts');
+        const source = await readFile(botFile, 'utf8');
+        await writeFile(botFile, source.replace('port: 0', 'port: false'));
+        await quickBuildRunner().run(projectDir);
+        return () => copy[Symbol.asyncDispose]();
+    }, 120_000);
 
+    it("serves the bot through the fetch of a plain node server's own port", async () => {
         const output = await smoke('http', process.execPath, [join(projectDir, 'server.mjs')]);
 
         expect(output).toContain('fixture:text hello from the text table');
     }, 120_000);
 
     it('still loads its folders once a bundler leaves import.meta.dirname undefined', async () => {
-        const projectDir = await builtHttpExport();
         const outDir = join(projectDir, 'bundled');
         await build({
             configFile: false,
@@ -114,7 +114,6 @@ describe('seedcord build without build.start', () => {
     }, 120_000);
 
     it('types the default export of dist/index.mjs for an app that imports it', async () => {
-        const projectDir = await builtHttpExport();
         await writeFile(join(projectDir, 'app.mts'), TYPED_APP);
 
         const result = await runProjectTsc(projectDir, [...APP_TSC_FLAGS, 'app.mts']);
@@ -122,10 +121,18 @@ describe('seedcord build without build.start', () => {
         expect(result.stdout + result.stderr).toBe('');
         expect(result.exitCode).toBe(0);
     }, 120_000);
+});
 
-    it('writes the types in a step after the bundle', async () => {
-        const projectDir = await exportProject(GATEWAY_BOT, GATEWAY_SCRIPT);
-        const labels: string[] = [];
+describe('seedcord build without build.start on a gateway bot', () => {
+    let projectDir = '';
+    const labels: string[] = [];
+
+    beforeAll(async () => {
+        const copy = await exportCopy(GATEWAY_BOT, {
+            'server.mjs': GATEWAY_SCRIPT,
+            'seedcord-first.mjs': SEEDCORD_FIRST_SCRIPT
+        });
+        projectDir = copy.path;
         const recording: Steps<BuildStep> = {
             step: (label, task) => {
                 labels.push(label);
@@ -133,26 +140,22 @@ describe('seedcord build without build.start', () => {
             },
             detail: () => undefined
         };
-
         await quickBuildRunner(targetBuildFor, new ShellMode(), recording).run(projectDir);
-
-        expect(labels.slice(-2)).toEqual(['bundle', 'write types']);
+        return () => copy[Symbol.asyncDispose]();
     }, 120_000);
 
-    it('reads the .env beside the config when the app imports seedcord before the bot', async () => {
-        const projectDir = await exportProject(GATEWAY_BOT, SEEDCORD_FIRST_SCRIPT);
-        await quickBuildRunner().run(projectDir);
+    it('writes the types in a step after the bundle', () => {
+        expect(labels.slice(-2)).toEqual(['bundle', 'write types']);
+    });
 
+    it('reads the .env beside the config when a plain node script imports the bot', async () => {
         const output = await smoke('gateway', process.execPath, [join(projectDir, 'server.mjs')]);
 
         expect(output).toContain('fixture:env beside the config');
     }, 120_000);
 
-    it('reads the .env beside the config when a plain node script imports the bot', async () => {
-        const projectDir = await exportProject(GATEWAY_BOT, GATEWAY_SCRIPT);
-        await quickBuildRunner().run(projectDir);
-
-        const output = await smoke('gateway', process.execPath, [join(projectDir, 'server.mjs')]);
+    it('reads the .env beside the config when the app imports seedcord before the bot', async () => {
+        const output = await smoke('gateway', process.execPath, [join(projectDir, 'seedcord-first.mjs')]);
 
         expect(output).toContain('fixture:env beside the config');
     }, 120_000);

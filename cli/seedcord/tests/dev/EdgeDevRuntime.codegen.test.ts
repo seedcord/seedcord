@@ -13,28 +13,7 @@ import { edgeConfig, edgeProject, editFile, fakeDiscordApi, startedRuntime, WAVE
 import type { DevEvent } from '#commands/dev/runtime/events';
 
 describe('EdgeDevRuntime codegen', () => {
-    it('gives codegen a node copy of the bot that scans its commands', async () => {
-        await using project = await edgeProject();
-        const { projectDir } = project;
-        await editFile(join(projectDir, 'src/bot.ts'), (text) =>
-            text.replace('commands: { path: null }', "commands: { path: './commands' }")
-        );
-        await mkdir(join(projectDir, 'src/commands'));
-        await writeFile(join(projectDir, 'src/commands/Wave.ts'), WAVE_COMMAND);
-        await using started = await startedRuntime(projectDir);
-        const { runtime, instance } = started;
-        const config = edgeConfig(projectDir);
-
-        const { outputPath } = await CodegenRunner.create(quietSteps, silentLogger, new ShellMode()).writeFrom({
-            config,
-            instance,
-            modules: runtime
-        });
-
-        await expect(readFile(outputPath, 'utf8')).resolves.toContain('wave');
-    }, 120_000);
-
-    it('gives codegen the saved version of a file a command imports', async () => {
+    it('gives codegen a node copy of the bot that scans its commands, then the saved version of a file they import', async () => {
         await using project = await edgeProject();
         const { projectDir } = project;
         await editFile(join(projectDir, 'src/bot.ts'), (text) =>
@@ -51,7 +30,8 @@ describe('EdgeDevRuntime codegen', () => {
         const { runtime, instance } = started;
         const codegen = CodegenRunner.create(quietSteps, silentLogger, new ShellMode());
         const bot = { config: edgeConfig(projectDir), instance, modules: runtime };
-        await codegen.writeFrom(bot);
+        const { outputPath: first } = await codegen.writeFrom(bot);
+        await expect(readFile(first, 'utf8')).resolves.toContain('wave');
 
         await writeFile(names, "export const WAVE = 'salute';\n");
 

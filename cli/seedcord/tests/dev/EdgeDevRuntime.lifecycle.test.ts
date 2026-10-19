@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { posixRelative } from '@seedcord/utils/node/internal';
 import { bindings, exports } from 'cf/config';
-import { assert, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { assert, beforeAll, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 import { DevRunner } from '#commands/dev/DevRunner';
@@ -76,22 +76,70 @@ describe('EdgeDevRuntime lifecycle', () => {
         await expect(nodeCopyApiToken(project.projectDir, 'staging')).resolves.toBe('from-staging');
     }, 120_000);
 
-    it('reports each slow startup step before the endpoint listens', async () => {
-        await using project = await edgeProject();
-        const { projectDir } = project;
+    describe('on one started bot', () => {
         const events: DevEvent[] = [];
+        const pluginObjects: { servers: number }[] = [];
+        let projectDir = '';
+        let runtime: EdgeDevRuntime | undefined;
+        let port = 0;
 
-        await using started = await startedRuntime(projectDir, (event) => events.push(event));
-        const { runtime, instance } = started;
-        await runtime.startBot(instance);
+        beforeAll(async () => {
+            await using cleanup = new AsyncDisposableStack();
+            ({ projectDir } = cleanup.use(await edgeProject()));
+            await appendFile(
+                join(projectDir, 'src/bot.ts'),
+                "\nimport { DurableObject } from 'cloudflare:workers';\nexport class Counter extends DurableObject {}\n\nexport function helper(): number {\n    return 1;\n}\n"
+            );
+            await writeCloudflareConfig(projectDir, {
+                env: { COUNTER: bindings.durableObject({ worker: 'edge-bot', exportName: 'Counter' }) },
+                exports: { Counter: exports.durableObject({ storage: 'sqlite' }) }
+            });
+            // the worker loads this folder on start
+            await writeFile(join(projectDir, 'src/handlers/greeting.ts'), GREETING_PROBE);
+            const vitePlugins = vitePluginsOf(() => {
+                const counter = { servers: 0 };
+                pluginObjects.push(counter);
+                return [greetingPlugin(), { name: 'counts-servers', configureServer: () => void counter.servers++ }];
+            });
+            const started = cleanup.use(
+                await startedRuntime(projectDir, (event) => events.push(event), { vitePlugins })
+            );
+            await started.runtime.startBot(started.instance);
+            ({ runtime } = started);
+            port = started.port();
+            const owned = cleanup.move();
+            return () => owned.disposeAsync();
+        }, 120_000);
 
-        const types = events.map((event) => event.type);
-        const steps = events.flatMap((event) => (event.type === 'progress' ? [event.status] : []));
-        expect(types.lastIndexOf('progress')).toBeLessThan(types.indexOf('server-listening'));
-        expect(steps).toContainEqual(
-            expect.stringContaining(posixRelative(process.cwd(), join(projectDir, 'src/bot.ts')))
-        );
-    }, 120_000);
+        it('reports each slow startup step before the endpoint listens', () => {
+            const types = events.map((event) => event.type);
+            const steps = events.flatMap((event) => (event.type === 'progress' ? [event.status] : []));
+
+            expect(types.lastIndexOf('progress')).toBeLessThan(types.indexOf('server-listening'));
+            expect(steps).toContainEqual(
+                expect.stringContaining(posixRelative(process.cwd(), join(projectDir, 'src/bot.ts')))
+            );
+        });
+
+        it('starts a bot.ts that exports a function and a durable object class', async () => {
+            const unsigned = await fetch(`http://localhost:${port}/`, { method: 'POST', body: '{}' });
+
+            expect(unsigned.status).toBe(401);
+        });
+
+        it("runs vitePlugins on the worker's code and on codegen's node copy", async () => {
+            assert(runtime);
+            const nodeCopy = await runtime.importModule<{ default: string }>(
+                join(projectDir, 'src/handlers/greeting.ts')
+            );
+
+            expect(nodeCopy.default).toBe(GREETING);
+        });
+
+        it('gives the node copy and the worker their own plugin objects from vitePlugins', () => {
+            expect(pluginObjects).toEqual([{ servers: 1 }, { servers: 1 }]);
+        });
+    });
 
     it('runs the startup sequence once in a seedcord dev session', async () => {
         await using project = await edgeProject();
@@ -203,47 +251,6 @@ describe('EdgeDevRuntime lifecycle', () => {
         expect(unsigned.status).toBe(401);
     }, 120_000);
 
-    it('starts a bot.ts that has a named export', async () => {
-        await using project = await edgeProject();
-        const { projectDir } = project;
-        await appendFile(join(projectDir, 'src/bot.ts'), '\nexport function helper(): number {\n    return 1;\n}\n');
-        await using started = await startedRuntime(projectDir);
-        const { runtime, instance } = started;
-        await runtime.startBot(instance);
-
-        const unsigned = await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body: '{}' });
-        expect(unsigned.status).toBe(401);
-    }, 60_000);
-
-    it("runs vitePlugins on the worker's code and on codegen's node copy", async () => {
-        await using project = await edgeProject();
-        const { projectDir } = project;
-        // the worker loads this folder on start
-        await writeFile(join(projectDir, 'src/handlers/greeting.ts'), GREETING_PROBE);
-        const vitePlugins = vitePluginsOf(() => [greetingPlugin()]);
-        await using started = await startedRuntime(projectDir, undefined, { vitePlugins });
-        const { runtime, instance } = started;
-
-        await runtime.startBot(instance);
-        const nodeCopy = await runtime.importModule<{ default: string }>(join(projectDir, 'src/handlers/greeting.ts'));
-
-        expect(nodeCopy.default).toBe(GREETING);
-    }, 60_000);
-
-    it('gives the node copy and the worker their own plugin objects from vitePlugins', async () => {
-        await using project = await edgeProject();
-        const created: { servers: number }[] = [];
-        const vitePlugins = vitePluginsOf(() => {
-            const plugin = { servers: 0 };
-            created.push(plugin);
-            return [{ name: 'counts-servers', configureServer: () => void plugin.servers++ }];
-        });
-
-        await using _started = await startedRuntime(project.projectDir, undefined, { vitePlugins });
-
-        expect(created).toEqual([{ servers: 1 }, { servers: 1 }]);
-    }, 60_000);
-
     it('throws CoreVitePluginThrew for a plugin that throws while edge dev starts', async () => {
         await using project = await edgeProject();
         const vitePlugins = vitePluginsOf(
@@ -328,25 +335,6 @@ describe('EdgeDevRuntime lifecycle', () => {
         await second.runtime.startBot(second.instance);
 
         const unsigned = await fetch(`http://localhost:${second.port()}/`, { method: 'POST', body: '{}' });
-        expect(unsigned.status).toBe(401);
-    }, 120_000);
-
-    it('exports the durable object classes bot.ts exports', async () => {
-        await using project = await edgeProject();
-        const { projectDir } = project;
-        await appendFile(
-            join(projectDir, 'src/bot.ts'),
-            "\nimport { DurableObject } from 'cloudflare:workers';\nexport class Counter extends DurableObject {}\n"
-        );
-        await writeCloudflareConfig(projectDir, {
-            env: { COUNTER: bindings.durableObject({ worker: 'edge-bot', exportName: 'Counter' }) },
-            exports: { Counter: exports.durableObject({ storage: 'sqlite' }) }
-        });
-        await using started = await startedRuntime(projectDir);
-        const { runtime, instance } = started;
-        await runtime.startBot(instance);
-
-        const unsigned = await fetch(`http://localhost:${started.port()}/`, { method: 'POST', body: '{}' });
         expect(unsigned.status).toBe(401);
     }, 120_000);
 });

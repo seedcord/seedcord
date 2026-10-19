@@ -1,7 +1,7 @@
 import { connect } from 'node:net';
 import path from 'node:path';
 
-import { shutdownOf } from '@seedcord/core/node/internal';
+import { DRAIN_WINDOW_MS, shutdownOf } from '@seedcord/core/node/internal';
 import { Logger } from '@seedcord/logger';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -25,6 +25,19 @@ function signalListeners(): number[] {
     return [process.listenerCount('SIGTERM'), process.listenerCount('SIGINT')];
 }
 
+async function runPastDrainWindow(work: Promise<void>): Promise<void> {
+    const finished = work.then(() => true);
+    const advance = async (): Promise<boolean> => {
+        await vi.advanceTimersByTimeAsync(DRAIN_WINDOW_MS);
+        // the server's sockets close on real I/O
+        await new Promise((resolve) => setImmediate(resolve));
+        return false;
+    };
+    let done: boolean;
+    do done = await Promise.race([finished, advance()]);
+    while (!done);
+}
+
 const encoder = new TextEncoder();
 
 // with Expect: 100-continue, node sends 100 Continue once it has read the headers
@@ -41,6 +54,7 @@ async function rawPost(signer: Signer, payload: string): Promise<{ head: string;
 
 describe('http Seedcord shutdown', () => {
     afterEach(() => {
+        vi.useRealTimers();
         vi.restoreAllMocks();
     });
 
@@ -122,7 +136,8 @@ describe('http Seedcord shutdown', () => {
         const response = await postSigned(host, signer, JSON.stringify(slashPayload('drainhang')));
         expect(response.status).toBe(202);
 
-        await shutdownOf(host).run(0, false);
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
+        await runPastDrainWindow(shutdownOf(host).run(0, false));
 
         const failed = errors.mock.calls.some((call) => call.some((arg) => String(arg).includes('shutdown failed')));
         expect(failed).toBe(false);

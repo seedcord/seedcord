@@ -131,43 +131,20 @@ describe('a built edge worker', () => {
 });
 
 describe('seedcord build on an edge bot with files it never loads', () => {
-    it('builds next to a dist folder that holds other files', async () => {
+    it('builds beside a dist folder of other files, with an unimported file that sets a timer, and a bot.ts that exports a durable object and a constant and awaits at the top', async () => {
         const projectDir = await copyEdgeBotForTest();
         await mkdir(join(projectDir, 'dist'));
         await writeFile(join(projectDir, 'dist/notes.txt'), 'not a build\n');
-
-        await expect(edgeBuildRunner().run(projectDir)).resolves.toBeDefined();
-    }, 120_000);
-
-    it('builds a file under root that sets a timer at load, since nothing imports it', async () => {
-        const projectDir = await copyEdgeBotForTest();
         await mkdir(join(projectDir, 'src/scripts'));
         await writeFile(join(projectDir, 'src/scripts/oneOff.ts'), 'setTimeout(() => undefined, 1);\n');
-
-        await expect(edgeBuildRunner().run(projectDir)).resolves.toBeDefined();
-    }, 120_000);
-
-    it('passes a named export of the instance file through to the worker', async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await appendFile(join(projectDir, 'src/bot.ts'), '\nexport class Counter {}\n');
+        await appendFile(
+            join(projectDir, 'src/bot.ts'),
+            "\nexport class Counter {}\nexport const BOT_NAME = 'edge-bot';\nawait Promise.resolve();\n"
+        );
         await writeCloudflareConfig(projectDir, {
             env: { COUNTER: bindings.durableObject({ worker: 'edge-bot', exportName: 'Counter' }) },
             exports: { Counter: exports.durableObject({ storage: 'sqlite' }) }
         });
-
-        await expect(edgeBuildRunner().run(projectDir)).resolves.toBeDefined();
-    }, 120_000);
-
-    it('builds an instance file with a top-level await', async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await appendFile(join(projectDir, 'src/bot.ts'), '\nawait Promise.resolve();\n');
-
-        await expect(edgeBuildRunner().run(projectDir)).resolves.toBeDefined();
-    }, 120_000);
-
-    it('leaves a constant the instance file exports out of the worker', async () => {
-        const projectDir = await copyEdgeBotForTest();
-        await appendFile(join(projectDir, 'src/bot.ts'), "\nexport const BOT_NAME = 'edge-bot';\n");
 
         await expect(edgeBuildRunner().run(projectDir)).resolves.toBeDefined();
     }, 120_000);
