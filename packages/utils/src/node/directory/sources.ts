@@ -23,7 +23,7 @@ interface FolderAccess {
     resolve(dir: string): string;
     // resolve, then throw for a folder outside root
     walkable(dir: string): string;
-    // walkable, then throw for a folder that files leaves out
+    // resolve, then throw for a folder outside root or outside every folder in files
     readable(dir: string): string;
 }
 
@@ -42,18 +42,22 @@ class BotFolderAccess implements FolderAccess {
 
     public walkable(dir: string): string {
         const folder = this.resolve(dir);
-        if (!isInside(this.root, folder)) {
-            throw new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, this.root]);
-        }
+        this.assertInsideRoot(folder);
         return folder;
     }
 
     public readable(dir: string): string {
-        const folder = this.walkable(dir);
+        const folder = this.resolve(dir);
+        this.assertInsideRoot(folder, 'readFiles');
         if (!this.listed.some((listed) => isInside(listed, folder))) {
             throw new SeedcordError(SeedcordErrorCode.CoreDirectoryNotListed, [folder]);
         }
         return folder;
+    }
+
+    private assertInsideRoot(folder: string, readBy?: 'readFiles'): void {
+        if (isInside(this.root, folder)) return;
+        throw new SeedcordError(SeedcordErrorCode.CorePathOutsideRoot, [folder, this.root, readBy]);
     }
 }
 

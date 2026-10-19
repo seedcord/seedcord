@@ -10,7 +10,7 @@ export function isTsOrJsFile(entry: fs.Dirent): boolean {
 }
 
 const MODULE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs'];
-const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts', '.d.cts'];
+const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts'];
 const CODE_AND_MAP_EXTENSIONS = [...MODULE_EXTENSIONS, '.map'];
 
 function endsWithAny(name: string, extensions: string[]): boolean {

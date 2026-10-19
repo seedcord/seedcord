@@ -121,14 +121,14 @@ const messages = {
             : `The Vite plugin ${paint.sky(plugin)} from ${paint.bold('vitePlugins')} in ${paint.path(configFile)} threw ${placeText(place.hook, place.loading)}. ${reasonThen(reason, vitePluginFix(place))}`,
     [SeedcordErrorCode.CorePathUnreadable]: (path: string, reason: string) =>
         `Could not read ${paint.path(path)}. ${reasonThen(reason, 'Check that it exists and that this process can read it.')}`,
-    [SeedcordErrorCode.CorePathOutsideRoot]: (path: string, root: string) =>
-        `${paint.path(path)} is outside ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move it under ${paint.bold('root')}, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds it.`,
+    [SeedcordErrorCode.CorePathOutsideRoot]: (path: string, root: string, readBy?: 'readFiles') =>
+        `${paint.path(path)} is outside ${paint.bold('root')} (${paint.path(root)}). ${paint.bold('seedcord build')} bundles only the files under ${paint.bold('root')}. Move it under ${paint.bold('root')}, or set ${paint.bold('root')} in seedcord.config.ts to a folder that holds it.${readBy ? ` A plugin that reads its own data files should import them, since ${paint.bold('readFiles')} reads the bot's folders.` : ''}`,
     [SeedcordErrorCode.CoreDirectoryRootUnknown]: (dir: string) =>
         `${paint.path(dir)} is relative to ${paint.bold('root')}, but this process has no ${paint.bold('root')} to resolve it against. ${paint.bold('seedcord dev')} and a built bot set ${paint.bold('root')} from seedcord.config.ts. Start the bot one of those ways, or pass an absolute path like ${paint.sky(`resolve(import.meta.dirname, '${dir}')`)}.`,
     [SeedcordErrorCode.CoreDirectoryNotBuilt]: (dir: string, root: string) =>
         `${paint.path(dir)} was not a folder under ${paint.bold('root')} (${paint.path(root)}) when ${paint.bold('seedcord build')} ran, so the build holds none of its files. Create the folder, then build again.`,
     [SeedcordErrorCode.CoreDirectoryNotListed]: (dir: string) =>
-        `${paint.bold('readFiles')} read ${paint.path(dir)}, which no folder in ${paint.bold('files')} in seedcord.config.ts holds. ${paint.bold('seedcord build')} bundles non-code files from only those folders. Add it to ${paint.bold('files')}, like ${paint.sky("files: ['./locales']")}.`,
+        `${paint.bold('readFiles')} was called on ${paint.path(dir)}, which is outside every folder in ${paint.bold('files')} in seedcord.config.ts. ${paint.bold('seedcord build')} bundles non-code files from only those folders. Add it to ${paint.bold('files')}, like ${paint.sky("files: ['./locales']")}.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.bold(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>

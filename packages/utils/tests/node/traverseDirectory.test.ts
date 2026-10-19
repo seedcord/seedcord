@@ -159,10 +159,13 @@ describe('a folder on disk under seedcord dev', () => {
         expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathOutsideRoot });
     });
 
-    it('throws CorePathOutsideRoot for a folder outside root', async () => {
+    it('throws CorePathOutsideRoot for a folder outside root, pointing a plugin at importing its own files', async () => {
         const error = await rejection(readFiles(scratch));
 
-        expect(error).toMatchObject({ code: SeedcordErrorCode.CorePathOutsideRoot });
+        expect(error).toMatchObject({
+            code: SeedcordErrorCode.CorePathOutsideRoot,
+            message: expect.stringContaining('import') as string
+        });
     });
 });
 

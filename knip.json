@@ -104,7 +104,7 @@
             "entry": ["**/*.types-test.ts"]
         },
         "cli/seedcord": {
-            "entry": ["**/*.types-test.ts", "tests/fixtures/*/**/*.{ts,js}"],
+            "entry": ["**/*.types-test.ts", "tests/fixtures/*/**/*.{ts,tsx,mts,js,jsx,mjs}"],
             "ignoreDependencies": ["cloudflare", "@leeoniya/ufuzzy", "cli-spinners"]
         },
         "cli/create-seedcord": {

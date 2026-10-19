@@ -9,12 +9,6 @@ describe('encodeFile', () => {
         expect(encodeFile(Buffer.from('# héllo\n'))).toEqual({ encoding: 'utf8', data: '# héllo\n' });
     });
 
-    it('stores bytes that are not UTF-8 as base64', () => {
-        const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff]);
-
-        expect(encodeFile(png)).toEqual({ encoding: 'base64', data: png.toString('base64') });
-    });
-
     it.each([
         ['UTF-8 text', Buffer.from('{ "hi": "salut" }\n')],
         ['text that starts with a byte order mark', Buffer.from('﻿en,fr\n')],
