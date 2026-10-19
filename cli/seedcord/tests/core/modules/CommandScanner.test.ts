@@ -11,7 +11,7 @@ import { ProjectFiles } from '#core/project/ProjectFiles';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
 
 function filesAt(root: string): ProjectFiles {
-    return new ProjectFiles({
+    return ProjectFiles.of({
         root,
         configFile: join(root, 'seedcord.config.ts'),
         files: [],

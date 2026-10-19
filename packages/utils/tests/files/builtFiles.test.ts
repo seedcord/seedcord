@@ -8,7 +8,7 @@ import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { encodeFile } from '#src/files/encodedFile';
 import { toPosixPath } from '#src/files/paths';
 import { readFiles, importFiles } from '#src/files/readers';
-import { BOT_FILES_KEY, BUILT_FILES_READY_KEY, builtConfigDir, setBuiltFilesHook, setDevFiles } from '#src/files/slots';
+import { BUILT_FILES_READY_KEY, botConfigDir, setBuiltFiles, setBuiltFilesHook, setDevFiles } from '#src/files/slots';
 import { clearBuiltFiles } from '#tests/builtFilesSlot';
 
 import type { EncodedFile } from '#src/files/encodedFile';
@@ -33,19 +33,7 @@ function register({
     listedFiles = {},
     ...rest
 }: Partial<TypedOmit<BuiltSlot, 'kind'>>): Disposable {
-    const slot: BuiltSlot = {
-        kind: 'built',
-        root,
-        folders,
-        listed,
-        skippedFolders,
-        projectFiles,
-        modules,
-        listedFiles,
-        ...rest
-    };
-    Reflect.set(globalThis, Symbol.for(BOT_FILES_KEY), slot);
-    return { [Symbol.dispose]: clearBuiltFiles };
+    return setBuiltFiles({ root, folders, listed, skippedFolders, projectFiles, modules, listedFiles, ...rest });
 }
 
 // a text file the way the build stores it
@@ -79,20 +67,20 @@ async function rejection(iterable: AsyncIterable<unknown>): Promise<unknown> {
     }
 }
 
-describe('builtConfigDir', () => {
+describe('botConfigDir', () => {
     it('returns the folder holding seedcord.config.ts', () => {
         using project = mkdtempDisposableSync(path.join(tmpdir(), 'seedcord-built-'));
         writeFileSync(path.join(project.path, 'seedcord.config.ts'), '');
         using _built = register({ root: path.join(project.path, 'dist'), configFile: '../seedcord.config.ts' });
 
-        expect(builtConfigDir()).toBe(project.path);
+        expect(botConfigDir()).toBe(project.path);
     });
 
     it('returns nothing for a build copied away from its project', () => {
         using elsewhere = mkdtempDisposableSync(path.join(tmpdir(), 'seedcord-built-'));
         using _built = register({ root: path.join(elsewhere.path, 'app'), configFile: '../seedcord.config.ts' });
 
-        expect(builtConfigDir()).toBeUndefined();
+        expect(botConfigDir()).toBeUndefined();
     });
 });
 
@@ -118,7 +106,13 @@ describe('setBuiltFilesHook', () => {
     });
 
     it('treats the root seedcord dev sets as no built files', () => {
-        using _dev = setDevFiles({ root: ROOT, listed: [], skippedFolders: [], projectFiles: [] });
+        using _dev = setDevFiles({
+            root: ROOT,
+            listed: [],
+            skippedFolders: [],
+            projectFiles: [],
+            configFile: 'seedcord.config.ts'
+        });
         // setBuiltFilesHook keeps the hook it could not run yet
         onTestFinished(clearBuiltFiles);
         const hook = vi.fn();
@@ -126,7 +120,7 @@ describe('setBuiltFilesHook', () => {
         setBuiltFilesHook(hook);
 
         expect(hook).not.toHaveBeenCalled();
-        expect(builtConfigDir()).toBeUndefined();
+        expect(botConfigDir()).toBeUndefined();
     });
 });
 

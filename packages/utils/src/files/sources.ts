@@ -1,19 +1,17 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { asError } from '#src/misc/asError';
-
 import { BotLayout } from './BotLayout';
 import { decodeFile } from './encodedFile';
 import { botFilesSlot } from './slots';
 
-import type { BuiltSlot, ModuleLoader } from './slots';
+import type { BotFolder } from './BotLayout';
+import type { BuiltSlot, DevSlot, ModuleLoader } from './slots';
 import type { Buffer } from 'node:buffer';
-import type * as fs from 'node:fs';
 
 type BytesLoader = () => Promise<Buffer>;
 type Loaders<Loader> = [fullPath: string, load: Loader][];
@@ -95,7 +93,7 @@ abstract class FileSource {
 
 class DiskFiles extends FileSource {
     protected async modulesIn(folder: string, layout: BotLayout): Promise<Loaders<ModuleLoader>> {
-        const all = await DiskFiles.filesUnder(folder);
+        const all = await DiskFiles.filesUnder(folder, layout);
         const files = all.filter((file) => layout.isModule(file));
         // node reads a raw windows path's drive letter as a url protocol
         return files.map((file) => [
@@ -105,25 +103,17 @@ class DiskFiles extends FileSource {
     }
 
     protected async filesIn(folder: string, layout: BotLayout): Promise<Loaders<BytesLoader>> {
-        const all = await DiskFiles.filesUnder(folder);
+        const all = await DiskFiles.filesUnder(folder, layout);
         const files = all.filter((file) => layout.isListedFile(file));
         return files.map((file) => [file, () => readFile(file)]);
     }
 
-    private static async filesUnder(folder: string): Promise<string[]> {
-        let entries: fs.Dirent[];
-        try {
-            entries = await readdir(folder, { withFileTypes: true, recursive: true });
-        } catch (err) {
-            throw new SeedcordError(SeedcordErrorCode.CorePathUnreadable, [folder, asError(err).message], {
-                cause: err
-            });
-        }
-
+    private static async filesUnder(folder: string, layout: BotLayout): Promise<string[]> {
+        const entries = await Array.fromAsync(layout.entriesUnder(folder));
         return entries
-            .filter((entry) => entry.isFile())
-            .map((entry) => path.join(entry.parentPath, entry.name))
-            .sort();
+            .filter(({ isFolder }) => !isFolder)
+            .map(({ path: file }) => file)
+            .toSorted();
     }
 }
 
@@ -171,21 +161,23 @@ class BuiltFiles extends FileSource {
     }
 }
 
-const builtSources = new WeakMap<BuiltSlot, BuiltFiles>();
+// every reader of one slot shares its BotLayout
+const sources = new WeakMap<BuiltSlot | DevSlot, FileSource>();
 
-function builtFilesOf(slot: BuiltSlot): BuiltFiles {
-    const source = builtSources.get(slot) ?? new BuiltFiles(slot);
-    builtSources.set(slot, source);
+function sourceOf(slot: BuiltSlot | DevSlot): FileSource {
+    const source =
+        sources.get(slot) ??
+        (slot.kind === 'built' ? new BuiltFiles(slot) : new DiskFiles(new BotFolderAccess(new BotLayout(slot))));
+    sources.set(slot, source);
     return source;
 }
 
 export function fileSource(): FileSource {
     const slot = botFilesSlot();
-    if (slot?.kind === 'built') return builtFilesOf(slot);
-    return new DiskFiles(slot ? new BotFolderAccess(new BotLayout(slot)) : new OpenFolderAccess());
+    return slot ? sourceOf(slot) : new DiskFiles(new OpenFolderAccess());
 }
 
-// the slot's layout under seedcord dev and in a built bot. a script without one gets a layout rooted at dir
-export function botLayout(dir: string): BotLayout {
-    return fileSource().layoutFor(dir);
+// a folder of the bot under seedcord dev and in a built bot. a script without a slot gets dir on its own
+export function botFolder(dir: string): BotFolder {
+    return fileSource().layoutFor(dir).folderAt(dir);
 }

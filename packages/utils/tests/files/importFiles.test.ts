@@ -127,7 +127,13 @@ describe('a module that fails to load through a Vite plugin', () => {
 
 describe('a folder on disk under seedcord dev', () => {
     beforeEach(() => {
-        const dev = setDevFiles({ root: FIXTURES, listed: ['/text'], skippedFolders: [], projectFiles: [] });
+        const dev = setDevFiles({
+            root: FIXTURES,
+            listed: ['/text'],
+            skippedFolders: [],
+            projectFiles: [],
+            configFile: 'seedcord.config.ts'
+        });
         return () => dev[Symbol.dispose]();
     });
 
@@ -189,7 +195,8 @@ describe('the folders and files the build leaves out, under seedcord dev', () =>
             root,
             listed: ['/'],
             skippedFolders: ['/dist', '/logs'],
-            projectFiles: ['/seedcord.config.ts', '/package.json']
+            projectFiles: ['/seedcord.config.ts', '/package.json'],
+            configFile: 'seedcord.config.ts'
         });
         return () => dev[Symbol.dispose]();
     });
@@ -225,7 +232,13 @@ describe('a folder seedcord build skips, under seedcord dev', () => {
     });
 
     beforeEach(() => {
-        const dev = setDevFiles({ root, listed: ['/locales'], skippedFolders: [], projectFiles: [] });
+        const dev = setDevFiles({
+            root,
+            listed: ['/locales'],
+            skippedFolders: [],
+            projectFiles: [],
+            configFile: 'seedcord.config.ts'
+        });
         return () => dev[Symbol.dispose]();
     });
 

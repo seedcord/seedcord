@@ -3,7 +3,7 @@ import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { formatFilePath, importFiles } from '@seedcord/utils';
-import { botLayout } from '@seedcord/utils/internal';
+import { botFolder } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 
 import { getDevChannel } from '#hmr/devChannel';
@@ -168,7 +168,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     /** @internal */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        if (botLayout(this.dir).isBotFileUnder(this.dir, event.file)) {
+        if (botFolder(this.dir).holdsBotFile(event.file)) {
             this.pendingEvents.delete(event.file);
             this.pendingEvents.set(event.file, event);
             getDevChannel()?.send('seedcord:commands-update-prompt', {

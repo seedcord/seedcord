@@ -1,3 +1,5 @@
+import { relative } from 'node:path';
+
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { setDevFiles } from '@seedcord/utils/internal';
@@ -27,11 +29,7 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
 
     public abstract startBot(instance: SeedcordInstance): Promise<string | undefined>;
     // every resource it creates goes on the stack it receives
-    protected abstract open(
-        context: DevRuntimeContext,
-        resources: AsyncDisposableStack,
-        files: ProjectFiles
-    ): Promise<TStarted>;
+    protected abstract open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<TStarted>;
     protected abstract stopInstance(): Promise<void>;
 
     public async start(context: DevRuntimeContext): Promise<void> {
@@ -43,9 +41,10 @@ export abstract class BaseDevRuntime<TStarted extends StartedRuntime = StartedRu
     private async openWithCleanup(context: DevRuntimeContext): Promise<TStarted> {
         const resources = new AsyncDisposableStack();
         try {
-            const files = new ProjectFiles(context.config);
-            resources.use(setDevFiles(files.layout.toJSON()));
-            return await this.open(context, resources, files);
+            const { root, configFile } = context.config;
+            const { layout } = ProjectFiles.of(context.config);
+            resources.use(setDevFiles({ ...layout.toJSON(), configFile: relative(root, configFile) }));
+            return await this.open(context, resources);
         } catch (error: unknown) {
             await resources.disposeAsync();
             throw error;

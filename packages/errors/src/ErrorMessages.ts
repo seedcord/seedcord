@@ -22,9 +22,7 @@ function vitePluginFix({ loading }: VitePluginPlace): string {
 
 const listedFolderProblems = {
     missing: `which does not exist. Create it, or take it out of ${paint.bold('files')}.`,
-    file: `which is a file. ${paint.bold('files')} takes folders. List the folder that holds it.`,
-    skipped: `which ${paint.bold('seedcord build')} skips. The build skips dot-folders, node_modules, outDir and the logs folder beside seedcord.config.ts, with everything in them. Move the files to another folder under root.`,
-    holdsSkipped: `which holds outDir, the logs folder, or project files like package.json. ${paint.bold('seedcord build')} leaves those out of the bot. List the folders inside it that hold the bot's files.`
+    file: `which is a file. ${paint.bold('files')} takes folders. List the folder that holds it.`
 };
 
 // the edge worker sets chalk's color level after this module loads
@@ -106,7 +104,7 @@ const messages = {
     [SeedcordErrorCode.CoreDirectoryNotListed]: (dir: string) =>
         `${paint.bold('readFiles')} was called on ${paint.path(dir)}, which is outside every folder in ${paint.bold('files')} in seedcord.config.ts. ${paint.bold('seedcord build')} bundles non-code files from only those folders. Add it to ${paint.bold('files')}, like ${paint.sky("files: ['./locales']")}.`,
     [SeedcordErrorCode.CoreDirectorySkipped]: (dir: string) =>
-        `${paint.path(dir)} has a dot-folder or node_modules in its path. ${paint.bold('seedcord build')} skips both, so a built bot holds none of its files. Move them to another folder under ${paint.bold('root')}.`,
+        `${paint.path(dir)} is in a folder ${paint.bold('seedcord build')} skips, so a built bot holds none of its files. The build skips dot-folders, node_modules, outDir, the logs folder beside seedcord.config.ts and project files like package.json. Move the files to another folder under ${paint.bold('root')}.`,
     [SeedcordErrorCode.CorePluginGroupTaken]: (head: string, key: string) =>
         `${paint.bold(head)} is already taken on this bot, so ${paint.sky(key)} cannot nest under it. Pick another group name.`,
     [SeedcordErrorCode.CorePluginKeyMalformed]: (key: string, reason: string) =>

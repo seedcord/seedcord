@@ -19,6 +19,7 @@ import { openViteServer } from '#core/modules/openViteServer';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
 import { WorkerEnv } from '#core/modules/workerEnv';
 import { functionExportsOf } from '#core/modules/workerExports';
+import { ProjectFiles } from '#core/project/ProjectFiles';
 
 import { BaseDevRuntime } from './BaseDevRuntime';
 import { devWatchOptions, edgeViteConfig } from './devServerConfig';
@@ -27,7 +28,6 @@ import { loadWorkerEntry } from './loadWorkerEntry';
 
 import type { ResolvedEdgeTarget } from '#core/config/schema';
 import type { ModuleLoader } from '#core/modules/ModuleLoader';
-import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { StartedRuntime } from './BaseDevRuntime';
 import type { DevRuntimeContext } from './DevRuntime';
 import type {
@@ -77,12 +77,9 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         super();
     }
 
-    protected async open(
-        context: DevRuntimeContext,
-        resources: AsyncDisposableStack,
-        files: ProjectFiles
-    ): Promise<EdgeStarted> {
+    protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<EdgeStarted> {
         const { config } = context;
+        const files = ProjectFiles.of(config);
         const { viteRoot } = this.target;
         installCliLogSinks(resources);
         this.emit(context, { type: 'progress', status: 'Loading Cloudflare plugin…' });
@@ -92,7 +89,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
             WorkerEnv.load(this.target.cloudflareConfig, config.viteMode)
         ]);
         const nodeCopy = await openModuleLoader(dirname(config.configFile), this.target, config.viteMode, config, {
-            watch: devWatchOptions(files.layout, process.cwd()),
+            watch: devWatchOptions(config),
             workerEnv
         }).catch(rethrowVitePluginError);
         resources.use(nodeCopy);
@@ -104,7 +101,7 @@ export class EdgeDevRuntime extends BaseDevRuntime<EdgeStarted> {
         ]);
         const server = await openViteServer(
             resources,
-            mergeViteConfig(edgeViteConfig(config, files.layout, viteRoot, process.cwd()), {
+            mergeViteConfig(edgeViteConfig(config, viteRoot), {
                 mode: config.viteMode,
                 plugins: [
                     workerEntry({

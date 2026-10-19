@@ -19,7 +19,7 @@ export class Project implements AsyncDisposable {
         private readonly configLoader?: AsyncDisposable
     ) {
         this.configDir = dirname(config.configFile);
-        this.files = new ProjectFiles(config);
+        this.files = ProjectFiles.of(config);
     }
 
     public get modules(): ModuleLoader {

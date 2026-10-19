@@ -10,17 +10,15 @@ import type { SeedcordErrorArguments } from '@seedcord/errors/internal';
 
 type ListedFolderProblem = SeedcordErrorArguments<SeedcordErrorCode.CliListedFolderUnusable>[1];
 
-function listedFolderProblem(folder: string, layout: BotLayout): ListedFolderProblem | undefined {
+function listedFolderProblem(folder: string): ListedFolderProblem | undefined {
     const stats = statSync(folder, { throwIfNoEntry: false });
     if (!stats) return 'missing';
-    if (!stats.isDirectory()) return 'file';
-    if (layout.isSkipped(folder)) return 'skipped';
-    return layout.holdsSkipped(folder) ? 'holdsSkipped' : undefined;
+    return stats.isDirectory() ? undefined : 'file';
 }
 
-function* listedFolderProblems({ config, files }: Project): Generator<SeedcordError> {
+function* listedFolderProblems({ config }: Project): Generator<SeedcordError> {
     for (const folder of config.files) {
-        const problem = listedFolderProblem(folder, files.layout);
+        const problem = listedFolderProblem(folder);
         if (problem) yield new SeedcordError(SeedcordErrorCode.CliListedFolderUnusable, [folder, problem]);
     }
 }

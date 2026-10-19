@@ -329,7 +329,13 @@ describe('CommandRegistry Integration', () => {
     it('holds an edited command for the refresh prompt when the commands path is relative to root', async ({
         testEnv
     }) => {
-        using _dev = setDevFiles({ root: testEnv.rootDir, listed: [], skippedFolders: [], projectFiles: [] });
+        using _dev = setDevFiles({
+            root: testEnv.rootDir,
+            listed: [],
+            skippedFolders: [],
+            projectFiles: [],
+            configFile: 'seedcord.config.ts'
+        });
         const command = (name: string): string => `
             import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
 
@@ -354,7 +360,13 @@ describe('CommandRegistry Integration', () => {
     });
 
     it('sends no refresh prompt for a file saved in a dot-folder, which startup skips', async ({ testEnv }) => {
-        using _dev = setDevFiles({ root: testEnv.rootDir, listed: [], skippedFolders: [], projectFiles: [] });
+        using _dev = setDevFiles({
+            root: testEnv.rootDir,
+            listed: [],
+            skippedFolders: [],
+            projectFiles: [],
+            configFile: 'seedcord.config.ts'
+        });
         const sent: string[] = [];
         setDevChannel({ send: (event) => sent.push(event), on: () => undefined, off: () => undefined });
         onTestFinished(() => setDevChannel(undefined));

@@ -100,7 +100,7 @@ export class CodegenRunner {
             'scan commands',
             () =>
                 commandsPath
-                    ? new CommandScanner(modules, new ProjectFiles(config)).scan(commandsPath)
+                    ? new CommandScanner(modules, ProjectFiles.of(config)).scan(commandsPath)
                     : Promise.resolve([]),
             (found) => paint.mute(plural(found.length, 'command'))
         );

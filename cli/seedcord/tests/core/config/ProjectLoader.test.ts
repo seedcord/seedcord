@@ -460,6 +460,12 @@ describe('ProjectLoader files', () => {
         });
     });
 
+    it('throws CoreDirectorySkipped for a folder inside a dot-folder', async () => {
+        const load = projectWith({ ...MINIMAL, files: ['./.drafts/locales'] }).load();
+
+        await expect(load).rejects.toMatchObject({ code: SeedcordErrorCode.CoreDirectorySkipped });
+    });
+
     it.each([['./locales'], [['./locales', 3]]])('rejects files set to %j', async (files) => {
         await expect(projectWith({ ...MINIMAL, files }).load()).rejects.toMatchObject({
             code: SeedcordErrorCode.CliConfigInvalidField,

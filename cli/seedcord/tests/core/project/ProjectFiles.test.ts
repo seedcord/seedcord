@@ -15,7 +15,7 @@ async function projectRoot(): Promise<string> {
 }
 
 function filesUnder(root: string): ProjectFiles {
-    return new ProjectFiles({
+    return ProjectFiles.of({
         root,
         configFile: join(root, 'seedcord.config.ts'),
         files: [],
@@ -60,7 +60,7 @@ describe('the build globs', () => {
             await mkdir(join(root, file, '..'), { recursive: true });
             await writeFile(join(root, file), '{}\n');
         }
-        const files = new ProjectFiles({
+        const files = ProjectFiles.of({
             root,
             configFile: join(root, 'seedcord.config.ts'),
             files: [join(root, 'locales')],

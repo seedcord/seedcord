@@ -8,7 +8,6 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { serverViteConfig } from '#commands/dev/runtime/devServerConfig';
 import { mergeViteConfig } from '#core/modules/userCodeConfig';
-import { ProjectFiles } from '#core/project/ProjectFiles';
 import { watchedPath } from '#core/project/watchedPath';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -52,19 +51,18 @@ interface WatchedProject {
     touchUntilReported: (file: string) => Promise<void>;
 }
 
-async function watchProject(root: string): Promise<WatchedProject> {
+async function watchProject(root: string, botRoot = root): Promise<WatchedProject> {
     const real = watchedPath(root);
     const reported = new Set<string>();
 
     const config: Pick<ResolvedSeedcordConfig, 'root' | 'configFile' | 'files' | 'target'> = {
-        root,
+        root: botRoot,
         configFile: join(root, 'seedcord.config.ts'),
         files: [],
         target: { kind: 'server', start: undefined, outDir: join(root, 'build') }
     };
-    const { layout } = new ProjectFiles(config);
     server = await createServer(
-        mergeViteConfig(serverViteConfig(config, layout, root), {
+        mergeViteConfig(serverViteConfig(config), {
             plugins: [
                 {
                     name: 'record',
@@ -96,10 +94,14 @@ async function watchProject(root: string): Promise<WatchedProject> {
 }
 
 describe('dev server watch ignores', () => {
-    it(
-        "never watches the bot's log folder",
-        async () => {
-            const { watcher, real, touchUntilReported } = await watchProject(project());
+    it.each([
+        ['the project', (dir: string) => dir],
+        ['./src', (dir: string) => join(dir, 'src')]
+    ])(
+        'never watches the logs folder beside the config of a bot rooted at %s',
+        async (_, botRoot) => {
+            const dir = project();
+            const { watcher, real, touchUntilReported } = await watchProject(dir, botRoot(dir));
 
             await touchUntilReported(SOURCE_FILE);
 

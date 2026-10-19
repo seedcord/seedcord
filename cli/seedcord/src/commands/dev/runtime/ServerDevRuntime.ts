@@ -12,7 +12,6 @@ import { BaseDevRuntime } from './BaseDevRuntime';
 import { serverViteConfig } from './devServerConfig';
 import { InstanceLifecycle } from './InstanceLifecycle';
 
-import type { ProjectFiles } from '#core/project/ProjectFiles';
 import type { StartedRuntime } from './BaseDevRuntime';
 import type { DevRuntimeContext } from './DevRuntime';
 import type { SeedcordInstance } from '@seedcord/types/internal';
@@ -20,15 +19,11 @@ import type { SeedcordInstance } from '@seedcord/types/internal';
 export class ServerDevRuntime extends BaseDevRuntime {
     private readonly lifecycle = new InstanceLifecycle();
 
-    protected async open(
-        context: DevRuntimeContext,
-        resources: AsyncDisposableStack,
-        files: ProjectFiles
-    ): Promise<StartedRuntime> {
+    protected async open(context: DevRuntimeContext, resources: AsyncDisposableStack): Promise<StartedRuntime> {
         const hmr = this.openHmr(context, BOT_ENVIRONMENT, resources);
         const server = await openViteServer(
             resources,
-            mergeViteConfig(serverViteConfig(context.config, files.layout, process.cwd()), {
+            mergeViteConfig(serverViteConfig(context.config), {
                 mode: context.config.viteMode,
                 plugins: [hmr.plugin, context.config.vitePlugins.create()]
             })

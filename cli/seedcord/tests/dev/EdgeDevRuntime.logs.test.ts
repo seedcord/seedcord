@@ -17,6 +17,7 @@ import {
     liveVars,
     logCapture,
     messagesOf,
+    projectLogs,
     startedRuntime,
     waveHandler
 } from './edgeDevRuntime';
@@ -31,7 +32,7 @@ describe('EdgeDevRuntime logs from one started bot', () => {
     beforeAll(async () => {
         await using setup = new AsyncDisposableStack();
         // a development env logs at debug, in the worker and in the CLI
-        setup.use(await developmentMode());
+        setup.use(developmentMode());
         const { projectDir } = setup.use(await edgeProject({ ...liveVars, ENVIRONMENT: 'development' }));
         await appendFile(join(projectDir, 'src/bot.ts'), "\nconsole.log('counter ready');\n");
         wavePath = join(projectDir, 'src/handlers/Wave.ts');
@@ -76,13 +77,9 @@ describe('EdgeDevRuntime hot reload', () => {
 
     beforeAll(async () => {
         await using setup = new AsyncDisposableStack();
-        setup.use(await developmentMode());
+        setup.use(developmentMode());
         const project = setup.use(await edgeProject());
         projectDir = project.projectDir;
-        // the log file goes under the cwd. a bot runs seedcord dev from its project folder
-        const cwd = process.cwd();
-        process.chdir(projectDir);
-        setup.defer(() => process.chdir(cwd));
         ({ records } = setup.use(logCapture()));
         const started = setup.use(await startedRuntime(projectDir));
         await started.runtime.startBot(started.instance);
@@ -136,7 +133,7 @@ describe('EdgeDevRuntime logs', () => {
     }, 120_000);
 
     it("writes the worker's logs to the session's log file after a server session reset the logger", async () => {
-        const createdLogs = await asDevelopment();
+        asDevelopment();
         // what ServerHost.reset leaves behind
         LoggerChannelRegistry.instance.configure({});
         await using project = await edgeProject();
@@ -147,7 +144,7 @@ describe('EdgeDevRuntime logs', () => {
         await runtime.startBot(instance);
 
         await vi.waitFor(async () => {
-            expect(await createdLogs()).toContain('Coordinated startup completed successfully');
+            expect(await projectLogs(projectDir)).toContain('Coordinated startup completed successfully');
         });
     }, 120_000);
 });

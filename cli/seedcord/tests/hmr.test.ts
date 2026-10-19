@@ -132,8 +132,8 @@ function configuredPlugin(config: ConstructorParameters<typeof HmrPlugin>[0], st
 describe('HmrPlugin', () => {
     let hmrPlugin: HmrPlugin;
     const mockConfig = {
-        root: '/test/root',
-        configFile: 'seedcord.config.ts',
+        root: projectRoot,
+        configFile: join(projectRoot, 'seedcord.config.ts'),
         target: { kind: 'server', start: 'src/index.ts', outDir: 'dist' } as const,
         instance: 'src/Seedcord.ts',
         typecheck: { enabled: false } as const,
@@ -220,6 +220,17 @@ describe('HmrPlugin', () => {
             expect(events).toContainEqual({ type: 'restart-required' });
         }
     );
+
+    it('asks for a restart on a lockfile save beside the config of a bot rooted at ./src', () => {
+        const config = { ...mockConfig, root: srcRoot, configFile: join(projectRoot, 'seedcord.config.ts') };
+        const lockfile = join(projectRoot, 'pnpm-lock.yaml');
+        writeFileSync(lockfile, '');
+        const { plugin, events } = configuredPlugin(config);
+
+        viteHotUpdate(plugin, 'update', lockfile);
+
+        expect(events).toContainEqual({ type: 'restart-required' });
+    });
 
     it('asks for a restart on a save matching a ./ pattern in hmr.restart', () => {
         const { plugin, events } = configuredPlugin({

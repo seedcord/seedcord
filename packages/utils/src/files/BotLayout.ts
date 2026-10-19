@@ -1,19 +1,27 @@
+import { readdir } from 'node:fs/promises';
 import * as path from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import { asError } from '#src/misc/asError';
+
 import { isInside, posixRelative } from './paths';
 
-// every path here is root-relative with a leading slash, like '/locales'
+// every path here is root-relative with a leading slash, like '/locales'. one beside a ./src root reads '/../logs'
 export interface BotLayoutData {
-    root: string;
+    readonly root: string;
     // the folders from files in seedcord.config.ts
-    listed: string[];
+    readonly listed: readonly string[];
     // outDir and the logs folder
-    skippedFolders: string[];
-    // seedcord.config.ts, package.json, lockfiles and tsconfigs
-    projectFiles: string[];
+    readonly skippedFolders: readonly string[];
+    // seedcord.config.ts, package.json, lockfiles and tsconfigs beside the config
+    readonly projectFiles: readonly string[];
+}
+
+export interface BotEntry {
+    path: string;
+    isFolder: boolean;
 }
 
 const MODULE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs'];
@@ -37,15 +45,22 @@ function isSkippedName(name: string): boolean {
 // the CLI writes this into the slot for seedcord dev and the built bot
 export class BotLayout {
     public readonly root: string;
-    private readonly listed: string[];
-    private readonly skippedFolders: string[];
-    private readonly projectFiles: string[];
+    private readonly data: Readonly<BotLayoutData>;
+    private readonly listed: readonly string[];
+    private readonly skippedFolders: readonly string[];
+    private readonly projectFiles: readonly string[];
 
-    public constructor(private readonly data: BotLayoutData) {
-        this.root = path.resolve(data.root);
-        this.listed = data.listed.map((key) => this.pathOf(key));
-        this.skippedFolders = data.skippedFolders.map((key) => this.pathOf(key));
-        this.projectFiles = data.projectFiles.map((key) => this.pathOf(key));
+    public constructor({ root, listed, skippedFolders, projectFiles }: BotLayoutData) {
+        this.root = path.resolve(root);
+        this.data = Object.freeze({
+            root: this.root,
+            listed: [...listed],
+            skippedFolders: [...skippedFolders],
+            projectFiles: [...projectFiles]
+        });
+        this.listed = this.data.listed.map((key) => this.pathOf(key));
+        this.skippedFolders = this.data.skippedFolders.map((key) => this.pathOf(key));
+        this.projectFiles = this.data.projectFiles.map((key) => this.pathOf(key));
     }
 
     // a script that reads an absolute folder without a config gets every file in it
@@ -84,7 +99,7 @@ export class BotLayout {
     public isSkipped(file: string): boolean {
         if (this.skippedFolders.some((folder) => isInside(folder, file))) return true;
         if (this.isProjectFile(file)) return true;
-        return path.relative(this.root, file).split(path.sep).some(isSkippedName);
+        return this.holds(file) && path.relative(this.root, file).split(path.sep).some(isSkippedName);
     }
 
     public isProjectFile(file: string): boolean {
@@ -115,18 +130,27 @@ export class BotLayout {
         return this.isListed(file) && !endsWithAny(file, CODE_AND_MAP_EXTENSIONS) && !this.isSkipped(file);
     }
 
-    // whether importFiles(dir) imports the file
-    public isModuleUnder(dir: string, file: string): boolean {
-        return isInside(this.resolve(dir), file) && this.isModule(file);
+    public folderAt(dir: string): BotFolder {
+        return new BotFolder(this.resolve(dir), this);
     }
 
-    // any file under dir that seedcord build keeps, code or not
-    public isBotFileUnder(dir: string, file: string): boolean {
-        return isInside(this.resolve(dir), file) && !this.isSkipped(file);
-    }
-
-    public holdsSkipped(folder: string): boolean {
-        return [...this.skippedFolders, ...this.projectFiles].some((skipped) => isInside(folder, skipped));
+    // never reads inside a skipped folder
+    public async *entriesUnder(folder: string): AsyncGenerator<BotEntry> {
+        const entries = await readdir(folder, { withFileTypes: true }).catch((error: unknown) => {
+            throw new SeedcordError(SeedcordErrorCode.CorePathUnreadable, [folder, asError(error).message], {
+                cause: error
+            });
+        });
+        for (const entry of entries) {
+            const entryPath = path.join(folder, entry.name);
+            if (this.isSkipped(entryPath)) continue;
+            if (entry.isDirectory()) {
+                yield { path: entryPath, isFolder: true };
+                yield* this.entriesUnder(entryPath);
+            } else if (entry.isFile()) {
+                yield { path: entryPath, isFolder: false };
+            }
+        }
     }
 
     // base is the folder import.meta.glob resolves the patterns against, relative to root
@@ -149,17 +173,47 @@ export class BotLayout {
         ];
     }
 
-    public toJSON(): BotLayoutData {
+    public toJSON(): Readonly<BotLayoutData> {
         return this.data;
     }
 
+    // a built bot resolves these against its own root, where a key like '/../dist' is the bot itself
+    public bundledData(): BotLayoutData {
+        const insideRoot = (keys: readonly string[]): string[] => keys.filter((key) => this.holds(this.pathOf(key)));
+        return {
+            root: this.root,
+            listed: insideRoot(this.data.listed),
+            skippedFolders: insideRoot(this.data.skippedFolders),
+            projectFiles: insideRoot(this.data.projectFiles)
+        };
+    }
+
     private globExcludes(base: string): string[] {
-        const folders = this.data.skippedFolders.map((key) => `!${base}${key}/**`);
-        const files = this.data.projectFiles.map((key) => `!${base}${key}`);
+        const { skippedFolders, projectFiles } = this.bundledData();
+        const folders = skippedFolders.map((key) => `!${base}${key}/**`);
+        const files = projectFiles.map((key) => `!${base}${key}`);
         return [...SKIPPED_NAME_GLOBS, ...folders, ...files];
     }
 
     private pathOf(key: string): string {
         return path.join(this.root, key);
+    }
+}
+
+// one folder of the bot, like the handlers folder
+export class BotFolder {
+    public constructor(
+        public readonly path: string,
+        private readonly layout: BotLayout
+    ) {}
+
+    // whether importFiles on this folder imports the file
+    public holdsModule(file: string): boolean {
+        return isInside(this.path, file) && this.layout.isModule(file);
+    }
+
+    // any file in this folder that seedcord build keeps, code or not
+    public holdsBotFile(file: string): boolean {
+        return isInside(this.path, file) && !this.layout.isSkipped(file);
     }
 }

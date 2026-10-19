@@ -9,6 +9,7 @@ import { Logger } from '@seedcord/logger';
 import { posixRelative, workerdPath } from '@seedcord/utils/internal';
 import { minimatch } from 'minimatch';
 
+import { ProjectFiles } from '#core/project/ProjectFiles';
 import { deployedCommandsFile, lastDeployOf } from '#core/state/deployedCommands';
 
 import type { ResolvedSeedcordConfig } from '#core/config/schema';
@@ -39,6 +40,7 @@ const TYPE_COLOR = {
 
 export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly logger: Logger;
+    private readonly files: ProjectFiles;
     private readonly lastUpdate = new Map<string, number>();
     private server: ViteDevServer | null = null;
     private readonly restartPatterns: Set<string>;
@@ -59,6 +61,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         private readonly restartFiles: ViteRestartFiles
     ) {
         super();
+        this.files = ProjectFiles.of(config);
         this.logger = new Logger('HMR', { channel: 'hmr' });
         this.restartPatterns = new Set((config.hmr?.restart ?? []).map((pattern) => this.fromRoot(pattern)));
     }
@@ -189,8 +192,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
         return (
             [...this.restartPatterns].some((pattern) => minimatch(relPath, pattern)) ||
-            file.endsWith('package.json') ||
-            file.endsWith('tsconfig.json') ||
+            this.files.isProjectFile(file) ||
             file === resolve(root, instance)
         );
     }

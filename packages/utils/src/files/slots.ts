@@ -20,8 +20,9 @@ export interface BuiltSlot extends BotLayoutData {
 }
 
 // server dev reads the files off disk
-interface DevSlot extends BotLayoutData {
+export interface DevSlot extends BotLayoutData {
     kind: 'dev';
+    configFile: string;
 }
 
 type BotFilesSlot = BuiltSlot | DevSlot;
@@ -46,17 +47,26 @@ export function setBuiltFilesHook(callback: () => void): void {
     else Reflect.set(globalThis, Symbol.for(BUILT_FILES_READY_KEY), callback);
 }
 
-export function builtConfigDir(): string | undefined {
-    const built = builtSlot();
-    if (built?.configFile === undefined) return undefined;
+export function botConfigDir(): string | undefined {
+    const slot = botFilesSlot();
+    if (slot?.configFile === undefined) return undefined;
 
-    const configFile = path.resolve(built.root, built.configFile);
+    const configFile = path.resolve(slot.root, slot.configFile);
     // a bun binary's root is under /$bunfs
     return existsSync(configFile) ? path.dirname(configFile) : undefined;
 }
 
-export function setDevFiles(layout: BotLayoutData): Disposable {
+function writeSlot(slot: BotFilesSlot): Disposable {
     const key = Symbol.for(BOT_FILES_KEY);
-    Reflect.set(globalThis, key, { kind: 'dev', ...layout } satisfies DevSlot);
+    Reflect.set(globalThis, key, slot);
     return { [Symbol.dispose]: () => Reflect.deleteProperty(globalThis, key) };
+}
+
+export function setDevFiles(dev: Omit<DevSlot, 'kind'>): Disposable {
+    return writeSlot({ kind: 'dev', ...dev });
+}
+
+// the generated entry writes the same object without importing seedcord
+export function setBuiltFiles(built: Omit<BuiltSlot, 'kind'>): Disposable {
+    return writeSlot({ kind: 'built', ...built });
 }

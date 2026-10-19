@@ -66,7 +66,7 @@ export function builtFilesSource({
 }: BuiltFilesOptions): string {
     const moduleOptions = { base: rootKey };
     const fileOptions = { ...moduleOptions, query: LISTED_FILE_QUERY, import: 'default' };
-    const { listed, skippedFolders, projectFiles } = layout.toJSON();
+    const { listed, skippedFolders, projectFiles } = layout.bundledData();
 
     return [
         `${BOT_FILES_SLOT} = {`,

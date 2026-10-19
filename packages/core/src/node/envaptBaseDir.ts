@@ -1,9 +1,9 @@
-import { builtConfigDir, setBuiltFilesHook } from '@seedcord/utils/internal';
+import { botConfigDir, setBuiltFilesHook } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 
 export function setEnvaptBaseDir(): void {
     setBuiltFilesHook(() => {
-        const configDir = builtConfigDir();
+        const configDir = botConfigDir();
         if (configDir !== undefined) Envapter.baseDir = configDir;
     });
 }

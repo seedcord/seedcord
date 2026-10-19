@@ -1,6 +1,4 @@
-import { BOT_FILES_KEY } from '@seedcord/utils/internal';
-
-import type { BuiltSlot } from '@seedcord/utils/internal';
+import { BOT_FILES_KEY, setBuiltFiles } from '@seedcord/utils/internal';
 
 // the root seedcord build gives every edge worker
 export const BUILT_ROOT = '/bot';
@@ -19,8 +17,7 @@ export function registerBuiltFiles(
     modules: Record<string, Record<string, unknown>>,
     emptyFolders: readonly string[] = []
 ): Disposable {
-    const slot: BuiltSlot = {
-        kind: 'built',
+    return setBuiltFiles({
         root: BUILT_ROOT,
         listed: [],
         skippedFolders: [],
@@ -30,9 +27,7 @@ export function registerBuiltFiles(
             Object.entries(modules).map(([key, exported]) => [key, () => Promise.resolve(exported)])
         ),
         listedFiles: {}
-    };
-    Reflect.set(globalThis, Symbol.for(BOT_FILES_KEY), slot);
-    return { [Symbol.dispose]: clearBuiltFiles };
+    });
 }
 
 export function clearBuiltFiles(): void {

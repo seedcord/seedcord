@@ -1,13 +1,10 @@
 import { dirname, resolve } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordTypeError } from '@seedcord/errors/internal';
-import { isInside } from '@seedcord/utils/internal';
-
 import { Project } from '#core/project/Project';
 import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { assertNoHashPaths } from './assertNoHashPaths';
+import { assertPathsBundled } from './assertPathsBundled';
 import { assertTargetMatchesTsconfig } from './assertTargetMatchesTsconfig';
 import { ConfigValidator, isEdgeConfig } from './ConfigValidator';
 import { detectTarget } from './detectTarget';
@@ -34,12 +31,6 @@ const EDGE_DEV_PORT = 3000;
 
 // runs before any plugin in vitePlugins starts
 export type ProjectCheck = (project: Project) => void | Promise<void>;
-
-function resolveUnderRoot(root: string, path: string): string {
-    const resolved = resolve(root, path);
-    if (!isInside(root, resolved)) throw new SeedcordTypeError(SeedcordErrorCode.CorePathOutsideRoot, [resolved, root]);
-    return resolved;
-}
 
 function resolveTunnel(value: boolean | string | undefined): ResolvedTunnel {
     if (value === false) return { mode: 'off' };
@@ -71,7 +62,9 @@ export class ProjectLoader {
         const project = new Project(await this.resolveConfig(configModules, configPath, target, mode), configModules);
         await assertNoHashPaths(project);
         await assertTargetMatchesTsconfig(project);
+        // the build's check reports an outDir that holds root before every path under it reads as skipped
         await check?.(project);
+        assertPathsBundled(project);
         const loaded = new LoadedConfig(project.config);
         return loaded.hasVitePlugins ? new LoadedConfig(project.config, stack.move()) : loaded;
     }
@@ -110,7 +103,7 @@ export class ProjectLoader {
         return {
             instance,
             root,
-            files: (config.files ?? []).map((folder) => resolveUnderRoot(root, folder)),
+            files: (config.files ?? []).map((folder) => resolve(root, folder)),
             configFile: configPath,
             target: this.resolveTarget(root, configDir, checked),
             build,
@@ -132,7 +125,7 @@ export class ProjectLoader {
         } = checked;
         return {
             ...target,
-            start: build?.start === undefined ? undefined : resolveUnderRoot(root, build.start),
+            start: build?.start === undefined ? undefined : resolve(root, build.start),
             outDir: resolve(configDir, build?.outDir ?? 'dist')
         };
     }

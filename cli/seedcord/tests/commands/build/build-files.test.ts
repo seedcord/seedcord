@@ -47,10 +47,7 @@ function buildOf(projectDir: string): Promise<unknown> {
 describe('seedcord build with files in the config', () => {
     it.each([
         ['does not exist', { files: ['./locales'] }, 'does not exist'],
-        ['is a file', { files: ['./bot.ts'] }, 'is a file'],
-        ['is a dot-folder', { files: ['./.data'], write: ['src/.data/x.json'] }, 'build skips'],
-        ['is the project logs folder', { root: '.', files: ['./logs'], write: ['logs/x.json'] }, 'build skips'],
-        ['holds the project files', { root: '.', files: ['.'] }, 'package.json']
+        ['is a file', { files: ['./bot.ts'] }, 'is a file']
     ])('throws CliListedFolderUnusable for a listed folder that %s', async (_, shape, says) => {
         await using bot = await project(shape);
 
@@ -60,6 +57,15 @@ describe('seedcord build with files in the config', () => {
             code: SeedcordErrorCode.CliListedFolderUnusable,
             message: expect.stringContaining(says) as string
         });
+    });
+
+    it.each([
+        ['is a dot-folder', { files: ['./.data'], write: ['src/.data/x.json'] }],
+        ['is the project logs folder', { root: '.', files: ['./logs'], write: ['logs/x.json'] }]
+    ])('throws CoreDirectorySkipped for a listed folder that %s', async (_, shape) => {
+        await using bot = await project(shape);
+
+        await expect(buildOf(bot.path)).resolves.toMatchObject({ code: SeedcordErrorCode.CoreDirectorySkipped });
     });
 
     it('throws CoreDuplicateName for two handlers that build to one file', async () => {

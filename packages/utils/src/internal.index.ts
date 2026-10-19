@@ -1,11 +1,17 @@
 export { encodeFile } from './files/encodedFile';
 export { BotLayout } from './files/BotLayout';
-export type { BotLayoutData } from './files/BotLayout';
-export type { BuiltSlot } from './files/slots';
+export type { BotEntry, BotFolder, BotLayoutData } from './files/BotLayout';
 export { importFailed, recordThrownBy, vitePluginThrew } from './files/importFailed';
 export { isInside, posixRelative, toPosixPath, workerdPath } from './files/paths';
-export { BOT_FILES_KEY, BUILT_FILES_READY_KEY, builtConfigDir, setBuiltFilesHook, setDevFiles } from './files/slots';
-export { botLayout } from './files/sources';
+export {
+    BOT_FILES_KEY,
+    BUILT_FILES_READY_KEY,
+    botConfigDir,
+    setBuiltFiles,
+    setBuiltFilesHook,
+    setDevFiles
+} from './files/slots';
+export { botFolder } from './files/sources';
 export { withoutQuery } from './files/withoutQuery';
 export * from './misc/asError';
 export * from './misc/isPortInUse';

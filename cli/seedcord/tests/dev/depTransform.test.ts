@@ -2,7 +2,6 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { BotLayout } from '@seedcord/utils/internal';
 import { createServer, createServerModuleRunner } from 'vite';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -91,11 +90,12 @@ describe('dev runtime module resolution', () => {
 
         server = await createServer(
             mergeViteConfig(
-                serverViteConfig(
-                    { root: join(root, 'src'), configFile: join(root, 'seedcord.config.ts') },
-                    BotLayout.openAt(join(root, 'src')),
-                    root
-                ),
+                serverViteConfig({
+                    root: join(root, 'src'),
+                    configFile: join(root, 'seedcord.config.ts'),
+                    files: [],
+                    target: { kind: 'server', start: undefined, outDir: join(root, 'dist') }
+                }),
                 { server: { hmr: false, watch: null } }
             )
         );

@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { stripAnsi } from '@seedcord/utils';
-import { BOT_FILES_KEY } from '@seedcord/utils/internal';
+import { setBuiltFiles, setDevFiles } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -13,7 +13,6 @@ import { LoggerChannelRegistry } from '#src/LoggerChannelRegistry';
 import { formatBody, formatPretty, installNodeDefaults, WinstonConsoleSink, WinstonFileSink } from '#src/node';
 
 import type { ILogSink, LogRecord } from '@seedcord/types';
-import type { BuiltSlot } from '@seedcord/utils/internal';
 
 function record(overrides: Partial<LogRecord>): LogRecord {
     return { level: 'info', message: '', label: 'Bot', channel: 'default', timestamp: Date.now(), ...overrides };
@@ -46,9 +45,7 @@ const plain = (value: string): string => stripAnsi(value);
 
 // the slot the entry of a built bot fills before anything imports seedcord
 function asBuiltBot({ root, configFile }: { root: string; configFile: string }): Disposable {
-    const key = Symbol.for(BOT_FILES_KEY);
-    const slot: BuiltSlot = {
-        kind: 'built',
+    return setBuiltFiles({
         root,
         configFile,
         listed: [],
@@ -57,9 +54,7 @@ function asBuiltBot({ root, configFile }: { root: string; configFile: string }):
         folders: [],
         modules: {},
         listedFiles: {}
-    };
-    Reflect.set(globalThis, key, slot);
-    return { [Symbol.dispose]: () => Reflect.deleteProperty(globalThis, key) };
+    });
 }
 
 const LOGS_TO_STDOUT = join(import.meta.dirname, 'fixtures/logsToStdout.ts');
@@ -190,6 +185,25 @@ describe('winston sinks', () => {
         sink.onLog(record({ message: 'beside the config' }));
 
         expect(await readWhenWritten(join(project.path, 'logs/out.log'))).toContain('beside the config');
+    });
+
+    it('writes the logs folder beside seedcord.config.ts under seedcord dev started in another folder', async () => {
+        using project = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
+        using elsewhere = mkdtempDisposableSync(join(tmpdir(), 'seedcord-logger-'));
+        writeFileSync(join(project.path, 'seedcord.config.ts'), '');
+        using _cwd = vi.spyOn(process, 'cwd').mockReturnValue(elsewhere.path);
+        using _dev = setDevFiles({
+            root: join(project.path, 'src'),
+            listed: [],
+            skippedFolders: [],
+            projectFiles: [],
+            configFile: '../seedcord.config.ts'
+        });
+        using sink = new WinstonFileSink({ format: 'json' });
+
+        sink.onLog(record({ message: 'beside the config' }));
+
+        expect(await listWhenWritten(join(project.path, 'logs'))).toHaveLength(1);
     });
 
     it('writes a relative file name in the working folder outside a built bot', async () => {
